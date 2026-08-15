@@ -36,7 +36,7 @@ The API is currently client-ready. Pharmacy and admin modules are planned extens
 - Password update
 - Password reset request
 - Password reset with email token
-- JWT auth with backend-managed httpOnly cookies
+- JWT auth with Next.js BFF-owned httpOnly cookies
 - Role middleware foundation
 
 ### Pharmacies
@@ -92,6 +92,12 @@ store.
 Public pharmacy registration documents require a one-hour upload session. A
 session is limited to six documents and 30 MB total; only the upload-session
 token hash is stored. Individual unclaimed documents keep their existing TTL.
+
+Legacy `e_pharmacy_auth_token` fallback removal is deployment-gated. The API
+logs token-free `legacy_auth_cookie_used` security telemetry only when that
+fallback actually authenticates a request. See
+[`docs/legacy-auth-cookie-sunset.md`](./docs/legacy-auth-cookie-sunset.md) for the
+production evidence required before removal.
 
 ## Tech Stack
 
@@ -214,7 +220,7 @@ Public/server data -> Express API -> MongoDB
 Browser private flow -> Next.js same-origin /api/* route handlers -> Express API -> MongoDB
 ```
 
-The API remains the real authorization boundary. Private data is protected by backend `authenticate` middleware and httpOnly auth cookies.
+The API remains the real authorization boundary. Private data is protected by backend `authenticate` middleware; browser auth cookies are owned by the Next.js BFF and forwarded to the API only through the trusted proxy boundary.
 
 ## Cart / Order Notes
 

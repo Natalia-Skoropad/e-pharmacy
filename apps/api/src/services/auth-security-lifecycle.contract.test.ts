@@ -10,6 +10,21 @@ const source = readFileSync(
   'utf8'
 );
 
+const userModelSource = readFileSync(
+  resolve(process.cwd(), 'src/models/user.model.ts'),
+  'utf8'
+);
+
+const userTypeSource = readFileSync(
+  resolve(process.cwd(), 'src/types/user.ts'),
+  'utf8'
+);
+
+const jwtSource = readFileSync(
+  resolve(process.cwd(), 'src/utils/jwt.ts'),
+  'utf8'
+);
+
 //===================================================================
 
 test('registration commits User and role profile before creating a browser session', () => {
@@ -93,5 +108,33 @@ test('refresh rotates tokens, caps sliding expiry with an absolute lifetime, and
   assert.match(refresh, /revokedReason:\s*'token_reuse'/);
   assert.match(refresh, /!matchesCurrentToken && !matchesPreviousToken/);
   assert.match(refresh, /AUTH_ERROR_CODES\.SESSION_INVALID/);
-  assert.doesNotMatch(refresh, /session\.expiresAt\s*=\s*getRefreshTokenExpiresAt/);
+  assert.doesNotMatch(
+    refresh,
+    /session\.expiresAt\s*=\s*getRefreshTokenExpiresAt/
+  );
+});
+
+//===================================================================
+
+test('password reset uses only opaque hashed reset secrets without stale application/JWT semantics', () => {
+  const requestReset = source.slice(
+    source.indexOf('export async function requestPasswordResetService'),
+    source.indexOf('export async function resetPasswordService')
+  );
+
+  const confirmReset = source.slice(
+    source.indexOf('export async function resetPasswordService'),
+    source.indexOf('export async function getUserByIdService')
+  );
+
+  assert.match(requestReset, /createPasswordResetToken/);
+  assert.match(requestReset, /hashPasswordResetToken/);
+  assert.match(confirmReset, /resetPasswordTokenHash:\s*tokenHash/);
+
+  assert.doesNotMatch(source, /resetPasswordApplication/);
+  assert.doesNotMatch(userModelSource, /resetPasswordApplication/);
+  assert.doesNotMatch(userTypeSource, /resetPasswordApplication/);
+  assert.doesNotMatch(jwtSource, /PasswordResetJwtPayload/);
+  assert.doesNotMatch(jwtSource, /signPasswordResetToken/);
+  assert.doesNotMatch(jwtSource, /verifyPasswordResetToken/);
 });

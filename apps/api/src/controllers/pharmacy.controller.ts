@@ -73,6 +73,7 @@ export async function getMyPharmacyDocument(
     documentId
   );
 
+  res.setHeader('Cache-Control', 'private, no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -105,7 +106,10 @@ export async function submitMyPharmacyModeration(
   res: ValidatedResponse<SubmitMyPharmacyModerationInput>
 ): Promise<void> {
   const { body } = res.locals.validated;
-  const data = await submitMyPharmacyModerationService(req.user?.id ?? '', body);
+  const data = await submitMyPharmacyModerationService(
+    req.user?.id ?? '',
+    body
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

@@ -64,3 +64,16 @@ test('account switching remounts private profile state for the next identity', a
     /<AuthenticatedProfilePageContent key=\{user\.id\} user=\{user\} \/>/
   );
 });
+
+//===================================================================
+
+test('favorite profile reads are abortable/versioned and zero-timeout workarounds are absent', async () => {
+  const source = await readProfileSource();
+
+  assert.match(source, /favoriteProductsRequestVersionRef/);
+  assert.match(source, /favoritePharmaciesRequestVersionRef/);
+  assert.match(source, /new AbortController\(\)/);
+  assert.match(source, /\{ signal: controller\.signal \}/);
+  assert.match(source, /onChange=\{handleTabChange\}/);
+  assert.doesNotMatch(source, /setTimeout\([^)]*,\s*0\)/);
+});

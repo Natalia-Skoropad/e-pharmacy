@@ -78,7 +78,10 @@ test('owner and manager pharmacy-profile capabilities follow least privilege', (
 
 test('profile and document services enforce the membership capability matrix', async () => {
   const [profileService, documentService] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/services/pharmacy.service.ts'), 'utf8'),
+    readFile(
+      resolve(process.cwd(), 'src/services/pharmacy.service.ts'),
+      'utf8'
+    ),
     readFile(
       resolve(process.cwd(), 'src/services/pharmacy-document.service.ts'),
       'utf8'
@@ -113,5 +116,24 @@ test('profile and document services enforce the membership capability matrix', a
   assert.match(
     documentService,
     /findPharmacyForProfileAccess\(\s*userId,\s*'manage_documents'\s*\)/
+  );
+});
+
+//===================================================================
+
+test('private pharmacy document responses are explicitly non-cacheable at the backend boundary', async () => {
+  const controllerSource = await readFile(
+    resolve(process.cwd(), 'src/controllers/pharmacy.controller.ts'),
+    'utf8'
+  );
+
+  const handler = controllerSource.slice(
+    controllerSource.indexOf('export async function getMyPharmacyDocument'),
+    controllerSource.indexOf('export async function getMyPharmacyProfile')
+  );
+
+  assert.match(
+    handler,
+    /res\.setHeader\('Cache-Control',\s*'private, no-store'\)/
   );
 });

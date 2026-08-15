@@ -10,7 +10,6 @@ import mongoose, { type ClientSession, type HydratedDocument } from 'mongoose';
 import { env } from '../config/env';
 
 import { AUTH_ERROR_CODES, USER_ROLES, USER_STATUSES } from '../constants/auth';
-
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
@@ -927,9 +926,10 @@ export async function requestPasswordResetService(
     const user = await User.findOne({ email: input.email });
 
     // Anti user enumeration: the controller returns the same 200 response
-    // whether the account exists or not. The selected application still scopes
-    // the reset token, so a client login cannot reset a pharmacy account and
-    // vice versa.
+    // whether the account exists or not. Application is an issuance gate: a
+    // reset secret is created only when the selected application matches the
+    // account role. Confirmation is then authorized by the opaque, single-use
+    // reset secret itself; there is no second stale application claim.
     if (
       !user ||
       user.status === USER_STATUSES.BLOCKED ||
@@ -942,7 +942,6 @@ export async function requestPasswordResetService(
 
     user.resetPasswordTokenHash = hashPasswordResetToken(resetToken);
     user.resetPasswordExpiresAt = getPasswordResetExpiresAt();
-    user.resetPasswordApplication = input.application;
 
     await user.save();
 
@@ -992,7 +991,6 @@ export async function resetPasswordService(
           $unset: {
             resetPasswordTokenHash: '',
             resetPasswordExpiresAt: '',
-            resetPasswordApplication: '',
           },
         },
         {

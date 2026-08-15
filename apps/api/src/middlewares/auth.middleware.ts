@@ -15,6 +15,7 @@ import {
 } from '../services/auth.service';
 
 import { httpError } from '../utils/httpError';
+import { logger } from '../utils/logger';
 import { verifyToken } from '../utils/jwt';
 
 //===============================================================
@@ -23,6 +24,11 @@ type ErrorWithStatus = {
   status?: unknown;
   name?: unknown;
   code?: unknown;
+};
+
+type AuthTokenCandidate = {
+  token: string;
+  source: 'authorization' | 'access_cookie' | 'legacy_cookie';
 };
 
 //===============================================================
@@ -91,20 +97,33 @@ function getCookieValues(
 
 //===============================================================
 
-function getTokensFromCookies(cookieHeader?: string): string[] {
-  return [
-    ...getCookieValues(cookieHeader, ACCESS_TOKEN_COOKIE_NAME),
-    ...getCookieValues(cookieHeader, AUTH_COOKIE_NAME),
-  ].reverse();
+function getTokensFromCookies(cookieHeader?: string): AuthTokenCandidate[] {
+  const accessCandidates = getCookieValues(
+    cookieHeader,
+    ACCESS_TOKEN_COOKIE_NAME
+  )
+    .reverse()
+    .map((token) => ({ token, source: 'access_cookie' as const }));
+
+  const legacyCandidates = getCookieValues(cookieHeader, AUTH_COOKIE_NAME)
+    .reverse()
+    .map((token) => ({ token, source: 'legacy_cookie' as const }));
+
+  // Current access cookies always win over the legacy migration fallback.
+  // Within one cookie name, try the last browser-provided value first so a
+  // stale duplicate cannot shadow a freshly written cookie.
+  return [...accessCandidates, ...legacyCandidates];
 }
 
 //===============================================================
 
-function getTokensFromRequest(req: Request): string[] {
+function getTokensFromRequest(req: Request): AuthTokenCandidate[] {
   const headerToken = getTokenFromHeader(req.headers.authorization);
 
   return [
-    ...(headerToken ? [headerToken] : []),
+    ...(headerToken
+      ? [{ token: headerToken, source: 'authorization' as const }]
+      : []),
     ...getTokensFromCookies(req.headers.cookie),
   ];
 }
@@ -125,9 +144,9 @@ async function authenticateToken(req: Request): Promise<void> {
 
   let lastCandidateError: unknown;
 
-  for (const token of tokens) {
+  for (const candidate of tokens) {
     try {
-      const payload = verifyToken(token);
+      const payload = verifyToken(candidate.token);
 
       if (!payload.sessionId) continue;
 
@@ -137,6 +156,14 @@ async function authenticateToken(req: Request): Promise<void> {
 
       req.authSessionId = payload.sessionId;
       req.user = user;
+
+      if (candidate.source === 'legacy_cookie') {
+        logger.security({
+          type: 'legacy_auth_cookie_used',
+          method: req.method,
+          path: req.path,
+        });
+      }
 
       return;
     } catch (error) {

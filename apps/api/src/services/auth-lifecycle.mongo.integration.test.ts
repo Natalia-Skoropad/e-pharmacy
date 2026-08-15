@@ -379,7 +379,6 @@ test(
         role: 'client',
         resetPasswordTokenHash: tokenHash,
         resetPasswordExpiresAt: new Date(Date.now() + 60_000),
-        resetPasswordApplication: 'client',
       });
 
       await Client.create({ userId: user._id });
@@ -1141,15 +1140,21 @@ test(
         }
       );
 
-      const firstUpdate = await updateMyPharmacyProfileService(String(user._id), {
-        documents: [{ documentId: first.document.id }],
-        expectedRevision: pharmacy.updatedAt.toISOString(),
-      });
+      const firstUpdate = await updateMyPharmacyProfileService(
+        String(user._id),
+        {
+          documents: [{ documentId: first.document.id }],
+          expectedRevision: pharmacy.updatedAt.toISOString(),
+        }
+      );
 
-      const secondUpdate = await updateMyPharmacyProfileService(String(user._id), {
-        documents: [{ documentId: second.document.id }],
-        expectedRevision: firstUpdate.pharmacy.updatedAt,
-      });
+      const secondUpdate = await updateMyPharmacyProfileService(
+        String(user._id),
+        {
+          documents: [{ documentId: second.document.id }],
+          expectedRevision: firstUpdate.pharmacy.updatedAt,
+        }
+      );
 
       let persisted = await Pharmacy.findById(pharmacy._id);
 
@@ -1594,7 +1599,9 @@ test(
           error.code === 'AUTH_PROFILE_CONFLICT'
       );
 
-      const persisted = await User.findById(user._id).lean<{ name: string } | null>();
+      const persisted = await User.findById(user._id).lean<{
+        name: string;
+      } | null>();
       assert.equal(persisted?.name, 'Saved In Tab B');
     } finally {
       await cleanup(identity.email);
@@ -1721,10 +1728,7 @@ test(
         pendingModeration?: { description?: string | null };
       } | null>();
 
-      assert.equal(
-        persisted?.pendingModeration?.description,
-        'Saved in Tab B'
-      );
+      assert.equal(persisted?.pendingModeration?.description, 'Saved in Tab B');
     } finally {
       await cleanup(identity.email);
       await mongoose.disconnect();

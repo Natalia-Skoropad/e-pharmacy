@@ -103,6 +103,7 @@ import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
+import { isCurrentFavoriteRequest } from './favorite-request-lifecycle';
 import css from './ProfilePageContent.module.css';
 
 //===================================================================
@@ -229,6 +230,12 @@ function AuthenticatedProfilePageContent({
   const profileMutationInFlightRef = useRef(false);
   const passwordMutationInFlightRef = useRef(false);
   const sessionMutationInFlightRef = useRef(false);
+  const favoriteProductsAbortRef = useRef<AbortController | null>(null);
+  const favoriteProductsCountAbortRef = useRef<AbortController | null>(null);
+  const favoriteProductsRequestVersionRef = useRef(0);
+  const favoritePharmaciesAbortRef = useRef<AbortController | null>(null);
+  const favoritePharmaciesCountAbortRef = useRef<AbortController | null>(null);
+  const favoritePharmaciesRequestVersionRef = useRef(0);
 
   const profileErrors = useMemo(
     () => validateDataProfileForm(profileValues),
@@ -246,6 +253,13 @@ function AuthenticatedProfilePageContent({
 
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
   const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
+  const effectiveFavoriteProductsCount = canUseAuthFeatures
+    ? favoriteProductsCount
+    : 0;
+  const effectiveFavoritePharmaciesCount = canUseAuthFeatures
+    ? favoritePharmaciesCount
+    : 0;
+  const effectiveOrdersCount = canUseAuthFeatures ? orders.length : 0;
 
   const tabs = useMemo(
     () =>
@@ -253,35 +267,42 @@ function AuthenticatedProfilePageContent({
         if (tab.value === 'favorite-products') {
           return {
             ...tab,
-            label: `${tab.label} (${favoriteProductsCount})`,
+            label: `${tab.label} (${effectiveFavoriteProductsCount})`,
           };
         }
 
         if (tab.value === 'favorite-pharmacies') {
           return {
             ...tab,
-            label: `${tab.label} (${favoritePharmaciesCount})`,
+            label: `${tab.label} (${effectiveFavoritePharmaciesCount})`,
           };
         }
 
         if (tab.value === 'orders') {
           return {
             ...tab,
-            label: `${tab.label} (${orders.length})`,
+            label: `${tab.label} (${effectiveOrdersCount})`,
           };
         }
 
         return tab;
       }),
-    [favoriteProductsCount, favoritePharmaciesCount, orders.length]
+    [
+      effectiveFavoritePharmaciesCount,
+      effectiveFavoriteProductsCount,
+      effectiveOrdersCount,
+    ]
   );
 
   const visibleOrders = useMemo(
-    () => orders.slice(0, ordersVisibleCount),
-    [orders, ordersVisibleCount]
+    () => (canUseAuthFeatures ? orders.slice(0, ordersVisibleCount) : []),
+    [canUseAuthFeatures, orders, ordersVisibleCount]
   );
 
-  const hiddenOrdersCount = Math.max(orders.length - visibleOrders.length, 0);
+  const hiddenOrdersCount = Math.max(
+    effectiveOrdersCount - visibleOrders.length,
+    0
+  );
 
   const orderColumns = useMemo<Array<DataTableColumn<ClientOrder>>>(
     () => [
@@ -330,26 +351,51 @@ function AuthenticatedProfilePageContent({
     []
   );
 
-  const visibleFavoriteProducts = favoriteProducts;
-  const visibleFavoritePharmacies = favoritePharmacies;
+  const visibleFavoriteProducts = canUseAuthFeatures ? favoriteProducts : [];
+  const visibleFavoritePharmacies = canUseAuthFeatures
+    ? favoritePharmacies
+    : [];
+
   const hiddenFavoriteProductsCount = Math.max(
-    favoriteProductsCount - favoriteProducts.length,
+    effectiveFavoriteProductsCount - visibleFavoriteProducts.length,
     0
   );
   const hiddenFavoritePharmaciesCount = Math.max(
-    favoritePharmaciesCount - favoritePharmacies.length,
+    effectiveFavoritePharmaciesCount - visibleFavoritePharmacies.length,
     0
   );
 
   const loadFavoriteProducts = useCallback(async (page = 1) => {
+    favoriteProductsAbortRef.current?.abort();
+    favoriteProductsCountAbortRef.current?.abort();
+
+    const controller = new AbortController();
+    const requestVersion = favoriteProductsRequestVersionRef.current + 1;
+    favoriteProductsAbortRef.current = controller;
+    favoriteProductsRequestVersionRef.current = requestVersion;
+
+    const isCurrentRequest = () =>
+      isCurrentFavoriteRequest({
+        currentVersion: favoriteProductsRequestVersionRef.current,
+        requestVersion,
+        aborted: controller.signal.aborted,
+      });
+
     try {
       setIsFavoriteProductsLoading(true);
       setFavoriteProductsError('');
-      const response = await getFavoriteProducts({
-        page,
-        perPage: FAVORITES_PER_PAGE,
-        sort: 'name-asc',
-      });
+
+      const response = await getFavoriteProducts(
+        {
+          page,
+          perPage: FAVORITES_PER_PAGE,
+          sort: 'name-asc',
+        },
+        { signal: controller.signal }
+      );
+
+      if (!isCurrentRequest()) return;
+
       setFavoriteProducts((current) =>
         page === 1 ? [...response.items] : [...current, ...response.items]
       );
@@ -357,22 +403,54 @@ function AuthenticatedProfilePageContent({
       setFavoriteProductsPage(response.page);
       setFavoriteProductsTotalPages(response.totalPages);
     } catch {
+      if (!isCurrentRequest()) return;
+
       setFavoriteProductsError('Could not load favorite products.');
       if (page === 1) setFavoriteProductsCount(0);
     } finally {
-      setIsFavoriteProductsLoading(false);
+      if (favoriteProductsRequestVersionRef.current === requestVersion) {
+        if (favoriteProductsAbortRef.current === controller) {
+          favoriteProductsAbortRef.current = null;
+        }
+
+        if (!controller.signal.aborted) {
+          setIsFavoriteProductsLoading(false);
+        }
+      }
     }
   }, []);
 
   const loadFavoritePharmacies = useCallback(async (page = 1) => {
+    favoritePharmaciesAbortRef.current?.abort();
+    favoritePharmaciesCountAbortRef.current?.abort();
+
+    const controller = new AbortController();
+    const requestVersion = favoritePharmaciesRequestVersionRef.current + 1;
+    favoritePharmaciesAbortRef.current = controller;
+    favoritePharmaciesRequestVersionRef.current = requestVersion;
+
+    const isCurrentRequest = () =>
+      isCurrentFavoriteRequest({
+        currentVersion: favoritePharmaciesRequestVersionRef.current,
+        requestVersion,
+        aborted: controller.signal.aborted,
+      });
+
     try {
       setIsFavoritePharmaciesLoading(true);
       setFavoritePharmaciesError('');
-      const response = await getFavoritePharmacies({
-        page,
-        perPage: FAVORITES_PER_PAGE,
-        sort: 'name-asc',
-      });
+
+      const response = await getFavoritePharmacies(
+        {
+          page,
+          perPage: FAVORITES_PER_PAGE,
+          sort: 'name-asc',
+        },
+        { signal: controller.signal }
+      );
+
+      if (!isCurrentRequest()) return;
+
       setFavoritePharmacies((current) =>
         page === 1 ? [...response.items] : [...current, ...response.items]
       );
@@ -380,97 +458,105 @@ function AuthenticatedProfilePageContent({
       setFavoritePharmaciesPage(response.page);
       setFavoritePharmaciesTotalPages(response.totalPages);
     } catch {
+      if (!isCurrentRequest()) return;
+
       setFavoritePharmaciesError('Could not load favorite pharmacies.');
       if (page === 1) setFavoritePharmaciesCount(0);
     } finally {
-      setIsFavoritePharmaciesLoading(false);
+      if (favoritePharmaciesRequestVersionRef.current === requestVersion) {
+        if (favoritePharmaciesAbortRef.current === controller) {
+          favoritePharmaciesAbortRef.current = null;
+        }
+
+        if (!controller.signal.aborted) {
+          setIsFavoritePharmaciesLoading(false);
+        }
+      }
     }
   }, []);
 
   const loadFavoriteCounts = useCallback(async () => {
+    favoriteProductsCountAbortRef.current?.abort();
+    favoritePharmaciesCountAbortRef.current?.abort();
+
+    const productsController = new AbortController();
+    const pharmaciesController = new AbortController();
+    const productsListVersion = favoriteProductsRequestVersionRef.current;
+    const pharmaciesListVersion = favoritePharmaciesRequestVersionRef.current;
+
+    favoriteProductsCountAbortRef.current = productsController;
+    favoritePharmaciesCountAbortRef.current = pharmaciesController;
+
     const [productsResult, pharmaciesResult] = await Promise.allSettled([
-      getFavoriteProducts({
-        page: 1,
-        perPage: FAVORITE_COUNTS_PER_PAGE,
-        sort: 'name-asc',
-      }),
-      getFavoritePharmacies({
-        page: 1,
-        perPage: FAVORITE_COUNTS_PER_PAGE,
-        sort: 'name-asc',
-      }),
+      getFavoriteProducts(
+        {
+          page: 1,
+          perPage: FAVORITE_COUNTS_PER_PAGE,
+          sort: 'name-asc',
+        },
+        { signal: productsController.signal }
+      ),
+      getFavoritePharmacies(
+        {
+          page: 1,
+          perPage: FAVORITE_COUNTS_PER_PAGE,
+          sort: 'name-asc',
+        },
+        { signal: pharmaciesController.signal }
+      ),
     ]);
 
-    if (productsResult.status === 'fulfilled') {
+    if (
+      productsResult.status === 'fulfilled' &&
+      isCurrentFavoriteRequest({
+        currentVersion: favoriteProductsRequestVersionRef.current,
+        requestVersion: productsListVersion,
+        aborted: productsController.signal.aborted,
+      })
+    ) {
       setFavoriteProductsCount(productsResult.value.total);
     }
 
-    if (pharmaciesResult.status === 'fulfilled') {
+    if (
+      pharmaciesResult.status === 'fulfilled' &&
+      isCurrentFavoriteRequest({
+        currentVersion: favoritePharmaciesRequestVersionRef.current,
+        requestVersion: pharmaciesListVersion,
+        aborted: pharmaciesController.signal.aborted,
+      })
+    ) {
       setFavoritePharmaciesCount(pharmaciesResult.value.total);
+    }
+
+    if (favoriteProductsCountAbortRef.current === productsController) {
+      favoriteProductsCountAbortRef.current = null;
+    }
+
+    if (favoritePharmaciesCountAbortRef.current === pharmaciesController) {
+      favoritePharmaciesCountAbortRef.current = null;
     }
   }, []);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      if (!canUseAuthFeatures) {
-        setFavoriteProductsCount(0);
-        setFavoritePharmaciesCount(0);
-        return;
-      }
+    if (!canUseAuthFeatures) return;
 
-      void loadFavoriteCounts();
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
+    void loadFavoriteCounts();
   }, [canUseAuthFeatures, loadFavoriteCounts]);
+
+  useEffect(
+    () => () => {
+      favoriteProductsAbortRef.current?.abort();
+      favoriteProductsCountAbortRef.current?.abort();
+      favoritePharmaciesAbortRef.current?.abort();
+      favoritePharmaciesCountAbortRef.current?.abort();
+      favoriteProductsRequestVersionRef.current += 1;
+      favoritePharmaciesRequestVersionRef.current += 1;
+    },
+    []
+  );
 
   useEffect(() => {
     if (!canUseAuthFeatures) return;
-
-    const shouldLoadFavoriteProducts =
-      activeTab === 'favorite-products' && favoriteProductsPage === 0;
-
-    const shouldLoadFavoritePharmacies =
-      activeTab === 'favorite-pharmacies' && favoritePharmaciesPage === 0;
-
-    if (!shouldLoadFavoriteProducts && !shouldLoadFavoritePharmacies) return;
-
-    const timeoutId = window.setTimeout(() => {
-      if (shouldLoadFavoriteProducts) {
-        void loadFavoriteProducts();
-      }
-
-      if (shouldLoadFavoritePharmacies) {
-        void loadFavoritePharmacies();
-      }
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [
-    activeTab,
-    canUseAuthFeatures,
-    favoriteProductsPage,
-    favoritePharmaciesPage,
-    loadFavoriteProducts,
-    loadFavoritePharmacies,
-  ]);
-
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setOrdersVisibleCount(ORDERS_VISIBLE_STEP);
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (!canUseAuthFeatures) {
-      const timeoutId = window.setTimeout(() => {
-        setOrders([]);
-      }, 0);
-
-      return () => window.clearTimeout(timeoutId);
-    }
 
     const controller = new AbortController();
 
@@ -526,6 +612,21 @@ function AuthenticatedProfilePageContent({
       controller.abort();
     };
   }, [activeTab, canUseAuthFeatures]);
+
+  const handleTabChange = (nextTab: ProfileTab) => {
+    setActiveTab(nextTab);
+    setOrdersVisibleCount(ORDERS_VISIBLE_STEP);
+
+    if (!canUseAuthFeatures) return;
+
+    if (nextTab === 'favorite-products' && favoriteProductsPage === 0) {
+      void loadFavoriteProducts();
+    }
+
+    if (nextTab === 'favorite-pharmacies' && favoritePharmaciesPage === 0) {
+      void loadFavoritePharmacies();
+    }
+  };
 
   const handleRevokeSession = async (sessionId: string) => {
     if (sessionMutationInFlightRef.current) return;
@@ -771,7 +872,7 @@ function AuthenticatedProfilePageContent({
                 ariaLabel="Profile sections"
                 mobileVisibleCount={2}
                 tabletVisibleCount={4}
-                onChange={setActiveTab}
+                onChange={handleTabChange}
               />
 
               {activeTab === 'data' ? (
@@ -1000,7 +1101,7 @@ function AuthenticatedProfilePageContent({
                     <h2 className={css.panelTitle}>My orders</h2>
                     <CountLabel
                       shown={visibleOrders.length}
-                      total={orders.length}
+                      total={effectiveOrdersCount}
                       label="orders"
                     />
                   </div>
@@ -1046,7 +1147,7 @@ function AuthenticatedProfilePageContent({
 
                     <CountLabel
                       shown={visibleFavoriteProducts.length}
-                      total={favoriteProductsCount}
+                      total={effectiveFavoriteProductsCount}
                       label="items"
                     />
                   </div>
@@ -1059,7 +1160,7 @@ function AuthenticatedProfilePageContent({
 
                   {isFavoriteProductsLoading ? (
                     <LoadingSpinner label="Loading favorite products..." />
-                  ) : favoriteProducts.length > 0 ? (
+                  ) : visibleFavoriteProducts.length > 0 ? (
                     <>
                       <div className={css.favoritesGrid}>
                         {visibleFavoriteProducts.map((product) => (
@@ -1137,7 +1238,7 @@ function AuthenticatedProfilePageContent({
 
                     <CountLabel
                       shown={visibleFavoritePharmacies.length}
-                      total={favoritePharmaciesCount}
+                      total={effectiveFavoritePharmaciesCount}
                       label="pharmacies"
                     />
                   </div>
@@ -1150,7 +1251,7 @@ function AuthenticatedProfilePageContent({
 
                   {isFavoritePharmaciesLoading ? (
                     <LoadingSpinner label="Loading favorite pharmacies..." />
-                  ) : favoritePharmacies.length > 0 ? (
+                  ) : visibleFavoritePharmacies.length > 0 ? (
                     <>
                       <div className={css.favoritesGrid}>
                         {visibleFavoritePharmacies.map((pharmacy) => (
