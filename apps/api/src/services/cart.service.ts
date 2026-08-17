@@ -277,6 +277,7 @@ async function serializeCartWithCleanup(
       pharmacyId: String(offer.pharmacyId),
       product: productDto,
       pharmacyName: pharmacy.name,
+      ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),
       ...(typeof pharmacy.rating === 'number'
         ? { pharmacyRating: pharmacy.rating }
         : {}),

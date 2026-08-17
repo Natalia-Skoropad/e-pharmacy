@@ -319,7 +319,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                               ) : null}
 
                               {pharmacyEmail ? (
-                                <li>
+                                <li className={css.emailRow}>
                                   <Mail size={18} aria-hidden="true" />
                                   <span className={css.emailActions}>
                                     <a href={`mailto:${pharmacyEmail}`}>

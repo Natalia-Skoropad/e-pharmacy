@@ -164,6 +164,14 @@
   color: var(--color-accent);
 }
 
+.emailRow {
+  align-items: center !important;
+}
+
+.emailRow > svg {
+  margin-top: 0;
+}
+
 .emailActions {
   display: inline-flex;
   gap: 8px;

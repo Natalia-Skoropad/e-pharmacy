@@ -175,6 +175,10 @@
   border-top: 1px solid var(--color-border);
 }
 
+.profileDataSection {
+  gap: 12px;
+}
+
 .panelHeader {
   display: grid;
   gap: 8px;
@@ -229,6 +233,15 @@
   min-width: 0;
 }
 
+.ordersFiltersCard,
+.ordersTableSection {
+  min-width: 0;
+  padding: 16px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 .ordersSearchGrid {
   display: grid;
   gap: 12px;
@@ -248,7 +261,6 @@
 .ordersTableSection {
   display: grid;
   gap: 20px;
-  min-width: 0;
 }
 
 .ordersToolbar {
@@ -257,9 +269,14 @@
   min-width: 0;
 }
 
-.ordersCountLabel {
-  justify-self: start;
+.ordersCountLabelWrap {
   width: 100%;
+}
+
+.ordersCountLabelWrap > * {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
 }
 
 .ordersRowsControl {
@@ -315,7 +332,7 @@
 
 .orderLink,
 .pharmacyLink {
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-regular);
   color: var(--color-accent);
   text-decoration: none;
   transition: color var(--transition-base);
@@ -331,6 +348,16 @@
 .panelSection > button,
 .emptyState > a,
 .showMoreButton {
+  width: 100%;
+  justify-content: center;
+}
+
+.sessionsHeader {
+  display: grid;
+  gap: 12px;
+}
+
+.sessionsSignOutButton {
   width: 100%;
   justify-content: center;
 }
@@ -423,9 +450,30 @@
     width: auto;
   }
 
+  .emptyState > a {
+    width: auto;
+    min-width: 220px;
+    justify-content: center;
+  }
+
+  .sessionsHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .sessionsSignOutButton {
+    width: auto;
+    justify-self: end;
+  }
+
   .showMoreButton {
     width: auto;
     min-width: 220px;
+  }
+
+  .ordersFiltersCard,
+  .ordersTableSection {
+    padding: 20px;
   }
 
   .ordersSearchGrid {
@@ -438,11 +486,15 @@
     align-items: end;
   }
 
-  .ordersCountLabel {
+  .ordersCountLabelWrap {
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
-    width: unset;
+    width: auto;
+  }
+
+  .ordersCountLabelWrap > * {
+    width: auto;
   }
 
   .ordersRowsControl {

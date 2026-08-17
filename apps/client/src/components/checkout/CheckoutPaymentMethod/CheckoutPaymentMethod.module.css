@@ -25,6 +25,11 @@
   min-width: 0;
 }
 
+.bankDetailsStack {
+  display: grid;
+  gap: 12px;
+}
+
 .infoCard,
 .bankCard {
   display: grid;
@@ -89,17 +94,19 @@
 
 .emailNote {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-start;
-  padding-top: 4px;
+  padding: 14px 16px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-lg);
 }
 
 .emailNote svg {
   flex: 0 0 auto;
-  margin-top: 1px;
   color: var(--color-accent);
 }
 

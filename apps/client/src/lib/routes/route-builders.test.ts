@@ -8,6 +8,7 @@ import {
   buildProductPath,
   getCheckoutPharmacyIdFromPathParam,
   getLegacyCheckoutRedirectPath,
+  getLegacyOrderRedirectPath,
   getOrderIdFromPathParam,
 } from './route-builders';
 
@@ -61,8 +62,20 @@ test('builds typed checkout pharmacy paths and redirects legacy checkout slugs',
 test('builds and parses a canonical order slug with Unicode order numbers', () => {
   const path = buildOrderPath({ id: ID, orderNumber: 'Замовлення № 42' });
 
-  assert.match(path, new RegExp(`${ID}$`));
+  assert.match(path, new RegExp(`ph${ID}$`));
   assert.equal(getOrderIdFromPathParam(path.split('/').at(-1) ?? ''), ID);
+});
+
+//===================================================================
+
+test('redirects legacy order slugs to the canonical ph-prefixed route', () => {
+  const legacy = `/profile/orders/ep-20260716-080000-${ID}`;
+  const legacySlug = legacy.split('/').at(-1) ?? '';
+
+  assert.equal(
+    getLegacyOrderRedirectPath(legacySlug),
+    `/profile/orders/ep-20260716-080000-ph${ID}`
+  );
 });
 
 //===================================================================

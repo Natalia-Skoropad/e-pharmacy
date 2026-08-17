@@ -17,6 +17,7 @@ import type {
   ClientOrderDetailsResponse,
   ClientOrdersResponse,
   DeliveryMethod,
+  OrderCreatedByType,
   OrderStatus,
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
@@ -40,6 +41,7 @@ export type ClientOrdersQueryParams = Readonly<{
   deliveryMethod?: DeliveryMethod;
   paymentMethod?: PaymentMethod;
   status?: OrderStatus;
+  createdByType?: OrderCreatedByType;
 }>;
 
 //===================================================================

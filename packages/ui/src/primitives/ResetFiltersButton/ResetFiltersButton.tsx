@@ -7,7 +7,7 @@ import css from './ResetFiltersButton.module.css';
 //===================================================================
 
 export type ResetFiltersButtonProps = {
-  href: string;
+  href?: string;
   children?: ReactNode;
   label?: ReactNode;
   className?: string;
@@ -27,6 +27,24 @@ function ResetFiltersButton({
   disabled = false,
   onClick,
 }: ResetFiltersButtonProps) {
+  const commonClassName = clsx(css.button, !isVisible && css.hidden, className);
+  const content = children ?? label;
+
+  if (!href) {
+    return (
+      <button
+        className={commonClassName}
+        type="button"
+        aria-hidden={!isVisible}
+        disabled={disabled}
+        tabIndex={isVisible && !disabled ? undefined : -1}
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
+
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (disabled) {
       event.preventDefault();
@@ -38,14 +56,14 @@ function ResetFiltersButton({
 
   return (
     <Link
-      className={clsx(css.button, !isVisible && css.hidden, className)}
+      className={commonClassName}
       href={href}
       aria-hidden={!isVisible}
       aria-disabled={disabled || undefined}
       tabIndex={isVisible && !disabled ? undefined : -1}
       onClick={handleClick}
     >
-      {children ?? label}
+      {content}
     </Link>
   );
 }

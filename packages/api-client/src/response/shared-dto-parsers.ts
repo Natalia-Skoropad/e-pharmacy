@@ -2168,6 +2168,7 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
     record,
     'cart item',
     {
+      pharmacyImageUrl: 'string',
       pharmacyRating: 'number',
       pharmacyReviewsCount: 'number',
     },
@@ -2316,6 +2317,7 @@ function assertCartPharmacyMetadataConsistency(
     string,
     Readonly<{
       pharmacyName: string;
+      pharmacyImageUrl?: string;
       pharmacyRating?: number;
       pharmacyReviewsCount?: number;
     }>
@@ -2324,6 +2326,9 @@ function assertCartPharmacyMetadataConsistency(
   for (const item of items) {
     const metadata = {
       pharmacyName: item.pharmacyName,
+      ...(item.pharmacyImageUrl !== undefined
+        ? { pharmacyImageUrl: item.pharmacyImageUrl }
+        : {}),
       ...(item.pharmacyRating !== undefined
         ? { pharmacyRating: item.pharmacyRating }
         : {}),
@@ -2340,6 +2345,7 @@ function assertCartPharmacyMetadataConsistency(
 
     if (
       existing.pharmacyName !== metadata.pharmacyName ||
+      existing.pharmacyImageUrl !== metadata.pharmacyImageUrl ||
       existing.pharmacyRating !== metadata.pharmacyRating ||
       existing.pharmacyReviewsCount !== metadata.pharmacyReviewsCount
     ) {

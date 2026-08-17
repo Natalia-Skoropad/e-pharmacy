@@ -74,6 +74,10 @@ export function getLegacyCheckoutRedirectPath(slugId: string): string | null {
 
 //===================================================================
 
+const ORDER_ROUTE_ID_PREFIX = 'ph';
+
+//===================================================================
+
 export function buildOrderPath(
   order: Pick<ClientOrder, 'id' | 'orderNumber'>
 ): string {
@@ -83,12 +87,34 @@ export function buildOrderPath(
 
   return `${ROUTES.PROFILE}/orders/${buildSlugId(
     order.orderNumber.trim() || 'order',
-    order.id
+    `${ORDER_ROUTE_ID_PREFIX}${order.id}`
   )}`;
 }
 
 //===================================================================
 
 export function getOrderIdFromPathParam(orderSlugId: string): string | null {
-  return getIdFromSlugId(orderSlugId);
+  const match = orderSlugId.match(/(?:^|-)ph([a-f\d]{24})$/i);
+  return match?.[1]?.toLowerCase() ?? null;
+}
+
+//===================================================================
+
+export function getLegacyOrderRedirectPath(
+  orderSlugId: string
+): string | null {
+  if (getOrderIdFromPathParam(orderSlugId)) return null;
+
+  const legacyId = getIdFromSlugId(orderSlugId);
+  if (!legacyId) return null;
+
+  const suffix = `-${legacyId}`;
+  const orderNumber = orderSlugId.endsWith(suffix)
+    ? orderSlugId.slice(0, -suffix.length)
+    : 'order';
+
+  return buildOrderPath({
+    id: legacyId,
+    orderNumber: orderNumber || 'order',
+  });
 }

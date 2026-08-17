@@ -62,11 +62,7 @@
 
 @media only screen and (min-width: 768px) {
   .linkRow {
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .link {
     width: 305px;
+    margin-left: auto;
   }
 }

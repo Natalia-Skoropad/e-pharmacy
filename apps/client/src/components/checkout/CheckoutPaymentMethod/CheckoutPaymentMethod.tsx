@@ -77,11 +77,11 @@ function CheckoutPaymentMethod({
               </p>
             </div>
           ) : (
-            <div className={css.bankCard}>
-              <h3 className={css.infoTitle}>Bank details</h3>
+            <div className={css.bankDetailsStack}>
+              <div className={css.bankCard}>
+                <h3 className={css.infoTitle}>Bank details</h3>
 
-              {bankDetails ? (
-                <>
+                {bankDetails ? (
                   <dl className={css.bankList}>
                     {bankRows.map(([label, value]) => (
                       <div key={label}>
@@ -97,21 +97,23 @@ function CheckoutPaymentMethod({
                       </div>
                     ))}
                   </dl>
-
-                  <p className={css.emailNote}>
-                    <Mail size={18} aria-hidden="true" />
-                    <span>
-                      After payment, send the receipt to the pharmacy email for
-                      faster processing.
-                    </span>
+                ) : (
+                  <p className={css.mutedText}>
+                    Bank transfer is unavailable because the pharmacy has not
+                    provided bank details yet.
                   </p>
-                </>
-              ) : (
-                <p className={css.mutedText}>
-                  Bank transfer is unavailable because the pharmacy has not
-                  provided bank details yet.
-                </p>
-              )}
+                )}
+              </div>
+
+              {bankDetails ? (
+                <div className={css.emailNote}>
+                  <Mail size={20} aria-hidden="true" />
+                  <p>
+                    After payment, send the receipt to the pharmacy email for
+                    faster processing.
+                  </p>
+                </div>
+              ) : null}
             </div>
           )}
         </div>

@@ -25,6 +25,7 @@ export type CartItem = Readonly<{
   pharmacyId: EntityId;
   product: CartProduct;
   pharmacyName: string;
+  pharmacyImageUrl?: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
   stockQuantity: number;

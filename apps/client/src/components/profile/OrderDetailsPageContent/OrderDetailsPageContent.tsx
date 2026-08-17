@@ -23,8 +23,8 @@ import {
 
 import { LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import { RatingSummary } from '@e-pharmacy/ui/data-display';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { formatInitials, RatingSummary } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { useAuth } from '@e-pharmacy/auth/react';
@@ -175,15 +175,24 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             <div className={css.orderMain}>
               <article className={css.order} aria-labelledby="order-title">
                 <div className={css.pharmacyHead}>
-                  <div>
-                    <p className={css.kicker}>Pharmacy order</p>
-                    <h2 className={css.pharmacyTitle}>{order.pharmacyName}</h2>
-
-                    <RatingSummary
-                      rating={order.pharmacyRating}
-                      reviewsCount={order.pharmacyReviewsCount ?? 0}
-                      size="sm"
+                  <div className={css.pharmacyIdentity}>
+                    <TableImagePreview
+                      src={order.pharmacyImageUrl}
+                      alt={`${order.pharmacyName} photo`}
+                      fallback={formatInitials(order.pharmacyName, 'P')}
+                      size={56}
                     />
+
+                    <div>
+                      <p className={css.kicker}>Pharmacy order</p>
+                      <h2 className={css.pharmacyTitle}>{order.pharmacyName}</h2>
+
+                      <RatingSummary
+                        rating={order.pharmacyRating}
+                        reviewsCount={order.pharmacyReviewsCount ?? 0}
+                        size="sm"
+                      />
+                    </div>
                   </div>
 
                   <LinkButton

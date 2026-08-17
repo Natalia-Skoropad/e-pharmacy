@@ -10,7 +10,9 @@
   color: var(--color-accent);
   white-space: nowrap;
   background-color: var(--color-accent-light);
+  border: 0;
   border-radius: var(--radius-pill);
+  cursor: pointer;
   transition:
     color var(--transition-base),
     background-color var(--transition-base),

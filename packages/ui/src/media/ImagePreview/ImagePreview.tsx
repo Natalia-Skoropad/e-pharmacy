@@ -1,5 +1,7 @@
 import type { ImgHTMLAttributes } from 'react';
 
+import { normalizeImageSource } from '../image-source';
+
 //===================================================================
 
 export type ImagePreviewProps = Readonly<{
@@ -17,7 +19,14 @@ function ImagePreview({
   className,
   ...props
 }: ImagePreviewProps) {
-  return <img className={className} src={src} alt={alt} {...props} />;
+  return (
+    <img
+      className={className}
+      src={String(normalizeImageSource(src))}
+      alt={alt}
+      {...props}
+    />
+  );
 }
 
 export default ImagePreview;

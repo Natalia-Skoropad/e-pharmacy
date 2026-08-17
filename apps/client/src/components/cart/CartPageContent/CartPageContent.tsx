@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react';
 
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import { CountLabel, RatingSummary } from '@e-pharmacy/ui/data-display';
+import { CountLabel, formatInitials, RatingSummary } from '@e-pharmacy/ui/data-display';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
@@ -258,19 +259,28 @@ function CartPageContent() {
                   <div className={css.orderGrid}>
                     <div className={css.orderMain}>
                       <div className={css.pharmacyGroupHead}>
-                        <div className={css.pharmacyInfo}>
-                          <p className={css.groupKicker}>Pharmacy order</p>
-
-                          <h2 className={css.pharmacyGroupTitle}>
-                            {group.pharmacyName}
-                          </h2>
-
-                          <RatingSummary
-                            className={css.pharmacyRating}
-                            rating={group.pharmacyRating}
-                            reviewsCount={group.pharmacyReviewsCount ?? 0}
-                            size="sm"
+                        <div className={css.pharmacyIdentity}>
+                          <TableImagePreview
+                            src={group.pharmacyImageUrl}
+                            alt={`${group.pharmacyName} photo`}
+                            fallback={formatInitials(group.pharmacyName, 'P')}
+                            size={52}
                           />
+
+                          <div className={css.pharmacyInfo}>
+                            <p className={css.groupKicker}>Pharmacy order</p>
+
+                            <h2 className={css.pharmacyGroupTitle}>
+                              {group.pharmacyName}
+                            </h2>
+
+                            <RatingSummary
+                              className={css.pharmacyRating}
+                              rating={group.pharmacyRating}
+                              reviewsCount={group.pharmacyReviewsCount ?? 0}
+                              size="sm"
+                            />
+                          </div>
                         </div>
 
                         <div className={css.pharmacyActions}>

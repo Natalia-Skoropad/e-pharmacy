@@ -6,12 +6,14 @@ import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
 import {
   DELIVERY_METHODS,
+  ORDER_CREATED_BY_TYPES,
   ORDER_STATUSES,
   PAYMENT_METHODS,
 } from '@e-pharmacy/config/orders';
 
 import {
   DELIVERY_METHOD_LABELS,
+  ORDER_CREATED_BY_LABELS,
   ORDER_STATUS_PRESENTATION,
   PAYMENT_METHOD_LABELS,
   USER_ROLE_LABELS,
@@ -58,7 +60,7 @@ import { useAuth } from '@e-pharmacy/auth/react';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
@@ -97,6 +99,7 @@ import type { ActiveSession, AuthUser } from '@e-pharmacy/types/auth';
 import type {
   ClientOrder,
   DeliveryMethod,
+  OrderCreatedByType,
   OrderStatus,
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
@@ -161,6 +164,17 @@ const FAVORITE_COUNTS_PER_PAGE = 1;
 
 //===================================================================
 
+function truncateOrderComment(value?: string): string {
+  const normalized = value?.trim() ?? '';
+
+  if (!normalized) return '—';
+  if (normalized.length <= 50) return normalized;
+
+  return `${normalized.slice(0, 50)}...`;
+}
+
+//===================================================================
+
 type ClientOrdersFilterState = Readonly<{
   date: { from: string; to: string };
   pharmacy: string;
@@ -168,6 +182,7 @@ type ClientOrdersFilterState = Readonly<{
   deliveryMethod: 'all' | DeliveryMethod;
   paymentMethod: 'all' | PaymentMethod;
   status: 'all' | OrderStatus;
+  createdByType: 'all' | OrderCreatedByType;
 }>;
 
 const DEFAULT_CLIENT_ORDERS_FILTERS: ClientOrdersFilterState = {
@@ -177,6 +192,7 @@ const DEFAULT_CLIENT_ORDERS_FILTERS: ClientOrdersFilterState = {
   deliveryMethod: 'all',
   paymentMethod: 'all',
   status: 'all',
+  createdByType: 'all',
 };
 
 const DELIVERY_METHOD_OPTIONS: Array<
@@ -206,6 +222,16 @@ const ORDER_STATUS_OPTIONS: Array<
   ...ORDER_STATUSES.map((status) => ({
     value: status,
     label: ORDER_STATUS_PRESENTATION[status].label,
+  })),
+];
+
+const ORDER_CREATED_BY_OPTIONS: Array<
+  SelectOption<ClientOrdersFilterState['createdByType']>
+> = [
+  { value: 'all', label: 'All' },
+  ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
+    value: createdByType,
+    label: ORDER_CREATED_BY_LABELS[createdByType],
   })),
 ];
 
@@ -400,6 +426,10 @@ function AuthenticatedProfilePageContent({
           ? undefined
           : ordersFilters.paymentMethod,
       status: ordersFilters.status === 'all' ? undefined : ordersFilters.status,
+      createdByType:
+        ordersFilters.createdByType === 'all'
+          ? undefined
+          : ordersFilters.createdByType,
     }),
     [ordersCurrentPage, ordersFilters, ordersRowsPerPage]
   );
@@ -410,7 +440,8 @@ function AuthenticatedProfilePageContent({
     Boolean(ordersFilters.orderNumber.trim()),
     ordersFilters.deliveryMethod !== 'all',
     ordersFilters.paymentMethod !== 'all',
-    ordersFilters.status !== 'all'
+    ordersFilters.status !== 'all',
+    ordersFilters.createdByType !== 'all'
   );
 
   const hasActiveOrdersFilters = ordersActiveFiltersCount > 0;
@@ -468,9 +499,24 @@ function AuthenticatedProfilePageContent({
         render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
       },
       {
+        key: 'clientComment',
+        title: <TableHeaderTitle parts={['Client', 'comment']} />,
+        render: (order) => truncateOrderComment(order.comment),
+      },
+      {
+        key: 'totalQuantity',
+        title: <TableHeaderTitle parts={['Total', 'quantity']} />,
+        render: (order) => order.totalItems,
+      },
+      {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order', 'amount']} />,
-        render: (order) => formatMoney(order.totalPrice) ?? '—',
+        title: <TableHeaderTitle parts={['Order amount,', '₴']} />,
+        render: (order) => formatAmount(order.totalPrice) ?? '—',
+      },
+      {
+        key: 'createdBy',
+        title: <TableHeaderTitle parts={['Created', 'by']} />,
+        render: (order) => ORDER_CREATED_BY_LABELS[order.createdByType],
       },
       {
         key: 'status',
@@ -1036,7 +1082,7 @@ function AuthenticatedProfilePageContent({
               {activeTab === 'data' ? (
                 <div className={css.tabPanel} role="tabpanel">
                   <section
-                    className={css.panelSection}
+                    className={`${css.panelSection} ${css.profileDataSection}`}
                     aria-labelledby="personal-data-title"
                   >
                     <div className={css.panelHeader}>
@@ -1187,14 +1233,28 @@ function AuthenticatedProfilePageContent({
                     className={css.panelSection}
                     aria-labelledby="sessions-title"
                   >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="sessions-title">
-                        Active sessions and devices
-                      </h2>
-                      <p className={css.panelText}>
-                        Review devices signed in to your account and revoke
-                        sessions you no longer use.
-                      </p>
+                    <div className={css.sessionsHeader}>
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="sessions-title">
+                          Active sessions and devices
+                        </h2>
+                        <p className={css.panelText}>
+                          Review devices signed in to your account and revoke
+                          sessions you no longer use.
+                        </p>
+                      </div>
+
+                      {logoutAll ? (
+                        <Button
+                          className={css.sessionsSignOutButton}
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => void handleLogoutAllSessions()}
+                        >
+                          Sign out all devices
+                        </Button>
+                      ) : null}
                     </div>
 
                     {isSessionsLoading ? (
@@ -1238,17 +1298,6 @@ function AuthenticatedProfilePageContent({
                         ))}
                       </ul>
                     )}
-
-                    {logoutAll ? (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => void handleLogoutAllSessions()}
-                      >
-                        Sign out all devices
-                      </Button>
-                    ) : null}
                   </section>
                 </div>
               ) : null}
@@ -1263,45 +1312,50 @@ function AuthenticatedProfilePageContent({
                     </p>
                   </div>
 
-                  <div className={css.ordersSearchGrid}>
-                    <SearchInput
-                      id="profile-orders-number-search"
-                      label="Order number search"
-                      value={ordersFilters.orderNumber}
-                      placeholder="Order number"
-                      isActive={Boolean(ordersFilters.orderNumber)}
-                      onChange={(orderNumber) =>
-                        handleOrdersFiltersChange({
-                          ...ordersFilters,
-                          orderNumber,
-                        })
-                      }
-                    />
-
-                    <SearchInput
-                      id="profile-orders-pharmacy-search"
-                      label="Pharmacy name search"
-                      value={ordersFilters.pharmacy}
-                      placeholder="Pharmacy name"
-                      isActive={Boolean(ordersFilters.pharmacy)}
-                      onChange={(pharmacy) =>
-                        handleOrdersFiltersChange({
-                          ...ordersFilters,
-                          pharmacy,
-                        })
-                      }
-                    />
-
-                    <div className={css.ordersSearchAction}>
-                      <FiltersButton
-                        activeCount={ordersActiveFiltersCount}
-                        controlsId="profile-orders-filters-panel"
-                        isExpanded={isOrdersFiltersOpen}
-                        onClick={() => setIsOrdersFiltersOpen(true)}
-                        className={css.ordersFilterButton}
+                  <section
+                    className={css.ordersFiltersCard}
+                    aria-label="Order search and filters"
+                  >
+                    <div className={css.ordersSearchGrid}>
+                      <SearchInput
+                        id="profile-orders-number-search"
+                        label="Order number search"
+                        value={ordersFilters.orderNumber}
+                        placeholder="Order number"
+                        isActive={Boolean(ordersFilters.orderNumber)}
+                        onChange={(orderNumber) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            orderNumber,
+                          })
+                        }
                       />
+
+                      <SearchInput
+                        id="profile-orders-pharmacy-search"
+                        label="Pharmacy name search"
+                        value={ordersFilters.pharmacy}
+                        placeholder="Pharmacy name"
+                        isActive={Boolean(ordersFilters.pharmacy)}
+                        onChange={(pharmacy) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            pharmacy,
+                          })
+                        }
+                      />
+
+                      <div className={css.ordersSearchAction}>
+                        <FiltersButton
+                          activeCount={ordersActiveFiltersCount}
+                          controlsId="profile-orders-filters-panel"
+                          isExpanded={isOrdersFiltersOpen}
+                          onClick={() => setIsOrdersFiltersOpen(true)}
+                          className={css.ordersFilterButton}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </section>
 
                   <div
                     className={css.ordersTableSection}
@@ -1316,12 +1370,13 @@ function AuthenticatedProfilePageContent({
                         />
                       </div>
 
-                      <CountLabel
-                        className={css.ordersCountLabel}
-                        shown={orders.length}
-                        total={effectiveOrdersCount}
-                        label="orders"
-                      />
+                      <div className={css.ordersCountLabelWrap}>
+                        <CountLabel
+                          shown={orders.length}
+                          total={effectiveOrdersCount}
+                          label="orders"
+                        />
+                      </div>
                     </div>
 
                     <DataTable
@@ -1350,7 +1405,6 @@ function AuthenticatedProfilePageContent({
                       id="profile-orders-filters-panel"
                       eyebrow="Orders"
                       hasActiveFilters={hasActiveOrdersFilters}
-                      resetHref="#profile-orders-table"
                       onClose={() => setIsOrdersFiltersOpen(false)}
                       onReset={() => {
                         resetOrdersFilters();
@@ -1414,6 +1468,20 @@ function AuthenticatedProfilePageContent({
                           handleOrdersFiltersChange({
                             ...ordersFilters,
                             status,
+                          })
+                        }
+                      />
+
+                      <SelectField
+                        id="profile-orders-created-by"
+                        label="Created by"
+                        value={ordersFilters.createdByType}
+                        options={ORDER_CREATED_BY_OPTIONS}
+                        isActive={ordersFilters.createdByType !== 'all'}
+                        onChange={(createdByType) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            createdByType,
                           })
                         }
                       />

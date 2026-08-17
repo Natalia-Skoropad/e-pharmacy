@@ -7,6 +7,7 @@ import { buildCheckoutPath } from '@/lib/routes';
 export type CartPharmacyGroup = Readonly<{
   pharmacyId: string;
   pharmacyName: string;
+  pharmacyImageUrl?: string;
   items: readonly Cart['items'][number][];
   totalItems: number;
   totalPrice: number;
@@ -44,6 +45,9 @@ export function groupCartItemsByPharmacy(
       const group = {
         pharmacyId,
         pharmacyName: firstItem.pharmacyName,
+        ...(firstItem.pharmacyImageUrl !== undefined
+          ? { pharmacyImageUrl: firstItem.pharmacyImageUrl }
+          : {}),
         items: Object.freeze([...groupItems]),
         totalItems: groupItems.reduce(
           (total, item) => total + item.quantity,

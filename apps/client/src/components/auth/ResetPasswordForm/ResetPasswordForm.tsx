@@ -2,8 +2,10 @@
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type ChangeEvent,
   type FormEvent,
 } from 'react';
@@ -44,6 +46,12 @@ type ResetPasswordFormProps = {
 
 //===================================================================
 
+const subscribeToClientReady = () => () => undefined;
+const getClientReadySnapshot = () => true;
+const getServerReadySnapshot = () => false;
+
+//===================================================================
+
 function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
   const toast = useToast();
   const router = useRouter();
@@ -58,11 +66,19 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
   const [touchedFields, setTouchedFields] =
     useState<ResetPasswordTouchedFields>({});
 
-  const [token] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-
-    return captureResetPasswordToken(window.location.href).token;
-  });
+  const isClientReady = useSyncExternalStore(
+    subscribeToClientReady,
+    getClientReadySnapshot,
+    getServerReadySnapshot
+  );
+  const token = useMemo(
+    () =>
+      isClientReady
+        ? captureResetPasswordToken(window.location.href).token
+        : null,
+    [isClientReady]
+  );
+  const hasCapturedToken = isClientReady;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submitInFlightRef = useRef(false);
@@ -73,6 +89,8 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
     useState(false);
 
   useEffect(() => {
+    if (!isClientReady) return;
+
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     const captured = captureResetPasswordToken(window.location.href);
 
@@ -83,9 +101,12 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
         captured.sanitizedUrl
       );
     }
-  }, []);
+  }, [isClientReady]);
 
-  const formIsValid = token !== null && isResetPasswordFormValid(values, token);
+  const formIsValid =
+    hasCapturedToken &&
+    Boolean(token) &&
+    isResetPasswordFormValid(values, token ?? '');
 
   const handleChange =
     (field: keyof ResetPasswordFormValues) =>
@@ -170,7 +191,7 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
         <p className={css.text}>{text}</p>
       </div>
 
-      {token !== null && !token ? (
+      {hasCapturedToken && !token ? (
         <p className={css.submitError} role="alert">
           Password reset link is missing. Please request a new link.
         </p>
@@ -214,7 +235,11 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
         type="submit"
         fullWidth
         disabled={
-          token === null || isSubmitting || isBootstrapping || !formIsValid
+          !hasCapturedToken ||
+          !token ||
+          isSubmitting ||
+          isBootstrapping ||
+          !formIsValid
         }
       >
         {isSubmitting ? 'Saving new password...' : 'Save new password'}

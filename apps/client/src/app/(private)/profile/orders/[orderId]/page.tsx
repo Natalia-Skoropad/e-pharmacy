@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 
 import {
   ORDER_DETAILS_DESCRIPTION,
@@ -6,7 +6,12 @@ import {
   createPageMetadata,
 } from '@/lib/seo/server';
 
-import { getOrderIdFromPathParam, ROUTES } from '@/lib/routes';
+import {
+  getLegacyOrderRedirectPath,
+  getOrderIdFromPathParam,
+  ROUTES,
+} from '@/lib/routes';
+
 import { OrderDetailsPageContent } from '@/components/profile';
 
 //===================================================================
@@ -26,9 +31,7 @@ export async function generateMetadata({ params }: OrderDetailsPageProps) {
   return createPageMetadata({
     title: ORDER_DETAILS_TITLE,
     description: ORDER_DETAILS_DESCRIPTION,
-    path: cleanOrderId
-      ? `${ROUTES.PROFILE}/orders/${orderId}`
-      : ROUTES.PROFILE,
+    path: cleanOrderId ? `${ROUTES.PROFILE}/orders/${orderId}` : ROUTES.PROFILE,
     noIndex: true,
   });
 }
@@ -37,8 +40,11 @@ export async function generateMetadata({ params }: OrderDetailsPageProps) {
 
 async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
-  const cleanOrderId = getOrderIdFromPathParam(orderId);
+  const legacyRedirectPath = getLegacyOrderRedirectPath(orderId);
 
+  if (legacyRedirectPath) permanentRedirect(legacyRedirectPath);
+
+  const cleanOrderId = getOrderIdFromPathParam(orderId);
   if (!cleanOrderId) notFound();
 
   return <OrderDetailsPageContent orderId={cleanOrderId} />;

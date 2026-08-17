@@ -104,7 +104,7 @@ export function PharmacyContactPanel({
       </dl>
 
       <div className={css.linkRow}>
-        <LinkButton className={css.link} href={productsHref}>
+        <LinkButton className={css.link} href={productsHref} fullWidth>
           View products from this pharmacy
         </LinkButton>
       </div>

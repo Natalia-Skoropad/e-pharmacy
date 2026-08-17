@@ -67,7 +67,7 @@ export function FilterDrawer({
 
         <div className={css.controls}>{children}</div>
 
-        {hasActiveFilters && resetHref ? (
+        {hasActiveFilters && (resetHref || onReset) ? (
           <ResetFiltersButton
             className={css.resetButton}
             href={resetHref}

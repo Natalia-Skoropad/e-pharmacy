@@ -1,5 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
 
+import { formatInitials } from '@e-pharmacy/ui/data-display';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
@@ -30,6 +32,12 @@ function CheckoutOrderPanel({
       </h2>
 
       <div className={css.orderCard}>
+        <TableImagePreview
+          src={orderGroup.pharmacyImageUrl}
+          alt={`${orderGroup.pharmacyName} photo`}
+          fallback={formatInitials(orderGroup.pharmacyName, 'P')}
+          size={48}
+        />
         <h3>{orderGroup.pharmacyName}</h3>
       </div>
 

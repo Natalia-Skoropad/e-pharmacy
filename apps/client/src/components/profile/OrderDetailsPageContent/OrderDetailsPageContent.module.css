@@ -114,6 +114,14 @@
   padding: 16px;
 }
 
+.pharmacyIdentity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
 .pharmacyTitle,
 .summaryTitle {
   font-size: var(--fz-24);

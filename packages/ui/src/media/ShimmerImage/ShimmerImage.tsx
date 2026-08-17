@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Image, { type ImageProps } from 'next/image';
 import clsx from 'clsx';
 
+import { normalizeImageSource } from '../image-source';
+
 import css from './ShimmerImage.module.css';
 
 //===============================================================
@@ -34,6 +36,7 @@ function ShimmerImage({
     <Wrap className={clsx(css.wrap, wrapClassName)}>
       <Image
         {...props}
+        src={normalizeImageSource(props.src)}
         alt={alt}
         fill
         className={clsx(css.img, className)}

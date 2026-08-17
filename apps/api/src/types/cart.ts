@@ -41,6 +41,7 @@ export type CartItemResponseDto = {
   pharmacyId: string;
   product: CartProductResponseDto;
   pharmacyName: string;
+  pharmacyImageUrl?: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
   stockQuantity: number;

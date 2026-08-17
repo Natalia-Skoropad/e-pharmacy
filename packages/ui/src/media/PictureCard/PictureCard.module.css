@@ -55,14 +55,51 @@
   justify-content: center;
 }
 
-.dangerButton {
+.card .buttons .dangerButton {
   color: var(--color-error);
-  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+  background-color: transparent;
+  border-color: var(--color-error);
 }
 
-.buttons .dangerButton:hover:not(:disabled),
-.buttons .dangerButton:focus-visible:not(:disabled) {
+.card .buttons .dangerButton:hover:not(:disabled),
+.card .buttons .dangerButton:focus-visible:not(:disabled) {
   color: var(--color-white);
   background-color: var(--color-error);
   border-color: var(--color-error);
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    align-items: start;
+  }
+
+  .hint {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .buttons {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: -4px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .card {
+    align-items: center;
+  }
+
+  .hint {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: auto;
+  }
+
+  .buttons {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    margin-top: 0;
+  }
 }
