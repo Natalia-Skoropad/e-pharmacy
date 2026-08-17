@@ -254,7 +254,9 @@ function serializeOrder(
     createdAt: order.createdAt.toISOString(),
     userId: order.userId.toString(),
     clientId: order.userId.toString(),
-    clientName: clientUser?.name ?? undefined,
+    clientName: clientUser?.isDefaultPharmacyClient
+      ? 'Walk-in client'
+      : (clientUser?.name ?? undefined),
     clientPhotoUrl: clientUser?.isDefaultPharmacyClient
       ? order.pharmacySnapshot.imageUrl
       : (clientUser?.pictureUrl ?? undefined),
@@ -268,7 +270,9 @@ function serializeOrder(
       ? {
           client: {
             id: clientUser._id.toString(),
-            name: clientUser.name ?? clientUser.email ?? 'Client',
+            name: clientUser.isDefaultPharmacyClient
+              ? 'Walk-in client'
+              : (clientUser.name ?? clientUser.email ?? 'Client'),
             ...(clientUser.isDefaultPharmacyClient
               ? order.pharmacySnapshot.imageUrl
                 ? { photoUrl: order.pharmacySnapshot.imageUrl }
@@ -281,6 +285,9 @@ function serializeOrder(
       : {}),
     pharmacyId: order.pharmacyId.toString(),
     pharmacyName: order.pharmacySnapshot.name,
+    ...(order.pharmacySnapshot.imageUrl
+      ? { pharmacyImageUrl: order.pharmacySnapshot.imageUrl }
+      : {}),
     ...(typeof order.pharmacySnapshot.rating === 'number'
       ? { pharmacyRating: order.pharmacySnapshot.rating }
       : {}),
@@ -2114,6 +2121,10 @@ export async function getOrdersService(
     filter['delivery.details.recipientName'] = createSafeRegExp(
       query.client.trim()
     );
+  }
+
+  if (query.pharmacy?.trim()) {
+    filter['pharmacySnapshot.name'] = createSafeRegExp(query.pharmacy.trim());
   }
 
   if (query.clientId) {

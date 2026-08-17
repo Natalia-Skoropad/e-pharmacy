@@ -213,6 +213,7 @@
         "pharmacyReviewsCount",
         "pharmacyPhone",
         "pharmacyEmail",
+        "pharmacyImageUrl",
         "pharmacyAddress",
         "pharmacyWorkingHours",
         "rejectionReason",

@@ -1,4 +1,4 @@
-import { Wallet } from 'lucide-react';
+import { Mail, Wallet } from 'lucide-react';
 
 import { PAYMENT_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
@@ -99,8 +99,11 @@ function CheckoutPaymentMethod({
                   </dl>
 
                   <p className={css.emailNote}>
-                    After payment, send the receipt to the pharmacy email for
-                    faster processing.
+                    <Mail size={18} aria-hidden="true" />
+                    <span>
+                      After payment, send the receipt to the pharmacy email for
+                      faster processing.
+                    </span>
                   </p>
                 </>
               ) : (

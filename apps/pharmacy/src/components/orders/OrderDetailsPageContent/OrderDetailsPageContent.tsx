@@ -2196,7 +2196,7 @@ function OrderDetailsPageContent({
                     title="Client selection"
                     icon={<UsersRound size={20} aria-hidden="true" />}
                   >
-                    The default walk-in customer is selected automatically. Only
+                    The default walk-in client is selected automatically. Only
                     active clients can be used for a new order.
                   </InfoTooltip>
                 }

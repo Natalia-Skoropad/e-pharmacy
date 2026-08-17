@@ -41,7 +41,7 @@ test('closes the mobile overlay in state at desktop breakpoint', async () => {
 
 //===================================================================
 
-test('keeps public feature actions as real links and the shell keyboard-skippable', async () => {
+test('keeps public feature actions as real links and exposes the scroll-to-top control', async () => {
   const [features, shell] = await Promise.all([
     readComponent('./home/HomeFeatureCards/HomeFeatureCards.tsx'),
     readComponent('./layout/AppShell/AppShell.tsx'),
@@ -50,7 +50,7 @@ test('keeps public feature actions as real links and the shell keyboard-skippabl
   assert.match(features, /<LinkButton/);
   assert.match(features, /href=\{feature\.href\}/);
   assert.doesNotMatch(features, /router\.push|useClientAuthCapabilities/);
-  assert.match(shell, /href="#main-content"/);
+  assert.match(shell, /<ScrollToTopButton \/>/);
   assert.match(shell, /id="main-content"/);
 });
 
@@ -100,7 +100,7 @@ test('keeps CartPageContent outside its own feature barrel cycle', async () => {
 
 //===================================================================
 
-test('keeps the restored home advantages and customer review sections', async () => {
+test('keeps the restored home advantages and client review sections', async () => {
   const [homePage, homeContent, reviews] = await Promise.all([
     readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
     readComponent('./home/config/content.ts'),

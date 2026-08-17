@@ -219,14 +219,9 @@
   white-space: nowrap;
 }
 
-.totalPriceRow dt {
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  color: var(--color-accent);
-}
-
+.totalPriceRow dt,
 .totalPriceRow dd {
-  font-size: var(--fz-20);
+  font-size: var(--fz-16);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
@@ -234,13 +229,10 @@
 
 .unitPriceRow dt,
 .unitPriceRow dd {
-  font-size: var(--fz-13);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
-}
-
-.unitPriceRow dd {
-  font-weight: var(--fw-medium);
 }
 
 .quantityText {

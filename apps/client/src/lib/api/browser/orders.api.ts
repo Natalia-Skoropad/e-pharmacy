@@ -1,5 +1,7 @@
 import 'client-only';
 
+import { appendQueryParams } from '@e-pharmacy/api-client/transport';
+
 import {
   parseApiResponseData,
   parseCheckoutOrderResponse,
@@ -14,6 +16,9 @@ import type {
   CheckoutOrderResponse,
   ClientOrderDetailsResponse,
   ClientOrdersResponse,
+  DeliveryMethod,
+  OrderStatus,
+  PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
 import { clientApiRoutes as ROUTES } from '@/lib/api/routes/client-api-routes';
@@ -22,6 +27,20 @@ import type {
   MutationRequestOptions,
   ReadRequestOptions,
 } from '@/lib/api/request-options';
+
+//===================================================================
+
+export type ClientOrdersQueryParams = Readonly<{
+  page?: number;
+  perPage?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  pharmacy?: string;
+  orderNumber?: string;
+  deliveryMethod?: DeliveryMethod;
+  paymentMethod?: PaymentMethod;
+  status?: OrderStatus;
+}>;
 
 //===================================================================
 
@@ -41,9 +60,10 @@ export async function checkoutOrder(
 //===================================================================
 
 export async function getOrders(
+  params: ClientOrdersQueryParams = {},
   options?: ReadRequestOptions
 ): Promise<ClientOrdersResponse> {
-  const path = ROUTES.orders.list;
+  const path = appendQueryParams(ROUTES.orders.list, params);
 
   return parseApiResponseData(
     await localApiRequest(path, options),

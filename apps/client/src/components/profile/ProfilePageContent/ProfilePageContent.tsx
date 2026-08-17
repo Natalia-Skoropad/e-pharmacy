@@ -4,36 +4,54 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
 
-import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import {
+  DELIVERY_METHODS,
+  ORDER_STATUSES,
+  PAYMENT_METHODS,
+} from '@e-pharmacy/config/orders';
 
 import {
+  DELIVERY_METHOD_LABELS,
+  ORDER_STATUS_PRESENTATION,
+  PAYMENT_METHOD_LABELS,
   USER_ROLE_LABELS,
   USER_STATUS_PRESENTATION,
 } from '@e-pharmacy/config/presentation';
 
 import {
   Button,
+  FiltersButton,
   LoadingSpinner,
   TextActionButton,
 } from '@e-pharmacy/ui/primitives';
 
-import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { LinkButton, PaginationView, Tabs } from '@e-pharmacy/ui/navigation';
 
 import {
   CountLabel,
   DataTable,
+  formatInitials,
+  TableDateTime,
+  TableHeaderTitle,
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
-import { PictureCard } from '@e-pharmacy/ui/media';
-import { Tabs } from '@e-pharmacy/ui/navigation';
+import { PictureCard, TableImagePreview } from '@e-pharmacy/ui/media';
 
 import {
   AddressInput,
+  DateFilter,
   NameInput,
   PasswordInput,
   PhoneInput,
+  RowsPerPageSelect,
+  SearchInput,
+  SelectField,
+  type RowsPerPageValue,
+  type SelectOption,
 } from '@e-pharmacy/ui/forms';
+
+import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
@@ -42,6 +60,7 @@ import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
 import {
   CHANGE_PASSWORD_FORM_FIELDS,
@@ -74,7 +93,14 @@ import {
 } from '@e-pharmacy/validation/files';
 
 import type { ActiveSession, AuthUser } from '@e-pharmacy/types/auth';
-import type { ClientOrder } from '@e-pharmacy/types/orders';
+
+import type {
+  ClientOrder,
+  DeliveryMethod,
+  OrderStatus,
+  PaymentMethod,
+} from '@e-pharmacy/types/orders';
+
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
@@ -132,7 +158,56 @@ const TABS: Array<{
 
 const FAVORITES_PER_PAGE = 16;
 const FAVORITE_COUNTS_PER_PAGE = 1;
-const ORDERS_VISIBLE_STEP = 15;
+
+//===================================================================
+
+type ClientOrdersFilterState = Readonly<{
+  date: { from: string; to: string };
+  pharmacy: string;
+  orderNumber: string;
+  deliveryMethod: 'all' | DeliveryMethod;
+  paymentMethod: 'all' | PaymentMethod;
+  status: 'all' | OrderStatus;
+}>;
+
+const DEFAULT_CLIENT_ORDERS_FILTERS: ClientOrdersFilterState = {
+  date: { from: '', to: '' },
+  pharmacy: '',
+  orderNumber: '',
+  deliveryMethod: 'all',
+  paymentMethod: 'all',
+  status: 'all',
+};
+
+const DELIVERY_METHOD_OPTIONS: Array<
+  SelectOption<ClientOrdersFilterState['deliveryMethod']>
+> = [
+  { value: 'all', label: 'All' },
+  ...DELIVERY_METHODS.map((deliveryMethod) => ({
+    value: deliveryMethod,
+    label: DELIVERY_METHOD_LABELS[deliveryMethod],
+  })),
+];
+
+const PAYMENT_METHOD_OPTIONS: Array<
+  SelectOption<ClientOrdersFilterState['paymentMethod']>
+> = [
+  { value: 'all', label: 'All' },
+  ...PAYMENT_METHODS.map((paymentMethod) => ({
+    value: paymentMethod,
+    label: PAYMENT_METHOD_LABELS[paymentMethod],
+  })),
+];
+
+const ORDER_STATUS_OPTIONS: Array<
+  SelectOption<ClientOrdersFilterState['status']>
+> = [
+  { value: 'all', label: 'All' },
+  ...ORDER_STATUSES.map((status) => ({
+    value: status,
+    label: ORDER_STATUS_PRESENTATION[status].label,
+  })),
+];
 
 //===================================================================
 
@@ -187,12 +262,26 @@ function AuthenticatedProfilePageContent({
   const picturePreview =
     pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
   const [orders, setOrders] = useState<ClientOrder[]>([]);
+
+  const [ordersFilters, setOrdersFilters] = useState<ClientOrdersFilterState>(
+    DEFAULT_CLIENT_ORDERS_FILTERS
+  );
+
+  const [ordersRowsPerPage, setOrdersRowsPerPage] =
+    useState<RowsPerPageValue>(20);
+
+  const [ordersCurrentPage, setOrdersCurrentPage] = useState(1);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersTotalPages, setOrdersTotalPages] = useState(0);
+
+  const [ordersEarliestCreatedAt, setOrdersEarliestCreatedAt] = useState<
+    string | null
+  >(null);
+
+  const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
   const [sessionsError, setSessionsError] = useState('');
-
-  const [ordersVisibleCount, setOrdersVisibleCount] =
-    useState(ORDERS_VISIBLE_STEP);
 
   const [favoriteProducts, setFavoriteProducts] = useState<
     ProductCardSummary[]
@@ -259,7 +348,7 @@ function AuthenticatedProfilePageContent({
   const effectiveFavoritePharmaciesCount = canUseAuthFeatures
     ? favoritePharmaciesCount
     : 0;
-  const effectiveOrdersCount = canUseAuthFeatures ? orders.length : 0;
+  const effectiveOrdersCount = canUseAuthFeatures ? ordersTotal : 0;
 
   const tabs = useMemo(
     () =>
@@ -294,26 +383,48 @@ function AuthenticatedProfilePageContent({
     ]
   );
 
-  const visibleOrders = useMemo(
-    () => (canUseAuthFeatures ? orders.slice(0, ordersVisibleCount) : []),
-    [canUseAuthFeatures, orders, ordersVisibleCount]
+  const ordersQueryParams = useMemo(
+    () => ({
+      page: ordersCurrentPage,
+      perPage: ordersRowsPerPage,
+      dateFrom: ordersFilters.date.from || undefined,
+      dateTo: ordersFilters.date.to || undefined,
+      pharmacy: ordersFilters.pharmacy.trim() || undefined,
+      orderNumber: ordersFilters.orderNumber.trim() || undefined,
+      deliveryMethod:
+        ordersFilters.deliveryMethod === 'all'
+          ? undefined
+          : ordersFilters.deliveryMethod,
+      paymentMethod:
+        ordersFilters.paymentMethod === 'all'
+          ? undefined
+          : ordersFilters.paymentMethod,
+      status: ordersFilters.status === 'all' ? undefined : ordersFilters.status,
+    }),
+    [ordersCurrentPage, ordersFilters, ordersRowsPerPage]
   );
 
-  const hiddenOrdersCount = Math.max(
-    effectiveOrdersCount - visibleOrders.length,
-    0
+  const ordersActiveFiltersCount = countTrueConditions(
+    Boolean(ordersFilters.date.from || ordersFilters.date.to),
+    Boolean(ordersFilters.pharmacy.trim()),
+    Boolean(ordersFilters.orderNumber.trim()),
+    ordersFilters.deliveryMethod !== 'all',
+    ordersFilters.paymentMethod !== 'all',
+    ordersFilters.status !== 'all'
   );
+
+  const hasActiveOrdersFilters = ordersActiveFiltersCount > 0;
 
   const orderColumns = useMemo<Array<DataTableColumn<ClientOrder>>>(
     () => [
       {
         key: 'date',
-        title: 'Date',
-        render: (order) => formatShortDate(order.createdAt) ?? '—',
+        title: <TableHeaderTitle parts={['Order', 'date']} />,
+        render: (order) => <TableDateTime value={order.createdAt} />,
       },
       {
         key: 'orderNumber',
-        title: 'Order number',
+        title: <TableHeaderTitle parts={['Order', 'number']} />,
         render: (order) => (
           <TextActionButton
             className={css.orderLink}
@@ -324,8 +435,19 @@ function AuthenticatedProfilePageContent({
         ),
       },
       {
+        key: 'pharmacyPhoto',
+        title: <TableHeaderTitle parts={['Pharmacy', 'photo']} />,
+        render: (order) => (
+          <TableImagePreview
+            src={order.pharmacyImageUrl}
+            alt={`${order.pharmacyName} photo`}
+            fallback={formatInitials(order.pharmacyName, 'P')}
+          />
+        ),
+      },
+      {
         key: 'pharmacy',
-        title: 'Pharmacy',
+        title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
         render: (order) => (
           <TextActionButton
             className={css.pharmacyLink}
@@ -336,13 +458,23 @@ function AuthenticatedProfilePageContent({
         ),
       },
       {
+        key: 'deliveryMethod',
+        title: <TableHeaderTitle parts={['Delivery', 'method']} />,
+        render: (order) => DELIVERY_METHOD_LABELS[order.delivery.method],
+      },
+      {
+        key: 'paymentMethod',
+        title: <TableHeaderTitle parts={['Payment', 'method']} />,
+        render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
+      },
+      {
         key: 'amount',
-        title: 'Order amount',
+        title: <TableHeaderTitle parts={['Order', 'amount']} />,
         render: (order) => formatMoney(order.totalPrice) ?? '—',
       },
       {
         key: 'status',
-        title: 'Status',
+        title: <TableHeaderTitle parts={['Order', 'status']} />,
         render: (order) => (
           <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
         ),
@@ -563,13 +695,23 @@ function AuthenticatedProfilePageContent({
     async function loadOrders() {
       try {
         setIsOrdersLoading(true);
-        const response = await getOrders({ signal: controller.signal });
+        const response = await getOrders(ordersQueryParams, {
+          signal: controller.signal,
+        });
 
         if (!controller.signal.aborted) {
           setOrders([...response.items]);
+          setOrdersTotal(response.total);
+          setOrdersTotalPages(response.totalPages);
+          setOrdersEarliestCreatedAt(response.earliestCreatedAt);
         }
       } catch {
-        if (!controller.signal.aborted) setOrders([]);
+        if (!controller.signal.aborted) {
+          setOrders([]);
+          setOrdersTotal(0);
+          setOrdersTotalPages(0);
+          setOrdersEarliestCreatedAt(null);
+        }
       } finally {
         if (!controller.signal.aborted) setIsOrdersLoading(false);
       }
@@ -580,7 +722,7 @@ function AuthenticatedProfilePageContent({
     return () => {
       controller.abort();
     };
-  }, [canUseAuthFeatures]);
+  }, [canUseAuthFeatures, ordersQueryParams]);
 
   useEffect(() => {
     if (!canUseAuthFeatures || activeTab !== 'sessions') return;
@@ -615,7 +757,6 @@ function AuthenticatedProfilePageContent({
 
   const handleTabChange = (nextTab: ProfileTab) => {
     setActiveTab(nextTab);
-    setOrdersVisibleCount(ORDERS_VISIBLE_STEP);
 
     if (!canUseAuthFeatures) return;
 
@@ -627,6 +768,23 @@ function AuthenticatedProfilePageContent({
       void loadFavoritePharmacies();
     }
   };
+
+  const handleOrdersFiltersChange = (nextFilters: ClientOrdersFilterState) => {
+    setOrdersFilters(nextFilters);
+    setOrdersCurrentPage(1);
+  };
+
+  const handleOrdersRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
+    setOrdersRowsPerPage(nextRowsPerPage);
+    setOrdersCurrentPage(1);
+  };
+
+  const resetOrdersFilters = () => {
+    setOrdersFilters(DEFAULT_CLIENT_ORDERS_FILTERS);
+    setOrdersCurrentPage(1);
+  };
+
+  //===================================================================
 
   const handleRevokeSession = async (sessionId: string) => {
     if (sessionMutationInFlightRef.current) return;
@@ -1097,40 +1255,169 @@ function AuthenticatedProfilePageContent({
 
               {activeTab === 'orders' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <div className={css.ordersHeader}>
+                  <div className={css.panelHeader}>
                     <h2 className={css.panelTitle}>My orders</h2>
-                    <CountLabel
-                      shown={visibleOrders.length}
-                      total={effectiveOrdersCount}
-                      label="orders"
+                    <p className={css.panelText}>
+                      Search by order number or pharmacy and narrow the list
+                      with order filters.
+                    </p>
+                  </div>
+
+                  <div className={css.ordersSearchGrid}>
+                    <SearchInput
+                      id="profile-orders-number-search"
+                      label="Order number search"
+                      value={ordersFilters.orderNumber}
+                      placeholder="Order number"
+                      isActive={Boolean(ordersFilters.orderNumber)}
+                      onChange={(orderNumber) =>
+                        handleOrdersFiltersChange({
+                          ...ordersFilters,
+                          orderNumber,
+                        })
+                      }
+                    />
+
+                    <SearchInput
+                      id="profile-orders-pharmacy-search"
+                      label="Pharmacy name search"
+                      value={ordersFilters.pharmacy}
+                      placeholder="Pharmacy name"
+                      isActive={Boolean(ordersFilters.pharmacy)}
+                      onChange={(pharmacy) =>
+                        handleOrdersFiltersChange({
+                          ...ordersFilters,
+                          pharmacy,
+                        })
+                      }
+                    />
+
+                    <div className={css.ordersSearchAction}>
+                      <FiltersButton
+                        activeCount={ordersActiveFiltersCount}
+                        controlsId="profile-orders-filters-panel"
+                        isExpanded={isOrdersFiltersOpen}
+                        onClick={() => setIsOrdersFiltersOpen(true)}
+                        className={css.ordersFilterButton}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    className={css.ordersTableSection}
+                    id="profile-orders-table"
+                  >
+                    <div className={css.ordersToolbar}>
+                      <div className={css.ordersRowsControl}>
+                        <RowsPerPageSelect
+                          id="profile-orders-rows-per-page"
+                          value={ordersRowsPerPage}
+                          onChange={handleOrdersRowsPerPageChange}
+                        />
+                      </div>
+
+                      <CountLabel
+                        className={css.ordersCountLabel}
+                        shown={orders.length}
+                        total={effectiveOrdersCount}
+                        label="orders"
+                      />
+                    </div>
+
+                    <DataTable
+                      columns={orderColumns}
+                      items={canUseAuthFeatures ? orders : []}
+                      getItemKey={(order) => String(order.id)}
+                      isLoading={isOrdersLoading}
+                      minWidth={0}
+                      labels={{
+                        loading: 'Loading orders...',
+                        empty: hasActiveOrdersFilters
+                          ? 'No orders found for the selected search and filters. Adjust them or reset the filters.'
+                          : 'Orders will appear here after checkout.',
+                      }}
+                    />
+
+                    <PaginationView
+                      currentPage={ordersCurrentPage}
+                      totalPages={ordersTotalPages}
+                      onPageChange={setOrdersCurrentPage}
                     />
                   </div>
 
-                  <DataTable
-                    columns={orderColumns}
-                    items={visibleOrders}
-                    getItemKey={(order) => String(order.id)}
-                    isLoading={isOrdersLoading}
-                    minWidth={620}
-                    labels={{
-                      loading: 'Loading orders...',
-                      empty: 'Orders will appear here after checkout.',
-                    }}
-                  />
-
-                  {hiddenOrdersCount > 0 ? (
-                    <Button
-                      className={css.showMoreButton}
-                      type="button"
-                      variant="secondary"
-                      onClick={() =>
-                        setOrdersVisibleCount(
-                          (prev) => prev + ORDERS_VISIBLE_STEP
-                        )
-                      }
+                  {isOrdersFiltersOpen ? (
+                    <FilterDrawer
+                      id="profile-orders-filters-panel"
+                      eyebrow="Orders"
+                      hasActiveFilters={hasActiveOrdersFilters}
+                      resetHref="#profile-orders-table"
+                      onClose={() => setIsOrdersFiltersOpen(false)}
+                      onReset={() => {
+                        resetOrdersFilters();
+                        setIsOrdersFiltersOpen(false);
+                      }}
                     >
-                      Show more orders ({hiddenOrdersCount})
-                    </Button>
+                      <DateFilter
+                        id="profile-orders-date-filter"
+                        minDate={ordersEarliestCreatedAt ?? undefined}
+                        disabled={!ordersEarliestCreatedAt}
+                        label="Order date"
+                        value={ordersFilters.date}
+                        isActive={Boolean(
+                          ordersFilters.date.from || ordersFilters.date.to
+                        )}
+                        applyOnSubmit
+                        applyLabel="Apply"
+                        onChange={(date) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            date,
+                          })
+                        }
+                      />
+
+                      <SelectField
+                        id="profile-orders-delivery-method"
+                        label="Delivery method"
+                        value={ordersFilters.deliveryMethod}
+                        options={DELIVERY_METHOD_OPTIONS}
+                        isActive={ordersFilters.deliveryMethod !== 'all'}
+                        onChange={(deliveryMethod) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            deliveryMethod,
+                          })
+                        }
+                      />
+
+                      <SelectField
+                        id="profile-orders-payment-method"
+                        label="Payment method"
+                        value={ordersFilters.paymentMethod}
+                        options={PAYMENT_METHOD_OPTIONS}
+                        isActive={ordersFilters.paymentMethod !== 'all'}
+                        onChange={(paymentMethod) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            paymentMethod,
+                          })
+                        }
+                      />
+
+                      <SelectField
+                        id="profile-orders-status"
+                        label="Order status"
+                        value={ordersFilters.status}
+                        options={ORDER_STATUS_OPTIONS}
+                        isActive={ordersFilters.status !== 'all'}
+                        onChange={(status) =>
+                          handleOrdersFiltersChange({
+                            ...ordersFilters,
+                            status,
+                          })
+                        }
+                      />
+                    </FilterDrawer>
                   ) : null}
                 </div>
               ) : null}

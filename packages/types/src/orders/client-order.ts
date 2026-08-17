@@ -89,6 +89,7 @@ export type ClientOrder = Readonly<{
 
   pharmacyId: EntityId;
   pharmacyName: string;
+  pharmacyImageUrl?: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
   pharmacyPhone?: string;

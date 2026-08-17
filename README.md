@@ -151,6 +151,7 @@ Main local values:
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_PHARMACY_APP_URL=http://localhost:3002
 API_BASE_URL=http://localhost:4000
+# Optional only for local `pnpm dev`: dev scripts auto-provision one shared secret.
 BFF_PROXY_SECRET=
 
 # apps/api

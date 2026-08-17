@@ -59,7 +59,7 @@ import css from './ClientsPageContent.module.css';
 
 function isWalkInClient(client: PharmacyClientRow): boolean {
   return (
-    client.isDefault || client.name.trim().toLowerCase() === 'walk-in customer'
+    client.isDefault || client.name.trim().toLowerCase() === 'walk-in client'
   );
 }
 
@@ -182,7 +182,7 @@ function ClientsPageContent({
                 {
                   page: 1,
                   perPage: 20,
-                  name: 'Walk-in customer',
+                  name: 'Walk-in client',
                 },
                 requestOptions
               )
@@ -285,10 +285,10 @@ function ClientsPageContent({
                   {
                     title: 'Repeat clients',
                     description:
-                      'Customers who have completed two or more successful orders in this pharmacy.',
+                      'Clients who have completed two or more successful orders in this pharmacy.',
                   },
                   {
-                    title: 'Walk-in customer',
+                    title: 'Walk-in client',
                     description:
                       'The default active client created when the pharmacy first becomes Active. Use it for counter sales when a visitor has no personal account. Its photo comes from the pharmacy profile, and its purchase statistics are tracked like any other client.',
                   },

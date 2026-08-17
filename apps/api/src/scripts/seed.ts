@@ -1,6 +1,9 @@
+import { createHash } from 'node:crypto';
+
 import mongoose, { Types } from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
+import { env } from '../config/env';
 
 import {
   PHARMACY_STATUSES,
@@ -443,8 +446,17 @@ const PHARMACY_IMAGE_URLS = [
 
 //===============================================================
 
+function createSeedAssetUrl(value: string): string {
+  if (value.startsWith('data:')) return value;
+  return new URL(value, env.CLIENT_APP_URL).toString();
+}
+
+//===============================================================
+
 function createPharmacyImageUrl(index: number): string {
-  return PHARMACY_IMAGE_URLS[index % PHARMACY_IMAGE_URLS.length];
+  return createSeedAssetUrl(
+    PHARMACY_IMAGE_URLS[index % PHARMACY_IMAGE_URLS.length]
+  );
 }
 
 //===============================================================
@@ -680,6 +692,7 @@ ${pharmacyName} keeps public pharmacy data ready for clients after Admin approva
 
 function createVerificationDocuments(email: string) {
   const prefix = email.split('@')[0];
+  const uploadedAt = ACTIVE_PHARMACY_FIRST_ACTIVATED_AT.toISOString();
 
   return [
     {
@@ -697,7 +710,26 @@ function createVerificationDocuments(email: string) {
       size: 156_320,
       type: 'application/pdf',
     },
-  ];
+  ].map((document) => {
+    const sha256 = createHash('sha256')
+      .update(
+        [
+          'e-pharmacy-seed-document',
+          email,
+          document.name,
+          String(document.size),
+          document.type,
+        ].join(':')
+      )
+      .digest('hex');
+
+    return {
+      ...document,
+      id: sha256.slice(0, 24),
+      sha256,
+      uploadedAt,
+    };
+  });
 }
 
 //===============================================================
@@ -735,6 +767,8 @@ type OfferPricePoint = Readonly<{
 }>;
 
 type OfferPriceTimeline = Map<string, OfferPricePoint[]>;
+
+//===============================================================
 
 async function getOfferPriceTimeline(
   offerIds: Types.ObjectId[]
@@ -887,7 +921,9 @@ async function seedPharmacyAccounts(): Promise<number> {
             'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
           bankDetails: createPharmacyAccountBankDetails(seed),
           rating: 0,
-          imageUrl: seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL,
+          imageUrl: createSeedAssetUrl(
+            seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL
+          ),
           description:
             seed.description ??
             createPharmacyAccountDescription(seed.pharmacyName),
@@ -1207,7 +1243,11 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
   await User.updateOne(
     { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
-    { $set: { pictureUrl: '/images/seed/clients/client-008.png' } }
+    {
+      $set: {
+        pictureUrl: createSeedAssetUrl('/images/seed/clients/client-008.png'),
+      },
+    }
   );
   const clientUser = await User.findOneAndUpdate(
     { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
@@ -1220,7 +1260,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
         status: USER_STATUSES.ACTIVE,
         phone: '+380968016907',
         address: '27 Wellness Street, Lviv, Lviv',
-        pictureUrl: '/images/seed/clients/client-008.png',
+        pictureUrl: createSeedAssetUrl('/images/seed/clients/client-008.png'),
       },
     },
     {
@@ -2068,7 +2108,11 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   await User.updateOne(
     { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
-    { $set: { pictureUrl: '/images/seed/clients/client-008.png' } }
+    {
+      $set: {
+        pictureUrl: createSeedAssetUrl('/images/seed/clients/client-008.png'),
+      },
+    }
   );
 
   await User.deleteMany({
@@ -2095,7 +2139,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
                 : USER_STATUSES.ACTIVE,
             phone: client.phone,
             address: client.address,
-            pictureUrl: client.pictureUrl,
+            pictureUrl: createSeedAssetUrl(client.pictureUrl),
             ...(client.statusReason
               ? { statusReason: client.statusReason }
               : {}),
@@ -2848,7 +2892,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           changedAt: createdAt,
           changedBy: pharmacy.ownerId,
           comment:
-            'Order created by the pharmacy manager for a walk-in customer.',
+            'Order created by the pharmacy manager for a walk-in client.',
         },
         {
           status: 'successful',
@@ -3495,6 +3539,8 @@ async function seedOwnProductManagerNotes(): Promise<number> {
   return notes.length;
 }
 
+//===============================================================
+
 const CLIENT_MANAGER_NOTE_TEMPLATES = [
   'Prefers concise updates about order readiness and pickup timing.',
   'Check previous successful purchases before suggesting a replacement product.',
@@ -3647,6 +3693,17 @@ const PRODUCT_REQUEST_SEED_CATEGORIES = [
   'other',
 ] as const;
 
+const PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT = '%PDF-1.4\n%%EOF\n';
+const PRODUCT_REQUEST_SEED_ATTACHMENT_SIZE = Buffer.byteLength(
+  PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
+  'utf8'
+);
+const PRODUCT_REQUEST_SEED_ATTACHMENT_DATA_URL =
+  `data:application/pdf;base64,${Buffer.from(
+    PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
+    'utf8'
+  ).toString('base64')}`;
+
 //===============================================================
 
 function createProductRequestSeedHistory(
@@ -3716,29 +3773,23 @@ function createProductRequestSeedHistory(
 
 //===============================================================
 
-async function seedProductRequests(): Promise<number> {
-  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
+type ProductRequestSeedApprovedProduct = Readonly<{
+  _id: Types.ObjectId;
+  name: string;
+  article: string;
+  category: (typeof PRODUCT_REQUEST_SEED_CATEGORIES)[number];
+  manufacturer?: string;
+}>;
 
-  if (!pharmacy) return 0;
+//===============================================================
 
-  const approvedProducts = await Product.find({ status: 'active' })
-    .sort({ createdAt: 1 })
-    .limit(14)
-    .select('_id name article category manufacturer')
-    .lean<
-      Array<{
-        _id: Types.ObjectId;
-        name: string;
-        article: string;
-        category: (typeof PRODUCT_REQUEST_SEED_CATEGORIES)[number];
-        manufacturer?: string;
-      }>
-    >();
-
+function createProductRequestSeeds(
+  pharmacyId: Types.ObjectId,
+  approvedProducts: readonly ProductRequestSeedApprovedProduct[]
+) {
   const baseDate = new Date('2026-06-25T08:30:00.000Z');
-  const requests = PRODUCT_REQUEST_SEED_NAMES.map((seedName, index) => {
+
+  return PRODUCT_REQUEST_SEED_NAMES.map((seedName, index) => {
     const status = PRODUCT_REQUEST_SEED_STATUSES[index];
     const approvedProduct =
       status === 'approved' && approvedProducts.length > 0
@@ -3766,7 +3817,7 @@ async function seedProductRequests(): Promise<number> {
     );
 
     return {
-      pharmacyId: pharmacy._id,
+      pharmacyId,
       name,
       article,
       category,
@@ -3783,7 +3834,7 @@ async function seedProductRequests(): Promise<number> {
         ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4],
       countryOfOrigin: ['Ukraine', 'Poland', 'Germany', 'Italy'][index % 4],
       dosage: index % 3 === 0 ? '500 mg' : index % 3 === 1 ? '10 ml' : '1 unit',
-      packageSize: index % 2 === 0 ? '№30' : '100 ml',
+      packageSize: index % 2 === 0 ? '30 tablets' : '100 ml',
       form: ['tablets', 'spray', 'capsules', 'medical device'][index % 4],
       activeSubstance:
         category === 'medical_devices'
@@ -3801,7 +3852,8 @@ async function seedProductRequests(): Promise<number> {
               {
                 name: `product-document-${index + 1}.pdf`,
                 type: 'application/pdf',
-                size: 245000 + index * 1000,
+                size: PRODUCT_REQUEST_SEED_ATTACHMENT_SIZE,
+                dataUrl: PRODUCT_REQUEST_SEED_ATTACHMENT_DATA_URL,
               },
             ]
           : undefined,
@@ -3811,6 +3863,24 @@ async function seedProductRequests(): Promise<number> {
       updatedAt: history.at(-1)?.createdAt ?? createdAt,
     };
   });
+}
+
+//===============================================================
+
+async function seedProductRequests(): Promise<number> {
+  const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!pharmacy) return 0;
+
+  const approvedProducts = await Product.find({ status: 'active' })
+    .sort({ createdAt: 1 })
+    .limit(14)
+    .select('_id name article category manufacturer')
+    .lean<ProductRequestSeedApprovedProduct[]>();
+
+  const requests = createProductRequestSeeds(pharmacy._id, approvedProducts);
 
   await ProductRequest.insertMany(requests);
   return requests.length;
@@ -3832,6 +3902,8 @@ const PRODUCT_REQUEST_COMMENT_TEMPLATES = [
   'Review the country of origin against the package before approval.',
   'This is a private pharmacy note and is not visible to Admin or clients.',
 ] as const;
+
+//===============================================================
 
 async function seedProductRequestComments(): Promise<number> {
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
@@ -3896,10 +3968,96 @@ async function removeSeededDefaultPharmacyClients(): Promise<void> {
 
 //===============================================================
 
+function assertSeedPharmaciesAreValid(
+  pharmacySeeds: ReturnType<typeof createSeedPharmacies>
+): void {
+  for (const [index, seed] of pharmacySeeds.entries()) {
+    const { reviews, ...pharmacy } = seed;
+    void reviews;
+
+    const validationError = new Pharmacy(pharmacy).validateSync();
+
+    if (validationError) {
+      throw new Error(
+        `Seed preflight failed for pharmacy ${index + 1} before database reset: ${validationError.message}`
+      );
+    }
+  }
+}
+
+//===============================================================
+
+function assertPharmacyAccountSeedsAreValid(): void {
+  for (const seed of PHARMACY_ACCOUNT_SEEDS) {
+    const ownerId = new Types.ObjectId();
+    const validationError = new Pharmacy({
+      name: seed.pharmacyName,
+      address: seed.address,
+      city: seed.address.endsWith('Kyiv') ? 'Kyiv' : 'Lviv',
+      phone: seed.phone,
+      email: seed.publicEmail ?? seed.email,
+      workingHours:
+        seed.workingHours ??
+        'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+      bankDetails: createPharmacyAccountBankDetails(seed),
+      rating: 0,
+      imageUrl: createSeedAssetUrl(
+        seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL
+      ),
+      description:
+        seed.description ?? createPharmacyAccountDescription(seed.pharmacyName),
+      reviewsCount: 0,
+      ownerId,
+      managerUserIds: [],
+      documents: createVerificationDocuments(seed.email),
+      status: seed.status,
+      ...(seed.statusReason ? { statusReason: seed.statusReason } : {}),
+      ...(seed.status === PHARMACY_STATUSES.ACTIVE
+        ? {
+            approvedBy: ownerId,
+            approvedAt: ACTIVE_PHARMACY_FIRST_ACTIVATED_AT,
+            activatedAt: ACTIVE_PHARMACY_FIRST_ACTIVATED_AT,
+          }
+        : {}),
+      createdBy: ownerId,
+      updatedBy: ownerId,
+    }).validateSync();
+
+    if (validationError) {
+      throw new Error(
+        `Seed preflight failed for pharmacy account ${seed.email} before database reset: ${validationError.message}`
+      );
+    }
+  }
+}
+
+//===============================================================
+
+function assertProductRequestSeedsAreValid(): void {
+  const requests = createProductRequestSeeds(new Types.ObjectId(), []);
+
+  for (const [index, request] of requests.entries()) {
+    const validationError = new ProductRequest(request).validateSync();
+
+    if (validationError) {
+      throw new Error(
+        `Seed preflight failed for product request ${index + 1} before database reset: ${validationError.message}`
+      );
+    }
+  }
+}
+
+//===============================================================
+
 async function seedDatabase(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('Seed script is blocked in production');
   }
+
+  const pharmacySeeds = createSeedPharmacies();
+  assertSeedPharmaciesAreValid(pharmacySeeds);
+  assertPharmacyAccountSeedsAreValid();
+  assertProductRequestSeedsAreValid();
 
   await connectDB();
   await removeSeededDefaultPharmacyClients();
@@ -3917,7 +4075,6 @@ async function seedDatabase(): Promise<void> {
     ProductRequest.deleteMany({}),
   ]);
 
-  const pharmacySeeds = createSeedPharmacies();
   const createdPharmacies = (await Pharmacy.insertMany(
     pharmacySeeds.map(({ reviews, ...pharmacy }) => {
       void reviews;
@@ -4021,6 +4178,7 @@ async function seedDatabase(): Promise<void> {
   console.log(
     `Seed completed: ${activePharmacyOffersCount} active pharmacy offers created`
   );
+
   console.log(
     `Seed completed: ${restockedOffersCount} own products restocked and repriced`
   );
@@ -4032,24 +4190,31 @@ async function seedDatabase(): Promise<void> {
   console.log(
     `Seed completed: ${pharmacyClientsCount} pharmacy client profiles created`
   );
+
   console.log(
-    `Seed completed: ${defaultClientOrdersCount} successful walk-in customer orders created`
+    `Seed completed: ${defaultClientOrdersCount} successful walk-in client orders created`
   );
+
   console.log(
     `Seed completed: ${inventoryScenario.soldOutProducts} sold-out products, ${inventoryScenario.lowStockProducts} low-stock products, and ${inventoryScenario.linkedOrders} successful orders linked to sellout history`
   );
+
   console.log(
     `Seed completed: ${reconciledOffersCount} inventory ledgers reconciled chronologically`
   );
+
   console.log(
     `Seed completed: ${productRequestsCount} product requests created`
   );
+
   console.log(
     `Seed completed: ${productRequestCommentsCount} product request comments created`
   );
+
   console.log(
     `Seed completed: ${productManagerNotesCount} product manager comments created`
   );
+
   console.log(
     `Seed completed: ${clientManagerNotesCount} client manager comments created`
   );

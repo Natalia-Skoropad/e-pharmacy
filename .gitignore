@@ -39,6 +39,9 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
+# local development/runtime state
+.dev
+
 # local generated source-archive staging
 .artifacts
 

@@ -165,6 +165,7 @@ export type OrderResponseDto = {
 
   pharmacyId: string;
   pharmacyName: string;
+  pharmacyImageUrl?: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
   pharmacyPhone?: string;

@@ -1,6 +1,8 @@
 .card {
   display: grid;
-  gap: 14px;
+  grid-template-columns: 108px minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: center;
   width: 100%;
 }
 
@@ -26,17 +28,12 @@
   object-fit: cover;
 }
 
-.actions {
-  display: grid;
-  gap: 10px;
-}
-
 .input {
   display: none;
 }
 
 .hint {
-  max-width: 280px;
+  min-width: 0;
   padding: 10px 12px;
   font-size: var(--fz-12);
   line-height: var(--lh-base);
@@ -47,9 +44,15 @@
 }
 
 .buttons {
-  display: flex;
-  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.buttons > * {
+  width: 100%;
+  justify-content: center;
 }
 
 .dangerButton {
@@ -57,26 +60,9 @@
   border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
 }
 
-.dangerButton:hover:not(:disabled),
-.dangerButton:focus-visible:not(:disabled) {
+.buttons .dangerButton:hover:not(:disabled),
+.buttons .dangerButton:focus-visible:not(:disabled) {
   color: var(--color-white);
   background-color: var(--color-error);
   border-color: var(--color-error);
-}
-
-@media only screen and (min-width: 768px) {
-  .actions,
-  .actions > *,
-  .buttons,
-  .buttons > * {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .card {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-  }
 }

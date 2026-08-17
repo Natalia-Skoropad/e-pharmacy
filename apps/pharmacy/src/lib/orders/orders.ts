@@ -306,17 +306,14 @@ function getNestedRecord(
 
 function getClientId(order: Record<string, unknown>): string | null {
   const client = getNestedRecord(order, 'client');
-  const customer = getNestedRecord(order, 'customer');
   const user = getNestedRecord(order, 'user');
 
   return (
     getTrimmedString(order.clientId) ??
-    getTrimmedString(order.customerId) ??
     getTrimmedString(order.userId) ??
     (client ? getTrimmedString(client.id) : undefined) ??
     (client ? getTrimmedString(client.clientId) : undefined) ??
     (client ? getTrimmedString(client._id) : undefined) ??
-    (customer ? getTrimmedString(customer.id) : undefined) ??
     (user ? getTrimmedString(user.id) : undefined) ??
     null
   );
@@ -326,7 +323,6 @@ function getClientId(order: Record<string, unknown>): string | null {
 
 function getClientPhotoUrl(order: Record<string, unknown>): string | null {
   const client = getNestedRecord(order, 'client');
-  const customer = getNestedRecord(order, 'customer');
   const user = getNestedRecord(order, 'user');
   const profile = client ? getNestedRecord(client, 'profile') : undefined;
 
@@ -337,7 +333,6 @@ function getClientPhotoUrl(order: Record<string, unknown>): string | null {
     (client ? getTrimmedString(client.photoUrl) : undefined) ??
     (client ? getTrimmedString(client.pictureUrl) : undefined) ??
     (client ? getTrimmedString(client.avatarUrl) : undefined) ??
-    (customer ? getTrimmedString(customer.photoUrl) : undefined) ??
     (user ? getTrimmedString(user.photoUrl) : undefined) ??
     (profile ? getTrimmedString(profile.photoUrl) : undefined) ??
     (profile ? getTrimmedString(profile.pictureUrl) : undefined) ??

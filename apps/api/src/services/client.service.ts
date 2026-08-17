@@ -132,7 +132,7 @@ function serializeClient(
       ? fallbackDate
       : getFirstOrderDate(orders, fallbackDate)
     ).toISOString(),
-    name: user.name,
+    name: isDefault ? 'Walk-in client' : user.name,
     email: isDefault ? '' : user.email,
     phone: isDefault ? '' : user.phone,
     address: isDefault ? '' : getClientAddress(user, orders),
@@ -157,7 +157,7 @@ function serializeClient(
 
 function isWalkInClient(client: ClientRow): boolean {
   return (
-    client.isDefault || client.name.trim().toLowerCase() === 'walk-in customer'
+    client.isDefault || client.name.trim().toLowerCase() === 'walk-in client'
   );
 }
 

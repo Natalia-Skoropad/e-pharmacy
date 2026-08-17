@@ -229,47 +229,42 @@
   min-width: 0;
 }
 
-.ordersHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+.ordersSearchGrid {
+  display: grid;
   gap: 12px;
 }
 
-.tableWrap {
-  max-width: 100%;
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+.ordersSearchAction {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
 }
 
-.ordersTable {
+.ordersFilterButton {
   width: 100%;
-  min-width: 620px;
-  border-collapse: collapse;
-  font-size: var(--fz-14);
+  min-height: 48px;
 }
 
-.ordersTable th,
-.ordersTable td {
-  padding: 14px 16px;
-  text-align: left;
-  border-bottom: 1px solid var(--color-border);
+.ordersTableSection {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
 }
 
-.ordersTable th {
-  font-weight: var(--fw-bold);
-  color: var(--color-text-primary);
-  background-color: var(--color-background);
+.ordersToolbar {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
 }
 
-.ordersTable td {
-  color: var(--color-text-secondary);
+.ordersCountLabel {
+  justify-self: start;
+  width: 100%;
 }
 
-.ordersTable tr:last-child td {
-  border-bottom: 0;
+.ordersRowsControl {
+  width: 100%;
+  min-width: 0;
 }
 
 .emptyState {
@@ -421,6 +416,39 @@
 
   .fieldWide {
     grid-column: 1 / -1;
+  }
+
+  .panelSection > button {
+    justify-self: end;
+    width: auto;
+  }
+
+  .showMoreButton {
+    width: auto;
+    min-width: 220px;
+  }
+
+  .ordersSearchGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, 80px);
+    align-items: end;
+  }
+
+  .ordersToolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .ordersCountLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: unset;
+  }
+
+  .ordersRowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
   }
 
   .favoritesGrid {

@@ -8,7 +8,7 @@ import { hashPassword } from '../utils/password';
 
 //===============================================================
 
-const DEFAULT_CLIENT_NAME = 'Walk-in customer';
+const DEFAULT_CLIENT_NAME = 'Walk-in client';
 const DEFAULT_CLIENT_PASSWORD = 'walk-in-client-disabled-login';
 
 //===============================================================

@@ -41,7 +41,7 @@ function HomeReviewsSection() {
     <section className={css.section} aria-labelledby="home-reviews-title">
       <Container>
         <header className={css.header}>
-          <p className={css.kicker}>Customer reviews</p>
+          <p className={css.kicker}>Client reviews</p>
           <h2 className={css.title} id="home-reviews-title">
             A calmer way to manage medicines
           </h2>
@@ -62,7 +62,7 @@ function HomeReviewsSection() {
           <p className={css.comment}>{activeReview.comment}</p>
         </article>
 
-        <div className={css.controls} aria-label="Customer review controls">
+        <div className={css.controls} aria-label="Client review controls">
           <IconButton
             className={css.arrow}
             label="Show previous review"

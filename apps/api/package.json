@@ -4,7 +4,7 @@
   "private": true,
   "description": "Shared backend API for E-PHARMACY apps.",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "node ../../scripts/dev/run-with-bff-secret.mjs tsx watch src/server.ts",
     "seed": "tsx src/scripts/seed.ts",
     "build": "tsc && node src/scripts/copy-templates.mjs",
     "start": "node dist/server.js",

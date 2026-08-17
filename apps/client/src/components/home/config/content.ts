@@ -97,7 +97,7 @@ export const HOME_FEATURES = [
     text: 'Check the pharmacy behind an offer before deciding where your order should be prepared.',
     highlights: [
       'See contacts and working hours',
-      'Review ratings and customer feedback',
+      'Review ratings and client feedback',
       'Open products available right now',
     ],
     href: ROUTES.PHARMACIES,

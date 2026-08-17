@@ -49,6 +49,7 @@ export const ordersQuerySchema = z.preprocess(
       dateFrom: dateQuerySchema,
       dateTo: dateQuerySchema,
       client: sharedSearchSchema,
+      pharmacy: sharedSearchSchema,
       clientId: mongoIdSchema.optional(),
       orderNumber: sharedSearchSchema,
       deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),

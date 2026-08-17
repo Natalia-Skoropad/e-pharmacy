@@ -88,10 +88,19 @@
 }
 
 .emailNote {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
   padding-top: 4px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
+}
+
+.emailNote svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--color-accent);
 }
 
 .optionsGrid {

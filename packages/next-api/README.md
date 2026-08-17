@@ -111,7 +111,7 @@ File uploads require a dedicated streaming/upload route factory rather than the 
 - Enum path params must declare an `enumParams` allowlist.
 - Backend fetches use `redirect: 'manual'`.
 - The BFF marker and secret are generated server-side and cannot be overridden by the browser.
-- `BFF_PROXY_SECRET` and an HTTPS `API_BASE_URL` are required in production.
+- `BFF_PROXY_SECRET` is required whenever trusted auth proxying runs; the repository dev scripts auto-provision one shared local value. An HTTPS `API_BASE_URL` is additionally required in production.
 - Request headers and response headers use explicit allowlists.
 - Every BFF request has an `X-Request-ID` that is sent to the backend and returned to the browser.
 - Logs never include request bodies, cookies, auth tokens, or the BFF secret.

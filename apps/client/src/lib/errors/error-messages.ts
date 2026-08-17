@@ -22,7 +22,7 @@ export const APP_ERROR_MESSAGES = {
     clear: 'Could not clear cart.',
     removeOrder: 'Could not remove pharmacy order.',
     itemsChanged:
-      'Some expired or unavailable products were removed from your cart. Please review the updated cart before checkout.',
+      'Products are kept in your cart for 3 days and are removed automatically after that. A product may also be removed earlier if it becomes unavailable, sells out, or is no longer in stock. Please review the updated cart before checkout.',
     changed:
       'Your cart changed in another request. Review the cart before continuing; refresh if the latest state could not be loaded.',
     stockChanged:

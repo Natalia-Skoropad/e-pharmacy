@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3002",
+    "dev": "node ../../scripts/dev/run-with-bff-secret.mjs next dev --port 3002",
     "build": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next build",
     "start": "next start --port 3002",
     "lint": "eslint .",

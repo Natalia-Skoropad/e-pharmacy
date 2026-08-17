@@ -1336,16 +1336,14 @@ function validateOptionalPharmacyProfileSemantics(
 
   if (
     typeof record.city === 'string' &&
-    (
-      !PROFILE_SEARCH_TEXT_PATTERN.test(record.city))
+    !PROFILE_SEARCH_TEXT_PATTERN.test(record.city)
   ) {
     throw invalidDto('pharmacy profile.city is invalid.', record, context);
   }
 
   if (
     typeof record.description === 'string' &&
-    (
-      !PROFILE_TEXT_EDITOR_PATTERN.test(record.description))
+    !PROFILE_TEXT_EDITOR_PATTERN.test(record.description)
   ) {
     throw invalidDto(
       'pharmacy profile.description is invalid.',
@@ -1376,8 +1374,7 @@ function validateOptionalPharmacyProfileSemantics(
 
   if (
     typeof record.workingHours === 'string' &&
-    (
-      !hasCompleteWorkingHours(record.workingHours))
+    !hasCompleteWorkingHours(record.workingHours)
   ) {
     throw invalidDto(
       'pharmacy profile.workingHours is invalid.',
@@ -1505,14 +1502,16 @@ function parsePendingPharmacyBankDetails(
   }
 
   const stringOnly = Object.fromEntries(
-    Object.entries(result).filter((entry): entry is [string, string] =>
-      typeof entry[1] === 'string'
+    Object.entries(result).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string'
     )
   );
   parseEditablePharmacyBankDetails(stringOnly, context);
 
   return checked<
-    NonNullable<NonNullable<PharmacyProfile['pendingModeration']>['bankDetails']>
+    NonNullable<
+      NonNullable<PharmacyProfile['pendingModeration']>['bankDetails']
+    >
   >(result);
 }
 
@@ -1549,9 +1548,8 @@ function parsePharmacyPendingModeration(
 
   if (
     typeof record.name === 'string' &&
-    (
-      (record.name.length > 0 &&
-        !PROFILE_PHARMACY_NAME_PATTERN.test(record.name)))
+    record.name.length > 0 &&
+    !PROFILE_PHARMACY_NAME_PATTERN.test(record.name)
   ) {
     throw invalidDto(
       'pharmacy pending moderation.name is invalid.',
@@ -1570,8 +1568,7 @@ function parsePharmacyPendingModeration(
   }
   if (
     typeof record.city === 'string' &&
-    (
-      !PROFILE_SEARCH_TEXT_PATTERN.test(record.city))
+    !PROFILE_SEARCH_TEXT_PATTERN.test(record.city)
   ) {
     throw invalidDto(
       'pharmacy pending moderation.city is invalid.',
@@ -1581,8 +1578,7 @@ function parsePharmacyPendingModeration(
   }
   if (
     typeof record.description === 'string' &&
-    (
-      !PROFILE_TEXT_EDITOR_PATTERN.test(record.description))
+    !PROFILE_TEXT_EDITOR_PATTERN.test(record.description)
   ) {
     throw invalidDto(
       'pharmacy pending moderation.description is invalid.',
@@ -1611,8 +1607,7 @@ function parsePharmacyPendingModeration(
   }
   if (
     typeof record.workingHours === 'string' &&
-    (
-      !hasCompleteWorkingHours(record.workingHours))
+    !hasCompleteWorkingHours(record.workingHours)
   ) {
     throw invalidDto(
       'pharmacy pending moderation.workingHours is invalid.',
@@ -1857,9 +1852,10 @@ export function parsePharmacyRegistrationUploadSessionResponse(
   return {
     uploadSessionId,
     uploadToken: record.uploadToken,
-    expiresAt: checked<
-      PharmacyRegistrationUploadSessionResponse['expiresAt']
-    >(expiresAt),
+    expiresAt:
+      checked<PharmacyRegistrationUploadSessionResponse['expiresAt']>(
+        expiresAt
+      ),
     maxFiles,
     maxTotalSizeBytes,
   };
@@ -2495,6 +2491,13 @@ function parseClientOrder(
       managerCommentsCount: 'number',
       items: 'array',
     },
+    context
+  );
+
+  requireOptionalFields(
+    record,
+    'client order',
+    { pharmacyImageUrl: 'string' },
     context
   );
 

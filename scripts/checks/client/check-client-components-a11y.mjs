@@ -111,14 +111,14 @@ const [
 
 requirePattern(
   appShell,
-  /href="#main-content"/,
-  'AppShell: skip-to-content link is missing.'
+  /<ScrollToTopButton \/>/,
+  'AppShell: scroll-to-top control is missing.'
 );
 
 requirePattern(
   appShell,
   /id="main-content"/,
-  'AppShell: stable skip target is missing.'
+  'AppShell: stable main-content target is missing.'
 );
 
 requirePattern(

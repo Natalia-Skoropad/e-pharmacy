@@ -138,47 +138,45 @@ function PictureCard({
         )}
       </div>
 
-      <div className={css.actions}>
-        <input
-          ref={inputRef}
-          className={css.input}
-          type="file"
-          accept={accept}
-          aria-label={mergedLabels.uploadAriaLabel}
+      <input
+        ref={inputRef}
+        className={css.input}
+        type="file"
+        accept={accept}
+        aria-label={mergedLabels.uploadAriaLabel}
+        disabled={disabled || isSaving}
+        onChange={(event) => void handleFileChange(event)}
+      />
+
+      {mergedLabels.hint ? (
+        <p className={css.hint}>{mergedLabels.hint}</p>
+      ) : null}
+
+      <div className={css.buttons}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
           disabled={disabled || isSaving}
-          onChange={(event) => void handleFileChange(event)}
-        />
+          isLoading={isSaving}
+          loadingLabel={mergedLabels.savingButton}
+          iconLeft={<Upload size={16} aria-hidden="true" />}
+          onClick={() => inputRef.current?.click()}
+        >
+          {mergedLabels.uploadButton}
+        </Button>
 
-        {mergedLabels.hint ? (
-          <p className={css.hint}>{mergedLabels.hint}</p>
-        ) : null}
-
-        <div className={css.buttons}>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={disabled || isSaving}
-            isLoading={isSaving}
-            loadingLabel={mergedLabels.savingButton}
-            iconLeft={<Upload size={16} aria-hidden="true" />}
-            onClick={() => inputRef.current?.click()}
-          >
-            {mergedLabels.uploadButton}
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className={css.dangerButton}
-            disabled={disabled || !pictureUrl || isSaving}
-            iconLeft={<ImageOff size={16} aria-hidden="true" />}
-            onClick={() => setIsConfirmOpen(true)}
-          >
-            {mergedLabels.removeButton}
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={css.dangerButton}
+          disabled={disabled || !pictureUrl || isSaving}
+          iconLeft={<ImageOff size={16} aria-hidden="true" />}
+          onClick={() => setIsConfirmOpen(true)}
+        >
+          {mergedLabels.removeButton}
+        </Button>
       </div>
 
       {isConfirmOpen ? (

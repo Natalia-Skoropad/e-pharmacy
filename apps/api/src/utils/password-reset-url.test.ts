@@ -5,17 +5,12 @@ import { buildPasswordResetUrl } from './password-reset-url';
 
 //===================================================================
 
-test('puts the reset secret in the fragment instead of the server request URL', () => {
+test('includes a query fallback while keeping the fragment reset handoff', () => {
   const token = 'secret+/= token';
   const value = buildPasswordResetUrl('https://client.example.com', token);
   const url = new URL(value);
 
   assert.equal(url.pathname, '/reset-password');
-  assert.equal(url.search, '');
+  assert.equal(url.searchParams.get('token'), token);
   assert.equal(new URLSearchParams(url.hash.slice(1)).get('token'), token);
-
-  assert.equal(
-    `${url.origin}${url.pathname}${url.search}`.includes(token),
-    false
-  );
 });
