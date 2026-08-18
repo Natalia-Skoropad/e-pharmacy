@@ -11,12 +11,31 @@ import {
 } from './catalog-param-utils';
 
 import {
+  isPharmacyNoIndex,
   isPharmacySortFilter,
   type PharmacyFilters,
   type PharmacyRouteParams,
 } from './pharmacies-catalog-filters';
 
 import type { CatalogSegmentIssue } from './product-catalog-paths';
+
+//===================================================================
+
+const PHARMACY_CATALOG_SEGMENT_PREFIXES = [
+  'search-name-',
+  'address-',
+  'city-',
+  'sort-',
+  'page-',
+] as const;
+
+//===================================================================
+
+export function isPharmacyCatalogSegment(segment: string): boolean {
+  return PHARMACY_CATALOG_SEGMENT_PREFIXES.some((prefix) =>
+    segment.startsWith(prefix)
+  );
+}
 
 //===================================================================
 
@@ -160,4 +179,20 @@ export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
   return segments.length
     ? `${ROUTES.PHARMACIES}/${segments.join('/')}`
     : ROUTES.PHARMACIES;
+}
+
+//===================================================================
+
+export function buildPharmacyIndexedPath(
+  filters: Partial<PharmacyFilters>
+): string {
+  return buildPharmacyPath({ city: filters.city });
+}
+
+//===================================================================
+
+export function buildPharmacyCanonicalPath(filters: PharmacyFilters): string {
+  return isPharmacyNoIndex(filters)
+    ? buildPharmacyIndexedPath(filters)
+    : buildPharmacyPath(filters);
 }

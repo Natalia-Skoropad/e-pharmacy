@@ -75,7 +75,14 @@ for (const contract of [
 assert.doesNotMatch(environment, /VERCEL_ENV|process\.env\.CI/);
 
 const cache = await read('apps/client/src/lib/api/server/cache-options.ts');
-assert.match(cache, /revalidate: PUBLIC_API_REVALIDATE_SECONDS/);
+
+for (const preset of ['commerce', 'reviews', 'dictionary']) {
+  assert.match(
+    cache,
+    new RegExp(`revalidate: PUBLIC_CACHE_REVALIDATE_SECONDS\\.${preset}`)
+  );
+}
+
 assert.doesNotMatch(cache, /cache:\s*['"]no-store/);
 
 const dataState = await read('apps/client/src/lib/api/server/data-state.ts');

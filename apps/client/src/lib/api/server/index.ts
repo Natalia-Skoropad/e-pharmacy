@@ -1,6 +1,10 @@
 import 'server-only';
 
-export { PUBLIC_API_CACHE_OPTIONS } from './cache-options';
+export {
+  PUBLIC_COMMERCE_CACHE_OPTIONS,
+  PUBLIC_DICTIONARY_CACHE_OPTIONS,
+  PUBLIC_REVIEWS_CACHE_OPTIONS,
+} from './cache-options';
 
 export {
   getDataUnavailableReason,

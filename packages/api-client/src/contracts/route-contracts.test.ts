@@ -19,6 +19,14 @@ test('uses resource-oriented backend route builders', () => {
     apiRoutes.products.myPharmacy(id),
     `/products/${id}/my-pharmacy`
   );
+
+  assert.equal(apiRoutes.products.managementList, '/products/management');
+
+  assert.equal(
+    apiRoutes.products.managementDetails(id),
+    `/products/management/${id}`
+  );
+
   assert.equal(apiRoutes.cart.item(id), `/cart/items/${id}`);
 });
 

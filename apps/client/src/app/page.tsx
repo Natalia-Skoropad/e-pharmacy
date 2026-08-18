@@ -18,7 +18,7 @@ import { ROUTES } from '@/lib/routes';
 import {
   getProducts,
   getPharmacies,
-  PUBLIC_API_CACHE_OPTIONS,
+  PUBLIC_COMMERCE_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
 import CatalogAutoRecovery from '@/components/catalog/CatalogAutoRecovery/CatalogAutoRecovery';
@@ -55,7 +55,7 @@ async function getFeaturedPharmacies(): Promise<
         perPage: HOME_PREVIEW_LIMIT,
         sort: 'rating-desc',
       },
-      PUBLIC_API_CACHE_OPTIONS
+      PUBLIC_COMMERCE_CACHE_OPTIONS
     );
 
     return { items: response.items, hasError: false };
@@ -77,7 +77,7 @@ async function getFeaturedProducts(): Promise<
         perPage: HOME_PREVIEW_LIMIT,
         sort: 'rating-desc',
       },
-      PUBLIC_API_CACHE_OPTIONS
+      PUBLIC_COMMERCE_CACHE_OPTIONS
     );
 
     return { items: response.items, hasError: false };

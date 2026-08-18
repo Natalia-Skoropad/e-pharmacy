@@ -2,7 +2,11 @@ import { sanitizeTextParam } from '@e-pharmacy/validation/url';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import type { PharmaciesSortFilter } from '@e-pharmacy/types/pharmacies';
 
-import { parsePositivePageParam } from './catalog-param-utils';
+import {
+  getSingleSearchParam,
+  parsePositivePageParam,
+  type CatalogSearchParamValue,
+} from './catalog-param-utils';
 
 //===================================================================
 
@@ -31,12 +35,12 @@ const PHARMACIES_PER_PAGE = 24;
 
 //===================================================================
 
-export type PharmacySearchParams = {
-  name?: string;
-  address?: string;
-  city?: string;
-  sort?: string;
-  page?: string;
+export type PharmacySearchParams = Record<string, CatalogSearchParamValue> & {
+  name?: CatalogSearchParamValue;
+  address?: CatalogSearchParamValue;
+  city?: CatalogSearchParamValue;
+  sort?: CatalogSearchParamValue;
+  page?: CatalogSearchParamValue;
 };
 
 export type PharmacyRouteParams = {
@@ -130,12 +134,33 @@ export function normalizePharmacyFiltersCity(
 export function parsePharmacySearchParams(
   params: PharmacySearchParams = {}
 ): PharmacyFilters {
+  const name = getSingleSearchParam(params.name);
+  const address = getSingleSearchParam(params.address);
+  const city = getSingleSearchParam(params.city);
+  const sort = getSingleSearchParam(params.sort);
+  const page = getSingleSearchParam(params.page);
+
   return {
-    name: sanitizeTextParam(params.name),
-    address: sanitizeTextParam(params.address),
-    city: sanitizeTextParam(params.city),
-    sort: isPharmacySortFilter(params.sort) ? params.sort : 'newest',
-    page: parsePositivePageParam(params.page),
+    name: sanitizeTextParam(name),
+    address: sanitizeTextParam(address),
+    city: sanitizeTextParam(city),
+    sort: isPharmacySortFilter(sort) ? sort : 'newest',
+    page: parsePositivePageParam(page),
+  };
+}
+
+//===================================================================
+
+export function mergePharmacyCatalogFilters(
+  routeFilters: PharmacyFilters,
+  queryFilters: PharmacyFilters
+): PharmacyFilters {
+  return {
+    name: routeFilters.name || queryFilters.name,
+    address: routeFilters.address || queryFilters.address,
+    city: routeFilters.city || queryFilters.city,
+    sort: routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
+    page: routeFilters.page > 1 ? routeFilters.page : queryFilters.page,
   };
 }
 

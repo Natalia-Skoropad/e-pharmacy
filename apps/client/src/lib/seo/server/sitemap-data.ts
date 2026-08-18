@@ -12,7 +12,10 @@ import {
 import { createTrustedBackendApiUrl } from '@e-pharmacy/next-api/server';
 import { buildPharmacyPath, buildProductPath } from '@/lib/routes';
 
-import { STATIC_SITEMAP_ENTRIES } from './route-policy';
+import {
+  createApprovedInfoSitemapEntries,
+  STATIC_SITEMAP_ENTRIES,
+} from './route-policy';
 
 import {
   createSitemapRoutes,
@@ -357,12 +360,14 @@ export async function buildClientSitemap({
   fetcher = fetch,
   resolveBackendUrl = createTrustedBackendApiUrl,
   logger = console,
+  approvedInfoPaths = [],
 }: Readonly<{
   siteUrl: string;
   now?: Date;
   fetcher?: typeof fetch;
   resolveBackendUrl?: (path: string) => string;
   logger?: Pick<Console, 'error' | 'warn'>;
+  approvedInfoPaths?: readonly string[];
 }>): Promise<SitemapLoadReport> {
   const [productsResult, pharmaciesResult] = await Promise.all([
     fetchAllSitemapItems({
@@ -429,6 +434,7 @@ export async function buildClientSitemap({
 
   const entries = dedupeSitemapEntries([
     ...STATIC_SITEMAP_ENTRIES.map((entry) => ({ ...entry, lastModified: now })),
+    ...createApprovedInfoSitemapEntries(approvedInfoPaths),
     ...dynamicEntries,
   ]);
 

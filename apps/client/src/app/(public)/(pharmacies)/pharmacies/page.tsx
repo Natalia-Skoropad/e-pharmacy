@@ -1,4 +1,7 @@
+import { permanentRedirect } from 'next/navigation';
+
 import {
+  buildPharmacyCanonicalPath,
   buildPharmacyPath,
   getPharmacyDescription,
   getPharmacyTitle,
@@ -7,7 +10,12 @@ import {
   type PharmacySearchParams,
 } from '@/lib/catalog/pharmacies-catalog';
 
-import { loadPharmaciesCatalogPageData } from '@/lib/catalog/pharmacies-catalog-server';
+import {
+  loadPharmaciesCatalogPageData,
+  resolvePharmaciesCatalogFilters,
+} from '@/lib/catalog/pharmacies-catalog-server';
+
+import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
 import { createPageMetadata } from '@/lib/seo/server';
 
 import { PharmaciesPageContent } from '@/components/pharmacies';
@@ -22,20 +30,26 @@ type PharmaciesPageProps = {
 
 export async function generateMetadata({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
+  const { filters } = await resolvePharmaciesCatalogFilters(parsedFilters);
 
   return createPageMetadata({
-    title: getPharmacyTitle(parsedFilters),
-    description: getPharmacyDescription(parsedFilters),
-    path: buildPharmacyPath(parsedFilters),
-    noIndex: isPharmacyNoIndex(parsedFilters),
+    title: getPharmacyTitle(filters),
+    description: getPharmacyDescription(filters),
+    path: buildPharmacyCanonicalPath(filters),
+    noIndex: isPharmacyNoIndex(filters),
   });
 }
 
 //===================================================================
 
 async function PharmaciesPage({ searchParams }: PharmaciesPageProps) {
-  const parsedFilters = parsePharmacySearchParams(await searchParams);
+  const resolvedSearchParams = await searchParams;
+  const parsedFilters = parsePharmacySearchParams(resolvedSearchParams);
   const pageData = await loadPharmaciesCatalogPageData(parsedFilters);
+
+  if (hasCatalogSearchParams(resolvedSearchParams)) {
+    permanentRedirect(buildPharmacyPath(pageData.filters));
+  }
 
   return <PharmaciesPageContent {...pageData} />;
 }

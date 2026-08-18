@@ -12,7 +12,7 @@ import {
 import {
   getServerDataErrorContext,
   getPharmacyDetails,
-  PUBLIC_API_CACHE_OPTIONS,
+  PUBLIC_COMMERCE_CACHE_OPTIONS,
   type ServerDataErrorContext,
 } from '@/lib/api/server';
 
@@ -38,7 +38,7 @@ export async function lookupPharmacyBySlugId(
   try {
     const pharmacyData = await getPharmacyDetails(
       pharmacyId,
-      PUBLIC_API_CACHE_OPTIONS
+      PUBLIC_COMMERCE_CACHE_OPTIONS
     );
 
     return pharmacyData.pharmacy

@@ -7,7 +7,7 @@ import {
 } from '@e-pharmacy/api-client/transport';
 
 import { createTrustedBackendApiUrl } from '../internal/backend-url';
-import { REQUEST_ID_HEADER_NAME } from '../internal/bff-contract';
+import { applyServerCorrelationHeaders } from '../internal/trace-context';
 import { createRequestId } from '../internal/request-id';
 import { logTransportRequest } from '../observability/logger';
 
@@ -50,7 +50,10 @@ export async function publicBackendApiRequest(
     cache ?? (next?.revalidate === undefined ? 'no-store' : undefined);
 
   const requestHeaders = new Headers(options.headers);
-  requestHeaders.set(REQUEST_ID_HEADER_NAME, requestId);
+  const isCacheable =
+    next?.revalidate !== undefined && resolvedCache !== 'no-store';
+
+  applyServerCorrelationHeaders(requestHeaders, requestId, isCacheable);
 
   const nextFetchInit: NextExtendedRequestInit = next
     ? {

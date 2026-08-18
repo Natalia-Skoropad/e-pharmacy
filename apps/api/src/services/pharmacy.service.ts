@@ -17,6 +17,7 @@ import {
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyReview } from '../models/pharmacyReview.model';
+import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 
 import type {
@@ -144,6 +145,16 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
         availableQuantity: { $gt: 0 },
       },
     },
+    {
+      $lookup: {
+        from: Product.collection.name,
+        localField: 'productId',
+        foreignField: '_id',
+        as: 'product',
+      },
+    },
+    { $unwind: '$product' },
+    { $match: { 'product.status': 'active' } },
     { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
   ]);
   return new Map(rows.map((row) => [String(row._id), row.count]));

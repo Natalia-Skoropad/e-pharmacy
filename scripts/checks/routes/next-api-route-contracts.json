@@ -531,20 +531,18 @@
   {
     "app": "pharmacy",
     "route": "/products",
-    "backend": "/products",
+    "backend": "/products/management",
     "methods": {
-      "GET": "optional"
-    },
-    "optionalPolicy": "refresh-aware"
+      "GET": "private"
+    }
   },
   {
     "app": "pharmacy",
     "route": "/products/[productId]",
-    "backend": "/products/:productId",
+    "backend": "/products/management/:productId",
     "methods": {
-      "GET": "optional"
-    },
-    "optionalPolicy": "refresh-aware"
+      "GET": "private"
+    }
   },
   {
     "app": "pharmacy",

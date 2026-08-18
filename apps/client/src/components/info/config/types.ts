@@ -49,3 +49,31 @@ export type InfoPageData = Readonly<{
   highlights?: readonly InfoPageHighlight[];
   sections: readonly InfoPageSection[];
 }>;
+
+//===================================================================
+
+export function isInfoDocumentApproved(
+  document: Pick<InfoPageData, 'metadata'>
+): boolean {
+  const { metadata } = document;
+
+  return Boolean(
+    metadata.approvalStatus === 'approved' &&
+      metadata.version.trim() &&
+      metadata.effectiveAt?.iso &&
+      metadata.effectiveAt.label.trim() &&
+      metadata.updatedAt.iso &&
+      metadata.updatedAt.label.trim() &&
+      metadata.contentOwner?.trim() &&
+      metadata.legalEntity?.trim() &&
+      metadata.reviewId?.trim()
+  );
+}
+
+//===================================================================
+
+export function isInfoDocumentNoIndex(
+  document: Pick<InfoPageData, 'metadata'>
+): boolean {
+  return !isInfoDocumentApproved(document);
+}

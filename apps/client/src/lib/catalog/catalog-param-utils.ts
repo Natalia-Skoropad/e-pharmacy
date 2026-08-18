@@ -15,3 +15,24 @@ export function isCanonicalPositivePageParam(value?: string): boolean {
   if (!value || !CANONICAL_POSITIVE_INTEGER_PATTERN.test(value)) return false;
   return Number.isSafeInteger(Number(value));
 }
+
+//===================================================================
+
+export type CatalogSearchParamValue = string | string[] | undefined;
+export type CatalogSearchParams = Record<string, CatalogSearchParamValue>;
+
+//===================================================================
+
+export function getSingleSearchParam(
+  value: CatalogSearchParamValue
+): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+//===================================================================
+
+export function hasCatalogSearchParams(
+  params?: CatalogSearchParams
+): boolean {
+  return Boolean(params && Object.keys(params).length > 0);
+}

@@ -6,6 +6,8 @@ import {
   getFavoriteProductIds,
   getFavoriteProducts,
   getPendingProductReviews,
+  getManagedProductDetails,
+  getManagedProducts,
   moderateProductReview,
   removeProductFromMyPharmacy,
   getProductDetails,
@@ -34,7 +36,8 @@ import {
   productFiltersQuerySchema,
   productIdParamsSchema,
   productReviewParamsSchema,
-  productsQuerySchema,
+  managedProductsQuerySchema,
+  publicProductsQuerySchema,
 } from '../schemas/product.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -49,7 +52,7 @@ productRoutes.get(
   '/',
   optionalAuthenticate,
   validate({
-    query: productsQuerySchema,
+    query: publicProductsQuerySchema,
   }),
   ctrlWrapper(getProducts)
 );
@@ -60,6 +63,26 @@ productRoutes.get(
   '/filters',
   validate({ query: productFiltersQuerySchema }),
   ctrlWrapper(getProductFilters)
+);
+
+//=================================================================================
+
+productRoutes.get(
+  '/management',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
+  validate({ query: managedProductsQuerySchema }),
+  ctrlWrapper(getManagedProducts)
+);
+
+//=================================================================================
+
+productRoutes.get(
+  '/management/:productId',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
+  validate({ params: productIdParamsSchema }),
+  ctrlWrapper(getManagedProductDetails)
 );
 
 //=================================================================================
@@ -78,7 +101,7 @@ productRoutes.get(
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
   validate({
-    query: productsQuerySchema,
+    query: publicProductsQuerySchema,
   }),
   ctrlWrapper(getFavoriteProducts)
 );

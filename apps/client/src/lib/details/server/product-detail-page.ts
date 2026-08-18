@@ -12,7 +12,7 @@ import {
 import {
   getServerDataErrorContext,
   getProductDetails,
-  PUBLIC_API_CACHE_OPTIONS,
+  PUBLIC_COMMERCE_CACHE_OPTIONS,
   type ServerDataErrorContext,
 } from '@/lib/api/server';
 
@@ -38,7 +38,7 @@ export async function lookupProductBySlugId(
   try {
     const productData = await getProductDetails(
       productId,
-      PUBLIC_API_CACHE_OPTIONS
+      PUBLIC_COMMERCE_CACHE_OPTIONS
     );
 
     return productData.product

@@ -13,7 +13,11 @@ import {
   uploadMyPharmacyDocumentSchema,
 } from './pharmacy.schema';
 
-import { productsQuerySchema } from './product.schema';
+import {
+  managedProductsQuerySchema,
+  publicProductsQuerySchema,
+} from './product.schema';
+
 import { sharedWorkingHoursSchema } from './shared-validation.schema';
 
 const EXPECTED_REVISION = '2026-08-14T12:00:00.000Z';
@@ -70,7 +74,7 @@ test('query schemas validate real calendar dates and ordered ranges', () => {
   );
 
   assert.equal(
-    productsQuerySchema.safeParse({
+    managedProductsQuerySchema.safeParse({
       addedFrom: invertedRange.dateFrom,
       addedTo: invertedRange.dateTo,
     }).success,
@@ -88,6 +92,28 @@ test('query schemas validate real calendar dates and ordered ranges', () => {
   assert.equal(
     clientProductsQuerySchema.safeParse(invertedRange).success,
     false
+  );
+});
+
+//===============================================================
+
+test('public product queries reject management-only lifecycle filters', () => {
+  assert.equal(
+    publicProductsQuerySchema.safeParse({ includeBlocked: true }).success,
+    false
+  );
+
+  assert.equal(
+    publicProductsQuerySchema.safeParse({ status: 'blocked' }).success,
+    false
+  );
+
+  assert.equal(
+    managedProductsQuerySchema.safeParse({
+      includeBlocked: true,
+      status: 'blocked',
+    }).success,
+    true
   );
 });
 
@@ -124,6 +150,7 @@ test('profile updates use null for explicit clears and reject empty-string clear
   });
 
   assert.equal(clearResult.success, true);
+
   assert.equal(
     updateMyPharmacyProfileSchema.safeParse({
       expectedRevision: EXPECTED_REVISION,

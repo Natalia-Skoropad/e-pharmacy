@@ -10,7 +10,8 @@ import type {
   ProductFiltersQuery,
   ProductIdParams,
   ProductReviewParams,
-  ProductsQuery,
+  ManagedProductsQuery,
+  PublicProductsQuery,
 } from '../schemas/product.schema';
 
 import {
@@ -18,6 +19,8 @@ import {
   createProductReviewService,
   getFavoriteProductIdsService,
   getFavoriteProductsService,
+  getManagedProductDetailsService,
+  getManagedProductsService,
   getProductDetailsService,
   getProductFiltersService,
   getPendingProductReviewsService,
@@ -48,19 +51,38 @@ export async function getProductFilters(
 
 export async function getProducts(
   req: Request,
-  res: ValidatedResponse<unknown, unknown, ProductsQuery>
+  res: ValidatedResponse<unknown, unknown, PublicProductsQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
 
   const data = await getProductsService(
     query,
-    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined,
-    {
-      includeOffers:
-        req.user?.role === USER_ROLES.PHARMACY ||
-        req.user?.role === USER_ROLES.ADMIN,
-    }
+    req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
   );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getManagedProducts(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, ManagedProductsQuery>
+): Promise<void> {
+  const { query } = res.locals.validated;
+  const data = await getManagedProductsService(query, { includeOffers: true });
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getManagedProductDetails(
+  _req: Request,
+  res: ValidatedResponse<unknown, ProductIdParams>
+): Promise<void> {
+  const { productId } = res.locals.validated.params;
+  const data = await getManagedProductDetailsService(productId);
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -79,7 +101,7 @@ export async function getFavoriteProductIds(
 
 export async function getFavoriteProducts(
   req: Request,
-  res: ValidatedResponse<unknown, unknown, ProductsQuery>
+  res: ValidatedResponse<unknown, unknown, PublicProductsQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
   const data = await getFavoriteProductsService(query, req.user?.id ?? '');

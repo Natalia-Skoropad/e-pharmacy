@@ -4,7 +4,13 @@ import test from 'node:test';
 import { DELIVERY_PAYMENT_INFO } from './delivery-payment';
 import { PERSONAL_DATA_NOTICE_INFO } from './personal-data-notice';
 import { RETURN_POLICY_INFO } from './return-policy';
-import type { InfoPageData } from './types';
+
+import {
+  isInfoDocumentApproved,
+  isInfoDocumentNoIndex,
+  type InfoPageData,
+} from './types';
+
 import { USER_AGREEMENT_INFO } from './user-agreement';
 
 //===================================================================
@@ -39,9 +45,14 @@ test('legal and information documents have unique paths and structured revision 
     }
 
     if (document.metadata.approvalStatus === 'approved') {
+      assert.ok(document.metadata.effectiveAt);
       assert.ok(document.metadata.contentOwner);
       assert.ok(document.metadata.legalEntity);
       assert.ok(document.metadata.reviewId);
+      assert.equal(isInfoDocumentApproved(document), true);
+    } else {
+      assert.equal(isInfoDocumentApproved(document), false);
+      assert.equal(isInfoDocumentNoIndex(document), true);
     }
   }
 });

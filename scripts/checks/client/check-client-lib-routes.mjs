@@ -33,17 +33,12 @@ const routePolicy = await read(
 
 const routes = await read('apps/client/src/lib/routes/routes.ts');
 
-for (const routeName of [
-  'HOME',
-  'PHARMACIES',
-  'PRODUCTS_CATALOG',
-  'DELIVERY_PAYMENT',
-  'RETURN_POLICY',
-  'USER_AGREEMENT',
-  'PERSONAL_DATA_NOTICE',
-]) {
+for (const routeName of ['HOME', 'PHARMACIES', 'PRODUCTS_CATALOG']) {
   assert.match(routePolicy, new RegExp(`ROUTES\\.${routeName}\\b`));
 }
+
+assert.match(routePolicy, /createApprovedInfoSitemapEntries/);
+assert.match(routePolicy, /ROUTES\.DELIVERY_PAYMENT/);
 
 for (const privateRoute of [
   'CART',

@@ -4,7 +4,7 @@ import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import {
   getPharmacyReviews,
-  PUBLIC_API_CACHE_OPTIONS,
+  PUBLIC_REVIEWS_CACHE_OPTIONS,
   resolveServerDataState,
 } from '@/lib/api/server';
 
@@ -16,7 +16,7 @@ export async function PharmacyDetailPage({
   pharmacy,
 }: Readonly<{ pharmacy: PublicPharmacy }>) {
   const reviewsState = await resolveServerDataState(
-    getPharmacyReviews(pharmacy.id, PUBLIC_API_CACHE_OPTIONS)
+    getPharmacyReviews(pharmacy.id, PUBLIC_REVIEWS_CACHE_OPTIONS)
   );
 
   if (reviewsState.status === 'unavailable') {

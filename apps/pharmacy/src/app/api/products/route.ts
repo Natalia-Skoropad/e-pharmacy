@@ -1,10 +1,9 @@
 import { apiRoutes as API_ROUTES } from '@e-pharmacy/api-client/contracts';
-
-import { createOptionalAuthGetProxyRoute } from '@e-pharmacy/next-api/proxy';
+import { createPrivateProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 //===================================================================
 
-export const GET = createOptionalAuthGetProxyRoute({
-  backendPath: API_ROUTES.products.list,
-  policy: 'refresh-aware',
+export const GET = createPrivateProxyRoute({
+  backendPath: API_ROUTES.products.managementList,
+  method: 'GET',
 });

@@ -109,8 +109,8 @@ requirePattern(
 
 requirePattern(
   productController,
-  /includeOffers:\s*(?:isPharmacy|canManageProducts|hasPharmacyRole|[^\n]*PHARMACY)/i,
-  'Full offers must be explicitly limited to pharmacy-management requests.'
+  /getManagedProducts[\s\S]*getManagedProductsService\(query, \{ includeOffers: true \}\)/,
+  'Full offers must be explicitly limited to the authenticated product-management controller.'
 );
 
 requirePattern(

@@ -4,7 +4,8 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import {
-  PUBLIC_API_CACHE_OPTIONS,
+  PUBLIC_COMMERCE_CACHE_OPTIONS,
+  PUBLIC_DICTIONARY_CACHE_OPTIONS,
   resolveServerDataState,
 } from '@/lib/api/server';
 
@@ -37,12 +38,12 @@ export async function loadProductCatalogPageData(
       resolveServerDataState(
         getProducts(
           buildProductCatalogApiParams(filters),
-          PUBLIC_API_CACHE_OPTIONS
+          PUBLIC_COMMERCE_CACHE_OPTIONS
         )
       ),
 
-      resolveServerDataState(getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS)),
-      resolveServerDataState(getProductFilters({}, PUBLIC_API_CACHE_OPTIONS)),
+      resolveServerDataState(getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)),
+      resolveServerDataState(getProductFilters({}, PUBLIC_DICTIONARY_CACHE_OPTIONS)),
     ]);
 
   const pageData = createProductCatalogPageData({

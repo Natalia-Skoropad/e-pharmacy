@@ -15,7 +15,11 @@ import {
   sanitizeTextParam,
 } from '@e-pharmacy/validation/url';
 
-import { parsePositivePageParam } from './catalog-param-utils';
+import {
+  getSingleSearchParam,
+  parsePositivePageParam,
+  type CatalogSearchParamValue,
+} from './catalog-param-utils';
 
 //===================================================================
 
@@ -83,14 +87,17 @@ export type ProductCatalogSeoContext = {
   pharmacyName?: string;
 };
 
-export type ProductCatalogSearchParams = {
-  name?: string;
-  article?: string;
-  category?: string;
-  availability?: string;
-  sort?: string;
-  page?: string;
-  pharmacyId?: string;
+export type ProductCatalogSearchParams = Record<
+  string,
+  CatalogSearchParamValue
+> & {
+  name?: CatalogSearchParamValue;
+  article?: CatalogSearchParamValue;
+  category?: CatalogSearchParamValue;
+  availability?: CatalogSearchParamValue;
+  sort?: CatalogSearchParamValue;
+  page?: CatalogSearchParamValue;
+  pharmacyId?: CatalogSearchParamValue;
 };
 
 export type ProductCatalogRouteParams = {
@@ -158,23 +165,24 @@ export function sortPharmaciesByName(
 export function parseProductCatalogSearchParams(
   params: ProductCatalogSearchParams = {}
 ): ProductCatalogFilters {
+  const name = getSingleSearchParam(params.name);
+  const article = getSingleSearchParam(params.article);
+  const category = getSingleSearchParam(params.category);
+  const availability = getSingleSearchParam(params.availability);
+  const sort = getSingleSearchParam(params.sort);
+  const page = getSingleSearchParam(params.page);
+  const pharmacyId = getSingleSearchParam(params.pharmacyId);
+
   return {
-    name: sanitizeTextParam(params.name),
-    article: sanitizeArticleParam(params.article),
-
-    category: isProductCategoryFilter(params.category)
-      ? params.category
+    name: sanitizeTextParam(name),
+    article: sanitizeArticleParam(article),
+    category: isProductCategoryFilter(category) ? category : 'all',
+    availability: isProductAvailabilityFilter(availability)
+      ? availability
       : 'all',
-
-    availability: isProductAvailabilityFilter(params.availability)
-      ? params.availability
-      : 'all',
-
-    sort: isProductSortFilter(params.sort) ? params.sort : 'newest',
-    page: parsePositivePageParam(params.page),
-    ...(isValidObjectId(params.pharmacyId)
-      ? { pharmacyId: params.pharmacyId }
-      : {}),
+    sort: isProductSortFilter(sort) ? sort : 'newest',
+    page: parsePositivePageParam(page),
+    ...(isValidObjectId(pharmacyId) ? { pharmacyId } : {}),
   };
 }
 
@@ -185,18 +193,21 @@ export function mergeProductCatalogFilters(
   queryFilters: ProductCatalogFilters
 ): ProductCatalogFilters {
   return {
-    ...routeFilters,
-    ...(queryFilters.name ? { name: queryFilters.name } : {}),
-    ...(queryFilters.article ? { article: queryFilters.article } : {}),
-    ...(queryFilters.category !== 'all'
-      ? { category: queryFilters.category }
+    name: routeFilters.name || queryFilters.name,
+    article: routeFilters.article || queryFilters.article,
+    category:
+      routeFilters.category !== 'all'
+        ? routeFilters.category
+        : queryFilters.category,
+    availability:
+      routeFilters.availability !== 'all'
+        ? routeFilters.availability
+        : queryFilters.availability,
+    sort: routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
+    page: routeFilters.page > 1 ? routeFilters.page : queryFilters.page,
+    ...(routeFilters.pharmacyId || queryFilters.pharmacyId
+      ? { pharmacyId: routeFilters.pharmacyId ?? queryFilters.pharmacyId }
       : {}),
-    ...(queryFilters.availability !== 'all'
-      ? { availability: queryFilters.availability }
-      : {}),
-    ...(queryFilters.pharmacyId ? { pharmacyId: queryFilters.pharmacyId } : {}),
-    ...(queryFilters.sort !== 'newest' ? { sort: queryFilters.sort } : {}),
-    ...(queryFilters.page > 1 ? { page: queryFilters.page } : {}),
   };
 }
 

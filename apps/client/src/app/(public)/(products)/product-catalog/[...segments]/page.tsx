@@ -16,7 +16,8 @@ import {
 } from '@/lib/catalog/product-catalog';
 
 import { loadProductCatalogPageData } from '@/lib/catalog/product-catalog-server';
-import { getPharmacyOptions, PUBLIC_API_CACHE_OPTIONS } from '@/lib/api/server';
+import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
+import { getPharmacyOptions, PUBLIC_DICTIONARY_CACHE_OPTIONS } from '@/lib/api/server';
 import { createPageMetadata } from '@/lib/seo/server';
 
 import { ProductCatalogPageContent } from '@/components/product-catalog';
@@ -47,7 +48,7 @@ export async function generateMetadata({
 
   if (filters.pharmacyId) {
     try {
-      pharmacies = (await getPharmacyOptions(PUBLIC_API_CACHE_OPTIONS)).items;
+      pharmacies = (await getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)).items;
     } catch {
       pharmacies = [];
     }
@@ -79,9 +80,10 @@ async function ProductCatalogSegmentsPage({
   const resolvedParams = await params;
   const routeResult = parseProductCatalogSegments(resolvedParams);
 
+  const resolvedSearchParams = await searchParams;
   const filters = mergeProductCatalogFilters(
     routeResult.filters,
-    parseProductCatalogSearchParams(await searchParams)
+    parseProductCatalogSearchParams(resolvedSearchParams)
   );
 
   const pageData = await loadProductCatalogPageData(filters);
@@ -91,7 +93,11 @@ async function ProductCatalogSegmentsPage({
     ? `/product-catalog/${resolvedParams.segments.join('/')}`
     : '/product-catalog';
 
-  if (!routeResult.isCanonical || currentPath !== canonicalPath) {
+  if (
+    !routeResult.isCanonical ||
+    hasCatalogSearchParams(resolvedSearchParams) ||
+    currentPath !== canonicalPath
+  ) {
     permanentRedirect(canonicalPath);
   }
 

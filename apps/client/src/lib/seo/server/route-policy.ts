@@ -14,27 +14,19 @@ export const STATIC_SITEMAP_ENTRIES = [
     priority: 0.8,
     changeFrequency: 'daily',
   },
-  {
-    path: ROUTES.DELIVERY_PAYMENT,
-    priority: 0.5,
-    changeFrequency: 'monthly',
-  },
-  {
-    path: ROUTES.RETURN_POLICY,
-    priority: 0.4,
-    changeFrequency: 'monthly',
-  },
-  {
-    path: ROUTES.USER_AGREEMENT,
-    priority: 0.4,
-    changeFrequency: 'monthly',
-  },
-  {
-    path: ROUTES.PERSONAL_DATA_NOTICE,
-    priority: 0.4,
-    changeFrequency: 'monthly',
-  },
 ] as const satisfies readonly SitemapEntryConfig[];
+
+//===================================================================
+
+export function createApprovedInfoSitemapEntries(
+  approvedPaths: readonly string[]
+): SitemapEntryConfig[] {
+  return approvedPaths.map((path) => ({
+    path,
+    priority: path === ROUTES.DELIVERY_PAYMENT ? 0.5 : 0.4,
+    changeFrequency: 'monthly',
+  }));
+}
 
 //===================================================================
 

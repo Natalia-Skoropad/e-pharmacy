@@ -56,35 +56,44 @@ const productsPerPageSchema = createPerPageSchema({
 
 //===============================================================
 
-export const productsQuerySchema = z.preprocess(
+const baseProductsQueryShape = {
+  page: positivePageSchema,
+  perPage: productsPerPageSchema,
+  keyword: sharedSearchSchema,
+  nameKeyword: sharedSearchSchema,
+  articleKeyword: sharedSearchSchema,
+  category: z.enum(PRODUCT_CATEGORIES).optional(),
+  pharmacyId: mongoIdSchema.optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  inStock: booleanQuerySchema.optional(),
+  sort: z.enum(PRODUCT_SORT_OPTIONS).optional(),
+} as const;
+
+//===============================================================
+
+export const publicProductsQuerySchema = z.preprocess(
+  normalizePaginationQuery,
+  z.object(baseProductsQueryShape).strict()
+);
+
+//===============================================================
+
+export const managedProductsQuerySchema = z.preprocess(
   normalizePaginationQuery,
   z
     .object({
-      page: positivePageSchema,
-      perPage: productsPerPageSchema,
-      keyword: sharedSearchSchema,
-      nameKeyword: sharedSearchSchema,
-      articleKeyword: sharedSearchSchema,
-      category: z.enum(PRODUCT_CATEGORIES).optional(),
+      ...baseProductsQueryShape,
       status: z.enum(PRODUCT_STATUS_FILTER_OPTIONS).optional(),
-
       includeBlocked: booleanQuerySchema.optional(),
-
-      pharmacyId: mongoIdSchema.optional(),
       addedToPharmacyId: mongoIdSchema.optional(),
-
       addedToMyPharmacy: booleanQuerySchema.optional(),
-
-      minPrice: z.coerce.number().min(0).optional(),
-      maxPrice: z.coerce.number().min(0).optional(),
-
-      inStock: booleanQuerySchema.optional(),
       stock: z.enum(PRODUCT_STOCK_FILTER_OPTIONS).optional(),
-
       addedFrom: dateQuerySchema,
       addedTo: dateQuerySchema,
-      sort: z.enum(PRODUCT_SORT_OPTIONS).optional(),
     })
+
+    .strict()
     .refine(
       ({ addedFrom, addedTo }) => isDateRangeOrdered(addedFrom, addedTo),
       { message: DATE_RANGE_MESSAGE, path: ['addedTo'] }
@@ -144,7 +153,8 @@ export const createProductReviewSchema = z.object({
 
 //===============================================================
 
-export type ProductsQuery = z.infer<typeof productsQuerySchema>;
+export type PublicProductsQuery = z.infer<typeof publicProductsQuerySchema>;
+export type ManagedProductsQuery = z.infer<typeof managedProductsQuerySchema>;
 export type ProductFiltersQuery = z.infer<typeof productFiltersQuerySchema>;
 export type ProductIdParams = z.infer<typeof productIdParamsSchema>;
 export type ProductReviewParams = z.infer<typeof productReviewParamsSchema>;

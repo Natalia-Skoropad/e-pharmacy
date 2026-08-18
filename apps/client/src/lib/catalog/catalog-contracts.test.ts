@@ -1,18 +1,33 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { parsePositivePageParam } from './catalog-param-utils';
+import {
+  getSingleSearchParam,
+  hasCatalogSearchParams,
+  parsePositivePageParam,
+} from './catalog-param-utils';
+
 import { getCatalogRedirectPage } from './catalog-resource-state';
 
 import {
   formatPharmacyCityLabel,
   normalizeCityKey,
   resolvePharmacyCity,
+  mergePharmacyCatalogFilters,
+  parsePharmacySearchParams,
 } from './pharmacies-catalog-filters';
 
-import { parsePharmacySegments } from './pharmacies-catalog-paths';
+import {
+  buildPharmacyCanonicalPath,
+  isPharmacyCatalogSegment,
+  parsePharmacySegments,
+} from './pharmacies-catalog-paths';
 
-import { buildProductCatalogApiParams } from './product-catalog-filters';
+import {
+  buildProductCatalogApiParams,
+  mergeProductCatalogFilters,
+  parseProductCatalogSearchParams,
+} from './product-catalog-filters';
 
 import {
   buildProductCatalogPath,
@@ -216,4 +231,90 @@ test('uses semantic, neutral catalog SEO content', () => {
     const text = Object.values(content).join(' ');
     assert.doesNotMatch(text, /tiny assistant|white coat|22:59/i);
   }
+});
+
+//===================================================================
+
+test('treats known pharmacy catalog prefixes as catalog segments before legacy detail lookup', () => {
+  for (const segment of [
+    'city-aaaaaaaaaaaaaaaaaaaaaaaa',
+    'address-aaaaaaaaaaaaaaaaaaaaaaaa',
+    'search-name-aaaaaaaaaaaaaaaaaaaaaaaa',
+  ]) {
+    assert.equal(isPharmacyCatalogSegment(segment), true);
+  }
+
+  assert.equal(
+    isPharmacyCatalogSegment('care-pharmacy-aaaaaaaaaaaaaaaaaaaaaaaa'),
+    false
+  );
+});
+
+//===================================================================
+
+test('uses path filters as canonical authority and query filters only as compatibility input', () => {
+  const routeProductFilters = parseProductCatalogSegments({
+    segments: ['category-medicine'],
+  }).filters;
+
+  const queryProductFilters = parseProductCatalogSearchParams({
+    category: 'vitamins',
+    sort: 'rating-desc',
+  });
+
+  const productFilters = mergeProductCatalogFilters(
+    routeProductFilters,
+    queryProductFilters
+  );
+
+  assert.equal(productFilters.category, 'medicine');
+  assert.equal(productFilters.sort, 'rating-desc');
+
+  const routePharmacyFilters = parsePharmacySegments({
+    segments: ['city-kyiv'],
+  }).filters;
+
+  const queryPharmacyFilters = parsePharmacySearchParams({
+    city: 'Lviv',
+    sort: 'rating-desc',
+  });
+
+  const pharmacyFilters = mergePharmacyCatalogFilters(
+    routePharmacyFilters,
+    queryPharmacyFilters
+  );
+
+  assert.equal(pharmacyFilters.city, 'kyiv');
+  assert.equal(pharmacyFilters.sort, 'rating-desc');
+});
+
+//===================================================================
+
+test('drops duplicate query values and recognizes any query form as compatibility input', () => {
+  assert.equal(getSingleSearchParam(['medicine', 'vitamins']), undefined);
+
+  assert.equal(
+    parseProductCatalogSearchParams({ category: ['medicine', 'vitamins'] })
+      .category,
+    'all'
+  );
+
+  assert.equal(parsePharmacySearchParams({ city: ['Kyiv', 'Lviv'] }).city, '');
+  assert.equal(hasCatalogSearchParams({ foo: 'bar' }), true);
+  assert.equal(hasCatalogSearchParams({}), false);
+});
+
+//===================================================================
+
+test('pharmacy noindex canonical keeps only the indexed city dimension', () => {
+  assert.equal(
+    buildPharmacyCanonicalPath({
+      name: 'Care',
+      address: 'Main Street',
+      city: 'Київ',
+      sort: 'rating-desc',
+      page: 3,
+    }),
+    '/pharmacies/city-київ'
+  );
 });

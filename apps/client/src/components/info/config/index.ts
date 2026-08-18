@@ -1,3 +1,4 @@
+export * from './documents';
 export * from './delivery-payment';
 export * from './links';
 export * from './navigation';

@@ -12,6 +12,12 @@ import { ProductReview } from '../models/productReview.model';
 import { Order } from '../models/order.model';
 
 import type {
+  ManagedProductsQuery,
+  ProductFiltersQuery,
+  PublicProductsQuery,
+} from '../schemas/product.schema';
+
+import type {
   ProductCardSummaryResponseDto,
   ProductFilterOptionsResponseDto,
   ProductEntity,
@@ -42,34 +48,7 @@ type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 
 //===============================================================
 
-type ProductsQuery = {
-  page: number;
-  perPage: number;
-  keyword?: string;
-  nameKeyword?: string;
-  articleKeyword?: string;
-  category?: ProductCategory;
-  status?: 'active' | 'blocked';
-  includeBlocked?: boolean;
-  pharmacyId?: string;
-  addedToPharmacyId?: string;
-  addedToMyPharmacy?: boolean;
-  minPrice?: number;
-  maxPrice?: number;
-  inStock?: boolean;
-  stock?: 'in-stock' | 'available' | 'empty' | 'reserved';
-  addedFrom?: string;
-  addedTo?: string;
-
-  sort?:
-    | 'price-asc'
-    | 'price-desc'
-    | 'rating-desc'
-    | 'rating-asc'
-    | 'name-asc'
-    | 'name-desc'
-    | 'newest';
-};
+type ProductsQuery = ManagedProductsQuery;
 
 //===============================================================
 
@@ -81,11 +60,6 @@ type CreateReviewInput = {
 };
 
 type PendingReviewsQuery = { page: number; perPage: number };
-
-type ProductFiltersQuery = {
-  pharmacyId?: string;
-  inStock?: boolean;
-};
 
 type PendingReviewDto = {
   productId: string;
@@ -548,18 +522,22 @@ async function getOwnProductStatistics(pharmacyId: string) {
 
 //===============================================================
 
-export async function getProductsService(
+async function getProductsByScope(
   query: ProductsQuery,
+  scope: 'public' | 'management',
   userId?: string,
   options: Readonly<{ includeOffers?: boolean }> = {}
 ) {
   const filter: Record<string, unknown> = {};
   const tableStatusFilter =
-    query.pharmacyId || query.includeBlocked
-      ? { $in: ['active', 'blocked'] }
-      : 'active';
+    scope === 'public'
+      ? 'active'
+      : query.pharmacyId || query.includeBlocked
+        ? { $in: ['active', 'blocked'] }
+        : 'active';
 
-  filter.status = query.status ?? tableStatusFilter;
+  filter.status =
+    scope === 'public' ? 'active' : (query.status ?? tableStatusFilter);
   const productTableScopeFilter: Record<string, unknown> = {
     status: tableStatusFilter,
   };
@@ -748,6 +726,24 @@ export async function getProductsService(
 
 //===============================================================
 
+export async function getProductsService(
+  query: PublicProductsQuery,
+  userId?: string
+) {
+  return getProductsByScope(query, 'public', userId);
+}
+
+//===============================================================
+
+export async function getManagedProductsService(
+  query: ManagedProductsQuery,
+  options: Readonly<{ includeOffers?: boolean }> = {}
+) {
+  return getProductsByScope(query, 'management', undefined, options);
+}
+
+//===============================================================
+
 export async function getFavoriteProductIdsService(userId: string) {
   const client = await Client.findOne({ userId })
     .select('favoriteProductIds')
@@ -761,7 +757,7 @@ export async function getFavoriteProductIdsService(userId: string) {
 //===============================================================
 
 export async function getFavoriteProductsService(
-  query: ProductsQuery,
+  query: PublicProductsQuery,
   userId: string
 ) {
   const client = await Client.findOne({ userId })
@@ -811,13 +807,14 @@ export async function getFavoriteProductsService(
 
 //===============================================================
 
-export async function getProductDetailsService(
+async function getProductDetailsByScope(
   productId: string,
-  userId?: string
+  userId: string | undefined,
+  scope: 'public' | 'management'
 ) {
   const product = await Product.findOne({
     _id: productId,
-    status: { $in: ['active', 'blocked'] },
+    status: scope === 'public' ? 'active' : { $in: ['active', 'blocked'] },
   }).lean();
 
   if (!product) {
@@ -847,6 +844,21 @@ function createInitialOfferStockQuantity(productId: Types.ObjectId): number {
   const parsed = Number.parseInt(tail, 16);
 
   return 100 + (Number.isNaN(parsed) ? 0 : parsed % 35);
+}
+
+//===============================================================
+
+export async function getProductDetailsService(
+  productId: string,
+  userId?: string
+) {
+  return getProductDetailsByScope(productId, userId, 'public');
+}
+
+//===============================================================
+
+export async function getManagedProductDetailsService(productId: string) {
+  return getProductDetailsByScope(productId, undefined, 'management');
 }
 
 //===============================================================
@@ -932,7 +944,7 @@ export async function addProductToMyPharmacyService(
     'Initial stock quantity added when the product was added to the pharmacy.'
   );
 
-  const details = await getProductDetailsService(productId, userId);
+  const details = await getManagedProductDetailsService(productId);
 
   return {
     ...details,
@@ -981,7 +993,7 @@ export async function removeProductFromMyPharmacyService(
 
   await ProductOffer.deleteOne({ _id: offer._id });
 
-  const details = await getProductDetailsService(productId, userId);
+  const details = await getManagedProductDetailsService(productId);
 
   return {
     ...details,
@@ -994,7 +1006,7 @@ export async function removeProductFromMyPharmacyService(
 export async function getProductReviewsService(productId: string) {
   const exists = await Product.exists({
     _id: productId,
-    status: { $in: ['active', 'blocked'] },
+    status: 'active',
   });
 
   if (!exists) {
