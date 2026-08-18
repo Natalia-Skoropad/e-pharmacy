@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   buildCheckoutPath,
+  buildProductContextQueryString,
   buildOrderPath,
   buildPharmacyPath,
   buildProductPath,
@@ -35,6 +36,28 @@ test('uses the backend canonical public slug when it is provided', () => {
     buildPharmacyPath('Ignored', ID, `canonical-pharmacy-ph${ID}`),
     `/canonical-pharmacy-ph${ID}`
   );
+});
+
+//===================================================================
+
+test('builds a shared product context query string', () => {
+  assert.equal(buildProductContextQueryString(), '');
+
+  assert.equal(
+    buildProductContextQueryString('pharmacy id/with spaces'),
+    '?pharmacyId=pharmacy%20id%2Fwith%20spaces'
+  );
+});
+
+//===================================================================
+
+test('treats private route labels as advisory while IDs remain authoritative', () => {
+  assert.equal(
+    getCheckoutPharmacyIdFromPathParam(`wrong-pharmacy-name-ph${ID}`),
+    ID
+  );
+
+  assert.equal(getOrderIdFromPathParam(`wrong-order-number-ph${ID}`), ID);
 });
 
 //===================================================================

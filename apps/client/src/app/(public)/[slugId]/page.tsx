@@ -13,6 +13,7 @@ import {
 
 import {
   buildPharmacyPath,
+  buildProductContextQueryString,
   buildProductPath,
   logLegacyPublicRouteHit,
   resolveLegacyPublicEntity,
@@ -35,12 +36,6 @@ type PublicDetailsPageProps = Readonly<{
 
 const resolveProduct = cache(lookupProductBySlugId);
 const resolvePharmacy = cache(lookupPharmacyBySlugId);
-
-//===================================================================
-
-function createProductQueryString(pharmacyId?: string): string {
-  return pharmacyId ? `?pharmacyId=${encodeURIComponent(pharmacyId)}` : '';
-}
 
 //===================================================================
 
@@ -145,7 +140,7 @@ async function PublicDetailsPage({
       );
 
       permanentRedirect(
-        `${canonicalPath}${createProductQueryString(resolvedSearchParams?.pharmacyId)}`
+        `${canonicalPath}${buildProductContextQueryString(resolvedSearchParams?.pharmacyId)}`
       );
     }
 
@@ -190,7 +185,7 @@ async function PublicDetailsPage({
 
     if (canonicalPath !== `/${slugId}`) {
       permanentRedirect(
-        `${canonicalPath}${createProductQueryString(resolvedSearchParams?.pharmacyId)}`
+        `${canonicalPath}${buildProductContextQueryString(resolvedSearchParams?.pharmacyId)}`
       );
     }
 

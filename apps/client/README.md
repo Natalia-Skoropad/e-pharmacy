@@ -315,6 +315,24 @@ Private route modules must use dedicated private server readers; direct imports
 of public server readers or transport helpers are guarded by the client-lib
 boundary check.
 
+### Private dynamic route labels
+
+Private checkout and order URLs keep a human-readable label for usability, but
+their typed ObjectId is the authoritative route identity:
+
+```txt
+/checkout/<pharmacy-label>-ph<ObjectId>
+/profile/orders/<order-number-label>-ph<ObjectId>
+```
+
+The pharmacy/order label is intentionally advisory on these `noindex` routes.
+A stale or incorrect label does not trigger an extra backend lookup solely for
+cosmetic canonicalization. Checkout resolves the pharmacy by the typed ID, and
+order access is still decided by the authenticated backend ownership query.
+The `ph` suffix in an order route is an order-route compatibility prefix; it
+must not be interpreted as a public Pharmacy entity marker outside the order
+parser.
+
 ## Main Pages
 
 ### Home
@@ -446,6 +464,11 @@ The pharmacy catalog also uses readable route segments:
 ```
 
 City pages can be indexable because they describe stable location-based catalog content. Search by name/address, sorting, pagination, and empty-result states are noindex to avoid thin or duplicate pages.
+
+Both catch-all catalog parsers enforce a shared practical segment budget before
+walking the route. Excessively long catch-all URLs are treated as
+non-canonical input and cannot expand parser/backend filter work without
+bounds.
 
 ### Sitemap and robots
 
@@ -593,7 +616,7 @@ Test layers:
 
 - `test` runs pure selectors, state machines, stores, route/config decisions, and API-reader contracts.
 - `test:react` renders the real `ClientProviders` stack with React and verifies that application content is mounted inside the required provider order.
-- `test:integration` covers structured server-data degradation and sitemap partial-failure behavior with injected HTTP responses.
+- `test:integration` covers route/access policy, SEO/canonical policy, structured server-data degradation, and sitemap partial-failure behavior with injected HTTP responses.
 - `check:client-hooks`, `check:client-providers`, `check:client-routes`, `check:client-user-state`, `check:client-cart`, and `check:client-noop-wrappers` are architecture checks included in `check:before-deploy`.
 
 ## Security Notes

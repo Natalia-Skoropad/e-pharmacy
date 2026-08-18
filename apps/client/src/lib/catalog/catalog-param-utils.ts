@@ -1,5 +1,7 @@
 const CANONICAL_POSITIVE_INTEGER_PATTERN = /^[1-9]\d*$/;
 
+export const MAX_CATALOG_SEGMENTS = 12;
+
 //===================================================================
 
 export function parsePositivePageParam(value?: string): number {

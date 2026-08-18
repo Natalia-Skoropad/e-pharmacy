@@ -36,6 +36,12 @@ export function buildPharmacyPath(
 
 //===================================================================
 
+export function buildProductContextQueryString(pharmacyId?: string): string {
+  return pharmacyId ? `?pharmacyId=${encodeURIComponent(pharmacyId)}` : '';
+}
+
+//===================================================================
+
 export function buildCheckoutPath(
   pharmacyName: string | null | undefined,
   pharmacyId: string
@@ -53,6 +59,9 @@ export function buildCheckoutPath(
 export function getCheckoutPharmacyIdFromPathParam(
   slugId: string
 ): string | null {
+  // Private checkout routes are ID-authoritative. The human-readable pharmacy
+  // label is advisory and is not revalidated with a backend lookup solely for
+  // canonicalization on this noindex route.
   return getPharmacyIdFromPublicSlugId(slugId);
 }
 
@@ -94,6 +103,8 @@ export function buildOrderPath(
 //===================================================================
 
 export function getOrderIdFromPathParam(orderSlugId: string): string | null {
+  // Private order routes are ID-authoritative. The order-number label is
+  // advisory; backend ownership still decides whether this client may read it.
   const match = orderSlugId.match(/(?:^|-)ph([a-f\d]{24})$/i);
   return match?.[1]?.toLowerCase() ?? null;
 }

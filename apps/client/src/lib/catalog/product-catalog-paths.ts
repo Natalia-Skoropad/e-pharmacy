@@ -11,6 +11,7 @@ import { ROUTES } from '@/lib/routes';
 
 import {
   isCanonicalPositivePageParam,
+  MAX_CATALOG_SEGMENTS,
   parsePositivePageParam,
 } from './catalog-param-utils';
 
@@ -26,7 +27,7 @@ import {
 //===================================================================
 
 export type CatalogSegmentIssue = Readonly<{
-  code: 'duplicate' | 'legacy' | 'malformed' | 'unknown';
+  code: 'duplicate' | 'legacy' | 'malformed' | 'unknown' | 'too_many';
   segment: string;
   index: number;
 }>;
@@ -68,6 +69,22 @@ export function parseProductCatalogSegments(
   };
 
   const issues: CatalogSegmentIssue[] = [];
+  const segments = params.segments ?? [];
+
+  if (segments.length > MAX_CATALOG_SEGMENTS) {
+    return {
+      filters,
+      issues: [
+        {
+          code: 'too_many',
+          segment: segments[MAX_CATALOG_SEGMENTS] ?? '',
+          index: MAX_CATALOG_SEGMENTS,
+        },
+      ],
+      isCanonical: false,
+    };
+  }
+
   const seen = new Set<string>();
 
   const apply = (
@@ -85,7 +102,7 @@ export function parseProductCatalogSegments(
     if (!update()) issues.push({ code: 'malformed', segment, index });
   };
 
-  for (const [index, segment] of (params.segments ?? []).entries()) {
+  for (const [index, segment] of segments.entries()) {
     if (segment.startsWith('category-')) {
       apply('category', segment, index, () => {
         const value = segment.slice('category-'.length);

@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   getSingleSearchParam,
   hasCatalogSearchParams,
+  MAX_CATALOG_SEGMENTS,
   parsePositivePageParam,
 } from './catalog-param-utils';
 
@@ -73,6 +74,24 @@ test('accepts only canonical safe positive page values', () => {
   assert.equal(parsePositivePageParam('1.0'), 1);
   assert.equal(parsePositivePageParam('1e3'), 1);
   assert.equal(parsePositivePageParam('9007199254740992'), 1);
+});
+
+//===================================================================
+
+test('rejects excessive catch-all segment counts before parsing the full URL', () => {
+  const segments = Array.from(
+    { length: MAX_CATALOG_SEGMENTS + 100 },
+    (_, index) => `unknown-${index}`
+  );
+
+  const productResult = parseProductCatalogSegments({ segments });
+  const pharmacyResult = parsePharmacySegments({ segments });
+
+  for (const result of [productResult, pharmacyResult]) {
+    assert.equal(result.isCanonical, false);
+    assert.deepEqual(result.issues.map((issue) => issue.code), ['too_many']);
+    assert.equal(result.issues[0]?.index, MAX_CATALOG_SEGMENTS);
+  }
 });
 
 //===================================================================

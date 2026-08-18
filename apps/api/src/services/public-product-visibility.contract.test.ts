@@ -40,6 +40,16 @@ test('public product endpoints are active-only while blocked lifecycle access is
 
   assert.match(
     pharmacyService,
+    /const PUBLIC_PHARMACY_STATUSES = \[[\s\S]*?PHARMACY_STATUSES\.ACTIVE[\s\S]*?PHARMACY_STATUSES\.ON_MODERATION[\s\S]*?\] as const/
+  );
+
+  assert.match(
+    service,
+    /getOffersByProductIds[\s\S]*?status:\s*\{ \$in: \['active', 'on_moderation'\] \}/
+  );
+
+  assert.match(
+    pharmacyService,
     /\$lookup:[\s\S]*?from:\s*Product\.collection\.name[\s\S]*?\$match:\s*\{ 'product\.status': 'active' \}/
   );
 });

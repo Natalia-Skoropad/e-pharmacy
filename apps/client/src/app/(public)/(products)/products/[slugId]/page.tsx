@@ -7,7 +7,7 @@ import {
   lookupProductBySlugId,
 } from '@/lib/details';
 
-import { buildProductPath } from '@/lib/routes';
+import { buildProductContextQueryString, buildProductPath } from '@/lib/routes';
 import { createPageMetadata } from '@/lib/seo/server';
 
 import { DetailsUnavailablePage } from '@/components/common/DetailsUnavailablePage';
@@ -22,12 +22,6 @@ type LegacyProductDetailsPageProps = Readonly<{
 //===================================================================
 
 const resolveProduct = cache(lookupProductBySlugId);
-
-//===================================================================
-
-function createProductQueryString(pharmacyId?: string): string {
-  return pharmacyId ? `?pharmacyId=${encodeURIComponent(pharmacyId)}` : '';
-}
 
 //===================================================================
 
@@ -64,9 +58,7 @@ async function LegacyProductDetailsPage({
 
   if (result.status === 'not_found') notFound();
   if (result.status === 'unavailable') {
-    return (
-      <DetailsUnavailablePage entityLabel="product" error={result} />
-    );
+    return <DetailsUnavailablePage entityLabel="product" error={result} />;
   }
 
   const resolvedSearchParams = await searchParams;
@@ -76,7 +68,7 @@ async function LegacyProductDetailsPage({
       result.product.name,
       result.product.id,
       result.product.publicSlugId
-    )}${createProductQueryString(resolvedSearchParams?.pharmacyId)}`
+    )}${buildProductContextQueryString(resolvedSearchParams?.pharmacyId)}`
   );
 }
 

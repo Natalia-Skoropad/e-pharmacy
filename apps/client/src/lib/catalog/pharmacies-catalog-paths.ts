@@ -7,6 +7,7 @@ import { ROUTES } from '@/lib/routes';
 
 import {
   isCanonicalPositivePageParam,
+  MAX_CATALOG_SEGMENTS,
   parsePositivePageParam,
 } from './catalog-param-utils';
 
@@ -59,6 +60,22 @@ export function parsePharmacySegments(
   };
 
   const issues: CatalogSegmentIssue[] = [];
+  const segments = params.segments ?? [];
+
+  if (segments.length > MAX_CATALOG_SEGMENTS) {
+    return {
+      filters,
+      issues: [
+        {
+          code: 'too_many',
+          segment: segments[MAX_CATALOG_SEGMENTS] ?? '',
+          index: MAX_CATALOG_SEGMENTS,
+        },
+      ],
+      isCanonical: false,
+    };
+  }
+
   const seen = new Set<string>();
 
   const apply = (
@@ -76,7 +93,7 @@ export function parsePharmacySegments(
     if (!update()) issues.push({ code: 'malformed', segment, index });
   };
 
-  for (const [index, segment] of (params.segments ?? []).entries()) {
+  for (const [index, segment] of segments.entries()) {
     if (segment.startsWith('search-name-')) {
       apply('name', segment, index, () => {
         const value = deslugifyNameSegment(
