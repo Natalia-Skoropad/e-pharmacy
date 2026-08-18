@@ -4,13 +4,20 @@ import { useMemo, useState } from 'react';
 
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
-import { CountLabel, formatInitials, RatingSummary } from '@e-pharmacy/ui/data-display';
+import {
+  CountLabel,
+  formatInitials,
+  RatingSummary,
+} from '@e-pharmacy/ui/data-display';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { Cart } from '@e-pharmacy/types/cart';
-import { CART_CHANGED_ERROR_CODE, STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
+import {
+  CART_CHANGED_ERROR_CODE,
+  STOCK_CHANGED_ERROR_CODE,
+} from '@e-pharmacy/config/cart';
 
 import {
   getCartOrderPath,
@@ -264,7 +271,7 @@ function CartPageContent() {
                             src={group.pharmacyImageUrl}
                             alt={`${group.pharmacyName} photo`}
                             fallback={formatInitials(group.pharmacyName, 'P')}
-                            size={52}
+                            size={70}
                           />
 
                           <div className={css.pharmacyInfo}>

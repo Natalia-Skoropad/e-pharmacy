@@ -110,7 +110,7 @@
 }
 
 .stock {
-  max-width: 220px;
+  max-width: 250px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-accent);
@@ -178,7 +178,7 @@
   }
 
   .footer {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
   }
 

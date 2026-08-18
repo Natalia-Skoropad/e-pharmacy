@@ -236,7 +236,7 @@
   }
 
   .productItem {
-    grid-template-columns: 72px minmax(0, 1fr) 120px;
+    grid-template-columns: 72px minmax(0, 1fr) minmax(236px, auto);
     gap: 14px;
     padding-block: 16px;
   }
@@ -248,6 +248,14 @@
   }
 
   .productActions {
-    width: 120px;
+    grid-template-columns: minmax(0, auto) 120px;
+    gap: 12px;
+    align-items: center;
+    justify-content: end;
+    width: auto;
+  }
+
+  .productPrice {
+    white-space: nowrap;
   }
 }

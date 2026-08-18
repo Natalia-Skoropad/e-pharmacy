@@ -166,15 +166,31 @@ function DocumentUpload({
   };
 
   const handleDownload = async (file: BrowserUploadFile) => {
-    if (!onDownloadFile) return;
-    const dataUrl = await onDownloadFile(file);
-    if (!dataUrl) return;
+    let downloadUrl = file.dataUrl ?? '';
+    let objectUrl = '';
+
+    if (!downloadUrl && file.file) {
+      objectUrl = URL.createObjectURL(file.file);
+      downloadUrl = objectUrl;
+    }
+
+    if (!downloadUrl && onDownloadFile) {
+      downloadUrl = await onDownloadFile(file);
+    }
+
+    if (!downloadUrl) return;
 
     const anchor = document.createElement('a');
-    anchor.href = dataUrl;
+    anchor.href = downloadUrl;
     anchor.download = file.name;
     anchor.rel = 'noopener';
+    document.body.appendChild(anchor);
     anchor.click();
+    anchor.remove();
+
+    if (objectUrl) {
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+    }
   };
 
   return (
@@ -249,10 +265,11 @@ function DocumentUpload({
                     <span className={css.fileName}>{file.name}</span>
                     <Download size={14} aria-hidden="true" />
                   </a>
-                ) : onDownloadFile ? (
+                ) : file.file || onDownloadFile ? (
                   <button
                     className={css.fileLink}
                     type="button"
+                    aria-label={`Download ${file.name}`}
                     onClick={() => void handleDownload(file)}
                   >
                     <span className={css.fileName}>{file.name}</span>

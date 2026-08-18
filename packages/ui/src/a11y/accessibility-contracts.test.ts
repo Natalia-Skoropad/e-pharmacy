@@ -108,6 +108,8 @@ test('document upload delegates file rules to validation and exposes a labelled 
   assert.match(source, /<label className=\{css\.label\} htmlFor=\{id\}>/);
   assert.match(source, /required=\{required\}/);
   assert.match(source, /aria-errormessage/);
+  assert.match(source, /file\.file \|\| onDownloadFile/);
+  assert.match(source, /URL\.createObjectURL\(file\.file\)/);
   assert.doesNotMatch(source, /type DocumentUploadFile/);
 });
 

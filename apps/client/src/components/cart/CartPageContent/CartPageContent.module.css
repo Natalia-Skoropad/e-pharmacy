@@ -120,6 +120,8 @@
   align-items: flex-start;
   justify-content: space-between;
   padding: 16px;
+  background-color: var(--color-background);
+  border-radius: 25px;
 }
 
 .pharmacyIdentity {

@@ -9,6 +9,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -31,7 +32,12 @@ import {
 } from '@e-pharmacy/validation/auth';
 
 import { getClientAuthErrorMessage } from '@/lib/auth';
-import { captureResetPasswordToken } from '@/lib/auth/reset-password-token';
+
+import {
+  captureResetPasswordToken,
+  clearResetPasswordTokenFromHistoryState,
+} from '@/lib/auth/reset-password-token';
+
 import { ROUTES } from '@/lib/routes';
 import { resetPassword } from '@/lib/api/browser';
 
@@ -71,13 +77,14 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
     getClientReadySnapshot,
     getServerReadySnapshot
   );
-  const token = useMemo(
+  const resetTokenCapture = useMemo(
     () =>
       isClientReady
-        ? captureResetPasswordToken(window.location.href).token
+        ? captureResetPasswordToken(window.location.href, window.history.state)
         : null,
     [isClientReady]
   );
+  const token = resetTokenCapture?.token ?? null;
   const hasCapturedToken = isClientReady;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -89,19 +96,21 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
     useState(false);
 
   useEffect(() => {
-    if (!isClientReady) return;
+    if (!resetTokenCapture) return;
 
     const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    const captured = captureResetPasswordToken(window.location.href);
 
-    if (captured.sanitizedUrl !== currentUrl) {
+    if (
+      resetTokenCapture.token ||
+      resetTokenCapture.sanitizedUrl !== currentUrl
+    ) {
       window.history.replaceState(
-        window.history.state,
+        resetTokenCapture.historyState,
         '',
-        captured.sanitizedUrl
+        resetTokenCapture.sanitizedUrl
       );
     }
-  }, [isClientReady]);
+  }, [resetTokenCapture]);
 
   const formIsValid =
     hasCapturedToken &&
@@ -146,6 +155,12 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
       });
 
       invalidateSession('password_reset');
+      window.history.replaceState(
+        clearResetPasswordTokenFromHistoryState(window.history.state),
+        '',
+        `${window.location.pathname}${window.location.search}${window.location.hash}`
+      );
+
       setIsDone(true);
       setValues(RESET_PASSWORD_INITIAL_VALUES);
       setTouchedFields({});

@@ -112,6 +112,8 @@
   gap: 14px;
   align-items: start;
   padding: 16px;
+  background-color: var(--color-background);
+  border-radius: 25px;
 }
 
 .pharmacyIdentity {

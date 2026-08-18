@@ -1,6 +1,6 @@
 import { ShieldAlert } from 'lucide-react';
 
-import { formatInitials } from '@e-pharmacy/ui/data-display';
+import { formatInitials, RatingSummary } from '@e-pharmacy/ui/data-display';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { formatMoney } from '@e-pharmacy/utils/money';
@@ -27,18 +27,25 @@ function CheckoutOrderPanel({
 }: CheckoutOrderPanelProps) {
   return (
     <aside className={css.panel} aria-labelledby="order-title">
-      <h2 className={css.title} id="order-title">
-        Pharmacy order
-      </h2>
-
       <div className={css.orderCard}>
         <TableImagePreview
           src={orderGroup.pharmacyImageUrl}
           alt={`${orderGroup.pharmacyName} photo`}
           fallback={formatInitials(orderGroup.pharmacyName, 'P')}
-          size={48}
+          size={64}
         />
-        <h3>{orderGroup.pharmacyName}</h3>
+
+        <div className={css.orderIdentity}>
+          <p className={css.orderKicker}>Pharmacy order</p>
+          <h2 className={css.orderName} id="order-title">
+            {orderGroup.pharmacyName}
+          </h2>
+          <RatingSummary
+            rating={orderGroup.pharmacyRating}
+            reviewsCount={orderGroup.pharmacyReviewsCount ?? 0}
+            size="sm"
+          />
+        </div>
       </div>
 
       <div className={css.policyNotice}>

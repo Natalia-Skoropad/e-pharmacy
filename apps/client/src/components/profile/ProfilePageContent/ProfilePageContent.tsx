@@ -164,17 +164,6 @@ const FAVORITE_COUNTS_PER_PAGE = 1;
 
 //===================================================================
 
-function truncateOrderComment(value?: string): string {
-  const normalized = value?.trim() ?? '';
-
-  if (!normalized) return '—';
-  if (normalized.length <= 50) return normalized;
-
-  return `${normalized.slice(0, 50)}...`;
-}
-
-//===================================================================
-
 type ClientOrdersFilterState = Readonly<{
   date: { from: string; to: string };
   pharmacy: string;
@@ -497,11 +486,6 @@ function AuthenticatedProfilePageContent({
         key: 'paymentMethod',
         title: <TableHeaderTitle parts={['Payment', 'method']} />,
         render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
-      },
-      {
-        key: 'clientComment',
-        title: <TableHeaderTitle parts={['Client', 'comment']} />,
-        render: (order) => truncateOrderComment(order.comment),
       },
       {
         key: 'totalQuantity',

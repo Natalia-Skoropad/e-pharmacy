@@ -33,11 +33,7 @@ import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
 
-import {
-  ROUTES,
-  buildProductPath,
-  buildPharmacyPath,
-} from '@/lib/routes';
+import { ROUTES, buildProductPath, buildPharmacyPath } from '@/lib/routes';
 
 import { getOrderDetails } from '@/lib/api/browser';
 
@@ -180,12 +176,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                       src={order.pharmacyImageUrl}
                       alt={`${order.pharmacyName} photo`}
                       fallback={formatInitials(order.pharmacyName, 'P')}
-                      size={56}
+                      size={70}
                     />
 
                     <div>
                       <p className={css.kicker}>Pharmacy order</p>
-                      <h2 className={css.pharmacyTitle}>{order.pharmacyName}</h2>
+                      <h2 className={css.pharmacyTitle}>
+                        {order.pharmacyName}
+                      </h2>
 
                       <RatingSummary
                         rating={order.pharmacyRating}
