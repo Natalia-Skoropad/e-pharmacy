@@ -193,15 +193,8 @@ function serializePharmacyCardSummary(
 function serializePublicPharmacy(
   pharmacy: PharmacyDocument,
   availableProductsCount: number,
-  favoriteIds: Set<string>,
-  options: { includeBankDetails?: boolean } = {}
+  favoriteIds: Set<string>
 ): PublicPharmacyResponseDto {
-  const completeBankDetails = hasCompleteBankDetails(pharmacy.bankDetails)
-    ? pharmacy.bankDetails
-    : null;
-  const shouldIncludeBankDetails =
-    Boolean(options.includeBankDetails) && Boolean(completeBankDetails);
-
   const pharmacyId = String(pharmacy._id);
 
   return {
@@ -218,9 +211,6 @@ function serializePublicPharmacy(
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
-    ...(shouldIncludeBankDetails && completeBankDetails
-      ? { bankDetails: completeBankDetails }
-      : {}),
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
@@ -455,8 +445,7 @@ export async function getPharmacyDetailsService(
     pharmacy: serializePublicPharmacy(
       pharmacy,
       countMap.get(String(pharmacy._id)) ?? 0,
-      favoriteIds,
-      { includeBankDetails: Boolean(userId) }
+      favoriteIds
     ),
   };
 }

@@ -125,6 +125,59 @@ for (const file of clientFiles) {
 
 //===================================================================
 
+const privateRouteFiles = await listFiles(
+  path.join(clientSource, 'app/(private)')
+);
+
+for (const file of privateRouteFiles) {
+  const relative = path.relative(root, file).replaceAll('\\', '/');
+  const source = await readFile(file, 'utf8');
+  const imports = importsOf(source, file);
+
+  for (const imported of imports) {
+    if (
+      imported === '@e-pharmacy/next-api/server' ||
+      imported === '@/lib/api/server' ||
+      (imported.startsWith('@/lib/api/server/') &&
+        !imported.startsWith('@/lib/api/server/private/'))
+    ) {
+      violations.push(
+        `${relative}: private App Router modules must use a dedicated private server reader, never a public/direct server transport`
+      );
+    }
+  }
+}
+
+for (const file of libFiles.filter((candidate) =>
+  candidate.replaceAll('\\', '/').includes('/lib/api/server/private/')
+)) {
+  const relative = path.relative(root, file).replaceAll('\\', '/');
+  const source = await readFile(file, 'utf8');
+
+  if (!/authenticatedBackendApiRequest/.test(source)) {
+    violations.push(
+      `${relative}: private server readers must use authenticatedBackendApiRequest so backend session validation remains the security boundary`
+    );
+  }
+}
+
+const nextServerTransport = await readFile(
+  path.join(root, 'packages/next-api/src/server/public-backend-api-request.ts'),
+  'utf8'
+);
+
+if (
+  !/authenticatedBackendApiRequest[\s\S]*?createAllowedAuthCookieHeader\([\s\S]*?'access-only'[\s\S]*?cache:\s*'no-store'/.test(
+    nextServerTransport
+  )
+) {
+  violations.push(
+    'packages/next-api server transport must keep authenticated private reads access-only, backend-validated and no-store'
+  );
+}
+
+//===================================================================
+
 for (const directory of ['apps/api', 'apps/pharmacy', 'packages']) {
   const files = await listFiles(path.join(root, directory));
   for (const file of files) {

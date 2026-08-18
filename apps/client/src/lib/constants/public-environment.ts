@@ -14,7 +14,8 @@ export type ClientPublicEnvironmentErrorCode =
   | 'INSECURE_PRODUCTION_URL'
   | 'CREDENTIALS_NOT_ALLOWED'
   | 'QUERY_OR_HASH_NOT_ALLOWED'
-  | 'BASE_PATH_NOT_ALLOWED';
+  | 'BASE_PATH_NOT_ALLOWED'
+  | 'MISSING_PRODUCTION_SITE_URL';
 
 //===================================================================
 
@@ -54,13 +55,29 @@ export function resolveClientPublicEnvironment({
   runtimeSiteUrl,
   deploymentSiteUrl,
   nodeEnv,
+  requireExplicitProductionSiteUrl = false,
 }: Readonly<{
   configuredSiteUrl: string | undefined;
   runtimeSiteUrl?: string | undefined;
   deploymentSiteUrl?: string | undefined;
   nodeEnv: string | undefined;
+  requireExplicitProductionSiteUrl?: boolean;
 }>): ClientPublicEnvironmentResult {
   const isProduction = nodeEnv === 'production';
+
+  if (
+    isProduction &&
+    requireExplicitProductionSiteUrl &&
+    !configuredSiteUrl?.trim() &&
+    !deploymentSiteUrl?.trim()
+  ) {
+    return {
+      ok: false,
+      code: 'MISSING_PRODUCTION_SITE_URL',
+      message:
+        'NEXT_PUBLIC_SITE_URL or a trusted production deployment origin is required for the canonical URL.',
+    };
+  }
 
   const candidate =
     configuredSiteUrl?.trim() ||

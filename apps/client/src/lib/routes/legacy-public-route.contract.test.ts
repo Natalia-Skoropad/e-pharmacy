@@ -5,14 +5,17 @@ import test from 'node:test';
 //===================================================================
 
 test('legacy public entity URLs permanently redirect to typed canonical URLs', async () => {
-  const source = await readFile(
-    new URL('../../app/(public)/[slugId]/page.tsx', import.meta.url),
-    'utf8'
-  );
+  const [pageSource, resolverSource] = await Promise.all([
+    readFile(
+      new URL('../../app/(public)/[slugId]/page.tsx', import.meta.url),
+      'utf8'
+    ),
+    readFile(new URL('./legacy-public-route.ts', import.meta.url), 'utf8'),
+  ]);
 
-  assert.match(source, /resolveLegacyPublicEntity/);
-  assert.match(source, /getIdFromSlugId/);
-  assert.match(source, /permanentRedirect\(/);
-  assert.match(source, /buildProductPath\(/);
-  assert.match(source, /buildPharmacyPath\(/);
+  assert.match(pageSource, /resolveLegacyPublicEntity/);
+  assert.match(resolverSource, /getIdFromSlugId/);
+  assert.match(pageSource, /permanentRedirect\(/);
+  assert.match(pageSource, /buildProductPath\(/);
+  assert.match(pageSource, /buildPharmacyPath\(/);
 });

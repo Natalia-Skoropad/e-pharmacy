@@ -60,15 +60,6 @@ export type CompletePharmacyBankDetails = {
   paymentPurpose: string;
 };
 
-export type PublicPaymentBankDetails = {
-  recipientName: string;
-  taxId: string;
-  iban: string;
-  bankName: string;
-  receiptEmail: string;
-  paymentPurpose: string;
-};
-
 export type PharmacyPendingModeration = {
   name?: string;
   address?: string | null;
@@ -155,7 +146,6 @@ export type PublicPharmacyResponseDto = {
   email?: string;
   workingHours?: string;
   bankTransferAvailable: boolean;
-  bankDetails?: PublicPaymentBankDetails;
   rating: number;
   imageUrl?: string;
   description?: string;

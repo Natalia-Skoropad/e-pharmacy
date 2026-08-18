@@ -219,11 +219,13 @@ apps/client/
           return-policy/
           user-agreement/
         (products)/
-          product-catalog/[[...segments]]
+          product-catalog/
+          product-catalog/[...segments]/
           products/[slugId]/
         (pharmacies)/
-          pharmacies/[[...segments]]
-          pharmacies/[slugId]/
+          pharmacies/
+          pharmacies/[...segments]/
+        [slugId]/
       api/
         auth/
         cart/
@@ -273,6 +275,45 @@ apps/client/
     providers/
     routes/
 ```
+
+### Legacy public route lifecycle
+
+Canonical public entity URLs are typed and unambiguous:
+
+```txt
+/<name>-pr<ObjectId>  # product
+/<name>-ph<ObjectId>  # pharmacy
+```
+
+The untyped compatibility form `/<name>-<ObjectId>` is migration-only. Its
+resolution is intentionally **product-first**: if the same ObjectId exists for
+both a Product and a Pharmacy, the legacy URL resolves to the Product and is
+permanently redirected to the typed product URL. New links must never use the
+untyped form.
+
+Each redirect from an untyped root URL emits the structured server event
+`legacy_public_entity_route_hit` with the resolved entity type. Review legacy
+traffic on **2026-11-30**. The compatibility route may be removed only when
+there are no known production links and telemetry shows **30 consecutive days
+of zero legacy hits**.
+
+### Private server-read contract
+
+The `(private)` route group and `proxy.ts` are UX/access layers, not an
+authorization boundary. Current private pages intentionally render client
+features and do not load cart/profile/order data in React Server Components.
+
+Before any private RSC reader is added, it must use the authenticated server
+transport from `@e-pharmacy/next-api/server`. That transport forwards only the
+access/legacy auth identity, always uses `no-store`, and relies on backend
+`authenticate` plus role/ownership checks to validate the JWT, active Session,
+and current User. Refresh-cookie presence in `proxy.ts` must never authorize a
+private server fetch. A failed/expired/revoked/blocked session must fail closed
+and must not render private data into HTML or the Flight payload.
+
+Private route modules must use dedicated private server readers; direct imports
+of public server readers or transport helpers are guarded by the client-lib
+boundary check.
 
 ## Main Pages
 
@@ -429,14 +470,14 @@ The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker f
 
 ### Lifecycle ownership map
 
-| Layer | Owner | Identity / concurrency policy |
-| --- | --- | --- |
-| Auth capability | `selectClientAuthCapabilities` + `useClientAuthCapabilities` | Pure selector stays separate from the React adapter |
-| Session lifecycle | `ClientSessionScopeProvider` | Every authenticated, unavailable, logout, account-switch, and same-user relogin lifecycle receives a new owner key |
-| Favorites | `FavoritesProvider` | Product/pharmacy ID sets are single-flight, session-keyed, abortable, and updated by one mutation owner |
-| Reviews | `useReviewForm` | Ephemeral draft keyed by session owner and `product:*` or `pharmacy:*` target |
-| Cart | `CartProvider` | Discriminated read state, one serialized mutation queue, session cancellation, retry/refresh |
-| Route access | `ClientProtectedRoute` / `ClientGuestOnlyRoute` | Client-specific UX boundary; backend remains the security boundary |
+| Layer             | Owner                                                        | Identity / concurrency policy                                                                                      |
+| ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Auth capability   | `selectClientAuthCapabilities` + `useClientAuthCapabilities` | Pure selector stays separate from the React adapter                                                                |
+| Session lifecycle | `ClientSessionScopeProvider`                                 | Every authenticated, unavailable, logout, account-switch, and same-user relogin lifecycle receives a new owner key |
+| Favorites         | `FavoritesProvider`                                          | Product/pharmacy ID sets are single-flight, session-keyed, abortable, and updated by one mutation owner            |
+| Reviews           | `useReviewForm`                                              | Ephemeral draft keyed by session owner and `product:*` or `pharmacy:*` target                                      |
+| Cart              | `CartProvider`                                               | Discriminated read state, one serialized mutation queue, session cancellation, retry/refresh                       |
+| Route access      | `ClientProtectedRoute` / `ClientGuestOnlyRoute`              | Client-specific UX boundary; backend remains the security boundary                                                 |
 
 App-specific lifecycle hooks remain in `apps/client`; `packages/hooks` contains only environment-agnostic infrastructure. Source-pattern checks are architecture lint only. Behavioral coverage lives in pure controller/store tests plus the React provider-stack render test.
 
@@ -484,12 +525,12 @@ BFF_PROXY_SECRET=
 
 ### Variable reference
 
-| Variable | Used for | Example |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | canonical URLs, metadata, sitemap, robots, absolute public URLs | `http://localhost:3000` |
-| `NEXT_PUBLIC_PHARMACY_APP_URL` | pharmacy application base URL used for trusted cross-application redirects | `http://localhost:3002` |
-| `API_BASE_URL` | backend URL used only by Next.js server-side data fetches and BFF route handlers | `http://localhost:4000` |
-| `BFF_PROXY_SECRET` | server-only shared secret sent by Next.js BFF handlers to the Express API; local `pnpm dev` auto-provisions it when absent | `local-secret` |
+| Variable                       | Used for                                                                                                                   | Example                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `NEXT_PUBLIC_SITE_URL`         | canonical URLs, metadata, sitemap, robots, absolute public URLs                                                            | `http://localhost:3000` |
+| `NEXT_PUBLIC_PHARMACY_APP_URL` | pharmacy application base URL used for trusted cross-application redirects                                                 | `http://localhost:3002` |
+| `API_BASE_URL`                 | backend URL used only by Next.js server-side data fetches and BFF route handlers                                           | `http://localhost:4000` |
+| `BFF_PROXY_SECRET`             | server-only shared secret sent by Next.js BFF handlers to the Express API; local `pnpm dev` auto-provisions it when absent | `local-secret`          |
 
 For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured pharmacy base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required in production and must be an origin-only HTTPS URL such as `https://client.example.com`; application base paths, credentials, query strings, and hashes are rejected. Local development may use the localhost fallback.
 

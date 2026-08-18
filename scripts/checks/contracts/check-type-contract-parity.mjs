@@ -328,11 +328,6 @@ async function assertActualTypeShapes(frontendFixture) {
       'CompletePharmacyBankDetails',
     ],
     [
-      'publicBankDetails',
-      'apps/api/src/types/pharmacy.ts',
-      'PublicPaymentBankDetails',
-    ],
-    [
       'verificationDocument',
       'apps/api/src/types/pharmacy.ts',
       'PharmacyVerificationDocumentMetadata',

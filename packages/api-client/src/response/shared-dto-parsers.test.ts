@@ -9,6 +9,7 @@ import {
   parseFavoriteMutationResponse,
   parseHealthResponse,
   parsePharmaciesResponse,
+  parsePharmacyCheckoutDetailsResponse,
   parsePharmacyDetailsResponse,
   parsePharmacyDocumentContentResponse,
   parsePharmacyProfileResponse,
@@ -345,6 +346,57 @@ test('requires backend-provided typed public slug IDs', () => {
     parsePharmacyDetailsResponse({ pharmacy }).pharmacy.publicSlugId,
     pharmacy.publicSlugId
   );
+
+  assert.throws(
+    () =>
+      parsePharmacyDetailsResponse({
+        pharmacy: {
+          ...pharmacy,
+          bankDetails: {
+            recipientName: 'E Pharmacy',
+            taxId: '12345678',
+            iban: 'UA123456789012345678901234567',
+            bankName: 'Bank',
+            receiptEmail: 'billing@example.com',
+            paymentPurpose: 'Order payment',
+          },
+        },
+      }),
+    ApiError
+  );
+
+  const checkoutBankDetails = {
+    recipientName: 'E Pharmacy',
+    taxId: '12345678',
+    iban: 'UA123456789012345678901234567',
+    bankName: 'Bank',
+    receiptEmail: 'billing@example.com',
+    paymentPurpose: 'Order payment',
+  };
+
+  assert.deepEqual(
+    parsePharmacyCheckoutDetailsResponse({
+      pharmacy: {
+        id: pharmacy.id,
+        name: pharmacy.name,
+        bankTransferAvailable: true,
+        bankDetails: checkoutBankDetails,
+      },
+    }).pharmacy.bankDetails,
+    checkoutBankDetails
+  );
+
+  assert.throws(
+    () =>
+      parsePharmacyCheckoutDetailsResponse({
+        pharmacy: {
+          id: pharmacy.id,
+          name: pharmacy.name,
+          bankTransferAvailable: true,
+        },
+      }),
+    ApiError
+  );
 });
 
 //===================================================================
@@ -561,8 +613,9 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     document.id
   );
 
-
-  const ownerProfile = parsePharmacyProfileResponse({ pharmacy: profile }).pharmacy;
+  const ownerProfile = parsePharmacyProfileResponse({
+    pharmacy: profile,
+  }).pharmacy;
   assert.equal(ownerProfile.pendingModeration?.phone, null);
   assert.equal(ownerProfile.pendingModeration?.description, null);
   assert.equal(ownerProfile.pendingModeration?.bankDetails?.receiptEmail, null);

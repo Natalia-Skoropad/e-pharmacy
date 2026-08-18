@@ -1,6 +1,10 @@
 import 'server-only';
 
-import { CLIENT_RESERVED_APP_PREFIXES, ROUTES } from '@/lib/routes';
+import {
+  CLIENT_PRIVATE_ROUTE_PREFIXES,
+  CLIENT_RESERVED_APP_PREFIXES,
+  ROUTES,
+} from '@/lib/routes';
 
 import type { SitemapEntryConfig } from './sitemap';
 
@@ -32,13 +36,11 @@ export function createApprovedInfoSitemapEntries(
 
 const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   '/api',
-  ROUTES.CART,
-  ROUTES.CHECKOUT,
+  ...CLIENT_PRIVATE_ROUTE_PREFIXES,
   ROUTES.LOGIN,
   ROUTES.REGISTER,
   ROUTES.PASSWORD_RECOVERY,
   ROUTES.RESET_PASSWORD,
-  ROUTES.PROFILE,
   ...CLIENT_RESERVED_APP_PREFIXES.map((segment) => `/${segment}`),
 ] as const;
 

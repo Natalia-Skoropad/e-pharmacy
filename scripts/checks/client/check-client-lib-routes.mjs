@@ -40,10 +40,10 @@ for (const routeName of ['HOME', 'PHARMACIES', 'PRODUCTS_CATALOG']) {
 assert.match(routePolicy, /createApprovedInfoSitemapEntries/);
 assert.match(routePolicy, /ROUTES\.DELIVERY_PAYMENT/);
 
+assert.match(routePolicy, /CLIENT_PRIVATE_ROUTE_PREFIXES/);
+assert.match(routePolicy, /\.\.\.CLIENT_PRIVATE_ROUTE_PREFIXES/);
+
 for (const privateRoute of [
-  'CART',
-  'CHECKOUT',
-  'PROFILE',
   'LOGIN',
   'REGISTER',
   'PASSWORD_RECOVERY',

@@ -46,7 +46,7 @@ function PharmacyDetailsPageContent({
   const tabsIdBase = `pharmacy-details-${generatedTabsId.replace(/:/g, '')}`;
   const clipboard = useClipboardAction();
 
-  const bankDetails = usePharmacyBankDetails(pharmacy.id, pharmacy.bankDetails);
+  const bankDetails = usePharmacyBankDetails(pharmacy.id);
 
   const currentTab: PharmacyTab =
     activeTab === 'payment' && !canShowBankDetails ? 'details' : activeTab;

@@ -10,7 +10,7 @@ import {
   SITE_NAME,
 } from '@/lib/seo/server';
 
-import { getClientSiteUrl } from '@/lib/constants/env';
+import { getClientCanonicalSiteUrl } from '@/lib/constants/env';
 
 import '@e-pharmacy/ui/styles/tokens.css';
 import '@e-pharmacy/ui/styles/reset.css';
@@ -20,7 +20,7 @@ import '@e-pharmacy/ui/styles/utilities.css';
 //===================================================================
 
 export const metadata: Metadata = {
-  metadataBase: new URL(getClientSiteUrl()),
+  metadataBase: new URL(getClientCanonicalSiteUrl()),
 
   title: {
     default: SITE_NAME,

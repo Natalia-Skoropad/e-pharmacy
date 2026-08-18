@@ -19,7 +19,6 @@ export type PublicPharmacy = Readonly<{
   reviewsCount: number;
   isFavorite: boolean;
   bankTransferAvailable: boolean;
-  bankDetails?: PublicPaymentBankDetails;
   updatedAt: ISODateTimeString;
 }>;
 

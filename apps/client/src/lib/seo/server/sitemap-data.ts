@@ -36,7 +36,6 @@ type SitemapProduct = Readonly<{
   id: string;
   name: string;
   publicSlugId: string;
-  inStock?: boolean;
   updatedAt?: string;
 }>;
 
@@ -44,7 +43,6 @@ type SitemapPharmacy = Readonly<{
   id: string;
   name: string;
   publicSlugId: string;
-  isActive?: boolean;
   updatedAt?: string;
 }>;
 
@@ -94,10 +92,6 @@ export function parseSitemapProduct(value: unknown): SitemapProduct {
     throw new TypeError('Sitemap product updatedAt must be a string.');
   }
 
-  if (value.inStock !== undefined && typeof value.inStock !== 'boolean') {
-    throw new TypeError('Sitemap product inStock must be boolean.');
-  }
-
   return {
     id: value.id,
     name: value.name,
@@ -106,8 +100,6 @@ export function parseSitemapProduct(value: unknown): SitemapProduct {
     ...(typeof value.updatedAt === 'string'
       ? { updatedAt: value.updatedAt }
       : {}),
-
-    ...(typeof value.inStock === 'boolean' ? { inStock: value.inStock } : {}),
   };
 }
 
@@ -129,10 +121,6 @@ export function parseSitemapPharmacy(value: unknown): SitemapPharmacy {
     throw new TypeError('Sitemap pharmacy updatedAt must be a string.');
   }
 
-  if (value.isActive !== undefined && typeof value.isActive !== 'boolean') {
-    throw new TypeError('Sitemap pharmacy isActive must be boolean.');
-  }
-
   return {
     id: value.id,
     name: value.name,
@@ -140,10 +128,6 @@ export function parseSitemapPharmacy(value: unknown): SitemapPharmacy {
 
     ...(typeof value.updatedAt === 'string'
       ? { updatedAt: value.updatedAt }
-      : {}),
-
-    ...(typeof value.isActive === 'boolean'
-      ? { isActive: value.isActive }
       : {}),
   };
 }
@@ -356,14 +340,12 @@ async function fetchAllSitemapItems<TItem>({
 
 export async function buildClientSitemap({
   siteUrl,
-  now = new Date(),
   fetcher = fetch,
   resolveBackendUrl = createTrustedBackendApiUrl,
   logger = console,
   approvedInfoPaths = [],
 }: Readonly<{
   siteUrl: string;
-  now?: Date;
   fetcher?: typeof fetch;
   resolveBackendUrl?: (path: string) => string;
   logger?: Pick<Console, 'error' | 'warn'>;
@@ -388,28 +370,23 @@ export async function buildClientSitemap({
   ]);
 
   const dynamicEntries: SitemapEntryConfig[] = [
-    ...productsResult.items
-      .filter((product) => product.inStock !== false)
-      .map((product) => ({
-        path: buildProductPath(product.name, product.id, product.publicSlugId),
-        priority: 0.7,
-        changeFrequency: 'daily' as const,
-        lastModified: parseSitemapDate(product.updatedAt),
-      })),
+    ...productsResult.items.map((product) => ({
+      path: buildProductPath(product.name, product.id, product.publicSlugId),
+      priority: 0.7,
+      changeFrequency: 'daily' as const,
+      lastModified: parseSitemapDate(product.updatedAt),
+    })),
 
-    ...pharmaciesResult.items
-      .filter((pharmacy) => pharmacy.isActive !== false)
-      .map((pharmacy) => ({
-        path: buildPharmacyPath(
-          pharmacy.name,
-          pharmacy.id,
-          pharmacy.publicSlugId
-        ),
-
-        priority: 0.7,
-        changeFrequency: 'daily' as const,
-        lastModified: parseSitemapDate(pharmacy.updatedAt),
-      })),
+    ...pharmaciesResult.items.map((pharmacy) => ({
+      path: buildPharmacyPath(
+        pharmacy.name,
+        pharmacy.id,
+        pharmacy.publicSlugId
+      ),
+      priority: 0.7,
+      changeFrequency: 'daily' as const,
+      lastModified: parseSitemapDate(pharmacy.updatedAt),
+    })),
   ];
 
   const failures = [...productsResult.failures, ...pharmaciesResult.failures];
@@ -433,13 +410,13 @@ export async function buildClientSitemap({
   }
 
   const entries = dedupeSitemapEntries([
-    ...STATIC_SITEMAP_ENTRIES.map((entry) => ({ ...entry, lastModified: now })),
+    ...STATIC_SITEMAP_ENTRIES,
     ...createApprovedInfoSitemapEntries(approvedInfoPaths),
     ...dynamicEntries,
   ]);
 
   return {
-    routes: createSitemapRoutes(entries, siteUrl, now),
+    routes: createSitemapRoutes(entries, siteUrl),
     failures,
     truncatedResources,
   };

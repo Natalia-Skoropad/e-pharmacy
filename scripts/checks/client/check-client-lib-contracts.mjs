@@ -65,6 +65,8 @@ for (const contract of [
   'CREDENTIALS_NOT_ALLOWED',
   'QUERY_OR_HASH_NOT_ALLOWED',
   'BASE_PATH_NOT_ALLOWED',
+  'MISSING_PRODUCTION_SITE_URL',
+  'requireExplicitProductionSiteUrl',
   "nodeEnv === 'production'",
 ])
   assert.match(
@@ -121,6 +123,9 @@ const sitemapData = await read(
 
 assert.match(sitemapData, /Sitemap was generated with partial backend data/);
 assert.doesNotMatch(sitemapData, /catch\s*\{\s*return null/);
+assert.doesNotMatch(sitemapData, /product\.inStock\s*!==\s*false/);
+assert.doesNotMatch(sitemapData, /pharmacy\.isActive\s*!==\s*false/);
+assert.doesNotMatch(sitemapData, /lastModified:\s*now/);
 
 const clientLib = await read('apps/client/src/lib/seo/server/sitemap.ts');
 assert.match(clientLib, /ISO_CALENDAR_OR_DATETIME_PATTERN/);

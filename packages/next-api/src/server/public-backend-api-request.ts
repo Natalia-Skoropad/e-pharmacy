@@ -1,4 +1,5 @@
 import 'server-only';
+import { headers as getRequestHeaders } from 'next/headers';
 
 import {
   ApiError,
@@ -7,6 +8,7 @@ import {
 } from '@e-pharmacy/api-client/transport';
 
 import { createTrustedBackendApiUrl } from '../internal/backend-url';
+import { createAllowedAuthCookieHeader } from '../internal/cookie-header';
 import { applyServerCorrelationHeaders } from '../internal/trace-context';
 import { createRequestId } from '../internal/request-id';
 import { logTransportRequest } from '../observability/logger';
@@ -28,6 +30,11 @@ export type PublicBackendRequestOptions = Omit<
 > & {
   next?: NextServerRequestOptions;
 };
+
+export type AuthenticatedBackendReadOptions = Omit<
+  RequestOptions,
+  'method' | 'body' | 'cache' | 'credentials' | 'responseType'
+>;
 
 type NextExtendedRequestInit = RequestInit & {
   next?: {
@@ -109,3 +116,72 @@ export async function publicBackendApiRequest(
     throw error;
   }
 }
+
+//===================================================================
+
+export async function authenticatedBackendApiRequest(
+  path: string,
+  options: AuthenticatedBackendReadOptions = {}
+): Promise<unknown> {
+  const requestId = createRequestId();
+  const startedAt = Date.now();
+  const url = createTrustedBackendApiUrl(path);
+  const incomingHeaders = await getRequestHeaders();
+
+  const authCookieHeader = createAllowedAuthCookieHeader(
+    incomingHeaders.get('cookie'),
+    'access-only'
+  );
+
+  const requestHeaders = new Headers(options.headers);
+  requestHeaders.delete('Cookie');
+  if (authCookieHeader) requestHeaders.set('Cookie', authCookieHeader);
+
+  // Private RSC reads are always fail-closed and never cached. Cookie presence
+  // is not treated as authentication: the backend authenticate middleware must
+  // validate the JWT, active Session, current User and role/ownership policy.
+  applyServerCorrelationHeaders(requestHeaders, requestId, false);
+
+  try {
+    const result = await executeHttpRequest(url, {
+      ...options,
+      method: 'GET',
+      headers: requestHeaders,
+      cache: 'no-store',
+      credentials: 'omit',
+      redirect: 'manual',
+    });
+
+    logTransportRequest({
+      requestId,
+      method: 'GET',
+      path,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: result.status,
+      retryCount: result.retryCount,
+      cachePolicy: 'no-store',
+      authMode: 'private',
+      source: 'server-private-api',
+    });
+
+    return result.data;
+  } catch (error) {
+    logTransportRequest({
+      requestId,
+      method: 'GET',
+      path,
+      destination: 'backend',
+      durationMs: Date.now() - startedAt,
+      status: error instanceof ApiError ? error.httpStatus : undefined,
+      cachePolicy: 'no-store',
+      authMode: 'private',
+      transportErrorCode:
+        error instanceof ApiError ? error.transportCode : undefined,
+      source: 'server-private-api',
+    });
+
+    throw error;
+  }
+}
+

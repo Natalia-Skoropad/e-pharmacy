@@ -6,6 +6,7 @@ import {
 //===================================================================
 
 let cachedEnvironment: ClientPublicEnvironment | undefined;
+let cachedCanonicalEnvironment: ClientPublicEnvironment | undefined;
 
 //===================================================================
 
@@ -46,3 +47,36 @@ export function getClientEnvironment(): ClientPublicEnvironment {
 export function getClientSiteUrl(): string {
   return getClientEnvironment().siteUrl;
 }
+
+//===================================================================
+
+function isDeploymentBuild(): boolean {
+  return process.env.VERCEL === '1' || process.env.CI === 'true';
+}
+
+//===================================================================
+
+export function getClientCanonicalEnvironment(): ClientPublicEnvironment {
+  if (cachedCanonicalEnvironment) return cachedCanonicalEnvironment;
+
+  const result = resolveClientPublicEnvironment({
+    configuredSiteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+    deploymentSiteUrl: process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    nodeEnv: process.env.NODE_ENV,
+    requireExplicitProductionSiteUrl: isDeploymentBuild(),
+  });
+
+  if (!result.ok) {
+    throw new Error(`[${result.code}] ${result.message}`);
+  }
+
+  cachedCanonicalEnvironment = result.environment;
+  return cachedCanonicalEnvironment;
+}
+
+//===================================================================
+
+export function getClientCanonicalSiteUrl(): string {
+  return getClientCanonicalEnvironment().siteUrl;
+}
+

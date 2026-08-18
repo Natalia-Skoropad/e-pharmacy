@@ -2,10 +2,7 @@ import { cache } from 'react';
 import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
-import {
-  getIdFromSlugId,
-  parsePublicEntitySlugId,
-} from '@e-pharmacy/validation/url';
+import { parsePublicEntitySlugId } from '@e-pharmacy/validation/url';
 
 import {
   createPharmacyDetailMetadata,
@@ -14,7 +11,13 @@ import {
   lookupProductBySlugId,
 } from '@/lib/details';
 
-import { buildPharmacyPath, buildProductPath } from '@/lib/routes';
+import {
+  buildPharmacyPath,
+  buildProductPath,
+  logLegacyPublicRouteHit,
+  resolveLegacyPublicEntity,
+} from '@/lib/routes';
+
 import { createPageMetadata } from '@/lib/seo/server';
 
 import { DetailsUnavailablePage } from '@/components/common/DetailsUnavailablePage';
@@ -41,41 +44,6 @@ function createProductQueryString(pharmacyId?: string): string {
 
 //===================================================================
 
-async function resolveLegacyPublicEntity(slugId: string) {
-  if (!getIdFromSlugId(slugId)) return null;
-
-  const productResult = await resolveProduct(slugId);
-
-  if (productResult.status === 'found') {
-    return { entityType: 'product' as const, result: productResult };
-  }
-
-  const pharmacyResult = await resolvePharmacy(slugId);
-
-  if (pharmacyResult.status === 'found') {
-    return { entityType: 'pharmacy' as const, result: pharmacyResult };
-  }
-
-  if (
-    productResult.status === 'unavailable' ||
-    pharmacyResult.status === 'unavailable'
-  ) {
-    return {
-      entityType: 'unavailable' as const,
-      result:
-        productResult.status === 'unavailable'
-          ? productResult
-          : pharmacyResult.status === 'unavailable'
-            ? pharmacyResult
-            : null,
-    };
-  }
-
-  return null;
-}
-
-//===================================================================
-
 export async function generateMetadata({
   params,
 }: PublicDetailsPageProps): Promise<Metadata> {
@@ -83,7 +51,10 @@ export async function generateMetadata({
   const parsed = parsePublicEntitySlugId(slugId);
 
   if (!parsed) {
-    const legacyEntity = await resolveLegacyPublicEntity(slugId);
+    const legacyEntity = await resolveLegacyPublicEntity(slugId, {
+      lookupProduct: resolveProduct,
+      lookupPharmacy: resolvePharmacy,
+    });
 
     if (legacyEntity?.entityType === 'product') {
       return createProductDetailMetadata(legacyEntity.result.product);
@@ -159,9 +130,14 @@ async function PublicDetailsPage({
   const resolvedSearchParams = await searchParams;
 
   if (!parsed) {
-    const legacyEntity = await resolveLegacyPublicEntity(slugId);
+    const legacyEntity = await resolveLegacyPublicEntity(slugId, {
+      lookupProduct: resolveProduct,
+      lookupPharmacy: resolvePharmacy,
+    });
 
     if (legacyEntity?.entityType === 'product') {
+      logLegacyPublicRouteHit('product');
+
       const canonicalPath = buildProductPath(
         legacyEntity.result.product.name,
         legacyEntity.result.product.id,
@@ -174,6 +150,8 @@ async function PublicDetailsPage({
     }
 
     if (legacyEntity?.entityType === 'pharmacy') {
+      logLegacyPublicRouteHit('pharmacy');
+
       permanentRedirect(
         buildPharmacyPath(
           legacyEntity.result.pharmacy.name,
@@ -185,7 +163,10 @@ async function PublicDetailsPage({
 
     if (legacyEntity?.entityType === 'unavailable' && legacyEntity.result) {
       return (
-        <DetailsUnavailablePage entityLabel="page" error={legacyEntity.result} />
+        <DetailsUnavailablePage
+          entityLabel="page"
+          error={legacyEntity.result}
+        />
       );
     }
 
@@ -196,9 +177,7 @@ async function PublicDetailsPage({
     const result = await resolveProduct(slugId);
 
     if (result.status === 'unavailable') {
-      return (
-        <DetailsUnavailablePage entityLabel="product" error={result} />
-      );
+      return <DetailsUnavailablePage entityLabel="product" error={result} />;
     }
 
     if (result.status === 'not_found') notFound();
@@ -226,9 +205,7 @@ async function PublicDetailsPage({
   const result = await resolvePharmacy(slugId);
 
   if (result.status === 'unavailable') {
-    return (
-      <DetailsUnavailablePage entityLabel="pharmacy" error={result} />
-    );
+    return <DetailsUnavailablePage entityLabel="pharmacy" error={result} />;
   }
 
   if (result.status === 'not_found') notFound();

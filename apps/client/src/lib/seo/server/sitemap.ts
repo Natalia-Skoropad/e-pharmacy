@@ -1,5 +1,7 @@
 import 'server-only';
 
+//===================================================================
+
 const ISO_CALENDAR_OR_DATETIME_PATTERN =
   /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2}))?$/;
 
@@ -26,7 +28,6 @@ export type SitemapEntryConfig = Readonly<{
 export type SitemapRouteConfig = SitemapEntryConfig &
   Readonly<{
     url: string;
-    lastModified: Date;
   }>;
 
 //===================================================================
@@ -108,12 +109,10 @@ export function dedupeSitemapEntries(
 
 export function createSitemapRoutes(
   entries: readonly SitemapEntryConfig[],
-  siteUrl: string,
-  fallbackLastModified: Date
+  siteUrl: string
 ): SitemapRouteConfig[] {
   return entries.map((entry) => ({
     ...entry,
     url: createAbsoluteUrl(entry.path, siteUrl),
-    lastModified: entry.lastModified ?? fallbackLastModified,
   }));
 }

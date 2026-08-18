@@ -1026,7 +1026,6 @@ function parsePublicPharmacy(
       workingHours: 'string',
       imageUrl: 'string',
       description: 'string',
-      bankDetails: 'record',
     },
     context
   );
@@ -1039,6 +1038,8 @@ function parsePublicPharmacy(
   );
 
   requireSafeNonNegativeInteger(record, 'reviewsCount', 'pharmacy', context);
+
+  rejectFields(record, ['bankDetails'], 'pharmacy', context);
 
   return checked<PublicPharmacy>(record);
 }
@@ -1140,7 +1141,68 @@ function parsePharmacyCheckoutDetails(
     context
   );
 
-  return checked<PharmacyCheckoutDetails>(record);
+  requireOptionalFields(
+    record,
+    'pharmacy checkout details',
+    {
+      address: 'string',
+      city: 'string',
+      phone: 'string',
+      email: 'string',
+      workingHours: 'string',
+      bankDetails: 'record',
+    },
+    context
+  );
+
+  let bankDetails: PharmacyCheckoutDetails['bankDetails'];
+
+  if (record.bankDetails !== undefined) {
+    const bankRecord = requireRecord(
+      record.bankDetails,
+      'pharmacy checkout bank details',
+      context
+    );
+
+    requireFields(
+      bankRecord,
+      'pharmacy checkout bank details',
+      {
+        recipientName: 'string',
+        taxId: 'string',
+        iban: 'string',
+        bankName: 'string',
+        receiptEmail: 'string',
+        paymentPurpose: 'string',
+      },
+      context
+    );
+
+    parseEditablePharmacyBankDetails(bankRecord, context);
+    bankDetails =
+      checked<NonNullable<PharmacyCheckoutDetails['bankDetails']>>(bankRecord);
+  }
+
+  if (record.bankTransferAvailable === true && !bankDetails) {
+    throw invalidDto(
+      'pharmacy checkout details must include complete bank details when bank transfer is available.',
+      record,
+      context
+    );
+  }
+
+  if (record.bankTransferAvailable === false && bankDetails) {
+    throw invalidDto(
+      'pharmacy checkout details must not include bank details when bank transfer is unavailable.',
+      record,
+      context
+    );
+  }
+
+  return checked<PharmacyCheckoutDetails>({
+    ...record,
+    ...(bankDetails ? { bankDetails } : {}),
+  });
 }
 
 //===================================================================

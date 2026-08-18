@@ -97,9 +97,85 @@ const accessPolicy = await readFile(
   'utf8'
 );
 
-for (const routeName of ['CART', 'CHECKOUT', 'PROFILE']) {
-  assert.match(accessPolicy, new RegExp(`ROUTES\\.${routeName}`));
+const routeSegmentsSource = await readFile(
+  path.join(root, 'apps/client/src/lib/routes/route-segments.ts'),
+  'utf8'
+);
+
+const routesSource = await readFile(
+  path.join(root, 'apps/client/src/lib/routes/routes.ts'),
+  'utf8'
+);
+
+const segmentValues = new Map(
+  [...routeSegmentsSource.matchAll(/(\w+):\s*'([^']+)'/g)].map((match) => [
+    match[1],
+    match[2],
+  ])
+);
+
+const routeValues = new Map();
+for (const match of routesSource.matchAll(
+  /(\w+):\s*`\/\$\{ROUTE_SEGMENTS\.(\w+)\}`/g
+)) {
+  const segment = segmentValues.get(match[2]);
+  assert.ok(segment, `Missing ROUTE_SEGMENTS.${match[2]} value.`);
+  routeValues.set(match[1], `/${segment}`);
 }
+
+const privateArray = accessPolicy.match(
+  /CLIENT_PRIVATE_ROUTE_PREFIXES\s*=\s*\[([\s\S]*?)\]\s*as const/
+)?.[1];
+
+assert.ok(privateArray, 'CLIENT_PRIVATE_ROUTE_PREFIXES must remain explicit.');
+
+const registeredPrivateRoots = [...privateArray.matchAll(/ROUTES\.(\w+)/g)]
+  .map((match) => {
+    const value = routeValues.get(match[1]);
+    assert.ok(value, `Unable to resolve ROUTES.${match[1]}.`);
+    return value;
+  })
+  .sort();
+
+const actualPrivateRoots = (await readdir(privateRoot, { withFileTypes: true }))
+  .filter(
+    (entry) =>
+      entry.isDirectory() &&
+      !entry.name.startsWith('(') &&
+      !entry.name.startsWith('@')
+  )
+  .map((entry) => `/${entry.name}`)
+  .sort();
+
+const matcherBlock = proxy.match(/matcher:\s*\[([\s\S]*?)\]/)?.[1];
+assert.ok(matcherBlock, 'proxy.config.matcher must remain explicit.');
+
+const proxyMatcherRoots = [...matcherBlock.matchAll(/['"]([^'"]+)['"]/g)]
+  .map((match) => match[1].replace(/\/:path\*$/, ''))
+  .sort();
+
+assert.deepEqual(
+  registeredPrivateRoots,
+  actualPrivateRoots,
+  'Private App Router roots must match CLIENT_PRIVATE_ROUTE_PREFIXES.'
+);
+
+assert.deepEqual(
+  proxyMatcherRoots,
+  actualPrivateRoots,
+  'proxy.config.matcher must match the actual private App Router roots.'
+);
+
+const routePolicy = await readFile(
+  path.join(root, 'apps/client/src/lib/seo/server/route-policy.ts'),
+  'utf8'
+);
+
+assert.match(
+  routePolicy,
+  /\.\.\.CLIENT_PRIVATE_ROUTE_PREFIXES/,
+  'robots policy must derive private roots from CLIENT_PRIVATE_ROUTE_PREFIXES.'
+);
 
 for (const routeName of ['LOGIN', 'REGISTER', 'PASSWORD_RECOVERY']) {
   assert.match(accessPolicy, new RegExp(`ROUTES\\.${routeName}`));
@@ -108,11 +184,45 @@ for (const routeName of ['LOGIN', 'REGISTER', 'PASSWORD_RECOVERY']) {
 assert.match(accessPolicy, /CLIENT_TOKEN_ACCESS_ROUTES/);
 assert.match(accessPolicy, /ROUTES\.RESET_PASSWORD/);
 
+const clientReadme = await readFile(
+  path.join(root, 'apps/client/README.md'),
+  'utf8'
+);
+
+for (const documentedRoute of [
+  'product-catalog/[...segments]/',
+  'pharmacies/[...segments]/',
+  '[slugId]/',
+]) {
+  assert.match(
+    clientReadme,
+    new RegExp(documentedRoute.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+    `Client README must document ${documentedRoute}.`
+  );
+}
+
+for (const deprecatedRoute of [
+  'product-catalog/[[...segments]]',
+  'pharmacies/[[...segments]]',
+  'pharmacies/[slugId]/',
+]) {
+  assert.equal(
+    clientReadme.includes(deprecatedRoute),
+    false,
+    `Client README must not document deprecated route ${deprecatedRoute}.`
+  );
+}
+
+assert.match(clientReadme, /legacy_public_entity_route_hit/);
+assert.match(clientReadme, /product-first/);
+assert.match(clientReadme, /2026-11-30/);
+assert.match(clientReadme, /30 consecutive days/);
 
 const routeBarrel = await readFile(
   path.join(root, 'apps/client/src/routes/index.ts'),
   'utf8'
 );
+
 assert.match(routeBarrel, /ClientProtectedRoute/);
 assert.match(routeBarrel, /ClientGuestOnlyRoute/);
 assert.doesNotMatch(routeBarrel, /export \{ default \} from/);
@@ -135,6 +245,7 @@ const loginDestination = await readFile(
   path.join(root, 'apps/client/src/lib/auth/resolve-login-destination.ts'),
   'utf8'
 );
+
 assert.match(loginDestination, /requirePharmacyAppConfiguration/);
 assert.doesNotMatch(loginDestination, /\? ROUTES\.HOME/);
 

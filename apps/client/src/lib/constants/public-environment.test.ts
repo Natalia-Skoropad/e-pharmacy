@@ -98,3 +98,44 @@ test('uses the browser or deployment origin when the explicit URL is absent', ()
     }
   );
 });
+
+//===================================================================
+
+test('requires an explicit canonical site URL in production', () => {
+  const result = resolveClientPublicEnvironment({
+    configuredSiteUrl: undefined,
+    nodeEnv: 'production',
+    requireExplicitProductionSiteUrl: true,
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.code, 'MISSING_PRODUCTION_SITE_URL');
+
+  assert.deepEqual(
+    resolveClientPublicEnvironment({
+      configuredSiteUrl: 'https://www.example.com',
+      runtimeSiteUrl: 'https://preview.example.com',
+      deploymentSiteUrl: 'preview-deployment.vercel.app',
+      nodeEnv: 'production',
+      requireExplicitProductionSiteUrl: true,
+    }),
+    {
+      ok: true,
+      environment: { siteUrl: 'https://www.example.com' },
+    }
+  );
+
+  assert.deepEqual(
+    resolveClientPublicEnvironment({
+      configuredSiteUrl: undefined,
+      deploymentSiteUrl: 'client-production.vercel.app',
+      nodeEnv: 'production',
+      requireExplicitProductionSiteUrl: true,
+    }),
+    {
+      ok: true,
+      environment: { siteUrl: 'https://client-production.vercel.app' },
+    }
+  );
+});
+

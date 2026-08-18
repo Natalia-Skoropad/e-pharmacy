@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { PublicPaymentBankDetails } from '@e-pharmacy/types/pharmacies';
-
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser';
 
 import {
@@ -23,14 +21,11 @@ export type PharmacyBankDetailsController = Readonly<{
 //===================================================================
 
 export function usePharmacyBankDetails(
-  pharmacyId: string,
-  initialBankDetails?: PublicPaymentBankDetails
+  pharmacyId: string
 ): PharmacyBankDetailsController {
-  const [state, setState] = useState<PharmacyBankDetailsState>(() =>
-    initialBankDetails
-      ? { status: 'success', data: initialBankDetails }
-      : { status: 'idle' }
-  );
+  const [state, setState] = useState<PharmacyBankDetailsState>({
+    status: 'idle',
+  });
 
   const stateRef = useRef(state);
   const controllerRef = useRef<AbortController | null>(null);
