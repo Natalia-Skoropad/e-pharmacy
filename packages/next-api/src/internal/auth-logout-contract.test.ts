@@ -25,7 +25,7 @@ test('logout forwards refresh identity and always clears browser cookies', async
 
   for (const route of [clientRoute, pharmacyRoute]) {
     assert.match(route, /authCookieMode: 'refresh-only'/);
-    assert.match(route, /markerAction: 'delete'/);
+    assert.match(route, /cookieCleanup: 'always'/);
   }
 
   assert.match(
@@ -55,7 +55,7 @@ test('logout-all also uses refresh identity and clears local cookies without a l
 
   for (const route of [clientRoute, pharmacyRoute]) {
     assert.match(route, /authCookieMode: 'refresh-only'/);
-    assert.match(route, /markerAction: 'delete'/);
+    assert.match(route, /cookieCleanup: 'always'/);
   }
 
   assert.match(

@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import path from 'path';
 
 import { env } from './config/env';
+import { API_JSON_BODY_LIMITS } from './constants/request-body';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/notFound.middleware';
 import { validateMutationOrigin } from './middlewares/origin.middleware';
@@ -65,7 +66,21 @@ app.use(
 
 //===============================================================
 
-app.use(express.json({ limit: '32mb' }));
+// Large base64 document/attachment payloads are opt-in. All ordinary JSON
+// requests use the much smaller standard limit so auth/cart/profile endpoints
+// cannot make Express buffer tens of megabytes before route middleware runs.
+for (const routePath of [
+  '/auth/pharmacy-documents',
+  '/pharmacies/me/documents',
+  '/product-requests',
+]) {
+  app.use(
+    routePath,
+    express.json({ limit: API_JSON_BODY_LIMITS.documentUpload })
+  );
+}
+
+app.use(express.json({ limit: API_JSON_BODY_LIMITS.standardJson }));
 
 //===============================================================
 

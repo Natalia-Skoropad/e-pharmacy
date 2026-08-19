@@ -18,7 +18,11 @@ import {
 
 import { transformAuthResponseBody } from '../internal/auth-tokens';
 import { createTextProxyResponse } from '../internal/proxy-response';
-import { readProxyRequestBody } from '../internal/request-body';
+
+import {
+  readProxyRequestBody,
+  type ProxyRequestBodyPreset,
+} from '../internal/request-body';
 
 import {
   createInvalidBackendResponse,
@@ -31,7 +35,8 @@ import { logTransportRequest } from '../observability/logger';
 
 //===================================================================
 
-export type AuthMarkerAction = 'set' | 'delete';
+export type AuthMarkerAction = 'set';
+export type AuthCookieCleanupPolicy = 'none' | 'always' | 'on-success';
 
 //===================================================================
 
@@ -41,7 +46,9 @@ type AuthProxyOptions = Readonly<{
   requestId: string;
   method?: Extract<HttpMethod, 'GET' | 'POST' | 'PATCH'>;
   markerAction?: AuthMarkerAction;
+  cookieCleanup?: AuthCookieCleanupPolicy;
   authCookieMode: AuthCookieForwardMode;
+  bodyPreset?: ProxyRequestBodyPreset;
 }>;
 
 //===================================================================
@@ -52,13 +59,15 @@ export async function proxyAuthRequest({
   requestId,
   method = 'POST',
   markerAction,
+  cookieCleanup = 'none',
   authCookieMode,
+  bodyPreset = 'smallJson',
 }: AuthProxyOptions) {
   const startedAt = Date.now();
   let response: Response;
 
   try {
-    const body = await readProxyRequestBody(request, method);
+    const body = await readProxyRequestBody(request, method, bodyPreset);
 
     response = await executeBackendFetch({
       request,
@@ -89,7 +98,7 @@ export async function proxyAuthRequest({
       descriptor,
       requestId,
       request,
-      clearAuthCookies: markerAction === 'delete',
+      clearAuthCookies: cookieCleanup === 'always',
     });
   }
 
@@ -104,7 +113,7 @@ export async function proxyAuthRequest({
     return createInvalidBackendResponse({
       requestId,
       request,
-      clearAuthCookies: markerAction === 'set',
+      clearAuthCookies: markerAction === 'set' || cookieCleanup === 'always',
     });
   }
 
@@ -148,7 +157,10 @@ export async function proxyAuthRequest({
     clearClientAuthCookies(nextResponse, request);
   }
 
-  if (markerAction === 'delete') {
+  if (
+    cookieCleanup === 'always' ||
+    (cookieCleanup === 'on-success' && response.ok)
+  ) {
     clearClientAuthCookies(nextResponse, request);
   }
 

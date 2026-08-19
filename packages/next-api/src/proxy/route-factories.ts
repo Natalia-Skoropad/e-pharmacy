@@ -4,6 +4,7 @@ import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
 import type { AuthCookieForwardMode } from '../internal/cookie-header';
 import { validateBffMutationRequest } from '../internal/csrf';
+import type { ProxyRequestBodyPreset } from '../internal/request-body';
 import { createRequestId } from '../internal/request-id';
 
 import {
@@ -16,7 +17,12 @@ import {
   describeProxyError,
 } from '../internal/transport-error';
 
-import { proxyAuthRequest, type AuthMarkerAction } from './auth-proxy';
+import {
+  proxyAuthRequest,
+  type AuthCookieCleanupPolicy,
+  type AuthMarkerAction,
+} from './auth-proxy';
+
 import { proxyBackendRequest } from './backend-proxy';
 
 import {
@@ -107,11 +113,13 @@ export function createPrivateProxyRoute<
   backendPath,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
+  bodyPreset = 'standardJson',
   enumParams,
 }: {
   backendPath: BackendPath<TParams>;
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
+  bodyPreset?: ProxyRequestBodyPreset;
   enumParams?: EnumParamValues<TParams>;
 }): ProxyRouteHandler<TParams> {
   return async (request, context) => {
@@ -126,6 +134,7 @@ export function createPrivateProxyRoute<
         backendPath: await resolveBackendPath(backendPath, context, enumParams),
         method,
         clearAuthCookiesOnSuccess,
+        bodyPreset,
       });
     } catch (error) {
       return handleRouteFactoryError(error, request, requestId);
@@ -234,12 +243,16 @@ export function createAuthProxyRoute({
   backendPath,
   method = 'POST',
   markerAction,
+  cookieCleanup = 'none',
   authCookieMode = 'none',
+  bodyPreset = 'smallJson',
 }: {
   backendPath: string;
   method?: Extract<HttpMethod, 'GET' | 'POST' | 'PATCH'>;
   markerAction?: AuthMarkerAction;
+  cookieCleanup?: AuthCookieCleanupPolicy;
   authCookieMode?: AuthCookieForwardMode;
+  bodyPreset?: ProxyRequestBodyPreset;
 }) {
   return async (request: NextRequest) => {
     const requestId = createRequestId();
@@ -253,7 +266,9 @@ export function createAuthProxyRoute({
         backendPath,
         method,
         markerAction,
+        cookieCleanup,
         authCookieMode,
+        bodyPreset,
       });
     } catch (error) {
       return handleRouteFactoryError(error, request, requestId);

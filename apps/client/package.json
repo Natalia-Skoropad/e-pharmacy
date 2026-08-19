@@ -8,7 +8,7 @@
     "build": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next build",
     "start": "next start",
     "lint": "eslint .",
-    "type-check": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && tsc --noEmit",
+    "type-check": "next typegen && tsc --noEmit",
     "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.test.ts",
     "test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.react.test.tsx",
     "test:integration": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.integration.test.ts"

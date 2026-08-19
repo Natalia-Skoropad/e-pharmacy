@@ -223,3 +223,28 @@ test('retries GET status and network failures but never retries mutations', asyn
     restoreFetch();
   }
 });
+
+//===================================================================
+
+test('does not retry browser → BFF GET requests unless a caller explicitly opts in', async () => {
+  try {
+    let calls = 0;
+
+    globalThis.fetch = async () => {
+      calls += 1;
+      return jsonResponse(
+        { status: 'error', message: 'Temporary BFF failure' },
+        503
+      );
+    };
+
+    await assert.rejects(
+      localApiRequest('/api/no-default-retry'),
+      (error: unknown) => error instanceof ApiError && error.httpStatus === 503
+    );
+
+    assert.equal(calls, 1);
+  } finally {
+    restoreFetch();
+  }
+});

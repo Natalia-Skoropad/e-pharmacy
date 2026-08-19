@@ -2,7 +2,11 @@ import type { NextRequest } from 'next/server';
 
 import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
-import { responseInvalidatesAuthSession } from '../internal/auth-error-code';
+import {
+  responseInvalidatesAuthSession,
+  responseRequiresAuthRefresh,
+} from '../internal/auth-error-code';
+
 import { executeBackendFetch } from '../internal/backend-fetch';
 import { validateBackendJsonResponse } from '../internal/backend-response';
 
@@ -18,9 +22,12 @@ import {
 } from '../internal/auth-refresh';
 
 import { createPrivateCookieHeaderWithAccessToken } from '../internal/cookie-header';
-
 import { createProxyResponse } from '../internal/proxy-response';
-import { readProxyRequestBody } from '../internal/request-body';
+
+import {
+  readProxyRequestBody,
+  type ProxyRequestBodyPreset,
+} from '../internal/request-body';
 
 import {
   createInvalidBackendResponse,
@@ -39,6 +46,7 @@ type BackendProxyOptions = Readonly<{
   requestId: string;
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
+  bodyPreset?: ProxyRequestBodyPreset;
 }>;
 
 //===================================================================
@@ -49,13 +57,14 @@ export async function proxyBackendRequest({
   requestId,
   method = 'GET',
   clearAuthCookiesOnSuccess = false,
+  bodyPreset = 'standardJson',
 }: BackendProxyOptions) {
   const startedAt = Date.now();
   let body: string | undefined;
   let response: Response;
 
   try {
-    body = await readProxyRequestBody(request, method);
+    body = await readProxyRequestBody(request, method, bodyPreset);
     response = await executeBackendFetch({
       request,
       backendPath,
@@ -90,13 +99,17 @@ export async function proxyBackendRequest({
     return createProxyErrorResponse({ descriptor, requestId, request });
   }
 
-  if (response.status !== 401) {
+  const requiresRefresh = await responseRequiresAuthRefresh(response);
+
+  if (!requiresRefresh) {
     const nextResponse = createProxyResponse(response, {
       cacheControl: 'no-store',
       requestId,
     });
 
-    if (response.ok && clearAuthCookiesOnSuccess) {
+    if (await responseInvalidatesAuthSession(response)) {
+      clearClientAuthCookies(nextResponse, request);
+    } else if (response.ok && clearAuthCookiesOnSuccess) {
       clearClientAuthCookies(nextResponse, request);
     }
 

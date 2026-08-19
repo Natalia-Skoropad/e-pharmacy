@@ -18,6 +18,7 @@ export const GET = createPrivateProxyRoute<ProductRequestRouteParams>({
 export const PATCH = createPrivateProxyRoute<ProductRequestRouteParams>({
   backendPath: ({ requestId }) => API_ROUTES.productRequests.details(requestId),
   method: 'PATCH',
+  bodyPreset: 'documentUpload',
 });
 
 export const DELETE = createPrivateProxyRoute<ProductRequestRouteParams>({

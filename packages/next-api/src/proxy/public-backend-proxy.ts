@@ -7,7 +7,7 @@ import {
   resolvePublicRevalidate,
 } from '../internal/cache-policy';
 
-import { validateBackendJsonResponse } from '../internal/backend-response';
+import { validateBackendApiEnvelopeResponse } from '../internal/backend-response';
 import { createProxyResponse } from '../internal/proxy-response';
 
 import {
@@ -43,6 +43,7 @@ export async function proxyPublicBackendRequest({
 }: PublicBackendProxyOptions) {
   const startedAt = Date.now();
   const resolvedRevalidate = resolvePublicRevalidate(revalidate);
+  let observedRetryCount: number | undefined;
 
   try {
     const execution = await executeBackendFetchWithRetry({
@@ -54,28 +55,40 @@ export async function proxyPublicBackendRequest({
       authCookieMode: 'none',
       forwardAccept: true,
       retry: PUBLIC_READ_RETRY_POLICY,
-      validateResponse: validateBackendJsonResponse,
     });
 
-    const cacheControl = execution.response.ok
-      ? createPublicCacheControl(resolvedRevalidate, staleWhileRevalidate)
-      : 'no-store';
+    observedRetryCount = execution.retryCount;
 
-    logTransportRequest({
-      requestId,
-      method: 'GET',
-      path: backendPath,
-      destination: 'backend',
-      durationMs: Date.now() - startedAt,
-      status: execution.response.status,
-      retryCount: execution.retryCount,
-      authMode: 'public',
-      cachePolicy: cacheControl,
-      source: 'public-proxy',
-    });
+    try {
+      // Retry ownership stays status-based. A syntactically valid but malformed
+      // 2xx API envelope is a contract failure, not a transient read failure,
+      // so validate it once after retries and before assigning cache headers.
+      await validateBackendApiEnvelopeResponse(execution.response);
 
-    execution.cleanup();
-    return createProxyResponse(execution.response, { cacheControl, requestId });
+      const cacheControl = execution.response.ok
+        ? createPublicCacheControl(resolvedRevalidate, staleWhileRevalidate)
+        : 'no-store';
+
+      logTransportRequest({
+        requestId,
+        method: 'GET',
+        path: backendPath,
+        destination: 'backend',
+        durationMs: Date.now() - startedAt,
+        status: execution.response.status,
+        retryCount: execution.retryCount,
+        authMode: 'public',
+        cachePolicy: cacheControl,
+        source: 'public-proxy',
+      });
+
+      return createProxyResponse(execution.response, {
+        cacheControl,
+        requestId,
+      });
+    } finally {
+      execution.cleanup();
+    }
   } catch (error) {
     const descriptor = describeProxyError(error);
 
@@ -86,7 +99,7 @@ export async function proxyPublicBackendRequest({
       destination: 'backend',
       durationMs: Date.now() - startedAt,
       status: descriptor.status,
-      retryCount: PUBLIC_READ_RETRY_POLICY.attempts - 1,
+      retryCount: observedRetryCount ?? PUBLIC_READ_RETRY_POLICY.attempts - 1,
       authMode: 'public',
       transportErrorCode: descriptor.code,
       source: 'public-proxy',

@@ -407,7 +407,7 @@ const clientResetRoute = await read(
 );
 
 assert.match(clientPasswordRoute, /clearAuthCookiesOnSuccess:\s*true/);
-assert.match(clientResetRoute, /markerAction:\s*'delete'/);
+assert.match(clientResetRoute, /cookieCleanup:\s*'on-success'/);
 
 const clientLoginForm = await read(
   'apps',
@@ -515,7 +515,7 @@ const pharmacyLogoutAllRoute = await read(
 
 for (const routeSource of [clientLogoutAllRoute, pharmacyLogoutAllRoute]) {
   assert.match(routeSource, /authCookieMode:\s*['"]refresh-only['"]/);
-  assert.match(routeSource, /markerAction:\s*['"]delete['"]/);
+  assert.match(routeSource, /cookieCleanup:\s*['"]always['"]/);
 }
 
 const clientBrowserAuth = await read(

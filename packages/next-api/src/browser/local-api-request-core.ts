@@ -45,6 +45,7 @@ export async function localApiRequest(
     cache = 'no-store',
     credentials = 'same-origin',
     redirect = 'manual',
+    retry = false,
     ...options
   }: RequestOptions = {}
 ): Promise<unknown> {
@@ -66,6 +67,7 @@ export async function localApiRequest(
       cache,
       credentials,
       redirect,
+      retry,
     });
 
     logTransportRequest({

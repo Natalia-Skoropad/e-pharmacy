@@ -17,4 +17,11 @@ export const PUBLIC_READ_RETRY_POLICY = {
 
 export const DEFAULT_PUBLIC_REVALIDATE_SECONDS = 120;
 export const DEFAULT_STALE_WHILE_REVALIDATE_SECONDS = 300;
-export const MAX_PROXY_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
+
+//===================================================================
+
+export const PROXY_REQUEST_BODY_LIMITS_BYTES = {
+  smallJson: 64 * 1024,
+  standardJson: 1024 * 1024,
+  documentUpload: 32 * 1024 * 1024,
+} as const;

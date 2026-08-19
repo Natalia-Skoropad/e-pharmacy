@@ -13,4 +13,5 @@ export const GET = createPrivateProxyRoute({
 export const POST = createPrivateProxyRoute({
   backendPath: API_ROUTES.productRequests.list,
   method: 'POST',
+  bodyPreset: 'documentUpload',
 });

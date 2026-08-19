@@ -88,7 +88,14 @@ test('concurrent private requests share one refresh call', async () => {
         return jsonResponse({ status: 'success', data: { value: 1 } });
       }
 
-      return jsonResponse({ status: 'error', message: 'Expired' }, 401);
+      return jsonResponse(
+        {
+          status: 'error',
+          message: 'Expired',
+          code: 'AUTH_SESSION_INVALID',
+        },
+        401
+      );
     };
 
     const [first, second] = await Promise.all([

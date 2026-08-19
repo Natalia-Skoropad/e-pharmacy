@@ -6,4 +6,5 @@ import { createPrivateProxyRoute } from '@e-pharmacy/next-api/proxy';
 export const POST = createPrivateProxyRoute({
   backendPath: API_ROUTES.pharmacies.myDocumentUpload,
   method: 'POST',
+  bodyPreset: 'documentUpload',
 });

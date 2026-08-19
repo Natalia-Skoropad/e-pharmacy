@@ -11,6 +11,12 @@ import { createTrustedBackendApiUrl } from '../internal/backend-url';
 import { createAllowedAuthCookieHeader } from '../internal/cookie-header';
 import { applyServerCorrelationHeaders } from '../internal/trace-context';
 import { createRequestId } from '../internal/request-id';
+
+import {
+  NEXT_API_TIMEOUTS_MS,
+  PUBLIC_READ_RETRY_POLICY,
+} from '../internal/transport-policy';
+
 import { logTransportRequest } from '../observability/logger';
 
 //===================================================================
@@ -35,6 +41,13 @@ export type AuthenticatedBackendReadOptions = Omit<
   RequestOptions,
   'method' | 'body' | 'cache' | 'credentials' | 'responseType'
 >;
+
+export const PUBLIC_BACKEND_READ_TRANSPORT_OPTIONS = {
+  timeoutMs: NEXT_API_TIMEOUTS_MS.publicRead,
+  retry: PUBLIC_READ_RETRY_POLICY,
+} as const satisfies Pick<RequestOptions, 'timeoutMs' | 'retry'>;
+
+//===================================================================
 
 type NextExtendedRequestInit = RequestInit & {
   next?: {
@@ -184,4 +197,3 @@ export async function authenticatedBackendApiRequest(
     throw error;
   }
 }
-

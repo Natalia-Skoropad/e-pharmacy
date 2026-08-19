@@ -1,3 +1,5 @@
+const REFRESHABLE_AUTH_ERROR_CODES = new Set(['AUTH_SESSION_INVALID']);
+
 const INVALIDATING_AUTH_ERROR_CODES = new Set([
   'AUTH_SESSION_INVALID',
   'AUTH_SESSION_REVOKED',
@@ -22,10 +24,40 @@ export function getAuthErrorCodeFromBody(body: string): string | null {
 
 //===================================================================
 
-export function isInvalidatingAuthErrorCode(
-  code: string | null
-): boolean {
+export function isRefreshableAuthErrorCode(code: string | null): boolean {
+  return Boolean(code && REFRESHABLE_AUTH_ERROR_CODES.has(code));
+}
+
+//===================================================================
+
+export function isInvalidatingAuthErrorCode(code: string | null): boolean {
   return Boolean(code && INVALIDATING_AUTH_ERROR_CODES.has(code));
+}
+
+//===================================================================
+
+async function getAuthErrorCodeFromResponse(
+  response: Response
+): Promise<string | null> {
+  if (response.ok) return null;
+
+  try {
+    const body = await response.clone().text();
+    return getAuthErrorCodeFromBody(body);
+  } catch {
+    return null;
+  }
+}
+
+//===================================================================
+
+export async function responseRequiresAuthRefresh(
+  response: Response
+): Promise<boolean> {
+  if (response.status !== 401) return false;
+  return isRefreshableAuthErrorCode(
+    await getAuthErrorCodeFromResponse(response)
+  );
 }
 
 //===================================================================
@@ -33,12 +65,7 @@ export function isInvalidatingAuthErrorCode(
 export async function responseInvalidatesAuthSession(
   response: Response
 ): Promise<boolean> {
-  if (response.ok) return false;
-
-  try {
-    const body = await response.clone().text();
-    return isInvalidatingAuthErrorCode(getAuthErrorCodeFromBody(body));
-  } catch {
-    return false;
-  }
+  return isInvalidatingAuthErrorCode(
+    await getAuthErrorCodeFromResponse(response)
+  );
 }

@@ -239,7 +239,18 @@ export async function optionalAuthenticate(
     next();
   } catch (error) {
     if (isAuthenticationCandidateError(error)) {
-      next();
+      if (hasPreservedAuthLifecycleCode(error)) {
+        next(error);
+      } else {
+        next(
+          httpError(
+            HTTP_STATUS.UNAUTHORIZED,
+            API_MESSAGES.INVALID_TOKEN,
+            undefined,
+            AUTH_ERROR_CODES.SESSION_INVALID
+          )
+        );
+      }
       return;
     }
 

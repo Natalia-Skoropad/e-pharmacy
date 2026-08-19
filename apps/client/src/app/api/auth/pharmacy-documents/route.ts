@@ -5,4 +5,5 @@ import { createAuthProxyRoute } from '@e-pharmacy/next-api/proxy';
 
 export const POST = createAuthProxyRoute({
   backendPath: authRoutes.pharmacyDocumentUpload,
+  bodyPreset: 'documentUpload',
 });

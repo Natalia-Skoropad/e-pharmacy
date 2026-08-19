@@ -1,20 +1,23 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import path from 'node:path';
 import test from 'node:test';
 
 //===================================================================
 
 const readSource = async (relativePath: string) =>
-  readFile(resolve(__dirname, relativePath), 'utf8');
+  readFile(path.resolve(__dirname, relativePath), 'utf8');
 
 //===================================================================
 
-test('token-bearing auth endpoints require the trusted BFF in every environment', async () => {
-  const [controllerSource, envSource] = await Promise.all([
-    readSource('./auth.controller.ts'),
-    readSource('../config/env.ts'),
-  ]);
+test('token-bearing auth endpoints require the trusted BFF before rate limiting and validation', async () => {
+  const [controllerSource, middlewareSource, routesSource, envSource] =
+    await Promise.all([
+      readSource('./auth.controller.ts'),
+      readSource('../middlewares/auth-bff.middleware.ts'),
+      readSource('../routes/auth.routes.ts'),
+      readSource('../config/env.ts'),
+    ]);
 
   assert.match(
     envSource,
@@ -22,26 +25,39 @@ test('token-bearing auth endpoints require the trusted BFF in every environment'
   );
 
   assert.doesNotMatch(
-    controllerSource,
+    middlewareSource,
     /return\s+env\.NODE_ENV\s*!==\s*['"]production['"]/,
     'development/test must not trust an auth proxy marker without the secret'
   );
 
   assert.doesNotMatch(controllerSource, /setAuthCookies|clearAuthCookies/);
+  assert.doesNotMatch(controllerSource, /assertNextAuthProxyRequest/);
 
-  const guardedCalls = controllerSource.match(
-    /assertNextAuthProxyRequest\(req\);/g
+  assert.match(
+    routesSource,
+    /['"]\/register['"][\s\S]*?requireTrustedAuthProxy[\s\S]*?registrationIpRateLimit[\s\S]*?validateAuth[\s\S]*?registrationAccountRateLimit/
   );
-  assert.ok((guardedCalls?.length ?? 0) >= 3);
+
+  assert.match(
+    routesSource,
+    /['"]\/login['"][\s\S]*?requireTrustedAuthProxy[\s\S]*?loginIpRateLimit[\s\S]*?validateAuth[\s\S]*?loginProgressiveDelay[\s\S]*?loginAccountIpRateLimit/
+  );
+
+  assert.match(
+    routesSource,
+    /['"]\/refresh['"][\s\S]*?requireTrustedAuthProxy[\s\S]*?ctrlWrapper\(refreshAuthSession\)/
+  );
 });
 
 //===================================================================
 
 test('a browser-supplied marker alone cannot satisfy the BFF trust check', async () => {
-  const controllerSource = await readSource('./auth.controller.ts');
+  const middlewareSource = await readSource(
+    '../middlewares/auth-bff.middleware.ts'
+  );
 
   assert.match(
-    controllerSource,
+    middlewareSource,
     /marker\s*!==\s*BFF_AUTH_PROXY_MARKER_VALUE[\s\S]*typeof secret === ['"]string['"] && secret === configuredSecret/
   );
 });

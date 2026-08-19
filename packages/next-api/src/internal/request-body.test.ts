@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { ProxyRequestBodyError, readProxyRequestBody } from './request-body.ts';
+import {
+  getProxyRequestBodyLimitBytes,
+  ProxyRequestBodyError,
+  readProxyRequestBody,
+} from './request-body.ts';
 
 //===================================================================
 
@@ -18,6 +22,17 @@ test('forwards JSON bodies for POST, PATCH, PUT, and DELETE', async () => {
       JSON.stringify({ value: method })
     );
   }
+});
+
+//===================================================================
+
+test('uses semantic limits for small, standard, and document JSON payloads', () => {
+  assert.equal(getProxyRequestBodyLimitBytes('smallJson'), 64 * 1024);
+  assert.equal(getProxyRequestBodyLimitBytes('standardJson'), 1024 * 1024);
+  assert.equal(
+    getProxyRequestBodyLimitBytes('documentUpload'),
+    32 * 1024 * 1024
+  );
 });
 
 //===================================================================
@@ -47,21 +62,63 @@ test('returns undefined for an empty mutation body', async () => {
 
 //===================================================================
 
-test('rejects declared oversized bodies before buffering', async () => {
-  const request = new Request('https://example.test/api/items', {
+test('rejects declared oversized small JSON bodies before buffering', async () => {
+  const request = new Request('https://example.test/api/auth/login', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'content-length': String(32 * 1024 * 1024 + 1),
+      'content-length': String(64 * 1024 + 1),
     },
     body: '{}',
   });
 
   await assert.rejects(
-    readProxyRequestBody(request, 'POST'),
+    readProxyRequestBody(request, 'POST', 'smallJson'),
     (error: unknown) =>
       error instanceof ProxyRequestBodyError && error.status === 413
   );
+});
+
+//===================================================================
+
+test('rejects actual standard JSON size even when Content-Length is spoofed smaller', async () => {
+  const request = new Request('https://example.test/api/orders/checkout', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'content-length': '2',
+    },
+    body: JSON.stringify({ value: 'x'.repeat(1024 * 1024) }),
+  });
+
+  await assert.rejects(
+    readProxyRequestBody(request, 'POST', 'standardJson'),
+    (error: unknown) =>
+      error instanceof ProxyRequestBodyError && error.status === 413
+  );
+});
+
+//===================================================================
+
+test('accepts a realistic base64-sized document payload under documentUpload limit', async () => {
+  const base64Bytes = Math.floor(13.4 * 1024 * 1024);
+  const body = JSON.stringify({ dataUrl: 'x'.repeat(base64Bytes) });
+  const request = new Request(
+    'https://example.test/api/auth/pharmacy-documents',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json; charset=utf-8' },
+      body,
+    }
+  );
+
+  const forwarded = await readProxyRequestBody(
+    request,
+    'POST',
+    'documentUpload'
+  );
+
+  assert.equal(forwarded?.length, body.length);
 });
 
 //===================================================================

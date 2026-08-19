@@ -24,6 +24,7 @@ import {
 } from '../controllers/auth.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
+import { requireTrustedAuthProxy } from '../middlewares/auth-bff.middleware';
 
 import {
   loginAccountIpRateLimit,
@@ -91,6 +92,7 @@ authRoutes.post(
 
 authRoutes.post(
   '/register',
+  requireTrustedAuthProxy,
   registrationIpRateLimit,
   validateAuth({
     body: registerSchema,
@@ -103,6 +105,7 @@ authRoutes.post(
 
 authRoutes.post(
   '/login',
+  requireTrustedAuthProxy,
   loginIpRateLimit,
   validateAuth({
     body: loginSchema,
@@ -114,7 +117,11 @@ authRoutes.post(
 
 //=================================================================================
 
-authRoutes.post('/refresh', ctrlWrapper(refreshAuthSession));
+authRoutes.post(
+  '/refresh',
+  requireTrustedAuthProxy,
+  ctrlWrapper(refreshAuthSession)
+);
 
 //=================================================================================
 

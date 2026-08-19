@@ -80,6 +80,12 @@ const backendAuthController = await read(
   'apps/api/src/controllers/auth.controller.ts'
 );
 
+const backendAuthBffMiddleware = await read(
+  'apps/api/src/middlewares/auth-bff.middleware.ts'
+);
+
+const backendAuthRoutes = await read('apps/api/src/routes/auth.routes.ts');
+
 //===================================================================
 
 const nextApiSources = [
@@ -347,14 +353,26 @@ if (
   violations.push('BFF proxy secret must be required in every runtime environment');
 }
 
-const trustedAuthAssertions = backendAuthController.match(
-  /assertNextAuthProxyRequest\(req\);/g
-);
+if (
+  !/export function requireTrustedAuthProxy/.test(backendAuthBffMiddleware) ||
+  !/marker\s*!==\s*BFF_AUTH_PROXY_MARKER_VALUE/.test(backendAuthBffMiddleware) ||
+  !/typeof secret === ['"]string['"] && secret === configuredSecret/.test(
+    backendAuthBffMiddleware
+  )
+) {
+  violations.push('Backend trusted auth BFF middleware is missing or incomplete');
+}
 
-if ((trustedAuthAssertions?.length ?? 0) < 3) {
-  violations.push(
-    'Backend register/login/refresh must require the trusted BFF before returning tokens'
+for (const routeName of ['register', 'login', 'refresh']) {
+  const routePattern = new RegExp(
+    String.raw`['"]\/${routeName}['"][\s\S]*?requireTrustedAuthProxy[\s\S]*?ctrlWrapper`
   );
+
+  if (!routePattern.test(backendAuthRoutes)) {
+    violations.push(
+      `Backend ${routeName} must require the trusted BFF before auth route work`
+    );
+  }
 }
 
 if (violations.length) {

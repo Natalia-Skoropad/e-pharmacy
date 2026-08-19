@@ -1,6 +1,6 @@
 import type { HttpMethod } from '@e-pharmacy/api-client/transport';
 
-import { MAX_PROXY_REQUEST_BODY_BYTES } from './transport-policy';
+import { PROXY_REQUEST_BODY_LIMITS_BYTES } from './transport-policy';
 
 //===================================================================
 
@@ -9,6 +9,11 @@ const ALLOWED_CONTENT_TYPES = [
   'text/plain',
   'application/x-www-form-urlencoded',
 ] as const;
+
+//===================================================================
+
+export type ProxyRequestBodyPreset =
+  keyof typeof PROXY_REQUEST_BODY_LIMITS_BYTES;
 
 //===================================================================
 
@@ -37,18 +42,25 @@ function isAllowedContentType(contentType: string): boolean {
 
 //===================================================================
 
+export function getProxyRequestBodyLimitBytes(
+  preset: ProxyRequestBodyPreset
+): number {
+  return PROXY_REQUEST_BODY_LIMITS_BYTES[preset];
+}
+
+//===================================================================
+
 export async function readProxyRequestBody(
   request: Request,
-  method: HttpMethod
+  method: HttpMethod,
+  preset: ProxyRequestBodyPreset = 'standardJson'
 ): Promise<string | undefined> {
   if (method === 'GET') return undefined;
 
+  const maxBytes = getProxyRequestBodyLimitBytes(preset);
   const declaredLength = Number(request.headers.get('content-length') ?? '0');
 
-  if (
-    Number.isFinite(declaredLength) &&
-    declaredLength > MAX_PROXY_REQUEST_BODY_BYTES
-  ) {
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
     throw new ProxyRequestBodyError(
       413,
       'PAYLOAD_TOO_LARGE',
@@ -59,7 +71,7 @@ export async function readProxyRequestBody(
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.byteLength === 0) return undefined;
 
-  if (bytes.byteLength > MAX_PROXY_REQUEST_BODY_BYTES) {
+  if (bytes.byteLength > maxBytes) {
     throw new ProxyRequestBodyError(
       413,
       'PAYLOAD_TOO_LARGE',
