@@ -438,10 +438,7 @@ export async function resolvePrivatePharmacyDocumentSelections(
   const selectableDocumentFilter = {
     _id: { $in: ids },
     pharmacyId,
-    $or: [
-      { attachedAt: { $exists: true } },
-      { expiresAt: { $gt: now } },
-    ],
+    $or: [{ attachedAt: { $exists: true } }, { expiresAt: { $gt: now } }],
   };
 
   const query = PharmacyDocumentFile.find(selectableDocumentFilter);
@@ -481,7 +478,7 @@ export async function getPrivatePharmacyDocumentContentService(
   documentId: string
 ): Promise<{
   document: PharmacyVerificationDocumentMetadata;
-  dataUrl: string;
+  content: Buffer;
 }> {
   const { pharmacy } = await findPharmacyForProfileAccess(
     userId,
@@ -501,7 +498,10 @@ export async function getPrivatePharmacyDocumentContentService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy document was not found.');
   }
 
-  return serializeDocumentContent(document);
+  return {
+    document: serializeDocument(document),
+    content: Buffer.from(document.content),
+  };
 }
 
 //===================================================================

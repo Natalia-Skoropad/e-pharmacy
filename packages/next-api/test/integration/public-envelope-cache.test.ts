@@ -127,3 +127,49 @@ test('canonical 503 error envelope preserves status and no-store policy', async 
     restore();
   }
 });
+
+//===================================================================
+
+test('authenticated browser public reads never forward cookies or upstream Set-Cookie', async () => {
+  const restore = configureEnvironment();
+
+  try {
+    globalThis.fetch = async (_input, init) => {
+      const headers = new Headers(init?.headers);
+      assert.equal(headers.get('cookie'), null);
+      assert.equal(headers.get('authorization'), null);
+
+      return new Response(
+        JSON.stringify({ status: 'success', data: { items: [] } }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'set-cookie': 'backend_session=must-not-reach-browser; HttpOnly',
+          },
+        }
+      );
+    };
+
+    const response = await proxyPublicBackendRequest({
+      request: new NextRequest('https://client.example/api/products', {
+        headers: {
+          cookie:
+            'e_pharmacy_access_token=access; e_pharmacy_refresh_token=refresh; analytics=drop-me',
+          authorization: 'Bearer browser-token',
+        },
+      }),
+
+      requestId: 'public-auth-isolation',
+      backendPath: '/products',
+      revalidate: 30,
+      staleWhileRevalidate: 30,
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('set-cookie'), null);
+    assert.match(response.headers.get('cache-control') ?? '', /s-maxage=30/);
+  } finally {
+    restore();
+  }
+});

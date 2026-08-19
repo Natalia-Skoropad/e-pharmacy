@@ -10,5 +10,6 @@ export function notFoundMiddleware(req: Request, res: Response): void {
     status: 'error',
     message: API_MESSAGES.ROUTE_NOT_FOUND,
     path: req.originalUrl,
+    ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
   });
 }

@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { REVIEW_ERROR_CODES } from '../constants/reviews';
 import { API_MESSAGES } from '../constants/messages';
 
 import { Client } from '../models/client.model';
@@ -36,6 +37,7 @@ import {
 
 import { recordInitialStockArrival } from './stockMovement.service';
 import { httpError } from '../utils/httpError';
+import { isDuplicateProductReviewError } from '../utils/mongoError';
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
@@ -1040,14 +1042,27 @@ export async function createProductReviewService(
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
-  await ProductReview.create({
-    productId,
-    userId: input.userId,
-    userName: input.userName,
-    rating: input.rating,
-    comment: input.comment,
-    status: 'on_moderation',
-  });
+  try {
+    await ProductReview.create({
+      productId,
+      userId: input.userId,
+      userName: input.userName,
+      rating: input.rating,
+      comment: input.comment,
+      status: 'on_moderation',
+    });
+  } catch (error) {
+    if (isDuplicateProductReviewError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'You already have a pending or approved review for this product.',
+        undefined,
+        REVIEW_ERROR_CODES.ALREADY_SUBMITTED
+      );
+    }
+
+    throw error;
+  }
 
   return { message: 'Product review was submitted for moderation.' };
 }

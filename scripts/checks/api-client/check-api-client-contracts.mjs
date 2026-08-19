@@ -66,7 +66,17 @@ assert.match(jsonResponse, /\\\+json/);
 assert.match(requestExecutor, /responseType === 'no-content'/);
 assert.doesNotMatch(types, /BodyInit\s*\|/);
 assert.doesNotMatch(types, /next\?:/);
-assert.doesNotMatch(types, /FormData|Blob|ReadableStream|ArrayBuffer/);
+
+const requestBodyTypes =
+  types.match(/export type ApiRequestBody =([\s\S]*?);/)?.[0] ?? '';
+
+assert.doesNotMatch(
+  requestBodyTypes,
+  /FormData|Blob|ReadableStream|ArrayBuffer/,
+  'Binary or streaming request bodies must not enter the generic API-client body contract.'
+);
+assert.match(types, /responseType\?: 'json' \| 'no-content' \| 'blob'/);
+assert.match(types, /export type BlobResponseRequestOptions/);
 assert.match(requestBody, /INVALID_REQUEST_BODY/);
 assert.match(requestBody, /custom toJSON/);
 assert.match(pagination, /legacyItemKeys/);

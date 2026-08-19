@@ -46,6 +46,7 @@ import {
   uploadMyPharmacyDocumentSchema,
 } from '../schemas/pharmacy.schema';
 
+import { emptyQuerySchema } from '../schemas/shared';
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================
@@ -53,7 +54,6 @@ import { ctrlWrapper } from '../utils/ctrlWrapper';
 export const pharmacyRoutes = Router();
 
 //===============================================================
-
 
 pharmacyRoutes.post(
   '/me/documents',
@@ -127,11 +127,19 @@ pharmacyRoutes.get(
 
 //=================================================================================
 
-pharmacyRoutes.get('/filters', ctrlWrapper(getPharmacyFilters));
+pharmacyRoutes.get(
+  '/filters',
+  validate({ query: emptyQuerySchema }),
+  ctrlWrapper(getPharmacyFilters)
+);
 
 //=================================================================================
 
-pharmacyRoutes.get('/options', ctrlWrapper(getPharmacyOptions));
+pharmacyRoutes.get(
+  '/options',
+  validate({ query: emptyQuerySchema }),
+  ctrlWrapper(getPharmacyOptions)
+);
 
 //=================================================================================
 

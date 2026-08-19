@@ -209,6 +209,7 @@ function createRateLimit(options: {
         status: 'error',
         message,
         ...(code ? { code } : {}),
+        ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
       });
     } catch (error) {
       next(error);

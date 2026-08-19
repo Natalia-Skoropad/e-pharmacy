@@ -31,7 +31,22 @@ export type RequestOptions = {
   timeoutMs?: number;
   retry?: false | ApiRetryConfig;
   redirect?: RequestRedirect;
-  responseType?: 'json' | 'no-content';
+  responseType?: 'json' | 'no-content' | 'blob';
+};
+
+//===================================================================
+
+export type BlobResponseRequestOptions = Omit<
+  RequestOptions,
+  'responseType'
+> & {
+  responseType: 'blob';
+};
+
+//===================================================================
+
+export type ApiBlobResponseRequestOptions = BlobResponseRequestOptions & {
+  baseUrl: string;
 };
 
 //===================================================================

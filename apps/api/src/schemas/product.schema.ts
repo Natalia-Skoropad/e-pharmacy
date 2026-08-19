@@ -102,10 +102,12 @@ export const managedProductsQuerySchema = z.preprocess(
 
 //===============================================================
 
-export const productFiltersQuerySchema = z.object({
-  pharmacyId: mongoIdSchema.optional(),
-  inStock: booleanQuerySchema.optional(),
-});
+export const productFiltersQuerySchema = z
+  .object({
+    pharmacyId: mongoIdSchema.optional(),
+    inStock: booleanQuerySchema.optional(),
+  })
+  .strict();
 
 //===============================================================
 

@@ -1,5 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
+import { ACTIVE_REVIEW_STATUSES } from '../constants/reviews';
+
 import {
   MAX_REVIEW_RATING,
   MIN_REVIEW_RATING,
@@ -70,10 +72,7 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
         USER_REVIEW_COMMENT_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMax,
       ],
-      match: [
-        REVIEW_COMMENT_PATTERN,
-        VALIDATION_MESSAGES.format.reviewComment,
-      ],
+      match: [REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment],
     },
 
     status: {
@@ -110,6 +109,17 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
 
 pharmacyReviewSchema.index({ pharmacyId: 1, status: 1, createdAt: -1 });
 pharmacyReviewSchema.index({ status: 1, createdAt: -1 });
+
+pharmacyReviewSchema.index(
+  { pharmacyId: 1, userId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      userId: { $type: 'objectId' },
+      status: { $in: [...ACTIVE_REVIEW_STATUSES] },
+    },
+  }
+);
 
 //===============================================================
 

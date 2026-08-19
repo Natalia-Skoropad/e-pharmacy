@@ -1,12 +1,14 @@
 import 'client-only';
 
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+import type {
+  BlobResponseRequestOptions,
+  JsonResponseRequestOptions,
+} from '@e-pharmacy/api-client/transport';
 
 import {
   parseActiveSessionsResponse,
   parseApiEmptyResponse,
   parseApiResponseData,
-  parsePharmacyDocumentContentResponse,
   parsePharmacyProfileDocumentUploadResponse,
   parsePharmacyProfileResponse,
   parseSendPharmacyForVerificationResponse,
@@ -23,7 +25,6 @@ import type {
 } from '@e-pharmacy/types/auth';
 
 import type {
-  PharmacyDocumentContentResponse,
   PharmacyDocumentUploadPayload,
   PharmacyProfileDocumentUploadResponse,
   PharmacyProfileResponse,
@@ -52,17 +53,42 @@ export async function uploadMyPharmacyDocument(
 
 //===================================================================
 
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener('load', () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error('Downloaded document could not be read.'));
+    });
+
+    reader.addEventListener('error', () => {
+      reject(
+        reader.error ?? new Error('Downloaded document could not be read.')
+      );
+    });
+
+    reader.readAsDataURL(blob);
+  });
+}
+
+//===================================================================
+
 export async function getMyPharmacyDocument(
   documentId: EntityId,
-  options?: JsonResponseRequestOptions
-): Promise<PharmacyDocumentContentResponse> {
+  options?: Omit<BlobResponseRequestOptions, 'responseType'>
+): Promise<string> {
   const path = PHARMACY_API_ROUTES.pharmacies.myDocument(documentId);
+  const blob = await localApiRequest(path, {
+    ...options,
+    responseType: 'blob',
+  });
 
-  return parseApiResponseData(
-    await localApiRequest(path, options),
-    parsePharmacyDocumentContentResponse,
-    { url: path, method: 'GET' }
-  );
+  return blobToDataUrl(blob);
 }
 
 //===================================================================

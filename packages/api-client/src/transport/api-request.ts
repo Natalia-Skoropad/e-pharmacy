@@ -2,9 +2,11 @@ import { createApiUrl, InvalidApiBaseUrlError } from './api-url';
 import { executeHttpRequest } from './request-executor';
 
 import type {
+  ApiBlobResponseRequestOptions,
   ApiClientConfig,
   ApiJsonResponseRequestOptions,
   ApiNoContentResponseRequestOptions,
+  BlobResponseRequestOptions,
   JsonResponseRequestOptions,
   NoContentResponseRequestOptions,
   RequestOptions,
@@ -21,6 +23,13 @@ export function apiRequest(
 
 export function apiRequest(
   path: string,
+  options: ApiBlobResponseRequestOptions
+): Promise<Blob>;
+
+//===================================================================
+
+export function apiRequest(
+  path: string,
   options: ApiJsonResponseRequestOptions
 ): Promise<unknown>;
 
@@ -29,6 +38,7 @@ export function apiRequest(
 export async function apiRequest(
   path: string,
   requestOptions?:
+    | ApiBlobResponseRequestOptions
     | ApiJsonResponseRequestOptions
     | ApiNoContentResponseRequestOptions
 ): Promise<unknown> {
@@ -55,6 +65,8 @@ export type ApiClient = Readonly<{
     path: string,
     options: NoContentResponseRequestOptions
   ): Promise<void>;
+
+  request(path: string, options: BlobResponseRequestOptions): Promise<Blob>;
 
   request(path: string, options?: JsonResponseRequestOptions): Promise<unknown>;
 }>;

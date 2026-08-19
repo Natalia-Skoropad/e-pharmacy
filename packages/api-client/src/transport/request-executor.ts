@@ -8,6 +8,34 @@ import { tryParseApiErrorEnvelope } from '../response/api-envelope';
 
 //===================================================================
 
+const SAFE_REQUEST_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
+
+//===================================================================
+
+function getResponseRequestId(response: Response): string | undefined {
+  const value = response.headers.get('x-request-id')?.trim();
+  return value && SAFE_REQUEST_ID_PATTERN.test(value) ? value : undefined;
+}
+
+//===================================================================
+
+function getRetryAfterSeconds(response: Response): number | undefined {
+  const value = response.headers.get('retry-after')?.trim();
+  if (!value) return undefined;
+
+  if (/^\d+$/.test(value)) {
+    const seconds = Number.parseInt(value, 10);
+    return Number.isSafeInteger(seconds) ? seconds : undefined;
+  }
+
+  const retryAt = Date.parse(value);
+  if (!Number.isFinite(retryAt)) return undefined;
+
+  return Math.max(0, Math.ceil((retryAt - Date.now()) / 1_000));
+}
+
+//===================================================================
+
 export type HttpRequestResult<TData> = Readonly<{
   data: TData;
   status: number;
@@ -70,7 +98,8 @@ async function parseFinalJsonResponse(
       {
         httpStatus: response.status,
         backendCode: canonical?.code,
-        requestId: canonical?.requestId,
+        requestId: canonical?.requestId ?? getResponseRequestId(response),
+        retryAfterSeconds: getRetryAfterSeconds(response),
         details: canonical?.details,
         payload: parsed.value,
         ...context,
@@ -158,7 +187,7 @@ export async function executeHttpRequest(
       headers: requestHeaders,
       body: requestBody,
       cache,
-        credentials,
+      credentials,
       redirect,
     },
     signal,
@@ -175,6 +204,18 @@ export async function executeHttpRequest(
       assertNoContentResponse(execution.response, context);
       return {
         data: undefined,
+        status: execution.response.status,
+        retryCount: execution.retryCount,
+      };
+    }
+
+    if (responseType === 'blob') {
+      if (!execution.response.ok) {
+        await parseFinalJsonResponse(execution.response, context);
+      }
+
+      return {
+        data: await execution.response.blob(),
         status: execution.response.status,
         retryCount: execution.retryCount,
       };

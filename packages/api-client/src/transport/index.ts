@@ -24,7 +24,9 @@ export { executeHttpRequest } from './request-executor';
 export type { HttpRequestResult } from './request-executor';
 
 export type {
+  ApiBlobResponseRequestOptions,
   ApiClientConfig,
+  BlobResponseRequestOptions,
   ApiJsonResponseRequestOptions,
   ApiNoContentResponseRequestOptions,
   ApiRequestOptions,

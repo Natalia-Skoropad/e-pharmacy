@@ -66,7 +66,8 @@ function inferAccessModes(source, methods) {
 
   const access = source.includes('createAuthProxyRoute')
     ? 'auth'
-    : source.includes('createPrivateProxyRoute')
+    : source.includes('createPrivateProxyRoute') ||
+        source.includes('createPrivateDownloadProxyRoute')
       ? 'private'
       : source.includes('createOptionalAuthGetProxyRoute')
         ? 'optional'
@@ -223,11 +224,16 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
       /createPublicGetProxyRoute/.test(source)
     ) {
       if (
-        !/revalidate:\s*600/.test(source) ||
-        !/staleWhileRevalidate:\s*600/.test(source)
+        !/PUBLIC_CACHE_REVALIDATE_SECONDS\.dictionary/.test(source) ||
+        !/revalidate:\s*PUBLIC_CACHE_REVALIDATE_SECONDS\.dictionary/.test(
+          source
+        ) ||
+        !/staleWhileRevalidate:\s*PUBLIC_CACHE_REVALIDATE_SECONDS\.dictionary/.test(
+          source
+        )
       ) {
         violations.push(
-          `${rel}: filters/options must use the explicit 600-second cache policy`
+          `${rel}: filters/options must use the semantic dictionary cache preset`
         );
       }
     }
@@ -269,5 +275,5 @@ if (violations.length) {
 //===================================================================
 
 console.log(
-  `Next API route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified).`
+  `Next API structural route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified).`
 );

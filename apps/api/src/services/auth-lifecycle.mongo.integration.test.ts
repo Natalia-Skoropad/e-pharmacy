@@ -837,10 +837,10 @@ test(
         uploaded.document.id
       );
 
-      assert.equal(ownerContent.dataUrl, adminContent.dataUrl);
-
+      assert.deepEqual(ownerContent.content, content);
+      assert.equal(ownerContent.document.type, 'application/pdf');
       assert.equal(
-        ownerContent.dataUrl,
+        adminContent.dataUrl,
         `data:application/pdf;base64,${content.toString('base64')}`
       );
     } finally {

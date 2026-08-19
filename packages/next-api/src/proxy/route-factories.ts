@@ -23,7 +23,10 @@ import {
   type AuthMarkerAction,
 } from './auth-proxy';
 
-import { proxyBackendRequest } from './backend-proxy';
+import {
+  proxyBackendRequest,
+  proxyPrivateBackendDownloadRequest,
+} from './backend-proxy';
 
 import {
   proxyOptionalAuthBackendRequest,
@@ -135,6 +138,32 @@ export function createPrivateProxyRoute<
         method,
         clearAuthCookiesOnSuccess,
         bodyPreset,
+      });
+    } catch (error) {
+      return handleRouteFactoryError(error, request, requestId);
+    }
+  };
+}
+
+//===================================================================
+
+export function createPrivateDownloadProxyRoute<
+  TParams extends RouteParams = RouteParams,
+>({
+  backendPath,
+  enumParams,
+}: {
+  backendPath: BackendPath<TParams>;
+  enumParams?: EnumParamValues<TParams>;
+}): ProxyRouteHandler<TParams> {
+  return async (request, context) => {
+    const requestId = createRequestId();
+
+    try {
+      return proxyPrivateBackendDownloadRequest({
+        request,
+        requestId,
+        backendPath: await resolveBackendPath(backendPath, context, enumParams),
       });
     } catch (error) {
       return handleRouteFactoryError(error, request, requestId);

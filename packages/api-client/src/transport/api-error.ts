@@ -20,6 +20,7 @@ export type ApiErrorOptions = Readonly<{
   httpStatus?: number;
   backendCode?: string;
   requestId?: string;
+  retryAfterSeconds?: number;
   details?: unknown;
   url?: string;
   method?: string;
@@ -42,6 +43,7 @@ export class ApiError extends Error {
   readonly httpStatus?: number;
   readonly backendCode?: string;
   readonly requestId?: string;
+  readonly retryAfterSeconds?: number;
   readonly details?: unknown;
   readonly url?: string;
   readonly method?: string;
@@ -93,6 +95,7 @@ export class ApiError extends Error {
     this.httpStatus = options.httpStatus;
     this.backendCode = options.backendCode;
     this.requestId = options.requestId;
+    this.retryAfterSeconds = options.retryAfterSeconds;
     this.details = options.details;
     this.url = options.url;
     this.method = options.method;

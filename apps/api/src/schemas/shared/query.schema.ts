@@ -7,3 +7,7 @@ export const booleanQuerySchema = z.preprocess((value) => {
   if (value === 'false') return false;
   return value;
 }, z.boolean());
+
+//===================================================================
+
+export const emptyQuerySchema = z.object({}).strict();

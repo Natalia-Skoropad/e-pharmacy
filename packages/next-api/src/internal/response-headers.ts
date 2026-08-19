@@ -4,6 +4,7 @@ import { REQUEST_ID_HEADER_NAME } from './bff-contract';
 
 const FORWARDED_RESPONSE_HEADERS = [
   'content-type',
+  'content-length',
   'retry-after',
   'www-authenticate',
   'etag',

@@ -3,8 +3,13 @@ import test from 'node:test';
 import { Types } from 'mongoose';
 
 import { Pharmacy } from './pharmacy.model';
+import { PharmacyReview } from './pharmacyReview.model';
 import { ProductReview } from './productReview.model';
 import { User } from './user.model';
+
+//===============================================================
+
+type ReviewSchemaIndex = ReturnType<typeof ProductReview.schema.indexes>[number];
 
 //===============================================================
 
@@ -96,4 +101,26 @@ test('Review model rejects comments outside the shared character contract', () =
 
   review.comment = 'Чудовий сервіс і швидка доставка';
   assert.ok(review.validateSync()?.errors.comment);
+});
+
+//===============================================================
+
+test('Review models enforce one pending or approved review per user and entity', () => {
+  for (const [model, entityKey] of [
+    [ProductReview, 'productId'],
+    [PharmacyReview, 'pharmacyId'],
+  ] as const) {
+    const matchingIndex = model.schema
+      .indexes()
+      .find(
+        ([keys, options]: ReviewSchemaIndex) =>
+          keys[entityKey] === 1 && keys.userId === 1 && options.unique === true
+      );
+
+    assert.ok(matchingIndex);
+
+    assert.deepEqual(matchingIndex[1].partialFilterExpression?.status, {
+      $in: ['on_moderation', 'approved'],
+    });
+  }
 });

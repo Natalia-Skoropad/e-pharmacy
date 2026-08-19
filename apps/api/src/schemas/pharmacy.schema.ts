@@ -45,17 +45,19 @@ const pharmaciesPerPageSchema = createPerPageSchema({
 
 export const pharmaciesQuerySchema = z.preprocess(
   normalizePaginationQuery,
-  z.object({
-    page: positivePageSchema,
-    perPage: pharmaciesPerPageSchema,
-    keyword: sharedSearchSchema,
-    nameKeyword: sharedSearchSchema,
-    addressKeyword: sharedSearchSchema,
-    city: sharedSearchSchema,
-    sort: z
-      .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])
-      .default('newest'),
-  })
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: pharmaciesPerPageSchema,
+      keyword: sharedSearchSchema,
+      nameKeyword: sharedSearchSchema,
+      addressKeyword: sharedSearchSchema,
+      city: sharedSearchSchema,
+      sort: z
+        .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])
+        .default('newest'),
+    })
+    .strict()
 );
 
 //===============================================================
@@ -133,7 +135,8 @@ export const updateMyPharmacyProfileSchema = pharmacyProfileUpdateChangesSchema
   .refine(
     (data) =>
       Object.entries(data).some(
-        ([key, value]) => key !== 'expectedRevision' && hasMeaningfulValue(value)
+        ([key, value]) =>
+          key !== 'expectedRevision' && hasMeaningfulValue(value)
       ),
     { message: 'At least one field is required' }
   );
@@ -160,7 +163,9 @@ export const sendMyPharmacyForVerificationSchema = z.object({
 export type PharmaciesQuery = z.infer<typeof pharmaciesQuerySchema>;
 export type PharmacyIdParams = z.infer<typeof pharmacyIdParamsSchema>;
 export type PharmacyReviewParams = z.infer<typeof pharmacyReviewParamsSchema>;
-export type PharmacyDocumentParams = z.infer<typeof pharmacyDocumentParamsSchema>;
+export type PharmacyDocumentParams = z.infer<
+  typeof pharmacyDocumentParamsSchema
+>;
 
 export type PendingPharmacyReviewsQuery = z.infer<
   typeof pendingPharmacyReviewsQuerySchema

@@ -9,16 +9,19 @@ import {
 } from './order.schema';
 
 import {
+  pharmaciesQuerySchema,
   updateMyPharmacyProfileSchema,
   uploadMyPharmacyDocumentSchema,
 } from './pharmacy.schema';
 
 import {
   managedProductsQuerySchema,
+  productFiltersQuerySchema,
   publicProductsQuerySchema,
 } from './product.schema';
 
 import { sharedWorkingHoursSchema } from './shared-validation.schema';
+import { emptyQuerySchema } from './shared';
 
 const EXPECTED_REVISION = '2026-08-14T12:00:00.000Z';
 
@@ -115,6 +118,20 @@ test('public product queries reject management-only lifecycle filters', () => {
     }).success,
     true
   );
+});
+
+//===============================================================
+
+test('public cacheable query schemas reject unknown parameters', () => {
+  assert.equal(pharmaciesQuerySchema.safeParse({ junk: 'a' }).success, false);
+
+  assert.equal(
+    productFiltersQuerySchema.safeParse({ junk: 'a' }).success,
+    false
+  );
+
+  assert.equal(emptyQuerySchema.safeParse({ junk: 'a' }).success, false);
+  assert.equal(emptyQuerySchema.safeParse({}).success, true);
 });
 
 //===============================================================

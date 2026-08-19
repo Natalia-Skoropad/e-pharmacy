@@ -47,6 +47,15 @@ import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
 
+function encodeContentDispositionFilename(value: string): string {
+  return encodeURIComponent(value).replace(
+    /[!'()*]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+}
+
+//===============================================================
+
 export async function uploadMyPharmacyDocument(
   req: Request,
   res: ValidatedResponse<PharmacyDocumentUploadInput>
@@ -68,13 +77,19 @@ export async function getMyPharmacyDocument(
 ): Promise<void> {
   const { documentId } = res.locals.validated.params;
 
-  const data = await getPrivatePharmacyDocumentContentService(
+  const { document, content } = await getPrivatePharmacyDocumentContentService(
     req.user?.id ?? '',
     documentId
   );
 
   res.setHeader('Cache-Control', 'private, no-store');
-  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+  res.setHeader('Content-Type', document.type);
+  res.setHeader('Content-Length', String(content.byteLength));
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename*=UTF-8''${encodeContentDispositionFilename(document.name)}`
+  );
+  res.status(HTTP_STATUS.OK).send(content);
 }
 
 //===============================================================

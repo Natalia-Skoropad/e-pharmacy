@@ -1,6 +1,7 @@
 import {
   executeHttpRequest,
   isApiError,
+  type BlobResponseRequestOptions,
   type JsonResponseRequestOptions,
   type NoContentResponseRequestOptions,
   type RequestOptions,
@@ -12,6 +13,7 @@ import {
 } from '../internal/bff-contract';
 
 import { createRequestId } from '../internal/request-id';
+import { createTraceparent } from '../internal/trace-context';
 import { logTransportRequest } from '../observability/logger';
 import { assertLocalApiPath } from './local-api-path';
 
@@ -27,6 +29,13 @@ export function localApiRequest(
   path: string,
   options: NoContentResponseRequestOptions
 ): Promise<void>;
+
+//===================================================================
+
+export function localApiRequest(
+  path: string,
+  options: BlobResponseRequestOptions
+): Promise<Blob>;
 
 //===================================================================
 
@@ -54,6 +63,11 @@ export async function localApiRequest(
   const requestId = createRequestId();
   const requestHeaders = new Headers(headers);
   const startedAt = Date.now();
+
+  if (!requestHeaders.has('traceparent')) {
+    const traceparent = createTraceparent(requestId);
+    if (traceparent) requestHeaders.set('traceparent', traceparent);
+  }
 
   if (isMutationMethod(method)) {
     requestHeaders.set(BFF_CSRF_HEADER_NAME, BFF_CSRF_HEADER_VALUE);

@@ -248,3 +248,46 @@ test('does not retry browser → BFF GET requests unless a caller explicitly opt
     restoreFetch();
   }
 });
+
+//===================================================================
+
+test('supports binary same-origin responses without JSON parsing', async () => {
+  try {
+    globalThis.fetch = async () =>
+      new Response(new Uint8Array([1, 2, 3]), {
+        status: 200,
+        headers: { 'content-type': 'application/pdf' },
+      });
+
+    const blob = await localApiRequest('/api/document', {
+      responseType: 'blob',
+    });
+
+    assert.equal(blob.type, 'application/pdf');
+    assert.deepEqual(
+      new Uint8Array(await blob.arrayBuffer()),
+      new Uint8Array([1, 2, 3])
+    );
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
+test('adds a W3C traceparent for browser to BFF correlation', async () => {
+  try {
+    globalThis.fetch = async (_input, init) => {
+      const headers = new Headers(init?.headers);
+      assert.match(
+        headers.get('traceparent') ?? '',
+        /^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/
+      );
+      return jsonResponse({ ok: true });
+    };
+
+    await localApiRequest('/api/correlated');
+  } finally {
+    restoreFetch();
+  }
+});

@@ -245,6 +245,40 @@ test('separates backend error semantics from transport errors', async () => {
 
 //===================================================================
 
+test('falls back to X-Request-ID and exposes normalized Retry-After seconds', async () => {
+  try {
+    globalThis.fetch = async () =>
+      new Response(
+        JSON.stringify({
+          status: 'error',
+          message: 'Too many requests',
+          code: 'AUTH_RATE_LIMITED',
+        }),
+        {
+          status: 429,
+          headers: {
+            'content-type': 'application/json',
+            'x-request-id': 'request-from-header',
+            'retry-after': '43',
+          },
+        }
+      );
+
+    await assert.rejects(
+      apiRequest('/resource', requestOptions),
+      (error: unknown) =>
+        error instanceof ApiError &&
+        error.httpStatus === 429 &&
+        error.requestId === 'request-from-header' &&
+        error.retryAfterSeconds === 43
+    );
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
 test('retries the default GET status allowlist and network failures', async () => {
   try {
     for (const status of [502, 503, 504]) {

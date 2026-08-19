@@ -13,6 +13,7 @@ test('preserves transport, HTTP, backend and request diagnostic fields', () => {
     httpStatus: 502,
     backendCode: 'UPSTREAM_INVALID',
     requestId: 'request-123',
+    retryAfterSeconds: 43,
     details: { field: 'items' },
     url: '/api/items',
     method: 'GET',
@@ -23,6 +24,7 @@ test('preserves transport, HTTP, backend and request diagnostic fields', () => {
   assert.equal(error.httpStatus, 502);
   assert.equal(error.backendCode, 'UPSTREAM_INVALID');
   assert.equal(error.requestId, 'request-123');
+  assert.equal(error.retryAfterSeconds, 43);
   assert.deepEqual(error.details, { field: 'items' });
   assert.equal(error.url, '/api/items');
   assert.equal(error.method, 'GET');

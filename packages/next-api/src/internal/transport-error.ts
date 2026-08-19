@@ -9,6 +9,7 @@ import { CsrfValidationError } from './csrf';
 import { InvalidBackendPathError } from './trusted-backend-path';
 import { InvalidRouteParameterError } from './route-params';
 import { ProxyRequestBodyError } from './request-body';
+import { ProxyQueryError } from './query';
 import { REQUEST_ID_HEADER_NAME } from './bff-contract';
 
 //===================================================================
@@ -21,7 +22,9 @@ export type ProxyTransportErrorCode =
   | 'INVALID_ROUTE_PARAMETER'
   | 'CSRF_VALIDATION_FAILED'
   | 'PAYLOAD_TOO_LARGE'
-  | 'UNSUPPORTED_MEDIA_TYPE';
+  | 'UNSUPPORTED_MEDIA_TYPE'
+  | 'INVALID_QUERY'
+  | 'QUERY_TOO_LARGE';
 
 //===================================================================
 
@@ -65,6 +68,10 @@ export function describeProxyError(error: unknown): ProxyErrorDescriptor {
   }
 
   if (error instanceof ProxyRequestBodyError) {
+    return { status: error.status, code: error.code, message: error.message };
+  }
+
+  if (error instanceof ProxyQueryError) {
     return { status: error.status, code: error.code, message: error.message };
   }
 

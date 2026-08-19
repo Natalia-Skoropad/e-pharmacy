@@ -1154,7 +1154,7 @@ function PharmacyProfilePage({
     if (!file.documentId) return '';
 
     try {
-      return (await getMyPharmacyDocument(file.documentId)).dataUrl;
+      return await getMyPharmacyDocument(file.documentId);
     } catch (error) {
       toast.error(
         getProfileErrorMessage(error, 'Failed to download the document.')

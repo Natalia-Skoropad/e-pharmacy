@@ -8,7 +8,11 @@ import {
 } from '../internal/auth-error-code';
 
 import { executeBackendFetch } from '../internal/backend-fetch';
-import { validateBackendJsonResponse } from '../internal/backend-response';
+
+import {
+  validateBackendDownloadResponse,
+  validateBackendJsonResponse,
+} from '../internal/backend-response';
 
 import {
   clearClientAuthCookies,
@@ -51,14 +55,21 @@ type BackendProxyOptions = Readonly<{
 
 //===================================================================
 
-export async function proxyBackendRequest({
-  backendPath,
-  request,
-  requestId,
-  method = 'GET',
-  clearAuthCookiesOnSuccess = false,
-  bodyPreset = 'standardJson',
-}: BackendProxyOptions) {
+type BackendResponseValidator = (response: Response) => Promise<void>;
+
+//===================================================================
+
+async function proxyPrivateBackendRequestCore(
+  {
+    backendPath,
+    request,
+    requestId,
+    method = 'GET',
+    clearAuthCookiesOnSuccess = false,
+    bodyPreset = 'standardJson',
+  }: BackendProxyOptions,
+  validateResponse: BackendResponseValidator
+) {
   const startedAt = Date.now();
   let body: string | undefined;
   let response: Response;
@@ -93,7 +104,7 @@ export async function proxyBackendRequest({
   }
 
   try {
-    await validateBackendJsonResponse(response);
+    await validateResponse(response);
   } catch (error) {
     const descriptor = describeProxyError(error);
     return createProxyErrorResponse({ descriptor, requestId, request });
@@ -102,12 +113,14 @@ export async function proxyBackendRequest({
   const requiresRefresh = await responseRequiresAuthRefresh(response);
 
   if (!requiresRefresh) {
+    const invalidatesAuthSession =
+      await responseInvalidatesAuthSession(response);
     const nextResponse = createProxyResponse(response, {
       cacheControl: 'no-store',
       requestId,
     });
 
-    if (await responseInvalidatesAuthSession(response)) {
+    if (invalidatesAuthSession) {
       clearClientAuthCookies(nextResponse, request);
     } else if (response.ok && clearAuthCookiesOnSuccess) {
       clearClientAuthCookies(nextResponse, request);
@@ -169,12 +182,15 @@ export async function proxyBackendRequest({
   }
 
   if (!refreshResult.response.ok) {
+    const invalidatesAuthSession = await responseInvalidatesAuthSession(
+      refreshResult.response
+    );
     const nextResponse = createProxyResponse(refreshResult.response, {
       cacheControl: 'no-store',
       requestId,
     });
 
-    if (await responseInvalidatesAuthSession(refreshResult.response)) {
+    if (invalidatesAuthSession) {
       clearClientAuthCookies(nextResponse, request);
     }
 
@@ -214,18 +230,20 @@ export async function proxyBackendRequest({
   }
 
   try {
-    await validateBackendJsonResponse(retryResponse);
+    await validateResponse(retryResponse);
   } catch (error) {
     const descriptor = describeProxyError(error);
     return createProxyErrorResponse({ descriptor, requestId, request });
   }
 
+  const invalidatesAuthSession =
+    await responseInvalidatesAuthSession(retryResponse);
   const nextResponse = createProxyResponse(retryResponse, {
     cacheControl: 'no-store',
     requestId,
   });
 
-  if (await responseInvalidatesAuthSession(retryResponse)) {
+  if (invalidatesAuthSession) {
     clearClientAuthCookies(nextResponse, request);
   } else {
     setClientAuthCookies(nextResponse, request, refreshResult.tokens);
@@ -248,4 +266,24 @@ export async function proxyBackendRequest({
   });
 
   return nextResponse;
+}
+
+//===================================================================
+
+export function proxyBackendRequest(options: BackendProxyOptions) {
+  return proxyPrivateBackendRequestCore(options, validateBackendJsonResponse);
+}
+
+//===================================================================
+
+export function proxyPrivateBackendDownloadRequest(
+  options: Omit<
+    BackendProxyOptions,
+    'method' | 'clearAuthCookiesOnSuccess' | 'bodyPreset'
+  >
+) {
+  return proxyPrivateBackendRequestCore(
+    { ...options, method: 'GET' },
+    validateBackendDownloadResponse
+  );
 }

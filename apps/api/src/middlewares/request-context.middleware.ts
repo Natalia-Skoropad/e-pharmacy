@@ -23,6 +23,17 @@ function formatTraceIdAsRequestId(traceId: string): string {
 
 //===============================================================
 
+function getTraceId(req: Request): string | undefined {
+  const traceparent = req.get('traceparent')?.trim();
+  const traceMatch = traceparent?.match(TRACEPARENT_PATTERN);
+
+  return traceMatch && !/^0{32}$/.test(traceMatch[1])
+    ? traceMatch[1].toLowerCase()
+    : undefined;
+}
+
+//===============================================================
+
 function getRequestId(req: Request): string {
   const value = req.get(REQUEST_ID_HEADER_NAME)?.trim();
   if (value && SAFE_REQUEST_ID_PATTERN.test(value)) return value;
@@ -44,6 +55,7 @@ export function attachRequestContext(
   next: NextFunction
 ): void {
   const requestId = getRequestId(req);
+  const traceId = getTraceId(req);
   const startedAt = Date.now();
 
   res.locals.requestId = requestId;
@@ -52,6 +64,7 @@ export function attachRequestContext(
   res.on('finish', () => {
     logger.request({
       requestId,
+      ...(traceId ? { traceId } : {}),
       method: req.method,
       path: req.path,
       status: res.statusCode,

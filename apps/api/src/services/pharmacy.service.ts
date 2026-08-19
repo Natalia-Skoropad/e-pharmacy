@@ -2,6 +2,7 @@ import mongoose, { Types, type HydratedDocument } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { REVIEW_ERROR_CODES } from '../constants/reviews';
 import { API_MESSAGES } from '../constants/messages';
 
 import {
@@ -37,6 +38,7 @@ import type {
 } from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
+import { isDuplicatePharmacyReviewError } from '../utils/mongoError';
 import { createFlexibleSearchRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
@@ -531,14 +533,27 @@ export async function createPharmacyReviewService(
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
 
-  await PharmacyReview.create({
-    pharmacyId,
-    userId: input.userId,
-    userName: input.userName,
-    rating: input.rating,
-    comment: input.comment,
-    status: 'on_moderation',
-  });
+  try {
+    await PharmacyReview.create({
+      pharmacyId,
+      userId: input.userId,
+      userName: input.userName,
+      rating: input.rating,
+      comment: input.comment,
+      status: 'on_moderation',
+    });
+  } catch (error) {
+    if (isDuplicatePharmacyReviewError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'You already have a pending or approved review for this pharmacy.',
+        undefined,
+        REVIEW_ERROR_CODES.ALREADY_SUBMITTED
+      );
+    }
+
+    throw error;
+  }
 
   return { message: 'Pharmacy review was submitted for moderation.' };
 }

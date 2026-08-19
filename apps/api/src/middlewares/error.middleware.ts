@@ -39,6 +39,7 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
       code: isDuplicatePhoneError(error)
         ? AUTH_ERROR_CODES.PHONE_CONFLICT
         : AUTH_ERROR_CODES.EMAIL_CONFLICT,
+      ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
     });
 
     return;

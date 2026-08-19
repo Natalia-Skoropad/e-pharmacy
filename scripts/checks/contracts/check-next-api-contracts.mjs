@@ -55,10 +55,6 @@ const browserApiRequest = await read(
   'packages/next-api/src/browser/local-api-request-core.ts'
 );
 
-const sharedApiRequest = await read(
-  'packages/api-client/src/transport/api-request.ts'
-);
-
 const sharedRequestExecutor = await read(
   'packages/api-client/src/transport/request-executor.ts'
 );
@@ -287,11 +283,11 @@ if (
 }
 
 if (
+  !optionalAuthProxy.includes("'public-fallback'") ||
   !optionalAuthProxy.includes("'refresh-aware'") ||
-  !optionalAuthProxy.includes('refreshAuthSession') ||
-  !optionalAuthProxy.includes('executePublicFallback')
+  !optionalAuthProxy.includes("'strict'")
 ) {
-  violations.push('Refresh-aware optional-auth flow is missing');
+  violations.push('Optional-auth policy surface is missing or incomplete');
 }
 
 if (!browserApiRequest.includes('executeHttpRequest')) {
@@ -339,7 +335,9 @@ if (
 }
 
 if (
-  /setAuthCookies|clearAuthCookies|utils\/authCookie/.test(backendAuthController)
+  /setAuthCookies|clearAuthCookies|utils\/authCookie/.test(
+    backendAuthController
+  )
 ) {
   violations.push(
     'Backend auth controller still owns browser auth cookies instead of the BFF'
@@ -347,20 +345,30 @@ if (
 }
 
 if (
-  !/BFF_PROXY_SECRET:\s*getRequiredEnv\(['"]BFF_PROXY_SECRET['"]\)/.test(backendEnv) ||
-  !/if \(!bffProxySecret\)\s*\{[\s\S]*BFF_PROXY_SECRET is required/.test(nextApiEnv)
+  !/BFF_PROXY_SECRET:\s*getRequiredEnv\(['"]BFF_PROXY_SECRET['"]\)/.test(
+    backendEnv
+  ) ||
+  !/if \(!bffProxySecret\)\s*\{[\s\S]*BFF_PROXY_SECRET is required/.test(
+    nextApiEnv
+  )
 ) {
-  violations.push('BFF proxy secret must be required in every runtime environment');
+  violations.push(
+    'BFF proxy secret must be required in every runtime environment'
+  );
 }
 
 if (
   !/export function requireTrustedAuthProxy/.test(backendAuthBffMiddleware) ||
-  !/marker\s*!==\s*BFF_AUTH_PROXY_MARKER_VALUE/.test(backendAuthBffMiddleware) ||
+  !/marker\s*!==\s*BFF_AUTH_PROXY_MARKER_VALUE/.test(
+    backendAuthBffMiddleware
+  ) ||
   !/typeof secret === ['"]string['"] && secret === configuredSecret/.test(
     backendAuthBffMiddleware
   )
 ) {
-  violations.push('Backend trusted auth BFF middleware is missing or incomplete');
+  violations.push(
+    'Backend trusted auth BFF middleware is missing or incomplete'
+  );
 }
 
 for (const routeName of ['register', 'login', 'refresh']) {

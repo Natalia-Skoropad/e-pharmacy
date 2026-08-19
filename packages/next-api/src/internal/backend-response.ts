@@ -1,7 +1,6 @@
 import { isJsonContentType } from '@e-pharmacy/api-client/transport';
 
 //===================================================================
-
 export class InvalidBackendResponseError extends Error {
   constructor(message = 'The upstream service returned an invalid response.') {
     super(message);
@@ -77,6 +76,34 @@ export async function validateBackendApiEnvelopeResponse(
   ) {
     throw new InvalidBackendResponseError(
       'The upstream service returned an invalid error envelope.'
+    );
+  }
+}
+
+//===================================================================
+
+export async function validateBackendDownloadResponse(
+  response: Response
+): Promise<void> {
+  if (!response.ok) {
+    await validateBackendApiEnvelopeResponse(response);
+    return;
+  }
+
+  const contentType = response.headers.get('content-type')?.trim();
+  const contentDisposition = response.headers
+    .get('content-disposition')
+    ?.trim();
+
+  if (!contentType || isJsonContentType(contentType)) {
+    throw new InvalidBackendResponseError(
+      'The upstream service returned an invalid download content type.'
+    );
+  }
+
+  if (!contentDisposition) {
+    throw new InvalidBackendResponseError(
+      'The upstream service returned a download without Content-Disposition.'
     );
   }
 }
