@@ -63,6 +63,77 @@ test('keeps public feature actions as real links and exposes accessible shell na
 
 //===================================================================
 
+test('freezes the client reference shell and server-rendered home baseline', async () => {
+  const [rootLayout, homePage, loadingPage, pageLoader, pageLoaderStyles] =
+    await Promise.all([
+      readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8'),
+      readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
+      readFile(new URL('../app/loading.tsx', import.meta.url), 'utf8'),
+
+      readFile(
+        new URL(
+          '../../../../packages/ui/src/status-pages/PageLoader/PageLoader.tsx',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+
+      readFile(
+        new URL(
+          '../../../../packages/ui/src/status-pages/PageLoader/PageLoader.module.css',
+          import.meta.url
+        ),
+        'utf8'
+      ),
+    ]);
+
+  assert.doesNotMatch(rootLayout, /^['\"]use client['\"];?/m);
+
+  assert.match(
+    rootLayout,
+    /<ClientProviders>[\s\S]*?<AppShell>\{children\}<\/AppShell>[\s\S]*?<\/ClientProviders>/
+  );
+
+  assert.doesNotMatch(homePage, /^['\"]use client['\"];?/m);
+  assert.doesNotMatch(homePage, /cookies\(|headers\(|@\/lib\/api\/browser/);
+
+  assert.match(
+    homePage,
+    /<Image[\s\S]*?src="\/images\/home\/three-pills\.png"[\s\S]*?alt=""[\s\S]*?width=\{749\}[\s\S]*?height=\{508\}[\s\S]*?priority[\s\S]*?fetchPriority="high"[\s\S]*?sizes=/
+  );
+
+  assert.match(
+    homePage,
+    /getPharmacies\([\s\S]*?page:\s*1,[\s\S]*?perPage:\s*HOME_PREVIEW_LIMIT,[\s\S]*?sort:\s*'rating-desc'[\s\S]*?PUBLIC_COMMERCE_CACHE_OPTIONS/
+  );
+
+  assert.match(
+    homePage,
+    /getProducts\([\s\S]*?page:\s*1,[\s\S]*?perPage:\s*HOME_PREVIEW_LIMIT,[\s\S]*?sort:\s*'rating-desc'[\s\S]*?PUBLIC_COMMERCE_CACHE_OPTIONS/
+  );
+
+  assert.equal((homePage.match(/<Suspense\b/g) ?? []).length, 2);
+
+  assert.match(
+    homePage,
+    /<Suspense fallback=\{<FeaturedSectionFallback label="pharmacies" \/>\}>[\s\S]*?<FeaturedPharmaciesSection \/>[\s\S]*?<\/Suspense>/
+  );
+
+  assert.match(
+    homePage,
+    /<Suspense fallback=\{<FeaturedSectionFallback label="products" \/>\}>[\s\S]*?<FeaturedProductsSection \/>[\s\S]*?<\/Suspense>/
+  );
+
+  assert.match(loadingPage, /return <PageLoader \/>/);
+  assert.match(pageLoader, /role="status"/);
+  assert.match(pageLoader, /label = 'Loading page'/);
+  assert.match(pageLoader, /aria-label=\{label\}/);
+  assert.match(pageLoaderStyles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(pageLoaderStyles, /animation:\s*none/);
+});
+
+//===================================================================
+
 test('does not publish placeholder social links or developer diagnostics', async () => {
   const sources = await Promise.all([
     readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
@@ -101,7 +172,6 @@ test('keeps CartPageContent outside its own feature barrel cycle', async () => {
   ]);
 
   assert.doesNotMatch(pageContent, /from ['"]@\/components\/cart['"]/);
-
   assert.match(cartBarrel, /from ['"]\.\/CartPageContent\/CartPageContent['"]/);
 });
 
@@ -131,6 +201,7 @@ test('preserves all home blocks while keeping stats and sample experiences truth
   ];
 
   let previousIndex = -1;
+
   for (const marker of orderedHomeMarkers) {
     const currentIndex = homePage.indexOf(marker);
     assert.ok(

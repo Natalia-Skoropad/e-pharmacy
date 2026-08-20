@@ -504,6 +504,12 @@ The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker f
 
 App-specific lifecycle hooks remain in `apps/client`; `packages/hooks` contains only environment-agnostic infrastructure. Source-pattern checks are architecture lint only. Behavioral coverage lives in pure controller/store tests plus the React provider-stack render test.
 
+### Reference implementation baseline
+
+The client application is the reference storefront baseline for the monorepo. Its root composition is intentionally stable: `RootLayout` remains a server component, `ClientProviders` wraps `AppShell`, and the provider order remains `Auth → Favorites → Cart`. The home page remains server-rendered with nine sections in the established order; product and pharmacy previews keep independent Suspense/error boundaries and use non-personalized public server readers. `proxy.ts` remains a lightweight cookie-presence UX boundary, while authorization stays on the backend. Metadata, robots, sitemap generation, branded status boundaries, and same-origin BFF browser traffic are centralized contracts rather than feature-local behavior.
+
+Changes to this baseline should preserve those boundaries rather than move authorization into the proxy, personalize public SSR with user cookies, remove/reorder home sections, or bypass the same-origin `/api/*` transport. The source contracts and route/provider checks protect these invariants before deployment.
+
 ### Client architecture boundaries
 
 - Browser API helpers live in `src/lib/api/browser` and are marked as client-only. They are low-level same-origin BFF request wrappers and should not be imported by server components, metadata helpers, sitemap, robots, or server route handlers.

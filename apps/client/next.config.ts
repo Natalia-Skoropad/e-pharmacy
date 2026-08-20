@@ -61,6 +61,9 @@ const nextConfig: NextConfig = {
 
   images: {
     qualities: [75, 90],
+    // Compatibility allowlist for persisted absolute image URLs. Current seed
+    // assets are same-origin; remove these hosts only after production data
+    // confirms that no stored product/pharmacy image still depends on them.
     remotePatterns: [
       {
         protocol: 'https',
