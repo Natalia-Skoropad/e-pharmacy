@@ -191,36 +191,12 @@
   margin-top: 32px;
 }
 
-.pharmacyCard,
-.featureCard,
 .stepCard {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card-lg);
 }
 
-.pharmacyCard {
-  position: relative;
-  min-height: 168px;
-  padding: 24px;
-  overflow: hidden;
-  border-radius: var(--radius-xl);
-}
-
-.pharmacyCard::after {
-  content: '';
-  position: absolute;
-  right: -32px;
-  bottom: -46px;
-  width: 150px;
-  height: 150px;
-  background: url('/images/common/two-pills.png') center / contain no-repeat;
-  opacity: 0.08;
-  transform: rotate(-18deg);
-}
-
-.pharmacyCard h3,
-.featureCard h3,
 .stepCard h3 {
   font-size: var(--fz-18);
   font-weight: var(--fw-bold);
@@ -228,49 +204,11 @@
   color: var(--color-text-primary);
 }
 
-.pharmacyCard p,
-.featureCard p,
 .stepCard p {
   margin-top: 8px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
-}
-
-.rating {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-primary);
-}
-
-.rating svg {
-  color: var(--color-warning);
-}
-
-.status {
-  position: absolute;
-  left: 24px;
-  bottom: 24px;
-  padding: 6px 12px;
-  font-size: var(--fz-12);
-  font-weight: var(--fw-medium);
-  line-height: 1;
-  color: var(--color-accent);
-  text-transform: uppercase;
-  background-color: var(--color-accent-light);
-  border-radius: var(--radius-pill);
-}
-
-.pharmacyLink {
-  position: absolute;
-  right: 24px;
-  bottom: 18px;
 }
 
 .sectionAction {
@@ -468,35 +406,11 @@
   border-radius: 50%;
 }
 
-.featureCard {
-  padding: 24px;
-  border-radius: var(--radius-xl);
-}
-
-.featureCard > span {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  margin-bottom: 18px;
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  border-radius: 50%;
-}
-
-.sectionError,
 .sectionEmpty {
   margin-top: 32px;
   padding: 20px;
   text-align: center;
   border-radius: var(--radius-lg);
-}
-
-.sectionError {
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
 }
 
 .sectionEmpty {

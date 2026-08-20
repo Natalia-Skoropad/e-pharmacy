@@ -108,12 +108,15 @@ test('keeps CartPageContent outside its own feature barrel cycle', async () => {
 //===================================================================
 
 test('preserves all home blocks while keeping stats and sample experiences truthful', async () => {
-  const [homePage, homeContent, reviews, recovery] = await Promise.all([
-    readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
-    readComponent('./home/config/content.ts'),
-    readComponent('./home/HomeReviewsSection/HomeReviewsSection.tsx'),
-    readComponent('./catalog/CatalogAutoRecovery/CatalogAutoRecovery.tsx'),
-  ]);
+  const [homePage, homeStyles, homeContent, reviews, reviewStyles, recovery] =
+    await Promise.all([
+      readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
+      readFile(new URL('../app/page.module.css', import.meta.url), 'utf8'),
+      readComponent('./home/config/content.ts'),
+      readComponent('./home/HomeReviewsSection/HomeReviewsSection.tsx'),
+      readComponent('./home/HomeReviewsSection/HomeReviewsSection.module.css'),
+      readComponent('./catalog/CatalogAutoRecovery/CatalogAutoRecovery.tsx'),
+    ]);
 
   const orderedHomeMarkers = [
     'aria-labelledby="home-title"',
@@ -149,6 +152,29 @@ test('preserves all home blocks while keeping stats and sample experiences truth
   assert.match(reviews, /aria-live="polite"/);
   assert.match(reviews, /role="group"/);
   assert.doesNotMatch(reviews, /Client reviews/);
+
+  assert.match(reviewStyles, /\.dot\s*\{[\s\S]*?width:\s*36px;/);
+  assert.match(reviewStyles, /\.dot::before\s*\{[\s\S]*?width:\s*8px;/);
+
+  assert.match(
+    reviewStyles,
+    /\.dot\[aria-current='true'\]::before\s*\{[\s\S]*?width:\s*28px;/
+  );
+
+  for (const legacySelector of [
+    '.pharmacyCard',
+    '.featureCard',
+    '.rating',
+    '.status',
+    '.pharmacyLink',
+    '.sectionError',
+  ]) {
+    assert.equal(
+      homeStyles.includes(legacySelector),
+      false,
+      `Legacy homepage selector should be removed: ${legacySelector}`
+    );
+  }
 
   assert.doesNotMatch(
     [homePage, homeContent, reviews].join('\n'),

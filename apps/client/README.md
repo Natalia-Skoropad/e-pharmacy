@@ -510,7 +510,7 @@ App-specific lifecycle hooks remain in `apps/client`; `packages/hooks` contains 
 - Server reads for catalog, SEO, sitemap, robots, and detail metadata use `src/lib/api/server`. Proxy route handlers use the shared `@e-pharmacy/next-api` package.
 - `CartProvider` is the single cart read/write controller in the browser. It owns the cart state machine, one serialized mutation queue, pending item/offer state, retry/refresh commands, and authoritative server commits. Components do not call cart mutation API helpers directly.
 - Cart state is keyed by the shared client session generation and is destroyed on logout, account switch, blocked/unavailable auth transitions, and same-user relogin. Cancelled or stale reads return `null`; they are never represented as a valid empty cart.
-- Quantity updates are optimistic inside the serialized queue. Add/remove/clear operations are server-authoritative. Multi-item pharmacy removal refreshes the cart after partial failure and reports a structured partial-mutation error.
+- Quantity updates are optimistic inside the serialized queue. Add/remove/clear operations are server-authoritative. Whole-pharmacy removal is atomic through `DELETE /cart/pharmacies/:pharmacyId`; the cart is refreshed from the authoritative server response after mutations or conflicts.
 - `FavoritesProvider` owns product and pharmacy favorite ID collections. Collection reads are single-flight per session owner, mutations are abortable, and cards never issue one favorite-ID request per item.
 - Auth route guards in `src/routes` are client-specific wrappers around the shared auth guards. The private route-group layout requires an active client capability, while login, registration, and password recovery inherit one guest-preferred layout. Reset-password remains a token route and is not guest-only.
 - Product and pharmacy detail server composition lives under `src/lib/details/server` and is exported through a server-only details barrel.
@@ -527,10 +527,10 @@ Main API areas used by the client:
 
 ## Performance Notes
 
-- Public catalog pages are rendered on the server and use a 120-second Next.js revalidation policy for public reads.
+- Public catalog pages are rendered on the server with domain-specific cache presets: volatile commerce reads revalidate every 30 seconds, reviews every 300 seconds, and dictionary/reference reads every 600 seconds.
 - `apps/client/src/lib/api/server/cache-options.ts` centralizes public API revalidation settings.
 - `packages/next-api` provides the shared public/private/optional-auth/auth proxy factories, cache policy, security checks, and auth-cookie handling.
-- Remote image patterns are configured in `next.config.ts` for deployed backend image assets.
+- Remote image patterns in `next.config.ts` are retained only for compatibility with persisted absolute image URLs; current seed product/pharmacy assets use same-origin `/images/seed/**` paths. Remove allowlisted hosts only after production data confirms they are unused.
 - Seed product and pharmacy images are client-owned runtime assets under `public/images/seed/**`; backend seed DTOs return same-origin relative paths for this portfolio deployment.
 - CSS Modules keep component styling scoped.
 - `AuthProvider` uses `bootstrapMode="always"`; the client-readable marker is not a source of truth. A shared client session generation scopes cart, favorites, and review drafts across logout and relogin transitions.
@@ -624,7 +624,7 @@ Test layers:
 ## Security Notes
 
 - Client-side browser API helpers and the provider-owned cart controller call same-origin `/api/*` route handlers instead of writing directly to the external backend URL.
-- Auth tokens are not stored in `localStorage`; the real auth session is represented by backend-managed httpOnly cookies.
+- Auth tokens are not stored in `localStorage`. Browser auth cookies are owned by the same-origin Next.js BFF, while the backend validates the active Session and current User on protected requests.
 - The client-readable `e_pharmacy_auth_ready` cookie is only a UX/session marker and is not used to authorize backend data access.
 - `ClientProtectedRoute` and `ClientGuestOnlyRoute` improve navigation UX, while real authorization stays on the backend. Private routes require an active client account, not merely the `client` role.
 - Private pages are marked noindex and are excluded from sitemap generation.

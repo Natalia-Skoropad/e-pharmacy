@@ -70,7 +70,12 @@ export type SitemapLoadReport = Readonly<{
 const PRODUCT_SITEMAP_PER_PAGE = 200;
 const PHARMACY_SITEMAP_PER_PAGE = 100;
 const SITEMAP_REVALIDATE_SECONDS = 3600;
-const SITEMAP_FETCH_SAFETY_MAX_PAGES = 500;
+const SINGLE_SITEMAP_URL_LIMIT = 50_000;
+const SITEMAP_NON_DYNAMIC_URL_RESERVE = 2_000;
+const SITEMAP_FETCH_SAFETY_MAX_PAGES = Math.floor(
+  (SINGLE_SITEMAP_URL_LIMIT - SITEMAP_NON_DYNAMIC_URL_RESERVE) /
+    (PRODUCT_SITEMAP_PER_PAGE + PHARMACY_SITEMAP_PER_PAGE)
+);
 const SITEMAP_FETCH_BATCH_SIZE = 5;
 
 //===================================================================
@@ -424,6 +429,8 @@ export async function buildClientSitemap({
     logger.warn('Sitemap page safety limit was reached.', {
       resources: truncatedResources,
       maxPages: SITEMAP_FETCH_SAFETY_MAX_PAGES,
+      singleSitemapUrlLimit: SINGLE_SITEMAP_URL_LIMIT,
+      reservedNonDynamicUrls: SITEMAP_NON_DYNAMIC_URL_RESERVE,
     });
   }
 

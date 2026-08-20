@@ -184,3 +184,43 @@ test('reuses the public transport retry policy and preserves sitemap cache optio
     assert.ok(options.signal instanceof AbortSignal);
   }
 });
+
+//===================================================================
+
+test('caps page collection below the single-sitemap URL ceiling', async () => {
+  let productRequests = 0;
+  const warnings: unknown[] = [];
+
+  const report = await buildClientSitemap({
+    siteUrl: 'https://example.com',
+    resolveBackendUrl: (path) => `https://api.example.com${path}`,
+    logger: {
+      error: () => undefined,
+      warn: (...args) => warnings.push(args),
+    },
+    fetcher: async (url) => {
+      const value = String(url);
+
+      if (value.includes('/products')) {
+        productRequests += 1;
+
+        return response({
+          status: 'success',
+          data: {
+            items: [],
+            totalPages: 161,
+          },
+        });
+      }
+
+      return response({
+        status: 'success',
+        data: { items: [], totalPages: 1 },
+      });
+    },
+  });
+
+  assert.equal(productRequests, 160);
+  assert.deepEqual(report.truncatedResources, ['/products']);
+  assert.equal(warnings.length, 1);
+});

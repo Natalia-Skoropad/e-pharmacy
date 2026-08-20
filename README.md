@@ -37,7 +37,7 @@ Admin routes and navigation are intentionally created only together with a runna
 
 ### Backend API
 
-- Auth with JWT and backend-managed httpOnly cookies
+- Auth with BFF-owned browser httpOnly cookies and backend-validated Session/User state
 - User profile and password management
 - Products, pharmacies, reviews, favorites, cart, and orders
 - MongoDB/Mongoose data models
