@@ -4,6 +4,16 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 
+const STATUS_PAGE_IMAGE = {
+  src: '/images/status/status-pills.png',
+  alt: '',
+  width: 749,
+  height: 508,
+  priority: true,
+};
+
+//===================================================================
+
 function NotFoundPage() {
   return (
     <SharedNotFoundPage
@@ -12,6 +22,14 @@ function NotFoundPage() {
       eyebrow="404"
       homeHref={PHARMACY_ROUTES.DASHBOARD}
       homeLabel="Back to dashboard"
+      variant="brand"
+      landmark="main"
+      image={STATUS_PAGE_IMAGE}
+      secondaryAction={{
+        href: PHARMACY_ROUTES.PRODUCTS,
+        label: 'View pharmacy products',
+        variant: 'secondary',
+      }}
     />
   );
 }

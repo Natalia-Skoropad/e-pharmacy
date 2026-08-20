@@ -28,6 +28,7 @@ export type FetchExecutorOptions = Readonly<{
   timeoutMs?: number;
   retry?: RequestOptions['retry'];
   validateResponse?: (response: Response) => void | Promise<void>;
+  fetcher?: typeof fetch;
 }>;
 
 //===================================================================
@@ -51,6 +52,7 @@ export async function executeFetchWithRetry(
     timeoutMs = DEFAULT_API_REQUEST_TIMEOUT_MS,
     retry,
     validateResponse,
+    fetcher = fetch,
   }: FetchExecutorOptions
 ): Promise<FetchExecutionResult> {
   const retryConfig = getRetryConfig(method, retry);
@@ -68,7 +70,7 @@ export async function executeFetchWithRetry(
           signal: operation.signal,
         };
 
-        response = await fetch(url, fetchInit);
+        response = await fetcher(url, fetchInit);
       } catch (error) {
         if (attempt < retryConfig.attempts && !operation.signal.aborted) {
           retryCount += 1;

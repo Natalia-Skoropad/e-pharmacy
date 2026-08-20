@@ -5,11 +5,16 @@ import { apiRoutes } from '@e-pharmacy/api-client/contracts';
 
 import {
   appendQueryParams,
+  executeFetchWithRetry,
   isApiError,
   parseJsonResponse,
 } from '@e-pharmacy/api-client/transport';
 
-import { createTrustedBackendApiUrl } from '@e-pharmacy/next-api/server';
+import {
+  createTrustedBackendApiUrl,
+  PUBLIC_BACKEND_READ_TRANSPORT_OPTIONS,
+} from '@e-pharmacy/next-api/server';
+
 import { buildPharmacyPath, buildProductPath } from '@/lib/routes';
 
 import {
@@ -199,44 +204,57 @@ async function fetchSitemapPage<TItem>({
   }
 
   try {
-    const response = await fetcher(url, {
+    const requestInit = {
       next: { revalidate: SITEMAP_REVALIDATE_SECONDS },
-      redirect: 'manual',
+      redirect: 'manual' as const,
+    };
+
+    const execution = await executeFetchWithRetry(url, {
+      method: 'GET',
+      init: requestInit,
+      fetcher,
+      ...PUBLIC_BACKEND_READ_TRANSPORT_OPTIONS,
     });
 
-    if (!response.ok) {
+    try {
+      const response = execution.response;
+
+      if (!response.ok) {
+        return {
+          status: 'failure',
+          failure: {
+            resourcePath,
+            page,
+            reason: 'http_error',
+            httpStatus: response.status,
+
+            ...(response.headers.get('x-request-id')
+              ? { requestId: response.headers.get('x-request-id') ?? undefined }
+              : {}),
+          },
+        };
+      }
+
+      const json = await parseJsonResponse(response);
+      if (!json.success) {
+        return {
+          status: 'failure',
+          failure: { resourcePath, page, reason: 'invalid_json' },
+        };
+      }
+
       return {
-        status: 'failure',
-        failure: {
-          resourcePath,
-          page,
-          reason: 'http_error',
-          httpStatus: response.status,
+        status: 'success',
 
-          ...(response.headers.get('x-request-id')
-            ? { requestId: response.headers.get('x-request-id') ?? undefined }
-            : {}),
-        },
+        page: parseApiResponseData(
+          json.value,
+          (value) => parseSitemapPageData(value, parseItem),
+          { url, method: 'GET' }
+        ),
       };
+    } finally {
+      execution.cleanup();
     }
-
-    const json = await parseJsonResponse(response);
-    if (!json.success) {
-      return {
-        status: 'failure',
-        failure: { resourcePath, page, reason: 'invalid_json' },
-      };
-    }
-
-    return {
-      status: 'success',
-
-      page: parseApiResponseData(
-        json.value,
-        (value) => parseSitemapPageData(value, parseItem),
-        { url, method: 'GET' }
-      ),
-    };
   } catch (error) {
     return {
       status: 'failure',

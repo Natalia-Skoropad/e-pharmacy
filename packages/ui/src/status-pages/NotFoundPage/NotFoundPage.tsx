@@ -3,6 +3,7 @@ import LinkButton from '../../navigation/LinkButton/LinkButton';
 
 import StatusPageLayout, {
   type StatusPageLayoutImage,
+  type StatusPageLayoutLandmark,
   type StatusPageLayoutVariant,
 } from '../StatusPageLayout/StatusPageLayout';
 
@@ -23,6 +24,7 @@ export type NotFoundPageProps = Readonly<{
   secondaryAction?: NotFoundPageAction;
   image?: StatusPageLayoutImage;
   variant?: StatusPageLayoutVariant;
+  landmark?: StatusPageLayoutLandmark;
 }>;
 
 //===================================================================
@@ -36,6 +38,7 @@ function NotFoundPage({
   secondaryAction,
   image,
   variant,
+  landmark,
 }: NotFoundPageProps) {
   return (
     <StatusPageLayout
@@ -44,6 +47,7 @@ function NotFoundPage({
       description={description}
       image={image}
       variant={variant}
+      landmark={landmark}
       actions={
         <>
           <LinkButton href={homeHref} size="lg">

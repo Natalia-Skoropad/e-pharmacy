@@ -1,5 +1,7 @@
 import {
+  isOptimizedProductionBuild,
   resolveClientPublicEnvironment,
+  shouldRequireExplicitProductionSiteUrl,
   type ClientPublicEnvironment,
 } from './public-environment';
 
@@ -17,8 +19,15 @@ function getBrowserOrigin(): string | undefined {
 //===================================================================
 
 function getDeploymentSiteUrl(): string | undefined {
+  return process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+}
+
+//===================================================================
+
+function shouldAllowLocalProductionSiteUrl(): boolean {
   return (
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL
+    process.env.NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL === 'true' ||
+    isOptimizedProductionBuild(process.env.NEXT_PHASE)
   );
 }
 
@@ -32,6 +41,8 @@ export function getClientEnvironment(): ClientPublicEnvironment {
     runtimeSiteUrl: getBrowserOrigin(),
     deploymentSiteUrl: getDeploymentSiteUrl(),
     nodeEnv: process.env.NODE_ENV,
+
+    allowLocalProductionSiteUrl: shouldAllowLocalProductionSiteUrl(),
   });
 
   if (!result.ok) {
@@ -50,12 +61,6 @@ export function getClientSiteUrl(): string {
 
 //===================================================================
 
-function isDeploymentBuild(): boolean {
-  return process.env.VERCEL === '1' || process.env.CI === 'true';
-}
-
-//===================================================================
-
 export function getClientCanonicalEnvironment(): ClientPublicEnvironment {
   if (cachedCanonicalEnvironment) return cachedCanonicalEnvironment;
 
@@ -63,7 +68,15 @@ export function getClientCanonicalEnvironment(): ClientPublicEnvironment {
     configuredSiteUrl: process.env.NEXT_PUBLIC_SITE_URL,
     deploymentSiteUrl: process.env.VERCEL_PROJECT_PRODUCTION_URL,
     nodeEnv: process.env.NODE_ENV,
-    requireExplicitProductionSiteUrl: isDeploymentBuild(),
+
+    requireExplicitProductionSiteUrl: shouldRequireExplicitProductionSiteUrl({
+      nodeEnv: process.env.NODE_ENV,
+      nextPhase: process.env.NEXT_PHASE,
+      allowLocalProductionSiteUrl:
+        process.env.NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL,
+    }),
+
+    allowLocalProductionSiteUrl: shouldAllowLocalProductionSiteUrl(),
   });
 
   if (!result.ok) {
@@ -79,4 +92,3 @@ export function getClientCanonicalEnvironment(): ClientPublicEnvironment {
 export function getClientCanonicalSiteUrl(): string {
   return getClientCanonicalEnvironment().siteUrl;
 }
-

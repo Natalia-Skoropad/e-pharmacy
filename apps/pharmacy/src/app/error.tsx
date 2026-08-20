@@ -12,6 +12,16 @@ type ErrorPageProps = Readonly<{
 
 //===================================================================
 
+const STATUS_PAGE_IMAGE = {
+  src: '/images/status/status-pills.png',
+  alt: '',
+  width: 749,
+  height: 508,
+  priority: true,
+};
+
+//===================================================================
+
 function ErrorPage({ reset }: ErrorPageProps) {
   return (
     <SharedErrorPage
@@ -21,6 +31,9 @@ function ErrorPage({ reset }: ErrorPageProps) {
       homeHref={PHARMACY_ROUTES.DASHBOARD}
       homeLabel="Back to dashboard"
       retryLabel="Try again"
+      variant="brand"
+      landmark="main"
+      image={STATUS_PAGE_IMAGE}
       onRetry={reset}
     />
   );

@@ -1,4 +1,5 @@
 const LOCAL_SITE_URL = 'http://localhost:3000';
+const NEXT_PRODUCTION_BUILD_PHASE = 'phase-production-build';
 
 //===================================================================
 
@@ -15,7 +16,8 @@ export type ClientPublicEnvironmentErrorCode =
   | 'CREDENTIALS_NOT_ALLOWED'
   | 'QUERY_OR_HASH_NOT_ALLOWED'
   | 'BASE_PATH_NOT_ALLOWED'
-  | 'MISSING_PRODUCTION_SITE_URL';
+  | 'MISSING_PRODUCTION_SITE_URL'
+  | 'LOCAL_PRODUCTION_URL_NOT_ALLOWED';
 
 //===================================================================
 
@@ -50,18 +52,46 @@ function isLoopbackHostname(hostname: string): boolean {
 
 //===================================================================
 
+export function isOptimizedProductionBuild(
+  nextPhase: string | undefined
+): boolean {
+  return nextPhase === NEXT_PRODUCTION_BUILD_PHASE;
+}
+
+//===================================================================
+
+export function shouldRequireExplicitProductionSiteUrl({
+  nodeEnv,
+  nextPhase,
+  allowLocalProductionSiteUrl,
+}: Readonly<{
+  nodeEnv: string | undefined;
+  nextPhase?: string | undefined;
+  allowLocalProductionSiteUrl: string | undefined;
+}>): boolean {
+  return (
+    nodeEnv === 'production' &&
+    !isOptimizedProductionBuild(nextPhase) &&
+    allowLocalProductionSiteUrl?.trim() !== 'true'
+  );
+}
+
+//===================================================================
+
 export function resolveClientPublicEnvironment({
   configuredSiteUrl,
   runtimeSiteUrl,
   deploymentSiteUrl,
   nodeEnv,
   requireExplicitProductionSiteUrl = false,
+  allowLocalProductionSiteUrl = false,
 }: Readonly<{
   configuredSiteUrl: string | undefined;
   runtimeSiteUrl?: string | undefined;
   deploymentSiteUrl?: string | undefined;
   nodeEnv: string | undefined;
   requireExplicitProductionSiteUrl?: boolean;
+  allowLocalProductionSiteUrl?: boolean;
 }>): ClientPublicEnvironmentResult {
   const isProduction = nodeEnv === 'production';
 
@@ -102,6 +132,19 @@ export function resolveClientPublicEnvironment({
       ok: false,
       code: 'UNSUPPORTED_PROTOCOL',
       message: 'NEXT_PUBLIC_SITE_URL must use HTTP or HTTPS.',
+    };
+  }
+
+  if (
+    isProduction &&
+    isLoopbackHostname(url.hostname) &&
+    !allowLocalProductionSiteUrl
+  ) {
+    return {
+      ok: false,
+      code: 'LOCAL_PRODUCTION_URL_NOT_ALLOWED',
+      message:
+        'A localhost site URL in production requires an explicit local-build opt-in.',
     };
   }
 

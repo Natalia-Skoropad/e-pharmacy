@@ -41,7 +41,7 @@ test('closes the mobile overlay in state at desktop breakpoint', async () => {
 
 //===================================================================
 
-test('keeps public feature actions as real links and exposes the scroll-to-top control', async () => {
+test('keeps public feature actions as real links and exposes accessible shell navigation', async () => {
   const [features, shell] = await Promise.all([
     readComponent('./home/HomeFeatureCards/HomeFeatureCards.tsx'),
     readComponent('./layout/AppShell/AppShell.tsx'),
@@ -51,7 +51,14 @@ test('keeps public feature actions as real links and exposes the scroll-to-top c
   assert.match(features, /href=\{feature\.href\}/);
   assert.doesNotMatch(features, /router\.push|useClientAuthCapabilities/);
   assert.match(shell, /<ScrollToTopButton \/>/);
+  assert.match(shell, /href="#main-content"/);
+  assert.match(shell, />\s*Skip to main content\s*</);
   assert.match(shell, /id="main-content"/);
+  assert.match(shell, /tabIndex=\{-1\}/);
+
+  assert.ok(
+    shell.indexOf('href="#main-content"') < shell.indexOf('<Header />')
+  );
 });
 
 //===================================================================
@@ -100,22 +107,68 @@ test('keeps CartPageContent outside its own feature barrel cycle', async () => {
 
 //===================================================================
 
-test('keeps the restored home advantages and client review sections', async () => {
-  const [homePage, homeContent, reviews] = await Promise.all([
+test('preserves all home blocks while keeping stats and sample experiences truthful', async () => {
+  const [homePage, homeContent, reviews, recovery] = await Promise.all([
     readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
     readComponent('./home/config/content.ts'),
     readComponent('./home/HomeReviewsSection/HomeReviewsSection.tsx'),
+    readComponent('./catalog/CatalogAutoRecovery/CatalogAutoRecovery.tsx'),
   ]);
 
-  assert.match(homePage, /HOME_STATS\.map/);
-  assert.match(homePage, /<HomeReviewsSection \/>/);
+  const orderedHomeMarkers = [
+    'aria-labelledby="home-title"',
+    'HOME_STATS.map',
+    'aria-labelledby="pharmacies-title"',
+    'aria-labelledby="steps-title"',
+    'aria-labelledby="banner-title"',
+    'aria-labelledby="benefits-title"',
+    'aria-labelledby="products-title"',
+    'aria-labelledby="features-title"',
+    '<HomeReviewsSection />',
+  ];
+
+  let previousIndex = -1;
+  for (const marker of orderedHomeMarkers) {
+    const currentIndex = homePage.indexOf(marker);
+    assert.ok(
+      currentIndex > previousIndex,
+      `Missing or reordered home block: ${marker}`
+    );
+    previousIndex = currentIndex;
+  }
+
   assert.match(homeContent, /icon: Pill/);
   assert.match(homeContent, /icon: Building2/);
   assert.match(homeContent, /icon: Clock3/);
+  assert.doesNotMatch(homeContent, /126\+|98\+|partner pharmacy stores/);
+  assert.match(homeContent, /HOME_REVIEWS_PROVENANCE = 'demo'/);
+  assert.equal((homeContent.match(/provenance: 'demo',/g) ?? []).length, 7);
+
+  assert.match(reviews, /not verified customer\s+testimonials/);
+  assert.match(reviews, /Demo example/);
   assert.match(reviews, /aria-live="polite"/);
-  assert.match(reviews, /Show previous review/);
-  assert.match(reviews, /Show next review/);
-  assert.equal((homeContent.match(/id: '[^']+-review'/g) ?? []).length, 7);
+  assert.match(reviews, /role="group"/);
+  assert.doesNotMatch(reviews, /Client reviews/);
+
+  assert.doesNotMatch(
+    [homePage, homeContent, reviews].join('\n'),
+    /AggregateRating|schema\.org\/Review/
+  );
+
+  assert.match(recovery, /useRouter\(\)/);
+  assert.match(recovery, /router\.refresh\(\)/);
+  assert.match(recovery, /This section is temporarily unavailable/);
+  assert.doesNotMatch(recovery, /useEffect|location\.reload|setTimeout/);
+
+  assert.match(
+    homePage,
+    /FeaturedPharmaciesSection[\s\S]*?<CatalogAutoRecovery label="pharmacies" compact \/>/
+  );
+
+  assert.match(
+    homePage,
+    /FeaturedProductsSection[\s\S]*?<CatalogAutoRecovery label="products" compact \/>/
+  );
 });
 
 //===================================================================
@@ -139,6 +192,21 @@ test('keeps information navigation in the mobile drawer and hides draft copy', a
 
   assert.doesNotMatch(infoPage, /Version \{metadata\.version\}/);
   assert.match(infoPage, /Updated\{' '\}/);
+});
+
+//===================================================================
+
+test('app-level client status boundaries opt into one main landmark', async () => {
+  const [errorPage, notFoundPage] = await Promise.all([
+    readFile(new URL('../app/error.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/not-found.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  for (const source of [errorPage, notFoundPage]) {
+    assert.match(source, /variant="brand"/);
+    assert.match(source, /landmark="main"/);
+    assert.match(source, /image=\{STATUS_PAGE_IMAGE\}/);
+  }
 });
 
 //===================================================================

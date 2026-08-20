@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+import { Button } from '@e-pharmacy/ui/primitives';
 
 import css from './CatalogAutoRecovery.module.css';
-
-//===================================================================
-
-const REFRESH_DELAY_MS = 3_500;
 
 //===================================================================
 
@@ -21,23 +20,34 @@ function CatalogAutoRecovery({
   label,
   compact = false,
 }: CatalogAutoRecoveryProps) {
-  useEffect(() => {
-    const timerId = window.setTimeout(() => {
-      window.location.reload();
-    }, REFRESH_DELAY_MS);
+  const router = useRouter();
 
-    return () => window.clearTimeout(timerId);
-  }, []);
+  const handleRetry = () => {
+    router.refresh();
+  };
 
   return (
     <div
       className={compact ? css.compact : css.panel}
-      role="status"
+      role="region"
       aria-live="polite"
-      aria-label={`Loading ${label}`}
+      aria-label={`${label} section unavailable`}
     >
-      <span className={css.spinner} aria-hidden="true" />
-      <span>Loading {label}…</span>
+      <div className={css.message}>
+        <strong>This section is temporarily unavailable.</strong>
+        <span>Try again when the catalog service is ready.</span>
+      </div>
+
+      <Button
+        className={css.retryButton}
+        type="button"
+        variant="secondary"
+        size="sm"
+        iconLeft={<RefreshCw size={17} aria-hidden="true" />}
+        onClick={handleRetry}
+      >
+        Try again
+      </Button>
     </div>
   );
 }

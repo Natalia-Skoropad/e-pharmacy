@@ -5,6 +5,7 @@ import { LinkButton } from '../../navigation';
 
 import StatusPageLayout, {
   type StatusPageLayoutImage,
+  type StatusPageLayoutLandmark,
   type StatusPageLayoutVariant,
 } from '../StatusPageLayout/StatusPageLayout';
 
@@ -20,6 +21,7 @@ export type ErrorPageProps = Readonly<{
   eyebrow?: string;
   image?: StatusPageLayoutImage;
   variant?: StatusPageLayoutVariant;
+  landmark?: StatusPageLayoutLandmark;
 }>;
 
 //===================================================================
@@ -34,6 +36,7 @@ function ErrorPage({
   eyebrow = 'Page error',
   image,
   variant,
+  landmark,
 }: ErrorPageProps) {
   return (
     <StatusPageLayout
@@ -42,6 +45,7 @@ function ErrorPage({
       description={description}
       image={image}
       variant={variant}
+      landmark={landmark}
       actions={
         <>
           <Button type="button" size="lg" onClick={onRetry}>

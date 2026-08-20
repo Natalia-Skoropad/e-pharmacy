@@ -541,6 +541,7 @@ Create an `.env.local` file inside `apps/client`. The source of truth for client
 
 ```env
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL=false
 NEXT_PUBLIC_PHARMACY_APP_URL=http://localhost:3002
 API_BASE_URL=http://localhost:4000
 BFF_PROXY_SECRET=
@@ -551,11 +552,12 @@ BFF_PROXY_SECRET=
 | Variable                       | Used for                                                                                                                   | Example                 |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
 | `NEXT_PUBLIC_SITE_URL`         | canonical URLs, metadata, sitemap, robots, absolute public URLs                                                            | `http://localhost:3000` |
+| `NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL` | explicit opt-in for running a local production server with a localhost canonical origin; `next build` recognizes the build phase automatically | `false` |
 | `NEXT_PUBLIC_PHARMACY_APP_URL` | pharmacy application base URL used for trusted cross-application redirects                                                 | `http://localhost:3002` |
 | `API_BASE_URL`                 | backend URL used only by Next.js server-side data fetches and BFF route handlers                                           | `http://localhost:4000` |
 | `BFF_PROXY_SECRET`             | server-only shared secret sent by Next.js BFF handlers to the Express API; local `pnpm dev` auto-provisions it when absent | `local-secret`          |
 
-For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured pharmacy base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required in production and must be an origin-only HTTPS URL such as `https://client.example.com`; application base paths, credentials, query strings, and hashes are rejected. Local development may use the localhost fallback.
+For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured pharmacy base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required for deployed production runtimes and must be an origin-only HTTPS URL such as `https://client.example.com`; application base paths, credentials, query strings, and hashes are rejected. `next build` recognizes Next.js `phase-production-build`, so a local optimized build can complete without weakening the deployed runtime check. Set `NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL=true` only when intentionally running a local production server against localhost. Do not enable that flag in deployed production.
 
 For deployments, set the same explicit `BFF_PROXY_SECRET` value in the client app and API app. Local `pnpm dev` commands share an auto-provisioned development secret when the variable is not configured.
 
@@ -692,11 +694,11 @@ The footer year remains server-rendered at build/request time; the application d
 
 ### Accessibility policy
 
-The shell provides a first-focusable “Skip to main content” link. Informational dialogs use one dismiss action. Review ratings use native radio inputs with grouped validation semantics. Unknown stock is never announced as zero, favorite mutations expose pending state, and service error pages retain a main landmark and support-friendly request reference.
+The shell provides a first-focusable “Skip to main content” link targeting `#main-content`. Informational dialogs use one dismiss action. Review ratings use native radio inputs with grouped validation semantics. Unknown stock is never announced as zero, favorite mutations expose pending state, and app-level error/not-found pages explicitly opt into a main landmark while embedded status states keep the shared layout non-main to avoid nested landmarks.
 
 ### Public content ownership
 
-Home copy describes E-PHARMACY as a platform for finding products and preparing order requests; the selected pharmacy confirms availability, sale, pickup, or delivery. Information documents include typed version, effective-date, revision, owner, approval, legal-entity, support-route, and review-ID fields. Unknown legal or contact values remain `null`, and documents remain marked `unreviewed` until formal approval is recorded.
+Home copy describes E-PHARMACY as a platform for finding products and preparing order requests; the selected pharmacy confirms availability, sale, pickup, or delivery. Homepage advantage cards do not claim seed-derived catalog or pharmacy counts. Until verified customer testimonials have an approved source, the home experience carousel is explicitly marked as demo/sample content and must not be emitted as `Review` or `AggregateRating` structured data. Information documents include typed version, effective-date, revision, owner, approval, legal-entity, support-route, and review-ID fields. Unknown legal or contact values remain `null`, and documents remain marked `unreviewed` until formal approval is recorded.
 
 ### Required checks
 

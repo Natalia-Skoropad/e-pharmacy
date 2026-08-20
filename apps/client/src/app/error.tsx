@@ -35,6 +35,7 @@ function AppError({ error, reset }: AppErrorProps) {
       onRetry={reset}
       homeHref={ROUTES.HOME}
       variant="brand"
+      landmark="main"
       image={STATUS_PAGE_IMAGE}
     />
   );

@@ -20,6 +20,7 @@ export type StatusPageLayoutImage = Readonly<{
 //===================================================================
 
 export type StatusPageLayoutVariant = 'plain' | 'brand';
+export type StatusPageLayoutLandmark = 'none' | 'main';
 
 //===================================================================
 
@@ -30,6 +31,7 @@ export type StatusPageLayoutProps = Readonly<{
   actions?: ReactNode;
   image?: StatusPageLayoutImage;
   variant?: StatusPageLayoutVariant;
+  landmark?: StatusPageLayoutLandmark;
 }>;
 
 //===================================================================
@@ -41,11 +43,13 @@ function StatusPageLayout({
   actions,
   image,
   variant = 'plain',
+  landmark = 'none',
 }: StatusPageLayoutProps) {
   const imageIsDecorative = !image?.alt;
+  const Root = landmark === 'main' ? 'main' : 'div';
 
   return (
-    <div className={clsx(css.page, css[variant])}>
+    <Root className={clsx(css.page, css[variant])}>
       <section className={css.hero}>
         <Container>
           <div className={clsx(css.heroGrid, !image && css.heroGridCompact)}>
@@ -82,7 +86,7 @@ function StatusPageLayout({
           </div>
         </Container>
       </section>
-    </div>
+    </Root>
   );
 }
 

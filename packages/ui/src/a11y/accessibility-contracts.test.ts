@@ -134,6 +134,11 @@ test('status pages have one image API and truthful image semantics', async () =>
   assert.match(layout, /imageIsDecorative/);
   assert.match(layout, /aria-hidden=\{imageIsDecorative \|\| undefined\}/);
   assert.match(layout, /alt=\{image\.alt \?\? ''\}/);
+  assert.match(layout, /StatusPageLayoutLandmark = 'none' \| 'main'/);
+  assert.match(layout, /landmark = 'none'/);
+  assert.match(layout, /const Root = landmark === 'main' \? 'main' : 'div'/);
+  assert.match(errorPage, /landmark\?: StatusPageLayoutLandmark/);
+  assert.match(notFoundPage, /landmark\?: StatusPageLayoutLandmark/);
 });
 
 //===================================================================

@@ -48,21 +48,22 @@ export type HomeReview = Readonly<{
   author: string;
   rating: number;
   comment: string;
+  provenance: 'demo';
 }>;
 
 //===================================================================
 
 export const HOME_STATS = [
   {
-    id: 'catalog-size',
-    value: '126+',
-    label: 'products in catalog',
+    id: 'catalog-search',
+    value: 'Search',
+    label: 'products by name or article',
     icon: Pill,
   },
   {
-    id: 'pharmacy-network',
-    value: '98+',
-    label: 'partner pharmacy stores',
+    id: 'pharmacy-comparison',
+    value: 'Compare',
+    label: 'pharmacy offers and details',
     icon: Building2,
   },
   {
@@ -191,53 +192,64 @@ export const STEPS = [
 
 //===================================================================
 
+export const HOME_REVIEWS_PROVENANCE = 'demo' as const;
+
+//===================================================================
+
 export const HOME_REVIEWS = [
   {
     id: 'natalia-catalog-review',
-    author: 'Natalia',
+    author: 'Sample client 01',
     rating: 5,
+    provenance: 'demo',
     comment:
       'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the availability information matched the real stock, so there were no surprises when I arrived.',
   },
   {
     id: 'olena-comparison-review',
-    author: 'Olena',
+    author: 'Sample client 02',
     rating: 5,
+    provenance: 'demo',
     comment:
       'I checked several options and this one was the easiest to understand because the description, price, rating, and pharmacy information were all in one place. The product was prepared on time and the checkout flow felt simple.',
   },
   {
     id: 'iryna-pharmacy-review',
-    author: 'Iryna',
+    author: 'Sample client 03',
     rating: 5,
+    provenance: 'demo',
     comment:
       'The catalog helped me compare products, and the pharmacy page showed the address, phone number, rating, and available offers clearly. I could choose a pharmacy calmly without jumping between different tabs.',
   },
   {
     id: 'kateryna-pickup-review',
-    author: 'Kateryna',
+    author: 'Sample client 04',
     rating: 5,
+    provenance: 'demo',
     comment:
       'I found the product I needed, compared the pharmacy offers, and selected a convenient pickup point in a few minutes. The order details were clear, and the pharmacy confirmed everything without unnecessary calls.',
   },
   {
     id: 'maksym-favorites-review',
-    author: 'Maksym',
+    author: 'Sample client 05',
     rating: 4.8,
+    provenance: 'demo',
     comment:
       'Favorites make repeat searches much easier. I saved the products and pharmacies I use most often, then returned later and prepared a new order without searching through the catalog again.',
   },
   {
     id: 'sofiia-delivery-review',
-    author: 'Sofiia',
+    author: 'Sample client 06',
     rating: 5,
+    provenance: 'demo',
     comment:
       'The delivery information was easy to understand, and I could see which pharmacy would process the order before submitting it. The status updates helped me know what was happening at every step.',
   },
   {
     id: 'andrii-mobile-review',
-    author: 'Andrii',
+    author: 'Sample client 07',
     rating: 4.9,
+    provenance: 'demo',
     comment:
       'The mobile version is convenient and straightforward. Product information, pharmacy contacts, and the cart were easy to use, even when I needed to prepare an order while away from home.',
   },

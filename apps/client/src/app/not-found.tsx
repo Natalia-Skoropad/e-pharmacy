@@ -21,6 +21,7 @@ function AppNotFound() {
       description="The link may be outdated, moved, or typed with a tiny typo. Go back home or open the product catalog to continue shopping safely."
       homeHref={ROUTES.HOME}
       variant="brand"
+      landmark="main"
       image={STATUS_PAGE_IMAGE}
       secondaryAction={{
         href: ROUTES.PRODUCTS_CATALOG,

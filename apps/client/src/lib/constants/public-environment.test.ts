@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { resolveClientPublicEnvironment } from './public-environment';
+import {
+  isOptimizedProductionBuild,
+  resolveClientPublicEnvironment,
+  shouldRequireExplicitProductionSiteUrl,
+} from './public-environment';
 
 //===================================================================
 
@@ -42,11 +46,12 @@ test('rejects unsafe and base-path site URLs', () => {
 
 //===================================================================
 
-test('allows localhost during an optimized local build', () => {
+test('allows localhost when local production fallback is explicitly permitted', () => {
   assert.deepEqual(
     resolveClientPublicEnvironment({
       configuredSiteUrl: undefined,
       nodeEnv: 'production',
+      allowLocalProductionSiteUrl: true,
     }),
 
     {
@@ -59,12 +64,69 @@ test('allows localhost during an optimized local build', () => {
     resolveClientPublicEnvironment({
       configuredSiteUrl: 'http://localhost:3000',
       nodeEnv: 'production',
+      allowLocalProductionSiteUrl: true,
     }),
 
     {
       ok: true,
       environment: { siteUrl: 'http://localhost:3000' },
     }
+  );
+});
+
+//===================================================================
+
+test('rejects a production localhost origin without the explicit local-build opt-in', () => {
+  const result = resolveClientPublicEnvironment({
+    configuredSiteUrl: 'http://localhost:3000',
+    nodeEnv: 'production',
+  });
+
+  assert.equal(result.ok, false);
+  if (!result.ok) assert.equal(result.code, 'LOCAL_PRODUCTION_URL_NOT_ALLOWED');
+});
+
+//===================================================================
+
+test('canonical production policy distinguishes build-time validation from production runtime', () => {
+  assert.equal(isOptimizedProductionBuild('phase-production-build'), true);
+  assert.equal(isOptimizedProductionBuild('phase-production-server'), false);
+  assert.equal(isOptimizedProductionBuild(undefined), false);
+
+  assert.equal(
+    shouldRequireExplicitProductionSiteUrl({
+      nodeEnv: 'production',
+      nextPhase: 'phase-production-server',
+      allowLocalProductionSiteUrl: undefined,
+    }),
+    true
+  );
+
+  assert.equal(
+    shouldRequireExplicitProductionSiteUrl({
+      nodeEnv: 'production',
+      nextPhase: 'phase-production-build',
+      allowLocalProductionSiteUrl: undefined,
+    }),
+    false
+  );
+
+  assert.equal(
+    shouldRequireExplicitProductionSiteUrl({
+      nodeEnv: 'production',
+      nextPhase: 'phase-production-server',
+      allowLocalProductionSiteUrl: 'true',
+    }),
+    false
+  );
+
+  assert.equal(
+    shouldRequireExplicitProductionSiteUrl({
+      nodeEnv: 'development',
+      nextPhase: undefined,
+      allowLocalProductionSiteUrl: undefined,
+    }),
+    false
   );
 });
 
@@ -138,4 +200,3 @@ test('requires an explicit canonical site URL in production', () => {
     }
   );
 });
-
