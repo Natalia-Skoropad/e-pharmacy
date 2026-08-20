@@ -3,7 +3,11 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE } from '../constants/order';
+import {
+  CHECKOUT_GROUP_MISSING_ERROR_CODE,
+  PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
+} from '../constants/order';
+
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
@@ -343,6 +347,60 @@ test(
           'code' in error &&
           error.code === PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
       );
+    } finally {
+      await removeFixture(fixture);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'retrying the same checkout after a committed response is lost cannot create a duplicate order',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture({ stock: 2 });
+
+    try {
+      // The first checkout represents a server-side commit whose HTTP response
+      // is lost before the browser can observe it.
+      await checkoutFixture(fixture);
+
+      await assert.rejects(
+        checkoutFixture(fixture),
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === CHECKOUT_GROUP_MISSING_ERROR_CODE
+      );
+
+      assert.equal(
+        await Order.countDocuments({ userId: fixture.clientUserId }),
+        1
+      );
+
+      const cart = await Cart.findById(fixture.cartId).lean<{
+        revision: number;
+        items: unknown[];
+      } | null>();
+
+      assert.ok(cart);
+      assert.equal(cart.revision, fixture.revision + 1);
+      assert.equal(cart.items.length, 0);
+
+      const offer = await ProductOffer.findById(fixture.offerId).lean<{
+        totalQuantity: number;
+        availableQuantity: number;
+        reservedQuantity: number;
+      } | null>();
+
+      assert.ok(offer);
+      assert.equal(offer.totalQuantity, 2);
+      assert.equal(offer.availableQuantity, 1);
+      assert.equal(offer.reservedQuantity, 1);
     } finally {
       await removeFixture(fixture);
       await mongoose.disconnect();

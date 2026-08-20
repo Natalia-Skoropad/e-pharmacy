@@ -11,7 +11,6 @@ import {
   parsePharmaciesResponse,
   parsePharmacyCheckoutDetailsResponse,
   parsePharmacyDetailsResponse,
-  parsePharmacyDocumentContentResponse,
   parsePharmacyProfileResponse,
   parsePharmacyRegistrationDocumentUploadResponse,
   parsePharmacyRegistrationUploadSessionResponse,
@@ -715,36 +714,6 @@ test('validates controlled pharmacy registration upload responses', () => {
       parsePharmacyRegistrationDocumentUploadResponse({
         document,
         claimToken: 'short',
-      }),
-    ApiError
-  );
-});
-
-//===================================================================
-
-test('validates controlled pharmacy document content responses', () => {
-  const document = {
-    id: '6a5f5240d9c46211621acf16',
-    name: 'license.pdf',
-    size: 8,
-    type: 'application/pdf',
-    sha256: 'd'.repeat(64),
-    uploadedAt: '2026-08-13T08:00:00.000Z',
-  };
-
-  assert.equal(
-    parsePharmacyDocumentContentResponse({
-      document,
-      dataUrl: 'data:application/pdf;base64,JVBERi0xLjQ=',
-    }).document.id,
-    document.id
-  );
-
-  assert.throws(
-    () =>
-      parsePharmacyDocumentContentResponse({
-        document,
-        dataUrl: 'data:image/png;base64,JVBERi0xLjQ=',
       }),
     ApiError
   );

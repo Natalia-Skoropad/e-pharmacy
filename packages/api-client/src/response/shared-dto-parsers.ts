@@ -32,7 +32,6 @@ import type {
   PharmacyCheckoutDetails,
   PharmacyCheckoutDetailsResponse,
   PharmacyDetailsResponse,
-  PharmacyDocumentContentResponse,
   PharmacyFilterOptionsResponse,
   PharmacyOption,
   PharmacyOptionsResponse,
@@ -1948,30 +1947,6 @@ export function parsePharmacyRegistrationDocumentUploadResponse(
     document: parsePharmacyVerificationDocument(record.document, context),
     claimToken: record.claimToken,
   };
-}
-
-//===================================================================
-
-export function parsePharmacyDocumentContentResponse(
-  value: unknown,
-  context?: ApiResponseContext
-): PharmacyDocumentContentResponse {
-  const record = requireRecord(
-    value,
-    'pharmacy document content response',
-    context
-  );
-  const document = parsePharmacyVerificationDocument(record.document, context);
-
-  if (
-    typeof record.dataUrl !== 'string' ||
-    !record.dataUrl.startsWith(`data:${document.type};base64,`) ||
-    record.dataUrl.length <= `data:${document.type};base64,`.length
-  ) {
-    throw invalidDto('pharmacy document dataUrl is invalid.', record, context);
-  }
-
-  return { document, dataUrl: record.dataUrl };
 }
 
 //===================================================================

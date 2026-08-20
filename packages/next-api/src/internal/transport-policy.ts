@@ -3,6 +3,7 @@ export const NEXT_API_TIMEOUTS_MS = {
   privateRequest: 12_000,
   authRefresh: 8_000,
   authRequest: 20_000,
+  documentTransfer: 30_000,
 } as const;
 
 //===================================================================

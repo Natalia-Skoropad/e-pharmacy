@@ -53,8 +53,3 @@ export type PharmacyProfileDocumentUploadResponse = Readonly<{
   document: PharmacyVerificationDocument;
 }>;
 
-export type PharmacyDocumentContentResponse = Readonly<{
-  document: PharmacyVerificationDocument;
-  dataUrl: string;
-}>;
-

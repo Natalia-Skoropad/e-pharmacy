@@ -80,6 +80,12 @@ for (const routePath of [
   );
 }
 
+// Auth payloads are intentionally much smaller than general business JSON.
+// The registration document upload route above is parsed first with the
+// document preset, so this middleware does not re-read its already-consumed
+// request body.
+app.use('/auth', express.json({ limit: API_JSON_BODY_LIMITS.smallJson }));
+
 app.use(express.json({ limit: API_JSON_BODY_LIMITS.standardJson }));
 
 //===============================================================

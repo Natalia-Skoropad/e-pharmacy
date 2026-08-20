@@ -57,7 +57,7 @@ Authenticated server-side reads require a separate explicit design and must not 
 
 - `public`: no cookies; route-specific cache policy.
 - `optional`: access/legacy cookies only; an explicit `strict`, `public-fallback`, or `refresh-aware` policy.
-- `private`: access/legacy cookies only; one refresh attempt on 401.
+- `private`: access/legacy cookies only; one refresh attempt only for the stable `AUTH_SESSION_INVALID` lifecycle code. Business `401` responses are never replayed just because of their HTTP status.
 - `auth`: explicit cookie mode per route. Login/register/password reset forward no auth cookies, logout uses access cookies, refresh uses only the refresh cookie.
 
 Unrelated browser cookies and refresh cookies are never forwarded to ordinary business endpoints.
@@ -76,7 +76,7 @@ login/register
 A successful auth response without valid tokens is converted to `502 INVALID_BACKEND_RESPONSE`; partial login success is forbidden.
 
 ```text
-private request 401
+private request AUTH_SESSION_INVALID
 → refresh-only backend request
 → single-flight refresh per refresh token
 → runtime token validation
@@ -84,25 +84,37 @@ private request 401
 → update browser cookies
 ```
 
-Refresh 401/403 and a repeated private 401/403 clear browser auth cookies. Timeout, network, and backend 5xx refresh failures do not clear the session automatically.
+Stable invalidating lifecycle codes such as `AUTH_SESSION_REVOKED` and `AUTH_USER_BLOCKED` clear browser auth cookies without replay. Timeout, network, and backend 5xx refresh failures do not clear the session automatically.
 
-Optional product/pharmacy detail reads use `refresh-aware`: after an access-token 401 the BFF attempts the same single-flight refresh, retries with the new access token, and only then falls back to anonymous public data. Invalid refresh credentials clear cookies; a temporary refresh outage preserves them.
+Optional product/pharmacy detail reads use `refresh-aware`. A presented but invalid/expired access token is surfaced by backend optional auth as `AUTH_SESSION_INVALID`; the BFF then attempts the same single-flight refresh and retries the detail read. If the access cookie is missing but a refresh cookie exists, `refresh-aware` pre-refreshes before the first personalized read. Invalid refresh credentials clear cookies and fall back to anonymous public data; a temporary refresh outage preserves cookies and falls back to public data.
 
 Logout is local fail-closed: browser auth cookies are cleared even when the backend revoke request is temporarily unavailable. In that case the server-side session may remain active until expiry or a later successful logout-all request.
 
 The generic session revoke route is for other devices only. The backend rejects revocation of the current session with `409`; the current session must use the logout flow so BFF cookies are cleared consistently.
 
-## Request body policy
+## Request body and document policy
 
-The generic proxy is JSON/text-only and supports:
+The generic mutation proxy is text-based and supports:
 
 - `application/json` and `+json`;
 - `text/plain`;
 - `application/x-www-form-urlencoded`.
 
-The same body contract applies to POST, PUT, PATCH, and DELETE. Multipart and binary requests return `415`. Request bodies are limited to 32 MiB and return `413` when exceeded.
+Multipart and binary request bodies return `415`. Actual byte length is checked even when `Content-Length` is missing or misleading.
 
-File uploads require a dedicated streaming/upload route factory rather than the generic JSON proxy.
+Semantic request-body presets are used instead of one global practical allowance:
+
+- `smallJson`: 64 KiB for auth/session payloads;
+- `standardJson`: 1 MiB for normal business mutations;
+- `documentUpload`: 32 MiB only for the existing base64 document/attachment upload contracts.
+
+Document transfers have a dedicated 30-second transport timeout rather than inheriting login/private-request timing. Private pharmacy document **downloads** use a dedicated binary route factory and return the upstream MIME body directly with `no-store`; they do not pass through JSON/base64 response parsing.
+
+## Retry and query ownership
+
+Browser → same-origin BFF requests do not retry by default. Public BFF → backend reads own the bounded transient retry policy (`502/503/504`, two attempts); direct public SSR readers reuse that same transport preset. `429` is not retried without an explicit bounded `Retry-After` policy.
+
+Forwarded query strings keep their supported semantics but are bounded before backend fetch: encoded query length, parameter count (including duplicates), and combined backend URL length all have practical limits. Public backend schemas reject unsupported query keys, and no-query dictionary routes validate an explicitly empty query object so ignored parameters cannot create unbounded CDN cache variants.
 
 ## Security
 

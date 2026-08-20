@@ -51,6 +51,7 @@ type BackendProxyOptions = Readonly<{
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
   bodyPreset?: ProxyRequestBodyPreset;
+  timeoutMs?: number;
 }>;
 
 //===================================================================
@@ -67,6 +68,9 @@ async function proxyPrivateBackendRequestCore(
     method = 'GET',
     clearAuthCookiesOnSuccess = false,
     bodyPreset = 'standardJson',
+    timeoutMs = bodyPreset === 'documentUpload'
+      ? NEXT_API_TIMEOUTS_MS.documentTransfer
+      : NEXT_API_TIMEOUTS_MS.privateRequest,
   }: BackendProxyOptions,
   validateResponse: BackendResponseValidator
 ) {
@@ -81,7 +85,7 @@ async function proxyPrivateBackendRequestCore(
       backendPath,
       method,
       requestId,
-      timeoutMs: NEXT_API_TIMEOUTS_MS.privateRequest,
+      timeoutMs,
       authCookieMode: 'access-only',
       body,
     });
@@ -219,7 +223,7 @@ async function proxyPrivateBackendRequestCore(
       backendPath,
       method,
       requestId,
-      timeoutMs: NEXT_API_TIMEOUTS_MS.privateRequest,
+      timeoutMs,
       authCookieMode: 'none',
       cookieHeaderOverride: cookieHeader,
       body,
@@ -283,7 +287,11 @@ export function proxyPrivateBackendDownloadRequest(
   >
 ) {
   return proxyPrivateBackendRequestCore(
-    { ...options, method: 'GET' },
+    {
+      ...options,
+      method: 'GET',
+      timeoutMs: NEXT_API_TIMEOUTS_MS.documentTransfer,
+    },
     validateBackendDownloadResponse
   );
 }

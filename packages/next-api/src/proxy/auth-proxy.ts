@@ -74,7 +74,10 @@ export async function proxyAuthRequest({
       backendPath,
       method,
       requestId,
-      timeoutMs: NEXT_API_TIMEOUTS_MS.authRequest,
+      timeoutMs:
+        bodyPreset === 'documentUpload'
+          ? NEXT_API_TIMEOUTS_MS.documentTransfer
+          : NEXT_API_TIMEOUTS_MS.authRequest,
       authCookieMode,
       body,
       includeAuthProxyMarker: true,

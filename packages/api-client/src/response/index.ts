@@ -40,7 +40,6 @@ export {
   parsePharmacyFilterOptionsResponse,
   parsePharmacyOptionsResponse,
   parsePharmacyProfileResponse,
-  parsePharmacyDocumentContentResponse,
   parsePharmacyProfileDocumentUploadResponse,
   parsePharmacyRegistrationDocumentUploadResponse,
   parsePharmacyRegistrationUploadSessionResponse,
