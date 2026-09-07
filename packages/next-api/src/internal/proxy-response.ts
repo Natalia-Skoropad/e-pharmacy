@@ -16,14 +16,19 @@ export function createTextProxyResponse(
   body: string,
   options: ProxyResponseOptions
 ): NextResponse {
+  const headers = createProxyResponseHeaders(
+    response.headers,
+    options.cacheControl,
+    options.requestId
+  );
+
+  headers.delete('content-length');
+  headers.delete('etag');
+  headers.delete('last-modified');
+
   return new NextResponse(body || null, {
     status: response.status,
-
-    headers: createProxyResponseHeaders(
-      response.headers,
-      options.cacheControl,
-      options.requestId
-    ),
+    headers,
   });
 }
 

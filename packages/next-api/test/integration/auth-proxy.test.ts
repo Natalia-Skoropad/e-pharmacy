@@ -9,6 +9,7 @@ import {
   REFRESH_TOKEN_COOKIE_NAME,
 } from '@e-pharmacy/config/auth';
 
+import { createTextProxyResponse } from '../../src/internal/proxy-response.ts';
 import { proxyAuthRequest } from '../../src/proxy/auth-proxy.ts';
 
 //===================================================================
@@ -105,6 +106,62 @@ test('login/register/refresh strip valid tokens and set httpOnly cookies', async
   } finally {
     restore();
   }
+});
+
+//===================================================================
+
+test('transformed proxy responses drop stale representation headers', async () => {
+  const upstreamBody = JSON.stringify({
+    status: 'success',
+    data: {
+      user: {
+        id: '507f1f77bcf86cd799439011',
+        name: 'Test User',
+      },
+      tokens: {
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+      },
+    },
+  });
+
+  const upstreamResponse = new Response(upstreamBody, {
+    status: 200,
+    headers: {
+      'content-type': 'application/json',
+      'content-length': String(Buffer.byteLength(upstreamBody)),
+      etag: '"upstream-etag"',
+      'last-modified': 'Mon, 07 Sep 2026 10:00:00 GMT',
+      'x-upstream-header': 'preserved',
+    },
+  });
+
+  const transformedPayload = {
+    status: 'success',
+    data: {
+      user: {
+        id: '507f1f77bcf86cd799439011',
+        name: 'Test User',
+      },
+    },
+  };
+
+  const response = createTextProxyResponse(
+    upstreamResponse,
+    JSON.stringify(transformedPayload),
+    {
+      cacheControl: 'no-store',
+      requestId: 'transformed-response',
+    }
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('content-length'), null);
+  assert.equal(response.headers.get('etag'), null);
+  assert.equal(response.headers.get('last-modified'), null);
+  assert.equal(response.headers.get('x-upstream-header'), null);
+  assert.match(response.headers.get('content-type') ?? '', /application\/json/);
+  assert.deepEqual(await response.json(), transformedPayload);
 });
 
 //===================================================================
