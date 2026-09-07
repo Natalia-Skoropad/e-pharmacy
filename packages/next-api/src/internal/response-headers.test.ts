@@ -8,6 +8,7 @@ import { createProxyResponseHeaders } from './response-headers.ts';
 test('forwards the approved response header allowlist', () => {
   const source = new Headers({
     'Content-Type': 'application/json',
+    'Content-Length': '999',
     Location: '/next',
     'Retry-After': '30',
     ETag: '"abc"',
@@ -23,6 +24,7 @@ test('forwards the approved response header allowlist', () => {
   const result = createProxyResponseHeaders(source, 'no-store', 'request-1');
 
   assert.equal(result.get('content-type'), 'application/json');
+  assert.equal(result.get('content-length'), null);
   assert.equal(result.get('location'), '/next');
   assert.equal(result.get('retry-after'), '30');
   assert.equal(result.get('etag'), '"abc"');
@@ -64,6 +66,7 @@ test('response header policy forwards only safe relative redirects', () => {
     'no-store',
     'request-id'
   );
+
   assert.equal(protocolRelative.get('location'), null);
 });
 

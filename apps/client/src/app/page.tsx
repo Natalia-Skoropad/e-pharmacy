@@ -22,6 +22,7 @@ import {
 } from '@/lib/api/server';
 
 import CatalogAutoRecovery from '@/components/catalog/CatalogAutoRecovery/CatalogAutoRecovery';
+import CatalogCardSkeleton from '@/components/catalog/CatalogCardSkeleton/CatalogCardSkeleton';
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 import { HOME_PREVIEW_LIMIT } from '@/components/home/config/data';
@@ -91,9 +92,11 @@ async function getFeaturedProducts(): Promise<
 
 function FeaturedSectionFallback({ label }: { label: string }) {
   return (
-    <div className={css.sectionEmpty} role="status">
-      Loading {label}...
-    </div>
+    <CatalogCardSkeleton
+      className={css.previewSkeleton}
+      count={HOME_PREVIEW_LIMIT}
+      label={`Loading ${label}`}
+    />
   );
 }
 
@@ -278,6 +281,7 @@ async function HomePage() {
                 choose pickup or postal delivery. The selected pharmacy confirms
                 the final order and fulfillment details.
               </p>
+
               <LinkButton href={ROUTES.PRODUCTS_CATALOG} variant="secondary">
                 Browse catalog
               </LinkButton>

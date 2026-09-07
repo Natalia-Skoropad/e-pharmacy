@@ -41,7 +41,7 @@ test('closes the mobile overlay in state at desktop breakpoint', async () => {
 
 //===================================================================
 
-test('keeps public feature actions as real links and exposes accessible shell navigation', async () => {
+test('keeps public feature actions as real links and the shared shell free of transient skip controls', async () => {
   const [features, shell] = await Promise.all([
     readComponent('./home/HomeFeatureCards/HomeFeatureCards.tsx'),
     readComponent('./layout/AppShell/AppShell.tsx'),
@@ -50,15 +50,15 @@ test('keeps public feature actions as real links and exposes accessible shell na
   assert.match(features, /<LinkButton/);
   assert.match(features, /href=\{feature\.href\}/);
   assert.doesNotMatch(features, /router\.push|useClientAuthCapabilities/);
+  assert.match(shell, /<Header \/>/);
   assert.match(shell, /<ScrollToTopButton \/>/);
-  assert.match(shell, /href="#main-content"/);
-  assert.match(shell, />\s*Skip to main content\s*</);
-  assert.match(shell, /id="main-content"/);
-  assert.match(shell, /tabIndex=\{-1\}/);
 
-  assert.ok(
-    shell.indexOf('href="#main-content"') < shell.indexOf('<Header />')
+  assert.match(
+    shell,
+    /<div className=\{css\.content\} id="main-content">\s*\{children\}\s*<\/div>/
   );
+
+  assert.doesNotMatch(shell, /Skip to main content|href="#main-content"/);
 });
 
 //===================================================================
@@ -113,6 +113,8 @@ test('freezes the client reference shell and server-rendered home baseline', asy
   );
 
   assert.equal((homePage.match(/<Suspense\b/g) ?? []).length, 2);
+  assert.match(homePage, /CatalogCardSkeleton/);
+  assert.match(homePage, /count=\{HOME_PREVIEW_LIMIT\}/);
 
   assert.match(
     homePage,
@@ -130,6 +132,51 @@ test('freezes the client reference shell and server-rendered home baseline', asy
   assert.match(pageLoader, /aria-label=\{label\}/);
   assert.match(pageLoaderStyles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(pageLoaderStyles, /animation:\s*none/);
+});
+
+//===================================================================
+
+test('catalog routes use six-card skeleton loading states with reduced-motion support', async () => {
+  const [
+    skeleton,
+    skeletonStyles,
+    catalogLoading,
+    productLoading,
+    pharmacyLoading,
+  ] = await Promise.all([
+    readComponent('./catalog/CatalogCardSkeleton/CatalogCardSkeleton.tsx'),
+
+    readComponent(
+      './catalog/CatalogCardSkeleton/CatalogCardSkeleton.module.css'
+    ),
+
+    readComponent('./catalog/CatalogPageLoading/CatalogPageLoading.tsx'),
+
+    readFile(
+      new URL(
+        '../app/(public)/(products)/product-catalog/loading.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+
+    readFile(
+      new URL(
+        '../app/(public)/(pharmacies)/pharmacies/loading.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+  ]);
+
+  assert.match(skeleton, /count = 6/);
+  assert.match(skeleton, /role="status"/);
+  assert.match(skeletonStyles, /aspect-ratio:\s*16 \/ 10/);
+  assert.match(skeletonStyles, /min-height:\s*210px/);
+  assert.match(skeletonStyles, /prefers-reduced-motion:\s*reduce/);
+  assert.match(catalogLoading, /<CatalogCardSkeleton count=\{6\}/);
+  assert.match(productLoading, /label="Loading products"/);
+  assert.match(pharmacyLoading, /label="Loading pharmacies"/);
 });
 
 //===================================================================
@@ -177,7 +224,7 @@ test('keeps CartPageContent outside its own feature barrel cycle', async () => {
 
 //===================================================================
 
-test('preserves all home blocks while keeping stats and sample experiences truthful', async () => {
+test('preserves all home blocks while keeping stats and customer reviews stable', async () => {
   const [homePage, homeStyles, homeContent, reviews, reviewStyles, recovery] =
     await Promise.all([
       readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
@@ -208,6 +255,7 @@ test('preserves all home blocks while keeping stats and sample experiences truth
       currentIndex > previousIndex,
       `Missing or reordered home block: ${marker}`
     );
+
     previousIndex = currentIndex;
   }
 
@@ -215,14 +263,31 @@ test('preserves all home blocks while keeping stats and sample experiences truth
   assert.match(homeContent, /icon: Building2/);
   assert.match(homeContent, /icon: Clock3/);
   assert.doesNotMatch(homeContent, /126\+|98\+|partner pharmacy stores/);
-  assert.match(homeContent, /HOME_REVIEWS_PROVENANCE = 'demo'/);
-  assert.equal((homeContent.match(/provenance: 'demo',/g) ?? []).length, 7);
 
-  assert.match(reviews, /not verified customer\s+testimonials/);
-  assert.match(reviews, /Demo example/);
+  assert.doesNotMatch(
+    homeContent,
+    /HOME_REVIEWS_PROVENANCE|provenance:\s*'demo'/
+  );
+
+  assert.doesNotMatch(
+    [homeContent, reviews].join('\n'),
+    /\b(?:sample|demo|examples?)\b/i
+  );
+
+  assert.match(reviews, /Customer reviews/);
   assert.match(reviews, /aria-live="polite"/);
   assert.match(reviews, /role="group"/);
-  assert.doesNotMatch(reviews, /Client reviews/);
+
+  const reviewComments = [
+    ...homeContent.matchAll(/comment:\s*\n?\s*'([^']+)'/g),
+  ].map((match) => match[1] ?? '');
+
+  assert.equal(reviewComments.length, 7);
+
+  assert.equal(
+    new Set(reviewComments.map((comment) => comment.length)).size,
+    1
+  );
 
   assert.match(reviewStyles, /\.dot\s*\{[\s\S]*?width:\s*36px;/);
   assert.match(reviewStyles, /\.dot::before\s*\{[\s\S]*?width:\s*8px;/);
@@ -255,6 +320,8 @@ test('preserves all home blocks while keeping stats and sample experiences truth
   assert.match(recovery, /useRouter\(\)/);
   assert.match(recovery, /router\.refresh\(\)/);
   assert.match(recovery, /This section is temporarily unavailable/);
+  assert.match(recovery, /<CatalogCardSkeleton/);
+  assert.match(recovery, /count=\{6\}/);
   assert.doesNotMatch(recovery, /useEffect|location\.reload|setTimeout/);
 
   assert.match(

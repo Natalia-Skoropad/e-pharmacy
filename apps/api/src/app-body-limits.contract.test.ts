@@ -15,6 +15,7 @@ test('ordinary JSON uses a small global parser while document payloads opt into 
 
   assert.match(limitsSource, /smallJson:\s*'64kb'/);
   assert.match(limitsSource, /standardJson:\s*'1mb'/);
+  assert.match(limitsSource, /profileJson:\s*'1mb'/);
   assert.match(limitsSource, /documentUpload:\s*'32mb'/);
 
   for (const routePath of [
@@ -27,6 +28,6 @@ test('ordinary JSON uses a small global parser while document payloads opt into 
 
   assert.match(
     appSource,
-    /express\.json\(\{ limit: API_JSON_BODY_LIMITS\.documentUpload \}\)[\s\S]*app\.use\('\/auth', express\.json\(\{ limit: API_JSON_BODY_LIMITS\.smallJson \}\)\)[\s\S]*express\.json\(\{ limit: API_JSON_BODY_LIMITS\.standardJson \}\)/
+    /express\.json\(\{ limit: API_JSON_BODY_LIMITS\.documentUpload \}\)[\s\S]*app\.patch\([\s\S]*'\/auth\/current'[\s\S]*API_JSON_BODY_LIMITS\.profileJson[\s\S]*app\.use\('\/auth', express\.json\(\{ limit: API_JSON_BODY_LIMITS\.smallJson \}\)\)[\s\S]*express\.json\(\{ limit: API_JSON_BODY_LIMITS\.standardJson \}\)/
   );
 });

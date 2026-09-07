@@ -1,5 +1,4 @@
-.panel,
-.compact {
+.panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -16,8 +15,27 @@
 }
 
 .compact {
-  min-height: 120px;
-  box-shadow: none;
+  display: grid;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.compactSkeleton {
+  margin: 0;
+}
+
+.compactNotice {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 16px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .message {
@@ -39,7 +57,7 @@
 
 @media only screen and (min-width: 768px) {
   .panel,
-  .compact {
+  .compactNotice {
     flex-direction: row;
     text-align: left;
   }

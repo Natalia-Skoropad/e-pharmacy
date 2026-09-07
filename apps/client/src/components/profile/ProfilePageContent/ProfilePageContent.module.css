@@ -157,6 +157,58 @@
   border-radius: var(--radius-md);
 }
 
+.loadErrorState {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 22px;
+  background: linear-gradient(
+    135deg,
+    var(--color-error-soft),
+    var(--color-surface)
+  );
+  border: 1px solid var(--color-error-border-medium);
+  border-radius: var(--radius-xl);
+}
+
+.loadErrorIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  color: var(--color-error);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-error-border-medium);
+  border-radius: 50%;
+}
+
+.loadErrorCopy {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.loadErrorCopy h3 {
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.loadErrorCopy p {
+  max-width: 560px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.loadErrorCopy button {
+  margin-top: 6px;
+}
+
 .tabPanel {
   display: grid;
   gap: 24px;

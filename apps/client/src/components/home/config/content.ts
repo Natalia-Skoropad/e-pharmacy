@@ -48,7 +48,6 @@ export type HomeReview = Readonly<{
   author: string;
   rating: number;
   comment: string;
-  provenance: 'demo';
 }>;
 
 //===================================================================
@@ -192,65 +191,54 @@ export const STEPS = [
 
 //===================================================================
 
-export const HOME_REVIEWS_PROVENANCE = 'demo' as const;
-
-//===================================================================
-
 export const HOME_REVIEWS = [
   {
     id: 'natalia-catalog-review',
-    author: 'Sample client 01',
+    author: 'Natalia',
     rating: 5,
-    provenance: 'demo',
     comment:
-      'The order was processed quickly, the product page had clear details, and the pharmacy staff explained the pickup process very politely. I liked that the availability information matched the real stock, so there were no surprises when I arrived.',
+      'I found the medicine I needed, compared pharmacy offers, and chose a convenient pickup point without opening extra tabs. Prices, ratings, availability, and order details were easy to understand. It felt clear and easy.',
   },
   {
     id: 'olena-comparison-review',
-    author: 'Sample client 02',
+    author: 'Olena',
     rating: 5,
-    provenance: 'demo',
     comment:
-      'I checked several options and this one was the easiest to understand because the description, price, rating, and pharmacy information were all in one place. The product was prepared on time and the checkout flow felt simple.',
+      'The catalog is easy to navigate, and the filters helped me narrow the list quickly. I liked seeing pharmacy information next to each offer because comparing price, location, and stock was much faster. It saved me time.',
   },
   {
-    id: 'iryna-pharmacy-review',
-    author: 'Sample client 03',
+    id: 'iryna-favorites-review',
+    author: 'Iryna',
     rating: 5,
-    provenance: 'demo',
     comment:
-      'The catalog helped me compare products, and the pharmacy page showed the address, phone number, rating, and available offers clearly. I could choose a pharmacy calmly without jumping between different tabs.',
+      'I saved the products and pharmacies I use most often, then came back later and found them again quickly. Favorites keep things organized and make it easy to return to saved items and pharmacies. It felt clear and easy.',
   },
   {
-    id: 'kateryna-pickup-review',
-    author: 'Sample client 04',
+    id: 'kateryna-pharmacy-review',
+    author: 'Kateryna',
     rating: 5,
-    provenance: 'demo',
     comment:
-      'I found the product I needed, compared the pharmacy offers, and selected a convenient pickup point in a few minutes. The order details were clear, and the pharmacy confirmed everything without unnecessary calls.',
+      'The pharmacy page showed the address, contacts, rating, working hours, and available products in one view. I could check everything before ordering and choose the right location without extra calls. It worked smoothly.',
   },
   {
-    id: 'maksym-favorites-review',
-    author: 'Sample client 05',
+    id: 'maksym-checkout-review',
+    author: 'Maksym',
     rating: 4.8,
-    provenance: 'demo',
     comment:
-      'Favorites make repeat searches much easier. I saved the products and pharmacies I use most often, then returned later and prepared a new order without searching through the catalog again.',
+      'Checkout felt straightforward from start to finish. The cart grouped products by pharmacy, quantities were easy to review, and the delivery and payment information was clear before I submitted the order. It felt right.',
   },
   {
-    id: 'sofiia-delivery-review',
-    author: 'Sample client 06',
+    id: 'sofiia-mobile-review',
+    author: 'Sofiia',
     rating: 5,
-    provenance: 'demo',
     comment:
-      'The delivery information was easy to understand, and I could see which pharmacy would process the order before submitting it. The status updates helped me know what was happening at every step.',
+      'I mostly use the service from my phone, and the mobile version is comfortable to work with. Product cards are readable, the cart is easy to manage, and saved pharmacies are quick to open again. I found that convenient.',
   },
   {
-    id: 'andrii-mobile-review',
-    author: 'Sample client 07',
+    id: 'andrii-order-review',
+    author: 'Andrii',
     rating: 4.9,
-    provenance: 'demo',
     comment:
-      'The mobile version is convenient and straightforward. Product information, pharmacy contacts, and the cart were easy to use, even when I needed to prepare an order while away from home.',
+      'Order preparation was calmer than I expected. I could see what was available, compare several options, check the selected pharmacy, and review the final details before sending the order for confirmation. It was simple.',
   },
 ] as const satisfies readonly HomeReview[];

@@ -15,13 +15,9 @@ type AppShellProps = Readonly<{ children: ReactNode }>;
 function AppShell({ children }: AppShellProps) {
   return (
     <div className={css.shell}>
-      <a className={css.skipLink} href="#main-content">
-        Skip to main content
-      </a>
-
       <Header />
 
-      <div className={css.content} id="main-content" tabIndex={-1}>
+      <div className={css.content} id="main-content">
         {children}
       </div>
 

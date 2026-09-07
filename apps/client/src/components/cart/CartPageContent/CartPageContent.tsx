@@ -1,19 +1,23 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { CircleAlert } from 'lucide-react';
 
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
+
 import {
   CountLabel,
   formatInitials,
   RatingSummary,
 } from '@e-pharmacy/ui/data-display';
+
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
 import type { Cart } from '@e-pharmacy/types/cart';
+
 import {
   CART_CHANGED_ERROR_CODE,
   STOCK_CHANGED_ERROR_CODE,
@@ -204,11 +208,13 @@ function CartPageContent() {
               <p className={css.text}>{CART_DESCRIPTION}</p>
             </div>
 
-            <CountLabel
-              shown={groupedCartItems.length}
-              total={groupedCartItems.length}
-              label={groupedCartItems.length === 1 ? 'order' : 'orders'}
-            />
+            {!shouldShowLoading && !cartLoadError ? (
+              <CountLabel
+                shown={groupedCartItems.length}
+                total={groupedCartItems.length}
+                label={groupedCartItems.length === 1 ? 'order' : 'orders'}
+              />
+            ) : null}
           </div>
 
           {shouldShowLoading ? (
@@ -217,20 +223,36 @@ function CartPageContent() {
             </div>
           ) : null}
 
-          {visibleError ? (
+          {cartLoadError ? (
+            <div className={css.errorState} role="alert">
+              <span className={css.errorIcon} aria-hidden="true">
+                <CircleAlert size={30} />
+              </span>
+
+              <div className={css.errorCopy}>
+                <h2>We couldn’t load your cart</h2>
+                <p>{cartLoadError}</p>
+
+                <div className={css.errorActions}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    disabled={isLoading || isRefreshing}
+                    onClick={() => void retryCart().catch(() => undefined)}
+                  >
+                    Try again
+                  </Button>
+
+                  <LinkButton href={ROUTES.PRODUCTS_CATALOG} size="sm">
+                    Browse products
+                  </LinkButton>
+                </div>
+              </div>
+            </div>
+          ) : error ? (
             <div className={css.notice} role="alert">
-              <p>{visibleError}</p>
-              {cartLoadError ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={isLoading || isRefreshing}
-                  onClick={() => void retryCart().catch(() => undefined)}
-                >
-                  Retry loading cart
-                </Button>
-              ) : null}
+              <p>{error}</p>
             </div>
           ) : null}
 
@@ -259,7 +281,7 @@ function CartPageContent() {
             </div>
           ) : null}
 
-          {visibleCart.items.length > 0 ? (
+          {!cartLoadError && visibleCart.items.length > 0 ? (
             <ul className={css.groupList}>
               {groupedCartItems.map((group) => (
                 <li className={css.order} key={group.pharmacyId}>

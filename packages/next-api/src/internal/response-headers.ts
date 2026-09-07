@@ -2,9 +2,11 @@ import { REQUEST_ID_HEADER_NAME } from './bff-contract';
 
 //===================================================================
 
+// Content-Length is intentionally not forwarded. The upstream body can be
+// decoded/re-encoded by fetch, Next.js, or Vercel before it reaches the
+// browser, so the upstream byte count is not a safe downstream framing value.
 const FORWARDED_RESPONSE_HEADERS = [
   'content-type',
-  'content-length',
   'retry-after',
   'www-authenticate',
   'etag',

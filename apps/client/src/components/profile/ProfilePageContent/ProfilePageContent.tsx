@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { Building2, Heart, KeyRound, MonitorSmartphone } from 'lucide-react';
+
+import {
+  Building2,
+  CircleAlert,
+  Heart,
+  KeyRound,
+  MonitorSmartphone,
+} from 'lucide-react';
 
 import {
   DELIVERY_METHODS,
@@ -297,6 +304,7 @@ function AuthenticatedProfilePageContent({
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
   const [sessionsError, setSessionsError] = useState('');
+  const [sessionsReloadKey, setSessionsReloadKey] = useState(0);
 
   const [favoriteProducts, setFavoriteProducts] = useState<
     ProductCardSummary[]
@@ -514,6 +522,7 @@ function AuthenticatedProfilePageContent({
   );
 
   const visibleFavoriteProducts = canUseAuthFeatures ? favoriteProducts : [];
+
   const visibleFavoritePharmacies = canUseAuthFeatures
     ? favoritePharmacies
     : [];
@@ -522,6 +531,7 @@ function AuthenticatedProfilePageContent({
     effectiveFavoriteProductsCount - visibleFavoriteProducts.length,
     0
   );
+
   const hiddenFavoritePharmaciesCount = Math.max(
     effectiveFavoritePharmaciesCount - visibleFavoritePharmacies.length,
     0
@@ -658,6 +668,7 @@ function AuthenticatedProfilePageContent({
         },
         { signal: productsController.signal }
       ),
+
       getFavoritePharmacies(
         {
           page: 1,
@@ -783,7 +794,7 @@ function AuthenticatedProfilePageContent({
     return () => {
       controller.abort();
     };
-  }, [activeTab, canUseAuthFeatures]);
+  }, [activeTab, canUseAuthFeatures, sessionsReloadKey]);
 
   const handleTabChange = (nextTab: ProfileTab) => {
     setActiveTab(nextTab);
@@ -1046,6 +1057,7 @@ function AuthenticatedProfilePageContent({
                   <dt>Role</dt>
                   <dd>{USER_ROLE_LABELS[user.role]}</dd>
                 </div>
+
                 <div>
                   <dt>Status</dt>
                   <dd>{USER_STATUS_PRESENTATION[user.status].label}</dd>
@@ -1244,9 +1256,26 @@ function AuthenticatedProfilePageContent({
                     {isSessionsLoading ? (
                       <LoadingSpinner label="Loading active sessions..." />
                     ) : sessionsError ? (
-                      <p className={css.error} role="alert">
-                        {sessionsError}
-                      </p>
+                      <div className={css.loadErrorState} role="alert">
+                        <span className={css.loadErrorIcon} aria-hidden="true">
+                          <CircleAlert size={28} />
+                        </span>
+                        <div className={css.loadErrorCopy}>
+                          <h3>Active sessions could not be loaded</h3>
+                          <p>{sessionsError}</p>
+
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() =>
+                              setSessionsReloadKey((current) => current + 1)
+                            }
+                          >
+                            Try again
+                          </Button>
+                        </div>
+                      </div>
                     ) : (
                       <ul className={css.sessionsList}>
                         {sessions.map((session) => (
@@ -1484,20 +1513,34 @@ function AuthenticatedProfilePageContent({
                       </p>
                     </div>
 
-                    <CountLabel
-                      shown={visibleFavoriteProducts.length}
-                      total={effectiveFavoriteProductsCount}
-                      label="items"
-                    />
+                    {!favoriteProductsError ? (
+                      <CountLabel
+                        shown={visibleFavoriteProducts.length}
+                        total={effectiveFavoriteProductsCount}
+                        label="items"
+                      />
+                    ) : null}
                   </div>
 
                   {favoriteProductsError ? (
-                    <p className={css.error} role="alert">
-                      {favoriteProductsError}
-                    </p>
-                  ) : null}
-
-                  {isFavoriteProductsLoading ? (
+                    <div className={css.loadErrorState} role="alert">
+                      <span className={css.loadErrorIcon} aria-hidden="true">
+                        <CircleAlert size={28} />
+                      </span>
+                      <div className={css.loadErrorCopy}>
+                        <h3>Favorite products could not be loaded</h3>
+                        <p>{favoriteProductsError}</p>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => void loadFavoriteProducts(1)}
+                        >
+                          Try again
+                        </Button>
+                      </div>
+                    </div>
+                  ) : isFavoriteProductsLoading ? (
                     <LoadingSpinner label="Loading favorite products..." />
                   ) : visibleFavoriteProducts.length > 0 ? (
                     <>
@@ -1575,20 +1618,34 @@ function AuthenticatedProfilePageContent({
                       </p>
                     </div>
 
-                    <CountLabel
-                      shown={visibleFavoritePharmacies.length}
-                      total={effectiveFavoritePharmaciesCount}
-                      label="pharmacies"
-                    />
+                    {!favoritePharmaciesError ? (
+                      <CountLabel
+                        shown={visibleFavoritePharmacies.length}
+                        total={effectiveFavoritePharmaciesCount}
+                        label="pharmacies"
+                      />
+                    ) : null}
                   </div>
 
                   {favoritePharmaciesError ? (
-                    <p className={css.error} role="alert">
-                      {favoritePharmaciesError}
-                    </p>
-                  ) : null}
-
-                  {isFavoritePharmaciesLoading ? (
+                    <div className={css.loadErrorState} role="alert">
+                      <span className={css.loadErrorIcon} aria-hidden="true">
+                        <CircleAlert size={28} />
+                      </span>
+                      <div className={css.loadErrorCopy}>
+                        <h3>Favorite pharmacies could not be loaded</h3>
+                        <p>{favoritePharmaciesError}</p>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => void loadFavoritePharmacies(1)}
+                        >
+                          Try again
+                        </Button>
+                      </div>
+                    </div>
+                  ) : isFavoritePharmaciesLoading ? (
                     <LoadingSpinner label="Loading favorite pharmacies..." />
                   ) : visibleFavoritePharmacies.length > 0 ? (
                     <>

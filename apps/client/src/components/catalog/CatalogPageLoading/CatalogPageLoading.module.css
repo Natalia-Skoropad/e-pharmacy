@@ -1,0 +1,103 @@
+.page {
+  min-height: 100%;
+  background-color: var(--color-background);
+}
+
+.section {
+  padding-block: 20px 60px;
+}
+
+.breadcrumbs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.line,
+.lineShort,
+.title,
+.filters span {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-background-soft);
+  border-radius: var(--radius-md);
+}
+
+.line::after,
+.lineShort::after,
+.title::after,
+.filters span::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-shimmer-highlight) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: catalog-page-shimmer 1.35s ease-in-out infinite;
+}
+
+.line {
+  width: 54px;
+  height: 14px;
+}
+
+.lineShort {
+  width: 88px;
+  height: 14px;
+}
+
+.title {
+  width: min(420px, 76%);
+  height: 42px;
+  margin-bottom: 28px;
+}
+
+.filters {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.filters span {
+  min-height: 48px;
+}
+
+@keyframes catalog-page-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .section {
+    padding-block: 20px 80px;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .section {
+    padding-block: 20px 100px;
+  }
+
+  .filters {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line::after,
+  .lineShort::after,
+  .title::after,
+  .filters span::after {
+    animation: none;
+  }
+}

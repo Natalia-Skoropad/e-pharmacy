@@ -700,7 +700,7 @@ The footer year remains server-rendered at build/request time; the application d
 
 ### Accessibility policy
 
-The shell provides a first-focusable “Skip to main content” link targeting `#main-content`. Informational dialogs use one dismiss action. Review ratings use native radio inputs with grouped validation semantics. Unknown stock is never announced as zero, favorite mutations expose pending state, and app-level error/not-found pages explicitly opt into a main landmark while embedded status states keep the shared layout non-main to avoid nested landmarks.
+The shared shell keeps header, content, footer, and scroll-to-top behavior consistent across pages. Informational dialogs use one dismiss action. Review ratings use native radio inputs with grouped validation semantics. Unknown stock is never announced as zero, favorite mutations expose pending state, and app-level error/not-found pages explicitly opt into a main landmark while embedded status states keep the shared layout non-main to avoid nested landmarks.
 
 ### Public content ownership
 

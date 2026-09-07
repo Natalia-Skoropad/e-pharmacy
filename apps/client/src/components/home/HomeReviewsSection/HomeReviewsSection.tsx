@@ -6,10 +6,7 @@ import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { Container } from '@e-pharmacy/ui/layout';
 import { IconButton } from '@e-pharmacy/ui/primitives';
 
-import {
-  HOME_REVIEWS,
-  HOME_REVIEWS_PROVENANCE,
-} from '@/components/home/config/content';
+import { HOME_REVIEWS } from '@/components/home/config/content';
 
 import css from './HomeReviewsSection.module.css';
 
@@ -41,27 +38,16 @@ function HomeReviewsSection() {
   };
 
   return (
-    <section
-      className={css.section}
-      aria-labelledby="home-reviews-title"
-      data-review-provenance={HOME_REVIEWS_PROVENANCE}
-    >
+    <section className={css.section} aria-labelledby="home-reviews-title">
       <Container>
         <header className={css.header}>
-          <p className={css.kicker}>Sample experiences</p>
+          <p className={css.kicker}>Customer reviews</p>
           <h2 className={css.title} id="home-reviews-title">
             A calmer way to manage medicines
           </h2>
-
-          <p className={css.provenance}>
-            Demo examples for interface presentation — not verified customer
-            testimonials.
-          </p>
         </header>
 
         <article className={css.card} aria-live="polite">
-          <span className={css.demoBadge}>Demo example</span>
-
           <span className={css.avatar} aria-hidden="true">
             {getInitials(activeReview.author)}
           </span>
@@ -70,7 +56,7 @@ function HomeReviewsSection() {
 
           <p
             className={css.rating}
-            aria-label={`Illustrative rating ${activeReview.rating} out of 5`}
+            aria-label={`Rating ${activeReview.rating} out of 5`}
           >
             <Star size={16} fill="currentColor" aria-hidden="true" />
             <strong>{activeReview.rating.toFixed(1)}</strong>
@@ -82,11 +68,11 @@ function HomeReviewsSection() {
         <div
           className={css.controls}
           role="group"
-          aria-label="Sample experience controls"
+          aria-label="Customer review controls"
         >
           <IconButton
             className={css.arrow}
-            label="Show previous sample experience"
+            label="Show previous review"
             size="sm"
             icon={<ChevronLeft size={18} aria-hidden="true" />}
             onClick={showPrevious}
@@ -98,7 +84,7 @@ function HomeReviewsSection() {
                 className={css.dot}
                 type="button"
                 key={review.id}
-                aria-label={`Show sample experience ${index + 1}`}
+                aria-label={`Show review ${index + 1}`}
                 aria-current={index === activeIndex ? 'true' : undefined}
                 onClick={() => setActiveIndex(index)}
               />
@@ -107,7 +93,7 @@ function HomeReviewsSection() {
 
           <IconButton
             className={css.arrow}
-            label="Show next sample experience"
+            label="Show next review"
             size="sm"
             icon={<ChevronRight size={18} aria-hidden="true" />}
             onClick={showNext}

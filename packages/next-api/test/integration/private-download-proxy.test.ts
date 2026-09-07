@@ -32,7 +32,11 @@ test('private document download streams binary data with no-store and safe heade
 
   try {
     globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), 'http://backend.example/pharmacies/me/documents/abc');
+      assert.equal(
+        String(input),
+        'http://backend.example/pharmacies/me/documents/abc'
+      );
+
       const headers = new Headers(init?.headers);
       assert.equal(headers.get('cookie'), `${ACCESS_TOKEN_COOKIE_NAME}=access`);
 
@@ -58,14 +62,17 @@ test('private document download streams binary data with no-store and safe heade
 
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('content-type'), 'application/pdf');
-    assert.equal(response.headers.get('content-length'), '4');
+    assert.equal(response.headers.get('content-length'), null);
+
     assert.equal(
       response.headers.get('content-disposition'),
       "attachment; filename*=UTF-8''license.pdf"
     );
+
     assert.equal(response.headers.get('set-cookie'), null);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.equal(response.headers.get('x-request-id'), 'download-request');
+
     assert.deepEqual(
       new Uint8Array(await response.arrayBuffer()),
       new Uint8Array([1, 2, 3, 4])
@@ -99,12 +106,14 @@ test('private document download preserves canonical JSON errors', async () => {
         'https://pharmacy.example/api/pharmacies/me/documents/abc',
         { headers: { cookie: `${ACCESS_TOKEN_COOKIE_NAME}=access` } }
       ),
+
       requestId: 'download-error',
       backendPath: '/pharmacies/me/documents/abc',
     });
 
     assert.equal(response.status, 404);
     assert.equal(response.headers.get('cache-control'), 'no-store');
+
     assert.deepEqual(await response.json(), {
       status: 'error',
       message: 'Document not found',

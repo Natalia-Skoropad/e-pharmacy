@@ -1,5 +1,7 @@
 'use client';
 
+import { CircleAlert, Landmark, WalletCards } from 'lucide-react';
+
 import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
 
 import type { PharmacyBankDetailsState } from './pharmacy-bank-details-state';
@@ -24,31 +26,61 @@ export function PharmacyBankDetailsPanel({
   return (
     <div className={css.panel}>
       <div className={css.header}>
-        <h2 className={css.title}>Bank details</h2>
+        <span className={css.headerIcon} aria-hidden="true">
+          <Landmark size={22} />
+        </span>
+        <div>
+          <h2 className={css.title}>Bank details</h2>
+          <p className={css.subtitle}>
+            Payment details provided by the pharmacy for bank transfer orders.
+          </p>
+        </div>
       </div>
 
       {state.status === 'idle' || state.status === 'loading' ? (
-        <p className={css.notice} role="status">
-          Loading bank details...
-        </p>
+        <div className={css.stateCard} role="status">
+          <span className={css.stateIcon} aria-hidden="true">
+            <WalletCards size={28} />
+          </span>
+          <div>
+            <h3>Loading bank details</h3>
+            <p>Please wait while the pharmacy payment information is loaded.</p>
+          </div>
+        </div>
       ) : null}
 
       {state.status === 'error' ? (
-        <div className={css.errorState}>
-          <p className={css.notice}>
-            Bank details are temporarily unavailable. Please try again.
-          </p>
-
-          <Button type="button" variant="secondary" onClick={onRetry}>
-            Retry
-          </Button>
+        <div className={css.stateCard} role="alert">
+          <span className={css.errorIcon} aria-hidden="true">
+            <CircleAlert size={28} />
+          </span>
+          <div className={css.stateCopy}>
+            <h3>Bank details could not be loaded</h3>
+            <p>
+              The payment information is temporarily unavailable. Try loading
+              it again in a moment.
+            </p>
+            <Button type="button" variant="secondary" onClick={onRetry}>
+              Retry
+            </Button>
+          </div>
         </div>
       ) : null}
 
       {state.status === 'empty' ? (
-        <p className={css.notice}>
-          Bank details are not available for this pharmacy yet.
-        </p>
+        <div className={css.stateCard}>
+          <span className={css.stateIcon} aria-hidden="true">
+            <WalletCards size={28} />
+          </span>
+          <div>
+            <h3>Bank details are not available yet</h3>
+            <p>
+              This pharmacy has not published bank transfer details. You can
+              still review its contacts and available products in the other
+              tabs.
+            </p>
+          </div>
+        </div>
       ) : null}
 
       {state.status === 'success' ? (

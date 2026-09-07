@@ -1,0 +1,153 @@
+.wrapper {
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.block {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-background-soft);
+  border-radius: var(--radius-md);
+}
+
+.block::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-shimmer-highlight) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: catalog-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.image {
+  width: 100%;
+  min-height: 210px;
+  aspect-ratio: 16 / 10;
+  border-radius: 0;
+  background-color: var(--color-accent-light);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.metaRow,
+.footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.metaRow {
+  margin-bottom: 16px;
+}
+
+.meta {
+  width: 86px;
+  height: 14px;
+}
+
+.rating {
+  width: 104px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+}
+
+.title {
+  width: 82%;
+  height: 22px;
+}
+
+.titleShort {
+  width: 58%;
+  height: 22px;
+  margin-top: 8px;
+}
+
+.summary {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.summaryLine,
+.summaryLineShort {
+  height: 16px;
+}
+
+.summaryLine {
+  width: 100%;
+}
+
+.summaryLineShort {
+  width: 74%;
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 28px;
+}
+
+.footerValue {
+  width: 96px;
+  height: 22px;
+}
+
+.footerAction {
+  width: 118px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+}
+
+@keyframes catalog-skeleton-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .content {
+    padding: 24px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block::after {
+    animation: none;
+  }
+}
