@@ -128,6 +128,7 @@ function ProductCatalogPageContent({
           }
           unavailableMessage="Products are loading."
           recoveryLabel="products"
+          skeletonVariant="product"
         >
           <ProductsList
             products={products}

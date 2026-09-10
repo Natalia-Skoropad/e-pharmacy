@@ -85,7 +85,7 @@ const authProvider = await read(
   'apps/client/src/providers/AuthProvider/AuthProvider.tsx'
 );
 
-assert.match(authProvider, /bootstrapMode="always"/);
+assert.match(authProvider, /bootstrapMode="session-hint"/);
 assert.match(authProvider, /ClientSessionScopeProvider/);
 
 const favoritesProvider = await read(

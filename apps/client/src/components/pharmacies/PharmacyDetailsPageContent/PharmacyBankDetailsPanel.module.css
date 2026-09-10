@@ -16,6 +16,7 @@
 
 .headerIcon,
 .stateIcon,
+.loadingIcon,
 .errorIcon {
   display: inline-flex;
   align-items: center;
@@ -62,6 +63,7 @@
 }
 
 .stateIcon,
+.loadingIcon,
 .errorIcon {
   width: 52px;
   height: 52px;
@@ -75,6 +77,21 @@
 .errorIcon {
   color: var(--color-error);
   background-color: var(--color-error-soft);
+}
+
+.loadingIcon {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.loadingIcon svg {
+  animation: bank-details-spin 0.8s linear infinite;
+}
+
+@keyframes bank-details-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .stateCard h3 {
@@ -137,6 +154,7 @@
   font-weight: var(--fw-medium);
   color: var(--color-text-primary);
   overflow-wrap: anywhere;
+  margin: 0;
 }
 
 .list dd > span,
@@ -169,5 +187,11 @@
   .list dd {
     justify-content: flex-end;
     text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingIcon svg {
+    animation: none;
   }
 }

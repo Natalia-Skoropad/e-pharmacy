@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 
+import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
+
 import CatalogAutoRecovery from '@/components/catalog/CatalogAutoRecovery/CatalogAutoRecovery';
+import type { CatalogCardSkeletonVariant } from '@/components/catalog/CatalogCardSkeleton/CatalogCardSkeleton';
 
 import css from './CatalogResourceState.module.css';
-
-import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
 
 //===================================================================
 
@@ -14,6 +15,7 @@ export type CatalogResourceStateProps = Readonly<{
   emptyMessage: string;
   unavailableMessage: string;
   recoveryLabel?: string;
+  skeletonVariant?: CatalogCardSkeletonVariant;
   children: ReactNode;
 }>;
 
@@ -25,12 +27,13 @@ function CatalogResourceStateView({
   emptyMessage,
   unavailableMessage,
   recoveryLabel = 'catalog results',
+  skeletonVariant = 'product',
   children,
 }: CatalogResourceStateProps) {
   if (state.status === 'unavailable') {
     return (
       <div className={css.recovery}>
-        <CatalogAutoRecovery label={recoveryLabel} />
+        <CatalogAutoRecovery label={recoveryLabel} variant={skeletonVariant} />
         <p className="visually-hidden">{unavailableMessage}</p>
       </div>
     );

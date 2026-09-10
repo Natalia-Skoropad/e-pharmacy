@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, Landmark, WalletCards } from 'lucide-react';
+import { CircleAlert, Landmark, LoaderCircle, WalletCards } from 'lucide-react';
 
 import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
 
@@ -39,8 +39,8 @@ export function PharmacyBankDetailsPanel({
 
       {state.status === 'idle' || state.status === 'loading' ? (
         <div className={css.stateCard} role="status">
-          <span className={css.stateIcon} aria-hidden="true">
-            <WalletCards size={28} />
+          <span className={css.loadingIcon} aria-hidden="true">
+            <LoaderCircle size={28} />
           </span>
           <div>
             <h3>Loading bank details</h3>
@@ -57,8 +57,8 @@ export function PharmacyBankDetailsPanel({
           <div className={css.stateCopy}>
             <h3>Bank details could not be loaded</h3>
             <p>
-              The payment information is temporarily unavailable. Try loading
-              it again in a moment.
+              The payment information is temporarily unavailable. Try loading it
+              again in a moment.
             </p>
             <Button type="button" variant="secondary" onClick={onRetry}>
               Retry

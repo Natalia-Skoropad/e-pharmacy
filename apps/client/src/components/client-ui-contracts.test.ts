@@ -118,12 +118,12 @@ test('freezes the client reference shell and server-rendered home baseline', asy
 
   assert.match(
     homePage,
-    /<Suspense fallback=\{<FeaturedSectionFallback label="pharmacies" \/>\}>[\s\S]*?<FeaturedPharmaciesSection \/>[\s\S]*?<\/Suspense>/
+    /<Suspense[\s\S]*?<FeaturedSectionFallback label="pharmacies" variant="pharmacy" \/>[\s\S]*?<FeaturedPharmaciesSection \/>[\s\S]*?<\/Suspense>/
   );
 
   assert.match(
     homePage,
-    /<Suspense fallback=\{<FeaturedSectionFallback label="products" \/>\}>[\s\S]*?<FeaturedProductsSection \/>[\s\S]*?<\/Suspense>/
+    /<Suspense[\s\S]*?<FeaturedSectionFallback label="products" variant="product" \/>[\s\S]*?<FeaturedProductsSection \/>[\s\S]*?<\/Suspense>/
   );
 
   assert.match(loadingPage, /return <PageLoader \/>/);
@@ -175,8 +175,13 @@ test('catalog routes use six-card skeleton loading states with reduced-motion su
   assert.match(skeletonStyles, /min-height:\s*210px/);
   assert.match(skeletonStyles, /prefers-reduced-motion:\s*reduce/);
   assert.match(catalogLoading, /<CatalogCardSkeleton count=\{6\}/);
-  assert.match(productLoading, /label="Loading products"/);
-  assert.match(pharmacyLoading, /label="Loading pharmacies"/);
+  assert.match(catalogLoading, /filterCount = variant === 'product' \? 5 : 3/);
+  assert.match(productLoading, /label="Loading products" variant="product"/);
+
+  assert.match(
+    pharmacyLoading,
+    /label="Loading pharmacies" variant="pharmacy"/
+  );
 });
 
 //===================================================================
@@ -317,21 +322,22 @@ test('preserves all home blocks while keeping stats and customer reviews stable'
     /AggregateRating|schema\.org\/Review/
   );
 
-  assert.match(recovery, /useRouter\(\)/);
-  assert.match(recovery, /router\.refresh\(\)/);
-  assert.match(recovery, /This section is temporarily unavailable/);
   assert.match(recovery, /<CatalogCardSkeleton/);
   assert.match(recovery, /count=\{6\}/);
-  assert.doesNotMatch(recovery, /useEffect|location\.reload|setTimeout/);
 
-  assert.match(
-    homePage,
-    /FeaturedPharmaciesSection[\s\S]*?<CatalogAutoRecovery label="pharmacies" compact \/>/
+  assert.doesNotMatch(
+    recovery,
+    /This section is temporarily unavailable|Try again|useRouter|router\.refresh/
   );
 
   assert.match(
     homePage,
-    /FeaturedProductsSection[\s\S]*?<CatalogAutoRecovery label="products" compact \/>/
+    /FeaturedPharmaciesSection[\s\S]*?<CatalogAutoRecovery label="pharmacies" variant="pharmacy" compact \/>/
+  );
+
+  assert.match(
+    homePage,
+    /FeaturedProductsSection[\s\S]*?<CatalogAutoRecovery label="products" variant="product" compact \/>/
   );
 });
 

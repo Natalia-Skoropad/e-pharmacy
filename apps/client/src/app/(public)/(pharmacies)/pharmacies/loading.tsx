@@ -3,5 +3,5 @@ import CatalogPageLoading from '@/components/catalog/CatalogPageLoading/CatalogP
 //===================================================================
 
 export default function PharmaciesLoading() {
-  return <CatalogPageLoading label="Loading pharmacies" />;
+  return <CatalogPageLoading label="Loading pharmacies" variant="pharmacy" />;
 }

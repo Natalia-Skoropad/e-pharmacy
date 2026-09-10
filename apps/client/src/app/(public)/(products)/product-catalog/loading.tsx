@@ -3,5 +3,5 @@ import CatalogPageLoading from '@/components/catalog/CatalogPageLoading/CatalogP
 //===================================================================
 
 export default function ProductCatalogLoading() {
-  return <CatalogPageLoading label="Loading products" />;
+  return <CatalogPageLoading label="Loading products" variant="product" />;
 }

@@ -87,6 +87,7 @@ function PharmaciesPageContent({
           }
           unavailableMessage="Pharmacies are loading."
           recoveryLabel="pharmacies"
+          skeletonVariant="pharmacy"
         >
           <PharmaciesList pharmacies={pharmacies} />
         </CatalogResourceStateView>

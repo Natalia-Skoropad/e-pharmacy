@@ -37,7 +37,7 @@ type AuthProviderProps = {
 
 function AuthProvider({ children }: AuthProviderProps) {
   return (
-    <AuthProviderCore {...clientAuthServices} bootstrapMode="always">
+    <AuthProviderCore {...clientAuthServices} bootstrapMode="session-hint">
       <ClientSessionScopeProvider>{children}</ClientSessionScopeProvider>
     </AuthProviderCore>
   );

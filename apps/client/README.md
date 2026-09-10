@@ -539,7 +539,7 @@ Main API areas used by the client:
 - Remote image patterns in `next.config.ts` are retained only for compatibility with persisted absolute image URLs; current seed product/pharmacy assets use same-origin `/images/seed/**` paths. Remove allowlisted hosts only after production data confirms they are unused.
 - Seed product and pharmacy images are client-owned runtime assets under `public/images/seed/**`; backend seed DTOs return same-origin relative paths for this portfolio deployment.
 - CSS Modules keep component styling scoped.
-- `AuthProvider` uses `bootstrapMode="always"`; the client-readable marker is not a source of truth. A shared client session generation scopes cart, favorites, and review drafts across logout and relogin transitions.
+- `AuthProvider` uses `bootstrapMode="session-hint"`; the client-readable marker only avoids an unnecessary `/api/auth/me` bootstrap for visitors without a server-issued auth hint and is never an authentication source of truth. A shared client session generation scopes cart, favorites, and review drafts across logout and relogin transitions.
 
 ## Environment Variables
 

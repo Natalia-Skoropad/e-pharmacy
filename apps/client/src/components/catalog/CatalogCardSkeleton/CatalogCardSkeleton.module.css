@@ -55,7 +55,8 @@
 }
 
 .metaRow,
-.footer {
+.footer,
+.summaryRow {
   display: flex;
   gap: 12px;
   align-items: center;
@@ -63,63 +64,65 @@
 }
 
 .metaRow {
-  margin-bottom: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
 }
 
 .meta {
   width: 86px;
-  height: 14px;
+  height: 16px;
 }
 
 .rating {
   width: 104px;
-  height: 24px;
+  height: 22px;
   border-radius: var(--radius-pill);
 }
 
 .title {
   width: 82%;
-  height: 22px;
+  height: 24px;
 }
 
 .titleShort {
   width: 58%;
-  height: 22px;
-  margin-top: 8px;
+  height: 24px;
+  margin-top: 6px;
 }
 
 .summary {
   display: grid;
-  gap: 12px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.summaryLine,
-.summaryLineShort {
+.summaryLabel {
+  width: 78px;
   height: 16px;
 }
 
-.summaryLine {
-  width: 100%;
+.summaryValue {
+  width: 132px;
+  height: 16px;
 }
 
-.summaryLineShort {
-  width: 74%;
+.summaryValueShort {
+  width: 92px;
 }
 
 .footer {
   margin-top: auto;
-  padding-top: 28px;
+  padding-top: 24px;
 }
 
 .footerValue {
   width: 96px;
-  height: 22px;
+  height: 24px;
 }
 
-.footerAction {
+.footerButton {
   width: 118px;
-  height: 36px;
+  height: 40px;
   border-radius: var(--radius-pill);
 }
 

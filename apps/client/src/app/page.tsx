@@ -90,12 +90,19 @@ async function getFeaturedProducts(): Promise<
 
 //===================================================================
 
-function FeaturedSectionFallback({ label }: { label: string }) {
+function FeaturedSectionFallback({
+  label,
+  variant,
+}: {
+  label: string;
+  variant: 'product' | 'pharmacy';
+}) {
   return (
     <CatalogCardSkeleton
       className={css.previewSkeleton}
       count={HOME_PREVIEW_LIMIT}
       label={`Loading ${label}`}
+      variant={variant}
     />
   );
 }
@@ -119,7 +126,7 @@ async function FeaturedPharmaciesSection() {
           ))}
         </div>
       ) : pharmaciesResult.hasError ? (
-        <CatalogAutoRecovery label="pharmacies" compact />
+        <CatalogAutoRecovery label="pharmacies" variant="pharmacy" compact />
       ) : (
         <p className={css.sectionEmpty}>No pharmacies are available yet.</p>
       )}
@@ -142,7 +149,7 @@ async function FeaturedProductsSection() {
           ))}
         </div>
       ) : productsResult.hasError ? (
-        <CatalogAutoRecovery label="products" compact />
+        <CatalogAutoRecovery label="products" variant="product" compact />
       ) : (
         <p className={css.sectionEmpty}>No products are available yet.</p>
       )}
@@ -231,7 +238,11 @@ async function HomePage() {
             </p>
           </div>
 
-          <Suspense fallback={<FeaturedSectionFallback label="pharmacies" />}>
+          <Suspense
+            fallback={
+              <FeaturedSectionFallback label="pharmacies" variant="pharmacy" />
+            }
+          >
             <FeaturedPharmaciesSection />
           </Suspense>
 
@@ -356,7 +367,11 @@ async function HomePage() {
             </p>
           </div>
 
-          <Suspense fallback={<FeaturedSectionFallback label="products" />}>
+          <Suspense
+            fallback={
+              <FeaturedSectionFallback label="products" variant="product" />
+            }
+          >
             <FeaturedProductsSection />
           </Suspense>
 
