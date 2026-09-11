@@ -13,10 +13,13 @@ export const pharmacyApiRoutes = {
   products: {
     list: '/api/products',
     details: (productId: string) => `/api/products/${segment(productId)}`,
+
     myPharmacy: (productId: string) =>
       `/api/products/${segment(productId)}/my-pharmacy`,
+
     stockMovements: (productId: string) =>
       `/api/products/${segment(productId)}/stock-movements`,
+
     reviews: (productId: string) =>
       `/api/products/${segment(productId)}/reviews`,
   },
@@ -61,12 +64,19 @@ export const pharmacyApiRoutes = {
   },
 
   pharmacies: {
+    checkoutDetails: (pharmacyId: string) =>
+      `/api/pharmacies/${segment(pharmacyId)}/checkout-details`,
+
+    mySummary: '/api/pharmacies/me/summary',
     myProfile: '/api/pharmacies/me/profile',
     myDocumentUpload: '/api/pharmacies/me/documents',
+
     myDocument: (documentId: string) =>
       `/api/pharmacies/me/documents/${segment(documentId)}`,
+
     sendMyProfileForVerification:
       '/api/pharmacies/me/profile/send-for-verification',
+
     submitMyProfileForModeration:
       '/api/pharmacies/me/profile/moderation-submission',
   },

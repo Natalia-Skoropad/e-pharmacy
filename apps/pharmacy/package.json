@@ -9,7 +9,8 @@
     "start": "next start --port 3002",
     "lint": "eslint .",
     "type-check": "next typegen && tsc --noEmit",
-    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src"
+    "test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.test.ts",
+    "test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.react.test.tsx"
   },
   "dependencies": {
     "@e-pharmacy/api-client": "workspace:*",

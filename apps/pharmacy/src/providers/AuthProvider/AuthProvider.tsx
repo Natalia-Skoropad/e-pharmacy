@@ -7,7 +7,11 @@ import {
   type AuthProviderServices,
 } from '@e-pharmacy/auth/react';
 
-import { getCurrentUser, logoutAllUser, logoutUser } from '@/lib/api/browser';
+import {
+  getCurrentUser,
+  logoutAllUser,
+  logoutUser,
+} from '@/lib/api/browser/auth.api';
 
 //===================================================================
 

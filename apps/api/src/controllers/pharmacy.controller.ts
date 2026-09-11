@@ -22,6 +22,7 @@ import {
   createPharmacyReviewService,
   getFavoritePharmacyIdsService,
   getFavoritePharmaciesService,
+  getCurrentPharmacySummaryService,
   getMyPharmacyProfileService,
   getPendingPharmacyReviewsService,
   getPharmaciesService,
@@ -90,6 +91,16 @@ export async function getMyPharmacyDocument(
     `attachment; filename*=UTF-8''${encodeContentDispositionFilename(document.name)}`
   );
   res.status(HTTP_STATUS.OK).send(content);
+}
+
+//===============================================================
+
+export async function getCurrentPharmacySummary(
+  req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getCurrentPharmacySummaryService(req.user?.id ?? '');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================

@@ -14,6 +14,7 @@ export const backendRoutes = {
 
   pharmacies: {
     list: '/pharmacies',
+    mySummary: '/pharmacies/me/summary',
     myProfile: '/pharmacies/me/profile',
     myDocumentUpload: '/pharmacies/me/documents',
 

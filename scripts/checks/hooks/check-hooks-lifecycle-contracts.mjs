@@ -333,33 +333,65 @@ for (const requiredBehavior of [
 }
 
 //===================================================================
-// One pharmacy-profile request owner.
+// Pharmacy summary/profile request ownership.
 
 const pharmacySources = sourcesByArea.get('pharmacy');
-const directProfileConsumers = pharmacySources
+
+const currentSummaryConsumers = pharmacySources
+  .filter(({ source }) => /\bgetCurrentPharmacySummary\s*\(/.test(source))
+  .map(({ file }) => path.relative(repositoryRoot, file).replaceAll('\\', '/'));
+
+const allowedCurrentSummaryConsumers = new Set([
+  'apps/pharmacy/src/lib/api/browser/pharmacy.api.ts',
+]);
+
+for (const consumer of currentSummaryConsumers) {
+  if (!allowedCurrentSummaryConsumers.has(consumer)) {
+    failures.push(
+      `${consumer}: current pharmacy summary must be loaded through PharmacyProfileProvider.`
+    );
+  }
+}
+
+const pharmacyProfileProvider = await readRepositoryFile(
+  'apps/pharmacy/src/providers/PharmacyProfileProvider/PharmacyProfileProvider.tsx'
+);
+
+for (const contract of [
+  'getCurrentPharmacySummary',
+  'loadSummary={getCurrentPharmacySummary}',
+]) {
+  if (!pharmacyProfileProvider.includes(contract)) {
+    failures.push(
+      `PharmacyProfileProvider must own the current pharmacy summary request: ${contract}.`
+    );
+  }
+}
+
+const fullProfileConsumers = pharmacySources
   .filter(({ source }) => /\bgetMyPharmacyProfile\s*\(/.test(source))
   .map(({ file }) => path.relative(repositoryRoot, file).replaceAll('\\', '/'));
 
-const allowedProfileConsumers = new Set([
+const allowedFullProfileConsumers = new Set([
   'apps/pharmacy/src/lib/api/browser/pharmacy.api.ts',
-  'apps/pharmacy/src/providers/PharmacyProfileProvider/PharmacyProfileProvider.tsx',
+  'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx',
 ]);
 
-for (const consumer of directProfileConsumers) {
-  if (!allowedProfileConsumers.has(consumer)) {
+for (const consumer of fullProfileConsumers) {
+  if (!allowedFullProfileConsumers.has(consumer)) {
     failures.push(
-      `${consumer}: pharmacy profile must be loaded through PharmacyProfileProvider.`
+      `${consumer}: full pharmacy profile must be loaded only by the profile feature.`
     );
   }
 }
 
 if (
-  !directProfileConsumers.includes(
-    'apps/pharmacy/src/providers/PharmacyProfileProvider/PharmacyProfileProvider.tsx'
+  !fullProfileConsumers.includes(
+    'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   )
 ) {
   failures.push(
-    'PharmacyProfileProvider must own the pharmacy profile request.'
+    'The pharmacy profile feature must own the full profile request.'
   );
 }
 

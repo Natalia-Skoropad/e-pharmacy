@@ -15,9 +15,6 @@ import type {
   CartResponse,
 } from '@e-pharmacy/types/cart';
 
-// Kept backend/config-aligned by check-config-contracts.mjs; api-client must not depend on config.
-const CART_ITEM_MAX_QUANTITY = 99;
-
 import type {
   CheckoutOrderResponse,
   ClientOrder,
@@ -28,6 +25,8 @@ import type {
 
 import type {
   PharmaciesResponse,
+  CurrentPharmacySummary,
+  CurrentPharmacySummaryResponse,
   PharmacyCardSummary,
   PharmacyCheckoutDetails,
   PharmacyCheckoutDetailsResponse,
@@ -71,6 +70,11 @@ import {
   normalizePaginatedResponse,
   requirePaginatedResponse,
 } from './pagination';
+
+//===================================================================
+
+// Kept backend/config-aligned by check-config-contracts.mjs; api-client must not depend on config.
+const CART_ITEM_MAX_QUANTITY = 99;
 
 //===================================================================
 
@@ -1962,6 +1966,100 @@ export function parsePharmacyProfileDocumentUploadResponse(
   );
   return {
     document: parsePharmacyVerificationDocument(record.document, context),
+  };
+}
+
+//===================================================================
+
+export function parseCurrentPharmacySummaryResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): CurrentPharmacySummaryResponse {
+  const record = requireRecord(
+    value,
+    'current pharmacy summary response',
+    context
+  );
+
+  const pharmacy = requireRecord(
+    record.pharmacy,
+    'current pharmacy summary',
+    context
+  );
+
+  requireFields(
+    pharmacy,
+    'current pharmacy summary',
+    {
+      name: 'string',
+      status: 'string',
+      membershipRole: 'string',
+    },
+    context
+  );
+
+  requireOptionalFields(
+    pharmacy,
+    'current pharmacy summary',
+    {
+      imageUrl: 'string',
+    },
+    context
+  );
+
+  const id = requireObjectId(
+    pharmacy,
+    'id',
+    'current pharmacy summary',
+    context
+  );
+
+  const allowedFields = new Set([
+    'id',
+    'name',
+    'status',
+    'imageUrl',
+    'membershipRole',
+  ]);
+
+  for (const field of Object.keys(pharmacy)) {
+    if (!allowedFields.has(field)) {
+      throw invalidDto(
+        `current pharmacy summary.${field} must not be exposed.`,
+        pharmacy,
+        context
+      );
+    }
+  }
+
+  if (!PHARMACY_STATUSES.has(pharmacy.status as string)) {
+    throw invalidDto(
+      'current pharmacy summary.status is invalid.',
+      pharmacy,
+      context
+    );
+  }
+
+  if (!PHARMACY_MEMBERSHIP_ROLES.has(pharmacy.membershipRole as string)) {
+    throw invalidDto(
+      'current pharmacy summary.membershipRole is invalid.',
+      pharmacy,
+      context
+    );
+  }
+
+  return {
+    pharmacy: checked<CurrentPharmacySummary>({
+      id,
+      name: pharmacy.name as string,
+      status: checked<CurrentPharmacySummary['status']>(pharmacy.status),
+      ...(pharmacy.imageUrl !== undefined
+        ? { imageUrl: pharmacy.imageUrl as string }
+        : {}),
+      membershipRole: checked<CurrentPharmacySummary['membershipRole']>(
+        pharmacy.membershipRole
+      ),
+    }),
   };
 }
 

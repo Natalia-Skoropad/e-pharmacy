@@ -10,7 +10,7 @@ async function readSource(path: string): Promise<string> {
 
 //===================================================================
 
-test('pharmacy profile has one provider-owned request source', async () => {
+test('cabinet summary is provider-owned while full profile stays feature-owned', async () => {
   const provider = await readSource(
     './providers/PharmacyProfileProvider/PharmacyProfileProvider.tsx'
   );
@@ -19,7 +19,8 @@ test('pharmacy profile has one provider-owned request source', async () => {
     './components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   );
 
-  assert.match(provider, /getMyPharmacyProfile/);
+  assert.match(provider, /getCurrentPharmacySummary/);
+  assert.doesNotMatch(provider, /getMyPharmacyProfile/);
   assert.match(provider, /identityRef/);
   assert.match(provider, /requestVersionRef/);
 
@@ -28,10 +29,9 @@ test('pharmacy profile has one provider-owned request source', async () => {
     /const syncProfile[\s\S]*?invalidatePendingRequest\(\)[\s\S]*?setSnapshot/
   );
 
-  assert.doesNotMatch(profilePage, /getMyPharmacyProfile/);
+  assert.match(profilePage, /getMyPharmacyProfile/);
   assert.match(profilePage, /usePharmacyProfile/);
   assert.match(profilePage, /pharmacy=\{profile\}/);
-  assert.doesNotMatch(profilePage, /useState<MyPharmacyProfile/);
   assert.doesNotMatch(profilePage, /setPharmacy\(/);
 });
 

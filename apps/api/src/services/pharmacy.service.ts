@@ -26,6 +26,7 @@ import type {
   EditablePharmacyBankDetails,
   PharmacyEntity,
   PharmacyCardSummaryResponseDto,
+  CurrentPharmacySummaryResponseDto,
   PharmacyFilterOptionsResponseDto,
   PharmacyPendingModeration,
   PublicPharmacyResponseDto,
@@ -220,6 +221,21 @@ function serializePublicPharmacy(
     reviewsCount: pharmacy.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(pharmacy._id)),
     updatedAt: requireISODateTime(pharmacy.updatedAt, 'pharmacy.updatedAt'),
+  };
+}
+
+//===============================================================
+
+function serializeCurrentPharmacySummary(
+  pharmacy: PharmacyDocument,
+  membershipRole: PharmacyMembershipRole
+): CurrentPharmacySummaryResponseDto {
+  return {
+    id: String(pharmacy._id),
+    name: pharmacy.name,
+    status: pharmacy.status,
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    membershipRole,
   };
 }
 
@@ -728,6 +744,24 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
       PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE
     );
   }
+}
+
+//===============================================================
+
+export async function getCurrentPharmacySummaryService(
+  userId: string
+): Promise<{ pharmacy: CurrentPharmacySummaryResponseDto }> {
+  const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
+    userId,
+    'read_profile'
+  );
+
+  return {
+    pharmacy: serializeCurrentPharmacySummary(
+      pharmacy as PharmacyDocument,
+      membershipRole
+    ),
+  };
 }
 
 //===============================================================

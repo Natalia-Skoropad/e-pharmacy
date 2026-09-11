@@ -9,6 +9,8 @@ import {
   parseActiveSessionsResponse,
   parseApiEmptyResponse,
   parseApiResponseData,
+  parseCurrentPharmacySummaryResponse,
+  parsePharmacyCheckoutDetailsResponse,
   parsePharmacyProfileDocumentUploadResponse,
   parsePharmacyProfileResponse,
   parseSendPharmacyForVerificationResponse,
@@ -25,6 +27,8 @@ import type {
 } from '@e-pharmacy/types/auth';
 
 import type {
+  CurrentPharmacySummaryResponse,
+  PharmacyCheckoutDetailsResponse,
   PharmacyDocumentUploadPayload,
   PharmacyProfileDocumentUploadResponse,
   PharmacyProfileResponse,
@@ -89,6 +93,35 @@ export async function getMyPharmacyDocument(
   });
 
   return blobToDataUrl(blob);
+}
+
+//===================================================================
+
+export async function getPharmacyCheckoutDetails(
+  pharmacyId: EntityId,
+  options?: JsonResponseRequestOptions
+): Promise<PharmacyCheckoutDetailsResponse> {
+  const path = PHARMACY_API_ROUTES.pharmacies.checkoutDetails(pharmacyId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parsePharmacyCheckoutDetailsResponse,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getCurrentPharmacySummary(
+  options?: JsonResponseRequestOptions
+): Promise<CurrentPharmacySummaryResponse> {
+  const path = PHARMACY_API_ROUTES.pharmacies.mySummary;
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseCurrentPharmacySummaryResponse,
+    { url: path, method: 'GET' }
+  );
 }
 
 //===================================================================

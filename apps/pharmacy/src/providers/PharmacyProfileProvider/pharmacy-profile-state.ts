@@ -1,10 +1,10 @@
-import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
+import type { CurrentPharmacySummary } from '@e-pharmacy/types/pharmacies';
 
 //===================================================================
 
 export type PharmacyProfileSnapshot = Readonly<{
   identity: string;
-  profile: MyPharmacyProfile | null;
+  profile: CurrentPharmacySummary | null;
   isLoading: boolean;
   error: unknown;
 }>;

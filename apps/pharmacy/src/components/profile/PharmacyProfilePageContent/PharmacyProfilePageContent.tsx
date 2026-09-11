@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { KeyRound, MonitorSmartphone } from 'lucide-react';
 
@@ -116,6 +116,7 @@ import {
   deletePharmacyNote,
   getActiveSessions,
   getMyPharmacyDocument,
+  getMyPharmacyProfile,
   getPharmacyNotes,
   revokeActiveSession,
   sendMyPharmacyForVerification,
@@ -436,20 +437,93 @@ async function buildDocumentsPayload(
   return { documents };
 }
 
+//===================================================================
+
 function PharmacyProfilePageContent() {
   const { user, isBootstrapping } = useAuth();
   const {
-    profile,
-    isLoading: isProfileLoading,
-    error: profileError,
-    syncProfile,
+    profile: pharmacySummary,
+    isLoading: isSummaryLoading,
+    error: summaryError,
+    syncProfile: syncSummary,
   } = usePharmacyProfile();
+
+  const [profileSnapshot, setProfileSnapshot] = useState<Readonly<{
+    identity: string;
+    profile: MyPharmacyProfile | null;
+    isLoading: boolean;
+    error: unknown;
+  }> | null>(null);
+
+  const identity =
+    !isBootstrapping && user?.role === 'pharmacy' ? user.id : null;
+  const pharmacySummaryId = pharmacySummary?.id ?? null;
+
+  useEffect(() => {
+    if (!identity || !pharmacySummaryId) return;
+
+    const controller = new AbortController();
+    const requestIdentity = identity;
+
+    void getMyPharmacyProfile({ signal: controller.signal })
+      .then((response) => {
+        if (controller.signal.aborted) return;
+
+        setProfileSnapshot({
+          identity: requestIdentity,
+          profile: response.pharmacy,
+          isLoading: false,
+          error: null,
+        });
+        syncSummary(response.pharmacy);
+      })
+      .catch((cause: unknown) => {
+        if (controller.signal.aborted) return;
+
+        setProfileSnapshot({
+          identity: requestIdentity,
+          profile: null,
+          isLoading: false,
+          error: cause,
+        });
+      });
+
+    return () => controller.abort();
+  }, [identity, pharmacySummaryId, syncSummary]);
+
+  const syncProfile = useCallback(
+    (profile: MyPharmacyProfile) => {
+      if (!identity) return;
+
+      setProfileSnapshot({
+        identity,
+        profile,
+        isLoading: false,
+        error: null,
+      });
+      syncSummary(profile);
+    },
+    [identity, syncSummary]
+  );
+
+  const hasCurrentProfile =
+    identity !== null && profileSnapshot?.identity === identity;
+
+  const profile = hasCurrentProfile ? profileSnapshot.profile : null;
+  const isProfileLoading =
+    isBootstrapping ||
+    isSummaryLoading ||
+    (identity !== null &&
+      pharmacySummary !== null &&
+      (!hasCurrentProfile || profileSnapshot.isLoading));
+
+  const profileError = hasCurrentProfile ? profileSnapshot.error : summaryError;
 
   if (isBootstrapping || !user || isProfileLoading) {
     return <PageLoader label="Loading pharmacy profile..." />;
   }
 
-  if (!profile) {
+  if (!pharmacySummary || !profile) {
     return (
       <main className={css.page}>
         <section
@@ -482,10 +556,10 @@ function PharmacyProfilePageContent() {
       user={user}
       pharmacy={profile}
       refreshError={
-        profileError
+        summaryError
           ? getProfileErrorMessage(
-              profileError,
-              'Could not refresh pharmacy profile.'
+              summaryError,
+              'Could not refresh pharmacy summary.'
             )
           : null
       }

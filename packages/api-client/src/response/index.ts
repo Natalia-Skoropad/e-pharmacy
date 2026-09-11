@@ -25,6 +25,7 @@ export type { PaginationLegacyMetadata } from './pagination';
 export {
   parseActiveSessionsResponse,
   parseCartResponse,
+  parseCurrentPharmacySummaryResponse,
   parseCheckoutOrderResponse,
   parseClientOrderDetailsResponse,
   parseClientOrdersResponse,

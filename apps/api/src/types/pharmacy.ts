@@ -163,6 +163,16 @@ export type PharmacyReviewResponseDto = {
   createdAt: ISODateTimeString;
 };
 
+export type CurrentPharmacySummaryResponseDto = {
+  id: string;
+  name: string;
+  status: PharmacyStatus;
+  imageUrl?: string;
+  membershipRole: PharmacyMembershipRole;
+};
+
+//===============================================================
+
 export type PharmacyProfileResponseDto = {
   id: string;
   name: string;
@@ -183,7 +193,6 @@ export type PharmacyProfileResponseDto = {
   reviewsCount: number;
   updatedAt: ISODateTimeString;
 };
-
 
 export type MyPharmacyProfileResponseDto = PharmacyProfileResponseDto & {
   membershipRole: PharmacyMembershipRole;

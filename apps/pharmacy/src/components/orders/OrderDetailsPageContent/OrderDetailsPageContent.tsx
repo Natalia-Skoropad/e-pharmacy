@@ -32,8 +32,6 @@ import {
   PAYMENT_METHOD_LABELS,
 } from '@e-pharmacy/config/presentation';
 
-import { isCompletePharmacyBankDetails } from '@e-pharmacy/validation/pharmacy';
-
 import {
   Button,
   CloseIconButton,
@@ -71,6 +69,7 @@ import {
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import type {
   DeliveryMethod,
@@ -138,13 +137,13 @@ import {
   type PharmacyOrderItem,
 } from '@/lib/orders/orders';
 
+import { getPharmacyCheckoutDetails } from '@/lib/api/browser/pharmacy.api';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -1432,10 +1431,13 @@ function OrderDetailsPageContent({
             throw new Error('Pharmacy profile could not be loaded.');
           }
 
-          const clientsResponse = await getPharmacyClients(
-            { page: 1, perPage: 200, status: 'active' },
-            requestOptions
-          );
+          const [clientsResponse, checkoutDetailsResponse] = await Promise.all([
+            getPharmacyClients(
+              { page: 1, perPage: 200, status: 'active' },
+              requestOptions
+            ),
+            getPharmacyCheckoutDetails(pharmacyProfile.id, requestOptions),
+          ]);
 
           if (controller.signal.aborted) return;
 
@@ -1452,7 +1454,7 @@ function OrderDetailsPageContent({
             );
           }
 
-          const pharmacy = pharmacyProfile;
+          const pharmacy = checkoutDetailsResponse.pharmacy;
           const clientPhone = getOptionalClientValue(defaultClient.phone);
           const clientAddress = getOptionalClientValue(defaultClient.address);
           const createdAt = new Date().toISOString();
@@ -1492,7 +1494,7 @@ function OrderDetailsPageContent({
               ? { pharmacyWorkingHours: pharmacy.workingHours }
               : {}),
             ...(pharmacy.email ? { pharmacyEmail: pharmacy.email } : {}),
-            ...(isCompletePharmacyBankDetails(pharmacy.bankDetails)
+            ...(pharmacy.bankDetails
               ? { bankDetails: pharmacy.bankDetails }
               : {}),
           };

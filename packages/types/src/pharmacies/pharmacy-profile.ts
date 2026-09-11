@@ -7,6 +7,8 @@ import type { PharmacyStatus } from './status';
 
 type PharmacyMembershipRole = 'owner' | 'manager';
 
+//=============================================================================
+
 type ClearableEditablePharmacyBankDetails = Partial<{
   [Field in keyof EditablePharmacyBankDetails]: string | null;
 }>;
@@ -24,6 +26,16 @@ export type PharmacyPendingModeration = Readonly<{
   description?: string | null;
   documents?: readonly PharmacyVerificationDocument[];
   bankDetails?: ClearableEditablePharmacyBankDetails;
+}>;
+
+//=============================================================================
+
+export type CurrentPharmacySummary = Readonly<{
+  id: EntityId;
+  name: string;
+  status: PharmacyStatus;
+  imageUrl?: string;
+  membershipRole: PharmacyMembershipRole;
 }>;
 
 //=============================================================================

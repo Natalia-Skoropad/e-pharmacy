@@ -445,6 +445,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/[pharmacyId]/checkout-details",
+    "backend": "/pharmacies/:pharmacyId/checkout-details",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/documents",
     "backend": "/pharmacies/me/documents",
     "methods": {
@@ -455,6 +463,14 @@
     "app": "pharmacy",
     "route": "/pharmacies/me/documents/[documentId]",
     "backend": "/pharmacies/me/documents/:documentId",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/summary",
+    "backend": "/pharmacies/me/summary",
     "methods": {
       "GET": "private"
     }

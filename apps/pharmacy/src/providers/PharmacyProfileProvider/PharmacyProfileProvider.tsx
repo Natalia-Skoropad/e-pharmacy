@@ -12,9 +12,14 @@ import {
 } from 'react';
 
 import { useAuth } from '@e-pharmacy/auth/react';
-import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
-import { getMyPharmacyProfile } from '@/lib/api/browser';
+import type {
+  CurrentPharmacySummary,
+  CurrentPharmacySummaryResponse,
+  MyPharmacyProfile,
+} from '@e-pharmacy/types/pharmacies';
+
+import { getCurrentPharmacySummary } from '@/lib/api/browser/pharmacy.api';
 
 import {
   invalidatePharmacyProfileRequest,
@@ -30,10 +35,10 @@ import {
 //===================================================================
 
 type PharmacyProfileContextValue = Readonly<{
-  profile: MyPharmacyProfile | null;
+  profile: CurrentPharmacySummary | null;
   isLoading: boolean;
   error: unknown;
-  refresh: () => Promise<MyPharmacyProfile | null>;
+  refresh: () => Promise<CurrentPharmacySummary | null>;
   syncProfile: (profile: MyPharmacyProfile) => void;
 }>;
 
@@ -44,8 +49,43 @@ const PharmacyProfileContext =
 
 //===================================================================
 
+type PharmacyProfileAuthState = Readonly<{
+  user: Readonly<{ id: string; role: string }> | null;
+  isBootstrapping: boolean;
+  canRenderAuthenticatedContent: boolean;
+}>;
+
+type PharmacySummaryLoader = (
+  options?: Readonly<{ signal?: AbortSignal }>
+) => Promise<CurrentPharmacySummaryResponse>;
+
+//===================================================================
+
 export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
-  const { user, isBootstrapping, canRenderAuthenticatedContent } = useAuth();
+  const authState = useAuth();
+
+  return (
+    <PharmacyProfileProviderRuntime
+      authState={authState}
+      loadSummary={getCurrentPharmacySummary}
+    >
+      {children}
+    </PharmacyProfileProviderRuntime>
+  );
+}
+
+//===================================================================
+
+export function PharmacyProfileProviderRuntime({
+  children,
+  authState,
+  loadSummary,
+}: Readonly<{
+  children?: ReactNode;
+  authState: PharmacyProfileAuthState;
+  loadSummary: PharmacySummaryLoader;
+}>) {
+  const { user, isBootstrapping, canRenderAuthenticatedContent } = authState;
 
   const identity =
     canRenderAuthenticatedContent && user?.role === 'pharmacy' ? user.id : null;
@@ -63,7 +103,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
   }, [identity]);
 
   const requestProfile = useCallback(
-    async (requestIdentity: string): Promise<MyPharmacyProfile | null> => {
+    async (requestIdentity: string): Promise<CurrentPharmacySummary | null> => {
       activeControllerRef.current?.abort();
       const controller = new AbortController();
       activeControllerRef.current = controller;
@@ -71,7 +111,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
       requestVersionRef.current = requestVersion;
 
       try {
-        const response = await getMyPharmacyProfile({
+        const response = await loadSummary({
           signal: controller.signal,
         });
 
@@ -111,7 +151,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    []
+    [loadSummary]
   );
 
   const invalidatePendingRequest = useCallback(() => {
@@ -129,7 +169,13 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
       invalidatePendingRequest();
       setSnapshot({
         identity,
-        profile,
+        profile: {
+          id: profile.id,
+          name: profile.name,
+          status: profile.status,
+          ...(profile.imageUrl ? { imageUrl: profile.imageUrl } : {}),
+          membershipRole: profile.membershipRole,
+        },
         isLoading: false,
         error: null,
       });

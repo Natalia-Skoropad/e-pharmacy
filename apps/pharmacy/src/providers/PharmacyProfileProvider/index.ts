@@ -1,1 +1,4 @@
-export * from './PharmacyProfileProvider';
+export {
+  PharmacyProfileProvider,
+  usePharmacyProfile,
+} from './PharmacyProfileProvider';

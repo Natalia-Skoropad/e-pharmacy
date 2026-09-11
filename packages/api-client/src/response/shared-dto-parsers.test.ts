@@ -6,6 +6,7 @@ import { parseApiEmptyResponse, parseApiResponseData } from './api-response';
 
 import {
   parseActiveSessionsResponse,
+  parseCurrentPharmacySummaryResponse,
   parseFavoriteMutationResponse,
   parseHealthResponse,
   parsePharmaciesResponse,
@@ -717,4 +718,48 @@ test('validates controlled pharmacy registration upload responses', () => {
       }),
     ApiError
   );
+});
+
+//===================================================================
+
+test('current pharmacy summary accepts only compact application-wide fields', () => {
+  const summary = parseCurrentPharmacySummaryResponse({
+    pharmacy: {
+      id: '507f1f77bcf86cd799439011',
+      name: 'SafeDose Pharmacy',
+      status: 'active',
+      imageUrl: 'https://example.com/pharmacy.jpg',
+      membershipRole: 'owner',
+    },
+  });
+
+  assert.deepEqual(summary.pharmacy, {
+    id: '507f1f77bcf86cd799439011',
+    name: 'SafeDose Pharmacy',
+    status: 'active',
+    imageUrl: 'https://example.com/pharmacy.jpg',
+    membershipRole: 'owner',
+  });
+});
+
+//===================================================================
+
+test('current pharmacy summary rejects private profile fields', () => {
+  for (const privateField of [
+    'bankDetails',
+    'documents',
+    'pendingModeration',
+  ]) {
+    assert.throws(() =>
+      parseCurrentPharmacySummaryResponse({
+        pharmacy: {
+          id: '507f1f77bcf86cd799439011',
+          name: 'SafeDose Pharmacy',
+          status: 'active',
+          membershipRole: 'owner',
+          [privateField]: privateField === 'documents' ? [] : {},
+        },
+      })
+    );
+  }
 });
