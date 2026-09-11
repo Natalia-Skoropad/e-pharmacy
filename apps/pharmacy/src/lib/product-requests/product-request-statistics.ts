@@ -1,5 +1,5 @@
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser/product-requests.api';
 
@@ -11,7 +11,7 @@ import {
 //===================================================================
 
 export async function getPharmacyProductRequestStatistics(
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ProductRequestStatisticsCounts> {
   const statistics = { ...DEFAULT_PRODUCT_REQUEST_STATISTICS };
 

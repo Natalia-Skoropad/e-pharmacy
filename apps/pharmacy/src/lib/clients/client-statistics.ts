@@ -1,4 +1,4 @@
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { type ClientStatisticsCounts } from '@/lib/statistics/config';
@@ -6,7 +6,7 @@ import { type ClientStatisticsCounts } from '@/lib/statistics/config';
 //===================================================================
 
 export async function getPharmacyClientStatistics(
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ClientStatisticsCounts> {
   const [allClients, repeatClients, activeClients, blockedClients] =
     await Promise.all([

@@ -1,10 +1,12 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductRequest } from '../models/productRequest.model';
+import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
 
 //===============================================================
@@ -36,10 +38,35 @@ async function assertEntityAccess(
   entityId: string,
   requireDraft = false
 ) {
+  const objectId = new Types.ObjectId(entityId);
+
+  if (entityType === 'pharmacy') {
+    if (!pharmacyId.equals(objectId)) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found.');
+    }
+    return;
+  }
+
+  if (entityType === 'client') {
+    const [clientHasOrders, isDefaultClient] = await Promise.all([
+      Order.exists({ pharmacyId, userId: objectId }),
+      User.exists({
+        _id: objectId,
+        isDefaultPharmacyClient: true,
+        defaultClientPharmacyId: pharmacyId,
+      }),
+    ]);
+
+    if (!clientHasOrders && !isDefaultClient) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found.');
+    }
+    return;
+  }
+
   if (entityType === 'product') {
     const offerExists = await ProductOffer.exists({
       pharmacyId,
-      productId: new Types.ObjectId(entityId),
+      productId: objectId,
     });
 
     if (!offerExists) {
@@ -48,12 +75,11 @@ async function assertEntityAccess(
         'Add this product to your pharmacy before creating comments.'
       );
     }
+    return;
   }
 
-  if (entityType !== 'product_request') return;
-
   const request = await ProductRequest.findOne({
-    _id: new Types.ObjectId(entityId),
+    _id: objectId,
     pharmacyId,
   })
     .select('status')
@@ -88,20 +114,24 @@ export async function getPharmacyNotesService(
     entityType,
     entityId: new Types.ObjectId(entityId),
   };
+
   const total = await PharmacyNote.countDocuments(filter);
   const totalPages = Math.ceil(total / perPage);
   const safePage = totalPages === 0 ? 1 : Math.min(page, totalPages);
+
   const notes = await PharmacyNote.find(filter)
     .sort({ createdAt: -1 })
     .skip((safePage - 1) * perPage)
     .limit(perPage)
     .lean();
+
   return {
     items: notes.map((note) => ({
       id: String(note._id),
       text: note.text,
       createdAt: note.createdAt.toISOString(),
     })),
+
     page: safePage,
     perPage,
     total,
@@ -118,6 +148,7 @@ export async function createPharmacyNoteService(
   text: string
 ) {
   const pharmacyId = await getPharmacyId(userId);
+
   await assertEntityAccess(
     pharmacyId,
     entityType,
@@ -132,6 +163,7 @@ export async function createPharmacyNoteService(
     text: text.trim(),
     createdBy: userId,
   });
+
   return {
     note: {
       id: String(note._id),
@@ -163,6 +195,7 @@ export async function deletePharmacyNoteService(
     entityType,
     entityId,
   });
+
   if (!deleted) throw httpError(HTTP_STATUS.NOT_FOUND, 'Comment was not found');
   return { message: 'Comment deleted successfully.' };
 }

@@ -1,16 +1,13 @@
 import 'client-only';
 
-import {
-  ApiError,
-  appendQueryParams,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
+import { ApiError, appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
   parseMessageResponse,
   type ApiResponseContext,
 } from '@e-pharmacy/api-client/response';
+
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import { isRecord } from '@e-pharmacy/utils/guards';
@@ -27,6 +24,11 @@ import {
   type ProductRequestsQueryParams,
   type ProductRequestsViewModelResponse,
 } from '@/lib/product-requests/product-requests';
+
+import {
+  sanitizeBrowserReadRequestOptions,
+  type BrowserReadRequestOptions,
+} from './request-options';
 
 //===================================================================
 
@@ -126,7 +128,7 @@ export async function createPharmacyProductRequest(
 export async function checkPharmacyProductRequestArticle(
   article: string,
   excludeRequestId?: string,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ArticleAvailabilityResult> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.productRequests.articleAvailability,
@@ -134,7 +136,7 @@ export async function checkPharmacyProductRequestArticle(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseArticleAvailabilityResponse,
     { url: path, method: 'GET' }
   );
@@ -144,7 +146,7 @@ export async function checkPharmacyProductRequestArticle(
 
 export async function getPharmacyProductRequests(
   params: ProductRequestsQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ProductRequestsViewModelResponse> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.productRequests.list,
@@ -152,7 +154,7 @@ export async function getPharmacyProductRequests(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     normalizeProductRequestsResponse,
     { url: path, method: 'GET' }
   );
@@ -162,12 +164,12 @@ export async function getPharmacyProductRequests(
 
 export async function getPharmacyProductRequest(
   requestId: string,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ProductRequestDetailsViewModel> {
   const path = PHARMACY_API_ROUTES.productRequests.details(requestId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseProductRequestDetails,
     { url: path, method: 'GET' }
   );

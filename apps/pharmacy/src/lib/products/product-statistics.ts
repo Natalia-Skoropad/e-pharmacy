@@ -3,7 +3,7 @@ import type {
   OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';
 
-import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import { getPharmacyProducts, getProducts } from '@/lib/api/browser';
@@ -46,7 +46,7 @@ export function getProductFinancialStats(products: PharmacyProductRow[]) {
 
 export async function getPharmacyOwnProductStatistics(
   pharmacyId: EntityId,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<OwnProductStatisticsCounts> {
   const response = await getPharmacyProducts(
     {
@@ -64,7 +64,7 @@ export async function getPharmacyOwnProductStatistics(
 
 export async function getPharmacyAllProductStatistics(
   pharmacyId: EntityId,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<AllProductStatisticsCounts> {
   const [active, blocked, addedToPharmacy, notAddedToPharmacy] =
     await Promise.all([

@@ -1,10 +1,5 @@
 import 'client-only';
 
-import type {
-  BlobResponseRequestOptions,
-  JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
-
 import {
   parseActiveSessionsResponse,
   parseApiEmptyResponse,
@@ -40,6 +35,11 @@ import type {
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
+
+import {
+  sanitizeBrowserReadRequestOptions,
+  type BrowserReadRequestOptions,
+} from './request-options';
 
 //===================================================================
 
@@ -84,11 +84,12 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 
 export async function getMyPharmacyDocument(
   documentId: EntityId,
-  options?: Omit<BlobResponseRequestOptions, 'responseType'>
+  options?: BrowserReadRequestOptions
 ): Promise<string> {
   const path = PHARMACY_API_ROUTES.pharmacies.myDocument(documentId);
+
   const blob = await localApiRequest(path, {
-    ...options,
+    ...sanitizeBrowserReadRequestOptions(options),
     responseType: 'blob',
   });
 
@@ -99,12 +100,12 @@ export async function getMyPharmacyDocument(
 
 export async function getPharmacyCheckoutDetails(
   pharmacyId: EntityId,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyCheckoutDetailsResponse> {
   const path = PHARMACY_API_ROUTES.pharmacies.checkoutDetails(pharmacyId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parsePharmacyCheckoutDetailsResponse,
     { url: path, method: 'GET' }
   );
@@ -113,12 +114,12 @@ export async function getPharmacyCheckoutDetails(
 //===================================================================
 
 export async function getCurrentPharmacySummary(
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<CurrentPharmacySummaryResponse> {
   const path = PHARMACY_API_ROUTES.pharmacies.mySummary;
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseCurrentPharmacySummaryResponse,
     { url: path, method: 'GET' }
   );
@@ -127,12 +128,12 @@ export async function getCurrentPharmacySummary(
 //===================================================================
 
 export async function getMyPharmacyProfile(
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyProfileResponse> {
   const path = PHARMACY_API_ROUTES.pharmacies.myProfile;
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parsePharmacyProfileResponse,
     { url: path, method: 'GET' }
   );
@@ -208,12 +209,12 @@ export async function updateCurrentUserPassword(
 //===================================================================
 
 export async function getActiveSessions(
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ActiveSessionsResponse> {
   const path = PHARMACY_API_ROUTES.auth.sessions;
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseActiveSessionsResponse,
     { url: path, method: 'GET' }
   );

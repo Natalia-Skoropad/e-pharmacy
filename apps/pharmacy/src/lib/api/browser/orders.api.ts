@@ -1,10 +1,6 @@
 import 'client-only';
 
-import {
-  ApiError,
-  appendQueryParams,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
+import { ApiError, appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
@@ -40,6 +36,11 @@ import {
   normalizeOrderSalesStatistics,
   type PharmacyOrderSalesStatisticsQueryParams,
 } from '@/lib/orders/order-sales-statistics';
+
+import {
+  sanitizeBrowserReadRequestOptions,
+  type BrowserReadRequestOptions,
+} from './request-options';
 
 //===================================================================
 
@@ -116,12 +117,12 @@ export async function createPharmacyOrder(
 
 export async function getPharmacyOrders(
   params: PharmacyOrdersQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyOrdersResponse> {
   const path = appendQueryParams(PHARMACY_API_ROUTES.orders.list, params);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     normalizePharmacyOrdersResponse,
     { url: path, method: 'GET' }
   );
@@ -131,12 +132,12 @@ export async function getPharmacyOrders(
 
 export async function getPharmacyOrderDetails(
   orderId: string,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyOrderDetails> {
   const path = PHARMACY_API_ROUTES.orders.details(orderId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseOrderData,
     { url: path, method: 'GET' }
   );
@@ -186,7 +187,7 @@ export async function updatePharmacyOrderStatus(
 export async function getPharmacyOrderComments(
   orderId: string,
   params: { page?: number; perPage?: number } = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyOrderManagerCommentsResponse> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.orders.comments(orderId),
@@ -194,7 +195,7 @@ export async function getPharmacyOrderComments(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     normalizePharmacyOrderManagerCommentsResponse,
     { url: path, method: 'GET' }
   );
@@ -234,7 +235,7 @@ export async function deletePharmacyOrderComment(
 
 export async function getPharmacyOrderSalesStatistics(
   params: PharmacyOrderSalesStatisticsQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ) {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.orders.salesStatistics,
@@ -242,7 +243,7 @@ export async function getPharmacyOrderSalesStatistics(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     normalizeOrderSalesStatistics,
     { url: path, method: 'GET' }
   );

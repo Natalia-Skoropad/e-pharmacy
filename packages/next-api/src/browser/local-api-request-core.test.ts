@@ -52,6 +52,26 @@ test('returns JSON and requires an explicit empty-response contract for 204', as
 
 //===================================================================
 
+test('uses the fixed private browser-to-BFF transport policy by default', async () => {
+  try {
+    globalThis.fetch = async (_input, init) => {
+      assert.equal(init?.method, 'GET');
+      assert.equal(init?.cache, 'no-store');
+      assert.equal(init?.credentials, 'same-origin');
+      assert.equal(init?.redirect, 'manual');
+      return jsonResponse({ ok: true });
+    };
+
+    assert.deepEqual(await localApiRequest('/api/private-defaults'), {
+      ok: true,
+    });
+  } finally {
+    restoreFetch();
+  }
+});
+
+//===================================================================
+
 test('rejects invalid JSON and HTML success responses', async () => {
   try {
     for (const response of [

@@ -1,10 +1,6 @@
 import 'client-only';
 
-import {
-  ApiError,
-  appendQueryParams,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
+import { ApiError, appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
@@ -15,6 +11,11 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { isRecord } from '@e-pharmacy/utils/guards';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
+
+import {
+  sanitizeBrowserReadRequestOptions,
+  type BrowserReadRequestOptions,
+} from './request-options';
 
 import {
   normalizePharmacyClient,
@@ -51,12 +52,12 @@ function parseClientDetailsData(
 
 export async function getPharmacyClientDetails(
   clientId: string,
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyClientRow> {
   const path = PHARMACY_API_ROUTES.clients.details(clientId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseClientDetailsData,
     { url: path, method: 'GET' }
   );
@@ -66,12 +67,12 @@ export async function getPharmacyClientDetails(
 
 export async function getPharmacyClients(
   params: PharmacyClientsQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyClientsResponse> {
   const path = appendQueryParams(PHARMACY_API_ROUTES.clients.list, params);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     normalizePharmacyClientsResponse,
     { url: path, method: 'GET' }
   );
@@ -82,7 +83,7 @@ export async function getPharmacyClients(
 export async function getPharmacyClientProducts(
   clientId: string,
   params: PharmacyClientProductsQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyClientProductsResponse> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.clients.products(clientId),
@@ -90,7 +91,7 @@ export async function getPharmacyClientProducts(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     normalizePharmacyClientProductsResponse,
     { url: path, method: 'GET' }
   );

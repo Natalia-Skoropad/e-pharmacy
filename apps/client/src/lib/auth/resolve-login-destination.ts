@@ -10,6 +10,7 @@ import { ROUTES, CLIENT_ALLOWED_REDIRECT_PREFIXES } from '@/lib/routes';
 import {
   getPharmacyAppConfiguration,
   requirePharmacyAppConfiguration,
+  type PharmacyAppConfiguration,
 } from './pharmacy-app-config';
 
 //===================================================================
@@ -35,6 +36,22 @@ export function resolveTrustedClientAuthExternalRedirect(
 
 //===================================================================
 
+export function resolvePharmacyLoginDestination(
+  requestedRedirect: string | null,
+  config: PharmacyAppConfiguration
+): string {
+  if (!requestedRedirect) return config.dashboardUrl;
+
+  return (
+    getTrustedExternalRedirectUrl(requestedRedirect, {
+      allowedOrigins: [config.origin],
+      allowedPathPrefixes: [config.allowedPathPrefix],
+    }) ?? config.dashboardUrl
+  );
+}
+
+//===================================================================
+
 export function resolveLoginDestination({
   user,
   requestedRedirect,
@@ -47,7 +64,10 @@ export function resolveLoginDestination({
   }
 
   if (user.role === 'pharmacy') {
-    return requirePharmacyAppConfiguration().dashboardUrl;
+    return resolvePharmacyLoginDestination(
+      requestedRedirect,
+      requirePharmacyAppConfiguration()
+    );
   }
 
   if (user.role !== 'client') {

@@ -1,14 +1,26 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import {
+  buildClientsPath,
+  parseClientsSegments,
+} from '@/lib/clients/client-paths';
+
 import { buildOrdersPath, parseOrdersSegments } from '@/lib/orders/order-paths';
+import { DEFAULT_CLIENTS_FILTERS } from '@/lib/clients/client-paths';
 import { DEFAULT_ORDERS_FILTERS } from '@/lib/orders/orders-filters';
+
+import {
+  buildAllProductsPath,
+  parseAllProductsSegments,
+} from '@/lib/products/all-product-paths';
 
 import {
   buildOwnProductsPath,
   parseOwnProductsSegments,
 } from '@/lib/products/own-product-paths';
 
+import { DEFAULT_ALL_PRODUCTS_FILTERS } from '@/lib/products/all-products-filters';
 import { DEFAULT_OWN_PRODUCTS_FILTERS } from '@/lib/products/own-products-filters';
 
 import {
@@ -64,4 +76,57 @@ test('product request status route roundtrips through its domain builder', () =>
     parseProductRequestsSegments({ filters: segments(path) }),
     state
   );
+});
+
+//===================================================================
+
+test('client non-PII filters roundtrip through the canonical client path builder', () => {
+  const state = {
+    ...DEFAULT_CLIENTS_FILTERS,
+    firstOrderDate: { from: '2026-08-01', to: '2026-08-31' },
+    status: 'active' as const,
+    successfulOrders: 'repeat' as const,
+  };
+
+  const path = buildClientsPath(state);
+
+  assert.deepEqual(parseClientsSegments({ filters: segments(path) }), state);
+});
+
+//===================================================================
+
+test('all-products filters roundtrip through the canonical domain builder', () => {
+  const state = {
+    ...DEFAULT_ALL_PRODUCTS_FILTERS,
+    name: 'vitamin c',
+    article: 'vit-100',
+    status: 'active' as const,
+    addedToMyPharmacy: 'no' as const,
+  };
+
+  const path = buildAllProductsPath(state);
+
+  assert.deepEqual(
+    parseAllProductsSegments({ filters: segments(path) }),
+    state
+  );
+});
+
+//===================================================================
+
+test('invalid known enum segments normalize to canonical defaults', () => {
+  const orders = parseOrdersSegments({ filters: ['status-impossible'] });
+  assert.equal(orders.status, DEFAULT_ORDERS_FILTERS.status);
+  assert.equal(buildOrdersPath(orders), '/pharmacy/orders');
+
+  const products = parseAllProductsSegments({
+    filters: ['added-to-my-pharmacy-maybe'],
+  });
+
+  assert.equal(
+    products.addedToMyPharmacy,
+    DEFAULT_ALL_PRODUCTS_FILTERS.addedToMyPharmacy
+  );
+
+  assert.equal(buildAllProductsPath(products), '/pharmacy/all-products');
 });

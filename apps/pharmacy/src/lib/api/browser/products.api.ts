@@ -1,9 +1,6 @@
 import 'client-only';
 
-import {
-  appendQueryParams,
-  type JsonResponseRequestOptions,
-} from '@e-pharmacy/api-client/transport';
+import { appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
   parseApiResponseData,
@@ -35,16 +32,21 @@ import {
   type PharmacyProductsResponse,
 } from '@/lib/products/products';
 
+import {
+  sanitizeBrowserReadRequestOptions,
+  type BrowserReadRequestOptions,
+} from './request-options';
+
 //===================================================================
 
 export async function getProducts(
   params: PharmacyProductsApiQueryParams = {},
-  options: JsonResponseRequestOptions = {}
+  options: BrowserReadRequestOptions = {}
 ): Promise<ProductsWithOffersResponse> {
   const path = appendQueryParams(PHARMACY_API_ROUTES.products.list, params);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseProductsWithOffersResponse,
     { url: path, method: 'GET' }
   );
@@ -54,7 +56,7 @@ export async function getProducts(
 
 export async function getPharmacyProducts(
   params: PharmacyProductsQueryParams = {},
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<PharmacyProductsResponse> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.products.list,
@@ -62,7 +64,7 @@ export async function getPharmacyProducts(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     (value) => normalizePharmacyProductsResponse(value, params.pharmacyId),
     { url: path, method: 'GET' }
   );
@@ -72,12 +74,12 @@ export async function getPharmacyProducts(
 
 export async function getProductDetails(
   productId: ProductDetails['id'],
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ProductDetailsResponse> {
   const path = PHARMACY_API_ROUTES.products.details(productId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseProductDetailsResponse,
     { url: path, method: 'GET' }
   );
@@ -115,12 +117,12 @@ export async function removeProductFromMyPharmacy(
 
 export async function getProductStockMovements(
   productId: ProductDetails['id'],
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ProductStockMovementsResponse> {
   const path = PHARMACY_API_ROUTES.products.stockMovements(productId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseProductStockMovementsResponse,
     { url: path, method: 'GET' }
   );
@@ -130,12 +132,12 @@ export async function getProductStockMovements(
 
 export async function getProductReviews(
   productId: ProductDetails['id'],
-  options?: JsonResponseRequestOptions
+  options?: BrowserReadRequestOptions
 ): Promise<ReviewsResponse> {
   const path = PHARMACY_API_ROUTES.products.reviews(productId);
 
   return parseApiResponseData(
-    await localApiRequest(path, options),
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseReviewsResponse,
     { url: path, method: 'GET' }
   );

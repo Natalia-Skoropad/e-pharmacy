@@ -4,35 +4,30 @@ import {
 } from '@e-pharmacy/auth/routing';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
+import { requireClientAppConfiguration } from './client-app-config';
 
 //===================================================================
 
 const SHARED_LOGIN_PATH = '/login';
-const CLIENT_APP_FALLBACK_URL = 'http://localhost:3000';
 
 //===================================================================
 
-function getClientAppOrigin(): string {
-  const configuredUrl =
-    process.env.NEXT_PUBLIC_CLIENT_APP_URL?.trim() || CLIENT_APP_FALLBACK_URL;
-
-  try {
-    return new URL(configuredUrl).origin;
-  } catch {
-    return new URL(CLIENT_APP_FALLBACK_URL).origin;
-  }
+function getClientAppLoginPath(basePath: string): string {
+  return `${basePath}${SHARED_LOGIN_PATH}`;
 }
 
 //===================================================================
 
 export function getClientAppHomeUrl(): string {
-  return new URL('/', getClientAppOrigin()).toString();
+  return requireClientAppConfiguration().baseUrl;
 }
 
 //===================================================================
 
 export function getSharedLoginUrl(redirect?: string): string {
-  const loginUrl = new URL(SHARED_LOGIN_PATH, getClientAppOrigin());
+  const clientApp = requireClientAppConfiguration();
+  const loginPath = getClientAppLoginPath(clientApp.basePath);
+  const loginUrl = new URL(loginPath, clientApp.origin);
 
   if (redirect) {
     loginUrl.searchParams.set('redirect', redirect);
@@ -40,9 +35,9 @@ export function getSharedLoginUrl(redirect?: string): string {
 
   return (
     getTrustedExternalRedirectUrl(loginUrl.toString(), {
-      allowedOrigins: [getClientAppOrigin()],
-      allowedPathPrefixes: [SHARED_LOGIN_PATH],
-    }) ?? getClientAppHomeUrl()
+      allowedOrigins: [clientApp.origin],
+      allowedPathPrefixes: [loginPath],
+    }) ?? clientApp.baseUrl
   );
 }
 

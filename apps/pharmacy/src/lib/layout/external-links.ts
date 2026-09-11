@@ -1,15 +1,12 @@
 import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import { buildSlugId } from '@e-pharmacy/validation/url';
 
-//===================================================================
-
-const CLIENT_APP_URL =
-  process.env.NEXT_PUBLIC_CLIENT_APP_URL?.trim() || 'http://localhost:3000';
+import { requireClientAppConfiguration } from '@/lib/auth/client-app-config';
 
 //===================================================================
 
 export function getClientAppUrl(): string {
-  return CLIENT_APP_URL;
+  return requireClientAppConfiguration().baseUrl;
 }
 
 //===================================================================
@@ -27,5 +24,11 @@ export function getClientPharmacyUrl(
 ): string | undefined {
   if (!pharmacy?.id) return undefined;
 
-  return `${CLIENT_APP_URL}/${buildSlugId(pharmacy.name, pharmacy.id)}`;
+  const clientApp = requireClientAppConfiguration();
+  const pharmacyPath = `${clientApp.basePath}/${buildSlugId(
+    pharmacy.name,
+    pharmacy.id
+  )}`;
+
+  return new URL(pharmacyPath, clientApp.origin).toString();
 }
