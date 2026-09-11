@@ -31,7 +31,7 @@ test('active pharmacy moderation uses one atomic browser command and supports al
 
   assert.match(
     source,
-    /hasExistingPendingModeration[\s\S]*?pharmacy\?\.pendingModeration[\s\S]*?moderationFormHasChanges[\s\S]*?hasExistingPendingModeration/
+    /hasExistingPendingModeration[\s\S]*?pharmacy\.pendingModeration[\s\S]*?moderationFormHasChanges[\s\S]*?hasExistingPendingModeration/
   );
 
   assert.match(

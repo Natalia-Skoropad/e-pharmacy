@@ -241,7 +241,7 @@ assert.match(
 
 assert.match(
   pharmacyProfileSource,
-  /pharmacy\?\.membershipRole === ['"]owner['"]/
+  /const isProfileOwner =\s*pharmacy\.membershipRole === ['"]owner['"]/
 );
 
 assert.match(pharmacyProfileSource, /canPharmacyProfilePerformAction\(/);

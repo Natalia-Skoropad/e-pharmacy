@@ -14,6 +14,7 @@ test('pharmacy profile has one provider-owned request source', async () => {
   const provider = await readSource(
     './providers/PharmacyProfileProvider/PharmacyProfileProvider.tsx'
   );
+
   const profilePage = await readSource(
     './components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   );
@@ -21,9 +22,17 @@ test('pharmacy profile has one provider-owned request source', async () => {
   assert.match(provider, /getMyPharmacyProfile/);
   assert.match(provider, /identityRef/);
   assert.match(provider, /requestVersionRef/);
-  assert.match(provider, /syncProfile/);
+
+  assert.match(
+    provider,
+    /const syncProfile[\s\S]*?invalidatePendingRequest\(\)[\s\S]*?setSnapshot/
+  );
+
   assert.doesNotMatch(profilePage, /getMyPharmacyProfile/);
   assert.match(profilePage, /usePharmacyProfile/);
+  assert.match(profilePage, /pharmacy=\{profile\}/);
+  assert.doesNotMatch(profilePage, /useState<MyPharmacyProfile/);
+  assert.doesNotMatch(profilePage, /setPharmacy\(/);
 });
 
 //===================================================================
@@ -31,16 +40,20 @@ test('pharmacy profile has one provider-owned request source', async () => {
 test('list and detail effects use AbortController rather than mounted flags', async () => {
   const sources = await Promise.all([
     readSource('./components/orders/OrdersPageContent/OrdersPageContent.tsx'),
-    readSource('./components/clients/ClientsPageContent/ClientsPageContent.tsx'),
+
+    readSource(
+      './components/clients/ClientsPageContent/ClientsPageContent.tsx'
+    ),
+
     readSource(
       './components/product-requests/ProductRequestsPageContent/ProductRequestsPageContent.tsx'
     ),
+
     readSource(
       './components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
     ),
-    readSource(
-      './components/layout/PharmacySidebar/PharmacySidebar.tsx'
-    ),
+
+    readSource('./components/layout/PharmacySidebar/PharmacySidebar.tsx'),
     readSource('./components/comments/EntityComments/EntityComments.tsx'),
   ]);
 
@@ -56,6 +69,7 @@ test('URL filters and outside-pointer behavior use shared hooks', async () => {
   const orders = await readSource(
     './components/orders/OrdersPageContent/OrdersPageContent.tsx'
   );
+
   const header = await readSource(
     './components/layout/PharmacyHeader/PharmacyHeader.tsx'
   );
@@ -72,6 +86,7 @@ test('sidebar storage and breadcrumb dispatch remain hydration and timer safe', 
   const shell = await readSource(
     './components/layout/PharmacyShell/PharmacyShell.tsx'
   );
+
   const breadcrumbs = await readSource('./lib/layout/breadcrumbs.ts');
 
   assert.match(shell, /useSyncExternalStore/);

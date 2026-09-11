@@ -16,7 +16,16 @@ import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
 import { getMyPharmacyProfile } from '@/lib/api/browser';
 
-import { isCurrentPharmacyProfileRequest } from './pharmacy-profile-request';
+import {
+  invalidatePharmacyProfileRequest,
+  isCurrentPharmacyProfileRequest,
+} from './pharmacy-profile-request';
+
+import {
+  createPharmacyProfileRefreshErrorSnapshot,
+  createPharmacyProfileRefreshStartSnapshot,
+  type PharmacyProfileSnapshot,
+} from './pharmacy-profile-state';
 
 //===================================================================
 
@@ -26,13 +35,6 @@ type PharmacyProfileContextValue = Readonly<{
   error: unknown;
   refresh: () => Promise<MyPharmacyProfile | null>;
   syncProfile: (profile: MyPharmacyProfile) => void;
-}>;
-
-type PharmacyProfileSnapshot = Readonly<{
-  identity: string;
-  profile: MyPharmacyProfile | null;
-  isLoading: boolean;
-  error: unknown;
 }>;
 
 //===================================================================
@@ -112,10 +114,19 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const invalidatePendingRequest = useCallback(() => {
+    requestVersionRef.current = invalidatePharmacyProfileRequest({
+      currentVersion: requestVersionRef.current,
+      controller: activeControllerRef.current,
+    });
+    activeControllerRef.current = null;
+  }, []);
+
   const syncProfile = useCallback(
     (profile: MyPharmacyProfile) => {
-      if (!identity) return;
+      if (!identity || identityRef.current !== identity) return;
 
+      invalidatePendingRequest();
       setSnapshot({
         identity,
         profile,
@@ -123,7 +134,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
         error: null,
       });
     },
-    [identity]
+    [identity, invalidatePendingRequest]
   );
 
   //===================================================================
@@ -131,13 +142,9 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     if (!identity) return null;
 
-    setSnapshot((currentSnapshot) => ({
-      identity,
-      profile:
-        currentSnapshot?.identity === identity ? currentSnapshot.profile : null,
-      isLoading: true,
-      error: null,
-    }));
+    setSnapshot((currentSnapshot) =>
+      createPharmacyProfileRefreshStartSnapshot(currentSnapshot, identity)
+    );
 
     try {
       const profile = await requestProfile(identity);
@@ -159,12 +166,13 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      setSnapshot({
-        identity,
-        profile: null,
-        isLoading: false,
-        error: cause,
-      });
+      setSnapshot((currentSnapshot) =>
+        createPharmacyProfileRefreshErrorSnapshot(
+          currentSnapshot,
+          identity,
+          cause
+        )
+      );
 
       return null;
     }
@@ -174,9 +182,7 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
     if (isBootstrapping) return;
 
     if (!identity) {
-      requestVersionRef.current += 1;
-      activeControllerRef.current?.abort();
-      activeControllerRef.current = null;
+      invalidatePendingRequest();
       return;
     }
 
@@ -207,16 +213,9 @@ export function PharmacyProfileProvider({ children }: { children: ReactNode }) {
           error: cause,
         });
       });
-  }, [identity, isBootstrapping, requestProfile]);
+  }, [identity, invalidatePendingRequest, isBootstrapping, requestProfile]);
 
-  useEffect(
-    () => () => {
-      requestVersionRef.current += 1;
-      activeControllerRef.current?.abort();
-      activeControllerRef.current = null;
-    },
-    []
-  );
+  useEffect(() => () => invalidatePendingRequest(), [invalidatePendingRequest]);
 
   const hasCurrentSnapshot =
     identity !== null && snapshot?.identity === identity;
