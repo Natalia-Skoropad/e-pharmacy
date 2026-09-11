@@ -40,6 +40,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 
 import type {
@@ -86,15 +87,9 @@ import {
 
 import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
-
-import {
-  getLockedFeatureBannerStatus,
-  useCurrentPharmacyStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
-
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 import { getProductImageSrc } from '@/lib/products/product-images';
-
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -107,6 +102,8 @@ const CATEGORY_OPTIONS = PRODUCT_CATEGORIES.map((category) => ({
   label: PRODUCT_CATEGORY_LABELS[category],
 }));
 
+//===================================================================
+
 const PRESCRIPTION_OPTIONS = [
   { value: '', label: 'Select prescription type' },
   { value: 'prescription', label: 'Prescription only' },
@@ -114,8 +111,12 @@ const PRESCRIPTION_OPTIONS = [
   { value: 'not_applicable', label: 'Not applicable' },
 ] as const;
 
+//===================================================================
+
 type ValidationMode = ProductRequestValidationMode | null;
 type RequestTab = 'details' | 'comments' | 'history';
+
+//===================================================================
 
 export type NewProductRequestPageContentProps = Readonly<{
   requestId?: string;

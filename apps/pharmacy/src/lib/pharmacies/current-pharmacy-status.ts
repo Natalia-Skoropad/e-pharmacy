@@ -1,8 +1,4 @@
-'use client';
-
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
-
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 //===================================================================
 
@@ -18,17 +14,4 @@ export function getLockedFeatureBannerStatus(
   }
 
   return null;
-}
-
-//===================================================================
-
-export function useCurrentPharmacyStatus() {
-  const { profile, isLoading, error, refresh } = usePharmacyProfile();
-
-  return {
-    status: profile?.status ?? null,
-    isLoading,
-    error,
-    refresh,
-  };
 }

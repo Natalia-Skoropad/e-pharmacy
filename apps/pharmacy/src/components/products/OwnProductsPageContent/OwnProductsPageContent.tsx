@@ -21,6 +21,7 @@ import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import type {
@@ -49,11 +50,9 @@ import {
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
-import { getPharmacyProductsFilterPath } from '@/lib/layout/routes';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { OwnProductStatistics } from '@/components/statistics/OwnProductStatistics/OwnProductStatistics';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
 
@@ -99,19 +98,31 @@ type OwnProductsPageContentProps = Readonly<{
 
 function getOwnProductStatisticHref(key: OwnProductStatisticsKey) {
   if (key === 'reserved') {
-    return getPharmacyProductsFilterPath({ stock: 'reserved' });
+    return buildOwnProductsPath({
+      ...DEFAULT_OWN_PRODUCTS_FILTERS,
+      stock: 'reserved',
+    });
   }
 
   if (key === 'available') {
-    return getPharmacyProductsFilterPath({ stock: 'available' });
+    return buildOwnProductsPath({
+      ...DEFAULT_OWN_PRODUCTS_FILTERS,
+      stock: 'available',
+    });
   }
 
   if (key === 'outOfStock') {
-    return getPharmacyProductsFilterPath({ stock: 'empty' });
+    return buildOwnProductsPath({
+      ...DEFAULT_OWN_PRODUCTS_FILTERS,
+      stock: 'empty',
+    });
   }
 
   if (key === 'inStock') {
-    return getPharmacyProductsFilterPath({ stock: 'in-stock' });
+    return buildOwnProductsPath({
+      ...DEFAULT_OWN_PRODUCTS_FILTERS,
+      stock: 'in-stock',
+    });
   }
 
   return PHARMACY_ROUTES.PRODUCTS;
@@ -145,6 +156,8 @@ function OwnProductsPageContent({
 
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
+  const [isProductStatisticsUnavailable, setIsProductStatisticsUnavailable] =
+    useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -170,10 +183,13 @@ function OwnProductsPageContent({
           { signal: controller.signal }
         );
 
-        if (!controller.signal.aborted) setProductStatistics(nextStatistics);
+        if (!controller.signal.aborted) {
+          setProductStatistics(nextStatistics);
+          setIsProductStatisticsUnavailable(false);
+        }
       } catch {
         if (!controller.signal.aborted) {
-          setProductStatistics(DEFAULT_OWN_PRODUCT_STATISTICS);
+          setIsProductStatisticsUnavailable(true);
         }
       }
     }
@@ -332,11 +348,15 @@ function OwnProductsPageContent({
           />
         ) : null}
 
-        <OwnProductStatistics
-          className={css.productStatistics}
-          counts={productStatistics}
-          getStatisticHref={getOwnProductStatisticHref}
-        />
+        {isProductStatisticsUnavailable ? (
+          <p role="status">Product statistics are temporarily unavailable.</p>
+        ) : (
+          <OwnProductStatistics
+            className={css.productStatistics}
+            counts={productStatistics}
+            getStatisticHref={getOwnProductStatisticHref}
+          />
+        )}
       </section>
 
       <section className={css.card} aria-labelledby="own-products-search">

@@ -19,8 +19,7 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { PHARMACY_ROUTES } from '@/lib/routes';
-
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 import {
@@ -33,17 +32,13 @@ import {
 } from '@/lib/product-requests/product-requests';
 
 import { getPharmacyProductRequests } from '@/lib/api/browser';
-import { getPharmacyRequestsFilterPath } from '@/lib/layout/routes';
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
-
-import {
-  getLockedFeatureBannerStatus,
-  useCurrentPharmacyStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
+import { PHARMACY_ROUTES } from '@/lib/routes';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { ProductRequestStatistics } from '@/components/statistics';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
 
@@ -101,6 +96,8 @@ function ProductRequestsPageContent({
     useState<ProductRequestStatisticsCounts>(
       DEFAULT_PRODUCT_REQUEST_STATISTICS
     );
+  const [isRequestStatisticsUnavailable, setIsRequestStatisticsUnavailable] =
+    useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -118,10 +115,13 @@ function ProductRequestsPageContent({
         const statistics = await getPharmacyProductRequestStatistics({
           signal: controller.signal,
         });
-        if (!controller.signal.aborted) setRequestStatistics(statistics);
+        if (!controller.signal.aborted) {
+          setRequestStatistics(statistics);
+          setIsRequestStatisticsUnavailable(false);
+        }
       } catch {
         if (!controller.signal.aborted) {
-          setRequestStatistics(DEFAULT_PRODUCT_REQUEST_STATISTICS);
+          setIsRequestStatisticsUnavailable(true);
         }
       }
     }
@@ -233,11 +233,22 @@ function ProductRequestsPageContent({
           />
         ) : null}
 
-        <ProductRequestStatistics
-          className={css.requestStatistics}
-          counts={requestStatistics}
-          getStatusHref={(status) => getPharmacyRequestsFilterPath({ status })}
-        />
+        {isRequestStatisticsUnavailable ? (
+          <p role="status">
+            Product request statistics are temporarily unavailable.
+          </p>
+        ) : (
+          <ProductRequestStatistics
+            className={css.requestStatistics}
+            counts={requestStatistics}
+            getStatusHref={(status) =>
+              buildProductRequestsPath({
+                ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
+                status,
+              })
+            }
+          />
+        )}
       </section>
 
       <section

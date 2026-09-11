@@ -16,7 +16,6 @@ import {
 } from '@e-pharmacy/api-client/response';
 
 import { isRecord } from '@e-pharmacy/utils/guards';
-import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
@@ -32,8 +31,6 @@ import type {
 import type { CompletePharmacyBankDetails } from '@e-pharmacy/types/pharmacies';
 import type { EntityId, ISODateTimeString } from '@e-pharmacy/types/primitives';
 import type { ProductCategory } from '@e-pharmacy/types/products';
-
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
 //===================================================================
 
@@ -205,7 +202,11 @@ function invalidOrderContract(message: string, payload: unknown): never {
 
 //===================================================================
 
-function requireObjectId(value: unknown, label: string, payload: unknown): EntityId {
+function requireObjectId(
+  value: unknown,
+  label: string,
+  payload: unknown
+): EntityId {
   const id = getTrimmedString(value);
   if (!id || !OBJECT_ID_PATTERN.test(id)) {
     invalidOrderContract(`${label} must be a Mongo ObjectId string.`, payload);
@@ -222,7 +223,10 @@ function requireIsoDateTime(
   payload: unknown
 ): ISODateTimeString {
   if (!isISODateTimeString(value)) {
-    invalidOrderContract(`${label} must be a canonical ISO datetime string.`, payload);
+    invalidOrderContract(
+      `${label} must be a canonical ISO datetime string.`,
+      payload
+    );
   }
 
   return value;
@@ -232,7 +236,8 @@ function requireIsoDateTime(
 
 function requireText(value: unknown, label: string, payload: unknown): string {
   const text = getTrimmedString(value);
-  if (!text) invalidOrderContract(`${label} must be a non-empty string.`, payload);
+  if (!text)
+    invalidOrderContract(`${label} must be a non-empty string.`, payload);
   return text;
 }
 
@@ -258,7 +263,10 @@ function requireNonNegativeInteger(
   payload: unknown
 ): number {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
-    invalidOrderContract(`${label} must be a safe non-negative integer.`, payload);
+    invalidOrderContract(
+      `${label} must be a safe non-negative integer.`,
+      payload
+    );
   }
 
   return value;
@@ -272,7 +280,10 @@ function requireNonNegativeNumber(
   payload: unknown
 ): number {
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    invalidOrderContract(`${label} must be a finite non-negative number.`, payload);
+    invalidOrderContract(
+      `${label} must be a finite non-negative number.`,
+      payload
+    );
   }
 
   return value;
@@ -287,7 +298,10 @@ function assertMoneyEqual(
   payload: unknown
 ): void {
   if (Math.abs(actual - expected) > 1e-9) {
-    invalidOrderContract(`${label} is inconsistent with order item totals.`, payload);
+    invalidOrderContract(
+      `${label} is inconsistent with order item totals.`,
+      payload
+    );
   }
 }
 
@@ -385,28 +399,34 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
   }
 
   const id = requireObjectId(rawItem.id, 'order item.id', rawItem);
+
   const productId = requireObjectId(
     rawItem.productId,
     'order item.productId',
     rawItem
   );
+
   const productOfferId = requireObjectId(
     rawItem.productOfferId,
     'order item.productOfferId',
     rawItem
   );
+
   const name = requireText(rawItem.name, 'order item.name', rawItem);
   const article = requireText(rawItem.article, 'order item.article', rawItem);
+
   const quantity = requirePositiveInteger(
     rawItem.quantity,
     'order item.quantity',
     rawItem
   );
+
   const unitPrice = requireNonNegativeNumber(
     rawItem.unitPrice,
     'order item.unitPrice',
     rawItem
   );
+
   const totalPrice = requireNonNegativeNumber(
     rawItem.totalPrice,
     'order item.totalPrice',
@@ -431,6 +451,7 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
     rawItem.rating === undefined
       ? undefined
       : requireNonNegativeNumber(rawItem.rating, 'order item.rating', rawItem);
+
   const reviewsCount =
     rawItem.reviewsCount === undefined
       ? undefined
@@ -439,6 +460,7 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
           'order item.reviewsCount',
           rawItem
         );
+
   const availableQuantity =
     rawItem.availableQuantity === undefined
       ? undefined
@@ -447,6 +469,7 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
           'order item.availableQuantity',
           rawItem
         );
+
   const currentPrice =
     rawItem.currentPrice === undefined
       ? undefined
@@ -484,11 +507,13 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
   }
 
   const id = requireObjectId(rawOrder.id, 'order.id', rawOrder);
+
   const orderNumber = requireText(
     rawOrder.orderNumber,
     'order.orderNumber',
     rawOrder
   );
+
   const orderDate = requireIsoDateTime(
     rawOrder.orderDate ?? rawOrder.createdAt,
     'order.createdAt',
@@ -514,11 +539,13 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
     'order.totalItems',
     rawOrder
   );
+
   const totalAmount = requireNonNegativeNumber(
     rawOrder.totalPrice,
     'order.totalPrice',
     rawOrder
   );
+
   const expectedQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
   const expectedAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
@@ -528,6 +555,7 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
       rawOrder
     );
   }
+
   assertMoneyEqual(totalAmount, expectedAmount, 'order.totalPrice', rawOrder);
 
   const clientId = getClientId(rawOrder);
@@ -567,12 +595,18 @@ function normalizeStatusHistory(
   payload: unknown
 ): PharmacyOrderStatusHistoryItem[] {
   if (!Array.isArray(payload)) {
-    return invalidOrderContract('order.statusHistory must be an array.', payload);
+    return invalidOrderContract(
+      'order.statusHistory must be an array.',
+      payload
+    );
   }
 
   return payload.map((entry) => {
     if (!isRecord(entry) || !isOrderStatus(entry.status)) {
-      return invalidOrderContract('order.statusHistory entry is invalid.', entry);
+      return invalidOrderContract(
+        'order.statusHistory entry is invalid.',
+        entry
+      );
     }
 
     return {
@@ -582,6 +616,7 @@ function normalizeStatusHistory(
         'order.statusHistory.changedAt',
         entry
       ),
+
       changedBy: requireObjectId(
         entry.changedBy,
         'order.statusHistory.changedBy',
@@ -600,12 +635,18 @@ function normalizeActivityHistory(
   payload: unknown
 ): PharmacyOrderActivityHistoryItem[] {
   if (!Array.isArray(payload)) {
-    return invalidOrderContract('order.activityHistory must be an array.', payload);
+    return invalidOrderContract(
+      'order.activityHistory must be an array.',
+      payload
+    );
   }
 
   return payload.map((entry) => {
     if (!isRecord(entry) || !isOrderActivityType(entry.type)) {
-      return invalidOrderContract('order.activityHistory entry is invalid.', entry);
+      return invalidOrderContract(
+        'order.activityHistory entry is invalid.',
+        entry
+      );
     }
 
     const previousQuantity = requireNonNegativeInteger(
@@ -613,13 +654,18 @@ function normalizeActivityHistory(
       'order.activityHistory.previousQuantity',
       entry
     );
+
     const quantity = requireNonNegativeInteger(
       entry.quantity,
       'order.activityHistory.quantity',
       entry
     );
+
     const quantityDelta = entry.quantityDelta;
-    if (typeof quantityDelta !== 'number' || !Number.isSafeInteger(quantityDelta)) {
+    if (
+      typeof quantityDelta !== 'number' ||
+      !Number.isSafeInteger(quantityDelta)
+    ) {
       invalidOrderContract(
         'order.activityHistory.quantityDelta must be a safe integer.',
         entry
@@ -628,39 +674,47 @@ function normalizeActivityHistory(
 
     return {
       type: entry.type,
+
       occurredAt: requireIsoDateTime(
         entry.occurredAt,
         'order.activityHistory.occurredAt',
         entry
       ),
+
       changedBy: requireObjectId(
         entry.changedBy,
         'order.activityHistory.changedBy',
         entry
       ),
+
       productId: requireObjectId(
         entry.productId,
         'order.activityHistory.productId',
         entry
       ),
+
       productOfferId: requireObjectId(
         entry.productOfferId,
         'order.activityHistory.productOfferId',
         entry
       ),
+
       productName: requireText(
         entry.productName,
         'order.activityHistory.productName',
         entry
       ),
+
       previousQuantity,
       quantity,
       quantityDelta,
+
       previousUnitPrice: requireNonNegativeNumber(
         entry.previousUnitPrice,
         'order.activityHistory.previousUnitPrice',
         entry
       ),
+
       unitPrice: requireNonNegativeNumber(
         entry.unitPrice,
         'order.activityHistory.unitPrice',
@@ -689,6 +743,8 @@ export function normalizePharmacyOrderManagerComment(
   return { id, text, createdAt, createdBy };
 }
 
+//===================================================================
+
 export function normalizePharmacyOrderManagerCommentsResponse(
   payload: unknown
 ): PharmacyOrderManagerCommentsResponse {
@@ -708,7 +764,10 @@ function normalizeBankDetails(
 ): CompletePharmacyBankDetails | null {
   if (payload === undefined || payload === null) return null;
   if (!isRecord(payload)) {
-    return invalidOrderContract('order.bankDetails must be an object.', payload);
+    return invalidOrderContract(
+      'order.bankDetails must be an object.',
+      payload
+    );
   }
 
   return {
@@ -717,18 +776,22 @@ function normalizeBankDetails(
       'order.bankDetails.recipientName',
       payload
     ),
+
     taxId: requireText(payload.taxId, 'order.bankDetails.taxId', payload),
+
     iban: requireText(payload.iban, 'order.bankDetails.iban', payload),
     bankName: requireText(
       payload.bankName,
       'order.bankDetails.bankName',
       payload
     ),
+
     receiptEmail: requireText(
       payload.receiptEmail,
       'order.bankDetails.receiptEmail',
       payload
     ),
+
     paymentPurpose: requireText(
       payload.paymentPurpose,
       'order.bankDetails.paymentPurpose',
@@ -755,7 +818,12 @@ export function normalizePharmacyOrderDetails(
   return {
     ...row,
     currency: '₴',
-    pharmacyId: requireObjectId(payload.pharmacyId, 'order.pharmacyId', payload),
+    pharmacyId: requireObjectId(
+      payload.pharmacyId,
+      'order.pharmacyId',
+      payload
+    ),
+
     statusHistory: normalizeStatusHistory(payload.statusHistory),
     activityHistory: normalizeActivityHistory(payload.activityHistory),
     managerCommentsCount: requireNonNegativeInteger(
@@ -808,21 +876,36 @@ export function normalizePharmacyOrderDetails(
 //===================================================================
 
 function normalizeOrderStatistics(payload: unknown): OrderStatisticsCounts {
-  if (!isRecord(payload)) return DEFAULT_ORDER_STATISTICS;
+  if (!isRecord(payload)) {
+    invalidOrderContract('order statistics must be an object.', payload);
+  }
 
   return ORDER_STATUSES.reduce<OrderStatisticsCounts>((acc, status) => {
     const value = payload[status];
 
-    if (!isRecord(value)) return acc;
+    if (!isRecord(value)) {
+      invalidOrderContract(
+        `order statistics.${status} must be an object.`,
+        payload
+      );
+    }
 
     return {
       ...acc,
       [status]: {
-        count: getFiniteNumber(value.count) ?? 0,
-        amount: getFiniteNumber(value.amount) ?? 0,
+        count: requireNonNegativeInteger(
+          value.count,
+          `order statistics.${status}.count`,
+          value
+        ),
+        amount: requireNonNegativeNumber(
+          value.amount,
+          `order statistics.${status}.amount`,
+          value
+        ),
       },
     };
-  }, DEFAULT_ORDER_STATISTICS);
+  }, {} as OrderStatisticsCounts);
 }
 
 //===================================================================
@@ -841,7 +924,10 @@ export function normalizePharmacyOrdersResponse(
     ...response,
     statistics: isRecord(payload)
       ? normalizeOrderStatistics(payload.statistics)
-      : DEFAULT_ORDER_STATISTICS,
+      : invalidOrderContract(
+          'pharmacy orders response must be an object.',
+          payload
+        ),
     earliestCreatedAt: isRecord(payload)
       ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
       : null,

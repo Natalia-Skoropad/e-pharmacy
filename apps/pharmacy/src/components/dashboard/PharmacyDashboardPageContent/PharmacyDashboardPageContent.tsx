@@ -7,6 +7,7 @@ import { LayoutDashboard } from 'lucide-react';
 import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
@@ -28,6 +29,7 @@ import {
 } from '@/lib/statistics/config';
 
 import {
+  DEFAULT_PRODUCT_REQUESTS_FILTERS,
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
   type ProductRequestStatisticsCounts,
 } from '@/lib/product-requests/product-requests';
@@ -43,18 +45,22 @@ import {
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
+import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
+import { DEFAULT_OWN_PRODUCTS_FILTERS } from '@/lib/products/own-products-filters';
+import { buildOrdersPath } from '@/lib/orders/order-paths';
+import { DEFAULT_ORDERS_FILTERS } from '@/lib/orders/orders-filters';
+
+import {
+  buildClientsPath,
+  DEFAULT_CLIENTS_FILTERS,
+} from '@/lib/clients/client-paths';
+
+import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 
 import {
   getPharmacyAllProductStatistics,
   getPharmacyOwnProductStatistics,
 } from '@/lib/products/product-statistics';
-
-import {
-  getPharmacyClientsFilterPath,
-  getPharmacyOrdersFilterPath,
-  getPharmacyProductsFilterPath,
-  getPharmacyRequestsFilterPath,
-} from '@/lib/layout/routes';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
@@ -77,7 +83,6 @@ import {
   type SalesPeriodMonth,
 } from '@/components/sales';
 
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import css from './PharmacyDashboardPageContent.module.css';
@@ -106,6 +111,7 @@ type DashboardSnapshot = Readonly<{
   requestKey: string | null;
   data: DashboardData;
   isLoading: boolean;
+  hasError: boolean;
 }>;
 
 //===================================================================
@@ -256,11 +262,13 @@ function PharmacyDashboardPageContent() {
     DEFAULT_ORDER_SALES_STATISTICS
   );
   const [isSalesLoading, setIsSalesLoading] = useState(true);
+  const [isSalesUnavailable, setIsSalesUnavailable] = useState(false);
   const [dashboardSnapshot, setDashboardSnapshot] = useState<DashboardSnapshot>(
     {
       requestKey: null,
       data: DEFAULT_DATA,
       isLoading: false,
+      hasError: false,
     }
   );
 
@@ -283,6 +291,8 @@ function PharmacyDashboardPageContent() {
     isProfileLoading ||
     (dashboardRequestKey !== null &&
       (!hasCurrentDashboard || dashboardSnapshot.isLoading));
+
+  const hasDashboardError = hasCurrentDashboard && dashboardSnapshot.hasError;
 
   useEffect(() => {
     if (
@@ -314,6 +324,7 @@ function PharmacyDashboardPageContent() {
             requestKey: currentRequestKey,
             data: nextData,
             isLoading: false,
+            hasError: false,
           });
         }
       } catch {
@@ -322,6 +333,7 @@ function PharmacyDashboardPageContent() {
             requestKey: currentRequestKey,
             data: DEFAULT_DATA,
             isLoading: false,
+            hasError: true,
           });
         }
       }
@@ -356,10 +368,13 @@ function PharmacyDashboardPageContent() {
           signal: controller.signal,
         });
 
-        if (!controller.signal.aborted) setSalesData(nextSalesData);
+        if (!controller.signal.aborted) {
+          setSalesData(nextSalesData);
+          setIsSalesUnavailable(false);
+        }
       } catch {
         if (!controller.signal.aborted) {
-          setSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+          setIsSalesUnavailable(true);
         }
       } finally {
         if (!controller.signal.aborted) setIsSalesLoading(false);
@@ -377,15 +392,21 @@ function PharmacyDashboardPageContent() {
 
   const getClientStatisticHref = (key: ClientStatisticsKey) => {
     if (key === 'active') {
-      return getPharmacyClientsFilterPath({ status: 'active' });
+      return buildClientsPath({ ...DEFAULT_CLIENTS_FILTERS, status: 'active' });
     }
 
     if (key === 'blocked') {
-      return getPharmacyClientsFilterPath({ status: 'blocked' });
+      return buildClientsPath({
+        ...DEFAULT_CLIENTS_FILTERS,
+        status: 'blocked',
+      });
     }
 
     if (key === 'repeat') {
-      return getPharmacyClientsFilterPath({ 'successful-orders': 'repeat' });
+      return buildClientsPath({
+        ...DEFAULT_CLIENTS_FILTERS,
+        successfulOrders: 'repeat',
+      });
     }
 
     return PHARMACY_ROUTES.CLIENTS;
@@ -393,19 +414,31 @@ function PharmacyDashboardPageContent() {
 
   const getProductStatisticHref = (key: OwnProductStatisticsKey) => {
     if (key === 'reserved') {
-      return getPharmacyProductsFilterPath({ stock: 'reserved' });
+      return buildOwnProductsPath({
+        ...DEFAULT_OWN_PRODUCTS_FILTERS,
+        stock: 'reserved',
+      });
     }
 
     if (key === 'available') {
-      return getPharmacyProductsFilterPath({ stock: 'available' });
+      return buildOwnProductsPath({
+        ...DEFAULT_OWN_PRODUCTS_FILTERS,
+        stock: 'available',
+      });
     }
 
     if (key === 'outOfStock') {
-      return getPharmacyProductsFilterPath({ stock: 'empty' });
+      return buildOwnProductsPath({
+        ...DEFAULT_OWN_PRODUCTS_FILTERS,
+        stock: 'empty',
+      });
     }
 
     if (key === 'inStock') {
-      return getPharmacyProductsFilterPath({ stock: 'in-stock' });
+      return buildOwnProductsPath({
+        ...DEFAULT_OWN_PRODUCTS_FILTERS,
+        stock: 'in-stock',
+      });
     }
 
     return PHARMACY_ROUTES.PRODUCTS;
@@ -482,6 +515,16 @@ function PharmacyDashboardPageContent() {
           <section className={css.section} aria-labelledby="orders-stats-title">
             <LoadingSpinner label="Loading dashboard statistics..." />
           </section>
+        ) : hasDashboardError ? (
+          <section
+            className={css.section}
+            aria-label="Dashboard statistics unavailable"
+          >
+            <EmptyState
+              title="Dashboard statistics are temporarily unavailable."
+              message="The data could not be loaded. Please try again later."
+            />
+          </section>
         ) : (
           <>
             <section
@@ -526,7 +569,7 @@ function PharmacyDashboardPageContent() {
               <OrderStatistics
                 counts={dashboardData.orders}
                 getStatusHref={(status) =>
-                  getPharmacyOrdersFilterPath({ status })
+                  buildOrdersPath({ ...DEFAULT_ORDERS_FILTERS, status })
                 }
               />
             </section>
@@ -537,6 +580,11 @@ function PharmacyDashboardPageContent() {
             >
               {isSalesLoading ? (
                 <LoadingSpinner label="Loading sales chart..." />
+              ) : isSalesUnavailable ? (
+                <EmptyState
+                  title="Sales statistics are temporarily unavailable."
+                  message="The sales chart could not be loaded. Please try again later."
+                />
               ) : (
                 <SalesValueChart
                   key={`${selectedSalesYear}-${selectedSalesMonth}`}
@@ -722,7 +770,10 @@ function PharmacyDashboardPageContent() {
               <ProductRequestStatistics
                 counts={dashboardData.requests}
                 getStatusHref={(status) =>
-                  getPharmacyRequestsFilterPath({ status })
+                  buildProductRequestsPath({
+                    ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
+                    status,
+                  })
                 }
               />
 

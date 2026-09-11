@@ -1,4 +1,12 @@
+import { ApiError } from '@e-pharmacy/api-client/transport';
+
+import {
+  isISODateTimeString,
+  isCalendarDateString,
+} from '@e-pharmacy/validation/dates';
+
 import { isProductCategory } from '@e-pharmacy/validation/products';
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   normalizePaginatedResponse,
@@ -93,180 +101,232 @@ export type PharmacyClientProductsResponse = Readonly<
 
 //===================================================================
 
+function invalidClientContract(message: string, payload: unknown): never {
+  throw new ApiError(message, {
+    transportCode: 'INVALID_RESPONSE',
+    payload,
+  });
+}
+
+//===================================================================
+
 function isClientStatus(value: unknown): value is ClientStatus {
   return USER_STATUSES.includes(value as UserStatus);
 }
 
 //===================================================================
 
-function getNestedRecord(
-  source: Record<string, unknown>,
-  key: string
-): Record<string, unknown> | undefined {
-  const value = source[key];
-
-  return isRecord(value) ? value : undefined;
+function isProductStatus(value: unknown): value is ProductStatus {
+  return value === 'new' || value === 'active' || value === 'blocked';
 }
 
 //===================================================================
 
-function getClientId(client: Record<string, unknown>): string | undefined {
-  return (
-    getTrimmedString(client.id) ??
-    getTrimmedString(client.clientId) ??
-    getTrimmedString(client._id)
-  );
+function requireObjectId(
+  value: unknown,
+  label: string,
+  payload: unknown
+): EntityId {
+  const id = getTrimmedString(value);
+
+  if (!id || !isValidObjectId(id)) {
+    invalidClientContract(`${label} must be a valid entity ID.`, payload);
+  }
+
+  return id;
 }
 
 //===================================================================
 
-function getClientName(client: Record<string, unknown>): string {
-  const nestedClient = getNestedRecord(client, 'client');
-  const profile = getNestedRecord(client, 'profile');
+function requireText(value: unknown, label: string, payload: unknown): string {
+  const text = getTrimmedString(value);
 
-  return (
-    getTrimmedString(client.name) ??
-    getTrimmedString(client.fullName) ??
-    (nestedClient ? getTrimmedString(nestedClient.name) : undefined) ??
-    (nestedClient ? getTrimmedString(nestedClient.fullName) : undefined) ??
-    (profile ? getTrimmedString(profile.name) : undefined) ??
-    'Not specified'
-  );
+  if (!text) {
+    invalidClientContract(`${label} must be a non-empty string.`, payload);
+  }
+
+  return text;
 }
 
 //===================================================================
 
-function getClientEmail(client: Record<string, unknown>): string {
-  const nestedClient = getNestedRecord(client, 'client');
-  const profile = getNestedRecord(client, 'profile');
+function requireString(
+  value: unknown,
+  label: string,
+  payload: unknown
+): string {
+  if (typeof value !== 'string') {
+    invalidClientContract(`${label} must be a string.`, payload);
+  }
 
-  return (
-    getTrimmedString(client.email) ??
-    (nestedClient ? getTrimmedString(nestedClient.email) : undefined) ??
-    (profile ? getTrimmedString(profile.email) : undefined) ??
-    'Not specified'
-  );
+  return value.trim();
 }
 
 //===================================================================
 
-function getClientPhone(client: Record<string, unknown>): string {
-  const nestedClient = getNestedRecord(client, 'client');
-  const profile = getNestedRecord(client, 'profile');
+function requireNullableString(
+  value: unknown,
+  label: string,
+  payload: unknown
+): string | null {
+  if (value === null) return null;
+  if (typeof value !== 'string') {
+    invalidClientContract(`${label} must be a string or null.`, payload);
+  }
 
-  return (
-    getTrimmedString(client.phone) ??
-    (nestedClient ? getTrimmedString(nestedClient.phone) : undefined) ??
-    (profile ? getTrimmedString(profile.phone) : undefined) ??
-    'Not specified'
-  );
+  return value.trim() || null;
 }
 
 //===================================================================
 
-function getClientAddress(client: Record<string, unknown>): string {
-  const nestedClient = getNestedRecord(client, 'client');
-  const profile = getNestedRecord(client, 'profile');
+function requireNonNegativeNumber(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  const number = getFiniteNumber(value);
 
-  return (
-    getTrimmedString(client.address) ??
-    (nestedClient ? getTrimmedString(nestedClient.address) : undefined) ??
-    (profile ? getTrimmedString(profile.address) : undefined) ??
-    'Not specified'
-  );
+  if (number === undefined || number < 0) {
+    invalidClientContract(
+      `${label} must be a finite non-negative number.`,
+      payload
+    );
+  }
+
+  return number;
 }
 
 //===================================================================
 
-function getClientPhoto(client: Record<string, unknown>): string | null {
-  const nestedClient = getNestedRecord(client, 'client');
-  const profile = getNestedRecord(client, 'profile');
+function requireNonNegativeInteger(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    invalidClientContract(
+      `${label} must be a safe non-negative integer.`,
+      payload
+    );
+  }
 
-  return (
-    getTrimmedString(client.photoUrl) ??
-    getTrimmedString(client.pictureUrl) ??
-    getTrimmedString(client.avatarUrl) ??
-    (nestedClient ? getTrimmedString(nestedClient.photoUrl) : undefined) ??
-    (nestedClient ? getTrimmedString(nestedClient.pictureUrl) : undefined) ??
-    (profile ? getTrimmedString(profile.photoUrl) : undefined) ??
-    (profile ? getTrimmedString(profile.pictureUrl) : undefined) ??
-    null
-  );
+  return value;
 }
 
 //===================================================================
 
-function getSuccessfulOrdersCount(client: Record<string, unknown>): number {
-  const statistics = getNestedRecord(client, 'statistics');
-  const successful = statistics
-    ? getNestedRecord(statistics, 'successful')
-    : undefined;
+function requirePositiveInteger(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 1) {
+    invalidClientContract(`${label} must be a safe positive integer.`, payload);
+  }
 
-  return (
-    getFiniteNumber(client.successfulOrdersCount) ??
-    getFiniteNumber(client.successfulOrders) ??
-    (statistics
-      ? getFiniteNumber(statistics.successfulOrdersCount)
-      : undefined) ??
-    (successful ? getFiniteNumber(successful.count) : undefined) ??
-    0
-  );
+  return value;
 }
 
 //===================================================================
 
-function getSuccessfulOrdersAmount(client: Record<string, unknown>): number {
-  const statistics = getNestedRecord(client, 'statistics');
-  const successful = statistics
-    ? getNestedRecord(statistics, 'successful')
-    : undefined;
+function parseEarliestCreatedAt(
+  payload: unknown,
+  label: string
+): string | null {
+  if (!isRecord(payload)) {
+    invalidClientContract(`${label} must be an object.`, payload);
+  }
 
-  return (
-    getFiniteNumber(client.successfulOrdersAmount) ??
-    getFiniteNumber(client.successfulOrdersTotal) ??
-    (statistics
-      ? getFiniteNumber(statistics.successfulOrdersAmount)
-      : undefined) ??
-    (successful ? getFiniteNumber(successful.amount) : undefined) ??
-    0
-  );
+  if (payload.earliestCreatedAt === null) return null;
+
+  if (!isCalendarDateString(payload.earliestCreatedAt)) {
+    invalidClientContract(
+      `${label}.earliestCreatedAt must be a calendar date or null.`,
+      payload
+    );
+  }
+
+  return payload.earliestCreatedAt;
 }
 
 //===================================================================
 
-export function normalizePharmacyClient(
-  rawClient: unknown
-): PharmacyClientRow | null {
-  if (!isRecord(rawClient)) return null;
+export function normalizePharmacyClient(rawClient: unknown): PharmacyClientRow {
+  if (!isRecord(rawClient)) {
+    invalidClientContract('pharmacy client must be an object.', rawClient);
+  }
 
-  const id = getClientId(rawClient);
-  if (!id) return null;
+  const id = requireObjectId(rawClient.id, 'pharmacy client.id', rawClient);
+  const firstOrderAt = rawClient.firstOrderAt;
+  const status = rawClient.status;
 
-  const isDefault = rawClient.isDefault === true;
+  if (!isISODateTimeString(firstOrderAt)) {
+    invalidClientContract(
+      'pharmacy client.firstOrderAt must be a canonical ISO datetime.',
+      rawClient
+    );
+  }
+
+  if (!isClientStatus(status)) {
+    invalidClientContract('pharmacy client.status is invalid.', rawClient);
+  }
+
+  if (typeof rawClient.isDefault !== 'boolean') {
+    invalidClientContract(
+      'pharmacy client.isDefault must be boolean.',
+      rawClient
+    );
+  }
+
+  if (rawClient.isDefault && status !== 'active') {
+    invalidClientContract(
+      'default pharmacy client must have active status.',
+      rawClient
+    );
+  }
+
+  const statusReason =
+    rawClient.statusReason === undefined
+      ? undefined
+      : requireText(
+          rawClient.statusReason,
+          'pharmacy client.statusReason',
+          rawClient
+        );
 
   return {
     id,
-    photoUrl: getClientPhoto(rawClient),
-    firstOrderAt:
-      getTrimmedString(rawClient.firstOrderAt) ??
-      getTrimmedString(rawClient.firstOrderDate) ??
-      getTrimmedString(rawClient.createdAt) ??
-      '',
-    name: getClientName(rawClient),
-    email: isDefault ? '' : getClientEmail(rawClient),
-    phone: isDefault ? '' : getClientPhone(rawClient),
-    address: isDefault ? '' : getClientAddress(rawClient),
-    successfulOrdersCount: getSuccessfulOrdersCount(rawClient),
-    successfulOrdersAmount: getSuccessfulOrdersAmount(rawClient),
-    status: isDefault
-      ? 'active'
-      : isClientStatus(rawClient.status)
-        ? rawClient.status
-        : 'active',
-    ...(getTrimmedString(rawClient.statusReason)
-      ? { statusReason: getTrimmedString(rawClient.statusReason) }
-      : {}),
-    isDefault,
+    photoUrl: requireNullableString(
+      rawClient.photoUrl,
+      'pharmacy client.photoUrl',
+      rawClient
+    ),
+    firstOrderAt,
+    name: requireText(rawClient.name, 'pharmacy client.name', rawClient),
+    email: requireString(rawClient.email, 'pharmacy client.email', rawClient),
+    phone: requireString(rawClient.phone, 'pharmacy client.phone', rawClient),
+
+    address: requireString(
+      rawClient.address,
+      'pharmacy client.address',
+      rawClient
+    ),
+
+    successfulOrdersCount: requireNonNegativeInteger(
+      rawClient.successfulOrdersCount,
+      'pharmacy client.successfulOrdersCount',
+      rawClient
+    ),
+
+    successfulOrdersAmount: requireNonNegativeNumber(
+      rawClient.successfulOrdersAmount,
+      'pharmacy client.successfulOrdersAmount',
+      rawClient
+    ),
+
+    status,
+    ...(statusReason ? { statusReason } : {}),
+    isDefault: rawClient.isDefault,
   };
 }
 
@@ -285,58 +345,100 @@ export function normalizePharmacyClientsResponse(
 
   return {
     ...response,
-    earliestCreatedAt: isRecord(payload)
-      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
-      : null,
+    earliestCreatedAt: parseEarliestCreatedAt(
+      payload,
+      'pharmacy clients response'
+    ),
   };
-}
-
-//===================================================================
-
-function isProductStatus(value: unknown): value is ProductStatus {
-  return value === 'new' || value === 'active' || value === 'blocked';
 }
 
 //===================================================================
 
 function normalizePharmacyClientPurchasedProduct(
   payload: unknown
-): PharmacyClientPurchasedProduct | null {
-  if (!isRecord(payload)) return null;
+): PharmacyClientPurchasedProduct {
+  if (!isRecord(payload)) {
+    invalidClientContract(
+      'pharmacy client purchased product must be an object.',
+      payload
+    );
+  }
 
-  const id = getTrimmedString(payload.id);
-  const orderId = getTrimmedString(payload.orderId);
-  const orderDate = getTrimmedString(payload.orderDate);
-  const productId = getTrimmedString(payload.productId);
-  const article = getTrimmedString(payload.article);
-  const name = getTrimmedString(payload.name);
+  const orderDate = payload.orderDate;
   const category = payload.category;
   const status = payload.status;
 
-  if (
-    !id ||
-    !orderId ||
-    !orderDate ||
-    !productId ||
-    !article ||
-    !name ||
-    !isProductCategory(category) ||
-    !isProductStatus(status)
-  ) {
-    return null;
+  if (!isISODateTimeString(orderDate)) {
+    invalidClientContract(
+      'pharmacy client purchased product.orderDate must be a canonical ISO datetime.',
+      payload
+    );
+  }
+
+  if (!isProductCategory(category)) {
+    invalidClientContract(
+      'pharmacy client purchased product.category is invalid.',
+      payload
+    );
+  }
+
+  if (!isProductStatus(status)) {
+    invalidClientContract(
+      'pharmacy client purchased product.status is invalid.',
+      payload
+    );
   }
 
   return {
-    id,
-    orderId,
+    id: requireText(
+      payload.id,
+      'pharmacy client purchased product.id',
+      payload
+    ),
+
+    orderId: requireObjectId(
+      payload.orderId,
+      'pharmacy client purchased product.orderId',
+      payload
+    ),
+
     orderDate,
-    productId,
-    photoUrl: getTrimmedString(payload.photoUrl) ?? null,
-    article,
-    name,
+    productId: requireObjectId(
+      payload.productId,
+      'pharmacy client purchased product.productId',
+      payload
+    ),
+
+    photoUrl: requireNullableString(
+      payload.photoUrl,
+      'pharmacy client purchased product.photoUrl',
+      payload
+    ),
+
+    article: requireText(
+      payload.article,
+      'pharmacy client purchased product.article',
+      payload
+    ),
+
+    name: requireText(
+      payload.name,
+      'pharmacy client purchased product.name',
+      payload
+    ),
+
     category,
-    quantity: getFiniteNumber(payload.quantity) ?? 0,
-    totalAmount: getFiniteNumber(payload.totalAmount) ?? 0,
+    quantity: requirePositiveInteger(
+      payload.quantity,
+      'pharmacy client purchased product.quantity',
+      payload
+    ),
+
+    totalAmount: requireNonNegativeNumber(
+      payload.totalAmount,
+      'pharmacy client purchased product.totalAmount',
+      payload
+    ),
     status,
   };
 }
@@ -356,8 +458,9 @@ export function normalizePharmacyClientProductsResponse(
 
   return {
     ...response,
-    earliestCreatedAt: isRecord(payload)
-      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
-      : null,
+    earliestCreatedAt: parseEarliestCreatedAt(
+      payload,
+      'pharmacy client products response'
+    ),
   };
 }

@@ -1,3 +1,4 @@
+import { ApiError } from '@e-pharmacy/api-client/transport';
 import { isProductCategory } from '@e-pharmacy/validation/products';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
@@ -12,8 +13,6 @@ import type {
 
 import type { ProductCategory } from '@e-pharmacy/types/products';
 
-import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
-
 //===================================================================
 
 export type PharmacyOrderSalesStatisticsQueryParams = Readonly<{
@@ -25,6 +24,18 @@ export type PharmacyOrderSalesStatisticsQueryParams = Readonly<{
 
 //===================================================================
 
+function invalidSalesStatisticsContract(
+  message: string,
+  payload: unknown
+): never {
+  throw new ApiError(message, {
+    transportCode: 'INVALID_RESPONSE',
+    payload,
+  });
+}
+
+//===================================================================
+
 function isOrderSalesGroupBy(
   value: unknown
 ): value is OrderSalesStatisticsGroupBy {
@@ -33,12 +44,57 @@ function isOrderSalesGroupBy(
 
 //===================================================================
 
-function normalizeSalesValue(value: unknown): OrderSalesStatisticsValue {
-  if (!isRecord(value)) return { quantity: 0, amount: 0 };
+function requireNonNegativeInteger(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    invalidSalesStatisticsContract(
+      `${label} must be a safe non-negative integer.`,
+      payload
+    );
+  }
+
+  return value;
+}
+
+//===================================================================
+
+function requireNonNegativeNumber(
+  value: unknown,
+  label: string,
+  payload: unknown
+): number {
+  const number = getFiniteNumber(value);
+
+  if (number === undefined || number < 0) {
+    invalidSalesStatisticsContract(
+      `${label} must be a finite non-negative number.`,
+      payload
+    );
+  }
+
+  return number;
+}
+
+//===================================================================
+
+function normalizeSalesValue(
+  value: unknown,
+  label: string
+): OrderSalesStatisticsValue {
+  if (!isRecord(value)) {
+    invalidSalesStatisticsContract(`${label} must be an object.`, value);
+  }
 
   return {
-    quantity: getFiniteNumber(value.quantity) ?? 0,
-    amount: getFiniteNumber(value.amount) ?? 0,
+    quantity: requireNonNegativeInteger(
+      value.quantity,
+      `${label}.quantity`,
+      value
+    ),
+    amount: requireNonNegativeNumber(value.amount, `${label}.amount`, value),
   };
 }
 
@@ -47,19 +103,32 @@ function normalizeSalesValue(value: unknown): OrderSalesStatisticsValue {
 function normalizeSalesPoint(
   value: unknown,
   categories: ProductCategory[]
-): OrderSalesStatisticsPoint | null {
-  if (!isRecord(value)) return null;
+): OrderSalesStatisticsPoint {
+  if (!isRecord(value)) {
+    invalidSalesStatisticsContract(
+      'sales statistics point must be an object.',
+      value
+    );
+  }
 
   const key = getTrimmedString(value.key);
   const label = getTrimmedString(value.label);
+  const rawValues = value.values;
 
-  if (!key || !label) return null;
+  if (!key || !label || !isRecord(rawValues)) {
+    invalidSalesStatisticsContract(
+      'sales statistics point key, label, and values are required.',
+      value
+    );
+  }
 
-  const rawValues = isRecord(value.values) ? value.values : {};
   const values = categories.reduce<OrderSalesStatisticsPoint['values']>(
     (acc, category) => ({
       ...acc,
-      [category]: normalizeSalesValue(rawValues[category]),
+      [category]: normalizeSalesValue(
+        rawValues[category],
+        `sales statistics point.values.${category}`
+      ),
     }),
     {}
   );
@@ -72,27 +141,59 @@ function normalizeSalesPoint(
 export function normalizeOrderSalesStatistics(
   payload: unknown
 ): OrderSalesStatistics {
-  if (!isRecord(payload)) return DEFAULT_ORDER_SALES_STATISTICS;
+  if (!isRecord(payload)) {
+    invalidSalesStatisticsContract(
+      'sales statistics response must be an object.',
+      payload
+    );
+  }
 
-  const categories = Array.isArray(payload.categories)
-    ? payload.categories.filter(isProductCategory)
-    : [];
+  if (payload.currency !== '₴') {
+    invalidSalesStatisticsContract(
+      'sales statistics currency is invalid.',
+      payload
+    );
+  }
 
-  const groupBy = isOrderSalesGroupBy(payload.groupBy)
-    ? payload.groupBy
-    : DEFAULT_ORDER_SALES_STATISTICS.groupBy;
+  if (!isOrderSalesGroupBy(payload.groupBy)) {
+    invalidSalesStatisticsContract(
+      'sales statistics groupBy is invalid.',
+      payload
+    );
+  }
 
-  const points = Array.isArray(payload.points)
-    ? payload.points.flatMap((point) => {
-        const normalizedPoint = normalizeSalesPoint(point, categories);
-        return normalizedPoint ? [normalizedPoint] : [];
-      })
-    : [];
+  if (
+    !Array.isArray(payload.categories) ||
+    !payload.categories.every(isProductCategory)
+  ) {
+    invalidSalesStatisticsContract(
+      'sales statistics categories are invalid.',
+      payload
+    );
+  }
+
+  if (!Array.isArray(payload.points)) {
+    invalidSalesStatisticsContract(
+      'sales statistics points must be an array.',
+      payload
+    );
+  }
+
+  const categories = [...payload.categories];
+
+  if (new Set(categories).size !== categories.length) {
+    invalidSalesStatisticsContract(
+      'sales statistics categories must be unique.',
+      payload
+    );
+  }
 
   return {
     currency: '₴',
-    groupBy,
+    groupBy: payload.groupBy,
     categories,
-    points,
+    points: payload.points.map((point) =>
+      normalizeSalesPoint(point, categories)
+    ),
   };
 }

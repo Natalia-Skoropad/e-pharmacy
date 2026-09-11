@@ -1,14 +1,9 @@
 import { USER_STATUSES } from '@e-pharmacy/config/users';
 
 import {
-  CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN,
-  URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
-  deslugifyNameSegment,
   isDateParam,
   isDateRangeValid,
   normalizeSlugEnumValue,
-  sanitizeTextParam,
-  slugifySegment,
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
@@ -19,16 +14,6 @@ import {
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { type ClientStatus } from '@/lib/clients/clients';
-
-//===================================================================
-
-const CLIENT_TEXT_PARAM_OPTIONS = {
-  disallowedCharsPattern: URL_CLIENT_TEXT_PARAM_DISALLOWED_CHARS_PATTERN,
-} as const;
-
-const CLIENT_SLUG_OPTIONS = {
-  separatorPattern: CLIENT_SLUG_SEGMENT_SEPARATOR_PATTERN,
-} as const;
 
 //===================================================================
 
@@ -90,18 +75,6 @@ function normalizeSuccessfulOrdersSegment(
 
 //===================================================================
 
-function sanitizeContactSegment(value: string): string {
-  return sanitizeTextParam(value, CLIENT_TEXT_PARAM_OPTIONS);
-}
-
-//===================================================================
-
-function deslugifyContactSegment(value: string): string {
-  return deslugifyNameSegment(value, CLIENT_TEXT_PARAM_OPTIONS);
-}
-
-//===================================================================
-
 export type ClientsRouteParams = Readonly<{
   filters?: string[];
 }>;
@@ -140,43 +113,16 @@ export function parseClientsSegments(
   };
 
   for (const segment of params.filters ?? []) {
-    if (segment.startsWith('search-name-')) {
-      filters.name = deslugifyNameSegment(
-        segment.replace('search-name-', ''),
-        CLIENT_TEXT_PARAM_OPTIONS
-      );
-      continue;
-    }
-
-    if (segment.startsWith('client-id-')) {
-      filters.clientId = sanitizeTextParam(
-        segment.replace('client-id-', ''),
-        CLIENT_TEXT_PARAM_OPTIONS
-      );
-      continue;
-    }
-
-    if (segment.startsWith('contact-')) {
-      filters.contact = deslugifyContactSegment(
-        segment.replace('contact-', '')
-      );
-      continue;
-    }
-
-    if (segment.startsWith('email-')) {
-      filters.contact = sanitizeContactSegment(segment.replace('email-', ''));
-      continue;
-    }
-
-    if (segment.startsWith('phone-')) {
-      filters.contact = sanitizeContactSegment(segment.replace('phone-', ''));
-      continue;
-    }
-
-    if (segment.startsWith('address-')) {
-      filters.contact = deslugifyContactSegment(
-        segment.replace('address-', '')
-      );
+    if (
+      segment.startsWith('search-name-') ||
+      segment.startsWith('client-id-') ||
+      segment.startsWith('contact-') ||
+      segment.startsWith('email-') ||
+      segment.startsWith('phone-') ||
+      segment.startsWith('address-')
+    ) {
+      // Legacy PII-bearing URLs are recognized so the page can canonicalize
+      // them, but their values are intentionally not restored into state.
       continue;
     }
 
@@ -242,21 +188,6 @@ export function parseClientsSegments(
 export function buildClientsPath(filters: ClientsFilterState): string {
   const segments: string[] = [];
   const dateRangeIsValid = isDateRangeValid(filters.firstOrderDate);
-  const name = filters.name.trim();
-  const clientId = filters.clientId.trim();
-  const contact = filters.contact.trim();
-
-  if (name) {
-    segments.push(`search-name-${slugifySegment(name, CLIENT_SLUG_OPTIONS)}`);
-  }
-
-  if (clientId) {
-    segments.push(`client-id-${slugifySegment(clientId, CLIENT_SLUG_OPTIONS)}`);
-  }
-
-  if (contact) {
-    segments.push(`contact-${slugifySegment(contact, CLIENT_SLUG_OPTIONS)}`);
-  }
 
   if (filters.status !== 'all') {
     segments.push(`status-${slugifyStatus(filters.status)}`);

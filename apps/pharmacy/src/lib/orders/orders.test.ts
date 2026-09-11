@@ -6,6 +6,7 @@ import { ApiError } from '@e-pharmacy/api-client/transport';
 import {
   normalizePharmacyOrder,
   normalizePharmacyOrderDetails,
+  normalizePharmacyOrdersResponse,
 } from './orders';
 
 //===================================================================
@@ -102,6 +103,53 @@ test('pharmacy order details reject malformed nested history and bank data', () 
       normalizePharmacyOrderDetails({
         ...order,
         bankDetails: { iban: 'UA00' },
+      }),
+    isInvalidResponse
+  );
+});
+
+//===================================================================
+
+test('pharmacy orders response rejects malformed statistics instead of using zero defaults', () => {
+  const statistics = {
+    new: { count: 1, amount: 200 },
+    in_progress: { count: 0, amount: 0 },
+    successful: { count: 0, amount: 0 },
+    rejected: { count: 0, amount: 0 },
+  };
+
+  const response = {
+    items: [validOrder()],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+    statistics,
+    earliestCreatedAt: '2026-08-12',
+  };
+
+  assert.equal(
+    normalizePharmacyOrdersResponse(response).statistics.new.count,
+    1
+  );
+
+  assert.throws(
+    () =>
+      normalizePharmacyOrdersResponse({
+        ...response,
+        statistics: { ...statistics, successful: undefined },
+      }),
+    isInvalidResponse
+  );
+
+  assert.throws(
+    () =>
+      normalizePharmacyOrdersResponse({
+        ...response,
+        statistics: {
+          ...statistics,
+          successful: { count: -1, amount: 0 },
+        },
       }),
     isInvalidResponse
   );

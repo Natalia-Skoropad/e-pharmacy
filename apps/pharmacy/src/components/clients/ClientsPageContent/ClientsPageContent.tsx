@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
@@ -28,12 +29,8 @@ import {
 
 import { getPharmacyClients } from '@/lib/api/browser';
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
-import { getPharmacyClientsFilterPath } from '@/lib/layout/routes';
-
-import {
-  getLockedFeatureBannerStatus,
-  useCurrentPharmacyStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import {
   DEFAULT_CLIENTS_FILTERS,
@@ -49,7 +46,6 @@ import type {
 import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 
 import { ClientStatistics } from '@/components/statistics';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 
@@ -126,6 +122,8 @@ function ClientsPageContent({
 
   const [clientStatistics, setClientStatistics] =
     useState<ClientStatisticsCounts>(DEFAULT_CLIENT_STATISTICS);
+  const [isClientStatisticsUnavailable, setIsClientStatisticsUnavailable] =
+    useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -138,10 +136,13 @@ function ClientsPageContent({
         const nextStatistics = await getPharmacyClientStatistics({
           signal: controller.signal,
         });
-        if (!controller.signal.aborted) setClientStatistics(nextStatistics);
+        if (!controller.signal.aborted) {
+          setClientStatistics(nextStatistics);
+          setIsClientStatisticsUnavailable(false);
+        }
       } catch {
         if (!controller.signal.aborted) {
-          setClientStatistics(DEFAULT_CLIENT_STATISTICS);
+          setIsClientStatisticsUnavailable(true);
         }
       }
     }
@@ -254,15 +255,21 @@ function ClientsPageContent({
 
   const getClientStatisticHref = (key: ClientStatisticsKey) => {
     if (key === 'active') {
-      return getPharmacyClientsFilterPath({ status: 'active' });
+      return buildClientsPath({ ...DEFAULT_CLIENTS_FILTERS, status: 'active' });
     }
 
     if (key === 'blocked') {
-      return getPharmacyClientsFilterPath({ status: 'blocked' });
+      return buildClientsPath({
+        ...DEFAULT_CLIENTS_FILTERS,
+        status: 'blocked',
+      });
     }
 
     if (key === 'repeat') {
-      return getPharmacyClientsFilterPath({ 'successful-orders': 'repeat' });
+      return buildClientsPath({
+        ...DEFAULT_CLIENTS_FILTERS,
+        successfulOrders: 'repeat',
+      });
     }
 
     return PHARMACY_ROUTES.CLIENTS;
@@ -312,11 +319,15 @@ function ClientsPageContent({
           />
         ) : null}
 
-        <ClientStatistics
-          counts={clientStatistics}
-          getStatisticHref={getClientStatisticHref}
-          className={css.clientStatistics}
-        />
+        {isClientStatisticsUnavailable ? (
+          <p role="status">Client statistics are temporarily unavailable.</p>
+        ) : (
+          <ClientStatistics
+            counts={clientStatistics}
+            getStatisticHref={getClientStatisticHref}
+            className={css.clientStatistics}
+          />
+        )}
       </section>
 
       <section className={css.card} aria-labelledby="clients-search-title">

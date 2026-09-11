@@ -19,6 +19,7 @@ import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 import type { EntityId } from '@e-pharmacy/types/primitives';
@@ -34,7 +35,6 @@ import type {
 } from '@e-pharmacy/types/products';
 
 import { addProductToMyPharmacy, getProducts } from '@/lib/api/browser';
-
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 
 import {
@@ -45,10 +45,9 @@ import {
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { AllProductStatistics } from '@/components/statistics';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 
@@ -131,6 +130,8 @@ function AllProductsPageContent({
 
   const [productStatistics, setProductStatistics] =
     useState<AllProductStatisticsCounts>(DEFAULT_ALL_PRODUCT_STATISTICS);
+  const [isProductStatisticsUnavailable, setIsProductStatisticsUnavailable] =
+    useState(false);
 
   const [productToAdd, setProductToAdd] = useState<ProductDetails | null>(null);
   const [addingProductId, setAddingProductId] = useState<EntityId | null>(null);
@@ -151,10 +152,13 @@ function AllProductsPageContent({
           { signal: controller.signal }
         );
 
-        if (!controller.signal.aborted) setProductStatistics(nextStatistics);
+        if (!controller.signal.aborted) {
+          setProductStatistics(nextStatistics);
+          setIsProductStatisticsUnavailable(false);
+        }
       } catch {
         if (!controller.signal.aborted) {
-          setProductStatistics(DEFAULT_ALL_PRODUCT_STATISTICS);
+          setIsProductStatisticsUnavailable(true);
         }
       }
     }
@@ -329,11 +333,15 @@ function AllProductsPageContent({
           />
         ) : null}
 
-        <AllProductStatistics
-          counts={productStatistics}
-          getStatisticHref={getProductStatisticHref}
-          className={css.productStatistics}
-        />
+        {isProductStatisticsUnavailable ? (
+          <p role="status">Product statistics are temporarily unavailable.</p>
+        ) : (
+          <AllProductStatistics
+            counts={productStatistics}
+            getStatisticHref={getProductStatisticHref}
+            className={css.productStatistics}
+          />
+        )}
       </section>
 
       <section

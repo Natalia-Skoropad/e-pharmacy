@@ -18,15 +18,13 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser';
-import { getPharmacyOrdersFilterPath } from '@/lib/layout/routes';
 
-import {
-  getLockedFeatureBannerStatus,
-  useCurrentPharmacyStatus,
-} from '@/lib/pharmacies/current-pharmacy-status';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { buildOrdersPath } from '@/lib/orders/order-paths';
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
@@ -42,7 +40,6 @@ import type {
 } from '@/lib/orders/orders';
 
 import { OrderStatistics } from '@/components/statistics';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
 
@@ -98,6 +95,8 @@ function OrdersPageContent({
   const [orderStatistics, setOrderStatistics] = useState(
     DEFAULT_ORDER_STATISTICS
   );
+  const [isOrderStatisticsUnavailable, setIsOrderStatisticsUnavailable] =
+    useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -124,6 +123,7 @@ function OrdersPageContent({
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
         setOrderStatistics(response.statistics);
+        setIsOrderStatisticsUnavailable(false);
       } catch {
         if (controller.signal.aborted) return;
 
@@ -131,7 +131,7 @@ function OrdersPageContent({
         setTotalOrders(0);
         setTotalPages(0);
         setEarliestCreatedAt(null);
-        setOrderStatistics(DEFAULT_ORDER_STATISTICS);
+        setIsOrderStatisticsUnavailable(true);
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -205,11 +205,17 @@ function OrdersPageContent({
           />
         ) : null}
 
-        <OrderStatistics
-          counts={orderStatistics}
-          getStatusHref={(status) => getPharmacyOrdersFilterPath({ status })}
-          className={css.orderStatistics}
-        />
+        {isOrderStatisticsUnavailable ? (
+          <p role="status">Order statistics are temporarily unavailable.</p>
+        ) : (
+          <OrderStatistics
+            counts={orderStatistics}
+            getStatusHref={(status) =>
+              buildOrdersPath({ ...DEFAULT_ORDERS_FILTERS, status })
+            }
+            className={css.orderStatistics}
+          />
+        )}
       </section>
 
       <section className={css.card} aria-labelledby="orders-search-title">
