@@ -122,11 +122,55 @@ test('invalid known enum segments normalize to canonical defaults', () => {
   const products = parseAllProductsSegments({
     filters: ['added-to-my-pharmacy-maybe'],
   });
-
   assert.equal(
     products.addedToMyPharmacy,
     DEFAULT_ALL_PRODUCTS_FILTERS.addedToMyPharmacy
   );
-
   assert.equal(buildAllProductsPath(products), '/pharmacy/all-products');
+});
+
+//===================================================================
+
+test('unknown filter segments normalize deterministically to canonical base routes', () => {
+  const cases = [
+    {
+      parse: () => parseOrdersSegments({ filters: ['random-filter-value'] }),
+      build: buildOrdersPath,
+      expectedState: DEFAULT_ORDERS_FILTERS,
+      expectedPath: '/pharmacy/orders',
+    },
+    {
+      parse: () => parseClientsSegments({ filters: ['random-filter-value'] }),
+      build: buildClientsPath,
+      expectedState: DEFAULT_CLIENTS_FILTERS,
+      expectedPath: '/pharmacy/clients',
+    },
+    {
+      parse: () =>
+        parseOwnProductsSegments({ filters: ['random-filter-value'] }),
+      build: buildOwnProductsPath,
+      expectedState: DEFAULT_OWN_PRODUCTS_FILTERS,
+      expectedPath: '/pharmacy/products',
+    },
+    {
+      parse: () =>
+        parseAllProductsSegments({ filters: ['random-filter-value'] }),
+      build: buildAllProductsPath,
+      expectedState: DEFAULT_ALL_PRODUCTS_FILTERS,
+      expectedPath: '/pharmacy/all-products',
+    },
+    {
+      parse: () =>
+        parseProductRequestsSegments({ filters: ['random-filter-value'] }),
+      build: buildProductRequestsPath,
+      expectedState: DEFAULT_PRODUCT_REQUESTS_FILTERS,
+      expectedPath: '/pharmacy/product-requests',
+    },
+  ] as const;
+
+  for (const { parse, build, expectedState, expectedPath } of cases) {
+    const state = parse();
+    assert.deepEqual(state, expectedState);
+    assert.equal(build(state as never), expectedPath);
+  }
 });

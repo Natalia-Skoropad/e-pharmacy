@@ -3,6 +3,7 @@ import {
   requirePaginatedResponse,
 } from '@e-pharmacy/api-client/response';
 
+import { ApiError } from '@e-pharmacy/api-client/transport';
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 
@@ -29,6 +30,40 @@ import { isProductRequestStatus } from '@e-pharmacy/validation/product-requests'
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
+
+//===================================================================
+
+function invalidProductRequestContract(
+  message: string,
+  payload: unknown
+): never {
+  throw new ApiError(message, {
+    transportCode: 'INVALID_RESPONSE',
+    payload,
+  });
+}
+
+//===================================================================
+
+function parseEarliestCreatedAt(payload: unknown): CalendarDateString | null {
+  if (!isRecord(payload)) {
+    invalidProductRequestContract(
+      'product requests response must be an object.',
+      payload
+    );
+  }
+
+  if (payload.earliestCreatedAt === null) return null;
+
+  if (!isCalendarDateString(payload.earliestCreatedAt)) {
+    invalidProductRequestContract(
+      'product requests response.earliestCreatedAt must be a calendar date or null.',
+      payload
+    );
+  }
+
+  return payload.earliestCreatedAt;
+}
 
 //===================================================================
 
@@ -364,15 +399,8 @@ export function normalizeProductRequestsResponse(
     }),
     { label: 'product requests response' }
   );
-  const earliestCreatedAt = isRecord(payload)
-    ? getTrimmedString(payload.earliestCreatedAt)
-    : undefined;
-
   return {
     ...response,
-    earliestCreatedAt:
-      earliestCreatedAt && isCalendarDateString(earliestCreatedAt)
-        ? earliestCreatedAt
-        : null,
+    earliestCreatedAt: parseEarliestCreatedAt(payload),
   };
 }

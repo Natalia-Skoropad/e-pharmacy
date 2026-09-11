@@ -1,5 +1,10 @@
-import { isISODateTimeString } from '@e-pharmacy/validation/dates';
+import {
+  isCalendarDateString,
+  isISODateTimeString,
+} from '@e-pharmacy/validation/dates';
+
 import { isProductCategory } from '@e-pharmacy/validation/products';
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   DELIVERY_METHODS,
@@ -189,15 +194,33 @@ function isOrderActivityType(value: unknown): value is OrderActivityType {
 
 //===================================================================
 
-const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
-
-//===================================================================
-
 function invalidOrderContract(message: string, payload: unknown): never {
   throw new ApiError(message, {
     transportCode: 'INVALID_RESPONSE',
     payload,
   });
+}
+
+//===================================================================
+
+function parseEarliestCreatedAt(payload: unknown): string | null {
+  if (!isRecord(payload)) {
+    invalidOrderContract(
+      'pharmacy orders response must be an object.',
+      payload
+    );
+  }
+
+  if (payload.earliestCreatedAt === null) return null;
+
+  if (!isCalendarDateString(payload.earliestCreatedAt)) {
+    invalidOrderContract(
+      'pharmacy orders response.earliestCreatedAt must be a calendar date or null.',
+      payload
+    );
+  }
+
+  return payload.earliestCreatedAt;
 }
 
 //===================================================================
@@ -208,7 +231,7 @@ function requireObjectId(
   payload: unknown
 ): EntityId {
   const id = getTrimmedString(value);
-  if (!id || !OBJECT_ID_PATTERN.test(id)) {
+  if (!id || !isValidObjectId(id)) {
     invalidOrderContract(`${label} must be a Mongo ObjectId string.`, payload);
   }
 
@@ -559,7 +582,7 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
   assertMoneyEqual(totalAmount, expectedAmount, 'order.totalPrice', rawOrder);
 
   const clientId = getClientId(rawOrder);
-  if (clientId && !OBJECT_ID_PATTERN.test(clientId)) {
+  if (clientId && !isValidObjectId(clientId)) {
     invalidOrderContract('order.clientId is invalid.', rawOrder);
   }
 
@@ -928,8 +951,6 @@ export function normalizePharmacyOrdersResponse(
           'pharmacy orders response must be an object.',
           payload
         ),
-    earliestCreatedAt: isRecord(payload)
-      ? (getTrimmedString(payload.earliestCreatedAt) ?? null)
-      : null,
+    earliestCreatedAt: parseEarliestCreatedAt(payload),
   };
 }

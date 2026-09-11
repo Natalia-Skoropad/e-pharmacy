@@ -153,4 +153,26 @@ test('pharmacy orders response rejects malformed statistics instead of using zer
       }),
     isInvalidResponse
   );
+
+  for (const earliestCreatedAt of [undefined, '', '2026-99-99', 123]) {
+    assert.throws(
+      () =>
+        normalizePharmacyOrdersResponse({
+          ...response,
+          earliestCreatedAt,
+        }),
+      isInvalidResponse
+    );
+  }
+
+  assert.equal(
+    normalizePharmacyOrdersResponse({
+      ...response,
+      items: [],
+      total: 0,
+      totalPages: 0,
+      earliestCreatedAt: null,
+    }).earliestCreatedAt,
+    null
+  );
 });

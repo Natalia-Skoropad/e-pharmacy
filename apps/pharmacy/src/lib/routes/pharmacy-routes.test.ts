@@ -16,6 +16,16 @@ const {
 
 //===================================================================
 
+const ENTITY_IDS = {
+  order: '507f1f77bcf86cd799439011',
+  client: '507f1f77bcf86cd799439012',
+  product: '507f1f77bcf86cd799439013',
+  allProduct: '507f1f77bcf86cd799439014',
+  request: '507f1f77bcf86cd799439015',
+} as const;
+
+//===================================================================
+
 test('exposes app-local pharmacy routes', () => {
   assert.deepEqual(PHARMACY_ROUTES, {
     ROOT: '/pharmacy',
@@ -33,36 +43,36 @@ test('exposes app-local pharmacy routes', () => {
 
 //===================================================================
 
-test('encodes validated entity IDs in every dynamic route', () => {
+test('builds dynamic routes only from validated entity IDs', () => {
   assert.equal(
-    getPharmacyOrderPath('order / Київ'),
-    '/pharmacy/orders/order%20%2F%20%D0%9A%D0%B8%D1%97%D0%B2'
+    getPharmacyOrderPath(ENTITY_IDS.order),
+    `/pharmacy/orders/${ENTITY_IDS.order}`
   );
 
   assert.equal(
-    getPharmacyClientPath(' client-1 '),
-    '/pharmacy/clients/client-1'
+    getPharmacyClientPath(` ${ENTITY_IDS.client} `),
+    `/pharmacy/clients/${ENTITY_IDS.client}`
   );
 
   assert.equal(
-    getPharmacyProductPath('product/1'),
-    '/pharmacy/products/product%2F1'
+    getPharmacyProductPath(ENTITY_IDS.product),
+    `/pharmacy/products/${ENTITY_IDS.product}`
   );
 
   assert.equal(
-    getPharmacyAllProductPath('all product'),
-    '/pharmacy/all-products/all%20product'
+    getPharmacyAllProductPath(ENTITY_IDS.allProduct),
+    `/pharmacy/all-products/${ENTITY_IDS.allProduct}`
   );
 
   assert.equal(
-    getPharmacyRequestPath(' request-1 '),
-    '/pharmacy/product-requests/request-1'
+    getPharmacyRequestPath(ENTITY_IDS.request),
+    `/pharmacy/product-requests/${ENTITY_IDS.request}`
   );
 });
 
 //===================================================================
 
-test('rejects empty route parameters', () => {
+test('rejects empty and malformed dynamic route IDs', () => {
   for (const builder of [
     getPharmacyOrderPath,
     getPharmacyClientPath,
@@ -70,7 +80,16 @@ test('rejects empty route parameters', () => {
     getPharmacyAllProductPath,
     getPharmacyRequestPath,
   ]) {
-    assert.throws(() => builder('   '), TypeError);
+    for (const invalidId of [
+      '',
+      '   ',
+      'client-1',
+      'product/1',
+      '507f1f77bcf86cd79943901',
+      '507f1f77bcf86cd79943901z',
+    ]) {
+      assert.throws(() => builder(invalidId), TypeError);
+    }
   }
 });
 

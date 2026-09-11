@@ -1,3 +1,4 @@
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { isClientsFilterSegment } from '@/lib/clients/client-paths';
 import { isOrdersFilterSegment } from '@/lib/orders/order-paths';
 import { isProductRequestsFilterSegment } from '@/lib/product-requests/product-request-paths';
@@ -201,20 +202,6 @@ export function getEditProductRequestBreadcrumbs(
 
 //===================================================================
 
-export const PHARMACY_BREADCRUMB_ROOTS = {
-  dashboard: PHARMACY_ROUTES.DASHBOARD,
-  profile: PHARMACY_ROUTES.PROFILE,
-  orders: PHARMACY_ROUTES.ORDERS,
-  clients: PHARMACY_ROUTES.CLIENTS,
-  products: PHARMACY_ROUTES.PRODUCTS,
-  allProducts: PHARMACY_ROUTES.ALL_PRODUCTS,
-  productRequests: PHARMACY_ROUTES.PRODUCT_REQUESTS,
-} as const;
-
-//===================================================================
-
-//===================================================================
-
 export function getPharmacyBreadcrumbsByPathname(
   pathname: string,
   currentDetailLabel?: string
@@ -239,25 +226,25 @@ export function getPharmacyBreadcrumbsByPathname(
       );
     }
 
-    return id && !isOrdersFilterSegment(id)
+    return id && isValidObjectId(id) && !isOrdersFilterSegment(id)
       ? getOrderDetailsBreadcrumbs(id, currentDetailLabel)
       : getOrdersBreadcrumbs();
   }
 
   if (section === 'clients') {
-    return id && !isClientsFilterSegment(id)
+    return id && isValidObjectId(id) && !isClientsFilterSegment(id)
       ? getClientDetailsBreadcrumbs(id, currentDetailLabel)
       : getClientsBreadcrumbs();
   }
 
   if (section === 'products') {
-    return id && !isOwnProductsFilterSegment(id)
+    return id && isValidObjectId(id) && !isOwnProductsFilterSegment(id)
       ? getProductDetailsBreadcrumbs(id, currentDetailLabel)
       : getProductsBreadcrumbs();
   }
 
   if (section === 'all-products') {
-    return id && !isAllProductsFilterSegment(id)
+    return id && isValidObjectId(id) && !isAllProductsFilterSegment(id)
       ? getAllProductDetailsBreadcrumbs(id, currentDetailLabel)
       : getAllProductsBreadcrumbs();
   }
@@ -267,11 +254,11 @@ export function getPharmacyBreadcrumbsByPathname(
       return getNewProductRequestBreadcrumbs();
     }
 
-    if (id && action === 'edit') {
+    if (id && isValidObjectId(id) && action === 'edit') {
       return getEditProductRequestBreadcrumbs(id);
     }
 
-    return id && !isProductRequestsFilterSegment(id)
+    return id && isValidObjectId(id) && !isProductRequestsFilterSegment(id)
       ? getProductRequestDetailsBreadcrumbs(id, currentDetailLabel)
       : getProductRequestsBreadcrumbs();
   }

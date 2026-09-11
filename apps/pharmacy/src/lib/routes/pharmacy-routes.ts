@@ -1,3 +1,4 @@
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 //===================================================================
@@ -24,8 +25,8 @@ export const PHARMACY_ROUTES = {
 function appendRouteParam(basePath: string, value: EntityId): string {
   const routeSegment = value.trim();
 
-  if (!routeSegment) {
-    throw new TypeError('Route parameter must be a non-empty entity ID.');
+  if (!isValidObjectId(routeSegment)) {
+    throw new TypeError('Route parameter must be a valid entity ID.');
   }
 
   return `${basePath}/${encodeURIComponent(routeSegment)}`;
