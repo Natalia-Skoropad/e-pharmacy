@@ -36,6 +36,7 @@ type AllProductsFilterDraft = {
     from: string;
     to: string;
   };
+
   name: string;
   article: string;
   category: AllProductsFilterState['category'];

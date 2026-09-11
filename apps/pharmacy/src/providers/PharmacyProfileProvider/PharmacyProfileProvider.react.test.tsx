@@ -657,6 +657,7 @@ test('unmount aborts the active request and its later response cannot commit', a
   pending.resolve({
     pharmacy: createSummary(id, 'Obsolete after unmount'),
   });
+
   await flush();
 
   assert.equal(requireContext(latest).profile, null);

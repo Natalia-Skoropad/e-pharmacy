@@ -1,6 +1,6 @@
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
-import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 
+import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 import { getPharmacyProductRequests } from '@/lib/api/browser/product-requests.api';
 
 import {

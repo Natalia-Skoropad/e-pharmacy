@@ -20,6 +20,7 @@ export type OrdersFilterState = Readonly<{
     from: string;
     to: string;
   };
+
   client: string;
   orderNumber: string;
   deliveryMethod: DeliveryMethodFilter;
@@ -35,6 +36,7 @@ export const DEFAULT_ORDERS_FILTERS: OrdersFilterState = {
     from: '',
     to: '',
   },
+
   client: '',
   orderNumber: '',
   deliveryMethod: 'all',

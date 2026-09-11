@@ -14,8 +14,9 @@ import {
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
-import { PHARMACY_ROUTES } from '@/lib/routes';
 import type { DeliveryMethod, PaymentMethod } from '@e-pharmacy/types/orders';
+
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   DEFAULT_ORDERS_FILTERS,

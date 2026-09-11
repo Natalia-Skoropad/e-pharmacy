@@ -1,4 +1,5 @@
 import { isValidObjectId } from '@e-pharmacy/validation/url';
+
 import { isClientsFilterSegment } from '@/lib/clients/client-paths';
 import { isOrdersFilterSegment } from '@/lib/orders/order-paths';
 import { isProductRequestsFilterSegment } from '@/lib/product-requests/product-request-paths';
@@ -21,31 +22,7 @@ export type BreadcrumbItem = Readonly<{
 
 //===================================================================
 
-const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
-
-//===================================================================
-
-export function dispatchPharmacyBreadcrumbLabel(label: string): void {
-  if (typeof window === 'undefined') return;
-
-  const dispatch = () => {
-    window.dispatchEvent(
-      new CustomEvent(BREADCRUMB_LABEL_EVENT, {
-        detail: {
-          pathname: window.location.pathname,
-          label,
-        },
-      })
-    );
-  };
-
-  if (typeof window.queueMicrotask === 'function') {
-    window.queueMicrotask(dispatch);
-    return;
-  }
-
-  void Promise.resolve().then(dispatch);
-}
+export { dispatchPharmacyBreadcrumbLabel } from './breadcrumb-label-event';
 
 //===================================================================
 

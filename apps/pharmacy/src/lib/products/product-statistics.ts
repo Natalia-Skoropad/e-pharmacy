@@ -3,9 +3,9 @@ import type {
   OwnProductStatisticsCounts,
 } from '@e-pharmacy/types/products';
 
-import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
+import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 import { getPharmacyProducts, getProducts } from '@/lib/api/browser';
 
 //===================================================================

@@ -152,12 +152,8 @@
     gap: 8px;
   }
 
-  .pathItem:not(:first-child) {
-    display: none;
-  }
-
   .separator {
-    display: none;
+    margin-inline: 0 8px;
   }
 
   .link,

@@ -35,6 +35,7 @@ test('aggregate statistics helpers cannot widen browser transport options', () =
   const sourceFiles = [
     join(process.cwd(), 'src', 'lib', 'clients', 'client-statistics.ts'),
     join(process.cwd(), 'src', 'lib', 'products', 'product-statistics.ts'),
+
     join(
       process.cwd(),
       'src',

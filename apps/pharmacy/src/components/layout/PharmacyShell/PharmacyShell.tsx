@@ -7,27 +7,22 @@ import clsx from 'clsx';
 import { Container } from '@e-pharmacy/ui/layout';
 import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
+import { getPharmacyBreadcrumbsByPathname } from '@/lib/layout/breadcrumbs';
+import { subscribeToPharmacyBreadcrumbLabels } from '@/lib/layout/breadcrumb-label-event';
+import { PharmacyProfileProvider } from '@/providers/PharmacyProfileProvider';
+
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
-import { PharmacyProfileProvider } from '@/providers/PharmacyProfileProvider';
-import { getPharmacyBreadcrumbsByPathname } from '@/lib/layout/breadcrumbs';
 
 import css from './PharmacyShell.module.css';
 
 //===================================================================
 
-const BREADCRUMB_LABEL_EVENT = 'pharmacy:breadcrumb-current-label';
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'pharmacy-sidebar-collapsed';
-const SIDEBAR_COLLAPSED_CHANGE_EVENT =
-  'pharmacy:sidebar-collapsed-change';
+const SIDEBAR_COLLAPSED_CHANGE_EVENT = 'pharmacy:sidebar-collapsed-change';
 
 //===================================================================
-
-type BreadcrumbLabelEventDetail = {
-  pathname?: string;
-  label?: string;
-};
 
 type BreadcrumbOverride = {
   pathname: string;
@@ -43,6 +38,8 @@ type PharmacyShellProps = Readonly<{
 //===================================================================
 
 let sidebarCollapsedFallback = false;
+
+//===================================================================
 
 function getSidebarCollapsedSnapshot(): boolean {
   try {
@@ -64,9 +61,9 @@ function getServerSidebarCollapsedSnapshot(): boolean {
   return false;
 }
 
-function subscribeToSidebarCollapsed(
-  onStoreChange: () => void
-): () => void {
+//===================================================================
+
+function subscribeToSidebarCollapsed(onStoreChange: () => void): () => void {
   const handleStorage = (event: StorageEvent) => {
     if (event.key !== SIDEBAR_COLLAPSED_STORAGE_KEY) return;
 
@@ -79,12 +76,11 @@ function subscribeToSidebarCollapsed(
 
   return () => {
     window.removeEventListener('storage', handleStorage);
-    window.removeEventListener(
-      SIDEBAR_COLLAPSED_CHANGE_EVENT,
-      onStoreChange
-    );
+    window.removeEventListener(SIDEBAR_COLLAPSED_CHANGE_EVENT, onStoreChange);
   };
 }
+
+//===================================================================
 
 function updateSidebarCollapsed(nextValue: boolean): void {
   sidebarCollapsedFallback = nextValue;
@@ -126,22 +122,12 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
   );
 
   useEffect(() => {
-    const handleBreadcrumbLabel = (event: Event) => {
-      const { detail } = event as CustomEvent<BreadcrumbLabelEventDetail>;
-
-      if (!detail?.pathname || !detail.label) return;
-
+    return subscribeToPharmacyBreadcrumbLabels((detail) => {
       setBreadcrumbOverride({
         pathname: detail.pathname,
         label: detail.label,
       });
-    };
-
-    window.addEventListener(BREADCRUMB_LABEL_EVENT, handleBreadcrumbLabel);
-
-    return () => {
-      window.removeEventListener(BREADCRUMB_LABEL_EVENT, handleBreadcrumbLabel);
-    };
+    });
   }, []);
 
   const toggleSidebar = () => {

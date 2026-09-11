@@ -1,6 +1,5 @@
 import { encodeRouteSegment } from '@e-pharmacy/api-client/contracts';
 import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
-
 import type { PharmacyNoteEntityType } from '@e-pharmacy/types/notes';
 
 //===================================================================

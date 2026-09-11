@@ -224,6 +224,7 @@ export async function deletePharmacyOrderComment(
   commentId: string
 ): Promise<void> {
   const path = PHARMACY_API_ROUTES.orders.comment(orderId, commentId);
+
   parseApiResponseData(
     await localApiRequest(path, { method: 'DELETE' }),
     parseMessageResponse,

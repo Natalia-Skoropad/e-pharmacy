@@ -59,6 +59,7 @@ function parseCreatedNote(
       ...context,
     });
   }
+
   return note;
 }
 

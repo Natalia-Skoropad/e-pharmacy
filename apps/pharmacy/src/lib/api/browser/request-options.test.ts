@@ -32,6 +32,7 @@ test('read request options forward only cancellation and timeout controls', () =
 
 test('read request options preserve AbortSignal identity and optional timeout', () => {
   const controller = new AbortController();
+
   const sanitized = sanitizeBrowserReadRequestOptions({
     signal: controller.signal,
   });

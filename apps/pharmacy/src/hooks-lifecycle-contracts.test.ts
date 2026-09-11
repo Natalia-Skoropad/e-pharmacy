@@ -89,8 +89,13 @@ test('sidebar storage and breadcrumb dispatch remain hydration and timer safe', 
 
   const breadcrumbs = await readSource('./lib/layout/breadcrumbs.ts');
 
+  const breadcrumbLabelEvent = await readSource(
+    './lib/layout/breadcrumb-label-event.ts'
+  );
+
   assert.match(shell, /useSyncExternalStore/);
   assert.match(shell, /getServerSidebarCollapsedSnapshot/);
-  assert.doesNotMatch(breadcrumbs, /setTimeout/);
-  assert.match(breadcrumbs, /queueMicrotask|Promise\.resolve/);
+  assert.match(breadcrumbs, /dispatchPharmacyBreadcrumbLabel/);
+  assert.doesNotMatch(breadcrumbLabelEvent, /setTimeout/);
+  assert.match(breadcrumbLabelEvent, /queueMicrotask|Promise\.resolve/);
 });

@@ -26,9 +26,10 @@ import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { useAuth } from '@e-pharmacy/auth/react';
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
-import { PHARMACY_ROUTES } from '@/lib/routes';
 
+import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import {
   canOpenClientPharmacyPage,
@@ -37,13 +38,15 @@ import {
 } from '@/lib/layout/external-links';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu/PharmacyMobileMenu';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
+import { subscribeToDesktopBreakpoint } from '@/components/layout/hooks/desktop-breakpoint-lifecycle';
 
 import css from './PharmacyHeader.module.css';
 
 //===================================================================
 
 const MOBILE_MENU_ID = 'pharmacy-mobile-menu';
+const USER_MENU_ID = 'pharmacy-user-menu';
+const DESKTOP_MEDIA_QUERY = '(min-width: 1440px)';
 const TOPBAR_ICON_SIZE = 19;
 
 //===================================================================
@@ -92,6 +95,7 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   const { user, logout } = useAuth();
   const { profile: pharmacyProfile } = usePharmacyProfile();
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutLoading, setIsLogoutLoading] = useState(false);
@@ -141,6 +145,14 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(DESKTOP_MEDIA_QUERY);
+
+    return subscribeToDesktopBreakpoint(mediaQuery, () => {
+      setIsMenuOpen(false);
+    });
+  }, []);
+
   useOutsidePointerDown({
     refs: [menuRef],
     enabled: isUserMenuOpen,
@@ -153,6 +165,7 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsUserMenuOpen(false);
+        userMenuButtonRef.current?.focus();
       }
     };
 
@@ -204,10 +217,11 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
 
               <div className={css.userMenuWrap} ref={menuRef}>
                 <button
+                  ref={userMenuButtonRef}
                   className={css.userMenuButton}
                   type="button"
-                  aria-haspopup="menu"
                   aria-expanded={isUserMenuOpen}
+                  aria-controls={isUserMenuOpen ? USER_MENU_ID : undefined}
                   onClick={() => setIsUserMenuOpen((value) => !value)}
                 >
                   <UserBadge
@@ -220,11 +234,10 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                 </button>
 
                 {isUserMenuOpen ? (
-                  <div className={css.userMenu} role="menu">
+                  <div className={css.userMenu} id={USER_MENU_ID}>
                     <Link
                       className={css.userMenuItem}
                       href={PHARMACY_ROUTES.PROFILE}
-                      role="menuitem"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
                       <UserRound size={18} aria-hidden="true" />
@@ -236,7 +249,6 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                     <a
                       className={css.userMenuItem}
                       href={clientAppUrl}
-                      role="menuitem"
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => setIsUserMenuOpen(false)}
@@ -249,7 +261,6 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                       <a
                         className={css.userMenuItem}
                         href={clientPharmacyUrl}
-                        role="menuitem"
                         target="_blank"
                         rel="noreferrer"
                         onClick={() => setIsUserMenuOpen(false)}
@@ -260,7 +271,6 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                     ) : (
                       <span
                         className={`${css.userMenuItem} ${css.userMenuItemDisabled}`}
-                        role="menuitem"
                         aria-disabled="true"
                       >
                         <Store size={18} aria-hidden="true" />

@@ -122,10 +122,12 @@ test('invalid known enum segments normalize to canonical defaults', () => {
   const products = parseAllProductsSegments({
     filters: ['added-to-my-pharmacy-maybe'],
   });
+
   assert.equal(
     products.addedToMyPharmacy,
     DEFAULT_ALL_PRODUCTS_FILTERS.addedToMyPharmacy
   );
+
   assert.equal(buildAllProductsPath(products), '/pharmacy/all-products');
 });
 

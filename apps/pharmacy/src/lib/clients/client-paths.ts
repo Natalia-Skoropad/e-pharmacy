@@ -30,6 +30,7 @@ export type ClientsFilterState = Readonly<{
     from: string;
     to: string;
   };
+
   name: string;
   clientId: string;
   contact: string;
@@ -44,6 +45,7 @@ export const DEFAULT_CLIENTS_FILTERS: ClientsFilterState = {
     from: '',
     to: '',
   },
+
   name: '',
   clientId: '',
   contact: '',
@@ -58,6 +60,7 @@ type ClientsFilterDraft = {
     from: string;
     to: string;
   };
+
   name: string;
   clientId: string;
   contact: string;

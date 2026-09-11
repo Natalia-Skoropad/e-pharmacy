@@ -27,6 +27,7 @@ type OwnProductsFilterDraft = {
     from: string;
     to: string;
   };
+
   name: string;
   article: string;
   category: OwnProductsFilterState['category'];

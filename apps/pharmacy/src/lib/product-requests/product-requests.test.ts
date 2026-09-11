@@ -30,6 +30,7 @@ function validRequest() {
     name: 'Aspirin',
     category: 'medicine',
     status: 'in_progress',
+
     history: [
       {
         id: `${REQUEST_ID}-0`,

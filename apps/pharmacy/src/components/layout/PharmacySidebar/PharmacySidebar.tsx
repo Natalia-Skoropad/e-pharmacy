@@ -7,8 +7,9 @@ import { useEffect, useState } from 'react';
 import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
-import { getPharmacyOrders } from '@/lib/api/browser';
+import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
+import { subscribeToOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 
 import css from './PharmacySidebar.module.css';
 
@@ -37,9 +38,17 @@ export function PharmacySidebar({
   });
 
   useEffect(() => {
-    const controller = new AbortController();
+    let requestVersion = 0;
+    let activeController: AbortController | null = null;
 
-    async function loadOrderCounts() {
+    const loadOrderCounts = async () => {
+      requestVersion += 1;
+      const currentVersion = requestVersion;
+
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+
       try {
         const requestOptions = { signal: controller.signal };
         const [newOrders, inProgressOrders] = await Promise.all([
@@ -53,23 +62,38 @@ export function PharmacySidebar({
           ),
         ]);
 
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || currentVersion !== requestVersion) {
+          return;
+        }
 
         setOrderCounts({
           new: newOrders.total,
           inProgress: inProgressOrders.total,
         });
       } catch {
-        // Navigation must stay usable when counters cannot be loaded.
+        // Navigation must stay usable when notification counters are unavailable.
       }
-    }
+    };
+
+    const handleFocus = () => {
+      void loadOrderCounts();
+    };
 
     void loadOrderCounts();
 
+    const unsubscribeRefresh = subscribeToOrderCounterRefresh(() => {
+      void loadOrderCounts();
+    });
+
+    window.addEventListener('focus', handleFocus);
+
     return () => {
-      controller.abort();
+      requestVersion += 1;
+      activeController?.abort();
+      unsubscribeRefresh();
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [pathname]);
+  }, []);
 
   return (
     <CabinetSidebar

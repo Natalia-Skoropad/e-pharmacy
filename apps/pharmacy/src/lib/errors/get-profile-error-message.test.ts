@@ -19,7 +19,6 @@ test('maps profile business codes without exposing backend copy', () => {
   );
 });
 
-
 //===================================================================
 
 test('maps moderation and owner-only profile codes through controlled copy', () => {
@@ -31,6 +30,7 @@ test('maps moderation and owner-only profile codes through controlled copy', () 
       }),
       'Fallback'
     ),
+
     'This pharmacy profile is already submitted for review.'
   );
 
@@ -42,6 +42,7 @@ test('maps moderation and owner-only profile codes through controlled copy', () 
       }),
       'Fallback'
     ),
+
     'Only the pharmacy owner can change verification profile data.'
   );
 });
@@ -57,6 +58,7 @@ test('does not expose unknown API or technical messages', () => {
       }),
       'Could not save profile.'
     ),
+
     'The service is temporarily unavailable. Please try again later.'
   );
 

@@ -10,6 +10,7 @@ import {
 
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
 import { isProductCategory } from '@e-pharmacy/validation/products';
+
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { DEFAULT_PRODUCT_REQUESTS_FILTERS } from './product-requests';

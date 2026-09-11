@@ -9,7 +9,6 @@ import {
 } from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
-
 import { isRecord } from '@e-pharmacy/utils/guards';
 import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
 

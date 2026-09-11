@@ -301,6 +301,7 @@ export function normalizePharmacyClient(rawClient: unknown): PharmacyClientRow {
       'pharmacy client.photoUrl',
       rawClient
     ),
+
     firstOrderAt,
     name: requireText(rawClient.name, 'pharmacy client.name', rawClient),
     email: requireString(rawClient.email, 'pharmacy client.email', rawClient),

@@ -31,6 +31,7 @@ export async function logoutUser(options?: {
   signal?: AbortSignal;
 }): Promise<void> {
   const path = PHARMACY_API_ROUTES.auth.logout;
+
   parseApiEmptyResponse(
     await localApiRequest(path, {
       method: 'POST',

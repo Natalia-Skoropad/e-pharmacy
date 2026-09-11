@@ -1,5 +1,4 @@
 import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
-
 import { getPharmacyClients } from '@/lib/api/browser';
 import { type ClientStatisticsCounts } from '@/lib/statistics/config';
 
@@ -19,6 +18,7 @@ export async function getPharmacyClientStatistics(
         },
         options
       ),
+
       getPharmacyClients({ page: 1, perPage: 1, status: 'active' }, options),
       getPharmacyClients({ page: 1, perPage: 1, status: 'blocked' }, options),
     ]);

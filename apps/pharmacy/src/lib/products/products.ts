@@ -1,9 +1,11 @@
 import { PRODUCT_STATUSES } from '@e-pharmacy/config/products';
 import { ApiError } from '@e-pharmacy/api-client/transport';
+
 import {
   isISODateTimeString,
   isCalendarDateString,
 } from '@e-pharmacy/validation/dates';
+
 import { isProductCategory } from '@e-pharmacy/validation/products';
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 import type { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
@@ -318,16 +320,19 @@ function normalizeOwnProductStatistics(
 
   return {
     inStock: normalizeStatisticValue(value.inStock, 'statistics.inStock', true),
+
     reserved: normalizeStatisticValue(
       value.reserved,
       'statistics.reserved',
       true
     ),
+
     available: normalizeStatisticValue(
       value.available,
       'statistics.available',
       true
     ),
+
     outOfStock: normalizeStatisticValue(
       value.outOfStock,
       'statistics.outOfStock',

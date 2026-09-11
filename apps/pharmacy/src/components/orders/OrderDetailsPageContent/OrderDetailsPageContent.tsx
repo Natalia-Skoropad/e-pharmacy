@@ -139,6 +139,7 @@ import {
 
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser/pharmacy.api';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
+import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -2039,6 +2040,7 @@ function OrderDetailsPageContent({
       const updatedOrder = await updatePharmacyOrderStatus(order.id, payload);
 
       syncOrderState(updatedOrder);
+      dispatchOrderCounterRefresh();
       setPendingStatus(null);
       setRejectionReason('');
       toast.success('Order status updated successfully.');
@@ -2103,6 +2105,7 @@ function OrderDetailsPageContent({
       });
 
       setIsCreateConfirmationOpen(false);
+      dispatchOrderCounterRefresh();
       toast.success('Order created and moved to In progress.');
       router.replace(getPharmacyOrderPath(createdOrder.id));
     } catch (createError) {
