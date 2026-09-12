@@ -246,6 +246,14 @@
   },
   {
     "app": "client",
+    "route": "/pharmacies/me/summary",
+    "backend": "/pharmacies/me/summary",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "client",
     "route": "/pharmacies/options",
     "backend": "/pharmacies/options",
     "methods": {

@@ -1,4 +1,6 @@
 .backdrop {
+  --modal-dialog-radius: var(--radius-xl) 0 0 var(--radius-xl);
+
   position: fixed;
   inset: 0;
   z-index: var(--z-drawer);

@@ -60,9 +60,10 @@
 .current {
   display: inline-flex;
   align-items: center;
+  gap: 8px;
   min-width: 0;
   color: var(--color-white);
-  font-size: var(--fz-18);
+  font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: var(--lh-heading);
   text-decoration: none;
@@ -158,6 +159,7 @@
 
   .link,
   .current {
+    gap: 10px;
     font-size: var(--fz-16);
   }
 

@@ -14,6 +14,7 @@ export const clientApiRoutes = {
     favorites: '/api/pharmacies/favorites',
     favoriteIds: '/api/pharmacies/favorites/ids',
     filters: '/api/pharmacies/filters',
+    mySummary: '/api/pharmacies/me/summary',
     details: (id: EntityId) => `/api/pharmacies/${encodeRouteSegment(id)}`,
 
     checkoutDetails: (id: EntityId) =>

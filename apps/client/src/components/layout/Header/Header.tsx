@@ -100,7 +100,9 @@ function Header() {
 
           {authState.mode === 'unavailable' ? (
             <div className={css.authStatus}>
-              <span className="visually-hidden">Session check unavailable.</span>
+              <span className="visually-hidden">
+                Session check unavailable.
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -121,14 +123,24 @@ function Header() {
           ) : null}
 
           {controller.isPharmacyMode && controller.pharmacyDashboardUrl ? (
-            <LinkButton
-              className={css.pharmacyCabinetLink}
+            <UserBadge
+              className={css.pharmacyCabinetBadge}
               href={controller.pharmacyDashboardUrl}
-              variant="secondary"
-              size="sm"
-            >
-              Pharmacy cabinet
-            </LinkButton>
+              name={controller.pharmacySummary?.name ?? 'Pharmacy'}
+              pictureUrl={controller.pharmacySummary?.imageUrl}
+              pictureAlt={
+                controller.pharmacySummary
+                  ? `${controller.pharmacySummary.name} photo`
+                  : ''
+              }
+              meta="Pharmacy cabinet"
+              fallbackLabel="Pharmacy"
+              renderLink={({ href, className, children, onClick }) => (
+                <a className={className} href={href} onClick={onClick}>
+                  {children}
+                </a>
+              )}
+            />
           ) : null}
 
           {controller.isPharmacyMode && !controller.pharmacyDashboardUrl ? (
@@ -155,6 +167,7 @@ function Header() {
 
           {'logout' in authState ? (
             <LogoutButton
+              variant={controller.isPharmacyMode ? 'ghost' : 'secondary'}
               isLoading={controller.isLogoutPending}
               disabled={controller.isLogoutPending}
               onClick={() => void controller.logout()}

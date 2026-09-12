@@ -42,6 +42,7 @@ export {
 export {
   addFavoritePharmacy,
   createPharmacyReview,
+  getCurrentPharmacySummary,
   getFavoritePharmacies,
   getFavoritePharmacyIds,
   getPharmacies,

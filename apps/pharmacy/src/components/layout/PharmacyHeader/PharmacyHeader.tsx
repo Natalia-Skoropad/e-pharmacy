@@ -21,10 +21,10 @@ import { useAuth } from '@e-pharmacy/auth/react';
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { getClientAppUrl } from '@/lib/layout/external-links';
 import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
 import { getPharmacyNavigationItemByPathname } from '@/lib/layout/navigation';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import {
   isFullscreenAvailable,
@@ -74,6 +74,7 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
   const topBarIcon =
     getPharmacyNavigationItemByPathname(pathname)?.icon ?? null;
   const clientAppUrl = getClientAppUrl();
+
   const publicPharmacyLink = getPublicPharmacyLinkState({
     profile: pharmacyProfile,
     isLoading: isPharmacyProfileLoading,

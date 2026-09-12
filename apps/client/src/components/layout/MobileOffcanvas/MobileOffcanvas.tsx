@@ -15,6 +15,7 @@ import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 
 import { ROUTES, isActiveRoute } from '@/lib/routes';
+
 import { MOBILE_MAIN_NAV_ITEMS } from '@/components/layout/config/navigation';
 import { INFO_SIDE_MENU_ITEMS } from '@/components/info/config/navigation';
 import type { usePublicHeaderController } from '@/components/layout/hooks/usePublicHeaderController';
@@ -149,14 +150,26 @@ function MobileOffcanvas({
         ) : null}
 
         {controller.isPharmacyMode && controller.pharmacyDashboardUrl ? (
-          <LinkButton
+          <UserBadge
+            className={css.pharmacyCabinetBadge}
             href={controller.pharmacyDashboardUrl}
-            variant="secondary"
-            fullWidth
+            name={controller.pharmacySummary?.name ?? 'Pharmacy'}
+            pictureUrl={controller.pharmacySummary?.imageUrl}
+            pictureAlt={
+              controller.pharmacySummary
+                ? `${controller.pharmacySummary.name} photo`
+                : ''
+            }
+            meta="Pharmacy cabinet"
+            fallbackLabel="Pharmacy"
+            variant="dark"
             onClick={onClose}
-          >
-            Pharmacy cabinet
-          </LinkButton>
+            renderLink={({ href, className, children, onClick }) => (
+              <a className={className} href={href} onClick={onClick}>
+                {children}
+              </a>
+            )}
+          />
         ) : null}
 
         {controller.isPharmacyMode && !controller.pharmacyDashboardUrl ? (

@@ -139,7 +139,8 @@
   }
 }
 
-.pharmacyCabinetLink {
+.pharmacyCabinetBadge {
+  flex: 0 1 auto;
   white-space: nowrap;
 }
 

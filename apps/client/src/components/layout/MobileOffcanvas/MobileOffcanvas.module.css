@@ -116,6 +116,17 @@
   border-radius: var(--radius-pill);
 }
 
+.pharmacyCabinetBadge {
+  background-color: var(--color-white-alpha-20);
+  border-color: var(--color-white-alpha-48);
+}
+
+.pharmacyCabinetBadge:hover,
+.pharmacyCabinetBadge:focus-visible {
+  background-color: var(--color-white-alpha-28);
+  border-color: var(--color-white-alpha-72);
+}
+
 .actions .loginLink,
 .actions .loginLink:hover,
 .actions .loginLink:focus-visible {

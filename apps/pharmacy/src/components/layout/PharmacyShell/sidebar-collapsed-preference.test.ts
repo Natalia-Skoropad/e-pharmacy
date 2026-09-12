@@ -53,6 +53,7 @@ function installWindow(options?: Readonly<{ storageThrows?: boolean }>) {
 
   return {
     storage,
+
     emitStorage(key: string | null, newValue: string | null) {
       const event = new Event('storage') as StorageEvent;
       Object.defineProperties(event, {

@@ -7,6 +7,7 @@ import {
   parseFavoriteIdsResponse,
   parseFavoriteMutationResponse,
   parsePharmaciesResponse,
+  parseCurrentPharmacySummaryResponse,
   parsePharmacyCheckoutDetailsResponse,
   parseReviewMutationResponse,
 } from '@e-pharmacy/api-client/response';
@@ -20,6 +21,7 @@ import type {
 
 import type {
   PharmaciesQueryParams,
+  CurrentPharmacySummaryResponse,
   PharmaciesResponse,
   PharmacyCheckoutDetailsResponse,
 } from '@e-pharmacy/types/pharmacies';
@@ -51,6 +53,20 @@ export const getPharmacyOptions = publicPharmaciesReader.getOptions;
 export const getPharmacyFilters = publicPharmaciesReader.getFilters;
 export const getPharmacyDetails = publicPharmaciesReader.getDetails;
 export const getPharmacyReviews = publicPharmaciesReader.getReviews;
+
+//===================================================================
+
+export async function getCurrentPharmacySummary(
+  options?: ReadRequestOptions
+): Promise<CurrentPharmacySummaryResponse> {
+  const path = ROUTES.pharmacies.mySummary;
+
+  return parseApiResponseData(
+    await localApiRequest(path, options),
+    parseCurrentPharmacySummaryResponse,
+    { url: path, method: 'GET' }
+  );
+}
 
 //===================================================================
 
