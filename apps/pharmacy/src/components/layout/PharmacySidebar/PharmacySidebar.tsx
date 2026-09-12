@@ -19,6 +19,13 @@ import {
   type OrderCounterState,
 } from '@/lib/orders/order-counter-state';
 
+import {
+  formatVisibleOrderCount,
+  getCollapsedOrderNotificationLabel,
+  getOrderCountAriaLabel,
+  hasOrderNotifications,
+} from './order-counter-presentation';
+
 import css from './PharmacySidebar.module.css';
 
 //===================================================================
@@ -124,34 +131,56 @@ export function PharmacySidebar({
           {children}
         </Link>
       )}
-      renderLink={({ item, href, className, children, ...props }) => (
-        <Link href={href} className={className} {...props}>
-          {children}
-          {!isCollapsed &&
-          orderCounts &&
-          item.href === PHARMACY_ROUTES.ORDERS &&
-          (orderCounts.new > 0 || orderCounts.inProgress > 0) ? (
-            <span
-              className={css.orderCounters}
-              aria-label="Order notifications"
-            >
-              {orderCounts.new > 0 ? (
-                <span className={css.newCounter} title="New orders">
-                  {orderCounts.new}
-                </span>
-              ) : null}
-              {orderCounts.inProgress > 0 ? (
-                <span
-                  className={css.progressCounter}
-                  title="Orders in progress"
-                >
-                  {orderCounts.inProgress}
-                </span>
-              ) : null}
-            </span>
-          ) : null}
-        </Link>
-      )}
+      renderLink={({ item, href, className, children, ...props }) => {
+        const isOrdersLink = item.href === PHARMACY_ROUTES.ORDERS;
+        const hasNotifications = Boolean(
+          isOrdersLink && orderCounts && hasOrderNotifications(orderCounts)
+        );
+
+        return (
+          <Link
+            href={href}
+            className={
+              isOrdersLink ? `${className} ${css.ordersLink}` : className
+            }
+            {...props}
+          >
+            {children}
+
+            {!isCollapsed && hasNotifications && orderCounts ? (
+              <span className={css.orderCounters}>
+                {orderCounts.new > 0 ? (
+                  <span
+                    className={css.newCounter}
+                    aria-label={getOrderCountAriaLabel(orderCounts.new, 'new')}
+                  >
+                    {formatVisibleOrderCount(orderCounts.new)}
+                  </span>
+                ) : null}
+
+                {orderCounts.inProgress > 0 ? (
+                  <span
+                    className={css.progressCounter}
+                    aria-label={getOrderCountAriaLabel(
+                      orderCounts.inProgress,
+                      'in_progress'
+                    )}
+                  >
+                    {formatVisibleOrderCount(orderCounts.inProgress)}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+
+            {isCollapsed && hasNotifications && orderCounts ? (
+              <span
+                className={css.collapsedCounter}
+                aria-label={getCollapsedOrderNotificationLabel(orderCounts)}
+              />
+            ) : null}
+          </Link>
+        );
+      }}
     />
   );
 }

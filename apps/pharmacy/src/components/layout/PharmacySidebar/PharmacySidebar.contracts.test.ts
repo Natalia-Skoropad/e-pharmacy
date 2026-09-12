@@ -31,3 +31,18 @@ test('counter refresh aborts the previous generation before starting another', a
   assert.match(source, /currentVersion !== requestVersion/);
   assert.match(source, /controller\.signal\.aborted/);
 });
+
+//===================================================================
+
+test('collapsed order notifications remain visible and expanded badges expose semantic labels', async () => {
+  const [source, css] = await Promise.all([
+    readFile(new URL('./PharmacySidebar.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('./PharmacySidebar.module.css', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(source, /isCollapsed && hasNotifications && orderCounts/);
+  assert.match(source, /getCollapsedOrderNotificationLabel\(orderCounts\)/);
+  assert.match(source, /getOrderCountAriaLabel/);
+  assert.match(source, /formatVisibleOrderCount/);
+  assert.match(css, /\.collapsedCounter\s*\{/);
+});

@@ -2,6 +2,10 @@
   display: none;
 }
 
+.ordersLink {
+  position: relative;
+}
+
 .orderCounters {
   display: inline-flex;
   gap: 8px;
@@ -29,6 +33,17 @@
 .progressCounter {
   background-color: var(--color-warning);
   opacity: 0.8;
+}
+
+.collapsedCounter {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
+  background-color: var(--color-info);
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
 }
 
 @media only screen and (min-width: 1440px) {

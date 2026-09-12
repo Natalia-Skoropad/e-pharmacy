@@ -15,12 +15,14 @@ import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
 
+import {
+  getServerSidebarCollapsedSnapshot,
+  getSidebarCollapsedSnapshot,
+  subscribeToSidebarCollapsed,
+  updateSidebarCollapsed,
+} from './sidebar-collapsed-preference';
+
 import css from './PharmacyShell.module.css';
-
-//===================================================================
-
-const SIDEBAR_COLLAPSED_STORAGE_KEY = 'pharmacy-sidebar-collapsed';
-const SIDEBAR_COLLAPSED_CHANGE_EVENT = 'pharmacy:sidebar-collapsed-change';
 
 //===================================================================
 
@@ -34,68 +36,6 @@ type BreadcrumbOverride = {
 type PharmacyShellProps = Readonly<{
   children: React.ReactNode;
 }>;
-
-//===================================================================
-
-let sidebarCollapsedFallback = false;
-
-//===================================================================
-
-function getSidebarCollapsedSnapshot(): boolean {
-  try {
-    const storedValue = window.localStorage.getItem(
-      SIDEBAR_COLLAPSED_STORAGE_KEY
-    );
-
-    if (storedValue === 'true' || storedValue === 'false') {
-      sidebarCollapsedFallback = storedValue === 'true';
-    }
-  } catch {
-    // Keep the in-memory value when browser storage is unavailable.
-  }
-
-  return sidebarCollapsedFallback;
-}
-
-function getServerSidebarCollapsedSnapshot(): boolean {
-  return false;
-}
-
-//===================================================================
-
-function subscribeToSidebarCollapsed(onStoreChange: () => void): () => void {
-  const handleStorage = (event: StorageEvent) => {
-    if (event.key !== SIDEBAR_COLLAPSED_STORAGE_KEY) return;
-
-    sidebarCollapsedFallback = event.newValue === 'true';
-    onStoreChange();
-  };
-
-  window.addEventListener('storage', handleStorage);
-  window.addEventListener(SIDEBAR_COLLAPSED_CHANGE_EVENT, onStoreChange);
-
-  return () => {
-    window.removeEventListener('storage', handleStorage);
-    window.removeEventListener(SIDEBAR_COLLAPSED_CHANGE_EVENT, onStoreChange);
-  };
-}
-
-//===================================================================
-
-function updateSidebarCollapsed(nextValue: boolean): void {
-  sidebarCollapsedFallback = nextValue;
-
-  try {
-    window.localStorage.setItem(
-      SIDEBAR_COLLAPSED_STORAGE_KEY,
-      String(nextValue)
-    );
-  } catch {
-    // The in-memory snapshot keeps the UI functional without storage.
-  }
-
-  window.dispatchEvent(new Event(SIDEBAR_COLLAPSED_CHANGE_EVENT));
-}
 
 //===================================================================
 

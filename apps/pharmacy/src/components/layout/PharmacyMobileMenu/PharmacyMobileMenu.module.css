@@ -79,12 +79,6 @@
   stroke-width: 2.1;
 }
 
-.menu :global(.SideMenu-module__label),
-.menu span:last-child {
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-}
-
 .menu a:hover,
 .menu a:focus-visible,
 .menu a[aria-current='page'] {

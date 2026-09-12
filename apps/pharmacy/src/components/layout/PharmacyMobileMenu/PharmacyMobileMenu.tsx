@@ -18,6 +18,8 @@ import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-st
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
+import { shouldCloseMobileMenuForPathnameChange } from './mobile-menu-route-lifecycle';
+
 import css from './PharmacyMobileMenu.module.css';
 
 //===================================================================
@@ -58,7 +60,14 @@ export function PharmacyMobileMenu({
   });
 
   useEffect(() => {
-    if (previousPathnameRef.current === pathname) return;
+    if (
+      !shouldCloseMobileMenuForPathnameChange(
+        previousPathnameRef.current,
+        pathname
+      )
+    ) {
+      return;
+    }
 
     previousPathnameRef.current = pathname;
     onClose();

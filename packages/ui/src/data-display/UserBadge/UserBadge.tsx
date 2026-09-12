@@ -1,9 +1,12 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 
 import { ImagePreview } from '../../media/ImagePreview';
 import { formatInitials } from '../format-initials';
+import { shouldRenderUserBadgePicture } from './user-badge-picture-state';
 
 import css from './UserBadge.module.css';
 
@@ -51,12 +54,22 @@ function UserBadge({
 }: UserBadgeProps) {
   const label = name ?? email ?? fallbackLabel;
   const secondaryText = meta ?? (name && email ? email : null);
+  const [failedPictureUrl, setFailedPictureUrl] = useState<string | null>(null);
+
+  const shouldRenderPicture = shouldRenderUserBadgePicture(
+    pictureUrl,
+    failedPictureUrl
+  );
 
   const content = (
     <>
       <span className={css.picture} aria-hidden={!pictureAlt}>
-        {pictureUrl ? (
-          <ImagePreview src={pictureUrl} alt={pictureAlt} />
+        {shouldRenderPicture && pictureUrl ? (
+          <ImagePreview
+            src={pictureUrl}
+            alt={pictureAlt}
+            onError={() => setFailedPictureUrl(pictureUrl)}
+          />
         ) : (
           formatInitials(label)
         )}
