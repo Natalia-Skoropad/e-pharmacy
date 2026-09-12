@@ -1,16 +1,17 @@
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 
-import { isClientsFilterSegment } from '@/lib/clients/client-paths';
-import { isOrdersFilterSegment } from '@/lib/orders/order-paths';
-import { isProductRequestsFilterSegment } from '@/lib/product-requests/product-request-paths';
-import { isAllProductsFilterSegment } from '@/lib/products/all-product-paths';
-import { isOwnProductsFilterSegment } from '@/lib/products/own-product-paths';
+import { isClientsFilterRoute } from '@/lib/clients/client-paths';
+import { isOrdersFilterRoute } from '@/lib/orders/order-paths';
+import { isProductRequestsFilterRoute } from '@/lib/product-requests/product-request-paths';
+import { isAllProductsFilterRoute } from '@/lib/products/all-product-paths';
+import { isOwnProductsFilterRoute } from '@/lib/products/own-product-paths';
 
 import {
   PHARMACY_ROUTES,
   getPharmacyAllProductPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
+  matchPharmacyRoute,
 } from '@/lib/routes';
 
 //===================================================================
@@ -165,16 +166,11 @@ export function getProductRequestDetailsBreadcrumbs(
 
 //===================================================================
 
-export function getEditProductRequestBreadcrumbs(
-  requestId: string
-): BreadcrumbItem[] {
-  return getPharmacyBreadcrumbs(
-    { label: `Edit product request ${requestId}` },
-    {
-      label: `Product request ${requestId}`,
-      href: getPharmacyRequestPath(requestId),
-    }
-  );
+function getSingleEntityId(segments: readonly string[]): string | null {
+  if (segments.length !== 1) return null;
+
+  const [id] = segments;
+  return id && isValidObjectId(id) ? id : null;
 }
 
 //===================================================================
@@ -183,60 +179,84 @@ export function getPharmacyBreadcrumbsByPathname(
   pathname: string,
   currentDetailLabel?: string
 ): BreadcrumbItem[] {
-  const cleanPathname = pathname.split('?')[0] ?? pathname;
-  const segments = cleanPathname.split('/').filter(Boolean);
-  const [, section, id, action] = segments;
+  const route = matchPharmacyRoute(pathname);
 
-  if (section === 'dashboard' || !section) {
+  if (route.family === 'dashboard' || route.family === 'unknown') {
     return getDashboardBreadcrumbs();
   }
 
-  if (section === 'profile') {
+  if (route.family === 'profile') {
     return getProfileBreadcrumbs();
   }
 
-  if (section === 'orders') {
-    if (id === 'new') {
+  if (route.family === 'orders') {
+    if (
+      pathname.split('?')[0]?.replace(/\/$/, '') === PHARMACY_ROUTES.ORDER_NEW
+    ) {
       return getPharmacyBreadcrumbs(
         { label: 'New order' },
         { label: 'Orders', href: PHARMACY_ROUTES.ORDERS }
       );
     }
 
-    return id && isValidObjectId(id) && !isOrdersFilterSegment(id)
-      ? getOrderDetailsBreadcrumbs(id, currentDetailLabel)
+    if (isOrdersFilterRoute([...route.segments])) {
+      return getOrdersBreadcrumbs();
+    }
+
+    const orderId = getSingleEntityId(route.segments);
+    return orderId
+      ? getOrderDetailsBreadcrumbs(orderId, currentDetailLabel)
       : getOrdersBreadcrumbs();
   }
 
-  if (section === 'clients') {
-    return id && isValidObjectId(id) && !isClientsFilterSegment(id)
-      ? getClientDetailsBreadcrumbs(id, currentDetailLabel)
+  if (route.family === 'clients') {
+    if (isClientsFilterRoute([...route.segments])) {
+      return getClientsBreadcrumbs();
+    }
+
+    const clientId = getSingleEntityId(route.segments);
+    return clientId
+      ? getClientDetailsBreadcrumbs(clientId, currentDetailLabel)
       : getClientsBreadcrumbs();
   }
 
-  if (section === 'products') {
-    return id && isValidObjectId(id) && !isOwnProductsFilterSegment(id)
-      ? getProductDetailsBreadcrumbs(id, currentDetailLabel)
+  if (route.family === 'products') {
+    if (isOwnProductsFilterRoute([...route.segments])) {
+      return getProductsBreadcrumbs();
+    }
+
+    const productId = getSingleEntityId(route.segments);
+    return productId
+      ? getProductDetailsBreadcrumbs(productId, currentDetailLabel)
       : getProductsBreadcrumbs();
   }
 
-  if (section === 'all-products') {
-    return id && isValidObjectId(id) && !isAllProductsFilterSegment(id)
-      ? getAllProductDetailsBreadcrumbs(id, currentDetailLabel)
+  if (route.family === 'all-products') {
+    if (isAllProductsFilterRoute([...route.segments])) {
+      return getAllProductsBreadcrumbs();
+    }
+
+    const productId = getSingleEntityId(route.segments);
+    return productId
+      ? getAllProductDetailsBreadcrumbs(productId, currentDetailLabel)
       : getAllProductsBreadcrumbs();
   }
 
-  if (section === 'product-requests') {
-    if (id === 'new') {
+  if (route.family === 'product-requests') {
+    if (
+      pathname.split('?')[0]?.replace(/\/$/, '') ===
+      PHARMACY_ROUTES.PRODUCT_REQUEST_NEW
+    ) {
       return getNewProductRequestBreadcrumbs();
     }
 
-    if (id && isValidObjectId(id) && action === 'edit') {
-      return getEditProductRequestBreadcrumbs(id);
+    if (isProductRequestsFilterRoute([...route.segments])) {
+      return getProductRequestsBreadcrumbs();
     }
 
-    return id && isValidObjectId(id) && !isProductRequestsFilterSegment(id)
-      ? getProductRequestDetailsBreadcrumbs(id, currentDetailLabel)
+    const requestId = getSingleEntityId(route.segments);
+    return requestId
+      ? getProductRequestDetailsBreadcrumbs(requestId, currentDetailLabel)
       : getProductRequestsBreadcrumbs();
   }
 

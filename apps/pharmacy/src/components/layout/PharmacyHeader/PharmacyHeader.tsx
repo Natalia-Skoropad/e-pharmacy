@@ -1,44 +1,39 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
 import {
-  Boxes,
-  ClipboardList,
-  FilePlus2,
   Globe2,
-  LayoutDashboard,
   LogOut,
   Maximize2,
   Minimize2,
-  PackageSearch,
-  ShoppingBag,
   Store,
   UserRound,
-  Users,
 } from 'lucide-react';
 
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
-import { BurgerButton } from '@e-pharmacy/ui/cabinet';
-import { CabinetTopBar } from '@e-pharmacy/ui/cabinet';
+import { BurgerButton, CabinetTopBar } from '@e-pharmacy/ui/cabinet';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { UserBadge } from '@e-pharmacy/ui/data-display';
 import { useAuth } from '@e-pharmacy/auth/react';
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
-import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
+import { getClientAppUrl } from '@/lib/layout/external-links';
+import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
+import { getPharmacyNavigationItemByPathname } from '@/lib/layout/navigation';
 
 import {
-  canOpenClientPharmacyPage,
-  getClientAppUrl,
-  getClientPharmacyUrl,
-} from '@/lib/layout/external-links';
+  isFullscreenAvailable,
+  toggleFullscreen,
+} from '@/lib/layout/fullscreen';
 
 import { PharmacyMobileMenu } from '@/components/layout/PharmacyMobileMenu/PharmacyMobileMenu';
 import { subscribeToDesktopBreakpoint } from '@/components/layout/hooks/desktop-breakpoint-lifecycle';
+import { usePharmacyLogoutController } from '@/components/layout/hooks/usePharmacyLogoutController';
 
 import css from './PharmacyHeader.module.css';
 
@@ -47,7 +42,6 @@ import css from './PharmacyHeader.module.css';
 const MOBILE_MENU_ID = 'pharmacy-mobile-menu';
 const USER_MENU_ID = 'pharmacy-user-menu';
 const DESKTOP_MEDIA_QUERY = '(min-width: 1440px)';
-const TOPBAR_ICON_SIZE = 19;
 
 //===================================================================
 
@@ -57,87 +51,46 @@ type PharmacyHeaderProps = Readonly<{
 
 //===================================================================
 
-function getTopBarIcon(label?: string) {
-  if (label === 'Dashboard') {
-    return <LayoutDashboard size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  if (label === 'Orders') {
-    return <ShoppingBag size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  if (label === 'Clients') {
-    return <Users size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  if (label === 'Own products') {
-    return <Boxes size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  if (label === 'All products') {
-    return <PackageSearch size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  if (label === 'Product requests') {
-    return <FilePlus2 size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  if (label === 'Pharmacy profile') {
-    return <ClipboardList size={TOPBAR_ICON_SIZE} aria-hidden="true" />;
-  }
-
-  return null;
-}
-
-//===================================================================
-
 export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
+  const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { profile: pharmacyProfile } = usePharmacyProfile();
+
+  const {
+    profile: pharmacyProfile,
+    isLoading: isPharmacyProfileLoading,
+    error: pharmacyProfileError,
+  } = usePharmacyProfile();
+
+  const { isLogoutPending, logoutFromPharmacy } =
+    usePharmacyLogoutController(logout);
+
   const menuRef = useRef<HTMLDivElement | null>(null);
   const userMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreenSupported, setIsFullscreenSupported] = useState(false);
 
-  const topBarIcon = getTopBarIcon(breadcrumbs[0]?.label);
+  const topBarIcon =
+    getPharmacyNavigationItemByPathname(pathname)?.icon ?? null;
   const clientAppUrl = getClientAppUrl();
-  const clientPharmacyUrl = getClientPharmacyUrl(pharmacyProfile);
-  const canOpenPharmacyWebsite =
-    canOpenClientPharmacyPage(pharmacyProfile?.status) &&
-    Boolean(clientPharmacyUrl);
-
-  const handleLogout = async () => {
-    try {
-      setIsLogoutLoading(true);
-      await logout();
-      window.location.assign(getSharedLoginUrl());
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
+  const publicPharmacyLink = getPublicPharmacyLinkState({
+    profile: pharmacyProfile,
+    isLoading: isPharmacyProfileLoading,
+    error: pharmacyProfileError,
+  });
 
   const handleFullscreenToggle = async () => {
-    if (!document.documentElement.requestFullscreen) return;
-
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        return;
-      }
-
-      await document.documentElement.requestFullscreen();
-    } catch (error) {
-      console.error('[pharmacy-header] Failed to toggle fullscreen', error);
-    }
+    await toggleFullscreen(document);
   };
 
   useEffect(() => {
     const handleFullscreenChange = () => {
+      setIsFullscreenSupported(isFullscreenAvailable(document));
       setIsFullscreen(Boolean(document.fullscreenElement));
     };
 
+    handleFullscreenChange();
     document.addEventListener('fullscreenchange', handleFullscreenChange);
 
     return () => {
@@ -200,20 +153,22 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
           )}
           actions={
             <div className={css.actionsGroup}>
-              <button
-                className={css.fullscreenButton}
-                type="button"
-                aria-label={
-                  isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'
-                }
-                onClick={handleFullscreenToggle}
-              >
-                {isFullscreen ? (
-                  <Minimize2 size={18} aria-hidden="true" />
-                ) : (
-                  <Maximize2 size={18} aria-hidden="true" />
-                )}
-              </button>
+              {isFullscreenSupported ? (
+                <button
+                  className={css.fullscreenButton}
+                  type="button"
+                  aria-label={
+                    isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'
+                  }
+                  onClick={() => void handleFullscreenToggle()}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 size={18} aria-hidden="true" />
+                  ) : (
+                    <Maximize2 size={18} aria-hidden="true" />
+                  )}
+                </button>
+              ) : null}
 
               <div className={css.userMenuWrap} ref={menuRef}>
                 <button
@@ -257,24 +212,27 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                       <span>Go to the website</span>
                     </a>
 
-                    {canOpenPharmacyWebsite ? (
+                    {publicPharmacyLink.status === 'available' ? (
                       <a
                         className={css.userMenuItem}
-                        href={clientPharmacyUrl}
+                        href={publicPharmacyLink.href}
                         target="_blank"
                         rel="noreferrer"
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <Store size={18} aria-hidden="true" />
-                        <span>Go to my pharmacy on the website</span>
+                        <span>{publicPharmacyLink.label}</span>
                       </a>
                     ) : (
                       <span
                         className={`${css.userMenuItem} ${css.userMenuItemDisabled}`}
                         aria-disabled="true"
+                        aria-busy={
+                          publicPharmacyLink.status === 'loading' || undefined
+                        }
                       >
                         <Store size={18} aria-hidden="true" />
-                        <span>Go to my pharmacy on the website</span>
+                        <span>{publicPharmacyLink.label}</span>
                       </span>
                     )}
 
@@ -283,13 +241,15 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
                     <button
                       className={css.logoutButton}
                       type="button"
-                      disabled={isLogoutLoading}
-                      aria-busy={isLogoutLoading || undefined}
-                      onClick={handleLogout}
+                      disabled={isLogoutPending}
+                      aria-busy={isLogoutPending || undefined}
+                      onClick={() =>
+                        void logoutFromPharmacy(() => setIsUserMenuOpen(false))
+                      }
                     >
                       <LogOut size={16} aria-hidden="true" />
                       <span>
-                        {isLogoutLoading ? 'Logging out...' : 'Log out'}
+                        {isLogoutPending ? 'Logging out...' : 'Log out'}
                       </span>
                     </button>
                   </div>
@@ -303,7 +263,9 @@ export function PharmacyHeader({ breadcrumbs }: PharmacyHeaderProps) {
       <PharmacyMobileMenu
         id={MOBILE_MENU_ID}
         isOpen={isMenuOpen}
+        isLogoutPending={isLogoutPending}
         onClose={() => setIsMenuOpen(false)}
+        onLogout={logoutFromPharmacy}
       />
     </>
   );

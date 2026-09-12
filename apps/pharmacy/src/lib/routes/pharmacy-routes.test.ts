@@ -12,6 +12,7 @@ const {
   getPharmacyOrderPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
+  matchPharmacyRoute,
 } = pharmacyRoutes;
 
 //===================================================================
@@ -38,6 +39,37 @@ test('exposes app-local pharmacy routes', () => {
     PRODUCT_REQUESTS: '/pharmacy/product-requests',
     PRODUCT_REQUEST_NEW: '/pharmacy/product-requests/new',
     PROFILE: '/pharmacy/profile',
+  });
+});
+
+//===================================================================
+
+test('matches canonical route families without re-parsing section names in layout', () => {
+  assert.deepEqual(matchPharmacyRoute('/pharmacy'), {
+    family: 'dashboard',
+    basePath: PHARMACY_ROUTES.DASHBOARD,
+    segments: [],
+  });
+
+  assert.deepEqual(matchPharmacyRoute('/pharmacy/orders/status-new'), {
+    family: 'orders',
+    basePath: PHARMACY_ROUTES.ORDERS,
+    segments: ['status-new'],
+  });
+
+  assert.deepEqual(
+    matchPharmacyRoute(`/pharmacy/product-requests/${ENTITY_IDS.request}`),
+    {
+      family: 'product-requests',
+      basePath: PHARMACY_ROUTES.PRODUCT_REQUESTS,
+      segments: [ENTITY_IDS.request],
+    }
+  );
+
+  assert.deepEqual(matchPharmacyRoute('/pharmacy/unknown'), {
+    family: 'unknown',
+    basePath: null,
+    segments: [],
   });
 });
 

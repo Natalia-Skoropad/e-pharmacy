@@ -11,6 +11,14 @@ import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 import { subscribeToOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 
+import {
+  INITIAL_ORDER_COUNTER_STATE,
+  createReadyOrderCounterState,
+  createUnavailableOrderCounterState,
+  getVisibleOrderCounts,
+  type OrderCounterState,
+} from '@/lib/orders/order-counter-state';
+
 import css from './PharmacySidebar.module.css';
 
 //===================================================================
@@ -20,11 +28,6 @@ type PharmacySidebarProps = Readonly<{
   onToggleCollapsed: () => void;
 }>;
 
-type OrderMenuCounts = Readonly<{
-  new: number;
-  inProgress: number;
-}>;
-
 //===================================================================
 
 export function PharmacySidebar({
@@ -32,10 +35,12 @@ export function PharmacySidebar({
   onToggleCollapsed,
 }: PharmacySidebarProps) {
   const pathname = usePathname();
-  const [orderCounts, setOrderCounts] = useState<OrderMenuCounts>({
-    new: 0,
-    inProgress: 0,
-  });
+
+  const [orderCounterState, setOrderCounterState] = useState<OrderCounterState>(
+    INITIAL_ORDER_COUNTER_STATE
+  );
+
+  const orderCounts = getVisibleOrderCounts(orderCounterState);
 
   useEffect(() => {
     let requestVersion = 0;
@@ -66,12 +71,18 @@ export function PharmacySidebar({
           return;
         }
 
-        setOrderCounts({
-          new: newOrders.total,
-          inProgress: inProgressOrders.total,
-        });
+        setOrderCounterState(
+          createReadyOrderCounterState({
+            new: newOrders.total,
+            inProgress: inProgressOrders.total,
+          })
+        );
       } catch {
-        // Navigation must stay usable when notification counters are unavailable.
+        if (controller.signal.aborted || currentVersion !== requestVersion) {
+          return;
+        }
+
+        setOrderCounterState(createUnavailableOrderCounterState());
       }
     };
 
@@ -117,6 +128,7 @@ export function PharmacySidebar({
         <Link href={href} className={className} {...props}>
           {children}
           {!isCollapsed &&
+          orderCounts &&
           item.href === PHARMACY_ROUTES.ORDERS &&
           (orderCounts.new > 0 || orderCounts.inProgress > 0) ? (
             <span

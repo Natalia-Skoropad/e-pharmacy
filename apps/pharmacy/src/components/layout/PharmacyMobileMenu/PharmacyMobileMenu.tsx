@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Globe2, Store } from 'lucide-react';
 
 import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
@@ -13,15 +13,8 @@ import { SideMenu } from '@e-pharmacy/ui/cabinet';
 import { useAuth } from '@e-pharmacy/auth/react';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
-
-import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
-
-import {
-  canOpenClientPharmacyPage,
-  getClientAppUrl,
-  getClientPharmacyUrl,
-} from '@/lib/layout/external-links';
-
+import { getClientAppUrl } from '@/lib/layout/external-links';
+import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -32,7 +25,9 @@ import css from './PharmacyMobileMenu.module.css';
 type PharmacyMobileMenuProps = Readonly<{
   id: string;
   isOpen: boolean;
+  isLogoutPending: boolean;
   onClose: () => void;
+  onLogout: (onSettled?: () => void) => Promise<void>;
 }>;
 
 //===================================================================
@@ -40,30 +35,27 @@ type PharmacyMobileMenuProps = Readonly<{
 export function PharmacyMobileMenu({
   id,
   isOpen,
+  isLogoutPending,
   onClose,
+  onLogout,
 }: PharmacyMobileMenuProps) {
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
-  const { user, logout } = useAuth();
-  const { profile: pharmacyProfile } = usePharmacyProfile();
-  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
+  const { user } = useAuth();
+
+  const {
+    profile: pharmacyProfile,
+    isLoading: isPharmacyProfileLoading,
+    error: pharmacyProfileError,
+  } = usePharmacyProfile();
 
   const clientAppUrl = getClientAppUrl();
-  const clientPharmacyUrl = getClientPharmacyUrl(pharmacyProfile);
-  const canOpenPharmacyWebsite =
-    canOpenClientPharmacyPage(pharmacyProfile?.status) &&
-    Boolean(clientPharmacyUrl);
 
-  const handleLogout = async () => {
-    try {
-      setIsLogoutLoading(true);
-      await logout();
-      onClose();
-      window.location.assign(getSharedLoginUrl());
-    } finally {
-      setIsLogoutLoading(false);
-    }
-  };
+  const publicPharmacyLink = getPublicPharmacyLinkState({
+    profile: pharmacyProfile,
+    isLoading: isPharmacyProfileLoading,
+    error: pharmacyProfileError,
+  });
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -132,21 +124,25 @@ export function PharmacyMobileMenu({
           <span>Go to the website</span>
         </a>
 
-        {canOpenPharmacyWebsite ? (
+        {publicPharmacyLink.status === 'available' ? (
           <a
             className={css.quickLink}
-            href={clientPharmacyUrl}
+            href={publicPharmacyLink.href}
             target="_blank"
             rel="noreferrer"
             onClick={onClose}
           >
             <Store size={23} aria-hidden="true" />
-            <span>Go to my pharmacy on the website</span>
+            <span>{publicPharmacyLink.label}</span>
           </a>
         ) : (
-          <span className={`${css.quickLink} ${css.quickLinkDisabled}`}>
+          <span
+            className={`${css.quickLink} ${css.quickLinkDisabled}`}
+            aria-disabled="true"
+            aria-busy={publicPharmacyLink.status === 'loading' || undefined}
+          >
             <Store size={23} aria-hidden="true" />
-            <span>Go to my pharmacy on the website</span>
+            <span>{publicPharmacyLink.label}</span>
           </span>
         )}
       </div>
@@ -164,9 +160,9 @@ export function PharmacyMobileMenu({
         <LogoutButton
           fullWidth
           tone="inverse"
-          isLoading={isLogoutLoading}
-          disabled={isLogoutLoading}
-          onClick={handleLogout}
+          isLoading={isLogoutPending}
+          disabled={isLogoutPending}
+          onClick={() => void onLogout(onClose)}
         />
       </div>
     </MobileOffcanvasBase>
