@@ -118,3 +118,47 @@ test('supporting resources expose unavailable states instead of fake empty or ze
     /setProductSalesData\(DEFAULT_ORDER_SALES_STATISTICS\)[\s\S]{0,120}catch/
   );
 });
+
+//===================================================================
+
+test('add mutation commits its response before supporting-resource refresh and reconciles ambiguous failures', async () => {
+  const source = await readDetails();
+
+  const addStart = source.indexOf(
+    'const handleAddProductConfirm = async () =>'
+  );
+
+  const removeStart = source.indexOf(
+    'const handleRemoveProductConfirm = async () =>',
+    addStart
+  );
+
+  const addSource = source.slice(addStart, removeStart);
+
+  assert.match(
+    addSource,
+    /const response = await addProductToMyPharmacy\(product\.id\)/
+  );
+
+  assert.match(addSource, /setProduct\(response\.product\)/);
+  assert.doesNotMatch(addSource, /getProductStockMovements/);
+
+  assert.match(addSource, /shouldReconcileProductMutation\(addError, 'add'\)/);
+  assert.match(source, /error\.transportCode === 'INVALID_RESPONSE'/);
+  assert.match(source, /error\.httpStatus >= 500/);
+
+  assert.match(
+    addSource,
+    /const latest = await getProductDetails\(product\.id\)/
+  );
+
+  assert.match(
+    addSource,
+    /getProductOffer\(latest\.product, currentPharmacyId\)/
+  );
+
+  assert.match(
+    addSource,
+    /toast\.success\('Product is already added to your pharmacy\.'\)/
+  );
+});

@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 import { ORDER_CREATED_BY_TYPES } from '@e-pharmacy/config/orders';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
 import {
   PHARMACY_STATUS_PRESENTATION,
@@ -107,6 +108,7 @@ import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -328,26 +330,76 @@ const DEFAULT_BANNER_MESSAGE =
 //===================================================================
 
 function getProductDetailsError(error: unknown): ProductDetailsError {
-  if (isApiError(error) && [400, 404, 422].includes(error.status)) {
+  if (isApiError(error) && [400, 404, 422].includes(error.httpStatus ?? 0)) {
     return {
-      title: 'ProductDetails not found',
-      message: 'This product does not exist.',
+      title: 'Product not found',
+      message: 'This product does not exist or the link is invalid.',
+    };
+  }
+
+  if (isApiError(error) && error.httpStatus === 403) {
+    return {
+      title: 'Product is unavailable',
+      message: 'You do not have access to this product.',
     };
   }
 
   return {
-    title: 'ProductDetails could not be loaded',
-    message: 'Could not load product data. Please try again.',
+    title: 'Product could not be loaded',
+    message: getSafeApiErrorMessage(
+      error,
+      'Could not load product data. Please try again.'
+    ),
   };
 }
 
 //===================================================================
 
-function getProductActionErrorMessage(error: unknown): string {
-  if (isApiError(error) && error.message) return error.message;
-  if (error instanceof Error && error.message) return error.message;
+const PRODUCT_ACTION_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND]:
+    'Pharmacy profile is unavailable for this account.',
+  [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED]:
+    'Product management is unavailable until Admin verifies the pharmacy.',
+  [PRODUCT_MANAGEMENT_ERROR_CODES.PRODUCT_BLOCKED]:
+    'Blocked products cannot be added to your pharmacy.',
+  [PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED]:
+    'This product is already added to your pharmacy.',
+  [PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED]:
+    'This product is no longer added to your pharmacy.',
+  [PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS]:
+    'This product cannot be removed because it has related orders.',
+};
 
-  return 'ProductDetails action could not be completed. Please try again.';
+//===================================================================
+
+function getProductActionErrorMessage(error: unknown): string {
+  return getSafeApiErrorMessage(
+    error,
+    'Product action could not be completed. Please try again.',
+    { backendMessages: PRODUCT_ACTION_ERROR_MESSAGES }
+  );
+}
+
+//===================================================================
+
+function shouldReconcileProductMutation(
+  error: unknown,
+  action: 'add' | 'remove'
+): boolean {
+  if (!isApiError(error)) return false;
+
+  if (
+    error.transportCode === 'NETWORK_ERROR' ||
+    error.transportCode === 'TIMEOUT' ||
+    error.transportCode === 'INVALID_RESPONSE' ||
+    (error.httpStatus !== undefined && error.httpStatus >= 500)
+  ) {
+    return true;
+  }
+
+  return action === 'add'
+    ? error.httpStatus === 409
+    : error.httpStatus === 404 || error.httpStatus === 409;
 }
 
 //===================================================================
@@ -1347,7 +1399,33 @@ function AllProductDetailsPageContent({
         response.message || 'ProductDetails added to your pharmacy.'
       );
     } catch (addError) {
-      toast.error(getProductActionErrorMessage(addError));
+      if (
+        currentPharmacyId &&
+        shouldReconcileProductMutation(addError, 'add')
+      ) {
+        try {
+          const latest = await getProductDetails(product.id);
+          if (getProductOffer(latest.product, currentPharmacyId)) {
+            setProduct(latest.product);
+            setStockMovements([]);
+            setStockEarliestCreatedAt(null);
+            setStockBalance(null);
+            setStockStatus('idle');
+            setRelatedOrders([]);
+            setRelatedOrdersTotal(0);
+            setRelatedOrdersTotalPages(1);
+            setRelatedOrdersStatus('idle');
+            setIsAddModalOpen(false);
+            toast.success('Product is already added to your pharmacy.');
+            return;
+          }
+        } catch {
+          // Reconciliation is best-effort. Preserve the original mutation error.
+        }
+      }
+
+      const message = getProductActionErrorMessage(addError);
+      if (message) toast.error(message);
     } finally {
       setIsAddingProduct(false);
     }
@@ -1377,7 +1455,35 @@ function AllProductDetailsPageContent({
         response.message || 'ProductDetails was removed from your pharmacy.'
       );
     } catch (removeError) {
-      toast.error(getProductActionErrorMessage(removeError));
+      if (
+        currentPharmacyId &&
+        shouldReconcileProductMutation(removeError, 'remove')
+      ) {
+        try {
+          const latest = await getProductDetails(product.id);
+          if (!getProductOffer(latest.product, currentPharmacyId)) {
+            setProduct(latest.product);
+            setStockMovements([]);
+            setStockEarliestCreatedAt(null);
+            setStockBalance(null);
+            setStockStatus('idle');
+            setRelatedOrders([]);
+            setRelatedOrdersTotal(0);
+            setRelatedOrdersTotalPages(1);
+            setRelatedOrdersStatus('idle');
+            setCommentsTotal(0);
+            setCommentsTotalStatus('success');
+            setIsRemoveModalOpen(false);
+            toast.success('Product is already removed from your pharmacy.');
+            return;
+          }
+        } catch {
+          // Reconciliation is best-effort. Preserve the original mutation error.
+        }
+      }
+
+      const message = getProductActionErrorMessage(removeError);
+      if (message) toast.error(message);
     } finally {
       setIsRemovingProduct(false);
     }

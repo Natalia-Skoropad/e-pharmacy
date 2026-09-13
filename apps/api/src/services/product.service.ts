@@ -1,8 +1,9 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { REVIEW_ERROR_CODES } from '../constants/reviews';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../constants/product-management';
 import { API_MESSAGES } from '../constants/messages';
 
 import { Client } from '../models/client.model';
@@ -38,7 +39,12 @@ import {
 
 import { recordInitialStockArrival } from './stockMovement.service';
 import { httpError } from '../utils/httpError';
-import { isDuplicateProductReviewError } from '../utils/mongoError';
+
+import {
+  isDuplicateProductOfferError,
+  isDuplicateProductReviewError,
+} from '../utils/mongoError';
+
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
@@ -86,6 +92,8 @@ const PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES = [
   PHARMACY_STATUSES.ACTIVE,
   PHARMACY_STATUSES.ON_MODERATION,
 ] as const;
+
+//===============================================================
 
 type ProductManagementActor = Readonly<{
   userId: string;
@@ -796,7 +804,12 @@ async function getCurrentUserPharmacyForManagedProductRead(userId: string) {
     .lean<{ _id: Types.ObjectId } | null>();
 
   if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Pharmacy profile was not found.',
+      undefined,
+      PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND
+    );
   }
 
   return pharmacy;
@@ -1026,7 +1039,12 @@ async function getCurrentUserPharmacyForProductManagement(userId: string) {
   });
 
   if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Pharmacy profile was not found.',
+      undefined,
+      PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND
+    );
   }
 
   const canManageProducts = PHARMACY_PRODUCT_MANAGEMENT_STATUSES.some(
@@ -1036,7 +1054,9 @@ async function getCurrentUserPharmacyForProductManagement(userId: string) {
   if (!canManageProducts) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
-      'Products can be added only after Admin verifies the pharmacy profile.'
+      'Products can be added only after Admin verifies the pharmacy profile.',
+      undefined,
+      PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED
     );
   }
 
@@ -1061,45 +1081,73 @@ export async function addProductToMyPharmacyService(
   if (product.status !== 'active') {
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
-      'Blocked products cannot be added to a pharmacy.'
-    );
-  }
-
-  const existingOffer = await ProductOffer.findOne({
-    productId: product._id,
-    pharmacyId: pharmacy._id,
-  }).lean();
-
-  if (existingOffer) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'This product is already added to your pharmacy.'
+      'Blocked products cannot be added to a pharmacy.',
+      undefined,
+      PRODUCT_MANAGEMENT_ERROR_CODES.PRODUCT_BLOCKED
     );
   }
 
   const initialQuantity = createInitialOfferStockQuantity(product._id);
+  const session = await mongoose.startSession();
 
-  const offer = await ProductOffer.create({
-    productId: product._id,
-    pharmacyId: pharmacy._id,
-    price: product.price ?? 0,
-    totalQuantity: initialQuantity,
-    availableQuantity: initialQuantity,
-    reservedQuantity: 0,
-  });
+  try {
+    await session.withTransaction(async () => {
+      const existingOffer = await ProductOffer.exists({
+        productId: product._id,
+        pharmacyId: pharmacy._id,
+      }).session(session);
 
-  await recordInitialStockArrival(
-    {
-      _id: offer._id as Types.ObjectId,
-      productId: offer.productId as unknown as Types.ObjectId,
-      pharmacyId: offer.pharmacyId as unknown as Types.ObjectId,
-      price: offer.price,
-      totalQuantity: offer.totalQuantity,
-      availableQuantity: offer.availableQuantity,
-      reservedQuantity: offer.reservedQuantity,
-    },
-    'Initial stock quantity added when the product was added to the pharmacy.'
-  );
+      if (existingOffer) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'This product is already added to your pharmacy.',
+          undefined,
+          PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED
+        );
+      }
+
+      const [offer] = await ProductOffer.create(
+        [
+          {
+            productId: product._id,
+            pharmacyId: pharmacy._id,
+            price: product.price ?? 0,
+            totalQuantity: initialQuantity,
+            availableQuantity: initialQuantity,
+            reservedQuantity: 0,
+          },
+        ],
+        { session }
+      );
+
+      await recordInitialStockArrival(
+        {
+          _id: offer._id as Types.ObjectId,
+          productId: offer.productId as unknown as Types.ObjectId,
+          pharmacyId: offer.pharmacyId as unknown as Types.ObjectId,
+          price: offer.price,
+          totalQuantity: offer.totalQuantity,
+          availableQuantity: offer.availableQuantity,
+          reservedQuantity: offer.reservedQuantity,
+        },
+        'Initial stock quantity added when the product was added to the pharmacy.',
+        session
+      );
+    });
+  } catch (error) {
+    if (isDuplicateProductOfferError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'This product is already added to your pharmacy.',
+        undefined,
+        PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED
+      );
+    }
+
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 
   const details = await getManagedProductDetailsService(productId, {
     userId,
@@ -1127,31 +1175,43 @@ export async function removeProductFromMyPharmacyService(
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
-  const offer = await ProductOffer.findOne({
-    productId: product._id,
-    pharmacyId: pharmacy._id,
-  });
+  const session = await mongoose.startSession();
 
-  if (!offer) {
-    throw httpError(
-      HTTP_STATUS.NOT_FOUND,
-      'This product is not added to your pharmacy.'
-    );
+  try {
+    await session.withTransaction(async () => {
+      const offer = await ProductOffer.findOne({
+        productId: product._id,
+        pharmacyId: pharmacy._id,
+      }).session(session);
+
+      if (!offer) {
+        throw httpError(
+          HTTP_STATUS.NOT_FOUND,
+          'This product is not added to your pharmacy.',
+          undefined,
+          PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED
+        );
+      }
+
+      const hasRelatedOrders = await Order.exists({
+        pharmacyId: pharmacy._id,
+        'items.productOfferId': offer._id,
+      }).session(session);
+
+      if (hasRelatedOrders) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Product cannot be removed because it already has related orders.',
+          undefined,
+          PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS
+        );
+      }
+
+      await ProductOffer.deleteOne({ _id: offer._id }, { session });
+    });
+  } finally {
+    await session.endSession();
   }
-
-  const hasRelatedOrders = await Order.exists({
-    pharmacyId: pharmacy._id,
-    'items.productOfferId': offer._id,
-  });
-
-  if (hasRelatedOrders) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Product cannot be removed because it already has related orders.'
-    );
-  }
-
-  await ProductOffer.deleteOne({ _id: offer._id });
 
   const details = await getManagedProductDetailsService(productId, {
     userId,

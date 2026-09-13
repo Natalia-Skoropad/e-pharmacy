@@ -8,6 +8,7 @@ import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
 import {
   RowsPerPageSelect,
@@ -36,6 +37,7 @@ import type {
 
 import { addProductToMyPharmacy, getProducts } from '@/lib/api/browser';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import {
   DEFAULT_ALL_PRODUCTS_FILTERS,
@@ -92,9 +94,22 @@ function getProductsQueryParams(
 //===================================================================
 
 function getAddProductErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-
-  return 'Could not add product. Please try again.';
+  return getSafeApiErrorMessage(
+    error,
+    'Could not add product. Please try again.',
+    {
+      backendMessages: {
+        [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND]:
+          'Pharmacy profile is unavailable for this account.',
+        [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED]:
+          'Adding products is unavailable until Admin verifies the pharmacy.',
+        [PRODUCT_MANAGEMENT_ERROR_CODES.PRODUCT_BLOCKED]:
+          'Blocked products cannot be added to your pharmacy.',
+        [PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED]:
+          'This product is already added to your pharmacy.',
+      },
+    }
+  );
 }
 
 //===================================================================

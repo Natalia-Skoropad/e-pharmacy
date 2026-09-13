@@ -87,7 +87,7 @@ function createProductRequestFileSchema({
       size: {
         type: Number,
         required: true,
-        min: [0, 'File size is invalid.'],
+        min: [1, 'File size must be greater than 0.'],
         max: [maxSizeBytes, maxSizeMessage],
       },
 
@@ -402,6 +402,17 @@ productRequestSchema.index({ pharmacyId: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, status: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, category: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, article: 1 });
+
+productRequestSchema.index(
+  { article: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ['draft', 'new', 'in_progress', 'approved'] },
+    },
+  }
+);
+
 productRequestSchema.index({ name: 'text', article: 'text' });
 
 //===============================================================

@@ -45,3 +45,30 @@ export function isDuplicatePharmacyReviewError(error: unknown): boolean {
     (error.keyValue?.pharmacyId && error.keyValue?.userId)
   );
 }
+
+//===============================================================
+
+export function isDuplicateProductOfferError(error: unknown): boolean {
+  if (!isMongoDuplicateKeyError(error)) return false;
+
+  return Boolean(
+    (error.keyPattern?.productId && error.keyPattern?.pharmacyId) ||
+    (error.keyValue?.productId && error.keyValue?.pharmacyId)
+  );
+}
+
+//===============================================================
+
+export function isDuplicateProductRequestArticleError(error: unknown): boolean {
+  if (!isMongoDuplicateKeyError(error)) return false;
+
+  return Boolean(error.keyPattern?.article || error.keyValue?.article);
+}
+
+//===============================================================
+
+export function isDuplicateProductArticleError(error: unknown): boolean {
+  if (!isMongoDuplicateKeyError(error)) return false;
+
+  return Boolean(error.keyPattern?.article || error.keyValue?.article);
+}

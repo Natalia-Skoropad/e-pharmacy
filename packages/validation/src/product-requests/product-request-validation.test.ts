@@ -186,6 +186,11 @@ test('product image validation checks MIME, extension and size', () => {
   assert.equal(validateProductRequestImageFile(validImage), '');
 
   assert.notEqual(
+    validateProductRequestImageFile({ ...validImage, size: 0 }),
+    ''
+  );
+
+  assert.notEqual(
     validateProductRequestImageFile({
       name: 'product.gif',
       type: 'image/gif',
@@ -223,6 +228,12 @@ test('additional file validation checks count, MIME, size and data URL', () => {
   } as const;
 
   assert.equal(validateProductRequestAdditionalFiles([validFile]), '');
+
+  assert.notEqual(
+    validateProductRequestAdditionalFiles([{ ...validFile, size: 0 }]),
+    ''
+  );
+
   assert.notEqual(
     validateProductRequestAdditionalFiles(
       [{ ...validFile, dataUrl: undefined }],

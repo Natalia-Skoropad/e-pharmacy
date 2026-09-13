@@ -42,6 +42,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
+import { PRODUCT_REQUEST_ERROR_CODES } from '@e-pharmacy/config/product-requests';
 
 import type {
   ProductRequestFormPayload,
@@ -88,8 +89,9 @@ import {
 import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
-import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -203,6 +205,33 @@ function getStatusMessage(status: ProductRequestStatus) {
 
 //===================================================================
 
+const PRODUCT_REQUEST_ACTION_ERROR_MESSAGES: Readonly<Record<string, string>> =
+  {
+    [PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT]:
+      'This article is already used by a catalog product or another active request.',
+    [PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND]:
+      'This product request is no longer available.',
+    [PRODUCT_REQUEST_ERROR_CODES.NOT_EDITABLE]:
+      'Only draft product requests can be edited.',
+    [PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE]:
+      'Only draft product requests can be deleted.',
+    [PRODUCT_REQUEST_ERROR_CODES.INVALID_TRANSITION]:
+      'This product request status has already changed. Reload the latest data and try again.',
+  };
+
+//===================================================================
+
+function getProductRequestActionErrorMessage(
+  error: unknown,
+  fallback: string
+): string {
+  return getSafeApiErrorMessage(error, fallback, {
+    backendMessages: PRODUCT_REQUEST_ACTION_ERROR_MESSAGES,
+  });
+}
+
+//===================================================================
+
 function NewProductRequestPageContent({
   requestId,
   sourceRequestId,
@@ -235,6 +264,8 @@ function NewProductRequestPageContent({
 
   const [isProductImageRemoved, setIsProductImageRemoved] = useState(false);
   const [isImageProcessing, setIsImageProcessing] = useState(false);
+  const [isAdditionalFilesProcessing, setIsAdditionalFilesProcessing] =
+    useState(false);
   const imageReadControllerRef = useRef<AbortController | null>(null);
   const additionalFilesReadControllerRef = useRef<AbortController | null>(null);
   const [productImageError, setProductImageError] = useState('');
@@ -249,7 +280,7 @@ function NewProductRequestPageContent({
     Boolean(requestId || cloneSourceRequestId)
   );
 
-  const [hasLoadError, setHasLoadError] = useState(false);
+  const [loadErrorMessage, setLoadErrorMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<RequestTab>('details');
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
@@ -259,9 +290,10 @@ function NewProductRequestPageContent({
     useState(false);
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const mutationLockRef = useRef(false);
 
   const [articleCheckStatus, setArticleCheckStatus] = useState<
-    'idle' | 'checking' | 'available' | 'unavailable'
+    'idle' | 'checking' | 'available' | 'conflict' | 'error'
   >('idle');
 
   const [articleCheckMessage, setArticleCheckMessage] = useState('');
@@ -270,10 +302,12 @@ function NewProductRequestPageContent({
   const isReadonly = Boolean(request && request.status !== 'draft');
   const canEdit = !isReadonly && !isCreationLocked;
   const isSaving = savingStatus !== null;
+  const isMutating = isSaving || isDeleting;
+  const isFileProcessing = isImageProcessing || isAdditionalFilesProcessing;
   const hasProductImage = productImage.length > 0 && !isProductImageRemoved;
 
   const articleError =
-    articleCheckStatus === 'unavailable' ? articleCheckMessage : undefined;
+    articleCheckStatus === 'conflict' ? articleCheckMessage : undefined;
 
   const validationContext = useMemo(
     () => ({
@@ -287,7 +321,8 @@ function NewProductRequestPageContent({
   const isModerationReady =
     isProductRequestSubmissionValid(values, validationContext) &&
     articleCheckStatus === 'available' &&
-    !isImageProcessing;
+    !isFileProcessing &&
+    !isMutating;
 
   const formErrors: ProductRequestFormErrors = validationMode
     ? validateProductRequestForm(values, validationMode, validationContext)
@@ -330,7 +365,7 @@ function NewProductRequestPageContent({
 
     async function loadRequest() {
       setIsLoading(true);
-      setHasLoadError(false);
+      setLoadErrorMessage(null);
 
       try {
         const loadedRequest = await getPharmacyProductRequest(requestIdToLoad, {
@@ -358,8 +393,20 @@ function NewProductRequestPageContent({
           setCommentsTotal(loadedRequest.commentsTotal);
           dispatchPharmacyBreadcrumbLabel(loadedRequest.name);
         }
-      } catch {
-        if (!controller.signal.aborted) setHasLoadError(true);
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setLoadErrorMessage(
+            getSafeApiErrorMessage(
+              loadError,
+              'Could not load the product request. Please try again.',
+              {
+                statusMessages: {
+                  404: 'The request may have been removed, or it does not belong to the current pharmacy.',
+                },
+              }
+            )
+          );
+        }
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -389,16 +436,21 @@ function NewProductRequestPageContent({
 
         if (controller.signal.aborted) return;
 
-        setArticleCheckStatus(result.available ? 'available' : 'unavailable');
+        setArticleCheckStatus(result.available ? 'available' : 'conflict');
         setArticleCheckMessage(
-          result.message ?? 'This article is already in use.'
+          result.available
+            ? 'Article is available.'
+            : 'This article is already used by a catalog product or another active request.'
         );
-      } catch {
+      } catch (checkError) {
         if (controller.signal.aborted) return;
 
-        setArticleCheckStatus('unavailable');
+        setArticleCheckStatus('error');
         setArticleCheckMessage(
-          'Could not verify the product article. Try again.'
+          getSafeApiErrorMessage(
+            checkError,
+            'Article availability could not be verified. Please try again.'
+          )
         );
       }
     }, 350);
@@ -462,11 +514,7 @@ function NewProductRequestPageContent({
       setIsProductImageRemoved(false);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        setProductImageError(
-          error instanceof Error
-            ? error.message
-            : 'The selected file could not be read.'
-        );
+        setProductImageError('The selected image could not be read.');
       }
     } finally {
       if (imageReadControllerRef.current === controller) {
@@ -486,6 +534,7 @@ function NewProductRequestPageContent({
     additionalFilesReadControllerRef.current?.abort();
     const controller = new AbortController();
     additionalFilesReadControllerRef.current = controller;
+    setIsAdditionalFilesProcessing(true);
 
     try {
       const filesWithData = await Promise.all(
@@ -511,15 +560,12 @@ function NewProductRequestPageContent({
       setAdditionalFilesError('');
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        setAdditionalFilesError(
-          error instanceof Error
-            ? error.message
-            : 'The selected file could not be read.'
-        );
+        setAdditionalFilesError('The selected files could not be read.');
       }
     } finally {
       if (additionalFilesReadControllerRef.current === controller) {
         additionalFilesReadControllerRef.current = null;
+        setIsAdditionalFilesProcessing(false);
       }
     }
   };
@@ -538,6 +584,16 @@ function NewProductRequestPageContent({
     });
 
   const saveRequest = async (status: 'draft' | 'new') => {
+    if (
+      mutationLockRef.current ||
+      imageReadControllerRef.current ||
+      additionalFilesReadControllerRef.current
+    ) {
+      toast.error('Wait until the current file or request operation finishes.');
+      return;
+    }
+
+    mutationLockRef.current = true;
     setSavingStatus(status);
 
     try {
@@ -568,14 +624,15 @@ function NewProductRequestPageContent({
       router.push(getPharmacyRequestPath(createdRequest.id));
       router.refresh();
     } catch (error) {
-      toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : status === 'draft'
-            ? 'Could not save draft. Please try again.'
-            : 'Could not send request. Please try again.'
+      const message = getProductRequestActionErrorMessage(
+        error,
+        status === 'draft'
+          ? 'Could not save draft. Please try again.'
+          : 'Could not send request. Please try again.'
       );
+      if (message) toast.error(message);
     } finally {
+      mutationLockRef.current = false;
       setSavingStatus(null);
     }
   };
@@ -593,8 +650,13 @@ function NewProductRequestPageContent({
       return;
     }
 
-    if (articleCheckStatus !== 'available' || isImageProcessing) {
-      toast.error('Wait until the image and product article checks finish.');
+    if (
+      articleCheckStatus !== 'available' ||
+      isFileProcessing ||
+      isMutating ||
+      mutationLockRef.current
+    ) {
+      toast.error('Wait until the file, article, and request checks finish.');
       return;
     }
 
@@ -602,19 +664,22 @@ function NewProductRequestPageContent({
   };
 
   const handleSendForModeration = () => {
+    if (isMutating || isFileProcessing || mutationLockRef.current) return;
     if (!isModerationReady) return;
     setValidationMode('moderation');
     setIsModerationConfirmOpen(true);
   };
 
   const handleConfirmModeration = async () => {
+    if (isMutating || isFileProcessing || mutationLockRef.current) return;
     setIsModerationConfirmOpen(false);
     await saveRequest('new');
   };
 
   const handleDeleteDraft = async () => {
-    if (!requestId) return;
+    if (!requestId || mutationLockRef.current || isFileProcessing) return;
 
+    mutationLockRef.current = true;
     setIsDeleteConfirmOpen(false);
     setIsDeleting(true);
 
@@ -624,12 +689,13 @@ function NewProductRequestPageContent({
       router.push(PHARMACY_ROUTES.PRODUCT_REQUESTS);
       router.refresh();
     } catch (error) {
-      toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : 'Could not delete the draft.'
+      const message = getProductRequestActionErrorMessage(
+        error,
+        'Could not delete the draft.'
       );
+      if (message) toast.error(message);
     } finally {
+      mutationLockRef.current = false;
       setIsDeleting(false);
     }
   };
@@ -653,7 +719,7 @@ function NewProductRequestPageContent({
               size="sm"
               variant="ghost"
               className={css.dangerButton}
-              disabled={isSaving || isDeleting || !canEdit}
+              disabled={isMutating || isFileProcessing || !canEdit}
               isLoading={isDeleting}
               iconLeft={<Trash2 size={17} aria-hidden="true" />}
               onClick={() => setIsDeleteConfirmOpen(true)}
@@ -668,10 +734,10 @@ function NewProductRequestPageContent({
             size="sm"
             isLoading={savingStatus === 'draft'}
             disabled={
-              isSaving ||
+              isMutating ||
               !canEdit ||
               articleCheckStatus !== 'available' ||
-              isImageProcessing
+              isFileProcessing
             }
             iconLeft={<Save size={17} aria-hidden="true" />}
             onClick={handleSaveDraft}
@@ -684,7 +750,7 @@ function NewProductRequestPageContent({
             size="sm"
             isLoading={savingStatus === 'new'}
             disabled={
-              isSaving || !canEdit || !isModerationReady || isImageProcessing
+              isMutating || !canEdit || !isModerationReady || isFileProcessing
             }
             iconLeft={<Send size={17} aria-hidden="true" />}
             onClick={handleSendForModeration}
@@ -716,14 +782,14 @@ function NewProductRequestPageContent({
     );
   }
 
-  if (hasLoadError) {
+  if (loadErrorMessage) {
     return (
       <main className={css.page}>
         <section className={css.contentCard}>
           <StatusBanner
             {...PRODUCT_REQUEST_STATUS_PRESENTATION.rejected}
-            title="Product request was not found"
-            message="The request may have been removed, or it does not belong to the current pharmacy."
+            title="Product request could not be loaded"
+            message={loadErrorMessage}
           />
         </section>
       </main>
@@ -864,7 +930,7 @@ function NewProductRequestPageContent({
                     productImageError || validationMode === 'moderation'
                   )}
                   required
-                  disabled={!canEdit || isImageProcessing}
+                  disabled={!canEdit || isMutating || isFileProcessing}
                   multiple={false}
                   maxFiles={PRODUCT_REQUEST_IMAGE_RULES.maxFiles}
                   accept={PRODUCT_REQUEST_IMAGE_ACCEPT}
@@ -873,7 +939,7 @@ function NewProductRequestPageContent({
                     files[0] ? validateProductRequestImageFile(files[0]) : ''
                   }
                   labels={{
-                    dropzoneTitle: isImageProcessing
+                    dropzoneTitle: isFileProcessing
                       ? 'Preparing image preview...'
                       : 'Choose product image',
                     dropzoneText: 'Upload one clear product photo.',
@@ -909,8 +975,7 @@ function NewProductRequestPageContent({
                 value={values.article}
                 error={errors.article}
                 isTouched={
-                  Boolean(validationMode) ||
-                  articleCheckStatus === 'unavailable'
+                  Boolean(validationMode) || articleCheckStatus === 'conflict'
                 }
                 maxLength={PRODUCT_REQUEST_LIMITS.articleMax}
                 disabled={!canEdit}
@@ -919,6 +984,20 @@ function NewProductRequestPageContent({
                   updateValue('article', event.target.value.toUpperCase())
                 }
               />
+
+              {articleCheckStatus === 'checking' ||
+              articleCheckStatus === 'available' ||
+              articleCheckStatus === 'error' ? (
+                <p
+                  className={css.articleCheckStatus}
+                  role="status"
+                  aria-live="polite"
+                >
+                  {articleCheckStatus === 'checking'
+                    ? 'Checking article availability…'
+                    : articleCheckMessage}
+                </p>
+              ) : null}
 
               <NameInput
                 id="product-request-manufacturer"
@@ -1172,7 +1251,7 @@ function NewProductRequestPageContent({
               isTouched={Boolean(
                 additionalFilesError || errors.additionalFiles
               )}
-              disabled={!canEdit}
+              disabled={!canEdit || isMutating || isFileProcessing}
               maxFiles={PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles}
               accept={PRODUCT_REQUEST_ATTACHMENTS_ACCEPT}
               hint={`Up to ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} files, no larger than ${PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB} MB each.`}

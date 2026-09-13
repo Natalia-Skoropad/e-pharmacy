@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { productRequestFormSchema } from './product-request.schema';
+import {
+  productRequestFormSchema,
+  productRequestModerationSchema,
+} from './product-request.schema';
 
 //===============================================================
 
@@ -135,6 +138,14 @@ test('product request schema enforces image MIME, extension and size', () => {
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validSubmission,
+      productImage: { ...validProductImage, size: 0 },
+    }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validSubmission,
       productImage: {
         ...validProductImage,
         name: 'product.gif',
@@ -169,6 +180,15 @@ test('product request schema stores attachment data and checks MIME consistency'
   });
 
   assert.equal(parsed.additionalFiles?.[0]?.dataUrl, validFile.dataUrl);
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validSubmission,
+      additionalFiles: [{ ...validFile, size: 0 }],
+    }).success,
+    false
+  );
+
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validSubmission,
@@ -192,6 +212,49 @@ test('product request schema stores attachment data and checks MIME consistency'
       ...validSubmission,
       additionalFiles: [{ ...validFile, size: 2 }],
     }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('product request moderation schema enforces the admin transition payload', () => {
+  assert.equal(
+    productRequestModerationSchema.safeParse({ status: 'in_progress' }).success,
+    true
+  );
+
+  assert.equal(
+    productRequestModerationSchema.safeParse({ status: 'rejected' }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestModerationSchema.safeParse({
+      status: 'rejected',
+      reason: 'The submitted information needs correction.',
+    }).success,
+    true
+  );
+
+  assert.equal(
+    productRequestModerationSchema.safeParse({
+      status: 'approved',
+      productId: '507f1f77bcf86cd799439011',
+    }).success,
+    true
+  );
+
+  assert.equal(
+    productRequestModerationSchema.safeParse({
+      status: 'in_progress',
+      productId: '507f1f77bcf86cd799439011',
+    }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestModerationSchema.safeParse({ status: 'new' }).success,
     false
   );
 });

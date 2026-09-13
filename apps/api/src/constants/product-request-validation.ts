@@ -43,13 +43,16 @@ export const PRODUCT_REQUEST_ATTACHMENT_RULES = {
   maxSizeBytes: 5 * 1024 * 1024,
   maxTotalSizeBytes: 20 * 1024 * 1024,
   maxDataUrlLength: 7 * 1024 * 1024,
+
   mimeTypes: [
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ...PRODUCT_REQUEST_IMAGE_RULES.mimeTypes,
   ],
+
   fileNamePattern: /\.(?:pdf|docx?|jpe?g|png|webp)$/i,
+
   dataUrlPattern:
     /^data:(?:application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|image\/(?:jpeg|png|webp));base64,[A-Za-z0-9+/=]+$/,
 } as const;
@@ -85,8 +88,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
   format: {
     article: 'Use English letters, numbers, dot, slash, underscore or hyphen',
     shortText: 'Use English letters, numbers, spaces and basic punctuation',
-    longText:
-      'Use English letters, numbers, line breaks and basic punctuation',
+    longText: 'Use English letters, numbers, line breaks and basic punctuation',
     productImage: 'Choose a JPG, PNG, or WEBP image',
     attachment: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP file',
     attachmentData: 'The attached file data does not match its MIME type',
@@ -108,6 +110,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     pharmacyComment: `Pharmacy note must be at most ${PRODUCT_REQUEST_LIMITS.pharmacyCommentMax} characters`,
     fileName: `File name must be at most ${PRODUCT_REQUEST_LIMITS.fileNameMax} characters`,
     fileType: `File type must be at most ${PRODUCT_REQUEST_LIMITS.fileTypeMax} characters`,
+    fileSize: 'File size is invalid',
     productImageSize: 'The product image must be no larger than 2 MB',
     productImageData: 'The product image data is too large',
     attachmentSize: 'Additional files must be no larger than 5 MB',

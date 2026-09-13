@@ -10,6 +10,7 @@ import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
 import {
   RowsPerPageSelect,
@@ -35,6 +36,7 @@ import {
 } from '@/lib/api/browser';
 
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import type {
@@ -83,9 +85,22 @@ function getProductsQueryParams(
 //===================================================================
 
 function getRemoveProductErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) return error.message;
-
-  return 'Could not remove product from your pharmacy.';
+  return getSafeApiErrorMessage(
+    error,
+    'Could not remove product from your pharmacy.',
+    {
+      backendMessages: {
+        [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND]:
+          'Pharmacy profile is unavailable for this account.',
+        [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED]:
+          'Product management is unavailable until Admin verifies the pharmacy.',
+        [PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED]:
+          'This product is no longer added to your pharmacy.',
+        [PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS]:
+          'This product cannot be removed because it has related orders.',
+      },
+    }
+  );
 }
 
 //===================================================================

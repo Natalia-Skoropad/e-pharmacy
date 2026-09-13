@@ -1,7 +1,8 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { PRODUCT_REQUEST_ERROR_CODES } from '../constants/product-request';
 
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
@@ -18,10 +19,17 @@ import type {
 import type {
   ProductRequestArticleAvailabilityQuery,
   ProductRequestFormInput,
+  ProductRequestModerationInput,
   ProductRequestsQuery,
 } from '../schemas/product-request.schema';
 
 import { httpError } from '../utils/httpError';
+
+import {
+  isDuplicateProductArticleError,
+  isDuplicateProductRequestArticleError,
+} from '../utils/mongoError';
+
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
@@ -95,7 +103,12 @@ async function assertArticleAvailable(
   const conflict = await getArticleConflict(article, excludeRequestId);
 
   if (conflict) {
-    throw httpError(HTTP_STATUS.CONFLICT, conflict);
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      conflict,
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT
+    );
   }
 }
 
@@ -348,24 +361,38 @@ export async function createProductRequestService(
 
   const now = new Date();
   const historyCopy = getStatusHistoryCopy(input.status);
-  const request = await ProductRequest.create({
-    pharmacyId: pharmacy._id,
-    status: input.status,
-    ...getRequestFormUpdate(input),
-    history: [
-      {
-        status: input.status,
-        ...historyCopy,
-        createdAt: now,
-      },
-    ],
-  });
 
-  return {
-    request: serializeProductRequest(
-      request.toObject() as unknown as ProductRequestDocument
-    ),
-  };
+  try {
+    const request = await ProductRequest.create({
+      pharmacyId: pharmacy._id,
+      status: input.status,
+      ...getRequestFormUpdate(input),
+      history: [
+        {
+          status: input.status,
+          ...historyCopy,
+          createdAt: now,
+        },
+      ],
+    });
+
+    return {
+      request: serializeProductRequest(
+        request.toObject() as unknown as ProductRequestDocument
+      ),
+    };
+  } catch (error) {
+    if (isDuplicateProductRequestArticleError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'Another active product request already uses this article.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT
+      );
+    }
+
+    throw error;
+  }
 }
 
 //===============================================================
@@ -378,7 +405,12 @@ export async function updateProductRequestService(
   const pharmacyId = await getCurrentPharmacyId(userId);
 
   if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
   }
 
   const request = await ProductRequest.findOne({
@@ -387,13 +419,20 @@ export async function updateProductRequestService(
   });
 
   if (!request) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
   }
 
   if (request.status !== 'draft') {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Only draft product requests can be edited.'
+      'Only draft product requests can be edited.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_EDITABLE
     );
   }
 
@@ -421,7 +460,20 @@ export async function updateProductRequestService(
     },
   ];
 
-  await request.save();
+  try {
+    await request.save();
+  } catch (error) {
+    if (isDuplicateProductRequestArticleError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'Another active product request already uses this article.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT
+      );
+    }
+
+    throw error;
+  }
 
   const commentsTotal = await PharmacyNote.countDocuments({
     pharmacyId,
@@ -446,7 +498,12 @@ export async function deleteProductRequestService(
   const pharmacyId = await getCurrentPharmacyId(userId);
 
   if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
   }
 
   const request = await ProductRequest.findOne({
@@ -455,13 +512,20 @@ export async function deleteProductRequestService(
   }).select('_id status');
 
   if (!request) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
   }
 
   if (request.status !== 'draft') {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Only draft product requests can be deleted.'
+      'Only draft product requests can be deleted.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
     );
   }
 
@@ -475,6 +539,195 @@ export async function deleteProductRequestService(
   ]);
 
   return { message: 'Product request draft deleted successfully.' };
+}
+
+//===============================================================
+
+function canTransitionProductRequest(
+  currentStatus: ProductRequestStatus,
+  nextStatus: ProductRequestModerationInput['status']
+): boolean {
+  if (currentStatus === 'new') return nextStatus === 'in_progress';
+
+  if (currentStatus === 'in_progress') {
+    return nextStatus === 'approved' || nextStatus === 'rejected';
+  }
+
+  return false;
+}
+
+//===============================================================
+
+async function resolveApprovedProductId(
+  request: ProductRequestDocument,
+  input: ProductRequestModerationInput,
+  adminUserId: string,
+  session: mongoose.ClientSession
+): Promise<Types.ObjectId> {
+  const normalizedArticle = request.article.trim().toUpperCase();
+
+  if (input.productId) {
+    const linkedProduct = await Product.findById(input.productId)
+      .session(session)
+      .lean<ProductRequestProductDocument | null>();
+
+    if (
+      !linkedProduct ||
+      linkedProduct.article?.toUpperCase() !== normalizedArticle
+    ) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'The selected catalog product does not match the request article.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
+      );
+    }
+
+    return linkedProduct._id;
+  }
+
+  const existingProduct = await Product.findOne({ article: normalizedArticle })
+    .session(session)
+    .select('_id article')
+    .lean<ProductRequestProductDocument | null>();
+
+  if (existingProduct) return existingProduct._id;
+
+  const [createdProduct] = await Product.create(
+    [
+      {
+        name: request.name,
+        article: normalizedArticle,
+        description: request.fullDescription,
+        category: request.category,
+        status: 'active',
+        imageUrl: request.productImage?.dataUrl,
+        manufacturer: request.manufacturer,
+        dosage: request.dosage,
+        packageQuantity: request.packageSize,
+        inStock: false,
+        createdBy: new Types.ObjectId(adminUserId),
+        updatedBy: new Types.ObjectId(adminUserId),
+      },
+    ],
+    { session }
+  );
+
+  return createdProduct._id as Types.ObjectId;
+}
+
+//===============================================================
+
+export async function moderateProductRequestByAdminService(
+  requestId: string,
+  input: ProductRequestModerationInput,
+  adminUserId: string
+) {
+  if (
+    !Types.ObjectId.isValid(requestId) ||
+    !Types.ObjectId.isValid(adminUserId)
+  ) {
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    const moderatedRequest = await session.withTransaction(async () => {
+      const request = await ProductRequest.findById(requestId).session(session);
+
+      if (!request) {
+        throw httpError(
+          HTTP_STATUS.NOT_FOUND,
+          'Product request was not found.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+        );
+      }
+
+      if (!canTransitionProductRequest(request.status, input.status)) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          `Product request cannot transition from ${request.status} to ${input.status}.`,
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.INVALID_TRANSITION
+        );
+      }
+
+      if (input.status === 'rejected' && !input.reason?.trim()) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Rejection reason is required.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.REJECTION_REASON_REQUIRED
+        );
+      }
+
+      let approvedProductId: Types.ObjectId | undefined;
+
+      if (input.status === 'approved') {
+        approvedProductId = await resolveApprovedProductId(
+          request.toObject() as unknown as ProductRequestDocument,
+          input,
+          adminUserId,
+          session
+        );
+      }
+
+      request.status = input.status;
+
+      if (approvedProductId) {
+        request.productId = approvedProductId;
+        request.rejectionReason = undefined;
+      } else if (input.status === 'rejected') {
+        request.rejectionReason = input.reason?.trim();
+      }
+
+      const historyCopy = getStatusHistoryCopy(
+        input.status,
+        request.rejectionReason
+      );
+
+      request.history = [
+        ...(request.history ?? []),
+        {
+          status: input.status,
+          ...historyCopy,
+          createdAt: new Date(),
+        },
+      ];
+
+      await request.save({ session });
+
+      return request.toObject() as unknown as ProductRequestDocument;
+    });
+
+    if (!moderatedRequest) {
+      throw new Error(
+        'Product request moderation transaction returned no request.'
+      );
+    }
+
+    return { request: serializeProductRequest(moderatedRequest) };
+  } catch (error) {
+    if (isDuplicateProductArticleError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'A catalog product with this article was created concurrently. Retry approval to link it.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
+      );
+    }
+
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 }
 
 //===============================================================
@@ -563,7 +816,12 @@ export async function getProductRequestByIdService(
   const pharmacyId = await getCurrentPharmacyId(userId);
 
   if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
   }
 
   const request = await ProductRequest.findOne({
@@ -574,7 +832,12 @@ export async function getProductRequestByIdService(
     .lean<ProductRequestDocument | null>();
 
   if (!request) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+    throw httpError(
+      HTTP_STATUS.NOT_FOUND,
+      'Product request was not found.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+    );
   }
 
   const commentsTotal = await PharmacyNote.countDocuments({

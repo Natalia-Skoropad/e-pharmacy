@@ -5,6 +5,7 @@ import {
   createPharmacyUserByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
+  updateProductRequestStatusByAdmin,
 } from '../controllers/admin.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
@@ -18,6 +19,12 @@ import {
 } from '../schemas/admin.schema';
 
 import { createPharmacyUserSchema } from '../schemas/auth.schema';
+
+import {
+  productRequestModerationSchema,
+  productRequestParamsSchema,
+} from '../schemas/product-request.schema';
+
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //=================================================================================
@@ -52,5 +59,18 @@ adminRoutes.patch(
     params: pharmacyIdParamsSchema,
     body: updateAdminPharmacyStatusSchema,
   }),
+
   ctrlWrapper(updatePharmacyStatusByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.patch(
+  '/product-requests/:requestId/status',
+  validate({
+    params: productRequestParamsSchema,
+    body: productRequestModerationSchema,
+  }),
+
+  ctrlWrapper(updateProductRequestStatusByAdmin)
 );

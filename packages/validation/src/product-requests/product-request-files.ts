@@ -94,7 +94,7 @@ function validateFileMetadata(file: ProductRequestFileLike): string {
   if (fileType.length > PRODUCT_REQUEST_LIMITS.fileTypeMax) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileType;
   }
-  if (!Number.isInteger(file.size) || file.size < 0) {
+  if (!Number.isInteger(file.size) || file.size <= 0) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileSize;
   }
 

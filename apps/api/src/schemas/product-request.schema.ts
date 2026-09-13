@@ -79,7 +79,11 @@ function createProductRequestFileSchema(
         )
         .regex(rules.fileNamePattern, formatMessage),
       type: z.enum(rules.mimeTypes),
-      size: z.number().int().min(0).max(rules.maxSizeBytes, sizeMessage),
+      size: z
+        .number()
+        .int()
+        .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileSize)
+        .max(rules.maxSizeBytes, sizeMessage),
       dataUrl: z
         .string()
         .max(rules.maxDataUrlLength, dataMessage)
@@ -389,6 +393,33 @@ export const productRequestParamsSchema = z.object({
 
 //===============================================================
 
+export const productRequestModerationSchema = z
+  .object({
+    status: z.enum(['in_progress', 'approved', 'rejected']),
+    reason: z.string().trim().max(1000).optional(),
+    productId: mongoIdSchema.optional(),
+  })
+
+  .superRefine((value, context) => {
+    if (value.status === 'rejected' && !value.reason?.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['reason'],
+        message: 'Rejection reason is required.',
+      });
+    }
+
+    if (value.status !== 'approved' && value.productId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['productId'],
+        message: 'Catalog product can be linked only when approving a request.',
+      });
+    }
+  });
+
+//===============================================================
+
 export type ProductRequestParams = z.infer<typeof productRequestParamsSchema>;
 export type ProductRequestsQuery = z.infer<typeof productRequestsQuerySchema>;
 
@@ -397,3 +428,7 @@ export type ProductRequestArticleAvailabilityQuery = z.infer<
 >;
 
 export type ProductRequestFormInput = z.infer<typeof productRequestFormSchema>;
+
+export type ProductRequestModerationInput = z.infer<
+  typeof productRequestModerationSchema
+>;

@@ -10,12 +10,18 @@ import type {
 
 import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
 
+import type {
+  ProductRequestModerationInput,
+  ProductRequestParams,
+} from '../schemas/product-request.schema';
+
 import {
   createPharmacyUserByAdminService,
   updatePharmacyStatusByAdminService,
 } from '../services/admin.service';
 
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
+import { moderateProductRequestByAdminService } from '../services/product-request.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -76,5 +82,29 @@ export async function updatePharmacyStatusByAdmin(
     statusCode: HTTP_STATUS.OK,
     message: 'Pharmacy status was updated successfully.',
     data: { pharmacy },
+  });
+}
+
+//===============================================================
+
+export async function updateProductRequestStatusByAdmin(
+  req: Request,
+  res: ValidatedResponse<ProductRequestModerationInput, ProductRequestParams>
+): Promise<void> {
+  const adminUserId = req.user?.id;
+  if (!adminUserId) return;
+
+  const { requestId } = res.locals.validated.params;
+  const data = await moderateProductRequestByAdminService(
+    requestId,
+    res.locals.validated.body,
+    adminUserId
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Product request status was updated successfully.',
+    data,
   });
 }
