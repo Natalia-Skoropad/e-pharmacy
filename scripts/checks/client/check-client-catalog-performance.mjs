@@ -109,8 +109,8 @@ requirePattern(
 
 requirePattern(
   productController,
-  /getManagedProducts[\s\S]*getManagedProductsService\(query, \{ includeOffers: true \}\)/,
-  'Full offers must be explicitly limited to the authenticated product-management controller.'
+  /getManagedProducts[\s\S]*getManagedProductsService\(\s*query,\s*\{\s*userId:\s*req\.user\?\.id\s*\?\?\s*['"]{2},\s*role:\s*req\.user\?\.role,?\s*\},\s*\{\s*includeOffers:\s*true\s*\}\s*\)/,
+  'Full offers must be explicitly limited to the authenticated product-management controller with actor context.'
 );
 
 requirePattern(

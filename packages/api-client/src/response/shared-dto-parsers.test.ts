@@ -209,6 +209,32 @@ test('requires backend-provided typed public slug IDs', () => {
     8
   );
 
+  const publicOffer = {
+    ...validOffer,
+    totalQuantity: undefined,
+    reservedQuantity: undefined,
+    hasRelatedOrders: undefined,
+  };
+
+  const parsedPublicOffer = parseProductDetails({
+    ...product,
+    offers: [publicOffer],
+  }).offers[0];
+
+  assert.equal(parsedPublicOffer?.availableQuantity, 8);
+  assert.equal(parsedPublicOffer?.totalQuantity, undefined);
+  assert.equal(parsedPublicOffer?.reservedQuantity, undefined);
+
+  assert.throws(
+    () =>
+      parseProductDetails({
+        ...product,
+        offers: [{ ...publicOffer, totalQuantity: 10 }],
+      }),
+    (error: unknown) =>
+      error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
+  );
+
   for (const invalidQuantity of [
     -1,
     1.5,

@@ -100,11 +100,40 @@ function ProductRequestsPageContent({
     useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
+  const debouncedRequestNumber = useDebouncedValue(filters.requestNumber, 450);
+  const debouncedProductArticle = useDebouncedValue(
+    filters.productArticle,
+    450
+  );
+
+  const debouncedProductName = useDebouncedValue(filters.productName, 450);
+
+  const requestFilters = useMemo<ProductRequestsFilterState>(
+    () => ({
+      date: filters.date,
+      requestNumber: debouncedRequestNumber,
+      productArticle: debouncedProductArticle,
+      productName: debouncedProductName,
+      category: filters.category,
+      status: filters.status,
+    }),
+    [
+      debouncedProductArticle,
+      debouncedProductName,
+      debouncedRequestNumber,
+      filters.category,
+      filters.date,
+      filters.status,
+    ]
+  );
+
   const queryParams = useMemo(
-    () => getProductRequestsQueryParams(filters, rowsPerPage, currentPage),
-    [currentPage, filters, rowsPerPage]
+    () =>
+      getProductRequestsQueryParams(requestFilters, rowsPerPage, currentPage),
+    [currentPage, requestFilters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -138,6 +167,7 @@ function ProductRequestsPageContent({
 
     async function loadProductRequests() {
       setIsLoading(true);
+      setLoadError(null);
 
       try {
         const response = await getPharmacyProductRequests(queryParams, {
@@ -152,10 +182,9 @@ function ProductRequestsPageContent({
       } catch {
         if (controller.signal.aborted) return;
 
-        setRequests([]);
-        setTotalRequests(0);
-        setTotalPages(0);
-        setEarliestCreatedAt(null);
+        setLoadError(
+          'Product requests could not be loaded. Please try again in a moment.'
+        );
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -346,13 +375,25 @@ function ProductRequestsPageContent({
           )}
         </div>
 
+        {loadError ? (
+          <div role="alert">
+            <StatusBanner
+              tone="danger"
+              title="Product requests are temporarily unavailable"
+              message={loadError}
+            />
+          </div>
+        ) : null}
+
         <ProductRequestsTable
           requests={requests}
           isLoading={isLoading}
           emptyMessage={
-            hasActiveFilters
-              ? 'No requests found for the selected filters.'
-              : 'Your pharmacy has no product creation requests yet.'
+            loadError
+              ? 'Product requests are temporarily unavailable.'
+              : hasActiveFilters
+                ? 'No requests found for the selected filters.'
+                : 'Your pharmacy has no product creation requests yet.'
           }
         />
 

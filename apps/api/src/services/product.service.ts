@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../constants/auth';
+import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { REVIEW_ERROR_CODES } from '../constants/reviews';
 import { API_MESSAGES } from '../constants/messages';
@@ -29,6 +29,7 @@ import type {
 } from '../types/product';
 
 import type { ProductCategory } from '../types/categories';
+import type { UserRole } from '../types/user';
 
 import {
   PRODUCT_CATEGORIES,
@@ -81,6 +82,21 @@ const PHARMACY_PRODUCT_MANAGEMENT_STATUSES = [
   PHARMACY_STATUSES.ON_MODERATION,
 ] as const;
 
+const PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES = [
+  PHARMACY_STATUSES.ACTIVE,
+  PHARMACY_STATUSES.ON_MODERATION,
+] as const;
+
+type ProductManagementActor = Readonly<{
+  userId: string;
+  role?: UserRole;
+}>;
+
+type ProductOfferVisibility =
+  | Readonly<{ mode: 'public' }>
+  | Readonly<{ mode: 'pharmacy-management'; pharmacyId: string }>
+  | Readonly<{ mode: 'admin-management' }>;
+
 //===============================================================
 
 async function getClientFavorites(userId?: string) {
@@ -102,16 +118,28 @@ async function getClientFavorites(userId?: string) {
 
 async function getOffersByProductIds(
   productIds: Types.ObjectId[],
-  favoritePharmacyIds = new Set<string>()
+  favoritePharmacyIds = new Set<string>(),
+  visibility: ProductOfferVisibility = { mode: 'public' }
 ) {
   const offers = await ProductOffer.find({
     productId: { $in: productIds },
   }).lean();
 
+  const operationalOffers = offers.filter((offer) => {
+    if (visibility.mode === 'admin-management') return true;
+
+    return (
+      visibility.mode === 'pharmacy-management' &&
+      String(offer.pharmacyId) === visibility.pharmacyId
+    );
+  });
+
   const relatedOfferIds = new Set<string>(
-    (offers.length
+    (operationalOffers.length
       ? await Order.distinct('items.productOfferId', {
-          'items.productOfferId': { $in: offers.map((offer) => offer._id) },
+          'items.productOfferId': {
+            $in: operationalOffers.map((offer) => offer._id),
+          },
         })
       : []
     ).map(String)
@@ -121,10 +149,20 @@ async function getOffersByProductIds(
     ...new Set(offers.map((offer) => String(offer.pharmacyId))),
   ];
 
-  const pharmacies = await Pharmacy.find({
+  const pharmacyFilter: Record<string, unknown> = {
     _id: { $in: pharmacyIds },
-    status: { $in: ['active', 'on_moderation'] },
-  }).lean();
+  };
+
+  if (visibility.mode === 'public') {
+    pharmacyFilter.status = { $in: PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES };
+  } else if (visibility.mode === 'pharmacy-management') {
+    pharmacyFilter.$or = [
+      { status: { $in: PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES } },
+      { _id: new Types.ObjectId(visibility.pharmacyId) },
+    ];
+  }
+
+  const pharmacies = await Pharmacy.find(pharmacyFilter).lean();
 
   const pharmacyMap = new Map(
     pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy])
@@ -136,6 +174,11 @@ async function getOffersByProductIds(
     const pharmacy = pharmacyMap.get(String(offer.pharmacyId));
 
     if (!pharmacy) continue;
+
+    const canSeeOperationalFields =
+      visibility.mode === 'admin-management' ||
+      (visibility.mode === 'pharmacy-management' &&
+        String(offer.pharmacyId) === visibility.pharmacyId);
 
     const item: ProductOfferResponseDto = {
       id: String(offer._id),
@@ -149,11 +192,15 @@ async function getOffersByProductIds(
       pharmacyReviewsCount: pharmacy.reviewsCount ?? 0,
       pharmacyIsFavorite: favoritePharmacyIds.has(String(pharmacy._id)),
       price: offer.price,
-      totalQuantity: offer.totalQuantity,
       availableQuantity: offer.availableQuantity,
-      reservedQuantity: offer.reservedQuantity,
       inStock: offer.availableQuantity > 0,
-      hasRelatedOrders: relatedOfferIds.has(String(offer._id)),
+      ...(canSeeOperationalFields
+        ? {
+            totalQuantity: offer.totalQuantity,
+            reservedQuantity: offer.reservedQuantity,
+            hasRelatedOrders: relatedOfferIds.has(String(offer._id)),
+          }
+        : {}),
       createdAt: requireISODateTime(offer.createdAt, 'productOffer.createdAt'),
       updatedAt: requireISODateTime(offer.updatedAt, 'productOffer.updatedAt'),
     };
@@ -528,7 +575,10 @@ async function getProductsByScope(
   query: ProductsQuery,
   scope: 'public' | 'management',
   userId?: string,
-  options: Readonly<{ includeOffers?: boolean }> = {}
+  options: Readonly<{
+    includeOffers?: boolean;
+    offerVisibility?: ProductOfferVisibility;
+  }> = {}
 ) {
   const filter: Record<string, unknown> = {};
   const tableStatusFilter =
@@ -684,7 +734,8 @@ async function getProductsByScope(
     ? await (async () => {
         const offerMap = await getOffersByProductIds(
           productIds,
-          favorites.pharmacies
+          favorites.pharmacies,
+          options.offerVisibility
         );
 
         return products.map((product) =>
@@ -737,11 +788,103 @@ export async function getProductsService(
 
 //===============================================================
 
+async function getCurrentUserPharmacyForManagedProductRead(userId: string) {
+  const pharmacy = await Pharmacy.findOne({
+    $or: [{ ownerId: userId }, { managerUserIds: userId }],
+  })
+    .select('_id')
+    .lean<{ _id: Types.ObjectId } | null>();
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
+  }
+
+  return pharmacy;
+}
+
+//===============================================================
+
+function assertCurrentPharmacyScope(
+  requestedPharmacyId: string | undefined,
+  currentPharmacyId: string
+): void {
+  if (requestedPharmacyId && requestedPharmacyId !== currentPharmacyId) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'You do not have access to this pharmacy.'
+    );
+  }
+}
+
+//===============================================================
+
+async function getManagedProductOfferVisibility(
+  actor: ProductManagementActor
+): Promise<ProductOfferVisibility> {
+  if (actor.role === USER_ROLES.ADMIN) {
+    return { mode: 'admin-management' };
+  }
+
+  if (actor.role !== USER_ROLES.PHARMACY) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Access denied.');
+  }
+
+  const pharmacy = await getCurrentUserPharmacyForManagedProductRead(
+    actor.userId
+  );
+
+  return {
+    mode: 'pharmacy-management',
+    pharmacyId: String(pharmacy._id),
+  };
+}
+
+//===============================================================
+
+async function resolveManagedProductsAccess(
+  query: ManagedProductsQuery,
+  actor: ProductManagementActor
+): Promise<{
+  query: ManagedProductsQuery;
+  offerVisibility: ProductOfferVisibility;
+}> {
+  const offerVisibility = await getManagedProductOfferVisibility(actor);
+
+  if (offerVisibility.mode !== 'pharmacy-management') {
+    return { query, offerVisibility };
+  }
+
+  const currentPharmacyId = offerVisibility.pharmacyId;
+
+  assertCurrentPharmacyScope(query.pharmacyId, currentPharmacyId);
+  assertCurrentPharmacyScope(query.addedToPharmacyId, currentPharmacyId);
+
+  return {
+    query: {
+      ...query,
+      ...(query.pharmacyId ? { pharmacyId: currentPharmacyId } : {}),
+      ...(typeof query.addedToMyPharmacy === 'boolean' ||
+      query.addedToPharmacyId
+        ? { addedToPharmacyId: currentPharmacyId }
+        : {}),
+    },
+    offerVisibility,
+  };
+}
+
+//===============================================================
+
 export async function getManagedProductsService(
   query: ManagedProductsQuery,
+  actor: ProductManagementActor,
   options: Readonly<{ includeOffers?: boolean }> = {}
 ) {
-  return getProductsByScope(query, 'management', undefined, options);
+  const access = await resolveManagedProductsAccess(query, actor);
+
+  return getProductsByScope(access.query, 'management', undefined, {
+    ...options,
+    offerVisibility: access.offerVisibility,
+  });
 }
 
 //===============================================================
@@ -812,7 +955,8 @@ export async function getFavoriteProductsService(
 async function getProductDetailsByScope(
   productId: string,
   userId: string | undefined,
-  scope: 'public' | 'management'
+  scope: 'public' | 'management',
+  offerVisibility: ProductOfferVisibility = { mode: 'public' }
 ) {
   const product = await Product.findOne({
     _id: productId,
@@ -827,7 +971,8 @@ async function getProductDetailsByScope(
 
   const offerMap = await getOffersByProductIds(
     [product._id],
-    favorites.pharmacies
+    favorites.pharmacies,
+    offerVisibility
   );
 
   return {
@@ -859,8 +1004,18 @@ export async function getProductDetailsService(
 
 //===============================================================
 
-export async function getManagedProductDetailsService(productId: string) {
-  return getProductDetailsByScope(productId, undefined, 'management');
+export async function getManagedProductDetailsService(
+  productId: string,
+  actor: ProductManagementActor
+) {
+  const offerVisibility = await getManagedProductOfferVisibility(actor);
+
+  return getProductDetailsByScope(
+    productId,
+    undefined,
+    'management',
+    offerVisibility
+  );
 }
 
 //===============================================================
@@ -946,7 +1101,10 @@ export async function addProductToMyPharmacyService(
     'Initial stock quantity added when the product was added to the pharmacy.'
   );
 
-  const details = await getManagedProductDetailsService(productId);
+  const details = await getManagedProductDetailsService(productId, {
+    userId,
+    role: USER_ROLES.PHARMACY,
+  });
 
   return {
     ...details,
@@ -995,7 +1153,10 @@ export async function removeProductFromMyPharmacyService(
 
   await ProductOffer.deleteOne({ _id: offer._id });
 
-  const details = await getManagedProductDetailsService(productId);
+  const details = await getManagedProductDetailsService(productId, {
+    userId,
+    role: USER_ROLES.PHARMACY,
+  });
 
   return {
     ...details,

@@ -14,9 +14,9 @@ export type ProductOffer = Readonly<{
   pharmacyReviewsCount: number;
   pharmacyIsFavorite: boolean;
   price: number;
-  totalQuantity: number;
+  totalQuantity?: number;
   availableQuantity: number;
-  reservedQuantity: number;
+  reservedQuantity?: number;
   inStock: boolean;
   hasRelatedOrders?: boolean;
   createdAt: ISODateTimeString;

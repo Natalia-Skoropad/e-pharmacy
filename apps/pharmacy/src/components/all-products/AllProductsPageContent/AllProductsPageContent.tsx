@@ -138,6 +138,7 @@ function AllProductsPageContent({
   const [refreshVersion, setRefreshVersion] = useState(0);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -170,15 +171,37 @@ function AllProductsPageContent({
     };
   }, [currentPharmacyId, refreshVersion]);
 
+  const debouncedName = useDebouncedValue(filters.name, 450);
+  const debouncedArticle = useDebouncedValue(filters.article, 450);
+
+  const requestFilters = useMemo<AllProductsFilterState>(
+    () => ({
+      createdDate: filters.createdDate,
+      name: debouncedName,
+      article: debouncedArticle,
+      category: filters.category,
+      status: filters.status,
+      addedToMyPharmacy: filters.addedToMyPharmacy,
+    }),
+    [
+      debouncedArticle,
+      debouncedName,
+      filters.addedToMyPharmacy,
+      filters.category,
+      filters.createdDate,
+      filters.status,
+    ]
+  );
+
   const queryParams = useMemo(
     () =>
       getProductsQueryParams(
-        filters,
+        requestFilters,
         rowsPerPage,
         currentPage,
         currentPharmacyId
       ),
-    [currentPage, currentPharmacyId, filters, rowsPerPage]
+    [currentPage, currentPharmacyId, requestFilters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -188,6 +211,7 @@ function AllProductsPageContent({
 
     async function loadProducts() {
       setIsLoading(true);
+      setLoadError(null);
 
       try {
         const response = await getProducts(queryParams, {
@@ -202,10 +226,9 @@ function AllProductsPageContent({
       } catch {
         if (controller.signal.aborted) return;
 
-        setProducts([]);
-        setTotalProducts(0);
-        setEarliestCreatedAt(null);
-        setTotalPages(1);
+        setLoadError(
+          'Products could not be loaded. Please try again in a moment.'
+        );
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -407,6 +430,16 @@ function AllProductsPageContent({
           />
         </div>
 
+        {loadError ? (
+          <div role="alert">
+            <StatusBanner
+              tone="danger"
+              title="Products are temporarily unavailable"
+              message={loadError}
+            />
+          </div>
+        ) : null}
+
         <AllProductsTable
           currentPharmacyId={currentPharmacyId}
           products={products}
@@ -415,9 +448,11 @@ function AllProductsPageContent({
           addingProductId={addingProductId}
           onAddProduct={setProductToAdd}
           emptyMessage={
-            hasActiveFilters
-              ? 'No products found for the selected filters.'
-              : 'No active or blocked Admin products are available yet.'
+            loadError
+              ? 'Products are temporarily unavailable.'
+              : hasActiveFilters
+                ? 'No products found for the selected filters.'
+                : 'No active or blocked Admin products are available yet.'
           }
         />
 

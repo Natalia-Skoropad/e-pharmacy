@@ -276,6 +276,8 @@ function requireSafeNonNegativeInteger(
 
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 
+//===================================================================
+
 const PRODUCT_CATEGORIES = new Set([
   'medicine',
   'vitamins',
@@ -300,12 +302,16 @@ const PHARMACY_STATUSES = new Set([
   'blocked',
 ]);
 
+//===================================================================
+
 const USER_ROLES = new Set(['client', 'pharmacy', 'admin']);
 const PHARMACY_MEMBERSHIP_ROLES = new Set(['owner', 'manager']);
 
 // Mirrors the shared pharmacy verification-document contract. The config parity
 // checks protect the source-of-truth value without coupling api-client to config.
 const PHARMACY_DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+//===================================================================
 
 const PHARMACY_DOCUMENT_MIME_TYPES = new Set([
   'application/pdf',
@@ -315,6 +321,8 @@ const PHARMACY_DOCUMENT_MIME_TYPES = new Set([
   'image/png',
   'image/webp',
 ]);
+
+//===================================================================
 
 const SHA256_PATTERN = /^[a-f\d]{64}$/i;
 const PROFILE_PHARMACY_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
@@ -467,9 +475,7 @@ function parseProductOffer(
       pharmacyReviewsCount: 'number',
       pharmacyIsFavorite: 'boolean',
       price: 'number',
-      totalQuantity: 'number',
       availableQuantity: 'number',
-      reservedQuantity: 'number',
       inStock: 'boolean',
       createdAt: 'string',
       updatedAt: 'string',
@@ -485,6 +491,8 @@ function parseProductOffer(
       pharmacyAddress: 'string',
       pharmacyPhone: 'string',
       pharmacyImageUrl: 'string',
+      totalQuantity: 'number',
+      reservedQuantity: 'number',
       hasRelatedOrders: 'boolean',
     },
     context
@@ -497,13 +505,6 @@ function parseProductOffer(
     context
   );
 
-  const totalQuantity = requireSafeNonNegativeInteger(
-    record,
-    'totalQuantity',
-    'product offer',
-    context
-  );
-
   const availableQuantity = requireSafeNonNegativeInteger(
     record,
     'availableQuantity',
@@ -511,35 +512,55 @@ function parseProductOffer(
     context
   );
 
-  const reservedQuantity = requireSafeNonNegativeInteger(
-    record,
-    'reservedQuantity',
-    'product offer',
-    context
-  );
+  const hasTotalQuantity = record.totalQuantity !== undefined;
+  const hasReservedQuantity = record.reservedQuantity !== undefined;
 
-  if (availableQuantity > totalQuantity) {
+  if (hasTotalQuantity !== hasReservedQuantity) {
     throw invalidDto(
-      'product offer.availableQuantity must not exceed totalQuantity.',
+      'product offer management quantities must be provided together.',
       record,
       context
     );
   }
 
-  if (reservedQuantity > totalQuantity) {
-    throw invalidDto(
-      'product offer.reservedQuantity must not exceed totalQuantity.',
+  if (hasTotalQuantity && hasReservedQuantity) {
+    const totalQuantity = requireSafeNonNegativeInteger(
       record,
+      'totalQuantity',
+      'product offer',
       context
     );
-  }
 
-  if (availableQuantity + reservedQuantity > totalQuantity) {
-    throw invalidDto(
-      'product offer available and reserved quantities exceed totalQuantity.',
+    const reservedQuantity = requireSafeNonNegativeInteger(
       record,
+      'reservedQuantity',
+      'product offer',
       context
     );
+
+    if (availableQuantity > totalQuantity) {
+      throw invalidDto(
+        'product offer.availableQuantity must not exceed totalQuantity.',
+        record,
+        context
+      );
+    }
+
+    if (reservedQuantity > totalQuantity) {
+      throw invalidDto(
+        'product offer.reservedQuantity must not exceed totalQuantity.',
+        record,
+        context
+      );
+    }
+
+    if (availableQuantity + reservedQuantity > totalQuantity) {
+      throw invalidDto(
+        'product offer available and reserved quantities exceed totalQuantity.',
+        record,
+        context
+      );
+    }
   }
 
   const expectedInStock = availableQuantity > 0;

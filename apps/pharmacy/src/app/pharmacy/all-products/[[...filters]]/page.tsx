@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent';
-import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
+import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent/AllProductsPageContent';
 
 import {
   isAllProductsFilterRoute,
@@ -32,9 +32,12 @@ async function AllProductsPage({ params }: AllProductsPageProps) {
     return <AllProductDetailsPageContent productId={segments?.[0] ?? ''} />;
   }
 
+  const initialFilters = parseAllProductsSegments(resolvedParams);
+
   return (
     <AllProductsPageContent
-      initialFilters={parseAllProductsSegments(resolvedParams)}
+      key={JSON.stringify(initialFilters)}
+      initialFilters={initialFilters}
     />
   );
 }

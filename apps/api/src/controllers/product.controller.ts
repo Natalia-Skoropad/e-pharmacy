@@ -66,11 +66,19 @@ export async function getProducts(
 //===============================================================
 
 export async function getManagedProducts(
-  _req: Request,
+  req: Request,
   res: ValidatedResponse<unknown, unknown, ManagedProductsQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
-  const data = await getManagedProductsService(query, { includeOffers: true });
+
+  const data = await getManagedProductsService(
+    query,
+    {
+      userId: req.user?.id ?? '',
+      role: req.user?.role,
+    },
+    { includeOffers: true }
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -78,11 +86,15 @@ export async function getManagedProducts(
 //===============================================================
 
 export async function getManagedProductDetails(
-  _req: Request,
+  req: Request,
   res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
-  const data = await getManagedProductDetailsService(productId);
+
+  const data = await getManagedProductDetailsService(productId, {
+    userId: req.user?.id ?? '',
+    role: req.user?.role,
+  });
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -116,6 +128,7 @@ export async function getProductDetails(
   res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
+
   const data = await getProductDetailsService(
     productId,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
@@ -163,6 +176,7 @@ export async function removeProductFromMyPharmacy(
   res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
+
   const data = await removeProductFromMyPharmacyService(
     productId,
     req.user?.id ?? ''
@@ -202,6 +216,7 @@ export async function createProductReview(
   res: ValidatedResponse<CreateProductReviewInput, ProductIdParams>
 ): Promise<void> {
   const { body, params } = res.locals.validated;
+
   const data = await createProductReviewService(params.productId, {
     userId: req.user?.id ?? '',
     userName: req.user?.name ?? 'Client',
@@ -219,6 +234,7 @@ export async function moderateProductReview(
   res: ValidatedResponse<ModerateProductReviewInput, ProductReviewParams>
 ): Promise<void> {
   const { body, params } = res.locals.validated;
+
   const data = await moderateProductReviewService(
     params.productId,
     params.reviewId,
@@ -239,6 +255,7 @@ export async function setFavoriteProduct(
   res: ValidatedResponse<unknown, ProductIdParams>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
+
   const data = await setFavoriteProductService(
     productId,
     req.user?.id ?? '',

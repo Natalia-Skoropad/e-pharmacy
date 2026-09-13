@@ -49,7 +49,6 @@ import {
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
-import { getPharmacyOwnProductStatistics } from '@/lib/products/product-statistics';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { OwnProductStatistics } from '@/components/statistics/OwnProductStatistics/OwnProductStatistics';
@@ -170,43 +169,41 @@ function OwnProductsPageContent({
   );
 
   const [refreshVersion, setRefreshVersion] = useState(0);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!pharmacyId) return;
+  const debouncedName = useDebouncedValue(filters.name, 450);
+  const debouncedArticle = useDebouncedValue(filters.article, 450);
 
-    const controller = new AbortController();
-
-    async function loadProductStatistics(currentPharmacyId: EntityId) {
-      try {
-        const nextStatistics = await getPharmacyOwnProductStatistics(
-          currentPharmacyId,
-          { signal: controller.signal }
-        );
-
-        if (!controller.signal.aborted) {
-          setProductStatistics(nextStatistics);
-          setIsProductStatisticsUnavailable(false);
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setIsProductStatisticsUnavailable(true);
-        }
-      }
-    }
-
-    void loadProductStatistics(pharmacyId);
-
-    return () => {
-      controller.abort();
-    };
-  }, [pharmacyId, refreshVersion]);
+  const requestFilters = useMemo<OwnProductsFilterState>(
+    () => ({
+      createdDate: filters.createdDate,
+      name: debouncedName,
+      article: debouncedArticle,
+      category: filters.category,
+      status: filters.status,
+      stock: filters.stock,
+    }),
+    [
+      debouncedArticle,
+      debouncedName,
+      filters.category,
+      filters.createdDate,
+      filters.status,
+      filters.stock,
+    ]
+  );
 
   const queryParams = useMemo(
     () =>
       pharmacyId
-        ? getProductsQueryParams(filters, rowsPerPage, pharmacyId, currentPage)
+        ? getProductsQueryParams(
+            requestFilters,
+            rowsPerPage,
+            pharmacyId,
+            currentPage
+          )
         : null,
-    [currentPage, filters, pharmacyId, rowsPerPage]
+    [currentPage, pharmacyId, requestFilters, rowsPerPage]
   );
 
   useEffect(() => {
@@ -216,6 +213,7 @@ function OwnProductsPageContent({
 
     async function loadProducts(params: PharmacyProductsQueryParams) {
       setIsLoading(true);
+      setLoadError(null);
 
       try {
         const response = await getPharmacyProducts(params, {
@@ -227,13 +225,15 @@ function OwnProductsPageContent({
         setTotalProducts(response.total);
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
+        setProductStatistics(response.statistics);
+        setIsProductStatisticsUnavailable(false);
       } catch {
         if (controller.signal.aborted) return;
 
-        setProducts([]);
-        setTotalProducts(0);
-        setTotalPages(0);
-        setEarliestCreatedAt(null);
+        setLoadError(
+          'Own products could not be loaded. Please try again in a moment.'
+        );
+        setIsProductStatisticsUnavailable(true);
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -419,13 +419,25 @@ function OwnProductsPageContent({
           />
         </div>
 
+        {loadError ? (
+          <div role="alert">
+            <StatusBanner
+              tone="danger"
+              title="Own products are temporarily unavailable"
+              message={loadError}
+            />
+          </div>
+        ) : null}
+
         <OwnProductsTable
           products={products}
           isLoading={!isProfileLoaded || isLoading}
           emptyMessage={
-            hasActiveFilters
-              ? 'No products found for the selected filters.'
-              : 'Your pharmacy has no added products yet.'
+            loadError
+              ? 'Own products are temporarily unavailable.'
+              : hasActiveFilters
+                ? 'No products found for the selected filters.'
+                : 'Your pharmacy has no added products yet.'
           }
           removingProductId={removingProductId}
           onRemoveProduct={handleRemoveProduct}
