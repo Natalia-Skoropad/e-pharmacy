@@ -29,6 +29,23 @@ test('product request mutations wait for every file reader and share one mutatio
     source,
     /disabled=\{!canEdit \|\| isMutating \|\| isFileProcessing\}/
   );
+
+  const additionalFilesStart = source.indexOf(
+    'const handleAdditionalFilesChange = async'
+  );
+
+  const buildPayloadStart = source.indexOf(
+    'const buildPayload =',
+    additionalFilesStart
+  );
+
+  const additionalFilesSource = source.slice(
+    additionalFilesStart,
+    buildPayloadStart
+  );
+
+  assert.match(additionalFilesSource, /for \(const file of files\)/);
+  assert.doesNotMatch(additionalFilesSource, /Promise\.all/);
 });
 
 //===================================================================

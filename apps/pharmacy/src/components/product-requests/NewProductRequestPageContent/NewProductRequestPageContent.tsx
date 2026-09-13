@@ -549,16 +549,21 @@ function NewProductRequestPageContent({
     setIsAdditionalFilesProcessing(true);
 
     try {
-      const filesWithData = await Promise.all(
-        files.map(async (file) => {
-          if (file.dataUrl || !file.file) return file;
+      const filesWithData: BrowserUploadFile[] = [];
 
-          return {
-            ...file,
-            dataUrl: await readFileAsDataUrl(file.file, controller.signal),
-          };
-        })
-      );
+      for (const file of files) {
+        if (controller.signal.aborted) return;
+
+        if (file.dataUrl || !file.file) {
+          filesWithData.push(file);
+          continue;
+        }
+
+        const dataUrl = await readFileAsDataUrl(file.file, controller.signal);
+        filesWithData.push({ ...file, dataUrl });
+      }
+
+      if (controller.signal.aborted) return;
 
       const filesError = validateProductRequestAdditionalFiles(filesWithData, {
         requireDataUrl: true,

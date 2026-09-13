@@ -137,16 +137,22 @@ type ProductDetailsTab =
 
 //===================================================================
 
+type ProductDetailsMode = 'all' | 'own';
+
+//===================================================================
+
 type AllProductDetailsPageContentProps = Readonly<{
   productId: string;
-  backHref?: string;
-  backLabel?: string;
-  pageDescription?: string;
-  bannerTitle?: string;
-  bannerMessage?: string;
-  productKicker?: string;
-  showAddAction?: boolean;
-  showRemoveAction?: boolean;
+  mode: ProductDetailsMode;
+}>;
+
+type ProductDetailsModeConfig = Readonly<{
+  backHref: string;
+  backLabel: string;
+  bannerTitle: string;
+  bannerMessage: string;
+  showAddAction: boolean;
+  showRemoveAction: boolean;
 }>;
 
 type ProductDetailsError = Readonly<{
@@ -322,10 +328,26 @@ const STOCK_SOURCE_LABELS: Record<StockMovementSource, string> = {
 
 //===================================================================
 
-const DEFAULT_BANNER_TITLE = 'Adding this product is locked';
-
-const DEFAULT_BANNER_MESSAGE =
-  'You can review active Admin product details now. Add-to-my-pharmacy actions unlock after Admin verifies your pharmacy profile.';
+const PRODUCT_DETAILS_MODE_CONFIG = {
+  all: {
+    backHref: PHARMACY_ROUTES.ALL_PRODUCTS,
+    backLabel: 'Back to all products',
+    bannerTitle: 'Adding this product is locked',
+    bannerMessage:
+      'You can review active Admin product details now. Add-to-my-pharmacy actions unlock after Admin verifies your pharmacy profile.',
+    showAddAction: true,
+    showRemoveAction: false,
+  },
+  own: {
+    backHref: PHARMACY_ROUTES.PRODUCTS,
+    backLabel: 'Back to own products',
+    bannerTitle: 'Product management is locked for now',
+    bannerMessage:
+      'You can review product details now. Price and stock management unlock after Admin verifies your pharmacy profile.',
+    showAddAction: false,
+    showRemoveAction: true,
+  },
+} as const satisfies Record<ProductDetailsMode, ProductDetailsModeConfig>;
 
 //===================================================================
 
@@ -490,14 +512,7 @@ function getSingleProductStatisticsCounts(
   offer: ProductOffer | null,
   stockBalance?: ProductStockBalance | null
 ): OwnProductStatisticsCounts | null {
-  if (!offer) {
-    return {
-      inStock: { quantity: 0, amount: 0 },
-      reserved: { quantity: 0, amount: 0 },
-      available: { quantity: 0, amount: 0 },
-      outOfStock: { quantity: 0 },
-    };
-  }
+  if (!offer) return null;
 
   const stockQuantity = stockBalance?.stockQuantity ?? offer.totalQuantity;
   const reservedQuantity =
@@ -699,13 +714,16 @@ function EmptyPanel({ children }: Readonly<{ children: string }>) {
 
 function AllProductDetailsPageContent({
   productId,
-  backHref = PHARMACY_ROUTES.ALL_PRODUCTS,
-  backLabel = 'Back to all products',
-  bannerTitle = DEFAULT_BANNER_TITLE,
-  bannerMessage = DEFAULT_BANNER_MESSAGE,
-  showAddAction = true,
-  showRemoveAction = false,
+  mode,
 }: AllProductDetailsPageContentProps) {
+  const {
+    backHref,
+    backLabel,
+    bannerTitle,
+    bannerMessage,
+    showAddAction,
+    showRemoveAction,
+  } = PRODUCT_DETAILS_MODE_CONFIG[mode];
   const { profile: pharmacyProfile } = usePharmacyProfile();
   const currentPharmacyId = pharmacyProfile?.id ?? null;
   const pharmacyStatus = pharmacyProfile?.status ?? null;
@@ -1079,12 +1097,17 @@ function AllProductDetailsPageContent({
       if (!product || !currentPharmacyId) return;
 
       if (!currentOffer) {
-        setCommentsTotal(0);
-        setCommentsTotalStatus('success');
+        queueMicrotask(() => {
+          if (controller.signal.aborted) return;
+          setCommentsTotal(0);
+          setCommentsTotalStatus('success');
+        });
         return;
       }
 
-      setCommentsTotalStatus('loading');
+      queueMicrotask(() => {
+        if (!controller.signal.aborted) setCommentsTotalStatus('loading');
+      });
 
       try {
         const response = await getPharmacyNotes('product', productId, 1, {
@@ -1158,8 +1181,8 @@ function AllProductDetailsPageContent({
     ? getRelatedOrderRows(product.id, relatedOrders)
     : [];
   const singleProductStatistics = getSingleProductStatisticsCounts(
-    bannerStatus ? null : currentOffer,
-    bannerStatus ? null : stockBalance
+    currentOffer,
+    stockBalance
   );
 
   const stockMovementRows = getStockMovementRows(

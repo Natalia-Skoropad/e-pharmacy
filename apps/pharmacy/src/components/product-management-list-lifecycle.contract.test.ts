@@ -12,16 +12,19 @@ async function read(relativePath: string): Promise<string> {
 //===================================================================
 
 test('all products remounts from canonical server filters like the other list routes', async () => {
-  const route = await read(
-    'src/app/pharmacy/all-products/[[...filters]]/page.tsx'
-  );
+  const routes = await Promise.all([
+    read('src/app/pharmacy/all-products/[[...filters]]/page.tsx'),
+    read('src/app/pharmacy/all-products/[productId]/page.tsx'),
+  ]);
 
-  assert.match(route, /const initialFilters = parseAllProductsSegments/);
+  for (const route of routes) {
+    assert.match(route, /const initialFilters = parseAllProductsSegments/);
 
-  assert.match(
-    route,
-    /<AllProductsPageContent[\s\S]*?key=\{JSON\.stringify\(initialFilters\)\}[\s\S]*?initialFilters=\{initialFilters\}/
-  );
+    assert.match(
+      route,
+      /<AllProductsPageContent[\s\S]*?key=\{JSON\.stringify\(initialFilters\)\}[\s\S]*?initialFilters=\{initialFilters\}/
+    );
+  }
 });
 
 //===================================================================
@@ -142,4 +145,29 @@ test('product lists clamp pagination after mutations and server total changes', 
   assert.match(allProducts, /setCurrentPage\(nextPage\)/);
   assert.match(ownProducts, /nextTotalProducts/);
   assert.match(ownProducts, /setCurrentPage\(nextPage\)/);
+});
+
+//===================================================================
+
+test('list requests abort stale generations before they can overwrite newer state', async () => {
+  const sources = await Promise.all([
+    read(
+      'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/products/OwnProductsPageContent/OwnProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/ProductRequestsPageContent/ProductRequestsPageContent.tsx'
+    ),
+  ]);
+
+  for (const source of sources) {
+    assert.match(source, /const controller = new AbortController\(\)/);
+    assert.match(source, /signal:\s*controller\.signal/);
+    assert.match(source, /controller\.signal\.aborted/);
+    assert.match(source, /return \(\) => \{\s*controller\.abort\(\);\s*\}/);
+  }
 });

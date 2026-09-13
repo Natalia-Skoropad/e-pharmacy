@@ -27,14 +27,17 @@ async function AllProductDetailsPage({ params }: AllProductDetailsPageProps) {
   const { productId } = await params;
 
   if (isAllProductsFilterSegment(productId)) {
+    const initialFilters = parseAllProductsSegments({ filters: [productId] });
+
     return (
       <AllProductsPageContent
-        initialFilters={parseAllProductsSegments({ filters: [productId] })}
+        key={JSON.stringify(initialFilters)}
+        initialFilters={initialFilters}
       />
     );
   }
 
-  return <AllProductDetailsPageContent productId={productId} />;
+  return <AllProductDetailsPageContent productId={productId} mode="all" />;
 }
 
 export default AllProductDetailsPage;

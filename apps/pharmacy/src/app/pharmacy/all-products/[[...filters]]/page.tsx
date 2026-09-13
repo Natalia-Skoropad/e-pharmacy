@@ -29,7 +29,12 @@ async function AllProductsPage({ params }: AllProductsPageProps) {
   const segments = resolvedParams?.filters;
 
   if (!isAllProductsFilterRoute(segments)) {
-    return <AllProductDetailsPageContent productId={segments?.[0] ?? ''} />;
+    return (
+      <AllProductDetailsPageContent
+        productId={segments?.[0] ?? ''}
+        mode="all"
+      />
+    );
   }
 
   const initialFilters = parseAllProductsSegments(resolvedParams);
