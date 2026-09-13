@@ -49,6 +49,7 @@ import {
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
+import { clampProductListPage } from '@/lib/products/product-pagination';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { OwnProductStatistics } from '@/components/statistics/OwnProductStatistics/OwnProductStatistics';
@@ -221,9 +222,20 @@ function OwnProductsPageContent({
         });
         if (controller.signal.aborted) return;
 
+        const normalizedPage = clampProductListPage(
+          currentPage,
+          response.total,
+          rowsPerPage
+        );
+
+        if (normalizedPage !== currentPage) {
+          setCurrentPage(normalizedPage);
+          return;
+        }
+
         setProducts([...response.items]);
         setTotalProducts(response.total);
-        setTotalPages(response.totalPages);
+        setTotalPages(Math.max(1, response.totalPages));
         setEarliestCreatedAt(response.earliestCreatedAt);
         setProductStatistics(response.statistics);
         setIsProductStatisticsUnavailable(false);
@@ -244,7 +256,7 @@ function OwnProductsPageContent({
     return () => {
       controller.abort();
     };
-  }, [isProfileLoaded, queryParams, refreshVersion]);
+  }, [currentPage, isProfileLoaded, queryParams, refreshVersion, rowsPerPage]);
 
   const debouncedFilters = useDebouncedValue(filters, 450);
 
@@ -294,10 +306,18 @@ function OwnProductsPageContent({
     try {
       const response = await removeProductFromMyPharmacy(productToRemove.id);
 
+      const nextTotalProducts = Math.max(0, totalProducts - 1);
+      const nextPage = clampProductListPage(
+        currentPage,
+        nextTotalProducts,
+        rowsPerPage
+      );
+
       setProducts((current) =>
         current.filter((product) => product.id !== productToRemove.id)
       );
-      setTotalProducts((current) => Math.max(0, current - 1));
+      setTotalProducts(nextTotalProducts);
+      setCurrentPage(nextPage);
       setProductToRemove(null);
       setRefreshVersion((current) => current + 1);
       toast.success(response.message || 'Product was removed.');

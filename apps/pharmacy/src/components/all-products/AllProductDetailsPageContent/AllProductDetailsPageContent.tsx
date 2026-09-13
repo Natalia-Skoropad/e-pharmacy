@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { BarChart3, History, PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 import { ORDER_CREATED_BY_TYPES } from '@e-pharmacy/config/orders';
 
@@ -26,6 +27,7 @@ import {
 } from '@e-pharmacy/ui/primitives';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import {
   CountLabel,
@@ -103,12 +105,10 @@ import {
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
 import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
-
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
-
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
-
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { OrderStatistics, OwnProductStatistics } from '@/components/statistics';
 
@@ -120,9 +120,6 @@ import {
 } from '@/components/sales';
 
 import { EntityComments } from '@/components/comments/EntityComments';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
-
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import css from './AllProductDetailsPageContent.module.css';
 
@@ -154,6 +151,12 @@ type ProductDetailsError = Readonly<{
   title: string;
   message: string;
 }>;
+
+//===================================================================
+
+type ResourceStatus = 'idle' | 'loading' | 'success' | 'error';
+
+//===================================================================
 
 type SummaryItem = Readonly<{
   label: string;
@@ -375,18 +378,6 @@ function getProductPriceLabel(
 
 //===================================================================
 
-function getStockQuantity(offer: ProductOffer | null): number {
-  return offer?.totalQuantity ?? 0;
-}
-
-//===================================================================
-
-function getReservedQuantity(offer: ProductOffer | null): number {
-  return offer?.reservedQuantity ?? 0;
-}
-
-//===================================================================
-
 function getProductSummaryItems(
   product: ProductDetails,
   offer: ProductOffer | null
@@ -445,16 +436,28 @@ function getProductCharacteristics(
 
 function getSingleProductStatisticsCounts(
   offer: ProductOffer | null,
-  stockBalance?: ProductStockBalance | null,
-  activeOrdersReservedQuantity?: number
-): OwnProductStatisticsCounts {
-  const stockQuantity = stockBalance?.stockQuantity ?? getStockQuantity(offer);
+  stockBalance?: ProductStockBalance | null
+): OwnProductStatisticsCounts | null {
+  if (!offer) {
+    return {
+      inStock: { quantity: 0, amount: 0 },
+      reserved: { quantity: 0, amount: 0 },
+      available: { quantity: 0, amount: 0 },
+      outOfStock: { quantity: 0 },
+    };
+  }
+
+  const stockQuantity = stockBalance?.stockQuantity ?? offer.totalQuantity;
   const reservedQuantity =
-    activeOrdersReservedQuantity ??
-    stockBalance?.reservedQuantity ??
-    getReservedQuantity(offer);
-  const availableQuantity = Math.max(0, stockQuantity - reservedQuantity);
-  const currentPrice = offer?.price ?? 0;
+    stockBalance?.reservedQuantity ?? offer.reservedQuantity;
+  const availableQuantity =
+    stockBalance?.availableQuantity ?? offer.availableQuantity;
+
+  if (stockQuantity === undefined || reservedQuantity === undefined) {
+    return null;
+  }
+
+  const currentPrice = offer.price;
 
   return {
     inStock: {
@@ -472,7 +475,7 @@ function getSingleProductStatisticsCounts(
       amount: currentPrice ? availableQuantity * currentPrice : 0,
     },
 
-    outOfStock: { quantity: offer && availableQuantity === 0 ? 1 : 0 },
+    outOfStock: { quantity: availableQuantity === 0 ? 1 : 0 },
   };
 }
 
@@ -608,22 +611,6 @@ function getRelatedOrderRows(
 
 //===================================================================
 
-function getActiveOrdersReservedQuantity(
-  rows: RelatedOrderRow[]
-): number | undefined {
-  if (rows.length === 0) return undefined;
-
-  return rows.reduce(
-    (total, row) =>
-      row.status === 'new' || row.status === 'in_progress'
-        ? total + row.quantityValue
-        : total,
-    0
-  );
-}
-
-//===================================================================
-
 function paginateRows<TRow>(
   rows: TRow[],
   page: number,
@@ -658,8 +645,6 @@ function EmptyPanel({ children }: Readonly<{ children: string }>) {
 
 //===================================================================
 
-//===================================================================
-
 function AllProductDetailsPageContent({
   productId,
   backHref = PHARMACY_ROUTES.ALL_PRODUCTS,
@@ -675,9 +660,16 @@ function AllProductDetailsPageContent({
 
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewsTotal, setReviewsTotal] = useState(0);
-  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [reviewsTotal, setReviewsTotal] = useState<number | null>(null);
+  const [reviewsStatus, setReviewsStatus] = useState<ResourceStatus>('idle');
+  const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
+  const [commentsTotalStatus, setCommentsTotalStatus] =
+    useState<ResourceStatus>('idle');
   const [relatedOrders, setRelatedOrders] = useState<PharmacyOrderRow[]>([]);
+  const [relatedOrdersTotal, setRelatedOrdersTotal] = useState(0);
+  const [relatedOrdersTotalPages, setRelatedOrdersTotalPages] = useState(1);
+  const [relatedOrdersStatus, setRelatedOrdersStatus] =
+    useState<ResourceStatus>('idle');
 
   const [relatedOrderStatistics, setRelatedOrderStatistics] =
     useState<OrderStatisticsCounts>(DEFAULT_ORDER_STATISTICS);
@@ -692,11 +684,13 @@ function AllProductDetailsPageContent({
   const [productSalesData, setProductSalesData] =
     useState<OrderSalesStatistics>(DEFAULT_ORDER_SALES_STATISTICS);
 
-  const [isProductSalesLoading, setIsProductSalesLoading] = useState(false);
+  const [productSalesStatus, setProductSalesStatus] =
+    useState<ResourceStatus>('idle');
 
   const [stockMovements, setStockMovements] = useState<ProductStockMovement[]>(
     []
   );
+  const [stockStatus, setStockStatus] = useState<ResourceStatus>('idle');
 
   const [stockEarliestCreatedAt, setStockEarliestCreatedAt] = useState<
     string | null
@@ -746,65 +740,58 @@ function AllProductDetailsPageContent({
 
   useEffect(() => {
     const controller = new AbortController();
-    const requestOptions = { signal: controller.signal };
 
     async function loadProductData() {
       setIsLoading(true);
       setError(null);
+      setProduct(null);
+      setActiveTab('details');
+
+      setReviews([]);
+      setReviewsTotal(null);
+      setReviewsStatus('idle');
+      setCommentsTotal(null);
+      setCommentsTotalStatus('idle');
+
+      setRelatedOrders([]);
+      setRelatedOrdersTotal(0);
+      setRelatedOrdersTotalPages(1);
+      setRelatedOrderStatistics(DEFAULT_ORDER_STATISTICS);
+      setRelatedOrdersEarliestCreatedAt(null);
+      setRelatedOrdersStatus('idle');
+      setRelatedOrderNumberSearch('');
+      setRelatedClientSearch('');
+      setRelatedRowsPerPage(20);
+      setRelatedCurrentPage(1);
+      setRelatedFilters(DEFAULT_RELATED_ORDERS_FILTERS);
+      setIsRelatedFiltersOpen(false);
+
+      setStockMovements([]);
+      setStockEarliestCreatedAt(null);
+      setStockBalance(null);
+      setStockStatus('idle');
+      setStockOrderNumberSearch('');
+      setStockCommentSearch('');
+      setStockRowsPerPage(20);
+      setStockCurrentPage(1);
+      setStockFilters(DEFAULT_STOCK_MOVEMENT_FILTERS);
+      setIsStockFiltersOpen(false);
+
+      setProductSalesYear(String(CURRENT_YEAR));
+      setProductSalesMonth('all');
+      setProductSalesData(DEFAULT_ORDER_SALES_STATISTICS);
+      setProductSalesStatus('idle');
 
       try {
-        const [
-          productResponse,
-          reviewsResponse,
-          ordersResponse,
-          stockMovementsResponse,
-        ] = await Promise.all([
-          getProductDetails(productId, requestOptions),
-          getProductReviews(productId, requestOptions).catch(() => null),
-          getPharmacyOrders(
-            { page: 1, perPage: 200, productId },
-            requestOptions
-          ).catch(() => null),
-          getProductStockMovements(productId, requestOptions).catch(() => null),
-        ]);
+        const response = await getProductDetails(productId, {
+          signal: controller.signal,
+        });
 
-        if (controller.signal.aborted) return;
-
-        setProduct(productResponse.product);
-        setReviews([...(reviewsResponse?.items ?? [])]);
-        setReviewsTotal(
-          reviewsResponse?.total ?? productResponse.product.reviewsCount ?? 0
-        );
-
-        setRelatedOrders([...(ordersResponse?.items ?? [])]);
-        setRelatedOrderStatistics(
-          ordersResponse?.statistics ?? DEFAULT_ORDER_STATISTICS
-        );
-
-        setRelatedOrdersEarliestCreatedAt(
-          ordersResponse?.earliestCreatedAt ?? null
-        );
-
-        setStockMovements([...(stockMovementsResponse?.items ?? [])]);
-        setStockEarliestCreatedAt(
-          stockMovementsResponse?.earliestCreatedAt ?? null
-        );
-
-        setStockBalance(stockMovementsResponse?.stock ?? null);
+        if (!controller.signal.aborted) setProduct(response.product);
       } catch (loadError) {
-        if (controller.signal.aborted) return;
-
-        setProduct(null);
-        setReviews([]);
-        setReviewsTotal(0);
-        setCommentsTotal(0);
-        setRelatedOrders([]);
-        setRelatedOrderStatistics(DEFAULT_ORDER_STATISTICS);
-        setRelatedOrdersEarliestCreatedAt(null);
-        setStockMovements([]);
-        setStockEarliestCreatedAt(null);
-        setStockBalance(null);
-        setError(getProductDetailsError(loadError));
+        if (!controller.signal.aborted) {
+          setError(getProductDetailsError(loadError));
+        }
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -823,74 +810,181 @@ function AllProductDetailsPageContent({
     dispatchPharmacyBreadcrumbLabel(product.name);
   }, [product?.name]);
 
-  useEffect(() => {
-    if (!product || !currentPharmacyId) return;
-
-    const controller = new AbortController();
-    const currentProductId = product.id;
-
-    async function loadRelatedOrders() {
-      const response = await getPharmacyOrders(
-        {
-          page: 1,
-          perPage: 200,
-          productId: currentProductId,
-          orderNumber: relatedOrderNumberSearch.trim() || undefined,
-          client: relatedClientSearch.trim() || undefined,
-          status:
-            relatedFilters.orderStatus === 'all'
-              ? undefined
-              : relatedFilters.orderStatus,
-          createdByType:
-            relatedFilters.createdByType === 'all'
-              ? undefined
-              : relatedFilters.createdByType,
-          dateFrom: relatedFilters.date.from || undefined,
-          dateTo: relatedFilters.date.to || undefined,
-        },
-        { signal: controller.signal }
-      );
-
-      if (controller.signal.aborted) return;
-
-      setRelatedOrders([...response.items]);
-      setRelatedOrderStatistics(response.statistics);
-      setRelatedOrdersEarliestCreatedAt(response.earliestCreatedAt);
-    }
-
-    void loadRelatedOrders().catch(() => {
-      if (!controller.signal.aborted) {
-        setRelatedOrders([]);
-        setRelatedOrderStatistics(DEFAULT_ORDER_STATISTICS);
-        setRelatedOrdersEarliestCreatedAt(null);
-      }
-    });
-
-    return () => {
-      controller.abort();
-    };
-  }, [
-    currentPharmacyId,
-    product,
-    relatedClientSearch,
-    relatedFilters,
-    relatedOrderNumberSearch,
-  ]);
-
   const currentOffer = product
     ? getProductOffer(product, currentPharmacyId)
     : null;
 
   const isAddedToPharmacy = Boolean(currentOffer);
 
+  const debouncedRelatedOrderNumberSearch = useDebouncedValue(
+    relatedOrderNumberSearch,
+    450
+  );
+  const debouncedRelatedClientSearch = useDebouncedValue(
+    relatedClientSearch,
+    450
+  );
+
   useEffect(() => {
-    if (!isAddedToPharmacy) return;
+    if (activeTab !== 'reviews' || !product) return;
 
     const controller = new AbortController();
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) setReviewsStatus('loading');
+    });
+
+    async function loadReviews() {
+      try {
+        const response = await getProductReviews(productId, {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        setReviews([...response.items]);
+        setReviewsTotal(response.total);
+        setReviewsStatus('success');
+      } catch {
+        if (controller.signal.aborted) return;
+
+        setReviewsTotal(null);
+        setReviewsStatus('error');
+      }
+    }
+
+    void loadReviews();
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeTab, product, productId]);
+
+  useEffect(() => {
+    if (activeTab !== 'stock-movement' || !product || !isAddedToPharmacy) {
+      return;
+    }
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) setStockStatus('loading');
+    });
+
+    async function loadStockMovements() {
+      try {
+        const response = await getProductStockMovements(productId, {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        setStockMovements([...response.items]);
+        setStockEarliestCreatedAt(response.earliestCreatedAt);
+        setStockBalance(response.stock);
+        setStockStatus('success');
+      } catch {
+        if (controller.signal.aborted) return;
+
+        setStockMovements([]);
+        setStockEarliestCreatedAt(null);
+        setStockBalance(null);
+        setStockStatus('error');
+      }
+    }
+
+    void loadStockMovements();
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeTab, isAddedToPharmacy, product, productId]);
+
+  useEffect(() => {
+    if (
+      activeTab !== 'related-orders' ||
+      !product ||
+      !currentPharmacyId ||
+      !isAddedToPharmacy
+    ) {
+      return;
+    }
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) setRelatedOrdersStatus('loading');
+    });
+
+    async function loadRelatedOrders() {
+      try {
+        const response = await getPharmacyOrders(
+          {
+            page: relatedCurrentPage,
+            perPage: relatedRowsPerPage,
+            productId,
+            orderNumber: debouncedRelatedOrderNumberSearch.trim() || undefined,
+            client: debouncedRelatedClientSearch.trim() || undefined,
+            status:
+              relatedFilters.orderStatus === 'all'
+                ? undefined
+                : relatedFilters.orderStatus,
+            createdByType:
+              relatedFilters.createdByType === 'all'
+                ? undefined
+                : relatedFilters.createdByType,
+            dateFrom: relatedFilters.date.from || undefined,
+            dateTo: relatedFilters.date.to || undefined,
+          },
+          { signal: controller.signal }
+        );
+
+        if (controller.signal.aborted) return;
+
+        const normalizedTotalPages = Math.max(1, response.totalPages);
+
+        if (relatedCurrentPage > normalizedTotalPages) {
+          setRelatedCurrentPage(normalizedTotalPages);
+          return;
+        }
+
+        setRelatedOrders([...response.items]);
+        setRelatedOrdersTotal(response.total);
+        setRelatedOrdersTotalPages(normalizedTotalPages);
+        setRelatedOrderStatistics(response.statistics);
+        setRelatedOrdersEarliestCreatedAt(response.earliestCreatedAt);
+        setRelatedOrdersStatus('success');
+      } catch {
+        if (controller.signal.aborted) return;
+
+        setRelatedOrdersStatus('error');
+      }
+    }
+
+    void loadRelatedOrders();
+
+    return () => {
+      controller.abort();
+    };
+  }, [
+    activeTab,
+    currentPharmacyId,
+    debouncedRelatedClientSearch,
+    debouncedRelatedOrderNumberSearch,
+    isAddedToPharmacy,
+    product,
+    productId,
+    relatedCurrentPage,
+    relatedFilters,
+    relatedRowsPerPage,
+  ]);
+
+  useEffect(() => {
+    if (activeTab !== 'details' || !isAddedToPharmacy) return;
+
+    const controller = new AbortController();
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) setProductSalesStatus('loading');
+    });
 
     async function loadProductSales() {
-      setIsProductSalesLoading(true);
-
       try {
         const period = getSalesPeriodDateRange(
           productSalesYear,
@@ -904,13 +998,12 @@ function AllProductDetailsPageContent({
           { signal: controller.signal }
         );
 
-        if (!controller.signal.aborted) setProductSalesData(response);
+        if (controller.signal.aborted) return;
+
+        setProductSalesData(response);
+        setProductSalesStatus('success');
       } catch {
-        if (!controller.signal.aborted) {
-          setProductSalesData(DEFAULT_ORDER_SALES_STATISTICS);
-        }
-      } finally {
-        if (!controller.signal.aborted) setIsProductSalesLoading(false);
+        if (!controller.signal.aborted) setProductSalesStatus('error');
       }
     }
 
@@ -919,7 +1012,13 @@ function AllProductDetailsPageContent({
     return () => {
       controller.abort();
     };
-  }, [isAddedToPharmacy, productId, productSalesMonth, productSalesYear]);
+  }, [
+    activeTab,
+    isAddedToPharmacy,
+    productId,
+    productSalesMonth,
+    productSalesYear,
+  ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -927,20 +1026,27 @@ function AllProductDetailsPageContent({
     async function loadCommentsTotal() {
       if (!product || !currentPharmacyId) return;
 
-      const offer = getProductOffer(product, currentPharmacyId);
-
-      if (!offer) {
+      if (!currentOffer) {
         setCommentsTotal(0);
+        setCommentsTotalStatus('success');
         return;
       }
+
+      setCommentsTotalStatus('loading');
 
       try {
         const response = await getPharmacyNotes('product', productId, 1, {
           signal: controller.signal,
         });
-        if (!controller.signal.aborted) setCommentsTotal(response.total);
+        if (controller.signal.aborted) return;
+
+        setCommentsTotal(response.total);
+        setCommentsTotalStatus('success');
       } catch {
-        if (!controller.signal.aborted) setCommentsTotal(0);
+        if (controller.signal.aborted) return;
+
+        setCommentsTotal(null);
+        setCommentsTotalStatus('error');
       }
     }
 
@@ -949,7 +1055,7 @@ function AllProductDetailsPageContent({
     return () => {
       controller.abort();
     };
-  }, [currentPharmacyId, product, productId]);
+  }, [currentOffer, currentPharmacyId, product, productId]);
 
   const productImageSrc = getProductImageSrc(product?.imageUrl);
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
@@ -971,15 +1077,21 @@ function AllProductDetailsPageContent({
   );
 
   const tabs = PRODUCT_DETAILS_TABS.map((tab) => {
-    if (tab.value === 'reviews') {
+    if (
+      tab.value === 'reviews' &&
+      reviewsStatus === 'success' &&
+      reviewsTotal !== null
+    ) {
       return { ...tab, label: `Reviews (${reviewsTotal})` };
     }
 
-    if (tab.value === 'comments') {
-      return {
-        ...tab,
-        label: `Comments (${isAddedToPharmacy ? commentsTotal : 0})`,
-      };
+    if (
+      tab.value === 'comments' &&
+      isAddedToPharmacy &&
+      commentsTotalStatus === 'success' &&
+      commentsTotal !== null
+    ) {
+      return { ...tab, label: `Comments (${commentsTotal})` };
     }
 
     return tab;
@@ -993,12 +1105,9 @@ function AllProductDetailsPageContent({
   const relatedOrderRows = product
     ? getRelatedOrderRows(product.id, relatedOrders)
     : [];
-  const activeOrdersReservedQuantity =
-    getActiveOrdersReservedQuantity(relatedOrderRows);
   const singleProductStatistics = getSingleProductStatisticsCounts(
     bannerStatus ? null : currentOffer,
-    bannerStatus ? null : stockBalance,
-    bannerStatus ? undefined : activeOrdersReservedQuantity
+    bannerStatus ? null : stockBalance
   );
 
   const stockMovementRows = getStockMovementRows(
@@ -1014,12 +1123,6 @@ function AllProductDetailsPageContent({
     stockRowsPerPage
   );
 
-  const paginatedRelatedOrderRows = paginateRows(
-    relatedOrderRows,
-    relatedCurrentPage,
-    relatedRowsPerPage
-  );
-
   const handleRelatedStatisticsClick = (status: OrderStatus) => {
     setRelatedFilters((currentFilters) => ({
       ...currentFilters,
@@ -1031,11 +1134,6 @@ function AllProductDetailsPageContent({
   const stockMovementTotalPages = getTotalPages(
     stockMovementRows.length,
     stockRowsPerPage
-  );
-
-  const relatedOrdersTotalPages = getTotalPages(
-    relatedOrderRows.length,
-    relatedRowsPerPage
   );
 
   const stockActiveFiltersCount = countTrueConditions(
@@ -1234,12 +1332,16 @@ function AllProductDetailsPageContent({
 
     try {
       const response = await addProductToMyPharmacy(product.id);
-      const stockResponse = await getProductStockMovements(product.id);
 
       setProduct(response.product);
-      setStockMovements([...stockResponse.items]);
-      setStockEarliestCreatedAt(stockResponse.earliestCreatedAt);
-      setStockBalance(stockResponse.stock);
+      setStockMovements([]);
+      setStockEarliestCreatedAt(null);
+      setStockBalance(null);
+      setStockStatus('idle');
+      setRelatedOrders([]);
+      setRelatedOrdersTotal(0);
+      setRelatedOrdersTotalPages(1);
+      setRelatedOrdersStatus('idle');
       setIsAddModalOpen(false);
       toast.success(
         response.message || 'ProductDetails added to your pharmacy.'
@@ -1263,6 +1365,13 @@ function AllProductDetailsPageContent({
       setStockMovements([]);
       setStockEarliestCreatedAt(null);
       setStockBalance(null);
+      setStockStatus('idle');
+      setRelatedOrders([]);
+      setRelatedOrdersTotal(0);
+      setRelatedOrdersTotalPages(1);
+      setRelatedOrdersStatus('idle');
+      setCommentsTotal(0);
+      setCommentsTotalStatus('success');
       setIsRemoveModalOpen(false);
       toast.success(
         response.message || 'ProductDetails was removed from your pharmacy.'
@@ -1303,7 +1412,7 @@ function AllProductDetailsPageContent({
               <RatingSummary
                 className={css.titleRating}
                 rating={product.rating}
-                reviewsCount={reviewsTotal}
+                reviewsCount={product.reviewsCount}
               />
             ) : null}
           </div>
@@ -1317,12 +1426,14 @@ function AllProductDetailsPageContent({
             />
           ) : null}
 
-          {product ? (
+          {product && singleProductStatistics ? (
             <OwnProductStatistics
               counts={singleProductStatistics}
               visibleKeys={['inStock', 'reserved', 'available']}
               className={css.singleProductStatistics}
             />
+          ) : product && isAddedToPharmacy ? (
+            <p role="status">Stock summary is temporarily unavailable.</p>
           ) : null}
         </div>
       </section>
@@ -1486,9 +1597,13 @@ function AllProductDetailsPageContent({
                       </div>
                     </div>
 
-                    {isProductSalesLoading ? (
-                      <LoadingSpinner label="Loading product sales chart..." />
-                    ) : (
+                    {productSalesStatus === 'error' ? (
+                      <StatusBanner
+                        tone="danger"
+                        title="Sales analytics are temporarily unavailable"
+                        message="Could not load product sales for the selected period."
+                      />
+                    ) : productSalesStatus === 'success' ? (
                       <SalesValueChart
                         key={`${productSalesYear}-${productSalesMonth}`}
                         data={productSalesData}
@@ -1497,6 +1612,8 @@ function AllProductDetailsPageContent({
                         description="The line shows successful sales of this product for the selected period."
                         categoryControlsLabel="ProductDetails category shown on the chart"
                       />
+                    ) : (
+                      <LoadingSpinner label="Loading product sales chart..." />
                     )}
                   </section>
                 ) : null}
@@ -1506,116 +1623,126 @@ function AllProductDetailsPageContent({
                 {activeTab === 'stock-movement' ? (
                   <>
                     {isAddedToPharmacy ? (
-                      <div className={css.sectionStack}>
-                        <section
-                          className={css.sectionCard}
-                          aria-labelledby="stock-movement-title"
-                        >
-                          <h3
-                            className={`${css.panelTitle} ${css.panelTitleWithHelp}`}
-                            id="stock-movement-title"
+                      stockStatus === 'error' ? (
+                        <StatusBanner
+                          tone="danger"
+                          title="Stock movement is temporarily unavailable"
+                          message="Could not load stock movement history. Please try again later."
+                        />
+                      ) : stockStatus !== 'success' ? (
+                        <LoadingSpinner label="Loading stock movement..." />
+                      ) : (
+                        <div className={css.sectionStack}>
+                          <section
+                            className={css.sectionCard}
+                            aria-labelledby="stock-movement-title"
                           >
-                            Stock movement
-                            <InfoTooltip
-                              label="How does the stock movement table work?"
-                              title="How stock movement works"
-                              icon={<History size={20} strokeWidth={2} />}
+                            <h3
+                              className={`${css.panelTitle} ${css.panelTitleWithHelp}`}
+                              id="stock-movement-title"
                             >
-                              Stock arrivals increase physical and available
-                              quantity.
-                              <br />
-                              <br />
-                              New and In progress orders reserve available
-                              units.
-                              <br />
-                              <br />
-                              Rejected orders release their reserve, while
-                              Successful orders write reserved units off the
-                              physical stock.
-                            </InfoTooltip>
-                          </h3>
+                              Stock movement
+                              <InfoTooltip
+                                label="How does the stock movement table work?"
+                                title="How stock movement works"
+                                icon={<History size={20} strokeWidth={2} />}
+                              >
+                                Stock arrivals increase physical and available
+                                quantity.
+                                <br />
+                                <br />
+                                New and In progress orders reserve available
+                                units.
+                                <br />
+                                <br />
+                                Rejected orders release their reserve, while
+                                Successful orders write reserved units off the
+                                physical stock.
+                              </InfoTooltip>
+                            </h3>
 
-                          <div className={css.searchGrid}>
-                            <SearchInput
-                              id="stock-movement-order-number-search"
-                              label="Order number search"
-                              value={stockOrderNumberSearch}
-                              placeholder="Order number"
-                              isActive={Boolean(stockOrderNumberSearch)}
-                              onChange={(value) => {
-                                setStockOrderNumberSearch(value);
-                                setStockCurrentPage(1);
-                              }}
-                            />
-
-                            <SearchInput
-                              id="stock-movement-comment-search"
-                              label="Comment search"
-                              value={stockCommentSearch}
-                              placeholder="Comment"
-                              isActive={Boolean(stockCommentSearch)}
-                              onChange={(value) => {
-                                setStockCommentSearch(value);
-                                setStockCurrentPage(1);
-                              }}
-                            />
-
-                            <div className={css.searchAction}>
-                              <FiltersButton
-                                activeCount={stockActiveFiltersCount}
-                                controlsId="stock-movement-filters-panel"
-                                isExpanded={isStockFiltersOpen}
-                                className={css.filterButton}
-                                onClick={() => setIsStockFiltersOpen(true)}
+                            <div className={css.searchGrid}>
+                              <SearchInput
+                                id="stock-movement-order-number-search"
+                                label="Order number search"
+                                value={stockOrderNumberSearch}
+                                placeholder="Order number"
+                                isActive={Boolean(stockOrderNumberSearch)}
+                                onChange={(value) => {
+                                  setStockOrderNumberSearch(value);
+                                  setStockCurrentPage(1);
+                                }}
                               />
-                            </div>
-                          </div>
-                        </section>
 
-                        <section
-                          className={css.sectionCard}
-                          aria-label="Stock movement table"
-                        >
-                          <div className={css.tableStack}>
-                            <div className={css.tableToolbar}>
-                              <div className={css.rowsControl}>
-                                <RowsPerPageSelect
-                                  id="stock-movement-rows-per-page"
-                                  value={stockRowsPerPage}
-                                  options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
-                                  onChange={(value) => {
-                                    setStockRowsPerPage(value);
-                                    setStockCurrentPage(1);
-                                  }}
+                              <SearchInput
+                                id="stock-movement-comment-search"
+                                label="Comment search"
+                                value={stockCommentSearch}
+                                placeholder="Comment"
+                                isActive={Boolean(stockCommentSearch)}
+                                onChange={(value) => {
+                                  setStockCommentSearch(value);
+                                  setStockCurrentPage(1);
+                                }}
+                              />
+
+                              <div className={css.searchAction}>
+                                <FiltersButton
+                                  activeCount={stockActiveFiltersCount}
+                                  controlsId="stock-movement-filters-panel"
+                                  isExpanded={isStockFiltersOpen}
+                                  className={css.filterButton}
+                                  onClick={() => setIsStockFiltersOpen(true)}
+                                />
+                              </div>
+                            </div>
+                          </section>
+
+                          <section
+                            className={css.sectionCard}
+                            aria-label="Stock movement table"
+                          >
+                            <div className={css.tableStack}>
+                              <div className={css.tableToolbar}>
+                                <div className={css.rowsControl}>
+                                  <RowsPerPageSelect
+                                    id="stock-movement-rows-per-page"
+                                    value={stockRowsPerPage}
+                                    options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
+                                    onChange={(value) => {
+                                      setStockRowsPerPage(value);
+                                      setStockCurrentPage(1);
+                                    }}
+                                  />
+                                </div>
+
+                                <CountLabel
+                                  className={css.countLabel}
+                                  shown={paginatedStockMovementRows.length}
+                                  total={stockMovementRows.length}
+                                  label="records"
                                 />
                               </div>
 
-                              <CountLabel
-                                className={css.countLabel}
-                                shown={paginatedStockMovementRows.length}
-                                total={stockMovementRows.length}
-                                label="records"
+                              <DataTable
+                                columns={stockMovementColumns}
+                                items={paginatedStockMovementRows}
+                                getItemKey={(row) => row.id}
+                                minWidth={0}
+                                labels={{
+                                  empty: 'Stock movement history is empty.',
+                                }}
+                              />
+
+                              <PaginationView
+                                currentPage={stockCurrentPage}
+                                totalPages={stockMovementTotalPages}
+                                onPageChange={setStockCurrentPage}
                               />
                             </div>
-
-                            <DataTable
-                              columns={stockMovementColumns}
-                              items={paginatedStockMovementRows}
-                              getItemKey={(row) => row.id}
-                              minWidth={0}
-                              labels={{
-                                empty: 'Stock movement history is empty.',
-                              }}
-                            />
-
-                            <PaginationView
-                              currentPage={stockCurrentPage}
-                              totalPages={stockMovementTotalPages}
-                              onPageChange={setStockCurrentPage}
-                            />
-                          </div>
-                        </section>
-                      </div>
+                          </section>
+                        </div>
+                      )
                     ) : (
                       <EmptyPanel>
                         This product is not added to your pharmacy, so stock
@@ -1628,111 +1755,121 @@ function AllProductDetailsPageContent({
                 {activeTab === 'related-orders' ? (
                   <>
                     {isAddedToPharmacy ? (
-                      <div className={css.sectionStack}>
-                        <section
-                          className={css.sectionCard}
-                          aria-labelledby="related-orders-title"
-                        >
-                          <h3
-                            className={css.panelTitle}
-                            id="related-orders-title"
+                      relatedOrdersStatus === 'error' ? (
+                        <StatusBanner
+                          tone="danger"
+                          title="Related orders are temporarily unavailable"
+                          message="Could not load orders for this product. Please try again later."
+                        />
+                      ) : relatedOrdersStatus !== 'success' ? (
+                        <LoadingSpinner label="Loading related orders..." />
+                      ) : (
+                        <div className={css.sectionStack}>
+                          <section
+                            className={css.sectionCard}
+                            aria-labelledby="related-orders-title"
                           >
-                            Related orders
-                          </h3>
+                            <h3
+                              className={css.panelTitle}
+                              id="related-orders-title"
+                            >
+                              Related orders
+                            </h3>
 
-                          <OrderStatistics
-                            counts={relatedOrderStatistics}
-                            className={css.relatedStatistics}
-                            onStatusClick={handleRelatedStatisticsClick}
-                          />
-                        </section>
-
-                        <section
-                          className={css.sectionCard}
-                          aria-label="Related orders filters"
-                        >
-                          <div className={css.searchGrid}>
-                            <SearchInput
-                              id="related-orders-order-number-search"
-                              label="Order number search"
-                              value={relatedOrderNumberSearch}
-                              placeholder="Order number"
-                              isActive={Boolean(relatedOrderNumberSearch)}
-                              onChange={(value) => {
-                                setRelatedOrderNumberSearch(value);
-                                setRelatedCurrentPage(1);
-                              }}
+                            <OrderStatistics
+                              counts={relatedOrderStatistics}
+                              className={css.relatedStatistics}
+                              onStatusClick={handleRelatedStatisticsClick}
                             />
+                          </section>
 
-                            <SearchInput
-                              id="related-orders-client-search"
-                              label="Client search"
-                              value={relatedClientSearch}
-                              placeholder="Client"
-                              isActive={Boolean(relatedClientSearch)}
-                              onChange={(value) => {
-                                setRelatedClientSearch(value);
-                                setRelatedCurrentPage(1);
-                              }}
-                            />
-
-                            <div className={css.searchAction}>
-                              <FiltersButton
-                                activeCount={relatedActiveFiltersCount}
-                                controlsId="related-orders-filters-panel"
-                                isExpanded={isRelatedFiltersOpen}
-                                className={css.filterButton}
-                                onClick={() => setIsRelatedFiltersOpen(true)}
+                          <section
+                            className={css.sectionCard}
+                            aria-label="Related orders filters"
+                          >
+                            <div className={css.searchGrid}>
+                              <SearchInput
+                                id="related-orders-order-number-search"
+                                label="Order number search"
+                                value={relatedOrderNumberSearch}
+                                placeholder="Order number"
+                                isActive={Boolean(relatedOrderNumberSearch)}
+                                onChange={(value) => {
+                                  setRelatedOrderNumberSearch(value);
+                                  setRelatedCurrentPage(1);
+                                }}
                               />
-                            </div>
-                          </div>
-                        </section>
 
-                        <section
-                          className={css.sectionCard}
-                          aria-label="Related orders table"
-                        >
-                          <div className={css.tableStack}>
-                            <div className={css.tableToolbar}>
-                              <div className={css.rowsControl}>
-                                <RowsPerPageSelect
-                                  id="related-orders-rows-per-page"
-                                  value={relatedRowsPerPage}
-                                  options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
-                                  onChange={(value) => {
-                                    setRelatedRowsPerPage(value);
-                                    setRelatedCurrentPage(1);
-                                  }}
+                              <SearchInput
+                                id="related-orders-client-search"
+                                label="Client search"
+                                value={relatedClientSearch}
+                                placeholder="Client"
+                                isActive={Boolean(relatedClientSearch)}
+                                onChange={(value) => {
+                                  setRelatedClientSearch(value);
+                                  setRelatedCurrentPage(1);
+                                }}
+                              />
+
+                              <div className={css.searchAction}>
+                                <FiltersButton
+                                  activeCount={relatedActiveFiltersCount}
+                                  controlsId="related-orders-filters-panel"
+                                  isExpanded={isRelatedFiltersOpen}
+                                  className={css.filterButton}
+                                  onClick={() => setIsRelatedFiltersOpen(true)}
+                                />
+                              </div>
+                            </div>
+                          </section>
+
+                          <section
+                            className={css.sectionCard}
+                            aria-label="Related orders table"
+                          >
+                            <div className={css.tableStack}>
+                              <div className={css.tableToolbar}>
+                                <div className={css.rowsControl}>
+                                  <RowsPerPageSelect
+                                    id="related-orders-rows-per-page"
+                                    value={relatedRowsPerPage}
+                                    options={PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS}
+                                    onChange={(value) => {
+                                      setRelatedRowsPerPage(value);
+                                      setRelatedCurrentPage(1);
+                                    }}
+                                  />
+                                </div>
+
+                                <CountLabel
+                                  className={css.countLabel}
+                                  shown={relatedOrderRows.length}
+                                  total={relatedOrdersTotal}
+                                  label="orders"
                                 />
                               </div>
 
-                              <CountLabel
-                                className={css.countLabel}
-                                shown={paginatedRelatedOrderRows.length}
-                                total={relatedOrderRows.length}
-                                label="orders"
+                              <DataTable
+                                columns={relatedOrderColumns}
+                                items={relatedOrderRows}
+                                getItemKey={(row) => row.id}
+                                minWidth={0}
+                                labels={{
+                                  empty:
+                                    'There are no orders with this product yet.',
+                                }}
+                              />
+
+                              <PaginationView
+                                currentPage={relatedCurrentPage}
+                                totalPages={relatedOrdersTotalPages}
+                                onPageChange={setRelatedCurrentPage}
                               />
                             </div>
-
-                            <DataTable
-                              columns={relatedOrderColumns}
-                              items={paginatedRelatedOrderRows}
-                              getItemKey={(row) => row.id}
-                              minWidth={0}
-                              labels={{
-                                empty:
-                                  'There are no orders with this product yet.',
-                              }}
-                            />
-
-                            <PaginationView
-                              currentPage={relatedCurrentPage}
-                              totalPages={relatedOrdersTotalPages}
-                              onPageChange={setRelatedCurrentPage}
-                            />
-                          </div>
-                        </section>
-                      </div>
+                          </section>
+                        </div>
+                      )
                     ) : (
                       <EmptyPanel>
                         This product is not added to your pharmacy, so related
@@ -1782,19 +1919,29 @@ function AllProductDetailsPageContent({
                 ) : null}
 
                 {activeTab === 'reviews' ? (
-                  <ReviewsList
-                    reviews={reviewItems}
-                    title="Reviews"
-                    emptyTitle="This product has no reviews yet."
-                    emptyText="ProductDetails reviews will appear here after clients share their feedback."
-                  />
+                  reviewsStatus === 'error' ? (
+                    <StatusBanner
+                      tone="danger"
+                      title="Reviews are temporarily unavailable"
+                      message="Could not load product reviews. Please try again later."
+                    />
+                  ) : reviewsStatus === 'success' ? (
+                    <ReviewsList
+                      reviews={reviewItems}
+                      title="Reviews"
+                      emptyTitle="This product has no reviews yet."
+                      emptyText="ProductDetails reviews will appear here after clients share their feedback."
+                    />
+                  ) : (
+                    <LoadingSpinner label="Loading product reviews..." />
+                  )
                 ) : null}
 
                 {activeTab === 'comments' ? (
                   isAddedToPharmacy ? (
                     <EntityComments
                       entityKey={`product:${product.id}`}
-                      initialTotal={commentsTotal}
+                      initialTotal={commentsTotal ?? 0}
                       load={(page, options) =>
                         getPharmacyNotes('product', productId, page, options)
                       }
@@ -1804,7 +1951,10 @@ function AllProductDetailsPageContent({
                       remove={(id) =>
                         deletePharmacyNote('product', productId, id)
                       }
-                      onTotalChange={setCommentsTotal}
+                      onTotalChange={(total) => {
+                        setCommentsTotal(total);
+                        setCommentsTotalStatus('success');
+                      }}
                     />
                   ) : (
                     <EmptyPanel>

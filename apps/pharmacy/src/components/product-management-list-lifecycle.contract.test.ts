@@ -108,3 +108,38 @@ test('own products statistics reuse the management list response', async () => {
   assert.doesNotMatch(source, /getPharmacyOwnProductStatistics/);
   assert.match(source, /setProductStatistics\(response\.statistics\)/);
 });
+
+//===================================================================
+
+test('product lists clamp pagination after mutations and server total changes', async () => {
+  const [allProducts, ownProducts] = await Promise.all([
+    read(
+      'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/products/OwnProductsPageContent/OwnProductsPageContent.tsx'
+    ),
+  ]);
+
+  for (const source of [allProducts, ownProducts]) {
+    assert.match(source, /clampProductListPage/);
+    assert.match(source, /normalizedPage !== currentPage/);
+    assert.match(source, /setCurrentPage\(normalizedPage\)/);
+
+    assert.match(
+      source,
+      /handleFiltersChange[\s\S]{0,220}?setCurrentPage\(1\)/
+    );
+
+    assert.match(
+      source,
+      /handleRowsPerPageChange[\s\S]{0,220}?setCurrentPage\(1\)/
+    );
+  }
+
+  assert.match(allProducts, /leavesCurrentResultSet/);
+  assert.match(allProducts, /setCurrentPage\(nextPage\)/);
+  assert.match(ownProducts, /nextTotalProducts/);
+  assert.match(ownProducts, /setCurrentPage\(nextPage\)/);
+});

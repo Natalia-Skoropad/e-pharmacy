@@ -80,6 +80,7 @@ function EntityCommentsContent({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const [commentToDelete, setCommentToDelete] = useState<PharmacyNote | null>(
     null
   );
@@ -221,12 +222,14 @@ function EntityCommentsContent({
     <section className={css.card} aria-labelledby={titleId}>
       <div className={css.head}>
         <h2 id={titleId}>{title}</h2>
-        <CountLabel
-          className={css.countLabel}
-          shown={data.items.length}
-          total={data.total}
-          label="comments"
-        />
+        {!error ? (
+          <CountLabel
+            className={css.countLabel}
+            shown={data.items.length}
+            total={data.total}
+            label="comments"
+          />
+        ) : null}
       </div>
 
       <CommentComposer

@@ -44,6 +44,7 @@ import {
 
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
+import { clampProductListPage } from '@/lib/products/product-pagination';
 import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -219,10 +220,22 @@ function AllProductsPageContent({
         });
         if (controller.signal.aborted) return;
 
+        const normalizedTotalPages = Math.max(1, response.totalPages);
+        const normalizedPage = clampProductListPage(
+          currentPage,
+          response.total,
+          rowsPerPage
+        );
+
+        if (normalizedPage !== currentPage) {
+          setCurrentPage(normalizedPage);
+          return;
+        }
+
         setProducts([...response.items]);
         setTotalProducts(response.total);
         setEarliestCreatedAt(response.earliestCreatedAt);
-        setTotalPages(Math.max(1, response.totalPages));
+        setTotalPages(normalizedTotalPages);
       } catch {
         if (controller.signal.aborted) return;
 
@@ -239,7 +252,7 @@ function AllProductsPageContent({
     return () => {
       controller.abort();
     };
-  }, [isProfileLoaded, queryParams, refreshVersion]);
+  }, [currentPage, isProfileLoaded, queryParams, refreshVersion, rowsPerPage]);
 
   const debouncedFilters = useDebouncedValue(filters, 450);
 
@@ -287,11 +300,27 @@ function AllProductsPageContent({
     try {
       const response = await addProductToMyPharmacy(productToAdd.id);
 
-      setProducts((currentProducts) =>
-        currentProducts.map((product) =>
-          product.id === response.product.id ? response.product : product
-        )
+      const leavesCurrentResultSet = filters.addedToMyPharmacy === 'no';
+      const nextTotalProducts = leavesCurrentResultSet
+        ? Math.max(0, totalProducts - 1)
+        : totalProducts;
+      const nextPage = clampProductListPage(
+        currentPage,
+        nextTotalProducts,
+        rowsPerPage
       );
+
+      setProducts((currentProducts) =>
+        leavesCurrentResultSet
+          ? currentProducts.filter(
+              (product) => product.id !== response.product.id
+            )
+          : currentProducts.map((product) =>
+              product.id === response.product.id ? response.product : product
+            )
+      );
+      setTotalProducts(nextTotalProducts);
+      setCurrentPage(nextPage);
       setProductToAdd(null);
       setRefreshVersion((value) => value + 1);
       toast.success(
