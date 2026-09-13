@@ -99,6 +99,7 @@ export type ProductRequestHistoryViewModel = Readonly<{
   title: string;
   description: string;
   createdAt: ISODateTimeString;
+  isInferred: boolean;
 }>;
 
 export type ProductRequestRowViewModel = Readonly<{
@@ -243,12 +244,27 @@ function normalizeProductRequestHistoryEntry(
   const title = getTrimmedString(rawEntry.title);
   const description = getTrimmedString(rawEntry.description);
   const status = normalizeProductRequestStatus(rawEntry.status);
+  const isInferred = rawEntry.isInferred;
 
-  if (!id || !createdAt || !title || !description || !status.success) {
+  if (
+    !id ||
+    !createdAt ||
+    !title ||
+    !description ||
+    !status.success ||
+    typeof isInferred !== 'boolean'
+  ) {
     return null;
   }
 
-  return { id, status: status.value, title, description, createdAt };
+  return {
+    id,
+    status: status.value,
+    title,
+    description,
+    createdAt,
+    isInferred,
+  };
 }
 
 //===================================================================
@@ -338,13 +354,14 @@ export function normalizeProductRequestDetails(
         .filter((file): file is ProductRequestFile => Boolean(file))
     : [];
 
-  const history = Array.isArray(rawRequest.history)
+  const rawHistory = Array.isArray(rawRequest.history)
     ? rawRequest.history
-        .map(normalizeProductRequestHistoryEntry)
-        .filter((entry): entry is ProductRequestHistoryViewModel =>
-          Boolean(entry)
-        )
     : [];
+  const history = rawHistory
+    .map(normalizeProductRequestHistoryEntry)
+    .filter((entry): entry is ProductRequestHistoryViewModel => Boolean(entry));
+
+  if (history.length !== rawHistory.length) return null;
 
   const optionalString = (key: string): string | undefined =>
     getTrimmedString(rawRequest[key]);

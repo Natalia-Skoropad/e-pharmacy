@@ -86,6 +86,7 @@ export type ProductRequestResponseDto = {
     title: string;
     description: string;
     createdAt: ISODateTimeString;
+    isInferred: boolean;
   }>;
 
   commentsTotal?: number;

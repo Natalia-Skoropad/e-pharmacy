@@ -12,6 +12,7 @@ export type ProductRequestHistoryResponseDto = Readonly<{
   title: string;
   description: string;
   createdAt: ISODateTimeString;
+  isInferred: boolean;
 }>;
 
 //=============================================================================

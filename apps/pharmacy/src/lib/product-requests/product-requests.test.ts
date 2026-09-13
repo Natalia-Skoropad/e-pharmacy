@@ -38,6 +38,7 @@ function validRequest() {
         title: 'Request is in progress',
         description: 'The request is being reviewed.',
         createdAt: '2026-08-12T10:00:00.000Z',
+        isInferred: false,
       },
     ],
     commentsTotal: 1,
@@ -63,6 +64,7 @@ test('product request parser preserves the canonical application projection', ()
   const details = normalizeProductRequestDetails(validRequest());
   assert.equal(details?.updatedAt, '2026-08-13T10:00:00.000Z');
   assert.equal(details?.history.length, 1);
+  assert.equal(details?.history[0]?.isInferred, false);
   assert.equal(details?.commentsTotal, 1);
 });
 
@@ -143,6 +145,19 @@ test('product request list metadata fails closed for malformed earliest dates', 
       totalPages: 0,
       earliestCreatedAt: null,
     }).earliestCreatedAt,
+    null
+  );
+});
+
+//===================================================================
+
+test('product request history requires an explicit inferred marker', () => {
+  const request = validRequest();
+  const historyEntry = request.history[0];
+  const { isInferred: _isInferred, ...withoutMarker } = historyEntry;
+
+  assert.equal(
+    normalizeProductRequestDetails({ ...request, history: [withoutMarker] }),
     null
   );
 });

@@ -394,7 +394,7 @@ function OwnProductsPageContent({
         )}
       </section>
 
-      <section className={css.card} aria-labelledby="own-products-search">
+      <section className={css.card} aria-label="Search and filter own products">
         <div className={css.searchGrid}>
           <SearchInput
             id="own-products-product-article-search"

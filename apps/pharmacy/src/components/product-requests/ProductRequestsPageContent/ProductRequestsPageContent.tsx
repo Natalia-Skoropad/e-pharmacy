@@ -239,10 +239,10 @@ function ProductRequestsPageContent({
     Boolean(bannerStatus) || currentPharmacyStatus === 'blocked';
 
   return (
-    <main className={css.page} aria-labelledby="product-requests-page">
+    <main className={css.page} aria-labelledby="product-requests-page-title">
       <section
         className={css.tableCard}
-        aria-label="product-requests-page-title"
+        aria-labelledby="product-requests-page-title"
       >
         <PageHeader
           title="Product requests"
@@ -282,7 +282,7 @@ function ProductRequestsPageContent({
 
       <section
         className={css.heroCard}
-        aria-labelledby="product-requests-search"
+        aria-label="Search and filter product requests"
       >
         <div className={css.searchGrid}>
           <SearchInput

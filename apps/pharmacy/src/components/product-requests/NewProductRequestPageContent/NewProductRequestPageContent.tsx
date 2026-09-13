@@ -94,6 +94,7 @@ import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message'
 import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+import { resolveProductRequestPageMode } from './product-request-page-mode';
 
 import css from './NewProductRequestPageContent.module.css';
 
@@ -298,9 +299,13 @@ function NewProductRequestPageContent({
 
   const [articleCheckMessage, setArticleCheckMessage] = useState('');
 
-  const isDraft = request?.status === 'draft';
-  const isReadonly = Boolean(request && request.status !== 'draft');
-  const canEdit = !isReadonly && !isCreationLocked;
+  const requestMode = resolveProductRequestPageMode({
+    requestId,
+    sourceRequestId: cloneSourceRequestId,
+    requestStatus: request?.status,
+  });
+  const isDraft = requestMode === 'edit';
+  const canEdit = requestMode !== 'readonly' && !isCreationLocked;
   const isSaving = savingStatus !== null;
   const isMutating = isSaving || isDeleting;
   const isFileProcessing = isImageProcessing || isAdditionalFilesProcessing;
@@ -373,6 +378,13 @@ function NewProductRequestPageContent({
         });
 
         if (controller.signal.aborted) return;
+
+        if (cloneSourceRequestId && loadedRequest.status !== 'rejected') {
+          setLoadErrorMessage(
+            'Only rejected product requests can be used as a source for a new request.'
+          );
+          return;
+        }
 
         setValues(toFormState(loadedRequest));
         setProductImage(
@@ -700,7 +712,11 @@ function NewProductRequestPageContent({
     }
   };
 
-  const pageTitle = request?.name ?? 'New product request';
+  const pageTitle =
+    request?.name ??
+    (requestMode === 'clone'
+      ? 'New product request from rejected request'
+      : 'New product request');
   const statusMessage = request ? getStatusMessage(request.status) : null;
   const savedImageSrc = request?.productImageUrl
     ? getProductImageSrc(request.productImageUrl)
@@ -711,7 +727,7 @@ function NewProductRequestPageContent({
 
   const headerActions = (
     <div className={css.headerActions}>
-      {!request || isDraft ? (
+      {requestMode !== 'readonly' ? (
         <>
           {isDraft ? (
             <Button
@@ -808,7 +824,7 @@ function NewProductRequestPageContent({
           title={
             <span className={css.titleWithTooltip}>
               <span>{pageTitle}</span>
-              {!request || isDraft ? (
+              {requestMode !== 'readonly' ? (
                 <InfoTooltip
                   className={css.titleTooltip}
                   label="About saving and sending product requests"
@@ -1341,9 +1357,15 @@ function NewProductRequestPageContent({
                   <History size={18} aria-hidden="true" />
                   <div className={css.historyContent}>
                     <strong>{entry.title}</strong>
-                    <time dateTime={entry.createdAt}>
-                      {formatDateTime(entry.createdAt) ?? '—'}
-                    </time>
+                    {entry.isInferred ? (
+                      <span className={css.historyInferred}>
+                        Legacy history · exact event time unavailable
+                      </span>
+                    ) : (
+                      <time dateTime={entry.createdAt}>
+                        {formatDateTime(entry.createdAt) ?? '—'}
+                      </time>
+                    )}
                     <StatusBadge
                       {...PRODUCT_REQUEST_STATUS_PRESENTATION[entry.status]}
                     />

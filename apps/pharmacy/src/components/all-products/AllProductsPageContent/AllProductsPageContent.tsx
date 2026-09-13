@@ -413,14 +413,14 @@ function AllProductsPageContent({
 
       <section
         className={css.heroCard}
-        aria-labelledby="all-products-page-title"
+        aria-label="Search and filter all products"
       >
         <div className={css.searchGrid}>
           <SearchInput
             id="all-products-product-article-search"
-            label="ProductDetails article search"
+            label="Product article search"
             value={filters.article}
-            placeholder="ProductDetails article"
+            placeholder="Product article"
             isActive={Boolean(filters.article)}
             onChange={(article) =>
               handleFiltersChange({
@@ -432,9 +432,9 @@ function AllProductsPageContent({
 
           <SearchInput
             id="all-products-product-name-search"
-            label="ProductDetails name search"
+            label="Product name search"
             value={filters.name}
-            placeholder="ProductDetails name"
+            placeholder="Product name"
             isActive={Boolean(filters.name)}
             onChange={(name) =>
               handleFiltersChange({

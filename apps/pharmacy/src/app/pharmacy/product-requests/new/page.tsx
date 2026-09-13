@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 
 import { NewProductRequestPageContent } from '@/components/product-requests/NewProductRequestPageContent';
+import { getProductRequestGenerationKey } from '@/components/product-requests/NewProductRequestPageContent/product-request-page-mode';
 
 //===================================================================
 
@@ -24,7 +25,16 @@ async function NewProductRequestPage({
   const source = resolvedSearchParams.source;
   const sourceRequestId = Array.isArray(source) ? source[0] : source;
 
-  return <NewProductRequestPageContent sourceRequestId={sourceRequestId} />;
+  const generationKey = getProductRequestGenerationKey({
+    sourceRequestId,
+  });
+
+  return (
+    <NewProductRequestPageContent
+      key={generationKey}
+      sourceRequestId={sourceRequestId}
+    />
+  );
 }
 
 export default NewProductRequestPage;

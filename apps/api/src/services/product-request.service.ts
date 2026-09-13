@@ -259,8 +259,9 @@ function serializeProductRequest(
   request: ProductRequestDocument,
   commentsTotal = 0
 ): ProductRequestResponseDto {
-  const history = request.history?.length
-    ? request.history
+  const hasPersistedHistory = Boolean(request.history?.length);
+  const history = hasPersistedHistory
+    ? (request.history ?? [])
     : getFallbackHistory(request);
 
   return {
@@ -301,6 +302,7 @@ function serializeProductRequest(
       title: entry.title,
       description: entry.description,
       createdAt: entry.createdAt.toISOString(),
+      isInferred: !hasPersistedHistory,
     })),
     commentsTotal,
   };
@@ -506,37 +508,60 @@ export async function deleteProductRequestService(
     );
   }
 
-  const request = await ProductRequest.findOne({
-    _id: new Types.ObjectId(requestId),
-    pharmacyId,
-  }).select('_id status');
+  const requestObjectId = new Types.ObjectId(requestId);
+  const session = await mongoose.startSession();
 
-  if (!request) {
-    throw httpError(
-      HTTP_STATUS.NOT_FOUND,
-      'Product request was not found.',
-      undefined,
-      PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
-    );
+  try {
+    await session.withTransaction(async () => {
+      const request = await ProductRequest.findOne({
+        _id: requestObjectId,
+        pharmacyId,
+      })
+        .select('_id status')
+        .session(session);
+
+      if (!request) {
+        throw httpError(
+          HTTP_STATUS.NOT_FOUND,
+          'Product request was not found.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+        );
+      }
+
+      if (request.status !== 'draft') {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Only draft product requests can be deleted.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
+        );
+      }
+
+      const deleteResult = await ProductRequest.deleteOne({
+        _id: request._id,
+        pharmacyId,
+        status: 'draft',
+      }).session(session);
+
+      if (deleteResult.deletedCount !== 1) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'The product request changed before it could be deleted.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
+        );
+      }
+
+      await PharmacyNote.deleteMany({
+        pharmacyId,
+        entityType: 'product_request',
+        entityId: request._id,
+      }).session(session);
+    });
+  } finally {
+    await session.endSession();
   }
-
-  if (request.status !== 'draft') {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Only draft product requests can be deleted.',
-      undefined,
-      PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
-    );
-  }
-
-  await Promise.all([
-    ProductRequest.deleteOne({ _id: request._id }),
-    PharmacyNote.deleteMany({
-      pharmacyId,
-      entityType: 'product_request',
-      entityId: request._id,
-    }),
-  ]);
 
   return { message: 'Product request draft deleted successfully.' };
 }

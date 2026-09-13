@@ -1,7 +1,7 @@
-import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { useMemo } from 'react';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   DataTable,
@@ -11,7 +11,6 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { getPharmacyProductPath } from '@/lib/routes';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import { formatAmount } from '@e-pharmacy/utils/money';
@@ -19,6 +18,7 @@ import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { type PharmacyProductRow } from '@/lib/products/products';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { getPharmacyProductPath } from '@/lib/routes';
 
 import css from './OwnProductsTable.module.css';
 
@@ -164,4 +164,3 @@ function OwnProductsTable({
 
 export default OwnProductsTable;
 export { OwnProductsTable };
-export type { PharmacyProductRow };

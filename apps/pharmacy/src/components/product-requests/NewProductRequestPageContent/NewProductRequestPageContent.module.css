@@ -236,6 +236,11 @@
   color: var(--color-text-muted);
 }
 
+.historyInferred {
+  font-size: var(--fz-12);
+  color: var(--color-text-muted);
+}
+
 .historyContent p {
   margin: 0;
   color: var(--color-text-secondary);

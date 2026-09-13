@@ -1395,9 +1395,7 @@ function AllProductDetailsPageContent({
       setRelatedOrdersTotalPages(1);
       setRelatedOrdersStatus('idle');
       setIsAddModalOpen(false);
-      toast.success(
-        response.message || 'ProductDetails added to your pharmacy.'
-      );
+      toast.success(response.message || 'Product added to your pharmacy.');
     } catch (addError) {
       if (
         currentPharmacyId &&
@@ -1452,7 +1450,7 @@ function AllProductDetailsPageContent({
       setCommentsTotalStatus('success');
       setIsRemoveModalOpen(false);
       toast.success(
-        response.message || 'ProductDetails was removed from your pharmacy.'
+        response.message || 'Product was removed from your pharmacy.'
       );
     } catch (removeError) {
       if (
@@ -1545,12 +1543,12 @@ function AllProductDetailsPageContent({
       </section>
 
       {product ? (
-        <section className={css.contentCard} aria-label="ProductDetails data">
+        <section className={css.contentCard} aria-label="Product details">
           <div className={css.tabsSection}>
             <Tabs
               items={tabs}
               activeValue={activeTab}
-              ariaLabel="ProductDetails details tabs"
+              ariaLabel="Product details sections"
               mobileVisibleCount={1}
               tabletVisibleCount={3}
               onChange={setActiveTab}
@@ -1568,7 +1566,7 @@ function AllProductDetailsPageContent({
 
                 <section
                   className={css.detailsGrid}
-                  aria-labelledby="product-summary-title"
+                  aria-label="Product summary"
                 >
                   <div className={css.visualCard}>
                     {productImageSrc ? (
@@ -1678,13 +1676,13 @@ function AllProductDetailsPageContent({
                 {isAddedToPharmacy ? (
                   <section
                     className={css.productSalesSection}
-                    aria-label="ProductDetails sales value"
+                    aria-label="Product sales value"
                   >
                     <div className={css.productSalesToolbar}>
                       <div className={css.productSalesHeading}>
                         <BarChart3 size={22} aria-hidden="true" />
                         <div className={css.productSalesHeadingContent}>
-                          <h3>ProductDetails sales analytics</h3>
+                          <h3>Product sales analytics</h3>
                           <p>
                             Successful sales of this product for the selected
                             year or month.
@@ -1713,10 +1711,10 @@ function AllProductDetailsPageContent({
                       <SalesValueChart
                         key={`${productSalesYear}-${productSalesMonth}`}
                         data={productSalesData}
-                        kicker="ProductDetails sales"
+                        kicker="Product sales"
                         title="Sales value by product"
                         description="The line shows successful sales of this product for the selected period."
-                        categoryControlsLabel="ProductDetails category shown on the chart"
+                        categoryControlsLabel="Product category shown on the chart"
                       />
                     ) : (
                       <LoadingSpinner label="Loading product sales chart..." />
@@ -2036,7 +2034,7 @@ function AllProductDetailsPageContent({
                       reviews={reviewItems}
                       title="Reviews"
                       emptyTitle="This product has no reviews yet."
-                      emptyText="ProductDetails reviews will appear here after clients share their feedback."
+                      emptyText="Product reviews will appear here after clients share their feedback."
                     />
                   ) : (
                     <LoadingSpinner label="Loading product reviews..." />
@@ -2078,7 +2076,7 @@ function AllProductDetailsPageContent({
       {isStockFiltersOpen ? (
         <FilterDrawer
           id="stock-movement-filters-panel"
-          eyebrow="ProductDetails details"
+          eyebrow="Product details"
           title="Stock movement filters"
           hasActiveFilters={stockActiveFiltersCount > 0}
           resetHref="#"
@@ -2155,7 +2153,7 @@ function AllProductDetailsPageContent({
       {isRelatedFiltersOpen ? (
         <FilterDrawer
           id="related-orders-filters-panel"
-          eyebrow="ProductDetails details"
+          eyebrow="Product details"
           title="Related orders filters"
           hasActiveFilters={relatedActiveFiltersCount > 0}
           resetHref="#"
