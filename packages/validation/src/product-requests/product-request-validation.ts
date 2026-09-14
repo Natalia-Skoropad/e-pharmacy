@@ -233,17 +233,6 @@ export function validateProductRequestForm(
         'countryOfOrigin',
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.countryOfOrigin,
       ],
-      ['dosage', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.dosage],
-      ['packageSize', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.packageSize],
-      ['form', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.form],
-      [
-        'activeSubstance',
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeSubstance,
-      ],
-      [
-        'prescriptionType',
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.prescriptionType,
-      ],
       [
         'fullDescription',
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,

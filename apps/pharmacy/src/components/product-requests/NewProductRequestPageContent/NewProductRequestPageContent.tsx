@@ -909,11 +909,7 @@ function NewProductRequestPageContent({
     <main className={css.page} aria-labelledby="product-request-page-title">
       <section className={css.contentCard}>
         <PageHeader
-          className={
-            isDraft
-              ? `${css.requestPageHeader} ${css.draftPageHeader}`
-              : css.requestPageHeader
-          }
+          className={css.requestPageHeader}
           title={
             <span className={css.titleWithTooltip}>
               <span>{pageTitle}</span>
@@ -1030,6 +1026,7 @@ function NewProductRequestPageContent({
 
               <div className={css.imageUploadSlot}>
                 <DocumentUpload
+                  className={css.productImageUpload}
                   id="product-request-image"
                   name="productImage"
                   label="Product image"
@@ -1064,7 +1061,7 @@ function NewProductRequestPageContent({
                 id="product-request-name"
                 name="name"
                 label="Product name"
-                hint="Use the official name shown on the package."
+                hint="Use the official name shown on the package"
                 placeholder="Enter product name"
                 value={values.name}
                 error={errors.name}
@@ -1075,44 +1072,48 @@ function NewProductRequestPageContent({
                 onChange={(event) => updateValue('name', event.target.value)}
               />
 
-              <NameInput
-                id="product-request-article"
-                name="article"
-                label="Product article"
-                hint="Enter the unique manufacturer or supplier article."
-                placeholder="Enter product article"
-                value={values.article}
-                error={errors.article}
-                isTouched={
-                  Boolean(validationMode) || articleCheckStatus === 'conflict'
-                }
-                maxLength={PRODUCT_REQUEST_LIMITS.articleMax}
-                disabled={!canEdit}
-                autoComplete="off"
-                onChange={(event) =>
-                  updateValue('article', event.target.value.toUpperCase())
-                }
-              />
+              <div className={css.articleField}>
+                <NameInput
+                  id="product-request-article"
+                  name="article"
+                  label="Product article"
+                  hint="Enter the unique manufacturer or supplier article"
+                  placeholder="Enter product article"
+                  value={values.article}
+                  error={errors.article}
+                  isTouched={
+                    Boolean(validationMode) || articleCheckStatus === 'conflict'
+                  }
+                  maxLength={PRODUCT_REQUEST_LIMITS.articleMax}
+                  disabled={!canEdit}
+                  autoComplete="off"
+                  onChange={(event) =>
+                    updateValue('article', event.target.value.toUpperCase())
+                  }
+                />
 
-              {articleCheckStatus === 'checking' ||
-              articleCheckStatus === 'available' ||
-              articleCheckStatus === 'error' ? (
-                <p
-                  className={css.articleCheckStatus}
-                  role="status"
-                  aria-live="polite"
-                >
-                  {articleCheckStatus === 'checking'
-                    ? 'Checking article availability…'
-                    : articleCheckMessage}
-                </p>
-              ) : null}
+                <div className={css.articleStatusSlot}>
+                  {articleCheckStatus === 'checking' ||
+                  articleCheckStatus === 'available' ||
+                  articleCheckStatus === 'error' ? (
+                    <p
+                      className={css.articleCheckStatus}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {articleCheckStatus === 'checking'
+                        ? 'Checking article availability…'
+                        : articleCheckMessage}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
 
               <NameInput
                 id="product-request-manufacturer"
                 name="manufacturer"
                 label="Manufacturer"
-                hint="Enter the full manufacturer name."
+                hint="Enter the name exactly as it appears on the product"
                 placeholder="Enter manufacturer"
                 value={values.manufacturer}
                 error={errors.manufacturer}
@@ -1131,7 +1132,7 @@ function NewProductRequestPageContent({
                 id="product-request-country"
                 name="countryOfOrigin"
                 label="Country of origin"
-                hint="Use the country printed on the product package."
+                hint="Use the country printed on the product package"
                 placeholder="Enter country"
                 value={values.countryOfOrigin}
                 error={errors.countryOfOrigin}
@@ -1147,7 +1148,7 @@ function NewProductRequestPageContent({
               <SelectField
                 id="product-request-category"
                 label="Category"
-                hint="Select the closest catalog category."
+                hint="Select a catalog category for this product or device"
                 required
                 value={values.category}
                 options={CATEGORY_OPTIONS}
@@ -1162,7 +1163,7 @@ function NewProductRequestPageContent({
                 id="product-request-custom-category"
                 name="customCategory"
                 label="Other category"
-                hint="Enter the category Admin should use."
+                hint="Enter the name that will be used in the global catalog"
                 placeholder="Enter category name"
                 value={values.customCategory}
                 error={errors.customCategory}
@@ -1190,7 +1191,8 @@ function NewProductRequestPageContent({
                   Product data
                 </h2>
                 <p className={css.sectionText}>
-                  Add the details Admin will need to create the catalog product.
+                  These fields are optional. Add only the details that apply to
+                  this product or device.
                 </p>
               </div>
             </div>
@@ -1200,6 +1202,7 @@ function NewProductRequestPageContent({
                 id="product-request-dosage"
                 name="dosage"
                 label="Dosage"
+                required={false}
                 placeholder="Example: 500 mg"
                 value={values.dosage}
                 error={errors.dosage}
@@ -1214,6 +1217,7 @@ function NewProductRequestPageContent({
                 id="product-request-package-size"
                 name="packageSize"
                 label="Package size"
+                required={false}
                 placeholder="Example: №20 (10x2)"
                 value={values.packageSize}
                 error={errors.packageSize}
@@ -1230,6 +1234,7 @@ function NewProductRequestPageContent({
                 id="product-request-form"
                 name="form"
                 label="Form"
+                required={false}
                 placeholder="Example: tablets"
                 value={values.form}
                 error={errors.form}
@@ -1246,6 +1251,7 @@ function NewProductRequestPageContent({
                 id="product-request-active-substance"
                 name="activeSubstance"
                 label="Active substance"
+                required={false}
                 placeholder="Enter active substance"
                 value={values.activeSubstance}
                 error={errors.activeSubstance}
@@ -1261,7 +1267,7 @@ function NewProductRequestPageContent({
               <SelectField
                 id="product-request-prescription-type"
                 label="Prescription type"
-                required
+                required={false}
                 value={values.prescriptionType}
                 options={[...PRESCRIPTION_OPTIONS]}
                 error={

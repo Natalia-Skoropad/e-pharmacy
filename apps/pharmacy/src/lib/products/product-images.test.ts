@@ -65,6 +65,34 @@ test('keeps already absolute image URLs unchanged', () => {
 
 //===================================================================
 
+test('rebases legacy seeded client photos to the API asset origin', () => {
+  withEnvironment(
+    {
+      nodeEnv: 'production',
+      apiUrl: 'https://api.example.com/',
+    },
+    () => {
+      assert.equal(
+        getProductImageSrc(
+          'https://client.example.com/images/seed/clients/client-001.png'
+        ),
+        'https://api.example.com/images/seed/clients/client-001.png'
+      );
+    }
+  );
+
+  withEnvironment({ nodeEnv: 'development' }, () => {
+    assert.equal(
+      getProductImageSrc(
+        'http://localhost:3000/images/seed/clients/client-008.png'
+      ),
+      'http://localhost:4000/images/seed/clients/client-008.png'
+    );
+  });
+});
+
+//===================================================================
+
 test('resolves backend image paths against a validated public API URL', () => {
   withEnvironment(
     {

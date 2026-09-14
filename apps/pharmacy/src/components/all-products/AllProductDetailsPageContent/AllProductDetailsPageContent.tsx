@@ -1376,12 +1376,12 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'fixedUnitPrice',
-        title: <TableHeaderTitle parts={['Fixed unit price,', '₴']} />,
+        title: <TableHeaderTitle parts={['Fixed unit ', 'price, ₴']} />,
         render: (row: RelatedOrderRow) => row.fixedUnitPrice,
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order amount,', '₴']} />,
+        title: <TableHeaderTitle parts={['Order ', 'amount, ₴']} />,
         render: (row: RelatedOrderRow) => row.amount,
       },
       {

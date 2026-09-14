@@ -323,27 +323,6 @@ export const productRequestFormSchema = z
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.countryOfOrigin,
       ],
       [
-        'dosage',
-        value.dosage,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.dosage,
-      ],
-      [
-        'packageSize',
-        value.packageSize,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.packageSize,
-      ],
-      ['form', value.form, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.form],
-      [
-        'activeSubstance',
-        value.activeSubstance,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeSubstance,
-      ],
-      [
-        'prescriptionType',
-        value.prescriptionType,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.prescriptionType,
-      ],
-      [
         'fullDescription',
         value.fullDescription,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,

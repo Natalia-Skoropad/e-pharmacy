@@ -80,7 +80,7 @@ export const PRODUCT_REQUEST_SHORT_TEXT_PATTERN =
   /^[A-Za-z0-9][A-Za-z0-9\s.,'’"()/%+&\-]*$/;
 
 export const PRODUCT_REQUEST_LONG_TEXT_PATTERN =
-  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*&\n\r]+$/;
+  /^[A-Za-z0-9\s.,!?;:'"“”()[\]_\-–—/#%+*&=~@\n\r]+$/;
 
 //===================================================================
 

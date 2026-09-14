@@ -281,6 +281,32 @@ export async function recordInitialStockArrival(
 
 //===============================================================
 
+function buildLegacyBalanceSnapshot(
+  offer: StockOfferSnapshot,
+  occurredAt: Date
+): Record<string, unknown> {
+  return {
+    productOfferId: offer._id,
+    productId: offer.productId,
+    pharmacyId: offer.pharmacyId,
+    eventType: 'adjustment',
+    source: 'pharmacy_stock',
+    quantity: 0,
+    stockDelta: 0,
+    reservedDelta: 0,
+    availableDelta: 0,
+    stockAfter: offer.totalQuantity,
+    reservedAfter: offer.reservedQuantity,
+    availableAfter: offer.availableQuantity,
+    unitPrice: offer.price,
+    comment:
+      'Legacy movement history could not be reconstructed safely. The current stock balance was preserved and recorded as a migration snapshot.',
+    occurredAt,
+  };
+}
+
+//===============================================================
+
 /**
  * Rebuilds the ledger once for offers created before stock movements existed.
  * In the legacy model, successful orders did not reduce totalQuantity, so the
@@ -314,6 +340,8 @@ async function backfillLegacyStockHistory(
     ? new Date(firstOrderDate.getTime() - 1)
     : new Date();
 
+  let canReconstructHistory = true;
+
   const documents: Array<Record<string, unknown>> = [
     {
       productOfferId: offer._id,
@@ -338,10 +366,8 @@ async function backfillLegacyStockHistory(
   for (const event of getLegacyEvents(orders, offer._id)) {
     if (event.eventType === 'reserve') {
       if (event.quantity > availableQuantity) {
-        throw httpError(
-          HTTP_STATUS.CONFLICT,
-          'Legacy stock history cannot be reconstructed because reserved quantity exceeds available stock.'
-        );
+        canReconstructHistory = false;
+        break;
       }
 
       reservedQuantity += event.quantity;
@@ -350,10 +376,8 @@ async function backfillLegacyStockHistory(
 
     if (event.eventType === 'release') {
       if (event.quantity > reservedQuantity) {
-        throw httpError(
-          HTTP_STATUS.CONFLICT,
-          'Legacy stock history cannot be reconstructed because released quantity exceeds reserved stock.'
-        );
+        canReconstructHistory = false;
+        break;
       }
 
       reservedQuantity -= event.quantity;
@@ -362,10 +386,8 @@ async function backfillLegacyStockHistory(
 
     if (event.eventType === 'write_off') {
       if (event.quantity > reservedQuantity || event.quantity > stockQuantity) {
-        throw httpError(
-          HTTP_STATUS.CONFLICT,
-          'Legacy stock history cannot be reconstructed because written-off quantity exceeds reserved stock.'
-        );
+        canReconstructHistory = false;
+        break;
       }
 
       stockQuantity -= event.quantity;
@@ -404,6 +426,14 @@ async function backfillLegacyStockHistory(
       comment: buildMovementComment(event),
       occurredAt: event.occurredAt,
     });
+  }
+
+  if (!canReconstructHistory) {
+    await StockMovement.create(
+      [buildLegacyBalanceSnapshot(offer, new Date())],
+      { session }
+    );
+    return offer;
   }
 
   await StockMovement.insertMany(documents, { session });
@@ -477,6 +507,10 @@ async function reconcileOfferReservationBalance(
       ),
     0
   );
+
+  if (reservedQuantity > offer.totalQuantity) {
+    return offer;
+  }
 
   const availableQuantity = offer.totalQuantity - reservedQuantity;
 

@@ -14,7 +14,8 @@
 }
 
 .addButton {
-  justify-self: end;
+  justify-self: stretch;
+  width: 100%;
 }
 
 .savedComments h3 {
@@ -102,7 +103,8 @@
 
 @media only screen and (min-width: 768px) {
   .addButton {
-    width: 100%;
+    justify-self: end;
+    width: auto;
   }
 
   .deleteButton {

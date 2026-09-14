@@ -46,8 +46,7 @@ export const PICTURE_HTTP_URL_MAX_LENGTH = 2_048;
 
 export const USER_NAME_PATTERN = /^[A-Za-z]+(?:[ '’\-][A-Za-z]+)*$/;
 
-export const PHARMACY_NAME_PATTERN =
-  /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
+export const PHARMACY_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
 
 export const BANK_RECIPIENT_NAME_PATTERN =
   /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
@@ -62,14 +61,11 @@ export const PASSWORD_PATTERN = /^\S+$/;
 export const ADDRESS_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]+$/;
 export const SEARCH_TEXT_PATTERN = /^[\p{L}\p{N} .,'’/#&()\-]*$/u;
 
-export const REVIEW_COMMENT_PATTERN =
-  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
+export const REVIEW_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
 
-export const ORDER_COMMENT_PATTERN =
-  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]*$/;
+export const ORDER_COMMENT_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]*$/;
 
-export const PAYMENT_PURPOSE_PATTERN =
-  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
+export const PAYMENT_PURPOSE_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
 
 export const TAX_ID_PATTERN = /^\d{8,10}$/;
 export const IBAN_PATTERN = /^UA\d{27}$/;
@@ -78,7 +74,7 @@ export const WORKING_HOURS_PATTERN =
   /^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(?:Closed|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)(?:;\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(?:Closed|(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d))*$/;
 
 export const TEXT_EDITOR_PATTERN =
-  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*\n\r]+$/;
+  /^[A-Za-z0-9\s.,!?;:'"“”()[\]_\-–—/#%+*&=~@\n\r]+$/;
 
 export const PICTURE_DATA_URL_PATTERN =
   /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
@@ -137,9 +133,15 @@ export const VALIDATION_MESSAGES = {
     workingHours:
       'Use the format Mon: 09:00-18:00; Tue: Closed and include all seven days',
     workingHoursRange: 'Closing time must be later than opening time',
-    workingHoursMissingDays: 'Working hours must include every day from Mon to Sun',
+
+    workingHoursMissingDays:
+      'Working hours must include every day from Mon to Sun',
+
     workingHoursDuplicateDays: 'Each weekday must appear exactly once',
-    textEditor: 'Use English letters, numbers, line breaks and basic punctuation',
+
+    textEditor:
+      'Use English letters, numbers, line breaks and basic punctuation',
+
     taxId: 'Use 8–10 digits',
     iban: 'Use Ukrainian IBAN format: UA + 27 digits',
 

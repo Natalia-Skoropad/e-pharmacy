@@ -134,6 +134,37 @@ test('product request schema enforces moderation-required fields', () => {
 
 //===============================================================
 
+test('product request schema keeps Product data fields optional for moderation', () => {
+  const {
+    dosage: _dosage,
+    packageSize: _packageSize,
+    form: _form,
+    activeSubstance: _activeSubstance,
+    prescriptionType: _prescriptionType,
+    ...submissionWithoutProductData
+  } = validSubmission;
+
+  assert.equal(
+    productRequestFormSchema.safeParse(submissionWithoutProductData).success,
+    true
+  );
+});
+
+//===============================================================
+
+test('product request schema accepts rich text markdown links and lists', () => {
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validSubmission,
+      fullDescription:
+        '# Heading\n\n**Bold** text with [link](https://example.com/path?q=test&source=pharmacy).\n\n1. First item\n2. Second item',
+    }).success,
+    true
+  );
+});
+
+//===============================================================
+
 test('product request schema enforces image MIME, extension and size', () => {
   assert.equal(
     productRequestFormSchema.safeParse({

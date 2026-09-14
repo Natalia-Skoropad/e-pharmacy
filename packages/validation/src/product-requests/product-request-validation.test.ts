@@ -169,13 +169,54 @@ test('custom category is required only for the other category', () => {
 
 //=============================================================================
 
-test('moderation validation requires complete data and product image', () => {
+test('moderation validation requires the moderation essentials and product image', () => {
   assert.equal(isProductRequestSubmissionValid(createDraftValues()), false);
 
   assert.equal(
     isProductRequestSubmissionValid(createSubmissionValues(), {
       productImage: validImage,
     }),
+    true
+  );
+});
+
+//=============================================================================
+
+test('Product data fields stay optional when a request is sent for moderation', () => {
+  const values = createSubmissionValues({
+    dosage: '',
+    packageSize: '',
+    form: '',
+    activeSubstance: '',
+    prescriptionType: '',
+  });
+
+  const errors = validateProductRequestForm(values, 'moderation', {
+    productImage: validImage,
+  });
+
+  assert.equal(errors.dosage, undefined);
+  assert.equal(errors.packageSize, undefined);
+  assert.equal(errors.form, undefined);
+  assert.equal(errors.activeSubstance, undefined);
+  assert.equal(errors.prescriptionType, undefined);
+
+  assert.equal(
+    isProductRequestSubmissionValid(values, { productImage: validImage }),
+    true
+  );
+});
+
+//=============================================================================
+
+test('full description validation accepts rich-text markdown controls', () => {
+  const values = createSubmissionValues({
+    fullDescription:
+      '# Heading 1\n\n## Heading 2\n\n### Heading 3\n\n**Bold** and *italic* text.\n\n- Bullet item\n\n1. Numbered item\n\n[Product guide](https://example.com/help?q=device&source=pharmacy)',
+  });
+
+  assert.equal(
+    isProductRequestSubmissionValid(values, { productImage: validImage }),
     true
   );
 });
