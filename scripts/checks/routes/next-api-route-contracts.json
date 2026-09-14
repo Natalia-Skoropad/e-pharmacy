@@ -580,9 +580,9 @@
   {
     "app": "pharmacy",
     "route": "/products/[productId]/reviews",
-    "backend": "/products/:productId/reviews",
+    "backend": "/products/management/:productId/reviews",
     "methods": {
-      "GET": "public"
+      "GET": "private"
     }
   },
   {

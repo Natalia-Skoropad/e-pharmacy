@@ -2,6 +2,13 @@ import type { NextConfig } from 'next';
 
 //===============================================================
 
+const apiBaseUrl = (process.env.API_BASE_URL ?? 'http://localhost:4000').replace(
+  /\/+$/,
+  ''
+);
+
+//===============================================================
+
 const nextConfig: NextConfig = {
   transpilePackages: [
     '@e-pharmacy/api-client',
@@ -14,6 +21,15 @@ const nextConfig: NextConfig = {
     '@e-pharmacy/utils',
     '@e-pharmacy/validation',
   ],
+
+  async rewrites() {
+    return [
+      {
+        source: '/images/seed/products/:path*',
+        destination: `${apiBaseUrl}/images/seed/products/:path*`,
+      },
+    ];
+  },
 };
 
 //===============================================================

@@ -49,6 +49,9 @@ export const backendRoutes = {
     managementDetails: (productId: EntityId) =>
       `/products/management/${segment(productId)}`,
 
+    managementReviews: (productId: EntityId) =>
+      `/products/management/${segment(productId)}/reviews`,
+
     favorites: '/products/favorites',
     favoriteIds: '/products/favorites/ids',
     filters: '/products/filters',

@@ -1226,16 +1226,7 @@ export async function removeProductFromMyPharmacyService(
 
 //===============================================================
 
-export async function getProductReviewsService(productId: string) {
-  const exists = await Product.exists({
-    _id: productId,
-    status: 'active',
-  });
-
-  if (!exists) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
-  }
-
+async function getApprovedProductReviews(productId: string) {
   const reviews = await ProductReview.find({ productId, status: 'approved' })
     .sort({ createdAt: -1 })
     .lean();
@@ -1249,6 +1240,31 @@ export async function getProductReviewsService(productId: string) {
   }));
 
   return { items, total: items.length };
+}
+
+//===============================================================
+
+export async function getProductReviewsService(productId: string) {
+  const exists = await Product.exists({
+    _id: productId,
+    status: 'active',
+  });
+
+  if (!exists) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+  }
+
+  return getApprovedProductReviews(productId);
+}
+
+//===============================================================
+
+export async function getManagedProductReviewsService(
+  productId: string,
+  actor: ProductManagementActor
+) {
+  await getManagedProductDetailsService(productId, actor);
+  return getApprovedProductReviews(productId);
 }
 
 //===============================================================

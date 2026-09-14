@@ -43,6 +43,7 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import { PRODUCT_REQUEST_ERROR_CODES } from '@e-pharmacy/config/product-requests';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import type {
   ProductRequestFormPayload,
@@ -125,6 +126,37 @@ export type NewProductRequestPageContentProps = Readonly<{
   requestId?: string;
   sourceRequestId?: string;
 }>;
+
+type ProductRequestLoadError = Readonly<{
+  title: string;
+  message: string;
+}>;
+
+//===================================================================
+
+function getProductRequestLoadError(error: unknown): ProductRequestLoadError {
+  if (isApiError(error) && [400, 404, 422].includes(error.httpStatus ?? 0)) {
+    return {
+      title: 'Product request not found',
+      message: 'This product request does not exist or the link is invalid.',
+    };
+  }
+
+  if (isApiError(error) && error.httpStatus === 403) {
+    return {
+      title: 'Product request is unavailable',
+      message: 'You do not have access to this product request.',
+    };
+  }
+
+  return {
+    title: 'Product request could not be loaded',
+    message: getSafeApiErrorMessage(
+      error,
+      'Could not load the product request. Please try again.'
+    ),
+  };
+}
 
 //===================================================================
 
@@ -239,7 +271,11 @@ function NewProductRequestPageContent({
 }: NewProductRequestPageContentProps) {
   const router = useRouter();
   const toast = useToast();
-  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
+  const {
+    status: currentPharmacyStatus,
+    isLoading: isPharmacyStatusLoading,
+    error: pharmacyStatusError,
+  } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const isBlocked = currentPharmacyStatus === 'blocked';
   const isCreationLocked = Boolean(bannerStatus || isBlocked);
@@ -281,7 +317,9 @@ function NewProductRequestPageContent({
     Boolean(requestId || cloneSourceRequestId)
   );
 
-  const [loadErrorMessage, setLoadErrorMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<ProductRequestLoadError | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<RequestTab>('details');
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
@@ -370,7 +408,7 @@ function NewProductRequestPageContent({
 
     async function loadRequest() {
       setIsLoading(true);
-      setLoadErrorMessage(null);
+      setLoadError(null);
 
       try {
         const loadedRequest = await getPharmacyProductRequest(requestIdToLoad, {
@@ -380,9 +418,11 @@ function NewProductRequestPageContent({
         if (controller.signal.aborted) return;
 
         if (cloneSourceRequestId && loadedRequest.status !== 'rejected') {
-          setLoadErrorMessage(
-            'Only rejected product requests can be used as a source for a new request.'
-          );
+          setLoadError({
+            title: 'Product request cannot be copied',
+            message:
+              'Only rejected product requests can be used as a source for a new request.',
+          });
           return;
         }
 
@@ -407,17 +447,7 @@ function NewProductRequestPageContent({
         }
       } catch (loadError) {
         if (!controller.signal.aborted) {
-          setLoadErrorMessage(
-            getSafeApiErrorMessage(
-              loadError,
-              'Could not load the product request. Please try again.',
-              {
-                statusMessages: {
-                  404: 'The request may have been removed, or it does not belong to the current pharmacy.',
-                },
-              }
-            )
-          );
+          setLoadError(getProductRequestLoadError(loadError));
         }
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
@@ -793,25 +823,83 @@ function NewProductRequestPageContent({
     </div>
   );
 
-  if (isLoading) {
+  if (isLoading || isPharmacyStatusLoading) {
     return (
-      <main className={css.page}>
+      <main className={css.page} aria-label="Loading product request">
         <section className={css.contentCard}>
-          <LoadingSpinner label="Loading product request..." />
+          <div className={css.loaderBox}>
+            <LoadingSpinner label="Loading product request..." />
+          </div>
         </section>
       </main>
     );
   }
 
-  if (loadErrorMessage) {
+  if (loadError) {
     return (
-      <main className={css.page}>
+      <main className={css.page} aria-labelledby="product-request-error-title">
         <section className={css.contentCard}>
-          <StatusBanner
-            {...PRODUCT_REQUEST_STATUS_PRESENTATION.rejected}
-            title="Product request could not be loaded"
-            message={loadErrorMessage}
+          <PageHeader
+            title={loadError.title}
+            titleId="product-request-error-title"
+            icon={<FilePlus2 size={23} aria-hidden="true" />}
           />
+          <StatusBanner
+            tone="danger"
+            label="Error"
+            title={loadError.title}
+            message={loadError.message}
+          />
+        </section>
+      </main>
+    );
+  }
+
+  if (pharmacyStatusError) {
+    return (
+      <main className={css.page} aria-labelledby="product-request-error-title">
+        <section className={css.contentCard}>
+          <PageHeader
+            title="Product request is unavailable"
+            titleId="product-request-error-title"
+            icon={<FilePlus2 size={23} aria-hidden="true" />}
+          />
+          <StatusBanner
+            tone="danger"
+            label="Error"
+            title="Pharmacy status could not be verified"
+            message="Reload the page before creating or editing a product request."
+          />
+        </section>
+      </main>
+    );
+  }
+
+  if (!requestId && isCreationLocked) {
+    const lockedStatus = isBlocked ? 'blocked' : bannerStatus;
+
+    return (
+      <main className={css.page} aria-labelledby="product-request-page-title">
+        <section className={css.contentCard}>
+          <PageHeader
+            title="New product request"
+            titleId="product-request-page-title"
+            icon={<FilePlus2 size={23} aria-hidden="true" />}
+          />
+
+          {lockedStatus ? (
+            <StatusBanner
+              {...PHARMACY_STATUS_PRESENTATION[lockedStatus]}
+              title="Product request creation is unavailable"
+              message={
+                lockedStatus === 'on_verification'
+                  ? 'Creating product requests is paused while Admin verifies the pharmacy profile.'
+                  : lockedStatus === 'new'
+                    ? 'Creating product requests becomes available after Admin verifies the pharmacy profile.'
+                    : 'Your account is temporarily blocked. Contact Admin to restore access.'
+              }
+            />
+          ) : null}
         </section>
       </main>
     );

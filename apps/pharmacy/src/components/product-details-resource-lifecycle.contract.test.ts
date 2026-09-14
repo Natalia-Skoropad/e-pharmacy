@@ -35,6 +35,8 @@ test('initial product details load owns only the required product request', asyn
   assert.doesNotMatch(initialLoad, /Promise\.all/);
 
   assert.match(source, /activeTab !== 'reviews'/);
+  assert.match(source, /product\?\.reviewsCount \?\? null/);
+  assert.match(source, /Reviews \(\$\{displayedReviewsTotal\}\)/);
   assert.match(source, /activeTab !== 'stock-movement'/);
   assert.match(source, /activeTab !== 'related-orders'/);
 });

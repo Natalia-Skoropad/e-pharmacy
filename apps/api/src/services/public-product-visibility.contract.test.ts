@@ -27,6 +27,11 @@ test('public product endpoints are active-only while blocked lifecycle access is
   );
 
   assert.match(
+    routes,
+    /productRoutes\.get\(\s*'\/management\/:productId\/reviews'[\s\S]*?authenticate[\s\S]*?authorizeRoles\(USER_ROLES\.PHARMACY, USER_ROLES\.ADMIN\)/
+  );
+
+  assert.match(
     service,
     /scope === 'public' \? 'active' : \(query\.status \?\? tableStatusFilter\)/
   );
@@ -37,6 +42,11 @@ test('public product endpoints are active-only while blocked lifecycle access is
   );
 
   assert.match(service, /getProductReviewsService[\s\S]*?status:\s*'active'/);
+
+  assert.match(
+    service,
+    /getManagedProductReviewsService[\s\S]*?getManagedProductDetailsService[\s\S]*?getApprovedProductReviews/
+  );
 
   assert.match(
     pharmacyService,

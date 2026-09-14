@@ -1151,13 +1151,14 @@ function AllProductDetailsPageContent({
     !currentOffer.hasRelatedOrders
   );
 
+  const displayedReviewsTotal =
+    reviewsStatus === 'success' && reviewsTotal !== null
+      ? reviewsTotal
+      : (product?.reviewsCount ?? null);
+
   const tabs = PRODUCT_DETAILS_TABS.map((tab) => {
-    if (
-      tab.value === 'reviews' &&
-      reviewsStatus === 'success' &&
-      reviewsTotal !== null
-    ) {
-      return { ...tab, label: `Reviews (${reviewsTotal})` };
+    if (tab.value === 'reviews' && displayedReviewsTotal !== null) {
+      return { ...tab, label: `Reviews (${displayedReviewsTotal})` };
     }
 
     if (
@@ -1653,9 +1654,7 @@ function AllProductDetailsPageContent({
                             ? 'Unavailable'
                             : isAddedToPharmacy
                               ? 'Added to your pharmacy'
-                              : bannerStatus || !currentPharmacyId
-                                ? 'Add to my pharmacy after verification'
-                                : 'Add to my pharmacy'}
+                              : 'Add to my pharmacy'}
                         </Button>
                       ) : null}
 

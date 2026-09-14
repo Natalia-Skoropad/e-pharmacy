@@ -20,6 +20,7 @@ import {
   getFavoriteProductIdsService,
   getFavoriteProductsService,
   getManagedProductDetailsService,
+  getManagedProductReviewsService,
   getManagedProductsService,
   getProductDetailsService,
   getProductFiltersService,
@@ -92,6 +93,22 @@ export async function getManagedProductDetails(
   const { productId } = res.locals.validated.params;
 
   const data = await getManagedProductDetailsService(productId, {
+    userId: req.user?.id ?? '',
+    role: req.user?.role,
+  });
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getManagedProductReviews(
+  req: Request,
+  res: ValidatedResponse<unknown, ProductIdParams>
+): Promise<void> {
+  const { productId } = res.locals.validated.params;
+
+  const data = await getManagedProductReviewsService(productId, {
     userId: req.user?.id ?? '',
     role: req.user?.role,
   });

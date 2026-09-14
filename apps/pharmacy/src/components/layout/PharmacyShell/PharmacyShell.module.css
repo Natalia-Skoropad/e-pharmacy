@@ -13,12 +13,6 @@
   min-width: 0;
 }
 
-.workspace {
-  display: grid;
-  gap: 20px;
-  min-width: 0;
-}
-
 .content {
   width: 100%;
   min-width: 0;

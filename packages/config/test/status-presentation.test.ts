@@ -80,6 +80,7 @@ test('uses only semantic tones and non-empty labels', () => {
 
 test('keeps shared raw values owned by their domain maps', () => {
   assert.equal(PHARMACY_STATUS_PRESENTATION.active.label, 'Active');
+  assert.equal(PHARMACY_STATUS_PRESENTATION.on_verification.tone, 'warning');
   assert.equal(PRODUCT_STATUS_PRESENTATION.active.label, 'Active');
   assert.equal(USER_STATUS_PRESENTATION.active.label, 'Active');
 

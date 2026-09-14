@@ -614,6 +614,15 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
       'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
     description: createActivePharmacyDescription('Care Pharmacy Lviv'),
   },
+  {
+    email: 'nata7@ukr.net',
+    phone: '+380661234007',
+    ownerName: 'Nata Seven',
+    address: '27 Health Avenue, Kyiv',
+    pharmacyName: 'Nata Care Pharmacy Verification',
+    status: PHARMACY_STATUSES.ON_VERIFICATION,
+    imageUrl: '/images/seed/pharmacies/pharmacy-005.png',
+  },
 ];
 
 //===============================================================
@@ -3783,6 +3792,12 @@ type ProductRequestSeedApprovedProduct = Readonly<{
 
 //===============================================================
 
+function normalizeProductRequestSeedShortText(value: string): string {
+  return value.replace(/№\s*/g, 'No. ').trim();
+}
+
+//===============================================================
+
 function createProductRequestSeeds(
   pharmacyId: Types.ObjectId,
   approvedProducts: readonly ProductRequestSeedApprovedProduct[]
@@ -3803,7 +3818,9 @@ function createProductRequestSeeds(
       PRODUCT_REQUEST_SEED_CATEGORIES[
         index % PRODUCT_REQUEST_SEED_CATEGORIES.length
       ];
-    const name = approvedProduct?.name ?? seedName;
+    const name = normalizeProductRequestSeedShortText(
+      approvedProduct?.name ?? seedName
+    );
     const article =
       approvedProduct?.article ?? `REQ-${String(index + 1).padStart(4, '0')}`;
     const rejectionReason =
@@ -3829,9 +3846,10 @@ function createProductRequestSeeds(
         type: 'image/jpeg',
         size: 320000 + index * 1500,
       },
-      manufacturer:
+      manufacturer: normalizeProductRequestSeedShortText(
         approvedProduct?.manufacturer ??
-        ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4],
+          ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4]
+      ),
       countryOfOrigin: ['Ukraine', 'Poland', 'Germany', 'Italy'][index % 4],
       dosage: index % 3 === 0 ? '500 mg' : index % 3 === 1 ? '10 ml' : '1 unit',
       packageSize: index % 2 === 0 ? '30 tablets' : '100 ml',

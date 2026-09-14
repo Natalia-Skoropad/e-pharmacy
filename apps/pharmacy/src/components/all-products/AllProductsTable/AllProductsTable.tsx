@@ -78,7 +78,7 @@ function AllProductsTable({
       },
       {
         key: 'productPhoto',
-        title: <TableHeaderTitle parts={['ProductDetails', 'photo']} />,
+        title: <TableHeaderTitle parts={['Product', 'photo']} />,
         render: (product) => (
           <TableImagePreview
             src={getProductImageSrc(product.imageUrl)}
@@ -89,7 +89,7 @@ function AllProductsTable({
       },
       {
         key: 'article',
-        title: <TableHeaderTitle parts={['ProductDetails', 'article']} />,
+        title: <TableHeaderTitle parts={['Product', 'article']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.article}
@@ -98,7 +98,7 @@ function AllProductsTable({
       },
       {
         key: 'name',
-        title: <TableHeaderTitle parts={['ProductDetails', 'name']} />,
+        title: <TableHeaderTitle parts={['Product', 'name']} />,
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.name}
@@ -107,12 +107,12 @@ function AllProductsTable({
       },
       {
         key: 'category',
-        title: <TableHeaderTitle parts={['ProductDetails', 'category']} />,
+        title: <TableHeaderTitle parts={['Product', 'category']} />,
         render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
       },
       {
         key: 'status',
-        title: <TableHeaderTitle parts={['ProductDetails', 'status']} />,
+        title: <TableHeaderTitle parts={['Product', 'status']} />,
         render: (product) => (
           <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />
         ),

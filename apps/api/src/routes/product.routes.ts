@@ -7,6 +7,7 @@ import {
   getFavoriteProducts,
   getPendingProductReviews,
   getManagedProductDetails,
+  getManagedProductReviews,
   getManagedProducts,
   moderateProductReview,
   removeProductFromMyPharmacy,
@@ -83,6 +84,16 @@ productRoutes.get(
   authorizeRoles(USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
   validate({ params: productIdParamsSchema }),
   ctrlWrapper(getManagedProductDetails)
+);
+
+//=================================================================================
+
+productRoutes.get(
+  '/management/:productId/reviews',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
+  validate({ params: productIdParamsSchema }),
+  ctrlWrapper(getManagedProductReviews)
 );
 
 //=================================================================================
