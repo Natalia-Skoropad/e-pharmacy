@@ -1,4 +1,4 @@
-export * from './ClientDetailsPageContent';
-export * from './ClientsFiltersDrawer/ClientsFiltersDrawer';
-export * from './ClientsPageContent/ClientsPageContent';
-export * from './ClientsTable/ClientsTable';
+export { ClientDetailsPageContent } from './ClientDetailsPageContent';
+export { ClientsFiltersDrawer } from './ClientsFiltersDrawer/ClientsFiltersDrawer';
+export { ClientsPageContent } from './ClientsPageContent/ClientsPageContent';
+export { ClientsTable } from './ClientsTable/ClientsTable';

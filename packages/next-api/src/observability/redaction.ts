@@ -22,6 +22,14 @@ const CLIENT_PII_QUERY_KEYS = new Set([
   'address',
 ]);
 
+const PRIVATE_ORDER_QUERY_KEYS = new Set(['clientcomment', 'comment']);
+
+//===================================================================
+
+function isPrivateOrdersCollectionPath(pathname: string): boolean {
+  return pathname === '/orders' || pathname === '/api/orders';
+}
+
 //===================================================================
 
 function isPrivateClientsCollectionPath(pathname: string): boolean {
@@ -34,13 +42,15 @@ export function redactRequestPath(path: string): string {
   try {
     const url = new URL(path, 'http://next-api.internal');
     const redactClientPii = isPrivateClientsCollectionPath(url.pathname);
+    const redactPrivateOrderText = isPrivateOrdersCollectionPath(url.pathname);
 
     url.searchParams.forEach((_value, key) => {
       const normalizedKey = key.toLowerCase();
 
       if (
         SENSITIVE_QUERY_KEYS.has(normalizedKey) ||
-        (redactClientPii && CLIENT_PII_QUERY_KEYS.has(normalizedKey))
+        (redactClientPii && CLIENT_PII_QUERY_KEYS.has(normalizedKey)) ||
+        (redactPrivateOrderText && PRIVATE_ORDER_QUERY_KEYS.has(normalizedKey))
       ) {
         url.searchParams.set(key, '[REDACTED]');
       }

@@ -5,6 +5,7 @@ import {
   DEFAULT_CLIENTS_FILTERS,
   buildClientsPath,
   parseClientsSegments,
+  resolveClientsRoute,
 } from './client-paths';
 
 //===================================================================
@@ -44,4 +45,37 @@ test('legacy PII-bearing client URL is recognized but its values are not restore
   assert.equal(filters.contact, '');
   assert.equal(filters.status, 'active');
   assert.equal(buildClientsPath(filters), '/pharmacy/clients/status-active');
+});
+
+//===================================================================
+
+test('client routes distinguish canonical filters, entity IDs and malformed segments', () => {
+  assert.deepEqual(resolveClientsRoute(undefined), {
+    kind: 'filters',
+    filters: [],
+  });
+
+  assert.deepEqual(
+    resolveClientsRoute(['status-active', 'successful-orders-repeat']),
+    {
+      kind: 'filters',
+      filters: ['status-active', 'successful-orders-repeat'],
+    }
+  );
+
+  assert.deepEqual(resolveClientsRoute(['507f1f77bcf86cd799439011']), {
+    kind: 'detail',
+    clientId: '507f1f77bcf86cd799439011',
+  });
+
+  assert.deepEqual(resolveClientsRoute(['not-an-object-id']), {
+    kind: 'invalid',
+  });
+
+  assert.deepEqual(resolveClientsRoute(['foo', 'bar']), { kind: 'invalid' });
+
+  assert.deepEqual(
+    resolveClientsRoute(['507f1f77bcf86cd799439011', 'status-active']),
+    { kind: 'invalid' }
+  );
 });

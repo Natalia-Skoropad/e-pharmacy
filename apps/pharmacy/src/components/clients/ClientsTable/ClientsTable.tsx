@@ -12,13 +12,12 @@ import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
-import { getPharmacyClientPath } from '@/lib/routes';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
+import { getPharmacyClientPath } from '@/lib/routes';
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getProductImageSrc } from '@/lib/products/product-images';
-
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './ClientsTable.module.css';
 
@@ -150,4 +149,3 @@ function ClientsTable({
 
 export default ClientsTable;
 export { ClientsTable };
-export type { PharmacyClientRow };

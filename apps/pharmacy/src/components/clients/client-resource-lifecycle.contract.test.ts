@@ -158,3 +158,38 @@ test('client detail pagination accepts canonical backend pages and order statist
     /if \(!hasSearchOrFilters\) \{\s*setOrdersOverallTotal\(response\.total\);\s*\}\s*setOrderStatistics\(response\.statistics\)/
   );
 });
+
+//===================================================================
+
+test('client component barrels do not re-export canonical domain types', async () => {
+  const tableSource = await read('./ClientsTable/ClientsTable.tsx');
+  const barrelSource = await read('./index.ts');
+
+  assert.doesNotMatch(
+    tableSource,
+    /export\s+type\s*\{[^}]*PharmacyClientRow[^}]*\}/
+  );
+
+  assert.doesNotMatch(barrelSource, /PharmacyClientRow/);
+  assert.doesNotMatch(barrelSource, /export\s+\*/);
+});
+
+//===================================================================
+
+test('client route pages reject malformed segments before rendering details', async () => {
+  const catchAllSource = await read(
+    '../../app/pharmacy/clients/[[...filters]]/page.tsx'
+  );
+
+  const detailSource = await read(
+    '../../app/pharmacy/clients/[clientId]/page.tsx'
+  );
+
+  for (const source of [catchAllSource, detailSource]) {
+    assert.match(source, /resolveClientsRoute\(/);
+    assert.match(
+      source,
+      /if \(route\.kind === 'invalid'\) \{\s*notFound\(\);\s*\}/
+    );
+  }
+});

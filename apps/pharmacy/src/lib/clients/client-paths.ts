@@ -3,6 +3,7 @@ import { USER_STATUSES } from '@e-pharmacy/config/users';
 import {
   isDateParam,
   isDateRangeValid,
+  isValidObjectId,
   normalizeSlugEnumValue,
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
@@ -82,6 +83,11 @@ export type ClientsRouteParams = Readonly<{
   filters?: string[];
 }>;
 
+export type ClientsRouteResolution =
+  | Readonly<{ kind: 'filters'; filters: string[] }>
+  | Readonly<{ kind: 'detail'; clientId: string }>
+  | Readonly<{ kind: 'invalid' }>;
+
 //===================================================================
 
 export function isClientsFilterSegment(segment: string): boolean {
@@ -103,6 +109,26 @@ export function isClientsFilterSegment(segment: string): boolean {
 
 export function isClientsFilterRoute(segments: string[] | undefined): boolean {
   return !segments?.length || segments.every(isClientsFilterSegment);
+}
+
+//===================================================================
+
+export function resolveClientsRoute(
+  segments: string[] | undefined
+): ClientsRouteResolution {
+  if (!segments?.length) {
+    return { kind: 'filters', filters: [] };
+  }
+
+  if (isClientsFilterRoute(segments)) {
+    return { kind: 'filters', filters: segments };
+  }
+
+  if (segments.length === 1 && isValidObjectId(segments[0])) {
+    return { kind: 'detail', clientId: segments[0] };
+  }
+
+  return { kind: 'invalid' };
 }
 
 //===================================================================

@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import {
+  parseClientsSegments,
+  resolveClientsRoute,
+  type ClientsRouteParams,
+} from '@/lib/clients/client-paths';
 
 import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
 import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
-
-import {
-  isClientsFilterRoute,
-  parseClientsSegments,
-  type ClientsRouteParams,
-} from '@/lib/clients/client-paths';
 
 //===================================================================
 
@@ -26,14 +27,20 @@ type ClientsPageProps = Readonly<{
 
 async function ClientsPage({ params }: ClientsPageProps) {
   const resolvedParams = await params;
-  const segments = resolvedParams?.filters;
+  const route = resolveClientsRoute(resolvedParams?.filters);
 
-  if (!isClientsFilterRoute(segments)) {
-    return <ClientDetailsPageContent clientId={segments?.[0] ?? ''} />;
+  if (route.kind === 'invalid') {
+    notFound();
+  }
+
+  if (route.kind === 'detail') {
+    return <ClientDetailsPageContent clientId={route.clientId} />;
   }
 
   return (
-    <ClientsPageContent initialFilters={parseClientsSegments(resolvedParams)} />
+    <ClientsPageContent
+      initialFilters={parseClientsSegments({ filters: route.filters })}
+    />
   );
 }
 

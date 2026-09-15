@@ -44,3 +44,28 @@ test('does not redact ordinary name queries outside private clients', () => {
   assert.match(result, /name=Aspirin/);
   assert.match(result, /page=2/);
 });
+
+//===================================================================
+
+test('redacts private order comment search values', () => {
+  for (const path of [
+    '/api/orders?clientComment=Please%20call%20Olena%20at%20%2B380501234567&comment=Gate%20code%201234&page=2',
+    '/orders?clientComment=Please%20call%20Olena%20at%20%2B380501234567&comment=Gate%20code%201234&page=2',
+  ]) {
+    const result = redactRequestPath(path);
+
+    assert.match(result, /clientComment=%5BREDACTED%5D/);
+    assert.match(result, /comment=%5BREDACTED%5D/);
+    assert.match(result, /page=2/);
+    assert.doesNotMatch(result, /Olena|380501234567|Gate(?:%20|\+)code|1234/);
+  }
+});
+
+//===================================================================
+
+test('does not redact ordinary comment queries outside private orders', () => {
+  const result = redactRequestPath('/products?comment=aspirin&page=2');
+
+  assert.match(result, /comment=aspirin/);
+  assert.match(result, /page=2/);
+});
