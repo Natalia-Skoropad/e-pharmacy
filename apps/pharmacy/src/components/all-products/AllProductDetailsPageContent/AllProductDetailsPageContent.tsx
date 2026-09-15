@@ -1282,12 +1282,12 @@ function AllProductDetailsPageContent({
       },
       {
         key: 'price',
-        title: <TableHeaderTitle parts={['Price,', '₴']} />,
+        title: <TableHeaderTitle parts={['Price, ₴']} />,
         render: (row: StockMovementRow) => row.price,
       },
       {
         key: 'totalAmount',
-        title: <TableHeaderTitle parts={['Total', ' amount, ', '₴']} />,
+        title: <TableHeaderTitle parts={['Total', ' amount, ₴']} />,
         render: (row: StockMovementRow) => row.totalAmount,
       },
       {

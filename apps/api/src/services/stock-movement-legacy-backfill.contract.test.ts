@@ -62,3 +62,22 @@ test('reservation reconciliation does not turn legacy over-reservation into a fa
     /if \(reservedQuantity > offer\.totalQuantity\) \{\s*return offer;\s*\}/
   );
 });
+
+//===================================================================
+
+test('legacy stock replay tolerates incomplete historical order metadata', async () => {
+  const source = await readFile(
+    resolve(process.cwd(), 'src/services/stockMovement.service.ts'),
+    'utf8'
+  );
+
+  assert.match(source, /statusHistory\?\:/);
+  assert.match(source, /order\.statusHistory \?\? \[\]/);
+
+  assert.match(
+    source,
+    /!Number\.isInteger\(event\.quantity\) \|\| event\.quantity < 1/
+  );
+
+  assert.match(source, /!isValidStockBalance\(\{/);
+});

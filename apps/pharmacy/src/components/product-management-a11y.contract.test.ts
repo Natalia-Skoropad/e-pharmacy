@@ -69,13 +69,15 @@ test('product detail composition does not expose implementation names as accessi
 
 //===================================================================
 
-test('article availability is announced as an async status without duplicating shared tab keyboard logic', async () => {
+test('article validation uses shared field semantics without a redundant success announcement', async () => {
   const source = await read(
     'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
   );
 
-  assert.match(source, /role="status"/);
-  assert.match(source, /aria-live="polite"/);
+  assert.match(source, /error=\{errors\.article\}/);
+  assert.match(source, /articleCheckStatus === 'checking'/);
+  assert.match(source, /Checking article availability…/);
+  assert.doesNotMatch(source, /Article is available/);
   assert.match(source, /<Tabs[\s\S]+?ariaLabel="Product request sections"/);
   assert.doesNotMatch(source, /onKeyDown=.*Arrow(?:Left|Right)/);
 });

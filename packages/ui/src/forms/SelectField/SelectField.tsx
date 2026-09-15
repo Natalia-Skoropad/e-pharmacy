@@ -31,6 +31,10 @@ export type SelectFieldProps<TValue extends string> = Readonly<{
   disabled?: boolean;
   error?: string;
   describedBy?: string;
+  className?: string;
+  labelVisibility?: 'visible' | 'visually-hidden';
+  compact?: boolean;
+  reserveMessageSpace?: boolean;
   onChange: (value: TValue) => void;
 }>;
 
@@ -53,6 +57,10 @@ function SelectField<TValue extends string>({
   disabled = false,
   error,
   describedBy,
+  className,
+  labelVisibility = 'visible',
+  compact = false,
+  reserveMessageSpace = false,
   onChange,
 }: SelectFieldProps<TValue>) {
   const generatedId = useId();
@@ -190,10 +198,20 @@ function SelectField<TValue extends string>({
 
   return (
     <div
-      className={clsx(css.field, (hint || required) && css.formField)}
+      className={clsx(
+        css.field,
+        (hint || required || reserveMessageSpace) && css.formField,
+        className
+      )}
       ref={rootRef}
     >
-      <span className={css.label} id={`${buttonId}-label`}>
+      <span
+        className={clsx(
+          css.label,
+          labelVisibility === 'visually-hidden' && 'visually-hidden'
+        )}
+        id={`${buttonId}-label`}
+      >
         {label}
         {required ? (
           <span className={css.requiredMark} aria-hidden="true">
@@ -215,7 +233,8 @@ function SelectField<TValue extends string>({
             css.trigger,
             isOpen && css.triggerOpen,
             isActive && css.triggerActive,
-            error && css.triggerError
+            error && css.triggerError,
+            compact && css.triggerCompact
           )}
           type="button"
           role="combobox"

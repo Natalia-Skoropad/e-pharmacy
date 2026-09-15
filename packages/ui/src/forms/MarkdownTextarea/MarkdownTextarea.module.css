@@ -38,7 +38,16 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-.blockSelect,
+.blockSelect {
+  flex: 0 0 176px;
+  width: 176px;
+  min-width: 0;
+}
+
+.blockSelect [role='option'] {
+  white-space: nowrap;
+}
+
 .toolButton {
   min-height: 34px;
   font: inherit;
@@ -53,13 +62,6 @@
     background-color var(--transition-base);
 }
 
-.blockSelect {
-  min-width: 118px;
-  padding: 0 32px 0 10px;
-  font-weight: var(--fw-medium);
-  cursor: pointer;
-}
-
 .toolButton {
   display: inline-flex;
   align-items: center;
@@ -70,8 +72,6 @@
   cursor: pointer;
 }
 
-.blockSelect:hover:not(:disabled),
-.blockSelect:focus-visible:not(:disabled),
 .toolButton:hover:not(:disabled),
 .toolButton:focus-visible:not(:disabled) {
   color: var(--color-accent);
@@ -79,13 +79,11 @@
   border-color: var(--color-accent-border);
 }
 
-.blockSelect:focus-visible,
 .toolButton:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-.blockSelect:disabled,
 .toolButton:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -131,6 +129,12 @@
 .editable ul,
 .editable ol {
   margin: 0 0 12px;
+}
+
+.editable h1,
+.editable h2,
+.editable h3 {
+  color: var(--color-accent);
 }
 
 .editable h1 {
@@ -193,87 +197,86 @@
   border-radius: var(--radius-sm);
 }
 
-.linkEditor {
-  display: grid;
-  flex: 1 0 100%;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
-  width: 100%;
-  padding-top: 4px;
+.linkModal {
+  --modal-width: 520px;
+  --modal-dialog-padding: 20px;
 }
 
-.linkField {
+.linkModalContent {
+  display: grid;
+  gap: 18px;
+}
+
+.linkModalHeader {
   display: grid;
   gap: 4px;
-  min-width: 0;
+}
+
+.linkModalTitle {
+  margin: 0;
+  font-size: var(--fz-20);
+  line-height: var(--lh-heading);
+  color: var(--color-accent);
+}
+
+.linkModalHint {
+  margin: 0;
+  font-size: var(--fz-14);
+  line-height: 1.4;
+  color: var(--color-text-secondary);
 }
 
 .linkInput {
   width: 100%;
-  min-width: 0;
-  height: 36px;
-  padding: 0 10px;
+  min-height: 48px;
+  padding: 12px 16px;
   font: inherit;
-  font-size: var(--fz-14);
+  font-size: var(--fz-16);
+  line-height: 1.4;
   color: var(--color-text-primary);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   outline: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.linkInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+.linkInput:hover,
+.linkInput:focus {
+  border-color: var(--color-accent);
 }
 
 .linkInput:focus {
-  border-color: var(--color-accent);
   box-shadow: var(--shadow-accent-ring);
 }
 
-.linkError {
-  font-size: var(--fz-12);
-  line-height: 1.4;
-  color: var(--color-error);
+.linkInput[aria-invalid='true'],
+.linkInput[aria-invalid='true']:focus {
+  border-color: var(--color-error);
+  box-shadow: none;
 }
 
-.linkActions {
+.linkModalActions {
   display: flex;
-  gap: 6px;
-  justify-content: flex-end;
+  gap: 10px;
 }
 
-.linkActionButton {
-  min-height: 34px;
-  padding: 0 12px;
-  font: inherit;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+.linkModalActions > button {
+  flex: 1 1 0;
 }
 
-.linkActionButton:hover,
-.linkActionButton:focus-visible {
-  color: var(--color-accent);
-  border-color: var(--color-accent-border);
-}
+@media (min-width: 768px) {
+  .linkModalActions {
+    justify-content: flex-end;
+  }
 
-.linkApplyButton {
-  color: var(--color-white);
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.linkApplyButton:hover,
-.linkApplyButton:focus-visible {
-  color: var(--color-white);
-  background-color: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
-}
-
-@media only screen and (min-width: 768px) {
-  .linkEditor {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
+  .linkModalActions > button {
+    flex: 0 0 auto;
   }
 }

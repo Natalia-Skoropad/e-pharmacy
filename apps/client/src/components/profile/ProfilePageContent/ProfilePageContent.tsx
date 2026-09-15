@@ -502,7 +502,7 @@ function AuthenticatedProfilePageContent({
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order amount,', '₴']} />,
+        title: <TableHeaderTitle parts={['Order ', 'amount, ₴']} />,
         render: (order) => formatAmount(order.totalPrice) ?? '—',
       },
       {

@@ -50,7 +50,7 @@ test('product request mutations wait for every file reader and share one mutatio
 
 //===================================================================
 
-test('article checking separates conflict from transport failure and announces async state', async () => {
+test('article checking separates conflict from transport failure without rendering success copy', async () => {
   const source = await readFile(resolve(process.cwd(), REQUEST_PATH), 'utf8');
 
   assert.match(
@@ -64,7 +64,14 @@ test('article checking separates conflict from transport failure and announces a
   );
 
   assert.match(source, /setArticleCheckStatus\('error'\)/);
-  assert.match(source, /aria-live="polite"/);
+
+  assert.match(
+    source,
+    /articleCheckStatus === 'conflict' \|\| articleCheckStatus === 'error'/
+  );
+
+  assert.match(source, /error=\{errors\.article\}/);
+  assert.doesNotMatch(source, /Article is available/);
   assert.doesNotMatch(source, /articleCheckStatus === 'unavailable'/);
 });
 

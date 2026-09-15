@@ -350,7 +350,9 @@ function NewProductRequestPageContent({
   const hasProductImage = productImage.length > 0 && !isProductImageRemoved;
 
   const articleError =
-    articleCheckStatus === 'conflict' ? articleCheckMessage : undefined;
+    articleCheckStatus === 'conflict' || articleCheckStatus === 'error'
+      ? articleCheckMessage
+      : undefined;
 
   const validationContext = useMemo(
     () => ({
@@ -481,7 +483,7 @@ function NewProductRequestPageContent({
         setArticleCheckStatus(result.available ? 'available' : 'conflict');
         setArticleCheckMessage(
           result.available
-            ? 'Article is available.'
+            ? ''
             : 'This article is already used by a catalog product or another active request.'
         );
       } catch (checkError) {
@@ -760,6 +762,9 @@ function NewProductRequestPageContent({
     ? null
     : (productImagePreview ?? savedImageSrc);
 
+  const hasHeaderActions =
+    requestMode !== 'readonly' || request?.status === 'rejected';
+
   const headerActions = (
     <div className={css.headerActions}>
       {requestMode !== 'readonly' ? (
@@ -928,7 +933,7 @@ function NewProductRequestPageContent({
           }
           titleId="product-request-page-title"
           icon={<FilePlus2 size={23} aria-hidden="true" />}
-          actions={headerActions}
+          actions={hasHeaderActions ? headerActions : undefined}
         />
 
         {bannerStatus ? (
@@ -979,8 +984,9 @@ function NewProductRequestPageContent({
 
           <LinkButton
             href={PHARMACY_ROUTES.ALL_PRODUCTS}
-            variant="secondary"
+            variant="primary"
             size="sm"
+            className={css.catalogButton}
             iconRight={<ExternalLink size={16} aria-hidden="true" />}
           >
             Open All products
@@ -1072,42 +1078,30 @@ function NewProductRequestPageContent({
                 onChange={(event) => updateValue('name', event.target.value)}
               />
 
-              <div className={css.articleField}>
-                <NameInput
-                  id="product-request-article"
-                  name="article"
-                  label="Product article"
-                  hint="Enter the unique manufacturer or supplier article"
-                  placeholder="Enter product article"
-                  value={values.article}
-                  error={errors.article}
-                  isTouched={
-                    Boolean(validationMode) || articleCheckStatus === 'conflict'
-                  }
-                  maxLength={PRODUCT_REQUEST_LIMITS.articleMax}
-                  disabled={!canEdit}
-                  autoComplete="off"
-                  onChange={(event) =>
-                    updateValue('article', event.target.value.toUpperCase())
-                  }
-                />
-
-                <div className={css.articleStatusSlot}>
-                  {articleCheckStatus === 'checking' ||
-                  articleCheckStatus === 'available' ||
-                  articleCheckStatus === 'error' ? (
-                    <p
-                      className={css.articleCheckStatus}
-                      role="status"
-                      aria-live="polite"
-                    >
-                      {articleCheckStatus === 'checking'
-                        ? 'Checking article availability…'
-                        : articleCheckMessage}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
+              <NameInput
+                id="product-request-article"
+                name="article"
+                label="Product article"
+                hint={
+                  articleCheckStatus === 'checking'
+                    ? 'Checking article availability…'
+                    : 'Enter the unique manufacturer or supplier article'
+                }
+                placeholder="Enter product article"
+                value={values.article}
+                error={errors.article}
+                isTouched={
+                  Boolean(validationMode) ||
+                  articleCheckStatus === 'conflict' ||
+                  articleCheckStatus === 'error'
+                }
+                maxLength={PRODUCT_REQUEST_LIMITS.articleMax}
+                disabled={!canEdit}
+                autoComplete="off"
+                onChange={(event) =>
+                  updateValue('article', event.target.value.toUpperCase())
+                }
+              />
 
               <NameInput
                 id="product-request-manufacturer"
@@ -1268,6 +1262,7 @@ function NewProductRequestPageContent({
                 id="product-request-prescription-type"
                 label="Prescription type"
                 required={false}
+                reserveMessageSpace
                 value={values.prescriptionType}
                 options={[...PRESCRIPTION_OPTIONS]}
                 error={
@@ -1455,19 +1450,25 @@ function NewProductRequestPageContent({
                 <li key={entry.id} className={toneClassName}>
                   <History size={18} aria-hidden="true" />
                   <div className={css.historyContent}>
-                    <strong>{entry.title}</strong>
-                    {entry.isInferred ? (
-                      <span className={css.historyInferred}>
-                        Legacy history · exact event time unavailable
-                      </span>
-                    ) : (
-                      <time dateTime={entry.createdAt}>
-                        {formatDateTime(entry.createdAt) ?? '—'}
-                      </time>
-                    )}
-                    <StatusBadge
-                      {...PRODUCT_REQUEST_STATUS_PRESENTATION[entry.status]}
-                    />
+                    <div className={css.historyTopRow}>
+                      <div className={css.historyMeta}>
+                        <strong>{entry.title}</strong>
+                        {entry.isInferred ? (
+                          <span className={css.historyInferred}>
+                            Legacy history · exact event time unavailable
+                          </span>
+                        ) : (
+                          <time dateTime={entry.createdAt}>
+                            {formatDateTime(entry.createdAt) ?? '—'}
+                          </time>
+                        )}
+                      </div>
+
+                      <StatusBadge
+                        {...PRODUCT_REQUEST_STATUS_PRESENTATION[entry.status]}
+                      />
+                    </div>
+
                     <p>{entry.description}</p>
                   </div>
                 </li>

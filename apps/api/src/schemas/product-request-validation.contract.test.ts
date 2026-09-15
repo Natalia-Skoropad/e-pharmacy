@@ -135,14 +135,19 @@ test('product request schema enforces moderation-required fields', () => {
 //===============================================================
 
 test('product request schema keeps Product data fields optional for moderation', () => {
-  const {
-    dosage: _dosage,
-    packageSize: _packageSize,
-    form: _form,
-    activeSubstance: _activeSubstance,
-    prescriptionType: _prescriptionType,
-    ...submissionWithoutProductData
-  } = validSubmission;
+  const productDataFields = new Set([
+    'dosage',
+    'packageSize',
+    'form',
+    'activeSubstance',
+    'prescriptionType',
+  ]);
+
+  const submissionWithoutProductData = Object.fromEntries(
+    Object.entries(validSubmission).filter(
+      ([key]) => !productDataFields.has(key)
+    )
+  );
 
   assert.equal(
     productRequestFormSchema.safeParse(submissionWithoutProductData).success,

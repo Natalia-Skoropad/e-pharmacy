@@ -10,7 +10,11 @@ import {
   type ClipboardEvent as ReactClipboardEvent,
 } from 'react';
 
+import Button from '../../primitives/Button/Button';
+import ModalBase from '../../overlays/ModalBase/ModalBase';
+import ModalRoot from '../../overlays/ModalRoot/ModalRoot';
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
+import { SelectField } from '../SelectField/SelectField';
 
 import css from './MarkdownTextarea.module.css';
 
@@ -31,6 +35,19 @@ export type MarkdownTextareaProps = Readonly<{
   hint?: string;
   onValueChange: (value: string) => void;
 }>;
+
+//===================================================================
+
+type EditorBlockType = 'p' | 'h1' | 'h2' | 'h3';
+
+//===================================================================
+
+const BLOCK_STYLE_OPTIONS = [
+  { value: 'p', label: 'Text' },
+  { value: 'h1', label: 'Heading 1' },
+  { value: 'h2', label: 'Heading 2' },
+  { value: 'h3', label: 'Heading 3' },
+] as const;
 
 //===================================================================
 
@@ -262,7 +279,8 @@ function MarkdownTextarea({
   const linkInputRef = useRef<HTMLInputElement | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const lastEmittedValueRef = useRef<string | null>(null);
-  const [isLinkEditorOpen, setIsLinkEditorOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [blockType, setBlockType] = useState<EditorBlockType>('p');
   const [linkUrl, setLinkUrl] = useState('');
   const [linkError, setLinkError] = useState('');
   const hasError = Boolean(isTouched && error);
@@ -281,14 +299,14 @@ function MarkdownTextarea({
   }, [value]);
 
   useEffect(() => {
-    if (!isLinkEditorOpen) return;
+    if (!isLinkModalOpen) return;
 
     const frameId = window.requestAnimationFrame(() => {
       linkInputRef.current?.focus();
     });
 
     return () => window.cancelAnimationFrame(frameId);
-  }, [isLinkEditorOpen]);
+  }, [isLinkModalOpen]);
 
   const saveSelection = () => {
     const editor = editorRef.current;
@@ -341,19 +359,18 @@ function MarkdownTextarea({
     emitValue();
   };
 
-  const openLinkEditor = () => {
+  const openLinkModal = () => {
     if (disabled) return;
 
     setLinkUrl('');
     setLinkError('');
-    setIsLinkEditorOpen(true);
+    setIsLinkModalOpen(true);
   };
 
-  const closeLinkEditor = () => {
-    setIsLinkEditorOpen(false);
+  const closeLinkModal = () => {
+    setIsLinkModalOpen(false);
     setLinkUrl('');
     setLinkError('');
-    restoreSelection();
   };
 
   const applyLink = () => {
@@ -381,7 +398,7 @@ function MarkdownTextarea({
       document.execCommand('createLink', false, url);
     }
 
-    setIsLinkEditorOpen(false);
+    setIsLinkModalOpen(false);
     setLinkUrl('');
     setLinkError('');
     saveSelection();
@@ -409,20 +426,25 @@ function MarkdownTextarea({
       hint={hint}
     >
       <div className={clsx(css.editor, hasError && css.editorInvalid)}>
-        <div className={css.toolbar} aria-label={`${label} formatting tools`}>
-          <select
+        <div
+          className={css.toolbar}
+          aria-label={`${label} formatting tools`}
+          onMouseDown={saveSelection}
+        >
+          <SelectField
+            id={`${id}-block-style`}
             className={css.blockSelect}
-            aria-label="Text style"
-            defaultValue="p"
+            label="Text style"
+            labelVisibility="visually-hidden"
+            compact
+            value={blockType}
+            options={BLOCK_STYLE_OPTIONS}
             disabled={disabled}
-            onMouseDown={saveSelection}
-            onChange={(event) => runCommand('formatBlock', event.target.value)}
-          >
-            <option value="p">Text</option>
-            <option value="h1">Heading 1</option>
-            <option value="h2">Heading 2</option>
-            <option value="h3">Heading 3</option>
-          </select>
+            onChange={(nextBlockType) => {
+              setBlockType(nextBlockType);
+              runCommand('formatBlock', nextBlockType);
+            }}
+          />
 
           <span className={css.toolbarDivider} aria-hidden="true" />
 
@@ -482,66 +504,12 @@ function MarkdownTextarea({
             disabled={disabled}
             aria-label="Add link"
             title="Add link"
-            aria-expanded={isLinkEditorOpen}
+            aria-haspopup="dialog"
             onMouseDown={saveSelection}
-            onClick={openLinkEditor}
+            onClick={openLinkModal}
           >
             <Link2 size={17} aria-hidden="true" />
           </button>
-
-          {isLinkEditorOpen ? (
-            <div className={css.linkEditor}>
-              <div className={css.linkField}>
-                <input
-                  ref={linkInputRef}
-                  className={css.linkInput}
-                  type="url"
-                  inputMode="url"
-                  value={linkUrl}
-                  placeholder="https://example.com"
-                  aria-label="Link URL"
-                  aria-invalid={Boolean(linkError)}
-                  onChange={(event) => {
-                    setLinkUrl(event.target.value);
-                    if (linkError) setLinkError('');
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      applyLink();
-                    }
-
-                    if (event.key === 'Escape') {
-                      event.preventDefault();
-                      closeLinkEditor();
-                    }
-                  }}
-                />
-                {linkError ? (
-                  <span className={css.linkError} role="alert">
-                    {linkError}
-                  </span>
-                ) : null}
-              </div>
-
-              <div className={css.linkActions}>
-                <button
-                  className={css.linkActionButton}
-                  type="button"
-                  onClick={closeLinkEditor}
-                >
-                  Cancel
-                </button>
-                <button
-                  className={clsx(css.linkActionButton, css.linkApplyButton)}
-                  type="button"
-                  onClick={applyLink}
-                >
-                  Add link
-                </button>
-              </div>
-            </div>
-          ) : null}
         </div>
 
         <div className={css.inputWrap}>
@@ -575,6 +543,74 @@ function MarkdownTextarea({
           ) : null}
         </div>
       </div>
+
+      {isLinkModalOpen ? (
+        <ModalRoot>
+          <ModalBase
+            isOpen
+            ariaLabel="Add link"
+            dialogClassName={css.linkModal}
+            initialFocusRef={linkInputRef}
+            fallbackFocusRef={editorRef}
+            onClose={closeLinkModal}
+          >
+            <div className={css.linkModalContent}>
+              <div className={css.linkModalHeader}>
+                <h3 className={css.linkModalTitle}>Add link</h3>
+                <p className={css.linkModalHint}>
+                  Enter a web or email address for the selected text.
+                </p>
+              </div>
+
+              <FormFieldLayout
+                id={`${id}-link-url`}
+                label="Link URL"
+                required={false}
+                error={linkError}
+                isTouched={Boolean(linkError)}
+              >
+                <input
+                  ref={linkInputRef}
+                  className={css.linkInput}
+                  id={`${id}-link-url`}
+                  type="url"
+                  inputMode="url"
+                  value={linkUrl}
+                  placeholder="https://example.com"
+                  aria-invalid={Boolean(linkError) || undefined}
+                  aria-describedby={
+                    linkError ? `${id}-link-url-error` : undefined
+                  }
+                  onChange={(event) => {
+                    setLinkUrl(event.target.value);
+                    if (linkError) setLinkError('');
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      applyLink();
+                    }
+                  }}
+                />
+              </FormFieldLayout>
+
+              <div className={css.linkModalActions}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={closeLinkModal}
+                >
+                  Cancel
+                </Button>
+                <Button type="button" size="sm" onClick={applyLink}>
+                  Add link
+                </Button>
+              </div>
+            </div>
+          </ModalBase>
+        </ModalRoot>
+      ) : null}
     </FormFieldLayout>
   );
 }

@@ -65,7 +65,7 @@ test('keeps already absolute image URLs unchanged', () => {
 
 //===================================================================
 
-test('rebases legacy seeded client photos to the API asset origin', () => {
+test('normalizes seeded product and client images to same-origin rewrite paths', () => {
   withEnvironment(
     {
       nodeEnv: 'production',
@@ -76,7 +76,14 @@ test('rebases legacy seeded client photos to the API asset origin', () => {
         getProductImageSrc(
           'https://client.example.com/images/seed/clients/client-001.png'
         ),
-        'https://api.example.com/images/seed/clients/client-001.png'
+        '/images/seed/clients/client-001.png'
+      );
+
+      assert.equal(
+        getProductImageSrc(
+          'https://client.example.com/images/seed/products/product-001.png'
+        ),
+        '/images/seed/products/product-001.png'
       );
     }
   );
@@ -86,7 +93,7 @@ test('rebases legacy seeded client photos to the API asset origin', () => {
       getProductImageSrc(
         'http://localhost:3000/images/seed/clients/client-008.png'
       ),
-      'http://localhost:4000/images/seed/clients/client-008.png'
+      '/images/seed/clients/client-008.png'
     );
   });
 });

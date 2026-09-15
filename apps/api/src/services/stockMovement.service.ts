@@ -58,7 +58,7 @@ type LegacyOrder = {
   status: OrderStatus;
   items: LegacyOrderItem[];
 
-  statusHistory: Array<{
+  statusHistory?: Array<{
     status: OrderStatus;
     changedAt: Date;
   }>;
@@ -79,23 +79,33 @@ type LegacyEvent = {
 
 //===============================================================
 
+function isValidStockBalance(input: {
+  stockQuantity: number;
+  reservedQuantity: number;
+  availableQuantity: number;
+}): boolean {
+  const { stockQuantity, reservedQuantity, availableQuantity } = input;
+
+  return (
+    Number.isInteger(stockQuantity) &&
+    Number.isInteger(reservedQuantity) &&
+    Number.isInteger(availableQuantity) &&
+    stockQuantity >= 0 &&
+    reservedQuantity >= 0 &&
+    availableQuantity >= 0 &&
+    reservedQuantity <= stockQuantity &&
+    availableQuantity === stockQuantity - reservedQuantity
+  );
+}
+
+//===============================================================
+
 function assertStockBalance(input: {
   stockQuantity: number;
   reservedQuantity: number;
   availableQuantity: number;
 }): void {
-  const { stockQuantity, reservedQuantity, availableQuantity } = input;
-
-  if (
-    !Number.isInteger(stockQuantity) ||
-    !Number.isInteger(reservedQuantity) ||
-    !Number.isInteger(availableQuantity) ||
-    stockQuantity < 0 ||
-    reservedQuantity < 0 ||
-    availableQuantity < 0 ||
-    reservedQuantity > stockQuantity ||
-    availableQuantity !== stockQuantity - reservedQuantity
-  ) {
+  if (!isValidStockBalance(input)) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
       'Stock balance is inconsistent. Physical stock must equal reserved plus available stock.'
@@ -136,7 +146,7 @@ function buildMovementComment(event: LegacyEvent): string {
 //===============================================================
 
 function getFinalStatusDate(order: LegacyOrder): Date {
-  const statusEntry = [...order.statusHistory]
+  const statusEntry = [...(order.statusHistory ?? [])]
     .reverse()
     .find((entry) => entry.status === order.status);
 
@@ -364,6 +374,11 @@ async function backfillLegacyStockHistory(
   ];
 
   for (const event of getLegacyEvents(orders, offer._id)) {
+    if (!Number.isInteger(event.quantity) || event.quantity < 1) {
+      canReconstructHistory = false;
+      break;
+    }
+
     if (event.eventType === 'reserve') {
       if (event.quantity > availableQuantity) {
         canReconstructHistory = false;
@@ -394,11 +409,16 @@ async function backfillLegacyStockHistory(
       reservedQuantity -= event.quantity;
     }
 
-    assertStockBalance({
-      stockQuantity,
-      reservedQuantity,
-      availableQuantity,
-    });
+    if (
+      !isValidStockBalance({
+        stockQuantity,
+        reservedQuantity,
+        availableQuantity,
+      })
+    ) {
+      canReconstructHistory = false;
+      break;
+    }
 
     documents.push({
       productOfferId: offer._id,
@@ -468,7 +488,7 @@ type CurrentOrderSnapshot = {
     quantity: number;
     unitPrice: number;
   }>;
-  statusHistory: Array<{
+  statusHistory?: Array<{
     status: OrderStatus;
     changedAt: Date;
   }>;
@@ -880,7 +900,10 @@ export async function getProductStockMovementsService(
       occurredAt: row.occurredAt.toISOString(),
     })),
 
+    page: 1,
+    perPage: Math.max(rows.length, 1),
     total: rows.length,
+    totalPages: rows.length > 0 ? 1 : 0,
     stock: {
       stockQuantity: currentOffer.totalQuantity,
       reservedQuantity: currentOffer.reservedQuantity,

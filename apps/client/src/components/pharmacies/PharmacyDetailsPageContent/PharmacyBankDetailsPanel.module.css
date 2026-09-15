@@ -111,11 +111,13 @@
 
 .stateCopy {
   display: grid;
-  justify-items: start;
+  min-width: 0;
 }
 
-.stateCopy button {
-  margin-top: 16px;
+.retryButton {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 2px;
 }
 
 .list {
@@ -175,6 +177,17 @@
 @media only screen and (min-width: 768px) {
   .panel {
     padding: 28px;
+  }
+
+  .errorStateCard {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .retryButton {
+    grid-column: auto;
+    width: fit-content;
+    margin-top: 0;
   }
 
   .list div {

@@ -50,7 +50,7 @@ export function PharmacyBankDetailsPanel({
       ) : null}
 
       {state.status === 'error' ? (
-        <div className={css.stateCard} role="alert">
+        <div className={`${css.stateCard} ${css.errorStateCard}`} role="alert">
           <span className={css.errorIcon} aria-hidden="true">
             <CircleAlert size={28} />
           </span>
@@ -60,10 +60,11 @@ export function PharmacyBankDetailsPanel({
               The payment information is temporarily unavailable. Try loading it
               again in a moment.
             </p>
-            <Button type="button" variant="secondary" onClick={onRetry}>
-              Retry
-            </Button>
           </div>
+
+          <Button type="button" className={css.retryButton} onClick={onRetry}>
+            Retry
+          </Button>
         </div>
       ) : null}
 

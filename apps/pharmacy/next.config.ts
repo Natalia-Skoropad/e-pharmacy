@@ -2,10 +2,9 @@ import type { NextConfig } from 'next';
 
 //===============================================================
 
-const apiBaseUrl = (process.env.API_BASE_URL ?? 'http://localhost:4000').replace(
-  /\/+$/,
-  ''
-);
+const apiBaseUrl = (
+  process.env.API_BASE_URL ?? 'http://localhost:4000'
+).replace(/\/+$/, '');
 
 //===============================================================
 
@@ -27,6 +26,10 @@ const nextConfig: NextConfig = {
       {
         source: '/images/seed/products/:path*',
         destination: `${apiBaseUrl}/images/seed/products/:path*`,
+      },
+      {
+        source: '/images/seed/clients/:path*',
+        destination: `${apiBaseUrl}/images/seed/clients/:path*`,
       },
     ];
   },

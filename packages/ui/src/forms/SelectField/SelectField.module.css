@@ -73,6 +73,13 @@
   box-shadow: var(--shadow-accent-ring);
 }
 
+.triggerCompact {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: var(--fz-14);
+  border-radius: var(--radius-sm);
+}
+
 .triggerText {
   min-width: 0;
   overflow: hidden;
