@@ -80,7 +80,7 @@
 
 @media only screen and (min-width: 768px) {
   .searchGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(140px, 80px);
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(140px, max-content);
     align-items: end;
   }
 
@@ -103,12 +103,8 @@
   }
 
   .clientStatistics {
-    display: flex;
-    gap: 14px;
-  }
-
-  .clientStatistics {
     display: grid;
+    gap: 14px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

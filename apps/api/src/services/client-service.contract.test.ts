@@ -6,7 +6,16 @@ import test from 'node:test';
 //===================================================================
 
 async function readClientService(): Promise<string> {
-  return readFile(resolve(__dirname, 'client.service.ts'), 'utf8');
+  return readFile(
+    resolve(process.cwd(), 'src/services/client.service.ts'),
+    'utf8'
+  );
+}
+
+//===================================================================
+
+async function readOrderModel(): Promise<string> {
+  return readFile(resolve(process.cwd(), 'src/models/order.model.ts'), 'utf8');
 }
 
 //===================================================================
@@ -71,43 +80,62 @@ test('client list pagination and statistics stay inside one Mongo aggregation', 
 
 //===================================================================
 
-test('purchased products use immutable order snapshots and expose current product metadata separately', async () => {
+test('purchased products stay historical and paginate inside Mongo aggregation', async () => {
   const source = await readClientService();
+
   const start = source.indexOf(
     'export async function getClientPurchasedProductsService'
   );
+
   const purchasedProductsSource = source.slice(start);
 
-  assert.match(purchasedProductsSource, /\.select\('status'\)/);
+  const pipelineStart = source.indexOf(
+    'function buildClientProductsAggregationPipeline'
+  );
+
+  const pipelineSource = source.slice(pipelineStart, start);
 
   assert.match(
     purchasedProductsSource,
-    /photoUrl: snapshot\.imageUrl \?\? null/
+    /Order\.aggregate<ClientPurchasedProductsAggregationResult>/
   );
 
-  assert.match(purchasedProductsSource, /article: snapshot\.article/);
-  assert.match(purchasedProductsSource, /name: snapshot\.name/);
+  assert.match(pipelineSource, /from: Product\.collection\.name/);
 
   assert.match(
-    purchasedProductsSource,
-    /category: snapshot\.category \?\? 'other'/
+    pipelineSource,
+    /photoUrl:\s*\{[\s\S]*productSnapshot\.imageUrl/
   );
+
+  assert.match(pipelineSource, /article: '\$items\.productSnapshot\.article'/);
+  assert.match(pipelineSource, /name: '\$items\.productSnapshot\.name'/);
 
   assert.match(
-    purchasedProductsSource,
-    /currentProductExists: Boolean\(product\)/
+    pipelineSource,
+    /category:\s*\{[\s\S]*productSnapshot\.category[\s\S]*'other'/
   );
+
+  assert.match(pipelineSource, /currentProductExists:/);
+  assert.match(pipelineSource, /currentStatus:/);
 
   assert.match(
-    purchasedProductsSource,
-    /currentStatus: product\?\.status \?\? null/
+    pipelineSource,
+    /const itemsFacet: PipelineStage\.FacetPipelineStage\[\]/
   );
 
-  assert.doesNotMatch(purchasedProductsSource, /product\?\.name \?\?/);
-  assert.doesNotMatch(purchasedProductsSource, /product\?\.article \?\?/);
+  assert.match(pipelineSource, /\{ \$skip: skip \}/);
+  assert.match(pipelineSource, /\{ \$limit: query\.perPage \}/);
+  assert.match(pipelineSource, /total: totalFacet/);
+  assert.match(pipelineSource, /metadata: metadataFacet/);
+
+  assert.doesNotMatch(purchasedProductsSource, /Order\.find\(/);
+  assert.doesNotMatch(purchasedProductsSource, /Product\.find\(/);
+  assert.doesNotMatch(purchasedProductsSource, /\.slice\(skip/);
+  assert.doesNotMatch(pipelineSource, /currentProduct\?\.name/);
+  assert.doesNotMatch(pipelineSource, /currentProduct\?\.article/);
 });
 
-//===================================================================
+//===============================================================
 
 test('Walk-in identity is flag-based and never inferred from the display name', async () => {
   const source = await readClientService();
@@ -155,12 +183,61 @@ test('client and purchased-product pagination clamp stale requested pages before
 
   const productsSource = source.slice(productsStart);
 
-  assert.match(productsSource, /const total = rows\.length/);
-
   assert.match(
     productsSource,
     /const page = totalPages === 0 \? 1 : Math\.min\(query\.page, totalPages\)/
   );
 
-  assert.match(productsSource, /const skip = \(page - 1\) \* query\.perPage/);
+  assert.match(productsSource, /if \(page !== query\.page\)/);
+  assert.match(productsSource, /\(page - 1\) \* query\.perPage/);
+
+  assert.match(
+    productsSource,
+    /buildClientProductsAggregationPipeline\([\s\S]*?\(page - 1\) \* query\.perPage/
+  );
+});
+
+//===================================================================
+
+test('client purchase history has a compound order index for scoped pagination', async () => {
+  const source = await readOrderModel();
+
+  assert.match(
+    source,
+    /orderSchema\.index\(\{ pharmacyId: 1, userId: 1, status: 1, createdAt: -1 \}\)/
+  );
+});
+
+//===================================================================
+
+test('default client projection suppresses synthetic contact fields and stays active', async () => {
+  const source = await readClientService();
+  const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
+
+  const rowsEnd = source.indexOf(
+    '//===============================================================',
+    rowsStart + 10
+  );
+
+  const rowsSource = source.slice(rowsStart, rowsEnd);
+
+  assert.match(
+    rowsSource,
+    /email: \{ \$cond: \['\$isDefault', '', '\$user\.email'\] \}/
+  );
+
+  assert.match(
+    rowsSource,
+    /phone: \{ \$cond: \['\$isDefault', '', '\$user\.phone'\] \}/
+  );
+
+  assert.match(
+    rowsSource,
+    /address:\s*\{[\s\S]*?\$cond:\s*\[\s*'\$isDefault',\s*'',/
+  );
+
+  assert.match(
+    rowsSource,
+    /status:\s*\{[\s\S]*?\$cond:\s*\[\s*'\$isDefault',\s*'active',/
+  );
 });

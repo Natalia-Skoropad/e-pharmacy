@@ -79,3 +79,34 @@ test('client routes distinguish canonical filters, entity IDs and malformed segm
     { kind: 'invalid' }
   );
 });
+
+//===================================================================
+
+test('duplicate and invalid client filters canonicalize deterministically', () => {
+  const duplicate = parseClientsSegments({
+    filters: [
+      'status-active',
+      'status-blocked',
+      'successful-orders-successful',
+      'successful-orders-repeat',
+    ],
+  });
+
+  assert.equal(duplicate.status, 'blocked');
+  assert.equal(duplicate.successfulOrders, 'repeat');
+
+  assert.equal(
+    buildClientsPath(duplicate),
+    '/pharmacy/clients/status-blocked/successful-orders-repeat'
+  );
+
+  const invalidKnownSegments = ['status-unknown', 'date-from-not-a-date'];
+
+  assert.deepEqual(resolveClientsRoute(invalidKnownSegments), {
+    kind: 'filters',
+    filters: invalidKnownSegments,
+  });
+
+  const normalized = parseClientsSegments({ filters: invalidKnownSegments });
+  assert.equal(buildClientsPath(normalized), '/pharmacy/clients');
+});

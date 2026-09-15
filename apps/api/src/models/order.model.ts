@@ -147,11 +147,13 @@ const activityHistorySchema = new Schema(
     occurredAt: { type: Date, required: true },
     changedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+
     productOfferId: {
       type: Schema.Types.ObjectId,
       ref: 'ProductOffer',
       required: true,
     },
+
     productName: { type: String, required: true, trim: true },
     previousQuantity: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 0 },
@@ -278,6 +280,7 @@ const orderSchema = new Schema<OrderEntity>(
 
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ pharmacyId: 1, createdAt: -1 });
+orderSchema.index({ pharmacyId: 1, userId: 1, status: 1, createdAt: -1 });
 
 //===============================================================
 

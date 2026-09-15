@@ -72,7 +72,7 @@ test('clientId is a generation boundary that remounts all client-detail local re
   );
 
   assert.match(source, /useState<ClientTab>\('details'\)/);
-  assert.match(source, /useState\(1\)/);
+  assert.match(source, /page:\s*1/);
   assert.match(source, /useState\(''\)/);
   assert.match(source, /const controller = new AbortController\(\)/);
   assert.match(source, /controller\.abort\(\)/);
@@ -149,8 +149,15 @@ test('client detail pagination accepts canonical backend pages and order statist
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
 
-  assert.match(source, /setOrdersPage\(response\.page\)/);
-  assert.match(source, /setProductsPage\(response\.page\)/);
+  assert.match(
+    source,
+    /setOrdersPageState\(\{[\s\S]*?searchKey: orderSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
+  );
+
+  assert.match(
+    source,
+    /setProductsPageState\(\{[\s\S]*?searchKey: productSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
+  );
   assert.match(source, /setOrderStatistics\(response\.statistics\)/);
 
   assert.match(
@@ -192,4 +199,52 @@ test('client route pages reject malformed segments before rendering details', as
       /if \(route\.kind === 'invalid'\) \{\s*notFound\(\);\s*\}/
     );
   }
+});
+
+//===================================================================
+
+test('client detail text searches debounce network work and reset pagination by debounced generation', async () => {
+  const source = await read(
+    './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
+  );
+
+  assert.match(source, /useDebouncedValue\(orderNumberSearch, 450\)/);
+  assert.match(source, /useDebouncedValue\(\s*orderCommentSearch,\s*450\s*\)/);
+
+  assert.match(
+    source,
+    /useDebouncedValue\(\s*productArticleSearch,\s*450\s*\)/
+  );
+
+  assert.match(source, /useDebouncedValue\(productNameSearch, 450\)/);
+
+  assert.match(
+    source,
+    /orderNumber: debouncedOrderNumberSearch\.trim\(\) \|\| undefined/
+  );
+
+  assert.match(
+    source,
+    /clientComment: debouncedOrderCommentSearch\.trim\(\) \|\| undefined/
+  );
+
+  assert.match(
+    source,
+    /article: debouncedProductArticleSearch\.trim\(\) \|\| undefined/
+  );
+
+  assert.match(
+    source,
+    /name: debouncedProductNameSearch\.trim\(\) \|\| undefined/
+  );
+
+  assert.match(source, /const orderSearchKey =/);
+  assert.match(source, /ordersPageState\.searchKey === orderSearchKey/);
+  assert.match(source, /const productSearchKey =/);
+  assert.match(source, /productsPageState\.searchKey === productSearchKey/);
+
+  assert.match(source, /onChange=\{setOrderNumberSearch\}/);
+  assert.match(source, /onChange=\{setOrderCommentSearch\}/);
+  assert.match(source, /onChange=\{setProductArticleSearch\}/);
+  assert.match(source, /onChange=\{setProductNameSearch\}/);
 });

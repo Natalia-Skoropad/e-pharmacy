@@ -14,16 +14,13 @@ import type {
   ClientsQuery,
 } from '../schemas/client.schema';
 
-import type { OrderEntity } from '../types/order';
-import type { ProductEntity, ProductStatus } from '../types/product';
+import type { ProductStatus } from '../types/product';
 import type { ProductCategory } from '../types/categories';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 //===============================================================
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
-type OrderDocument = OrderEntity & { _id: Types.ObjectId };
-type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 
 //===============================================================
 
@@ -77,6 +74,19 @@ type ClientPurchasedProductRow = Readonly<{
   totalAmount: number;
   currentProductExists: boolean;
   currentStatus: ProductStatus | null;
+}>;
+
+type AggregatedClientPurchasedProductRow = Omit<
+  ClientPurchasedProductRow,
+  'orderDate'
+> & {
+  orderDate: Date;
+};
+
+type ClientPurchasedProductsAggregationResult = Readonly<{
+  items: AggregatedClientPurchasedProductRow[];
+  total: Array<{ count: number }>;
+  metadata: Array<{ earliestCreatedAt: Date }>;
 }>;
 
 //===============================================================
@@ -528,36 +538,139 @@ export async function getClientByIdService(userId: string, clientId: string) {
 
 //===============================================================
 
-function matchesClientProductFilters(
-  row: ClientPurchasedProductRow,
+function buildClientProductFilterStages(
   query: ClientProductsQuery
-): boolean {
-  if (
-    query.article?.trim() &&
-    !createSafeRegExp(query.article.trim()).test(row.article)
-  ) {
-    return false;
+): PipelineStage.FacetPipelineStage[] {
+  const match: Record<string, unknown> = {};
+
+  if (query.article?.trim()) {
+    match.article = createSafeRegExp(query.article.trim());
   }
 
-  if (
-    query.name?.trim() &&
-    !createSafeRegExp(query.name.trim()).test(row.name)
-  ) {
-    return false;
+  if (query.name?.trim()) {
+    match.name = createSafeRegExp(query.name.trim());
   }
 
-  if (query.category && row.category !== query.category) return false;
-  if (query.status && row.currentStatus !== query.status) return false;
-
-  if (query.dateFrom && row.orderDate < `${query.dateFrom}T00:00:00.000Z`) {
-    return false;
+  if (query.category) {
+    match.category = query.category;
   }
 
-  if (query.dateTo && row.orderDate > `${query.dateTo}T23:59:59.999Z`) {
-    return false;
+  if (query.status) {
+    match.currentStatus = query.status;
   }
 
-  return true;
+  if (query.dateFrom || query.dateTo) {
+    match.orderDate = {
+      ...(query.dateFrom ? { $gte: getStartOfDay(query.dateFrom) } : {}),
+      ...(query.dateTo ? { $lte: getEndOfDay(query.dateTo) } : {}),
+    };
+  }
+
+  return Object.keys(match).length ? [{ $match: match }] : [];
+}
+
+//===============================================================
+
+function buildClientProductsAggregationPipeline(
+  pharmacyId: Types.ObjectId,
+  clientObjectId: Types.ObjectId,
+  query: ClientProductsQuery,
+  skip: number
+): PipelineStage[] {
+  const filterStages = buildClientProductFilterStages(query);
+
+  const itemsFacet: PipelineStage.FacetPipelineStage[] = [
+    ...filterStages,
+    { $sort: { orderDate: -1, orderId: 1, id: 1 } },
+    { $skip: skip },
+    { $limit: query.perPage },
+  ];
+
+  const totalFacet: PipelineStage.FacetPipelineStage[] = [
+    ...filterStages,
+    { $count: 'count' },
+  ];
+
+  const metadataFacet: PipelineStage.FacetPipelineStage[] = [
+    {
+      $group: {
+        _id: null,
+        earliestCreatedAt: { $min: '$orderDate' },
+      },
+    },
+    { $project: { _id: 0, earliestCreatedAt: 1 } },
+  ];
+
+  return [
+    {
+      $match: {
+        pharmacyId,
+        userId: clientObjectId,
+        status: 'successful',
+      },
+    },
+    {
+      $unwind: {
+        path: '$items',
+        includeArrayIndex: 'itemIndex',
+      },
+    },
+    {
+      $lookup: {
+        from: Product.collection.name,
+        localField: 'items.productId',
+        foreignField: '_id',
+        as: 'currentProducts',
+        pipeline: [{ $project: { _id: 1, status: 1 } }],
+      },
+    },
+    {
+      $set: {
+        currentProduct: { $arrayElemAt: ['$currentProducts', 0] },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        id: {
+          $concat: [
+            { $toString: '$_id' },
+            '-',
+            {
+              $ifNull: [
+                { $toString: '$items._id' },
+                { $toString: '$itemIndex' },
+              ],
+            },
+          ],
+        },
+        orderId: { $toString: '$_id' },
+        orderDate: '$createdAt',
+        productId: { $toString: '$items.productId' },
+        photoUrl: {
+          $ifNull: ['$items.productSnapshot.imageUrl', null],
+        },
+        article: '$items.productSnapshot.article',
+        name: '$items.productSnapshot.name',
+        category: {
+          $ifNull: ['$items.productSnapshot.category', 'other'],
+        },
+        quantity: '$items.quantity',
+        totalAmount: '$items.totalPrice',
+        currentProductExists: {
+          $ne: [{ $ifNull: ['$currentProduct._id', null] }, null],
+        },
+        currentStatus: { $ifNull: ['$currentProduct.status', null] },
+      },
+    },
+    {
+      $facet: {
+        items: itemsFacet,
+        total: totalFacet,
+        metadata: metadataFacet,
+      },
+    },
+  ];
 }
 
 //===============================================================
@@ -573,22 +686,44 @@ export async function getClientPurchasedProductsService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
   }
 
-  const orders = await Order.find({
-    pharmacyId,
-    userId: new Types.ObjectId(clientId),
-    status: 'successful',
-  })
-    .sort({ createdAt: -1 })
-    .lean<OrderDocument[]>();
+  const clientObjectId = new Types.ObjectId(clientId);
+  const requestedSkip = (query.page - 1) * query.perPage;
 
-  if (!orders.length) {
+  let [result] =
+    await Order.aggregate<ClientPurchasedProductsAggregationResult>(
+      buildClientProductsAggregationPipeline(
+        pharmacyId,
+        clientObjectId,
+        query,
+        requestedSkip
+      )
+    );
+
+  const total = result?.total[0]?.count ?? 0;
+  const totalPages = Math.ceil(total / query.perPage);
+  const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
+
+  if (page !== query.page) {
+    [result] = await Order.aggregate<ClientPurchasedProductsAggregationResult>(
+      buildClientProductsAggregationPipeline(
+        pharmacyId,
+        clientObjectId,
+        query,
+        (page - 1) * query.perPage
+      )
+    );
+  }
+
+  const earliestCreatedAt = result?.metadata[0]?.earliestCreatedAt ?? null;
+
+  if (!earliestCreatedAt) {
     const [clientHasOrders, defaultClientExists] = await Promise.all([
       Order.exists({
         pharmacyId,
-        userId: new Types.ObjectId(clientId),
+        userId: clientObjectId,
       }),
       User.exists({
-        _id: new Types.ObjectId(clientId),
+        _id: clientObjectId,
         isDefaultPharmacyClient: true,
         defaultClientPharmacyId: pharmacyId,
       }),
@@ -597,72 +732,19 @@ export async function getClientPurchasedProductsService(
     if (!clientHasOrders && !defaultClientExists) {
       throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
     }
-
-    return {
-      items: [],
-      page: 1,
-      perPage: query.perPage,
-      total: 0,
-      totalPages: 0,
-      earliestCreatedAt: null,
-    };
   }
 
-  const productIds = [
-    ...new Set(
-      orders.flatMap((order) =>
-        order.items.map((item) => item.productId.toString())
-      )
-    ),
-  ].map((productId) => new Types.ObjectId(productId));
-
-  const products = await Product.find({ _id: { $in: productIds } })
-    .select('status')
-    .lean<ProductDocument[]>();
-
-  const productsById = new Map(
-    products.map((product) => [String(product._id), product])
-  );
-
-  const rows = orders
-    .flatMap((order) =>
-      order.items.map((item, itemIndex): ClientPurchasedProductRow => {
-        const productId = item.productId.toString();
-        const product = productsById.get(productId);
-        const snapshot = item.productSnapshot;
-
-        return {
-          id: `${order._id.toString()}-${item._id?.toString() ?? itemIndex}`,
-          orderId: order._id.toString(),
-          orderDate: order.createdAt.toISOString(),
-          productId,
-          photoUrl: snapshot.imageUrl ?? null,
-          article: snapshot.article,
-          name: snapshot.name,
-          category: snapshot.category ?? 'other',
-          quantity: item.quantity,
-          totalAmount: item.totalPrice,
-          currentProductExists: Boolean(product),
-          currentStatus: product?.status ?? null,
-        };
-      })
-    )
-    .filter((row) => matchesClientProductFilters(row, query))
-    .sort((left, right) => right.orderDate.localeCompare(left.orderDate));
-
-  const total = rows.length;
-  const totalPages = Math.ceil(total / query.perPage);
-  const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
-  const skip = (page - 1) * query.perPage;
-  const items = rows.slice(skip, skip + query.perPage);
-
   return {
-    items,
+    items: (result?.items ?? []).map((row) => ({
+      ...row,
+      orderDate: row.orderDate.toISOString(),
+    })),
     page,
     perPage: query.perPage,
     total,
     totalPages,
-    earliestCreatedAt:
-      orders[orders.length - 1]?.createdAt.toISOString().slice(0, 10) ?? null,
+    earliestCreatedAt: earliestCreatedAt
+      ? earliestCreatedAt.toISOString().slice(0, 10)
+      : null,
   };
 }

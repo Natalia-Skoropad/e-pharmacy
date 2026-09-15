@@ -178,6 +178,7 @@ test(
         orderNumber: `SEP-1-${suffix}`,
         snapshot,
       }),
+
       createSuccessfulOrder({
         pharmacyId,
         userId: septemberClientId,
@@ -308,6 +309,26 @@ test(
       assert.equal(currentItem.currentProductExists, true);
       assert.equal(currentItem.currentStatus, 'active');
 
+      await Product.updateOne(
+        { _id: productId },
+        { $set: { status: 'blocked' } }
+      );
+
+      const blocked = await getClientPurchasedProductsService(
+        ownerId.toString(),
+        clientId.toString(),
+        { page: 1, perPage: 20 }
+      );
+
+      const blockedItem = blocked.items[0];
+      assert.ok(blockedItem);
+      assert.equal(blockedItem.name, 'Aspirin 100');
+      assert.equal(blockedItem.article, `OLD-${suffix}`);
+      assert.equal(blockedItem.category, 'medicine');
+      assert.equal(blockedItem.photoUrl, 'https://example.com/historical.jpg');
+      assert.equal(blockedItem.currentProductExists, true);
+      assert.equal(blockedItem.currentStatus, 'blocked');
+
       await Product.deleteOne({ _id: productId });
 
       const deleted = await getClientPurchasedProductsService(
@@ -324,6 +345,141 @@ test(
       assert.equal(deletedItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(deletedItem.currentProductExists, false);
       assert.equal(deletedItem.currentStatus, null);
+    } finally {
+      await Promise.all([
+        Order.deleteMany({ pharmacyId }),
+        Product.deleteOne({ _id: productId }),
+        User.deleteOne({ _id: clientId }),
+        Pharmacy.deleteOne({ _id: pharmacyId }),
+      ]);
+
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===================================================================
+
+test(
+  'purchased-product filtering and pagination use the canonical Mongo result set',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const ownerId = new Types.ObjectId();
+    const pharmacyId = new Types.ObjectId();
+    const clientId = new Types.ObjectId();
+    const productId = new Types.ObjectId();
+    const suffix = new Types.ObjectId().toHexString().slice(-8).toUpperCase();
+
+    await Promise.all([
+      Pharmacy.create({
+        _id: pharmacyId,
+        ownerId,
+        managerUserIds: [],
+        documents: [],
+        name: 'Purchased Product Pagination Pharmacy',
+        status: 'active',
+      }),
+
+      User.create({
+        _id: clientId,
+        name: 'Pagination Client',
+        email: `pagination-${suffix.toLowerCase()}@example.com`,
+        password: 'hashed-password',
+        phone: testPhone('68', suffix),
+        role: 'client',
+        status: 'active',
+      }),
+
+      Product.create({
+        _id: productId,
+        name: 'Current Pagination Product',
+        article: `CURRENT-${suffix}`,
+        category: 'medicine',
+        status: 'active',
+        inStock: true,
+      }),
+    ]);
+
+    await Promise.all([
+      createSuccessfulOrder({
+        pharmacyId,
+        userId: clientId,
+        productId,
+        createdAt: new Date('2026-07-01T10:00:00.000Z'),
+        totalPrice: 100,
+        orderNumber: `PAGE-1-${suffix}`,
+        snapshot: {
+          name: 'Historical Alpha',
+          article: `ALPHA-${suffix}`,
+          category: 'medicine',
+        },
+      }),
+
+      createSuccessfulOrder({
+        pharmacyId,
+        userId: clientId,
+        productId,
+        createdAt: new Date('2026-08-01T10:00:00.000Z'),
+        totalPrice: 200,
+        orderNumber: `PAGE-2-${suffix}`,
+        snapshot: {
+          name: 'Historical Beta',
+          article: `BETA-${suffix}`,
+          category: 'medicine',
+        },
+      }),
+
+      createSuccessfulOrder({
+        pharmacyId,
+        userId: clientId,
+        productId,
+        createdAt: new Date('2026-09-01T10:00:00.000Z'),
+        totalPrice: 300,
+        orderNumber: `PAGE-3-${suffix}`,
+        snapshot: {
+          name: 'Historical Gamma',
+          article: `GAMMA-${suffix}`,
+          category: 'medicine',
+        },
+      }),
+    ]);
+
+    try {
+      const secondPage = await getClientPurchasedProductsService(
+        ownerId.toString(),
+        clientId.toString(),
+        { page: 2, perPage: 1 }
+      );
+
+      assert.equal(secondPage.page, 2);
+      assert.equal(secondPage.total, 3);
+      assert.equal(secondPage.totalPages, 3);
+      assert.equal(secondPage.items.length, 1);
+      assert.equal(secondPage.items[0]?.name, 'Historical Beta');
+      assert.equal(secondPage.earliestCreatedAt, '2026-07-01');
+
+      const stalePage = await getClientPurchasedProductsService(
+        ownerId.toString(),
+        clientId.toString(),
+        { page: 99, perPage: 2 }
+      );
+
+      assert.equal(stalePage.page, 2);
+      assert.equal(stalePage.totalPages, 2);
+      assert.equal(stalePage.items.length, 1);
+      assert.equal(stalePage.items[0]?.name, 'Historical Alpha');
+
+      const filtered = await getClientPurchasedProductsService(
+        ownerId.toString(),
+        clientId.toString(),
+        { page: 1, perPage: 20, name: 'Beta' }
+      );
+
+      assert.equal(filtered.total, 1);
+      assert.equal(filtered.items[0]?.name, 'Historical Beta');
+      assert.equal(filtered.items[0]?.currentStatus, 'active');
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId }),

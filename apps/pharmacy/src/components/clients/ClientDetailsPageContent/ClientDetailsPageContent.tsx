@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
+import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
@@ -464,7 +465,6 @@ function ClientDetailsPageContentState({
   );
 
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
-  const [ordersPage, setOrdersPage] = useState(1);
 
   const [ordersRowsPerPage, setOrdersRowsPerPage] =
     useState<RowsPerPageValue>(20);
@@ -475,6 +475,22 @@ function ClientDetailsPageContentState({
 
   const [orderNumberSearch, setOrderNumberSearch] = useState('');
   const [orderCommentSearch, setOrderCommentSearch] = useState('');
+  const debouncedOrderNumberSearch = useDebouncedValue(orderNumberSearch, 450);
+
+  const debouncedOrderCommentSearch = useDebouncedValue(
+    orderCommentSearch,
+    450
+  );
+
+  const orderSearchKey = `${debouncedOrderNumberSearch}\u0000${debouncedOrderCommentSearch}`;
+
+  const [ordersPageState, setOrdersPageState] = useState(() => ({
+    searchKey: orderSearchKey,
+    page: 1,
+  }));
+
+  const ordersPage =
+    ordersPageState.searchKey === orderSearchKey ? ordersPageState.page : 1;
 
   const [orderFilters, setOrderFilters] = useState<ClientOrderFilters>(
     DEFAULT_ORDER_FILTERS
@@ -508,13 +524,28 @@ function ClientDetailsPageContentState({
   >(null);
 
   const [productsTotalPages, setProductsTotalPages] = useState(0);
-  const [productsPage, setProductsPage] = useState(1);
 
   const [productsRowsPerPage, setProductsRowsPerPage] =
     useState<RowsPerPageValue>(20);
 
   const [productArticleSearch, setProductArticleSearch] = useState('');
   const [productNameSearch, setProductNameSearch] = useState('');
+  const debouncedProductArticleSearch = useDebouncedValue(
+    productArticleSearch,
+    450
+  );
+  const debouncedProductNameSearch = useDebouncedValue(productNameSearch, 450);
+
+  const productSearchKey = `${debouncedProductArticleSearch}\u0000${debouncedProductNameSearch}`;
+  const [productsPageState, setProductsPageState] = useState(() => ({
+    searchKey: productSearchKey,
+    page: 1,
+  }));
+
+  const productsPage =
+    productsPageState.searchKey === productSearchKey
+      ? productsPageState.page
+      : 1;
 
   const [productFilters, setProductFilters] = useState<ClientProductFilters>(
     DEFAULT_PRODUCT_FILTERS
@@ -580,8 +611,8 @@ function ClientDetailsPageContentState({
             page: ordersPage,
             perPage: ordersRowsPerPage,
             clientId,
-            orderNumber: orderNumberSearch.trim() || undefined,
-            clientComment: orderCommentSearch.trim() || undefined,
+            orderNumber: debouncedOrderNumberSearch.trim() || undefined,
+            clientComment: debouncedOrderCommentSearch.trim() || undefined,
             dateFrom: orderFilters.date.from || undefined,
             dateTo: orderFilters.date.to || undefined,
             status:
@@ -611,12 +642,15 @@ function ClientDetailsPageContentState({
         setOrders([...response.items]);
         setOrdersTotal(response.total);
         setOrdersTotalPages(response.totalPages);
-        setOrdersPage(response.page);
+        setOrdersPageState({
+          searchKey: orderSearchKey,
+          page: response.page,
+        });
         setOrdersEarliestCreatedAt(response.earliestCreatedAt);
 
         const hasSearchOrFilters = Boolean(
-          orderNumberSearch.trim() ||
-          orderCommentSearch.trim() ||
+          debouncedOrderNumberSearch.trim() ||
+          debouncedOrderCommentSearch.trim() ||
           orderFilters.date.from ||
           orderFilters.date.to ||
           orderFilters.status !== 'all' ||
@@ -653,9 +687,10 @@ function ClientDetailsPageContentState({
     };
   }, [
     clientId,
-    orderCommentSearch,
+    debouncedOrderCommentSearch,
+    debouncedOrderNumberSearch,
     orderFilters,
-    orderNumberSearch,
+    orderSearchKey,
     ordersPage,
     ordersRowsPerPage,
   ]);
@@ -675,8 +710,8 @@ function ClientDetailsPageContentState({
           {
             page: productsPage,
             perPage: productsRowsPerPage,
-            article: productArticleSearch.trim() || undefined,
-            name: productNameSearch.trim() || undefined,
+            article: debouncedProductArticleSearch.trim() || undefined,
+            name: debouncedProductNameSearch.trim() || undefined,
             dateFrom: productFilters.date.from || undefined,
             dateTo: productFilters.date.to || undefined,
             category:
@@ -697,11 +732,14 @@ function ClientDetailsPageContentState({
         setProductsTotal(response.total);
         setProductsEarliestCreatedAt(response.earliestCreatedAt);
         setProductsTotalPages(response.totalPages);
-        setProductsPage(response.page);
+        setProductsPageState({
+          searchKey: productSearchKey,
+          page: response.page,
+        });
 
         const hasSearchOrFilters = Boolean(
-          productArticleSearch.trim() ||
-          productNameSearch.trim() ||
+          debouncedProductArticleSearch.trim() ||
+          debouncedProductNameSearch.trim() ||
           productFilters.date.from ||
           productFilters.date.to ||
           productFilters.category !== 'all' ||
@@ -733,9 +771,10 @@ function ClientDetailsPageContentState({
     };
   }, [
     clientId,
-    productArticleSearch,
+    debouncedProductArticleSearch,
+    debouncedProductNameSearch,
     productFilters,
-    productNameSearch,
+    productSearchKey,
     productsActivated,
     productsPage,
     productsRowsPerPage,
@@ -1116,10 +1155,7 @@ function ClientDetailsPageContentState({
                     value={orderNumberSearch}
                     placeholder="Order number"
                     isActive={Boolean(orderNumberSearch)}
-                    onChange={(value) => {
-                      setOrderNumberSearch(value);
-                      setOrdersPage(1);
-                    }}
+                    onChange={setOrderNumberSearch}
                   />
 
                   <SearchInput
@@ -1128,10 +1164,7 @@ function ClientDetailsPageContentState({
                     value={orderCommentSearch}
                     placeholder="Client comment"
                     isActive={Boolean(orderCommentSearch)}
-                    onChange={(value) => {
-                      setOrderCommentSearch(value);
-                      setOrdersPage(1);
-                    }}
+                    onChange={setOrderCommentSearch}
                   />
 
                   <div className={css.searchAction}>
@@ -1156,7 +1189,10 @@ function ClientDetailsPageContentState({
                         options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
                         onChange={(value) => {
                           setOrdersRowsPerPage(value);
-                          setOrdersPage(1);
+                          setOrdersPageState({
+                            searchKey: orderSearchKey,
+                            page: 1,
+                          });
                         }}
                       />
                     </div>
@@ -1196,7 +1232,9 @@ function ClientDetailsPageContentState({
                       currentPage={ordersPage}
                       totalPages={ordersTotalPages}
                       ariaLabel="Client orders pagination"
-                      onPageChange={setOrdersPage}
+                      onPageChange={(page) =>
+                        setOrdersPageState({ searchKey: orderSearchKey, page })
+                      }
                     />
                   ) : null}
                 </div>
@@ -1227,10 +1265,7 @@ function ClientDetailsPageContentState({
                     value={productArticleSearch}
                     placeholder="Product article"
                     isActive={Boolean(productArticleSearch)}
-                    onChange={(value) => {
-                      setProductArticleSearch(value);
-                      setProductsPage(1);
-                    }}
+                    onChange={setProductArticleSearch}
                   />
 
                   <SearchInput
@@ -1239,10 +1274,7 @@ function ClientDetailsPageContentState({
                     value={productNameSearch}
                     placeholder="Product name"
                     isActive={Boolean(productNameSearch)}
-                    onChange={(value) => {
-                      setProductNameSearch(value);
-                      setProductsPage(1);
-                    }}
+                    onChange={setProductNameSearch}
                   />
 
                   <div className={css.searchAction}>
@@ -1267,7 +1299,10 @@ function ClientDetailsPageContentState({
                         options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
                         onChange={(value) => {
                           setProductsRowsPerPage(value);
-                          setProductsPage(1);
+                          setProductsPageState({
+                            searchKey: productSearchKey,
+                            page: 1,
+                          });
                         }}
                       />
                     </div>
@@ -1307,7 +1342,12 @@ function ClientDetailsPageContentState({
                     <PaginationView
                       currentPage={productsPage}
                       totalPages={productsTotalPages}
-                      onPageChange={setProductsPage}
+                      onPageChange={(page) =>
+                        setProductsPageState({
+                          searchKey: productSearchKey,
+                          page,
+                        })
+                      }
                     />
                   ) : null}
                 </div>
@@ -1340,12 +1380,18 @@ function ClientDetailsPageContentState({
           resetHref={getPharmacyClientPath(clientId)}
           onChange={(filters) => {
             setOrderFilters(filters);
-            setOrdersPage(1);
+            setOrdersPageState({
+              searchKey: orderSearchKey,
+              page: 1,
+            });
           }}
           onClose={() => setIsOrdersFiltersOpen(false)}
           onReset={() => {
             setOrderFilters(DEFAULT_ORDER_FILTERS);
-            setOrdersPage(1);
+            setOrdersPageState({
+              searchKey: orderSearchKey,
+              page: 1,
+            });
           }}
         />
       ) : null}
@@ -1358,12 +1404,12 @@ function ClientDetailsPageContentState({
           resetHref={getPharmacyClientPath(clientId)}
           onChange={(filters) => {
             setProductFilters(filters);
-            setProductsPage(1);
+            setProductsPageState({ searchKey: productSearchKey, page: 1 });
           }}
           onClose={() => setIsProductsFiltersOpen(false)}
           onReset={() => {
             setProductFilters(DEFAULT_PRODUCT_FILTERS);
-            setProductsPage(1);
+            setProductsPageState({ searchKey: productSearchKey, page: 1 });
           }}
         />
       ) : null}
