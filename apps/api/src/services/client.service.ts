@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, type PipelineStage } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Order } from '../models/order.model';
@@ -18,13 +18,11 @@ import type { OrderEntity } from '../types/order';
 import type { ProductEntity, ProductStatus } from '../types/product';
 import type { ProductCategory } from '../types/categories';
 import type { PharmacyEntity } from '../types/pharmacy';
-import type { UserEntity } from '../types/user';
 
 //===============================================================
 
 type PharmacyDocument = PharmacyEntity & { _id: Types.ObjectId };
 type OrderDocument = OrderEntity & { _id: Types.ObjectId };
-type UserDocument = UserEntity & { _id: Types.ObjectId; createdAt: Date };
 type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 
 //===============================================================
@@ -44,6 +42,28 @@ type ClientRow = Readonly<{
   isDefault: boolean;
 }>;
 
+type ClientStatistics = Readonly<{
+  total: number;
+  repeat: number;
+  active: number;
+  blocked: number;
+}>;
+
+type AggregatedClientRow = Omit<ClientRow, 'firstOrderAt'> & {
+  firstOrderAt: Date;
+  earliestOrderAt: Date | null;
+};
+
+type ClientAggregationResult = Readonly<{
+  items: AggregatedClientRow[];
+  total: Array<{ count: number }>;
+  statistics: Array<
+    ClientStatistics & {
+      earliestOrderAt: Date | null;
+    }
+  >;
+}>;
+
 type ClientPurchasedProductRow = Readonly<{
   id: string;
   orderId: string;
@@ -55,7 +75,8 @@ type ClientPurchasedProductRow = Readonly<{
   category: ProductCategory;
   quantity: number;
   totalAmount: number;
-  status: ProductStatus;
+  currentProductExists: boolean;
+  currentStatus: ProductStatus | null;
 }>;
 
 //===============================================================
@@ -74,191 +95,13 @@ async function getCurrentPharmacyId(userId: string) {
 
 //===============================================================
 
-function getDeliveryAddress(order: OrderDocument): string | undefined {
-  return order.delivery.method === 'postal_delivery'
-    ? order.delivery.details.address
-    : undefined;
-}
-
-//===============================================================
-
-function getClientAddress(user: UserDocument, orders: OrderDocument[]): string {
-  if (user.isDefaultPharmacyClient) return '';
-  if (user.address) return user.address;
-
-  const deliveryAddress = orders
-    .map((order) => getDeliveryAddress(order))
-    .find((address): address is string => Boolean(address));
-
-  return deliveryAddress ?? 'Not specified';
-}
-
-//===============================================================
-
-function getFirstOrderDate(orders: OrderDocument[], fallbackDate: Date): Date {
-  return orders.reduce(
-    (earliest, order) =>
-      order.createdAt < earliest ? order.createdAt : earliest,
-    orders[0]?.createdAt ?? fallbackDate
-  );
-}
-
-//===============================================================
-
-function serializeClient(
-  user: UserDocument,
-  orders: OrderDocument[],
-  pharmacy: Pick<
-    PharmacyDocument,
-    'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
-  >
-): ClientRow {
-  const successfulOrders = orders.filter(
-    (order) => order.status === 'successful'
-  );
-  const isDefault = Boolean(user.isDefaultPharmacyClient);
-  const fallbackDate =
-    pharmacy.activatedAt ??
-    pharmacy.approvedAt ??
-    pharmacy.createdAt ??
-    user.createdAt;
-
-  return {
-    id: String(user._id),
-    photoUrl: isDefault
-      ? (pharmacy.imageUrl ?? null)
-      : (user.pictureUrl ?? null),
-    firstOrderAt: (isDefault
-      ? fallbackDate
-      : getFirstOrderDate(orders, fallbackDate)
-    ).toISOString(),
-    name: isDefault ? 'Walk-in client' : user.name,
-    email: isDefault ? '' : user.email,
-    phone: isDefault ? '' : user.phone,
-    address: isDefault ? '' : getClientAddress(user, orders),
-    successfulOrdersCount: successfulOrders.length,
-    successfulOrdersAmount: successfulOrders.reduce(
-      (sum, order) => sum + order.totalPrice,
-      0
-    ),
-    status: isDefault
-      ? 'active'
-      : user.status === 'blocked'
-        ? 'blocked'
-        : 'active',
-    ...(user.statusReason && !isDefault
-      ? { statusReason: user.statusReason }
-      : {}),
-    isDefault,
-  };
-}
-
-//===============================================================
-
-function isWalkInClient(client: ClientRow): boolean {
-  return (
-    client.isDefault || client.name.trim().toLowerCase() === 'walk-in client'
-  );
-}
-
-//===============================================================
-
-function compareClientRows(first: ClientRow, second: ClientRow): number {
-  const firstIsWalkIn = isWalkInClient(first);
-  const secondIsWalkIn = isWalkInClient(second);
-
-  if (firstIsWalkIn !== secondIsWalkIn) {
-    return firstIsWalkIn ? -1 : 1;
-  }
-
-  return second.firstOrderAt.localeCompare(first.firstOrderAt);
-}
-
-//===============================================================
-
-function matchesClientFilters(client: ClientRow, query: ClientsQuery): boolean {
-  if (query.clientId?.trim() && !client.id.includes(query.clientId.trim())) {
-    return false;
-  }
-
-  if (
-    query.name?.trim() &&
-    !createSafeRegExp(query.name.trim()).test(client.name)
-  ) {
-    return false;
-  }
-
-  if (query.contact?.trim()) {
-    const contactSearchRegExp = createSafeRegExp(query.contact.trim());
-
-    if (
-      !contactSearchRegExp.test(client.email) &&
-      !contactSearchRegExp.test(client.phone) &&
-      !contactSearchRegExp.test(client.address)
-    ) {
-      return false;
-    }
-  }
-
-  if (
-    query.email?.trim() &&
-    !createSafeRegExp(query.email.trim()).test(client.email)
-  ) {
-    return false;
-  }
-
-  if (
-    query.phone?.trim() &&
-    !createSafeRegExp(query.phone.trim()).test(client.phone)
-  ) {
-    return false;
-  }
-
-  if (
-    query.address?.trim() &&
-    !createSafeRegExp(query.address.trim()).test(client.address)
-  ) {
-    return false;
-  }
-
-  if (query.status && client.status !== query.status) {
-    return false;
-  }
-
-  if (query.successfulOrders === 'repeat') {
-    return client.successfulOrdersCount > 1;
-  }
-
-  if (query.successfulOrders === 'successful') {
-    return client.successfulOrdersCount > 0;
-  }
-
-  if (query.successfulOrders === 'other') {
-    return client.successfulOrdersCount === 0;
-  }
-
-  return true;
-}
-
-//===============================================================
-
-async function getClientRowsForPharmacy(
-  pharmacyId: Types.ObjectId,
+function buildClientFilterStages(
   query: ClientsQuery
-): Promise<ClientRow[]> {
-  const pharmacy = await Pharmacy.findById(pharmacyId)
-    .select('imageUrl activatedAt approvedAt createdAt')
-    .lean<Pick<
-      PharmacyDocument,
-      '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
-    > | null>();
-
-  if (!pharmacy) return [];
-
-  const orderFilter: Record<string, unknown> = { pharmacyId };
+): PipelineStage.FacetPipelineStage[] {
+  const match: Record<string, unknown> = {};
 
   if (query.firstOrderFrom || query.firstOrderTo) {
-    orderFilter.createdAt = {
+    match.firstOrderAt = {
       ...(query.firstOrderFrom
         ? { $gte: getStartOfDay(query.firstOrderFrom) }
         : {}),
@@ -266,39 +109,359 @@ async function getClientRowsForPharmacy(
     };
   }
 
-  const orders = await Order.find(orderFilter)
-    .sort({ createdAt: -1 })
-    .lean<OrderDocument[]>();
-
-  const ordersByUserId = new Map<string, OrderDocument[]>();
-
-  for (const order of orders) {
-    const userId = String(order.userId);
-    const existingOrders = ordersByUserId.get(userId) ?? [];
-    existingOrders.push(order);
-    ordersByUserId.set(userId, existingOrders);
+  if (query.clientId?.trim()) {
+    match.id = createSafeRegExp(query.clientId.trim());
   }
 
-  const users = await User.find({
-    $or: [
-      { _id: { $in: [...ordersByUserId.keys()] } },
-      {
-        isDefaultPharmacyClient: true,
-        defaultClientPharmacyId: pharmacyId,
+  if (query.name?.trim()) {
+    match.name = createSafeRegExp(query.name.trim());
+  }
+
+  if (query.contact?.trim()) {
+    const contact = createSafeRegExp(query.contact.trim());
+    match.$or = [{ email: contact }, { phone: contact }, { address: contact }];
+  }
+
+  if (query.email?.trim()) {
+    match.email = createSafeRegExp(query.email.trim());
+  }
+
+  if (query.phone?.trim()) {
+    match.phone = createSafeRegExp(query.phone.trim());
+  }
+
+  if (query.address?.trim()) {
+    match.address = createSafeRegExp(query.address.trim());
+  }
+
+  if (query.status) {
+    match.status = query.status;
+  }
+
+  if (query.successfulOrders === 'repeat') {
+    match.successfulOrdersCount = { $gte: 2 };
+  } else if (query.successfulOrders === 'successful') {
+    match.successfulOrdersCount = { $gte: 1 };
+  } else if (query.successfulOrders === 'other') {
+    match.successfulOrdersCount = 0;
+  }
+
+  return Object.keys(match).length ? [{ $match: match }] : [];
+}
+
+//===============================================================
+
+async function getClientRowsForPharmacy(
+  pharmacyId: Types.ObjectId,
+  query: ClientsQuery
+): Promise<{
+  items: ClientRow[];
+  total: number;
+  statistics: ClientStatistics;
+  earliestCreatedAt: string | null;
+}> {
+  const pharmacy = await Pharmacy.findById(pharmacyId)
+    .select('imageUrl activatedAt approvedAt createdAt')
+    .lean<Pick<
+      PharmacyDocument,
+      '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
+    > | null>();
+
+  if (!pharmacy) {
+    return {
+      items: [],
+      total: 0,
+      statistics: { total: 0, repeat: 0, active: 0, blocked: 0 },
+      earliestCreatedAt: null,
+    };
+  }
+
+  const fallbackDate =
+    pharmacy.activatedAt ?? pharmacy.approvedAt ?? pharmacy.createdAt;
+  const filterStages = buildClientFilterStages(query);
+  const skip = (query.page - 1) * query.perPage;
+
+  const itemsFacet: PipelineStage.FacetPipelineStage[] = [
+    ...filterStages,
+    { $sort: { isDefault: -1, firstOrderAt: -1 } },
+    { $skip: skip },
+    { $limit: query.perPage },
+  ];
+
+  const totalFacet: PipelineStage.FacetPipelineStage[] = [
+    ...filterStages,
+    { $count: 'count' },
+  ];
+
+  const statisticsFacet: PipelineStage.FacetPipelineStage[] = [
+    {
+      $group: {
+        _id: null,
+        total: { $sum: 1 },
+        repeat: {
+          $sum: {
+            $cond: [{ $gte: ['$successfulOrdersCount', 2] }, 1, 0],
+          },
+        },
+        active: {
+          $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] },
+        },
+        blocked: {
+          $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] },
+        },
+        earliestOrderCandidates: { $push: '$earliestOrderAt' },
       },
-    ],
-  }).lean<UserDocument[]>();
+    },
+    {
+      $project: {
+        _id: 0,
+        total: 1,
+        repeat: 1,
+        active: 1,
+        blocked: 1,
+        earliestOrderAt: {
+          $min: {
+            $filter: {
+              input: '$earliestOrderCandidates',
+              as: 'orderDate',
+              cond: { $ne: ['$$orderDate', null] },
+            },
+          },
+        },
+      },
+    },
+  ];
 
-  return users
-    .flatMap((user) => {
-      const userOrders = ordersByUserId.get(String(user._id)) ?? [];
+  const pipeline: PipelineStage[] = [
+    { $match: { pharmacyId } },
+    {
+      $set: {
+        latestDeliveryAddressCandidate: {
+          $cond: [
+            {
+              $and: [
+                { $eq: ['$delivery.method', 'postal_delivery'] },
+                {
+                  $gt: [
+                    {
+                      $strLenCP: {
+                        $ifNull: ['$delivery.details.address', ''],
+                      },
+                    },
+                    0,
+                  ],
+                },
+              ],
+            },
+            '$delivery.details.address',
+            null,
+          ],
+        },
+        hasDeliveryAddressCandidate: {
+          $cond: [
+            {
+              $and: [
+                { $eq: ['$delivery.method', 'postal_delivery'] },
+                {
+                  $gt: [
+                    {
+                      $strLenCP: {
+                        $ifNull: ['$delivery.details.address', ''],
+                      },
+                    },
+                    0,
+                  ],
+                },
+              ],
+            },
+            1,
+            0,
+          ],
+        },
+      },
+    },
+    {
+      $sort: {
+        userId: 1,
+        hasDeliveryAddressCandidate: -1,
+        createdAt: -1,
+      },
+    },
+    {
+      $group: {
+        _id: '$userId',
+        firstOrderAt: { $min: '$createdAt' },
+        earliestOrderAt: { $min: '$createdAt' },
+        successfulOrdersCount: {
+          $sum: { $cond: [{ $eq: ['$status', 'successful'] }, 1, 0] },
+        },
+        successfulOrdersAmount: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'successful'] }, '$totalPrice', 0],
+          },
+        },
+        latestDeliveryAddress: { $first: '$latestDeliveryAddressCandidate' },
+      },
+    },
+    {
+      $lookup: {
+        from: User.collection.name,
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user',
+      },
+    },
+    { $unwind: '$user' },
+    { $set: { sourcePriority: 1 } },
+    {
+      $unionWith: {
+        coll: User.collection.name,
+        pipeline: [
+          {
+            $match: {
+              isDefaultPharmacyClient: true,
+              defaultClientPharmacyId: pharmacyId,
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              firstOrderAt: { $literal: null },
+              earliestOrderAt: { $literal: null },
+              successfulOrdersCount: { $literal: 0 },
+              successfulOrdersAmount: { $literal: 0 },
+              latestDeliveryAddress: { $literal: null },
+              sourcePriority: { $literal: 0 },
+              user: {
+                _id: '$_id',
+                name: '$name',
+                email: '$email',
+                phone: '$phone',
+                address: '$address',
+                pictureUrl: '$pictureUrl',
+                status: '$status',
+                statusReason: '$statusReason',
+                isDefaultPharmacyClient: '$isDefaultPharmacyClient',
+              },
+            },
+          },
+        ],
+      },
+    },
+    { $sort: { _id: 1, sourcePriority: -1 } },
+    {
+      $group: {
+        _id: '$_id',
+        row: { $first: '$$ROOT' },
+      },
+    },
+    { $replaceRoot: { newRoot: '$row' } },
+    {
+      $set: {
+        isDefault: { $eq: ['$user.isDefaultPharmacyClient', true] },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        id: { $toString: '$_id' },
+        photoUrl: {
+          $cond: [
+            '$isDefault',
+            pharmacy.imageUrl ?? null,
+            { $ifNull: ['$user.pictureUrl', null] },
+          ],
+        },
+        firstOrderAt: {
+          $cond: ['$isDefault', fallbackDate, '$firstOrderAt'],
+        },
+        earliestOrderAt: 1,
+        name: { $cond: ['$isDefault', 'Walk-in client', '$user.name'] },
+        email: { $cond: ['$isDefault', '', '$user.email'] },
+        phone: { $cond: ['$isDefault', '', '$user.phone'] },
+        address: {
+          $cond: [
+            '$isDefault',
+            '',
+            {
+              $cond: [
+                { $gt: [{ $strLenCP: { $ifNull: ['$user.address', ''] } }, 0] },
+                '$user.address',
+                { $ifNull: ['$latestDeliveryAddress', 'Not specified'] },
+              ],
+            },
+          ],
+        },
+        successfulOrdersCount: 1,
+        successfulOrdersAmount: 1,
+        status: {
+          $cond: [
+            '$isDefault',
+            'active',
+            {
+              $cond: [
+                { $eq: ['$user.status', 'blocked'] },
+                'blocked',
+                'active',
+              ],
+            },
+          ],
+        },
+        statusReason: {
+          $cond: [
+            '$isDefault',
+            null,
+            { $ifNull: ['$user.statusReason', null] },
+          ],
+        },
+        isDefault: 1,
+      },
+    },
+    {
+      $facet: {
+        items: itemsFacet,
+        total: totalFacet,
+        statistics: statisticsFacet,
+      },
+    },
+  ];
 
-      if (!userOrders.length && !user.isDefaultPharmacyClient) return [];
+  const [result] = await Order.aggregate<ClientAggregationResult>(pipeline);
+  const total = result?.total[0]?.count ?? 0;
+  const statistics = result?.statistics[0] ?? {
+    total: 0,
+    repeat: 0,
+    active: 0,
+    blocked: 0,
+    earliestOrderAt: null,
+  };
 
-      return [serializeClient(user, userOrders, pharmacy)];
-    })
-    .filter((client) => matchesClientFilters(client, query))
-    .sort(compareClientRows);
+  return {
+    items: (result?.items ?? []).map((client) => ({
+      id: client.id,
+      photoUrl: client.photoUrl,
+      firstOrderAt: client.firstOrderAt.toISOString(),
+      name: client.name,
+      email: client.email,
+      phone: client.phone,
+      address: client.address,
+      successfulOrdersCount: client.successfulOrdersCount,
+      successfulOrdersAmount: client.successfulOrdersAmount,
+      status: client.status,
+      ...(client.statusReason ? { statusReason: client.statusReason } : {}),
+      isDefault: client.isDefault,
+    })),
+    total,
+    statistics: {
+      total: statistics.total,
+      repeat: statistics.repeat,
+      active: statistics.active,
+      blocked: statistics.blocked,
+    },
+    earliestCreatedAt: statistics.earliestOrderAt
+      ? statistics.earliestOrderAt.toISOString().slice(0, 10)
+      : null,
+  };
 }
 
 //===============================================================
@@ -314,34 +477,20 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
       total: 0,
       totalPages: 0,
       earliestCreatedAt: null,
+      statistics: { total: 0, repeat: 0, active: 0, blocked: 0 },
     };
   }
 
-  const [clients, earliestOrder] = await Promise.all([
-    getClientRowsForPharmacy(pharmacyId, query),
-    Order.findOne({ pharmacyId })
-      .sort({ createdAt: 1 })
-      .select('createdAt')
-      .lean<{ createdAt: Date } | null>(),
-  ]);
-
-  const orderedClients = [
-    ...clients.filter(isWalkInClient),
-    ...clients.filter((client) => !isWalkInClient(client)),
-  ];
-  const skip = (query.page - 1) * query.perPage;
-  const items = orderedClients.slice(skip, skip + query.perPage);
+  const result = await getClientRowsForPharmacy(pharmacyId, query);
 
   return {
-    items,
-    page: clients.length === 0 ? 1 : query.page,
+    items: result.items,
+    page: result.total === 0 ? 1 : query.page,
     perPage: query.perPage,
-    total: clients.length,
-    totalPages: Math.ceil(clients.length / query.perPage),
-
-    earliestCreatedAt: earliestOrder
-      ? earliestOrder.createdAt.toISOString().slice(0, 10)
-      : null,
+    total: result.total,
+    totalPages: Math.ceil(result.total / query.perPage),
+    earliestCreatedAt: result.earliestCreatedAt,
+    statistics: result.statistics,
   };
 }
 
@@ -354,13 +503,13 @@ export async function getClientByIdService(userId: string, clientId: string) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
   }
 
-  const clients = await getClientRowsForPharmacy(pharmacyId, {
+  const result = await getClientRowsForPharmacy(pharmacyId, {
     page: 1,
     perPage: 1,
     clientId,
   });
 
-  const client = clients.find((item) => item.id === clientId);
+  const client = result.items.find((item) => item.id === clientId);
 
   if (!client) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
@@ -390,7 +539,7 @@ function matchesClientProductFilters(
   }
 
   if (query.category && row.category !== query.category) return false;
-  if (query.status && row.status !== query.status) return false;
+  if (query.status && row.currentStatus !== query.status) return false;
 
   if (query.dateFrom && row.orderDate < `${query.dateFrom}T00:00:00.000Z`) {
     return false;
@@ -460,7 +609,7 @@ export async function getClientPurchasedProductsService(
   ].map((productId) => new Types.ObjectId(productId));
 
   const products = await Product.find({ _id: { $in: productIds } })
-    .select('name article category imageUrl status')
+    .select('status')
     .lean<ProductDocument[]>();
 
   const productsById = new Map(
@@ -472,21 +621,21 @@ export async function getClientPurchasedProductsService(
       order.items.map((item, itemIndex): ClientPurchasedProductRow => {
         const productId = item.productId.toString();
         const product = productsById.get(productId);
-        const category =
-          product?.category ?? item.productSnapshot.category ?? 'other';
+        const snapshot = item.productSnapshot;
 
         return {
           id: `${order._id.toString()}-${item._id?.toString() ?? itemIndex}`,
           orderId: order._id.toString(),
           orderDate: order.createdAt.toISOString(),
           productId,
-          photoUrl: product?.imageUrl ?? item.productSnapshot.imageUrl ?? null,
-          article: product?.article ?? item.productSnapshot.article,
-          name: product?.name ?? item.productSnapshot.name,
-          category,
+          photoUrl: snapshot.imageUrl ?? null,
+          article: snapshot.article,
+          name: snapshot.name,
+          category: snapshot.category ?? 'other',
           quantity: item.quantity,
           totalAmount: item.totalPrice,
-          status: product?.status ?? 'blocked',
+          currentProductExists: Boolean(product),
+          currentStatus: product?.status ?? null,
         };
       })
     )

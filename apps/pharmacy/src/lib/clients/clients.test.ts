@@ -62,6 +62,7 @@ test('pharmacy clients response rejects malformed rows and earliest date', () =>
     total: 1,
     totalPages: 1,
     earliestCreatedAt: '2026-08-12',
+    statistics: { total: 1, repeat: 1, active: 1, blocked: 0 },
   };
 
   assert.equal(normalizePharmacyClientsResponse(response).total, 1);
@@ -83,6 +84,15 @@ test('pharmacy clients response rejects malformed rows and earliest date', () =>
       }),
     isInvalidResponse
   );
+
+  assert.throws(
+    () =>
+      normalizePharmacyClientsResponse({
+        ...response,
+        statistics: { ...response.statistics, repeat: -1 },
+      }),
+    isInvalidResponse
+  );
 });
 
 //===================================================================
@@ -99,7 +109,8 @@ test('purchased product response rejects invalid quantities and dates', () => {
     category: 'medicine',
     quantity: 2,
     totalAmount: 200,
-    status: 'active',
+    currentProductExists: true,
+    currentStatus: 'active',
   };
 
   const response = {
@@ -127,6 +138,29 @@ test('purchased product response rejects invalid quantities and dates', () => {
       normalizePharmacyClientProductsResponse({
         ...response,
         items: [{ ...item, orderDate: '2026-08-12' }],
+      }),
+    isInvalidResponse
+  );
+
+  const deletedProduct = {
+    ...item,
+    currentProductExists: false,
+    currentStatus: null,
+  };
+
+  assert.equal(
+    normalizePharmacyClientProductsResponse({
+      ...response,
+      items: [deletedProduct],
+    }).items[0]?.currentStatus,
+    null
+  );
+
+  assert.throws(
+    () =>
+      normalizePharmacyClientProductsResponse({
+        ...response,
+        items: [{ ...item, currentProductExists: false }],
       }),
     isInvalidResponse
   );

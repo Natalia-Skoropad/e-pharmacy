@@ -26,6 +26,8 @@ import type {
   ProductStatus,
 } from '@e-pharmacy/types/products';
 
+import type { ClientStatisticsCounts } from '@/lib/statistics/config';
+
 //===================================================================
 
 export type ClientStatus = UserStatus;
@@ -65,6 +67,7 @@ export type PharmacyClientsQueryParams = Readonly<{
 export type PharmacyClientsResponse = Readonly<
   ApiPaginationResponse<PharmacyClientRow> & {
     earliestCreatedAt: string | null;
+    statistics: ClientStatisticsCounts;
   }
 >;
 
@@ -79,7 +82,8 @@ export type PharmacyClientPurchasedProduct = Readonly<{
   category: ProductCategory;
   quantity: number;
   totalAmount: number;
-  status: ProductStatus;
+  currentProductExists: boolean;
+  currentStatus: ProductStatus | null;
 }>;
 
 export type PharmacyClientProductsQueryParams = Readonly<{
@@ -251,6 +255,49 @@ function parseEarliestCreatedAt(
 
 //===================================================================
 
+function parseClientStatistics(
+  payload: unknown,
+  label: string
+): ClientStatisticsCounts {
+  if (!isRecord(payload)) {
+    invalidClientContract(`${label} must be an object.`, payload);
+  }
+
+  const statistics = payload.statistics;
+
+  if (!isRecord(statistics)) {
+    invalidClientContract(`${label}.statistics must be an object.`, payload);
+  }
+
+  return {
+    total: requireNonNegativeInteger(
+      statistics.total,
+      `${label}.statistics.total`,
+      payload
+    ),
+
+    repeat: requireNonNegativeInteger(
+      statistics.repeat,
+      `${label}.statistics.repeat`,
+      payload
+    ),
+
+    active: requireNonNegativeInteger(
+      statistics.active,
+      `${label}.statistics.active`,
+      payload
+    ),
+
+    blocked: requireNonNegativeInteger(
+      statistics.blocked,
+      `${label}.statistics.blocked`,
+      payload
+    ),
+  };
+}
+
+//===================================================================
+
 export function normalizePharmacyClient(rawClient: unknown): PharmacyClientRow {
   if (!isRecord(rawClient)) {
     invalidClientContract('pharmacy client must be an object.', rawClient);
@@ -350,6 +397,7 @@ export function normalizePharmacyClientsResponse(
       payload,
       'pharmacy clients response'
     ),
+    statistics: parseClientStatistics(payload, 'pharmacy clients response'),
   };
 }
 
@@ -367,7 +415,7 @@ function normalizePharmacyClientPurchasedProduct(
 
   const orderDate = payload.orderDate;
   const category = payload.category;
-  const status = payload.status;
+  const currentStatus = payload.currentStatus;
 
   if (!isISODateTimeString(orderDate)) {
     invalidClientContract(
@@ -383,9 +431,23 @@ function normalizePharmacyClientPurchasedProduct(
     );
   }
 
-  if (!isProductStatus(status)) {
+  if (currentStatus !== null && !isProductStatus(currentStatus)) {
     invalidClientContract(
-      'pharmacy client purchased product.status is invalid.',
+      'pharmacy client purchased product.currentStatus is invalid.',
+      payload
+    );
+  }
+
+  if (typeof payload.currentProductExists !== 'boolean') {
+    invalidClientContract(
+      'pharmacy client purchased product.currentProductExists must be boolean.',
+      payload
+    );
+  }
+
+  if (payload.currentProductExists !== (currentStatus !== null)) {
+    invalidClientContract(
+      'pharmacy client purchased product current metadata is inconsistent.',
       payload
     );
   }
@@ -440,7 +502,9 @@ function normalizePharmacyClientPurchasedProduct(
       'pharmacy client purchased product.totalAmount',
       payload
     ),
-    status,
+
+    currentProductExists: payload.currentProductExists,
+    currentStatus,
   };
 }
 
@@ -454,6 +518,7 @@ export function normalizePharmacyClientProductsResponse(
       legacyItemKeys: ['products'],
       normalizeItem: normalizePharmacyClientPurchasedProduct,
     }),
+
     { label: 'pharmacy client products response' }
   );
 

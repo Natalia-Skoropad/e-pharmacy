@@ -20,17 +20,15 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import {
   type ClientStatisticsCounts,
   type ClientStatisticsKey,
 } from '@/lib/statistics/config';
 
+import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyClients } from '@/lib/api/browser';
-import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
-import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import {
   DEFAULT_CLIENTS_FILTERS,
@@ -44,37 +42,13 @@ import type {
 } from '@/lib/clients/clients';
 
 import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { ClientStatistics } from '@/components/statistics';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 
 import css from './ClientsPageContent.module.css';
-
-//===================================================================
-
-function isWalkInClient(client: PharmacyClientRow): boolean {
-  return (
-    client.isDefault || client.name.trim().toLowerCase() === 'walk-in client'
-  );
-}
-
-//===================================================================
-
-function putDefaultClientFirst(
-  clients: readonly PharmacyClientRow[]
-): PharmacyClientRow[] {
-  return [...clients].sort((first, second) => {
-    const firstIsWalkIn = isWalkInClient(first);
-    const secondIsWalkIn = isWalkInClient(second);
-
-    if (firstIsWalkIn !== secondIsWalkIn) {
-      return firstIsWalkIn ? -1 : 1;
-    }
-
-    return 0;
-  });
-}
 
 //===================================================================
 
@@ -128,36 +102,11 @@ function ClientsPageContent({
   const [isLoading, setIsLoading] = useState(false);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadClientStatistics() {
-      try {
-        const nextStatistics = await getPharmacyClientStatistics({
-          signal: controller.signal,
-        });
-        if (!controller.signal.aborted) {
-          setClientStatistics(nextStatistics);
-          setIsClientStatisticsUnavailable(false);
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setIsClientStatisticsUnavailable(true);
-        }
-      }
-    }
-
-    void loadClientStatistics();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
   const queryParams = useMemo(
     () => getClientsQueryParams(filters, rowsPerPage, currentPage),
     [currentPage, filters, rowsPerPage]
   );
+
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.firstOrderDate.from || filters.firstOrderDate.to),
     Boolean(filters.name.trim()),
@@ -166,7 +115,6 @@ function ClientsPageContent({
     filters.status !== 'all',
     filters.successfulOrders !== 'all'
   );
-  const shouldPinDefaultClient = currentPage === 1 && activeFiltersCount === 0;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -175,37 +123,17 @@ function ClientsPageContent({
       setIsLoading(true);
 
       try {
-        const requestOptions = { signal: controller.signal };
-        const [response, defaultClientResponse] = await Promise.all([
-          getPharmacyClients(queryParams, requestOptions),
-          shouldPinDefaultClient
-            ? getPharmacyClients(
-                {
-                  page: 1,
-                  perPage: 20,
-                  name: 'Walk-in client',
-                },
-                requestOptions
-              )
-            : Promise.resolve(null),
-        ]);
+        const response = await getPharmacyClients(queryParams, {
+          signal: controller.signal,
+        });
         if (controller.signal.aborted) return;
 
-        const nextClients = putDefaultClientFirst(response.items);
-        const defaultClient = defaultClientResponse?.items.find(isWalkInClient);
-
-        if (
-          defaultClient &&
-          !nextClients.some((client) => client.id === defaultClient.id)
-        ) {
-          nextClients.unshift(defaultClient);
-          nextClients.splice(rowsPerPage);
-        }
-
-        setClients(nextClients);
+        setClients([...response.items]);
         setTotalClients(response.total);
         setTotalPages(response.totalPages);
         setEarliestCreatedAt(response.earliestCreatedAt);
+        setClientStatistics(response.statistics);
+        setIsClientStatisticsUnavailable(false);
       } catch {
         if (controller.signal.aborted) return;
 
@@ -213,6 +141,7 @@ function ClientsPageContent({
         setTotalClients(0);
         setTotalPages(0);
         setEarliestCreatedAt(null);
+        setIsClientStatisticsUnavailable(true);
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -223,7 +152,7 @@ function ClientsPageContent({
     return () => {
       controller.abort();
     };
-  }, [queryParams, rowsPerPage, shouldPinDefaultClient]);
+  }, [queryParams]);
 
   const debouncedFilters = useDebouncedValue(filters, 450);
 

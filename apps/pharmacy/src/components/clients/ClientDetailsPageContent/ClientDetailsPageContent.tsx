@@ -67,6 +67,7 @@ import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 
@@ -76,7 +77,11 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
-import type { ProductCategory, ProductStatus } from '@e-pharmacy/types/products';
+import type {
+  ProductCategory,
+  ProductStatus,
+} from '@e-pharmacy/types/products';
+
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
@@ -105,22 +110,20 @@ import type {
   PharmacyClientRow,
 } from '@/lib/clients/clients';
 
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 import { getProductImageSrc } from '@/lib/products/product-images';
-
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
-
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './ClientDetailsPageContent.module.css';
 
 //===================================================================
 
 type ClientDetailsPageContentProps = Readonly<{ clientId: string }>;
+
+//===================================================================
 
 type ClientTab = 'details' | 'orders' | 'products' | 'comments';
 
@@ -150,7 +153,11 @@ const CLIENT_TABS: Array<TabItem<ClientTab>> = [
   { value: 'comments', label: 'Comments' },
 ];
 
+//===================================================================
+
 const PRODUCT_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
+
+//===================================================================
 
 const DEFAULT_PRODUCT_FILTERS: ClientProductFilters = {
   date: { from: '', to: '' },
@@ -340,6 +347,7 @@ function ClientOrdersFiltersDrawer({
     </FilterDrawer>
   );
 }
+
 //===================================================================
 
 type ClientProductsFiltersDrawerProps = Readonly<{
@@ -405,13 +413,20 @@ function ClientProductsFiltersDrawer({
     </FilterDrawer>
   );
 }
+
 //===================================================================
 
-function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
+function ClientDetailsPageContentState({
+  clientId,
+}: ClientDetailsPageContentProps) {
   const [client, setClient] = useState<PharmacyClientRow | null>(null);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [ordersTotal, setOrdersTotal] = useState(0);
-  const [ordersOverallTotal, setOrdersOverallTotal] = useState(0);
+
+  const [ordersOverallTotal, setOrdersOverallTotal] = useState<number | null>(
+    null
+  );
+
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
   const [ordersPage, setOrdersPage] = useState(1);
 
@@ -433,11 +448,11 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const [ordersError, setOrdersError] = useState('');
   const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
 
-  const [orderStatistics, setOrderStatistics] = useState<OrderStatisticsCounts>(
-    DEFAULT_ORDER_STATISTICS
-  );
+  const [orderStatistics, setOrderStatistics] =
+    useState<OrderStatisticsCounts | null>(null);
 
-  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
+  const [commentsActivated, setCommentsActivated] = useState(false);
   const [activeTab, setActiveTab] = useState<ClientTab>('details');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -452,7 +467,10 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     string | null
   >(null);
 
-  const [productsOverallTotal, setProductsOverallTotal] = useState(0);
+  const [productsOverallTotal, setProductsOverallTotal] = useState<
+    number | null
+  >(null);
+
   const [productsTotalPages, setProductsTotalPages] = useState(0);
   const [productsPage, setProductsPage] = useState(1);
 
@@ -469,35 +487,22 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState('');
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
+  const [productsActivated, setProductsActivated] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    const requestOptions = { signal: controller.signal };
 
     async function loadClient() {
       setLoading(true);
       setError('');
 
       try {
-        const [loadedClient, ordersResponse, commentsResponse] =
-          await Promise.all([
-            getPharmacyClientDetails(clientId, requestOptions),
-            getPharmacyOrders(
-              { page: 1, perPage: 1, clientId },
-              requestOptions
-            ),
-            getPharmacyNotes('client', clientId, 1, requestOptions).catch(
-              () => null
-            ),
-          ]);
+        const loadedClient = await getPharmacyClientDetails(clientId, {
+          signal: controller.signal,
+        });
 
         if (controller.signal.aborted) return;
-
         setClient(loadedClient);
-        setOrdersOverallTotal(ordersResponse.total);
-        setOrdersEarliestCreatedAt(ordersResponse.earliestCreatedAt);
-        setOrderStatistics(ordersResponse.statistics);
-        setCommentsTotal(commentsResponse?.total ?? 0);
       } catch {
         if (!controller.signal.aborted) {
           setError('Could not load client details.');
@@ -512,6 +517,10 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     return () => {
       controller.abort();
     };
+  }, [clientId]);
+
+  useEffect(() => {
+    dispatchPharmacyBreadcrumbLabel(`Client #${clientId}`);
   }, [clientId]);
 
   useEffect(() => {
@@ -612,6 +621,8 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
   ]);
 
   useEffect(() => {
+    if (!productsActivated) return;
+
     const controller = new AbortController();
 
     async function loadProducts() {
@@ -686,6 +697,7 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     productArticleSearch,
     productFilters,
     productNameSearch,
+    productsActivated,
     productsPage,
     productsRowsPerPage,
   ]);
@@ -694,15 +706,33 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     () =>
       CLIENT_TABS.map((tab) => {
         if (tab.value === 'orders') {
-          return { ...tab, label: `Orders (${ordersOverallTotal})` };
+          return {
+            ...tab,
+            label:
+              ordersOverallTotal === null
+                ? 'Orders'
+                : `Orders (${ordersOverallTotal})`,
+          };
         }
 
         if (tab.value === 'products') {
-          return { ...tab, label: `Products (${productsOverallTotal})` };
+          return {
+            ...tab,
+            label:
+              productsOverallTotal === null
+                ? 'Products'
+                : `Products (${productsOverallTotal})`,
+          };
         }
 
         if (tab.value === 'comments') {
-          return { ...tab, label: `Comments (${commentsTotal})` };
+          return {
+            ...tab,
+            label:
+              commentsTotal === null
+                ? 'Comments'
+                : `Comments (${commentsTotal})`,
+          };
         }
 
         return tab;
@@ -809,20 +839,26 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       {
         key: 'article',
         title: <TableHeaderTitle parts={['Product', 'article']} />,
-        render: (item) => (
-          <TextActionButton href={getPharmacyProductPath(item.productId)}>
-            {item.article}
-          </TextActionButton>
-        ),
+        render: (item) =>
+          item.currentProductExists ? (
+            <TextActionButton href={getPharmacyProductPath(item.productId)}>
+              {item.article}
+            </TextActionButton>
+          ) : (
+            item.article
+          ),
       },
       {
         key: 'name',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
-        render: (item) => (
-          <TextActionButton href={getPharmacyProductPath(item.productId)}>
-            {item.name}
-          </TextActionButton>
-        ),
+        render: (item) =>
+          item.currentProductExists ? (
+            <TextActionButton href={getPharmacyProductPath(item.productId)}>
+              {item.name}
+            </TextActionButton>
+          ) : (
+            item.name
+          ),
       },
       {
         key: 'category',
@@ -842,9 +878,12 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Product', 'status']} />,
-        render: (item) => (
-          <StatusBadge {...PRODUCT_STATUS_PRESENTATION[item.status]} />
-        ),
+        render: (item) =>
+          item.currentStatus ? (
+            <StatusBadge {...PRODUCT_STATUS_PRESENTATION[item.currentStatus]} />
+          ) : (
+            'Unavailable'
+          ),
       },
     ],
     []
@@ -894,10 +933,12 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          <OrderStatistics
-            counts={orderStatistics}
-            className={css.orderStatistics}
-          />
+          {orderStatistics ? (
+            <OrderStatistics
+              counts={orderStatistics}
+              className={css.orderStatistics}
+            />
+          ) : null}
         </div>
       </section>
 
@@ -909,7 +950,11 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             ariaLabel="Client details tabs"
             mobileVisibleCount={1}
             tabletVisibleCount={3}
-            onChange={setActiveTab}
+            onChange={(nextTab) => {
+              setActiveTab(nextTab);
+              if (nextTab === 'products') setProductsActivated(true);
+              if (nextTab === 'comments') setCommentsActivated(true);
+            }}
           />
 
           {activeTab === 'details' ? (
@@ -1197,17 +1242,19 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
             </div>
           ) : null}
 
-          {activeTab === 'comments' ? (
-            <EntityComments
-              entityKey={`client:${clientId}`}
-              initialTotal={commentsTotal}
-              load={(page, options) =>
-                getPharmacyNotes('client', clientId, page, options)
-              }
-              create={(text) => createPharmacyNote('client', clientId, text)}
-              remove={(id) => deletePharmacyNote('client', clientId, id)}
-              onTotalChange={setCommentsTotal}
-            />
+          {commentsActivated ? (
+            <div hidden={activeTab !== 'comments'}>
+              <EntityComments
+                entityKey={`client:${clientId}`}
+                initialTotal={commentsTotal ?? undefined}
+                load={(page, options) =>
+                  getPharmacyNotes('client', clientId, page, options)
+                }
+                create={(text) => createPharmacyNote('client', clientId, text)}
+                remove={(id) => deletePharmacyNote('client', clientId, id)}
+                onTotalChange={setCommentsTotal}
+              />
+            </div>
           ) : null}
         </div>
       </section>
@@ -1250,6 +1297,14 @@ function ClientDetailsPageContent({ clientId }: ClientDetailsPageContentProps) {
     </main>
   );
 }
+
+//===================================================================
+
+function ClientDetailsPageContent(props: ClientDetailsPageContentProps) {
+  return <ClientDetailsPageContentState key={props.clientId} {...props} />;
+}
+
+//===================================================================
 
 export default ClientDetailsPageContent;
 export { ClientDetailsPageContent };
