@@ -106,3 +106,61 @@ test('purchased products use immutable order snapshots and expose current produc
   assert.doesNotMatch(purchasedProductsSource, /product\?\.name \?\?/);
   assert.doesNotMatch(purchasedProductsSource, /product\?\.article \?\?/);
 });
+
+//===================================================================
+
+test('Walk-in identity is flag-based and never inferred from the display name', async () => {
+  const source = await readClientService();
+
+  assert.match(
+    source,
+    /isDefault:\s*\{ \$eq: \['\$user\.isDefaultPharmacyClient', true\] \}/
+  );
+
+  assert.doesNotMatch(source, /name\.trim\(\)\.toLowerCase\(\)/);
+  assert.doesNotMatch(source, /name\.toLowerCase\(\)/);
+});
+
+//===================================================================
+
+test('client and purchased-product pagination clamp stale requested pages before returning data', async () => {
+  const source = await readClientService();
+
+  const clientsStart = source.indexOf(
+    'export async function getClientsService'
+  );
+
+  const clientByIdStart = source.indexOf(
+    'export async function getClientByIdService',
+    clientsStart
+  );
+
+  const clientsSource = source.slice(clientsStart, clientByIdStart);
+
+  assert.match(
+    clientsSource,
+    /page = totalPages === 0 \? 1 : Math\.min\(query\.page, totalPages\)/
+  );
+
+  assert.match(clientsSource, /if \(page !== query\.page\)/);
+
+  assert.match(
+    clientsSource,
+    /getClientRowsForPharmacy\(pharmacyId, \{ \.\.\.query, page \}\)/
+  );
+
+  const productsStart = source.indexOf(
+    'export async function getClientPurchasedProductsService'
+  );
+
+  const productsSource = source.slice(productsStart);
+
+  assert.match(productsSource, /const total = rows\.length/);
+
+  assert.match(
+    productsSource,
+    /const page = totalPages === 0 \? 1 : Math\.min\(query\.page, totalPages\)/
+  );
+
+  assert.match(productsSource, /const skip = \(page - 1\) \* query\.perPage/);
+});

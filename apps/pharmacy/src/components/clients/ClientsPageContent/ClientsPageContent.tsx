@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 
@@ -29,6 +29,7 @@ import {
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyClients } from '@/lib/api/browser';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import {
   DEFAULT_CLIENTS_FILTERS,
@@ -73,6 +74,10 @@ function getClientsQueryParams(
 
 //===================================================================
 
+type ResourceStatus = 'idle' | 'loading' | 'success' | 'error';
+
+//===================================================================
+
 type ClientsPageContentProps = Readonly<{
   initialFilters?: ClientsFilterState;
 }>;
@@ -84,9 +89,15 @@ function ClientsPageContent({
 }: ClientsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [filters, setFilters] = useState<ClientsFilterState>(initialFilters);
+  const pendingRoutePathRef = useRef<string | null>(null);
+
+  const [searchFilters, setSearchFilters] = useState(() => ({
+    name: initialFilters.name,
+    clientId: initialFilters.clientId,
+    contact: initialFilters.contact,
+  }));
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
-  const [currentPage, setCurrentPage] = useState(1);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -96,15 +107,73 @@ function ClientsPageContent({
 
   const [clientStatistics, setClientStatistics] =
     useState<ClientStatisticsCounts>(DEFAULT_CLIENT_STATISTICS);
-  const [isClientStatisticsUnavailable, setIsClientStatisticsUnavailable] =
-    useState(false);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [clientsStatus, setClientsStatus] = useState<ResourceStatus>('idle');
+  const [clientsError, setClientsError] = useState('');
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
+  const routeFilters = useMemo<ClientsFilterState>(
+    () => ({
+      ...DEFAULT_CLIENTS_FILTERS,
+      firstOrderDate: {
+        from: initialFilters.firstOrderDate.from,
+        to: initialFilters.firstOrderDate.to,
+      },
+      status: initialFilters.status,
+      successfulOrders: initialFilters.successfulOrders,
+    }),
+    [
+      initialFilters.firstOrderDate.from,
+      initialFilters.firstOrderDate.to,
+      initialFilters.status,
+      initialFilters.successfulOrders,
+    ]
+  );
+
+  const filters = useMemo<ClientsFilterState>(
+    () => ({
+      ...routeFilters,
+      name: searchFilters.name,
+      clientId: searchFilters.clientId,
+      contact: searchFilters.contact,
+    }),
+    [
+      routeFilters,
+      searchFilters.clientId,
+      searchFilters.contact,
+      searchFilters.name,
+    ]
+  );
+
+  const debouncedSearchFilters = useDebouncedValue(searchFilters, 450);
+
+  const requestFilters = useMemo<ClientsFilterState>(
+    () => ({
+      ...routeFilters,
+      name: debouncedSearchFilters.name,
+      clientId: debouncedSearchFilters.clientId,
+      contact: debouncedSearchFilters.contact,
+    }),
+    [
+      debouncedSearchFilters.clientId,
+      debouncedSearchFilters.contact,
+      debouncedSearchFilters.name,
+      routeFilters,
+    ]
+  );
+
+  const canonicalInitialPath = buildClientsPath(routeFilters);
+  const [pageState, setPageState] = useState(() => ({
+    routeKey: canonicalInitialPath,
+    page: 1,
+  }));
+
+  const currentPage =
+    pageState.routeKey === canonicalInitialPath ? pageState.page : 1;
+
   const queryParams = useMemo(
-    () => getClientsQueryParams(filters, rowsPerPage, currentPage),
-    [currentPage, filters, rowsPerPage]
+    () => getClientsQueryParams(requestFilters, rowsPerPage, currentPage),
+    [currentPage, requestFilters, rowsPerPage]
   );
 
   const activeFiltersCount = countTrueConditions(
@@ -120,7 +189,8 @@ function ClientsPageContent({
     const controller = new AbortController();
 
     async function loadClients() {
-      setIsLoading(true);
+      setClientsStatus('loading');
+      setClientsError('');
 
       try {
         const response = await getPharmacyClients(queryParams, {
@@ -131,19 +201,20 @@ function ClientsPageContent({
         setClients([...response.items]);
         setTotalClients(response.total);
         setTotalPages(response.totalPages);
+        setPageState({ routeKey: canonicalInitialPath, page: response.page });
         setEarliestCreatedAt(response.earliestCreatedAt);
         setClientStatistics(response.statistics);
-        setIsClientStatisticsUnavailable(false);
-      } catch {
+        setClientsStatus('success');
+      } catch (loadError) {
         if (controller.signal.aborted) return;
 
-        setClients([]);
-        setTotalClients(0);
-        setTotalPages(0);
-        setEarliestCreatedAt(null);
-        setIsClientStatisticsUnavailable(true);
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        setClientsError(
+          getSafeApiErrorMessage(
+            loadError,
+            'Could not load clients. Please try again.'
+          )
+        );
+        setClientsStatus('error');
       }
     }
 
@@ -152,34 +223,63 @@ function ClientsPageContent({
     return () => {
       controller.abort();
     };
-  }, [queryParams]);
-
-  const debouncedFilters = useDebouncedValue(filters, 450);
+  }, [canonicalInitialPath, queryParams]);
 
   useEffect(() => {
-    if (debouncedFilters !== filters) return;
+    const pendingPath = pendingRoutePathRef.current;
 
-    const nextPath = buildClientsPath(debouncedFilters);
-    if (pathname === nextPath) return;
+    if (pendingPath) {
+      if (pathname === pendingPath && canonicalInitialPath === pendingPath) {
+        pendingRoutePathRef.current = null;
+      }
 
-    router.replace(nextPath, { scroll: false });
-  }, [debouncedFilters, filters, pathname, router]);
+      return;
+    }
+
+    if (pathname !== canonicalInitialPath) {
+      router.replace(canonicalInitialPath, { scroll: false });
+    }
+  }, [canonicalInitialPath, pathname, router]);
 
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: ClientsFilterState) => {
-    setFilters(nextFilters);
-    setCurrentPage(1);
+    if (
+      nextFilters.name !== searchFilters.name ||
+      nextFilters.clientId !== searchFilters.clientId ||
+      nextFilters.contact !== searchFilters.contact
+    ) {
+      setSearchFilters({
+        name: nextFilters.name,
+        clientId: nextFilters.clientId,
+        contact: nextFilters.contact,
+      });
+    }
+
+    const nextPath = buildClientsPath(nextFilters);
+
+    if (nextPath !== canonicalInitialPath) {
+      pendingRoutePathRef.current = nextPath;
+      router.replace(nextPath, { scroll: false });
+    }
+
+    setPageState({ routeKey: nextPath, page: 1 });
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
     setRowsPerPage(nextRowsPerPage);
-    setCurrentPage(1);
+    setPageState({ routeKey: canonicalInitialPath, page: 1 });
   };
 
   const resetFilters = () => {
-    setFilters(DEFAULT_CLIENTS_FILTERS);
-    setCurrentPage(1);
+    setSearchFilters({ name: '', clientId: '', contact: '' });
+
+    if (canonicalInitialPath !== PHARMACY_ROUTES.CLIENTS) {
+      pendingRoutePathRef.current = PHARMACY_ROUTES.CLIENTS;
+      router.replace(PHARMACY_ROUTES.CLIENTS, { scroll: false });
+    }
+
+    setPageState({ routeKey: PHARMACY_ROUTES.CLIENTS, page: 1 });
   };
 
   const getClientStatisticHref = (key: ClientStatisticsKey) => {
@@ -248,14 +348,16 @@ function ClientsPageContent({
           />
         ) : null}
 
-        {isClientStatisticsUnavailable ? (
+        {clientsStatus === 'error' ? (
           <p role="status">Client statistics are temporarily unavailable.</p>
-        ) : (
+        ) : clientsStatus === 'success' ? (
           <ClientStatistics
             counts={clientStatistics}
             getStatisticHref={getClientStatisticHref}
             className={css.clientStatistics}
           />
+        ) : (
+          <p role="status">Loading client statistics...</p>
         )}
       </section>
 
@@ -316,29 +418,41 @@ function ClientsPageContent({
             />
           </div>
 
-          <CountLabel
-            className={css.countLabel}
-            shown={clients.length}
-            total={totalClients}
-            label="clients"
-          />
+          {clientsStatus === 'success' ? (
+            <CountLabel
+              className={css.countLabel}
+              shown={clients.length}
+              total={totalClients}
+              label="clients"
+            />
+          ) : null}
         </div>
 
-        <ClientsTable
-          clients={clients}
-          isLoading={isLoading}
-          emptyMessage={
-            hasActiveFilters
-              ? 'No clients found for the selected filters.'
-              : 'Your pharmacy has no clients yet.'
-          }
-        />
+        {clientsStatus === 'error' ? (
+          <p className={css.errorText} role="alert">
+            {clientsError}
+          </p>
+        ) : (
+          <ClientsTable
+            clients={clients}
+            isLoading={clientsStatus === 'idle' || clientsStatus === 'loading'}
+            emptyMessage={
+              hasActiveFilters
+                ? 'No clients found for the selected filters.'
+                : 'Your pharmacy has no clients yet.'
+            }
+          />
+        )}
 
-        <PaginationView
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        {clientsStatus === 'success' ? (
+          <PaginationView
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) =>
+              setPageState({ routeKey: canonicalInitialPath, page })
+            }
+          />
+        ) : null}
       </section>
 
       {isFiltersOpen ? (

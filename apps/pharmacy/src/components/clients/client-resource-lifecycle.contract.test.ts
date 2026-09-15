@@ -89,3 +89,72 @@ test('deleted purchased products are rendered as history without a broken Produc
   assert.match(source, /item\.currentStatus \? \(/);
   assert.match(source, /'Unavailable'/);
 });
+
+//===================================================================
+
+test('clients list debounces PII search requests while route-owned filters resync from navigation', async () => {
+  const source = await read('./ClientsPageContent/ClientsPageContent.tsx');
+
+  assert.match(source, /const \[searchFilters, setSearchFilters\] = useState/);
+  assert.match(source, /useDebouncedValue\(searchFilters, 450\)/);
+  assert.match(source, /getClientsQueryParams\(requestFilters/);
+  assert.match(source, /const routeFilters = useMemo<ClientsFilterState>/);
+  assert.match(source, /buildClientsPath\(routeFilters\)/);
+  assert.match(source, /pendingRoutePathRef/);
+  assert.match(source, /pathname !== canonicalInitialPath/);
+  assert.match(source, /from: initialFilters\.firstOrderDate\.from/);
+  assert.match(source, /to: initialFilters\.firstOrderDate\.to/);
+  assert.match(source, /status: initialFilters\.status/);
+  assert.match(source, /successfulOrders: initialFilters\.successfulOrders/);
+});
+
+//===================================================================
+
+test('client resources keep unavailable state separate from successful empty data and map errors safely', async () => {
+  const clientsSource = await read(
+    './ClientsPageContent/ClientsPageContent.tsx'
+  );
+
+  const detailsSource = await read(
+    './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
+  );
+
+  const commentsSource = await read(
+    '../comments/EntityComments/EntityComments.tsx'
+  );
+
+  assert.match(clientsSource, /useState<ResourceStatus>\('idle'\)/);
+  assert.match(clientsSource, /getSafeApiErrorMessage\(/);
+  assert.match(clientsSource, /clientsStatus === 'error'/);
+  assert.doesNotMatch(clientsSource, /catch[\s\S]{0,220}setClients\(\[\]\)/);
+
+  assert.match(detailsSource, /const \[ordersStatus, setOrdersStatus\]/);
+  assert.match(detailsSource, /const \[productsStatus, setProductsStatus\]/);
+  assert.match(detailsSource, /getClientDetailsError\(loadError\)/);
+  assert.match(detailsSource, /getSafeApiErrorMessage\(/);
+  assert.doesNotMatch(detailsSource, /instanceof Error && .*\.message/);
+  assert.doesNotMatch(detailsSource, /setOrders\(\[\]\)[\s\S]{0,180}catch/);
+  assert.doesNotMatch(detailsSource, /setProducts\(\[\]\)[\s\S]{0,180}catch/);
+
+  assert.match(commentsSource, /useState<ResourceStatus>\('loading'\)/);
+  assert.match(commentsSource, /status === 'success'/);
+  assert.match(commentsSource, /getSafeApiErrorMessage\(/);
+  assert.doesNotMatch(commentsSource, /instanceof Error && .*\.message/);
+});
+
+//===================================================================
+
+test('client detail pagination accepts canonical backend pages and order statistics follow each successful filtered response', async () => {
+  const source = await read(
+    './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
+  );
+
+  assert.match(source, /setOrdersPage\(response\.page\)/);
+  assert.match(source, /setProductsPage\(response\.page\)/);
+  assert.match(source, /setOrderStatistics\(response\.statistics\)/);
+
+  assert.match(
+    source,
+    /if \(!hasSearchOrFilters\) \{\s*setOrdersOverallTotal\(response\.total\);\s*\}\s*setOrderStatistics\(response\.statistics\)/
+  );
+});

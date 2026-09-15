@@ -19,7 +19,13 @@ import {
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
+
 import css from './EntityComments.module.css';
+
+//===================================================================
+
+type ResourceStatus = 'loading' | 'success' | 'error';
 
 //===================================================================
 
@@ -54,7 +60,7 @@ function EntityCommentsContent({
   commentTitle = 'Comment',
   placeholder = 'Write an internal comment...',
   emptyText = 'No manager comments yet. The comment drawer is waiting patiently.',
-  initialTotal = 0,
+  initialTotal,
   isEditable = true,
   load,
   create,
@@ -72,12 +78,12 @@ function EntityCommentsContent({
     items: [],
     page: 1,
     perPage: 10,
-    total: initialTotal,
+    total: initialTotal ?? 0,
     totalPages: 1,
   });
 
   const [draft, setDraft] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState<ResourceStatus>('loading');
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -100,7 +106,7 @@ function EntityCommentsContent({
     const controller = new AbortController();
     activeLoadControllerRef.current = controller;
 
-    setIsLoading(true);
+    setStatus('loading');
     setError('');
 
     try {
@@ -112,21 +118,20 @@ function EntityCommentsContent({
 
       setData(response);
       onTotalChangeRef.current?.(response.total);
+      setStatus('success');
     } catch (loadError) {
       if (controller.signal.aborted) return;
 
       setError(
-        loadError instanceof Error && loadError.message
-          ? loadError.message
-          : 'Could not load comments.'
+        getSafeApiErrorMessage(
+          loadError,
+          'Could not load comments. Please try again.'
+        )
       );
+      setStatus('error');
     } finally {
-      if (
-        activeLoadControllerRef.current === controller &&
-        !controller.signal.aborted
-      ) {
+      if (activeLoadControllerRef.current === controller) {
         activeLoadControllerRef.current = null;
-        setIsLoading(false);
       }
     }
   }, []);
@@ -145,21 +150,20 @@ function EntityCommentsContent({
 
         setData(response);
         onTotalChangeRef.current?.(response.total);
+        setStatus('success');
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
         setError(
-          loadError instanceof Error && loadError.message
-            ? loadError.message
-            : 'Could not load comments.'
+          getSafeApiErrorMessage(
+            loadError,
+            'Could not load comments. Please try again.'
+          )
         );
+        setStatus('error');
       } finally {
-        if (
-          activeLoadControllerRef.current === controller &&
-          !controller.signal.aborted
-        ) {
+        if (activeLoadControllerRef.current === controller) {
           activeLoadControllerRef.current = null;
-          setIsLoading(false);
         }
       }
     };
@@ -186,9 +190,10 @@ function EntityCommentsContent({
       toast.success('Comment added successfully.');
     } catch (createError) {
       toast.error(
-        createError instanceof Error && createError.message
-          ? createError.message
-          : 'Could not add the comment.'
+        getSafeApiErrorMessage(
+          createError,
+          'Could not add the comment. Please try again.'
+        )
       );
     } finally {
       setIsSaving(false);
@@ -209,9 +214,10 @@ function EntityCommentsContent({
       toast.success('Comment deleted successfully.');
     } catch (deleteError) {
       toast.error(
-        deleteError instanceof Error && deleteError.message
-          ? deleteError.message
-          : 'Could not delete the comment.'
+        getSafeApiErrorMessage(
+          deleteError,
+          'Could not delete the comment. Please try again.'
+        )
       );
     } finally {
       setDeletingId(null);
@@ -222,7 +228,7 @@ function EntityCommentsContent({
     <section className={css.card} aria-labelledby={titleId}>
       <div className={css.head}>
         <h2 id={titleId}>{title}</h2>
-        {!error ? (
+        {status === 'success' ? (
           <CountLabel
             className={css.countLabel}
             shown={data.items.length}
@@ -250,19 +256,20 @@ function EntityCommentsContent({
         commentTitle={commentTitle}
         emptyText={emptyText}
         error={error}
-        isLoading={isLoading}
+        isLoading={status === 'loading'}
         deletingId={deletingId}
         deleteDisabled={!isEditable || Boolean(deletingId) || isSaving}
         onDelete={setCommentToDelete}
       />
 
-      <PaginationView
-        currentPage={data.page}
-        totalPages={data.totalPages}
-        ariaLabel="Comments pagination"
-        disabled={isLoading}
-        onPageChange={(page) => void loadPage(page)}
-      />
+      {status === 'success' ? (
+        <PaginationView
+          currentPage={data.page}
+          totalPages={data.totalPages}
+          ariaLabel="Comments pagination"
+          onPageChange={(page) => void loadPage(page)}
+        />
+      ) : null}
 
       <ConfirmationModal
         isOpen={Boolean(commentToDelete)}

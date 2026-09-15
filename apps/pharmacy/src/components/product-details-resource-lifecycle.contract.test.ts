@@ -108,7 +108,12 @@ test('supporting resources expose unavailable states instead of fake empty or ze
     'utf8'
   );
 
-  assert.match(commentsSource, /!error \? \([\s\S]{0,180}?<CountLabel/);
+  assert.match(
+    commentsSource,
+    /status === 'success' \? \([\s\S]{0,180}?<CountLabel/
+  );
+
+  assert.match(commentsSource, /getSafeApiErrorMessage\(/);
 
   assert.doesNotMatch(
     source,

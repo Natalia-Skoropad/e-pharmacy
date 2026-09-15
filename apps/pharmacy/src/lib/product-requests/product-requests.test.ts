@@ -153,8 +153,8 @@ test('product request list metadata fails closed for malformed earliest dates', 
 
 test('product request history requires an explicit inferred marker', () => {
   const request = validRequest();
-  const historyEntry = request.history[0];
-  const { isInferred: _isInferred, ...withoutMarker } = historyEntry;
+  const { isInferred, ...withoutMarker } = request.history[0];
+  assert.equal(isInferred, false);
 
   assert.equal(
     normalizeProductRequestDetails({ ...request, history: [withoutMarker] }),

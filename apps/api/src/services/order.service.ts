@@ -2188,14 +2188,7 @@ export async function getOrdersService(
     filter.status = query.status;
   }
 
-  const skip = (query.page - 1) * query.perPage;
-
-  const [orders, total, statistics, earliestOrder] = await Promise.all([
-    Order.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(query.perPage)
-      .lean<OrderDocument[]>(),
+  const [total, statistics, earliestOrder] = await Promise.all([
     Order.countDocuments(filter),
     getOrderStatistics(statisticsFilter),
     Order.findOne(earliestDateFilter)
@@ -2203,6 +2196,16 @@ export async function getOrdersService(
       .select('createdAt')
       .lean<{ createdAt: Date } | null>(),
   ]);
+
+  const totalPages = Math.ceil(total / query.perPage);
+  const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
+  const skip = (page - 1) * query.perPage;
+
+  const orders = await Order.find(filter)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(query.perPage)
+    .lean<OrderDocument[]>();
 
   const clients = await User.find({
     _id: { $in: orders.map((order) => order.userId) },
@@ -2218,10 +2221,10 @@ export async function getOrdersService(
 
   return {
     items: orders.map((order) => serializeOrder(order, undefined, clientMap)),
-    page: total === 0 ? 1 : query.page,
+    page,
     perPage: query.perPage,
     total,
-    totalPages: Math.ceil(total / query.perPage),
+    totalPages,
     statistics,
     earliestCreatedAt: earliestOrder
       ? earliestOrder.createdAt.toISOString().slice(0, 10)

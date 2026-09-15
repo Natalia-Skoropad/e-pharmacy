@@ -481,14 +481,22 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
     };
   }
 
-  const result = await getClientRowsForPharmacy(pharmacyId, query);
+  let result = await getClientRowsForPharmacy(pharmacyId, query);
+  let totalPages = Math.ceil(result.total / query.perPage);
+  let page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
+
+  if (page !== query.page) {
+    result = await getClientRowsForPharmacy(pharmacyId, { ...query, page });
+    totalPages = Math.ceil(result.total / query.perPage);
+    page = totalPages === 0 ? 1 : Math.min(page, totalPages);
+  }
 
   return {
     items: result.items,
-    page: result.total === 0 ? 1 : query.page,
+    page,
     perPage: query.perPage,
     total: result.total,
-    totalPages: Math.ceil(result.total / query.perPage),
+    totalPages,
     earliestCreatedAt: result.earliestCreatedAt,
     statistics: result.statistics,
   };
@@ -642,15 +650,18 @@ export async function getClientPurchasedProductsService(
     .filter((row) => matchesClientProductFilters(row, query))
     .sort((left, right) => right.orderDate.localeCompare(left.orderDate));
 
-  const skip = (query.page - 1) * query.perPage;
+  const total = rows.length;
+  const totalPages = Math.ceil(total / query.perPage);
+  const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
+  const skip = (page - 1) * query.perPage;
   const items = rows.slice(skip, skip + query.perPage);
 
   return {
     items,
-    page: rows.length === 0 ? 1 : query.page,
+    page,
     perPage: query.perPage,
-    total: rows.length,
-    totalPages: Math.ceil(rows.length / query.perPage),
+    total,
+    totalPages,
     earliestCreatedAt:
       orders[orders.length - 1]?.createdAt.toISOString().slice(0, 10) ?? null,
   };

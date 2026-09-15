@@ -14,6 +14,7 @@ import {
 
 import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import {
   ORDER_CREATED_BY_TYPES,
@@ -67,8 +68,7 @@ import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
-
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
 
 import type {
@@ -113,6 +113,7 @@ import type {
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
@@ -126,6 +127,15 @@ type ClientDetailsPageContentProps = Readonly<{ clientId: string }>;
 //===================================================================
 
 type ClientTab = 'details' | 'orders' | 'products' | 'comments';
+
+type ResourceStatus = 'idle' | 'loading' | 'success' | 'error';
+
+//===================================================================
+
+type ClientDetailsError = Readonly<{
+  title: string;
+  message: string;
+}>;
 
 //===================================================================
 
@@ -416,6 +426,32 @@ function ClientProductsFiltersDrawer({
 
 //===================================================================
 
+function getClientDetailsError(error: unknown): ClientDetailsError {
+  if (isApiError(error) && [400, 404, 422].includes(error.httpStatus ?? 0)) {
+    return {
+      title: 'Client not found',
+      message: 'This client does not exist or the link is invalid.',
+    };
+  }
+
+  if (isApiError(error) && error.httpStatus === 403) {
+    return {
+      title: 'Client is unavailable',
+      message: 'You do not have access to this client.',
+    };
+  }
+
+  return {
+    title: 'Client could not be loaded',
+    message: getSafeApiErrorMessage(
+      error,
+      'Could not load client details. Please try again.'
+    ),
+  };
+}
+
+//===================================================================
+
 function ClientDetailsPageContentState({
   clientId,
 }: ClientDetailsPageContentProps) {
@@ -444,7 +480,7 @@ function ClientDetailsPageContentState({
     DEFAULT_ORDER_FILTERS
   );
 
-  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersStatus, setOrdersStatus] = useState<ResourceStatus>('idle');
   const [ordersError, setOrdersError] = useState('');
   const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
 
@@ -454,8 +490,8 @@ function ClientDetailsPageContentState({
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
   const [commentsActivated, setCommentsActivated] = useState(false);
   const [activeTab, setActiveTab] = useState<ClientTab>('details');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [clientStatus, setClientStatus] = useState<ResourceStatus>('loading');
+  const [error, setError] = useState<ClientDetailsError | null>(null);
 
   const [products, setProducts] = useState<PharmacyClientPurchasedProduct[]>(
     []
@@ -484,7 +520,7 @@ function ClientDetailsPageContentState({
     DEFAULT_PRODUCT_FILTERS
   );
 
-  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsStatus, setProductsStatus] = useState<ResourceStatus>('idle');
   const [productsError, setProductsError] = useState('');
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
   const [productsActivated, setProductsActivated] = useState(false);
@@ -493,8 +529,8 @@ function ClientDetailsPageContentState({
     const controller = new AbortController();
 
     async function loadClient() {
-      setLoading(true);
-      setError('');
+      setClientStatus('loading');
+      setError(null);
 
       try {
         const loadedClient = await getPharmacyClientDetails(clientId, {
@@ -503,12 +539,13 @@ function ClientDetailsPageContentState({
 
         if (controller.signal.aborted) return;
         setClient(loadedClient);
-      } catch {
-        if (!controller.signal.aborted) {
-          setError('Could not load client details.');
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        setClientStatus('success');
+      } catch (loadError) {
+        if (controller.signal.aborted) return;
+
+        setClient(null);
+        setError(getClientDetailsError(loadError));
+        setClientStatus('error');
       }
     }
 
@@ -533,8 +570,9 @@ function ClientDetailsPageContentState({
     const controller = new AbortController();
 
     async function loadOrders() {
-      setOrdersLoading(true);
+      setOrdersStatus('loading');
       setOrdersError('');
+      setOrderStatistics(null);
 
       try {
         const response = await getPharmacyOrders(
@@ -573,6 +611,7 @@ function ClientDetailsPageContentState({
         setOrders([...response.items]);
         setOrdersTotal(response.total);
         setOrdersTotalPages(response.totalPages);
+        setOrdersPage(response.page);
         setOrdersEarliestCreatedAt(response.earliestCreatedAt);
 
         const hasSearchOrFilters = Boolean(
@@ -589,20 +628,21 @@ function ClientDetailsPageContentState({
 
         if (!hasSearchOrFilters) {
           setOrdersOverallTotal(response.total);
-          setOrderStatistics(response.statistics);
         }
+
+        setOrderStatistics(response.statistics);
+        setOrdersStatus('success');
       } catch (loadOrdersError) {
         if (controller.signal.aborted) return;
-        setOrders([]);
-        setOrdersTotal(0);
-        setOrdersTotalPages(0);
+
         setOrdersError(
-          loadOrdersError instanceof Error && loadOrdersError.message
-            ? loadOrdersError.message
-            : 'Could not load client orders.'
+          getSafeApiErrorMessage(
+            loadOrdersError,
+            'Could not load client orders. Please try again.'
+          )
         );
-      } finally {
-        if (!controller.signal.aborted) setOrdersLoading(false);
+        setOrderStatistics(null);
+        setOrdersStatus('error');
       }
     }
 
@@ -626,7 +666,7 @@ function ClientDetailsPageContentState({
     const controller = new AbortController();
 
     async function loadProducts() {
-      setProductsLoading(true);
+      setProductsStatus('loading');
       setProductsError('');
 
       try {
@@ -657,6 +697,7 @@ function ClientDetailsPageContentState({
         setProductsTotal(response.total);
         setProductsEarliestCreatedAt(response.earliestCreatedAt);
         setProductsTotalPages(response.totalPages);
+        setProductsPage(response.page);
 
         const hasSearchOrFilters = Boolean(
           productArticleSearch.trim() ||
@@ -670,20 +711,18 @@ function ClientDetailsPageContentState({
         if (!hasSearchOrFilters) {
           setProductsOverallTotal(response.total);
         }
+
+        setProductsStatus('success');
       } catch (loadProductsError) {
         if (controller.signal.aborted) return;
 
-        setProducts([]);
-        setProductsTotal(0);
-        setProductsEarliestCreatedAt(null);
-        setProductsTotalPages(0);
         setProductsError(
-          loadProductsError instanceof Error && loadProductsError.message
-            ? loadProductsError.message
-            : 'Could not load purchased products.'
+          getSafeApiErrorMessage(
+            loadProductsError,
+            'Could not load purchased products. Please try again.'
+          )
         );
-      } finally {
-        if (!controller.signal.aborted) setProductsLoading(false);
+        setProductsStatus('error');
       }
     }
 
@@ -889,7 +928,7 @@ function ClientDetailsPageContentState({
     []
   );
 
-  if (loading) {
+  if (clientStatus === 'idle' || clientStatus === 'loading') {
     return (
       <main className={css.page} aria-label="Loading client">
         <section className={css.contentCard}>
@@ -901,11 +940,28 @@ function ClientDetailsPageContentState({
     );
   }
 
-  if (error || !client) {
+  if (clientStatus === 'error' || !client) {
+    const clientError = error ?? {
+      title: 'Client not found',
+      message: 'This client does not exist or the link is invalid.',
+    };
+
     return (
-      <main className={css.page}>
+      <main className={css.page} aria-labelledby="client-details-error-title">
         <section className={css.contentCard}>
-          <p>{error || 'Client not found.'}</p>
+          <PageHeader
+            title="Client details"
+            titleId="client-details-error-title"
+            icon={<Users size={23} aria-hidden="true" />}
+          />
+
+          <StatusBanner
+            tone="danger"
+            label="Error"
+            title={clientError.title}
+            message={clientError.message}
+          />
+
           <LinkButton
             href={PHARMACY_ROUTES.CLIENTS}
             renderLink={({ href, className, children, ...props }) => (
@@ -933,7 +989,7 @@ function ClientDetailsPageContentState({
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          {orderStatistics ? (
+          {ordersStatus === 'success' && orderStatistics ? (
             <OrderStatistics
               counts={orderStatistics}
               className={css.orderStatistics}
@@ -1105,37 +1161,44 @@ function ClientDetailsPageContentState({
                       />
                     </div>
 
-                    <CountLabel
-                      className={css.countLabel}
-                      shown={orders.length}
-                      total={ordersTotal}
-                      label="orders"
-                    />
+                    {ordersStatus === 'success' ? (
+                      <CountLabel
+                        className={css.countLabel}
+                        shown={orders.length}
+                        total={ordersTotal}
+                        label="orders"
+                      />
+                    ) : null}
                   </div>
 
-                  {ordersError ? (
-                    <p className={css.errorText}>{ordersError}</p>
+                  {ordersStatus === 'error' ? (
+                    <p className={css.errorText} role="alert">
+                      {ordersError}
+                    </p>
+                  ) : (
+                    <DataTable
+                      columns={orderColumns}
+                      items={orders}
+                      getItemKey={(order) => String(order.id)}
+                      isLoading={
+                        ordersStatus === 'idle' || ordersStatus === 'loading'
+                      }
+                      minWidth={0}
+                      labels={{
+                        loading: 'Loading client orders...',
+                        empty: 'No orders match the selected filters.',
+                      }}
+                    />
+                  )}
+
+                  {ordersStatus === 'success' ? (
+                    <PaginationView
+                      currentPage={ordersPage}
+                      totalPages={ordersTotalPages}
+                      ariaLabel="Client orders pagination"
+                      onPageChange={setOrdersPage}
+                    />
                   ) : null}
-
-                  <DataTable
-                    columns={orderColumns}
-                    items={orders}
-                    getItemKey={(order) => String(order.id)}
-                    isLoading={ordersLoading}
-                    minWidth={0}
-                    labels={{
-                      loading: 'Loading client orders...',
-                      empty: 'No orders match the selected filters.',
-                    }}
-                  />
-
-                  <PaginationView
-                    currentPage={ordersPage}
-                    totalPages={ordersTotalPages}
-                    ariaLabel="Client orders pagination"
-                    disabled={ordersLoading}
-                    onPageChange={setOrdersPage}
-                  />
                 </div>
               </section>
             </div>
@@ -1208,35 +1271,45 @@ function ClientDetailsPageContentState({
                         }}
                       />
                     </div>
-                    <CountLabel
-                      className={css.countLabel}
-                      shown={products.length}
-                      total={productsTotal}
-                      label="products"
-                    />
+                    {productsStatus === 'success' ? (
+                      <CountLabel
+                        className={css.countLabel}
+                        shown={products.length}
+                        total={productsTotal}
+                        label="products"
+                      />
+                    ) : null}
                   </div>
 
-                  {productsError ? (
-                    <p className={css.errorText}>{productsError}</p>
+                  {productsStatus === 'error' ? (
+                    <p className={css.errorText} role="alert">
+                      {productsError}
+                    </p>
+                  ) : (
+                    <DataTable
+                      columns={productColumns}
+                      items={products}
+                      getItemKey={(item) => item.id}
+                      isLoading={
+                        productsStatus === 'idle' ||
+                        productsStatus === 'loading'
+                      }
+                      minWidth={0}
+                      labels={{
+                        loading: 'Loading purchased products...',
+                        empty:
+                          'No successful-order products match the filters.',
+                      }}
+                    />
+                  )}
+
+                  {productsStatus === 'success' ? (
+                    <PaginationView
+                      currentPage={productsPage}
+                      totalPages={productsTotalPages}
+                      onPageChange={setProductsPage}
+                    />
                   ) : null}
-
-                  <DataTable
-                    columns={productColumns}
-                    items={products}
-                    getItemKey={(item) => item.id}
-                    isLoading={productsLoading}
-                    minWidth={0}
-                    labels={{
-                      loading: 'Loading purchased products...',
-                      empty: 'No successful-order products match the filters.',
-                    }}
-                  />
-
-                  <PaginationView
-                    currentPage={productsPage}
-                    totalPages={productsTotalPages}
-                    onPageChange={setProductsPage}
-                  />
                 </div>
               </section>
             </div>

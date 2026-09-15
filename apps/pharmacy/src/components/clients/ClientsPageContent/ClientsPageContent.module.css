@@ -66,6 +66,12 @@
   display: none;
 }
 
+.errorText {
+  color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+
 .titleWithHelp {
   display: inline-flex;
   gap: 10px;
