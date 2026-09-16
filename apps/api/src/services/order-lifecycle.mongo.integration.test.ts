@@ -13,12 +13,14 @@ import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
+import { User } from '../models/user.model';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 
 import {
   checkoutOrderService,
   getOrderByIdService,
   updateOrderDetailsService,
+  updateOrderStatusService,
 } from './order.service';
 
 import {
@@ -32,6 +34,15 @@ import {
 const TEST_MONGODB_URI = process.env.E_PHARMACY_TEST_MONGODB_URI;
 const shouldSkip = !TEST_MONGODB_URI;
 const CHECKOUT_OFFER_PRICE = 100;
+
+//===============================================================
+
+function getPhoneSuffix(seed: string): string {
+  return String(Number.parseInt(seed.slice(-6), 16) % 10_000_000).padStart(
+    7,
+    '0'
+  );
+}
 
 //===============================================================
 
@@ -74,6 +85,9 @@ type CheckoutFixture = Readonly<{
   cartItemId: Types.ObjectId;
   revision: number;
   groupFingerprint: string;
+  clientName: string;
+  clientPhone: string;
+  clientAddress: string;
 }>;
 
 //===============================================================
@@ -89,28 +103,45 @@ async function createCheckoutFixture(options?: {
   const productId = new Types.ObjectId();
   const offerId = new Types.ObjectId();
 
-  await Pharmacy.create({
-    _id: pharmacyId,
-    ownerId: pharmacyOwnerId,
-    managerUserIds: [],
-    documents: [],
-    name: `Checkout Test Pharmacy ${suffix}`,
-    address: 'Kyiv, Main Street 10',
-    city: 'Kyiv',
-    phone: '+380501234567',
-    email: `checkout-${suffix.toLowerCase()}@example.com`,
-    status: 'active',
-    ...(options?.bankDetails ? { bankDetails: options.bankDetails } : {}),
-  });
+  const clientName = 'Checkout Test Client';
+  const clientPhone = `+38050${getPhoneSuffix(suffix)}`;
+  const clientAddress = 'Kyiv, Client Street 15';
 
-  await Product.create({
-    _id: productId,
-    name: `Checkout Test Product ${suffix}`,
-    article: `CT-${suffix}`,
-    status: 'active',
-    category: 'medicine',
-    inStock: true,
-  });
+  await Promise.all([
+    Pharmacy.create({
+      _id: pharmacyId,
+      ownerId: pharmacyOwnerId,
+      managerUserIds: [],
+      documents: [],
+      name: `Checkout Test Pharmacy ${suffix}`,
+      address: 'Kyiv, Main Street 10',
+      city: 'Kyiv',
+      phone: '+380501234567',
+      email: `checkout-${suffix.toLowerCase()}@example.com`,
+      status: 'active',
+      ...(options?.bankDetails ? { bankDetails: options.bankDetails } : {}),
+    }),
+
+    Product.create({
+      _id: productId,
+      name: `Checkout Test Product ${suffix}`,
+      article: `CT-${suffix}`,
+      status: 'active',
+      category: 'medicine',
+      inStock: true,
+    }),
+
+    User.create({
+      _id: clientUserId,
+      name: clientName,
+      email: `checkout-client-${suffix.toLowerCase()}@example.com`,
+      password: 'test-password-hash',
+      role: 'client',
+      status: 'active',
+      phone: clientPhone,
+      address: clientAddress,
+    }),
+  ]);
 
   const stock = options?.stock ?? 5;
   await ProductOffer.create({
@@ -171,6 +202,9 @@ async function createCheckoutFixture(options?: {
     cartItemId: cartItem._id,
     revision: cart.revision,
     groupFingerprint,
+    clientName,
+    clientPhone,
+    clientAddress,
   };
 }
 
@@ -183,6 +217,7 @@ async function removeFixture(fixture: CheckoutFixture): Promise<void> {
     ProductOffer.deleteOne({ _id: fixture.offerId }),
     Product.deleteOne({ _id: fixture.productId }),
     Pharmacy.deleteOne({ _id: fixture.pharmacyId }),
+    User.deleteOne({ _id: fixture.clientUserId }),
   ]);
 }
 
@@ -493,6 +528,125 @@ test(
       await Order.deleteMany({ userId: secondClientUserId });
       await Cart.deleteOne({ _id: secondCart._id });
       await removeFixture(first);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'order details keep the historical client snapshot after the client profile changes',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture();
+
+    try {
+      const checkout = await checkoutFixture(fixture);
+
+      await User.updateOne(
+        { _id: fixture.clientUserId },
+        {
+          $set: {
+            name: 'Updated Client Profile',
+            phone: `+38067${getPhoneSuffix(new Types.ObjectId().toHexString())}`,
+            address: 'Odesa, Updated Street 25',
+          },
+        }
+      );
+
+      const reloaded = await getOrderByIdService(
+        fixture.clientUserId.toString(),
+        checkout.order.id
+      );
+
+      assert.equal(reloaded.order.client, fixture.clientName);
+      assert.equal(reloaded.order.clientPhone, fixture.clientPhone);
+      assert.equal(reloaded.order.clientAddress, fixture.clientAddress);
+    } finally {
+      await removeFixture(fixture);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'concurrent terminal status changes commit exactly one stock outcome',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture({ stock: 5 });
+    const actor = {
+      id: fixture.pharmacyOwnerId.toString(),
+      role: 'pharmacy' as const,
+    };
+
+    try {
+      const checkout = await checkoutFixture(fixture);
+
+      await updateOrderStatusService(actor, checkout.order.id, {
+        status: 'in_progress',
+      });
+
+      const results = await Promise.allSettled([
+        updateOrderStatusService(actor, checkout.order.id, {
+          status: 'successful',
+        }),
+        updateOrderStatusService(actor, checkout.order.id, {
+          status: 'rejected',
+          rejectionReason: 'Concurrent rejection test',
+        }),
+      ]);
+
+      const fulfilled = results.filter(
+        (result) => result.status === 'fulfilled'
+      );
+      const rejected = results.filter((result) => result.status === 'rejected');
+
+      assert.equal(fulfilled.length, 1);
+      assert.equal(rejected.length, 1);
+
+      const rejectedError = rejected[0]?.reason as { status?: number };
+      assert.equal(rejectedError.status, 409);
+
+      const [order, offer] = await Promise.all([
+        Order.findById(checkout.order.id).lean<{
+          status: 'successful' | 'rejected';
+          statusHistory: Array<{ status: string }>;
+        } | null>(),
+        ProductOffer.findById(fixture.offerId).lean<{
+          totalQuantity: number;
+          availableQuantity: number;
+          reservedQuantity: number;
+        } | null>(),
+      ]);
+
+      assert.ok(order);
+      assert.ok(offer);
+      assert.ok(order.status === 'successful' || order.status === 'rejected');
+      assert.equal(
+        order.statusHistory.filter(
+          (entry) =>
+            entry.status === 'successful' || entry.status === 'rejected'
+        ).length,
+        1
+      );
+      assert.equal(offer.reservedQuantity, 0);
+
+      if (order.status === 'successful') {
+        assert.equal(offer.totalQuantity, 4);
+        assert.equal(offer.availableQuantity, 4);
+      } else {
+        assert.equal(offer.totalQuantity, 5);
+        assert.equal(offer.availableQuantity, 5);
+      }
+    } finally {
+      await removeFixture(fixture);
       await mongoose.disconnect();
     }
   }

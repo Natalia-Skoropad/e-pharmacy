@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   CircleMinus,
@@ -34,7 +34,6 @@ import {
 
 import {
   Button,
-  CloseIconButton,
   LazyLoadButton,
   LoadingSpinner,
   SvgIcon,
@@ -54,19 +53,12 @@ import {
   QuantityCounter,
   RadioOption,
   SearchableSelect,
-  SearchInput,
 } from '@e-pharmacy/ui/forms';
 
 import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { AddressInput, NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
-
-import {
-  ConfirmationModal,
-  ModalBase,
-  ModalRoot,
-} from '@e-pharmacy/ui/overlays';
-
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -78,17 +70,11 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
-import type {
-  ProductDetails,
-  ProductCategory,
-} from '@e-pharmacy/types/products';
-
+import type { ProductDetails } from '@e-pharmacy/types/products';
 import { getOrderStatusTransitions } from '@e-pharmacy/config/orders';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
-import type { LabeledOption } from '@e-pharmacy/utils/collections';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
-import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 
 import {
@@ -118,8 +104,6 @@ import {
   getPharmacyClients,
   getPharmacyOrderDetails,
   getPharmacyOrderComments,
-  getProductFilters,
-  getProducts,
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
   type CreatePharmacyOrderPayload,
@@ -142,6 +126,7 @@ import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
+import { ProductPickerModal } from './ProductPickerModal';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -215,7 +200,6 @@ type OrderHistoryEntry =
 
 //===================================================================
 
-const PRODUCT_PICKER_LIMIT = 150;
 const COMMENTS_PER_PAGE = 10;
 const HISTORY_INITIAL_VISIBLE_COUNT = 10;
 const HISTORY_LOAD_STEP = 5;
@@ -448,307 +432,6 @@ function OrderProductCard({
         </div>
       </div>
     </article>
-  );
-}
-
-//===================================================================
-
-function ProductPickerModal({
-  order,
-  onClose,
-  onAddProduct,
-}: Readonly<{
-  order: PharmacyOrderDetails;
-  onClose: () => void;
-  onAddProduct: (product: ProductDetails) => Promise<void>;
-}>) {
-  const titleId = useId();
-  const searchId = useId();
-  const [searchValue, setSearchValue] = useState('');
-
-  const [selectedCategory, setSelectedCategory] = useState<
-    ProductCategory | 'all'
-  >('all');
-
-  const [categoryOptions, setCategoryOptions] = useState<
-    readonly LabeledOption<ProductCategory>[]
-  >([]);
-
-  const [availableProductsCount, setAvailableProductsCount] = useState(0);
-  const [products, setProducts] = useState<ProductDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
-    () => new Set()
-  );
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadCategories() {
-      try {
-        const response = await getProductFilters(
-          {
-            pharmacyId: order.pharmacyId,
-            inStock: true,
-          },
-          { signal: controller.signal }
-        );
-
-        setCategoryOptions(
-          response.categories.flatMap((option) =>
-            option.value === 'all'
-              ? []
-              : [{ value: option.value, label: option.label }]
-          )
-        );
-      } catch {
-        if (!controller.signal.aborted) {
-          setError('Could not load product categories for this pharmacy.');
-        }
-      }
-    }
-
-    void loadCategories();
-
-    return () => controller.abort();
-  }, [order.pharmacyId]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        setIsLoading(true);
-        setError('');
-
-        const response = await getProducts(
-          {
-            pharmacyId: order.pharmacyId,
-            inStock: true,
-            page: 1,
-            perPage: PRODUCT_PICKER_LIMIT,
-            category: selectedCategory === 'all' ? undefined : selectedCategory,
-            keyword: searchValue.trim() || undefined,
-          },
-          { signal: controller.signal }
-        );
-
-        setProducts([...response.items]);
-        setAvailableProductsCount(response.total);
-      } catch {
-        if (!controller.signal.aborted) {
-          setError('Could not load products from this pharmacy.');
-        }
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
-      }
-    }, 250);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeoutId);
-    };
-  }, [order.pharmacyId, searchValue, selectedCategory]);
-
-  const handleAddProduct = async (product: ProductDetails) => {
-    if (addingProductIds.has(product.id)) return;
-
-    setAddingProductIds((current) => {
-      const next = new Set(current);
-      next.add(product.id);
-      return next;
-    });
-
-    try {
-      await onAddProduct(product);
-    } finally {
-      setAddingProductIds((current) => {
-        const next = new Set(current);
-        next.delete(product.id);
-        return next;
-      });
-    }
-  };
-
-  return (
-    <ModalRoot>
-      <ModalBase
-        className={css.productModalBackdrop}
-        dialogClassName={css.productModal}
-        labelledBy={titleId}
-        onClose={onClose}
-      >
-        <div className={css.productModalHead}>
-          <div>
-            <p className={css.productModalKicker}>{order.pharmacyName}</p>
-            <h2 className={css.productModalTitle} id={titleId}>
-              Continue shopping
-            </h2>
-          </div>
-
-          <CloseIconButton
-            className={css.productModalCloseButton}
-            onClick={onClose}
-          />
-        </div>
-
-        <div className={css.productModalSearchBlock}>
-          <SearchInput
-            id={searchId}
-            label="Search products"
-            value={searchValue}
-            placeholder="Add one more product"
-            isActive={Boolean(searchValue)}
-            onChange={setSearchValue}
-          />
-
-          <p className={css.productModalAvailableCount}>
-            {formatStockLabel(availableProductsCount) ?? '—'}
-          </p>
-        </div>
-
-        {categoryOptions.length > 0 ? (
-          <div
-            className={css.productModalCategories}
-            aria-label="ProductDetails categories in this pharmacy"
-          >
-            <button
-              className={
-                selectedCategory === 'all'
-                  ? css.productModalCategoryActive
-                  : css.productModalCategory
-              }
-              type="button"
-              aria-pressed={selectedCategory === 'all'}
-              onClick={() => setSelectedCategory('all')}
-            >
-              All
-            </button>
-
-            {categoryOptions.map((category) => (
-              <button
-                className={
-                  selectedCategory === category.value
-                    ? css.productModalCategoryActive
-                    : css.productModalCategory
-                }
-                type="button"
-                key={category.value}
-                aria-pressed={selectedCategory === category.value}
-                onClick={() => setSelectedCategory(category.value)}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {error ? (
-          <p className={css.productModalNotice} role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        <div className={css.productModalResults}>
-          {isLoading ? (
-            <LoadingSpinner label="Loading pharmacy products..." />
-          ) : null}
-
-          {!isLoading && products.length === 0 ? (
-            <p className={css.productModalStatus}>
-              No matching products in this pharmacy.
-            </p>
-          ) : null}
-
-          {!isLoading && products.length > 0 ? (
-            <ul className={css.productModalList}>
-              {products.map((product) => {
-                const offer = getProductOffer(product, order.pharmacyId);
-
-                const isInOrder = Boolean(
-                  offer &&
-                  order.items.some((item) => item.productOfferId === offer.id)
-                );
-
-                const isAdding = addingProductIds.has(product.id);
-
-                const categoryLabel =
-                  PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
-
-                const imageSrc = getProductImageSrc(product.imageUrl);
-
-                return (
-                  <li className={css.productModalItem} key={product.id}>
-                    <div className={css.productModalImageWrap}>
-                      {imageSrc ? (
-                        <ShimmerImage
-                          className={css.productModalImage}
-                          src={imageSrc}
-                          alt={product.name}
-                          sizes="72px"
-                          unoptimized
-                        />
-                      ) : (
-                        <div
-                          className={css.productModalImageFallback}
-                          aria-hidden="true"
-                        >
-                          <SvgIcon name="icon-shopping-cart" size={24} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={css.productModalInfo}>
-                      <h3 className={css.productModalName}>{product.name}</h3>
-                      <p className={css.productModalMeta}>{categoryLabel}</p>
-
-                      {product.manufacturer ? (
-                        <p className={css.productModalManufacturer}>
-                          {product.manufacturer}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <p className={css.productModalPrice}>
-                      {formatMoney(offer?.price ?? product.price) ?? '—'}
-                    </p>
-
-                    <Button
-                      className={
-                        isInOrder
-                          ? css.productModalInOrderButton
-                          : css.productModalAddButton
-                      }
-                      type="button"
-                      size="sm"
-                      variant={isInOrder ? 'secondary' : 'primary'}
-                      disabled={
-                        !offer ||
-                        offer.availableQuantity < 1 ||
-                        isInOrder ||
-                        isAdding
-                      }
-                      onClick={() => void handleAddProduct(product)}
-                    >
-                      {isInOrder ? (
-                        'In order'
-                      ) : isAdding ? (
-                        'Adding...'
-                      ) : (
-                        <>
-                          <ShoppingCart size={18} aria-hidden="true" />
-                          Add
-                        </>
-                      )}
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </div>
-      </ModalBase>
-    </ModalRoot>
   );
 }
 
@@ -1435,6 +1118,7 @@ function OrderDetailsPageContent({
   const [copiedEmail, setCopiedEmail] = useState(false);
   const copiedEmailTimerRef = useRef<number | null>(null);
   const createOrderRequestRef = useRef<CreateOrderRequestState | null>(null);
+  const resourceGenerationRef = useRef(0);
 
   useEffect(
     () => () => {
@@ -1448,13 +1132,13 @@ function OrderDetailsPageContent({
   useEffect(() => {
     if (isCreateMode && isProfileLoading) return;
 
+    const generation = resourceGenerationRef.current + 1;
+    resourceGenerationRef.current = generation;
+
     const controller = new AbortController();
     const requestOptions = { signal: controller.signal };
 
     async function loadPage() {
-      setIsLoading(true);
-      setError(null);
-
       try {
         if (isCreateMode) {
           if (!pharmacyProfile) {
@@ -1469,7 +1153,12 @@ function OrderDetailsPageContent({
             getPharmacyCheckoutDetails(pharmacyProfile.id, requestOptions),
           ]);
 
-          if (controller.signal.aborted) return;
+          if (
+            controller.signal.aborted ||
+            resourceGenerationRef.current !== generation
+          ) {
+            return;
+          }
 
           const activeClients = clientsResponse.items.filter(
             (client) => client.status === 'active'
@@ -1550,7 +1239,10 @@ function OrderDetailsPageContent({
           requestOptions
         );
 
-        if (!controller.signal.aborted) {
+        if (
+          !controller.signal.aborted &&
+          resourceGenerationRef.current === generation
+        ) {
           const formState = getOrderFormState(loadedOrder);
 
           setOrder(loadedOrder);
@@ -1563,7 +1255,10 @@ function OrderDetailsPageContent({
           setDeliveryTouchedFields({});
         }
       } catch (loadError) {
-        if (!controller.signal.aborted) {
+        if (
+          !controller.signal.aborted &&
+          resourceGenerationRef.current === generation
+        ) {
           setOrder(null);
           setError(
             getSafeApiErrorMessage(
@@ -1575,7 +1270,12 @@ function OrderDetailsPageContent({
           );
         }
       } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (
+          !controller.signal.aborted &&
+          resourceGenerationRef.current === generation
+        ) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -1583,6 +1283,10 @@ function OrderDetailsPageContent({
 
     return () => {
       controller.abort();
+
+      if (resourceGenerationRef.current === generation) {
+        resourceGenerationRef.current += 1;
+      }
     };
   }, [isCreateMode, isProfileLoading, orderId, pharmacyProfile]);
 
@@ -1683,16 +1387,21 @@ function OrderDetailsPageContent({
   ): Promise<PharmacyOrderDetails | null> => {
     if (!order || isCreateMode) return order;
 
+    const generation = resourceGenerationRef.current;
     setIsUpdatingOrder(true);
 
     try {
       const updatedOrder = await updatePharmacyOrder(order.id, payload);
+
+      if (resourceGenerationRef.current !== generation) return null;
 
       syncOrderState(updatedOrder);
       toast.success('Order updated successfully.');
 
       return updatedOrder;
     } catch (updateError) {
+      if (resourceGenerationRef.current !== generation) return null;
+
       toast.error(
         getSafeApiErrorMessage(
           updateError,
@@ -1702,7 +1411,9 @@ function OrderDetailsPageContent({
 
       return null;
     } finally {
-      setIsUpdatingOrder(false);
+      if (resourceGenerationRef.current === generation) {
+        setIsUpdatingOrder(false);
+      }
     }
   };
 
@@ -2035,6 +1746,7 @@ function OrderDetailsPageContent({
       }
     }
 
+    const generation = resourceGenerationRef.current;
     setIsUpdatingStatus(true);
 
     try {
@@ -2051,12 +1763,16 @@ function OrderDetailsPageContent({
 
       const updatedOrder = await updatePharmacyOrderStatus(order.id, payload);
 
+      if (resourceGenerationRef.current !== generation) return;
+
       syncOrderState(updatedOrder);
       dispatchOrderCounterRefresh();
       setPendingStatus(null);
       setRejectionReason('');
       toast.success('Order status updated successfully.');
     } catch (statusError) {
+      if (resourceGenerationRef.current !== generation) return;
+
       toast.error(
         getSafeApiErrorMessage(
           statusError,
@@ -2064,7 +1780,9 @@ function OrderDetailsPageContent({
         )
       );
     } finally {
-      setIsUpdatingStatus(false);
+      if (resourceGenerationRef.current === generation) {
+        setIsUpdatingStatus(false);
+      }
     }
   };
 
@@ -2097,6 +1815,7 @@ function OrderDetailsPageContent({
   const handleConfirmCreateOrder = async () => {
     if (!order || !selectedClientId || !isCreateMode) return;
 
+    const generation = resourceGenerationRef.current;
     setIsCreatingOrder(true);
 
     try {
@@ -2133,12 +1852,16 @@ function OrderDetailsPageContent({
         clientRequestId: requestState.clientRequestId,
       });
 
+      if (resourceGenerationRef.current !== generation) return;
+
       createOrderRequestRef.current = null;
       setIsCreateConfirmationOpen(false);
       dispatchOrderCounterRefresh();
       toast.success('Order created and moved to In progress.');
       router.replace(getPharmacyOrderPath(createdOrder.id));
     } catch (createError) {
+      if (resourceGenerationRef.current !== generation) return;
+
       toast.error(
         getSafeApiErrorMessage(
           createError,
@@ -2146,7 +1869,9 @@ function OrderDetailsPageContent({
         )
       );
     } finally {
-      setIsCreatingOrder(false);
+      if (resourceGenerationRef.current === generation) {
+        setIsCreatingOrder(false);
+      }
     }
   };
 

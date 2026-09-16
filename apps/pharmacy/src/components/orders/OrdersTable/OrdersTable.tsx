@@ -147,4 +147,3 @@ function OrdersTable({
 
 export default OrdersTable;
 export { OrdersTable };
-export type { PharmacyOrderRow };

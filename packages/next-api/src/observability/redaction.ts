@@ -22,7 +22,11 @@ const CLIENT_PII_QUERY_KEYS = new Set([
   'address',
 ]);
 
-const PRIVATE_ORDER_QUERY_KEYS = new Set(['clientcomment', 'comment']);
+const PRIVATE_ORDER_QUERY_KEYS = new Set([
+  'client',
+  'clientcomment',
+  'comment',
+]);
 
 //===================================================================
 

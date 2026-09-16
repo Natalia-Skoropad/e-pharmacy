@@ -47,6 +47,22 @@ test('does not redact ordinary name queries outside private clients', () => {
 
 //===================================================================
 
+test('redacts private order client search values', () => {
+  for (const path of [
+    '/api/orders?client=Natalia%20Skoropad&status=new&page=2',
+    '/orders?client=Natalia%20Skoropad&status=new&page=2',
+  ]) {
+    const result = redactRequestPath(path);
+
+    assert.match(result, /client=%5BREDACTED%5D/);
+    assert.match(result, /status=new/);
+    assert.match(result, /page=2/);
+    assert.doesNotMatch(result, /Natalia|Skoropad/);
+  }
+});
+
+//===================================================================
+
 test('redacts private order comment search values', () => {
   for (const path of [
     '/api/orders?clientComment=Please%20call%20Olena%20at%20%2B380501234567&comment=Gate%20code%201234&page=2',

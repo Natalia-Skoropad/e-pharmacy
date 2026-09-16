@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 
-import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
-import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
-
 import {
   isOrdersFilterRoute,
   parseOrdersSegments,
   type OrdersRouteParams,
 } from '@/lib/orders/order-paths';
+
+import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
+import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
 
 //===================================================================
 
@@ -29,10 +29,17 @@ async function OrdersPage({ params }: OrdersPageProps) {
   const segments = resolvedParams?.filters;
 
   if (!isOrdersFilterRoute(segments)) {
-    return <OrderDetailsPageContent orderId={segments?.[0] ?? ''} />;
+    return (
+      <OrderDetailsPageContent
+        key={segments?.[0] ?? 'invalid-order'}
+        orderId={segments?.[0] ?? ''}
+      />
+    );
   }
 
-  return <OrdersPageContent initialFilters={parseOrdersSegments(resolvedParams)} />;
+  return (
+    <OrdersPageContent initialFilters={parseOrdersSegments(resolvedParams)} />
+  );
 }
 
 export default OrdersPage;

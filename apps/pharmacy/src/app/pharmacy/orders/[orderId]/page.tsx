@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
-import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
-import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
-
 import {
   isOrdersFilterSegment,
   parseOrdersSegments,
 } from '@/lib/orders/order-paths';
+
+import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
+import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
 
 //===================================================================
 
@@ -34,7 +34,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
     );
   }
 
-  return <OrderDetailsPageContent orderId={orderId} />;
+  return <OrderDetailsPageContent key={orderId} orderId={orderId} />;
 }
 
 export default OrderDetailsPage;

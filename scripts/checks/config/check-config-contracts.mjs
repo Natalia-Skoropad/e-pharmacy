@@ -451,7 +451,7 @@ const [
       'components',
       'orders',
       'OrderDetailsPageContent',
-      'OrderDetailsPageContent.tsx'
+      'ProductPickerModal.tsx'
     ),
     'utf8'
   ),

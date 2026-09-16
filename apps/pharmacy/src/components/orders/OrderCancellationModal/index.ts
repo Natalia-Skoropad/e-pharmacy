@@ -1,2 +1,1 @@
-export * from './OrderCancellationModal';
-export { default } from './OrderCancellationModal';
+export { default, OrderCancellationModal } from './OrderCancellationModal';

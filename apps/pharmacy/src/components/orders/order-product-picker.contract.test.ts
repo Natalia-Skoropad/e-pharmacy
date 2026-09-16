@@ -12,11 +12,35 @@ const DETAILS_SOURCE = path.join(
   'OrderDetailsPageContent',
   'OrderDetailsPageContent.tsx'
 );
+const PRODUCT_PICKER_SOURCE = path.join(
+  CURRENT_DIR,
+  'OrderDetailsPageContent',
+  'ProductPickerModal.tsx'
+);
+
+//===================================================================
+
+test('ProductPicker owns its independent product resource lifecycle outside the order coordinator', async () => {
+  const [detailsSource, pickerSource] = await Promise.all([
+    readFile(DETAILS_SOURCE, 'utf8'),
+    readFile(PRODUCT_PICKER_SOURCE, 'utf8'),
+  ]);
+
+  assert.match(
+    detailsSource,
+    /import \{ ProductPickerModal \} from '\.\/ProductPickerModal'/
+  );
+
+  assert.doesNotMatch(detailsSource, /function ProductPickerModal\(/);
+  assert.match(pickerSource, /function ProductPickerModal\(/);
+  assert.match(pickerSource, /new AbortController\(\)/);
+  assert.match(pickerSource, /window\.setTimeout\(async \(\) =>/);
+});
 
 //===================================================================
 
 test('product picker loads categories from the canonical product filters endpoint', async () => {
-  const source = await readFile(DETAILS_SOURCE, 'utf8');
+  const source = await readFile(PRODUCT_PICKER_SOURCE, 'utf8');
 
   const loadCategories = source.match(
     /async function loadCategories\(\)[\s\S]*?void loadCategories\(\);/
