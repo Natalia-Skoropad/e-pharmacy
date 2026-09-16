@@ -23,7 +23,11 @@ import {
 import { sharedWorkingHoursSchema } from './shared-validation.schema';
 import { emptyQuerySchema } from './shared';
 
+//===============================================================
+
 const EXPECTED_REVISION = '2026-08-14T12:00:00.000Z';
+
+//===============================================================
 
 const validWorkingHours = [
   'Mon: 09:00-18:00',
@@ -96,6 +100,23 @@ test('query schemas validate real calendar dates and ordered ranges', () => {
     clientProductsQuerySchema.safeParse(invertedRange).success,
     false
   );
+});
+
+//===============================================================
+
+test('client contact search accepts email, phone and postal address values', () => {
+  for (const contact of [
+    'anna.rudenko.portfolio@ukr.net',
+    '+380968016907',
+    '27 Wellness Street, Lviv',
+  ]) {
+    const result = clientsQuerySchema.safeParse({ contact });
+    assert.equal(
+      result.success,
+      true,
+      `Expected contact search to accept: ${contact}`
+    );
+  }
 });
 
 //===============================================================

@@ -348,17 +348,11 @@ function ClientsPageContent({
           />
         ) : null}
 
-        {clientsStatus === 'error' ? (
-          <p role="status">Client statistics are temporarily unavailable.</p>
-        ) : clientsStatus === 'success' ? (
-          <ClientStatistics
-            counts={clientStatistics}
-            getStatisticHref={getClientStatisticHref}
-            className={css.clientStatistics}
-          />
-        ) : (
-          <p role="status">Loading client statistics...</p>
-        )}
+        <ClientStatistics
+          counts={clientStatistics}
+          getStatisticHref={getClientStatisticHref}
+          className={css.clientStatistics}
+        />
       </section>
 
       <section className={css.card} aria-labelledby="clients-search-title">

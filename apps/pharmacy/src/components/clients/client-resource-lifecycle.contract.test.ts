@@ -23,11 +23,13 @@ test('clients list uses one canonical request for rows and statistics without a 
   assert.doesNotMatch(source, /name:\s*['"]Walk-in client['"]/);
   assert.doesNotMatch(source, /putDefaultClientFirst/);
   assert.doesNotMatch(source, /getPharmacyClientStatistics/);
+  assert.doesNotMatch(source, /Loading client statistics/);
+  assert.match(source, /counts=\{clientStatistics\}/);
 });
 
 //===================================================================
 
-test('client details keep the primary client request independent and lazy-load supporting products and comments', async () => {
+test('client details keep the primary client request independent while preloading product and comment counts', async () => {
   const source = await read(
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
@@ -43,18 +45,10 @@ test('client details keep the primary client request independent and lazy-load s
   assert.doesNotMatch(loadClientSource, /getPharmacyNotes/);
 
   assert.equal((source.match(/getPharmacyOrders\(/g) ?? []).length, 1);
-  assert.match(source, /if \(!productsActivated\) return;/);
-
-  assert.match(
-    source,
-    /if \(nextTab === 'products'\) setProductsActivated\(true\)/
-  );
-
-  assert.match(
-    source,
-    /if \(nextTab === 'comments'\) setCommentsActivated\(true\)/
-  );
-
+  assert.doesNotMatch(source, /productsActivated/);
+  assert.doesNotMatch(source, /commentsActivated/);
+  assert.match(source, /getPharmacyClientProducts\(/);
+  assert.match(source, /getPharmacyNotes\('client', clientId, page, options\)/);
   assert.match(source, /commentsTotal === null\s*\? 'Comments'/);
   assert.match(source, /initialTotal=\{commentsTotal \?\? undefined\}/);
 });
@@ -88,6 +82,9 @@ test('deleted purchased products are rendered as history without a broken Produc
   assert.match(source, /item\.currentProductExists \? \(/);
   assert.match(source, /item\.currentStatus \? \(/);
   assert.match(source, /'Unavailable'/);
+  assert.match(source, /item\.firstOrderDate/);
+  assert.match(source, /item\.ordersCount/);
+  assert.match(source, /First order/);
 });
 
 //===================================================================
@@ -183,7 +180,7 @@ test('client component barrels do not re-export canonical domain types', async (
 
 //===================================================================
 
-test('client route pages reject malformed segments before rendering details', async () => {
+test('client route pages reject mixed segments while single invalid ids render branded detail errors', async () => {
   const catchAllSource = await read(
     '../../app/pharmacy/clients/[[...filters]]/page.tsx'
   );
@@ -199,6 +196,10 @@ test('client route pages reject malformed segments before rendering details', as
       /if \(route\.kind === 'invalid'\) \{\s*notFound\(\);\s*\}/
     );
   }
+
+  const pathsSource = await read('../../lib/clients/client-paths.ts');
+  assert.match(pathsSource, /if \(segments\.length === 1\) \{/);
+  assert.doesNotMatch(pathsSource, /segments\.length === 1 && isValidObjectId/);
 });
 
 //===================================================================

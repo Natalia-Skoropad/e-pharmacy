@@ -14,7 +14,21 @@ import {
 } from './shared/date.schema';
 
 import { PRODUCT_CATEGORIES } from '../types/categories';
+
+import {
+  USER_SEARCH_MAX_LENGTH,
+  VALIDATION_MESSAGES,
+} from '../constants/validation';
+
 import { sharedSearchSchema } from './shared-validation.schema';
+
+//===============================================================
+
+const clientContactSearchSchema = z
+  .string()
+  .trim()
+  .max(USER_SEARCH_MAX_LENGTH, VALIDATION_MESSAGES.limits.searchMax)
+  .optional();
 
 //===============================================================
 
@@ -35,7 +49,7 @@ export const clientsQuerySchema = z.preprocess(
       firstOrderTo: dateQuerySchema,
       name: sharedSearchSchema,
       clientId: sharedSearchSchema,
-      contact: sharedSearchSchema,
+      contact: clientContactSearchSchema,
       email: sharedSearchSchema,
       phone: sharedSearchSchema,
       address: sharedSearchSchema,

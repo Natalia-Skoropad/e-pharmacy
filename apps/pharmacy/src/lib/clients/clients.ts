@@ -73,8 +73,7 @@ export type PharmacyClientsResponse = Readonly<
 
 export type PharmacyClientPurchasedProduct = Readonly<{
   id: string;
-  orderId: EntityId;
-  orderDate: string;
+  firstOrderDate: string;
   productId: EntityId;
   photoUrl: string | null;
   article: string;
@@ -82,6 +81,7 @@ export type PharmacyClientPurchasedProduct = Readonly<{
   category: ProductCategory;
   quantity: number;
   totalAmount: number;
+  ordersCount: number;
   currentProductExists: boolean;
   currentStatus: ProductStatus | null;
 }>;
@@ -413,13 +413,13 @@ function normalizePharmacyClientPurchasedProduct(
     );
   }
 
-  const orderDate = payload.orderDate;
+  const firstOrderDate = payload.firstOrderDate;
   const category = payload.category;
   const currentStatus = payload.currentStatus;
 
-  if (!isISODateTimeString(orderDate)) {
+  if (!isISODateTimeString(firstOrderDate)) {
     invalidClientContract(
-      'pharmacy client purchased product.orderDate must be a canonical ISO datetime.',
+      'pharmacy client purchased product.firstOrderDate must be a canonical ISO datetime.',
       payload
     );
   }
@@ -459,13 +459,7 @@ function normalizePharmacyClientPurchasedProduct(
       payload
     ),
 
-    orderId: requireObjectId(
-      payload.orderId,
-      'pharmacy client purchased product.orderId',
-      payload
-    ),
-
-    orderDate,
+    firstOrderDate,
     productId: requireObjectId(
       payload.productId,
       'pharmacy client purchased product.productId',
@@ -500,6 +494,12 @@ function normalizePharmacyClientPurchasedProduct(
     totalAmount: requireNonNegativeNumber(
       payload.totalAmount,
       'pharmacy client purchased product.totalAmount',
+      payload
+    ),
+
+    ordersCount: requirePositiveInteger(
+      payload.ordersCount,
+      'pharmacy client purchased product.ordersCount',
       payload
     ),
 

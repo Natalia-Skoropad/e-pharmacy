@@ -168,3 +168,18 @@
     transform: translate(0, 0);
   }
 }
+
+.floatingTooltip {
+  --info-tooltip-arrow-left: 12px;
+
+  position: fixed;
+  z-index: var(--z-tooltip);
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+.floatingTooltip::before {
+  left: var(--info-tooltip-arrow-left, 12px);
+  transform: translateX(-50%) rotate(45deg);
+}

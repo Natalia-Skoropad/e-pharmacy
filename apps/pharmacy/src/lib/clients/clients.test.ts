@@ -99,9 +99,8 @@ test('pharmacy clients response rejects malformed rows and earliest date', () =>
 
 test('purchased product response rejects invalid quantities and dates', () => {
   const item = {
-    id: '507f1f77bcf86cd799439010-507f1f77bcf86cd799439012',
-    orderId: '507f1f77bcf86cd799439010',
-    orderDate: '2026-08-12T10:00:00.000Z',
+    id: '507f1f77bcf86cd799439013',
+    firstOrderDate: '2026-08-12T10:00:00.000Z',
     productId: '507f1f77bcf86cd799439013',
     photoUrl: null,
     article: 'ASP-100',
@@ -109,6 +108,7 @@ test('purchased product response rejects invalid quantities and dates', () => {
     category: 'medicine',
     quantity: 2,
     totalAmount: 200,
+    ordersCount: 2,
     currentProductExists: true,
     currentStatus: 'active',
   };
@@ -137,7 +137,16 @@ test('purchased product response rejects invalid quantities and dates', () => {
     () =>
       normalizePharmacyClientProductsResponse({
         ...response,
-        items: [{ ...item, orderDate: '2026-08-12' }],
+        items: [{ ...item, ordersCount: 0 }],
+      }),
+    isInvalidResponse
+  );
+
+  assert.throws(
+    () =>
+      normalizePharmacyClientProductsResponse({
+        ...response,
+        items: [{ ...item, firstOrderDate: '2026-08-12' }],
       }),
     isInvalidResponse
   );

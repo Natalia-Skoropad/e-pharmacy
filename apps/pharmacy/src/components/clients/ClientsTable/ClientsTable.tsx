@@ -108,6 +108,7 @@ function ClientsTable({
             <InfoTooltip
               label="How are order totals calculated?"
               title="Successful orders only"
+              escapeOverflow
             >
               Orders count is the number of successful orders. Orders amount is
               the total value of all successful orders for this client.
@@ -118,7 +119,7 @@ function ClientsTable({
       },
       {
         key: 'successfulOrdersAmount',
-        title: <TableHeaderTitle parts={['Orders', ' amount, ', '₴']} />,
+        title: <TableHeaderTitle parts={['Orders', ' amount, ₴']} />,
         render: (client) => formatAmount(client.successfulOrdersAmount) ?? '—',
       },
       {

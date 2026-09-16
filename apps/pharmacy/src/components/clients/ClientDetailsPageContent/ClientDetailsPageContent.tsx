@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import {
@@ -41,8 +40,6 @@ import {
   LoadingSpinner,
   TextActionButton,
 } from '@e-pharmacy/ui/primitives';
-
-import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
   CountLabel,
@@ -89,7 +86,6 @@ import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import {
   getPharmacyClientPath,
-  PHARMACY_ROUTES,
   getPharmacyOrderPath,
   getPharmacyProductPath,
 } from '@/lib/routes';
@@ -396,7 +392,7 @@ function ClientProductsFiltersDrawer({
         id="client-products-order-date"
         minDate={minDate}
         disabled={!minDate}
-        label="Order date"
+        label="First order date"
         value={filters.date}
         isActive={Boolean(filters.date.from || filters.date.to)}
         applyOnSubmit
@@ -504,7 +500,6 @@ function ClientDetailsPageContentState({
     useState<OrderStatisticsCounts | null>(null);
 
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
-  const [commentsActivated, setCommentsActivated] = useState(false);
   const [activeTab, setActiveTab] = useState<ClientTab>('details');
   const [clientStatus, setClientStatus] = useState<ResourceStatus>('loading');
   const [error, setError] = useState<ClientDetailsError | null>(null);
@@ -554,7 +549,6 @@ function ClientDetailsPageContentState({
   const [productsStatus, setProductsStatus] = useState<ResourceStatus>('idle');
   const [productsError, setProductsError] = useState('');
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
-  const [productsActivated, setProductsActivated] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -598,6 +592,8 @@ function ClientDetailsPageContentState({
   }, [client?.name]);
 
   useEffect(() => {
+    if (clientStatus !== 'success') return;
+
     const controller = new AbortController();
 
     async function loadOrders() {
@@ -687,6 +683,7 @@ function ClientDetailsPageContentState({
     };
   }, [
     clientId,
+    clientStatus,
     debouncedOrderCommentSearch,
     debouncedOrderNumberSearch,
     orderFilters,
@@ -696,7 +693,7 @@ function ClientDetailsPageContentState({
   ]);
 
   useEffect(() => {
-    if (!productsActivated) return;
+    if (clientStatus !== 'success') return;
 
     const controller = new AbortController();
 
@@ -771,11 +768,11 @@ function ClientDetailsPageContentState({
     };
   }, [
     clientId,
+    clientStatus,
     debouncedProductArticleSearch,
     debouncedProductNameSearch,
     productFilters,
     productSearchKey,
-    productsActivated,
     productsPage,
     productsRowsPerPage,
   ]);
@@ -875,7 +872,7 @@ function ClientDetailsPageContentState({
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Order', ' amount, ', '₴']} />,
+        title: <TableHeaderTitle parts={['Order', ' amount, ₴']} />,
         render: (order) => formatAmountValue(order.totalAmount),
       },
       {
@@ -899,9 +896,9 @@ function ClientDetailsPageContentState({
   >(
     () => [
       {
-        key: 'date',
-        title: <TableHeaderTitle parts={['Order', 'date']} />,
-        render: (item) => <TableDateTime value={item.orderDate} />,
+        key: 'firstOrderDate',
+        title: <TableHeaderTitle parts={['First order', 'date']} />,
+        render: (item) => <TableDateTime value={item.firstOrderDate} />,
       },
       {
         key: 'photo',
@@ -950,8 +947,13 @@ function ClientDetailsPageContentState({
       },
       {
         key: 'amount',
-        title: <TableHeaderTitle parts={['Purchased amount,', '₴']} />,
+        title: <TableHeaderTitle parts={['Purchased ', 'amount, ₴']} />,
         render: (item) => formatAmountValue(item.totalAmount),
+      },
+      {
+        key: 'ordersCount',
+        title: <TableHeaderTitle parts={['Orders', 'count']} />,
+        render: (item) => item.ordersCount,
       },
       {
         key: 'status',
@@ -988,29 +990,20 @@ function ClientDetailsPageContentState({
     return (
       <main className={css.page} aria-labelledby="client-details-error-title">
         <section className={css.contentCard}>
-          <PageHeader
-            title="Client details"
-            titleId="client-details-error-title"
-            icon={<Users size={23} aria-hidden="true" />}
-          />
+          <div className={css.headerStack}>
+            <PageHeader
+              title={clientError.title}
+              titleId="client-details-error-title"
+              icon={<Users size={23} aria-hidden="true" />}
+            />
 
-          <StatusBanner
-            tone="danger"
-            label="Error"
-            title={clientError.title}
-            message={clientError.message}
-          />
-
-          <LinkButton
-            href={PHARMACY_ROUTES.CLIENTS}
-            renderLink={({ href, className, children, ...props }) => (
-              <Link href={href} className={className} {...props}>
-                {children}
-              </Link>
-            )}
-          >
-            Back to clients
-          </LinkButton>
+            <StatusBanner
+              tone="danger"
+              label="Error"
+              title={clientError.title}
+              message={clientError.message}
+            />
+          </div>
         </section>
       </main>
     );
@@ -1045,11 +1038,7 @@ function ClientDetailsPageContentState({
             ariaLabel="Client details tabs"
             mobileVisibleCount={1}
             tabletVisibleCount={3}
-            onChange={(nextTab) => {
-              setActiveTab(nextTab);
-              if (nextTab === 'products') setProductsActivated(true);
-              if (nextTab === 'comments') setCommentsActivated(true);
-            }}
+            onChange={setActiveTab}
           />
 
           {activeTab === 'details' ? (
@@ -1252,9 +1241,11 @@ function ClientDetailsPageContentState({
                     title="Successful purchases"
                     icon={<PackageCheck size={20} aria-hidden="true" />}
                   >
-                    This table contains products from this client’s successful
-                    orders only. Quantities and amounts reflect what was
-                    actually purchased in completed orders.
+                    Each product appears once across this client’s successful
+                    orders. Purchased quantity and amount are totals across all
+                    successful orders containing the product. First order date
+                    shows the earliest such purchase, and Orders count shows how
+                    many successful orders included it.
                   </InfoTooltip>
                 </div>
 
@@ -1355,20 +1346,18 @@ function ClientDetailsPageContentState({
             </div>
           ) : null}
 
-          {commentsActivated ? (
-            <div hidden={activeTab !== 'comments'}>
-              <EntityComments
-                entityKey={`client:${clientId}`}
-                initialTotal={commentsTotal ?? undefined}
-                load={(page, options) =>
-                  getPharmacyNotes('client', clientId, page, options)
-                }
-                create={(text) => createPharmacyNote('client', clientId, text)}
-                remove={(id) => deletePharmacyNote('client', clientId, id)}
-                onTotalChange={setCommentsTotal}
-              />
-            </div>
-          ) : null}
+          <div hidden={activeTab !== 'comments'}>
+            <EntityComments
+              entityKey={`client:${clientId}`}
+              initialTotal={commentsTotal ?? undefined}
+              load={(page, options) =>
+                getPharmacyNotes('client', clientId, page, options)
+              }
+              create={(text) => createPharmacyNote('client', clientId, text)}
+              remove={(id) => deletePharmacyNote('client', clientId, id)}
+              onTotalChange={setCommentsTotal}
+            />
+          </div>
         </div>
       </section>
 

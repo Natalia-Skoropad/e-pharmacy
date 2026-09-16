@@ -69,7 +69,13 @@ test('client routes distinguish canonical filters, entity IDs and malformed segm
   });
 
   assert.deepEqual(resolveClientsRoute(['not-an-object-id']), {
-    kind: 'invalid',
+    kind: 'detail',
+    clientId: 'not-an-object-id',
+  });
+
+  assert.deepEqual(resolveClientsRoute(['11']), {
+    kind: 'detail',
+    clientId: '11',
   });
 
   assert.deepEqual(resolveClientsRoute(['foo', 'bar']), { kind: 'invalid' });

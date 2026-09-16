@@ -63,8 +63,7 @@ type ClientAggregationResult = Readonly<{
 
 type ClientPurchasedProductRow = Readonly<{
   id: string;
-  orderId: string;
-  orderDate: string;
+  firstOrderDate: string;
   productId: string;
   photoUrl: string | null;
   article: string;
@@ -72,15 +71,16 @@ type ClientPurchasedProductRow = Readonly<{
   category: ProductCategory;
   quantity: number;
   totalAmount: number;
+  ordersCount: number;
   currentProductExists: boolean;
   currentStatus: ProductStatus | null;
 }>;
 
 type AggregatedClientPurchasedProductRow = Omit<
   ClientPurchasedProductRow,
-  'orderDate'
+  'firstOrderDate'
 > & {
-  orderDate: Date;
+  firstOrderDate: Date;
 };
 
 type ClientPurchasedProductsAggregationResult = Readonly<{
@@ -560,7 +560,7 @@ function buildClientProductFilterStages(
   }
 
   if (query.dateFrom || query.dateTo) {
-    match.orderDate = {
+    match.firstOrderDate = {
       ...(query.dateFrom ? { $gte: getStartOfDay(query.dateFrom) } : {}),
       ...(query.dateTo ? { $lte: getEndOfDay(query.dateTo) } : {}),
     };
@@ -581,7 +581,7 @@ function buildClientProductsAggregationPipeline(
 
   const itemsFacet: PipelineStage.FacetPipelineStage[] = [
     ...filterStages,
-    { $sort: { orderDate: -1, orderId: 1, id: 1 } },
+    { $sort: { firstOrderDate: -1, productId: 1 } },
     { $skip: skip },
     { $limit: query.perPage },
   ];
@@ -595,7 +595,7 @@ function buildClientProductsAggregationPipeline(
     {
       $group: {
         _id: null,
-        earliestCreatedAt: { $min: '$orderDate' },
+        earliestCreatedAt: { $min: '$firstOrderDate' },
       },
     },
     { $project: { _id: 0, earliestCreatedAt: 1 } },
@@ -616,9 +616,34 @@ function buildClientProductsAggregationPipeline(
       },
     },
     {
+      $sort: {
+        'items.productId': 1,
+        createdAt: 1,
+        _id: 1,
+        itemIndex: 1,
+      },
+    },
+    {
+      $group: {
+        _id: '$items.productId',
+        firstOrderDate: { $min: '$createdAt' },
+        photoUrl: {
+          $first: { $ifNull: ['$items.productSnapshot.imageUrl', null] },
+        },
+        article: { $first: '$items.productSnapshot.article' },
+        name: { $first: '$items.productSnapshot.name' },
+        category: {
+          $first: { $ifNull: ['$items.productSnapshot.category', 'other'] },
+        },
+        quantity: { $sum: '$items.quantity' },
+        totalAmount: { $sum: '$items.totalPrice' },
+        orderIds: { $addToSet: '$_id' },
+      },
+    },
+    {
       $lookup: {
         from: Product.collection.name,
-        localField: 'items.productId',
+        localField: '_id',
         foreignField: '_id',
         as: 'currentProducts',
         pipeline: [{ $project: { _id: 1, status: 1 } }],
@@ -632,31 +657,16 @@ function buildClientProductsAggregationPipeline(
     {
       $project: {
         _id: 0,
-        id: {
-          $concat: [
-            { $toString: '$_id' },
-            '-',
-            {
-              $ifNull: [
-                { $toString: '$items._id' },
-                { $toString: '$itemIndex' },
-              ],
-            },
-          ],
-        },
-        orderId: { $toString: '$_id' },
-        orderDate: '$createdAt',
-        productId: { $toString: '$items.productId' },
-        photoUrl: {
-          $ifNull: ['$items.productSnapshot.imageUrl', null],
-        },
-        article: '$items.productSnapshot.article',
-        name: '$items.productSnapshot.name',
-        category: {
-          $ifNull: ['$items.productSnapshot.category', 'other'],
-        },
-        quantity: '$items.quantity',
-        totalAmount: '$items.totalPrice',
+        id: { $toString: '$_id' },
+        firstOrderDate: 1,
+        productId: { $toString: '$_id' },
+        photoUrl: 1,
+        article: 1,
+        name: 1,
+        category: 1,
+        quantity: 1,
+        totalAmount: 1,
+        ordersCount: { $size: '$orderIds' },
         currentProductExists: {
           $ne: [{ $ifNull: ['$currentProduct._id', null] }, null],
         },
@@ -737,7 +747,7 @@ export async function getClientPurchasedProductsService(
   return {
     items: (result?.items ?? []).map((row) => ({
       ...row,
-      orderDate: row.orderDate.toISOString(),
+      firstOrderDate: row.firstOrderDate.toISOString(),
     })),
     page,
     perPage: query.perPage,

@@ -107,8 +107,15 @@ test('purchased products stay historical and paginate inside Mongo aggregation',
     /photoUrl:\s*\{[\s\S]*productSnapshot\.imageUrl/
   );
 
-  assert.match(pipelineSource, /article: '\$items\.productSnapshot\.article'/);
-  assert.match(pipelineSource, /name: '\$items\.productSnapshot\.name'/);
+  assert.match(
+    pipelineSource,
+    /article:\s*\{ \$first: '\$items\.productSnapshot\.article' \}/
+  );
+
+  assert.match(
+    pipelineSource,
+    /name:\s*\{ \$first: '\$items\.productSnapshot\.name' \}/
+  );
 
   assert.match(
     pipelineSource,
@@ -117,6 +124,17 @@ test('purchased products stay historical and paginate inside Mongo aggregation',
 
   assert.match(pipelineSource, /currentProductExists:/);
   assert.match(pipelineSource, /currentStatus:/);
+  assert.match(pipelineSource, /_id: '\$items\.productId'/);
+  assert.match(pipelineSource, /quantity: \{ \$sum: '\$items\.quantity' \}/);
+
+  assert.match(
+    pipelineSource,
+    /totalAmount: \{ \$sum: '\$items\.totalPrice' \}/
+  );
+
+  assert.match(pipelineSource, /orderIds: \{ \$addToSet: '\$_id' \}/);
+  assert.match(pipelineSource, /ordersCount: \{ \$size: '\$orderIds' \}/);
+  assert.match(pipelineSource, /firstOrderDate: \{ \$min: '\$createdAt' \}/);
 
   assert.match(
     pipelineSource,

@@ -48,6 +48,7 @@ async function createSuccessfulOrder({
   productId,
   createdAt,
   totalPrice,
+  quantity = 1,
   orderNumber,
   snapshot,
 }: Readonly<{
@@ -56,6 +57,7 @@ async function createSuccessfulOrder({
   productId: Types.ObjectId;
   createdAt: Date;
   totalPrice: number;
+  quantity?: number;
   orderNumber: string;
   snapshot: Readonly<{
     name: string;
@@ -75,12 +77,12 @@ async function createSuccessfulOrder({
         productId,
         productOfferId,
         productSnapshot: snapshot,
-        quantity: 1,
-        unitPrice: totalPrice,
+        quantity,
+        unitPrice: totalPrice / quantity,
         totalPrice,
       },
     ],
-    totalItems: 1,
+    totalItems: quantity,
     totalPrice,
     currency: '₴',
     paymentMethod: 'cash',
@@ -361,7 +363,7 @@ test(
 //===================================================================
 
 test(
-  'purchased-product filtering and pagination use the canonical Mongo result set',
+  'purchased products aggregate repeated product purchases across successful orders',
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
@@ -378,14 +380,14 @@ test(
         ownerId,
         managerUserIds: [],
         documents: [],
-        name: 'Purchased Product Pagination Pharmacy',
+        name: 'Purchased Product Aggregate Pharmacy',
         status: 'active',
       }),
 
       User.create({
         _id: clientId,
-        name: 'Pagination Client',
-        email: `pagination-${suffix.toLowerCase()}@example.com`,
+        name: 'Aggregate Client',
+        email: `aggregate-${suffix.toLowerCase()}@example.com`,
         password: 'hashed-password',
         phone: testPhone('68', suffix),
         role: 'client',
@@ -394,8 +396,8 @@ test(
 
       Product.create({
         _id: productId,
-        name: 'Current Pagination Product',
-        article: `CURRENT-${suffix}`,
+        name: 'Current Aggregate Product',
+        article: `EPH-${suffix}`,
         category: 'medicine',
         status: 'active',
         inStock: true,
@@ -407,12 +409,13 @@ test(
         pharmacyId,
         userId: clientId,
         productId,
-        createdAt: new Date('2026-07-01T10:00:00.000Z'),
-        totalPrice: 100,
-        orderNumber: `PAGE-1-${suffix}`,
+        createdAt: new Date('2026-09-15T10:00:00.000Z'),
+        totalPrice: 500,
+        quantity: 5,
+        orderNumber: `AGG-1-${suffix}`,
         snapshot: {
-          name: 'Historical Alpha',
-          article: `ALPHA-${suffix}`,
+          name: 'Historical Aggregate Product',
+          article: `EPH-${suffix}`,
           category: 'medicine',
         },
       }),
@@ -421,65 +424,36 @@ test(
         pharmacyId,
         userId: clientId,
         productId,
-        createdAt: new Date('2026-08-01T10:00:00.000Z'),
-        totalPrice: 200,
-        orderNumber: `PAGE-2-${suffix}`,
+        createdAt: new Date('2026-09-16T10:00:00.000Z'),
+        totalPrice: 770,
+        quantity: 7,
+        orderNumber: `AGG-2-${suffix}`,
         snapshot: {
-          name: 'Historical Beta',
-          article: `BETA-${suffix}`,
-          category: 'medicine',
-        },
-      }),
-
-      createSuccessfulOrder({
-        pharmacyId,
-        userId: clientId,
-        productId,
-        createdAt: new Date('2026-09-01T10:00:00.000Z'),
-        totalPrice: 300,
-        orderNumber: `PAGE-3-${suffix}`,
-        snapshot: {
-          name: 'Historical Gamma',
-          article: `GAMMA-${suffix}`,
+          name: 'Historical Aggregate Product',
+          article: `EPH-${suffix}`,
           category: 'medicine',
         },
       }),
     ]);
 
     try {
-      const secondPage = await getClientPurchasedProductsService(
+      const response = await getClientPurchasedProductsService(
         ownerId.toString(),
         clientId.toString(),
-        { page: 2, perPage: 1 }
+        { page: 1, perPage: 20 }
       );
 
-      assert.equal(secondPage.page, 2);
-      assert.equal(secondPage.total, 3);
-      assert.equal(secondPage.totalPages, 3);
-      assert.equal(secondPage.items.length, 1);
-      assert.equal(secondPage.items[0]?.name, 'Historical Beta');
-      assert.equal(secondPage.earliestCreatedAt, '2026-07-01');
+      assert.equal(response.total, 1);
+      assert.equal(response.items.length, 1);
 
-      const stalePage = await getClientPurchasedProductsService(
-        ownerId.toString(),
-        clientId.toString(),
-        { page: 99, perPage: 2 }
-      );
-
-      assert.equal(stalePage.page, 2);
-      assert.equal(stalePage.totalPages, 2);
-      assert.equal(stalePage.items.length, 1);
-      assert.equal(stalePage.items[0]?.name, 'Historical Alpha');
-
-      const filtered = await getClientPurchasedProductsService(
-        ownerId.toString(),
-        clientId.toString(),
-        { page: 1, perPage: 20, name: 'Beta' }
-      );
-
-      assert.equal(filtered.total, 1);
-      assert.equal(filtered.items[0]?.name, 'Historical Beta');
-      assert.equal(filtered.items[0]?.currentStatus, 'active');
+      const item = response.items[0];
+      assert.ok(item);
+      assert.equal(item.productId, productId.toString());
+      assert.equal(item.firstOrderDate, '2026-09-15T10:00:00.000Z');
+      assert.equal(item.ordersCount, 2);
+      assert.equal(item.quantity, 12);
+      assert.equal(item.totalAmount, 1270);
+      assert.equal(response.earliestCreatedAt, '2026-09-15');
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId }),
