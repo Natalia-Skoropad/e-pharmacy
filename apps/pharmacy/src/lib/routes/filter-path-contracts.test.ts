@@ -6,7 +6,12 @@ import {
   parseClientsSegments,
 } from '@/lib/clients/client-paths';
 
-import { buildOrdersPath, parseOrdersSegments } from '@/lib/orders/order-paths';
+import {
+  buildOrdersPath,
+  isOrdersFilterSegment,
+  parseOrdersSegments,
+} from '@/lib/orders/order-paths';
+
 import { DEFAULT_CLIENTS_FILTERS } from '@/lib/clients/client-paths';
 import { DEFAULT_ORDERS_FILTERS } from '@/lib/orders/orders-filters';
 
@@ -44,6 +49,24 @@ test('order status route uses canonical hyphenated slug and roundtrips', () => {
 
   assert.equal(path, '/pharmacy/orders/status-in-progress');
   assert.deepEqual(parseOrdersSegments({ filters: segments(path) }), state);
+});
+
+//===================================================================
+
+test('order client search stays ephemeral and is never persisted in the route', () => {
+  const state = {
+    ...DEFAULT_ORDERS_FILTERS,
+    client: 'Nataliia Skoropad',
+    status: 'new' as const,
+  };
+
+  assert.equal(buildOrdersPath(state), '/pharmacy/orders/status-new');
+  assert.equal(isOrdersFilterSegment('client-nataliia-skoropad'), false);
+
+  assert.deepEqual(
+    parseOrdersSegments({ filters: ['client-nataliia-skoropad'] }),
+    DEFAULT_ORDERS_FILTERS
+  );
 });
 
 //===================================================================

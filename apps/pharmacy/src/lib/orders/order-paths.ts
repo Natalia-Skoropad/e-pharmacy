@@ -6,7 +6,6 @@ import {
 
 import {
   deslugifyArticleSegment,
-  deslugifyNameSegment,
   isDateParam,
   isDateRangeValid,
   normalizeSlugEnumValue,
@@ -60,7 +59,6 @@ export type OrdersRouteParams = Readonly<{
 
 export function isOrdersFilterSegment(segment: string): boolean {
   return (
-    segment.startsWith('client-') ||
     segment.startsWith('order-number-') ||
     segment.startsWith('delivery-') ||
     segment.startsWith('payment-') ||
@@ -88,11 +86,6 @@ export function parseOrdersSegments(
   };
 
   for (const segment of params.filters ?? []) {
-    if (segment.startsWith('client-')) {
-      filters.client = deslugifyNameSegment(segment.replace('client-', ''));
-      continue;
-    }
-
     if (segment.startsWith('order-number-')) {
       filters.orderNumber = deslugifyArticleSegment(
         segment.replace('order-number-', '')
@@ -182,12 +175,7 @@ export function parseOrdersSegments(
 export function buildOrdersPath(filters: OrdersFilterState): string {
   const segments: string[] = [];
   const dateRangeIsValid = isDateRangeValid(filters.date);
-  const client = filters.client.trim();
   const orderNumber = filters.orderNumber.trim();
-
-  if (client) {
-    segments.push(`client-${slugifySegment(client)}`);
-  }
 
   if (orderNumber) {
     segments.push(`order-number-${slugifySegment(orderNumber)}`);

@@ -85,12 +85,7 @@ import type {
 
 import { getOrderStatusTransitions } from '@e-pharmacy/config/orders';
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
-
-import {
-  createUniqueLabeledOptions,
-  type LabeledOption,
-} from '@e-pharmacy/utils/collections';
-
+import type { LabeledOption } from '@e-pharmacy/utils/collections';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
@@ -123,6 +118,7 @@ import {
   getPharmacyClients,
   getPharmacyOrderDetails,
   getPharmacyOrderComments,
+  getProductFilters,
   getProducts,
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
@@ -491,20 +487,19 @@ function ProductPickerModal({
 
     async function loadCategories() {
       try {
-        const response = await getProducts(
+        const response = await getProductFilters(
           {
             pharmacyId: order.pharmacyId,
             inStock: true,
-            page: 1,
-            perPage: PRODUCT_PICKER_LIMIT,
           },
           { signal: controller.signal }
         );
 
         setCategoryOptions(
-          createUniqueLabeledOptions(
-            response.items.map((product) => product.category),
-            (category) => PRODUCT_CATEGORY_LABELS[category]
+          response.categories.flatMap((option) =>
+            option.value === 'all'
+              ? []
+              : [{ value: option.value, label: option.label }]
           )
         );
       } catch {

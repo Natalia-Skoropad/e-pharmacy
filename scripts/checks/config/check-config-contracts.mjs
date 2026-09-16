@@ -598,8 +598,9 @@ assert.match(clientCategoryConsumerSource, /getProductFilters/);
 assert.match(clientCategoryConsumerSource, /PRODUCT_CATEGORY_LABELS/);
 assert.doesNotMatch(clientCategoryConsumerSource, /PRODUCTS_LIMIT\s*=\s*150/);
 
-assert.match(pharmacyCategoryConsumerSource, /createUniqueLabeledOptions/);
+assert.match(pharmacyCategoryConsumerSource, /getProductFilters/);
 assert.match(pharmacyCategoryConsumerSource, /PRODUCT_CATEGORY_LABELS/);
+assert.doesNotMatch(pharmacyCategoryConsumerSource, /response\.items\.map/);
 
 assert.match(clientStatisticsSource, /export type ClientStatisticsCounts/);
 assert.match(clientStatisticsSource, /CLIENT_STATISTICS_LABELS/);

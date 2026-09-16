@@ -6,6 +6,7 @@ import {
   parseApiResponseData,
   parsePharmacyProductMutationResponse,
   parseProductDetailsResponse,
+  parseProductFilterOptionsResponse,
   parseProductsWithOffersResponse,
   parseProductStockMovementsResponse,
   parseReviewsResponse,
@@ -18,6 +19,7 @@ import type {
   PharmacyProductMutationResponse,
   ProductDetails,
   ProductDetailsResponse,
+  ProductFilterOptionsResponse,
   ProductStockMovementsResponse,
   PharmacyProductsQueryParams as PharmacyProductsApiQueryParams,
   ProductsWithOffersResponse,
@@ -48,6 +50,21 @@ export async function getProducts(
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseProductsWithOffersResponse,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getProductFilters(
+  params: Readonly<{ pharmacyId?: string; inStock?: boolean }> = {},
+  options: BrowserReadRequestOptions = {}
+): Promise<ProductFilterOptionsResponse> {
+  const path = appendQueryParams(PHARMACY_API_ROUTES.products.filters, params);
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    parseProductFilterOptionsResponse,
     { url: path, method: 'GET' }
   );
 }

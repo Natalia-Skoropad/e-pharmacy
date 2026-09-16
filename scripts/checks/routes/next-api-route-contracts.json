@@ -321,6 +321,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/products/filters",
+    "backend": "/products/filters",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/auth/logout",
     "backend": "/auth/logout",
     "methods": {
