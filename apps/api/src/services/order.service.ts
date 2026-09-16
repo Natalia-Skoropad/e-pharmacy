@@ -48,6 +48,7 @@ import type {
 
 import type {
   OrderActivityHistoryItem,
+  OrderClientSnapshot,
   OrderEntity,
   OrderItemEntity,
   OrderResponseDto,
@@ -176,6 +177,33 @@ function hasCompleteBankDetails(
 
 //===============================================================
 
+function createOrderClientSnapshot(client: UserDocument): OrderClientSnapshot {
+  const isDefaultPharmacyClient = Boolean(client.isDefaultPharmacyClient);
+
+  if (isDefaultPharmacyClient) {
+    return {
+      name: 'Walk-in client',
+      isDefaultPharmacyClient: true,
+      ...(client.defaultClientPharmacyId
+        ? { defaultClientPharmacyId: client.defaultClientPharmacyId }
+        : {}),
+    };
+  }
+
+  return {
+    name: client.name?.trim() || client.email?.trim() || 'Client',
+    ...(client.email?.trim() ? { email: client.email.trim() } : {}),
+    ...(client.phone?.trim() ? { phone: client.phone.trim() } : {}),
+    ...(client.address?.trim() ? { address: client.address.trim() } : {}),
+    ...(client.pictureUrl?.trim()
+      ? { pictureUrl: client.pictureUrl.trim() }
+      : {}),
+    isDefaultPharmacyClient: false,
+  };
+}
+
+//===============================================================
+
 function assertManagerOrderReplayMatches(
   order: OrderDocument,
   requestFingerprint: string
@@ -300,6 +328,24 @@ function serializeOrder(
   offerFallbacks?: OfferFallbackMap
 ): OrderResponseDto {
   const clientUser = clientUsers?.get(order.userId.toString());
+  const clientSnapshot = order.clientSnapshot;
+  const clientIdentity = clientSnapshot ?? clientUser;
+  const isDefaultPharmacyClient = Boolean(
+    clientIdentity?.isDefaultPharmacyClient
+  );
+  const hasClientIdentity = Boolean(clientIdentity);
+  const clientName = isDefaultPharmacyClient
+    ? 'Walk-in client'
+    : (clientIdentity?.name ?? clientIdentity?.email);
+  const clientPhotoUrl = isDefaultPharmacyClient
+    ? order.pharmacySnapshot.imageUrl
+    : clientIdentity?.pictureUrl;
+  const clientPhone = isDefaultPharmacyClient
+    ? undefined
+    : clientIdentity?.phone;
+  const clientAddress = isDefaultPharmacyClient
+    ? undefined
+    : clientIdentity?.address;
   const managerComments = serializeManagerComments(order);
 
   return {
@@ -308,32 +354,16 @@ function serializeOrder(
     createdAt: order.createdAt.toISOString(),
     userId: order.userId.toString(),
     clientId: order.userId.toString(),
-    clientName: clientUser?.isDefaultPharmacyClient
-      ? 'Walk-in client'
-      : (clientUser?.name ?? undefined),
-    clientPhotoUrl: clientUser?.isDefaultPharmacyClient
-      ? order.pharmacySnapshot.imageUrl
-      : (clientUser?.pictureUrl ?? undefined),
-    ...(!clientUser?.isDefaultPharmacyClient && clientUser?.phone
-      ? { clientPhone: clientUser.phone }
-      : {}),
-    ...(!clientUser?.isDefaultPharmacyClient && clientUser?.address
-      ? { clientAddress: clientUser.address }
-      : {}),
-    ...(clientUser
+    ...(clientName ? { clientName } : {}),
+    ...(clientPhotoUrl ? { clientPhotoUrl } : {}),
+    ...(clientPhone ? { clientPhone } : {}),
+    ...(clientAddress ? { clientAddress } : {}),
+    ...(hasClientIdentity
       ? {
           client: {
-            id: clientUser._id.toString(),
-            name: clientUser.isDefaultPharmacyClient
-              ? 'Walk-in client'
-              : (clientUser.name ?? clientUser.email ?? 'Client'),
-            ...(clientUser.isDefaultPharmacyClient
-              ? order.pharmacySnapshot.imageUrl
-                ? { photoUrl: order.pharmacySnapshot.imageUrl }
-                : {}
-              : clientUser.pictureUrl
-                ? { photoUrl: clientUser.pictureUrl }
-                : {}),
+            id: order.userId.toString(),
+            name: clientName ?? 'Client',
+            ...(clientPhotoUrl ? { photoUrl: clientPhotoUrl } : {}),
           },
         }
       : {}),
@@ -594,12 +624,24 @@ export async function checkoutOrderService(
 
   try {
     const createdOrder = await session.withTransaction(async () => {
-      const cart = await Cart.findOne({ clientUserId })
-        .session(session)
-        .lean<CartDocument | null>();
+      const [cart, client] = await Promise.all([
+        Cart.findOne({ clientUserId })
+          .session(session)
+          .lean<CartDocument | null>(),
+        User.findById(clientUserId)
+          .select(
+            'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+          )
+          .session(session)
+          .lean<UserDocument | null>(),
+      ]);
 
       if (!cart) {
         throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
+      }
+
+      if (!client) {
+        throw httpError(HTTP_STATUS.BAD_REQUEST, 'Client is unavailable');
       }
 
       if (cart.revision !== input.expectedCartRevision) {
@@ -800,6 +842,7 @@ export async function checkoutOrderService(
           {
             _id: orderId,
             userId: new Types.ObjectId(clientUserId),
+            clientSnapshot: createOrderClientSnapshot(client),
             pharmacyId: pharmacy._id,
             pharmacySnapshot: {
               name: pharmacy.name,
@@ -1089,6 +1132,7 @@ export async function createManagerOrderService(
           {
             _id: orderId,
             userId: client._id,
+            clientSnapshot: createOrderClientSnapshot(client),
             pharmacyId: pharmacy._id,
             pharmacySnapshot: {
               name: pharmacy.name,

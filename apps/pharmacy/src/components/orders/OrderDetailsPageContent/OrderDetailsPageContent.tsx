@@ -141,6 +141,7 @@ import { getPharmacyCheckoutDetails } from '@/lib/api/browser/pharmacy.api';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
@@ -1570,11 +1571,12 @@ function OrderDetailsPageContent({
         if (!controller.signal.aborted) {
           setOrder(null);
           setError(
-            loadError instanceof Error && loadError.message
-              ? loadError.message
-              : isCreateMode
+            getSafeApiErrorMessage(
+              loadError,
+              isCreateMode
                 ? 'Could not prepare a new order. Please try again.'
                 : 'Could not load the order. Please try again.'
+            )
           );
         }
       } finally {
@@ -1697,9 +1699,10 @@ function OrderDetailsPageContent({
       return updatedOrder;
     } catch (updateError) {
       toast.error(
-        updateError instanceof Error && updateError.message
-          ? updateError.message
-          : 'Could not update order.'
+        getSafeApiErrorMessage(
+          updateError,
+          'Could not update the order. Please try again.'
+        )
       );
 
       return null;
@@ -2060,9 +2063,10 @@ function OrderDetailsPageContent({
       toast.success('Order status updated successfully.');
     } catch (statusError) {
       toast.error(
-        statusError instanceof Error && statusError.message
-          ? statusError.message
-          : 'Could not update order status.'
+        getSafeApiErrorMessage(
+          statusError,
+          'Could not update the order status. Please try again.'
+        )
       );
     } finally {
       setIsUpdatingStatus(false);
@@ -2141,9 +2145,10 @@ function OrderDetailsPageContent({
       router.replace(getPharmacyOrderPath(createdOrder.id));
     } catch (createError) {
       toast.error(
-        createError instanceof Error && createError.message
-          ? createError.message
-          : 'Could not create the order.'
+        getSafeApiErrorMessage(
+          createError,
+          'Could not create the order. Please try again.'
+        )
       );
     } finally {
       setIsCreatingOrder(false);
@@ -2179,12 +2184,6 @@ function OrderDetailsPageContent({
                   : 'Order not found'}
               </h1>
               <p className={css.errorText}>{error ?? 'Order not found.'}</p>
-              {error === 'Authorization token is invalid' ? (
-                <p className={css.errorHint}>
-                  Your session may have expired. Refresh the page or sign in
-                  again before creating the order.
-                </p>
-              ) : null}
             </div>
 
             <div className={css.errorActions}>

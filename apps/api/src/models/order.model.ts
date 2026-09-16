@@ -46,6 +46,26 @@ const orderPharmacySnapshotSchema = new Schema(
 
 //===============================================================
 
+const orderClientSnapshotSchema = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, trim: true, lowercase: true, default: undefined },
+    phone: { type: String, trim: true, default: undefined },
+    address: { type: String, trim: true, default: undefined },
+    pictureUrl: { type: String, trim: true, default: undefined },
+    isDefaultPharmacyClient: { type: Boolean, default: undefined },
+
+    defaultClientPharmacyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Pharmacy',
+      default: undefined,
+    },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
 const orderProductSnapshotSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -191,6 +211,11 @@ const orderSchema = new Schema<OrderEntity>(
       ref: 'Pharmacy',
       required: true,
       index: true,
+    },
+
+    clientSnapshot: {
+      type: orderClientSnapshotSchema,
+      default: undefined,
     },
 
     pharmacySnapshot: { type: orderPharmacySnapshotSchema, required: true },

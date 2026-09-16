@@ -21,6 +21,16 @@ export type OrderActivityType =
 
 //===============================================================
 
+export type OrderClientSnapshot = {
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  pictureUrl?: string;
+  isDefaultPharmacyClient?: boolean;
+  defaultClientPharmacyId?: Types.ObjectId;
+};
+
 export type OrderPharmacySnapshot = {
   name: string;
   address?: string;
@@ -102,6 +112,7 @@ export type OrderItemEntity = {
 
 export type OrderEntity = {
   userId: Types.ObjectId;
+  clientSnapshot?: OrderClientSnapshot;
   pharmacyId: Types.ObjectId;
   pharmacySnapshot: OrderPharmacySnapshot;
   items: OrderItemEntity[];

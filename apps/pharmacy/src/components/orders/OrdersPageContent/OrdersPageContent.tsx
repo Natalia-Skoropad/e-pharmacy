@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag } from 'lucide-react';
 
@@ -45,6 +45,13 @@ import {
   failOrdersLoad,
 } from './orders-page-resource-state';
 
+import {
+  applyDebouncedOrdersTextFilters,
+  getOrdersTextFilterState,
+  syncOrdersFiltersFromRoute,
+  type OrdersTextFilterState,
+} from './orders-page-filter-state';
+
 import css from './OrdersPageContent.module.css';
 
 //===================================================================
@@ -87,11 +94,23 @@ function OrdersPageContent({
   const [filters, setFilters] = useState<OrdersFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [routeTextOverride, setRouteTextOverride] =
+    useState<OrdersTextFilterState | null>(null);
+
   const [ordersResource, setOrdersResource] = useState(
     INITIAL_ORDERS_PAGE_RESOURCE_STATE
   );
+
   const [retryVersion, setRetryVersion] = useState(0);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const skipCanonicalPageRequestRef = useRef<number | null>(null);
+  const internalRoutePathsRef = useRef(new Set<string>());
+  const initialFiltersPath = buildOrdersPath(initialFilters);
+  const previousInitialFiltersPathRef = useRef(initialFiltersPath);
+
+  const routeFiltersChanged =
+    previousInitialFiltersPathRef.current !== initialFiltersPath;
 
   const {
     status: ordersStatus,
@@ -103,12 +122,92 @@ function OrdersPageContent({
     errorMessage: ordersErrorMessage,
   } = ordersResource;
 
+  const textFilters = useMemo<OrdersTextFilterState>(
+    () => ({
+      client: filters.client,
+      orderNumber: filters.orderNumber,
+    }),
+    [filters.client, filters.orderNumber]
+  );
+
+  const debouncedTextFilters = useDebouncedValue(textFilters, 450);
+  const requestTextFilters = routeTextOverride ?? debouncedTextFilters;
+
+  const immediateFilters = useMemo<OrdersFilterState>(
+    () => ({
+      date: {
+        from: filters.date.from,
+        to: filters.date.to,
+      },
+      client: '',
+      orderNumber: '',
+      deliveryMethod: filters.deliveryMethod,
+      paymentMethod: filters.paymentMethod,
+      status: filters.status,
+      createdByType: filters.createdByType,
+    }),
+    [
+      filters.createdByType,
+      filters.date.from,
+      filters.date.to,
+      filters.deliveryMethod,
+      filters.paymentMethod,
+      filters.status,
+    ]
+  );
+
+  const requestFilters = useMemo(
+    () => applyDebouncedOrdersTextFilters(immediateFilters, requestTextFilters),
+    [immediateFilters, requestTextFilters]
+  );
+
   const queryParams = useMemo(
-    () => getOrdersQueryParams(filters, rowsPerPage, currentPage),
-    [currentPage, filters, rowsPerPage]
+    () => getOrdersQueryParams(requestFilters, rowsPerPage, currentPage),
+    [currentPage, requestFilters, rowsPerPage]
   );
 
   useEffect(() => {
+    if (!routeFiltersChanged) return;
+
+    previousInitialFiltersPathRef.current = initialFiltersPath;
+
+    if (internalRoutePathsRef.current.delete(initialFiltersPath)) {
+      return;
+    }
+
+    internalRoutePathsRef.current.clear();
+    setRouteTextOverride(getOrdersTextFilterState(initialFilters));
+    setFilters((currentFilters) =>
+      syncOrdersFiltersFromRoute(currentFilters, initialFilters)
+    );
+    setCurrentPage(1);
+  }, [initialFilters, initialFiltersPath, routeFiltersChanged]);
+
+  useEffect(() => {
+    if (!routeTextOverride) return;
+
+    if (
+      filters.client === routeTextOverride.client &&
+      filters.orderNumber === routeTextOverride.orderNumber &&
+      debouncedTextFilters.client === routeTextOverride.client &&
+      debouncedTextFilters.orderNumber === routeTextOverride.orderNumber
+    ) {
+      setRouteTextOverride(null);
+    }
+  }, [
+    debouncedTextFilters.client,
+    debouncedTextFilters.orderNumber,
+    filters.client,
+    filters.orderNumber,
+    routeTextOverride,
+  ]);
+
+  useEffect(() => {
+    if (skipCanonicalPageRequestRef.current === queryParams.page) {
+      skipCanonicalPageRequestRef.current = null;
+      return;
+    }
+
     const controller = new AbortController();
 
     async function loadOrders() {
@@ -121,6 +220,11 @@ function OrdersPageContent({
         if (controller.signal.aborted) return;
 
         setOrdersResource(completeOrdersLoad(response));
+
+        if (response.page !== queryParams.page) {
+          skipCanonicalPageRequestRef.current = response.page;
+          setCurrentPage(response.page);
+        }
       } catch (loadError) {
         if (controller.signal.aborted) return;
 
@@ -143,16 +247,15 @@ function OrdersPageContent({
     };
   }, [queryParams, retryVersion]);
 
-  const debouncedFilters = useDebouncedValue(filters, 450);
-
   useEffect(() => {
-    if (debouncedFilters !== filters) return;
+    if (routeFiltersChanged) return;
 
-    const nextPath = buildOrdersPath(debouncedFilters);
+    const nextPath = buildOrdersPath(requestFilters);
     if (pathname === nextPath) return;
 
+    internalRoutePathsRef.current.add(nextPath);
     router.replace(nextPath, { scroll: false });
-  }, [debouncedFilters, filters, pathname, router]);
+  }, [pathname, requestFilters, routeFiltersChanged, router]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.date.from || filters.date.to),
@@ -166,6 +269,13 @@ function OrdersPageContent({
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: OrdersFilterState) => {
+    if (
+      nextFilters.client !== filters.client ||
+      nextFilters.orderNumber !== filters.orderNumber
+    ) {
+      setRouteTextOverride(null);
+    }
+
     setFilters(nextFilters);
     setCurrentPage(1);
   };
