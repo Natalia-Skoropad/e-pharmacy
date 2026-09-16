@@ -123,10 +123,10 @@ import {
   getPharmacyClients,
   getPharmacyOrderDetails,
   getPharmacyOrderComments,
-  getPharmacyOrders,
   getProducts,
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
+  type CreatePharmacyOrderPayload,
 } from '@/lib/api/browser';
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
@@ -147,6 +147,37 @@ import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
 
 import css from './OrderDetailsPageContent.module.css';
+
+//===================================================================
+
+type CreateOrderRequestState = Readonly<{
+  clientRequestId: string;
+  payloadKey: string;
+}>;
+
+type CreateOrderPayloadWithoutRequestId = Omit<
+  CreatePharmacyOrderPayload,
+  'clientRequestId'
+>;
+
+//===================================================================
+
+function getCreateOrderPayloadKey(
+  payload: CreateOrderPayloadWithoutRequestId
+): string {
+  return JSON.stringify({
+    ...payload,
+    items: [...payload.items].sort((left, right) =>
+      left.productOfferId.localeCompare(right.productOfferId)
+    ),
+  });
+}
+
+//===================================================================
+
+function createClientRequestId(): string {
+  return globalThis.crypto.randomUUID();
+}
 
 //===================================================================
 
@@ -260,6 +291,7 @@ function getOrderHistoryEntries(
       kind: 'status' as const,
       entry,
     })),
+
     ...order.activityHistory.map((entry, index) => ({
       id: `activity-${entry.type}-${entry.occurredAt}-${entry.productOfferId}-${index}`,
       occurredAt: entry.occurredAt,
@@ -1406,6 +1438,7 @@ function OrderDetailsPageContent({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [copiedEmail, setCopiedEmail] = useState(false);
   const copiedEmailTimerRef = useRef<number | null>(null);
+  const createOrderRequestRef = useRef<CreateOrderRequestState | null>(null);
 
   useEffect(
     () => () => {
@@ -1516,29 +1549,10 @@ function OrderDetailsPageContent({
           throw new Error('Order ID is required.');
         }
 
-        let loadedOrder: PharmacyOrderDetails;
-
-        try {
-          loadedOrder = await getPharmacyOrderDetails(orderId, requestOptions);
-        } catch (detailsError) {
-          if (!/^\d+$/.test(orderId)) throw detailsError;
-
-          const ordersResponse = await getPharmacyOrders(
-            {
-              page: 1,
-              perPage: 1,
-            },
-            requestOptions
-          );
-          const fallbackOrder = ordersResponse.items[0];
-
-          if (!fallbackOrder) throw detailsError;
-
-          loadedOrder = await getPharmacyOrderDetails(
-            fallbackOrder.id,
-            requestOptions
-          );
-        }
+        const loadedOrder = await getPharmacyOrderDetails(
+          orderId,
+          requestOptions
+        );
 
         if (!controller.signal.aborted) {
           const formState = getOrderFormState(loadedOrder);
@@ -2087,7 +2101,7 @@ function OrderDetailsPageContent({
     setIsCreatingOrder(true);
 
     try {
-      const createdOrder = await createPharmacyOrder({
+      const payload: CreateOrderPayloadWithoutRequestId = {
         clientId: selectedClientId,
         items: getOrderItemsPayload(order.items),
         deliveryMethod,
@@ -2102,8 +2116,25 @@ function OrderDetailsPageContent({
           : {}),
         paymentMethod,
         comment: '',
+      };
+
+      const payloadKey = getCreateOrderPayloadKey(payload);
+      let requestState = createOrderRequestRef.current;
+
+      if (!requestState || requestState.payloadKey !== payloadKey) {
+        requestState = {
+          clientRequestId: createClientRequestId(),
+          payloadKey,
+        };
+        createOrderRequestRef.current = requestState;
+      }
+
+      const createdOrder = await createPharmacyOrder({
+        ...payload,
+        clientRequestId: requestState.clientRequestId,
       });
 
+      createOrderRequestRef.current = null;
       setIsCreateConfirmationOpen(false);
       dispatchOrderCounterRefresh();
       toast.success('Order created and moved to In progress.');

@@ -22,26 +22,28 @@ import { StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser';
-
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
-import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
-
 import { buildOrdersPath } from '@/lib/orders/order-paths';
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
+import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import {
   DEFAULT_ORDERS_FILTERS,
   type OrdersFilterState,
 } from '@/lib/orders/orders-filters';
 
-import type {
-  PharmacyOrdersQueryParams,
-  PharmacyOrderRow,
-} from '@/lib/orders/orders';
+import type { PharmacyOrdersQueryParams } from '@/lib/orders/orders';
+import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { OrderStatistics } from '@/components/statistics';
 import { OrdersFiltersDrawer } from '@/components/orders/OrdersFiltersDrawer';
 import { OrdersTable } from '@/components/orders/OrdersTable/OrdersTable';
+
+import {
+  INITIAL_ORDERS_PAGE_RESOURCE_STATE,
+  beginOrdersLoad,
+  completeOrdersLoad,
+  failOrdersLoad,
+} from './orders-page-resource-state';
 
 import css from './OrdersPageContent.module.css';
 
@@ -85,21 +87,21 @@ function OrdersPageContent({
   const [filters, setFilters] = useState<OrdersFilterState>(initialFilters);
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
-  const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
-  const [totalOrders, setTotalOrders] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
-    null
+  const [ordersResource, setOrdersResource] = useState(
+    INITIAL_ORDERS_PAGE_RESOURCE_STATE
   );
-
-  const [orderStatistics, setOrderStatistics] = useState(
-    DEFAULT_ORDER_STATISTICS
-  );
-  const [isOrderStatisticsUnavailable, setIsOrderStatisticsUnavailable] =
-    useState(false);
-
-  const [isLoading, setIsLoading] = useState(false);
+  const [retryVersion, setRetryVersion] = useState(0);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const {
+    status: ordersStatus,
+    orders,
+    totalOrders,
+    totalPages,
+    earliestCreatedAt,
+    statistics: orderStatistics,
+    errorMessage: ordersErrorMessage,
+  } = ordersResource;
 
   const queryParams = useMemo(
     () => getOrdersQueryParams(filters, rowsPerPage, currentPage),
@@ -110,7 +112,7 @@ function OrdersPageContent({
     const controller = new AbortController();
 
     async function loadOrders() {
-      setIsLoading(true);
+      setOrdersResource((state) => beginOrdersLoad(state));
 
       try {
         const response = await getPharmacyOrders(queryParams, {
@@ -118,22 +120,19 @@ function OrdersPageContent({
         });
         if (controller.signal.aborted) return;
 
-        setOrders([...response.items]);
-        setTotalOrders(response.total);
-        setTotalPages(response.totalPages);
-        setEarliestCreatedAt(response.earliestCreatedAt);
-        setOrderStatistics(response.statistics);
-        setIsOrderStatisticsUnavailable(false);
-      } catch {
+        setOrdersResource(completeOrdersLoad(response));
+      } catch (loadError) {
         if (controller.signal.aborted) return;
 
-        setOrders([]);
-        setTotalOrders(0);
-        setTotalPages(0);
-        setEarliestCreatedAt(null);
-        setIsOrderStatisticsUnavailable(true);
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        setOrdersResource((state) =>
+          failOrdersLoad(
+            state,
+            getSafeApiErrorMessage(
+              loadError,
+              'Could not load orders. Please try again.'
+            )
+          )
+        );
       }
     }
 
@@ -142,7 +141,7 @@ function OrdersPageContent({
     return () => {
       controller.abort();
     };
-  }, [queryParams]);
+  }, [queryParams, retryVersion]);
 
   const debouncedFilters = useDebouncedValue(filters, 450);
 
@@ -205,7 +204,7 @@ function OrdersPageContent({
           />
         ) : null}
 
-        {isOrderStatisticsUnavailable ? (
+        {ordersStatus === 'error' ? (
           <p role="status">Order statistics are temporarily unavailable.</p>
         ) : (
           <OrderStatistics
@@ -266,12 +265,14 @@ function OrdersPageContent({
             />
           </div>
 
-          <CountLabel
-            className={css.countLabel}
-            shown={orders.length}
-            total={totalOrders}
-            label="orders"
-          />
+          {ordersStatus === 'success' ? (
+            <CountLabel
+              className={css.countLabel}
+              shown={orders.length}
+              total={totalOrders}
+              label="orders"
+            />
+          ) : null}
 
           <Button
             className={css.createButton}
@@ -284,21 +285,36 @@ function OrdersPageContent({
           </Button>
         </div>
 
-        <OrdersTable
-          orders={orders}
-          isLoading={isLoading}
-          emptyMessage={
-            hasActiveFilters
-              ? 'No orders found for the selected filters. Adjust filters or reset them.'
-              : 'Orders will appear here after the pharmacy is verified and clients place orders.'
-          }
-        />
+        {ordersStatus === 'error' ? (
+          <div className={css.errorState} role="alert">
+            <p className={css.errorText}>{ordersErrorMessage}</p>
+            <Button
+              type="button"
+              size="md"
+              onClick={() => setRetryVersion((version) => version + 1)}
+            >
+              Retry
+            </Button>
+          </div>
+        ) : (
+          <OrdersTable
+            orders={orders}
+            isLoading={ordersStatus === 'loading'}
+            emptyMessage={
+              hasActiveFilters
+                ? 'No orders found for the selected filters. Adjust filters or reset them.'
+                : 'Orders will appear here after the pharmacy is verified and clients place orders.'
+            }
+          />
+        )}
 
-        <PaginationView
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
+        {ordersStatus === 'success' ? (
+          <PaginationView
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        ) : null}
       </section>
 
       {isFiltersOpen ? (

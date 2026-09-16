@@ -45,6 +45,7 @@ import {
 //===================================================================
 
 export type CreatePharmacyOrderPayload = Readonly<{
+  clientRequestId: string;
   clientId: string;
   items: Array<{ productOfferId: string; quantity: number }>;
   deliveryMethod: DeliveryMethod;

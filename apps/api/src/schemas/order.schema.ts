@@ -54,9 +54,11 @@ export const ordersQuerySchema = z.preprocess(
       orderNumber: sharedSearchSchema,
       deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
       paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
+
       status: z
         .enum(['new', 'in_progress', 'successful', 'rejected'])
         .optional(),
+
       createdByType: z.enum(['client', 'manager']).optional(),
       productId: mongoIdSchema.optional(),
       comment: sharedSearchSchema,
@@ -149,6 +151,7 @@ const orderEditableItemSchema = z.object({
 //===============================================================
 
 const managerOrderBaseSchema = z.object({
+  clientRequestId: z.string().trim().uuid(),
   clientId: mongoIdSchema,
   items: z.array(orderEditableItemSchema).min(1, 'Order must contain products'),
   paymentMethod: z.enum(['cash', 'bank_transfer']),

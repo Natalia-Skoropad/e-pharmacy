@@ -271,6 +271,18 @@ const orderSchema = new Schema<OrderEntity>(
       required: true,
       index: true,
     },
+
+    managerRequestId: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
+    managerRequestFingerprint: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
   },
 
   { timestamps: true, versionKey: false }
@@ -281,6 +293,14 @@ const orderSchema = new Schema<OrderEntity>(
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ pharmacyId: 1, createdAt: -1 });
 orderSchema.index({ pharmacyId: 1, userId: 1, status: 1, createdAt: -1 });
+
+orderSchema.index(
+  { pharmacyId: 1, managerRequestId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { managerRequestId: { $type: 'string' } },
+  }
+);
 
 //===============================================================
 

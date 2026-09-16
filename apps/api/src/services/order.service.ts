@@ -8,6 +8,7 @@ import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
   CHECKOUT_GROUP_MISSING_ERROR_CODE,
+  MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
   PHARMACY_UNAVAILABLE_ERROR_CODE,
 } from '../constants/order';
@@ -22,6 +23,7 @@ import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { createSafeRegExp } from '../utils/regexp';
+import { isMongoDuplicateKeyError } from '../utils/mongoError';
 
 import {
   commitReservedStock,
@@ -31,6 +33,7 @@ import {
 
 import { getCartService } from './cart.service';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
+import { createManagerOrderRequestFingerprint } from './manager-order-request-fingerprint';
 
 import type {
   CheckoutOrderInput,
@@ -172,6 +175,57 @@ function hasCompleteBankDetails(
 }
 
 //===============================================================
+
+function assertManagerOrderReplayMatches(
+  order: OrderDocument,
+  requestFingerprint: string
+): void {
+  if (order.managerRequestFingerprint === requestFingerprint) return;
+
+  throw httpError(
+    HTTP_STATUS.CONFLICT,
+    'This order request was already used with different order data.',
+    undefined,
+    MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE
+  );
+}
+
+//===============================================================
+
+async function findManagerOrderReplay(
+  pharmacyId: Types.ObjectId,
+  input: CreateManagerOrderInput,
+  requestFingerprint: string,
+  session?: mongoose.ClientSession
+): Promise<{ order: OrderResponseDto } | null> {
+  let orderQuery = Order.findOne({
+    pharmacyId,
+    createdByType: 'manager',
+    managerRequestId: input.clientRequestId,
+  });
+
+  if (session) orderQuery = orderQuery.session(session);
+
+  const order = await orderQuery.lean<OrderDocument | null>();
+  if (!order) return null;
+
+  assertManagerOrderReplayMatches(order, requestFingerprint);
+
+  let clientQuery = User.findById(order.userId).select(
+    'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+  );
+
+  if (session) clientQuery = clientQuery.session(session);
+
+  const client = await clientQuery.lean<UserDocument | null>();
+  const clientMap = client
+    ? new Map([[String(client._id), client]])
+    : undefined;
+
+  return {
+    order: serializeOrder(order, undefined, clientMap),
+  };
+}
 
 //===============================================================
 
@@ -870,6 +924,7 @@ export async function createManagerOrderService(
     );
   }
 
+  const requestFingerprint = createManagerOrderRequestFingerprint(input);
   const session = await mongoose.startSession();
 
   try {
@@ -880,7 +935,25 @@ export async function createManagerOrderService(
         .session(session)
         .lean<PharmacyDocument | null>();
 
-      if (!pharmacy || !isCheckoutPharmacyStatus(pharmacy.status)) {
+      if (!pharmacy) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'An active pharmacy is required to create orders.'
+        );
+      }
+
+      const replay = await findManagerOrderReplay(
+        pharmacy._id,
+        input,
+        requestFingerprint,
+        session
+      );
+
+      if (replay) {
+        return { kind: 'replay' as const, replay };
+      }
+
+      if (!isCheckoutPharmacyStatus(pharmacy.status)) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'An active pharmacy is required to create orders.'
@@ -1052,6 +1125,8 @@ export async function createManagerOrderService(
             ...(input.comment ? { comment: input.comment } : {}),
             status: 'in_progress',
             createdByType: 'manager',
+            managerRequestId: input.clientRequestId,
+            managerRequestFingerprint: requestFingerprint,
             statusHistory: [
               {
                 status: 'in_progress',
@@ -1080,8 +1155,11 @@ export async function createManagerOrderService(
       );
 
       return {
-        order: order.toObject() as OrderDocument,
-        client,
+        kind: 'created' as const,
+        created: {
+          order: order.toObject() as OrderDocument,
+          client,
+        },
       };
     });
 
@@ -1092,13 +1170,40 @@ export async function createManagerOrderService(
       );
     }
 
+    if (transactionResult.kind === 'replay') {
+      return transactionResult.replay;
+    }
+
     const clientMap: ClientUserMap = new Map([
-      [String(transactionResult.client._id), transactionResult.client],
+      [
+        String(transactionResult.created.client._id),
+        transactionResult.created.client,
+      ],
     ]);
 
     return {
-      order: serializeOrder(transactionResult.order, undefined, clientMap),
+      order: serializeOrder(
+        transactionResult.created.order,
+        undefined,
+        clientMap
+      ),
     };
+  } catch (error) {
+    if (isMongoDuplicateKeyError(error)) {
+      const pharmacyId = await getCurrentPharmacyId(actor.id);
+
+      if (pharmacyId) {
+        const replay = await findManagerOrderReplay(
+          pharmacyId,
+          input,
+          requestFingerprint
+        );
+
+        if (replay) return replay;
+      }
+    }
+
+    throw error;
   } finally {
     await session.endSession();
   }
@@ -2239,6 +2344,10 @@ export async function getOrderByIdService(
   orderId: string,
   role?: UserRole
 ): Promise<{ order: OrderResponseDto }> {
+  if (!Types.ObjectId.isValid(orderId)) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+  }
+
   let filter: Record<string, unknown>;
 
   if (role === USER_ROLES.PHARMACY) {
@@ -2248,20 +2357,12 @@ export async function getOrderByIdService(
       throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
     }
 
-    filter = Types.ObjectId.isValid(orderId)
-      ? { _id: orderId, pharmacyId }
-      : { pharmacyId };
+    filter = { _id: orderId, pharmacyId };
   } else {
-    if (!Types.ObjectId.isValid(orderId)) {
-      throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
-    }
-
     filter = { _id: orderId, userId };
   }
 
-  const order = await Order.findOne(filter)
-    .sort({ createdAt: -1 })
-    .lean<OrderDocument | null>();
+  const order = await Order.findOne(filter).lean<OrderDocument | null>();
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 

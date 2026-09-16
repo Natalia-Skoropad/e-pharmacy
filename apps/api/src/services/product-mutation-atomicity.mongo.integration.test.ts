@@ -144,6 +144,7 @@ test(
         createManagerOrderService(
           { id: ownerId.toString(), role: 'pharmacy' },
           {
+            clientRequestId: '89cf0a15-d61e-4d8b-94b6-c2b9cbeb81cb',
             clientId: clientId.toString(),
             items: [{ productOfferId: offer._id.toString(), quantity: 1 }],
             paymentMethod: 'cash',

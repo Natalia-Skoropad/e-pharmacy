@@ -115,6 +115,8 @@ export type OrderEntity = {
   managerComments?: OrderManagerCommentEntity[];
   status: OrderStatus;
   createdByType: OrderCreatedByType;
+  managerRequestId?: string;
+  managerRequestFingerprint?: string;
   statusHistory: OrderStatusHistoryItem[];
   activityHistory?: OrderActivityHistoryItem[];
   rejectionReason?: string;
