@@ -19,8 +19,8 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import { PHARMACY_ROUTES } from '@/lib/routes';
 
+import { PHARMACY_ROUTES } from '@/lib/routes';
 import type { OrdersFilterState } from '@/lib/orders/orders-filters';
 
 //===================================================================

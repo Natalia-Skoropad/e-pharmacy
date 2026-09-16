@@ -299,38 +299,40 @@ function ProductPickerModal({
                       ) : null}
                     </div>
 
-                    <p className={css.productModalPrice}>
-                      {formatMoney(offer?.price ?? product.price) ?? '—'}
-                    </p>
+                    <div className={css.productModalActions}>
+                      <p className={css.productModalPrice}>
+                        {formatMoney(offer?.price ?? product.price) ?? '—'}
+                      </p>
 
-                    <Button
-                      className={
-                        isInOrder
-                          ? css.productModalInOrderButton
-                          : css.productModalAddButton
-                      }
-                      type="button"
-                      size="sm"
-                      variant={isInOrder ? 'secondary' : 'primary'}
-                      disabled={
-                        !offer ||
-                        offer.availableQuantity < 1 ||
-                        isInOrder ||
-                        isAdding
-                      }
-                      onClick={() => void handleAddProduct(product)}
-                    >
-                      {isInOrder ? (
-                        'In order'
-                      ) : isAdding ? (
-                        'Adding...'
-                      ) : (
-                        <>
-                          <ShoppingCart size={18} aria-hidden="true" />
-                          Add
-                        </>
-                      )}
-                    </Button>
+                      <Button
+                        className={
+                          isInOrder
+                            ? css.productModalInOrderButton
+                            : css.productModalAddButton
+                        }
+                        type="button"
+                        size="sm"
+                        variant={isInOrder ? 'secondary' : 'primary'}
+                        disabled={
+                          !offer ||
+                          offer.availableQuantity < 1 ||
+                          isInOrder ||
+                          isAdding
+                        }
+                        onClick={() => void handleAddProduct(product)}
+                      >
+                        {isInOrder ? (
+                          'In order'
+                        ) : isAdding ? (
+                          'Adding...'
+                        ) : (
+                          <>
+                            <ShoppingCart size={18} aria-hidden="true" />
+                            Add
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </li>
                 );
               })}

@@ -7,11 +7,13 @@ import { fileURLToPath } from 'node:url';
 //===================================================================
 
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
+
 const DETAILS_SOURCE = path.join(
   CURRENT_DIR,
   'OrderDetailsPageContent',
   'OrderDetailsPageContent.tsx'
 );
+
 const PRODUCT_PICKER_SOURCE = path.join(
   CURRENT_DIR,
   'OrderDetailsPageContent',

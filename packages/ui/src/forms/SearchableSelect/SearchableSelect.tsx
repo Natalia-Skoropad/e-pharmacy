@@ -25,6 +25,7 @@ export type SearchableSelectOption<TValue extends string = string> = Readonly<{
   value: TValue;
   label: string;
   leading?: ReactNode;
+  searchText?: string;
   disabled?: boolean;
 }>;
 
@@ -88,7 +89,9 @@ function SearchableSelect<TValue extends string = string>({
     if (!normalizedQuery) return options;
 
     return options.filter((option) =>
-      option.label.toLocaleLowerCase().includes(normalizedQuery)
+      `${option.label} ${option.searchText ?? ''}`
+        .toLocaleLowerCase()
+        .includes(normalizedQuery)
     );
   }, [options, query]);
 
@@ -203,7 +206,13 @@ function SearchableSelect<TValue extends string = string>({
             (disabled || isLoading) && css.comboboxDisabled
           )}
         >
-          <Search className={css.searchIcon} size={18} aria-hidden="true" />
+          {!isOpen && selectedOption?.leading ? (
+            <span className={css.selectedLeading}>
+              {selectedOption.leading}
+            </span>
+          ) : (
+            <Search className={css.searchIcon} size={18} aria-hidden="true" />
+          )}
 
           <input
             id={inputId}

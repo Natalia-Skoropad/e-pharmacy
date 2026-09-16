@@ -8,8 +8,6 @@ import {
   CircleMinus,
   CirclePlus,
   Clock,
-  Copy,
-  CreditCard,
   History,
   Info,
   MapPin,
@@ -18,7 +16,6 @@ import {
   MessageSquareText,
   ShoppingBag,
   ShoppingCart,
-  ShieldAlert,
   Trash2,
   Truck,
   UserRound,
@@ -30,10 +27,12 @@ import {
   DELIVERY_METHOD_LABELS,
   ORDER_STATUS_PRESENTATION,
   PAYMENT_METHOD_LABELS,
+  PHARMACY_STATUS_PRESENTATION,
 } from '@e-pharmacy/config/presentation';
 
 import {
   Button,
+  CopyButton,
   LazyLoadButton,
   LoadingSpinner,
   SvgIcon,
@@ -61,7 +60,8 @@ import { AddressInput, NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import type {
   DeliveryMethod,
@@ -93,7 +93,6 @@ import {
 import {
   getPharmacyClientPath,
   getPharmacyOrderPath,
-  PHARMACY_ROUTES,
   getPharmacyProductPath,
 } from '@/lib/routes';
 
@@ -122,6 +121,7 @@ import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
+import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
@@ -415,7 +415,7 @@ function OrderProductCard({
                 </Link>
               )}
             >
-              ProductDetails details
+              Details
             </LinkButton>
 
             <Button
@@ -473,17 +473,10 @@ function OrderProductsTab({
               <div>
                 <h2>No products in this order yet</h2>
                 <p>
-                  Add at least one available product before saving the order.
+                  Click “Add more products” to select an available product
+                  before saving the order.
                 </p>
               </div>
-
-              <Button
-                type="button"
-                disabled={!isEditable || isUpdating}
-                onClick={onOpenProductModal}
-              >
-                Add products
-              </Button>
             </div>
           )}
         </div>
@@ -544,6 +537,7 @@ function DeliveryTab({
   onRecipientNameChange,
   onRecipientPhoneChange,
   onDeliveryAddressChange,
+  onCopyValue,
   onSave,
 }: Readonly<{
   order: PharmacyOrderDetails;
@@ -559,6 +553,7 @@ function DeliveryTab({
   onRecipientNameChange: (value: string) => void;
   onRecipientPhoneChange: (value: string) => void;
   onDeliveryAddressChange: (value: string) => void;
+  onCopyValue: (value: string, label: string) => void;
   onSave: () => void;
 }>) {
   const workingHours =
@@ -617,6 +612,27 @@ function DeliveryTab({
                     <a href={`tel:${order.pharmacyPhone}`}>
                       {order.pharmacyPhone}
                     </a>
+                  </li>
+                ) : null}
+
+                {order.pharmacyEmail ? (
+                  <li className={css.emailRow}>
+                    <Mail size={18} aria-hidden="true" />
+                    <span className={css.emailActions}>
+                      <a href={`mailto:${order.pharmacyEmail}`}>
+                        {order.pharmacyEmail}
+                      </a>
+                      <CopyButton
+                        label={`Copy pharmacy email ${order.pharmacyEmail}`}
+                        disabled={isUpdating}
+                        onClick={() =>
+                          onCopyValue(
+                            order.pharmacyEmail ?? '',
+                            'Pharmacy email'
+                          )
+                        }
+                      />
+                    </span>
                   </li>
                 ) : null}
 
@@ -679,6 +695,7 @@ function DeliveryTab({
                     value={deliveryAddress}
                     error={deliveryErrors.deliveryAddress ?? ''}
                     isTouched={Boolean(deliveryTouchedFields.deliveryAddress)}
+                    errorClassName={css.deliveryAddressError}
                     maxLength={USER_ADDRESS_MAX_LENGTH}
                     disabled={!isEditable || isUpdating}
                     onChange={(event) =>
@@ -718,24 +735,30 @@ function DeliveryTab({
 function PaymentTab({
   order,
   paymentMethod,
-  copiedEmail,
   isEditable,
   isUpdating,
   onPaymentMethodChange,
-  onCopyEmail,
+  onCopyValue,
   onSave,
 }: Readonly<{
   order: PharmacyOrderDetails;
   paymentMethod: PaymentMethod;
-  copiedEmail: boolean;
   isEditable: boolean;
   isUpdating: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;
-  onCopyEmail: () => void;
+  onCopyValue: (value: string, label: string) => void;
   onSave: () => void;
 }>) {
   const bankDetails = order.bankDetails;
-  const receiptEmail = bankDetails?.receiptEmail ?? order.pharmacyEmail ?? '';
+  const bankRows = bankDetails
+    ? ([
+        ['Recipient name', bankDetails.recipientName],
+        ['Tax ID / EDRPOU', bankDetails.taxId],
+        ['IBAN', bankDetails.iban],
+        ['Bank name', bankDetails.bankName],
+        ['Payment purpose', bankDetails.paymentPurpose],
+      ] as const)
+    : [];
 
   return (
     <section className={css.methodCard} aria-labelledby="payment-title">
@@ -793,65 +816,41 @@ function PaymentTab({
               </p>
             </div>
           ) : (
-            <div className={css.bankCard}>
-              <CreditCard size={20} aria-hidden="true" />
-              <h3>Bank details</h3>
+            <div className={css.bankDetailsStack}>
+              <div className={css.bankCard}>
+                <h3>Bank details</h3>
+
+                {bankDetails ? (
+                  <dl className={css.bankList}>
+                    {bankRows.map(([label, value]) => (
+                      <div key={label}>
+                        <dt>{label}</dt>
+                        <dd>
+                          <span>{value}</span>
+                          <CopyButton
+                            label={`Copy ${label} ${value}`}
+                            disabled={isUpdating}
+                            onClick={() => onCopyValue(value, label)}
+                          />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className={css.metaText}>
+                    Bank transfer is unavailable because the pharmacy has not
+                    provided bank details yet.
+                  </p>
+                )}
+              </div>
 
               {bankDetails ? (
-                <dl className={css.bankList}>
-                  <div>
-                    <dt>Recipient</dt>
-                    <dd>{bankDetails.recipientName}</dd>
-                  </div>
-
-                  <div>
-                    <dt>EDRPOU / Tax ID</dt>
-                    <dd>{bankDetails.taxId}</dd>
-                  </div>
-
-                  <div>
-                    <dt>IBAN</dt>
-                    <dd>{bankDetails.iban}</dd>
-                  </div>
-
-                  <div>
-                    <dt>Bank</dt>
-                    <dd>{bankDetails.bankName}</dd>
-                  </div>
-
-                  <div>
-                    <dt>Payment purpose</dt>
-                    <dd>{bankDetails.paymentPurpose}</dd>
-                  </div>
-                </dl>
-              ) : (
-                <p className={css.metaText}>
-                  Bank transfer is unavailable because the pharmacy has not
-                  provided bank details yet.
-                </p>
-              )}
-
-              {bankDetails && receiptEmail ? (
                 <div className={css.emailNote}>
-                  <Mail size={18} aria-hidden="true" />
-
+                  <Mail size={20} aria-hidden="true" />
                   <p>
                     After payment, the client should send the receipt to the
                     pharmacy email for faster processing.
                   </p>
-
-                  <button
-                    className={css.copyButton}
-                    type="button"
-                    disabled={!isEditable || isUpdating}
-                    onClick={onCopyEmail}
-                  >
-                    <span>{receiptEmail}</span>
-                    <Copy size={16} aria-hidden="true" />
-                  </button>
-                  {copiedEmail ? (
-                    <span className={css.copiedText}>Copied</span>
-                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -1076,6 +1075,52 @@ function recalculateDraftItems(
 
 //===================================================================
 
+type OrderDetailsLoadError = Readonly<{
+  title: string;
+  message: string;
+}>;
+
+//===================================================================
+
+function getOrderDetailsLoadError(
+  error: unknown,
+  isCreateMode: boolean
+): OrderDetailsLoadError {
+  if (isCreateMode) {
+    return {
+      title: 'Order could not be prepared',
+      message: getSafeApiErrorMessage(
+        error,
+        'Could not prepare a new order. Please try again.'
+      ),
+    };
+  }
+
+  if (isApiError(error) && [400, 404, 422].includes(error.httpStatus ?? 0)) {
+    return {
+      title: 'Order not found',
+      message: 'This order does not exist or the link is invalid.',
+    };
+  }
+
+  if (isApiError(error) && error.httpStatus === 403) {
+    return {
+      title: 'Order is unavailable',
+      message: 'You do not have access to this order.',
+    };
+  }
+
+  return {
+    title: 'Order could not be loaded',
+    message: getSafeApiErrorMessage(
+      error,
+      'Could not load the order. Please try again.'
+    ),
+  };
+}
+
+//===================================================================
+
 function OrderDetailsPageContent({
   orderId,
   mode = 'details',
@@ -1086,11 +1131,17 @@ function OrderDetailsPageContent({
   const { profile: pharmacyProfile, isLoading: isProfileLoading } =
     usePharmacyProfile();
 
+  const createLockedStatus = isCreateMode
+    ? getLockedFeatureBannerStatus(pharmacyProfile?.status)
+    : null;
+
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [selectedClientId, setSelectedClientId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<OrderDetailsLoadError | null>(
+    null
+  );
   const [activeTab, setActiveTab] = useState<OrderTab>('products');
   const [pendingStatus, setPendingStatus] =
     useState<PendingStatusChange | null>(null);
@@ -1115,22 +1166,11 @@ function OrderDetailsPageContent({
   const [deliveryTouchedFields, setDeliveryTouchedFields] =
     useState<OrderDeliveryTouchedFields>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
-  const [copiedEmail, setCopiedEmail] = useState(false);
-  const copiedEmailTimerRef = useRef<number | null>(null);
   const createOrderRequestRef = useRef<CreateOrderRequestState | null>(null);
   const resourceGenerationRef = useRef(0);
 
-  useEffect(
-    () => () => {
-      if (copiedEmailTimerRef.current !== null) {
-        window.clearTimeout(copiedEmailTimerRef.current);
-      }
-    },
-    []
-  );
-
   useEffect(() => {
-    if (isCreateMode && isProfileLoading) return;
+    if (isCreateMode && (isProfileLoading || createLockedStatus)) return;
 
     const generation = resourceGenerationRef.current + 1;
     resourceGenerationRef.current = generation;
@@ -1260,14 +1300,7 @@ function OrderDetailsPageContent({
           resourceGenerationRef.current === generation
         ) {
           setOrder(null);
-          setError(
-            getSafeApiErrorMessage(
-              loadError,
-              isCreateMode
-                ? 'Could not prepare a new order. Please try again.'
-                : 'Could not load the order. Please try again.'
-            )
-          );
+          setLoadError(getOrderDetailsLoadError(loadError, isCreateMode));
         }
       } finally {
         if (
@@ -1288,7 +1321,13 @@ function OrderDetailsPageContent({
         resourceGenerationRef.current += 1;
       }
     };
-  }, [isCreateMode, isProfileLoading, orderId, pharmacyProfile]);
+  }, [
+    createLockedStatus,
+    isCreateMode,
+    isProfileLoading,
+    orderId,
+    pharmacyProfile,
+  ]);
 
   useEffect(() => {
     if (isCreateMode || !order?.orderNumber) return;
@@ -1318,6 +1357,9 @@ function OrderDetailsPageContent({
         label: client.isDefault
           ? `${client.name} — default client`
           : client.name,
+        searchText: [client.id, client.email, client.phone, client.address]
+          .filter(Boolean)
+          .join(' '),
         leading: (
           <TableImagePreview
             src={getProductImageSrc(client.photoUrl ?? undefined)}
@@ -1695,31 +1737,14 @@ function OrderDetailsPageContent({
     void updateOrderDraft({ paymentMethod });
   };
 
-  const handleCopyEmail = async () => {
-    const email =
-      order?.bankDetails?.receiptEmail ?? order?.pharmacyEmail ?? '';
-
-    if (!email) return;
+  const handleCopyValue = async (value: string, label: string) => {
+    if (!value) return;
 
     try {
-      await navigator.clipboard.writeText(email);
-
-      if (copiedEmailTimerRef.current !== null) {
-        window.clearTimeout(copiedEmailTimerRef.current);
-      }
-
-      setCopiedEmail(true);
-      copiedEmailTimerRef.current = window.setTimeout(() => {
-        copiedEmailTimerRef.current = null;
-        setCopiedEmail(false);
-      }, 1800);
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied.`);
     } catch {
-      if (copiedEmailTimerRef.current !== null) {
-        window.clearTimeout(copiedEmailTimerRef.current);
-        copiedEmailTimerRef.current = null;
-      }
-      setCopiedEmail(false);
-      toast.error('Could not copy the pharmacy email.');
+      toast.error(`Could not copy ${label.toLowerCase()}.`);
     }
   };
 
@@ -1875,53 +1900,68 @@ function OrderDetailsPageContent({
     }
   };
 
-  if (isLoading) {
+  if (isCreateMode && !isProfileLoading && createLockedStatus) {
     return (
-      <main className={css.page} aria-label="Loading order">
+      <main className={css.page} aria-labelledby="order-details-page-title">
         <section className={css.contentCard}>
-          <LoadingSpinner
-            label={isCreateMode ? 'Preparing order...' : 'Loading order...'}
-          />
+          <div className={css.statusStack}>
+            <PageHeader
+              title="Create order"
+              titleId="order-details-page-title"
+              icon={<ShoppingBag size={23} aria-hidden="true" />}
+            />
+            <StatusBanner
+              {...PHARMACY_STATUS_PRESENTATION[createLockedStatus]}
+              title="Order creation is unavailable"
+              message={
+                createLockedStatus === 'on_verification'
+                  ? 'Creating orders is paused while Admin verifies the pharmacy profile.'
+                  : 'Creating orders becomes available after Admin verifies the pharmacy profile.'
+              }
+            />
+          </div>
         </section>
       </main>
     );
   }
 
-  if (error || !order) {
+  if (isLoading) {
+    return (
+      <main className={css.page} aria-label="Loading order">
+        <section className={css.contentCard}>
+          <div className={css.loaderBox}>
+            <LoadingSpinner
+              label={isCreateMode ? 'Preparing order...' : 'Loading order...'}
+            />
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (loadError || !order) {
+    const errorDetails =
+      loadError ??
+      ({
+        title: 'Order not found',
+        message: 'This order does not exist or the link is invalid.',
+      } satisfies OrderDetailsLoadError);
+
     return (
       <main className={css.page} aria-labelledby="order-details-page-title">
-        <section className={`${css.contentCard} ${css.errorCard}`}>
-          <div className={css.errorState}>
-            <span className={css.errorIcon} aria-hidden="true">
-              <ShieldAlert size={30} strokeWidth={1.9} />
-            </span>
-
-            <div className={css.errorCopy}>
-              <p className={css.errorKicker}>Order workspace</p>
-              <h1 id="order-details-page-title">
-                {isCreateMode
-                  ? 'Order could not be prepared'
-                  : 'Order not found'}
-              </h1>
-              <p className={css.errorText}>{error ?? 'Order not found.'}</p>
-            </div>
-
-            <div className={css.errorActions}>
-              <Button type="button" onClick={() => window.location.reload()}>
-                Try again
-              </Button>
-              <LinkButton
-                href={PHARMACY_ROUTES.ORDERS}
-                variant="secondary"
-                renderLink={({ href, className, children, ...props }) => (
-                  <Link href={href} className={className} {...props}>
-                    {children}
-                  </Link>
-                )}
-              >
-                Back to orders
-              </LinkButton>
-            </div>
+        <section className={css.contentCard}>
+          <div className={css.statusStack}>
+            <PageHeader
+              title={errorDetails.title}
+              titleId="order-details-page-title"
+              icon={<ShoppingBag size={23} aria-hidden="true" />}
+            />
+            <StatusBanner
+              tone="danger"
+              label="Error"
+              title={errorDetails.title}
+              message={errorDetails.message}
+            />
           </div>
         </section>
       </main>
@@ -1951,8 +1991,9 @@ function OrderDetailsPageContent({
                     title="Client selection"
                     icon={<UsersRound size={20} aria-hidden="true" />}
                   >
-                    The default walk-in client is selected automatically. Only
-                    active clients can be used for a new order.
+                    Search active clients by name, ID, email, phone number, or
+                    address. The default walk-in client is selected
+                    automatically.
                   </InfoTooltip>
                 }
                 value={selectedClientId}
@@ -1960,13 +2001,26 @@ function OrderDetailsPageContent({
                 placeholder="Search active client"
                 emptyMessage="No active clients found"
                 isActive={Boolean(selectedClientId)}
+                describedBy="manager-order-client-hint"
                 disabled={isCreatingOrder}
                 onChange={handleClientChange}
               />
+              <p
+                className={css.clientSearchHint}
+                id="manager-order-client-hint"
+              >
+                Search by client name, ID, email, phone number, or address.
+              </p>
             </div>
 
             {selectedClient ? (
-              <div className={css.selectedClientPreview}>
+              <Link
+                className={css.selectedClientPreview}
+                href={getPharmacyClientPath(selectedClient.id)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${selectedClient.name} client details in a new tab`}
+              >
                 <TableImagePreview
                   src={getProductImageSrc(selectedClient.photoUrl ?? undefined)}
                   alt={`${selectedClient.name} photo`}
@@ -1977,7 +2031,7 @@ function OrderDetailsPageContent({
                   <small>Selected client</small>
                   <strong>{selectedClient.name}</strong>
                 </span>
-              </div>
+              </Link>
             ) : null}
 
             <Button
@@ -2118,6 +2172,7 @@ function OrderDetailsPageContent({
               onRecipientNameChange={handleRecipientNameChange}
               onRecipientPhoneChange={handleRecipientPhoneChange}
               onDeliveryAddressChange={handleDeliveryAddressChange}
+              onCopyValue={(value, label) => void handleCopyValue(value, label)}
               onSave={handleSaveDelivery}
             />
           ) : null}
@@ -2126,11 +2181,10 @@ function OrderDetailsPageContent({
             <PaymentTab
               order={order}
               paymentMethod={paymentMethod}
-              copiedEmail={copiedEmail}
               isEditable={isEditable}
               isUpdating={isOrderBusy}
               onPaymentMethodChange={setPaymentMethod}
-              onCopyEmail={() => void handleCopyEmail()}
+              onCopyValue={(value, label) => void handleCopyValue(value, label)}
               onSave={handleSavePayment}
             />
           ) : null}

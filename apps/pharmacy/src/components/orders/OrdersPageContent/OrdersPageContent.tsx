@@ -344,14 +344,20 @@ function OrdersPageContent({
             }
           />
 
-          <SearchInput
-            id="orders-client-search"
-            label="Client name search"
-            value={filters.client}
-            placeholder="Client name"
-            isActive={Boolean(filters.client)}
-            onChange={(client) => handleFiltersChange({ ...filters, client })}
-          />
+          <div className={css.searchField}>
+            <SearchInput
+              id="orders-client-search"
+              label="Client search"
+              value={filters.client}
+              placeholder="Client"
+              isActive={Boolean(filters.client)}
+              describedBy="orders-client-search-hint"
+              onChange={(client) => handleFiltersChange({ ...filters, client })}
+            />
+            <p className={css.searchHint} id="orders-client-search-hint">
+              Search by client name, ID, email, phone number, or address.
+            </p>
+          </div>
 
           <div className={css.searchAction}>
             <FiltersButton

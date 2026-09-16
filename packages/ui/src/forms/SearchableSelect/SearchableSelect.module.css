@@ -57,6 +57,14 @@
   color: currentColor;
 }
 
+.selectedLeading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
 .input {
   width: 100%;
   min-width: 0;

@@ -35,6 +35,19 @@
   gap: 12px;
 }
 
+.searchField {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.searchHint {
+  margin: 0;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
 .searchAction {
   display: flex;
   align-items: flex-end;

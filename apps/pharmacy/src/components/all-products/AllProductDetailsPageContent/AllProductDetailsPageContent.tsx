@@ -1926,17 +1926,27 @@ function AllProductDetailsPageContent({
                                 }}
                               />
 
-                              <SearchInput
-                                id="related-orders-client-search"
-                                label="Client search"
-                                value={relatedClientSearch}
-                                placeholder="Client"
-                                isActive={Boolean(relatedClientSearch)}
-                                onChange={(value) => {
-                                  setRelatedClientSearch(value);
-                                  setRelatedCurrentPage(1);
-                                }}
-                              />
+                              <div className={css.searchField}>
+                                <SearchInput
+                                  id="related-orders-client-search"
+                                  label="Client search"
+                                  value={relatedClientSearch}
+                                  placeholder="Client"
+                                  isActive={Boolean(relatedClientSearch)}
+                                  describedBy="related-orders-client-search-hint"
+                                  onChange={(value) => {
+                                    setRelatedClientSearch(value);
+                                    setRelatedCurrentPage(1);
+                                  }}
+                                />
+                                <p
+                                  className={css.searchHint}
+                                  id="related-orders-client-search-hint"
+                                >
+                                  Search by client name, ID, email, phone
+                                  number, or address.
+                                </p>
+                              </div>
 
                               <div className={css.searchAction}>
                                 <FiltersButton

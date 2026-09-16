@@ -204,6 +204,62 @@ function createOrderClientSnapshot(client: UserDocument): OrderClientSnapshot {
 
 //===============================================================
 
+async function createOrderClientSearchCondition(
+  rawSearch: string
+): Promise<Record<string, unknown>> {
+  const search = rawSearch.trim();
+  const searchRegExp = createSafeRegExp(search);
+
+  const matchingUsers = await User.find({
+    isDefaultPharmacyClient: { $ne: true },
+    $or: [
+      { name: searchRegExp },
+      { email: searchRegExp },
+      { phone: searchRegExp },
+      { address: searchRegExp },
+    ],
+  })
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+
+  const matchingUserIds = matchingUsers.map((user) => user._id);
+
+  if (Types.ObjectId.isValid(search)) {
+    matchingUserIds.push(new Types.ObjectId(search));
+  }
+
+  const canMatchIdText = /^[0-9a-f]+$/i.test(search);
+
+  return {
+    $or: [
+      { 'clientSnapshot.name': searchRegExp },
+      { 'clientSnapshot.email': searchRegExp },
+      { 'clientSnapshot.phone': searchRegExp },
+      { 'clientSnapshot.address': searchRegExp },
+      { 'delivery.details.recipientName': searchRegExp },
+      { 'delivery.details.recipientPhone': searchRegExp },
+      { 'delivery.details.address': searchRegExp },
+      ...(matchingUserIds.length > 0
+        ? [{ userId: { $in: matchingUserIds } }]
+        : []),
+      ...(canMatchIdText
+        ? [
+            {
+              $expr: {
+                $regexMatch: {
+                  input: { $toString: '$userId' },
+                  regex: searchRegExp,
+                },
+              },
+            },
+          ]
+        : []),
+    ],
+  };
+}
+
+//===============================================================
+
 function assertManagerOrderReplayMatches(
   order: OrderDocument,
   requestFingerprint: string
@@ -2267,9 +2323,14 @@ export async function getOrdersService(
   }
 
   if (query.client?.trim()) {
-    filter['delivery.details.recipientName'] = createSafeRegExp(
-      query.client.trim()
+    const clientSearchCondition = await createOrderClientSearchCondition(
+      query.client
     );
+
+    filter.$and = [
+      ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+      clientSearchCondition,
+    ];
   }
 
   if (query.pharmacy?.trim()) {

@@ -46,6 +46,7 @@ export type TextFieldProps = BaseFieldProps & {
 //===================================================================
 
 export type AddressFieldProps = Omit<TextFieldProps, 'onChange' | 'pattern'> & {
+  errorClassName?: string;
   onChange: ChangeEventHandler<HTMLTextAreaElement>;
 };
 
