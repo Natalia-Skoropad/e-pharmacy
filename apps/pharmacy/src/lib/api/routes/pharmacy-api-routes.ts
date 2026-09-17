@@ -11,6 +11,7 @@ const segment = (value: string): string => encodeRouteSegment(value);
 export const pharmacyApiRoutes = {
   products: {
     list: '/api/products',
+    statistics: '/api/products/statistics',
     filters: '/api/products/filters',
     details: (productId: string) => `/api/products/${segment(productId)}`,
 
@@ -45,6 +46,7 @@ export const pharmacyApiRoutes = {
 
   productRequests: {
     list: '/api/product-requests',
+    statistics: '/api/product-requests/statistics',
     articleAvailability: '/api/product-requests/article-availability',
 
     details: (requestId: string) =>

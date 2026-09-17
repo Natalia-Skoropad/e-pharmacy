@@ -17,6 +17,7 @@ import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharm
 import {
   normalizeProductRequest,
   normalizeProductRequestDetails,
+  normalizeProductRequestStatisticsResponse,
   normalizeProductRequestsResponse,
   type ProductRequestDetailsViewModel,
   type ProductRequestRowViewModel,
@@ -137,6 +138,20 @@ export async function checkPharmacyProductRequestArticle(
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
     parseArticleAvailabilityResponse,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getPharmacyProductRequestStatistics(
+  options?: BrowserReadRequestOptions
+) {
+  const path = PHARMACY_API_ROUTES.productRequests.statistics;
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    normalizeProductRequestStatisticsResponse,
     { url: path, method: 'GET' }
   );
 }

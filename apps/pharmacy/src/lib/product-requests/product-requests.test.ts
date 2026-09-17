@@ -6,6 +6,7 @@ import { ApiError } from '@e-pharmacy/api-client/transport';
 import {
   normalizeProductRequest,
   normalizeProductRequestDetails,
+  normalizeProductRequestStatisticsResponse,
   normalizeProductRequestsResponse,
   normalizeProductRequestStatus,
 } from './product-requests';
@@ -160,4 +161,29 @@ test('product request history requires an explicit inferred marker', () => {
     normalizeProductRequestDetails({ ...request, history: [withoutMarker] }),
     null
   );
+});
+
+//===================================================================
+
+test('product request statistics require all canonical non-negative integer counts', () => {
+  const valid = {
+    draft: 1,
+    new: 2,
+    in_progress: 3,
+    approved: 4,
+    rejected: 5,
+  };
+
+  assert.deepEqual(normalizeProductRequestStatisticsResponse(valid), valid);
+
+  for (const invalid of [
+    { ...valid, draft: -1 },
+    { ...valid, new: 1.5 },
+    { ...valid, approved: undefined },
+  ]) {
+    assert.throws(
+      () => normalizeProductRequestStatisticsResponse(invalid),
+      isInvalidResponse
+    );
+  }
 });

@@ -21,6 +21,7 @@ import {
   getFavoriteProductsService,
   getManagedProductDetailsService,
   getManagedProductReviewsService,
+  getManagedProductStatisticsService,
   getManagedProductsService,
   getProductDetailsService,
   getProductFiltersService,
@@ -60,6 +61,20 @@ export async function getProducts(
     query,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
   );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getManagedProductStatistics(
+  req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getManagedProductStatisticsService({
+    userId: req.user?.id ?? '',
+    role: req.user?.role,
+  });
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

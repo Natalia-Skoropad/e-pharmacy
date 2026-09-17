@@ -14,6 +14,7 @@ import {
   deleteProductRequestService,
   getProductRequestArticleAvailabilityService,
   getProductRequestByIdService,
+  getProductRequestStatisticsService,
   getProductRequestsService,
   updateProductRequestService,
 } from '../services/product-request.service';
@@ -37,10 +38,25 @@ export async function createProductRequest(
 
 export async function getProductRequestArticleAvailability(
   _req: Request,
-  res: ValidatedResponse<unknown, unknown, ProductRequestArticleAvailabilityQuery>
+  res: ValidatedResponse<
+    unknown,
+    unknown,
+    ProductRequestArticleAvailabilityQuery
+  >
 ): Promise<void> {
   const { query } = res.locals.validated;
   const data = await getProductRequestArticleAvailabilityService(query);
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getProductRequestStatistics(
+  req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getProductRequestStatisticsService(req.user?.id ?? '');
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -64,7 +80,10 @@ export async function getProductRequestById(
   res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
-  const data = await getProductRequestByIdService(req.user?.id ?? '', requestId);
+  const data = await getProductRequestByIdService(
+    req.user?.id ?? '',
+    requestId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

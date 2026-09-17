@@ -70,6 +70,7 @@ orderRoutes.get(
 
 orderRoutes.get(
   '/sales-statistics',
+  authorizeRoles(USER_ROLES.PHARMACY),
   validate({ query: orderSalesStatisticsQuerySchema }),
   ctrlWrapper(getOrderSalesStatistics)
 );

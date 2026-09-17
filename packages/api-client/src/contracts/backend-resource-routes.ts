@@ -45,6 +45,7 @@ export const backendRoutes = {
   products: {
     list: '/products',
     managementList: '/products/management',
+    managementStatistics: '/products/management/statistics',
 
     managementDetails: (productId: EntityId) =>
       `/products/management/${segment(productId)}`,
@@ -100,6 +101,7 @@ export const backendRoutes = {
 
   productRequests: {
     list: '/product-requests',
+    statistics: '/product-requests/statistics',
     articleAvailability: '/product-requests/article-availability',
     details: (requestId: EntityId) => `/product-requests/${segment(requestId)}`,
   },

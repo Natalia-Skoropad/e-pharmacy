@@ -3,7 +3,10 @@ import test from 'node:test';
 
 import { ApiError } from '@e-pharmacy/api-client/transport';
 
-import { normalizePharmacyProductsResponse } from './products';
+import {
+  normalizeAllProductStatisticsResponse,
+  normalizePharmacyProductsResponse,
+} from './products';
 
 //===================================================================
 
@@ -144,6 +147,30 @@ test('own product response rejects malformed authoritative fields', () => {
   ]) {
     assert.throws(
       () => normalizePharmacyProductsResponse(invalid, PHARMACY_ID),
+      isInvalidResponse
+    );
+  }
+});
+
+//===================================================================
+
+test('all product statistics require canonical non-negative integer counts', () => {
+  const valid = {
+    active: 10,
+    blocked: 2,
+    addedToPharmacy: 4,
+    notAddedToPharmacy: 8,
+  };
+
+  assert.deepEqual(normalizeAllProductStatisticsResponse(valid), valid);
+
+  for (const invalid of [
+    { ...valid, active: -1 },
+    { ...valid, blocked: 1.5 },
+    { ...valid, addedToPharmacy: undefined },
+  ]) {
+    assert.throws(
+      () => normalizeAllProductStatisticsResponse(invalid),
       isInvalidResponse
     );
   }

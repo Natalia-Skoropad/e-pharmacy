@@ -8,7 +8,11 @@ import {
 
 import { isProductCategory } from '@e-pharmacy/validation/products';
 import { isValidObjectId } from '@e-pharmacy/validation/url';
-import type { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
+
+import type {
+  AllProductStatisticsCounts,
+  OwnProductStatisticsCounts,
+} from '@e-pharmacy/types/products';
 
 import {
   parseProductDetails,
@@ -18,7 +22,6 @@ import {
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
-
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
@@ -307,6 +310,41 @@ function normalizeStatisticValue(
     quantity,
     amount: requireNonNegativeNumber(value.amount, `${label}.amount`, value),
   };
+}
+
+//===================================================================
+
+export function normalizeAllProductStatisticsResponse(
+  value: unknown
+): AllProductStatisticsCounts {
+  if (!isRecord(value)) {
+    invalidProductContract(
+      'all product statistics response is invalid.',
+      value
+    );
+  }
+
+  const keys = [
+    'active',
+    'blocked',
+    'addedToPharmacy',
+    'notAddedToPharmacy',
+  ] as const;
+
+  const statistics = {} as AllProductStatisticsCounts;
+
+  for (const key of keys) {
+    const count = getFiniteNumber(value[key]);
+    if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
+      invalidProductContract(
+        `all product statistics response.${key} must be a non-negative integer.`,
+        value
+      );
+    }
+    statistics[key] = count;
+  }
+
+  return statistics;
 }
 
 //===================================================================

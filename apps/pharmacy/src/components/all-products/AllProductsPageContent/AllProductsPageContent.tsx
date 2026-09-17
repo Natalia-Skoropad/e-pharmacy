@@ -162,12 +162,11 @@ function AllProductsPageContent({
 
     const controller = new AbortController();
 
-    async function loadProductStatistics(pharmacyId: EntityId) {
+    async function loadProductStatistics() {
       try {
-        const nextStatistics = await getPharmacyAllProductStatistics(
-          pharmacyId,
-          { signal: controller.signal }
-        );
+        const nextStatistics = await getPharmacyAllProductStatistics({
+          signal: controller.signal,
+        });
 
         if (!controller.signal.aborted) {
           setProductStatistics(nextStatistics);
@@ -180,7 +179,7 @@ function AllProductsPageContent({
       }
     }
 
-    void loadProductStatistics(currentPharmacyId);
+    void loadProductStatistics();
 
     return () => {
       controller.abort();

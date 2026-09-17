@@ -156,6 +156,32 @@ export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts 
     PRODUCT_REQUEST_STATUSES.map((status) => [status, 0])
   ) as ProductRequestStatisticsCounts;
 
+export function normalizeProductRequestStatisticsResponse(
+  value: unknown
+): ProductRequestStatisticsCounts {
+  if (!isRecord(value)) {
+    invalidProductRequestContract(
+      'product request statistics response must be an object.',
+      value
+    );
+  }
+
+  const statistics = { ...DEFAULT_PRODUCT_REQUEST_STATISTICS };
+
+  for (const status of PRODUCT_REQUEST_STATUSES) {
+    const count = getFiniteNumber(value[status]);
+    if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
+      invalidProductRequestContract(
+        `product request statistics response.${status} must be a non-negative integer.`,
+        value
+      );
+    }
+    statistics[status] = count;
+  }
+
+  return statistics;
+}
+
 //===================================================================
 
 export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {

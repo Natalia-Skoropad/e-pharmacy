@@ -887,6 +887,79 @@ async function resolveManagedProductsAccess(
 
 //===============================================================
 
+export async function getManagedProductStatisticsService(
+  actor: ProductManagementActor
+) {
+  if (actor.role !== USER_ROLES.PHARMACY) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Access denied.');
+  }
+
+  const pharmacy = await getCurrentUserPharmacyForManagedProductRead(
+    actor.userId
+  );
+  const pharmacyId = pharmacy._id;
+
+  const [statistics] = await Product.aggregate<{
+    active: number;
+    blocked: number;
+    addedToPharmacy: number;
+    notAddedToPharmacy: number;
+  }>([
+    { $match: { status: { $in: ['active', 'blocked'] } } },
+    {
+      $lookup: {
+        from: ProductOffer.collection.name,
+        let: { productId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$productId', '$$productId'] },
+                  { $eq: ['$pharmacyId', pharmacyId] },
+                ],
+              },
+            },
+          },
+          { $limit: 1 },
+        ],
+        as: 'currentPharmacyOffers',
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+        blocked: {
+          $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] },
+        },
+        addedToPharmacy: {
+          $sum: {
+            $cond: [{ $gt: [{ $size: '$currentPharmacyOffers' }, 0] }, 1, 0],
+          },
+        },
+        notAddedToPharmacy: {
+          $sum: {
+            $cond: [{ $eq: [{ $size: '$currentPharmacyOffers' }, 0] }, 1, 0],
+          },
+        },
+      },
+    },
+    { $project: { _id: 0 } },
+  ]);
+
+  return (
+    statistics ?? {
+      active: 0,
+      blocked: 0,
+      addedToPharmacy: 0,
+      notAddedToPharmacy: 0,
+    }
+  );
+}
+
+//===============================================================
+
 export async function getManagedProductsService(
   query: ManagedProductsQuery,
   actor: ProductManagementActor,

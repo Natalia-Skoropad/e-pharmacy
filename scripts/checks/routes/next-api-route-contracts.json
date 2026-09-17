@@ -321,6 +321,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/product-requests/statistics",
+    "backend": "/product-requests/statistics",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/products/filters",
     "backend": "/products/filters",
     "methods": {
@@ -597,6 +605,14 @@
     "app": "pharmacy",
     "route": "/products/[productId]/stock-movements",
     "backend": "/products/:productId/stock-movements",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products/statistics",
+    "backend": "/products/management/statistics",
     "methods": {
       "GET": "private"
     }

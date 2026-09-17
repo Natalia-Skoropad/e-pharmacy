@@ -757,6 +757,36 @@ export async function moderateProductRequestByAdminService(
 
 //===============================================================
 
+export async function getProductRequestStatisticsService(userId: string) {
+  const pharmacyId = await getCurrentPharmacyId(userId);
+
+  const statistics: Record<ProductRequestStatus, number> = {
+    draft: 0,
+    new: 0,
+    in_progress: 0,
+    approved: 0,
+    rejected: 0,
+  };
+
+  if (!pharmacyId) return statistics;
+
+  const rows = await ProductRequest.aggregate<{
+    _id: ProductRequestStatus;
+    count: number;
+  }>([
+    { $match: { pharmacyId } },
+    { $group: { _id: '$status', count: { $sum: 1 } } },
+  ]);
+
+  for (const row of rows) {
+    if (row._id in statistics) statistics[row._id] = row.count;
+  }
+
+  return statistics;
+}
+
+//===============================================================
+
 export async function getProductRequestsService(
   userId: string,
   query: ProductRequestsQuery

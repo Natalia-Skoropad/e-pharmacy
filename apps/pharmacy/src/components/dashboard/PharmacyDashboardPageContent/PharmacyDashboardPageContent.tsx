@@ -97,16 +97,39 @@ type DashboardData = Readonly<{
   requests: ProductRequestStatisticsCounts;
 }>;
 
+type DashboardErrors = Readonly<{
+  orders: boolean;
+  clients: boolean;
+  products: boolean;
+  allProducts: boolean;
+  requests: boolean;
+}>;
+
+type DashboardLoadResult = Readonly<{
+  data: DashboardData;
+  errors: DashboardErrors;
+}>;
+
 type DashboardSnapshot = Readonly<{
   requestKey: string | null;
   data: DashboardData;
+  errors: DashboardErrors;
   isLoading: boolean;
-  hasError: boolean;
 }>;
 
 //===================================================================
 
 const CURRENT_YEAR = new Date().getFullYear();
+
+//===================================================================
+
+const DEFAULT_DASHBOARD_ERRORS: DashboardErrors = {
+  orders: false,
+  clients: false,
+  products: false,
+  allProducts: false,
+  requests: false,
+};
 
 //===================================================================
 
@@ -164,7 +187,7 @@ async function loadDashboardData(
   selectedYear: string,
   selectedMonth: SalesPeriodMonth,
   options?: JsonResponseRequestOptions
-): Promise<DashboardData> {
+): Promise<DashboardLoadResult> {
   const { dateFrom, dateTo } = getSalesPeriodDateRange(
     selectedYear,
     selectedMonth
@@ -172,26 +195,50 @@ async function loadDashboardData(
   const dateRange = { dateFrom, dateTo };
 
   const [
-    ordersResponse,
-    clientStatistics,
-    requestStatistics,
-    productStatistics,
-    allProductStatistics,
-  ] = await Promise.all([
+    ordersResult,
+    clientsResult,
+    requestsResult,
+    productsResult,
+    allProductsResult,
+  ] = await Promise.allSettled([
     getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }, options),
     getPharmacyClientStatistics(options),
     getPharmacyProductRequestStatistics(options),
     getPharmacyOwnProductStatistics(pharmacyId, options),
-    getPharmacyAllProductStatistics(pharmacyId, options),
+    getPharmacyAllProductStatistics(options),
   ]);
 
   return {
-    pharmacyStatus,
-    orders: ordersResponse.statistics,
-    clients: clientStatistics,
-    products: productStatistics,
-    allProducts: allProductStatistics,
-    requests: requestStatistics,
+    data: {
+      pharmacyStatus,
+      orders:
+        ordersResult.status === 'fulfilled'
+          ? ordersResult.value.statistics
+          : DEFAULT_ORDER_STATISTICS,
+      clients:
+        clientsResult.status === 'fulfilled'
+          ? clientsResult.value
+          : DEFAULT_CLIENT_STATISTICS,
+      products:
+        productsResult.status === 'fulfilled'
+          ? productsResult.value
+          : DEFAULT_OWN_PRODUCT_STATISTICS,
+      allProducts:
+        allProductsResult.status === 'fulfilled'
+          ? allProductsResult.value
+          : DEFAULT_ALL_PRODUCT_STATISTICS,
+      requests:
+        requestsResult.status === 'fulfilled'
+          ? requestsResult.value
+          : DEFAULT_PRODUCT_REQUEST_STATISTICS,
+    },
+    errors: {
+      orders: ordersResult.status === 'rejected',
+      clients: clientsResult.status === 'rejected',
+      products: productsResult.status === 'rejected',
+      allProducts: allProductsResult.status === 'rejected',
+      requests: requestsResult.status === 'rejected',
+    },
   };
 }
 
@@ -242,8 +289,8 @@ function PharmacyDashboardPageContent() {
     {
       requestKey: null,
       data: DEFAULT_DATA,
+      errors: DEFAULT_DASHBOARD_ERRORS,
       isLoading: false,
-      hasError: false,
     }
   );
 
@@ -267,7 +314,9 @@ function PharmacyDashboardPageContent() {
     (dashboardRequestKey !== null &&
       (!hasCurrentDashboard || dashboardSnapshot.isLoading));
 
-  const hasDashboardError = hasCurrentDashboard && dashboardSnapshot.hasError;
+  const dashboardErrors = hasCurrentDashboard
+    ? dashboardSnapshot.errors
+    : DEFAULT_DASHBOARD_ERRORS;
 
   useEffect(() => {
     if (
@@ -286,7 +335,7 @@ function PharmacyDashboardPageContent() {
 
     async function loadDashboard() {
       try {
-        const nextData = await loadDashboardData(
+        const result = await loadDashboardData(
           currentPharmacyId,
           currentPharmacyStatus,
           selectedYear,
@@ -297,9 +346,9 @@ function PharmacyDashboardPageContent() {
         if (!controller.signal.aborted) {
           setDashboardSnapshot({
             requestKey: currentRequestKey,
-            data: nextData,
+            data: result.data,
+            errors: result.errors,
             isLoading: false,
-            hasError: false,
           });
         }
       } catch {
@@ -307,8 +356,14 @@ function PharmacyDashboardPageContent() {
           setDashboardSnapshot({
             requestKey: currentRequestKey,
             data: DEFAULT_DATA,
+            errors: {
+              orders: true,
+              clients: true,
+              products: true,
+              allProducts: true,
+              requests: true,
+            },
             isLoading: false,
-            hasError: true,
           });
         }
       }
@@ -490,16 +545,6 @@ function PharmacyDashboardPageContent() {
           <section className={css.section} aria-labelledby="orders-stats-title">
             <LoadingSpinner label="Loading dashboard statistics..." />
           </section>
-        ) : hasDashboardError ? (
-          <section
-            className={css.section}
-            aria-label="Dashboard statistics unavailable"
-          >
-            <EmptyState
-              title="Dashboard statistics are temporarily unavailable."
-              message="The data could not be loaded. Please try again later."
-            />
-          </section>
         ) : (
           <>
             <section
@@ -541,12 +586,19 @@ function PharmacyDashboardPageContent() {
                 className={css.filters}
               />
 
-              <OrderStatistics
-                counts={dashboardData.orders}
-                getStatusHref={(status) =>
-                  buildOrdersPath({ ...DEFAULT_ORDERS_FILTERS, status })
-                }
-              />
+              {dashboardErrors.orders ? (
+                <EmptyState
+                  title="Order statistics are temporarily unavailable."
+                  message="Order data could not be loaded. Please try again later."
+                />
+              ) : (
+                <OrderStatistics
+                  counts={dashboardData.orders}
+                  getStatusHref={(status) =>
+                    buildOrdersPath({ ...DEFAULT_ORDERS_FILTERS, status })
+                  }
+                />
+              )}
             </section>
 
             <section
@@ -608,17 +660,26 @@ function PharmacyDashboardPageContent() {
                 </LinkButton>
               </div>
 
-              <ClientStatistics
-                counts={dashboardData.clients}
-                getStatisticHref={getClientStatisticHref}
-              />
-
-              {dashboardData.clients.total === 0 ? (
+              {dashboardErrors.clients ? (
                 <EmptyState
-                  title="Your pharmacy has no clients yet."
-                  message="Clients will appear after the first orders in your pharmacy."
+                  title="Client statistics are temporarily unavailable."
+                  message="Client data could not be loaded. Please try again later."
                 />
-              ) : null}
+              ) : (
+                <>
+                  <ClientStatistics
+                    counts={dashboardData.clients}
+                    getStatisticHref={getClientStatisticHref}
+                  />
+
+                  {dashboardData.clients.total === 0 ? (
+                    <EmptyState
+                      title="Your pharmacy has no clients yet."
+                      message="Clients will appear after the first orders in your pharmacy."
+                    />
+                  ) : null}
+                </>
+              )}
             </section>
 
             <section
@@ -654,24 +715,33 @@ function PharmacyDashboardPageContent() {
                 </LinkButton>
               </div>
 
-              <OwnProductStatistics
-                counts={dashboardData.products}
-                getStatisticHref={getProductStatisticHref}
-              />
-
-              {Object.values(dashboardData.products).every(
-                (value) => value.quantity === 0
-              ) ? (
+              {dashboardErrors.products ? (
                 <EmptyState
-                  title="Your pharmacy has no added products yet."
-                  message={
-                    dashboardData.pharmacyStatus === 'active' ||
-                    dashboardData.pharmacyStatus === 'on_moderation'
-                      ? 'Browse active Admin products and add them to your pharmacy.'
-                      : 'Browse active Admin products and add them after verification.'
-                  }
+                  title="Own product statistics are temporarily unavailable."
+                  message="Product data could not be loaded. Please try again later."
                 />
-              ) : null}
+              ) : (
+                <>
+                  <OwnProductStatistics
+                    counts={dashboardData.products}
+                    getStatisticHref={getProductStatisticHref}
+                  />
+
+                  {Object.values(dashboardData.products).every(
+                    (value) => value.quantity === 0
+                  ) ? (
+                    <EmptyState
+                      title="Your pharmacy has no added products yet."
+                      message={
+                        dashboardData.pharmacyStatus === 'active' ||
+                        dashboardData.pharmacyStatus === 'on_moderation'
+                          ? 'Browse active Admin products and add them to your pharmacy.'
+                          : 'Browse active Admin products and add them after verification.'
+                      }
+                    />
+                  ) : null}
+                </>
+              )}
             </section>
 
             <section
@@ -707,10 +777,17 @@ function PharmacyDashboardPageContent() {
                 </LinkButton>
               </div>
 
-              <AllProductStatistics
-                counts={dashboardData.allProducts}
-                getStatisticHref={getAllProductStatisticHref}
-              />
+              {dashboardErrors.allProducts ? (
+                <EmptyState
+                  title="All product statistics are temporarily unavailable."
+                  message="Catalog data could not be loaded. Please try again later."
+                />
+              ) : (
+                <AllProductStatistics
+                  counts={dashboardData.allProducts}
+                  getStatisticHref={getAllProductStatisticHref}
+                />
+              )}
             </section>
 
             <section
@@ -742,24 +819,33 @@ function PharmacyDashboardPageContent() {
                 </LinkButton>
               </div>
 
-              <ProductRequestStatistics
-                counts={dashboardData.requests}
-                getStatusHref={(status) =>
-                  buildProductRequestsPath({
-                    ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
-                    status,
-                  })
-                }
-              />
-
-              {Object.values(dashboardData.requests).every(
-                (value) => value === 0
-              ) ? (
+              {dashboardErrors.requests ? (
                 <EmptyState
-                  title="Your pharmacy has no product creation requests yet."
-                  message="Create a product request when you need to add a product that is absent from the global catalog."
+                  title="Product request statistics are temporarily unavailable."
+                  message="Request data could not be loaded. Please try again later."
                 />
-              ) : null}
+              ) : (
+                <>
+                  <ProductRequestStatistics
+                    counts={dashboardData.requests}
+                    getStatusHref={(status) =>
+                      buildProductRequestsPath({
+                        ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
+                        status,
+                      })
+                    }
+                  />
+
+                  {Object.values(dashboardData.requests).every(
+                    (value) => value === 0
+                  ) ? (
+                    <EmptyState
+                      title="Your pharmacy has no product creation requests yet."
+                      message="Create a product request when you need to add a product that is absent from the global catalog."
+                    />
+                  ) : null}
+                </>
+              )}
             </section>
           </>
         )}

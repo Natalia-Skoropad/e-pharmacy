@@ -8,6 +8,7 @@ import {
   getPendingProductReviews,
   getManagedProductDetails,
   getManagedProductReviews,
+  getManagedProductStatistics,
   getManagedProducts,
   moderateProductReview,
   removeProductFromMyPharmacy,
@@ -52,9 +53,11 @@ export const productRoutes = Router();
 productRoutes.get(
   '/',
   optionalAuthenticate,
+
   validate({
     query: publicProductsQuerySchema,
   }),
+
   ctrlWrapper(getProducts)
 );
 
@@ -74,6 +77,15 @@ productRoutes.get(
   authorizeRoles(USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
   validate({ query: managedProductsQuerySchema }),
   ctrlWrapper(getManagedProducts)
+);
+
+//=================================================================================
+
+productRoutes.get(
+  '/management/statistics',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  ctrlWrapper(getManagedProductStatistics)
 );
 
 //=================================================================================
@@ -111,9 +123,11 @@ productRoutes.get(
   '/favorites',
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     query: publicProductsQuerySchema,
   }),
+
   ctrlWrapper(getFavoriteProducts)
 );
 
@@ -123,9 +137,11 @@ productRoutes.get(
   '/reviews/pending',
   authenticate,
   authorizeRoles(USER_ROLES.ADMIN),
+
   validate({
     query: pendingProductReviewsQuerySchema,
   }),
+
   ctrlWrapper(getPendingProductReviews)
 );
 
@@ -135,9 +151,11 @@ productRoutes.post(
   '/:productId/my-pharmacy',
   authenticate,
   authorizeRoles(USER_ROLES.PHARMACY),
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(addProductToMyPharmacy)
 );
 
@@ -147,9 +165,11 @@ productRoutes.delete(
   '/:productId/my-pharmacy',
   authenticate,
   authorizeRoles(USER_ROLES.PHARMACY),
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(removeProductFromMyPharmacy)
 );
 
@@ -159,9 +179,11 @@ productRoutes.get(
   '/:productId/stock-movements',
   authenticate,
   authorizeRoles(USER_ROLES.PHARMACY),
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(getProductStockMovements)
 );
 
@@ -169,9 +191,11 @@ productRoutes.get(
 
 productRoutes.get(
   '/:productId/reviews',
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(getProductReviews)
 );
 
@@ -182,10 +206,12 @@ productRoutes.post(
   reviewRateLimit,
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     params: productIdParamsSchema,
     body: createProductReviewSchema,
   }),
+
   ctrlWrapper(createProductReview)
 );
 
@@ -195,10 +221,12 @@ productRoutes.patch(
   '/:productId/reviews/:reviewId/moderation',
   authenticate,
   authorizeRoles(USER_ROLES.ADMIN),
+
   validate({
     params: productReviewParamsSchema,
     body: moderateProductReviewSchema,
   }),
+
   ctrlWrapper(moderateProductReview)
 );
 
@@ -208,9 +236,11 @@ productRoutes.put(
   '/:productId/favorite',
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(setFavoriteProduct)
 );
 
@@ -220,9 +250,11 @@ productRoutes.delete(
   '/:productId/favorite',
   authenticate,
   authorizeRoles(USER_ROLES.CLIENT),
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(setFavoriteProduct)
 );
 
@@ -231,8 +263,10 @@ productRoutes.delete(
 productRoutes.get(
   '/:productId',
   optionalAuthenticate,
+
   validate({
     params: productIdParamsSchema,
   }),
+
   ctrlWrapper(getProductDetails)
 );
