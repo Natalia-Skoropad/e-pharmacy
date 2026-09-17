@@ -109,6 +109,9 @@ export const orderSalesStatisticsQuerySchema = z
     groupBy: z.enum(['day', 'month']).default('month'),
     productId: mongoIdSchema.optional(),
   })
+
+  .strict()
+
   .refine(({ dateFrom, dateTo }) => isDateRangeOrdered(dateFrom, dateTo), {
     message: DATE_RANGE_MESSAGE,
     path: ['dateTo'],
@@ -184,6 +187,7 @@ export const updateOrderDetailsSchema = z
     items: z.array(orderEditableItemSchema).min(1).optional(),
     paymentMethod: z.enum(['cash', 'bank_transfer']).optional(),
     deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
+
     deliveryDetails: z
       .object({
         recipientName: sharedUserNameSchema,

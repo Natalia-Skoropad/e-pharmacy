@@ -641,8 +641,8 @@ function PharmacyDashboardPageContent() {
                     Clients statistics
                   </h2>
                   <p className={css.sectionDescription}>
-                    Only clients who created orders in this pharmacy are
-                    included.
+                    Clients who created orders in this pharmacy are included,
+                    along with the pharmacy&apos;s walk-in client.
                   </p>
                 </div>
 

@@ -157,6 +157,20 @@ test('public cacheable query schemas reject unknown parameters', () => {
 
 //===============================================================
 
+test('sales statistics query rejects unknown parameters', () => {
+  assert.equal(
+    orderSalesStatisticsQuerySchema.safeParse({
+      dateFrom: '2026-09-01',
+      dateTo: '2026-09-30',
+      groupBy: 'day',
+      junk: 'unexpected-cache-variant',
+    }).success,
+    false
+  );
+});
+
+//===============================================================
+
 test('empty nested bank details do not count as a profile change', () => {
   assert.equal(
     updateMyPharmacyProfileSchema.safeParse({

@@ -608,10 +608,13 @@ test(
       const successfulAt = completedOrder.successfulAt;
       assert.ok(successfulAt);
 
-      const successfulHistoryEntry = completedOrder.statusHistory.find(
+      const successfulHistoryEntries = completedOrder.statusHistory.filter(
         (entry) => entry.status === 'successful'
       );
 
+      assert.equal(successfulHistoryEntries.length, 1);
+
+      const successfulHistoryEntry = successfulHistoryEntries[0];
       assert.ok(successfulHistoryEntry);
       assert.equal(
         successfulAt.getTime(),
@@ -630,6 +633,49 @@ test(
         { _id: new Types.ObjectId(checkout.order.id) },
         { $set: { createdAt: previousMonth } }
       );
+
+      await Promise.all([
+        Product.updateOne(
+          { _id: fixture.productId },
+          {
+            $set: {
+              name: 'Renamed after successful order',
+              category: 'beauty',
+            },
+          }
+        ),
+        ProductOffer.updateOne(
+          { _id: fixture.offerId },
+          { $set: { price: CHECKOUT_OFFER_PRICE * 9 } }
+        ),
+      ]);
+
+      const previousYear = previousMonth.getUTCFullYear();
+      const previousMonthIndex = previousMonth.getUTCMonth();
+
+      const previousMonthFrom = `${previousYear}-${String(
+        previousMonthIndex + 1
+      ).padStart(2, '0')}-01`;
+
+      const previousMonthLastDay = new Date(
+        Date.UTC(previousYear, previousMonthIndex + 1, 0)
+      ).getUTCDate();
+
+      const previousMonthTo = `${previousYear}-${String(
+        previousMonthIndex + 1
+      ).padStart(2, '0')}-${String(previousMonthLastDay).padStart(2, '0')}`;
+
+      const previousPeriodStatistics = await getOrderSalesStatisticsService(
+        fixture.pharmacyOwnerId.toString(),
+        {
+          dateFrom: previousMonthFrom,
+          dateTo: previousMonthTo,
+          groupBy: 'month',
+        },
+        'pharmacy'
+      );
+
+      assert.deepEqual(previousPeriodStatistics.categories, []);
 
       const year = successfulAt.getUTCFullYear();
       const month = successfulAt.getUTCMonth();
@@ -652,14 +698,169 @@ test(
       );
 
       assert.equal(statistics.points.length, 1);
+      assert.deepEqual(statistics.categories, ['medicine']);
       assert.equal(statistics.points[0]?.values.medicine?.quantity, 1);
 
       assert.equal(
         statistics.points[0]?.values.medicine?.amount,
         CHECKOUT_OFFER_PRICE
       );
+
+      const successfulDay = successfulAt.toISOString().slice(0, 10);
+      const dailyStatistics = await getOrderSalesStatisticsService(
+        fixture.pharmacyOwnerId.toString(),
+        {
+          dateFrom: successfulDay,
+          dateTo: successfulDay,
+          groupBy: 'day',
+        },
+        'pharmacy'
+      );
+
+      assert.equal(dailyStatistics.points.length, 1);
+      assert.deepEqual(dailyStatistics.categories, ['medicine']);
+      assert.equal(
+        dailyStatistics.points[0]?.values.medicine?.amount,
+        CHECKOUT_OFFER_PRICE
+      );
     } finally {
       await removeFixture(fixture);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'rejected orders never contribute to sales statistics',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture();
+    const actor = {
+      id: fixture.pharmacyOwnerId.toString(),
+      role: 'pharmacy' as const,
+    };
+
+    try {
+      const checkout = await checkoutFixture(fixture);
+
+      await updateOrderStatusService(actor, checkout.order.id, {
+        status: 'in_progress',
+      });
+
+      await updateOrderStatusService(actor, checkout.order.id, {
+        status: 'rejected',
+        rejectionReason: 'Rejected analytics regression test',
+      });
+
+      const rejectedOrder = await Order.findById(checkout.order.id)
+        .select('successfulAt status')
+        .lean<{ status: string; successfulAt?: Date } | null>();
+
+      assert.ok(rejectedOrder);
+      assert.equal(rejectedOrder.status, 'rejected');
+      assert.equal(rejectedOrder.successfulAt, undefined);
+
+      const year = new Date().getUTCFullYear();
+      const statistics = await getOrderSalesStatisticsService(
+        fixture.pharmacyOwnerId.toString(),
+        {
+          dateFrom: `${year}-01-01`,
+          dateTo: `${year}-12-31`,
+          groupBy: 'month',
+        },
+        'pharmacy'
+      );
+
+      assert.deepEqual(statistics.categories, []);
+
+      assert.ok(
+        statistics.points.every(
+          (point) => Object.keys(point.values).length === 0
+        )
+      );
+    } finally {
+      await removeFixture(fixture);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'sales statistics remain isolated to the authenticated pharmacy',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixtureA = await createCheckoutFixture();
+    const fixtureB = await createCheckoutFixture();
+
+    const actorA = {
+      id: fixtureA.pharmacyOwnerId.toString(),
+      role: 'pharmacy' as const,
+    };
+
+    const actorB = {
+      id: fixtureB.pharmacyOwnerId.toString(),
+      role: 'pharmacy' as const,
+    };
+
+    try {
+      const [checkoutA, checkoutB] = await Promise.all([
+        checkoutFixture(fixtureA),
+        checkoutFixture(fixtureB),
+      ]);
+
+      await Promise.all([
+        updateOrderStatusService(actorA, checkoutA.order.id, {
+          status: 'in_progress',
+        }),
+
+        updateOrderStatusService(actorB, checkoutB.order.id, {
+          status: 'in_progress',
+        }),
+      ]);
+
+      await Promise.all([
+        updateOrderStatusService(actorA, checkoutA.order.id, {
+          status: 'successful',
+        }),
+
+        updateOrderStatusService(actorB, checkoutB.order.id, {
+          status: 'successful',
+        }),
+      ]);
+
+      const year = new Date().getUTCFullYear();
+
+      const statistics = await getOrderSalesStatisticsService(
+        fixtureA.pharmacyOwnerId.toString(),
+        {
+          dateFrom: `${year}-01-01`,
+          dateTo: `${year}-12-31`,
+          groupBy: 'month',
+        },
+        'pharmacy'
+      );
+
+      const totalAmount = statistics.points.reduce(
+        (pointsTotal, point) =>
+          pointsTotal +
+          Object.values(point.values).reduce(
+            (pointTotal, value) => pointTotal + value.amount,
+            0
+          ),
+        0
+      );
+
+      assert.equal(totalAmount, CHECKOUT_OFFER_PRICE);
+    } finally {
+      await Promise.all([removeFixture(fixtureA), removeFixture(fixtureB)]);
       await mongoose.disconnect();
     }
   }
