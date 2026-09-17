@@ -19,6 +19,7 @@ import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import {
   checkoutOrderService,
   getOrderByIdService,
+  getOrderSalesStatisticsService,
   updateOrderDetailsService,
   updateOrderStatusService,
 } from './order.service';
@@ -565,6 +566,98 @@ test(
       assert.equal(reloaded.order.client, fixture.clientName);
       assert.equal(reloaded.order.clientPhone, fixture.clientPhone);
       assert.equal(reloaded.order.clientAddress, fixture.clientAddress);
+    } finally {
+      await removeFixture(fixture);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'successful sales use successfulAt instead of order creation time',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture();
+    const actor = {
+      id: fixture.pharmacyOwnerId.toString(),
+      role: 'pharmacy' as const,
+    };
+
+    try {
+      const checkout = await checkoutFixture(fixture);
+
+      await updateOrderStatusService(actor, checkout.order.id, {
+        status: 'in_progress',
+      });
+
+      await updateOrderStatusService(actor, checkout.order.id, {
+        status: 'successful',
+      });
+
+      const completedOrder = await Order.findById(checkout.order.id).lean<{
+        successfulAt?: Date;
+        statusHistory: Array<{ status: string; changedAt: Date }>;
+      } | null>();
+
+      assert.ok(completedOrder);
+
+      const successfulAt = completedOrder.successfulAt;
+      assert.ok(successfulAt);
+
+      const successfulHistoryEntry = completedOrder.statusHistory.find(
+        (entry) => entry.status === 'successful'
+      );
+
+      assert.ok(successfulHistoryEntry);
+      assert.equal(
+        successfulAt.getTime(),
+        successfulHistoryEntry.changedAt.getTime()
+      );
+
+      const previousMonth = new Date(
+        Date.UTC(
+          successfulAt.getUTCFullYear(),
+          successfulAt.getUTCMonth() - 1,
+          15
+        )
+      );
+
+      await Order.collection.updateOne(
+        { _id: new Types.ObjectId(checkout.order.id) },
+        { $set: { createdAt: previousMonth } }
+      );
+
+      const year = successfulAt.getUTCFullYear();
+      const month = successfulAt.getUTCMonth();
+      const currentMonthFrom = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+
+      const currentMonthLastDay = new Date(
+        Date.UTC(year, month + 1, 0)
+      ).getUTCDate();
+
+      const currentMonthTo = `${year}-${String(month + 1).padStart(2, '0')}-${String(currentMonthLastDay).padStart(2, '0')}`;
+
+      const statistics = await getOrderSalesStatisticsService(
+        fixture.pharmacyOwnerId.toString(),
+        {
+          dateFrom: currentMonthFrom,
+          dateTo: currentMonthTo,
+          groupBy: 'month',
+        },
+        'pharmacy'
+      );
+
+      assert.equal(statistics.points.length, 1);
+      assert.equal(statistics.points[0]?.values.medicine?.quantity, 1);
+
+      assert.equal(
+        statistics.points[0]?.values.medicine?.amount,
+        CHECKOUT_OFFER_PRICE
+      );
     } finally {
       await removeFixture(fixture);
       await mongoose.disconnect();

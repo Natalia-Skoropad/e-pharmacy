@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
-import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent';
-import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
-
 import {
   isAllProductsFilterSegment,
   parseAllProductsSegments,
 } from '@/lib/products/all-product-paths';
+
+import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent';
+import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
 
 //===================================================================
 

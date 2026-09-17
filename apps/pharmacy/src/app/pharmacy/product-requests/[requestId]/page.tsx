@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
-import { ProductRequestDetailsPageContent } from '@/components/product-requests/ProductRequestDetailsPageContent';
-import { ProductRequestsPageContent } from '@/components/product-requests/ProductRequestsPageContent';
-
 import {
   isProductRequestsFilterSegment,
   parseProductRequestsSegments,
 } from '@/lib/product-requests/product-request-paths';
+
+import { ProductRequestDetailsPageContent } from '@/components/product-requests/ProductRequestDetailsPageContent';
+import { ProductRequestsPageContent } from '@/components/product-requests/ProductRequestsPageContent';
 
 //===================================================================
 
@@ -29,7 +29,9 @@ async function ProductRequestDetailsPage({
   const { requestId } = await params;
 
   if (isProductRequestsFilterSegment(requestId)) {
-    const initialFilters = parseProductRequestsSegments({ filters: [requestId] });
+    const initialFilters = parseProductRequestsSegments({
+      filters: [requestId],
+    });
 
     return (
       <ProductRequestsPageContent

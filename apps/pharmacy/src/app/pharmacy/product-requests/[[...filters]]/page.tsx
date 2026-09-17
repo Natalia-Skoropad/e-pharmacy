@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 
-import { ProductRequestDetailsPageContent } from '@/components/product-requests/ProductRequestDetailsPageContent';
-import { ProductRequestsPageContent } from '@/components/product-requests/ProductRequestsPageContent';
-
 import {
   isProductRequestsFilterRoute,
   parseProductRequestsSegments,
   type ProductRequestsRouteParams,
 } from '@/lib/product-requests/product-request-paths';
+
+import { ProductRequestDetailsPageContent } from '@/components/product-requests/ProductRequestDetailsPageContent';
+import { ProductRequestsPageContent } from '@/components/product-requests/ProductRequestsPageContent';
 
 //===================================================================
 

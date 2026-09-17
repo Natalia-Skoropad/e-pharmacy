@@ -39,7 +39,6 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import {
   getPharmacyOrderSalesStatistics,
   getPharmacyOrders,
-  getPharmacyProducts,
 } from '@/lib/api/browser';
 
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
@@ -91,17 +90,8 @@ import css from './PharmacyDashboardPageContent.module.css';
 
 type DashboardData = Readonly<{
   pharmacyStatus: PharmacyStatus | null;
-  overview: {
-    orders: number;
-    revenue: number;
-    products: number;
-    clients: number;
-  };
-
   orders: OrderStatisticsCounts;
-
   clients: ClientStatisticsCounts;
-
   products: OwnProductStatisticsCounts;
   allProducts: typeof DEFAULT_ALL_PRODUCT_STATISTICS;
   requests: ProductRequestStatisticsCounts;
@@ -122,19 +112,10 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 const DEFAULT_DATA: DashboardData = {
   pharmacyStatus: null,
-  overview: {
-    orders: 0,
-    revenue: 0,
-    products: 0,
-    clients: 0,
-  },
   orders: DEFAULT_ORDER_STATISTICS,
-
   clients: DEFAULT_CLIENT_STATISTICS,
-
   products: DEFAULT_OWN_PRODUCT_STATISTICS,
   allProducts: DEFAULT_ALL_PRODUCT_STATISTICS,
-
   requests: DEFAULT_PRODUCT_REQUEST_STATISTICS,
 };
 
@@ -193,14 +174,12 @@ async function loadDashboardData(
   const [
     ordersResponse,
     clientStatistics,
-    allProducts,
     requestStatistics,
     productStatistics,
     allProductStatistics,
   ] = await Promise.all([
     getPharmacyOrders({ page: 1, perPage: 1, ...dateRange }, options),
     getPharmacyClientStatistics(options),
-    getPharmacyProducts({ page: 1, perPage: 100, pharmacyId }, options),
     getPharmacyProductRequestStatistics(options),
     getPharmacyOwnProductStatistics(pharmacyId, options),
     getPharmacyAllProductStatistics(pharmacyId, options),
@@ -208,20 +187,10 @@ async function loadDashboardData(
 
   return {
     pharmacyStatus,
-    overview: {
-      orders: ordersResponse.total,
-      revenue: ordersResponse.statistics.successful.amount,
-      products: allProducts.total,
-      clients: clientStatistics.total,
-    },
-
     orders: ordersResponse.statistics,
-
     clients: clientStatistics,
-
     products: productStatistics,
     allProducts: allProductStatistics,
-
     requests: requestStatistics,
   };
 }
@@ -251,18 +220,24 @@ function EmptyState({
 function PharmacyDashboardPageContent() {
   const { profile: pharmacyProfile, isLoading: isProfileLoading } =
     usePharmacyProfile();
+
   const [selectedYear, setSelectedYear] = useState(String(CURRENT_YEAR));
   const [selectedMonth, setSelectedMonth] = useState<SalesPeriodMonth>('all');
+
   const [selectedSalesYear, setSelectedSalesYear] = useState(
     String(CURRENT_YEAR)
   );
+
   const [selectedSalesMonth, setSelectedSalesMonth] =
     useState<SalesPeriodMonth>('all');
+
   const [salesData, setSalesData] = useState<OrderSalesStatistics>(
     DEFAULT_ORDER_SALES_STATISTICS
   );
+
   const [isSalesLoading, setIsSalesLoading] = useState(true);
   const [isSalesUnavailable, setIsSalesUnavailable] = useState(false);
+
   const [dashboardSnapshot, setDashboardSnapshot] = useState<DashboardSnapshot>(
     {
       requestKey: null,

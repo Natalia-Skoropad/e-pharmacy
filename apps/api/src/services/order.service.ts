@@ -1928,6 +1928,10 @@ export async function updateOrderStatusService(
       }
       const set: Record<string, unknown> = { status: input.status };
 
+      if (input.status === 'successful') {
+        set.successfulAt = changedAt;
+      }
+
       if (input.status === 'rejected') {
         set.rejectionReason = input.rejectionReason;
         set.rejectedAt = changedAt;
@@ -2224,13 +2228,15 @@ export async function getOrderSalesStatisticsService(
     };
   }
 
+  const successfulAtRange = {
+    $gte: getStartOfDay(dateFrom),
+    $lte: getEndOfDay(dateTo),
+  };
+
   const matchFilter: Record<string, unknown> = {
     pharmacyId,
     status: 'successful',
-    createdAt: {
-      $gte: getStartOfDay(dateFrom),
-      $lte: getEndOfDay(dateTo),
-    },
+    $or: [{ successfulAt: successfulAtRange }, { successfulAt: null }],
   };
 
   if (query.productId) {
@@ -2239,6 +2245,41 @@ export async function getOrderSalesStatisticsService(
 
   const rows = await Order.aggregate<OrderSalesAggregationRow>([
     { $match: matchFilter },
+    {
+      $set: {
+        _salesSuccessfulAt: {
+          $ifNull: [
+            '$successfulAt',
+            {
+              $let: {
+                vars: {
+                  successfulHistory: {
+                    $filter: {
+                      input: { $ifNull: ['$statusHistory', []] },
+                      as: 'history',
+                      cond: { $eq: ['$$history.status', 'successful'] },
+                    },
+                  },
+                },
+                in: {
+                  $arrayElemAt: [
+                    {
+                      $map: {
+                        input: '$$successfulHistory',
+                        as: 'history',
+                        in: '$$history.changedAt',
+                      },
+                    },
+                    -1,
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      },
+    },
+    { $match: { _salesSuccessfulAt: successfulAtRange } },
     { $unwind: '$items' },
     {
       $match: query.productId
@@ -2250,7 +2291,7 @@ export async function getOrderSalesStatisticsService(
         _id: {
           period: {
             $dateToString: {
-              date: '$createdAt',
+              date: '$_salesSuccessfulAt',
               format: groupBy === 'day' ? '%Y-%m-%d' : '%Y-%m',
               timezone: 'UTC',
             },

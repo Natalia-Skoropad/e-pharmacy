@@ -280,6 +280,7 @@ const orderSchema = new Schema<OrderEntity>(
       default: undefined,
     },
 
+    successfulAt: { type: Date, default: undefined },
     rejectedAt: { type: Date, default: undefined },
     rejectedBy: {
       type: Schema.Types.ObjectId,
@@ -317,6 +318,7 @@ const orderSchema = new Schema<OrderEntity>(
 
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ pharmacyId: 1, createdAt: -1 });
+orderSchema.index({ pharmacyId: 1, status: 1, successfulAt: -1 });
 orderSchema.index({ pharmacyId: 1, userId: 1, status: 1, createdAt: -1 });
 
 orderSchema.index(

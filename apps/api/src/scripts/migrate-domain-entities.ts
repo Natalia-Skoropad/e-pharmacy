@@ -435,6 +435,14 @@ async function migrate(): Promise<void> {
           },
         ];
 
+    const successfulHistoryEntry = [...statusHistory]
+      .reverse()
+      .find((entry) => entry.status === 'successful');
+    const successfulAt =
+      order.status === 'successful'
+        ? (order.successfulAt ?? successfulHistoryEntry?.changedAt)
+        : undefined;
+
     await orders.updateOne(
       { _id: order._id },
       {
@@ -443,6 +451,7 @@ async function migrate(): Promise<void> {
           currency: order.currency ?? '₴',
           delivery,
           statusHistory,
+          ...(successfulAt ? { successfulAt } : {}),
         },
         $unset: { deliveryMethod: '', deliveryDetails: '' },
       }

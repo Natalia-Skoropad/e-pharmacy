@@ -41,10 +41,13 @@ function WorkingHoursInput({
   const errorId = `${id}-error`;
   const hintId = hint ? `${id}-hint` : undefined;
   const hasError = Boolean(isTouched && error);
+
   const describedBy =
     [hintId, hasError ? errorId : undefined].filter(Boolean).join(' ') ||
     undefined;
+
   const lastEmittedValueRef = useRef<string | null>(null);
+
   const [currentValue, setCurrentValue] = useState<WorkingHoursValue>(() =>
     parseWorkingHoursValue(value)
   );

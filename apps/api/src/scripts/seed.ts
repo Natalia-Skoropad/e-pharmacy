@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-
 import mongoose, { Types } from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
@@ -1474,6 +1473,9 @@ async function seedActivePharmacyOrder(): Promise<number> {
             unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
           },
         ],
+        ...(config.status === 'successful'
+          ? { successfulAt: config.statusChangedAt }
+          : {}),
         ...(config.status === 'rejected'
           ? {
               rejectionReason:
@@ -2409,6 +2411,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
           unitPrice: item.unitPrice,
         })),
 
+        ...(status === 'successful' ? { successfulAt: finalChangedAt } : {}),
         ...(status === 'rejected'
           ? {
               rejectionReason:
@@ -2894,6 +2897,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       delivery: { method: 'pickup' },
       comment: `Walk-in counter purchase ${index + 1}.`,
       status: 'successful',
+      successfulAt: completedAt,
       createdByType: 'manager',
       statusHistory: [
         {
@@ -3707,11 +3711,10 @@ const PRODUCT_REQUEST_SEED_ATTACHMENT_SIZE = Buffer.byteLength(
   PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
   'utf8'
 );
-const PRODUCT_REQUEST_SEED_ATTACHMENT_DATA_URL =
-  `data:application/pdf;base64,${Buffer.from(
-    PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
-    'utf8'
-  ).toString('base64')}`;
+const PRODUCT_REQUEST_SEED_ATTACHMENT_DATA_URL = `data:application/pdf;base64,${Buffer.from(
+  PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
+  'utf8'
+).toString('base64')}`;
 
 //===============================================================
 

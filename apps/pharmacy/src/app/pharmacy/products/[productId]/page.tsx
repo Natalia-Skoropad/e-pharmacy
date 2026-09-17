@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
-import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
-import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
-
 import {
   isOwnProductsFilterSegment,
   parseOwnProductsSegments,
 } from '@/lib/products/own-product-paths';
+
+import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
+import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
 
 //===================================================================
 

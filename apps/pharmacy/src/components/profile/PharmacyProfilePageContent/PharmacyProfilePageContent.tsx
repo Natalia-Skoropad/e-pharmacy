@@ -132,7 +132,6 @@ import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
-
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
 
@@ -355,6 +354,7 @@ function PendingModerationBox({
         <h3>{title}</h3>
         <StatusBadge {...PHARMACY_STATUS_PRESENTATION.on_moderation} />
       </div>
+
       <dl className={css.pendingList}>
         {visibleItems.map((item) => (
           <div key={item.label}>
@@ -426,6 +426,7 @@ async function buildDocumentsPayload(
     const rawDataUrl = await readFileAsDataUrl(file.file);
     const base64Payload = rawDataUrl.slice(rawDataUrl.indexOf(',') + 1);
     const dataUrl = `data:${metadata.type};base64,${base64Payload}`;
+
     const uploaded = await uploadMyPharmacyDocument({
       ...metadata,
       dataUrl,
@@ -510,6 +511,7 @@ function PharmacyProfilePageContent() {
     identity !== null && profileSnapshot?.identity === identity;
 
   const profile = hasCurrentProfile ? profileSnapshot.profile : null;
+
   const isProfileLoading =
     isBootstrapping ||
     isSummaryLoading ||
@@ -600,16 +602,20 @@ function PharmacyProfilePage({
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [commentsTotal, setCommentsTotal] = useState(0);
+
   const [visibleSessionsCount, setVisibleSessionsCount] = useState(
     INITIAL_VISIBLE_SESSIONS_COUNT
   );
+
   const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
   const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
     createOwnerInitialValues(user)
   );
+
   const [initialOwnerValues, setInitialOwnerValues] =
     useState<DataProfileFormValues>(() => createOwnerInitialValues(user));
+
   const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>(
     {}
   );
@@ -628,9 +634,11 @@ function PharmacyProfilePage({
   const [ownerPictureUrl, setOwnerPictureUrl] = useState<string | null>(
     user.pictureUrl ?? null
   );
+
   const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
     pharmacy.imageUrl ?? null
   );
+
   const [initialPharmacyPictureUrl, setInitialPharmacyPictureUrl] = useState<
     string | null
   >(pharmacy.imageUrl ?? null);
@@ -644,6 +652,7 @@ function PharmacyProfilePage({
     useState<PharmacyContactFormValues>(() =>
       createPharmacyInitialValues(profileUserDefaults, pharmacy)
     );
+
   const [pharmacyTouched, setPharmacyTouched] =
     useState<PharmacyContactTouchedFields>({});
 
@@ -653,6 +662,7 @@ function PharmacyProfilePage({
 
   const [initialAboutValues, setInitialAboutValues] =
     useState<PharmacyAboutFormValues>(() => createAboutInitialValues(pharmacy));
+
   const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>(
     {}
   );
@@ -660,19 +670,23 @@ function PharmacyProfilePage({
   const [paymentValues, setPaymentValues] = useState<PharmacyPaymentFormValues>(
     () => createPaymentInitialValues(profileUserDefaults, pharmacy)
   );
+
   const [initialPaymentValues, setInitialPaymentValues] =
     useState<PharmacyPaymentFormValues>(() =>
       createPaymentInitialValues(profileUserDefaults, pharmacy)
     );
+
   const [paymentTouched, setPaymentTouched] =
     useState<PharmacyPaymentTouchedFields>({});
 
   const [documentValues, setDocumentValues] = useState<BrowserUploadFile[]>(
     () => createDocumentValues(pharmacy.documents)
   );
+
   const [initialDocumentValues, setInitialDocumentValues] = useState<
     BrowserUploadFile[]
   >(() => createDocumentValues(pharmacy.documents));
+
   const [documentsTouched, setDocumentsTouched] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
 
@@ -683,9 +697,11 @@ function PharmacyProfilePage({
   const [isPharmacySaving, setIsPharmacySaving] = useState(false);
   const [isDocumentsSaving, setIsDocumentsSaving] = useState(false);
   const [isSendingVerification, setIsSendingVerification] = useState(false);
+
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
     null
   );
+
   const ownerMutationInFlightRef = useRef(false);
   const passwordMutationInFlightRef = useRef(false);
   const pharmacyMutationInFlightRef = useRef(false);
@@ -744,10 +760,12 @@ function PharmacyProfilePage({
     () => validateDataProfileForm(ownerValues),
     [ownerValues]
   );
+
   const passwordErrors = useMemo(
     () => validateChangePasswordForm(passwordValues),
     [passwordValues]
   );
+
   const pharmacyStatus = pharmacy.status;
   const pharmacyValidationMode: PharmacyValidationMode =
     pharmacyStatus === 'new' ? 'draft' : 'verification';
@@ -756,22 +774,27 @@ function PharmacyProfilePage({
     () => validatePharmacyContactForm(pharmacyValues, pharmacyValidationMode),
     [pharmacyValidationMode, pharmacyValues]
   );
+
   const pharmacyVerificationErrors = useMemo(
     () => validatePharmacyContactForm(pharmacyValues, 'verification'),
     [pharmacyValues]
   );
+
   const aboutErrors = useMemo(
     () => validatePharmacyAboutForm(aboutValues, pharmacyValidationMode),
     [aboutValues, pharmacyValidationMode]
   );
+
   const aboutVerificationErrors = useMemo(
     () => validatePharmacyAboutForm(aboutValues, 'verification'),
     [aboutValues]
   );
+
   const paymentErrors = useMemo(
     () => validatePharmacyPaymentForm(paymentValues, pharmacyValidationMode),
     [paymentValues, pharmacyValidationMode]
   );
+
   const paymentVerificationErrors = useMemo(
     () => validatePharmacyPaymentForm(paymentValues, 'verification'),
     [paymentValues]
@@ -781,6 +804,7 @@ function PharmacyProfilePage({
     ownerValues,
     initialOwnerValues
   );
+
   const ownerFormIsValid = isDataProfileFormValid(ownerValues);
   const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
   const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
@@ -813,10 +837,12 @@ function PharmacyProfilePage({
     pharmacy
   );
   const canonicalAboutValues = createAboutInitialValues(pharmacy);
+
   const canonicalPaymentValues = createPaymentInitialValues(
     profileUserDefaults,
     pharmacy
   );
+
   const canonicalDocumentValues = createDocumentValues(pharmacy.documents);
   const canonicalPharmacyPictureUrl = pharmacy.imageUrl ?? null;
 
@@ -824,18 +850,22 @@ function PharmacyProfilePage({
     canonicalPharmacyValues,
     initialPharmacyValues
   );
+
   const aboutCanonicalChanged = isPharmacyAboutFormDirty(
     canonicalAboutValues,
     initialAboutValues
   );
+
   const paymentCanonicalChanged = isPharmacyPaymentFormDirty(
     canonicalPaymentValues,
     initialPaymentValues
   );
+
   const documentsCanonicalChanged = !areDocumentValuesEqual(
     canonicalDocumentValues,
     initialDocumentValues
   );
+
   const pharmacyPictureCanonicalChanged =
     canonicalPharmacyPictureUrl !== initialPharmacyPictureUrl;
 
@@ -906,9 +936,11 @@ function PharmacyProfilePage({
 
   const isProfileOwner = pharmacy.membershipRole === 'owner';
   const isProfileReadonly = !isProfileOwner || isReadonlyStatus(pharmacyStatus);
+
   const pharmacyDocumentsError = validatePharmacyDocuments(documentValues, {
     required: true,
   });
+
   const pharmacyDocumentsAreReady =
     !pharmacyDocumentsError && !documentsFormIsDirty;
 
@@ -1181,6 +1213,7 @@ function PharmacyProfilePage({
         ),
         expectedRevision: pharmacy.updatedAt,
       });
+
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
       syncProfile(response.pharmacy);
       setPharmacyValues(nextValues);
@@ -1224,6 +1257,7 @@ function PharmacyProfilePage({
         ),
         expectedRevision: pharmacy.updatedAt,
       });
+
       const nextValues = createAboutInitialValues(response.pharmacy);
       syncProfile(response.pharmacy);
       setAboutValues(nextValues);
@@ -1267,6 +1301,7 @@ function PharmacyProfilePage({
         ),
         expectedRevision: pharmacy.updatedAt,
       });
+
       const nextValues = createPaymentInitialValues(user, response.pharmacy);
       syncProfile(response.pharmacy);
       setPaymentValues(nextValues);
@@ -1340,6 +1375,7 @@ function PharmacyProfilePage({
         ...(await buildDocumentsPayload(documentValues)),
         expectedRevision: pharmacy.updatedAt,
       });
+
       const nextDocumentValues = createDocumentValues(
         response.pharmacy.documents
       );
@@ -1349,6 +1385,7 @@ function PharmacyProfilePage({
       setInitialDocumentValues(nextDocumentValues);
       setDocumentsTouched(false);
       setDocumentsError('');
+
       toast.success(
         response.pharmacy.status === 'on_moderation'
           ? 'Changes sent for moderation.'
@@ -1435,10 +1472,12 @@ function PharmacyProfilePage({
 
     try {
       const payload = await buildModerationPayload();
+
       const response = await submitMyPharmacyModeration({
         changes: payload,
         expectedRevision: pharmacy.updatedAt,
       });
+
       applyPharmacyFormState(response.pharmacy);
       toast.success(response.message);
     } catch (error) {
@@ -1492,6 +1531,7 @@ function PharmacyProfilePage({
       setSessions((current) =>
         current.filter((session) => session.id !== sessionId)
       );
+
       toast.success('Session was revoked.');
     } catch (error) {
       toast.error(getProfileErrorMessage(error, 'Could not revoke session.'));

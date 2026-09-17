@@ -131,6 +131,7 @@ export type OrderEntity = {
   statusHistory: OrderStatusHistoryItem[];
   activityHistory?: OrderActivityHistoryItem[];
   rejectionReason?: string;
+  successfulAt?: Date;
   rejectedAt?: Date;
   rejectedBy?: Types.ObjectId;
   orderNumber: string;
