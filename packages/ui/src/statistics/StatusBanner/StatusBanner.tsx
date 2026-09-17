@@ -14,6 +14,7 @@ export type StatusBannerProps = Readonly<{
   label?: string;
   className?: string;
   meta?: ReactNode;
+  inlineMeta?: boolean;
 }>;
 
 //===================================================================
@@ -25,9 +26,17 @@ export function StatusBanner({
   label,
   className,
   meta,
+  inlineMeta = false,
 }: StatusBannerProps) {
   return (
-    <section className={clsx(css.banner, css[tone], className)}>
+    <section
+      className={clsx(
+        css.banner,
+        css[tone],
+        inlineMeta && css.inlineMeta,
+        className
+      )}
+    >
       <div className={css.header}>
         <h2 className={css.title}>{title}</h2>
         {label ? <StatusBadge tone={tone} label={label} /> : null}

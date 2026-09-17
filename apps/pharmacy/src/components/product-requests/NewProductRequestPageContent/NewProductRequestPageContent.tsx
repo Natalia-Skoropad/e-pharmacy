@@ -966,6 +966,7 @@ function NewProductRequestPageContent({
             {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
             title={statusMessage.title}
             message={statusMessage.message}
+            inlineMeta
             meta={
               <span className={css.statusUpdatedAt}>
                 <Clock3 size={16} aria-hidden="true" />
@@ -1455,6 +1456,13 @@ function NewProductRequestPageContent({
                       ? css.historyInfo
                       : undefined;
 
+              const description =
+                entry.status === 'rejected' &&
+                request.rejectionReason &&
+                entry.description.trim() === request.rejectionReason.trim()
+                  ? 'Admin rejected the request because the submitted information needs correction.'
+                  : entry.description;
+
               return (
                 <li key={entry.id} className={toneClassName}>
                   <History size={18} aria-hidden="true" />
@@ -1478,7 +1486,13 @@ function NewProductRequestPageContent({
                       />
                     </div>
 
-                    <p>{entry.description}</p>
+                    <p>{description}</p>
+
+                    {entry.status === 'rejected' && request.rejectionReason ? (
+                      <p className={css.historyRejectionReason}>
+                        <b>Rejection reason:</b> {request.rejectionReason}
+                      </p>
+                    ) : null}
                   </div>
                 </li>
               );

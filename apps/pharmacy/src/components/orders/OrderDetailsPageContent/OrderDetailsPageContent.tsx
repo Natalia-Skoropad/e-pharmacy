@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  CircleCheckBig,
   CircleMinus,
+  CirclePlay,
   CirclePlus,
+  CircleX,
   Clock,
   History,
   Info,
@@ -230,6 +233,37 @@ function getStatusActionLabel(status: PendingStatusChange['status']) {
 
 //===================================================================
 
+function getOrderStatusSummary(status: OrderStatus) {
+  if (status === 'new') {
+    return {
+      title: 'This order is new',
+      message: 'Take this order into work to edit it.',
+    };
+  }
+
+  if (status === 'in_progress') {
+    return {
+      title: 'This order is in progress',
+      message:
+        'Review and update the order details before confirming or rejecting it.',
+    };
+  }
+
+  if (status === 'successful') {
+    return {
+      title: 'This order was completed successfully',
+      message: 'This order has a final status and can no longer be edited.',
+    };
+  }
+
+  return {
+    title: 'This order was rejected',
+    message: 'This order has a final status and can no longer be edited.',
+  };
+}
+
+//===================================================================
+
 function getStatusModalText(status: PendingStatusChange['status']) {
   if (status === 'in_progress') {
     return {
@@ -324,7 +358,7 @@ function OrderClientBadge({
         src={getProductImageSrc(photoUrl ?? undefined)}
         alt={`${name} photo`}
         fallback={formatInitials(name, 'C')}
-        size={42}
+        size={36}
       />
       <span>
         <small>Selected client</small>
@@ -1397,7 +1431,7 @@ function OrderDetailsPageContent({
       clients.map((client) => ({
         value: client.id,
         label: client.isDefault
-          ? `${client.name} — default client`
+          ? `${client.name} – default client`
           : client.name,
         searchText: [client.id, client.email, client.phone, client.address]
           .filter(Boolean)
@@ -2084,74 +2118,79 @@ function OrderDetailsPageContent({
                 titleId="order-details-page-title"
                 icon={<ShoppingBag size={23} aria-hidden="true" />}
               />
-              {order.status !== 'new' ? (
-                <p className={css.metaText}>
-                  Created on {formatDateTime(order.orderDate) ?? '—'}
-                </p>
-              ) : null}
             </div>
 
-            <div className={css.clientStatusRow}>
-              {order.clientId ? (
-                <OrderClientBadge
-                  clientId={order.clientId}
-                  name={order.client || 'Client'}
-                  photoUrl={order.clientPhotoUrl}
-                />
+            <div
+              className={`${css.clientStatusRow} ${
+                statusActions.length > 0
+                  ? css.clientStatusRowWithActions
+                  : css.clientStatusRowClientOnly
+              }`}
+            >
+              {statusActions.length > 0 ? (
+                <div className={css.statusActions}>
+                  {statusActions.map((status) => (
+                    <Button
+                      key={status}
+                      type="button"
+                      size="sm"
+                      variant={status === 'rejected' ? 'secondary' : 'primary'}
+                      className={
+                        status === 'rejected' ? css.rejectButton : undefined
+                      }
+                      iconLeft={
+                        status === 'in_progress' ? (
+                          <CirclePlay size={16} aria-hidden="true" />
+                        ) : status === 'successful' ? (
+                          <CircleCheckBig size={16} aria-hidden="true" />
+                        ) : (
+                          <CircleX size={16} aria-hidden="true" />
+                        )
+                      }
+                      disabled={isUpdatingStatus || isUpdatingOrder}
+                      onClick={() => handleStatusClick(status)}
+                    >
+                      {getStatusActionLabel(status)}
+                    </Button>
+                  ))}
+                </div>
               ) : null}
 
-              <div
-                className={`${css.statusActions} ${
-                  order.status === 'in_progress'
-                    ? css.statusActionsInProgress
-                    : ''
-                }`}
-              >
-                {order.status !== 'new' ? (
-                  <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
-                ) : null}
-
-                {statusActions.map((status) => (
-                  <Button
-                    key={status}
-                    type="button"
-                    size="sm"
-                    variant={status === 'rejected' ? 'secondary' : 'primary'}
-                    className={
-                      status === 'rejected' ? css.rejectButton : undefined
-                    }
-                    disabled={isUpdatingStatus || isUpdatingOrder}
-                    onClick={() => handleStatusClick(status)}
-                  >
-                    {getStatusActionLabel(status)}
-                  </Button>
-                ))}
-              </div>
+              {order.clientId ? (
+                <div className={css.detailsClientBadge}>
+                  <OrderClientBadge
+                    clientId={order.clientId}
+                    name={order.client || 'Client'}
+                    photoUrl={order.clientPhotoUrl}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
         )}
 
         {isCreateMode ? (
           <StatusBanner
-            tone="warning"
+            tone="neutral"
             label="Draft"
             title="This is an unsaved order draft"
             message="Saving it reserves the selected products and immediately moves the order to In progress."
             className={css.statusBanner}
           />
-        ) : order.status === 'new' ? (
+        ) : (
           <StatusBanner
-            {...ORDER_STATUS_PRESENTATION.new}
-            title="This order is new"
-            message="Take this order into work to edit it."
+            {...ORDER_STATUS_PRESENTATION[order.status]}
+            {...getOrderStatusSummary(order.status)}
+            inlineMeta
             meta={
               <span className={css.orderHeaderMeta}>
                 <Clock size={16} aria-hidden="true" />
                 Created {formatDateTime(order.orderDate) ?? '—'}
               </span>
             }
+            className={css.statusBanner}
           />
-        ) : null}
+        )}
       </section>
 
       <section className={css.contentCard}>
@@ -2165,14 +2204,6 @@ function OrderDetailsPageContent({
             onChange={setActiveTab}
           />
         </div>
-
-        {!isCreateMode &&
-        !isEditable &&
-        (order.status === 'successful' || order.status === 'rejected') ? (
-          <p className={css.lockNotice}>
-            This order has a final status and can no longer be edited.
-          </p>
-        ) : null}
 
         <div className={css.tabPanel}>
           {activeTab === 'products' ? (

@@ -181,6 +181,15 @@
   color: var(--color-error);
 }
 
+.statusReasonActive {
+  background-color: var(--color-success-soft);
+  border-color: var(--color-success-border);
+}
+
+.statusReasonActive strong {
+  color: var(--color-success);
+}
+
 .statusReason p {
   line-height: var(--lh-base);
   overflow-wrap: anywhere;

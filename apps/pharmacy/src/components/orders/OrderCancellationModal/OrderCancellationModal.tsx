@@ -84,6 +84,7 @@ function OrderCancellationModal({
           required
           value={value}
           error={fieldError}
+          errorClassName={css.commentError}
           isTouched
           maxLength={ORDER_REJECTION_REASON_MAX_LENGTH}
           disabled={isLoading}

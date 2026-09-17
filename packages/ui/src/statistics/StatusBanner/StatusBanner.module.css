@@ -1,6 +1,6 @@
 .banner {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   padding: 18px;
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
@@ -62,4 +62,32 @@
   color: var(--color-status-beauty);
   background-color: var(--color-status-beauty-soft);
   border-color: var(--color-status-beauty-border);
+}
+
+.inlineMeta .meta {
+  justify-content: flex-start;
+}
+
+@media only screen and (min-width: 768px) {
+  .inlineMeta {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 18px;
+    align-items: center;
+  }
+
+  .inlineMeta .header {
+    grid-column: 1 / -1;
+  }
+
+  .inlineMeta .message {
+    grid-column: 1;
+    align-self: center;
+  }
+
+  .inlineMeta .meta {
+    grid-column: 2;
+    align-self: center;
+    justify-content: flex-end;
+    text-align: right;
+  }
 }

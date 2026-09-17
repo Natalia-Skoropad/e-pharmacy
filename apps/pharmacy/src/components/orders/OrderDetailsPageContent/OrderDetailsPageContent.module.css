@@ -17,7 +17,7 @@
 }
 
 .statusBanner {
-  margin-top: 15px;
+  margin-top: 18px;
 }
 
 .headerGrid {
@@ -62,15 +62,6 @@
 
 .tabsWrap {
   margin-bottom: 18px;
-}
-
-.lockNotice {
-  padding: 14px 16px;
-  margin-bottom: 18px;
-  color: var(--color-text-secondary);
-  background-color: var(--color-accent-light);
-  border: 1px solid var(--color-accent-border-soft);
-  border-radius: var(--radius-lg);
 }
 
 .tabPanel {
@@ -1077,26 +1068,6 @@
   overflow-wrap: anywhere;
 }
 
-.statusActions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  justify-content: stretch;
-}
-
-.statusActions > * {
-  width: 100%;
-  min-width: 0;
-}
-
-.statusActions > :first-child {
-  justify-self: start;
-  width: auto;
-}
-
-.statusActionsInProgress > :first-child {
-  grid-column: 1 / -1;
-}
-
 .historyHeader {
   display: flex;
   flex-wrap: wrap;
@@ -1262,45 +1233,9 @@
   color: var(--color-error) !important;
 }
 
-.clientStatusRow {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-}
-
 .orderClientLink {
   min-width: 0;
   justify-self: start;
-}
-
-.statusActions,
-.statusActionsInProgress {
-  display: contents;
-}
-
-.statusActions > :first-child,
-.statusActionsInProgress > :first-child {
-  grid-column: 2;
-  grid-row: 1;
-  justify-self: end;
-  width: auto;
-}
-
-.statusActions > button {
-  grid-row: 2;
-  width: 100%;
-  min-width: 0;
-}
-
-.statusActions > button:first-of-type {
-  grid-column: 1;
-}
-
-.statusActions > button:last-of-type {
-  grid-column: 2;
-}
-
-.statusActions > button:only-of-type {
-  grid-column: 1 / -1;
 }
 
 .selectedClientPreview {
@@ -1592,28 +1527,92 @@
   width: 100%;
 }
 
+.detailsHeader {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.clientStatusRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.clientStatusRowWithActions {
+  grid-template-areas:
+    'actions'
+    'client';
+}
+
+.clientStatusRowClientOnly {
+  grid-template-areas: 'client';
+}
+
+.detailsClientBadge {
+  grid-area: client;
+  min-width: 0;
+}
+
+.statusActions {
+  display: grid;
+  grid-area: actions;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.statusActions > * {
+  width: 100%;
+  min-width: 0;
+}
+
+.selectedClientPreview {
+  min-height: 48px;
+  padding-block: 5px;
+}
+
 @media only screen and (min-width: 768px) {
   .detailsHeader {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
     align-items: start;
   }
 
   .clientStatusRow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 16px;
     align-items: center;
-    justify-content: flex-end;
   }
 
-  .statusActions,
-  .statusActionsInProgress {
+  .clientStatusRowWithActions {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'client actions';
+  }
+
+  .clientStatusRowClientOnly {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'client';
+  }
+
+  .detailsClientBadge {
+    justify-self: start;
+  }
+
+  .detailsClientBadge .selectedClientPreview {
+    width: fit-content;
+    justify-self: start;
+    justify-content: flex-start;
+  }
+
+  .statusActions {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     align-items: center;
     justify-content: flex-end;
+    width: auto;
   }
 
   .statusActions > * {
@@ -1622,11 +1621,11 @@
 
   .itemFooter {
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
+    align-items: center;
   }
 
   .itemActions {
-    align-items: flex-start;
+    align-items: center;
     justify-content: flex-end;
   }
 
@@ -1647,6 +1646,8 @@
     align-self: end;
     justify-self: end;
     width: auto;
+    min-height: 48px;
+    max-height: 48px;
     max-width: 280px;
     justify-content: flex-start;
   }
@@ -1655,6 +1656,8 @@
     align-self: end;
     width: auto;
     min-width: 132px;
+    min-height: 48px;
+    max-height: 48px;
   }
 
   .methodHeader .tabSaveButton {

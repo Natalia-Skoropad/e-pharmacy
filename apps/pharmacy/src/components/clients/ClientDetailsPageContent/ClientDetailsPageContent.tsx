@@ -1127,6 +1127,16 @@ function ClientDetailsPageContentState({
                     <strong>Inactive reason</strong>
                     <p>{client.statusReason}</p>
                   </div>
+                ) : client.status === 'active' ? (
+                  <div
+                    className={`${css.statusReason} ${css.statusReasonActive}`}
+                  >
+                    <strong>Active client</strong>
+                    <p>
+                      The client account is active and can place orders without
+                      additional account restrictions.
+                    </p>
+                  </div>
                 ) : null}
               </section>
             </div>
