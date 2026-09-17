@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BarChart3, History, PackageSearch } from 'lucide-react';
+import { BarChart3, History, PackageSearch, UsersRound } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
@@ -1772,19 +1772,25 @@ function AllProductDetailsPageContent({
                                 label="How does the stock movement table work?"
                                 title="How stock movement works"
                                 icon={<History size={20} strokeWidth={2} />}
-                              >
-                                Stock arrivals increase physical and available
-                                quantity.
-                                <br />
-                                <br />
-                                New and In progress orders reserve available
-                                units.
-                                <br />
-                                <br />
-                                Rejected orders release their reserve, while
-                                Successful orders write reserved units off the
-                                physical stock.
-                              </InfoTooltip>
+                                escapeOverflow
+                                items={[
+                                  {
+                                    title: 'Stock arrivals',
+                                    description:
+                                      'Increase both physical and available quantity.',
+                                  },
+                                  {
+                                    title: 'Order reservations',
+                                    description:
+                                      'New and In progress orders reserve available units.',
+                                  },
+                                  {
+                                    title: 'Final order status',
+                                    description:
+                                      'Rejected orders release their reserve, while Successful orders write reserved units off physical stock.',
+                                  },
+                                ]}
+                              />
                             </h3>
 
                             <div className={css.searchGrid}>
@@ -1926,27 +1932,37 @@ function AllProductDetailsPageContent({
                                 }}
                               />
 
-                              <div className={css.searchField}>
-                                <SearchInput
-                                  id="related-orders-client-search"
-                                  label="Client search"
-                                  value={relatedClientSearch}
-                                  placeholder="Client"
-                                  isActive={Boolean(relatedClientSearch)}
-                                  describedBy="related-orders-client-search-hint"
-                                  onChange={(value) => {
-                                    setRelatedClientSearch(value);
-                                    setRelatedCurrentPage(1);
-                                  }}
-                                />
-                                <p
-                                  className={css.searchHint}
-                                  id="related-orders-client-search-hint"
-                                >
-                                  Search by client name, ID, email, phone
-                                  number, or address.
-                                </p>
-                              </div>
+                              <SearchInput
+                                id="related-orders-client-search"
+                                label="Client search"
+                                labelAccessory={
+                                  <InfoTooltip
+                                    label="How can I search for a client?"
+                                    title="Client search"
+                                    icon={
+                                      <UsersRound
+                                        size={20}
+                                        aria-hidden="true"
+                                      />
+                                    }
+                                    items={[
+                                      {
+                                        title: 'Search fields',
+                                        description:
+                                          'Search by client name, ID, email, phone number, or address.',
+                                      },
+                                    ]}
+                                    escapeOverflow
+                                  />
+                                }
+                                value={relatedClientSearch}
+                                placeholder="Client"
+                                isActive={Boolean(relatedClientSearch)}
+                                onChange={(value) => {
+                                  setRelatedClientSearch(value);
+                                  setRelatedCurrentPage(1);
+                                }}
+                              />
 
                               <div className={css.searchAction}>
                                 <FiltersButton
@@ -1993,7 +2009,11 @@ function AllProductDetailsPageContent({
                                 minWidth={0}
                                 labels={{
                                   empty:
-                                    'There are no orders with this product yet.',
+                                    relatedActiveFiltersCount > 0 ||
+                                    relatedOrderNumberSearch.trim() ||
+                                    relatedClientSearch.trim()
+                                      ? 'No related orders found for the selected search or filters.'
+                                      : 'There are no orders with this product yet.',
                                 }}
                               />
 

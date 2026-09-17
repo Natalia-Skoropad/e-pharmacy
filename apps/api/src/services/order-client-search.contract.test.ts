@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
+import { ordersQuerySchema } from '../schemas/order.schema';
+
 //===============================================================
 
 const servicePath = resolve(process.cwd(), 'src/services/order.service.ts');
@@ -47,4 +49,17 @@ test('order client search covers historical and current client identity fields',
     source,
     /filter\['delivery\.details\.recipientName'\] = createSafeRegExp/
   );
+});
+
+//===============================================================
+
+test('order client search accepts email and phone syntax', () => {
+  for (const client of [
+    'client@example.com',
+    '+380672221110',
+    '+38 (067) 222-11-10',
+  ]) {
+    const result = ordersQuerySchema.safeParse({ client });
+    assert.equal(result.success, true, `Expected ${client} to be searchable`);
+  }
 });

@@ -32,6 +32,7 @@ import {
 
 const orderRouteIdSchema = z.string().trim().min(1, 'ID is required');
 const ordersPerPageSchema = createPerPageSchema({ defaultValue: 20, max: 200 });
+const orderClientSearchSchema = z.string().trim().max(80).optional();
 
 const orderCommentsPerPageSchema = createPerPageSchema({
   defaultValue: 5,
@@ -48,7 +49,7 @@ export const ordersQuerySchema = z.preprocess(
       perPage: ordersPerPageSchema,
       dateFrom: dateQuerySchema,
       dateTo: dateQuerySchema,
-      client: sharedSearchSchema,
+      client: orderClientSearchSchema,
       pharmacy: sharedSearchSchema,
       clientId: mongoIdSchema.optional(),
       orderNumber: sharedSearchSchema,

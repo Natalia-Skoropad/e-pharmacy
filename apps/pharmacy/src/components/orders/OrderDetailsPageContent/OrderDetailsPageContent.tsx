@@ -13,12 +13,12 @@ import {
   MapPin,
   Mail,
   Phone,
+  Save,
   MessageSquareText,
   ShoppingBag,
   ShoppingCart,
   Trash2,
   Truck,
-  UserRound,
   UsersRound,
   Wallet,
 } from 'lucide-react';
@@ -299,6 +299,39 @@ function getOrderItemsPayload(items: PharmacyOrderItem[]) {
 
 function formatAvailableItems(quantity: number): string {
   return quantity === 1 ? '1 item available' : `${quantity} items available`;
+}
+
+//===================================================================
+
+function OrderClientBadge({
+  clientId,
+  name,
+  photoUrl,
+}: Readonly<{
+  clientId: string;
+  name: string;
+  photoUrl?: string | null;
+}>) {
+  return (
+    <Link
+      className={css.selectedClientPreview}
+      href={getPharmacyClientPath(clientId)}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Open ${name} client details in a new tab`}
+    >
+      <TableImagePreview
+        src={getProductImageSrc(photoUrl ?? undefined)}
+        alt={`${name} photo`}
+        fallback={formatInitials(name, 'C')}
+        size={42}
+      />
+      <span>
+        <small>Selected client</small>
+        <strong>{name}</strong>
+      </span>
+    </Link>
+  );
 }
 
 //===================================================================
@@ -953,13 +986,18 @@ function HistoryTab({
               <li key={historyEntry.id} className={toneClassName}>
                 <History size={18} aria-hidden="true" />
                 <div className={css.historyContent}>
-                  <strong>
-                    {ORDER_STATUS_PRESENTATION[entry.status].label}
-                  </strong>
+                  <div className={css.historyTopRow}>
+                    <div className={css.historyMeta}>
+                      <strong>
+                        {ORDER_STATUS_PRESENTATION[entry.status].label}
+                      </strong>
+                      <time dateTime={entry.changedAt}>
+                        {formatDateTime(entry.changedAt) ?? '—'}
+                      </time>
+                    </div>
 
-                  <time dateTime={entry.changedAt}>
-                    {formatDateTime(entry.changedAt) ?? '—'}
-                  </time>
+                    <StatusBadge {...ORDER_STATUS_PRESENTATION[entry.status]} />
+                  </div>
 
                   {entry.comment ? <p>{entry.comment}</p> : null}
                   {entry.status === 'rejected' && rejectionReason ? (
@@ -997,10 +1035,14 @@ function HistoryTab({
             <li key={historyEntry.id} className={activityToneClassName}>
               <ActivityIcon size={18} aria-hidden="true" />
               <div className={css.historyContent}>
-                <strong>{getOrderActivityLabel(activity)}</strong>
-                <time dateTime={activity.occurredAt}>
-                  {formatDateTime(activity.occurredAt) ?? '—'}
-                </time>
+                <div className={css.historyTopRow}>
+                  <div className={css.historyMeta}>
+                    <strong>{getOrderActivityLabel(activity)}</strong>
+                    <time dateTime={activity.occurredAt}>
+                      {formatDateTime(activity.occurredAt) ?? '—'}
+                    </time>
+                  </div>
+                </div>
                 <p>
                   <b>{activity.productName}</b>: {activity.previousQuantity} →{' '}
                   {activity.quantity}{' '}
@@ -1990,53 +2032,43 @@ function OrderDetailsPageContent({
                     label="About client selection"
                     title="Client selection"
                     icon={<UsersRound size={20} aria-hidden="true" />}
-                  >
-                    Search active clients by name, ID, email, phone number, or
-                    address. The default walk-in client is selected
-                    automatically.
-                  </InfoTooltip>
+                    items={[
+                      {
+                        title: 'Search active clients',
+                        description:
+                          'Search by client name, ID, email, phone number, or address.',
+                      },
+                      {
+                        title: 'Walk-in client',
+                        description:
+                          'The default walk-in client is selected automatically when you start a new order.',
+                      },
+                    ]}
+                  />
                 }
                 value={selectedClientId}
                 options={clientOptions}
                 placeholder="Search active client"
                 emptyMessage="No active clients found"
                 isActive={Boolean(selectedClientId)}
-                describedBy="manager-order-client-hint"
                 disabled={isCreatingOrder}
                 onChange={handleClientChange}
               />
-              <p
-                className={css.clientSearchHint}
-                id="manager-order-client-hint"
-              >
-                Search by client name, ID, email, phone number, or address.
-              </p>
             </div>
 
             {selectedClient ? (
-              <Link
-                className={css.selectedClientPreview}
-                href={getPharmacyClientPath(selectedClient.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Open ${selectedClient.name} client details in a new tab`}
-              >
-                <TableImagePreview
-                  src={getProductImageSrc(selectedClient.photoUrl ?? undefined)}
-                  alt={`${selectedClient.name} photo`}
-                  fallback={formatInitials(selectedClient.name, 'C')}
-                  size={42}
-                />
-                <span>
-                  <small>Selected client</small>
-                  <strong>{selectedClient.name}</strong>
-                </span>
-              </Link>
+              <OrderClientBadge
+                clientId={selectedClient.id}
+                name={selectedClient.name}
+                photoUrl={selectedClient.photoUrl}
+              />
             ) : null}
 
             <Button
               className={css.saveOrderButton}
               type="button"
+              variant="secondary"
+              iconLeft={<Save size={17} aria-hidden="true" />}
               disabled={!selectedClientId || isCreatingOrder}
               isLoading={isCreatingOrder}
               onClick={handleRequestCreateOrder}
@@ -2052,34 +2084,20 @@ function OrderDetailsPageContent({
                 titleId="order-details-page-title"
                 icon={<ShoppingBag size={23} aria-hidden="true" />}
               />
-              <p className={css.metaText}>
-                Created on {formatDateTime(order.orderDate) ?? '—'}
-              </p>
+              {order.status !== 'new' ? (
+                <p className={css.metaText}>
+                  Created on {formatDateTime(order.orderDate) ?? '—'}
+                </p>
+              ) : null}
             </div>
 
             <div className={css.clientStatusRow}>
               {order.clientId ? (
-                <Link
-                  className={css.orderClientLink}
-                  href={getPharmacyClientPath(order.clientId)}
-                >
-                  <TableImagePreview
-                    src={getProductImageSrc(order.clientPhotoUrl ?? undefined)}
-                    alt={`${order.client} photo`}
-                    fallback={
-                      order.client ? (
-                        formatInitials(order.client, 'C')
-                      ) : (
-                        <UserRound size={18} aria-hidden="true" />
-                      )
-                    }
-                    size={38}
-                  />
-                  <span>
-                    <small>Client</small>
-                    <strong>{order.client}</strong>
-                  </span>
-                </Link>
+                <OrderClientBadge
+                  clientId={order.clientId}
+                  name={order.client || 'Client'}
+                  photoUrl={order.clientPhotoUrl}
+                />
               ) : null}
 
               <div
@@ -2089,7 +2107,9 @@ function OrderDetailsPageContent({
                     : ''
                 }`}
               >
-                <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+                {order.status !== 'new' ? (
+                  <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+                ) : null}
 
                 {statusActions.map((status) => (
                   <Button
@@ -2110,6 +2130,28 @@ function OrderDetailsPageContent({
             </div>
           </div>
         )}
+
+        {isCreateMode ? (
+          <StatusBanner
+            tone="warning"
+            label="Draft"
+            title="This is an unsaved order draft"
+            message="Saving it reserves the selected products and immediately moves the order to In progress."
+            className={css.statusBanner}
+          />
+        ) : order.status === 'new' ? (
+          <StatusBanner
+            {...ORDER_STATUS_PRESENTATION.new}
+            title="This order is new"
+            message="Take this order into work to edit it."
+            meta={
+              <span className={css.orderHeaderMeta}>
+                <Clock size={16} aria-hidden="true" />
+                Created {formatDateTime(order.orderDate) ?? '—'}
+              </span>
+            }
+          />
+        ) : null}
       </section>
 
       <section className={css.contentCard}>
@@ -2124,24 +2166,11 @@ function OrderDetailsPageContent({
           />
         </div>
 
-        {!isCreateMode && !isEditable && order.status === 'new' ? (
-          <p className={css.lockNotice}>
-            Take this order into work to edit it.
-          </p>
-        ) : null}
-
         {!isCreateMode &&
         !isEditable &&
         (order.status === 'successful' || order.status === 'rejected') ? (
           <p className={css.lockNotice}>
             This order has a final status and can no longer be edited.
-          </p>
-        ) : null}
-
-        {isCreateMode ? (
-          <p className={css.draftNotice}>
-            This is an unsaved order draft. Saving it reserves the selected
-            products and immediately moves the order to In progress.
           </p>
         ) : null}
 

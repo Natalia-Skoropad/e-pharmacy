@@ -924,10 +924,19 @@ function NewProductRequestPageContent({
                   label="About saving and sending product requests"
                   title="Save or send the request"
                   icon={<FileCheck2 size={20} strokeWidth={2} />}
-                >
-                  A draft remains editable. After sending, Admin starts
-                  reviewing the request and the pharmacy can no longer edit it.
-                </InfoTooltip>
+                  items={[
+                    {
+                      title: 'Save as draft',
+                      description:
+                        'Keep the request editable while you finish checking the product information and files.',
+                    },
+                    {
+                      title: 'Send for moderation',
+                      description:
+                        'Admin starts reviewing the request. After sending, the pharmacy can no longer edit it.',
+                    },
+                  ]}
+                />
               ) : null}
             </span>
           }

@@ -111,6 +111,7 @@ import { getProductImageSrc } from '@/lib/products/product-images';
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
+import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
@@ -496,8 +497,9 @@ function ClientDetailsPageContentState({
   const [ordersError, setOrdersError] = useState('');
   const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
 
-  const [orderStatistics, setOrderStatistics] =
-    useState<OrderStatisticsCounts | null>(null);
+  const [orderStatistics, setOrderStatistics] = useState<OrderStatisticsCounts>(
+    DEFAULT_ORDER_STATISTICS
+  );
 
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<ClientTab>('details');
@@ -599,7 +601,7 @@ function ClientDetailsPageContentState({
     async function loadOrders() {
       setOrdersStatus('loading');
       setOrdersError('');
-      setOrderStatistics(null);
+      setOrderStatistics(DEFAULT_ORDER_STATISTICS);
 
       try {
         const response = await getPharmacyOrders(
@@ -671,7 +673,7 @@ function ClientDetailsPageContentState({
             'Could not load client orders. Please try again.'
           )
         );
-        setOrderStatistics(null);
+        setOrderStatistics(DEFAULT_ORDER_STATISTICS);
         setOrdersStatus('error');
       }
     }
@@ -1021,12 +1023,10 @@ function ClientDetailsPageContentState({
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          {ordersStatus === 'success' && orderStatistics ? (
-            <OrderStatistics
-              counts={orderStatistics}
-              className={css.orderStatistics}
-            />
-          ) : null}
+          <OrderStatistics
+            counts={orderStatistics}
+            className={css.orderStatistics}
+          />
         </div>
       </section>
 
@@ -1240,13 +1240,25 @@ function ClientDetailsPageContentState({
                     label="About purchased products"
                     title="Successful purchases"
                     icon={<PackageCheck size={20} aria-hidden="true" />}
-                  >
-                    Each product appears once across this client’s successful
-                    orders. Purchased quantity and amount are totals across all
-                    successful orders containing the product. First order date
-                    shows the earliest such purchase, and Orders count shows how
-                    many successful orders included it.
-                  </InfoTooltip>
+                    escapeOverflow
+                    items={[
+                      {
+                        title: 'Purchased quantity and amount',
+                        description:
+                          'Totals across all successful orders containing the product.',
+                      },
+                      {
+                        title: 'First order date',
+                        description:
+                          'The earliest successful order in which this product appeared.',
+                      },
+                      {
+                        title: 'Orders count',
+                        description:
+                          'How many successful orders included this product. Each product appears only once in this table.',
+                      },
+                    ]}
+                  />
                 </div>
 
                 <div className={css.searchGrid}>

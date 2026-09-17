@@ -4,6 +4,14 @@
   min-width: 0;
 }
 
+.labelRow {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-self: start;
+  min-width: 0;
+}
+
 .label {
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
@@ -98,7 +106,6 @@
   color: var(--color-text-primary);
   background-color: var(--color-accent-light);
 }
-
 
 .inputWrapDisabled {
   cursor: not-allowed;

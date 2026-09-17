@@ -16,6 +16,10 @@
   box-shadow: var(--shadow-card);
 }
 
+.statusBanner {
+  margin-top: 15px;
+}
+
 .headerGrid {
   display: grid;
   gap: 20px;
@@ -532,6 +536,7 @@
 
 .historyHeader {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: flex-start;
   justify-content: space-between;
@@ -565,7 +570,22 @@
 
 .historyContent {
   display: grid;
-  gap: 4px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.historyTopRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.historyMeta {
+  display: grid;
+  gap: 6px;
   min-width: 0;
 }
 
@@ -579,8 +599,10 @@
 }
 
 .historyContent p {
+  margin: 0;
   color: var(--color-text-secondary);
   line-height: var(--lh-base);
+  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
@@ -1076,17 +1098,19 @@
 }
 
 .historyHeader {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
 .tabCountLabel {
-  width: 100%;
-  max-width: 100%;
-  justify-content: center;
-  white-space: normal;
-  text-align: center;
+  width: auto;
+  max-width: none;
+  justify-content: flex-start;
+  white-space: nowrap;
+  text-align: left;
 }
 
 /* Refined order header and error state */
@@ -1101,6 +1125,20 @@
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+
+.orderHeaderMeta {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-width: 0;
+  font-size: var(--fz-13);
+  color: var(--color-text-secondary);
+}
+
+.orderHeaderMeta svg {
+  flex: 0 0 auto;
+  color: var(--color-accent);
 }
 
 .clientStatusRow {
@@ -1555,6 +1593,43 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .detailsHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .clientStatusRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .statusActions,
+  .statusActionsInProgress {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .statusActions > * {
+    width: auto;
+  }
+
+  .itemFooter {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .itemActions {
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
   .createHeader {
     grid-template-columns: minmax(0, 1fr) auto auto;
     grid-template-areas:

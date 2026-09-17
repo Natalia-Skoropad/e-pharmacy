@@ -1,5 +1,6 @@
 import { Search, X } from 'lucide-react';
 import clsx from 'clsx';
+import type { ReactNode } from 'react';
 
 import css from './SearchInput.module.css';
 
@@ -8,6 +9,7 @@ import css from './SearchInput.module.css';
 export type SearchInputProps = {
   id: string;
   label: string;
+  labelAccessory?: ReactNode;
   value: string;
   placeholder?: string;
   isActive?: boolean;
@@ -24,6 +26,7 @@ export type SearchInputProps = {
 function SearchInput({
   id,
   label,
+  labelAccessory,
   value,
   placeholder,
   isActive = false,
@@ -43,8 +46,13 @@ function SearchInput({
   };
 
   return (
-    <label className={css.field} htmlFor={id}>
-      <span className={css.label}>{label}</span>
+    <div className={css.field}>
+      <span className={css.labelRow}>
+        <label className={css.label} htmlFor={id}>
+          {label}
+        </label>
+        {labelAccessory}
+      </span>
 
       <span
         className={clsx(
@@ -80,7 +88,7 @@ function SearchInput({
           </button>
         ) : null}
       </span>
-    </label>
+    </div>
   );
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, UsersRound } from 'lucide-react';
 
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -16,6 +16,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
@@ -344,20 +345,28 @@ function OrdersPageContent({
             }
           />
 
-          <div className={css.searchField}>
-            <SearchInput
-              id="orders-client-search"
-              label="Client search"
-              value={filters.client}
-              placeholder="Client"
-              isActive={Boolean(filters.client)}
-              describedBy="orders-client-search-hint"
-              onChange={(client) => handleFiltersChange({ ...filters, client })}
-            />
-            <p className={css.searchHint} id="orders-client-search-hint">
-              Search by client name, ID, email, phone number, or address.
-            </p>
-          </div>
+          <SearchInput
+            id="orders-client-search"
+            label="Client search"
+            labelAccessory={
+              <InfoTooltip
+                label="How can I search for a client?"
+                title="Client search"
+                icon={<UsersRound size={20} aria-hidden="true" />}
+                items={[
+                  {
+                    title: 'Search fields',
+                    description:
+                      'Search by client name, ID, email, phone number, or address.',
+                  },
+                ]}
+              />
+            }
+            value={filters.client}
+            placeholder="Client"
+            isActive={Boolean(filters.client)}
+            onChange={(client) => handleFiltersChange({ ...filters, client })}
+          />
 
           <div className={css.searchAction}>
             <FiltersButton
