@@ -23,7 +23,11 @@ import {
 } from '../utils/mongoError';
 
 import { hashPassword } from '../utils/password';
-import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
+
+import {
+  claimRegistrationPharmacyDocuments,
+  reconcileAttachedPharmacyDocumentStorage,
+} from './pharmacy-document.service';
 
 //===============================================================
 
@@ -271,6 +275,13 @@ export async function updatePharmacyStatusByAdminService(
       if (!updated) {
         throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
       }
+
+      await reconcileAttachedPharmacyDocumentStorage(
+        updated._id,
+        updated.documents ?? [],
+        updated.pendingModeration?.documents,
+        session
+      );
 
       if (input.status === PHARMACY_STATUSES.ACTIVE) {
         const defaultClient = await ensureDefaultPharmacyClient(

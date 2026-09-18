@@ -1,5 +1,7 @@
 import { Router } from 'express';
 
+import { USER_ROLES } from '../constants/auth';
+
 import {
   createPharmacyNote,
   deletePharmacyNote,
@@ -7,6 +9,7 @@ import {
 } from '../controllers/pharmacy-note.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
+import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
@@ -23,16 +26,19 @@ import { ctrlWrapper } from '../utils/ctrlWrapper';
 export const pharmacyNoteRoutes = Router();
 
 //===============================================================
-pharmacyNoteRoutes.use(authenticate);
+
+pharmacyNoteRoutes.use(authenticate, authorizeRoles(USER_ROLES.PHARMACY));
 
 //===============================================================
 
 pharmacyNoteRoutes.get(
   '/:entityType/:entityId',
+
   validate({
     params: pharmacyNoteParamsSchema,
     query: pharmacyNotesQuerySchema,
   }),
+
   ctrlWrapper(getPharmacyNotes)
 );
 
@@ -40,10 +46,12 @@ pharmacyNoteRoutes.get(
 
 pharmacyNoteRoutes.post(
   '/:entityType/:entityId',
+
   validate({
     params: pharmacyNoteParamsSchema,
     body: createPharmacyNoteSchema,
   }),
+
   ctrlWrapper(createPharmacyNote)
 );
 

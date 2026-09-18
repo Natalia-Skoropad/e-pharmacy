@@ -43,7 +43,10 @@ import { isDuplicatePharmacyReviewError } from '../utils/mongoError';
 import { createFlexibleSearchRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
-import { resolvePrivatePharmacyDocumentSelections } from './pharmacy-document.service';
+import {
+  reconcileAttachedPharmacyDocumentStorage,
+  resolvePrivatePharmacyDocumentSelections,
+} from './pharmacy-document.service';
 import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 
 //===============================================================
@@ -921,6 +924,13 @@ export async function updateMyPharmacyProfileService(
 
         if (!updatedPharmacy) throwPharmacyProfileConflict();
 
+        await reconcileAttachedPharmacyDocumentStorage(
+          updatedPharmacy._id,
+          updatedPharmacy.documents ?? [],
+          updatedPharmacy.pendingModeration?.documents,
+          mongoSession
+        );
+
         result = {
           pharmacy: serializePharmacyProfile(
             updatedPharmacy as PharmacyDocument,
@@ -968,6 +978,13 @@ export async function updateMyPharmacyProfileService(
       );
 
       if (!updatedPharmacy) throwPharmacyProfileConflict();
+
+      await reconcileAttachedPharmacyDocumentStorage(
+        updatedPharmacy._id,
+        updatedPharmacy.documents ?? [],
+        updatedPharmacy.pendingModeration?.documents,
+        mongoSession
+      );
 
       result = {
         pharmacy: serializePharmacyProfile(
@@ -1081,6 +1098,13 @@ export async function submitMyPharmacyModerationService(
       );
 
       if (!updatedPharmacy) throwPharmacyProfileConflict();
+
+      await reconcileAttachedPharmacyDocumentStorage(
+        updatedPharmacy._id,
+        updatedPharmacy.documents ?? [],
+        updatedPharmacy.pendingModeration?.documents,
+        mongoSession
+      );
 
       result = {
         pharmacy: serializePharmacyProfile(

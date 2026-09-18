@@ -2,12 +2,12 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Order } from '../models/order.model';
-import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductRequest } from '../models/productRequest.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
+import { findPharmacyForInternalNotesAccess } from './pharmacy-membership.service';
 
 //===============================================================
 
@@ -16,19 +16,6 @@ type PharmacyNoteEntityType =
   | 'product'
   | 'pharmacy'
   | 'product_request';
-
-//===============================================================
-
-async function getPharmacyId(userId: string) {
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
-  if (!pharmacy)
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found');
-  return pharmacy._id;
-}
 
 //===============================================================
 
@@ -106,7 +93,13 @@ export async function getPharmacyNotesService(
   page: number,
   perPage: number
 ) {
-  const pharmacyId = await getPharmacyId(userId);
+  const { pharmacy } = await findPharmacyForInternalNotesAccess(
+    userId,
+    'read_internal_notes'
+  );
+
+  const pharmacyId = pharmacy._id;
+
   await assertEntityAccess(pharmacyId, entityType, entityId);
 
   const filter = {
@@ -147,7 +140,12 @@ export async function createPharmacyNoteService(
   entityId: string,
   text: string
 ) {
-  const pharmacyId = await getPharmacyId(userId);
+  const { pharmacy } = await findPharmacyForInternalNotesAccess(
+    userId,
+    'manage_internal_notes'
+  );
+
+  const pharmacyId = pharmacy._id;
 
   await assertEntityAccess(
     pharmacyId,
@@ -181,7 +179,13 @@ export async function deletePharmacyNoteService(
   entityId: string,
   noteId: string
 ) {
-  const pharmacyId = await getPharmacyId(userId);
+  const { pharmacy } = await findPharmacyForInternalNotesAccess(
+    userId,
+    'manage_internal_notes'
+  );
+
+  const pharmacyId = pharmacy._id;
+
   await assertEntityAccess(
     pharmacyId,
     entityType,

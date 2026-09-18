@@ -11,10 +11,7 @@ import {
 
 import { Pharmacy } from '../models/pharmacy.model';
 
-import type {
-  PharmacyEntity,
-  PharmacyMembershipRole,
-} from '../types/pharmacy';
+import type { PharmacyEntity, PharmacyMembershipRole } from '../types/pharmacy';
 
 import { httpError } from '../utils/httpError';
 
@@ -26,6 +23,10 @@ export type PharmacyProfileCapability =
   | 'manage_documents'
   | 'submit_profile';
 
+export type PharmacyInternalNotesCapability =
+  | 'read_internal_notes'
+  | 'manage_internal_notes';
+
 //===============================================================
 
 type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
@@ -35,16 +36,19 @@ type PharmacyHydratedDocument = HydratedDocument<PharmacyEntity> & {
 //===============================================================
 
 const PHARMACY_PROFILE_CAPABILITIES_BY_MEMBERSHIP = {
-  owner: [
-    'read_profile',
-    'edit_profile',
-    'manage_documents',
-    'submit_profile',
-  ],
+  owner: ['read_profile', 'edit_profile', 'manage_documents', 'submit_profile'],
   manager: ['read_profile'],
 } as const satisfies Record<
   PharmacyMembershipRole,
   readonly PharmacyProfileCapability[]
+>;
+
+const PHARMACY_INTERNAL_NOTES_CAPABILITIES_BY_MEMBERSHIP = {
+  owner: ['read_internal_notes', 'manage_internal_notes'],
+  manager: ['read_internal_notes', 'manage_internal_notes'],
+} as const satisfies Record<
+  PharmacyMembershipRole,
+  readonly PharmacyInternalNotesCapability[]
 >;
 
 //===============================================================
@@ -64,22 +68,8 @@ function resolveMembershipRole(
 
 //===============================================================
 
-export function canPharmacyMembershipUseProfileCapability(
-  membershipRole: PharmacyMembershipRole,
-  capability: PharmacyProfileCapability
-): boolean {
-  return (
-    PHARMACY_PROFILE_CAPABILITIES_BY_MEMBERSHIP[
-      membershipRole
-    ] as readonly PharmacyProfileCapability[]
-  ).includes(capability);
-}
-
-//===============================================================
-
-export async function findPharmacyForProfileAccess(
+async function resolvePharmacyMembership(
   userId: string,
-  capability: PharmacyProfileCapability,
   session?: ClientSession
 ): Promise<{
   pharmacy: PharmacyHydratedDocument;
@@ -113,16 +103,76 @@ export async function findPharmacyForProfileAccess(
 
   const membershipRole = resolveMembershipRole(pharmacy, userId);
 
-  if (
-    !membershipRole ||
-    !canPharmacyMembershipUseProfileCapability(membershipRole, capability)
-  ) {
+  if (!membershipRole) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access is forbidden.');
+  }
+
+  return { pharmacy, membershipRole };
+}
+
+//===============================================================
+
+export function canPharmacyMembershipUseProfileCapability(
+  membershipRole: PharmacyMembershipRole,
+  capability: PharmacyProfileCapability
+): boolean {
+  return (
+    PHARMACY_PROFILE_CAPABILITIES_BY_MEMBERSHIP[
+      membershipRole
+    ] as readonly PharmacyProfileCapability[]
+  ).includes(capability);
+}
+
+//===============================================================
+
+export async function findPharmacyForProfileAccess(
+  userId: string,
+  capability: PharmacyProfileCapability,
+  session?: ClientSession
+): Promise<{
+  pharmacy: PharmacyHydratedDocument;
+  membershipRole: PharmacyMembershipRole;
+}> {
+  const { pharmacy, membershipRole } = await resolvePharmacyMembership(
+    userId,
+    session
+  );
+
+  if (!canPharmacyMembershipUseProfileCapability(membershipRole, capability)) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
       'Only the pharmacy owner can change verification profile data.',
       undefined,
       PHARMACY_OWNER_REQUIRED_ERROR_CODE
     );
+  }
+
+  return { pharmacy, membershipRole };
+}
+
+//===============================================================
+
+export async function findPharmacyForInternalNotesAccess(
+  userId: string,
+  capability: PharmacyInternalNotesCapability,
+  session?: ClientSession
+): Promise<{
+  pharmacy: PharmacyHydratedDocument;
+  membershipRole: PharmacyMembershipRole;
+}> {
+  const { pharmacy, membershipRole } = await resolvePharmacyMembership(
+    userId,
+    session
+  );
+
+  if (
+    !(
+      PHARMACY_INTERNAL_NOTES_CAPABILITIES_BY_MEMBERSHIP[
+        membershipRole
+      ] as readonly PharmacyInternalNotesCapability[]
+    ).includes(capability)
+  ) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access is forbidden.');
   }
 
   return { pharmacy, membershipRole };

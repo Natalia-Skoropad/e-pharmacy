@@ -1165,12 +1165,175 @@ test(
         [second.document.id]
       );
 
+      assert.equal(
+        await PharmacyDocumentFile.exists({ _id: first.document.id }),
+        null
+      );
+
+      const storedSecondDocument = await PharmacyDocumentFile.findById(
+        second.document.id
+      );
+      assert.ok(storedSecondDocument?.attachedAt);
+      assert.equal(storedSecondDocument?.expiresAt, undefined);
+
       await updateMyPharmacyProfileService(String(user._id), {
         documents: [],
         expectedRevision: secondUpdate.pharmacy.updatedAt,
       });
       persisted = await Pharmacy.findById(pharmacy._id);
       assert.deepEqual(persisted?.documents, []);
+      assert.equal(
+        await PharmacyDocumentFile.exists({ _id: second.document.id }),
+        null
+      );
+    } finally {
+      await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'active pharmacy document drafts keep approved files and delete superseded pending files',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const identity = uniqueIdentity('document-pending-replace');
+    const approvedContent = Buffer.from('%PDF-1.4');
+    const firstPendingContent = Buffer.from('%PDF-1.5');
+    const secondPendingContent = Buffer.from('%PDF-1.6');
+
+    try {
+      const user = await User.create({
+        name: 'Document Pending Replace',
+        email: identity.email,
+        phone: identity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: user._id,
+        managerUserIds: [],
+        name: 'Pending Document Pharmacy',
+        phone: identity.phone,
+        email: identity.email,
+        documents: [],
+        status: 'new',
+      });
+
+      const approved = await createPrivatePharmacyDocumentUploadService(
+        String(user._id),
+        {
+          name: 'approved.pdf',
+          size: approvedContent.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${approvedContent.toString('base64')}`,
+        }
+      );
+
+      const initial = await updateMyPharmacyProfileService(String(user._id), {
+        documents: [{ documentId: approved.document.id }],
+        expectedRevision: pharmacy.updatedAt.toISOString(),
+      });
+
+      const activePharmacy = await Pharmacy.findByIdAndUpdate(
+        pharmacy._id,
+        {
+          $set: {
+            status: 'active',
+            approvedAt: new Date(),
+            activatedAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+      assert.ok(activePharmacy);
+
+      const firstPending = await createPrivatePharmacyDocumentUploadService(
+        String(user._id),
+        {
+          name: 'pending-first.pdf',
+          size: firstPendingContent.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${firstPendingContent.toString('base64')}`,
+        }
+      );
+
+      const firstPendingUpdate = await updateMyPharmacyProfileService(
+        String(user._id),
+        {
+          documents: [{ documentId: firstPending.document.id }],
+          expectedRevision: activePharmacy.updatedAt.toISOString(),
+        }
+      );
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: approved.document.id })
+      );
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: firstPending.document.id })
+      );
+
+      const secondPending = await createPrivatePharmacyDocumentUploadService(
+        String(user._id),
+        {
+          name: 'pending-second.pdf',
+          size: secondPendingContent.byteLength,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${secondPendingContent.toString('base64')}`,
+        }
+      );
+
+      const secondPendingUpdate = await updateMyPharmacyProfileService(
+        String(user._id),
+        {
+          documents: [{ documentId: secondPending.document.id }],
+          expectedRevision: firstPendingUpdate.pharmacy.updatedAt,
+        }
+      );
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: approved.document.id })
+      );
+
+      assert.equal(
+        await PharmacyDocumentFile.exists({ _id: firstPending.document.id }),
+        null
+      );
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: secondPending.document.id })
+      );
+
+      await updateMyPharmacyProfileService(String(user._id), {
+        documents: [],
+        expectedRevision: secondPendingUpdate.pharmacy.updatedAt,
+      });
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: approved.document.id })
+      );
+
+      assert.equal(
+        await PharmacyDocumentFile.exists({ _id: secondPending.document.id }),
+        null
+      );
+
+      const persisted = await Pharmacy.findById(pharmacy._id);
+
+      assert.deepEqual(
+        persisted?.documents.map(
+          (document: PharmacyVerificationDocumentMetadata) => document.id
+        ),
+        [approved.document.id]
+      );
+
+      assert.deepEqual(persisted?.pendingModeration?.documents, []);
+      assert.equal(initial.pharmacy.documents[0]?.id, approved.document.id);
     } finally {
       await cleanup(identity.email);
       await mongoose.disconnect();
@@ -1780,6 +1943,7 @@ test(
           paymentPurpose: 'Payment for medicines',
           receiptEmail: ownerIdentity.email,
         },
+
         pendingModeration: {
           description: 'Owner-only pending change',
         },
@@ -1818,10 +1982,12 @@ test(
 
       const ownerProfile = await getMyPharmacyProfileService(String(owner._id));
       assert.equal(ownerProfile.pharmacy.membershipRole, 'owner');
+
       assert.equal(
         ownerProfile.pharmacy.bankDetails?.recipientName,
         'Membership Pharmacy LLC'
       );
+
       assert.equal(
         ownerProfile.pharmacy.pendingModeration?.description,
         'Owner-only pending change'

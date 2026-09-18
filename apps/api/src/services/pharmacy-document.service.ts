@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import mongoose, { type ClientSession, type Types } from 'mongoose';
+import mongoose, { Types, type ClientSession } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
@@ -469,6 +469,35 @@ export async function resolvePrivatePharmacyDocumentSelections(
   );
 
   return ordered.map((document) => serializeDocument(document!));
+}
+
+//===================================================================
+
+export async function reconcileAttachedPharmacyDocumentStorage(
+  pharmacyId: Types.ObjectId,
+  currentDocuments: readonly PharmacyVerificationDocumentMetadata[],
+  pendingDocuments: readonly PharmacyVerificationDocumentMetadata[] | undefined,
+  session?: ClientSession
+): Promise<void> {
+  const uniqueReferencedDocumentIds = [
+    ...new Set(
+      [...currentDocuments, ...(pendingDocuments ?? [])].map(
+        (document) => document.id
+      )
+    ),
+  ].map((documentId) => new Types.ObjectId(documentId));
+
+  const orphanedAttachedDocumentsFilter = {
+    pharmacyId,
+    attachedAt: { $exists: true },
+    ...(uniqueReferencedDocumentIds.length > 0
+      ? { _id: { $nin: uniqueReferencedDocumentIds } }
+      : {}),
+  };
+
+  await PharmacyDocumentFile.deleteMany(orphanedAttachedDocumentsFilter, {
+    session,
+  });
 }
 
 //===================================================================

@@ -119,6 +119,23 @@ test(
         ),
         (error: unknown) => (error as HttpError).status === 404
       );
+
+      await Pharmacy.updateOne(
+        { _id: pharmacyId },
+        { $set: { status: 'blocked' } }
+      );
+
+      await assert.rejects(
+        createPharmacyNoteService(
+          ownerId.toString(),
+          'pharmacy',
+          pharmacyId.toString(),
+          'Blocked pharmacy note'
+        ),
+        (error: unknown) =>
+          (error as HttpError).status === 403 &&
+          (error as HttpError).code === 'PHARMACY_PROFILE_BLOCKED'
+      );
     } finally {
       await Promise.all([
         PharmacyNote.deleteMany({ pharmacyId }),
