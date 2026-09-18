@@ -1,8 +1,4 @@
-import type {
-  EntityId,
-  FileMetadata,
-  ISODateTimeString,
-} from '../primitives';
+import type { EntityId, FileMetadata, ISODateTimeString } from '../primitives';
 
 //===================================================================
 
@@ -13,6 +9,12 @@ export type PharmacyVerificationDocument = FileMetadata &
     sha256: string;
     uploadedAt: ISODateTimeString;
   }>;
+
+/** Owner-facing verification document metadata without the binary fingerprint. */
+export type PharmacyProfileVerificationDocument = Omit<
+  PharmacyVerificationDocument,
+  'sha256'
+>;
 
 //===================================================================
 
@@ -52,4 +54,3 @@ export type PharmacyRegistrationDocumentUploadResponse = Readonly<{
 export type PharmacyProfileDocumentUploadResponse = Readonly<{
   document: PharmacyVerificationDocument;
 }>;
-

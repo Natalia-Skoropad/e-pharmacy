@@ -75,3 +75,58 @@ test('pharmacy profile mutations use scoped synchronous mutex refs', async () =>
     /handleLogoutAllSessions[\s\S]*?sessionMutationInFlightRef\.current/
   );
 });
+
+//===================================================================
+
+test('profile comments count is owned by EntityComments without an eager duplicate request', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /const \[commentsTotal, setCommentsTotal\] = useState<number \| null>\(null\)/
+  );
+
+  assert.doesNotMatch(source, /async function loadCommentsTotal/);
+
+  assert.match(
+    source,
+    /commentsTotal === null \? 'Comments' : `Comments \(\$\{commentsTotal\}\)`/
+  );
+
+  assert.match(source, /initialTotal=\{commentsTotal \?\? undefined\}/);
+  assert.match(source, /onTotalChange=\{setCommentsTotal\}/);
+});
+
+//===================================================================
+
+test('active sessions distinguish load errors from a real empty result and expose retry', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /type SessionsStatus = 'loading' \| 'success' \| 'error'/
+  );
+
+  assert.match(
+    source,
+    /const \[sessionsError, setSessionsError\] = useState\(''\)/
+  );
+
+  assert.match(source, /setSessionsStatus\('error'\)/);
+  assert.match(source, /Could not load active sessions\. Please try again\./);
+
+  assert.doesNotMatch(
+    source,
+    /catch \(error\)[\s\S]{0,500}?setSessions\(\[\]\)/
+  );
+
+  assert.match(
+    source,
+    /sessionsStatus === 'error'[\s\S]*?onClick=\{\(\) => void loadSessions\(\)\}[\s\S]*?>\s*Retry\s*</
+  );
+
+  assert.match(
+    source,
+    /sessionsStatus === 'success'[\s\S]*?No active sessions found/
+  );
+});

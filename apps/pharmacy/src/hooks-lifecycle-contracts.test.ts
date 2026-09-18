@@ -99,3 +99,19 @@ test('sidebar storage and breadcrumb dispatch remain hydration and timer safe', 
   assert.doesNotMatch(breadcrumbLabelEvent, /setTimeout/);
   assert.match(breadcrumbLabelEvent, /queueMicrotask|Promise\.resolve/);
 });
+
+//===================================================================
+
+test('comments error state retries the exact failed page', async () => {
+  const comments = await readSource(
+    './components/comments/EntityComments/EntityComments.tsx'
+  );
+
+  assert.match(comments, /const retryPageRef = useRef\(1\)/);
+  assert.match(comments, /retryPageRef\.current = page/);
+
+  assert.match(
+    comments,
+    /status === 'error'[\s\S]*?loadPage\(retryPageRef\.current\)[\s\S]*?Retry comments/
+  );
+});

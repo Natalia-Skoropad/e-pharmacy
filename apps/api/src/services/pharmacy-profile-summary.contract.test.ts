@@ -59,10 +59,42 @@ test('full profile serializer keeps owner-only private fields out of manager DTO
     /membershipRole !== 'manager' && pharmacy\.bankDetails/
   );
 
-  assert.match(serializer, /documents: membershipRole === 'manager' \? \[\] :/);
+  assert.match(
+    serializer,
+    /membershipRole === 'manager'[\s\S]*?serializeProfileVerificationDocument/
+  );
 
   assert.match(
     serializer,
     /membershipRole !== 'manager' && pharmacy\.pendingModeration/
+  );
+});
+
+//===================================================================
+
+test('owner-facing profile document metadata omits the stored sha256 fingerprint', async () => {
+  const source = await readServiceSource();
+
+  const start = source.indexOf(
+    'function serializeProfileVerificationDocument('
+  );
+
+  const end = source.indexOf(
+    '//===============================================================',
+    start + 1
+  );
+
+  assert.ok(start >= 0);
+  assert.ok(end > start);
+
+  const serializer = source.slice(start, end);
+
+  assert.match(serializer, /id: document\.id/);
+  assert.match(serializer, /uploadedAt: document\.uploadedAt/);
+  assert.doesNotMatch(serializer, /sha256/);
+
+  assert.match(
+    source,
+    /serializePendingModerationForProfile[\s\S]*?documents\.map\([\s\S]*?serializeProfileVerificationDocument[\s\S]*?\)/
   );
 });

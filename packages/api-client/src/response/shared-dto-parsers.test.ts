@@ -607,7 +607,6 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     name: 'license.pdf',
     size: 1024,
     type: 'application/pdf',
-    sha256: 'a'.repeat(64),
     uploadedAt: '2026-08-13T08:00:00.000Z',
   };
 
@@ -639,6 +638,13 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     document.id
   );
 
+  assert.equal(
+    'sha256' in
+      (parsePharmacyProfileResponse({ pharmacy: profile }).pharmacy
+        .documents[0] ?? {}),
+    false
+  );
+
   const ownerProfile = parsePharmacyProfileResponse({
     pharmacy: profile,
   }).pharmacy;
@@ -667,7 +673,6 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     { ...profile, status: 'something_new' },
     { ...profile, updatedAt: 'yesterday' },
     { ...profile, documents: [123] },
-    { ...profile, documents: [{ ...document, sha256: 'bad' }] },
     { ...profile, documents: [{ ...document, size: 10 * 1024 * 1024 + 1 }] },
     { ...profile, documents: Array.from({ length: 7 }, () => document) },
     { ...profile, documents: [document, document] },

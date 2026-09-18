@@ -33,6 +33,11 @@ export type PharmacyVerificationDocumentMetadata = {
   uploadedAt: ISODateTimeString;
 };
 
+export type PharmacyProfileVerificationDocumentResponseDto = Omit<
+  PharmacyVerificationDocumentMetadata,
+  'sha256'
+>;
+
 export type EditablePharmacyBankDetails = Partial<{
   recipientName: string;
   taxId: string;
@@ -71,6 +76,13 @@ export type PharmacyPendingModeration = {
   description?: string | null;
   documents?: PharmacyVerificationDocumentMetadata[];
   bankDetails?: EditablePharmacyBankDetailsPatch;
+};
+
+export type PharmacyPendingModerationResponseDto = Omit<
+  PharmacyPendingModeration,
+  'documents'
+> & {
+  documents?: PharmacyProfileVerificationDocumentResponseDto[];
 };
 
 export type PharmacyEntity = {
@@ -183,13 +195,13 @@ export type PharmacyProfileResponseDto = {
   workingHours?: string;
   bankDetails?: EditablePharmacyBankDetails;
   bankTransferAvailable: boolean;
-  documents: PharmacyVerificationDocumentMetadata[];
+  documents: PharmacyProfileVerificationDocumentResponseDto[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
   description?: string;
   statusReason?: string;
-  pendingModeration?: PharmacyPendingModeration;
+  pendingModeration?: PharmacyPendingModerationResponseDto;
   reviewsCount: number;
   updatedAt: ISODateTimeString;
 };

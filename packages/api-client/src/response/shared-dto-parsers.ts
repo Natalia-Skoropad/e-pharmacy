@@ -38,6 +38,7 @@ import type {
   PharmacyProfile,
   PharmacyProfileResponse,
   PharmacyProfileDocumentUploadResponse,
+  PharmacyProfileVerificationDocument,
   PharmacyRegistrationDocumentUploadResponse,
   PharmacyRegistrationUploadSessionResponse,
   PharmacyVerificationDocument,
@@ -1246,6 +1247,76 @@ export function parsePharmacyCheckoutDetailsResponse(
 
 //===================================================================
 
+function parsePharmacyProfileVerificationDocument(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyProfileVerificationDocument {
+  const record = requireRecord(
+    value,
+    'pharmacy profile verification document',
+    context
+  );
+
+  const id = requireObjectId(
+    record,
+    'id',
+    'pharmacy profile verification document',
+    context
+  );
+
+  const uploadedAt = requireCanonicalIsoDateTime(
+    record,
+    'uploadedAt',
+    'pharmacy profile verification document',
+    context
+  );
+
+  const size = requireSafeNonNegativeInteger(
+    record,
+    'size',
+    'pharmacy profile verification document',
+    context
+  );
+
+  if (size < 1 || size > PHARMACY_DOCUMENT_MAX_SIZE_BYTES) {
+    throw invalidDto(
+      'pharmacy profile verification document.size is outside the allowed range.',
+      record,
+      context
+    );
+  }
+
+  if (typeof record.name !== 'string' || !record.name.trim()) {
+    throw invalidDto(
+      'pharmacy profile verification document.name must be a non-empty string.',
+      record,
+      context
+    );
+  }
+
+  if (
+    typeof record.type !== 'string' ||
+    !PHARMACY_DOCUMENT_MIME_TYPES.has(record.type)
+  ) {
+    throw invalidDto(
+      'pharmacy profile verification document.type is invalid.',
+      record,
+      context
+    );
+  }
+
+  return {
+    id,
+    name: record.name,
+    size,
+    type: record.type,
+    uploadedAt:
+      checked<PharmacyProfileVerificationDocument['uploadedAt']>(uploadedAt),
+  };
+}
+
+//===================================================================
+
 function parsePharmacyVerificationDocument(
   value: unknown,
   context?: ApiResponseContext
@@ -1327,15 +1398,15 @@ function parsePharmacyVerificationDocument(
 
 //===================================================================
 
-function parsePharmacyVerificationDocuments(
+function parsePharmacyProfileVerificationDocuments(
   value: unknown,
   label: string,
   context?: ApiResponseContext
-): readonly PharmacyVerificationDocument[] {
+): readonly PharmacyProfileVerificationDocument[] {
   const documents = parseArray(
     value,
     label,
-    parsePharmacyVerificationDocument,
+    parsePharmacyProfileVerificationDocument,
     context
   );
 
@@ -1725,7 +1796,7 @@ function parsePharmacyPendingModeration(
   }
 
   if (record.documents !== undefined) {
-    result.documents = parsePharmacyVerificationDocuments(
+    result.documents = parsePharmacyProfileVerificationDocuments(
       record.documents,
       'pharmacy pending moderation.documents',
       context
@@ -1847,7 +1918,7 @@ function parsePharmacyProfile(
         }
       : {}),
     bankTransferAvailable: record.bankTransferAvailable as boolean,
-    documents: parsePharmacyVerificationDocuments(
+    documents: parsePharmacyProfileVerificationDocuments(
       record.documents,
       'pharmacy profile.documents',
       context

@@ -9,6 +9,7 @@ import type {
 
 import { PHARMACY_NOTE_MAX_LENGTH } from '@e-pharmacy/validation/pharmacy';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
   CommentsList,
@@ -72,6 +73,7 @@ function EntityCommentsContent({
   const titleId = `${entityKey}-${generatedId}-comments-title`;
   const loadRef = useRef(load);
   const activeLoadControllerRef = useRef<AbortController | null>(null);
+  const retryPageRef = useRef(1);
   const onTotalChangeRef = useRef(onTotalChange);
 
   const [data, setData] = useState<PharmacyNotesResponse>({
@@ -102,6 +104,7 @@ function EntityCommentsContent({
   }, [onTotalChange]);
 
   const loadPage = useCallback(async (page: number): Promise<void> => {
+    retryPageRef.current = page;
     activeLoadControllerRef.current?.abort();
     const controller = new AbortController();
     activeLoadControllerRef.current = controller;
@@ -261,6 +264,17 @@ function EntityCommentsContent({
         deleteDisabled={!isEditable || Boolean(deletingId) || isSaving}
         onDelete={setCommentToDelete}
       />
+
+      {status === 'error' ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => void loadPage(retryPageRef.current)}
+        >
+          Retry comments
+        </Button>
+      ) : null}
 
       {status === 'success' ? (
         <PaginationView

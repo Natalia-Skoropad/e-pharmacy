@@ -8,7 +8,10 @@ import { PharmacyNote } from '../models/pharmacyNote.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
-import { createPharmacyNoteService } from './pharmacy-note.service';
+import {
+  createPharmacyNoteService,
+  deletePharmacyNoteService,
+} from './pharmacy-note.service';
 
 //===================================================================
 
@@ -141,6 +144,92 @@ test(
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyId, otherPharmacyId] } }),
         User.deleteMany({ _id: { $in: [ownClientId, unrelatedClientId] } }),
+      ]);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===================================================================
+
+test(
+  'internal pharmacy notes are shared: owner and managers can delete each other notes inside the same pharmacy',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const ownerId = new Types.ObjectId();
+    const managerAId = new Types.ObjectId();
+    const managerBId = new Types.ObjectId();
+    const pharmacyId = new Types.ObjectId();
+
+    await Pharmacy.create({
+      _id: pharmacyId,
+      ownerId,
+      managerUserIds: [managerAId, managerBId],
+      documents: [],
+      name: 'Shared Notes Pharmacy',
+      status: 'active',
+    });
+
+    try {
+      const managerANote = await createPharmacyNoteService(
+        managerAId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        'Manager A shared note'
+      );
+
+      await deletePharmacyNoteService(
+        managerBId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        managerANote.note.id
+      );
+
+      assert.equal(
+        await PharmacyNote.exists({ _id: managerANote.note.id }),
+        null
+      );
+
+      const managerBNote = await createPharmacyNoteService(
+        managerBId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        'Manager B shared note'
+      );
+
+      await deletePharmacyNoteService(
+        ownerId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        managerBNote.note.id
+      );
+
+      assert.equal(
+        await PharmacyNote.exists({ _id: managerBNote.note.id }),
+        null
+      );
+
+      const ownerNote = await createPharmacyNoteService(
+        ownerId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        'Owner shared note'
+      );
+
+      await deletePharmacyNoteService(
+        managerAId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        ownerNote.note.id
+      );
+
+      assert.equal(await PharmacyNote.exists({ _id: ownerNote.note.id }), null);
+    } finally {
+      await Promise.all([
+        PharmacyNote.deleteMany({ pharmacyId }),
+        Pharmacy.deleteOne({ _id: pharmacyId }),
       ]);
       await mongoose.disconnect();
     }

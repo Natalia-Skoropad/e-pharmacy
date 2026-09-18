@@ -131,7 +131,7 @@ import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
-import { EntityComments } from '@/components/comments/EntityComments';
+import { EntityComments } from '@/components/comments/EntityComments/EntityComments';
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
 
@@ -159,6 +159,8 @@ type PendingModerationItem = {
   label: string;
   value?: string | null;
 };
+
+type SessionsStatus = 'loading' | 'success' | 'error';
 
 //===================================================================
 
@@ -601,13 +603,14 @@ function PharmacyProfilePage({
 
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
-  const [commentsTotal, setCommentsTotal] = useState(0);
+  const [sessionsStatus, setSessionsStatus] =
+    useState<SessionsStatus>('loading');
+  const [sessionsError, setSessionsError] = useState('');
+  const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
 
   const [visibleSessionsCount, setVisibleSessionsCount] = useState(
     INITIAL_VISIBLE_SESSIONS_COUNT
   );
-
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
   const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
     createOwnerInitialValues(user)
@@ -706,53 +709,76 @@ function PharmacyProfilePage({
   const passwordMutationInFlightRef = useRef(false);
   const pharmacyMutationInFlightRef = useRef(false);
   const sessionMutationInFlightRef = useRef(false);
+  const sessionsLoadControllerRef = useRef<AbortController | null>(null);
+
+  const loadSessions = useCallback(async (): Promise<void> => {
+    setSessionsStatus('loading');
+    setSessionsError('');
+    sessionsLoadControllerRef.current?.abort();
+
+    const controller = new AbortController();
+    sessionsLoadControllerRef.current = controller;
+
+    try {
+      const response = await getActiveSessions({
+        signal: controller.signal,
+      });
+
+      if (controller.signal.aborted) return;
+
+      setSessions([...response.sessions]);
+      setSessionsStatus('success');
+    } catch (error) {
+      if (controller.signal.aborted) return;
+
+      setSessionsError(
+        getProfileErrorMessage(
+          error,
+          'Could not load active sessions. Please try again.'
+        )
+      );
+      setSessionsStatus('error');
+    } finally {
+      if (sessionsLoadControllerRef.current === controller) {
+        sessionsLoadControllerRef.current = null;
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
-    const pharmacyId = pharmacy.id;
+    sessionsLoadControllerRef.current = controller;
 
-    async function loadCommentsTotal() {
-      try {
-        const response = await getPharmacyNotes('pharmacy', pharmacyId, 1, {
-          signal: controller.signal,
-        });
+    void getActiveSessions({ signal: controller.signal })
+      .then((response) => {
+        if (controller.signal.aborted) return;
 
-        if (!controller.signal.aborted) setCommentsTotal(response.total);
-      } catch {
-        if (!controller.signal.aborted) setCommentsTotal(0);
-      }
-    }
+        setSessions([...response.sessions]);
+        setSessionsStatus('success');
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
 
-    void loadCommentsTotal();
-
-    return () => {
-      controller.abort();
-    };
-  }, [pharmacy.id]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadSessions() {
-      setIsLoadingSessions(true);
-
-      try {
-        const response = await getActiveSessions({
-          signal: controller.signal,
-        });
-
-        if (!controller.signal.aborted) setSessions([...response.sessions]);
-      } catch {
-        if (!controller.signal.aborted) setSessions([]);
-      } finally {
-        if (!controller.signal.aborted) setIsLoadingSessions(false);
-      }
-    }
-
-    void loadSessions();
+        setSessionsError(
+          getProfileErrorMessage(
+            error,
+            'Could not load active sessions. Please try again.'
+          )
+        );
+        setSessionsStatus('error');
+      })
+      .finally(() => {
+        if (sessionsLoadControllerRef.current === controller) {
+          sessionsLoadControllerRef.current = null;
+        }
+      });
 
     return () => {
       controller.abort();
+
+      if (sessionsLoadControllerRef.current === controller) {
+        sessionsLoadControllerRef.current = null;
+      }
     };
   }, []);
 
@@ -1009,7 +1035,11 @@ function PharmacyProfilePage({
     }
 
     if (tab.value === 'comments') {
-      return { ...tab, label: `Comments (${commentsTotal})` };
+      return {
+        ...tab,
+        label:
+          commentsTotal === null ? 'Comments' : `Comments (${commentsTotal})`,
+      };
     }
 
     return tab;
@@ -2322,7 +2352,7 @@ function PharmacyProfilePage({
                 <div className={css.tabPanel} role="tabpanel">
                   <EntityComments
                     entityKey={`pharmacy:${pharmacy.id}`}
-                    initialTotal={commentsTotal}
+                    initialTotal={commentsTotal ?? undefined}
                     load={(page, options) =>
                       getPharmacyNotes('pharmacy', pharmacy.id, page, options)
                     }
@@ -2352,9 +2382,26 @@ function PharmacyProfilePage({
                       </p>
                     </div>
 
-                    {isLoadingSessions ? (
+                    {sessionsStatus === 'loading' && sessions.length === 0 ? (
                       <LoadingSpinner label="Loading active sessions..." />
-                    ) : sessions.length > 0 ? (
+                    ) : null}
+
+                    {sessionsStatus === 'error' ? (
+                      <div className={css.emptyState} role="alert">
+                        <h3>Could not load active sessions</h3>
+                        <p>{sessionsError}</p>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => void loadSessions()}
+                        >
+                          Retry
+                        </Button>
+                      </div>
+                    ) : null}
+
+                    {sessions.length > 0 ? (
                       <>
                         <ul className={css.sessionsList}>
                           {visibleSessions.map((session) => (
@@ -2416,7 +2463,7 @@ function PharmacyProfilePage({
                           </Button>
                         ) : null}
                       </>
-                    ) : (
+                    ) : sessionsStatus === 'success' ? (
                       <div className={css.emptyState}>
                         <h3>No active sessions found</h3>
                         <p>
@@ -2424,7 +2471,7 @@ function PharmacyProfilePage({
                           active login devices.
                         </p>
                       </div>
-                    )}
+                    ) : null}
                   </section>
                 </div>
               ) : null}

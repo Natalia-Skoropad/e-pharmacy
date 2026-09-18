@@ -29,6 +29,9 @@ import type {
   CurrentPharmacySummaryResponseDto,
   PharmacyFilterOptionsResponseDto,
   PharmacyPendingModeration,
+  PharmacyPendingModerationResponseDto,
+  PharmacyProfileVerificationDocumentResponseDto,
+  PharmacyVerificationDocumentMetadata,
   PublicPharmacyResponseDto,
   MyPharmacyProfileResponseDto,
   PharmacyMembershipRole,
@@ -244,6 +247,57 @@ function serializeCurrentPharmacySummary(
 
 //===============================================================
 
+function serializeProfileVerificationDocument(
+  document: PharmacyVerificationDocumentMetadata
+): PharmacyProfileVerificationDocumentResponseDto {
+  return {
+    id: document.id,
+    name: document.name,
+    size: document.size,
+    type: document.type,
+    uploadedAt: document.uploadedAt,
+  };
+}
+
+//===============================================================
+
+function serializePendingModerationForProfile(
+  pendingModeration: PharmacyPendingModeration
+): PharmacyPendingModerationResponseDto {
+  const result: PharmacyPendingModerationResponseDto = {};
+
+  if (pendingModeration.name !== undefined)
+    result.name = pendingModeration.name;
+  if (pendingModeration.address !== undefined)
+    result.address = pendingModeration.address;
+  if (pendingModeration.city !== undefined)
+    result.city = pendingModeration.city;
+  if (pendingModeration.phone !== undefined)
+    result.phone = pendingModeration.phone;
+  if (pendingModeration.email !== undefined)
+    result.email = pendingModeration.email;
+  if (pendingModeration.workingHours !== undefined)
+    result.workingHours = pendingModeration.workingHours;
+  if (pendingModeration.imageUrl !== undefined)
+    result.imageUrl = pendingModeration.imageUrl;
+  if (pendingModeration.description !== undefined)
+    result.description = pendingModeration.description;
+
+  if (pendingModeration.documents !== undefined) {
+    result.documents = pendingModeration.documents.map(
+      serializeProfileVerificationDocument
+    );
+  }
+
+  if (pendingModeration.bankDetails !== undefined) {
+    result.bankDetails = pendingModeration.bankDetails;
+  }
+
+  return result;
+}
+
+//===============================================================
+
 function serializePharmacyProfile(
   pharmacy: PharmacyDocument,
   membershipRole: PharmacyMembershipRole
@@ -261,14 +315,21 @@ function serializePharmacyProfile(
     ...(membershipRole !== 'manager' && pharmacy.bankDetails
       ? { bankDetails: pharmacy.bankDetails }
       : {}),
-    documents: membershipRole === 'manager' ? [] : (pharmacy.documents ?? []),
+    documents:
+      membershipRole === 'manager'
+        ? []
+        : (pharmacy.documents ?? []).map(serializeProfileVerificationDocument),
     status: pharmacy.status,
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
     ...(membershipRole !== 'manager' && pharmacy.pendingModeration
-      ? { pendingModeration: pharmacy.pendingModeration }
+      ? {
+          pendingModeration: serializePendingModerationForProfile(
+            pharmacy.pendingModeration
+          ),
+        }
       : {}),
     reviewsCount: pharmacy.reviewsCount ?? 0,
     updatedAt: requireISODateTime(pharmacy.updatedAt, 'pharmacy.updatedAt'),

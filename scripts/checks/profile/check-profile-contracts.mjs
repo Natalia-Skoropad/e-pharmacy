@@ -41,6 +41,7 @@ const [
   read(
     'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   ),
+
   read('packages/config/src/pharmacies/profile-transitions.ts'),
   read('apps/api/src/constants/pharmacy-profile.ts'),
   read('scripts/contracts/pharmacy-profile-transition-matrix.json'),
@@ -231,7 +232,33 @@ assert.match(
 
 assert.match(
   pharmacyServiceSource,
-  /membershipRole === ['"]manager['"] \? \[\]/
+  /membershipRole === ['"]manager['"][\s\S]*?\?[\s\S]*?\[\][\s\S]*?:[\s\S]*?serializeProfileVerificationDocument/
+);
+
+assert.match(
+  pharmacyServiceSource,
+  /function serializeProfileVerificationDocument\([\s\S]*?uploadedAt: document\.uploadedAt[\s\S]*?\}/
+);
+
+const profileDocumentSerializerStart = pharmacyServiceSource.indexOf(
+  'function serializeProfileVerificationDocument('
+);
+
+const profileDocumentSerializerEnd = pharmacyServiceSource.indexOf(
+  '//===============================================================',
+  profileDocumentSerializerStart + 1
+);
+
+assert.ok(profileDocumentSerializerStart >= 0);
+assert.ok(profileDocumentSerializerEnd > profileDocumentSerializerStart);
+
+assert.doesNotMatch(
+  pharmacyServiceSource.slice(
+    profileDocumentSerializerStart,
+    profileDocumentSerializerEnd
+  ),
+  /sha256/,
+  'Owner-facing pharmacy profile document metadata must not expose sha256.'
 );
 
 assert.match(

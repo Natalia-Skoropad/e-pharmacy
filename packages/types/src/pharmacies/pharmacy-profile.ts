@@ -1,5 +1,5 @@
 import type { EntityId, ISODateTimeString } from '../primitives';
-import type { PharmacyVerificationDocument } from './verification-document';
+import type { PharmacyProfileVerificationDocument } from './verification-document';
 import type { EditablePharmacyBankDetails } from './bank-details';
 import type { PharmacyStatus } from './status';
 
@@ -24,7 +24,7 @@ export type PharmacyPendingModeration = Readonly<{
   workingHours?: string | null;
   imageUrl?: string | null;
   description?: string | null;
-  documents?: readonly PharmacyVerificationDocument[];
+  documents?: readonly PharmacyProfileVerificationDocument[];
   bankDetails?: ClearableEditablePharmacyBankDetails;
 }>;
 
@@ -50,7 +50,7 @@ export type PharmacyProfile = Readonly<{
   workingHours?: string;
   bankDetails?: EditablePharmacyBankDetails;
   bankTransferAvailable: boolean;
-  documents: readonly PharmacyVerificationDocument[];
+  documents: readonly PharmacyProfileVerificationDocument[];
   status: PharmacyStatus;
   rating: number;
   imageUrl?: string;
