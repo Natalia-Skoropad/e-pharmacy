@@ -98,6 +98,7 @@ export type OrderManagerCommentEntity = {
   text: string;
   createdAt: Date;
   createdBy: Types.ObjectId;
+  authorDisplayName?: string;
 };
 
 export type OrderItemEntity = {
@@ -227,6 +228,11 @@ export type OrderResponseDto = {
     text: string;
     createdAt: ISODateTimeString;
     createdBy: string;
+
+    author: {
+      userId: string;
+      displayName: string;
+    };
   }>;
 
   bankDetails?: CompletePharmacyBankDetails;

@@ -19,6 +19,21 @@ type PharmacyNoteEntityType =
 
 //===============================================================
 
+type PharmacyNoteAuthorUser = {
+  name?: string;
+  email?: string;
+};
+
+//===============================================================
+
+function getPharmacyNoteAuthorDisplayName(
+  user?: PharmacyNoteAuthorUser | null
+): string {
+  return user?.name?.trim() || user?.email?.trim() || 'Pharmacy member';
+}
+
+//===============================================================
+
 async function assertEntityAccess(
   pharmacyId: Types.ObjectId,
   entityType: PharmacyNoteEntityType,
@@ -123,6 +138,11 @@ export async function getPharmacyNotesService(
       id: String(note._id),
       text: note.text,
       createdAt: note.createdAt.toISOString(),
+
+      author: {
+        userId: String(note.createdBy),
+        displayName: note.authorDisplayName?.trim() || 'Pharmacy member',
+      },
     })),
 
     page: safePage,
@@ -154,12 +174,19 @@ export async function createPharmacyNoteService(
     entityType === 'product_request'
   );
 
+  const author = await User.findById(userId)
+    .select('name email')
+    .lean<PharmacyNoteAuthorUser | null>();
+
+  const authorDisplayName = getPharmacyNoteAuthorDisplayName(author);
+
   const note = await PharmacyNote.create({
     pharmacyId,
     entityType,
     entityId,
     text: text.trim(),
     createdBy: userId,
+    authorDisplayName,
   });
 
   return {
@@ -167,6 +194,10 @@ export async function createPharmacyNoteService(
       id: String(note._id),
       text: note.text,
       createdAt: note.createdAt.toISOString(),
+      author: {
+        userId,
+        displayName: authorDisplayName,
+      },
     },
   };
 }

@@ -11,6 +11,7 @@ import type { HttpError } from '../types/errors';
 import {
   createPharmacyNoteService,
   deletePharmacyNoteService,
+  getPharmacyNotesService,
 } from './pharmacy-note.service';
 
 //===================================================================
@@ -231,6 +232,91 @@ test(
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
       ]);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===================================================================
+
+test(
+  'pharmacy note author snapshot survives author rename and deletion',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const ownerId = new Types.ObjectId();
+    const managerId = new Types.ObjectId();
+    const pharmacyId = new Types.ObjectId();
+    const suffix = new Types.ObjectId().toHexString().slice(-8);
+
+    await Promise.all([
+      User.create({
+        _id: managerId,
+        name: 'Manager Original',
+        email: `note-author-${suffix}@example.com`,
+        password: 'hashed-password',
+        phone: `+38093${suffix.slice(0, 7).replace(/[a-f]/g, '3')}`,
+        role: 'pharmacy',
+        status: 'active',
+      }),
+
+      Pharmacy.create({
+        _id: pharmacyId,
+        ownerId,
+        managerUserIds: [managerId],
+        documents: [],
+        name: 'Author Snapshot Pharmacy',
+        status: 'active',
+      }),
+    ]);
+
+    try {
+      const created = await createPharmacyNoteService(
+        managerId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        'Snapshot note'
+      );
+
+      assert.deepEqual(created.note.author, {
+        userId: managerId.toString(),
+        displayName: 'Manager Original',
+      });
+
+      await User.updateOne(
+        { _id: managerId },
+        { $set: { name: 'Manager Renamed' } }
+      );
+
+      let page = await getPharmacyNotesService(
+        managerId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        1,
+        10
+      );
+
+      assert.equal(page.items[0]?.author.displayName, 'Manager Original');
+
+      await User.deleteOne({ _id: managerId });
+
+      page = await getPharmacyNotesService(
+        ownerId.toString(),
+        'pharmacy',
+        pharmacyId.toString(),
+        1,
+        10
+      );
+
+      assert.equal(page.items[0]?.author.displayName, 'Manager Original');
+    } finally {
+      await Promise.all([
+        PharmacyNote.deleteMany({ pharmacyId }),
+        Pharmacy.deleteOne({ _id: pharmacyId }),
+        User.deleteOne({ _id: managerId }),
+      ]);
+
       await mongoose.disconnect();
     }
   }

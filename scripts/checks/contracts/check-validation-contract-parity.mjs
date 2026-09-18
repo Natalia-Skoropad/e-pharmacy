@@ -37,8 +37,54 @@ const BACKEND_FIXTURE = path.join(
 
 //===================================================================
 
+const PHARMACY_NOTE_VALIDATION_SOURCE = path.join(
+  ROOT_DIR,
+  'packages',
+  'validation',
+  'src',
+  'pharmacy',
+  'pharmacy-note-validation.ts'
+);
+
+const PHARMACY_NOTE_SCHEMA_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'schemas',
+  'pharmacy-note.schema.ts'
+);
+
+const PHARMACY_NOTE_MODEL_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'models',
+  'pharmacyNote.model.ts'
+);
+
+//===================================================================
+
 async function readFixture(filePath) {
   return JSON.parse(await readFile(filePath, 'utf8'));
+}
+
+//===================================================================
+async function readSource(filePath) {
+  return readFile(filePath, 'utf8');
+}
+
+//===================================================================
+
+function requireIntegerMatch(source, pattern, label) {
+  const match = source.match(pattern);
+
+  assert.ok(match, `${label} was not found`);
+
+  const value = Number(match[1]);
+  assert.equal(Number.isInteger(value), true, `${label} is not an integer`);
+  return value;
 }
 
 //===================================================================
@@ -71,9 +117,18 @@ function assertUniqueCaseIds(fixture, label) {
 
 //===================================================================
 
-const [frontendFixture, backendFixture] = await Promise.all([
+const [
+  frontendFixture,
+  backendFixture,
+  pharmacyNoteValidationSource,
+  pharmacyNoteSchemaSource,
+  pharmacyNoteModelSource,
+] = await Promise.all([
   readFixture(FRONTEND_FIXTURE),
   readFixture(BACKEND_FIXTURE),
+  readSource(PHARMACY_NOTE_VALIDATION_SOURCE),
+  readSource(PHARMACY_NOTE_SCHEMA_SOURCE),
+  readSource(PHARMACY_NOTE_MODEL_SOURCE),
 ]);
 
 //===================================================================
@@ -85,6 +140,36 @@ assert.deepEqual(
   backendFixture,
   frontendFixture,
   'Frontend and backend validation contract fixtures differ'
+);
+
+const pharmacyNoteMaxLength = requireIntegerMatch(
+  pharmacyNoteValidationSource,
+  /PHARMACY_NOTE_MAX_LENGTH\s*=\s*(\d+)/,
+  'Frontend pharmacy note max length'
+);
+
+const backendPharmacyNoteMaxLength = requireIntegerMatch(
+  pharmacyNoteSchemaSource,
+  /createPharmacyNoteSchema[\s\S]*?\.max\((\d+)\)/,
+  'Backend pharmacy note max length'
+);
+
+const storedPharmacyNoteMaxLength = requireIntegerMatch(
+  pharmacyNoteModelSource,
+  /text:\s*\{[\s\S]*?maxlength:\s*(\d+)/,
+  'Stored pharmacy note max length'
+);
+
+assert.equal(
+  backendPharmacyNoteMaxLength,
+  pharmacyNoteMaxLength,
+  'Frontend and backend pharmacy note max lengths differ'
+);
+
+assert.equal(
+  storedPharmacyNoteMaxLength,
+  pharmacyNoteMaxLength,
+  'Frontend and stored pharmacy note max lengths differ'
 );
 
 console.log(

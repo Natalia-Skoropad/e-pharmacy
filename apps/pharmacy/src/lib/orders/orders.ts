@@ -100,6 +100,10 @@ export type PharmacyOrderManagerComment = Readonly<{
   text: string;
   createdAt: ISODateTimeString;
   createdBy: EntityId;
+  author: Readonly<{
+    userId: EntityId;
+    displayName: string;
+  }>;
 }>;
 
 export type PharmacyOrderDetails = PharmacyOrderRow &
@@ -758,12 +762,31 @@ export function normalizePharmacyOrderManagerComment(
   const text = getTrimmedString(payload.text);
   const createdAt = getTrimmedString(payload.createdAt);
   const createdBy = getTrimmedString(payload.createdBy);
+  const author = isRecord(payload.author) ? payload.author : null;
+  const authorUserId = getTrimmedString(author?.userId);
+  const authorDisplayName = getTrimmedString(author?.displayName);
 
-  if (!id || !text || !isISODateTimeString(createdAt) || !createdBy) {
+  if (
+    !id ||
+    !text ||
+    !isISODateTimeString(createdAt) ||
+    !createdBy ||
+    !authorUserId ||
+    !authorDisplayName
+  ) {
     return null;
   }
 
-  return { id, text, createdAt, createdBy };
+  return {
+    id,
+    text,
+    createdAt,
+    createdBy,
+    author: {
+      userId: authorUserId,
+      displayName: authorDisplayName,
+    },
+  };
 }
 
 //===================================================================

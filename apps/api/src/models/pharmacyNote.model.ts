@@ -8,6 +8,7 @@ export type PharmacyNoteEntity = {
   entityId: Schema.Types.ObjectId;
   text: string;
   createdBy: Schema.Types.ObjectId;
+  authorDisplayName?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -41,6 +42,7 @@ const pharmacyNoteSchema = new Schema<PharmacyNoteEntity>(
     },
 
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    authorDisplayName: { type: String, trim: true, default: undefined },
   },
 
   { timestamps: true, versionKey: false }

@@ -140,6 +140,11 @@ type ManagerCommentDto = {
   text: string;
   createdAt: string;
   createdBy: string;
+
+  author: {
+    userId: string;
+    displayName: string;
+  };
 };
 
 //===============================================================
@@ -351,22 +356,40 @@ function getPharmacyAddress(
 
 //===============================================================
 
+function getManagerCommentAuthorDisplayName(
+  user?: Pick<UserDocument, 'name' | 'email'> | null
+): string {
+  return user?.name?.trim() || user?.email?.trim() || 'Pharmacy member';
+}
+
+//===============================================================
+
 function serializeManagerComments(order: OrderDocument): ManagerCommentDto[] {
   const comments = (order.managerComments ?? []).map((comment) => ({
     id: comment._id?.toString() ?? '',
     text: comment.text,
     createdAt: comment.createdAt.toISOString(),
     createdBy: comment.createdBy.toString(),
+    author: {
+      userId: comment.createdBy.toString(),
+      displayName: comment.authorDisplayName?.trim() || 'Pharmacy member',
+    },
   }));
 
   if (order.managerComment?.trim()) {
+    const legacyAuthorId =
+      order.statusHistory.at(-1)?.changedBy.toString() ??
+      order.userId.toString();
+
     comments.push({
       id: order._id.toString(),
       text: order.managerComment.trim(),
       createdAt: order.updatedAt.toISOString(),
-      createdBy:
-        order.statusHistory.at(-1)?.changedBy.toString() ??
-        order.userId.toString(),
+      createdBy: legacyAuthorId,
+      author: {
+        userId: legacyAuthorId,
+        displayName: 'Pharmacy member',
+      },
     });
   }
 
@@ -1735,6 +1758,7 @@ export async function createOrderManagerCommentService(
   const session = await mongoose.startSession();
   const commentId = new Types.ObjectId();
   const createdAt = new Date();
+  let authorDisplayName = 'Pharmacy member';
 
   try {
     await session.withTransaction(async () => {
@@ -1755,6 +1779,13 @@ export async function createOrderManagerCommentService(
         );
       }
 
+      const author = await User.findById(actor.id)
+        .select('name email')
+        .session(session)
+        .lean<UserDocument | null>();
+
+      authorDisplayName = getManagerCommentAuthorDisplayName(author);
+
       await Order.updateOne(
         { _id: orderId },
         {
@@ -1764,6 +1795,7 @@ export async function createOrderManagerCommentService(
               text: input.text.trim(),
               createdAt,
               createdBy: new Types.ObjectId(actor.id),
+              authorDisplayName,
             },
           },
         },
@@ -1777,6 +1809,10 @@ export async function createOrderManagerCommentService(
         text: input.text.trim(),
         createdAt: createdAt.toISOString(),
         createdBy: actor.id,
+        author: {
+          userId: actor.id,
+          displayName: authorDisplayName,
+        },
       },
     };
   } finally {

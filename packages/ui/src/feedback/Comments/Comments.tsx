@@ -87,7 +87,7 @@ export function CommentItem({
     <li className={css.comment}>
       <div className={css.commentHead}>
         <div>
-          <strong>{title}</strong>
+          <strong>{comment.author.displayName || title}</strong>
 
           <time dateTime={comment.createdAt}>
             {formatDateTime(comment.createdAt) ?? '—'}

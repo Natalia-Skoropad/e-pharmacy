@@ -36,9 +36,24 @@ function normalizeComment(value: unknown): PharmacyNote | null {
   const id = getTrimmedString(value.id);
   const text = getTrimmedString(value.text);
   const createdAt = getTrimmedString(value.createdAt);
+  const author = isRecord(value.author) ? value.author : null;
+  const authorUserId = getTrimmedString(author?.userId);
+  const authorDisplayName = getTrimmedString(author?.displayName);
 
-  return id && text && isISODateTimeString(createdAt)
-    ? { id, text, createdAt }
+  return id &&
+    text &&
+    isISODateTimeString(createdAt) &&
+    authorUserId &&
+    authorDisplayName
+    ? {
+        id,
+        text,
+        createdAt,
+        author: {
+          userId: authorUserId,
+          displayName: authorDisplayName,
+        },
+      }
     : null;
 }
 

@@ -191,6 +191,7 @@ const managerCommentSchema = new Schema(
     text: { type: String, required: true, trim: true, maxlength: 1000 },
     createdAt: { type: Date, required: true, default: Date.now },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    authorDisplayName: { type: String, trim: true, default: undefined },
   },
   { _id: true, id: false }
 );

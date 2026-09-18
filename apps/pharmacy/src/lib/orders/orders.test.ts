@@ -6,6 +6,7 @@ import { ApiError } from '@e-pharmacy/api-client/transport';
 import {
   normalizePharmacyOrder,
   normalizePharmacyOrderDetails,
+  normalizePharmacyOrderManagerCommentsResponse,
   normalizePharmacyOrdersResponse,
 } from './orders';
 
@@ -174,5 +175,42 @@ test('pharmacy orders response rejects malformed statistics instead of using zer
       earliestCreatedAt: null,
     }).earliestCreatedAt,
     null
+  );
+});
+
+//===================================================================
+
+test('order comment parser requires the author snapshot', () => {
+  const comment = {
+    id: '507f1f77bcf86cd799439017',
+    text: 'Internal note',
+    createdAt: '2026-08-12T10:05:00.000Z',
+    createdBy: '507f1f77bcf86cd799439018',
+    author: {
+      userId: '507f1f77bcf86cd799439018',
+      displayName: 'Manager Alice',
+    },
+  };
+
+  const response = normalizePharmacyOrderManagerCommentsResponse({
+    items: [comment],
+    page: 1,
+    perPage: 10,
+    total: 1,
+    totalPages: 1,
+  });
+
+  assert.equal(response.items[0]?.author.displayName, 'Manager Alice');
+
+  assert.throws(
+    () =>
+      normalizePharmacyOrderManagerCommentsResponse({
+        items: [{ ...comment, author: undefined }],
+        page: 1,
+        perPage: 10,
+        total: 1,
+        totalPages: 1,
+      }),
+    isInvalidResponse
   );
 });

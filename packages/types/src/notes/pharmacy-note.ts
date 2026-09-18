@@ -10,8 +10,16 @@ export type PharmacyNoteEntityType =
 
 //===================================================================
 
+type PharmacyNoteAuthor = Readonly<{
+  userId: EntityId;
+  displayName: string;
+}>;
+
+//===================================================================
+
 export type PharmacyNote = Readonly<{
   id: EntityId;
   text: string;
   createdAt: ISODateTimeString;
+  author: PharmacyNoteAuthor;
 }>;
