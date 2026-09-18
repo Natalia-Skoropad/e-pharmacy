@@ -522,6 +522,18 @@ function PharmacyDashboardPageContent() {
     return PHARMACY_ROUTES.ALL_PRODUCTS;
   };
 
+  if (isLoading) {
+    return (
+      <main className={css.page} aria-label="Loading dashboard">
+        <section className={css.contentCard}>
+          <div className={css.loaderBox}>
+            <LoadingSpinner label="Loading dashboard statistics..." />
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className={css.page} aria-labelledby="dashboard-page-title">
       <div className={css.stack}>
@@ -606,7 +618,9 @@ function PharmacyDashboardPageContent() {
               aria-label="Sales value statistics"
             >
               {isSalesLoading ? (
-                <LoadingSpinner label="Loading sales chart..." />
+                <div className={css.loaderBox}>
+                  <LoadingSpinner label="Loading sales chart..." />
+                </div>
               ) : isSalesUnavailable ? (
                 <EmptyState
                   title="Sales statistics are temporarily unavailable."

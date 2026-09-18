@@ -117,6 +117,7 @@ function SalesPeriodFilters({
         label="Year"
         value={year}
         options={yearOptions}
+        escapeOverflow
         onChange={onYearChange}
       />
 
@@ -125,6 +126,7 @@ function SalesPeriodFilters({
         label="Month"
         value={month}
         options={MONTH_OPTIONS}
+        escapeOverflow
         onChange={onMonthChange}
       />
 

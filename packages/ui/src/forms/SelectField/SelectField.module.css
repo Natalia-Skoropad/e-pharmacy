@@ -121,6 +121,15 @@
   box-shadow: var(--shadow-card);
 }
 
+.optionsFloating {
+  position: fixed;
+  z-index: var(--z-dropdown);
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+}
+
 .option {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

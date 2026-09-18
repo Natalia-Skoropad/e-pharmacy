@@ -1,7 +1,17 @@
 'use client';
 
 import clsx from 'clsx';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
+
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown, LoaderCircle } from 'lucide-react';
 
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
@@ -35,7 +45,16 @@ export type SelectFieldProps<TValue extends string> = Readonly<{
   labelVisibility?: 'visible' | 'visually-hidden';
   compact?: boolean;
   reserveMessageSpace?: boolean;
+  escapeOverflow?: boolean;
   onChange: (value: TValue) => void;
+}>;
+
+type FloatingOptionsPosition = Readonly<{
+  left: number;
+  width: number;
+  top?: number;
+  bottom?: number;
+  maxHeight: number;
 }>;
 
 //===============================================================
@@ -61,6 +80,7 @@ function SelectField<TValue extends string>({
   labelVisibility = 'visible',
   compact = false,
   reserveMessageSpace = false,
+  escapeOverflow = false,
   onChange,
 }: SelectFieldProps<TValue>) {
   const generatedId = useId();
@@ -73,10 +93,14 @@ function SelectField<TValue extends string>({
     [describedBy, hintId, errorId].filter(Boolean).join(' ') || undefined;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const floatingOptionsRef = useRef<HTMLUListElement | null>(null);
   const optionRefs = useRef<Array<HTMLLIElement | null>>([]);
   const typeaheadRef = useRef('');
   const typeaheadTimerRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [floatingPosition, setFloatingPosition] =
+    useState<FloatingOptionsPosition | null>(null);
 
   const selectedOption = options.find((option) => option.value === value);
   const selectedIndex = options.findIndex((option) => option.value === value);
@@ -108,13 +132,82 @@ function SelectField<TValue extends string>({
   useEffect(() => {
     if (!isOpen || activeIndex < 0) return;
     optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
-  }, [activeIndex, isOpen]);
+  }, [activeIndex, floatingPosition, isOpen]);
 
   useOutsidePointerDown({
-    refs: [rootRef],
+    refs: [rootRef, floatingOptionsRef],
     enabled: isOpen,
     onOutside: () => setIsOpen(false),
   });
+
+  const updateFloatingPosition = useCallback(() => {
+    if (!escapeOverflow || typeof window === 'undefined') return;
+
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const viewportPadding = 12;
+    const gap = 8;
+    const preferredMaxHeight = 260;
+
+    const availableBelow = Math.max(
+      0,
+      window.innerHeight - rect.bottom - viewportPadding - gap
+    );
+
+    const availableAbove = Math.max(0, rect.top - viewportPadding - gap);
+    const openAbove = availableBelow < 180 && availableAbove > availableBelow;
+
+    const maxHeight = Math.max(
+      96,
+      Math.min(preferredMaxHeight, openAbove ? availableAbove : availableBelow)
+    );
+
+    const width = Math.min(
+      rect.width,
+      Math.max(0, window.innerWidth - viewportPadding * 2)
+    );
+
+    const left = Math.min(
+      Math.max(viewportPadding, rect.left),
+      Math.max(viewportPadding, window.innerWidth - width - viewportPadding)
+    );
+
+    setFloatingPosition(
+      openAbove
+        ? {
+            left,
+            width,
+            bottom: window.innerHeight - rect.top + gap,
+            maxHeight,
+          }
+        : {
+            left,
+            width,
+            top: rect.bottom + gap,
+            maxHeight,
+          }
+    );
+  }, [escapeOverflow]);
+
+  useEffect(() => {
+    if (!isOpen || !escapeOverflow) {
+      setFloatingPosition(null);
+      return;
+    }
+
+    updateFloatingPosition();
+
+    const handleViewportChange = () => updateFloatingPosition();
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('scroll', handleViewportChange, true);
+
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('scroll', handleViewportChange, true);
+    };
+  }, [escapeOverflow, isOpen, updateFloatingPosition]);
 
   useEffect(
     () => () => {
@@ -196,6 +289,61 @@ function SelectField<TValue extends string>({
     }
   };
 
+  const optionsList = isOpen ? (
+    <ul
+      ref={escapeOverflow ? floatingOptionsRef : undefined}
+      className={clsx(css.options, escapeOverflow && css.optionsFloating)}
+      id={listboxId}
+      role="listbox"
+      aria-labelledby={`${buttonId}-label`}
+      style={
+        escapeOverflow && floatingPosition
+          ? ({
+              left: floatingPosition.left,
+              width: floatingPosition.width,
+              top: floatingPosition.top,
+              bottom: floatingPosition.bottom,
+              maxHeight: floatingPosition.maxHeight,
+            } as CSSProperties)
+          : undefined
+      }
+    >
+      {options.map((option, index) => {
+        const isSelected = option.value === value;
+        const isOptionActive = index === activeIndex;
+
+        return (
+          <li
+            ref={(element) => {
+              optionRefs.current[index] = element;
+            }}
+            className={clsx(
+              css.option,
+              isOptionActive && css.optionActive,
+              isSelected && css.optionSelected,
+              option.disabled && css.optionDisabled
+            )}
+            id={`${listboxId}-option-${index}`}
+            key={`${option.value}-${index}`}
+            role="option"
+            aria-selected={isSelected}
+            aria-disabled={option.disabled || undefined}
+            onMouseEnter={() => {
+              if (!option.disabled) setActiveIndex(index);
+            }}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => handleSelect(option)}
+          >
+            <span>{option.label}</span>
+            {isSelected ? (
+              <Check className={css.checkIcon} size={16} aria-hidden="true" />
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  ) : null;
+
   return (
     <div
       className={clsx(
@@ -228,6 +376,7 @@ function SelectField<TValue extends string>({
 
       <div className={css.selectRoot}>
         <button
+          ref={triggerRef}
           id={buttonId}
           className={clsx(
             css.trigger,
@@ -280,52 +429,11 @@ function SelectField<TValue extends string>({
           </p>
         ) : null}
 
-        {isOpen ? (
-          <ul
-            className={css.options}
-            id={listboxId}
-            role="listbox"
-            aria-labelledby={`${buttonId}-label`}
-          >
-            {options.map((option, index) => {
-              const isSelected = option.value === value;
-              const isOptionActive = index === activeIndex;
-
-              return (
-                <li
-                  ref={(element) => {
-                    optionRefs.current[index] = element;
-                  }}
-                  className={clsx(
-                    css.option,
-                    isOptionActive && css.optionActive,
-                    isSelected && css.optionSelected,
-                    option.disabled && css.optionDisabled
-                  )}
-                  id={`${listboxId}-option-${index}`}
-                  key={`${option.value}-${index}`}
-                  role="option"
-                  aria-selected={isSelected}
-                  aria-disabled={option.disabled || undefined}
-                  onMouseEnter={() => {
-                    if (!option.disabled) setActiveIndex(index);
-                  }}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => handleSelect(option)}
-                >
-                  <span>{option.label}</span>
-                  {isSelected ? (
-                    <Check
-                      className={css.checkIcon}
-                      size={16}
-                      aria-hidden="true"
-                    />
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
+        {escapeOverflow
+          ? isOpen && floatingPosition && typeof document !== 'undefined'
+            ? createPortal(optionsList, document.body)
+            : null
+          : optionsList}
       </div>
     </div>
   );

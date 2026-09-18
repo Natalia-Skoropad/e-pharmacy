@@ -1739,7 +1739,9 @@ function AllProductDetailsPageContent({
                         categoryControlsLabel="Product category shown on the chart"
                       />
                     ) : (
-                      <LoadingSpinner label="Loading product sales chart..." />
+                      <div className={css.loaderBox}>
+                        <LoadingSpinner label="Loading product sales chart..." />
+                      </div>
                     )}
                   </section>
                 ) : null}
