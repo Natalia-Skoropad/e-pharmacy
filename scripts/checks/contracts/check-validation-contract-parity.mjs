@@ -64,6 +64,24 @@ const PHARMACY_NOTE_MODEL_SOURCE = path.join(
   'pharmacyNote.model.ts'
 );
 
+const ORDER_SCHEMA_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'schemas',
+  'order.schema.ts'
+);
+
+const ORDER_MODEL_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'models',
+  'order.model.ts'
+);
+
 //===================================================================
 
 async function readFixture(filePath) {
@@ -123,12 +141,16 @@ const [
   pharmacyNoteValidationSource,
   pharmacyNoteSchemaSource,
   pharmacyNoteModelSource,
+  orderSchemaSource,
+  orderModelSource,
 ] = await Promise.all([
   readFixture(FRONTEND_FIXTURE),
   readFixture(BACKEND_FIXTURE),
   readSource(PHARMACY_NOTE_VALIDATION_SOURCE),
   readSource(PHARMACY_NOTE_SCHEMA_SOURCE),
   readSource(PHARMACY_NOTE_MODEL_SOURCE),
+  readSource(ORDER_SCHEMA_SOURCE),
+  readSource(ORDER_MODEL_SOURCE),
 ]);
 
 //===================================================================
@@ -170,6 +192,30 @@ assert.equal(
   storedPharmacyNoteMaxLength,
   pharmacyNoteMaxLength,
   'Frontend and stored pharmacy note max lengths differ'
+);
+
+const backendOrderCommentMaxLength = requireIntegerMatch(
+  orderSchemaSource,
+  /createOrderManagerCommentSchema[\s\S]*?\.max\((\d+)\)/,
+  'Backend order manager comment max length'
+);
+
+const storedOrderCommentMaxLength = requireIntegerMatch(
+  orderModelSource,
+  /const managerCommentSchema[\s\S]*?text:\s*\{[\s\S]*?maxlength:\s*(\d+)/,
+  'Stored order manager comment max length'
+);
+
+assert.equal(
+  backendOrderCommentMaxLength,
+  pharmacyNoteMaxLength,
+  'Frontend and backend order comment max lengths differ'
+);
+
+assert.equal(
+  storedOrderCommentMaxLength,
+  pharmacyNoteMaxLength,
+  'Frontend and stored order comment max lengths differ'
 );
 
 console.log(

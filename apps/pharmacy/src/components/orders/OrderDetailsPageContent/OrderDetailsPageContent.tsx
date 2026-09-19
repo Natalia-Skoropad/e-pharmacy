@@ -954,10 +954,15 @@ function ManagerCommentTab({
           options
         )
       }
-      create={async (text) => {
-        await createPharmacyOrderComment(orderId, text);
+      create={async (text, options) => {
+        await createPharmacyOrderComment(
+          orderId,
+          text,
+          options.clientRequestId,
+          options
+        );
       }}
-      remove={(id) => deletePharmacyOrderComment(orderId, id)}
+      remove={(id, options) => deletePharmacyOrderComment(orderId, id, options)}
       onTotalChange={onTotalChange}
     />
   );

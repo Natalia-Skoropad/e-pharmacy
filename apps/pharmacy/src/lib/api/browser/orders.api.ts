@@ -38,7 +38,9 @@ import {
 } from '@/lib/orders/order-sales-statistics';
 
 import {
+  sanitizeBrowserMutationRequestOptions,
   sanitizeBrowserReadRequestOptions,
+  type BrowserMutationRequestOptions,
   type BrowserReadRequestOptions,
 } from './request-options';
 
@@ -108,7 +110,11 @@ export async function createPharmacyOrder(
   const path = PHARMACY_API_ROUTES.orders.list;
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'POST', body: payload }),
+    await localApiRequest(path, {
+      method: 'POST',
+      body: payload,
+    }),
+
     parseOrderData,
     { url: path, method: 'POST' }
   );
@@ -206,13 +212,20 @@ export async function getPharmacyOrderComments(
 
 export async function createPharmacyOrderComment(
   orderId: string,
-  text: string
+  text: string,
+  clientRequestId: string,
+  options?: BrowserMutationRequestOptions
 ): Promise<PharmacyOrderManagerComment> {
   const path = PHARMACY_API_ROUTES.orders.comments(orderId);
-  const payload: CreateOrderManagerCommentPayload = { text };
+  const payload: CreateOrderManagerCommentPayload = { text, clientRequestId };
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'POST', body: payload }),
+    await localApiRequest(path, {
+      method: 'POST',
+      body: payload,
+      ...sanitizeBrowserMutationRequestOptions(options),
+    }),
+
     parseCreatedComment,
     { url: path, method: 'POST' }
   );
@@ -222,12 +235,17 @@ export async function createPharmacyOrderComment(
 
 export async function deletePharmacyOrderComment(
   orderId: string,
-  commentId: string
+  commentId: string,
+  options?: BrowserMutationRequestOptions
 ): Promise<void> {
   const path = PHARMACY_API_ROUTES.orders.comment(orderId, commentId);
 
   parseApiResponseData(
-    await localApiRequest(path, { method: 'DELETE' }),
+    await localApiRequest(path, {
+      method: 'DELETE',
+      ...sanitizeBrowserMutationRequestOptions(options),
+    }),
+
     parseMessageResponse,
     { url: path, method: 'DELETE' }
   );

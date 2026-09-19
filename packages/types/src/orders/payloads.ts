@@ -16,4 +16,7 @@ export type UpdateOrderStatusPayload =
 
 //=============================================================================
 
-export type CreateOrderManagerCommentPayload = { text: string };
+export type CreateOrderManagerCommentPayload = {
+  text: string;
+  clientRequestId: string;
+};

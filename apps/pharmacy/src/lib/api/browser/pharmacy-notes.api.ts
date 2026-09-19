@@ -24,7 +24,9 @@ import type {
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
 import {
+  sanitizeBrowserMutationRequestOptions,
   sanitizeBrowserReadRequestOptions,
+  type BrowserMutationRequestOptions,
   type BrowserReadRequestOptions,
 } from './request-options';
 
@@ -110,12 +112,19 @@ export async function getPharmacyNotes(
 export async function createPharmacyNote(
   type: PharmacyNoteEntityType,
   entityId: string,
-  text: string
+  text: string,
+  clientRequestId: string,
+  options?: BrowserMutationRequestOptions
 ): Promise<void> {
   const path = PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId);
 
   parseApiResponseData(
-    await localApiRequest(path, { method: 'POST', body: { text } }),
+    await localApiRequest(path, {
+      method: 'POST',
+      body: { text, clientRequestId },
+      ...sanitizeBrowserMutationRequestOptions(options),
+    }),
+
     parseCreatedNote,
     { url: path, method: 'POST' }
   );
@@ -126,7 +135,8 @@ export async function createPharmacyNote(
 export async function deletePharmacyNote(
   type: PharmacyNoteEntityType,
   entityId: string,
-  noteId: string
+  noteId: string,
+  options?: BrowserMutationRequestOptions
 ): Promise<void> {
   const path = PHARMACY_API_ROUTES.pharmacyNotes.details(
     type,
@@ -135,7 +145,11 @@ export async function deletePharmacyNote(
   );
 
   parseApiResponseData(
-    await localApiRequest(path, { method: 'DELETE' }),
+    await localApiRequest(path, {
+      method: 'DELETE',
+      ...sanitizeBrowserMutationRequestOptions(options),
+    }),
+
     parseMessageResponse,
     { url: path, method: 'DELETE' }
   );

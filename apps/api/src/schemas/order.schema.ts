@@ -98,6 +98,7 @@ export const orderCommentsQuerySchema = z.preprocess(
 
 export const createOrderManagerCommentSchema = z.object({
   text: z.string().trim().min(1, 'Comment is required').max(1000),
+  clientRequestId: z.string().trim().uuid(),
 });
 
 //===============================================================

@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { USER_ROLES } from '../constants/auth';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { User } from '../models/user.model';
@@ -29,6 +31,18 @@ function getTestMongoUri(): string {
   }
 
   return TEST_MONGODB_URI;
+}
+
+//===================================================================
+
+function pharmacyActor(id: Types.ObjectId) {
+  return { id: id.toString(), role: USER_ROLES.PHARMACY } as const;
+}
+
+//===================================================================
+
+function noteInput(text: string, clientRequestId = randomUUID()) {
+  return { text, clientRequestId };
 }
 
 //===================================================================
@@ -91,35 +105,35 @@ test(
 
     try {
       await createPharmacyNoteService(
-        ownerId.toString(),
+        pharmacyActor(ownerId),
         'pharmacy',
         pharmacyId.toString(),
-        'Own pharmacy note'
+        noteInput('Own pharmacy note')
       );
 
       await createPharmacyNoteService(
-        ownerId.toString(),
+        pharmacyActor(ownerId),
         'client',
         ownClientId.toString(),
-        'Own client note'
+        noteInput('Own client note')
       );
 
       await assert.rejects(
         createPharmacyNoteService(
-          ownerId.toString(),
+          pharmacyActor(ownerId),
           'pharmacy',
           otherPharmacyId.toString(),
-          'Foreign pharmacy note'
+          noteInput('Foreign pharmacy note')
         ),
         (error: unknown) => (error as HttpError).status === 404
       );
 
       await assert.rejects(
         createPharmacyNoteService(
-          ownerId.toString(),
+          pharmacyActor(ownerId),
           'client',
           unrelatedClientId.toString(),
-          'Unrelated client note'
+          noteInput('Unrelated client note')
         ),
         (error: unknown) => (error as HttpError).status === 404
       );
@@ -131,10 +145,10 @@ test(
 
       await assert.rejects(
         createPharmacyNoteService(
-          ownerId.toString(),
+          pharmacyActor(ownerId),
           'pharmacy',
           pharmacyId.toString(),
-          'Blocked pharmacy note'
+          noteInput('Blocked pharmacy note')
         ),
         (error: unknown) =>
           (error as HttpError).status === 403 &&
@@ -175,14 +189,14 @@ test(
 
     try {
       const managerANote = await createPharmacyNoteService(
-        managerAId.toString(),
+        pharmacyActor(managerAId),
         'pharmacy',
         pharmacyId.toString(),
-        'Manager A shared note'
+        noteInput('Manager A shared note')
       );
 
       await deletePharmacyNoteService(
-        managerBId.toString(),
+        pharmacyActor(managerBId),
         'pharmacy',
         pharmacyId.toString(),
         managerANote.note.id
@@ -194,14 +208,14 @@ test(
       );
 
       const managerBNote = await createPharmacyNoteService(
-        managerBId.toString(),
+        pharmacyActor(managerBId),
         'pharmacy',
         pharmacyId.toString(),
-        'Manager B shared note'
+        noteInput('Manager B shared note')
       );
 
       await deletePharmacyNoteService(
-        ownerId.toString(),
+        pharmacyActor(ownerId),
         'pharmacy',
         pharmacyId.toString(),
         managerBNote.note.id
@@ -213,14 +227,14 @@ test(
       );
 
       const ownerNote = await createPharmacyNoteService(
-        ownerId.toString(),
+        pharmacyActor(ownerId),
         'pharmacy',
         pharmacyId.toString(),
-        'Owner shared note'
+        noteInput('Owner shared note')
       );
 
       await deletePharmacyNoteService(
-        managerAId.toString(),
+        pharmacyActor(managerAId),
         'pharmacy',
         pharmacyId.toString(),
         ownerNote.note.id
@@ -273,10 +287,10 @@ test(
 
     try {
       const created = await createPharmacyNoteService(
-        managerId.toString(),
+        pharmacyActor(managerId),
         'pharmacy',
         pharmacyId.toString(),
-        'Snapshot note'
+        noteInput('Snapshot note')
       );
 
       assert.deepEqual(created.note.author, {
@@ -290,7 +304,7 @@ test(
       );
 
       let page = await getPharmacyNotesService(
-        managerId.toString(),
+        pharmacyActor(managerId),
         'pharmacy',
         pharmacyId.toString(),
         1,
@@ -302,7 +316,7 @@ test(
       await User.deleteOne({ _id: managerId });
 
       page = await getPharmacyNotesService(
-        ownerId.toString(),
+        pharmacyActor(ownerId),
         'pharmacy',
         pharmacyId.toString(),
         1,
@@ -317,6 +331,194 @@ test(
         User.deleteOne({ _id: managerId }),
       ]);
 
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===================================================================
+
+test(
+  'internal pharmacy notes fail closed for a non-pharmacy actor even with stale pharmacy membership',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const staleClientId = new Types.ObjectId();
+    const pharmacyId = new Types.ObjectId();
+
+    await Pharmacy.create({
+      _id: pharmacyId,
+      ownerId: staleClientId,
+      managerUserIds: [],
+      documents: [],
+      name: 'Stale Membership Pharmacy',
+      status: 'active',
+    });
+
+    try {
+      const actor = {
+        id: staleClientId.toString(),
+        role: USER_ROLES.CLIENT,
+      } as const;
+
+      await assert.rejects(
+        getPharmacyNotesService(
+          actor,
+          'pharmacy',
+          pharmacyId.toString(),
+          1,
+          10
+        ),
+        (error: unknown) => (error as HttpError).status === 403
+      );
+
+      await assert.rejects(
+        createPharmacyNoteService(
+          actor,
+          'pharmacy',
+          pharmacyId.toString(),
+          noteInput('Must stay forbidden')
+        ),
+        (error: unknown) => (error as HttpError).status === 403
+      );
+    } finally {
+      await Promise.all([
+        PharmacyNote.deleteMany({ pharmacyId }),
+        Pharmacy.deleteOne({ _id: pharmacyId }),
+      ]);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===================================================================
+
+test(
+  'removed pharmacy manager immediately loses internal note read and delete access',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const ownerId = new Types.ObjectId();
+    const managerId = new Types.ObjectId();
+    const pharmacyId = new Types.ObjectId();
+
+    await Pharmacy.create({
+      _id: pharmacyId,
+      ownerId,
+      managerUserIds: [managerId],
+      documents: [],
+      name: 'Removed Manager Pharmacy',
+      status: 'active',
+    });
+
+    try {
+      const created = await createPharmacyNoteService(
+        pharmacyActor(managerId),
+        'pharmacy',
+        pharmacyId.toString(),
+        noteInput('Manager note before removal')
+      );
+
+      await Pharmacy.updateOne(
+        { _id: pharmacyId },
+        { $pull: { managerUserIds: managerId } }
+      );
+
+      await assert.rejects(
+        getPharmacyNotesService(
+          pharmacyActor(managerId),
+          'pharmacy',
+          pharmacyId.toString(),
+          1,
+          10
+        ),
+        (error: unknown) => (error as HttpError).status === 409
+      );
+
+      await assert.rejects(
+        deletePharmacyNoteService(
+          pharmacyActor(managerId),
+          'pharmacy',
+          pharmacyId.toString(),
+          created.note.id
+        ),
+        (error: unknown) => (error as HttpError).status === 409
+      );
+
+      await deletePharmacyNoteService(
+        pharmacyActor(ownerId),
+        'pharmacy',
+        pharmacyId.toString(),
+        created.note.id
+      );
+    } finally {
+      await Promise.all([
+        PharmacyNote.deleteMany({ pharmacyId }),
+        Pharmacy.deleteOne({ _id: pharmacyId }),
+      ]);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===================================================================
+
+test(
+  'pharmacy note create is idempotent for an ambiguous retry and rejects request-key reuse with different text',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const ownerId = new Types.ObjectId();
+    const pharmacyId = new Types.ObjectId();
+    const clientRequestId = randomUUID();
+
+    await Pharmacy.create({
+      _id: pharmacyId,
+      ownerId,
+      managerUserIds: [],
+      documents: [],
+      name: 'Idempotent Notes Pharmacy',
+      status: 'active',
+    });
+
+    try {
+      await PharmacyNote.syncIndexes();
+
+      const first = await createPharmacyNoteService(
+        pharmacyActor(ownerId),
+        'pharmacy',
+        pharmacyId.toString(),
+        noteInput('Ambiguous retry note', clientRequestId)
+      );
+
+      const retry = await createPharmacyNoteService(
+        pharmacyActor(ownerId),
+        'pharmacy',
+        pharmacyId.toString(),
+        noteInput('Ambiguous retry note', clientRequestId)
+      );
+
+      assert.equal(retry.note.id, first.note.id);
+
+      assert.equal(
+        await PharmacyNote.countDocuments({ pharmacyId, clientRequestId }),
+        1
+      );
+
+      await assert.rejects(
+        createPharmacyNoteService(
+          pharmacyActor(ownerId),
+          'pharmacy',
+          pharmacyId.toString(),
+          noteInput('Different content', clientRequestId)
+        ),
+        (error: unknown) => (error as HttpError).status === 409
+      );
+    } finally {
+      await Promise.all([
+        PharmacyNote.deleteMany({ pharmacyId }),
+        Pharmacy.deleteOne({ _id: pharmacyId }),
+      ]);
       await mongoose.disconnect();
     }
   }

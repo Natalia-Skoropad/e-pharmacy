@@ -7,7 +7,12 @@ import { ProductOffer } from '../models/productOffer.model';
 import { ProductRequest } from '../models/productRequest.model';
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
-import { findPharmacyForInternalNotesAccess } from './pharmacy-membership.service';
+import type { CreatePharmacyNoteInput } from '../schemas/pharmacy-note.schema';
+
+import {
+  findPharmacyForInternalNotesAccess,
+  type PharmacyInternalNotesActor,
+} from './pharmacy-membership.service';
 
 //===============================================================
 
@@ -101,15 +106,78 @@ async function assertEntityAccess(
 
 //===============================================================
 
+function serializePharmacyNote(note: {
+  _id: unknown;
+  text: string;
+  createdAt: Date;
+  createdBy: unknown;
+  authorDisplayName?: string;
+}) {
+  return {
+    id: String(note._id),
+    text: note.text,
+    createdAt: note.createdAt.toISOString(),
+    author: {
+      userId: String(note.createdBy),
+      displayName: note.authorDisplayName?.trim() || 'Pharmacy member',
+    },
+  };
+}
+
+//===============================================================
+
+function assertPharmacyNoteReplayMatches(
+  note: { text: string },
+  normalizedText: string
+): void {
+  if (note.text !== normalizedText) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Comment request key was already used for different content.'
+    );
+  }
+}
+
+//===============================================================
+
+async function findPharmacyNoteReplay(input: {
+  pharmacyId: Types.ObjectId;
+  actorId: string;
+  entityType: PharmacyNoteEntityType;
+  entityId: string;
+  clientRequestId: string;
+}) {
+  return PharmacyNote.findOne({
+    pharmacyId: input.pharmacyId,
+    entityType: input.entityType,
+    entityId: new Types.ObjectId(input.entityId),
+    createdBy: input.actorId,
+    clientRequestId: input.clientRequestId,
+  }).lean();
+}
+
+//===============================================================
+
+function isDuplicateKeyError(error: unknown): boolean {
+  return Boolean(
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    error.code === 11000
+  );
+}
+
+//===============================================================
+
 export async function getPharmacyNotesService(
-  userId: string,
+  actor: PharmacyInternalNotesActor,
   entityType: PharmacyNoteEntityType,
   entityId: string,
   page: number,
   perPage: number
 ) {
   const { pharmacy } = await findPharmacyForInternalNotesAccess(
-    userId,
+    actor,
     'read_internal_notes'
   );
 
@@ -134,16 +202,7 @@ export async function getPharmacyNotesService(
     .lean();
 
   return {
-    items: notes.map((note) => ({
-      id: String(note._id),
-      text: note.text,
-      createdAt: note.createdAt.toISOString(),
-
-      author: {
-        userId: String(note.createdBy),
-        displayName: note.authorDisplayName?.trim() || 'Pharmacy member',
-      },
-    })),
+    items: notes.map(serializePharmacyNote),
 
     page: safePage,
     perPage,
@@ -155,17 +214,32 @@ export async function getPharmacyNotesService(
 //===============================================================
 
 export async function createPharmacyNoteService(
-  userId: string,
+  actor: PharmacyInternalNotesActor,
   entityType: PharmacyNoteEntityType,
   entityId: string,
-  text: string
+  input: CreatePharmacyNoteInput
 ) {
   const { pharmacy } = await findPharmacyForInternalNotesAccess(
-    userId,
+    actor,
     'manage_internal_notes'
   );
 
   const pharmacyId = pharmacy._id;
+  const normalizedText = input.text.trim();
+
+  const replayInput = {
+    pharmacyId,
+    actorId: actor.id,
+    entityType,
+    entityId,
+    clientRequestId: input.clientRequestId,
+  };
+
+  const existing = await findPharmacyNoteReplay(replayInput);
+  if (existing) {
+    assertPharmacyNoteReplayMatches(existing, normalizedText);
+    return { note: serializePharmacyNote(existing) };
+  }
 
   await assertEntityAccess(
     pharmacyId,
@@ -174,44 +248,44 @@ export async function createPharmacyNoteService(
     entityType === 'product_request'
   );
 
-  const author = await User.findById(userId)
+  const author = await User.findById(actor.id)
     .select('name email')
     .lean<PharmacyNoteAuthorUser | null>();
 
   const authorDisplayName = getPharmacyNoteAuthorDisplayName(author);
 
-  const note = await PharmacyNote.create({
-    pharmacyId,
-    entityType,
-    entityId,
-    text: text.trim(),
-    createdBy: userId,
-    authorDisplayName,
-  });
+  try {
+    const note = await PharmacyNote.create({
+      pharmacyId,
+      entityType,
+      entityId,
+      text: normalizedText,
+      createdBy: actor.id,
+      authorDisplayName,
+      clientRequestId: input.clientRequestId,
+    });
 
-  return {
-    note: {
-      id: String(note._id),
-      text: note.text,
-      createdAt: note.createdAt.toISOString(),
-      author: {
-        userId,
-        displayName: authorDisplayName,
-      },
-    },
-  };
+    return { note: serializePharmacyNote(note) };
+  } catch (error) {
+    if (!isDuplicateKeyError(error)) throw error;
+
+    const replay = await findPharmacyNoteReplay(replayInput);
+    if (!replay) throw error;
+    assertPharmacyNoteReplayMatches(replay, normalizedText);
+    return { note: serializePharmacyNote(replay) };
+  }
 }
 
 //===============================================================
 
 export async function deletePharmacyNoteService(
-  userId: string,
+  actor: PharmacyInternalNotesActor,
   entityType: PharmacyNoteEntityType,
   entityId: string,
   noteId: string
 ) {
   const { pharmacy } = await findPharmacyForInternalNotesAccess(
-    userId,
+    actor,
     'manage_internal_notes'
   );
 

@@ -116,9 +116,10 @@ test('client resources keep unavailable state separate from successful empty dat
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
 
-  const commentsSource = await read(
-    '../comments/EntityComments/EntityComments.tsx'
-  );
+  const [commentsSource, commentsResourceSource] = await Promise.all([
+    read('../comments/EntityComments/EntityComments.tsx'),
+    read('../comments/EntityComments/useEntityCommentsResource.ts'),
+  ]);
 
   assert.match(clientsSource, /useState<ResourceStatus>\('idle'\)/);
   assert.match(clientsSource, /getSafeApiErrorMessage\(/);
@@ -133,10 +134,19 @@ test('client resources keep unavailable state separate from successful empty dat
   assert.doesNotMatch(detailsSource, /setOrders\(\[\]\)[\s\S]{0,180}catch/);
   assert.doesNotMatch(detailsSource, /setProducts\(\[\]\)[\s\S]{0,180}catch/);
 
-  assert.match(commentsSource, /useState<ResourceStatus>\('loading'\)/);
-  assert.match(commentsSource, /status === 'success'/);
+  assert.match(
+    commentsResourceSource,
+    /useState<EntityCommentsResourceStatus>\(\s*'loading'\s*\)/
+  );
+
+  assert.match(commentsSource, /comments\.status === 'success'/);
   assert.match(commentsSource, /getSafeApiErrorMessage\(/);
   assert.doesNotMatch(commentsSource, /instanceof Error && .*\.message/);
+
+  assert.doesNotMatch(
+    commentsResourceSource,
+    /instanceof Error && .*\.message/
+  );
 });
 
 //===================================================================
@@ -155,6 +165,7 @@ test('client detail pagination accepts canonical backend pages and order statist
     source,
     /setProductsPageState\(\{[\s\S]*?searchKey: productSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
   );
+
   assert.match(source, /setOrderStatistics\(response\.statistics\)/);
 
   assert.match(

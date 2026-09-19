@@ -30,6 +30,7 @@ export const pharmacyNotesQuerySchema = z.object({
 
 export const createPharmacyNoteSchema = z.object({
   text: z.string().trim().min(1).max(1000),
+  clientRequestId: z.string().trim().uuid(),
 });
 
 //===============================================================

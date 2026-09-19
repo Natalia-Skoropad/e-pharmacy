@@ -25,8 +25,11 @@ export async function getPharmacyNotes(
   res: ValidatedResponse<unknown, PharmacyNoteParams, PharmacyNotesQuery>
 ) {
   const { params, query } = res.locals.validated;
+  const user = req.user;
+  if (!user) return;
+
   const data = await getPharmacyNotesService(
-    req.user?.id ?? '',
+    { id: user.id, role: user.role },
     params.entityType,
     params.entityId,
     query.page,
@@ -43,11 +46,14 @@ export async function createPharmacyNote(
   res: ValidatedResponse<CreatePharmacyNoteInput, PharmacyNoteParams>
 ) {
   const { body, params } = res.locals.validated;
+  const user = req.user;
+  if (!user) return;
+
   const data = await createPharmacyNoteService(
-    req.user?.id ?? '',
+    { id: user.id, role: user.role },
     params.entityType,
     params.entityId,
-    body.text
+    body
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
@@ -60,8 +66,11 @@ export async function deletePharmacyNote(
   res: ValidatedResponse<unknown, PharmacyNoteDeleteParams>
 ) {
   const { params } = res.locals.validated;
+  const user = req.user;
+  if (!user) return;
+
   const data = await deletePharmacyNoteService(
-    req.user?.id ?? '',
+    { id: user.id, role: user.role },
     params.entityType,
     params.entityId,
     params.noteId

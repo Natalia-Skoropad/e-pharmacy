@@ -192,6 +192,7 @@ const managerCommentSchema = new Schema(
     createdAt: { type: Date, required: true, default: Date.now },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     authorDisplayName: { type: String, trim: true, default: undefined },
+    clientRequestId: { type: String, trim: true, default: undefined },
   },
   { _id: true, id: false }
 );

@@ -104,6 +104,16 @@ test(
       }),
 
       User.create({
+        _id: managerA,
+        name: 'Tenant Manager Original',
+        email: `tenant-manager-${suffix.toLowerCase()}@example.com`,
+        password: 'test-password-hash',
+        role: 'pharmacy',
+        status: 'active',
+        phone: `+38093${getPhoneSuffix(suffix)}`,
+      }),
+
+      User.create({
         _id: clientId,
         name: 'Tenant Test Client',
         email: `tenant-${suffix.toLowerCase()}@example.com`,
@@ -196,6 +206,7 @@ test(
         () =>
           createOrderManagerCommentService(foreignActor, created.order.id, {
             text: 'Foreign comment attempt',
+            clientRequestId: '23bfe97c-0fbe-4747-aee9-1f7658301316',
           }),
         403
       );
@@ -208,6 +219,80 @@ test(
             new Types.ObjectId().toString()
           ),
         403
+      );
+
+      await updateOrderStatusService(ownerActor, created.order.id, {
+        status: 'in_progress',
+      });
+
+      const commentRequestId = '047f6380-56b4-4b49-b9ce-6b687559dd0b';
+      const firstComment = await createOrderManagerCommentService(
+        managerActor,
+        created.order.id,
+        {
+          text: 'Manager idempotent comment',
+          clientRequestId: commentRequestId,
+        }
+      );
+
+      const retriedComment = await createOrderManagerCommentService(
+        managerActor,
+        created.order.id,
+        {
+          text: 'Manager idempotent comment',
+          clientRequestId: commentRequestId,
+        }
+      );
+
+      assert.equal(retriedComment.comment.id, firstComment.comment.id);
+
+      let persistedComments = await getOrderManagerCommentsService(
+        managerActor,
+        created.order.id,
+        { page: 1, perPage: 10 }
+      );
+
+      assert.equal(persistedComments.total, 1);
+      assert.equal(
+        persistedComments.items[0]?.author.displayName,
+        'Tenant Manager Original'
+      );
+
+      await User.updateOne(
+        { _id: managerA },
+        { $set: { name: 'Tenant Manager Renamed' } }
+      );
+
+      persistedComments = await getOrderManagerCommentsService(
+        managerActor,
+        created.order.id,
+        { page: 1, perPage: 10 }
+      );
+
+      assert.equal(
+        persistedComments.items[0]?.author.displayName,
+        'Tenant Manager Original'
+      );
+
+      await User.deleteOne({ _id: managerA });
+      persistedComments = await getOrderManagerCommentsService(
+        ownerActor,
+        created.order.id,
+        { page: 1, perPage: 10 }
+      );
+
+      assert.equal(
+        persistedComments.items[0]?.author.displayName,
+        'Tenant Manager Original'
+      );
+
+      await expectHttpStatus(
+        () =>
+          createOrderManagerCommentService(managerActor, created.order.id, {
+            text: 'Different comment content',
+            clientRequestId: commentRequestId,
+          }),
+        409
       );
 
       await expectHttpStatus(
@@ -228,7 +313,7 @@ test(
         ProductOffer.deleteOne({ _id: offerId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
-        User.deleteOne({ _id: clientId }),
+        User.deleteMany({ _id: { $in: [clientId, managerA] } }),
       ]);
 
       await mongoose.disconnect();

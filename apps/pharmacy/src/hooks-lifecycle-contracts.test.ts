@@ -54,7 +54,10 @@ test('list and detail effects use AbortController rather than mounted flags', as
     ),
 
     readSource('./components/layout/PharmacySidebar/PharmacySidebar.tsx'),
-    readSource('./components/comments/EntityComments/EntityComments.tsx'),
+
+    readSource(
+      './components/comments/EntityComments/useEntityCommentsResource.ts'
+    ),
   ]);
 
   for (const source of sources) {
@@ -103,15 +106,17 @@ test('sidebar storage and breadcrumb dispatch remain hydration and timer safe', 
 //===================================================================
 
 test('comments error state retries the exact failed page', async () => {
-  const comments = await readSource(
-    './components/comments/EntityComments/EntityComments.tsx'
-  );
+  const [comments, resource] = await Promise.all([
+    readSource('./components/comments/EntityComments/EntityComments.tsx'),
 
-  assert.match(comments, /const retryPageRef = useRef\(1\)/);
-  assert.match(comments, /retryPageRef\.current = page/);
+    readSource(
+      './components/comments/EntityComments/useEntityCommentsResource.ts'
+    ),
+  ]);
 
-  assert.match(
-    comments,
-    /status === 'error'[\s\S]*?loadPage\(retryPageRef\.current\)[\s\S]*?Retry comments/
-  );
+  assert.match(resource, /const retryPageRef = useRef\(1\)/);
+  assert.match(resource, /retryPageRef\.current = page/);
+  assert.match(resource, /retryPageRef\.current/);
+  assert.match(comments, /comments\.retry\(\)/);
+  assert.match(comments, /Retry comments/);
 });

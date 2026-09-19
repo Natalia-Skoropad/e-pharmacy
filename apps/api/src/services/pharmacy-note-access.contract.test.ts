@@ -105,4 +105,9 @@ test('pharmacy notes reuse centralized membership and blocked-pharmacy access', 
     membershipSource,
     /pharmacy\.status === PHARMACY_STATUSES\.BLOCKED/
   );
+
+  assert.match(
+    membershipSource,
+    /actor\.role !== USER_ROLES\.PHARMACY[\s\S]*?Pharmacy access is forbidden/
+  );
 });

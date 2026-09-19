@@ -1409,11 +1409,17 @@ function NewProductRequestPageContent({
             load={(page, options) =>
               getPharmacyNotes('product_request', request.id, page, options)
             }
-            create={(text) =>
-              createPharmacyNote('product_request', request.id, text)
+            create={(text, options) =>
+              createPharmacyNote(
+                'product_request',
+                request.id,
+                text,
+                options.clientRequestId,
+                options
+              )
             }
-            remove={(id) =>
-              deletePharmacyNote('product_request', request.id, id)
+            remove={(id, options) =>
+              deletePharmacyNote('product_request', request.id, id, options)
             }
             onTotalChange={setCommentsTotal}
           />

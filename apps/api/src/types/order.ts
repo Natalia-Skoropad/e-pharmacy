@@ -99,6 +99,7 @@ export type OrderManagerCommentEntity = {
   createdAt: Date;
   createdBy: Types.ObjectId;
   authorDisplayName?: string;
+  clientRequestId?: string;
 };
 
 export type OrderItemEntity = {

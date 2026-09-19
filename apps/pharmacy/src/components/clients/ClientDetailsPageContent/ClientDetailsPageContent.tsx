@@ -1375,8 +1375,18 @@ function ClientDetailsPageContentState({
               load={(page, options) =>
                 getPharmacyNotes('client', clientId, page, options)
               }
-              create={(text) => createPharmacyNote('client', clientId, text)}
-              remove={(id) => deletePharmacyNote('client', clientId, id)}
+              create={(text, options) =>
+                createPharmacyNote(
+                  'client',
+                  clientId,
+                  text,
+                  options.clientRequestId,
+                  options
+                )
+              }
+              remove={(id, options) =>
+                deletePharmacyNote('client', clientId, id, options)
+              }
               onTotalChange={setCommentsTotal}
             />
           </div>

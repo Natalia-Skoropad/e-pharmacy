@@ -2103,11 +2103,17 @@ function AllProductDetailsPageContent({
                       load={(page, options) =>
                         getPharmacyNotes('product', productId, page, options)
                       }
-                      create={(text) =>
-                        createPharmacyNote('product', productId, text)
+                      create={(text, options) =>
+                        createPharmacyNote(
+                          'product',
+                          productId,
+                          text,
+                          options.clientRequestId,
+                          options
+                        )
                       }
-                      remove={(id) =>
-                        deletePharmacyNote('product', productId, id)
+                      remove={(id, options) =>
+                        deletePharmacyNote('product', productId, id, options)
                       }
                       onTotalChange={(total) => {
                         setCommentsTotal(total);

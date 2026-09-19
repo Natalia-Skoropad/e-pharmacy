@@ -51,6 +51,7 @@ import type {
   OrderClientSnapshot,
   OrderEntity,
   OrderItemEntity,
+  OrderManagerCommentEntity,
   OrderResponseDto,
   OrdersResponseDto,
   OrderSalesStatisticsDto,
@@ -360,6 +361,54 @@ function getManagerCommentAuthorDisplayName(
   user?: Pick<UserDocument, 'name' | 'email'> | null
 ): string {
   return user?.name?.trim() || user?.email?.trim() || 'Pharmacy member';
+}
+
+//===============================================================
+
+function findManagerCommentReplay(
+  order: OrderDocument,
+  actorId: string,
+  clientRequestId: string
+): OrderManagerCommentEntity | undefined {
+  return (order.managerComments ?? []).find(
+    (comment) =>
+      comment.createdBy.toString() === actorId &&
+      comment.clientRequestId === clientRequestId
+  );
+}
+
+//===============================================================
+
+function assertManagerCommentReplayMatches(
+  comment: OrderManagerCommentEntity,
+  normalizedText: string
+): void {
+  if (comment.text !== normalizedText) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Comment request key was already used for different content.'
+    );
+  }
+}
+
+//===============================================================
+
+function serializeCreatedManagerComment(
+  comment: OrderManagerCommentEntity,
+  actorId: string
+) {
+  return {
+    comment: {
+      id: comment._id?.toString() ?? '',
+      text: comment.text,
+      createdAt: comment.createdAt.toISOString(),
+      createdBy: actorId,
+      author: {
+        userId: actorId,
+        displayName: comment.authorDisplayName?.trim() || 'Pharmacy member',
+      },
+    },
+  };
 }
 
 //===============================================================
@@ -1756,9 +1805,8 @@ export async function createOrderManagerCommentService(
   input: CreateOrderManagerCommentInput
 ) {
   const session = await mongoose.startSession();
-  const commentId = new Types.ObjectId();
-  const createdAt = new Date();
-  let authorDisplayName = 'Pharmacy member';
+  const normalizedText = input.text.trim();
+  let resultComment: OrderManagerCommentEntity | null = null;
 
   try {
     await session.withTransaction(async () => {
@@ -1772,6 +1820,18 @@ export async function createOrderManagerCommentService(
 
       await assertCanEditPharmacyOrder(actor, order, session);
 
+      const replay = findManagerCommentReplay(
+        order,
+        actor.id,
+        input.clientRequestId
+      );
+
+      if (replay) {
+        assertManagerCommentReplayMatches(replay, normalizedText);
+        resultComment = replay;
+        return;
+      }
+
       if (order.status !== 'in_progress') {
         throw httpError(
           HTTP_STATUS.CONFLICT,
@@ -1784,37 +1844,34 @@ export async function createOrderManagerCommentService(
         .session(session)
         .lean<UserDocument | null>();
 
-      authorDisplayName = getManagerCommentAuthorDisplayName(author);
+      const authorDisplayName = getManagerCommentAuthorDisplayName(author);
+      const comment: OrderManagerCommentEntity = {
+        _id: new Types.ObjectId(),
+        text: normalizedText,
+        createdAt: new Date(),
+        createdBy: new Types.ObjectId(actor.id),
+        authorDisplayName,
+        clientRequestId: input.clientRequestId,
+      };
 
       await Order.updateOne(
         { _id: orderId },
-        {
-          $push: {
-            managerComments: {
-              _id: commentId,
-              text: input.text.trim(),
-              createdAt,
-              createdBy: new Types.ObjectId(actor.id),
-              authorDisplayName,
-            },
-          },
-        },
+        { $push: { managerComments: comment } },
         { session, runValidators: true }
       );
+
+      resultComment = comment;
     });
 
-    return {
-      comment: {
-        id: commentId.toString(),
-        text: input.text.trim(),
-        createdAt: createdAt.toISOString(),
-        createdBy: actor.id,
-        author: {
-          userId: actor.id,
-          displayName: authorDisplayName,
-        },
-      },
-    };
+    const finalComment = resultComment as OrderManagerCommentEntity | null;
+    if (!finalComment) {
+      throw httpError(
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'Comment could not be created.'
+      );
+    }
+
+    return serializeCreatedManagerComment(finalComment, actor.id);
   } finally {
     await session.endSession();
   }

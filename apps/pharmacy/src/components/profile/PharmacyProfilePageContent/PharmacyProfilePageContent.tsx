@@ -2438,11 +2438,17 @@ function PharmacyProfilePage({
                       load={(page, options) =>
                         getPharmacyNotes('pharmacy', pharmacy.id, page, options)
                       }
-                      create={(text) =>
-                        createPharmacyNote('pharmacy', pharmacy.id, text)
+                      create={(text, options) =>
+                        createPharmacyNote(
+                          'pharmacy',
+                          pharmacy.id,
+                          text,
+                          options.clientRequestId,
+                          options
+                        )
                       }
-                      remove={(id) =>
-                        deletePharmacyNote('pharmacy', pharmacy.id, id)
+                      remove={(id, options) =>
+                        deletePharmacyNote('pharmacy', pharmacy.id, id, options)
                       }
                       onTotalChange={setCommentsTotal}
                     />

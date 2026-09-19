@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
@@ -243,14 +244,17 @@ test(
         assert.equal(orders.items[0]?.clientId, clientA.toString());
 
         const ownNote = await createPharmacyNoteService(
-          actorId.toString(),
+          { id: actorId.toString(), role: USER_ROLES.PHARMACY },
           'client',
           clientA.toString(),
-          `Own note ${actorId.toString()}`
+          {
+            text: `Own note ${actorId.toString()}`,
+            clientRequestId: randomUUID(),
+          }
         );
 
         const notes = await getPharmacyNotesService(
-          actorId.toString(),
+          { id: actorId.toString(), role: USER_ROLES.PHARMACY },
           'client',
           clientA.toString(),
           1,
@@ -260,7 +264,7 @@ test(
         assert.ok(notes.items.some((note) => note.id === ownNote.note.id));
 
         await deletePharmacyNoteService(
-          actorId.toString(),
+          { id: actorId.toString(), role: USER_ROLES.PHARMACY },
           'client',
           clientA.toString(),
           ownNote.note.id
@@ -291,7 +295,7 @@ test(
 
         await assert.rejects(
           getPharmacyNotesService(
-            actorId.toString(),
+            { id: actorId.toString(), role: USER_ROLES.PHARMACY },
             'client',
             clientB.toString(),
             1,
@@ -302,26 +306,26 @@ test(
 
         await assert.rejects(
           createPharmacyNoteService(
-            actorId.toString(),
+            { id: actorId.toString(), role: USER_ROLES.PHARMACY },
             'client',
             clientB.toString(),
-            'Foreign note'
+            { text: 'Foreign note', clientRequestId: randomUUID() }
           ),
           isNotFound
         );
       }
 
       const foreignNote = await createPharmacyNoteService(
-        ownerB.toString(),
+        { id: ownerB.toString(), role: USER_ROLES.PHARMACY },
         'client',
         clientB.toString(),
-        'Foreign pharmacy note'
+        { text: 'Foreign pharmacy note', clientRequestId: randomUUID() }
       );
 
       for (const actorId of [ownerA, managerA]) {
         await assert.rejects(
           deletePharmacyNoteService(
-            actorId.toString(),
+            { id: actorId.toString(), role: USER_ROLES.PHARMACY },
             'client',
             clientB.toString(),
             foreignNote.note.id

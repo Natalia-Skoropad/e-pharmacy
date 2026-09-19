@@ -1,6 +1,6 @@
 import type { ClientSession, HydratedDocument, Types } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../constants/auth';
+import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
@@ -12,6 +12,7 @@ import {
 import { Pharmacy } from '../models/pharmacy.model';
 
 import type { PharmacyEntity, PharmacyMembershipRole } from '../types/pharmacy';
+import type { UserRole } from '../types/user';
 
 import { httpError } from '../utils/httpError';
 
@@ -26,6 +27,11 @@ export type PharmacyProfileCapability =
 export type PharmacyInternalNotesCapability =
   | 'read_internal_notes'
   | 'manage_internal_notes';
+
+export type PharmacyInternalNotesActor = Readonly<{
+  id: string;
+  role: UserRole;
+}>;
 
 //===============================================================
 
@@ -153,15 +159,19 @@ export async function findPharmacyForProfileAccess(
 //===============================================================
 
 export async function findPharmacyForInternalNotesAccess(
-  userId: string,
+  actor: PharmacyInternalNotesActor,
   capability: PharmacyInternalNotesCapability,
   session?: ClientSession
 ): Promise<{
   pharmacy: PharmacyHydratedDocument;
   membershipRole: PharmacyMembershipRole;
 }> {
+  if (actor.role !== USER_ROLES.PHARMACY) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access is forbidden.');
+  }
+
   const { pharmacy, membershipRole } = await resolvePharmacyMembership(
-    userId,
+    actor.id,
     session
   );
 

@@ -20,3 +20,10 @@ export function sanitizeBrowserReadRequestOptions(
       : {}),
   };
 }
+
+//===================================================================
+
+export type BrowserMutationRequestOptions = BrowserReadRequestOptions;
+
+export const sanitizeBrowserMutationRequestOptions =
+  sanitizeBrowserReadRequestOptions;

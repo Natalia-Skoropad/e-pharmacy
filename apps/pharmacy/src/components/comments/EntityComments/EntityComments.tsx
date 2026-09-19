@@ -1,12 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useId } from 'react';
 
-import type {
-  PharmacyNote,
-  PharmacyNotesResponse,
-} from '@e-pharmacy/types/notes';
-
+import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
 import { PHARMACY_NOTE_MAX_LENGTH } from '@e-pharmacy/validation/pharmacy';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -22,11 +18,13 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
+import {
+  type EntityCommentsCreateOptions,
+  type EntityCommentsRemoveOptions,
+  useEntityCommentsResource,
+} from './useEntityCommentsResource';
+
 import css from './EntityComments.module.css';
-
-//===================================================================
-
-type ResourceStatus = 'loading' | 'success' | 'error';
 
 //===================================================================
 
@@ -38,12 +36,14 @@ export type EntityCommentsProps = Readonly<{
   emptyText?: string;
   initialTotal?: number;
   isEditable?: boolean;
+
   load: (
     page: number,
     options?: Readonly<{ signal?: AbortSignal }>
   ) => Promise<PharmacyNotesResponse>;
-  create: (text: string) => Promise<void>;
-  remove: (id: string) => Promise<void>;
+
+  create: (text: string, options: EntityCommentsCreateOptions) => Promise<void>;
+  remove: (id: string, options?: EntityCommentsRemoveOptions) => Promise<void>;
   onTotalChange?: (total: number) => void;
 }>;
 
@@ -71,159 +71,41 @@ function EntityCommentsContent({
   const toast = useToast();
   const generatedId = useId();
   const titleId = `${entityKey}-${generatedId}-comments-title`;
-  const loadRef = useRef(load);
-  const activeLoadControllerRef = useRef<AbortController | null>(null);
-  const retryPageRef = useRef(1);
-  const onTotalChangeRef = useRef(onTotalChange);
 
-  const [data, setData] = useState<PharmacyNotesResponse>({
-    items: [],
-    page: 1,
-    perPage: 10,
-    total: initialTotal ?? 0,
-    totalPages: 1,
+  const comments = useEntityCommentsResource({
+    initialTotal,
+    isEditable,
+    load,
+    create,
+    remove,
+    onTotalChange,
   });
 
-  const [draft, setDraft] = useState('');
-  const [status, setStatus] = useState<ResourceStatus>('loading');
-  const [isSaving, setIsSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const [commentToDelete, setCommentToDelete] = useState<PharmacyNote | null>(
-    null
-  );
-
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadRef.current = load;
-  }, [load]);
-
-  useEffect(() => {
-    onTotalChangeRef.current = onTotalChange;
-  }, [onTotalChange]);
-
-  const loadPage = useCallback(async (page: number): Promise<void> => {
-    retryPageRef.current = page;
-    activeLoadControllerRef.current?.abort();
-    const controller = new AbortController();
-    activeLoadControllerRef.current = controller;
-
-    setStatus('loading');
-    setError('');
-
-    try {
-      const response = await loadRef.current(page, {
-        signal: controller.signal,
-      });
-
-      if (controller.signal.aborted) return;
-
-      setData(response);
-      onTotalChangeRef.current?.(response.total);
-      setStatus('success');
-    } catch (loadError) {
-      if (controller.signal.aborted) return;
-
-      setError(
-        getSafeApiErrorMessage(
-          loadError,
-          'Could not load comments. Please try again.'
-        )
-      );
-      setStatus('error');
-    } finally {
-      if (activeLoadControllerRef.current === controller) {
-        activeLoadControllerRef.current = null;
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    activeLoadControllerRef.current = controller;
-
-    const loadInitialPage = async (): Promise<void> => {
-      try {
-        const response = await loadRef.current(1, {
-          signal: controller.signal,
-        });
-
-        if (controller.signal.aborted) return;
-
-        setData(response);
-        onTotalChangeRef.current?.(response.total);
-        setStatus('success');
-      } catch (loadError) {
-        if (controller.signal.aborted) return;
-
-        setError(
-          getSafeApiErrorMessage(
-            loadError,
-            'Could not load comments. Please try again.'
-          )
-        );
-        setStatus('error');
-      } finally {
-        if (activeLoadControllerRef.current === controller) {
-          activeLoadControllerRef.current = null;
-        }
-      }
-    };
-
-    void loadInitialPage();
-
-    return () => {
-      controller.abort();
-      if (activeLoadControllerRef.current === controller) {
-        activeLoadControllerRef.current = null;
-      }
-    };
-  }, []);
-
   const handleCreate = async () => {
-    const text = draft.trim();
-    if (!text || isSaving || !isEditable) return;
-
-    setIsSaving(true);
-    try {
-      await create(text);
-      setDraft('');
-      await loadPage(1);
+    const result = await comments.submitDraft();
+    if (result.status === 'success') {
       toast.success('Comment added successfully.');
-    } catch (createError) {
+    } else if (result.status === 'error') {
       toast.error(
         getSafeApiErrorMessage(
-          createError,
+          result.error,
           'Could not add the comment. Please try again.'
         )
       );
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    const comment = commentToDelete;
-    if (!comment || deletingId || !isEditable) return;
-
-    setCommentToDelete(null);
-    setDeletingId(comment.id);
-    try {
-      await remove(comment.id);
-      const nextPage =
-        data.items.length === 1 && data.page > 1 ? data.page - 1 : data.page;
-      await loadPage(nextPage);
+    const result = await comments.confirmDelete();
+    if (result.status === 'success') {
       toast.success('Comment deleted successfully.');
-    } catch (deleteError) {
+    } else if (result.status === 'error') {
       toast.error(
         getSafeApiErrorMessage(
-          deleteError,
+          result.error,
           'Could not delete the comment. Please try again.'
         )
       );
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -231,11 +113,11 @@ function EntityCommentsContent({
     <section className={css.card} aria-labelledby={titleId}>
       <div className={css.head}>
         <h2 id={titleId}>{title}</h2>
-        {status === 'success' ? (
+        {comments.status === 'success' ? (
           <CountLabel
             className={css.countLabel}
-            shown={data.items.length}
-            total={data.total}
+            shown={comments.data.items.length}
+            total={comments.data.total}
             label="comments"
           />
         ) : null}
@@ -243,60 +125,60 @@ function EntityCommentsContent({
 
       <CommentComposer
         id={`${entityKey}-comment`}
-        value={draft}
+        value={comments.draft}
         maxLength={PHARMACY_NOTE_MAX_LENGTH}
         placeholder={placeholder}
         disabled={!isEditable}
-        isSaving={isSaving}
+        isSaving={comments.isSaving}
         onValueChange={(value) =>
-          setDraft(value.slice(0, PHARMACY_NOTE_MAX_LENGTH))
+          comments.setDraft(value.slice(0, PHARMACY_NOTE_MAX_LENGTH))
         }
         onSubmit={() => void handleCreate()}
       />
 
       <CommentsList
-        items={data.items}
+        items={comments.data.items}
         commentTitle={commentTitle}
         emptyText={emptyText}
-        error={error}
-        isLoading={status === 'loading'}
-        deletingId={deletingId}
-        deleteDisabled={!isEditable || Boolean(deletingId) || isSaving}
-        onDelete={setCommentToDelete}
+        error={comments.error}
+        isLoading={comments.status === 'loading'}
+        deletingId={comments.deletingId}
+        deleteDisabled={
+          !isEditable || Boolean(comments.deletingId) || comments.isSaving
+        }
+        onDelete={comments.requestDelete}
       />
 
-      {status === 'error' ? (
+      {comments.status === 'error' ? (
         <Button
           type="button"
           variant="secondary"
           size="sm"
-          onClick={() => void loadPage(retryPageRef.current)}
+          onClick={() => void comments.retry()}
         >
           Retry comments
         </Button>
       ) : null}
 
-      {status === 'success' ? (
+      {comments.status === 'success' ? (
         <PaginationView
-          currentPage={data.page}
-          totalPages={data.totalPages}
+          currentPage={comments.data.page}
+          totalPages={comments.data.totalPages}
           ariaLabel="Comments pagination"
-          onPageChange={(page) => void loadPage(page)}
+          onPageChange={(page) => void comments.loadPage(page)}
         />
       ) : null}
 
       <ConfirmationModal
-        isOpen={Boolean(commentToDelete)}
+        isOpen={Boolean(comments.commentToDelete)}
         title="Delete this comment?"
         description="The comment will be permanently removed."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"
         confirmButtonClassName={css.dangerConfirmButton}
-        isLoading={Boolean(deletingId)}
+        isLoading={Boolean(comments.deletingId)}
         onConfirm={() => void handleDelete()}
-        onCancel={() => {
-          if (!deletingId) setCommentToDelete(null);
-        }}
+        onCancel={comments.cancelDelete}
       />
     </section>
   );

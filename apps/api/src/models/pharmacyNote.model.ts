@@ -9,6 +9,7 @@ export type PharmacyNoteEntity = {
   text: string;
   createdBy: Schema.Types.ObjectId;
   authorDisplayName?: string;
+  clientRequestId?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -43,6 +44,7 @@ const pharmacyNoteSchema = new Schema<PharmacyNoteEntity>(
 
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     authorDisplayName: { type: String, trim: true, default: undefined },
+    clientRequestId: { type: String, trim: true, default: undefined },
   },
 
   { timestamps: true, versionKey: false }
@@ -56,6 +58,22 @@ pharmacyNoteSchema.index({
   entityId: 1,
   createdAt: -1,
 });
+
+//===============================================================
+
+pharmacyNoteSchema.index(
+  {
+    pharmacyId: 1,
+    entityType: 1,
+    entityId: 1,
+    createdBy: 1,
+    clientRequestId: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: { clientRequestId: { $type: 'string' } },
+  }
+);
 
 //===============================================================
 
