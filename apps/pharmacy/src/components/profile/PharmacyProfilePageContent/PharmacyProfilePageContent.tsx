@@ -16,7 +16,7 @@ import {
 import { DocumentUpload, MarkdownTextarea } from '@e-pharmacy/ui/forms';
 import { PictureCard, readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { ReviewsList } from '@e-pharmacy/ui/data-display';
-import { Tabs } from '@e-pharmacy/ui/navigation';
+import { TabPanel, Tabs } from '@e-pharmacy/ui/navigation';
 import { Container } from '@e-pharmacy/ui/layout';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 
@@ -166,6 +166,7 @@ type SessionsStatus = 'loading' | 'success' | 'error';
 
 const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
 const INITIAL_VISIBLE_SESSIONS_COUNT = 10;
+const PROFILE_TABS_ID_BASE = 'pharmacy-profile-tabs';
 
 //===================================================================
 
@@ -1179,9 +1180,9 @@ function PharmacyProfilePage({
       setInitialOwnerValues(nextValues);
       setOwnerTouched({});
       applyCurrentUser(response.user);
-      toast.success('Owner data saved successfully.');
+      toast.success('My data saved successfully.');
     } catch (error) {
-      toast.error(getProfileErrorMessage(error, 'Could not save owner data.'));
+      toast.error(getProfileErrorMessage(error, 'Could not save my data.'));
     } finally {
       ownerMutationInFlightRef.current = false;
       setIsOwnerSaving(false);
@@ -1586,7 +1587,7 @@ function PharmacyProfilePage({
     }
   };
 
-  const summaryOwnerName = ownerValues.name || user.name || 'Pharmacy owner';
+  const summaryOwnerName = ownerValues.name || user.name || 'Pharmacy account';
 
   const summaryPharmacyName =
     pharmacyValues.name || pharmacy.name || 'Pharmacy profile';
@@ -1709,6 +1710,7 @@ function PharmacyProfilePage({
 
             <div className={css.contentCard}>
               <Tabs
+                idBase={PROFILE_TABS_ID_BASE}
                 items={tabs}
                 activeValue={activeTab}
                 ariaLabel="Pharmacy profile sections"
@@ -1717,764 +1719,856 @@ function PharmacyProfilePage({
                 onChange={setActiveTab}
               />
 
-              {activeTab === 'data' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="owner-data-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="owner-data-title">
-                        Owner data
-                      </h2>
-                      <p className={css.panelText}>
-                        These are the real details used when the pharmacy owner
-                        registered.
-                      </p>
-                    </div>
-                    <div className={css.formGrid}>
-                      <NameInput
-                        id="owner-name"
-                        name="name"
-                        value={ownerValues.name}
-                        error={ownerErrors.name}
-                        isTouched={Boolean(ownerTouched.name)}
-                        maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handleOwnerChange('name', event.target.value)
-                        }
-                      />
-
-                      <PhoneInput
-                        id="owner-phone"
-                        name="phone"
-                        value={ownerValues.phone}
-                        error={ownerErrors.phone}
-                        isTouched={Boolean(ownerTouched.phone)}
-                        maxLength={USER_PHONE_MAX_LENGTH}
-                        onChange={(event) =>
-                          handleOwnerChange(
-                            'phone',
-                            normalizePhoneInput(event.target.value)
-                          )
-                        }
-                      />
-                    </div>
-
-                    <Button
-                      className={css.myDataAction}
-                      type="button"
-                      disabled={
-                        !ownerFormIsValid || !ownerFormIsDirty || isOwnerSaving
-                      }
-                      isLoading={isOwnerSaving}
-                      loadingLabel="Saving..."
-                      onClick={handleOwnerSubmit}
-                    >
-                      Save owner data
-                    </Button>
-                  </section>
-
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="password-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="password-title">
-                        Change password
-                      </h2>
-                      <p className={css.panelText}>
-                        Use this section only when you want to update the owner
-                        login password.
-                      </p>
-                    </div>
-
-                    <div className={css.formGrid}>
-                      <PasswordInput
-                        id="current-password"
-                        name="currentPassword"
-                        label="Current password"
-                        value={passwordValues.currentPassword}
-                        error={passwordErrors.currentPassword}
-                        isTouched={Boolean(passwordTouched.currentPassword)}
-                        autoComplete="current-password"
-                        maxLength={USER_PASSWORD_MAX_LENGTH}
-                        isVisible={isCurrentPasswordVisible}
-                        onToggleVisibility={() =>
-                          setIsCurrentPasswordVisible((value) => !value)
-                        }
-                        onChange={(event) =>
-                          handlePasswordChange(
-                            'currentPassword',
-                            event.target.value
-                          )
-                        }
-                      />
-
-                      <PasswordInput
-                        id="new-password"
-                        name="newPassword"
-                        label="New password"
-                        value={passwordValues.newPassword}
-                        error={passwordErrors.newPassword}
-                        isTouched={Boolean(passwordTouched.newPassword)}
-                        autoComplete="new-password"
-                        maxLength={USER_PASSWORD_MAX_LENGTH}
-                        isVisible={isNewPasswordVisible}
-                        onToggleVisibility={() =>
-                          setIsNewPasswordVisible((value) => !value)
-                        }
-                        onChange={(event) =>
-                          handlePasswordChange(
-                            'newPassword',
-                            event.target.value
-                          )
-                        }
-                      />
-                    </div>
-
-                    <Button
-                      className={css.myDataAction}
-                      type="button"
-                      iconLeft={<KeyRound size={18} aria-hidden="true" />}
-                      disabled={!passwordFormIsValid || isPasswordSaving}
-                      isLoading={isPasswordSaving}
-                      loadingLabel="Saving..."
-                      onClick={handlePasswordSubmit}
-                    >
-                      Change password
-                    </Button>
-                  </section>
-                </div>
-              ) : null}
-
-              {activeTab === 'pharmacy-data' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="pharmacy-data-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="pharmacy-data-title">
-                        Pharmacy data
-                      </h2>
-                      <p className={css.panelText}>
-                        Fill in the public pharmacy data required for
-                        verification.
-                      </p>
-                    </div>
-
-                    <PictureCard
-                      name={summaryPharmacyName}
-                      pictureUrl={pharmacyPictureUrl}
-                      isSaving={isPharmacyPictureSaving}
-                      disabled={isProfileReadonly}
-                      accept={PICTURE_ACCEPT}
-                      labels={{
-                        uploadAriaLabel: 'Upload pharmacy photo',
-                        hint: 'Upload the public pharmacy photo clients will see in the pharmacy profile.',
-                        uploadButton: 'Upload pharmacy photo',
-                        removeButton: 'Remove pharmacy photo',
-                        removeTitle: 'Remove pharmacy photo?',
-                        removeText:
-                          'This public pharmacy photo will be removed from the profile.',
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="data"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'data' ? (
+                  <>
+                    <form
+                      className={css.panelSection}
+                      aria-labelledby="account-data-title"
+                      noValidate
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void handleOwnerSubmit();
                       }}
-                      validateFile={(file) =>
-                        buildPictureFileError(file) || null
-                      }
-                      validatePictureUrl={(nextPictureUrl) =>
-                        buildPictureUrlError(nextPictureUrl) || null
-                      }
-                      onChange={handlePharmacyPictureChange}
-                      onError={handlePictureError}
-                    />
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="account-data-title">
+                          My data
+                        </h2>
+                        <p className={css.panelText}>
+                          These are the details for your current pharmacy
+                          account.
+                        </p>
+                      </div>
+                      <div className={css.formGrid}>
+                        <NameInput
+                          id="owner-name"
+                          name="name"
+                          value={ownerValues.name}
+                          error={ownerErrors.name}
+                          isTouched={Boolean(ownerTouched.name)}
+                          maxLength={USER_NAME_MAX_LENGTH}
+                          onChange={(event) =>
+                            handleOwnerChange('name', event.target.value)
+                          }
+                        />
 
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending pharmacy data"
-                        items={[
-                          {
-                            label: 'Pharmacy name',
-                            value: pharmacy.pendingModeration?.name,
-                          },
-                          {
-                            label: 'Email',
-                            value: pharmacy.pendingModeration?.email,
-                          },
-                          {
-                            label: 'Phone',
-                            value: pharmacy.pendingModeration?.phone,
-                          },
-                          {
-                            label: 'Address',
-                            value: pharmacy.pendingModeration?.address,
-                          },
-                          {
-                            label: 'Working hours',
-                            value: pharmacy.pendingModeration?.workingHours,
-                          },
-                          {
-                            label: 'Photo',
-                            value:
-                              pharmacy.pendingModeration?.imageUrl === null
-                                ? 'Photo will be removed'
-                                : pharmacy.pendingModeration?.imageUrl
-                                  ? 'New photo uploaded'
-                                  : undefined,
-                          },
-                        ]}
-                      />
-                    ) : null}
-
-                    <div className={css.formGrid}>
-                      <NameInput
-                        id="pharmacy-name"
-                        name="pharmacyName"
-                        hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
-                        label="Pharmacy name"
-                        placeholder="Enter pharmacy name"
-                        value={pharmacyValues.name}
-                        error={pharmacyErrors.name}
-                        isTouched={Boolean(pharmacyTouched.name)}
-                        disabled={isProfileReadonly}
-                        maxLength={PHARMACY_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange('name', event.target.value)
-                        }
-                      />
-
-                      <EmailInput
-                        id="pharmacy-email"
-                        name="email"
-                        value={pharmacyValues.email}
-                        hint="Clients will see this email in the pharmacy profile on the website."
-                        error={pharmacyErrors.email}
-                        isTouched={Boolean(pharmacyTouched.email)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_EMAIL_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange(
-                            'email',
-                            normalizeEmail(event.target.value)
-                          )
-                        }
-                      />
-
-                      <PhoneInput
-                        id="pharmacy-phone"
-                        name="phone"
-                        value={pharmacyValues.phone}
-                        hint="Clients will see this phone number in the pharmacy profile on the website."
-                        error={pharmacyErrors.phone}
-                        isTouched={Boolean(pharmacyTouched.phone)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_PHONE_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange(
-                            'phone',
-                            normalizePhoneInput(event.target.value)
-                          )
-                        }
-                      />
-
-                      <AddressInput
-                        id="pharmacy-address"
-                        name="address"
-                        className={css.fieldWide}
-                        label="Pharmacy address"
-                        placeholder="Example: 12 Central Street, Kyiv"
-                        hint="Clients will see this address in the pharmacy profile on the website."
-                        value={pharmacyValues.address}
-                        error={pharmacyErrors.address}
-                        isTouched={Boolean(pharmacyTouched.address)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_ADDRESS_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange('address', event.target.value)
-                        }
-                      />
-
-                      <div className={css.fieldWide}>
-                        <WorkingHoursInput
-                          id="pharmacy-working-hours"
-                          value={pharmacyValues.workingHours}
-                          error={pharmacyErrors.workingHours}
-                          isTouched={Boolean(pharmacyTouched.workingHours)}
-                          disabled={isProfileReadonly}
-                          onValueChange={(nextValue) =>
-                            handlePharmacyChange('workingHours', nextValue)
+                        <PhoneInput
+                          id="owner-phone"
+                          name="phone"
+                          value={ownerValues.phone}
+                          error={ownerErrors.phone}
+                          isTouched={Boolean(ownerTouched.phone)}
+                          maxLength={USER_PHONE_MAX_LENGTH}
+                          onChange={(event) =>
+                            handleOwnerChange(
+                              'phone',
+                              normalizePhoneInput(event.target.value)
+                            )
                           }
                         />
                       </div>
-                    </div>
 
-                    {pharmacy.status === 'new' ? (
                       <Button
-                        type="button"
+                        className={css.myDataAction}
+                        type="submit"
                         disabled={
-                          hasValidationErrors(pharmacyErrors) ||
-                          !pharmacyFormIsDirty ||
-                          isPharmacySaving ||
-                          isProfileReadonly
+                          !ownerFormIsValid ||
+                          !ownerFormIsDirty ||
+                          isOwnerSaving
                         }
-                        isLoading={isPharmacySaving}
+                        isLoading={isOwnerSaving}
                         loadingLabel="Saving..."
-                        onClick={handlePharmacySubmit}
                       >
-                        Save pharmacy data
+                        Save my data
                       </Button>
-                    ) : null}
-                  </section>
-                </div>
-              ) : null}
+                    </form>
 
-              {activeTab === 'about' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="about-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="about-title">
-                        About pharmacy
-                      </h2>
-                      <p className={css.panelText}>
-                        Add the public pharmacy description clients will read on
-                        the website.
-                      </p>
-                    </div>
-
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending about pharmacy"
-                        items={[
-                          {
-                            label: 'Description',
-                            value: pharmacy.pendingModeration?.description,
-                          },
-                        ]}
-                      />
-                    ) : null}
-
-                    <MarkdownTextarea
-                      id="pharmacy-description"
-                      name="pharmacyDescription"
-                      label="Description"
-                      value={aboutValues.description}
-                      placeholder="Describe pharmacy services, pickup details, and useful information for clients."
-                      hint="You can use simple formatting buttons or type plain text."
-                      error={aboutErrors.description}
-                      isTouched={Boolean(aboutTouched.description)}
-                      maxLength={TEXT_EDITOR_MAX_LENGTH}
-                      disabled={isProfileReadonly}
-                      onValueChange={handleAboutChange}
-                    />
-
-                    {pharmacy.status === 'new' ? (
-                      <Button
-                        type="button"
-                        disabled={
-                          hasValidationErrors(aboutErrors) ||
-                          !aboutFormIsDirty ||
-                          isPharmacySaving ||
-                          isProfileReadonly
-                        }
-                        isLoading={isPharmacySaving}
-                        loadingLabel="Saving..."
-                        onClick={handleAboutSubmit}
-                      >
-                        Save about pharmacy
-                      </Button>
-                    ) : null}
-                  </section>
-                </div>
-              ) : null}
-
-              {activeTab === 'payment' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="payment-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="payment-title">
-                        Payment details
-                      </h2>
-                      <p className={css.panelText}>
-                        These payment details are required before verification.
-                      </p>
-                    </div>
-
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending payment details"
-                        items={[
-                          {
-                            label: 'Recipient name',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails
-                                ?.recipientName,
-                          },
-                          {
-                            label: 'Tax ID',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails?.taxId,
-                          },
-                          {
-                            label: 'IBAN',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails?.iban,
-                          },
-                          {
-                            label: 'Bank name',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails?.bankName,
-                          },
-                          {
-                            label: 'Receipt email',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails
-                                ?.receiptEmail,
-                          },
-                          {
-                            label: 'Payment purpose',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails
-                                ?.paymentPurpose,
-                          },
-                        ]}
-                      />
-                    ) : null}
-
-                    <div className={css.formGrid}>
-                      <NameInput
-                        id="recipient-name"
-                        name="recipientName"
-                        label="Recipient name"
-                        hint="Enter the legal payment recipient name."
-                        value={paymentValues.recipientName}
-                        error={paymentErrors.recipientName}
-                        isTouched={Boolean(paymentTouched.recipientName)}
-                        disabled={isProfileReadonly}
-                        maxLength={BANK_RECIPIENT_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'recipientName',
-                            event.target.value
-                          )
-                        }
-                      />
-
-                      <TaxIdInput
-                        id="tax-id"
-                        name="taxId"
-                        value={paymentValues.taxId}
-                        error={paymentErrors.taxId}
-                        isTouched={Boolean(paymentTouched.taxId)}
-                        disabled={isProfileReadonly}
-                        maxLength={TAX_ID_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'taxId',
-                            sanitizeTaxId(event.target.value)
-                          )
-                        }
-                      />
-
-                      <IbanInput
-                        id="iban"
-                        name="iban"
-                        className={css.fieldWide}
-                        value={paymentValues.iban}
-                        error={paymentErrors.iban}
-                        isTouched={Boolean(paymentTouched.iban)}
-                        disabled={isProfileReadonly}
-                        maxLength={IBAN_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'iban',
-                            normalizeIban(event.target.value)
-                          )
-                        }
-                      />
-
-                      <NameInput
-                        id="bank-name"
-                        name="bankName"
-                        label="Bank name"
-                        value={paymentValues.bankName}
-                        error={paymentErrors.bankName}
-                        isTouched={Boolean(paymentTouched.bankName)}
-                        disabled={isProfileReadonly}
-                        maxLength={BANK_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange('bankName', event.target.value)
-                        }
-                      />
-
-                      <EmailInput
-                        id="receipt-email"
-                        name="receiptEmail"
-                        label="Receipt email"
-                        value={paymentValues.receiptEmail}
-                        error={paymentErrors.receiptEmail}
-                        isTouched={Boolean(paymentTouched.receiptEmail)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_EMAIL_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'receiptEmail',
-                            normalizeEmail(event.target.value)
-                          )
-                        }
-                      />
-
-                      <CommentInput
-                        id="payment-purpose"
-                        name="paymentPurpose"
-                        label="Payment purpose"
-                        className={css.fieldWide}
-                        value={paymentValues.paymentPurpose}
-                        error={paymentErrors.paymentPurpose}
-                        isTouched={Boolean(paymentTouched.paymentPurpose)}
-                        required
-                        disabled={isProfileReadonly}
-                        maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'paymentPurpose',
-                            event.target.value
-                          )
-                        }
-                      />
-                    </div>
-
-                    {pharmacy.status === 'new' ? (
-                      <Button
-                        type="button"
-                        disabled={
-                          hasValidationErrors(paymentErrors) ||
-                          !paymentFormIsDirty ||
-                          isPharmacySaving ||
-                          isProfileReadonly
-                        }
-                        isLoading={isPharmacySaving}
-                        loadingLabel="Saving..."
-                        onClick={handlePaymentSubmit}
-                      >
-                        Save payment details
-                      </Button>
-                    ) : null}
-                  </section>
-                </div>
-              ) : null}
-
-              {activeTab === 'documents' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="documents-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="documents-title">
-                        Registration documents
-                      </h2>
-                      <p className={css.panelText}>
-                        Manage registration documents, license scans, and other
-                        files Admin needs for verification.
-                      </p>
-                    </div>
-
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending registration documents"
-                        items={(
-                          pharmacy.pendingModeration?.documents ?? []
-                        ).map((document, index) => ({
-                          label: `Document ${index + 1}`,
-                          value: document.name,
-                        }))}
-                      />
-                    ) : null}
-
-                    <DocumentUpload
-                      id="pharmacy-profile-documents"
-                      name="documents"
-                      value={documentValues}
-                      error={documentsError || pharmacyDocumentsError}
-                      isTouched={documentsTouched}
-                      required
-                      disabled={isProfileReadonly || isDocumentsSaving}
-                      maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
-                      accept={PHARMACY_DOCUMENT_ACCEPT}
-                      hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
-                      validateSelection={(files) =>
-                        validatePharmacyDocuments(files)
-                      }
-                      confirmRemove
-                      onSelectionError={setDocumentsError}
-                      onDownloadFile={handleDocumentDownload}
-                      onChange={handleDocumentsChange}
-                    />
-
-                    {pharmacy.status === 'new' ? (
-                      <Button
-                        type="button"
-                        disabled={
-                          !documentsFormIsDirty ||
-                          Boolean(documentsError) ||
-                          isDocumentsSaving ||
-                          isProfileReadonly
-                        }
-                        isLoading={isDocumentsSaving}
-                        loadingLabel="Saving..."
-                        onClick={handleDocumentsSubmit}
-                      >
-                        Save documents
-                      </Button>
-                    ) : null}
-                  </section>
-                </div>
-              ) : null}
-
-              {activeTab === 'reviews' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <ReviewsList
-                    reviews={[]}
-                    initialVisibleCount={INITIAL_VISIBLE_REVIEWS_COUNT}
-                    emptyTitle="This pharmacy has no reviews yet."
-                    emptyText="Reviews appear only after real client orders are completed and approved."
-                  />
-                </div>
-              ) : null}
-
-              {activeTab === 'comments' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <EntityComments
-                    entityKey={`pharmacy:${pharmacy.id}`}
-                    initialTotal={commentsTotal ?? undefined}
-                    load={(page, options) =>
-                      getPharmacyNotes('pharmacy', pharmacy.id, page, options)
-                    }
-                    create={(text) =>
-                      createPharmacyNote('pharmacy', pharmacy.id, text)
-                    }
-                    remove={(id) =>
-                      deletePharmacyNote('pharmacy', pharmacy.id, id)
-                    }
-                    onTotalChange={setCommentsTotal}
-                  />
-                </div>
-              ) : null}
-
-              {activeTab === 'sessions' ? (
-                <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="sessions-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="sessions-title">
-                        Active sessions and devices
-                      </h2>
-                      <p className={css.panelText}>
-                        Review real devices signed in to your pharmacy account.
-                      </p>
-                    </div>
-
-                    {sessionsStatus === 'loading' && sessions.length === 0 ? (
-                      <LoadingSpinner label="Loading active sessions..." />
-                    ) : null}
-
-                    {sessionsStatus === 'error' ? (
-                      <div className={css.emptyState} role="alert">
-                        <h3>Could not load active sessions</h3>
-                        <p>{sessionsError}</p>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => void loadSessions()}
-                        >
-                          Retry
-                        </Button>
+                    <form
+                      className={css.panelSection}
+                      aria-labelledby="password-title"
+                      noValidate
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void handlePasswordSubmit();
+                      }}
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="password-title">
+                          Change password
+                        </h2>
+                        <p className={css.panelText}>
+                          Use this section only when you want to update your
+                          account login password.
+                        </p>
                       </div>
-                    ) : null}
 
-                    {sessions.length > 0 ? (
-                      <>
-                        <ul className={css.sessionsList}>
-                          {visibleSessions.map((session) => (
-                            <li className={css.sessionCard} key={session.id}>
-                              <MonitorSmartphone size={22} aria-hidden="true" />
-                              <div className={css.sessionInfo}>
-                                <strong>
-                                  {session.deviceName ??
-                                    session.userAgent ??
-                                    'Unknown device'}
-                                </strong>
-                                <span>
-                                  Last used:{' '}
-                                  {formatSessionDate(session.lastUsedAt)}
-                                </span>
-                              </div>
-                              {session.isCurrent ? (
-                                <span className={css.currentSession}>
-                                  Current session
-                                </span>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="secondary"
-                                  size="sm"
-                                  isLoading={revokingSessionId === session.id}
-                                  loadingLabel="Revoking..."
-                                  onClick={() =>
-                                    void handleRevokeSession(session.id)
-                                  }
-                                >
-                                  Revoke
-                                </Button>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-
-                        <LazyLoadButton
-                          visibleCount={visibleSessions.length}
-                          totalCount={sessions.length}
-                          label="Show more sessions"
-                          onLoadMore={() =>
-                            setVisibleSessionsCount(
-                              (current) =>
-                                current + INITIAL_VISIBLE_SESSIONS_COUNT
+                      <div className={css.formGrid}>
+                        <PasswordInput
+                          id="current-password"
+                          name="currentPassword"
+                          label="Current password"
+                          value={passwordValues.currentPassword}
+                          error={passwordErrors.currentPassword}
+                          isTouched={Boolean(passwordTouched.currentPassword)}
+                          autoComplete="current-password"
+                          maxLength={USER_PASSWORD_MAX_LENGTH}
+                          isVisible={isCurrentPasswordVisible}
+                          onToggleVisibility={() =>
+                            setIsCurrentPasswordVisible((value) => !value)
+                          }
+                          onChange={(event) =>
+                            handlePasswordChange(
+                              'currentPassword',
+                              event.target.value
                             )
                           }
                         />
 
-                        {logoutAll ? (
+                        <PasswordInput
+                          id="new-password"
+                          name="newPassword"
+                          label="New password"
+                          value={passwordValues.newPassword}
+                          error={passwordErrors.newPassword}
+                          isTouched={Boolean(passwordTouched.newPassword)}
+                          autoComplete="new-password"
+                          maxLength={USER_PASSWORD_MAX_LENGTH}
+                          isVisible={isNewPasswordVisible}
+                          onToggleVisibility={() =>
+                            setIsNewPasswordVisible((value) => !value)
+                          }
+                          onChange={(event) =>
+                            handlePasswordChange(
+                              'newPassword',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+                      <Button
+                        className={css.myDataAction}
+                        type="submit"
+                        iconLeft={<KeyRound size={18} aria-hidden="true" />}
+                        disabled={!passwordFormIsValid || isPasswordSaving}
+                        isLoading={isPasswordSaving}
+                        loadingLabel="Saving..."
+                      >
+                        Change password
+                      </Button>
+                    </form>
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="pharmacy-data"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'pharmacy-data' ? (
+                  <>
+                    <form
+                      className={css.panelSection}
+                      aria-labelledby="pharmacy-data-title"
+                      noValidate
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (pharmacy.status !== 'new') return;
+                        void handlePharmacySubmit();
+                      }}
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="pharmacy-data-title">
+                          Pharmacy data
+                        </h2>
+                        <p className={css.panelText}>
+                          Fill in the public pharmacy data required for
+                          verification.
+                        </p>
+                      </div>
+
+                      <PictureCard
+                        name={summaryPharmacyName}
+                        pictureUrl={pharmacyPictureUrl}
+                        isSaving={isPharmacyPictureSaving}
+                        disabled={isProfileReadonly}
+                        accept={PICTURE_ACCEPT}
+                        labels={{
+                          uploadAriaLabel: 'Upload pharmacy photo',
+                          hint: 'Upload the public pharmacy photo clients will see in the pharmacy profile.',
+                          uploadButton: 'Upload pharmacy photo',
+                          removeButton: 'Remove pharmacy photo',
+                          removeTitle: 'Remove pharmacy photo?',
+                          removeText:
+                            'This public pharmacy photo will be removed from the profile.',
+                        }}
+                        validateFile={(file) =>
+                          buildPictureFileError(file) || null
+                        }
+                        validatePictureUrl={(nextPictureUrl) =>
+                          buildPictureUrlError(nextPictureUrl) || null
+                        }
+                        onChange={handlePharmacyPictureChange}
+                        onError={handlePictureError}
+                      />
+
+                      {pharmacy.status === 'on_moderation' ? (
+                        <PendingModerationBox
+                          title="Pending pharmacy data"
+                          items={[
+                            {
+                              label: 'Pharmacy name',
+                              value: pharmacy.pendingModeration?.name,
+                            },
+                            {
+                              label: 'Email',
+                              value: pharmacy.pendingModeration?.email,
+                            },
+                            {
+                              label: 'Phone',
+                              value: pharmacy.pendingModeration?.phone,
+                            },
+                            {
+                              label: 'Address',
+                              value: pharmacy.pendingModeration?.address,
+                            },
+                            {
+                              label: 'Working hours',
+                              value: pharmacy.pendingModeration?.workingHours,
+                            },
+                            {
+                              label: 'Photo',
+                              value:
+                                pharmacy.pendingModeration?.imageUrl === null
+                                  ? 'Photo will be removed'
+                                  : pharmacy.pendingModeration?.imageUrl
+                                    ? 'New photo uploaded'
+                                    : undefined,
+                            },
+                          ]}
+                        />
+                      ) : null}
+
+                      <div className={css.formGrid}>
+                        <NameInput
+                          id="pharmacy-name"
+                          name="pharmacyName"
+                          hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
+                          label="Pharmacy name"
+                          placeholder="Enter pharmacy name"
+                          value={pharmacyValues.name}
+                          error={pharmacyErrors.name}
+                          isTouched={Boolean(pharmacyTouched.name)}
+                          disabled={isProfileReadonly}
+                          maxLength={PHARMACY_NAME_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange('name', event.target.value)
+                          }
+                        />
+
+                        <EmailInput
+                          id="pharmacy-email"
+                          name="email"
+                          value={pharmacyValues.email}
+                          hint="Clients will see this email in the pharmacy profile on the website."
+                          error={pharmacyErrors.email}
+                          isTouched={Boolean(pharmacyTouched.email)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_EMAIL_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'email',
+                              normalizeEmail(event.target.value)
+                            )
+                          }
+                        />
+
+                        <PhoneInput
+                          id="pharmacy-phone"
+                          name="phone"
+                          value={pharmacyValues.phone}
+                          hint="Clients will see this phone number in the pharmacy profile on the website."
+                          error={pharmacyErrors.phone}
+                          isTouched={Boolean(pharmacyTouched.phone)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_PHONE_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'phone',
+                              normalizePhoneInput(event.target.value)
+                            )
+                          }
+                        />
+
+                        <AddressInput
+                          id="pharmacy-address"
+                          name="address"
+                          className={css.fieldWide}
+                          label="Pharmacy address"
+                          placeholder="Example: 12 Central Street, Kyiv"
+                          hint="Clients will see this address in the pharmacy profile on the website."
+                          value={pharmacyValues.address}
+                          error={pharmacyErrors.address}
+                          isTouched={Boolean(pharmacyTouched.address)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_ADDRESS_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange('address', event.target.value)
+                          }
+                        />
+
+                        <div className={css.fieldWide}>
+                          <WorkingHoursInput
+                            id="pharmacy-working-hours"
+                            value={pharmacyValues.workingHours}
+                            error={pharmacyErrors.workingHours}
+                            isTouched={Boolean(pharmacyTouched.workingHours)}
+                            disabled={isProfileReadonly}
+                            onValueChange={(nextValue) =>
+                              handlePharmacyChange('workingHours', nextValue)
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {pharmacy.status === 'new' ? (
+                        <Button
+                          type="submit"
+                          disabled={
+                            hasValidationErrors(pharmacyErrors) ||
+                            !pharmacyFormIsDirty ||
+                            isPharmacySaving ||
+                            isProfileReadonly
+                          }
+                          isLoading={isPharmacySaving}
+                          loadingLabel="Saving..."
+                        >
+                          Save pharmacy data
+                        </Button>
+                      ) : null}
+                    </form>
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="about"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'about' ? (
+                  <>
+                    <form
+                      className={css.panelSection}
+                      aria-labelledby="about-title"
+                      noValidate
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (pharmacy.status !== 'new') return;
+                        void handleAboutSubmit();
+                      }}
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="about-title">
+                          About pharmacy
+                        </h2>
+                        <p className={css.panelText}>
+                          Add the public pharmacy description clients will read
+                          on the website.
+                        </p>
+                      </div>
+
+                      {pharmacy.status === 'on_moderation' ? (
+                        <PendingModerationBox
+                          title="Pending about pharmacy"
+                          items={[
+                            {
+                              label: 'Description',
+                              value: pharmacy.pendingModeration?.description,
+                            },
+                          ]}
+                        />
+                      ) : null}
+
+                      <MarkdownTextarea
+                        id="pharmacy-description"
+                        name="pharmacyDescription"
+                        label="Description"
+                        value={aboutValues.description}
+                        placeholder="Describe pharmacy services, pickup details, and useful information for clients."
+                        hint="You can use simple formatting buttons or type plain text."
+                        error={aboutErrors.description}
+                        isTouched={Boolean(aboutTouched.description)}
+                        maxLength={TEXT_EDITOR_MAX_LENGTH}
+                        disabled={isProfileReadonly}
+                        onValueChange={handleAboutChange}
+                      />
+
+                      {pharmacy.status === 'new' ? (
+                        <Button
+                          type="submit"
+                          disabled={
+                            hasValidationErrors(aboutErrors) ||
+                            !aboutFormIsDirty ||
+                            isPharmacySaving ||
+                            isProfileReadonly
+                          }
+                          isLoading={isPharmacySaving}
+                          loadingLabel="Saving..."
+                        >
+                          Save about pharmacy
+                        </Button>
+                      ) : null}
+                    </form>
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="payment"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'payment' ? (
+                  <>
+                    <form
+                      className={css.panelSection}
+                      aria-labelledby="payment-title"
+                      noValidate
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (pharmacy.status !== 'new') return;
+                        void handlePaymentSubmit();
+                      }}
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="payment-title">
+                          Payment details
+                        </h2>
+                        <p className={css.panelText}>
+                          These payment details are required before
+                          verification.
+                        </p>
+                      </div>
+
+                      {pharmacy.status === 'on_moderation' ? (
+                        <PendingModerationBox
+                          title="Pending payment details"
+                          items={[
+                            {
+                              label: 'Recipient name',
+                              value:
+                                pharmacy.pendingModeration?.bankDetails
+                                  ?.recipientName,
+                            },
+                            {
+                              label: 'Tax ID',
+                              value:
+                                pharmacy.pendingModeration?.bankDetails?.taxId,
+                            },
+                            {
+                              label: 'IBAN',
+                              value:
+                                pharmacy.pendingModeration?.bankDetails?.iban,
+                            },
+                            {
+                              label: 'Bank name',
+                              value:
+                                pharmacy.pendingModeration?.bankDetails
+                                  ?.bankName,
+                            },
+                            {
+                              label: 'Receipt email',
+                              value:
+                                pharmacy.pendingModeration?.bankDetails
+                                  ?.receiptEmail,
+                            },
+                            {
+                              label: 'Payment purpose',
+                              value:
+                                pharmacy.pendingModeration?.bankDetails
+                                  ?.paymentPurpose,
+                            },
+                          ]}
+                        />
+                      ) : null}
+
+                      <div className={css.formGrid}>
+                        <NameInput
+                          id="recipient-name"
+                          name="recipientName"
+                          label="Recipient name"
+                          hint="Enter the legal payment recipient name."
+                          value={paymentValues.recipientName}
+                          error={paymentErrors.recipientName}
+                          isTouched={Boolean(paymentTouched.recipientName)}
+                          disabled={isProfileReadonly}
+                          maxLength={BANK_RECIPIENT_NAME_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePaymentChange(
+                              'recipientName',
+                              event.target.value
+                            )
+                          }
+                        />
+
+                        <TaxIdInput
+                          id="tax-id"
+                          name="taxId"
+                          value={paymentValues.taxId}
+                          error={paymentErrors.taxId}
+                          isTouched={Boolean(paymentTouched.taxId)}
+                          disabled={isProfileReadonly}
+                          maxLength={TAX_ID_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePaymentChange(
+                              'taxId',
+                              sanitizeTaxId(event.target.value)
+                            )
+                          }
+                        />
+
+                        <IbanInput
+                          id="iban"
+                          name="iban"
+                          className={css.fieldWide}
+                          value={paymentValues.iban}
+                          error={paymentErrors.iban}
+                          isTouched={Boolean(paymentTouched.iban)}
+                          disabled={isProfileReadonly}
+                          maxLength={IBAN_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePaymentChange(
+                              'iban',
+                              normalizeIban(event.target.value)
+                            )
+                          }
+                        />
+
+                        <NameInput
+                          id="bank-name"
+                          name="bankName"
+                          label="Bank name"
+                          value={paymentValues.bankName}
+                          error={paymentErrors.bankName}
+                          isTouched={Boolean(paymentTouched.bankName)}
+                          disabled={isProfileReadonly}
+                          maxLength={BANK_NAME_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePaymentChange('bankName', event.target.value)
+                          }
+                        />
+
+                        <EmailInput
+                          id="receipt-email"
+                          name="receiptEmail"
+                          label="Receipt email"
+                          value={paymentValues.receiptEmail}
+                          error={paymentErrors.receiptEmail}
+                          isTouched={Boolean(paymentTouched.receiptEmail)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_EMAIL_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePaymentChange(
+                              'receiptEmail',
+                              normalizeEmail(event.target.value)
+                            )
+                          }
+                        />
+
+                        <CommentInput
+                          id="payment-purpose"
+                          name="paymentPurpose"
+                          label="Payment purpose"
+                          className={css.fieldWide}
+                          value={paymentValues.paymentPurpose}
+                          error={paymentErrors.paymentPurpose}
+                          isTouched={Boolean(paymentTouched.paymentPurpose)}
+                          required
+                          disabled={isProfileReadonly}
+                          maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePaymentChange(
+                              'paymentPurpose',
+                              event.target.value
+                            )
+                          }
+                        />
+                      </div>
+
+                      {pharmacy.status === 'new' ? (
+                        <Button
+                          type="submit"
+                          disabled={
+                            hasValidationErrors(paymentErrors) ||
+                            !paymentFormIsDirty ||
+                            isPharmacySaving ||
+                            isProfileReadonly
+                          }
+                          isLoading={isPharmacySaving}
+                          loadingLabel="Saving..."
+                        >
+                          Save payment details
+                        </Button>
+                      ) : null}
+                    </form>
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="documents"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'documents' ? (
+                  <>
+                    <form
+                      className={css.panelSection}
+                      aria-labelledby="documents-title"
+                      noValidate
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (pharmacy.status !== 'new') return;
+                        void handleDocumentsSubmit();
+                      }}
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="documents-title">
+                          Registration documents
+                        </h2>
+                        <p className={css.panelText}>
+                          Manage registration documents, license scans, and
+                          other files Admin needs for verification.
+                        </p>
+                      </div>
+
+                      {pharmacy.status === 'on_moderation' ? (
+                        <PendingModerationBox
+                          title="Pending registration documents"
+                          items={(
+                            pharmacy.pendingModeration?.documents ?? []
+                          ).map((document, index) => ({
+                            label: `Document ${index + 1}`,
+                            value: document.name,
+                          }))}
+                        />
+                      ) : null}
+
+                      <DocumentUpload
+                        id="pharmacy-profile-documents"
+                        name="documents"
+                        value={documentValues}
+                        error={documentsError || pharmacyDocumentsError}
+                        isTouched={documentsTouched}
+                        required
+                        disabled={isProfileReadonly || isDocumentsSaving}
+                        maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
+                        accept={PHARMACY_DOCUMENT_ACCEPT}
+                        hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+                        validateSelection={(files) =>
+                          validatePharmacyDocuments(files)
+                        }
+                        confirmRemove
+                        onSelectionError={setDocumentsError}
+                        onDownloadFile={handleDocumentDownload}
+                        onChange={handleDocumentsChange}
+                      />
+
+                      {pharmacy.status === 'new' ? (
+                        <Button
+                          type="submit"
+                          disabled={
+                            !documentsFormIsDirty ||
+                            Boolean(documentsError) ||
+                            isDocumentsSaving ||
+                            isProfileReadonly
+                          }
+                          isLoading={isDocumentsSaving}
+                          loadingLabel="Saving..."
+                        >
+                          Save documents
+                        </Button>
+                      ) : null}
+                    </form>
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="reviews"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'reviews' ? (
+                  <>
+                    <ReviewsList
+                      reviews={[]}
+                      initialVisibleCount={INITIAL_VISIBLE_REVIEWS_COUNT}
+                      emptyTitle="This pharmacy has no reviews yet."
+                      emptyText="Reviews appear only after real client orders are completed and approved."
+                    />
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="comments"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'comments' ? (
+                  <>
+                    <EntityComments
+                      entityKey={`pharmacy:${pharmacy.id}`}
+                      initialTotal={commentsTotal ?? undefined}
+                      load={(page, options) =>
+                        getPharmacyNotes('pharmacy', pharmacy.id, page, options)
+                      }
+                      create={(text) =>
+                        createPharmacyNote('pharmacy', pharmacy.id, text)
+                      }
+                      remove={(id) =>
+                        deletePharmacyNote('pharmacy', pharmacy.id, id)
+                      }
+                      onTotalChange={setCommentsTotal}
+                    />
+                  </>
+                ) : null}
+              </TabPanel>
+
+              <TabPanel
+                idBase={PROFILE_TABS_ID_BASE}
+                value="sessions"
+                activeValue={activeTab}
+                className={css.tabPanel}
+              >
+                {activeTab === 'sessions' ? (
+                  <>
+                    <section
+                      className={css.panelSection}
+                      aria-labelledby="sessions-title"
+                    >
+                      <div className={css.panelHeader}>
+                        <h2 className={css.panelTitle} id="sessions-title">
+                          Active sessions and devices
+                        </h2>
+                        <p className={css.panelText}>
+                          Review real devices signed in to your pharmacy
+                          account.
+                        </p>
+                      </div>
+
+                      {sessionsStatus === 'loading' && sessions.length === 0 ? (
+                        <LoadingSpinner label="Loading active sessions..." />
+                      ) : null}
+
+                      {sessionsStatus === 'error' ? (
+                        <div className={css.emptyState} role="alert">
+                          <h3>Could not load active sessions</h3>
+                          <p>{sessionsError}</p>
                           <Button
                             type="button"
                             variant="secondary"
                             size="sm"
-                            onClick={() => void handleLogoutAllSessions()}
+                            onClick={() => void loadSessions()}
                           >
-                            Sign out all devices
+                            Retry
                           </Button>
-                        ) : null}
-                      </>
-                    ) : sessionsStatus === 'success' ? (
-                      <div className={css.emptyState}>
-                        <h3>No active sessions found</h3>
-                        <p>
-                          Session data will appear here when the backend returns
-                          active login devices.
-                        </p>
-                      </div>
-                    ) : null}
-                  </section>
-                </div>
-              ) : null}
+                        </div>
+                      ) : null}
+
+                      {sessions.length > 0 ? (
+                        <>
+                          <ul className={css.sessionsList}>
+                            {visibleSessions.map((session) => (
+                              <li className={css.sessionCard} key={session.id}>
+                                <MonitorSmartphone
+                                  size={22}
+                                  aria-hidden="true"
+                                />
+                                <div className={css.sessionInfo}>
+                                  <strong>
+                                    {session.deviceName ??
+                                      session.userAgent ??
+                                      'Unknown device'}
+                                  </strong>
+                                  <span>
+                                    Last used:{' '}
+                                    {formatSessionDate(session.lastUsedAt)}
+                                  </span>
+                                </div>
+                                {session.isCurrent ? (
+                                  <span className={css.currentSession}>
+                                    Current session
+                                  </span>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    isLoading={revokingSessionId === session.id}
+                                    loadingLabel="Revoking..."
+                                    onClick={() =>
+                                      void handleRevokeSession(session.id)
+                                    }
+                                  >
+                                    Revoke
+                                  </Button>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+
+                          <LazyLoadButton
+                            visibleCount={visibleSessions.length}
+                            totalCount={sessions.length}
+                            label="Show more sessions"
+                            onLoadMore={() =>
+                              setVisibleSessionsCount(
+                                (current) =>
+                                  current + INITIAL_VISIBLE_SESSIONS_COUNT
+                              )
+                            }
+                          />
+
+                          {logoutAll ? (
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => void handleLogoutAllSessions()}
+                            >
+                              Sign out all devices
+                            </Button>
+                          ) : null}
+                        </>
+                      ) : sessionsStatus === 'success' ? (
+                        <div className={css.emptyState}>
+                          <h3>No active sessions found</h3>
+                          <p>
+                            Session data will appear here when the backend
+                            returns active login devices.
+                          </p>
+                        </div>
+                      ) : null}
+                    </section>
+                  </>
+                ) : null}
+              </TabPanel>
             </div>
           </div>
         </Container>

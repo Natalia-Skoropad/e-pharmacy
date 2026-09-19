@@ -130,3 +130,60 @@ test('active sessions distinguish load errors from a real empty result and expos
     /sessionsStatus === 'success'[\s\S]*?No active sessions found/
   );
 });
+
+//===================================================================
+
+test('profile tabs use the shared TabPanel contract without eagerly mounting tab resources', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /import \{ TabPanel, Tabs \} from '@e-pharmacy\/ui\/navigation'/
+  );
+
+  assert.match(source, /const PROFILE_TABS_ID_BASE = 'pharmacy-profile-tabs'/);
+  assert.match(source, /<Tabs[\s\S]*?idBase=\{PROFILE_TABS_ID_BASE\}/);
+
+  assert.match(
+    source,
+    /<TabPanel[\s\S]*?value="comments"[\s\S]*?activeValue=\{activeTab\}[\s\S]*?\{activeTab === 'comments' \? \(/
+  );
+
+  assert.doesNotMatch(source, /className=\{css\.tabPanel\} role="tabpanel"/);
+});
+
+//===================================================================
+
+test('profile save sections use native form submission and current-account copy', async () => {
+  const source = await readProfileSource();
+
+  assert.match(
+    source,
+    /<form[\s\S]*?aria-labelledby="account-data-title"[\s\S]*?onSubmit=\{\(event\) => \{[\s\S]*?handleOwnerSubmit\(\)[\s\S]*?<Button[\s\S]*?type="submit"[\s\S]*?Save my data/
+  );
+
+  assert.match(
+    source,
+    /<form[\s\S]*?aria-labelledby="password-title"[\s\S]*?onSubmit=\{\(event\) => \{[\s\S]*?handlePasswordSubmit\(\)[\s\S]*?<Button[\s\S]*?type="submit"[\s\S]*?Change password/
+  );
+
+  for (const handler of [
+    'handlePharmacySubmit',
+    'handleAboutSubmit',
+    'handlePaymentSubmit',
+    'handleDocumentsSubmit',
+  ]) {
+    assert.match(
+      source,
+      new RegExp(
+        `<form[\\s\\S]*?onSubmit=\\{\\(event\\) => \\{[\\s\\S]*?void ${handler}\\(\\);[\\s\\S]*?<Button[\\s\\S]*?type="submit"`
+      )
+    );
+  }
+
+  assert.doesNotMatch(source, />\s*Owner data\s*</);
+  assert.doesNotMatch(source, />\s*Save owner data\s*</);
+  assert.doesNotMatch(source, /owner\s+login password/i);
+  assert.match(source, />\s*My data\s*</);
+  assert.match(source, />\s*Save my data\s*</);
+});
