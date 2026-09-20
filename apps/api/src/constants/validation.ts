@@ -138,6 +138,7 @@ export const VALIDATION_MESSAGES = {
       'Working hours must include every day from Mon to Sun',
 
     workingHoursDuplicateDays: 'Each weekday must appear exactly once',
+    workingHoursOpenDay: 'At least one day must remain open',
 
     textEditor:
       'Use English letters, numbers, line breaks and basic punctuation',

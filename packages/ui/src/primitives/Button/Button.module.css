@@ -18,6 +18,10 @@
   opacity: 0.6;
 }
 
+.button > svg {
+  flex: 0 0 auto;
+}
+
 .fullWidth {
   width: 100%;
 }

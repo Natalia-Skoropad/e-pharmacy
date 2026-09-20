@@ -64,6 +64,13 @@ test('working hours require every day exactly once', () => {
       .success,
     false
   );
+
+  assert.equal(
+    sharedWorkingHoursSchema.safeParse(
+      'Mon: Closed; Tue: Closed; Wed: Closed; Thu: Closed; Fri: Closed; Sat: Closed; Sun: Closed'
+    ).success,
+    false
+  );
 });
 
 //===============================================================

@@ -85,14 +85,17 @@ export const sharedPharmacyNameSchema = z
 export const sharedBankRecipientNameSchema = z
   .string()
   .trim()
+
   .min(
     BANK_RECIPIENT_NAME_MIN_LENGTH,
     VALIDATION_MESSAGES.limits.bankRecipientNameMin
   )
+
   .max(
     BANK_RECIPIENT_NAME_MAX_LENGTH,
     VALIDATION_MESSAGES.limits.bankRecipientNameMax
   )
+
   .regex(
     BANK_RECIPIENT_NAME_PATTERN,
     VALIDATION_MESSAGES.format.bankRecipientName
@@ -169,14 +172,17 @@ export const sharedClearableAddressSchema = z.preprocess(
 export const sharedReviewCommentSchema = z
   .string()
   .trim()
+
   .min(
     USER_REVIEW_COMMENT_MIN_LENGTH,
     VALIDATION_MESSAGES.limits.reviewCommentMin
   )
+
   .max(
     USER_REVIEW_COMMENT_MAX_LENGTH,
     VALIDATION_MESSAGES.limits.reviewCommentMax
   )
+
   .regex(REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment);
 
 //===============================================================
@@ -192,10 +198,12 @@ export const sharedReviewRatingSchema = z.coerce
 export const sharedOrderCommentSchema = z
   .string()
   .trim()
+
   .max(
     USER_ORDER_COMMENT_MAX_LENGTH,
     VALIDATION_MESSAGES.limits.orderCommentMax
   )
+
   .regex(ORDER_COMMENT_PATTERN, VALIDATION_MESSAGES.format.orderComment)
   .optional();
 
@@ -204,6 +212,7 @@ export const sharedOrderCommentSchema = z
 export const sharedPictureUrlSchema = z
   .string()
   .trim()
+
   .superRefine((value, context) => {
     if (isPictureDataUrl(value)) {
       if (value.length > PICTURE_DATA_URL_MAX_LENGTH) {
@@ -230,6 +239,7 @@ export const sharedPictureUrlSchema = z
       message: VALIDATION_MESSAGES.format.picture,
     });
   })
+
   .optional()
   .nullable();
 
@@ -250,6 +260,7 @@ export const sharedWorkingHoursSchema = z
   .min(1, VALIDATION_MESSAGES.required.workingHours)
   .max(WORKING_HOURS_MAX_LENGTH, VALIDATION_MESSAGES.limits.workingHoursMax)
   .regex(WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours)
+
   .superRefine((value, context) => {
     const issue = getWorkingHoursValidationIssue(value);
     if (!issue) return;
@@ -261,7 +272,9 @@ export const sharedWorkingHoursSchema = z
           ? VALIDATION_MESSAGES.format.workingHoursDuplicateDays
           : issue === 'range'
             ? VALIDATION_MESSAGES.format.workingHoursRange
-            : VALIDATION_MESSAGES.format.workingHours;
+            : issue === 'all-closed'
+              ? VALIDATION_MESSAGES.format.workingHoursOpenDay
+              : VALIDATION_MESSAGES.format.workingHours;
 
     context.addIssue({ code: 'custom', message });
   });

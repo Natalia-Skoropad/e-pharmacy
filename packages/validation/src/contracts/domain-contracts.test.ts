@@ -64,6 +64,14 @@ test('working hours require exactly one entry for every day', () => {
     ),
     ''
   );
+
+  assert.equal(
+    buildWorkingHoursError(
+      'Mon: Closed; Tue: Closed; Wed: Closed; Thu: Closed; Fri: Closed; Sat: Closed; Sun: Closed'
+    ),
+
+    'At least one day must remain open'
+  );
 });
 
 //=============================================================================

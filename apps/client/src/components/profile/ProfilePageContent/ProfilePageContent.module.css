@@ -222,6 +222,14 @@
   min-width: 0;
 }
 
+.panelSection {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.panelSection > :not(.panelHeader):not(.panelAction) {
+  grid-column: 1 / -1;
+}
+
 .panelSection + .panelSection {
   padding-top: 24px;
   border-top: 1px solid var(--color-border);
@@ -232,8 +240,24 @@
 }
 
 .panelHeader {
+  grid-column: 1 / -1;
+  grid-row: 1;
   display: grid;
   gap: 8px;
+  min-width: 0;
+}
+
+.panelAction {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  justify-content: center;
+}
+
+.panelAction > svg {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
 }
 
 .panelTitle {
@@ -422,13 +446,19 @@
 
 .sessionCard {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 14px;
   align-items: center;
   padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background-color: var(--color-background);
+}
+
+.sessionCard > button {
+  grid-column: 1 / -1;
+  width: 100%;
+  justify-content: center;
 }
 
 .sessionInfo {
@@ -444,8 +474,18 @@
 }
 
 .currentSession {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 16px;
   font-weight: var(--fw-medium);
   color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-light);
+  border-radius: var(--radius-pill);
 }
 
 @media only screen and (min-width: 768px) {
@@ -497,9 +537,47 @@
     grid-column: 1 / -1;
   }
 
+  .panelSection {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .panelHeader {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .panelAction {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: auto;
+    min-width: 180px;
+  }
+
   .panelSection > button {
     justify-self: end;
     width: auto;
+  }
+
+  .sessionCard {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .sessionCard > button {
+    grid-column: auto;
+    justify-self: end;
+    width: auto;
+  }
+
+  .currentSession {
+    grid-column: auto;
+    width: auto;
+    min-height: 0;
+    padding: 0;
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
   }
 
   .emptyState > a {

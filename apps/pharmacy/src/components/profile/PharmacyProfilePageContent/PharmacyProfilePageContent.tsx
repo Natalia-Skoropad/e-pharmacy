@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { KeyRound, MonitorSmartphone } from 'lucide-react';
+
+import {
+  ChevronDown,
+  KeyRound,
+  LogOut,
+  MonitorSmartphone,
+  RefreshCw,
+  Save,
+  Send,
+} from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { canPharmacyProfilePerformAction } from '@e-pharmacy/config/pharmacies';
@@ -1685,6 +1694,7 @@ function PharmacyProfilePage({
                 <Button
                   type="button"
                   fullWidth
+                  iconLeft={<Send size={18} aria-hidden="true" />}
                   disabled={!canSendForVerification}
                   isLoading={isSendingVerification}
                   loadingLabel="Sending..."
@@ -1698,6 +1708,7 @@ function PharmacyProfilePage({
                 <Button
                   type="button"
                   fullWidth
+                  iconLeft={<Send size={18} aria-hidden="true" />}
                   disabled={!canSendForModeration}
                   isLoading={isSendingVerification}
                   loadingLabel="Sending..."
@@ -1775,8 +1786,9 @@ function PharmacyProfilePage({
                       </div>
 
                       <Button
-                        className={css.myDataAction}
+                        className={css.panelAction}
                         type="submit"
+                        iconLeft={<Save size={18} aria-hidden="true" />}
                         disabled={
                           !ownerFormIsValid ||
                           !ownerFormIsDirty ||
@@ -1853,7 +1865,7 @@ function PharmacyProfilePage({
                       </div>
 
                       <Button
-                        className={css.myDataAction}
+                        className={css.panelAction}
                         type="submit"
                         iconLeft={<KeyRound size={18} aria-hidden="true" />}
                         disabled={!passwordFormIsValid || isPasswordSaving}
@@ -2041,7 +2053,9 @@ function PharmacyProfilePage({
 
                       {pharmacy.status === 'new' ? (
                         <Button
+                          className={css.panelAction}
                           type="submit"
+                          iconLeft={<Save size={18} aria-hidden="true" />}
                           disabled={
                             hasValidationErrors(pharmacyErrors) ||
                             !pharmacyFormIsDirty ||
@@ -2115,7 +2129,9 @@ function PharmacyProfilePage({
 
                       {pharmacy.status === 'new' ? (
                         <Button
+                          className={css.panelAction}
                           type="submit"
+                          iconLeft={<Save size={18} aria-hidden="true" />}
                           disabled={
                             hasValidationErrors(aboutErrors) ||
                             !aboutFormIsDirty ||
@@ -2308,7 +2324,9 @@ function PharmacyProfilePage({
 
                       {pharmacy.status === 'new' ? (
                         <Button
+                          className={css.panelAction}
                           type="submit"
+                          iconLeft={<Save size={18} aria-hidden="true" />}
                           disabled={
                             hasValidationErrors(paymentErrors) ||
                             !paymentFormIsDirty ||
@@ -2388,7 +2406,9 @@ function PharmacyProfilePage({
 
                       {pharmacy.status === 'new' ? (
                         <Button
+                          className={css.panelAction}
                           type="submit"
+                          iconLeft={<Save size={18} aria-hidden="true" />}
                           disabled={
                             !documentsFormIsDirty ||
                             Boolean(documentsError) ||
@@ -2478,6 +2498,19 @@ function PharmacyProfilePage({
                         </p>
                       </div>
 
+                      {sessions.length > 0 && logoutAll ? (
+                        <Button
+                          className={css.panelAction}
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          iconLeft={<LogOut size={18} aria-hidden="true" />}
+                          onClick={() => void handleLogoutAllSessions()}
+                        >
+                          Sign out all devices
+                        </Button>
+                      ) : null}
+
                       {sessionsStatus === 'loading' && sessions.length === 0 ? (
                         <LoadingSpinner label="Loading active sessions..." />
                       ) : null}
@@ -2490,6 +2523,9 @@ function PharmacyProfilePage({
                             type="button"
                             variant="secondary"
                             size="sm"
+                            iconLeft={
+                              <RefreshCw size={18} aria-hidden="true" />
+                            }
                             onClick={() => void loadSessions()}
                           >
                             Retry
@@ -2526,6 +2562,9 @@ function PharmacyProfilePage({
                                     type="button"
                                     variant="secondary"
                                     size="sm"
+                                    iconLeft={
+                                      <LogOut size={18} aria-hidden="true" />
+                                    }
                                     isLoading={revokingSessionId === session.id}
                                     loadingLabel="Revoking..."
                                     onClick={() =>
@@ -2543,6 +2582,9 @@ function PharmacyProfilePage({
                             visibleCount={visibleSessions.length}
                             totalCount={sessions.length}
                             label="Show more sessions"
+                            iconRight={
+                              <ChevronDown size={18} aria-hidden="true" />
+                            }
                             onLoadMore={() =>
                               setVisibleSessionsCount(
                                 (current) =>
@@ -2550,17 +2592,6 @@ function PharmacyProfilePage({
                               )
                             }
                           />
-
-                          {logoutAll ? (
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => void handleLogoutAllSessions()}
-                            >
-                              Sign out all devices
-                            </Button>
-                          ) : null}
                         </>
                       ) : sessionsStatus === 'success' ? (
                         <div className={css.emptyState}>

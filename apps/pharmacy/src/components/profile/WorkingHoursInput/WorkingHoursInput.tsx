@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { SelectField, type SelectOption } from '@e-pharmacy/ui/forms';
+
 import {
   WORKING_DAYS,
   formatWorkingHoursValue,
@@ -24,6 +26,42 @@ export type WorkingHoursInputProps = Readonly<{
   disabled?: boolean;
   onValueChange: (value: string) => void;
 }>;
+
+//===================================================================
+
+const TIME_STEP_MINUTES = 15;
+
+//===================================================================
+
+const BASE_TIME_OPTIONS: readonly SelectOption<string>[] = [
+  { value: '', label: '--:--' },
+  ...Array.from({ length: (24 * 60) / TIME_STEP_MINUTES }, (_, index) => {
+    const totalMinutes = index * TIME_STEP_MINUTES;
+    const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+    const minutes = String(totalMinutes % 60).padStart(2, '0');
+    const value = `${hours}:${minutes}`;
+
+    return { value, label: value };
+  }),
+];
+
+//===================================================================
+
+function getTimeOptions(value: string): readonly SelectOption<string>[] {
+  if (!value || BASE_TIME_OPTIONS.some((option) => option.value === value)) {
+    return BASE_TIME_OPTIONS;
+  }
+
+  const customOption: SelectOption<string> = { value, label: value };
+  const timeOptions = BASE_TIME_OPTIONS.filter((option) => option.value);
+
+  return [
+    { value: '', label: '--:--' },
+    ...[...timeOptions, customOption].sort((first, second) =>
+      first.value.localeCompare(second.value)
+    ),
+  ];
+}
 
 //===================================================================
 
@@ -60,6 +98,11 @@ function WorkingHoursInput({
 
     setCurrentValue(parseWorkingHoursValue(value));
   }, [value]);
+
+  const openDaysCount = WORKING_DAYS.reduce(
+    (count, day) => count + (currentValue[day.key].isClosed ? 0 : 1),
+    0
+  );
 
   const emitChange = (nextValue: WorkingHoursValue) => {
     const formattedValue = formatWorkingHoursValue(nextValue);
@@ -111,6 +154,9 @@ function WorkingHoursInput({
           const fromId = `${id}-${day.key}-from`;
           const toId = `${id}-${day.key}-to`;
           const closedId = `${id}-${day.key}-closed`;
+          const fromOptions = getTimeOptions(dayValue.from);
+          const toOptions = getTimeOptions(dayValue.to);
+          const isLastOpenDay = !dayValue.isClosed && openDaysCount === 1;
 
           return (
             <div
@@ -123,49 +169,58 @@ function WorkingHoursInput({
                 {day.label}
               </span>
 
-              <label className={css.timeLabel} htmlFor={fromId}>
-                <span>From</span>
-                <input
-                  className={css.timeInput}
+              <div className={css.timeControl}>
+                <span className={css.timeCaption} aria-hidden="true">
+                  From
+                </span>
+                <SelectField
                   id={fromId}
-                  type="time"
+                  className={css.timeSelect}
+                  label={`${day.label} opening time`}
+                  labelVisibility="visually-hidden"
                   value={dayValue.from}
-                  required={required && !dayValue.isClosed}
+                  options={fromOptions}
+                  placeholder="--:--"
+                  compact
+                  escapeOverflow
                   disabled={disabled || dayValue.isClosed}
-                  aria-label={`${day.label} opening time`}
-                  aria-invalid={hasError || undefined}
-                  aria-describedby={describedBy}
-                  onChange={(event) =>
-                    updateDay(day.key, { from: event.target.value })
-                  }
+                  describedBy={describedBy}
+                  onChange={(from) => updateDay(day.key, { from })}
                 />
-              </label>
+              </div>
 
-              <label className={css.timeLabel} htmlFor={toId}>
-                <span>To</span>
-                <input
-                  className={css.timeInput}
+              <div className={css.timeControl}>
+                <span className={css.timeCaption} aria-hidden="true">
+                  To
+                </span>
+                <SelectField
                   id={toId}
-                  type="time"
+                  className={css.timeSelect}
+                  label={`${day.label} closing time`}
+                  labelVisibility="visually-hidden"
                   value={dayValue.to}
-                  required={required && !dayValue.isClosed}
+                  options={toOptions}
+                  placeholder="--:--"
+                  compact
+                  escapeOverflow
                   disabled={disabled || dayValue.isClosed}
-                  aria-label={`${day.label} closing time`}
-                  aria-invalid={hasError || undefined}
-                  aria-describedby={describedBy}
-                  onChange={(event) =>
-                    updateDay(day.key, { to: event.target.value })
-                  }
+                  describedBy={describedBy}
+                  onChange={(to) => updateDay(day.key, { to })}
                 />
-              </label>
+              </div>
 
               <label className={css.closedLabel} htmlFor={closedId}>
                 <input
                   id={closedId}
                   type="checkbox"
                   checked={dayValue.isClosed}
-                  disabled={disabled}
+                  disabled={disabled || isLastOpenDay}
                   aria-label={`${day.label} is closed`}
+                  title={
+                    isLastOpenDay
+                      ? 'At least one day must remain open'
+                      : undefined
+                  }
                   aria-invalid={hasError || undefined}
                   aria-describedby={describedBy}
                   onChange={(event) =>

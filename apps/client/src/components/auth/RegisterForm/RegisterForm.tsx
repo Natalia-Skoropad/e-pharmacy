@@ -28,7 +28,6 @@ import {
   USER_PHONE_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
   hasValidationErrors,
-  isRegisterFormValid,
   markAllFieldsTouched,
   normalizePhoneInput,
   normalizeEmail,
@@ -182,9 +181,6 @@ function RegisterForm() {
       ? validatePharmacyDocuments(pharmacyDocuments, { required: true })
       : '';
 
-  const registerFormIsValid =
-    isRegisterFormValid(values) && !pharmacyDocumentsError;
-
   const handleChange =
     (field: keyof RegisterFormValues) =>
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -250,9 +246,13 @@ function RegisterForm() {
     }
 
     if (accountType === 'pharmacy') {
-      nextErrors.pharmacyDocuments =
-        validatePharmacyDocuments(pharmacyDocuments, { required: true }) ||
-        undefined;
+      const documentsError = validatePharmacyDocuments(pharmacyDocuments, {
+        required: true,
+      });
+
+      if (documentsError) {
+        nextErrors.pharmacyDocuments = documentsError;
+      }
     }
 
     if (hasValidationErrors(nextErrors)) {
@@ -420,9 +420,7 @@ function RegisterForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={
-          isSubmitting || isBootstrapping || !register || !registerFormIsValid
-        }
+        disabled={isSubmitting || isBootstrapping || !register}
       >
         {isSubmitting ? selectedCopy.loading : selectedCopy.button}
       </Button>

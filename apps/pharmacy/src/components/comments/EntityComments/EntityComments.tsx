@@ -1,6 +1,7 @@
 'use client';
 
 import { useId } from 'react';
+import { RefreshCw } from 'lucide-react';
 
 import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
 import { PHARMACY_NOTE_MAX_LENGTH } from '@e-pharmacy/validation/pharmacy';
@@ -154,6 +155,7 @@ function EntityCommentsContent({
           type="button"
           variant="secondary"
           size="sm"
+          iconLeft={<RefreshCw size={17} aria-hidden="true" />}
           onClick={() => void comments.retry()}
         >
           Retry comments

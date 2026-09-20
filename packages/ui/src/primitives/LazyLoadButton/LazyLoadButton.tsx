@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import Button from '../../primitives/Button/Button';
 
 import css from './LazyLoadButton.module.css';
@@ -10,6 +12,7 @@ export type LazyLoadButtonProps = {
   label?: string;
   loadingLabel?: string;
   isLoading?: boolean;
+  iconRight?: ReactNode;
   onLoadMore: () => void;
 };
 
@@ -21,6 +24,7 @@ function LazyLoadButton({
   label = 'Show more',
   loadingLabel = 'Loading...',
   isLoading = false,
+  iconRight,
   onLoadMore,
 }: LazyLoadButtonProps) {
   if (visibleCount >= totalCount) return null;
@@ -35,6 +39,7 @@ function LazyLoadButton({
         className={css.button}
         isLoading={isLoading}
         loadingLabel={loadingLabel}
+        iconRight={iconRight}
         onClick={onLoadMore}
       >
         {label} ({remainingCount})

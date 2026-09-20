@@ -26,6 +26,17 @@ type ClientProtectedRouteProps = {
 
 //===================================================================
 
+const STATUS_PAGE_IMAGE = {
+  src: '/images/status/status-pills.png',
+  alt: '',
+  width: 749,
+  height: 508,
+  priority: true,
+  unoptimized: true,
+};
+
+//===================================================================
+
 function AuthUnavailableState() {
   const { retryAuthBootstrap } = useAuth();
 
@@ -33,8 +44,13 @@ function AuthUnavailableState() {
     <ErrorPage
       title="We could not verify your session"
       description="The authentication service is temporarily unavailable. Try again before continuing."
+      eyebrow="Access check"
       homeHref={ROUTES.HOME}
+      homeLabel="Back to home"
       retryLabel="Retry session check"
+      variant="brand"
+      landmark="main"
+      image={STATUS_PAGE_IMAGE}
       onRetry={() => void retryAuthBootstrap()}
     />
   );
@@ -51,9 +67,7 @@ function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
 
   if (pharmacyConfiguration && !pharmacyConfiguration.ok) {
     return (
-      <PharmacyAppConfigurationState
-        message={pharmacyConfiguration.message}
-      />
+      <PharmacyAppConfigurationState message={pharmacyConfiguration.message} />
     );
   }
 

@@ -2,7 +2,8 @@ export type WorkingHoursValidationIssue =
   | 'format'
   | 'missing-days'
   | 'duplicate-days'
-  | 'range';
+  | 'range'
+  | 'all-closed';
 
 //===============================================================
 
@@ -59,6 +60,10 @@ export function getWorkingHoursValidationIssue(
     WORKING_DAY_KEYS.some((day) => !seenDays.has(day))
   ) {
     return 'missing-days';
+  }
+
+  if (parts.every((part) => part.endsWith(': Closed'))) {
+    return 'all-closed';
   }
 
   return null;

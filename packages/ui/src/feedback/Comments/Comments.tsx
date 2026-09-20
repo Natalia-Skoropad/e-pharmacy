@@ -1,6 +1,6 @@
 'use client';
 
-import { Trash2 } from 'lucide-react';
+import { MessageSquarePlus, Trash2 } from 'lucide-react';
 
 import type { PharmacyNote } from '@e-pharmacy/types/notes';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -56,6 +56,7 @@ export function CommentComposer({
         type="button"
         disabled={disabled || !value.trim() || isSaving}
         isLoading={isSaving}
+        iconLeft={<MessageSquarePlus size={17} aria-hidden="true" />}
         onClick={onSubmit}
       >
         Add comment

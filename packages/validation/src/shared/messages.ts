@@ -61,10 +61,18 @@ export const VALIDATION_MESSAGES = {
 
     workingHours:
       'Use the format Mon: 09:00-18:00; Tue: Closed and include all seven days',
+
     workingHoursRange: 'Closing time must be later than opening time',
-    workingHoursMissingDays: 'Working hours must include every day from Mon to Sun',
+
+    workingHoursMissingDays:
+      'Working hours must include every day from Mon to Sun',
     workingHoursDuplicateDays: 'Each weekday must appear exactly once',
-    textEditor: 'Use English letters, numbers, line breaks and basic punctuation',
+
+    workingHoursOpenDay: 'At least one day must remain open',
+
+    textEditor:
+      'Use English letters, numbers, line breaks and basic punctuation',
+
     taxId: 'Use 8–10 digits',
     iban: 'Use Ukrainian IBAN format: UA + 27 digits',
 

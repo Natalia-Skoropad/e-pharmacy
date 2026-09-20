@@ -15,6 +15,7 @@ export type StatusPageLayoutImage = Readonly<{
   height: number;
   sizes?: string;
   priority?: boolean;
+  unoptimized?: boolean;
 }>;
 
 //===================================================================
@@ -78,6 +79,7 @@ function StatusPageLayout({
                     }
                     className={css.image}
                     priority={image.priority}
+                    unoptimized={image.unoptimized}
                     fetchPriority={image.priority ? 'high' : undefined}
                   />
                 </div>

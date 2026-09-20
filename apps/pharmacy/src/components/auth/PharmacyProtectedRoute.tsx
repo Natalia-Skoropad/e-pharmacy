@@ -22,6 +22,17 @@ type PharmacyProtectedRouteProps = Readonly<{
 
 //===================================================================
 
+const STATUS_PAGE_IMAGE = {
+  src: '/images/status/status-pills.png',
+  alt: '',
+  width: 749,
+  height: 508,
+  priority: true,
+  unoptimized: true,
+};
+
+//===================================================================
+
 export function PharmacyProtectedRoute({
   children,
 }: PharmacyProtectedRouteProps) {
@@ -37,6 +48,7 @@ export function PharmacyProtectedRoute({
     logout,
     retryAuthBootstrap,
   } = useAuth();
+
   const isPharmacy = user?.role === 'pharmacy';
   const isBlocked = user?.status === 'blocked';
 
@@ -63,9 +75,7 @@ export function PharmacyProtectedRoute({
       void logout()
         .catch(() => undefined)
         .finally(() => {
-          window.location.assign(
-            getSharedLoginUrl(PHARMACY_ROUTES.DASHBOARD)
-          );
+          window.location.assign(getSharedLoginUrl(PHARMACY_ROUTES.DASHBOARD));
         });
     }
   }, [
@@ -88,9 +98,13 @@ export function PharmacyProtectedRoute({
       <ErrorPage
         title="We could not verify pharmacy access"
         description="The authentication service is temporarily unavailable. Retry the session check before opening the cabinet."
+        eyebrow="Access check"
         homeHref={getSharedLoginUrl()}
         homeLabel="Open login"
         retryLabel="Retry session check"
+        variant="brand"
+        landmark="main"
+        image={STATUS_PAGE_IMAGE}
         onRetry={() => void retryAuthBootstrap()}
       />
     );

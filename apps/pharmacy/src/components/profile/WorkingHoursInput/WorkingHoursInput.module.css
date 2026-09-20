@@ -1,9 +1,14 @@
 .field {
   display: grid;
   gap: 8px;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
 }
 
 .label {
+  padding: 0;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
@@ -27,8 +32,9 @@
   gap: 10px;
   padding: 12px;
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base);
@@ -43,73 +49,65 @@
   box-shadow: var(--shadow-accent-ring);
 }
 
-.schedule[aria-invalid='true'] {
+.field[aria-invalid='true'] .schedule {
   border-color: var(--color-error);
   box-shadow: none;
 }
 
 .dayRow {
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
 }
 
 .dayName {
+  min-width: 0;
   font-size: var(--fz-14);
   font-weight: var(--fw-bold);
   line-height: var(--lh-base);
   color: var(--color-text-primary);
 }
 
-.timeLabel,
-.closedLabel {
-  display: inline-flex;
+.timeControl {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 8px;
   align-items: center;
+  min-width: 0;
+}
+
+.timeCaption {
   font-size: var(--fz-12);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
 }
 
-.timeLabel {
-  justify-content: space-between;
+.timeSelect {
+  width: 100%;
+  min-width: 0;
 }
 
-.timeInput {
-  width: 120px;
+.timeSelect button {
   min-height: 40px;
-  padding: 8px 10px;
-  font: inherit;
-  color: var(--color-text-primary);
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  outline: none;
-  transition:
-    border-color var(--transition-base),
-    box-shadow var(--transition-base);
+  cursor: pointer;
+  border-radius: var(--radius-md);
 }
 
-.timeInput:hover:not(:disabled),
-.timeInput:focus-visible:not(:disabled) {
-  border-color: var(--color-accent);
-}
-
-.timeInput:focus-visible:not(:disabled) {
-  box-shadow: var(--shadow-accent-ring);
-}
-
-.timeInput:disabled {
-  color: var(--color-text-muted);
+.timeSelect button:disabled {
   cursor: not-allowed;
-  background-color: var(--color-background-soft);
 }
 
 .closedLabel {
-  justify-content: flex-start;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-self: end;
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
   color: var(--color-text-primary);
 }
 
@@ -124,7 +122,7 @@
   -webkit-appearance: none;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border-strong, var(--color-border));
-  border-radius: 2px;
+  border-radius: 4px;
   transition:
     background-color var(--transition-base),
     border-color var(--transition-base),
@@ -177,13 +175,10 @@
 }
 
 .error {
-  font-size: var(--fz-12);
-  line-height: 1.4;
-}
-
-.error {
   min-height: 18px;
   margin: 0;
+  font-size: var(--fz-12);
+  line-height: 1.4;
   color: var(--color-error);
   text-align: right;
 }
@@ -194,14 +189,15 @@
     align-items: center;
   }
 
-  .timeLabel {
-    justify-content: flex-start;
+  .timeControl {
+    grid-template-columns: auto 120px;
   }
-}
 
-@media only screen and (min-width: 1440px) {
+  .timeSelect {
+    width: 120px;
+  }
+
   .closedLabel {
-    justify-content: flex-end;
-    width: 100%;
+    justify-self: end;
   }
 }

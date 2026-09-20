@@ -153,6 +153,10 @@ export function buildWorkingHoursError(
     return VALIDATION_MESSAGES.format.workingHoursRange;
   }
 
+  if (validationIssue === 'all-closed') {
+    return VALIDATION_MESSAGES.format.workingHoursOpenDay;
+  }
+
   if (validationIssue === 'format') {
     return VALIDATION_MESSAGES.format.workingHours;
   }

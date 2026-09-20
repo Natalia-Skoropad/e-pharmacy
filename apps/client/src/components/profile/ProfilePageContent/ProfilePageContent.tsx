@@ -5,10 +5,16 @@ import type { ChangeEvent } from 'react';
 
 import {
   Building2,
+  ChevronDown,
   CircleAlert,
   Heart,
   KeyRound,
+  LogIn,
+  LogOut,
   MonitorSmartphone,
+  RefreshCw,
+  Save,
+  ShoppingBag,
 } from 'lucide-react';
 
 import {
@@ -1090,6 +1096,20 @@ function AuthenticatedProfilePageContent({
                       </p>
                     </div>
 
+                    <Button
+                      className={css.panelAction}
+                      type="button"
+                      iconLeft={<Save size={18} aria-hidden="true" />}
+                      disabled={
+                        !profileFormIsValid ||
+                        !profileFormIsDirty ||
+                        isProfileSaving
+                      }
+                      onClick={() => void handleProfileSubmit()}
+                    >
+                      {isProfileSaving ? 'Saving...' : 'Save changes'}
+                    </Button>
+
                     <div className={css.formGrid}>
                       <NameInput
                         id="profile-name"
@@ -1132,18 +1152,6 @@ function AuthenticatedProfilePageContent({
                         }
                       />
                     </div>
-
-                    <Button
-                      type="button"
-                      disabled={
-                        !profileFormIsValid ||
-                        !profileFormIsDirty ||
-                        isProfileSaving
-                      }
-                      onClick={() => void handleProfileSubmit()}
-                    >
-                      {isProfileSaving ? 'Saving...' : 'Save changes'}
-                    </Button>
                   </section>
 
                   <section
@@ -1158,6 +1166,16 @@ function AuthenticatedProfilePageContent({
                         Keep your account more securely locked.
                       </p>
                     </div>
+
+                    <Button
+                      className={css.panelAction}
+                      type="button"
+                      disabled={!passwordFormIsValid || isPasswordSaving}
+                      iconLeft={<KeyRound size={18} aria-hidden="true" />}
+                      onClick={() => void handleSavePassword()}
+                    >
+                      {isPasswordSaving ? 'Changing...' : 'Change password'}
+                    </Button>
 
                     <div className={css.formGrid}>
                       <PasswordInput
@@ -1210,15 +1228,6 @@ function AuthenticatedProfilePageContent({
                         {passwordSubmitError}
                       </p>
                     ) : null}
-
-                    <Button
-                      type="button"
-                      disabled={!passwordFormIsValid || isPasswordSaving}
-                      iconLeft={<KeyRound size={18} aria-hidden="true" />}
-                      onClick={() => void handleSavePassword()}
-                    >
-                      {isPasswordSaving ? 'Changing...' : 'Change password'}
-                    </Button>
                   </section>
                 </div>
               ) : null}
@@ -1246,6 +1255,7 @@ function AuthenticatedProfilePageContent({
                           type="button"
                           variant="secondary"
                           size="sm"
+                          iconLeft={<LogOut size={18} aria-hidden="true" />}
                           onClick={() => void handleLogoutAllSessions()}
                         >
                           Sign out all devices
@@ -1268,6 +1278,9 @@ function AuthenticatedProfilePageContent({
                             type="button"
                             variant="secondary"
                             size="sm"
+                            iconLeft={
+                              <RefreshCw size={18} aria-hidden="true" />
+                            }
                             onClick={() =>
                               setSessionsReloadKey((current) => current + 1)
                             }
@@ -1300,6 +1313,9 @@ function AuthenticatedProfilePageContent({
                                 type="button"
                                 variant="secondary"
                                 size="sm"
+                                iconLeft={
+                                  <LogOut size={18} aria-hidden="true" />
+                                }
                                 onClick={() =>
                                   void handleRevokeSession(session.id)
                                 }
@@ -1534,6 +1550,7 @@ function AuthenticatedProfilePageContent({
                           type="button"
                           variant="secondary"
                           size="sm"
+                          iconLeft={<RefreshCw size={18} aria-hidden="true" />}
                           onClick={() => void loadFavoriteProducts(1)}
                         >
                           Try again
@@ -1577,6 +1594,9 @@ function AuthenticatedProfilePageContent({
                           className={css.showMoreButton}
                           type="button"
                           variant="secondary"
+                          iconRight={
+                            <ChevronDown size={18} aria-hidden="true" />
+                          }
                           onClick={() =>
                             void loadFavoriteProducts(favoriteProductsPage + 1)
                           }
@@ -1599,7 +1619,10 @@ function AuthenticatedProfilePageContent({
                           nicely — no shelf drama included.
                         </p>
                       </div>
-                      <LinkButton href={ROUTES.PRODUCTS_CATALOG}>
+                      <LinkButton
+                        href={ROUTES.PRODUCTS_CATALOG}
+                        iconLeft={<ShoppingBag size={18} aria-hidden="true" />}
+                      >
                         Browse products
                       </LinkButton>
                     </div>
@@ -1639,6 +1662,7 @@ function AuthenticatedProfilePageContent({
                           type="button"
                           variant="secondary"
                           size="sm"
+                          iconLeft={<RefreshCw size={18} aria-hidden="true" />}
                           onClick={() => void loadFavoritePharmacies(1)}
                         >
                           Try again
@@ -1682,6 +1706,9 @@ function AuthenticatedProfilePageContent({
                           className={css.showMoreButton}
                           type="button"
                           variant="secondary"
+                          iconRight={
+                            <ChevronDown size={18} aria-hidden="true" />
+                          }
                           onClick={() =>
                             void loadFavoritePharmacies(
                               favoritePharmaciesPage + 1
@@ -1706,7 +1733,10 @@ function AuthenticatedProfilePageContent({
                           for quick access — loyal as a tiny green assistant.
                         </p>
                       </div>
-                      <LinkButton href={ROUTES.PHARMACIES}>
+                      <LinkButton
+                        href={ROUTES.PHARMACIES}
+                        iconLeft={<Building2 size={18} aria-hidden="true" />}
+                      >
                         Browse pharmacies
                       </LinkButton>
                     </div>
@@ -1751,7 +1781,12 @@ function ProfileUnavailable() {
               We could not load your profile data. Please log in again.
             </p>
 
-            <LinkButton href={ROUTES.LOGIN}>Go to login</LinkButton>
+            <LinkButton
+              href={ROUTES.LOGIN}
+              iconLeft={<LogIn size={18} aria-hidden="true" />}
+            >
+              Go to login
+            </LinkButton>
           </div>
         </Container>
       </section>

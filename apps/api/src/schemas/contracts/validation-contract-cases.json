@@ -355,6 +355,12 @@
       "valid": false
     },
     {
+      "id": "working-hours-all-closed",
+      "contract": "workingHours",
+      "input": "Mon: Closed; Tue: Closed; Wed: Closed; Thu: Closed; Fri: Closed; Sat: Closed; Sun: Closed",
+      "valid": false
+    },
+    {
       "id": "picture-http",
       "contract": "pictureUrl",
       "input": "https://example.com/image.webp",

@@ -90,3 +90,31 @@ test('auth-sensitive submit handlers use synchronous refs before starting reques
     /handleLogoutAllSessions[\s\S]*?sessionMutationInFlightRef\.current/
   );
 });
+
+//===================================================================
+
+test('registration submit remains actionable so validation can explain blocked pharmacy registration', async () => {
+  const source = await readSource('./RegisterForm/RegisterForm.tsx');
+
+  assert.match(
+    source,
+    /const handleSubmit = async \(event: FormEvent<HTMLFormElement>\)[\s\S]*?hasValidationErrors\(nextErrors\)[\s\S]*?setTouchedFields/
+  );
+
+  assert.match(
+    source,
+    /<Button[\s\S]*?type="submit"[\s\S]*?disabled=\{isSubmitting \|\| isBootstrapping \|\| !register\}/
+  );
+
+  assert.doesNotMatch(source, /disabled=\{[\s\S]{0,180}!registerFormIsValid/);
+
+  assert.match(
+    source,
+    /const documentsError = validatePharmacyDocuments\(pharmacyDocuments,[\s\S]*?if \(documentsError\) \{[\s\S]*?nextErrors\.pharmacyDocuments = documentsError/
+  );
+
+  assert.doesNotMatch(
+    source,
+    /nextErrors\.pharmacyDocuments\s*=\s*[\s\S]{0,120}\|\|\s*undefined/
+  );
+});

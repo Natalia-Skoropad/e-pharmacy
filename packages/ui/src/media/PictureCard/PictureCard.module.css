@@ -55,6 +55,12 @@
   justify-content: center;
 }
 
+.buttons svg {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+}
+
 .card .buttons .dangerButton {
   color: var(--color-error);
   background-color: transparent;
