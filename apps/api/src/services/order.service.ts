@@ -1,9 +1,10 @@
 import mongoose, { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+import { USER_ROLES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
+import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
 
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
@@ -156,15 +157,6 @@ const ORDER_STATUSES_FOR_STATISTICS = [
   'successful',
   'rejected',
 ] as const;
-
-//===============================================================
-
-function isCheckoutPharmacyStatus(status: PharmacyEntity['status']): boolean {
-  return (
-    status === PHARMACY_STATUSES.ACTIVE ||
-    status === PHARMACY_STATUSES.ON_MODERATION
-  );
-}
 
 //===============================================================
 
@@ -844,7 +836,7 @@ export async function checkoutOrderService(
         .session(session)
         .lean<PharmacyDocument | null>();
 
-      if (!pharmacy || !isCheckoutPharmacyStatus(pharmacy.status)) {
+      if (!pharmacy || !isPharmacyOperationalStatus(pharmacy.status)) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'Pharmacy is unavailable for checkout.',
@@ -1124,7 +1116,7 @@ export async function createManagerOrderService(
         return { kind: 'replay' as const, replay };
       }
 
-      if (!isCheckoutPharmacyStatus(pharmacy.status)) {
+      if (!isPharmacyOperationalStatus(pharmacy.status)) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'An active pharmacy is required to create orders.'
@@ -1383,27 +1375,63 @@ export async function createManagerOrderService(
 
 //===============================================================
 
+async function getAuthorizedPharmacyOrderStatus(
+  actor: { id: string; role: UserRole },
+  order: OrderDocument,
+  session: mongoose.ClientSession
+): Promise<PharmacyEntity['status'] | null> {
+  if (actor.role === USER_ROLES.ADMIN) return null;
+
+  if (actor.role !== USER_ROLES.PHARMACY) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Only pharmacy users or admins can access orders.'
+    );
+  }
+
+  const pharmacy = await Pharmacy.findOne({
+    _id: order.pharmacyId,
+    $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
+  })
+    .select('status')
+    .session(session)
+    .lean<Pick<PharmacyDocument, 'status'> | null>();
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
+  }
+
+  return pharmacy.status;
+}
+
+//===============================================================
+
+async function assertCanAccessPharmacyOrder(
+  actor: { id: string; role: UserRole },
+  order: OrderDocument,
+  session: mongoose.ClientSession
+): Promise<void> {
+  await getAuthorizedPharmacyOrderStatus(actor, order, session);
+}
+
+//===============================================================
+
 async function assertCanEditPharmacyOrder(
   actor: { id: string; role: UserRole },
   order: OrderDocument,
   session: mongoose.ClientSession
 ): Promise<void> {
-  if (actor.role === USER_ROLES.ADMIN) return;
+  const pharmacyStatus = await getAuthorizedPharmacyOrderStatus(
+    actor,
+    order,
+    session
+  );
 
-  if (actor.role !== USER_ROLES.PHARMACY) {
+  if (pharmacyStatus !== null && !isPharmacyOperationalStatus(pharmacyStatus)) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
-      'Only pharmacy users or admins can edit orders.'
+      'Order changes are unavailable while the pharmacy is not active.'
     );
-  }
-
-  const hasAccess = await Pharmacy.exists({
-    _id: order.pharmacyId,
-    $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
-  }).session(session);
-
-  if (!hasAccess) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
   }
 }
 
@@ -1777,7 +1805,7 @@ export async function getOrderManagerCommentsService(
 
     if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-    await assertCanEditPharmacyOrder(actor, order, session);
+    await assertCanAccessPharmacyOrder(actor, order, session);
 
     const comments = serializeManagerComments(order);
     const total = comments.length;
@@ -1956,23 +1984,7 @@ export async function updateOrderStatusService(
 
       if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-      if (actor.role !== USER_ROLES.ADMIN) {
-        if (actor.role !== USER_ROLES.PHARMACY) {
-          throw httpError(
-            HTTP_STATUS.FORBIDDEN,
-            'Only pharmacy users or admins can update order status.'
-          );
-        }
-
-        const hasAccess = await Pharmacy.exists({
-          _id: order.pharmacyId,
-          $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
-        }).session(session);
-
-        if (!hasAccess) {
-          throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
-        }
-      }
+      await assertCanEditPharmacyOrder(actor, order, session);
 
       if (!canTransitionOrderStatus(order.status, input.status)) {
         throw httpError(

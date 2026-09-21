@@ -50,7 +50,10 @@ import {
   reconcileAttachedPharmacyDocumentStorage,
   resolvePrivatePharmacyDocumentSelections,
 } from './pharmacy-document.service';
-import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
+import {
+  findPharmacyForProfileAccess,
+  findPharmacyForSummaryAccess,
+} from './pharmacy-membership.service';
 
 //===============================================================
 
@@ -815,10 +818,8 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
 export async function getCurrentPharmacySummaryService(
   userId: string
 ): Promise<{ pharmacy: CurrentPharmacySummaryResponseDto }> {
-  const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
-    userId,
-    'read_profile'
-  );
+  const { pharmacy, membershipRole } =
+    await findPharmacyForSummaryAccess(userId);
 
   return {
     pharmacy: serializeCurrentPharmacySummary(

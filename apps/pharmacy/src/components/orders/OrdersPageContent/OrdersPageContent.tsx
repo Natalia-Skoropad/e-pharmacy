@@ -306,11 +306,17 @@ function OrdersPageContent({
         {bannerStatus ? (
           <StatusBanner
             {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title="Verification is required"
+            title={
+              bannerStatus === 'blocked'
+                ? 'Order management is unavailable'
+                : 'Verification is required'
+            }
             message={
-              bannerStatus === 'on_verification'
-                ? 'Orders stay locked while Admin reviews the submitted pharmacy profile.'
-                : 'New pharmacies do not receive orders until Admin verifies the pharmacy profile.'
+              bannerStatus === 'blocked'
+                ? 'Your pharmacy is temporarily blocked. Existing orders remain visible, but operational actions are disabled until Admin restores access.'
+                : bannerStatus === 'on_verification'
+                  ? 'Orders stay locked while Admin reviews the submitted pharmacy profile.'
+                  : 'New pharmacies do not receive orders until Admin verifies the pharmacy profile.'
             }
           />
         ) : null}

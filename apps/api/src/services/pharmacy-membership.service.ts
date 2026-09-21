@@ -76,7 +76,8 @@ function resolveMembershipRole(
 
 async function resolvePharmacyMembership(
   userId: string,
-  session?: ClientSession
+  session?: ClientSession,
+  options?: Readonly<{ allowBlocked?: boolean }>
 ): Promise<{
   pharmacy: PharmacyHydratedDocument;
   membershipRole: PharmacyMembershipRole;
@@ -98,7 +99,7 @@ async function resolvePharmacyMembership(
     );
   }
 
-  if (pharmacy.status === PHARMACY_STATUSES.BLOCKED) {
+  if (pharmacy.status === PHARMACY_STATUSES.BLOCKED && !options?.allowBlocked) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
       'Pharmacy is blocked.',
@@ -114,6 +115,18 @@ async function resolvePharmacyMembership(
   }
 
   return { pharmacy, membershipRole };
+}
+
+//===============================================================
+
+export async function findPharmacyForSummaryAccess(
+  userId: string,
+  session?: ClientSession
+): Promise<{
+  pharmacy: PharmacyHydratedDocument;
+  membershipRole: PharmacyMembershipRole;
+}> {
+  return resolvePharmacyMembership(userId, session, { allowBlocked: true });
 }
 
 //===============================================================

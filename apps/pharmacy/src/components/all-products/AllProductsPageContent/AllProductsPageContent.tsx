@@ -395,7 +395,11 @@ function AllProductsPageContent({
           <StatusBanner
             {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Catalog is available in read-only mode"
-            message="Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile."
+            message={
+              bannerStatus === 'blocked'
+                ? 'Your pharmacy is temporarily blocked. You can review Admin products, but adding products to your pharmacy is disabled until Admin restores access.'
+                : 'Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile.'
+            }
           />
         ) : null}
 

@@ -160,6 +160,16 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
     return null;
   }
 
+  if (status === 'blocked') {
+    return {
+      status: 'blocked' as const,
+      label: 'Blocked',
+      title: 'Your pharmacy is temporarily blocked',
+      message:
+        'Existing cabinet data remains available for review, but operational actions are disabled until Admin restores access.',
+    };
+  }
+
   if (status === 'on_verification') {
     return {
       status: 'on_verification' as const,

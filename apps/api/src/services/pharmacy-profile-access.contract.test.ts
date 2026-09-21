@@ -90,7 +90,12 @@ test('profile and document services enforce the membership capability matrix', a
 
   assert.match(
     profileService,
-    /findPharmacyForProfileAccess\(\s*userId,\s*'read_profile'\s*\)/
+    /getCurrentPharmacySummaryService[\s\S]*?findPharmacyForSummaryAccess\(userId\)/
+  );
+
+  assert.match(
+    profileService,
+    /getMyPharmacyProfileService[\s\S]*?findPharmacyForProfileAccess\(\s*userId,\s*'read_profile'\s*\)/
   );
 
   assert.match(

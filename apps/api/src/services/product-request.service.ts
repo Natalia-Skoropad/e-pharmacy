@@ -1,8 +1,8 @@
 import mongoose, { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../constants/product-request';
+import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
 
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
@@ -15,6 +15,8 @@ import type {
   ProductRequestResponseDto,
   ProductRequestStatus,
 } from '../types/product-request';
+
+import type { PharmacyEntity } from '../types/pharmacy';
 
 import type {
   ProductRequestArticleAvailabilityQuery,
@@ -57,7 +59,7 @@ type ProductRequestDocument = Omit<
 
 type CurrentPharmacy = {
   _id: Types.ObjectId;
-  status: string;
+  status: PharmacyEntity['status'];
 };
 
 //===============================================================
@@ -348,11 +350,7 @@ export async function createProductRequestService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
   }
 
-  const canCreateRequest =
-    pharmacy.status === PHARMACY_STATUSES.ACTIVE ||
-    pharmacy.status === PHARMACY_STATUSES.ON_MODERATION;
-
-  if (!canCreateRequest) {
+  if (!isPharmacyOperationalStatus(pharmacy.status)) {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
       'Product requests are available only for an activated pharmacy.'
@@ -404,9 +402,9 @@ export async function updateProductRequestService(
   requestId: string,
   input: ProductRequestFormInput
 ) {
-  const pharmacyId = await getCurrentPharmacyId(userId);
+  const pharmacy = await getCurrentPharmacy(userId);
 
-  if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
+  if (!pharmacy || !Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
@@ -414,6 +412,15 @@ export async function updateProductRequestService(
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
+
+  if (!isPharmacyOperationalStatus(pharmacy.status)) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Product request changes are unavailable while the pharmacy is not active.'
+    );
+  }
+
+  const pharmacyId = pharmacy._id;
 
   const request = await ProductRequest.findOne({
     _id: new Types.ObjectId(requestId),
@@ -497,9 +504,9 @@ export async function deleteProductRequestService(
   userId: string,
   requestId: string
 ) {
-  const pharmacyId = await getCurrentPharmacyId(userId);
+  const pharmacy = await getCurrentPharmacy(userId);
 
-  if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
+  if (!pharmacy || !Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
@@ -508,6 +515,14 @@ export async function deleteProductRequestService(
     );
   }
 
+  if (!isPharmacyOperationalStatus(pharmacy.status)) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Product request changes are unavailable while the pharmacy is not active.'
+    );
+  }
+
+  const pharmacyId = pharmacy._id;
   const requestObjectId = new Types.ObjectId(requestId);
   const session = await mongoose.startSession();
 

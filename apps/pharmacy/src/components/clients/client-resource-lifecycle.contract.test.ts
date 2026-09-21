@@ -19,11 +19,12 @@ test('clients list uses one canonical request for rows and statistics without a 
   const requestMatches = source.match(/getPharmacyClients\(/g) ?? [];
 
   assert.equal(requestMatches.length, 1);
-  assert.match(source, /setClientStatistics\(response\.statistics\)/);
+  assert.match(source, /setClientStatisticsSuccess\(response\.statistics\)/);
   assert.doesNotMatch(source, /name:\s*['"]Walk-in client['"]/);
   assert.doesNotMatch(source, /putDefaultClientFirst/);
   assert.doesNotMatch(source, /getPharmacyClientStatistics/);
-  assert.doesNotMatch(source, /Loading client statistics/);
+  assert.match(source, /Loading client statistics/);
+  assert.match(source, /Client statistics are temporarily unavailable/);
   assert.match(source, /counts=\{clientStatistics\}/);
 });
 
@@ -124,9 +125,13 @@ test('client resources keep unavailable state separate from successful empty dat
   assert.match(clientsSource, /useState<ResourceStatus>\('idle'\)/);
   assert.match(clientsSource, /getSafeApiErrorMessage\(/);
   assert.match(clientsSource, /clientsStatus === 'error'/);
+  assert.match(clientsSource, /useLastKnownStatistics<ClientStatisticsCounts>/);
+  assert.doesNotMatch(clientsSource, /DEFAULT_CLIENT_STATISTICS/);
   assert.doesNotMatch(clientsSource, /catch[\s\S]{0,220}setClients\(\[\]\)/);
 
   assert.match(detailsSource, /const \[ordersStatus, setOrdersStatus\]/);
+  assert.match(detailsSource, /useLastKnownStatistics<OrderStatisticsCounts>/);
+  assert.doesNotMatch(detailsSource, /DEFAULT_ORDER_STATISTICS/);
   assert.match(detailsSource, /const \[productsStatus, setProductsStatus\]/);
   assert.match(detailsSource, /getClientDetailsError\(loadError\)/);
   assert.match(detailsSource, /getSafeApiErrorMessage\(/);
@@ -166,11 +171,11 @@ test('client detail pagination accepts canonical backend pages and order statist
     /setProductsPageState\(\{[\s\S]*?searchKey: productSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
   );
 
-  assert.match(source, /setOrderStatistics\(response\.statistics\)/);
+  assert.match(source, /setOrderStatisticsSuccess\(response\.statistics\)/);
 
   assert.match(
     source,
-    /if \(!hasSearchOrFilters\) \{\s*setOrdersOverallTotal\(response\.total\);\s*\}\s*setOrderStatistics\(response\.statistics\)/
+    /if \(!hasSearchOrFilters\) \{\s*setOrdersOverallTotal\(response\.total\);\s*\}\s*setOrderStatisticsSuccess\(response\.statistics\)/
   );
 });
 

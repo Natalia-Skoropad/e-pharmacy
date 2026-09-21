@@ -1212,9 +1212,10 @@ function OrderDetailsPageContent({
   const { profile: pharmacyProfile, isLoading: isProfileLoading } =
     usePharmacyProfile();
 
-  const createLockedStatus = isCreateMode
-    ? getLockedFeatureBannerStatus(pharmacyProfile?.status)
-    : null;
+  const pharmacyLockedStatus = getLockedFeatureBannerStatus(
+    pharmacyProfile?.status
+  );
+  const createLockedStatus = isCreateMode ? pharmacyLockedStatus : null;
 
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
@@ -1453,7 +1454,8 @@ function OrderDetailsPageContent({
     [clients]
   );
 
-  const isEditable = isCreateMode || order?.status === 'in_progress';
+  const isEditable =
+    (isCreateMode || order?.status === 'in_progress') && !pharmacyLockedStatus;
   const isOrderBusy = isUpdatingOrder || isCreatingOrder;
   const statusModalText = pendingStatus
     ? getStatusModalText(pendingStatus.status)
@@ -1482,6 +1484,9 @@ function OrderDetailsPageContent({
     return getOrderStatusTransitions(order.status);
   }, [isCreateMode, order]);
 
+  const areStatusActionsDisabled =
+    Boolean(pharmacyLockedStatus) || isUpdatingStatus || isUpdatingOrder;
+
   const syncOrderState = (updatedOrder: PharmacyOrderDetails) => {
     const formState = getOrderFormState(updatedOrder);
 
@@ -1508,7 +1513,7 @@ function OrderDetailsPageContent({
   const updateOrderDraft = async (
     payload: Parameters<typeof updatePharmacyOrder>[1]
   ): Promise<PharmacyOrderDetails | null> => {
-    if (!order || isCreateMode) return order;
+    if (!order || isCreateMode || pharmacyLockedStatus) return order;
 
     const generation = resourceGenerationRef.current;
     setIsUpdatingOrder(true);
@@ -1830,6 +1835,8 @@ function OrderDetailsPageContent({
   };
 
   const handleStatusClick = (status: PendingStatusChange['status']) => {
+    if (pharmacyLockedStatus) return;
+
     if (status === 'rejected') {
       setRejectionReason('');
       setPendingStatus({ status });
@@ -1840,7 +1847,8 @@ function OrderDetailsPageContent({
   };
 
   const handleConfirmStatus = async () => {
-    if (!order || !pendingStatus || isCreateMode) return;
+    if (!order || !pendingStatus || isCreateMode || pharmacyLockedStatus)
+      return;
 
     if (pendingStatus.status === 'rejected') {
       const rejectionReasonError =
@@ -1995,9 +2003,11 @@ function OrderDetailsPageContent({
               {...PHARMACY_STATUS_PRESENTATION[createLockedStatus]}
               title="Order creation is unavailable"
               message={
-                createLockedStatus === 'on_verification'
-                  ? 'Creating orders is paused while Admin verifies the pharmacy profile.'
-                  : 'Creating orders becomes available after Admin verifies the pharmacy profile.'
+                createLockedStatus === 'blocked'
+                  ? 'Your pharmacy is temporarily blocked. Creating orders is disabled until Admin restores access.'
+                  : createLockedStatus === 'on_verification'
+                    ? 'Creating orders is paused while Admin verifies the pharmacy profile.'
+                    : 'Creating orders becomes available after Admin verifies the pharmacy profile.'
               }
             />
           </div>
@@ -2152,7 +2162,7 @@ function OrderDetailsPageContent({
                           <CircleX size={16} aria-hidden="true" />
                         )
                       }
-                      disabled={isUpdatingStatus || isUpdatingOrder}
+                      disabled={areStatusActionsDisabled}
                       onClick={() => handleStatusClick(status)}
                     >
                       {getStatusActionLabel(status)}
@@ -2183,18 +2193,39 @@ function OrderDetailsPageContent({
             className={css.statusBanner}
           />
         ) : (
-          <StatusBanner
-            {...ORDER_STATUS_PRESENTATION[order.status]}
-            {...getOrderStatusSummary(order.status)}
-            inlineMeta
-            meta={
-              <span className={css.orderHeaderMeta}>
-                <Clock size={16} aria-hidden="true" />
-                Created {formatDateTime(order.orderDate) ?? '—'}
-              </span>
-            }
-            className={css.statusBanner}
-          />
+          <div className={css.statusStack}>
+            {pharmacyLockedStatus ? (
+              <StatusBanner
+                {...PHARMACY_STATUS_PRESENTATION[pharmacyLockedStatus]}
+                title={
+                  pharmacyLockedStatus === 'blocked'
+                    ? 'Pharmacy access is temporarily restricted'
+                    : 'Verification is required'
+                }
+                message={
+                  pharmacyLockedStatus === 'blocked'
+                    ? 'This order remains available for review, but editing, status changes, and manager comment mutations are disabled until Admin restores access.'
+                    : pharmacyLockedStatus === 'on_verification'
+                      ? 'Order mutations are paused while Admin verifies the pharmacy profile.'
+                      : 'Order mutations become available after Admin verifies the pharmacy profile.'
+                }
+                className={css.statusBanner}
+              />
+            ) : null}
+
+            <StatusBanner
+              {...ORDER_STATUS_PRESENTATION[order.status]}
+              {...getOrderStatusSummary(order.status)}
+              inlineMeta
+              meta={
+                <span className={css.orderHeaderMeta}>
+                  <Clock size={16} aria-hidden="true" />
+                  Created {formatDateTime(order.orderDate) ?? '—'}
+                </span>
+              }
+              className={css.statusBanner}
+            />
+          </div>
         )}
       </section>
 

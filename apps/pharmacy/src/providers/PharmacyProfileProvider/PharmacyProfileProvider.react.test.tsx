@@ -313,6 +313,46 @@ test('unauthenticated state performs no summary request; authenticated pharmacy 
 
 //===================================================================
 
+test('blocked pharmacy summary remains available with its authoritative status', async () => {
+  let latest: ProfileContext | null = null;
+  const summary = createSummary(
+    '507f1f77bcf86cd799439011',
+    'Blocked Pharmacy',
+    'blocked'
+  );
+
+  const Probe = createProbe((value) => {
+    latest = value;
+  });
+
+  const { root } = createTestRoot();
+
+  await act(async () => {
+    root.render(
+      createElement(
+        PharmacyProfileProviderRuntime,
+        {
+          authState: authenticated(summary.id),
+          loadSummary: async () => ({ pharmacy: summary }),
+        },
+        createElement(Probe)
+      )
+    );
+    await flush();
+  });
+
+  assert.deepEqual(requireContext(latest).profile, summary);
+  assert.equal(requireContext(latest).profile?.status, 'blocked');
+  assert.equal(requireContext(latest).error, null);
+
+  await act(async () => {
+    root.unmount();
+    await flush();
+  });
+});
+
+//===================================================================
+
 test('initial failure exposes error and retry can recover', async () => {
   let latest: ProfileContext | null = null;
   let attempt = 0;

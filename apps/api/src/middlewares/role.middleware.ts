@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { USER_ROLES, PHARMACY_STATUSES } from '../constants/auth';
+import { USER_ROLES } from '../constants/auth';
+import { PHARMACY_OPERATIONAL_STATUSES } from '../constants/pharmacy-status';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
@@ -47,7 +48,7 @@ export async function requireActivePharmacy(
     const pharmacy = await Pharmacy.findOne({
       $or: [{ ownerId: req.user.id }, { managerUserIds: req.user.id }],
       status: {
-        $in: [PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.ON_MODERATION],
+        $in: [...PHARMACY_OPERATIONAL_STATUSES],
       },
     })
       .select('_id')

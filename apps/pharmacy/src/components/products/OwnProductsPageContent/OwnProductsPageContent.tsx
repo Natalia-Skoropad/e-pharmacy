@@ -378,8 +378,16 @@ function OwnProductsPageContent({
         {bannerStatus ? (
           <StatusBanner
             {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title="Verification is required"
-            message="Own products will appear only after verification, when adding products to this pharmacy becomes available."
+            title={
+              bannerStatus === 'blocked'
+                ? 'Product management is unavailable'
+                : 'Verification is required'
+            }
+            message={
+              bannerStatus === 'blocked'
+                ? 'Your pharmacy is temporarily blocked. Existing product data remains visible, but stock and catalog mutations are disabled until Admin restores access.'
+                : 'Own products will appear only after verification, when adding products to this pharmacy becomes available.'
+            }
           />
         ) : null}
 

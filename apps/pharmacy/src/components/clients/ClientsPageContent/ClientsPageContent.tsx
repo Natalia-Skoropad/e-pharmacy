@@ -42,12 +42,12 @@ import type {
   PharmacyClientsQueryParams,
 } from '@/lib/clients/clients';
 
-import { DEFAULT_CLIENT_STATISTICS } from '@/lib/statistics/defaults';
 import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { ClientStatistics } from '@/components/statistics';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
+import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
 
 import css from './ClientsPageContent.module.css';
 
@@ -105,8 +105,13 @@ function ClientsPageContent({
     null
   );
 
-  const [clientStatistics, setClientStatistics] =
-    useState<ClientStatisticsCounts>(DEFAULT_CLIENT_STATISTICS);
+  const {
+    data: clientStatistics,
+    status: clientStatisticsStatus,
+    startLoading: startClientStatisticsLoading,
+    setSuccess: setClientStatisticsSuccess,
+    setFailure: setClientStatisticsFailure,
+  } = useLastKnownStatistics<ClientStatisticsCounts>();
 
   const [clientsStatus, setClientsStatus] = useState<ResourceStatus>('idle');
   const [clientsError, setClientsError] = useState('');
@@ -191,6 +196,7 @@ function ClientsPageContent({
     async function loadClients() {
       setClientsStatus('loading');
       setClientsError('');
+      startClientStatisticsLoading();
 
       try {
         const response = await getPharmacyClients(queryParams, {
@@ -203,7 +209,7 @@ function ClientsPageContent({
         setTotalPages(response.totalPages);
         setPageState({ routeKey: canonicalInitialPath, page: response.page });
         setEarliestCreatedAt(response.earliestCreatedAt);
-        setClientStatistics(response.statistics);
+        setClientStatisticsSuccess(response.statistics);
         setClientsStatus('success');
       } catch (loadError) {
         if (controller.signal.aborted) return;
@@ -214,6 +220,7 @@ function ClientsPageContent({
             'Could not load clients. Please try again.'
           )
         );
+        setClientStatisticsFailure();
         setClientsStatus('error');
       }
     }
@@ -223,7 +230,13 @@ function ClientsPageContent({
     return () => {
       controller.abort();
     };
-  }, [canonicalInitialPath, queryParams]);
+  }, [
+    canonicalInitialPath,
+    queryParams,
+    setClientStatisticsFailure,
+    setClientStatisticsSuccess,
+    startClientStatisticsLoading,
+  ]);
 
   useEffect(() => {
     const pendingPath = pendingRoutePathRef.current;
@@ -339,20 +352,36 @@ function ClientsPageContent({
         {bannerStatus ? (
           <StatusBanner
             {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title="Verification is required"
+            title={
+              bannerStatus === 'blocked'
+                ? 'Pharmacy access is temporarily restricted'
+                : 'Verification is required'
+            }
             message={
-              bannerStatus === 'on_verification'
-                ? 'Client data stays locked while Admin reviews the submitted pharmacy profile.'
-                : 'Client data is connected only to real pharmacy orders, so a new pharmacy starts with an empty client table.'
+              bannerStatus === 'blocked'
+                ? 'Existing client data remains available for review, while operational pharmacy actions stay disabled until Admin restores access.'
+                : bannerStatus === 'on_verification'
+                  ? 'Client data stays locked while Admin reviews the submitted pharmacy profile.'
+                  : 'Client data is connected only to real pharmacy orders, so a new pharmacy starts with an empty client table.'
             }
           />
         ) : null}
 
-        <ClientStatistics
-          counts={clientStatistics}
-          getStatisticHref={getClientStatisticHref}
-          className={css.clientStatistics}
-        />
+        {clientStatistics ? (
+          <ClientStatistics
+            counts={clientStatistics}
+            getStatisticHref={getClientStatisticHref}
+            className={css.clientStatistics}
+          />
+        ) : clientStatisticsStatus === 'error' ? (
+          <p className={css.statisticsState} role="alert">
+            Client statistics are temporarily unavailable.
+          </p>
+        ) : (
+          <p className={css.statisticsState} role="status">
+            Loading client statistics...
+          </p>
+        )}
       </section>
 
       <section className={css.card} aria-labelledby="clients-search-title">

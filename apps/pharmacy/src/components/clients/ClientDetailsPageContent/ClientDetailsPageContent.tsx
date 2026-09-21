@@ -111,10 +111,10 @@ import { getProductImageSrc } from '@/lib/products/product-images';
 import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
-import { DEFAULT_ORDER_STATISTICS } from '@/lib/statistics/defaults';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
+import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -497,9 +497,13 @@ function ClientDetailsPageContentState({
   const [ordersError, setOrdersError] = useState('');
   const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
 
-  const [orderStatistics, setOrderStatistics] = useState<OrderStatisticsCounts>(
-    DEFAULT_ORDER_STATISTICS
-  );
+  const {
+    data: orderStatistics,
+    status: orderStatisticsStatus,
+    startLoading: startOrderStatisticsLoading,
+    setSuccess: setOrderStatisticsSuccess,
+    setFailure: setOrderStatisticsFailure,
+  } = useLastKnownStatistics<OrderStatisticsCounts>();
 
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<ClientTab>('details');
@@ -601,7 +605,7 @@ function ClientDetailsPageContentState({
     async function loadOrders() {
       setOrdersStatus('loading');
       setOrdersError('');
-      setOrderStatistics(DEFAULT_ORDER_STATISTICS);
+      startOrderStatisticsLoading();
 
       try {
         const response = await getPharmacyOrders(
@@ -662,7 +666,7 @@ function ClientDetailsPageContentState({
           setOrdersOverallTotal(response.total);
         }
 
-        setOrderStatistics(response.statistics);
+        setOrderStatisticsSuccess(response.statistics);
         setOrdersStatus('success');
       } catch (loadOrdersError) {
         if (controller.signal.aborted) return;
@@ -673,7 +677,7 @@ function ClientDetailsPageContentState({
             'Could not load client orders. Please try again.'
           )
         );
-        setOrderStatistics(DEFAULT_ORDER_STATISTICS);
+        setOrderStatisticsFailure();
         setOrdersStatus('error');
       }
     }
@@ -692,6 +696,9 @@ function ClientDetailsPageContentState({
     orderSearchKey,
     ordersPage,
     ordersRowsPerPage,
+    setOrderStatisticsFailure,
+    setOrderStatisticsSuccess,
+    startOrderStatisticsLoading,
   ]);
 
   useEffect(() => {
@@ -1023,10 +1030,20 @@ function ClientDetailsPageContentState({
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          <OrderStatistics
-            counts={orderStatistics}
-            className={css.orderStatistics}
-          />
+          {orderStatistics ? (
+            <OrderStatistics
+              counts={orderStatistics}
+              className={css.orderStatistics}
+            />
+          ) : orderStatisticsStatus === 'error' ? (
+            <p className={css.statisticsState} role="alert">
+              Order statistics are temporarily unavailable.
+            </p>
+          ) : (
+            <p className={css.statisticsState} role="status">
+              Loading order statistics...
+            </p>
+          )}
         </div>
       </section>
 

@@ -73,6 +73,15 @@ test('new order uses active client badge, matching states and compact controls',
     /PHARMACY_STATUS_PRESENTATION\[createLockedStatus\]/
   );
 
+  assert.match(detailsSource, /const pharmacyLockedStatus =/);
+
+  assert.match(
+    detailsSource,
+    /const isEditable =[\s\S]{0,120}!pharmacyLockedStatus/
+  );
+
+  assert.match(detailsSource, /Boolean\(pharmacyLockedStatus\)/);
+  assert.match(detailsSource, /manager comment mutations are disabled/);
   assert.match(detailsSource, /className=\{css\.loaderBox\}/);
   assert.match(detailsSource, /<StatusBanner[\s\S]{0,180}tone="danger"/);
   assert.match(styles, /\.loaderBox\s*\{/);

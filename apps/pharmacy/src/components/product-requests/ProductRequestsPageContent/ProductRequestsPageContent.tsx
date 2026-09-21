@@ -235,8 +235,7 @@ function ProductRequestsPageContent({
 
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const isCreateRequestLocked =
-    Boolean(bannerStatus) || currentPharmacyStatus === 'blocked';
+  const isCreateRequestLocked = Boolean(bannerStatus);
 
   return (
     <main className={css.page} aria-labelledby="product-requests-page-title">
@@ -253,11 +252,17 @@ function ProductRequestsPageContent({
         {bannerStatus ? (
           <StatusBanner
             {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title="Verification is required"
+            title={
+              bannerStatus === 'blocked'
+                ? 'Product request management is unavailable'
+                : 'Verification is required'
+            }
             message={
-              bannerStatus === 'on_verification'
-                ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
-                : 'Creating product requests is locked for a new pharmacy until verification is complete.'
+              bannerStatus === 'blocked'
+                ? 'Your pharmacy is temporarily blocked. Existing requests remain visible, but creating or changing requests is disabled until Admin restores access.'
+                : bannerStatus === 'on_verification'
+                  ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
+                  : 'Creating product requests is locked for a new pharmacy until verification is complete.'
             }
           />
         ) : null}

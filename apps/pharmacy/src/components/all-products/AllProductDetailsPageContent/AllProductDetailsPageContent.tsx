@@ -1583,8 +1583,16 @@ function AllProductDetailsPageContent({
                 {bannerStatus ? (
                   <StatusBanner
                     {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-                    title={bannerTitle}
-                    message={bannerMessage}
+                    title={
+                      bannerStatus === 'blocked'
+                        ? 'Product management is unavailable'
+                        : bannerTitle
+                    }
+                    message={
+                      bannerStatus === 'blocked'
+                        ? 'Your pharmacy is temporarily blocked. Product details remain visible, but catalog, price, and stock mutations are disabled until Admin restores access.'
+                        : bannerMessage
+                    }
                   />
                 ) : null}
 

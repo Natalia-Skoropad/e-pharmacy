@@ -14,6 +14,7 @@ import { PharmacyProfileProvider } from '@/providers/PharmacyProfileProvider';
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
+import { PharmacyCabinetBoundary } from './PharmacyCabinetBoundary';
 
 import {
   getServerSidebarCollapsedSnapshot,
@@ -77,26 +78,28 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
   return (
     <PharmacyProtectedRoute>
       <PharmacyProfileProvider>
-        <div className={css.shell}>
-          <Container className={css.container}>
-            <div
-              className={clsx(
-                css.layout,
-                isSidebarCollapsed && css.layoutCollapsed
-              )}
-            >
-              <PharmacySidebar
-                isCollapsed={isSidebarCollapsed}
-                onToggleCollapsed={toggleSidebar}
-              />
+        <PharmacyCabinetBoundary>
+          <div className={css.shell}>
+            <Container className={css.container}>
+              <div
+                className={clsx(
+                  css.layout,
+                  isSidebarCollapsed && css.layoutCollapsed
+                )}
+              >
+                <PharmacySidebar
+                  isCollapsed={isSidebarCollapsed}
+                  onToggleCollapsed={toggleSidebar}
+                />
 
-              <div className={css.workspace}>
-                <PharmacyHeader breadcrumbs={breadcrumbs} />
-                <div className={css.content}>{children}</div>
+                <div className={css.workspace}>
+                  <PharmacyHeader breadcrumbs={breadcrumbs} />
+                  <div className={css.content}>{children}</div>
+                </div>
               </div>
-            </div>
-          </Container>
-        </div>
+            </Container>
+          </div>
+        </PharmacyCabinetBoundary>
       </PharmacyProfileProvider>
     </PharmacyProtectedRoute>
   );

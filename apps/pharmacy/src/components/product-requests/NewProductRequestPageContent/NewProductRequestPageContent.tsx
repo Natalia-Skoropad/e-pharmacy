@@ -278,7 +278,7 @@ function NewProductRequestPageContent({
   } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const isBlocked = currentPharmacyStatus === 'blocked';
-  const isCreationLocked = Boolean(bannerStatus || isBlocked);
+  const isCreationLocked = Boolean(bannerStatus);
   const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
   const [request, setRequest] = useState<ProductRequestDetailsViewModel | null>(
@@ -881,7 +881,7 @@ function NewProductRequestPageContent({
   }
 
   if (!requestId && isCreationLocked) {
-    const lockedStatus = isBlocked ? 'blocked' : bannerStatus;
+    const lockedStatus = bannerStatus;
 
     return (
       <main className={css.page} aria-labelledby="product-request-page-title">
@@ -945,7 +945,7 @@ function NewProductRequestPageContent({
           actions={hasHeaderActions ? headerActions : undefined}
         />
 
-        {bannerStatus ? (
+        {bannerStatus && bannerStatus !== 'blocked' ? (
           <StatusBanner
             {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
             title="Product request management is locked for now"
