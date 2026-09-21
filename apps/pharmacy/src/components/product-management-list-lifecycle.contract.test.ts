@@ -200,3 +200,38 @@ test('product management list failures expose explicit retry generations', async
   assert.match(productRequests, /Retry request statistics/);
   assert.match(productRequests, /Retry product requests/);
 });
+
+//===================================================================
+
+test('successful product mutations apply canonical local state without an unconditional follow-up list GET', async () => {
+  const [allProducts, ownProducts] = await Promise.all([
+    read(
+      'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/products/OwnProductsPageContent/OwnProductsPageContent.tsx'
+    ),
+  ]);
+
+  const allProductsMutation = allProducts.match(
+    /const handleConfirmAddProduct = async \(\) => \{([\s\S]*?)\n  \};/
+  )?.[1];
+
+  const ownProductsMutation = ownProducts.match(
+    /const handleRemoveProductConfirm = async \(\) => \{([\s\S]*?)\n  \};/
+  )?.[1];
+
+  assert.ok(allProductsMutation);
+  assert.ok(ownProductsMutation);
+
+  assert.match(allProductsMutation, /response\.product/);
+  assert.match(allProductsMutation, /applyAddedProductStatistics/);
+  assert.doesNotMatch(allProductsMutation, /setRefreshVersion/);
+
+  assert.match(ownProductsMutation, /applyRemovedOwnProductStatistics/);
+  assert.doesNotMatch(ownProductsMutation, /setRefreshVersion/);
+
+  assert.match(allProducts, /Retry products/);
+  assert.match(ownProducts, /Retry own products/);
+});

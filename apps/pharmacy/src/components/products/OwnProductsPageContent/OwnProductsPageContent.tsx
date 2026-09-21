@@ -50,6 +50,7 @@ import {
 } from '@/lib/products/own-products-filters';
 
 import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
+import { applyRemovedOwnProductStatistics } from '@/lib/statistics/product-statistics-mutations';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { clampProductListPage } from '@/lib/products/product-pagination';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
@@ -333,8 +334,10 @@ function OwnProductsPageContent({
       );
       setTotalProducts(nextTotalProducts);
       setCurrentPage(nextPage);
+      setProductStatistics((current) =>
+        applyRemovedOwnProductStatistics(current, productToRemove)
+      );
       setProductToRemove(null);
-      setRefreshVersion((current) => current + 1);
       toast.success(response.message || 'Product was removed.');
     } catch (error) {
       toast.error(getRemoveProductErrorMessage(error));

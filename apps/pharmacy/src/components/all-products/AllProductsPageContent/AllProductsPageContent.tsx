@@ -45,6 +45,7 @@ import {
 } from '@/lib/products/all-products-filters';
 
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
+import { applyAddedProductStatistics } from '@/lib/statistics/product-statistics-mutations';
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 import { clampProductListPage } from '@/lib/products/product-pagination';
 import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
@@ -335,8 +336,8 @@ function AllProductsPageContent({
       );
       setTotalProducts(nextTotalProducts);
       setCurrentPage(nextPage);
+      setProductStatistics((current) => applyAddedProductStatistics(current));
       setProductToAdd(null);
-      setRefreshVersion((value) => value + 1);
       toast.success(
         response.message || 'ProductDetails added to your pharmacy.'
       );
