@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   isOwnProductsFilterRoute,
@@ -29,7 +32,13 @@ async function ProductsPage({ params }: ProductsPageProps) {
   const segments = resolvedParams?.filters;
 
   if (!isOwnProductsFilterRoute(segments)) {
-    return <OwnProductDetailsPageContent productId={segments?.[0] ?? ''} />;
+    const productId = segments?.length === 1 ? segments[0] : null;
+
+    if (!productId || !isValidObjectId(productId)) {
+      notFound();
+    }
+
+    return <OwnProductDetailsPageContent productId={productId} />;
   }
 
   const initialFilters = parseOwnProductsSegments(resolvedParams);

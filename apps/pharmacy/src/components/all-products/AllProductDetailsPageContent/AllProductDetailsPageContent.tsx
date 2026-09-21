@@ -1090,48 +1090,6 @@ function AllProductDetailsPageContent({
     productSalesYear,
   ]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadCommentsTotal() {
-      if (!product || !currentPharmacyId) return;
-
-      if (!currentOffer) {
-        queueMicrotask(() => {
-          if (controller.signal.aborted) return;
-          setCommentsTotal(0);
-          setCommentsTotalStatus('success');
-        });
-        return;
-      }
-
-      queueMicrotask(() => {
-        if (!controller.signal.aborted) setCommentsTotalStatus('loading');
-      });
-
-      try {
-        const response = await getPharmacyNotes('product', productId, 1, {
-          signal: controller.signal,
-        });
-        if (controller.signal.aborted) return;
-
-        setCommentsTotal(response.total);
-        setCommentsTotalStatus('success');
-      } catch {
-        if (controller.signal.aborted) return;
-
-        setCommentsTotal(null);
-        setCommentsTotalStatus('error');
-      }
-    }
-
-    void loadCommentsTotal();
-
-    return () => {
-      controller.abort();
-    };
-  }, [currentOffer, currentPharmacyId, product, productId]);
-
   const productImageSrc = getProductImageSrc(product?.imageUrl);
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
 
@@ -2107,7 +2065,7 @@ function AllProductDetailsPageContent({
                   isAddedToPharmacy ? (
                     <EntityComments
                       entityKey={`product:${product.id}`}
-                      initialTotal={commentsTotal ?? 0}
+                      initialTotal={commentsTotal ?? undefined}
                       load={(page, options) =>
                         getPharmacyNotes('product', productId, page, options)
                       }

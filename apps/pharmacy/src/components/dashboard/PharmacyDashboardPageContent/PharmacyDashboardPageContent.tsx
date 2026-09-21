@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 
-import { LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
@@ -294,6 +294,8 @@ function PharmacyDashboardPageContent() {
 
   const [isSalesLoading, setIsSalesLoading] = useState(true);
   const [isSalesUnavailable, setIsSalesUnavailable] = useState(false);
+  const [salesRetryVersion, setSalesRetryVersion] = useState(0);
+  const [dashboardRetryVersion, setDashboardRetryVersion] = useState(0);
 
   const [dashboardSnapshot, setDashboardSnapshot] = useState<DashboardSnapshot>(
     {
@@ -386,6 +388,7 @@ function PharmacyDashboardPageContent() {
     };
   }, [
     dashboardRequestKey,
+    dashboardRetryVersion,
     isProfileLoading,
     pharmacyId,
     pharmacyStatus,
@@ -426,7 +429,7 @@ function PharmacyDashboardPageContent() {
     return () => {
       controller.abort();
     };
-  }, [selectedSalesMonth, selectedSalesYear]);
+  }, [salesRetryVersion, selectedSalesMonth, selectedSalesYear]);
 
   const banner = getPharmacyBanner(dashboardData.pharmacyStatus);
 
@@ -612,6 +615,18 @@ function PharmacyDashboardPageContent() {
                 <EmptyState
                   title="Order statistics are temporarily unavailable."
                   message="Order data could not be loaded. Please try again later."
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setDashboardRetryVersion((version) => version + 1)
+                      }
+                    >
+                      Retry dashboard statistics
+                    </Button>
+                  }
                 />
               ) : (
                 <OrderStatistics
@@ -635,6 +650,18 @@ function PharmacyDashboardPageContent() {
                 <EmptyState
                   title="Sales statistics are temporarily unavailable."
                   message="The sales chart could not be loaded. Please try again later."
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setSalesRetryVersion((version) => version + 1)
+                      }
+                    >
+                      Retry sales statistics
+                    </Button>
+                  }
                 />
               ) : (
                 <SalesValueChart
@@ -688,6 +715,18 @@ function PharmacyDashboardPageContent() {
                 <EmptyState
                   title="Client statistics are temporarily unavailable."
                   message="Client data could not be loaded. Please try again later."
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setDashboardRetryVersion((version) => version + 1)
+                      }
+                    >
+                      Retry dashboard statistics
+                    </Button>
+                  }
                 />
               ) : (
                 <>
@@ -743,6 +782,18 @@ function PharmacyDashboardPageContent() {
                 <EmptyState
                   title="Own product statistics are temporarily unavailable."
                   message="Product data could not be loaded. Please try again later."
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setDashboardRetryVersion((version) => version + 1)
+                      }
+                    >
+                      Retry dashboard statistics
+                    </Button>
+                  }
                 />
               ) : (
                 <>
@@ -805,6 +856,18 @@ function PharmacyDashboardPageContent() {
                 <EmptyState
                   title="All product statistics are temporarily unavailable."
                   message="Catalog data could not be loaded. Please try again later."
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setDashboardRetryVersion((version) => version + 1)
+                      }
+                    >
+                      Retry dashboard statistics
+                    </Button>
+                  }
                 />
               ) : (
                 <AllProductStatistics
@@ -847,6 +910,18 @@ function PharmacyDashboardPageContent() {
                 <EmptyState
                   title="Product request statistics are temporarily unavailable."
                   message="Request data could not be loaded. Please try again later."
+                  action={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        setDashboardRetryVersion((version) => version + 1)
+                      }
+                    >
+                      Retry dashboard statistics
+                    </Button>
+                  }
                 />
               ) : (
                 <>

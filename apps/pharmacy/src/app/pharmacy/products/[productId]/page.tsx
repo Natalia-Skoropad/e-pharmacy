@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   isOwnProductsFilterSegment,
@@ -35,6 +38,10 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
         initialFilters={initialFilters}
       />
     );
+  }
+
+  if (!isValidObjectId(productId)) {
+    notFound();
   }
 
   return <OwnProductDetailsPageContent productId={productId} />;

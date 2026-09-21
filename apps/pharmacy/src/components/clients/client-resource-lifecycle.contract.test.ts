@@ -30,7 +30,7 @@ test('clients list uses one canonical request for rows and statistics without a 
 
 //===================================================================
 
-test('client details keep the primary client request independent while preloading product and comment counts', async () => {
+test('client details keep the primary request independent and lazily activate products and comments', async () => {
   const source = await read(
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
@@ -46,9 +46,11 @@ test('client details keep the primary client request independent while preloadin
   assert.doesNotMatch(loadClientSource, /getPharmacyNotes/);
 
   assert.equal((source.match(/getPharmacyOrders\(/g) ?? []).length, 1);
-  assert.doesNotMatch(source, /productsActivated/);
-  assert.doesNotMatch(source, /commentsActivated/);
+  assert.match(source, /shouldLoadClientProducts\(/);
+  assert.match(source, /setLoadedProductsRequestKey\(productsRequestKey\)/);
   assert.match(source, /getPharmacyClientProducts\(/);
+  assert.match(source, /activeTab === 'comments' \? \(/);
+  assert.doesNotMatch(source, /hidden=\{activeTab !== 'comments'\}/);
   assert.match(source, /getPharmacyNotes\('client', clientId, page, options\)/);
   assert.match(source, /commentsTotal === null\s*\? 'Comments'/);
   assert.match(source, /initialTotal=\{commentsTotal \?\? undefined\}/);
@@ -66,7 +68,7 @@ test('clientId is a generation boundary that remounts all client-detail local re
     /<ClientDetailsPageContentState key=\{props\.clientId\} \{\.\.\.props\} \/>/
   );
 
-  assert.match(source, /useState<ClientTab>\('details'\)/);
+  assert.match(source, /useState<ClientDetailTab>\('details'\)/);
   assert.match(source, /page:\s*1/);
   assert.match(source, /useState\(''\)/);
   assert.match(source, /const controller = new AbortController\(\)/);
@@ -196,7 +198,7 @@ test('client component barrels do not re-export canonical domain types', async (
 
 //===================================================================
 
-test('client route pages reject mixed segments while single invalid ids render branded detail errors', async () => {
+test('client route pages fail closed for malformed entity ids before rendering detail content', async () => {
   const catchAllSource = await read(
     '../../app/pharmacy/clients/[[...filters]]/page.tsx'
   );
@@ -214,8 +216,10 @@ test('client route pages reject mixed segments while single invalid ids render b
   }
 
   const pathsSource = await read('../../lib/clients/client-paths.ts');
-  assert.match(pathsSource, /if \(segments\.length === 1\) \{/);
-  assert.doesNotMatch(pathsSource, /segments\.length === 1 && isValidObjectId/);
+  assert.match(
+    pathsSource,
+    /segments\.length === 1 && isValidObjectId\(segments\[0\]\)/
+  );
 });
 
 //===================================================================
@@ -264,4 +268,23 @@ test('client detail text searches debounce network work and reset pagination by 
   assert.match(source, /onChange=\{setOrderCommentSearch\}/);
   assert.match(source, /onChange=\{setProductArticleSearch\}/);
   assert.match(source, /onChange=\{setProductNameSearch\}/);
+});
+
+//===================================================================
+
+test('client resources expose explicit local retry controls without clearing last-known-good state', async () => {
+  const [listSource, detailsSource] = await Promise.all([
+    read('./ClientsPageContent/ClientsPageContent.tsx'),
+    read('./ClientDetailsPageContent/ClientDetailsPageContent.tsx'),
+  ]);
+
+  assert.match(listSource, /const \[retryVersion, setRetryVersion\]/);
+  assert.match(listSource, /Retry clients/);
+  assert.match(listSource, /retryVersion/);
+
+  assert.match(detailsSource, /Retry client details/);
+  assert.match(detailsSource, /Retry order statistics/);
+  assert.match(detailsSource, /Retry purchased products/);
+  assert.match(detailsSource, /ordersRetryVersion/);
+  assert.match(detailsSource, /productsRetryVersion/);
 });

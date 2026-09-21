@@ -7,7 +7,7 @@ import { Users } from 'lucide-react';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
@@ -115,6 +115,7 @@ function ClientsPageContent({
 
   const [clientsStatus, setClientsStatus] = useState<ResourceStatus>('idle');
   const [clientsError, setClientsError] = useState('');
+  const [retryVersion, setRetryVersion] = useState(0);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const routeFilters = useMemo<ClientsFilterState>(
@@ -236,6 +237,7 @@ function ClientsPageContent({
     setClientStatisticsFailure,
     setClientStatisticsSuccess,
     startClientStatisticsLoading,
+    retryVersion,
   ]);
 
   useEffect(() => {
@@ -452,9 +454,17 @@ function ClientsPageContent({
         </div>
 
         {clientsStatus === 'error' ? (
-          <p className={css.errorText} role="alert">
-            {clientsError}
-          </p>
+          <div role="alert">
+            <p className={css.errorText}>{clientsError}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setRetryVersion((version) => version + 1)}
+            >
+              Retry clients
+            </Button>
+          </div>
         ) : (
           <ClientsTable
             clients={clients}

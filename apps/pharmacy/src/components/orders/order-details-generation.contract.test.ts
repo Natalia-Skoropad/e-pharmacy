@@ -39,9 +39,13 @@ test('order A to B navigation remounts the details resource and resets transient
     /<OrderDetailsPageContent key=\{orderId\} orderId=\{orderId\} \/>/
   );
 
+  assert.match(filterRouteSource, /const orderId = segments\?\.length === 1/);
+  assert.match(filterRouteSource, /!isValidObjectId\(orderId\)/);
+  assert.match(filterRouteSource, /notFound\(\)/);
+
   assert.match(
     filterRouteSource,
-    /key=\{segments\?\.\[0\] \?\? 'invalid-order'\}/
+    /<OrderDetailsPageContent key=\{orderId\} orderId=\{orderId\} \/>/
   );
 
   for (const initialState of [

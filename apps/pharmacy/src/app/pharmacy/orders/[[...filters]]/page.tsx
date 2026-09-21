@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   isOrdersFilterRoute,
@@ -29,12 +32,13 @@ async function OrdersPage({ params }: OrdersPageProps) {
   const segments = resolvedParams?.filters;
 
   if (!isOrdersFilterRoute(segments)) {
-    return (
-      <OrderDetailsPageContent
-        key={segments?.[0] ?? 'invalid-order'}
-        orderId={segments?.[0] ?? ''}
-      />
-    );
+    const orderId = segments?.length === 1 ? segments[0] : null;
+
+    if (!orderId || !isValidObjectId(orderId)) {
+      notFound();
+    }
+
+    return <OrderDetailsPageContent key={orderId} orderId={orderId} />;
   }
 
   return (

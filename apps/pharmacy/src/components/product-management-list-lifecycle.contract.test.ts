@@ -171,3 +171,32 @@ test('list requests abort stale generations before they can overwrite newer stat
     assert.match(source, /return \(\) => \{\s*controller\.abort\(\);\s*\}/);
   }
 });
+
+//===================================================================
+
+test('product management list failures expose explicit retry generations', async () => {
+  const [allProducts, ownProducts, productRequests] = await Promise.all([
+    read(
+      'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/products/OwnProductsPageContent/OwnProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/ProductRequestsPageContent/ProductRequestsPageContent.tsx'
+    ),
+  ]);
+
+  assert.match(allProducts, /Retry product statistics/);
+  assert.match(allProducts, /Retry products/);
+  assert.match(allProducts, /setRefreshVersion/);
+
+  assert.match(ownProducts, /Retry own products/);
+  assert.match(ownProducts, /setRefreshVersion/);
+
+  assert.match(productRequests, /const \[retryVersion, setRetryVersion\]/);
+  assert.match(productRequests, /Retry request statistics/);
+  assert.match(productRequests, /Retry product requests/);
+});

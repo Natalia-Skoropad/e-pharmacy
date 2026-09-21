@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   isAllProductsFilterSegment,
@@ -6,7 +9,7 @@ import {
 } from '@/lib/products/all-product-paths';
 
 import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent';
-import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent';
+import { AllProductsPageContent } from '@/components/all-products/AllProductsPageContent/AllProductsPageContent';
 
 //===================================================================
 
@@ -35,6 +38,10 @@ async function AllProductDetailsPage({ params }: AllProductDetailsPageProps) {
         initialFilters={initialFilters}
       />
     );
+  }
+
+  if (!isValidObjectId(productId)) {
+    notFound();
   }
 
   return <AllProductDetailsPageContent productId={productId} mode="all" />;

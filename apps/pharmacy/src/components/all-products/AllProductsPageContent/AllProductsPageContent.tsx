@@ -6,7 +6,7 @@ import { PackageSearch } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
@@ -404,7 +404,17 @@ function AllProductsPageContent({
         ) : null}
 
         {isProductStatisticsUnavailable ? (
-          <p role="status">Product statistics are temporarily unavailable.</p>
+          <div>
+            <p role="status">Product statistics are temporarily unavailable.</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setRefreshVersion((version) => version + 1)}
+            >
+              Retry product statistics
+            </Button>
+          </div>
         ) : (
           <AllProductStatistics
             counts={productStatistics}
@@ -484,6 +494,14 @@ function AllProductsPageContent({
               title="Products are temporarily unavailable"
               message={loadError}
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setRefreshVersion((version) => version + 1)}
+            >
+              Retry products
+            </Button>
           </div>
         ) : null}
 

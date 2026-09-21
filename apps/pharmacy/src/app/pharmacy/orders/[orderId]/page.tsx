@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   isOrdersFilterSegment,
@@ -32,6 +35,10 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
         initialFilters={parseOrdersSegments({ filters: [orderId] })}
       />
     );
+  }
+
+  if (!isValidObjectId(orderId)) {
+    notFound();
   }
 
   return <OrderDetailsPageContent key={orderId} orderId={orderId} />;

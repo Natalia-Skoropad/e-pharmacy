@@ -39,6 +39,19 @@ test('initial product details load owns only the required product request', asyn
   assert.match(source, /Reviews \(\$\{displayedReviewsTotal\}\)/);
   assert.match(source, /activeTab !== 'stock-movement'/);
   assert.match(source, /activeTab !== 'related-orders'/);
+
+  assert.equal(
+    (
+      source.match(
+        /getPharmacyNotes\('product', productId, page, options\)/g
+      ) ?? []
+    ).length,
+    1
+  );
+
+  assert.doesNotMatch(source, /loadCommentsTotal/);
+  assert.match(source, /activeTab === 'comments' \? \(/);
+  assert.match(source, /initialTotal=\{commentsTotal \?\? undefined\}/);
 });
 
 //===================================================================

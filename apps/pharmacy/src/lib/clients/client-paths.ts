@@ -2,6 +2,7 @@ import { USER_STATUSES } from '@e-pharmacy/config/users';
 
 import {
   isDateParam,
+  isValidObjectId,
   isDateRangeValid,
   normalizeSlugEnumValue,
   slugifyStatus,
@@ -123,7 +124,7 @@ export function resolveClientsRoute(
     return { kind: 'filters', filters: segments };
   }
 
-  if (segments.length === 1) {
+  if (segments.length === 1 && isValidObjectId(segments[0])) {
     return { kind: 'detail', clientId: segments[0] };
   }
 

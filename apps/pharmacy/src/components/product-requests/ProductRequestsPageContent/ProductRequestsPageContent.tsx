@@ -100,6 +100,7 @@ function ProductRequestsPageContent({
     useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [retryVersion, setRetryVersion] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
@@ -160,7 +161,7 @@ function ProductRequestsPageContent({
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [retryVersion]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -195,7 +196,7 @@ function ProductRequestsPageContent({
     return () => {
       controller.abort();
     };
-  }, [queryParams]);
+  }, [queryParams, retryVersion]);
 
   const debouncedFilters = useDebouncedValue(filters, 450);
 
@@ -268,9 +269,19 @@ function ProductRequestsPageContent({
         ) : null}
 
         {isRequestStatisticsUnavailable ? (
-          <p role="status">
-            Product request statistics are temporarily unavailable.
-          </p>
+          <div>
+            <p role="status">
+              Product request statistics are temporarily unavailable.
+            </p>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setRetryVersion((version) => version + 1)}
+            >
+              Retry request statistics
+            </Button>
+          </div>
         ) : (
           <ProductRequestStatistics
             className={css.requestStatistics}
@@ -387,6 +398,14 @@ function ProductRequestsPageContent({
               title="Product requests are temporarily unavailable"
               message={loadError}
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setRetryVersion((version) => version + 1)}
+            >
+              Retry product requests
+            </Button>
           </div>
         ) : null}
 

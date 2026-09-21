@@ -36,6 +36,7 @@ import {
 import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
 import {
+  Button,
   FiltersButton,
   LoadingSpinner,
   TextActionButton,
@@ -116,6 +117,11 @@ import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
 import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
 
+import {
+  shouldLoadClientProducts,
+  type ClientDetailTab,
+} from '@/components/clients/client-detail-resource-policy';
+
 import css from './ClientDetailsPageContent.module.css';
 
 //===================================================================
@@ -123,8 +129,6 @@ import css from './ClientDetailsPageContent.module.css';
 type ClientDetailsPageContentProps = Readonly<{ clientId: string }>;
 
 //===================================================================
-
-type ClientTab = 'details' | 'orders' | 'products' | 'comments';
 
 type ResourceStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -154,7 +158,7 @@ type ClientOrderFilters = Readonly<{
 
 //===================================================================
 
-const CLIENT_TABS: Array<TabItem<ClientTab>> = [
+const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
   { value: 'details', label: 'Details' },
   { value: 'orders', label: 'Client orders' },
   { value: 'products', label: 'Purchased products' },
@@ -495,6 +499,7 @@ function ClientDetailsPageContentState({
 
   const [ordersStatus, setOrdersStatus] = useState<ResourceStatus>('idle');
   const [ordersError, setOrdersError] = useState('');
+  const [ordersRetryVersion, setOrdersRetryVersion] = useState(0);
   const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
 
   const {
@@ -506,8 +511,9 @@ function ClientDetailsPageContentState({
   } = useLastKnownStatistics<OrderStatisticsCounts>();
 
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<ClientTab>('details');
+  const [activeTab, setActiveTab] = useState<ClientDetailTab>('details');
   const [clientStatus, setClientStatus] = useState<ResourceStatus>('loading');
+  const [clientRetryVersion, setClientRetryVersion] = useState(0);
   const [error, setError] = useState<ClientDetailsError | null>(null);
 
   const [products, setProducts] = useState<PharmacyClientPurchasedProduct[]>(
@@ -554,7 +560,23 @@ function ClientDetailsPageContentState({
 
   const [productsStatus, setProductsStatus] = useState<ResourceStatus>('idle');
   const [productsError, setProductsError] = useState('');
+  const [productsRetryVersion, setProductsRetryVersion] = useState(0);
+  const [loadedProductsRequestKey, setLoadedProductsRequestKey] = useState<
+    string | null
+  >(null);
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
+
+  const productsRequestKey = JSON.stringify({
+    clientId,
+    searchKey: productSearchKey,
+    page: productsPage,
+    perPage: productsRowsPerPage,
+    dateFrom: productFilters.date.from,
+    dateTo: productFilters.date.to,
+    category: productFilters.category,
+    status: productFilters.status,
+    retryVersion: productsRetryVersion,
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -585,7 +607,7 @@ function ClientDetailsPageContentState({
     return () => {
       controller.abort();
     };
-  }, [clientId]);
+  }, [clientId, clientRetryVersion]);
 
   useEffect(() => {
     dispatchPharmacyBreadcrumbLabel(`Client #${clientId}`);
@@ -695,6 +717,7 @@ function ClientDetailsPageContentState({
     orderFilters,
     orderSearchKey,
     ordersPage,
+    ordersRetryVersion,
     ordersRowsPerPage,
     setOrderStatisticsFailure,
     setOrderStatisticsSuccess,
@@ -703,6 +726,15 @@ function ClientDetailsPageContentState({
 
   useEffect(() => {
     if (clientStatus !== 'success') return;
+    if (
+      !shouldLoadClientProducts(
+        activeTab,
+        loadedProductsRequestKey,
+        productsRequestKey
+      )
+    ) {
+      return;
+    }
 
     const controller = new AbortController();
 
@@ -756,6 +788,7 @@ function ClientDetailsPageContentState({
           setProductsOverallTotal(response.total);
         }
 
+        setLoadedProductsRequestKey(productsRequestKey);
         setProductsStatus('success');
       } catch (loadProductsError) {
         if (controller.signal.aborted) return;
@@ -776,13 +809,16 @@ function ClientDetailsPageContentState({
       controller.abort();
     };
   }, [
+    activeTab,
     clientId,
     clientStatus,
     debouncedProductArticleSearch,
     debouncedProductNameSearch,
+    loadedProductsRequestKey,
     productFilters,
     productSearchKey,
     productsPage,
+    productsRequestKey,
     productsRowsPerPage,
   ]);
 
@@ -1012,6 +1048,15 @@ function ClientDetailsPageContentState({
               title={clientError.title}
               message={clientError.message}
             />
+
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setClientRetryVersion((version) => version + 1)}
+            >
+              Retry client details
+            </Button>
           </div>
         </section>
       </main>
@@ -1036,9 +1081,19 @@ function ClientDetailsPageContentState({
               className={css.orderStatistics}
             />
           ) : orderStatisticsStatus === 'error' ? (
-            <p className={css.statisticsState} role="alert">
-              Order statistics are temporarily unavailable.
-            </p>
+            <div role="alert">
+              <p className={css.statisticsState}>
+                Order statistics are temporarily unavailable.
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => setOrdersRetryVersion((version) => version + 1)}
+              >
+                Retry order statistics
+              </Button>
+            </div>
           ) : (
             <p className={css.statisticsState} role="status">
               Loading order statistics...
@@ -1224,9 +1279,19 @@ function ClientDetailsPageContentState({
                   </div>
 
                   {ordersStatus === 'error' ? (
-                    <p className={css.errorText} role="alert">
-                      {ordersError}
-                    </p>
+                    <div role="alert">
+                      <p className={css.errorText}>{ordersError}</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          setOrdersRetryVersion((version) => version + 1)
+                        }
+                      >
+                        Retry orders
+                      </Button>
+                    </div>
                   ) : (
                     <DataTable
                       columns={orderColumns}
@@ -1347,9 +1412,19 @@ function ClientDetailsPageContentState({
                   </div>
 
                   {productsStatus === 'error' ? (
-                    <p className={css.errorText} role="alert">
-                      {productsError}
-                    </p>
+                    <div role="alert">
+                      <p className={css.errorText}>{productsError}</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          setProductsRetryVersion((version) => version + 1)
+                        }
+                      >
+                        Retry purchased products
+                      </Button>
+                    </div>
                   ) : (
                     <DataTable
                       columns={productColumns}
@@ -1385,7 +1460,7 @@ function ClientDetailsPageContentState({
             </div>
           ) : null}
 
-          <div hidden={activeTab !== 'comments'}>
+          {activeTab === 'comments' ? (
             <EntityComments
               entityKey={`client:${clientId}`}
               initialTotal={commentsTotal ?? undefined}
@@ -1406,7 +1481,7 @@ function ClientDetailsPageContentState({
               }
               onTotalChange={setCommentsTotal}
             />
-          </div>
+          ) : null}
         </div>
       </section>
 

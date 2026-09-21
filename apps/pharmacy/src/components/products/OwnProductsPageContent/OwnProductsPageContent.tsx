@@ -7,7 +7,7 @@ import { Boxes, PackageCheck } from 'lucide-react';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { FiltersButton } from '@e-pharmacy/ui/primitives';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
@@ -469,6 +469,14 @@ function OwnProductsPageContent({
               title="Own products are temporarily unavailable"
               message={loadError}
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setRefreshVersion((version) => version + 1)}
+            >
+              Retry own products
+            </Button>
           </div>
         ) : null}
 
