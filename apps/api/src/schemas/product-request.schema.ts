@@ -170,6 +170,7 @@ export const productRequestsQuerySchema = z.preprocess(
       category: z.enum(PRODUCT_CATEGORIES).optional(),
       status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
     })
+    .strict()
     .refine((query) => isDateRangeOrdered(query.dateFrom, query.dateTo), {
       path: ['dateTo'],
       message: DATE_RANGE_MESSAGE,
@@ -347,22 +348,27 @@ export const productRequestFormSchema = z
 
 //===============================================================
 
-export const productRequestArticleAvailabilityQuerySchema = z.object({
-  article: z
-    .string()
-    .trim()
-    .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
-    .max(
-      PRODUCT_REQUEST_LIMITS.articleMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
-    )
-    .regex(
-      PRODUCT_REQUEST_ARTICLE_PATTERN,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
-    )
-    .transform((value) => value.toUpperCase()),
-  excludeRequestId: mongoIdSchema.optional(),
-});
+export const productRequestArticleAvailabilityQuerySchema = z
+  .object({
+    article: z
+      .string()
+      .trim()
+      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
+
+      .max(
+        PRODUCT_REQUEST_LIMITS.articleMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
+      )
+
+      .regex(
+        PRODUCT_REQUEST_ARTICLE_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+      )
+
+      .transform((value) => value.toUpperCase()),
+    excludeRequestId: mongoIdSchema.optional(),
+  })
+  .strict();
 
 //===============================================================
 

@@ -22,6 +22,7 @@ export function normalizePaginationQuery(value: unknown): unknown {
     query.perPage = query.limit;
   }
 
+  delete query.limit;
   return query;
 }
 

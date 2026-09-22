@@ -4,6 +4,7 @@ import test from 'node:test';
 import { clientsQuerySchema, clientProductsQuerySchema } from './client.schema';
 
 import {
+  orderCommentsQuerySchema,
   ordersQuerySchema,
   orderSalesStatisticsQuerySchema,
 } from './order.schema';
@@ -20,6 +21,12 @@ import {
   publicProductsQuerySchema,
 } from './product.schema';
 
+import {
+  productRequestArticleAvailabilityQuerySchema,
+  productRequestsQuerySchema,
+} from './product-request.schema';
+
+import { pharmacyNotesQuerySchema } from './pharmacy-note.schema';
 import { sharedWorkingHoursSchema } from './shared-validation.schema';
 import { emptyQuerySchema } from './shared';
 
@@ -172,6 +179,51 @@ test('sales statistics query rejects unknown parameters', () => {
       groupBy: 'day',
       junk: 'unexpected-cache-variant',
     }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('private resource query schemas reject unknown parameters', () => {
+  const cases = [
+    clientsQuerySchema.safeParse({ unknown: '1' }),
+    clientProductsQuerySchema.safeParse({ unknown: '1' }),
+    ordersQuerySchema.safeParse({ unknown: '1' }),
+    orderCommentsQuerySchema.safeParse({ unknown: '1' }),
+    productRequestsQuerySchema.safeParse({ unknown: '1' }),
+
+    productRequestArticleAvailabilityQuerySchema.safeParse({
+      article: 'ABC-123',
+      unknown: '1',
+    }),
+
+    pharmacyNotesQuerySchema.safeParse({ unknown: '1' }),
+  ];
+
+  for (const result of cases) {
+    assert.equal(result.success, false);
+  }
+});
+
+//===============================================================
+
+test('strict pagination query schemas preserve the supported limit alias', () => {
+  assert.deepEqual(ordersQuerySchema.parse({ page: '2', limit: '25' }), {
+    page: 2,
+    perPage: 25,
+  });
+
+  assert.deepEqual(
+    clientsQuerySchema.parse({ page: '3', perPage: '30', limit: '10' }),
+    {
+      page: 3,
+      perPage: 30,
+    }
+  );
+
+  assert.equal(
+    ordersQuerySchema.safeParse({ page: ['1', '2'] }).success,
     false
   );
 });

@@ -67,6 +67,7 @@ export const ordersQuerySchema = z.preprocess(
       clientCommentPresence: z.enum(['with', 'without']).optional(),
     })
 
+    .strict()
     .refine(({ dateFrom, dateTo }) => isDateRangeOrdered(dateFrom, dateTo), {
       message: DATE_RANGE_MESSAGE,
       path: ['dateTo'],
@@ -88,10 +89,12 @@ export const orderCommentParamsSchema = z.object({
 
 export const orderCommentsQuerySchema = z.preprocess(
   normalizePaginationQuery,
-  z.object({
-    page: positivePageSchema,
-    perPage: orderCommentsPerPageSchema,
-  })
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: orderCommentsPerPageSchema,
+    })
+    .strict()
 );
 
 //===============================================================

@@ -52,6 +52,7 @@ productRequestRoutes.get(
 
 productRequestRoutes.get(
   '/article-availability',
+  authorizeRoles(USER_ROLES.PHARMACY),
   validate({ query: productRequestArticleAvailabilityQuerySchema }),
   ctrlWrapper(getProductRequestArticleAvailability)
 );

@@ -21,10 +21,13 @@ export const pharmacyNoteDeleteParamsSchema = pharmacyNoteParamsSchema.extend({
 
 //===============================================================
 
-export const pharmacyNotesQuerySchema = z.object({
-  page: positivePageSchema,
-  perPage: createPerPageSchema({ defaultValue: 10, max: 100 }),
-});
+export const pharmacyNotesQuerySchema = z
+  .object({
+    page: positivePageSchema,
+    perPage: createPerPageSchema({ defaultValue: 10, max: 100 }),
+  })
+
+  .strict();
 
 //===============================================================
 

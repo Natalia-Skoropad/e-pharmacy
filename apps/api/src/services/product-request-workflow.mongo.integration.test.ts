@@ -10,7 +10,9 @@ import type { HttpError } from '../types/errors';
 
 import {
   createProductRequestService,
+  getProductRequestArticleAvailabilityService,
   moderateProductRequestByAdminService,
+  updateProductRequestService,
 } from './product-request.service';
 
 //===================================================================
@@ -119,6 +121,147 @@ test(
 
           assert.equal(created.length, 1);
           requestIds.push(...created.map((request) => request._id));
+        }
+      );
+
+      await context.test(
+        'article availability excludes only requests owned by the current pharmacy',
+        async () => {
+          const ownArticle = `REQ-OWN-${suffix.slice(-10)}`;
+
+          const ownRequest = await ProductRequest.create({
+            pharmacyId: pharmacyA,
+            name: 'Own availability request',
+            article: ownArticle,
+            category: 'medicine',
+            status: 'draft',
+          });
+
+          const foreignRequest = await ProductRequest.create({
+            pharmacyId: pharmacyB,
+            name: 'Foreign availability request',
+            article: `REQ-FOREIGN-${suffix.slice(-10)}`,
+            category: 'medicine',
+            status: 'draft',
+          });
+
+          requestIds.push(
+            ownRequest._id as Types.ObjectId,
+            foreignRequest._id as Types.ObjectId
+          );
+
+          const ownResult = await getProductRequestArticleAvailabilityService(
+            ownerA.toString(),
+            {
+              article: ownArticle,
+              excludeRequestId: String(ownRequest._id),
+            }
+          );
+
+          assert.equal(ownResult.available, true);
+
+          await assert.rejects(
+            getProductRequestArticleAvailabilityService(ownerA.toString(), {
+              article: foreignRequest.article,
+              excludeRequestId: String(foreignRequest._id),
+            }),
+
+            (error: unknown) => {
+              const httpError = error as HttpError;
+              return (
+                httpError.status === 404 &&
+                httpError.code === 'PRODUCT_REQUEST_NOT_FOUND'
+              );
+            }
+          );
+
+          await assert.rejects(
+            getProductRequestArticleAvailabilityService(ownerA.toString(), {
+              article: ownArticle,
+              excludeRequestId: new Types.ObjectId().toString(),
+            }),
+
+            (error: unknown) => {
+              const httpError = error as HttpError;
+              return (
+                httpError.status === 404 &&
+                httpError.code === 'PRODUCT_REQUEST_NOT_FOUND'
+              );
+            }
+          );
+        }
+      );
+
+      await context.test(
+        'create and update keep authoritative article conflict checks',
+        async () => {
+          const occupiedArticle = `REQ-OCCUPIED-${suffix.slice(-10)}`;
+          const editableArticle = `REQ-EDITABLE-${suffix.slice(-10)}`;
+
+          const occupiedRequest = await ProductRequest.create({
+            pharmacyId: pharmacyB,
+            name: 'Occupied request',
+            article: occupiedArticle,
+            category: 'medicine',
+            status: 'draft',
+          });
+
+          const editableRequest = await ProductRequest.create({
+            pharmacyId: pharmacyA,
+            name: 'Editable request',
+            article: editableArticle,
+            category: 'medicine',
+            status: 'draft',
+          });
+
+          requestIds.push(
+            occupiedRequest._id as Types.ObjectId,
+            editableRequest._id as Types.ObjectId
+          );
+
+          await assert.rejects(
+            createProductRequestService(ownerA.toString(), {
+              status: 'draft',
+              name: 'Conflicting create',
+              article: occupiedArticle,
+              category: 'medicine',
+            }),
+
+            (error: unknown) => {
+              const httpError = error as HttpError;
+              return (
+                httpError.status === 409 &&
+                httpError.code === 'PRODUCT_REQUEST_ARTICLE_CONFLICT'
+              );
+            }
+          );
+
+          await assert.rejects(
+            updateProductRequestService(
+              ownerA.toString(),
+              String(editableRequest._id),
+              {
+                status: 'draft',
+                name: 'Conflicting update',
+                article: occupiedArticle,
+                category: 'medicine',
+              }
+            ),
+
+            (error: unknown) => {
+              const httpError = error as HttpError;
+              return (
+                httpError.status === 409 &&
+                httpError.code === 'PRODUCT_REQUEST_ARTICLE_CONFLICT'
+              );
+            }
+          );
+
+          const persisted = await ProductRequest.findById(editableRequest._id)
+            .select('article')
+            .lean<{ article: string } | null>();
+
+          assert.equal(persisted?.article, editableArticle);
         }
       );
 

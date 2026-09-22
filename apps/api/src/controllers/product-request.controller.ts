@@ -37,7 +37,7 @@ export async function createProductRequest(
 //===============================================================
 
 export async function getProductRequestArticleAvailability(
-  _req: Request,
+  req: Request,
   res: ValidatedResponse<
     unknown,
     unknown,
@@ -45,7 +45,11 @@ export async function getProductRequestArticleAvailability(
   >
 ): Promise<void> {
   const { query } = res.locals.validated;
-  const data = await getProductRequestArticleAvailabilityService(query);
+
+  const data = await getProductRequestArticleAvailabilityService(
+    req.user?.id ?? '',
+    query
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -80,6 +84,7 @@ export async function getProductRequestById(
   res: ValidatedResponse<unknown, ProductRequestParams>
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
+
   const data = await getProductRequestByIdService(
     req.user?.id ?? '',
     requestId
@@ -95,6 +100,7 @@ export async function updateProductRequest(
   res: ValidatedResponse<ProductRequestFormInput, ProductRequestParams>
 ): Promise<void> {
   const { body, params } = res.locals.validated;
+
   const data = await updateProductRequestService(
     req.user?.id ?? '',
     params.requestId,

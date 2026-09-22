@@ -117,8 +117,31 @@ async function assertArticleAvailable(
 //===============================================================
 
 export async function getProductRequestArticleAvailabilityService(
+  userId: string,
   query: ProductRequestArticleAvailabilityQuery
 ) {
+  const pharmacy = await getCurrentPharmacy(userId);
+
+  if (!pharmacy) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
+  }
+
+  if (query.excludeRequestId) {
+    const ownedRequestExists = await ProductRequest.exists({
+      _id: new Types.ObjectId(query.excludeRequestId),
+      pharmacyId: pharmacy._id,
+    });
+
+    if (!ownedRequestExists) {
+      throw httpError(
+        HTTP_STATUS.NOT_FOUND,
+        'Product request was not found.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
+      );
+    }
+  }
+
   const message = await getArticleConflict(
     query.article,
     query.excludeRequestId

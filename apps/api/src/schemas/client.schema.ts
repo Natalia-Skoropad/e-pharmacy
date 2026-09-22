@@ -56,6 +56,7 @@ export const clientsQuerySchema = z.preprocess(
       status: z.enum(['active', 'blocked']).optional(),
       successfulOrders: z.enum(['repeat', 'successful', 'other']).optional(),
     })
+    .strict()
     .refine(
       ({ firstOrderFrom, firstOrderTo }) =>
         isDateRangeOrdered(firstOrderFrom, firstOrderTo),
@@ -78,6 +79,8 @@ export const clientProductsQuerySchema = z.preprocess(
       category: z.enum(PRODUCT_CATEGORIES).optional(),
       status: z.enum(['new', 'active', 'blocked']).optional(),
     })
+
+    .strict()
     .refine(({ dateFrom, dateTo }) => isDateRangeOrdered(dateFrom, dateTo), {
       message: DATE_RANGE_MESSAGE,
       path: ['dateTo'],
