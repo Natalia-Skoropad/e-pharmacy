@@ -227,7 +227,7 @@ Create the final source ZIP with the repository-owned command:
 pnpm archive:source
 ```
 
-The command stages the source tree, creates `.artifacts/e-pharmacy-source.zip`, and verifies the **actual ZIP entries**. The verifier rejects generated directories and files such as `node_modules`, `.turbo`, `.next`, `dist`, coverage output, `*.tsbuildinfo`, and nested ZIP archives containing forbidden content.
+The command stages the source tree, creates `.artifacts/e-pharmacy-source.zip`, and verifies the **actual ZIP entries**. The verifier rejects generated directories and files such as `node_modules`, `.turbo`, `.next`, `dist`, coverage output, `*.tsbuildinfo`, `next-env.d.ts`, and nested ZIP archives containing forbidden content.
 
 Verify an existing final artifact explicitly:
 

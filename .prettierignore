@@ -4,4 +4,9 @@ dist
 build
 out
 .turbo
+.artifacts
+coverage
+*.tsbuildinfo
+next-env.d.ts
+*.zip
 pnpm-lock.yaml
