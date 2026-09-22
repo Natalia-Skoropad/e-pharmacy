@@ -34,6 +34,7 @@ const requiredIgnoredPaths = [
   'coverage',
   '*.zip',
   '*.tsbuildinfo',
+  'next-env.d.ts',
 ];
 
 const requiredStagedFiles = [
@@ -150,9 +151,7 @@ try {
       requiredFiles: requiredStagedFiles,
     });
   } catch (error) {
-    failures.push(
-      error instanceof Error ? error.message : String(error)
-    );
+    failures.push(error instanceof Error ? error.message : String(error));
   }
 } finally {
   await rm(temporaryRoot, { recursive: true, force: true });
@@ -162,9 +161,10 @@ try {
 
 if (failures.length > 0) {
   console.error(
-    ['Source archive hygiene check failed:', ...failures.map((item) => `- ${item}`)].join(
-      '\n'
-    )
+    [
+      'Source archive hygiene check failed:',
+      ...failures.map((item) => `- ${item}`),
+    ].join('\n')
   );
   process.exit(1);
 }

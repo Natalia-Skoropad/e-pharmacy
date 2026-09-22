@@ -31,6 +31,7 @@ export const SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS = [
   /(^|\/)\.DS_Store$/,
   /(^|\/)Thumbs\.db$/i,
   /\.tsbuildinfo$/i,
+  /(^|\/)next-env\.d\.ts$/i,
   /\.zip$/i,
 ];
 
