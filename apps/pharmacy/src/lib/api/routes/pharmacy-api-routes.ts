@@ -87,7 +87,6 @@ export const pharmacyApiRoutes = {
     current: localAuthApiRoutes.current,
     logout: localAuthApiRoutes.logout,
     logoutAll: localAuthApiRoutes.logoutAll,
-    refresh: localAuthApiRoutes.refresh,
     password: localAuthApiRoutes.password,
     sessions: localAuthApiRoutes.sessions,
     session: localAuthApiRoutes.session,

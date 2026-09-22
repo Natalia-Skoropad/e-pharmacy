@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { NextRequest } from 'next/server';
 
-import { executeBackendFetch } from './backend-fetch.ts';
+import { isApiError } from '@e-pharmacy/api-client/transport';
+
+import {
+  executeBackendFetch,
+  executeBackendFetchWithRetry,
+} from './backend-fetch.ts';
 
 //===================================================================
 
@@ -21,6 +26,7 @@ function configureEnvironment(): () => void {
     for (const key of Object.keys(process.env)) {
       if (!(key in previous)) delete process.env[key];
     }
+
     Object.assign(process.env, previous);
   };
 }
@@ -73,6 +79,126 @@ test('forwards query parameters for every supported HTTP method and disables red
       );
       assert.equal(call.init?.redirect, 'manual');
     }
+  } finally {
+    restore();
+  }
+});
+
+//===================================================================
+
+test('propagates incoming request abort to a direct backend fetch', async () => {
+  const restore = configureEnvironment();
+  const requestController = new AbortController();
+  let observedSignal: AbortSignal | null | undefined;
+
+  try {
+    globalThis.fetch = async (_input, init) => {
+      observedSignal = init?.signal;
+
+      return new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+
+        if (!signal) {
+          reject(new Error('Backend fetch did not receive an AbortSignal.'));
+          return;
+        }
+
+        if (signal.aborted) {
+          reject(signal.reason);
+          return;
+        }
+
+        signal.addEventListener('abort', () => reject(signal.reason), {
+          once: true,
+        });
+      });
+    };
+
+    const request = new NextRequest('https://client.example/api/example', {
+      signal: requestController.signal,
+    });
+
+    const pending = executeBackendFetch({
+      request,
+      backendPath: '/resource',
+      method: 'GET',
+      requestId: 'request-direct-abort',
+      timeoutMs: 5_000,
+      authCookieMode: 'access-only',
+    });
+
+    await Promise.resolve();
+    requestController.abort(
+      new DOMException('The client closed the request.', 'AbortError')
+    );
+
+    await assert.rejects(
+      pending,
+      (error: unknown) => isApiError(error) && error.transportCode === 'ABORTED'
+    );
+
+    assert.equal(observedSignal?.aborted, true);
+  } finally {
+    restore();
+  }
+});
+
+//===================================================================
+
+test('propagates incoming request abort to backend fetch and does not retry', async () => {
+  const restore = configureEnvironment();
+  const requestController = new AbortController();
+  const calls: Array<{ signal?: AbortSignal | null }> = [];
+
+  try {
+    globalThis.fetch = async (_input, init) => {
+      calls.push({ signal: init?.signal });
+
+      return new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+
+        if (!signal) {
+          reject(new Error('Backend fetch did not receive an AbortSignal.'));
+          return;
+        }
+
+        if (signal.aborted) {
+          reject(signal.reason);
+          return;
+        }
+
+        signal.addEventListener('abort', () => reject(signal.reason), {
+          once: true,
+        });
+      });
+    };
+
+    const request = new NextRequest('https://client.example/api/example', {
+      signal: requestController.signal,
+    });
+
+    const pending = executeBackendFetchWithRetry({
+      request,
+      backendPath: '/resource',
+      method: 'GET',
+      requestId: 'request-abort',
+      timeoutMs: 5_000,
+      authCookieMode: 'none',
+      retry: { attempts: 2, delayMs: 0 },
+    });
+
+    await Promise.resolve();
+    requestController.abort(
+      new DOMException('The client closed the request.', 'AbortError')
+    );
+
+    await assert.rejects(
+      pending,
+      (error: unknown) => isApiError(error) && error.transportCode === 'ABORTED'
+    );
+
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0]?.signal?.aborted, true);
   } finally {
     restore();
   }

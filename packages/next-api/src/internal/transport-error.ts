@@ -17,6 +17,7 @@ import { REQUEST_ID_HEADER_NAME } from './bff-contract';
 export type ProxyTransportErrorCode =
   | 'BAD_GATEWAY'
   | 'GATEWAY_TIMEOUT'
+  | 'CLIENT_CLOSED_REQUEST'
   | 'INVALID_BACKEND_RESPONSE'
   | 'CONFIGURATION_ERROR'
   | 'INVALID_ROUTE_PARAMETER'
@@ -57,6 +58,14 @@ export function describeProxyError(error: unknown): ProxyErrorDescriptor {
         status: 502,
         code: 'INVALID_BACKEND_RESPONSE',
         message: 'The upstream service returned an invalid response.',
+      };
+    }
+
+    if (error.transportCode === 'ABORTED') {
+      return {
+        status: 499,
+        code: 'CLIENT_CLOSED_REQUEST',
+        message: 'The client closed the request.',
       };
     }
 

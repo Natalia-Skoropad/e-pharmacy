@@ -109,6 +109,7 @@ for (const [prefix, relativeFile] of Object.entries(backendRouteFiles)) {
 const violations = [];
 const discoveredKeys = new Set();
 let handlerCount = 0;
+let backendAccessAssertionCount = 0;
 
 //===================================================================
 
@@ -144,6 +145,7 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
     }
 
     const actualAccess = inferAccessModes(source, methods);
+    const expectedBackendAccess = contract.backendAccess ?? {};
 
     for (const method of expectedMethods) {
       if (actualAccess[method] !== contract.methods[method]) {
@@ -157,6 +159,16 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
           `${rel}: backend does not expose ${method} ${contract.backend}`
         );
       }
+
+      if (expectedBackendAccess[method] !== undefined) {
+        backendAccessAssertionCount += 1;
+
+        if (expectedBackendAccess[method] !== contract.methods[method]) {
+          violations.push(
+            `${rel}: ${method} BFF access ${contract.methods[method]} does not match explicit backend access ${expectedBackendAccess[method]}`
+          );
+        }
+      }
     }
 
     if (
@@ -168,11 +180,14 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
       );
     }
 
-    if (!methods.length) violations.push(`${rel}: no HTTP handler export found`);
+    if (!methods.length)
+      violations.push(`${rel}: no HTTP handler export found`);
     if (/AUTH_PROXY_ROUTES/.test(source))
       violations.push(`${rel}: AUTH_PROXY_ROUTES alias is forbidden`);
     if (/`\/pharmacy-notes\//.test(source))
-      violations.push(`${rel}: literal pharmacy-notes backend path is forbidden`);
+      violations.push(
+        `${rel}: literal pharmacy-notes backend path is forbidden`
+      );
     if (/orders\.details\([^)]*\)\}\/status/.test(source))
       violations.push(`${rel}: order status must use canonical route builder`);
 
@@ -216,7 +231,9 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
       /createPublicGetPrivatePostProxyRoute/.test(source) &&
       !/revalidate:\s*false/.test(source)
     ) {
-      violations.push(`${rel}: public reviews must use a fresh no-store policy`);
+      violations.push(
+        `${rel}: public reviews must use a fresh no-store policy`
+      );
     }
 
     if (
@@ -275,5 +292,5 @@ if (violations.length) {
 //===================================================================
 
 console.log(
-  `Next API structural route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified).`
+  `Next API structural route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified, ${backendAccessAssertionCount} explicit access assertions verified).`
 );

@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 
 import {
+  ApiError,
   executeFetchWithRetry,
   type FetchExecutionResult,
   type HttpMethod,
@@ -79,16 +80,40 @@ function createBackendFetchTarget({
 
 //===================================================================
 
-export function executeBackendFetch(
+export async function executeBackendFetch(
   options: ExecuteBackendFetchOptions
 ): Promise<Response> {
   const { url, init } = createBackendFetchTarget(options);
+  const timeoutSignal = AbortSignal.timeout(options.timeoutMs);
+  const signal = AbortSignal.any([options.request.signal, timeoutSignal]);
 
-  return fetch(url, {
-    ...init,
-    method: options.method,
-    signal: AbortSignal.timeout(options.timeoutMs),
-  });
+  try {
+    return await fetch(url, {
+      ...init,
+      method: options.method,
+      signal,
+    });
+  } catch (error) {
+    if (options.request.signal.aborted) {
+      throw new ApiError('The request was cancelled.', {
+        transportCode: 'ABORTED',
+        url,
+        method: options.method,
+        cause: error,
+      });
+    }
+
+    if (timeoutSignal.aborted) {
+      throw new ApiError('The service did not respond in time.', {
+        transportCode: 'TIMEOUT',
+        url,
+        method: options.method,
+        cause: error,
+      });
+    }
+
+    throw error;
+  }
 }
 
 //===================================================================
@@ -101,6 +126,7 @@ export function executeBackendFetchWithRetry(
   return executeFetchWithRetry(url, {
     method: options.method,
     init,
+    signal: options.request.signal,
     timeoutMs: options.timeoutMs,
     retry: options.retry,
     validateResponse: options.validateResponse,
