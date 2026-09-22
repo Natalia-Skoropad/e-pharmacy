@@ -144,8 +144,12 @@ if (
   violations.push('Backend does not require BFF_PROXY_SECRET in production');
 }
 
-if (!/nodeEnv === 'production'[\s\S]*!bffProxySecret/.test(nextApiEnv)) {
-  violations.push('Next BFF does not require BFF_PROXY_SECRET in production');
+if (
+  !/if\s*\(\s*!bffProxySecret\s*\)[\s\S]*BFF_PROXY_SECRET is required/.test(
+    nextApiEnv
+  )
+) {
+  violations.push('Next BFF does not require BFF_PROXY_SECRET');
 }
 
 if (/success\s*:\s*false/.test(nextApiSources)) {

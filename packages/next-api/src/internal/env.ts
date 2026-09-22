@@ -1,8 +1,13 @@
 // This module is internal to the server-only proxy/server entrypoints.
 
+import {
+  resolveApiBaseUrl,
+  resolveNodeEnvironment,
+  type NodeEnvironment,
+} from '../contracts/api-base-url';
+
 //===================================================================
 
-type NodeEnvironment = 'development' | 'test' | 'production';
 type CookieSameSite = 'lax' | 'strict' | 'none';
 type TrustedProxyProvider = 'none' | 'vercel' | 'cloudflare';
 
@@ -20,20 +25,7 @@ export type NextApiServerEnvironment = Readonly<{
 
 //===================================================================
 
-const LOCAL_API_BASE_URL = 'http://localhost:4000';
 const COOKIE_DOMAIN_PATTERN = /^\.?[a-z\d](?:[a-z\d.-]*[a-z\d])?$/i;
-
-//===================================================================
-
-function getNodeEnvironment(): NodeEnvironment {
-  const value = process.env.NODE_ENV ?? 'development';
-
-  if (value === 'development' || value === 'test' || value === 'production') {
-    return value;
-  }
-
-  throw new Error('NODE_ENV must be development, test, or production.');
-}
 
 //===================================================================
 
@@ -96,44 +88,8 @@ function getTrustedProxyProvider(): TrustedProxyProvider {
 
 //===================================================================
 
-function getApiBaseUrl(nodeEnv: NodeEnvironment): string {
-  const configured = process.env.API_BASE_URL?.trim();
-  const value =
-    configured || (nodeEnv === 'production' ? '' : LOCAL_API_BASE_URL);
-
-  if (!value) {
-    throw new Error('API_BASE_URL is required in production.');
-  }
-
-  let url: URL;
-
-  try {
-    url = new URL(value);
-  } catch {
-    throw new Error('API_BASE_URL must be a valid absolute URL.');
-  }
-
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new Error('API_BASE_URL must use http or https.');
-  }
-
-  if (nodeEnv === 'production' && url.protocol !== 'https:') {
-    throw new Error('API_BASE_URL must use https in production.');
-  }
-
-  if (url.username || url.password || url.search || url.hash) {
-    throw new Error(
-      'API_BASE_URL must not contain credentials, query, or hash.'
-    );
-  }
-
-  return url.toString();
-}
-
-//===================================================================
-
 export function getNextApiServerEnvironment(): NextApiServerEnvironment {
-  const nodeEnv = getNodeEnvironment();
+  const nodeEnv = resolveNodeEnvironment(process.env.NODE_ENV);
   const bffProxySecret = process.env.BFF_PROXY_SECRET?.trim() || undefined;
   const authCookieDomain = getCookieDomain();
 
@@ -143,7 +99,7 @@ export function getNextApiServerEnvironment(): NextApiServerEnvironment {
 
   return {
     nodeEnv,
-    apiBaseUrl: getApiBaseUrl(nodeEnv),
+    apiBaseUrl: resolveApiBaseUrl(process.env.API_BASE_URL, nodeEnv),
     bffProxySecret,
     authCookieDomain,
     authCookieLegacyDomains: getLegacyCookieDomains(authCookieDomain),

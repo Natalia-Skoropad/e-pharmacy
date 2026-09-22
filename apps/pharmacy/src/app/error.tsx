@@ -1,12 +1,16 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { ErrorPage as SharedErrorPage } from '@e-pharmacy/ui/status-pages';
 
+import { reportRenderError } from '@/lib/errors/report-render-error';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 //===================================================================
 
 type ErrorPageProps = Readonly<{
+  error: Error & { digest?: string };
   reset: () => void;
 }>;
 
@@ -22,7 +26,11 @@ const STATUS_PAGE_IMAGE = {
 
 //===================================================================
 
-function ErrorPage({ reset }: ErrorPageProps) {
+function ErrorPage({ error, reset }: ErrorPageProps) {
+  useEffect(() => {
+    reportRenderError(error, 'route-boundary');
+  }, [error]);
+
   return (
     <SharedErrorPage
       title="Something went wrong, but your route is still safe"

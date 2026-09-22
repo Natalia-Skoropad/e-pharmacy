@@ -1,15 +1,4 @@
-import type { Metadata } from 'next';
-
 import { PharmacyShell } from '@/components/layout/PharmacyShell/PharmacyShell';
-
-//===================================================================
-
-export const metadata: Metadata = {
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
 
 //===================================================================
 

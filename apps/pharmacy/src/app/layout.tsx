@@ -18,7 +18,13 @@ export const metadata: Metadata = {
     default: 'Pharmacy Cabinet | E-PHARMACY',
     template: '%s | Pharmacy Cabinet',
   },
+
   description: 'Private pharmacy cabinet for E-PHARMACY partners.',
+
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 //===================================================================

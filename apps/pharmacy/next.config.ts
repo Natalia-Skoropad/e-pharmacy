@@ -1,10 +1,20 @@
 import type { NextConfig } from 'next';
 
+import {
+  resolveApiBaseUrl,
+  resolveNodeEnvironment,
+} from '../../packages/next-api/src/contracts/api-base-url';
+
 //===============================================================
 
-const apiBaseUrl = (
-  process.env.API_BASE_URL ?? 'http://localhost:4000'
-).replace(/\/+$/, '');
+const nodeEnv = resolveNodeEnvironment(process.env.NODE_ENV);
+
+const apiBaseUrl = resolveApiBaseUrl(process.env.API_BASE_URL, nodeEnv, {
+  // Next runs `next build` with NODE_ENV=production even for a local build.
+  // Allow only loopback HTTP here so local production-build verification can
+  // target the local API. Server runtime validation remains strict by default.
+  allowInsecureLoopbackInProduction: true,
+}).replace(/\/+$/, '');
 
 //===============================================================
 
