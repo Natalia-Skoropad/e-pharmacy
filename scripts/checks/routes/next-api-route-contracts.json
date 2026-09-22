@@ -317,9 +317,6 @@
     "backend": "/products/filters",
     "methods": {
       "GET": "public"
-    },
-    "backendAccess": {
-      "GET": "public"
     }
   },
   {
@@ -335,9 +332,6 @@
     "route": "/products/filters",
     "backend": "/products/filters",
     "methods": {
-      "GET": "public"
-    },
-    "backendAccess": {
       "GET": "public"
     }
   },

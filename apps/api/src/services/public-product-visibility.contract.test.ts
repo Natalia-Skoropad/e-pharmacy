@@ -21,6 +21,18 @@ test('public product endpoints are active-only while blocked lifecycle access is
     /productRoutes\.get\(\s*'\/'[\s\S]*?query:\s*publicProductsQuerySchema/
   );
 
+  const filtersStart = routes.indexOf("productRoutes.get(\n  '/filters'");
+  const managementStart = routes.indexOf("productRoutes.get(\n  '/management'");
+  assert.ok(filtersStart >= 0 && managementStart > filtersStart);
+
+  const filtersRoute = routes.slice(filtersStart, managementStart);
+  assert.match(filtersRoute, /productFiltersQuerySchema/);
+
+  assert.doesNotMatch(
+    filtersRoute,
+    /\bauthenticate\b|\boptionalAuthenticate\b|\bauthorizeRoles\b/
+  );
+
   assert.match(
     routes,
     /productRoutes\.get\(\s*'\/management'[\s\S]*?authenticate[\s\S]*?authorizeRoles\(USER_ROLES\.PHARMACY, USER_ROLES\.ADMIN\)[\s\S]*?managedProductsQuerySchema/

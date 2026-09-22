@@ -57,6 +57,60 @@ function normalizeBackendPath(prefix, localPath) {
 
 //===================================================================
 
+function getBackendRouteDescriptor(backendPath) {
+  const prefix = Object.keys(backendRouteFiles)
+    .sort((a, b) => b.length - a.length)
+    .find(
+      (candidate) =>
+        backendPath === candidate || backendPath.startsWith(`${candidate}/`)
+    );
+
+  if (!prefix) return null;
+
+  return {
+    prefix,
+    localPath: backendPath === prefix ? '/' : backendPath.slice(prefix.length),
+  };
+}
+
+//===================================================================
+
+function inferBackendAccessMode(source, method, localPath) {
+  const escapedPath = localPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const routePattern = new RegExp(
+    `\\b(\\w+Routes)\\.${method.toLowerCase()}\\(\\s*['"]${escapedPath}['"]`
+  );
+  const match = routePattern.exec(source);
+
+  if (!match) return undefined;
+
+  const routerName = match[1];
+  const blockEnd = source.indexOf('\n);', match.index);
+  const routeBlock = source.slice(
+    match.index,
+    blockEnd === -1 ? source.length : blockEnd + 3
+  );
+
+  if (/\boptionalAuthenticate\b/.test(routeBlock)) return 'optional';
+
+  const beforeRoute = source.slice(0, match.index);
+  const hasRouterAuthGuard = new RegExp(
+    `\\b${routerName}\\.use\\(\\s*authenticate\\s*\\)`
+  ).test(beforeRoute);
+
+  if (
+    hasRouterAuthGuard ||
+    /\bauthenticate\b/.test(routeBlock) ||
+    /\bauthorizeRoles\b/.test(routeBlock)
+  ) {
+    return 'private';
+  }
+
+  return 'public';
+}
+
+//===================================================================
+
 function inferAccessModes(source, methods) {
   if (source.includes('createPublicGetPrivatePostProxyRoute')) {
     return Object.fromEntries(
@@ -87,14 +141,36 @@ const contracts = JSON.parse(
   )
 );
 
+const backendAccessContracts = JSON.parse(
+  await readFile(
+    path.join(
+      root,
+      'scripts/checks/routes/backend-route-access-contracts.json'
+    ),
+    'utf8'
+  )
+);
+
+const backendAccessByHandler = new Map(
+  backendAccessContracts.flatMap((contract) =>
+    Object.entries(contract.methods).map(([method, access]) => [
+      `${method} ${contract.backend}`,
+      access,
+    ])
+  )
+);
+
 const contractByKey = new Map(
   contracts.map((contract) => [`${contract.app}:${contract.route}`, contract])
 );
 
 const backendHandlers = new Set();
+const backendSources = new Map();
 
 for (const [prefix, relativeFile] of Object.entries(backendRouteFiles)) {
   const source = await readFile(path.join(root, relativeFile), 'utf8');
+  backendSources.set(prefix, source);
+
   const matches = source.matchAll(
     /\b\w+Routes\.(get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]/g
   );
@@ -110,6 +186,31 @@ const violations = [];
 const discoveredKeys = new Set();
 let handlerCount = 0;
 let backendAccessAssertionCount = 0;
+
+for (const [handlerKey, expectedAccess] of backendAccessByHandler) {
+  const separator = handlerKey.indexOf(' ');
+  const method = handlerKey.slice(0, separator);
+  const backendPath = handlerKey.slice(separator + 1);
+  const descriptor = getBackendRouteDescriptor(backendPath);
+
+  if (!descriptor) {
+    violations.push(
+      `${handlerKey}: backend access contract does not map to a known backend route file`
+    );
+    continue;
+  }
+
+  const source = backendSources.get(descriptor.prefix);
+  const actualAccess = source
+    ? inferBackendAccessMode(source, method, descriptor.localPath)
+    : undefined;
+
+  if (actualAccess !== expectedAccess) {
+    violations.push(
+      `${handlerKey}: expected backend access ${expectedAccess}, found ${String(actualAccess)}`
+    );
+  }
+}
 
 //===================================================================
 
@@ -145,7 +246,6 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
     }
 
     const actualAccess = inferAccessModes(source, methods);
-    const expectedBackendAccess = contract.backendAccess ?? {};
 
     for (const method of expectedMethods) {
       if (actualAccess[method] !== contract.methods[method]) {
@@ -160,12 +260,16 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
         );
       }
 
-      if (expectedBackendAccess[method] !== undefined) {
+      const expectedBackendAccess = backendAccessByHandler.get(
+        `${method} ${contract.backend}`
+      );
+
+      if (expectedBackendAccess !== undefined) {
         backendAccessAssertionCount += 1;
 
-        if (expectedBackendAccess[method] !== contract.methods[method]) {
+        if (expectedBackendAccess !== contract.methods[method]) {
           violations.push(
-            `${rel}: ${method} BFF access ${contract.methods[method]} does not match explicit backend access ${expectedBackendAccess[method]}`
+            `${rel}: ${method} BFF access ${contract.methods[method]} does not match explicit backend access ${expectedBackendAccess}`
           );
         }
       }
@@ -291,6 +395,11 @@ if (violations.length) {
 
 //===================================================================
 
+const backendAccessContractLabel =
+  backendAccessContracts.length === 1
+    ? 'backend access contract'
+    : 'backend access contracts';
+
 console.log(
-  `Next API structural route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified, ${backendAccessAssertionCount} explicit access assertions verified).`
+  `Next API structural route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified, ${backendAccessContracts.length} ${backendAccessContractLabel} and ${backendAccessAssertionCount} BFF access comparisons verified).`
 );

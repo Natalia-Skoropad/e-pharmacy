@@ -1,0 +1,8 @@
+[
+  {
+    "backend": "/products/filters",
+    "methods": {
+      "GET": "public"
+    }
+  }
+]
