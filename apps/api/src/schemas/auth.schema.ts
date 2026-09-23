@@ -99,14 +99,23 @@ export const loginSchema = z.object({
   email: sharedEmailSchema,
   password: sharedRequiredPasswordSchema,
 
-  application: z.enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY]),
+  application: z.enum([
+    AUTH_APPLICATIONS.CLIENT,
+    AUTH_APPLICATIONS.PHARMACY,
+    AUTH_APPLICATIONS.ADMIN,
+  ]),
 });
 
 //===============================================================
 
 export const forgotPasswordSchema = z.object({
   email: sharedEmailSchema,
-  application: z.enum([AUTH_APPLICATIONS.CLIENT, AUTH_APPLICATIONS.PHARMACY]),
+
+  application: z.enum([
+    AUTH_APPLICATIONS.CLIENT,
+    AUTH_APPLICATIONS.PHARMACY,
+    AUTH_APPLICATIONS.ADMIN,
+  ]),
 });
 
 //===============================================================
@@ -130,7 +139,8 @@ export const updateProfileSchema = z
   .refine(
     (data) =>
       Object.entries(data).some(
-        ([key, value]) => key !== 'expectedRevision' && hasMeaningfulValue(value)
+        ([key, value]) =>
+          key !== 'expectedRevision' && hasMeaningfulValue(value)
       ),
     { message: VALIDATION_MESSAGES.object.atLeastOneField }
   );

@@ -274,6 +274,14 @@ JWT_RESET_EXPIRES_IN=15m
 CLIENT_APP_URL=http://localhost:3000
 PHARMACY_APP_URL=http://localhost:3002
 ADMIN_APP_URL=http://localhost:3001
+
+# One-time first-admin bootstrap only
+ADMIN_OWNER_NAME=
+ADMIN_OWNER_EMAIL=
+ADMIN_OWNER_PASSWORD=
+ADMIN_OWNER_PHONE=
+ADMIN_OWNER_ADDRESS=
+
 TRUSTED_APP_ORIGINS=
 
 SMTP_HOST=smtp-relay.brevo.com
@@ -297,6 +305,8 @@ From the monorepo root:
 ```bash
 pnpm install
 pnpm seed:api
+# Run once when bootstrapping the first admin account:
+# pnpm seed:admin-owner
 pnpm dev:api
 ```
 
@@ -313,6 +323,7 @@ From the monorepo root:
 ```bash
 pnpm dev:api
 pnpm seed:api
+pnpm seed:admin-owner
 pnpm build:api
 pnpm type-check:api
 pnpm check:api
@@ -323,11 +334,21 @@ From `apps/api`:
 ```bash
 pnpm dev
 pnpm seed
+pnpm seed:admin-owner
 pnpm build
 pnpm start
 pnpm type-check
 pnpm lint
 ```
+
+### First admin bootstrap
+
+Public admin registration is intentionally unavailable. Configure the temporary
+`ADMIN_OWNER_*` values and run `pnpm seed:admin-owner` once to create the first
+active admin account. The command is not an HTTP endpoint, does not create a
+pharmacy/client profile, and does not overwrite credentials on a repeated run
+for the same admin. Remove the bootstrap secrets from the deployment environment
+after the account exists.
 
 ## Deployment Notes
 

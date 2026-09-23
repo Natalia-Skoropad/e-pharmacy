@@ -171,7 +171,10 @@ function getOptionalNumberListEnv(name: string): number[] {
 
 const CLIENT_APP_URL = getClientAppUrl();
 const PHARMACY_APP_URL = process.env.PHARMACY_APP_URL?.trim() || undefined;
-const ADMIN_APP_URL = process.env.ADMIN_APP_URL?.trim() || undefined;
+
+const ADMIN_APP_URL =
+  process.env.ADMIN_APP_URL?.trim() ||
+  (NODE_ENV === 'production' ? undefined : LOCAL_ADMIN_URL);
 
 const TRUSTED_APP_ORIGINS = buildTrustedAppOrigins({
   appUrls: [CLIENT_APP_URL, PHARMACY_APP_URL, ADMIN_APP_URL],

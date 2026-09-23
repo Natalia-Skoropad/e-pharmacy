@@ -49,6 +49,7 @@ import {
 
 import { comparePassword, hashPassword } from '../utils/password';
 import { logger } from '../utils/logger';
+import { resolvePasswordResetAppUrl } from '../utils/password-reset-app-url';
 import { buildPasswordResetUrl } from '../utils/password-reset-url';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { toAuthUserResponse } from '../utils/userResponse';
@@ -866,32 +867,17 @@ export async function assertActiveSessionService(
 
 //===============================================================
 
-function getPasswordResetAppUrl(
-  application: ForgotPasswordInput['application']
-): string {
-  const appUrls = {
-    client: env.CLIENT_APP_URL,
-    pharmacy: env.PHARMACY_APP_URL || env.CLIENT_APP_URL,
-  } satisfies Record<ForgotPasswordInput['application'], string | undefined>;
-
-  const appUrl = appUrls[application];
-
-  if (!appUrl) {
-    throw new Error(
-      `Password reset URL is not configured for application: ${application}`
-    );
-  }
-
-  return appUrl;
-}
-
-//===============================================================
-
 function createPasswordResetUrl(
   token: string,
   application: ForgotPasswordInput['application']
 ): string {
-  return buildPasswordResetUrl(getPasswordResetAppUrl(application), token);
+  const appUrl = resolvePasswordResetAppUrl(application, {
+    client: env.CLIENT_APP_URL,
+    pharmacy: env.PHARMACY_APP_URL,
+    admin: env.ADMIN_APP_URL,
+  });
+
+  return buildPasswordResetUrl(appUrl, token);
 }
 
 //===============================================================

@@ -35,13 +35,15 @@ test('login validates email but does not re-apply registration password rules', 
 //===============================================================
 
 test('forgot and reset password schemas enforce application, token and new password', () => {
-  assert.equal(
-    forgotPasswordSchema.safeParse({
-      email: 'user@example.com',
-      application: 'client',
-    }).success,
-    true
-  );
+  for (const application of ['client', 'pharmacy', 'admin'] as const) {
+    assert.equal(
+      forgotPasswordSchema.safeParse({
+        email: 'user@example.com',
+        application,
+      }).success,
+      true
+    );
+  }
 
   assert.equal(
     forgotPasswordSchema.safeParse({ email: 'user@example.com' }).success,
@@ -67,10 +69,12 @@ test('forgot and reset password schemas enforce application, token and new passw
 
 test('profile updates reject payloads without meaningful values', () => {
   assert.equal(updateProfileSchema.safeParse({}).success, false);
+
   assert.equal(
     updateProfileSchema.safeParse({ address: '   ' }).success,
     false
   );
+
   assert.equal(
     updateProfileSchema.safeParse({ pictureUrl: null }).success,
     false

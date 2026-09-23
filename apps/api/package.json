@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node ../../scripts/dev/run-with-bff-secret.mjs tsx watch src/server.ts",
     "seed": "node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/seed.ts",
+    "seed:admin-owner": "node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/seed-admin-owner.ts",
     "build": "tsc && node src/scripts/copy-templates.mjs",
     "start": "node dist/server.js",
     "type-check": "tsc --noEmit",

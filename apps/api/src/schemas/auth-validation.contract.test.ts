@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { forgotPasswordSchema, loginSchema, registerSchema } from './auth.schema';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+} from './auth.schema';
 
 //===============================================================
 
@@ -20,6 +24,7 @@ test('optional registration address normalizes empty values', () => {
     registerSchema.parse({ ...basePayload, address: '' }).address,
     undefined
   );
+
   assert.equal(
     registerSchema.parse({ ...basePayload, address: '   ' }).address,
     undefined
@@ -43,6 +48,7 @@ test('registration address enforces boundaries after trimming', () => {
     registerSchema.safeParse({ ...basePayload, address: '123456789' }).success,
     false
   );
+
   assert.equal(
     registerSchema.safeParse({ ...basePayload, address: 'a'.repeat(201) })
       .success,
@@ -61,7 +67,7 @@ test('public registration rejects the admin role', () => {
 
 //===============================================================
 
-test('login requires an explicit public application binding', () => {
+test('login requires an explicit supported application binding', () => {
   assert.equal(
     loginSchema.safeParse({
       email: 'user@example.com',
@@ -70,41 +76,31 @@ test('login requires an explicit public application binding', () => {
     false
   );
 
+  for (const application of ['client', 'pharmacy', 'admin'] as const) {
+    assert.equal(
+      loginSchema.safeParse({
+        email: 'user@example.com',
+        password: 'password1',
+        application,
+      }).success,
+      true
+    );
+  }
+
   assert.equal(
     loginSchema.safeParse({
       email: 'user@example.com',
       password: 'password1',
-      application: 'client',
+      application: 'supplier',
     }).success,
-    true
+    false
   );
 });
 
 //===============================================================
 
-test('public password recovery does not accept the future admin application', () => {
-  const adminAttempts = [
-    forgotPasswordSchema.safeParse({
-      email: 'admin@example.com',
-      application: 'admin',
-    }),
-    forgotPasswordSchema.safeParse({
-      email: 'unknown-admin@example.com',
-      application: 'admin',
-    }),
-  ];
-
-  assert.equal(adminAttempts[0].success, false);
-  assert.equal(adminAttempts[1].success, false);
-
-  if (!adminAttempts[0].success && !adminAttempts[1].success) {
-    assert.deepEqual(
-      adminAttempts[0].error.issues.map(({ code, path }) => ({ code, path })),
-      adminAttempts[1].error.issues.map(({ code, path }) => ({ code, path }))
-    );
-  }
-
-  for (const application of ['client', 'pharmacy'] as const) {
+test('password recovery accepts every supported auth application', () => {
+  for (const application of ['client', 'pharmacy', 'admin'] as const) {
     assert.equal(
       forgotPasswordSchema.safeParse({
         email: 'user@example.com',
@@ -113,4 +109,12 @@ test('public password recovery does not accept the future admin application', ()
       true
     );
   }
+
+  assert.equal(
+    forgotPasswordSchema.safeParse({
+      email: 'user@example.com',
+      application: 'supplier',
+    }).success,
+    false
+  );
 });

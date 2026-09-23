@@ -20,14 +20,14 @@ export type RegisterPayload = {
 export type LoginPayload = {
   email: string;
   password: string;
-  application: Extract<AuthApplication, 'client' | 'pharmacy'>;
+  application: AuthApplication;
 };
 
 //===================================================================
 
 export type ForgotPasswordPayload = {
   email: string;
-  application: Extract<AuthApplication, 'client' | 'pharmacy'>;
+  application: AuthApplication;
 };
 
 export type ResetPasswordPayload = {

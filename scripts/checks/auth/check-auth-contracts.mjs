@@ -227,11 +227,13 @@ for (const [frontendType, backendSchema] of [
   );
 }
 
-assert.match(frontendPayloads, /application:\s*Extract<AuthApplication/);
+assert.match(frontendPayloads, /application:\s*AuthApplication/);
+assert.doesNotMatch(frontendPayloads, /application:\s*Extract<AuthApplication/);
 
 const loginSchemaBlock = backendAuthSchema.match(
   /export const loginSchema = z\.object\(\{([\s\S]*?)\n\}\);/
 )?.[1];
+
 assert.ok(loginSchemaBlock, 'Could not parse loginSchema');
 assert.match(loginSchemaBlock, /application:\s*z\.enum/);
 assert.doesNotMatch(loginSchemaBlock, /application:[\s\S]*?\.optional\(\)/);
@@ -239,8 +241,32 @@ assert.doesNotMatch(loginSchemaBlock, /application:[\s\S]*?\.optional\(\)/);
 const forgotPasswordSchemaBlock = backendAuthSchema.match(
   /export const forgotPasswordSchema = z\.object\(\{([\s\S]*?)\n\}\);/
 )?.[1];
+
 assert.ok(forgotPasswordSchemaBlock, 'Could not parse forgotPasswordSchema');
-assert.doesNotMatch(forgotPasswordSchemaBlock, /AUTH_APPLICATIONS\.ADMIN/);
+
+for (const applicationName of ['CLIENT', 'PHARMACY', 'ADMIN']) {
+  assert.match(
+    loginSchemaBlock,
+    new RegExp(`AUTH_APPLICATIONS\\.${applicationName}`),
+    `loginSchema must support ${applicationName.toLowerCase()} application`
+  );
+
+  assert.match(
+    forgotPasswordSchemaBlock,
+    new RegExp(`AUTH_APPLICATIONS\\.${applicationName}`),
+    `forgotPasswordSchema must support ${applicationName.toLowerCase()} application`
+  );
+}
+
+assert.match(backendAuthSchema, /registerSchema[\s\S]*?USER_ROLES\.CLIENT/);
+assert.match(backendAuthSchema, /registerSchema[\s\S]*?USER_ROLES\.PHARMACY/);
+
+const registerSchemaBlock = backendAuthSchema.slice(
+  backendAuthSchema.indexOf('export const registerSchema'),
+  backendAuthSchema.indexOf('export const createPharmacyUserSchema')
+);
+
+assert.doesNotMatch(registerSchemaBlock, /USER_ROLES\.ADMIN/);
 
 assert.match(frontendPayloads, /role\?:\s*Extract<UserRole/);
 
