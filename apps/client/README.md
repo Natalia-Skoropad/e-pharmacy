@@ -549,6 +549,7 @@ Create an `.env.local` file inside `apps/client`. The source of truth for client
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL=false
 NEXT_PUBLIC_PHARMACY_APP_URL=http://localhost:3002
+NEXT_PUBLIC_ADMIN_APP_URL=http://localhost:3001
 API_BASE_URL=http://localhost:4000
 BFF_PROXY_SECRET=
 ```
@@ -560,10 +561,11 @@ BFF_PROXY_SECRET=
 | `NEXT_PUBLIC_SITE_URL`         | canonical URLs, metadata, sitemap, robots, absolute public URLs                                                            | `http://localhost:3000` |
 | `NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL` | explicit opt-in for running a local production server with a localhost canonical origin; `next build` recognizes the build phase automatically | `false` |
 | `NEXT_PUBLIC_PHARMACY_APP_URL` | pharmacy application base URL used for trusted cross-application redirects                                                 | `http://localhost:3002` |
+| `NEXT_PUBLIC_ADMIN_APP_URL`    | admin application base URL used for trusted cross-application cabinet navigation                                          | `http://localhost:3001` |
 | `API_BASE_URL`                 | backend URL used only by Next.js server-side data fetches and BFF route handlers                                           | `http://localhost:4000` |
 | `BFF_PROXY_SECRET`             | server-only shared secret sent by Next.js BFF handlers to the Express API; local `pnpm dev` auto-provisions it when absent | `local-secret`          |
 
-For production, replace these values with the deployed client, pharmacy, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured pharmacy base path is preserved when `/pharmacy/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required for deployed production runtimes and must be an origin-only HTTPS URL such as `https://client.example.com`; application base paths, credentials, query strings, and hashes are rejected. `next build` recognizes Next.js `phase-production-build`, so a local optimized build can complete without weakening the deployed runtime check. Set `NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL=true` only when intentionally running a local production server against localhost. Do not enable that flag in deployed production.
+For production, replace these values with the deployed client, pharmacy, admin, and API URLs. `NEXT_PUBLIC_PHARMACY_APP_URL` must be an HTTPS application base URL without credentials, query, hash, or the client origin. A configured pharmacy base path is preserved when `/pharmacy/dashboard` is appended. `NEXT_PUBLIC_ADMIN_APP_URL` follows the same fail-closed URL rules and must point to the admin application base URL; do not include `/admin/dashboard`. A configured admin base path is preserved when `/admin/dashboard` is appended. Invalid production configuration is shown as a controlled application error and never falls back silently to the client home page. `NEXT_PUBLIC_SITE_URL` is required for deployed production runtimes and must be an origin-only HTTPS URL such as `https://client.example.com`; application base paths, credentials, query strings, and hashes are rejected. `next build` recognizes Next.js `phase-production-build`, so a local optimized build can complete without weakening the deployed runtime check. Set `NEXT_PUBLIC_ALLOW_LOCAL_PRODUCTION_SITE_URL=true` only when intentionally running a local production server against localhost. Do not enable that flag in deployed production.
 
 For deployments, set the same explicit `BFF_PROXY_SECRET` value in the client app and API app. Local `pnpm dev` commands share an auto-provisioned development secret when the variable is not configured.
 

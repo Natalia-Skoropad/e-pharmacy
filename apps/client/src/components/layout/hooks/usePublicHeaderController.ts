@@ -7,7 +7,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import type { CurrentPharmacySummary } from '@e-pharmacy/types/pharmacies';
 
 import { getCurrentPharmacySummary } from '@/lib/api/browser';
-import { getPharmacyDashboardUrl } from '@/lib/auth';
+import { getAdminDashboardUrl, getPharmacyDashboardUrl } from '@/lib/auth';
 import { ROUTES } from '@/lib/routes';
 
 import { runPublicLogoutLifecycle } from './public-logout-lifecycle';
@@ -29,10 +29,13 @@ export function usePublicHeaderController() {
 
   const isClientMode = authState.mode === 'authenticated-client';
   const isPharmacyMode = authState.mode === 'authenticated-pharmacy';
+  const isAdminMode = authState.mode === 'authenticated-admin';
 
   const pharmacyDashboardUrl = isPharmacyMode
     ? getPharmacyDashboardUrl()
     : null;
+
+  const adminDashboardUrl = isAdminMode ? getAdminDashboardUrl() : null;
 
   const pharmacyUserId = isPharmacyMode ? authState.user.id : null;
   const pharmacySummary =
@@ -76,7 +79,9 @@ export function usePublicHeaderController() {
     authState,
     isClientMode,
     isPharmacyMode,
+    isAdminMode,
     pharmacyDashboardUrl,
+    adminDashboardUrl,
     pharmacySummary,
     isLogoutPending,
     logout,

@@ -116,13 +116,13 @@
   border-radius: var(--radius-pill);
 }
 
-.pharmacyCabinetBadge {
+.cabinetBadge {
   background-color: var(--color-white-alpha-20);
   border-color: var(--color-white-alpha-48);
 }
 
-.pharmacyCabinetBadge:hover,
-.pharmacyCabinetBadge:focus-visible {
+.cabinetBadge:hover,
+.cabinetBadge:focus-visible {
   background-color: var(--color-white-alpha-28);
   border-color: var(--color-white-alpha-72);
 }

@@ -1,4 +1,13 @@
 export {
+  getAdminAppConfiguration,
+  getAdminDashboardUrl,
+  isAdminAppConfigurationError,
+  requireAdminAppConfiguration,
+  resolveAdminAppConfiguration,
+  AdminAppConfigurationError,
+} from './admin-app-config';
+
+export {
   getPharmacyDashboardUrl,
   resolveAuthenticatedRouteForClientApp,
   resolveLoginDestination,

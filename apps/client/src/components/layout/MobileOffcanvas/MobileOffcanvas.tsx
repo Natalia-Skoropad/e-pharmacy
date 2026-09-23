@@ -151,7 +151,7 @@ function MobileOffcanvas({
 
         {controller.isPharmacyMode && controller.pharmacyDashboardUrl ? (
           <UserBadge
-            className={css.pharmacyCabinetBadge}
+            className={css.cabinetBadge}
             href={controller.pharmacyDashboardUrl}
             name={controller.pharmacySummary?.name ?? 'Pharmacy'}
             pictureUrl={controller.pharmacySummary?.imageUrl}
@@ -182,10 +182,30 @@ function MobileOffcanvas({
           <p className={css.accountNotice}>Account access is blocked.</p>
         ) : null}
 
-        {authState.mode === 'authenticated-admin' ? (
-          <p className={css.accountNotice}>
-            Use the admin application for account tools.
-          </p>
+        {authState.mode === 'authenticated-admin' &&
+        controller.adminDashboardUrl ? (
+          <UserBadge
+            className={css.cabinetBadge}
+            href={controller.adminDashboardUrl}
+            name={authState.user.name}
+            pictureUrl={authState.user.pictureUrl}
+            meta="Admin cabinet"
+            fallbackLabel="Admin"
+            variant="dark"
+            onClick={onClose}
+            renderLink={({ href, className, children, onClick }) => (
+              <a className={className} href={href} onClick={onClick}>
+                {children}
+              </a>
+            )}
+          />
+        ) : null}
+
+        {authState.mode === 'authenticated-admin' &&
+        !controller.adminDashboardUrl ? (
+          <Button type="button" variant="secondary" fullWidth disabled>
+            Admin cabinet unavailable
+          </Button>
         ) : null}
 
         {authState.mode === 'authenticated-unsupported' ? (

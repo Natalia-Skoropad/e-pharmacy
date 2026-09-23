@@ -139,7 +139,7 @@
   }
 }
 
-.pharmacyCabinetBadge {
+.cabinetBadge {
   flex: 0 1 auto;
   white-space: nowrap;
 }
