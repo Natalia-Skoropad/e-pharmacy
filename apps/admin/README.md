@@ -1,92 +1,44 @@
 # E-PHARMACY Admin
 
-Planned admin dashboard for the E-PHARMACY ecosystem.
+Private administration application on **http://localhost:3001**.
 
-## Current Status
+**Status:** application shell implemented; business modules pending.
 
-This app is not implemented yet.
+## Local development
 
-The current working parts of the project are:
-
-- `apps/client` — client storefront
-- `apps/api` — shared backend API foundation
-- `packages/*` — lightweight shared workspace packages
-
-This folder is kept as the planned app boundary for future development.
-
-## Planned Purpose
-
-The admin app will be a private dashboard for platform-level management.
-
-Planned administrators will be able to:
-
-- View dashboard statistics
-- Manage orders
-- Manage products
-- Manage clients
-- Manage suppliers
-- Use filters, tables, pagination, and modal forms
-- Support internal moderation and management workflows
-
-## Planned Tech Stack
-
-The expected frontend stack is aligned with the client app:
-
-- Next.js
-- React
-- TypeScript
-- CSS Modules
-- Shared workspace packages where reuse is useful
-
-The admin app should use the same shared backend API from `apps/api`. It should not introduce a separate duplicated backend.
-
-## Planned Structure
-
-The final structure may change during implementation, but the expected direction is:
-
-```txt
-apps/admin/
-  public/
-  src/
-    app/
-      login/
-      dashboard/
-      orders/
-      products/
-      clients/
-      suppliers/
-    components/
-    hooks/
-    lib/
-    providers/
-    services/
-    styles/
-    types/
-```
-
-## Planned Backend Areas
-
-The existing API can later be expanded with admin modules:
-
-- Admin auth/current user
-- Dashboard statistics
-- Orders management
-- Products management
-- Clients management
-- Suppliers CRUD
-- Moderation workflows
-
-## Local Development
-
-There is no runnable admin app package yet, so there is currently no `pnpm dev:admin` script.
-
-When the app is implemented, the expected monorepo flow will be similar to:
+From the repository root:
 
 ```bash
 pnpm install
 pnpm dev:admin
 ```
 
-## Note
+Use `.env.example` as the source for an optional local `.env.local`.
+The shared backend remains `apps/api`. Future browser requests will use
+same-origin `/api/*` BFF routes; `API_BASE_URL` is server-only.
+Public admin registration is not planned.
 
-This README is intentionally short because the app is roadmap-only. Detailed implementation documentation should be added after real code exists.
+## Stage 1 scope
+
+- Server Component root layout and shared `@e-pharmacy/ui` global styles.
+- Client `AdminProviders` boundary with the shared `ToastProvider`.
+- Server redirect from `/` to the app-local `/admin/dashboard` route constant.
+- `noindex, nofollow` metadata and `robots.txt` with `Disallow: /`.
+- No sitemap, deliberately. These crawler rules do not provide authorization.
+
+The dashboard destination currently returns 404. This is expected at this stage.
+Custom error/loading pages, auth, BFF routes, cabinet navigation and business
+modules belong to later stages.
+
+## Validation
+
+```bash
+pnpm check:admin
+pnpm check:before-deploy
+```
+
+`check:admin` runs structural checks, lint, type checking, available tests and
+production build. The admin test commands explicitly allow an empty test set
+until tests are introduced; other applications retain the default strict behavior.
+Next generates `next-env.d.ts` during type generation/build;
+do not add application declarations to that generated file.

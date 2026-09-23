@@ -6,11 +6,17 @@ import { spawnSync } from 'node:child_process';
 
 const rawArguments = process.argv.slice(2);
 const roots = [];
+let allowEmpty = false;
 let matchSuffixes = ['.test.ts', '.test.tsx'];
 
 //===================================================================
 
 for (const argument of rawArguments) {
+  if (argument === '--allow-empty') {
+    allowEmpty = true;
+    continue;
+  }
+
   if (argument.startsWith('--match=')) {
     matchSuffixes = argument
       .slice('--match='.length)
@@ -60,6 +66,13 @@ async function findTests(directory) {
 const tests = (await Promise.all(roots.map((root) => findTests(resolve(root)))))
   .flat()
   .sort();
+
+if (tests.length === 0 && allowEmpty) {
+  console.log(
+    'No matching tests yet; explicitly allowed for this application shell.'
+  );
+  process.exit(0);
+}
 
 if (tests.length === 0) {
   console.error(

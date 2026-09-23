@@ -1,6 +1,6 @@
 # E-PHARMACY
 
-E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a pharmacy cabinet, a shared backend API, shared workspace packages, and a planned admin application boundary.
+E-PHARMACY is a full-stack e-commerce project for an online pharmacy. The project is organized as a monorepo with a client storefront, a pharmacy cabinet, a shared backend API, shared workspace packages, and an admin application shell.
 
 ## Live Demo
 
@@ -14,13 +14,10 @@ Implemented:
 - `apps/client` — client storefront
 - `apps/pharmacy` — pharmacy cabinet
 - `apps/api` — shared Express/MongoDB API
+- `apps/admin` — admin application shell (stage 1; business modules pending)
 - `packages/*` — shared types, utilities, validation, config, auth, API helpers, hooks, and UI contracts
 
-Planned:
-
-- `apps/admin` — admin dashboard
-
-Admin routes and navigation are intentionally created only together with a runnable admin application.
+Admin auth, cabinet navigation and business modules will be implemented in later stages.
 
 ## Main Features
 
@@ -101,7 +98,7 @@ apps/
   client/    # client storefront
   pharmacy/  # pharmacy cabinet
   api/       # shared backend API
-  admin/     # planned admin dashboard
+  admin/     # admin application shell
 
 packages/
   api-client/
@@ -141,6 +138,7 @@ Use app-level examples as the source of truth:
 ```txt
 apps/client/.env.example
 apps/pharmacy/.env.example
+apps/admin/.env.example
 apps/api/.env.example
 ```
 
@@ -181,6 +179,7 @@ Create env files:
 ```txt
 apps/client/.env.local
 apps/pharmacy/.env.local
+apps/admin/.env.local
 apps/api/.env
 ```
 
@@ -201,6 +200,15 @@ Run the pharmacy cabinet:
 ```bash
 pnpm dev:pharmacy
 ```
+
+Run the admin application shell:
+
+```bash
+pnpm dev:admin
+```
+
+Admin: http://localhost:3001. `/` redirects to `/admin/dashboard`, which currently
+returns 404 as expected for stage 1.
 
 Seed the database when needed:
 
@@ -251,6 +259,7 @@ Useful scoped checks:
 ```bash
 pnpm check:client
 pnpm check:pharmacy
+pnpm check:admin
 pnpm check:api
 ```
 
@@ -258,7 +267,8 @@ pnpm check:api
 
 The strongest completed parts of the project are the client storefront, pharmacy cabinet, backend API, SEO routing, cookie-based auth flow, cart/checkout/order logic, and shared monorepo structure.
 
-The admin app remains a planned ecosystem extension and does not publish speculative routes or navigation contracts.
+The admin application shell uses shared UI styles and a Toast provider boundary,
+with no auth or business logic yet. It disables indexing and intentionally has no sitemap.
 
 ## Canonical cart, stock, and order rules
 
