@@ -153,10 +153,11 @@ assert.doesNotMatch(
 
 assert.doesNotMatch(adminLayout, /['"]use client['"]/);
 assert.match(adminLayout, /AdminProtectedRoute/);
+assert.match(adminLayout, /AdminShell/);
 
 assert.match(
   adminLayout,
-  /<AdminProtectedRoute>\{children\}<\/AdminProtectedRoute>/
+  /<AdminProtectedRoute>[\s\S]*<AdminShell>\{children\}<\/AdminShell>[\s\S]*<\/AdminProtectedRoute>/
 );
 
 assert.match(routeAccess, /user\.role === ['"]admin['"]/);

@@ -1,0 +1,38 @@
+.shell {
+  min-height: 100vh;
+  background: var(--gradient-page-bg);
+}
+
+.container {
+  min-width: 0;
+  padding-block: 20px 64px;
+}
+
+.layout {
+  display: block;
+  min-width: 0;
+}
+
+.workspace,
+.content {
+  width: 100%;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 1440px) {
+  .container {
+    padding-block: 32px 72px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+    transition: grid-template-columns var(--transition-base);
+  }
+
+  .layoutCollapsed {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+}

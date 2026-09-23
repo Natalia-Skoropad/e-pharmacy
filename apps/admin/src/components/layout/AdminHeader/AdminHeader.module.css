@@ -1,0 +1,42 @@
+.header {
+  position: relative;
+  z-index: var(--z-sticky);
+  padding-bottom: 20px;
+}
+
+.topbar {
+  display: flex;
+  overflow: visible;
+}
+
+.actionsGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fullscreenDesktop,
+.userDropdownDesktop {
+  display: none;
+}
+
+.fullscreenDesktop {
+  align-items: center;
+}
+
+.userBadge {
+  min-width: 120px;
+}
+
+@media only screen and (min-width: 768px) {
+  .fullscreenDesktop {
+    display: inline-flex;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .userDropdownDesktop {
+    display: block;
+  }
+}

@@ -21,8 +21,9 @@ function resolveApplicationAlias(specifier, parentURL) {
   }
 
   const parentPath = fileURLToPath(parentURL).replaceAll('\\', '/');
+
   const applicationMatch = parentPath.match(
-    /\/(apps\/(?:client|pharmacy))\/src\//
+    /\/(apps\/(?:client|pharmacy|admin))\/src\//
   );
 
   if (!applicationMatch) return null;
@@ -126,7 +127,7 @@ export async function load(url, context, nextLoad) {
     return {
       format: 'module',
       source:
-        "export default new Proxy({}, { get: (_target, key) => String(key) });",
+        'export default new Proxy({}, { get: (_target, key) => String(key) });',
       shortCircuit: true,
     };
   }
