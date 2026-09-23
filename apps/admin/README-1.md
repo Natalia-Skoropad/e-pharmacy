@@ -1,1839 +1,1745 @@
-Привіт) 💙💛
-Я переглянула `e-pharmacy.zip` і твоє ТЗ. Тут дуже важливо **не починати з Dashboard або таблиці аптек**. Якщо зараз одразу малювати сторінки admin, ми швидко отримаємо третю копію pharmacy-коду, тільки з іншими назвами. А потім на сцену вийде старий добрий «чому я змінила кнопку в одному місці, а треба ще в чотирьох?» 😄
+Так. Перший етап я б зробила **дуже вузьким і технічним**: після нього `apps/admin` уже є повноцінним третім frontend-застосунком монорепозиторію, але **ще не містить auth, Dashboard, меню, профілю чи business logic**.
 
-У проєкті вже є дуже хороший фундамент. `apps/admin` поки фактично порожній — лише `README.md`, зате більшість UI вже винесена в shared packages. Тому admin я б будувала в такій послідовності.
+Я звірила це з поточним `e-pharmacy.zip`. Зараз `apps/admin` фактично містить лише `README.md`; `pnpm-workspace.yaml` уже має `apps/*`, тому окремо реєструвати admin у workspace не потрібно. Для admin уже зарезервований локальний порт **3001**, тоді як client — `3000`, pharmacy — `3002`, API — `4000`.
 
-## 1. Що я вже бачу по поточному проєкту
-
-Хороша новина: **дуже багато нового створювати не потрібно**.
-
-У `@e-pharmacy/ui` вже є:
-
-- `UserBadge`;
-- `CabinetTopBar`;
-- `CabinetSidebar`;
-- `SideMenu`;
-- `BurgerButton`;
-- `DataTable`;
-- `SearchInput`;
-- `FiltersButton`;
-- `FilterDrawer`;
-- `RowsPerPageSelect`;
-- пагінація;
-- `StatsCard` / `StatsGrid`;
-- `Tabs`;
-- `StatusBadge`;
-- всі основні inputs;
-- `DocumentUpload`;
-- `Comments`;
-- `PictureCard`;
-- модалки;
-- `PageLoader`;
-- `ErrorPage`;
-- `NotFoundPage`;
-- breadcrumbs.
-
-Тобто твоє правило **«не придумуємо велосипед»** тут цілком реально виконати.
-
-Більше того, `UserBadge`, який ти просиш зробити окремим для pharmacy/admin/client header, **вже існує як shared-компонент**:
-
-`packages/ui/src/data-display/UserBadge/UserBadge.tsx`
-
-Його не треба створювати вдруге.
-
-А ось кілька речей справді треба доробити перед admin:
-
-| Що                        | Стан зараз                                    | Що робимо                                 |
-| ------------------------- | --------------------------------------------- | ----------------------------------------- |
-| User badge                | Уже shared                                    | Просто перевикористовуємо                 |
-| Sidebar / TopBar / Burger | Уже shared                                    | Перевикористовуємо                        |
-| Fullscreen button         | Зашитий у `PharmacyHeader`                    | Виносимо в shared component               |
-| User dropdown у header    | Pharmacy-specific                             | Робимо configurable shared component      |
-| Nested menu               | Shared menu поки плоске                       | Додаємо `children` для Reviews/Settings   |
-| Auth layout               | Є в client                                    | Виносимо reusable visual layer            |
-| Profile                   | Pharmacy-компонент ~дуже великий і монолітний | Розбиваємо на reusable profile blocks     |
-| Categories                | Захардкоджені                                 | Треба перевести на DB до адмінського CRUD |
-| Permissions               | Є лише `role=admin`                           | Треба нормальний permission layer         |
-| Audit history             | Немає                                         | Треба закласти до CRUD admin              |
-
-І ще два важливі моменти з backend.
-
-### Поточний admin auth ще не завершений
-
-`AuthApplication` уже дозволяє:
-
-```ts
-'client' | 'pharmacy' | 'admin';
-```
-
-але `LoginPayload`, `ForgotPasswordPayload` та backend Zod-схеми зараз дозволяють лише:
-
-```ts
-'client' | 'pharmacy';
-```
-
-Тобто admin auth був передбачений архітектурно, але ще не підключений.
-
-### У backend зараз є неправильний для нового ТЗ endpoint
-
-Є:
-
-```text
-POST /admin/pharmacies
-```
-
-який створює pharmacy user + аптеку.
-
-За новими правилами він нам **не потрібен**.
-
-Власник реєструється сам → аптека створюється через pharmacy/client flow → admin тільки переглядає, модерує та керує.
-
-Я б цей legacy-напрямок прибрала ще до реалізації UI admin.
+Нижче я б зафіксувала ЕТАП 1 саме так.
 
 ---
 
-# 2. Якою має бути архітектура admin
+# ЕТАП 1 — створення фундаменту `apps/admin`
 
-Я б залишила той самий підхід, який уже добре працює:
+## 1. Мета етапу
+
+Не реалізовувати функціонал адміністратора.
+
+На цьому етапі потрібно отримати окремий runnable Next.js application:
 
 ```text
-Browser
-   ↓
-apps/admin /api/*
-   ↓
-same-origin BFF
-   ↓
-apps/api
-   ↓
-MongoDB
+apps/admin
 ```
 
-Admin не повинен напряму ходити в backend.
+який:
 
-Тобто:
+- є повноцінним workspace package;
+- запускається через `pnpm dev:admin`;
+- працює на `http://localhost:3001`;
+- збирається окремо;
+- проходить ESLint;
+- проходить TypeScript;
+- використовує ті самі shared packages, що client/pharmacy;
+- має Server Component root layout;
+- має глобальні shared UI styles;
+- має базовий provider stack;
+- є повністю закритим від пошукової індексації;
+- має root redirect;
+- входить у `pnpm check:before-deploy`;
+- має structural checks;
+- не містить дубльованих компонентів із pharmacy/client;
+- не містить auth/business logic.
 
-- JWT не читається browser-кодом;
-- auth через `HttpOnly`;
-- приватні responses — `no-store`;
-- authorization — на backend;
-- frontend permissions потрібні для UX, але **ніколи не є security boundary**.
-
-Admin працюватиме на `3001` — це, до речі, вже передбачено поточною конфігурацією API через `ADMIN_APP_URL`.
+Тобто після етапу маємо не «адмінку», а **правильний каркас для адмінки**.
 
 ---
 
-# 3. Спочатку треба зафіксувати маршрути
-
-Я б відразу заклала приблизно таку структуру:
-
-```text
-apps/admin/src/app/
-
-  login/
-  password-recovery/
-  reset-password/
-
-  admin/
-    layout.tsx
-
-    dashboard/
-    profile/
-
-    pharmacy-owners/
-      [[...filters]]/
-      [ownerId]/
-
-    pharmacies/
-      [[...filters]]/
-      [pharmacyId]/
-
-    products/
-      [[...filters]]/
-      new/
-      [productId]/
-      [productId]/edit/
-
-    product-requests/
-      [[...filters]]/
-      [requestId]/
-
-    clients/
-      [[...filters]]/
-      [clientId]/
-
-    orders/
-      [[...filters]]/
-      [orderId]/
-
-    reviews/
-      products/
-      pharmacies/
-
-    settings/
-      employees/
-      employees/[employeeId]/
-
-      site-pages/
-      site-pages/[pageKey]/
-
-      categories/
-
-      activity/
-```
-
-Останній `activity` — це вже моя пропозиція. Про нього нижче.
-
-Корінь admin:
-
-```text
-/
-```
-
-просто redirect → `/admin/dashboard`.
-
----
-
-# 4. ЕТАП 1 — створити сам `apps/admin`
-
-Це перша реальна задача.
-
-Не функціонал. Не Dashboard. Сам application shell.
-
-Треба створити:
-
-- `package.json`;
-- `tsconfig.json`;
-- `eslint.config.mjs`;
-- `next.config.ts`;
-- `.env.example`;
-- `src/app/layout.tsx`;
-- `src/app/page.tsx`;
-- `src/app/styles.css`;
-- providers;
-- базові aliases;
-- public assets, якщо вони необхідні.
-
-У root `package.json` додати:
-
-```text
-dev:admin
-build:admin
-lint:admin
-type-check:admin
-check:admin
-```
-
-І admin має потрапити в:
-
-```text
-pnpm check:before-deploy
-```
-
-Одразу закладаємо ті самі structural checks, які зараз є для pharmacy/client.
-
-### SEO
-
-Admin приватний, тому:
-
-```ts
-robots: {
-  index: false,
-  follow: false,
-}
-```
-
-І я б обов'язково додала:
-
-```text
-apps/admin/src/app/robots.ts
-```
-
-з:
-
-```text
-Disallow: /
-```
-
-**`sitemap.ts` для admin не потрібен взагалі.**
-
----
-
-# 5. ЕТАП 2 — 404, Error, Global Error, Loading
-
-Їх я б зробила одразу.
-
-Бо це практично безкоштовно: всі компоненти вже shared.
-
-Admin використовує ті самі:
-
-```text
-PageLoader
-ErrorPage
-NotFoundPage
-```
-
-Тобто:
-
-```text
-loading.tsx
-not-found.tsx
-error.tsx
-global-error.tsx
-```
-
-із мінімальною admin-specific copy.
-
-І це важливий плюс для твоєї майбутньої ідеї з «веселішим аптечним loader».
-
-`PageLoader` уже shared.
-
-Отже, коли ми пізніше намалюємо красиву аптечну анімацію, міняємо **один shared-компонент**, а отримують її:
-
-- client;
-- pharmacy;
-- admin.
-
-Оце саме та архітектура, яку варто закласти зараз.
-
----
-
-# 6. ЕТАП 3 — завершити shared auth для admin
-
-До сторінки Login треба спочатку завершити контракти.
-
-Змінюємо auth application:
-
-```text
-client
-pharmacy
-admin
-```
-
-у:
-
-- shared types;
-- validation;
-- frontend payloads;
-- backend login schema;
-- forgot-password schema;
-- password reset application routing.
-
-Backend зараз формує reset URL окремо для client/pharmacy. Треба додати:
-
-```text
-ADMIN_APP_URL
-```
-
-для admin reset-password.
-
-### Login admin
-
-Окремий admin login:
-
-- email/login;
-- password;
-- Forgot password;
-- button;
-- image.
-
-**Жодного Register.**
-
-І я б не вводила нову сутність `username/login`. Зараз ідентифікатором користувача є email, і цього достатньо.
-
-Тобто поле можна в UI називати Login або Email, але backend identity лишаємо email.
-
----
-
-# 7. Важливе питання: звідки береться ПЕРШИЙ admin
-
-Оскільки:
-
-- public registration admin немає;
-- employee може бути створений лише з admin;
-- але admin ще порожній,
-
-потрібен bootstrap.
-
-Я б зробила окремий development/deployment script на кшталт:
-
-```text
-pnpm seed:admin-owner
-```
-
-Він створює **першого platform owner**.
-
-Не через публічний API.
-
-Не через приховану сторінку реєстрації.
-
-Не через «тимчасову кнопку, яку потім забудемо прибрати» 😄
-
-Після цього **всі інші співробітники додаються виключно з admin**.
-
----
-
-# 8. ЕТАП 4 — AdminProtectedRoute
-
-Аналог `PharmacyProtectedRoute`, але:
-
-```text
-role === admin
-status === active
-```
-
-Усі `/admin/*` routes проходять через нього.
-
-Якщо:
-
-- немає session → login;
-- client → client app;
-- pharmacy → pharmacy app;
-- blocked admin → logout/login;
-- auth unavailable → shared ErrorPage.
-
-Жодна сторінка admin не повинна самостійно перевіряти role.
-
----
-
-# 9. ЕТАП 5 — Client header для залогіненого admin
-
-Це я б зробила дуже рано, ще до Dashboard.
-
-У client уже є цікава річ:
-
-```text
-authenticated-admin
-```
-
-тобто client **вже розпізнає admin session**.
-
-Але зараз показує просто:
-
-> Use the admin application for account tools.
-
-Це треба замінити на нормальний `UserBadge`.
-
-Додати:
-
-```text
-NEXT_PUBLIC_ADMIN_APP_URL
-```
-
-і в header відображати:
-
-- фото;
-- ім'я;
-- `Admin cabinet`.
-
-При натисканні → admin dashboard/profile.
-
-Таким чином логіка стане симетричною:
-
-```text
-client user    → Client profile badge
-pharmacy user  → Pharmacy cabinet badge
-admin user     → Admin cabinet badge
-```
-
-І використовується той самий `UserBadge`.
-
----
-
-# 10. ЕТАП 6 — перед Admin Header треба трохи доробити shared Cabinet UI
-
-Ось тут я **не копіювала б `PharmacyHeader.tsx`**.
-
-Спочатку винесла б із нього те, що реально універсальне.
-
-### Fullscreen button
-
-Зараз fullscreen button знаходиться безпосередньо в `PharmacyHeader`.
-
-Ти якраз написала, що якщо він не окремий — зробити окремим.
-
-Так і треба.
-
-Наприклад:
-
-```text
-@e-pharmacy/ui/cabinet/FullscreenButton
-```
-
-І після цього його використовують:
-
-```text
-PharmacyHeader
-AdminHeader
-```
-
-### User dropdown
-
-Зараз dropdown:
-
-```text
-Go to profile
-Go to the website
-Go to my pharmacy
-Log out
-```
-
-Його можна зробити shared/configurable.
-
-Pharmacy передає:
-
-```text
-Profile
-Website
-Public pharmacy
-Logout
-```
-
-Admin:
-
-```text
-Profile
-Website
-Logout
-```
-
-Таким чином одна розмітка, один accessibility flow, один outside click, один Escape handler.
-
-### Nested navigation
-
-Оце вже обов'язкова зміна.
-
-Поточний `NavigationItem` має:
-
-```ts
-label;
-href;
-icon;
-exact;
-disabled;
-```
-
-але немає `children`.
-
-Admin потребує:
-
-```text
-Reviews
-  Pharmacy reviews
-  Product reviews
-
-Settings
-  Employees
-  Site pages
-  Product categories
-```
-
-Тому shared navigation треба розширити, наприклад:
-
-```ts
-children?: NavigationItem[]
-```
-
-І додати:
-
-- expand/collapse;
-- chevron;
-- `aria-expanded`;
-- active parent, якщо active child;
-- автоматичне відкриття групи активного route;
-- нормальну поведінку collapsed desktop sidebar;
-- таку саму поведінку mobile menu.
-
-Pharmacy при цьому нічого не втрачає — її меню лишається плоским.
-
----
-
-# 11. ЕТАП 7 — Admin Shell
-
-Після shared refactor уже робимо:
-
-```text
-AdminShell
-AdminHeader
-AdminSidebar
-AdminMobileMenu
-```
-
-Але вони мають складатися в основному із shared-компонентів.
-
-Наприклад:
-
-```text
-AdminShell
- ├─ CabinetSidebar
- ├─ CabinetTopBar
- │    ├─ Breadcrumbs
- │    ├─ FullscreenButton
- │    └─ UserBadge / UserMenu
- └─ content
-```
-
-Admin-specific тут тільки:
-
-- navigation config;
-- routes;
+# 2. Що НЕ робимо на цьому етапі
+
+Це важливо, щоб перший PR не перетворився на половину admin 😄
+
+Поки **не робимо**:
+
+- Login;
+- Password Recovery;
+- Reset Password;
+- `AdminProtectedRoute`;
+- admin API/BFF routes;
+- Dashboard;
+- Header;
+- Sidebar;
+- Mobile Menu;
 - breadcrumbs;
+- Profile;
 - permissions;
-- logout/controller.
-
-### Меню
-
-Я підтримую назву **«Співробітники»**, а не «Ролі».
-
-Бо користувач заходить не «створити роль», а:
-
-> додати людину і визначити, що їй можна.
-
-Ролі можна буде додати як **permission presets** пізніше:
-
-```text
-Moderator
-Content manager
-Support
-Administrator
-```
-
-але основна сутність — Employee.
-
----
-
-# 12. ЕТАП 8 — permissions треба зробити ДО CRUD сторінок
-
-Це один із найважливіших архітектурних моментів.
-
-Я б **не робила**:
-
-```text
-user.role = pharmacy_moderator
-user.role = products_editor
-user.role = reviews_moderator
-...
-```
-
-`User.role` має залишитись coarse-grained:
-
-```text
-client
-pharmacy
-admin
-```
-
-А для admin додати окремі permissions.
-
-Наприклад:
-
-```text
-pharmacies:
-  view
-  edit
-  moderate
-
-products:
-  view
-  create
-  edit
-  delete
-
-productRequests:
-  view
-  edit
-  moderate
-
-clients:
-  view
-
-orders:
-  view
-
-productReviews:
-  view
-  moderate
-
-pharmacyReviews:
-  view
-  moderate
-
-sitePages:
-  view
-  edit
-  publish
-
-categories:
-  view
-  create
-  edit
-  delete
-
-employees:
-  view
-  create
-  edit
-  managePermissions
-  revokeAccess
-
-audit:
-  view
-```
-
-Frontend може приховати недоступний menu item.
-
-Але backend **на кожній операції** перевіряє permission.
-
-Наприклад:
-
-```text
-requireAdminPermission('products', 'edit')
-```
-
-Саме backend вирішує, чи можна дію виконати.
-
----
-
-# 13. Platform Owner
-
-Я б окремо ввела поняття **platform owner**.
-
-Це не ще один `User.role`.
-
-Це admin із максимальними правами.
-
-Owner:
-
-- управляє співробітниками;
-- змінює permissions;
-- бачить employee documents;
-- може змінювати employee identity;
-- не може випадково позбавити себе останнього owner access;
-- не може бути видалений звичайним employee.
-
-Це значно безпечніше, ніж засунути все в `role`.
-
-І воно потім майже один-в-один переноситься на pharmacy roles.
-
----
-
-# 14. ЕТАП 9 — Audit log
-
-Я б робила його **до того, як admin почне щось редагувати**.
-
-Бо якщо додати logs наприкінці, половину mutations доведеться переписати.
-
-Наприклад:
-
-```text
-AuditLog
-
-actorUserId
-actorNameSnapshot
-
-action
-entityType
-entityId
-
-before
-after
-changedFields
-
-reason
-
-createdAt
-requestId
-```
-
-Наприклад:
-
-```text
-22 Sep 2026 16:24
-Natalia
-Pharmacy #123
-Status: on_moderation → active
-```
-
-або:
-
-```text
-Product #XXX
-Category: Hygiene → Beauty
-Changed by: John Smith
-```
-
-Паролі, JWT, cookies, file binary тощо в audit log **ніколи не потрапляють**.
-
-Для критичних mutations audit краще записувати в тій же Mongo transaction.
-
-### Я б додала ще один пункт Settings
-
-```text
-Activity history
-```
-
-Тобто Settings матиме:
-
-```text
-Employees
-Site pages
-Product categories
-Activity history
-```
-
-Бо якщо історія змін справді потрібна системно, її треба десь нормально переглядати.
-
-На detail pages при цьому можна показувати відфільтровану історію конкретної сутності.
-
----
-
-# 15. ЕТАП 10 — Admin Profile
-
-Тільки після auth + shell + permissions.
-
-І тут є ще одна важлива річ.
-
-Поточний:
-
-```text
-PharmacyProfilePageContent.tsx
-```
-
-дуже великий і містить разом:
-
-- user data;
-- pharmacy data;
-- about;
-- bank;
-- documents;
+- auth provider із реальним admin session;
+- employees;
+- pharmacies;
+- products;
 - reviews;
-- comments;
-- sessions;
-- moderation.
+- CMS;
+- admin business types.
 
-Його **не треба копіювати в admin**.
-
-Треба перед цим розбити reusable частини.
-
-Наприклад:
+Також поки не створюємо:
 
 ```text
-ProfileIdentityCard
-ProfilePictureEditor
-PersonalDataForm
-ChangePasswordForm
-DocumentsPanel
-PrivateNotesPanel
-ActiveSessionsPanel
-ProfileTabsLayout
+src/components/
+src/hooks/
+src/services/
 ```
 
-Тоді:
+просто «щоб були».
 
-```text
-PharmacyProfile
-```
-
-компонує їх + pharmacy-specific tabs.
-
-А:
-
-```text
-AdminProfile
-```
-
-компонує ті ж shared blocks.
-
-### Admin profile
-
-Ліва частина:
-
-- photo;
-- upload/delete photo;
-- name;
-- email;
-- role;
-- status.
-
-Без:
-
-- Pharmacy Profile status;
-- Send for moderation.
-
-Tabs:
-
-```text
-Personal information
-Documents
-Comments
-Active sessions
-```
-
-### Personal information
-
-Regular employee:
-
-- name — readonly;
-- email — readonly;
-- change password — доступно.
-
-Owner:
-
-- може мати право edit.
-
-Але owner-edit я б реалізувала через **admin employee endpoint**, а не розширювала generic `/auth/current` безконтрольно.
-
-### Documents
-
-Я б **не використовувала PharmacyDocument**.
-
-Це інший domain.
-
-Потрібен окремий:
-
-```text
-AdminEmployeeDocument
-```
-
-або generic private user document.
-
-Regular employee:
-
-- download own documents.
-
-Owner:
-
-- upload;
-- replace;
-- delete.
-
-### Comments
-
-Повністю приватні.
-
-Умова backend:
-
-```text
-note.ownerUserId === currentUser.id
-```
-
-Ніякий інший employee і навіть інший moderator їх не бачить.
-
-UI `Comments` можна перевикористати.
-
-### Sessions
-
-Можна практично напряму перевикористати поточну auth session logic.
+Порожні архітектурні папки нам нічого не дають.
 
 ---
 
-# 16. ЕТАП 11 — динамічні категорії товарів
+# 3. Базова структура після ЕТАПУ 1
 
-Цей пункт я б зробила **раніше Products admin**, хоча в меню він знаходиться в Settings.
-
-Зараз категорії жорстко зашиті:
-
-```ts
-medicine;
-vitamins;
-beauty;
-hygiene;
-medical_devices;
-other;
-```
-
-через:
+Я б очікувала приблизно таку структуру:
 
 ```text
-PRODUCT_CATEGORIES
-ProductCategory union
-validation
+apps/admin/
+├── .env.example
+├── eslint.config.mjs
+├── next.config.ts
+├── next-env.d.ts
+├── package.json
+├── README.md
+├── tsconfig.json
+│
+├── src/
+│   ├── app/
+│   │   ├── icon.svg
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── robots.ts
+│   │   └── styles.css
+│   │
+│   ├── lib/
+│   │   └── routes/
+│   │       ├── admin-routes.ts
+│   │       └── index.ts
+│   │
+│   └── providers/
+│       ├── AdminProviders.tsx
+│       └── index.ts
 ```
 
-А ти хочеш:
-
-> додавати та редагувати категорії через admin.
-
-Тобто це вже несумісно зі статичним enum.
-
-Тому потрібна `ProductCategory` collection, наприклад:
+Плюс у root:
 
 ```text
-id
-name
-slug
-status
-sortOrder
-image/icon optional
-createdAt
-updatedAt
-createdBy
-updatedBy
+package.json
+pnpm-lock.yaml
+scripts/checks/admin/
 ```
-
-І продукти вже посилаються на category entity.
-
-Існуючі категорії треба просто засіяти як initial categories.
-
-Це відразу підготує твою майбутню функцію:
-
-> кнопка «Каталог товарів» → список категорій → каталог категорії.
-
-Тобто цю майбутню фічу реально варто врахувати **вже зараз**.
 
 ---
 
-# 17. ЕТАП 12 — Dashboard
+# 4. `apps/admin/package.json`
 
-І лише тепер Dashboard 😄
+Беремо за основу **`apps/pharmacy/package.json`**, а не вигадуємо новий набір залежностей.
 
-Для admin його задача інша, ніж у pharmacy.
+Назва:
 
-Я б не перевантажувала його графіками просто заради графіків.
-
-Основне:
-
-```text
-Pharmacies
-Products
-Product requests
-Clients
-Reviews
+```json
+"name": "@e-pharmacy/admin"
 ```
 
-А всередині особливо важливі **action-required** значення.
+Admin працює на **3001**.
 
-Наприклад:
+Основні scripts:
 
-```text
-Pharmacies
-Total             159
-On verification    12
-On moderation       4
-Blocked              2
+```json
+"dev": "node ../../scripts/dev/run-with-bff-secret.mjs next dev --port 3001",
+"build": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next build",
+"start": "next start --port 3001",
+"lint": "eslint .",
+"type-check": "next typegen && tsc --noEmit"
 ```
 
-```text
-Product requests
-New                 19
-In progress          7
-Approved           221
-Rejected             9
+Я б одразу додала й стандартні test commands:
+
+```json
+"test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.test.ts",
+"test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.react.test.tsx"
 ```
 
-```text
-Reviews
-Pending products    17
-Pending pharmacies   8
-```
+Навіть якщо тестів першого дня майже немає.
 
-Для admin це набагато корисніше, ніж ще один красивий графік, який усі чемно ігнорують.
-
-### API
-
-Я б не робила 10–15 HTTP-запитів.
-
-Краще:
-
-```text
-GET /admin/dashboard/summary
-```
-
-який одним response повертає всі основні counters.
+Це дозволить admin із самого початку жити за тими самими правилами, що client/pharmacy.
 
 ---
 
-# 18. ЕТАП 13 — «Власники аптек»
+## Dependencies
 
-Саме цей розділ варто робити до Pharmacies.
-
-### Table
-
-Без Create button.
-
-Колонки я б зробила приблизно:
+Я б одразу підключила той самий shared foundation:
 
 ```text
-Photo
-Owner
-Email
-Phone
-Pharmacies
-Pharmacy status
-Account status
-Registration date
-```
-
-Filters:
-
-```text
-Name
-Email
-Phone
-Account status
-Pharmacy status
-Registration date
-```
-
-### Detail page
-
-Тут дуже важливо не змішувати:
-
-```text
-Owner account status
+@e-pharmacy/api-client
+@e-pharmacy/auth
+@e-pharmacy/config
+@e-pharmacy/hooks
+@e-pharmacy/next-api
+@e-pharmacy/types
+@e-pharmacy/ui
+@e-pharmacy/utils
+@e-pharmacy/validation
 ```
 
 та:
 
 ```text
-Pharmacy moderation status
+clsx
+lucide-react
+next
+react
+react-dom
 ```
 
-Owner може бути:
+Частина пакетів на ЕТАПІ 1 ще не буде використовуватись, але вони точно потрібні наступним admin-модулям і це фактично той самий frontend stack, що pharmacy.
+
+Версії **не придумуємо** — беремо ті самі, що зараз у pharmacy:
 
 ```text
-active
-blocked
+next 16.2.4
+react 19.2.4
+react-dom 19.2.4
 ```
 
-А Pharmacy:
-
-```text
-new
-on_verification
-on_moderation
-active
-blocked
-```
-
-Модерацію аптеки робимо в Pharmacy page.
-
-На Owner page:
-
-- personal data;
-- account status;
-- registration data;
-- **table of linked pharmacies**;
-- activity history.
-
-Навіть якщо сьогодні:
-
-```text
-1 owner = 1 pharmacy
-```
-
-API і UI відразу мають думати:
-
-```text
-1 owner → N pharmacies
-```
-
-Тоді пункт №7 твого roadmap не змусить переробляти admin.
+Так само devDependencies мають відповідати pharmacy.
 
 ---
 
-# 19. ЕТАП 14 — «Аптеки»
+# 5. `pnpm-lock.yaml`
 
-Table — максимально на базі поточних pharmacy tables.
-
-Без Create.
-
-Detail page я б зробила через tabs:
+Після появи:
 
 ```text
-Overview
-Pharmacy data
-About
-Payment details
-Documents
-Products
-Clients
-Orders
-Reviews
-Activity
+apps/admin/package.json
 ```
 
-Але важливе правило:
+обов'язково виконати:
 
-**не завантажувати всі вкладки одразу.**
+```bash
+pnpm install
+```
 
-Відкрили Products → тоді запит Products.
+щоб у `pnpm-lock.yaml` з'явився importer:
 
-Відкрили Reviews → тоді Reviews.
+```text
+apps/admin
+```
 
-Інакше одна сторінка аптеки перетвориться на маленький DDoS власного backend 😄
-
-### Overview
-
-Показувати:
-
-- pharmacy;
-- owner;
-- status;
-- contact;
-- creation/activation dates;
-- moderation info;
-- key counts.
-
-### Products
-
-Таблиця pharmacy offers.
-
-### Clients
-
-Клієнти саме цієї аптеки.
-
-### Orders
-
-Замовлення цієї аптеки.
-
-### Reviews
-
-Відгуки про аптеку.
-
-### Activity
-
-Хто й що міняв.
+Не редагувати lock вручну.
 
 ---
 
-# 20. ЕТАП 15 — «Товари»
+# 6. `tsconfig.json`
 
-Table — той самий pattern.
+Тут я взагалі не бачу причини винаходити щось нове.
 
-Admin може:
+Беремо контракт `apps/pharmacy/tsconfig.json`.
 
-- create;
-- view;
-- edit;
-- інколи delete.
+Обов'язково:
 
-### Create Product
-
-Я б не копіювала весь pharmacy Product Request form.
-
-Треба виділити reusable поля:
-
-```text
-ProductCoreFields
-ProductImageField
-ProductDescriptionEditor
-...
+```json
+"strict": true
 ```
 
-Бо у pharmacy request є pharmacy-specific поля на кшталт коментаря аптеки та attachments.
-
-Admin product — це canonical catalog entity.
-
-### Product detail
-
-Я б показувала:
-
-```text
-Product information
-Image
-Article
-Category
-Manufacturer
-Dosage/package/etc.
-Status
-Created/updated
+```json
+"moduleResolution": "bundler"
 ```
 
-і окремими tabs:
-
-```text
-Pharmacies
-Reviews
-Activity
+```json
+"jsx": "react-jsx"
 ```
 
-### Pharmacies table
-
-Дуже корисна.
-
-Наприклад:
-
-```text
-Pharmacy
-Price
-Available quantity
-Status
-Added at
+```json
+"noEmit": true
 ```
 
-Бо global Product ≠ pharmacy stock.
-
-Admin не повинен тут редагувати pharmacy stock.
-
-### Source request
-
-Якщо товар був створений після Product Request:
-
-```text
-Created from request #...
-```
-
-і link.
-
-Backend це вже частково підтримує — approved request зараз може автоматично створити або прив'язати Product.
-
-### Delete
-
-Тут твоє правило правильне.
-
-Hard delete можливий тільки якщо продукт:
-
-- не був у orders;
-- не має meaningful statistics/history;
-- немає pharmacy offers;
-- немає reviews;
-- не має інших business references.
-
-І це вирішує backend.
-
-Інакше:
-
-```text
-Archive / deactivate
-```
-
-а не delete.
+і Next plugin.
 
 ---
 
-# 21. ЕТАП 16 — «Запити на товари»
+# 7. Alias `@/*`
 
-Admin їх **не створює**.
+Обов'язково:
 
-Table:
-
-```text
-Request #
-Product
-Article
-Pharmacy
-Category
-Status
-Created
-Updated
+```json
+"paths": {
+  "@/*": ["./src/*"]
+}
 ```
 
-Filters:
+Тоді admin code використовує:
 
-```text
-request #
-product
-article
-pharmacy
-category
-status
-dates
+```ts
+import { AdminProviders } from '@/providers';
 ```
 
-Detail page максимально повторює pharmacy detail layout.
+а не:
 
-Але admin має moderation controls:
-
-```text
-New
-→ In progress
-→ Approved
-
-або
-→ Rejected
+```ts
+../../../providers/AdminProviders
 ```
 
-Для Reject — reason.
-
-Для Approve:
-
-- link existing product;
-- або create product.
-
-Ця backend-логіка в тебе вже частково реалізована.
-
-Тут її треба не переписувати, а дати їй нормальний admin UI.
+Бо відносні імпорти через пів застосунку — це та сама локшина, тільки TypeScript 😄
 
 ---
 
-# 22. ЕТАП 17 — «Клієнти»
+# 8. Shared package aliases
 
-Admin клієнта не створює.
-
-### Table
-
-Глобальний список клієнтів.
-
-### Detail
-
-Не треба напихати сюди все на світі.
-
-Я б залишила:
+Також копіюємо існуючі aliases pharmacy:
 
 ```text
-Overview
-Pharmacies
-Orders
-Products / purchase history
-Reviews
-Activity
+@e-pharmacy/utils
+@e-pharmacy/config/*
+@e-pharmacy/ui
+@e-pharmacy/ui/*
+@e-pharmacy/hooks/*
+@e-pharmacy/api-client/*
+@e-pharmacy/types
+@e-pharmacy/types/*
+@e-pharmacy/validation
+@e-pharmacy/validation/*
+@e-pharmacy/auth/*
+@e-pharmacy/next-api/browser
+@e-pharmacy/next-api/server
+@e-pharmacy/next-api/proxy
+@e-pharmacy/next-api/contracts
 ```
 
-Найважливіша нова вкладка:
+Важливо: **не створювати admin-specific aliases до копій shared code**.
 
-### Pharmacies
+Наприклад не потрібно:
 
-Таблиця аптек, із якими клієнт реально взаємодіяв.
+```text
+@/ui/*
+@/shared-ui/*
+```
 
-Не просто favorite pharmacy, а business relation через orders/transactions.
+якщо вже є:
 
-Так ми не створюємо штучний many-to-many зв'язок лише заради UI.
+```text
+@e-pharmacy/ui/*
+```
 
 ---
 
-# 23. ЕТАП 18 — «Замовлення»
+# 9. `eslint.config.mjs`
 
-На твоє питання:
+Абсолютно той самий baseline, що pharmacy:
 
-> Чи достатньо тільки таблиці?
-
-Я б усе-таки залишила **detail page**, але тільки read-only.
-
-Тому що коли з'явиться:
-
-- support;
-- чат;
-- скарга;
-- неправильний order;
-- проблема з аптекою;
-
-admin потрібно зрозуміти, що сталося.
-
-Table-only буде замало.
-
-Але admin **не повинен управляти normal order lifecycle**.
-
-Тобто немає:
+- `eslint-config-next/core-web-vitals`;
+- `eslint-config-next/typescript`;
+- ESLint 9 flat config;
+- ignores:
 
 ```text
-Accept
-Reject
-Successful
-...
+.next/**
+out/**
+build/**
+next-env.d.ts
 ```
 
-Це відповідальність pharmacy.
+Без admin-specific послаблень.
 
-Admin order detail:
-
-- client snapshot;
-- pharmacy snapshot;
-- products;
-- price;
-- delivery;
-- payment;
-- comment;
-- status;
-- status history;
-- created/updated timestamps.
-
-Можна максимально перевикористати pharmacy `OrderDetails` у:
+Не додаємо:
 
 ```text
-mode="readonly"
+eslint-disable
 ```
 
-Тобто ще одну сторінку фактично отримуємо майже без нового дизайну.
+на весь застосунок, щоб «поки не заважав».
 
 ---
 
-# 24. ЕТАП 19 — Reviews moderation
+# 10. `next.config.ts`
 
-Тут потрібна backend-зміна.
-
-Відгук не повинен одразу бути public.
-
-Додаємо moderation state:
+Admin має використовувати той самий workspace-transpilation approach.
 
 ```text
-pending
-published
-rejected
+transpilePackages:
+  @e-pharmacy/api-client
+  @e-pharmacy/auth
+  @e-pharmacy/config
+  @e-pharmacy/hooks
+  @e-pharmacy/next-api
+  @e-pharmacy/types
+  @e-pharmacy/ui
+  @e-pharmacy/utils
+  @e-pharmacy/validation
 ```
 
-і:
-
-```text
-moderatedBy
-moderatedAt
-rejectionReason
-```
-
-Client надсилає:
-
-```text
-pending
-```
-
-Public API показує тільки:
-
-```text
-published
-```
-
-Admin бачить усе.
-
-### Product reviews
-
-Окрема table.
-
-### Pharmacy reviews
-
-Окрема table.
-
-Actions:
-
-```text
-Publish
-Reject
-```
-
-Для reject — reason бажано.
-
-І це дуже добре закладається під твою майбутню фічу:
-
-> pharmacy відповідає на review клієнта.
-
-Review уже матиме стабільний lifecycle, і пізніше до нього можна додати reply.
+Це важливо для локальної роботи shared TypeScript packages.
 
 ---
 
-# 25. ЕТАП 20 — Site Pages CMS
+## Чого поки НЕ треба в `next.config.ts`
 
-Тут я дуже раджу **не робити «редактор усього HTML сторінки»**.
+Не додаємо поки:
 
-Це швидко перетвориться на генератор пригод.
+- redirects;
+- auth redirects;
+- admin rewrites;
+- BFF routing;
+- remote image domains;
+- pharmacy-specific seed rewrites;
+- CSP, придуманий тільки для admin;
+- route logic.
 
-Краще сторінка має структуровані editable fields.
+У pharmacy зараз є image rewrites, бо ці сторінки вже реально працюють з API assets.
 
-Наприклад Home:
+Admin на ЕТАПІ 1 цього ще не робить.
 
-```text
-Hero title
-Hero text
-Hero image
-Advantages title
-Advantages text
-...
-SEO title
-SEO description
-```
-
-Catalog pharmacies:
-
-```text
-Heading
-Intro
-SEO
-Banner
-```
-
-Information page:
-
-```text
-Title
-Content
-SEO
-```
-
-DB:
-
-```text
-SitePage
-  key
-  slug
-  draftContent
-  publishedContent
-  status
-  updatedBy
-  publishedBy
-  updatedAt
-  publishedAt
-```
-
-Тобто admin може:
-
-```text
-Save draft
-Publish
-```
-
-І це відразу вирішить майбутню **About us**.
-
-Коли додаси About page — вона вже природно стане ще однією CMS page.
+Коли з'являться Products/Clients/Pharmacies — тоді визначимо, які asset rewrites справді потрібні.
 
 ---
 
-# 26. ЕТАП 21 — Employees
+# 11. `.env.example`
 
-В UI я б назвала саме:
-
-## Employees
-
-Table містить **усіх, хто має або колись мав admin access**.
-
-Статуси, наприклад:
-
-```text
-Invited
-Active
-Suspended
-Revoked
-```
-
-Не видаляємо запис людини, яка вже щось робила.
-
-Інакше audit:
-
-> Product edited by [deleted user]
-
-виглядає трохи як кримінальний серіал 😄
-
-### Додавання employee
-
-Я б не створювала пароль за людину.
-
-Owner вводить:
-
-- name;
-- email;
-- permissions.
-
-Employee отримує одноразове:
-
-```text
-Set your password
-```
-
-Посилання.
-
-Тобто це invitation flow.
-
-Публічної registration page при цьому **немає**.
-
-### Employee detail
-
-- personal info;
-- access status;
-- permissions;
-- documents;
-- activity.
-
-### Permission matrix
+Для admin я б одразу заклала правильну BFF-модель, але **не додавала public backend URL**.
 
 Приблизно:
 
-| Розділ     | View | Create | Edit | Moderate | Delete |
-| ---------- | ---: | -----: | ---: | -------: | -----: |
-| Pharmacies |    ✓ |      — |    ✓ |        ✓ |      — |
-| Products   |    ✓ |      ✓ |    ✓ |        — |      ✓ |
-| Requests   |    ✓ |      — |    ✓ |        ✓ |      — |
-| Clients    |    ✓ |      — |    — |        — |      — |
-| Orders     |    ✓ |      — |    — |        — |      — |
-| Reviews    |    ✓ |      — |    — |        ✓ |      — |
-| Pages      |    ✓ |      — |    ✓ |        ✓ |      — |
-| Categories |    ✓ |      ✓ |    ✓ |        — |      ✓ |
+```env
+# apps/admin
 
-Це значно гнучкіше, ніж десятки ролей.
+# Express API origin.
+# Used only by Next.js server-side code and BFF route handlers.
+# Browser code must never call this origin directly.
+API_BASE_URL=http://localhost:4000
 
-Пізніше можна додати permission presets.
+# Shared client storefront.
+NEXT_PUBLIC_CLIENT_APP_URL=http://localhost:3000
 
----
+# Server-owned auth cookie configuration.
+AUTH_COOKIE_DOMAIN=
+AUTH_COOKIE_LEGACY_DOMAINS=
+AUTH_COOKIE_SAME_SITE=lax
 
-# 27. ЕТАП 22 — Categories UI
+# Trust provider-owned client IP headers only on a known deployment platform.
+# Allowed: none, vercel, cloudflare.
+BFF_TRUSTED_PROXY_PROVIDER=none
 
-Після того як categories переведені в DB, ця сторінка вже проста.
-
-Table:
-
-```text
-Name
-Slug
-Products count
-Visibility
-Sort order
-Updated
-Updated by
+# Server-only BFF → API shared secret.
+# Local pnpm dev may auto-provision the shared value.
+# Production must explicitly configure the same value in apps/admin and apps/api.
+BFF_PROXY_SECRET=
 ```
 
-Actions:
+---
+
+## Не додавати `NEXT_PUBLIC_API_URL`
+
+У pharmacy `.env.example` зараз воно ще є:
 
 ```text
-Add
-Edit
-Archive
-Delete — тільки якщо safe
+NEXT_PUBLIC_API_URL
 ```
 
-Я б також одразу заклала:
+але для нового admin я б цього **не переносила**.
+
+Правильний architecture contract уже є:
 
 ```text
-sortOrder
-isVisible
+browser
+   ↓
+/api/*
+   ↓
+Next BFF
+   ↓
+API_BASE_URL
 ```
 
-Бо твій майбутній Header Catalog буде використовувати саме їх.
+Тому admin browser взагалі не повинен знати origin backend.
 
 ---
 
-# 28. Що я б НЕ додавала до admin
+# 12. Чи потрібен `NEXT_PUBLIC_ADMIN_APP_URL`
 
-Щоб admin не роздути, я б зараз не робила:
+У самому `apps/admin` на цьому етапі — **ні**.
 
-- створення власників;
-- створення аптек;
-- створення клієнтів;
-- створення Product Requests;
-- pharmacy stock management через admin;
-- звичайне керування status замовлень;
-- cart/checkout;
-- pharmacy sales tools;
-- supplier section.
+Admin не потребує public self-origin для:
 
-До речі, у поточному `apps/admin/README.md` ще згадуються **Suppliers**.
+- sitemap;
+- canonical;
+- public SEO.
 
-У твоєму актуальному ТЗ Suppliers немає, тому я б прибрала це з README, щоб воно не перетворилось на «чому тут написано, що ми колись планували постачальників?» через пів року.
+Він приватний.
+
+`ADMIN_APP_URL=http://localhost:3001` вже має сенс на backend/client side для cross-app navigation та reset links, але це буде наступний auth етап.
+
+Не треба зараз насипати env-параметри «про всяк випадок».
 
 ---
 
-# 29. Що варто додати до admin від мене
+# 13. `src/app/layout.tsx`
 
-Я бачу три речі, які справді виправдані.
+Root layout admin має бути **Server Component**.
 
-### Activity history
+Тобто категорично:
 
-Як окремий Settings section.
-
-Це прямо випливає з твоєї вимоги бачити, хто і що змінив.
-
-### Dashboard moderation queues
-
-Не просто «100 аптек», а:
-
-```text
-12 pharmacies need verification
-8 reviews need moderation
-5 requests are new
+```tsx
+'use client';
 ```
 
-Це робить Dashboard реально робочим інструментом.
+там бути не повинно.
 
-### Draft / Publish для CMS
-
-Щоб випадкове редагування Home page не полетіло одразу на production.
+Це той самий правильний boundary, який уже збережений у pharmacy.
 
 ---
 
-# 30. Як закласти твої майбутні фічі вже зараз
+## Shared global styles
 
-Я їх зафіксувала як roadmap. І частину з них справді треба врахувати вже в admin architecture.
+Підключаємо:
 
-| Майбутня функція            | Що закладаємо зараз                                                             |
-| --------------------------- | ------------------------------------------------------------------------------- |
-| About us                    | Site Pages CMS                                                                  |
-| Admin ↔ Pharmacy chat       | стабільні User/Pharmacy IDs + permissions                                       |
-| Карти аптек                 | не прив'язуємо pharmacy лише до текстової address; передбачаємо geo/coordinates |
-| Header Product Catalog      | DB-driven Categories + sort/visibility                                          |
-| Новий loader                | один shared `PageLoader`                                                        |
-| Pharmacy/Admin roles        | спільна концепція permission layer                                              |
-| Кілька аптек одного owner   | `Owner → pharmacies[]`, не one-to-one admin API                                 |
-| Тарифні пакети              | **не змішуємо** subscription зі `pharmacy.status`                               |
-| Pharmacy replies to reviews | стабільний Review lifecycle/moderation                                          |
-| Notification bell           | всі business mutations централізовані, actor IDs збережені                      |
-| Promotions                  | майбутня знижка прив'язується до pharmacy `ProductOffer`, а не global Product   |
-| Excel/Word/PDF              | filters/API contracts робимо reusable, щоб export використовував ті самі query  |
+```ts
+import '@e-pharmacy/ui/styles/tokens.css';
+import '@e-pharmacy/ui/styles/reset.css';
+import '@e-pharmacy/ui/styles/base.css';
+import '@e-pharmacy/ui/styles/utilities.css';
+```
 
-Особливо важливі тут три речі.
+і після shared styles:
 
-**Тарифи не повинні ставати ще одним pharmacy status.** Moderation status і subscription status — різні domains.
+```ts
+import './styles.css';
+```
 
-**Акції не повинні жити в global Product.** Ціна та stock уже pharmacy-specific, тому discount логічно буде частиною pharmacy offer/promotion.
+Таким чином admin одразу використовує той самий visual baseline.
 
-**Multiple pharmacies не повинні ламати Owner API.** Уже зараз на Owner detail ми показуємо pharmacies як список, навіть якщо список сьогодні містить один рядок.
+Не копіюємо:
+
+- reset;
+- typography;
+- colors;
+- buttons;
+- spacing variables.
 
 ---
 
-# 31. Фінальний етап — tests та structural audit
+# 14. Metadata
 
-Коли функціонально все завершено, тільки тоді вважаємо admin готовим.
+Admin приватний.
 
-Я б додала:
+Тому metadata одразу:
+
+```ts
+export const metadata: Metadata = {
+  title: {
+    default: 'Admin Cabinet | E-PHARMACY',
+    template: '%s | Admin Cabinet',
+  },
+
+  description: 'Private administration cabinet for E-PHARMACY.',
+
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+```
+
+Головне тут не точне формулювання description.
+
+Головне:
 
 ```text
-check:admin-layout
+index: false
+follow: false
+```
+
+---
+
+# 15. Не додавати canonical
+
+Для client canonical потрібен.
+
+Для приватної admin area — ні.
+
+Так само не потрібні:
+
+- Open Graph metadata;
+- Twitter cards;
+- public structured data;
+- sitemap references.
+
+Це не маркетингова сторінка.
+
+---
+
+# 16. `<html>` та `<body>`
+
+Можна зберегти те саме:
+
+```tsx
+<html lang="en" data-scroll-behavior="smooth">
+```
+
+Мова UI у системі зараз англійська, тому `lang="en"` логічний.
+
+---
+
+# 17. Provider boundary
+
+Ось тут є нюанс.
+
+Я **не створювала б зараз фальшивий `AuthProvider`**.
+
+Admin auth буде окремим наступним етапом.
+
+Але provider infrastructure уже можна зробити.
+
+Створити:
+
+```text
+src/providers/AdminProviders.tsx
+src/providers/index.ts
+```
+
+---
+
+## `AdminProviders`
+
+Це client boundary:
+
+```tsx
+'use client';
+```
+
+На ЕТАПІ 1 він має містити тільки **реально потрібний provider**, наприклад shared:
+
+```text
+ToastProvider
+```
+
+Концептуально:
+
+```text
+RootLayout — Server Component
+        ↓
+AdminProviders — Client Component
+        ↓
+ToastProvider
+        ↓
+children
+```
+
+Пізніше сюди додасться:
+
+```text
+AuthProvider
+```
+
+без необхідності перетворювати root layout у Client Component.
+
+---
+
+# 18. Чому не класти `'use client'` у layout
+
+Тому що весь admin application shell не потребує бути client-rendered.
+
+Правильно:
+
+```text
+layout.tsx
+Server Component
+     ↓
+AdminProviders
+Client boundary
+```
+
+Неправильно:
+
+```text
+layout.tsx
+'use client'
+```
+
+і потім увесь application tree випадково стає клієнтським.
+
+Цю межу я б уже захищала structural check.
+
+---
+
+# 19. `src/app/styles.css`
+
+На цьому етапі файл має бути **дуже маленьким**.
+
+Наприклад global admin page baseline:
+
+```css
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--gradient-page-bg);
+  color: var(--color-text-primary);
+}
+
+a {
+  color: inherit;
+}
+```
+
+Тобто фактично те саме, що вже працює в pharmacy.
+
+---
+
+## Чого я зараз НЕ копіювала б
+
+У pharmacy є:
+
+```css
+--pharmacy-sidebar-width: 280px;
+--pharmacy-header-height: 72px;
+```
+
+Я б **не створювала зараз**:
+
+```css
+--admin-sidebar-width
+--admin-header-height
+```
+
+лише тому, що так є у pharmacy.
+
+На етапі Header/Sidebar ми якраз будемо рефакторити cabinet UI.
+
+Тоді логічніше вирішити, чи повинні ці variables стати shared:
+
+```text
+--cabinet-sidebar-width
+--cabinet-header-height
+```
+
+а не розмножувати:
+
+```text
+--pharmacy-...
+--admin-...
+```
+
+Це якраз відповідає правилу «не дублювати те, що вже є».
+
+---
+
+# 20. `src/app/icon.svg`
+
+Я б додала.
+
+Client і pharmacy вже мають:
+
+```text
+src/app/icon.svg
+```
+
+Admin — частина тієї самої E-PHARMACY ecosystem.
+
+Тому використовуємо той самий чистий application icon.
+
+Це не business functionality, тому нормально зробити вже зараз.
+
+---
+
+# 21. `public/`
+
+Я б **не копіювала зараз весь `public/` client/pharmacy**.
+
+На ЕТАПІ 1 admin не використовує:
+
+- auth image;
+- product assets;
+- client photos;
+- pharmacy images.
+
+Тому порожня `public/` нам не потрібна.
+
+Коли дійдемо до Login і буде потрібний малюнок, окремо вирішимо:
+
+- чи asset справді має бути duplicated per Next app;
+- чи є сенс винести reusable asset;
+- чи використати той самий source.
+
+Не копіюємо сотню файлів «бо, може, знадобляться».
+
+---
+
+# 22. Базові admin routes
+
+Я б уже зараз створила маленький app-local route contract.
+
+```text
+src/lib/routes/admin-routes.ts
+```
+
+Поки лише мінімум:
+
+```text
+ROOT
+DASHBOARD
+```
+
+Наприклад:
+
+```ts
+export const ADMIN_ROUTES = {
+  ROOT: '/',
+  DASHBOARD: '/admin/dashboard',
+} as const;
+```
+
+Потім цей object буде розширюватись.
+
+---
+
+# 23. Чому routes потрібні вже зараз
+
+Щоб у:
+
+```text
+src/app/page.tsx
+```
+
+не писати:
+
+```ts
+redirect('/admin/dashboard');
+```
+
+напряму.
+
+А використовувати:
+
+```ts
+redirect(ADMIN_ROUTES.DASHBOARD);
+```
+
+Pharmacy вже використовує такий route ownership pattern.
+
+Тому admin одразу робимо так само.
+
+---
+
+# 24. `src/app/page.tsx`
+
+Root page має залишатися **Server Component**.
+
+Вона не повинна:
+
+- рендерити UI;
+- визначати auth;
+- читати localStorage;
+- робити request;
+- містити dashboard;
+- містити loading logic.
+
+Вона лише виконує:
+
+```text
+/ → /admin/dashboard
+```
+
+через Next:
+
+```ts
+redirect();
+```
+
+---
+
+## «А `/admin/dashboard` ще не існує»
+
+Так. І це нормально для цього технічного етапу.
+
+Ми **не створюємо фальшивий Dashboard**, щоб redirect було куди приземлити.
+
+Після ЕТАПУ 1:
+
+```text
+/
+→ /admin/dashboard
+→ поки 404
+```
+
+це чесніше, ніж створювати тимчасову сторінку, яку потім забудемо видалити.
+
+Після auth/shell етапів `/admin/dashboard` буде реалізований нормально.
+
+---
+
+# 25. `robots.ts`
+
+Обов'язково:
+
+```text
+apps/admin/src/app/robots.ts
+```
+
+І він має бути максимально простим.
+
+```ts
+import type { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: '*',
+      disallow: '/',
+    },
+  };
+}
+```
+
+---
+
+# 26. Чому потрібні і metadata robots, і `robots.ts`
+
+Це дві різні речі.
+
+Metadata:
+
+```text
+noindex, nofollow
+```
+
+потрапляє безпосередньо на pages.
+
+`robots.txt`:
+
+```text
+Disallow: /
+```
+
+говорить crawler:
+
+> сюди взагалі не ходити.
+
+Для приватної admin application я б залишила **обидва шари**.
+
+---
+
+# 27. `sitemap.ts` НЕ створюємо
+
+Взагалі.
+
+Admin:
+
+```text
+/private
+/noindex
+/disallow
+```
+
+тому sitemap тут суперечив би самій концепції застосунку.
+
+Structural check навіть може перевіряти:
+
+```text
+apps/admin/src/app/sitemap.ts must not exist
+```
+
+щоб його випадково ніхто пізніше не «додав для SEO» 😄
+
+---
+
+# 28. `next-env.d.ts`
+
+Файл має бути присутнім так само, як у client/pharmacy.
+
+Його генерує Next.
+
+Не потрібно руками писати туди application declarations.
+
+---
+
+# 29. Root `package.json`
+
+Тепер додаємо scripts, про які ти писала.
+
+## Development
+
+```json
+"dev:admin": "pnpm --filter @e-pharmacy/admin dev"
+```
+
+---
+
+## Build
+
+```json
+"build:admin": "pnpm --filter @e-pharmacy/admin build"
+```
+
+---
+
+## Lint
+
+```json
+"lint:admin": "pnpm --filter @e-pharmacy/admin lint"
+```
+
+---
+
+## Type check
+
+```json
+"type-check:admin": "pnpm --filter @e-pharmacy/admin type-check"
+```
+
+---
+
+# 30. `check:admin`
+
+Я б не робила його просто:
+
+```text
+lint + type-check
+```
+
+У нас уже є структурні перевірки в pharmacy/client.
+
+Admin повинен стартувати з такою ж дисципліною.
+
+Наприклад:
+
+```json
+"check:admin": "pnpm check:admin-app-shell && pnpm check:admin-providers && pnpm --filter @e-pharmacy/admin lint && pnpm --filter @e-pharmacy/admin type-check && pnpm --filter @e-pharmacy/admin test && pnpm --filter @e-pharmacy/admin test:react && pnpm --filter @e-pharmacy/admin build"
+```
+
+Пізніше сюди додаватимуться:
+
+```text
 check:admin-auth
 check:admin-lib
-check:admin-components
+check:admin-layout
 check:admin-routes
 check:admin-permissions
-check:admin-resources
+...
 ```
 
-і загальний:
+Але не зараз.
+
+---
+
+# 31. Structural check №1 — `check-admin-app-shell.mjs`
+
+Створити:
+
+```text
+scripts/checks/admin/check-admin-app-shell.mjs
+```
+
+Цей check має захищати фундамент.
+
+---
+
+## Перевірка required files
+
+Повинні існувати:
+
+```text
+apps/admin/package.json
+apps/admin/tsconfig.json
+apps/admin/eslint.config.mjs
+apps/admin/next.config.ts
+apps/admin/.env.example
+
+apps/admin/src/app/layout.tsx
+apps/admin/src/app/page.tsx
+apps/admin/src/app/styles.css
+apps/admin/src/app/robots.ts
+
+apps/admin/src/providers/AdminProviders.tsx
+apps/admin/src/providers/index.ts
+
+apps/admin/src/lib/routes/admin-routes.ts
+```
+
+---
+
+# 32. Root layout contract
+
+Structural check перевіряє:
+
+### layout не client component
+
+Не повинно бути:
+
+```text
+'use client'
+```
+
+### Є Metadata
+
+І:
+
+```text
+robots.index === false
+robots.follow === false
+```
+
+### Shared UI styles підключені
+
+Перевірити imports:
+
+```text
+tokens.css
+reset.css
+base.css
+utilities.css
+```
+
+### Admin local stylesheet
+
+```text
+./styles.css
+```
+
+### Provider boundary
+
+Layout має використовувати:
+
+```text
+AdminProviders
+```
+
+а не складати кожен client provider прямо в root.
+
+---
+
+# 33. Root layout не містить business logic
+
+Structural check може забороняти в:
+
+```text
+src/app/layout.tsx
+```
+
+такі речі:
+
+```text
+fetch(
+localApiRequest
+API_BASE_URL
+Authorization
+accessToken
+refreshToken
+document.cookie
+localStorage
+sessionStorage
+```
+
+Так само layout не повинен імпортувати:
+
+```text
+@/lib/api/*
+```
+
+На root рівні йому це не потрібно.
+
+---
+
+# 34. Root page contract
+
+`src/app/page.tsx` має:
+
+```text
+import redirect from next/navigation
+```
+
+і використовувати canonical route constant.
+
+Не повинно бути:
+
+```text
+'use client'
+```
+
+Не повинно бути:
+
+```text
+fetch
+auth
+localStorage
+UI
+```
+
+---
+
+# 35. Robots contract
+
+Check перевіряє:
+
+```text
+userAgent: '*'
+disallow: '/'
+```
+
+І додатково:
+
+```text
+apps/admin/src/app/sitemap.ts
+```
+
+**не існує**.
+
+---
+
+# 36. Structural check №2 — providers
+
+Створити:
+
+```text
+scripts/checks/admin/check-admin-providers.mjs
+```
+
+На цьому етапі він буде невеликий.
+
+Перевіряє:
+
+- `AdminProviders.tsx` є client component;
+- provider використовує shared `ToastProvider`;
+- provider не містить network requests;
+- provider не читає JWT;
+- provider не використовує browser storage для auth;
+- provider не містить `API_BASE_URL`;
+- provider не містить прямого backend URL.
+
+---
+
+# 37. Чому structural checks уже зараз
+
+Бо потім ми хочемо гарантовано мати:
+
+```text
+Admin root layout = Server Component
+```
+
+а не через два місяці випадково побачити:
+
+```tsx
+'use client';
+
+export default function RootLayout() { ... }
+```
+
+лише тому, що комусь треба було `useEffect`.
+
+Structural check не дає архітектурі тихо поповзти в кущі.
+
+---
+
+# 38. Root scripts для structural checks
+
+Додати:
+
+```json
+"check:admin-app-shell": "node scripts/checks/admin/check-admin-app-shell.mjs",
+"check:admin-providers": "node scripts/checks/admin/check-admin-providers.mjs"
+```
+
+---
+
+# 39. Інтеграція в `check:before-deploy`
+
+Тут є важливий момент.
+
+Я б **не вставляла просто**:
 
 ```text
 pnpm check:admin
 ```
 
-Перевіряємо обов'язково:
+в `check:before-deploy`.
 
-- client не відкриває admin;
-- pharmacy не відкриває admin;
-- admin без permission не може виконати mutation навіть вручну через API;
-- blocked admin не працює;
-- admin BFF не прокидає browser-controlled authorization headers;
-- private responses `no-store`;
-- malformed IDs fail-closed;
-- filters URL-driven;
-- pagination authoritative;
-- inactive tabs не роблять зайві requests;
-- loading/error/empty не маскуються під реальні `0`;
-- audit створюється для mutations;
-- employee permissions перевіряються backend;
-- немає Create Owner/Pharmacy/Client/Request endpoint;
-- admin не потрапляє в sitemap;
-- весь admin `noindex, nofollow`.
+Чому?
+
+Тому що `check:before-deploy` наприкінці вже запускає:
+
+```text
+lint
+type-check
+test
+build
+```
+
+для workspace.
+
+Якщо там ще запустити повний `check:admin`, admin буде:
+
+- lint двічі;
+- type-check двічі;
+- build двічі.
+
+Нам це не потрібно.
 
 ---
 
-# 32. Отже, фактичний порядок робіт
+# 40. Правильніше інтегрувати structural checks
 
-Якщо звести весь план до послідовності реалізації, я б ішла **саме так**:
+У `check:before-deploy` додати:
 
-1. **Очистити та зафіксувати admin architecture**: routes, entities, permissions; прибрати legacy admin pharmacy creation та старий Suppliers scope.
-2. **Створити runnable `apps/admin`**: package/config/env/scripts/layout/status pages/robots.
-3. **Завершити shared auth для `application: admin`** та зробити bootstrap першого owner.
-4. **Login → Password Recovery → Reset Password → AdminProtectedRoute.**
-5. **Доробити client header для admin session.**
-6. **Refactor shared Cabinet UI**: FullscreenButton, user dropdown, nested navigation, reusable shell pieces.
-7. **Admin Header + Sidebar + Mobile menu + Breadcrumbs.**
-8. **Закласти RBAC/permissions.**
-9. **Закласти Audit Log.**
-10. **Розбити pharmacy Profile на reusable blocks і зробити Admin Profile.**
-11. **Перевести Product Categories зі static enum у DB-driven model.**
-12. **Dashboard.**
-13. **Pharmacy Owners.**
-14. **Pharmacies.**
-15. **Products + Create + Detail + Edit.**
-16. **Product Requests + moderation.**
-17. **Clients.**
-18. **Orders: global table + read-only detail.**
-19. **Product Reviews moderation.**
-20. **Pharmacy Reviews moderation.**
-21. **Site Pages CMS.**
-22. **Employees UI + invitations + permissions management.**
-23. **Categories UI.**
-24. **Global Activity History.**
-25. **Tests, structural checks, security/permissions audit, performance audit і фінальний cleanup.**
+```text
+pnpm check:admin-app-shell
+&& pnpm check:admin-providers
+```
 
-І найголовніше: **перший шматок роботи я б не починала з жодної business-сторінки**. Перший практичний milestone має закінчитися тим, що ми вже можемо відкрити `localhost:3001`, зайти під admin, побачити правильний shared shell, перейти в Profile, вийти, відновити пароль і побачити admin badge на client-сайті. Після цього Dashboard, Pharmacies, Products та решта будуть уже не новим застосунком, а просто новими domain modules усередині готового каркаса. Це буде значно чистіше і майже без дублювання.
+до структурної частини.
+
+А загальні:
+
+```text
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
+```
+
+вже автоматично підхоплять:
+
+```text
+@e-pharmacy/admin
+```
+
+через Turbo/workspace.
+
+Таким чином немає дублювання.
+
+---
+
+# 41. Root `test:react`
+
+Я б також підготувала root script до третього frontend app.
+
+Зараз там:
+
+```text
+client
+pharmacy
+```
+
+Поступово має стати:
+
+```text
+client
+pharmacy
+admin
+```
+
+Навіть якщо admin React tests поки порожні.
+
+Так усі три frontend apps мають однакову CI-модель.
+
+---
+
+# 42. `turbo.json`
+
+**Міняти не потрібно.**
+
+Він уже описує generic tasks:
+
+```text
+dev
+build
+lint
+type-check
+test
+```
+
+А `apps/admin/package.json` надасть відповідні scripts.
+
+Turbo сам підхопить admin.
+
+Це ще одна причина не додавати туди admin-specific logic.
+
+---
+
+# 43. `pnpm-workspace.yaml`
+
+Так само:
+
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+вже правильний.
+
+**Не змінюємо.**
+
+Admin автоматично входить у workspace.
+
+---
+
+# 44. `apps/admin/README.md`
+
+Його треба оновити вже на першому етапі.
+
+Зараз там написано:
+
+> This app is not implemented yet.
+
+Після ЕТАПУ 1 це вже неправда.
+
+Також там ще є старий planned section:
+
+```text
+Suppliers
+```
+
+А в актуальному ТЗ його немає.
+
+Тому README треба очистити від застарілого roadmap.
+
+---
+
+## README після ЕТАПУ 1 має описувати
+
+- що це private admin application;
+- port `3001`;
+- як запустити:
+
+```bash
+pnpm dev:admin
+```
+
+- що backend залишається shared `apps/api`;
+- що browser надалі працюватиме через same-origin BFF;
+- що UI перевикористовується з `@e-pharmacy/ui`;
+- що public registration admin не передбачається;
+- що app `noindex`;
+- що sitemap відсутній навмисно;
+- поточний статус:
+
+> application shell implemented; business modules pending.
+
+---
+
+# 45. Root `README.md`
+
+Його теж невеликим patch треба актуалізувати.
+
+Зараз список source-of-truth env examples містить:
+
+```text
+apps/client/.env.example
+apps/pharmacy/.env.example
+apps/api/.env.example
+```
+
+Додати:
+
+```text
+apps/admin/.env.example
+```
+
+І до local run documentation:
+
+```bash
+pnpm dev:admin
+```
+
+та:
+
+```text
+Admin: http://localhost:3001
+```
+
+---
+
+# 46. Archive hygiene
+
+Оскільки в тебе вже є:
+
+```text
+check:archive-hygiene
+archive:source
+check:archive-artifact
+```
+
+треба переконатися, що новий:
+
+```text
+apps/admin
+```
+
+потрапляє в source archive.
+
+Якщо archive script працює через `apps/*`, нічого додатково не міняємо.
+
+Якщо там hardcoded app list — додати admin.
+
+Це саме **перевірити**, а не автоматично переписувати archive logic.
+
+---
+
+# 47. Що має відкриватися після першого етапу
+
+Команда:
+
+```bash
+pnpm dev:admin
+```
+
+має успішно запустити Next на:
+
+```text
+http://localhost:3001
+```
+
+Root:
+
+```text
+http://localhost:3001/
+```
+
+має server-side redirect:
+
+```text
+/admin/dashboard
+```
+
+Сам Dashboard ще не реалізований.
+
+Це нормально для ЕТАПУ 1.
+
+---
+
+# 48. SEO-перевірка
+
+На:
+
+```text
+http://localhost:3001/robots.txt
+```
+
+має бути по суті:
+
+```text
+User-Agent: *
+Disallow: /
+```
+
+Admin HTML metadata:
+
+```text
+noindex
+nofollow
+```
+
+І не повинно існувати:
+
+```text
+/sitemap.xml
+```
+
+через admin `sitemap.ts`.
+
+---
+
+# 49. Security boundary першого етапу
+
+Хоч auth ще не реалізований, уже зараз закладаємо правила.
+
+У `apps/admin/src` не повинно бути:
+
+```text
+accessToken
+refreshToken
+Authorization
+document.cookie
+localStorage auth state
+NEXT_PUBLIC_API_URL
+direct backend fetch
+```
+
+На ЕТАПІ 1 це легко забезпечити, бо network layer взагалі ще не потрібен.
+
+---
+
+# 50. Не створювати `proxy.ts` зараз
+
+У client є proxy, але admin на цьому етапі він не потрібен.
+
+Коли будемо проектувати auth/navigation boundaries, тоді окремо визначимо, чи потрібен admin `proxy.ts`.
+
+І якщо потрібен — він, як і pharmacy/client, **не буде authorization layer**.
+
+---
+
+# 51. Не створювати `/api` зараз
+
+Так само:
+
+```text
+apps/admin/src/app/api
+```
+
+поки не потрібна.
+
+BFF routes почнемо створювати разом із admin auth/backend contracts.
+
+Порожня API папка не додає архітектури.
+
+---
+
+# 52. Не копіювати pharmacy application shell
+
+Це теж важлива acceptance умова.
+
+На першому етапі **не копіюємо**:
+
+```text
+PharmacyShell
+PharmacyHeader
+PharmacySidebar
+PharmacyMobileMenu
+PharmacyProtectedRoute
+```
+
+в admin під новими назвами.
+
+На майбутньому етапі спочатку рефакторимо reusable cabinet layer.
+
+Тільки після цього будуємо Admin Shell.
+
+Інакше вже на першому дні народимо два майже однакові комплекти компонентів.
+
+---
+
+# 53. Перевірки після реалізації
+
+Після внесення змін окремо запустити:
+
+```bash
+pnpm install
+```
+
+Потім:
+
+```bash
+pnpm lint:admin
+```
+
+```bash
+pnpm type-check:admin
+```
+
+```bash
+pnpm build:admin
+```
+
+```bash
+pnpm check:admin-app-shell
+```
+
+```bash
+pnpm check:admin-providers
+```
+
+І разом:
+
+```bash
+pnpm check:admin
+```
+
+---
+
+# 54. Після цього — повна перевірка монорепозиторію
+
+Обов'язково:
+
+```bash
+pnpm check:before-deploy
+```
+
+Не достатньо того, що сам admin build зелений.
+
+Новий workspace package може вплинути на:
+
+- Turbo graph;
+- root lint;
+- root TypeScript;
+- dependency graph;
+- source archive;
+- lockfile;
+- shared packages.
+
+---
+
+# 55. Definition of Done для ЕТАПУ 1
+
+Я б не вважала етап завершеним, доки не виконані **всі** ці умови:
+
+- `apps/admin` більше не README-only folder;
+- існує `@e-pharmacy/admin`;
+- `pnpm dev:admin` запускає port `3001`;
+- `pnpm build:admin` проходить;
+- `pnpm lint:admin` проходить;
+- `pnpm type-check:admin` проходить;
+- root layout лишається Server Component;
+- shared UI global styles використовуються напряму;
+- немає скопійованих reset/base styles;
+- є реальний provider boundary;
+- немає фальшивого auth provider;
+- root route використовує server `redirect()`;
+- route береться з app-local route contract;
+- metadata містить `noindex, nofollow`;
+- `/robots.txt` має `Disallow: /`;
+- `sitemap.ts` відсутній;
+- browser-facing public API origin не доданий;
+- немає direct backend fetch;
+- немає JWT/browser-token logic;
+- немає business components;
+- немає copied PharmacyShell/Header/Sidebar;
+- admin structural checks існують;
+- admin structural checks входять у `check:before-deploy`;
+- `pnpm-lock.yaml` актуальний;
+- README актуальний;
+- старий `Suppliers` roadmap прибраний;
+- `pnpm check:before-deploy` проходить.
+
+---
+
+## Які файли очікую змінити/створити
+
+У підсумку ЕТАП 1 має торкнутися приблизно цього набору:
+
+```text
+apps/admin/.env.example                         NEW
+apps/admin/eslint.config.mjs                   NEW
+apps/admin/next.config.ts                      NEW
+apps/admin/next-env.d.ts                       GENERATED/NEW
+apps/admin/package.json                        NEW
+apps/admin/README.md                           UPDATE
+apps/admin/tsconfig.json                       NEW
+
+apps/admin/src/app/icon.svg                    NEW
+apps/admin/src/app/layout.tsx                  NEW
+apps/admin/src/app/page.tsx                    NEW
+apps/admin/src/app/robots.ts                   NEW
+apps/admin/src/app/styles.css                  NEW
+
+apps/admin/src/lib/routes/admin-routes.ts      NEW
+apps/admin/src/lib/routes/index.ts             NEW
+
+apps/admin/src/providers/AdminProviders.tsx    NEW
+apps/admin/src/providers/index.ts              NEW
+
+scripts/checks/admin/check-admin-app-shell.mjs NEW
+scripts/checks/admin/check-admin-providers.mjs NEW
+
+package.json                                   UPDATE
+pnpm-lock.yaml                                 UPDATE
+README.md                                      UPDATE
+```
+
+При цьому **не очікую змін** у:
+
+```text
+apps/api
+apps/client
+apps/pharmacy
+packages/ui
+packages/auth
+packages/types
+packages/validation
+```
+
+на цьому конкретному етапі.
+
+Це дуже хороший критерій межі першої задачі: **ми вводимо новий application boundary, але поки не змінюємо жоден існуючий domain**. Наступний окремий етап уже можна буде присвятити shared Error/404/Loader, а після нього — admin auth.

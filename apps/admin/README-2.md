@@ -1,1745 +1,752 @@
-Так. Перший етап я б зробила **дуже вузьким і технічним**: після нього `apps/admin` уже є повноцінним третім frontend-застосунком монорепозиторію, але **ще не містить auth, Dashboard, меню, профілю чи business logic**.
+Так 🙂 **Етап 2 — додаємо до admin сторінки завантаження, 404 та обробки помилок на основі вже наявних shared-компонентів.**
 
-Я звірила це з поточним `e-pharmacy.zip`. Зараз `apps/admin` фактично містить лише `README.md`; `pnpm-workspace.yaml` уже має `apps/*`, тому окремо реєструвати admin у workspace не потрібно. Для admin уже зарезервований локальний порт **3001**, тоді як client — `3000`, pharmacy — `3002`, API — `4000`.
+Я звірила їхні реальні props у твоєму проєкті та реалізацію в pharmacy. Нижче — детальне завдання **для виконання після застосування правок першого етапу**.
 
-Нижче я б зафіксувала ЕТАП 1 саме так.
+Авторизацію, Dashboard, Header, Sidebar та інші наступні етапи сюди не включаємо. Цього разу навчаємо каркас красиво реагувати, коли щось загубилося або пішло не за планом 😄
 
 ---
 
-# ЕТАП 1 — створення фундаменту `apps/admin`
+1. **Мета другого етапу**
 
-## 1. Мета етапу
+   Додати чотири спеціальні файли Next.js:
 
-Не реалізовувати функціонал адміністратора.
+   ```text
+   apps/admin/src/app/loading.tsx
+   apps/admin/src/app/not-found.tsx
+   apps/admin/src/app/error.tsx
+   apps/admin/src/app/global-error.tsx
+   ```
 
-На цьому етапі потрібно отримати окремий runnable Next.js application:
+   Після цього admin має:
+   - показувати спільний loader під час очікування відповідного route segment;
+   - відображати брендовану сторінку для невідомих маршрутів;
+   - показувати зрозумілу помилку рендерингу сторінки;
+   - мати окремий fallback для помилок кореневого layout;
+   - пропонувати повторну спробу там, де це підтримує error boundary;
+   - зберігати `noindex, nofollow`;
+   - використовувати існуючий UI без дублювання його розмітки та стилів.
 
-```text
-apps/admin
-```
+2. **Межі етапу**
 
-який:
+   На цьому етапі не створюємо:
 
-- є повноцінним workspace package;
-- запускається через `pnpm dev:admin`;
-- працює на `http://localhost:3001`;
-- збирається окремо;
-- проходить ESLint;
-- проходить TypeScript;
-- використовує ті самі shared packages, що client/pharmacy;
-- має Server Component root layout;
-- має глобальні shared UI styles;
-- має базовий provider stack;
-- є повністю закритим від пошукової індексації;
-- має root redirect;
-- входить у `pnpm check:before-deploy`;
-- має structural checks;
-- не містить дубльованих компонентів із pharmacy/client;
-- не містить auth/business logic.
+   ```text
+   Login
+   Password Recovery
+   Reset Password
+   AuthProvider
+   AdminProtectedRoute
+   AdminShell
+   AdminHeader
+   AdminSidebar
+   Dashboard
+   API/BFF routes
+   permissions
+   business modules
+   ```
 
-Тобто після етапу маємо не «адмінку», а **правильний каркас для адмінки**.
+   Також не потрібні:
+   - нові бібліотеки;
+   - оновлення Next.js;
+   - окремий loading store;
+   - глобальний перехоплювач усіх browser errors;
+   - підключення сервісу моніторингу;
+   - власна реалізація React Error Boundary.
 
----
-
-# 2. Що НЕ робимо на цьому етапі
-
-Це важливо, щоб перший PR не перетворився на половину admin 😄
-
-Поки **не робимо**:
-
-- Login;
-- Password Recovery;
-- Reset Password;
-- `AdminProtectedRoute`;
-- admin API/BFF routes;
-- Dashboard;
-- Header;
-- Sidebar;
-- Mobile Menu;
-- breadcrumbs;
-- Profile;
-- permissions;
-- auth provider із реальним admin session;
-- employees;
-- pharmacies;
-- products;
-- reviews;
-- CMS;
-- admin business types.
-
-Також поки не створюємо:
-
-```text
-src/components/
-src/hooks/
-src/services/
-```
-
-просто «щоб були».
-
-Порожні архітектурні папки нам нічого не дають.
-
----
-
-# 3. Базова структура після ЕТАПУ 1
-
-Я б очікувала приблизно таку структуру:
-
-```text
-apps/admin/
-├── .env.example
-├── eslint.config.mjs
-├── next.config.ts
-├── next-env.d.ts
-├── package.json
-├── README.md
-├── tsconfig.json
-│
-├── src/
-│   ├── app/
-│   │   ├── icon.svg
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   ├── robots.ts
-│   │   └── styles.css
-│   │
-│   ├── lib/
-│   │   └── routes/
-│   │       ├── admin-routes.ts
-│   │       └── index.ts
-│   │
-│   └── providers/
-│       ├── AdminProviders.tsx
-│       └── index.ts
-```
-
-Плюс у root:
-
-```text
-package.json
-pnpm-lock.yaml
-scripts/checks/admin/
-```
-
----
-
-# 4. `apps/admin/package.json`
-
-Беремо за основу **`apps/pharmacy/package.json`**, а не вигадуємо новий набір залежностей.
-
-Назва:
-
-```json
-"name": "@e-pharmacy/admin"
-```
-
-Admin працює на **3001**.
-
-Основні scripts:
-
-```json
-"dev": "node ../../scripts/dev/run-with-bff-secret.mjs next dev --port 3001",
-"build": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\" && next build",
-"start": "next start --port 3001",
-"lint": "eslint .",
-"type-check": "next typegen && tsc --noEmit"
-```
-
-Я б одразу додала й стандартні test commands:
-
-```json
-"test": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.test.ts",
-"test:react": "node ../../scripts/test-runners/run-node-ts-tests.mjs src --match=.react.test.tsx"
-```
-
-Навіть якщо тестів першого дня майже немає.
-
-Це дозволить admin із самого початку жити за тими самими правилами, що client/pharmacy.
-
----
-
-## Dependencies
-
-Я б одразу підключила той самий shared foundation:
-
-```text
-@e-pharmacy/api-client
-@e-pharmacy/auth
-@e-pharmacy/config
-@e-pharmacy/hooks
-@e-pharmacy/next-api
-@e-pharmacy/types
-@e-pharmacy/ui
-@e-pharmacy/utils
-@e-pharmacy/validation
-```
-
-та:
-
-```text
-clsx
-lucide-react
-next
-react
-react-dom
-```
-
-Частина пакетів на ЕТАПІ 1 ще не буде використовуватись, але вони точно потрібні наступним admin-модулям і це фактично той самий frontend stack, що pharmacy.
-
-Версії **не придумуємо** — беремо ті самі, що зараз у pharmacy:
-
-```text
-next 16.2.4
-react 19.2.4
-react-dom 19.2.4
-```
-
-Так само devDependencies мають відповідати pharmacy.
-
----
-
-# 5. `pnpm-lock.yaml`
-
-Після появи:
-
-```text
-apps/admin/package.json
-```
-
-обов'язково виконати:
-
-```bash
-pnpm install
-```
-
-щоб у `pnpm-lock.yaml` з'явився importer:
-
-```text
-apps/admin
-```
-
-Не редагувати lock вручну.
-
----
-
-# 6. `tsconfig.json`
-
-Тут я взагалі не бачу причини винаходити щось нове.
-
-Беремо контракт `apps/pharmacy/tsconfig.json`.
-
-Обов'язково:
-
-```json
-"strict": true
-```
-
-```json
-"moduleResolution": "bundler"
-```
-
-```json
-"jsx": "react-jsx"
-```
-
-```json
-"noEmit": true
-```
-
-і Next plugin.
-
----
-
-# 7. Alias `@/*`
-
-Обов'язково:
-
-```json
-"paths": {
-  "@/*": ["./src/*"]
-}
-```
-
-Тоді admin code використовує:
-
-```ts
-import { AdminProviders } from '@/providers';
-```
-
-а не:
-
-```ts
-../../../providers/AdminProviders
-```
-
-Бо відносні імпорти через пів застосунку — це та сама локшина, тільки TypeScript 😄
-
----
-
-# 8. Shared package aliases
-
-Також копіюємо існуючі aliases pharmacy:
-
-```text
-@e-pharmacy/utils
-@e-pharmacy/config/*
-@e-pharmacy/ui
-@e-pharmacy/ui/*
-@e-pharmacy/hooks/*
-@e-pharmacy/api-client/*
-@e-pharmacy/types
-@e-pharmacy/types/*
-@e-pharmacy/validation
-@e-pharmacy/validation/*
-@e-pharmacy/auth/*
-@e-pharmacy/next-api/browser
-@e-pharmacy/next-api/server
-@e-pharmacy/next-api/proxy
-@e-pharmacy/next-api/contracts
-```
-
-Важливо: **не створювати admin-specific aliases до копій shared code**.
-
-Наприклад не потрібно:
-
-```text
-@/ui/*
-@/shared-ui/*
-```
-
-якщо вже є:
-
-```text
-@e-pharmacy/ui/*
-```
-
----
-
-# 9. `eslint.config.mjs`
-
-Абсолютно той самий baseline, що pharmacy:
-
-- `eslint-config-next/core-web-vitals`;
-- `eslint-config-next/typescript`;
-- ESLint 9 flat config;
-- ignores:
-
-```text
-.next/**
-out/**
-build/**
-next-env.d.ts
-```
-
-Без admin-specific послаблень.
-
-Не додаємо:
-
-```text
-eslint-disable
-```
-
-на весь застосунок, щоб «поки не заважав».
-
----
-
-# 10. `next.config.ts`
-
-Admin має використовувати той самий workspace-transpilation approach.
-
-```text
-transpilePackages:
-  @e-pharmacy/api-client
-  @e-pharmacy/auth
-  @e-pharmacy/config
-  @e-pharmacy/hooks
-  @e-pharmacy/next-api
-  @e-pharmacy/types
-  @e-pharmacy/ui
-  @e-pharmacy/utils
-  @e-pharmacy/validation
-```
-
-Це важливо для локальної роботи shared TypeScript packages.
-
----
-
-## Чого поки НЕ треба в `next.config.ts`
-
-Не додаємо поки:
-
-- redirects;
-- auth redirects;
-- admin rewrites;
-- BFF routing;
-- remote image domains;
-- pharmacy-specific seed rewrites;
-- CSP, придуманий тільки для admin;
-- route logic.
-
-У pharmacy зараз є image rewrites, бо ці сторінки вже реально працюють з API assets.
-
-Admin на ЕТАПІ 1 цього ще не робить.
-
-Коли з'являться Products/Clients/Pharmacies — тоді визначимо, які asset rewrites справді потрібні.
-
----
-
-# 11. `.env.example`
-
-Для admin я б одразу заклала правильну BFF-модель, але **не додавала public backend URL**.
-
-Приблизно:
-
-```env
-# apps/admin
-
-# Express API origin.
-# Used only by Next.js server-side code and BFF route handlers.
-# Browser code must never call this origin directly.
-API_BASE_URL=http://localhost:4000
-
-# Shared client storefront.
-NEXT_PUBLIC_CLIENT_APP_URL=http://localhost:3000
-
-# Server-owned auth cookie configuration.
-AUTH_COOKIE_DOMAIN=
-AUTH_COOKIE_LEGACY_DOMAINS=
-AUTH_COOKIE_SAME_SITE=lax
-
-# Trust provider-owned client IP headers only on a known deployment platform.
-# Allowed: none, vercel, cloudflare.
-BFF_TRUSTED_PROXY_PROVIDER=none
-
-# Server-only BFF → API shared secret.
-# Local pnpm dev may auto-provision the shared value.
-# Production must explicitly configure the same value in apps/admin and apps/api.
-BFF_PROXY_SECRET=
-```
-
----
-
-## Не додавати `NEXT_PUBLIC_API_URL`
-
-У pharmacy `.env.example` зараз воно ще є:
-
-```text
-NEXT_PUBLIC_API_URL
-```
-
-але для нового admin я б цього **не переносила**.
-
-Правильний architecture contract уже є:
-
-```text
-browser
-   ↓
-/api/*
-   ↓
-Next BFF
-   ↓
-API_BASE_URL
-```
-
-Тому admin browser взагалі не повинен знати origin backend.
-
----
-
-# 12. Чи потрібен `NEXT_PUBLIC_ADMIN_APP_URL`
-
-У самому `apps/admin` на цьому етапі — **ні**.
-
-Admin не потребує public self-origin для:
-
-- sitemap;
-- canonical;
-- public SEO.
-
-Він приватний.
-
-`ADMIN_APP_URL=http://localhost:3001` вже має сенс на backend/client side для cross-app navigation та reset links, але це буде наступний auth етап.
-
-Не треба зараз насипати env-параметри «про всяк випадок».
-
----
-
-# 13. `src/app/layout.tsx`
-
-Root layout admin має бути **Server Component**.
-
-Тобто категорично:
-
-```tsx
-'use client';
-```
-
-там бути не повинно.
-
-Це той самий правильний boundary, який уже збережений у pharmacy.
-
----
-
-## Shared global styles
-
-Підключаємо:
-
-```ts
-import '@e-pharmacy/ui/styles/tokens.css';
-import '@e-pharmacy/ui/styles/reset.css';
-import '@e-pharmacy/ui/styles/base.css';
-import '@e-pharmacy/ui/styles/utilities.css';
-```
-
-і після shared styles:
-
-```ts
-import './styles.css';
-```
-
-Таким чином admin одразу використовує той самий visual baseline.
-
-Не копіюємо:
-
-- reset;
-- typography;
-- colors;
-- buttons;
-- spacing variables.
-
----
-
-# 14. Metadata
-
-Admin приватний.
-
-Тому metadata одразу:
-
-```ts
-export const metadata: Metadata = {
-  title: {
-    default: 'Admin Cabinet | E-PHARMACY',
-    template: '%s | Admin Cabinet',
-  },
-
-  description: 'Private administration cabinet for E-PHARMACY.',
-
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
-```
-
-Головне тут не точне формулювання description.
-
-Головне:
-
-```text
-index: false
-follow: false
-```
-
----
-
-# 15. Не додавати canonical
-
-Для client canonical потрібен.
-
-Для приватної admin area — ні.
-
-Так само не потрібні:
-
-- Open Graph metadata;
-- Twitter cards;
-- public structured data;
-- sitemap references.
-
-Це не маркетингова сторінка.
-
----
-
-# 16. `<html>` та `<body>`
-
-Можна зберегти те саме:
-
-```tsx
-<html lang="en" data-scroll-behavior="smooth">
-```
-
-Мова UI у системі зараз англійська, тому `lang="en"` логічний.
-
----
-
-# 17. Provider boundary
-
-Ось тут є нюанс.
-
-Я **не створювала б зараз фальшивий `AuthProvider`**.
-
-Admin auth буде окремим наступним етапом.
-
-Але provider infrastructure уже можна зробити.
-
-Створити:
-
-```text
-src/providers/AdminProviders.tsx
-src/providers/index.ts
-```
-
----
-
-## `AdminProviders`
-
-Це client boundary:
-
-```tsx
-'use client';
-```
-
-На ЕТАПІ 1 він має містити тільки **реально потрібний provider**, наприклад shared:
-
-```text
-ToastProvider
-```
-
-Концептуально:
-
-```text
-RootLayout — Server Component
-        ↓
-AdminProviders — Client Component
-        ↓
-ToastProvider
-        ↓
-children
-```
-
-Пізніше сюди додасться:
-
-```text
-AuthProvider
-```
-
-без необхідності перетворювати root layout у Client Component.
-
----
-
-# 18. Чому не класти `'use client'` у layout
-
-Тому що весь admin application shell не потребує бути client-rendered.
-
-Правильно:
-
-```text
-layout.tsx
-Server Component
-     ↓
-AdminProviders
-Client boundary
-```
-
-Неправильно:
-
-```text
-layout.tsx
-'use client'
-```
-
-і потім увесь application tree випадково стає клієнтським.
-
-Цю межу я б уже захищала structural check.
-
----
-
-# 19. `src/app/styles.css`
-
-На цьому етапі файл має бути **дуже маленьким**.
-
-Наприклад global admin page baseline:
-
-```css
-html,
-body {
-  min-height: 100%;
-}
-
-body {
-  background: var(--gradient-page-bg);
-  color: var(--color-text-primary);
-}
-
-a {
-  color: inherit;
-}
-```
-
-Тобто фактично те саме, що вже працює в pharmacy.
+   Використовуємо файлові conventions Next.js і наявний shared UI.
 
----
-
-## Чого я зараз НЕ копіювала б
-
-У pharmacy є:
-
-```css
---pharmacy-sidebar-width: 280px;
---pharmacy-header-height: 72px;
-```
-
-Я б **не створювала зараз**:
-
-```css
---admin-sidebar-width
---admin-header-height
-```
-
-лише тому, що так є у pharmacy.
-
-На етапі Header/Sidebar ми якраз будемо рефакторити cabinet UI.
-
-Тоді логічніше вирішити, чи повинні ці variables стати shared:
-
-```text
---cabinet-sidebar-width
---cabinet-header-height
-```
-
-а не розмножувати:
-
-```text
---pharmacy-...
---admin-...
-```
-
-Це якраз відповідає правилу «не дублювати те, що вже є».
-
----
-
-# 20. `src/app/icon.svg`
-
-Я б додала.
-
-Client і pharmacy вже мають:
-
-```text
-src/app/icon.svg
-```
-
-Admin — частина тієї самої E-PHARMACY ecosystem.
-
-Тому використовуємо той самий чистий application icon.
-
-Це не business functionality, тому нормально зробити вже зараз.
-
----
-
-# 21. `public/`
-
-Я б **не копіювала зараз весь `public/` client/pharmacy**.
-
-На ЕТАПІ 1 admin не використовує:
-
-- auth image;
-- product assets;
-- client photos;
-- pharmacy images.
-
-Тому порожня `public/` нам не потрібна.
-
-Коли дійдемо до Login і буде потрібний малюнок, окремо вирішимо:
-
-- чи asset справді має бути duplicated per Next app;
-- чи є сенс винести reusable asset;
-- чи використати той самий source.
-
-Не копіюємо сотню файлів «бо, може, знадобляться».
-
----
-
-# 22. Базові admin routes
-
-Я б уже зараз створила маленький app-local route contract.
-
-```text
-src/lib/routes/admin-routes.ts
-```
-
-Поки лише мінімум:
-
-```text
-ROOT
-DASHBOARD
-```
-
-Наприклад:
-
-```ts
-export const ADMIN_ROUTES = {
-  ROOT: '/',
-  DASHBOARD: '/admin/dashboard',
-} as const;
-```
-
-Потім цей object буде розширюватись.
-
----
-
-# 23. Чому routes потрібні вже зараз
-
-Щоб у:
-
-```text
-src/app/page.tsx
-```
-
-не писати:
-
-```ts
-redirect('/admin/dashboard');
-```
-
-напряму.
-
-А використовувати:
-
-```ts
-redirect(ADMIN_ROUTES.DASHBOARD);
-```
-
-Pharmacy вже використовує такий route ownership pattern.
-
-Тому admin одразу робимо так само.
-
----
-
-# 24. `src/app/page.tsx`
-
-Root page має залишатися **Server Component**.
-
-Вона не повинна:
-
-- рендерити UI;
-- визначати auth;
-- читати localStorage;
-- робити request;
-- містити dashboard;
-- містити loading logic.
-
-Вона лише виконує:
-
-```text
-/ → /admin/dashboard
-```
-
-через Next:
-
-```ts
-redirect();
-```
-
----
-
-## «А `/admin/dashboard` ще не існує»
-
-Так. І це нормально для цього технічного етапу.
-
-Ми **не створюємо фальшивий Dashboard**, щоб redirect було куди приземлити.
-
-Після ЕТАПУ 1:
-
-```text
-/
-→ /admin/dashboard
-→ поки 404
-```
-
-це чесніше, ніж створювати тимчасову сторінку, яку потім забудемо видалити.
-
-Після auth/shell етапів `/admin/dashboard` буде реалізований нормально.
-
----
-
-# 25. `robots.ts`
-
-Обов'язково:
-
-```text
-apps/admin/src/app/robots.ts
-```
-
-І він має бути максимально простим.
-
-```ts
-import type { MetadataRoute } from 'next';
-
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: '*',
-      disallow: '/',
-    },
-  };
-}
-```
-
----
-
-# 26. Чому потрібні і metadata robots, і `robots.ts`
-
-Це дві різні речі.
-
-Metadata:
-
-```text
-noindex, nofollow
-```
-
-потрапляє безпосередньо на pages.
-
-`robots.txt`:
-
-```text
-Disallow: /
-```
-
-говорить crawler:
-
-> сюди взагалі не ходити.
-
-Для приватної admin application я б залишила **обидва шари**.
-
----
-
-# 27. `sitemap.ts` НЕ створюємо
-
-Взагалі.
-
-Admin:
-
-```text
-/private
-/noindex
-/disallow
-```
-
-тому sitemap тут суперечив би самій концепції застосунку.
+3. **Відповідальність кожного файла**
 
-Structural check навіть може перевіряти:
+   | Файл               | Призначення                                       | Компонент      |
+   | ------------------ | ------------------------------------------------- | -------------- |
+   | `loading.tsx`      | Очікування завантаження сегмента                  | `PageLoader`   |
+   | `not-found.tsx`    | Невідомий маршрут або `notFound()`                | `NotFoundPage` |
+   | `error.tsx`        | Неочікувана помилка рендерингу всередині boundary | `ErrorPage`    |
+   | `global-error.tsx` | Помилка кореневого layout/template                | `ErrorPage`    |
 
-```text
-apps/admin/src/app/sitemap.ts must not exist
-```
+   `error.tsx` не охоплює layout того самого сегмента. Для кореневого layout потрібний `global-error.tsx`. ([Next.js][1])
 
-щоб його випадково ніхто пізніше не «додав для SEO» 😄
+4. **Єдине джерело UI**
 
----
-
-# 28. `next-env.d.ts`
-
-Файл має бути присутнім так само, як у client/pharmacy.
-
-Його генерує Next.
-
-Не потрібно руками писати туди application declarations.
-
----
-
-# 29. Root `package.json`
-
-Тепер додаємо scripts, про які ти писала.
-
-## Development
-
-```json
-"dev:admin": "pnpm --filter @e-pharmacy/admin dev"
-```
-
----
-
-## Build
-
-```json
-"build:admin": "pnpm --filter @e-pharmacy/admin build"
-```
-
----
-
-## Lint
-
-```json
-"lint:admin": "pnpm --filter @e-pharmacy/admin lint"
-```
-
----
-
-## Type check
-
-```json
-"type-check:admin": "pnpm --filter @e-pharmacy/admin type-check"
-```
-
----
-
-# 30. `check:admin`
-
-Я б не робила його просто:
-
-```text
-lint + type-check
-```
-
-У нас уже є структурні перевірки в pharmacy/client.
-
-Admin повинен стартувати з такою ж дисципліною.
-
-Наприклад:
-
-```json
-"check:admin": "pnpm check:admin-app-shell && pnpm check:admin-providers && pnpm --filter @e-pharmacy/admin lint && pnpm --filter @e-pharmacy/admin type-check && pnpm --filter @e-pharmacy/admin test && pnpm --filter @e-pharmacy/admin test:react && pnpm --filter @e-pharmacy/admin build"
-```
-
-Пізніше сюди додаватимуться:
-
-```text
-check:admin-auth
-check:admin-lib
-check:admin-layout
-check:admin-routes
-check:admin-permissions
-...
-```
-
-Але не зараз.
-
----
-
-# 31. Structural check №1 — `check-admin-app-shell.mjs`
-
-Створити:
-
-```text
-scripts/checks/admin/check-admin-app-shell.mjs
-```
-
-Цей check має захищати фундамент.
-
----
-
-## Перевірка required files
-
-Повинні існувати:
-
-```text
-apps/admin/package.json
-apps/admin/tsconfig.json
-apps/admin/eslint.config.mjs
-apps/admin/next.config.ts
-apps/admin/.env.example
-
-apps/admin/src/app/layout.tsx
-apps/admin/src/app/page.tsx
-apps/admin/src/app/styles.css
-apps/admin/src/app/robots.ts
-
-apps/admin/src/providers/AdminProviders.tsx
-apps/admin/src/providers/index.ts
-
-apps/admin/src/lib/routes/admin-routes.ts
-```
-
----
-
-# 32. Root layout contract
-
-Structural check перевіряє:
-
-### layout не client component
-
-Не повинно бути:
-
-```text
-'use client'
-```
-
-### Є Metadata
-
-І:
-
-```text
-robots.index === false
-robots.follow === false
-```
-
-### Shared UI styles підключені
-
-Перевірити imports:
-
-```text
-tokens.css
-reset.css
-base.css
-utilities.css
-```
-
-### Admin local stylesheet
-
-```text
-./styles.css
-```
-
-### Provider boundary
-
-Layout має використовувати:
-
-```text
-AdminProviders
-```
-
-а не складати кожен client provider прямо в root.
-
----
-
-# 33. Root layout не містить business logic
-
-Structural check може забороняти в:
-
-```text
-src/app/layout.tsx
-```
-
-такі речі:
-
-```text
-fetch(
-localApiRequest
-API_BASE_URL
-Authorization
-accessToken
-refreshToken
-document.cookie
-localStorage
-sessionStorage
-```
+   Усі три компоненти вже експортуються з:
 
-Так само layout не повинен імпортувати:
+   ```ts
+   '@e-pharmacy/ui/status-pages';
+   ```
 
-```text
-@/lib/api/*
-```
+   Використовуємо цей public entrypoint:
 
-На root рівні йому це не потрібно.
+   ```tsx
+   import { PageLoader } from '@e-pharmacy/ui/status-pages';
+   ```
 
----
+   Для уникнення однакових назв локального та shared-компонента:
 
-# 34. Root page contract
+   ```tsx
+   import { ErrorPage as SharedErrorPage } from '@e-pharmacy/ui/status-pages';
+   ```
 
-`src/app/page.tsx` має:
+   ```tsx
+   import { NotFoundPage as SharedNotFoundPage } from '@e-pharmacy/ui/status-pages';
+   ```
 
-```text
-import redirect from next/navigation
-```
+   Не копіюємо в admin реалізації:
 
-і використовувати canonical route constant.
+   ```text
+   PageLoader
+   ErrorPage
+   NotFoundPage
+   StatusPageLayout
+   Button
+   LinkButton
+   Container
+   ```
 
-Не повинно бути:
+   Не імпортуємо компоненти безпосередньо з іншого застосунку, наприклад із `apps/pharmacy`.
 
-```text
-'use client'
-```
+5. **`loading.tsx`**
 
-Не повинно бути:
+   Файл має бути мінімальним:
 
-```text
-fetch
-auth
-localStorage
-UI
-```
-
----
+   ```tsx
+   import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
-# 35. Robots contract
+   function Loading() {
+     return <PageLoader label="Loading admin cabinet..." />;
+   }
 
-Check перевіряє:
+   export default Loading;
+   ```
 
-```text
-userAgent: '*'
-disallow: '/'
-```
+   Вимоги:
+   - без `'use client'`;
+   - без `useEffect`;
+   - без timer;
+   - без network requests;
+   - без перевірки session;
+   - без власної анімації;
+   - без копіювання CSS loader.
 
-І додатково:
+   У поточному `PageLoader` є лише prop `label`. Не додаємо до виклику вигадані `fullscreen`, `size`, `variant` або `isLoading`.
 
-```text
-apps/admin/src/app/sitemap.ts
-```
+6. **Коли loader має з’являтися**
 
-**не існує**.
+   `loading.tsx` працює як fallback для відповідної Suspense-межі, яку Next.js створює для сегмента. Він не є універсальним індикатором кожного запиту в застосунку. ([Next.js][2])
 
----
+   Тому не потрібно:
+   - примусово показувати його при кожному кліку;
+   - встановлювати мінімальну тривалість анімації;
+   - додавати штучну затримку до root redirect;
+   - обгортати ним майбутні fetch-запити вручну.
 
-# 36. Structural check №2 — providers
+   На швидкому переході loader може бути непомітним — це нормально.
 
-Створити:
+   Поточний shared loader уже має:
 
-```text
-scripts/checks/admin/check-admin-providers.mjs
-```
+   ```text
+   role="status"
+   aria-label
+   aria-hidden для декоративної анімації
+   prefers-reduced-motion
+   ```
 
-На цьому етапі він буде невеликий.
+   Зберігаємо цю поведінку.
 
-Перевіряє:
+7. **Майбутня аптечна анімація**
 
-- `AdminProviders.tsx` є client component;
-- provider використовує shared `ToastProvider`;
-- provider не містить network requests;
-- provider не читає JWT;
-- provider не використовує browser storage для auth;
-- provider не містить `API_BASE_URL`;
-- provider не містить прямого backend URL.
+   Другий етап має забезпечити простий контракт:
 
----
+   ```text
+   admin loading.tsx → shared PageLoader
+   ```
 
-# 37. Чому structural checks уже зараз
+   Коли пізніше зміниться анімація всередині shared `PageLoader`, admin отримає її разом з іншими місцями, які використовують цей компонент.
 
-Бо потім ми хочемо гарантовано мати:
+   Зараз анімацію не переробляємо. Не створюємо:
 
-```text
-Admin root layout = Server Component
-```
+   ```text
+   AdminLoader
+   AdminPageLoader
+   AdminLoadingAnimation
+   ```
 
-а не через два місяці випадково побачити:
+   Окремий wrapper, який лише повертає `PageLoader`, також не потрібний.
 
-```tsx
-'use client';
+8. **`not-found.tsx`**
 
-export default function RootLayout() { ... }
-```
+   Залишається Server Component.
 
-лише тому, що комусь треба було `useEffect`.
+   Використовуємо `SharedNotFoundPage` з такими параметрами:
 
-Structural check не дає архітектурі тихо поповзти в кущі.
+   | Prop          | Значення                                                        |
+   | ------------- | --------------------------------------------------------------- |
+   | `title`       | `Page not found`                                                |
+   | `description` | `The page you are looking for does not exist in Admin Cabinet.` |
+   | `eyebrow`     | `404`                                                           |
+   | `homeHref`    | `ADMIN_ROUTES.DASHBOARD`                                        |
+   | `homeLabel`   | `Back to dashboard`                                             |
+   | `variant`     | `brand`                                                         |
+   | `landmark`    | `main`                                                          |
 
----
+   Додаємо ту саму ілюстрацію сторінок статусів, яка використовується в pharmacy.
 
-# 38. Root scripts для structural checks
+   На цьому етапі `secondaryAction` не передаємо: робочих admin-розділів для другої кнопки ще немає.
 
-Додати:
+   Не додаємо посилання на майбутні Products, Employees або Pharmacies.
 
-```json
-"check:admin-app-shell": "node scripts/checks/admin/check-admin-app-shell.mjs",
-"check:admin-providers": "node scripts/checks/admin/check-admin-providers.mjs"
-```
+9. **Маршрути для кнопок**
 
----
+   Імпортуємо наявний app-local контракт:
 
-# 39. Інтеграція в `check:before-deploy`
+   ```tsx
+   import { ADMIN_ROUTES } from '@/lib/routes';
+   ```
 
-Тут є важливий момент.
+   Використовуємо:
 
-Я б **не вставляла просто**:
+   ```tsx
+   homeHref={ADMIN_ROUTES.DASHBOARD}
+   ```
 
-```text
-pnpm check:admin
-```
+   Не дублюємо строку:
 
-в `check:before-deploy`.
+   ```tsx
+   homeHref = '/admin/dashboard';
+   ```
 
-Чому?
+   Нові route constants для цього етапу не потрібні.
 
-Тому що `check:before-deploy` наприкінці вже запускає:
+   **Важливе обмеження:** Dashboard після другого етапу все ще не реалізований. Тому натискання `Back to dashboard` поки приведе на брендовану 404 за адресою `/admin/dashboard`.
 
-```text
-lint
-type-check
-test
-build
-```
+   Це продовження погодженого контракту першого етапу, а не готовий шлях виходу з помилки. У перевірках треба прямо зазначити це обмеження.
 
-для workspace.
+   Не створюємо тимчасовий Dashboard лише заради кнопки й не додаємо автоматичні редиректи зі сторінки 404.
 
-Якщо там ще запустити повний `check:admin`, admin буде:
+10. **Ілюстрація сторінок статусів**
 
-- lint двічі;
-- type-check двічі;
-- build двічі.
+    У pharmacy вже є:
 
-Нам це не потрібно.
+    ```text
+    apps/pharmacy/public/images/status/status-pills.png
+    ```
 
----
+    Для admin додаємо той самий asset:
 
-# 40. Правильніше інтегрувати structural checks
+    ```text
+    apps/admin/public/images/status/status-pills.png
+    ```
 
-У `check:before-deploy` додати:
+    Копіюємо **лише цей файл**.
 
-```text
-pnpm check:admin-app-shell
-&& pnpm check:admin-providers
-```
+    Це виправдане розміщення статичного ресурсу для окремого Next.js-застосунку: admin має самостійно віддавати зображення зі свого origin.
 
-до структурної частини.
+    Не копіюємо весь `public/` і не завантажуємо ілюстрацію з pharmacy-сайта.
 
-А загальні:
+    Параметри наявного зображення:
 
-```text
-pnpm lint
-pnpm type-check
-pnpm test
-pnpm build
-```
+    ```tsx
+    {
+      src: '/images/status/status-pills.png',
+      alt: '',
+      width: 749,
+      height: 508,
+      priority: true,
+    }
+    ```
 
-вже автоматично підхоплять:
+    `alt=""` правильний для декоративної ілюстрації: зміст помилки вже пояснений текстом.
 
-```text
-@e-pharmacy/admin
-```
+11. **Спільний опис asset усередині admin**
 
-через Turbo/workspace.
+    Щоб не повторювати цей об’єкт у трьох файлах, можна створити маленький модуль:
 
-Таким чином немає дублювання.
+    ```text
+    apps/admin/src/lib/status-pages/status-page-image.ts
+    ```
 
----
+    Наприклад:
 
-# 41. Root `test:react`
+    ```ts
+    export const STATUS_PAGE_IMAGE = {
+      src: '/images/status/status-pills.png',
+      alt: '',
+      width: 749,
+      height: 508,
+      priority: true,
+    } as const;
+    ```
 
-Я б також підготувала root script до третього frontend app.
+    Він має бути безпечним і для Server, і для Client Components:
+    - без `server-only`;
+    - без environment variables;
+    - без browser globals;
+    - без network requests;
+    - без імпорту auth або providers.
 
-Зараз там:
+    Це лише опис ресурсу, без додаткового шару компонентів.
 
-```text
-client
-pharmacy
-```
+12. **`error.tsx`**
 
-Поступово має стати:
+    Файл обов’язково починається з:
 
-```text
-client
-pharmacy
-admin
-```
+    ```tsx
+    'use client';
+    ```
 
-Навіть якщо admin React tests поки порожні.
+    Для встановленого в проєкті Next.js `16.2.4` використовуємо наявний стабільний контракт:
 
-Так усі три frontend apps мають однакову CI-модель.
+    ```tsx
+    type ErrorPageProps = Readonly<{
+      error: Error & { digest?: string };
+      reset: () => void;
+    }>;
+    ```
 
----
+    Передаємо callback у shared-компонент:
 
-# 42. `turbo.json`
+    ```tsx
+    onRetry = { reset };
+    ```
 
-**Міняти не потрібно.**
+    Це спроба скинути стан boundary та повторно відрендерити його вміст. Не обіцяємо, що будь-яка серверна чи мережева проблема обов’язково зникне.
 
-Він уже описує generic tasks:
+    Не переносимо приклади з новішим `retry` prop без урахування встановленої версії: стабільний `retry` з’явився пізніше. ([Next.js][1])
 
-```text
-dev
-build
-lint
-type-check
-test
-```
+13. **Тексти й оформлення route error**
 
-А `apps/admin/package.json` надасть відповідні scripts.
+    Для `SharedErrorPage`:
 
-Turbo сам підхопить admin.
+    | Prop          | Значення                                                           |
+    | ------------- | ------------------------------------------------------------------ |
+    | `title`       | `Something went wrong`                                             |
+    | `description` | `The admin cabinet could not display this page. Please try again.` |
+    | `eyebrow`     | `Page error`                                                       |
+    | `homeHref`    | `ADMIN_ROUTES.DASHBOARD`                                           |
+    | `homeLabel`   | `Back to dashboard`                                                |
+    | `retryLabel`  | `Try again`                                                        |
+    | `variant`     | `brand`                                                            |
+    | `landmark`    | `main`                                                             |
+    | `image`       | `STATUS_PAGE_IMAGE`                                                |
+    | `onRetry`     | `reset`                                                            |
 
-Це ще одна причина не додавати туди admin-specific logic.
+    Не переносимо pharmacy-specific copy на кшталт `Route guard`: на цьому етапі admin ще не має auth guard.
 
----
+    Кнопка `Try again` має викликати переданий callback **тільки після натискання**.
 
-# 43. `pnpm-workspace.yaml`
+    Не викликаємо `reset()` під час render або автоматично в `useEffect`.
 
-Так само:
+14. **Які помилки обробляє `error.tsx`**
 
-```yaml
-packages:
-  - 'apps/*'
-  - 'packages/*'
-```
+    Його призначення — неочікувані помилки рендерингу в межах відповідного дерева.
 
-вже правильний.
+    Не будуємо навколо нього універсальну обробку:
+    - помилок валідації форми;
+    - відмови в доступі;
+    - результатів бізнес-операцій;
+    - усіх event handlers;
+    - будь-якого rejected Promise.
 
-**Не змінюємо.**
+    Такі стани надалі оброблятимуться у відповідних features.
 
-Admin автоматично входить у workspace.
+    Також не підміняємо помилку сторінкою 404: «не знайдено» і «не вдалося відобразити» мають різний зміст.
 
----
+15. **Безпечна діагностика помилок**
 
-# 44. `apps/admin/README.md`
+    Для двох error boundaries потрібний невеликий app-local helper:
 
-Його треба оновити вже на першому етапі.
+    ```text
+    apps/admin/src/lib/errors/report-render-error.ts
+    ```
 
-Зараз там написано:
+    Він має формувати мінімальну структуровану діагностику:
 
-> This app is not implemented yet.
+    ```ts
+    {
+      application: 'admin',
+      category: 'render_error',
+      context: 'route-boundary' | 'root-layout',
+      digest?: string,
+    }
+    ```
 
-Після ЕТАПУ 1 це вже неправда.
+    Виклик — із `useEffect`, коли boundary отримав помилку.
 
-Також там ще є старий planned section:
+    У повідомлення користувачу та власний browser log не передаємо:
 
-```text
-Suppliers
-```
+    ```text
+    error.message
+    error.stack
+    повний об’єкт error
+    cookies
+    tokens
+    request/response bodies
+    URL query parameters
+    дані користувача
+    ```
 
-А в актуальному ТЗ його немає.
+    Для другого етапу достатньо структурованого `console.error` з дозволеними полями. Новий endpoint або зовнішній сервіс логування не потрібний.
 
-Тому README треба очистити від застарілого roadmap.
+    Helper не повинен залежати від `AuthProvider`, `ToastProvider` або працездатності backend.
 
----
+16. **`global-error.tsx`**
 
-## README після ЕТАПУ 1 має описувати
+    Це окремий Client Component:
 
-- що це private admin application;
-- port `3001`;
-- як запустити:
+    ```tsx
+    'use client';
+    ```
 
-```bash
-pnpm dev:admin
-```
+    Він використовує той самий `SharedErrorPage`, але повинен самостійно сформувати документ:
 
-- що backend залишається shared `apps/api`;
-- що browser надалі працюватиме через same-origin BFF;
-- що UI перевикористовується з `@e-pharmacy/ui`;
-- що public registration admin не передбачається;
-- що app `noindex`;
-- що sitemap відсутній навмисно;
-- поточний статус:
+    ```tsx
+    <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        <title>Something went wrong | Admin Cabinet</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </head>
+      <body>{/* SharedErrorPage */}</body>
+    </html>
+    ```
 
-> application shell implemented; business modules pending.
+    Причина: коли активний global error fallback, він замінює root layout. Потрібні власні `<html>`, `<body>` та необхідні стилі. Експорт `metadata` у цьому Client Component не підтримується. ([Next.js][1])
 
----
+17. **Незалежність global error від providers**
 
-# 45. Root `README.md`
+    У `global-error.tsx` не додаємо:
 
-Його теж невеликим patch треба актуалізувати.
+    ```tsx
+    <AdminProviders>...</AdminProviders>
+    ```
 
-Зараз список source-of-truth env examples містить:
+    Також не додаємо окремо:
 
-```text
-apps/client/.env.example
-apps/pharmacy/.env.example
-apps/api/.env.example
-```
+    ```text
+    ToastProvider
+    AuthProvider
+    майбутній AdminShell
+    ```
 
-Додати:
+    Global fallback має відображатися навіть тоді, коли звичайне кореневе дерево не змогло відрендеритися.
 
-```text
-apps/admin/.env.example
-```
+    Поточні shared `ErrorPage`, `Button` і `LinkButton` не вимагають auth/toast provider — це дозволяє використати їх тут.
 
-І до local run documentation:
+18. **Стилі для global error**
 
-```bash
-pnpm dev:admin
-```
+    Підключаємо необхідний shared baseline безпосередньо:
 
-та:
+    ```tsx
+    import '@e-pharmacy/ui/styles/tokens.css';
+    import '@e-pharmacy/ui/styles/reset.css';
+    import '@e-pharmacy/ui/styles/base.css';
+    import '@e-pharmacy/ui/styles/utilities.css';
 
-```text
-Admin: http://localhost:3001
-```
+    import './styles.css';
+    ```
 
----
+    Повторення imports у двох точках входу допустиме. Копіювати сам CSS не потрібно.
 
-# 46. Archive hygiene
+    Для етапу 2 не створюємо:
 
-Оскільки в тебе вже є:
+    ```text
+    AdminError.module.css
+    AdminNotFound.module.css
+    AdminLoader.module.css
+    ```
 
-```text
-check:archive-hygiene
-archive:source
-check:archive-artifact
-```
+    Зовнішній вигляд забезпечують shared-компоненти та їхні CSS Modules.
 
-треба переконатися, що новий:
+19. **Тексти global error**
 
-```text
-apps/admin
-```
+    Від route error відрізняються лише контекст і опис:
 
-потрапляє в source archive.
+    | Prop          | Значення                                                         |
+    | ------------- | ---------------------------------------------------------------- |
+    | `title`       | `Something went wrong`                                           |
+    | `description` | `The admin cabinet could not start correctly. Please try again.` |
+    | `eyebrow`     | `Application error`                                              |
+    | `retryLabel`  | `Try again`                                                      |
+    | `homeLabel`   | `Back to dashboard`                                              |
 
-Якщо archive script працює через `apps/*`, нічого додатково не міняємо.
+    Решта props — ті самі:
 
-Якщо там hardcoded app list — додати admin.
+    ```text
+    ADMIN_ROUTES.DASHBOARD
+    STATUS_PAGE_IMAGE
+    variant="brand"
+    landmark="main"
+    onRetry={reset}
+    ```
 
-Це саме **перевірити**, а не автоматично переписувати archive logic.
+    Для діагностики використовуємо:
 
----
+    ```text
+    context: root-layout
+    ```
 
-# 47. Що має відкриватися після першого етапу
+    Для звичайного `error.tsx`:
 
-Команда:
+    ```text
+    context: route-boundary
+    ```
 
-```bash
-pnpm dev:admin
-```
+20. **404, metadata та robots**
 
-має успішно запустити Next на:
+    Зберігаємо налаштування першого етапу:
 
-```text
-http://localhost:3001
-```
+    ```text
+    root metadata: noindex, nofollow
+    robots.txt: Disallow: /
+    sitemap.ts: відсутній
+    ```
 
-Root:
+    У global error додаємо власний robots meta, оскільки на metadata root layout покладатися не можна.
 
-```text
-http://localhost:3001/
-```
+    Root `not-found.tsx` має обробляти невідомі адреси. Водночас у Next.js HTTP-статус для not-found UI залежить від streaming: для вже розпочатої streamed-відповіді він може залишатися `200`. Тому тест «кожний not-found завжди повертає 404» був би некоректним. ([Next.js][3])
 
-має server-side redirect:
+    Для звичайного прямого запиту до невідомого маршруту перевіряємо очікувану 404-відповідь і потрібний UI.
 
-```text
-/admin/dashboard
-```
+    Не додаємо `global-not-found.tsx` чи експериментальні налаштування: для поточної структури вони не потрібні.
 
-Сам Dashboard ще не реалізований.
+21. **Доступність і responsive**
 
-Це нормально для ЕТАПУ 1.
+    Для 404 та двох error pages:
+    - один основний заголовок `h1`;
+    - один `main` у поточному документі;
+    - доступність кнопок із клавіатури;
+    - видимий focus;
+    - зрозумілі назви дій;
+    - декоративне зображення з порожнім `alt`;
+    - відсутність горизонтального scroll.
 
----
+    Shared-компонент уже підтримує:
 
-# 48. SEO-перевірка
+    ```tsx
+    landmark = 'main';
+    ```
 
-На:
+    Тому не обгортаємо його ще одним `<main>`.
 
-```text
-http://localhost:3001/robots.txt
-```
+    Перевіряємо щонайменше ширини:
 
-має бути по суті:
+    ```text
+    360px
+    768px
+    1440px
+    ```
 
-```text
-User-Agent: *
-Disallow: /
-```
+    Для loader зберігаємо наявну підтримку reduced motion.
 
-Admin HTML metadata:
+22. **Structural check для другого етапу**
 
-```text
-noindex
-nofollow
-```
+    Додаємо:
 
-І не повинно існувати:
+    ```text
+    scripts/checks/admin/check-admin-status-pages.mjs
+    ```
 
-```text
-/sitemap.xml
-```
+    Перевірка має захищати такі контракти:
 
-через admin `sitemap.ts`.
+    | Область      | Що перевіряємо                                              |
+    | ------------ | ----------------------------------------------------------- |
+    | Файли        | Усі чотири special files існують і не порожні               |
+    | Loading      | Shared `PageLoader`, admin label, без client directive      |
+    | Not found    | Shared `NotFoundPage`, route constant, без client directive |
+    | Error        | Client directive, shared `ErrorPage`, `onRetry={reset}`     |
+    | Global error | Client directive, власні `html/body`, robots meta, стилі    |
+    | Providers    | Global error не імпортує `AdminProviders`                   |
+    | Imports      | Немає імпортів із `apps/pharmacy` або `apps/client`         |
+    | Security     | Немає auth/network/token logic в boundary-файлах            |
+    | Asset        | Ілюстрація існує за заявленим локальним шляхом              |
 
----
+    Перевірка не повинна залежати від точного порядку props, форматування JSX чи дослівного тексту description.
 
-# 49. Security boundary першого етапу
+    Старі checks першого етапу залишаються активними.
 
-Хоч auth ще не реалізований, уже зараз закладаємо правила.
+23. **Підключення перевірок**
 
-У `apps/admin/src` не повинно бути:
+    У root `package.json` додаємо:
 
-```text
-accessToken
-refreshToken
-Authorization
-document.cookie
-localStorage auth state
-NEXT_PUBLIC_API_URL
-direct backend fetch
-```
+    ```json
+    "check:admin-status-pages": "node scripts/checks/admin/check-admin-status-pages.mjs"
+    ```
 
-На ЕТАПІ 1 це легко забезпечити, бо network layer взагалі ще не потрібен.
+    У `check:admin` новий check ставимо після наявних structural checks і перед lint/type-check.
 
----
+    У `check:before-deploy` додаємо окрему команду:
 
-# 50. Не створювати `proxy.ts` зараз
+    ```bash
+    pnpm check:admin-status-pages
+    ```
 
-У client є proxy, але admin на цьому етапі він не потрібен.
+    Вона має:
+    - запускатися в структурній частині;
+    - бути з’єднана через `&&`;
+    - виконуватися один раз;
+    - не додавати повторний admin build.
 
-Коли будемо проектувати auth/navigation boundaries, тоді окремо визначимо, чи потрібен admin `proxy.ts`.
+    Повний `pnpm check:admin` усередину `check:before-deploy` не вставляємо.
 
-І якщо потрібен — він, як і pharmacy/client, **не буде authorization layer**.
+24. **Тести поведінки**
 
----
+    Не потрібно заново тестувати всю реалізацію shared UI.
 
-# 51. Не створювати `/api` зараз
+    Для нового admin-коду корисні дві цільові перевірки:
+    - натискання `Try again` викликає переданий `reset`, а саме монтування error page його не викликає;
+    - діагностика містить лише дозволені поля й не серіалізує `message`, `stack` або сторонні властивості помилки.
 
-Так само:
+    Можливі файли:
 
-```text
-apps/admin/src/app/api
-```
+    ```text
+    apps/admin/src/app/error.react.test.tsx
+    apps/admin/src/lib/errors/report-render-error.test.ts
+    ```
 
-поки не потрібна.
+    Використовуємо наявну тестову інфраструктуру. Новий framework не встановлюємо.
 
-BFF routes почнемо створювати разом із admin auth/backend contracts.
+    Перевірка виклику `reset` не замінює перевірку реального Next.js boundary у запущеному застосунку.
 
-Порожня API папка не додає архітектури.
+25. **Ручна перевірка Next.js boundaries**
 
----
+    Перевіряємо:
 
-# 52. Не копіювати pharmacy application shell
+    | Сценарій                                       | Очікуваний результат                   |
+    | ---------------------------------------------- | -------------------------------------- |
+    | Пряма невідома адреса                          | Брендована admin 404                   |
+    | Відсутній `/admin/dashboard`                   | Та сама 404 — очікувано на цьому етапі |
+    | Затримка тестового сегмента                    | Shared loader                          |
+    | Помилка рендерингу тестової сторінки           | `error.tsx`                            |
+    | Помилка root layout у контрольованій перевірці | `global-error.tsx`                     |
+    | Натискання retry                               | Виклик boundary callback               |
+    | Стійка помилка після retry                     | Error UI залишається доступним         |
+    | Global error                                   | Стилі та UI працюють без providers     |
+    | Ілюстрація                                     | Завантажується з admin origin          |
 
-Це теж важлива acceptance умова.
+    Для перевірки loading/error можна тимчасово використати окремий тестовий маршрут у локальній робочій копії.
 
-На першому етапі **не копіюємо**:
+    Після перевірки прибрати:
 
-```text
-PharmacyShell
-PharmacyHeader
-PharmacySidebar
-PharmacyMobileMenu
-PharmacyProtectedRoute
-```
+    ```text
+    тестові маршрути
+    штучні throw
+    штучні затримки
+    debug-перемикачі
+    ```
 
-в admin під новими назвами.
+    Ці допоміжні зміни не повинні потрапити у фінальний архів.
 
-На майбутньому етапі спочатку рефакторимо reusable cabinet layer.
+    Особливо важливо перевірити error UI у production-збірці: development overlay не є фінальним інтерфейсом користувача.
 
-Тільки після цього будуємо Admin Shell.
+26. **Команди перевірки**
 
-Інакше вже на першому дні народимо два майже однакові комплекти компонентів.
+    Окремо:
 
----
+    ```bash
+    pnpm check:admin-status-pages
+    pnpm lint:admin
+    pnpm type-check:admin
+    pnpm --filter @e-pharmacy/admin test
+    pnpm --filter @e-pharmacy/admin test:react
+    pnpm build:admin
+    ```
 
-# 53. Перевірки після реалізації
+    Комплексно:
 
-Після внесення змін окремо запустити:
+    ```bash
+    pnpm check:admin
+    pnpm check:before-deploy
+    ```
 
-```bash
-pnpm install
-```
+    Для перевірки production-інтерфейсу після build:
 
-Потім:
+    ```bash
+    pnpm --filter @e-pharmacy/admin start
+    ```
 
-```bash
-pnpm lint:admin
-```
+    Повний monorepo check запускаємо з потрібними environment variables інших застосунків. Якщо перевірка заблокована середовищем, у результаті окремо зазначаємо, що пройдено, а що не вдалося перевірити.
 
-```bash
-pnpm type-check:admin
-```
+27. **Документація та залежності**
 
-```bash
-pnpm build:admin
-```
+    Оновлюємо:
 
-```bash
-pnpm check:admin-app-shell
-```
+    ```text
+    apps/admin/README.md
+    ```
 
-```bash
-pnpm check:admin-providers
-```
+    Фіксуємо:
+    - додані чотири fallback-файли;
+    - використання shared status components;
+    - команду `check:admin-status-pages`;
+    - обмеження маршруту Dashboard;
+    - відсутність auth і business modules;
+    - різницю між route error і global error.
 
-І разом:
+    Нових dependencies для цього етапу не потрібно. Відповідно, очікуваних змін у `pnpm-lock.yaml` немає.
 
-```bash
-pnpm check:admin
-```
+    `turbo.json`, `pnpm-workspace.yaml` і backend configuration для цієї задачі змінювати не потрібно.
 
----
+28. **Очікуваний набір файлів**
 
-# 54. Після цього — повна перевірка монорепозиторію
+    | Файл                                                    | Дія                  |
+    | ------------------------------------------------------- | -------------------- |
+    | `apps/admin/src/app/loading.tsx`                        | Додати               |
+    | `apps/admin/src/app/not-found.tsx`                      | Додати               |
+    | `apps/admin/src/app/error.tsx`                          | Додати               |
+    | `apps/admin/src/app/global-error.tsx`                   | Додати               |
+    | `apps/admin/src/lib/status-pages/status-page-image.ts`  | Додати               |
+    | `apps/admin/src/lib/errors/report-render-error.ts`      | Додати               |
+    | `apps/admin/src/lib/errors/report-render-error.test.ts` | Додати               |
+    | `apps/admin/src/app/error.react.test.tsx`               | Додати               |
+    | `apps/admin/public/images/status/status-pills.png`      | Додати наявний asset |
+    | `scripts/checks/admin/check-admin-status-pages.mjs`     | Додати               |
+    | `apps/admin/README.md`                                  | Оновити              |
+    | `package.json`                                          | Оновити scripts      |
 
-Обов'язково:
+    Основний шлях реалізації не потребує змін у:
 
-```bash
-pnpm check:before-deploy
-```
+    ```text
+    apps/api
+    apps/client
+    apps/pharmacy
+    packages/ui
+    packages/auth
+    packages/types
+    packages/validation
+    ```
 
-Не достатньо того, що сам admin build зелений.
+29. **Definition of Done**
 
-Новий workspace package може вплинути на:
+    Другий етап готовий, коли:
+    - усі чотири special files реалізовані;
+    - використовується shared status UI;
+    - loading і not-found залишаються Server Components;
+    - error і global-error є Client Components;
+    - retry передає керування boundary callback;
+    - global error має власний документ, стилі та `noindex, nofollow`;
+    - global error працює без providers;
+    - raw error details не виводяться користувачу й у власну діагностику;
+    - ілюстрація доступна з admin origin;
+    - сторінки перевірені на mobile і desktop;
+    - новий structural check інтегрований у команди перевірки;
+    - цільові тести проходять;
+    - lint, type-check і build проходять;
+    - результат повної перевірки монорепозиторію зафіксований;
+    - тимчасові тестові маршрути видалені;
+    - auth, Dashboard та інші наступні етапи не реалізовані.
 
-- Turbo graph;
-- root lint;
-- root TypeScript;
-- dependency graph;
-- source archive;
-- lockfile;
-- shared packages.
+30. **Формат результату після реалізації**
 
----
+    Надіслати:
+    - архів тільки зі зміненими й доданими файлами;
+    - короткий перелік змін;
+    - фактичні результати перевірок;
+    - текст коміту.
 
-# 55. Definition of Done для ЕТАПУ 1
-
-Я б не вважала етап завершеним, доки не виконані **всі** ці умови:
-
-- `apps/admin` більше не README-only folder;
-- існує `@e-pharmacy/admin`;
-- `pnpm dev:admin` запускає port `3001`;
-- `pnpm build:admin` проходить;
-- `pnpm lint:admin` проходить;
-- `pnpm type-check:admin` проходить;
-- root layout лишається Server Component;
-- shared UI global styles використовуються напряму;
-- немає скопійованих reset/base styles;
-- є реальний provider boundary;
-- немає фальшивого auth provider;
-- root route використовує server `redirect()`;
-- route береться з app-local route contract;
-- metadata містить `noindex, nofollow`;
-- `/robots.txt` має `Disallow: /`;
-- `sitemap.ts` відсутній;
-- browser-facing public API origin не доданий;
-- немає direct backend fetch;
-- немає JWT/browser-token logic;
-- немає business components;
-- немає copied PharmacyShell/Header/Sidebar;
-- admin structural checks існують;
-- admin structural checks входять у `check:before-deploy`;
-- `pnpm-lock.yaml` актуальний;
-- README актуальний;
-- старий `Suppliers` roadmap прибраний;
-- `pnpm check:before-deploy` проходить.
+    Очікуваний коміт:
 
----
+    ```text
+    feat(admin): add shared loading and error boundaries
+    ```
 
-## Які файли очікую змінити/створити
-
-У підсумку ЕТАП 1 має торкнутися приблизно цього набору:
-
-```text
-apps/admin/.env.example                         NEW
-apps/admin/eslint.config.mjs                   NEW
-apps/admin/next.config.ts                      NEW
-apps/admin/next-env.d.ts                       GENERATED/NEW
-apps/admin/package.json                        NEW
-apps/admin/README.md                           UPDATE
-apps/admin/tsconfig.json                       NEW
-
-apps/admin/src/app/icon.svg                    NEW
-apps/admin/src/app/layout.tsx                  NEW
-apps/admin/src/app/page.tsx                    NEW
-apps/admin/src/app/robots.ts                   NEW
-apps/admin/src/app/styles.css                  NEW
-
-apps/admin/src/lib/routes/admin-routes.ts      NEW
-apps/admin/src/lib/routes/index.ts             NEW
-
-apps/admin/src/providers/AdminProviders.tsx    NEW
-apps/admin/src/providers/index.ts              NEW
-
-scripts/checks/admin/check-admin-app-shell.mjs NEW
-scripts/checks/admin/check-admin-providers.mjs NEW
-
-package.json                                   UPDATE
-pnpm-lock.yaml                                 UPDATE
-README.md                                      UPDATE
-```
-
-При цьому **не очікую змін** у:
-
-```text
-apps/api
-apps/client
-apps/pharmacy
-packages/ui
-packages/auth
-packages/types
-packages/validation
-```
-
-на цьому конкретному етапі.
-
-Це дуже хороший критерій межі першої задачі: **ми вводимо новий application boundary, але поки не змінюємо жоден існуючий domain**. Наступний окремий етап уже можна буде присвятити shared Error/404/Loader, а після нього — admin auth.
+[1]: https://nextjs.org/docs/app/api-reference/file-conventions/error?utm_source=chatgpt.com 'File-system conventions: error.js'
+[2]: https://nextjs.org/docs/app/api-reference/file-conventions/loading?utm_source=chatgpt.com 'File-system conventions: loading.js'
+[3]: https://nextjs.org/docs/app/api-reference/file-conventions/not-found?utm_source=chatgpt.com 'File-system conventions: not-found.js'
