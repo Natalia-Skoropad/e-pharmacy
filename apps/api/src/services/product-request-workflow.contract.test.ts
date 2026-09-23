@@ -32,6 +32,7 @@ test('active product request articles have a storage-level uniqueness backstop',
 test('admin moderation endpoint owns the request transition graph and approved product relation', async () => {
   const [routes, service] = await Promise.all([
     readFile(resolve(process.cwd(), 'src/routes/admin.routes.ts'), 'utf8'),
+
     readFile(
       resolve(process.cwd(), 'src/services/product-request.service.ts'),
       'utf8'
@@ -40,11 +41,13 @@ test('admin moderation endpoint owns the request transition graph and approved p
 
   assert.match(
     routes,
-    /adminRoutes\.use\(authenticate, authorizeRoles\(USER_ROLES\.ADMIN\)\)/
+    /adminRoutes\.use\([\s\S]*?authenticate,[\s\S]*?authorizeRoles\(USER_ROLES\.ADMIN\),[\s\S]*?resolveAdminAuthorization[\s\S]*?\);/
   );
 
-  assert.match(routes, /'\/product-requests\/:requestId\/status'/);
-  assert.match(routes, /productRequestModerationSchema/);
+  assert.match(
+    routes,
+    /'\/product-requests\/:requestId\/status'[\s\S]*?requireAdminPermission\(ADMIN_PERMISSIONS\.productRequests\.moderate\)[\s\S]*?productRequestModerationSchema/
+  );
 
   assert.match(
     service,

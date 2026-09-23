@@ -102,10 +102,11 @@ assert.match(shell, /^\s*['"]use client['"];?/);
 assert.match(shell, /getAdminBreadcrumbsByPathname/);
 assert.match(shell, /<AdminSidebar/);
 assert.match(shell, /<AdminHeader/);
+assert.match(shell, /getAdminNavigationForAccess/);
 
 assert.doesNotMatch(
   shell,
-  /\bfetch\s*\(|localApiRequest|Authorization|accessToken|refreshToken|getDashboard|getOrders|getPharmacies|getReviews|getEmployees/
+  /\bfetch\s*\(|localApiRequest|['\"]Authorization['\"]|accessToken|refreshToken|getDashboard|getOrders|getPharmacies|getReviews|getEmployees/
 );
 
 assert.doesNotMatch(
@@ -142,12 +143,12 @@ assert.doesNotMatch(header, /NEXT_PUBLIC_CLIENT_APP_URL/);
 //===================================================================
 
 assert.match(sidebar, /CabinetSidebar/);
-assert.match(sidebar, /items=\{ADMIN_NAVIGATION\}/);
+assert.match(sidebar, /items=\{items\}/);
 assert.match(sidebar, /activePath=\{pathname\}/);
 assert.doesNotMatch(sidebar, /PHARMACY_NAVIGATION|PharmacySidebar/);
 
 assert.match(mobile, /SideMenu/);
-assert.match(mobile, /items=\{ADMIN_NAVIGATION\}/);
+assert.match(mobile, /items=\{items\}/);
 assert.match(mobile, /onNavigate=\{onClose\}/);
 assert.match(mobile, /MobileOffcanvasBase/);
 assert.match(mobile, /UserBadge/);
@@ -169,6 +170,7 @@ for (const label of [
   'Product reviews',
   'Settings',
   'Employees',
+  'Positions',
   'Site pages',
   'Product categories',
 ]) {
@@ -191,7 +193,6 @@ assert.match(
 );
 
 assert.doesNotMatch(navigation, /label:\s*['"]Roles['"]/);
-assert.doesNotMatch(navigation, /permission|position/i);
 
 for (const routeName of [
   'DASHBOARD',
@@ -204,6 +205,7 @@ for (const routeName of [
   'REVIEWS_PHARMACIES',
   'REVIEWS_PRODUCTS',
   'SETTINGS_EMPLOYEES',
+  'SETTINGS_POSITIONS',
   'SETTINGS_SITE_PAGES',
   'SETTINGS_PRODUCT_CATEGORIES',
 ]) {
@@ -234,6 +236,7 @@ for (const futurePage of [
   ['reviews', 'pharmacies', 'page.tsx'],
   ['reviews', 'products', 'page.tsx'],
   ['settings', 'employees', 'page.tsx'],
+  ['settings', 'positions', 'page.tsx'],
   ['settings', 'site-pages', 'page.tsx'],
   ['settings', 'categories', 'page.tsx'],
 ]) {

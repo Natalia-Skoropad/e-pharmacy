@@ -1,6 +1,8 @@
 import type { Request } from 'express';
 
+import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { serializeAdminAccess } from '../services/admin-access.service';
 
 import type {
   AdminPharmacyDocumentParams,
@@ -25,6 +27,33 @@ import { moderateProductRequestByAdminService } from '../services/product-reques
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
+import { httpError } from '../utils/httpError';
+
+//===============================================================
+
+export async function getCurrentAdminAccess(
+  req: Request,
+  res: ValidatedResponse<unknown>
+): Promise<void> {
+  const authorization = req.adminAuthorization;
+
+  if (!authorization) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Admin access is required.',
+      undefined,
+      ADMIN_ACCESS_ERROR_CODES.ACCESS_REQUIRED
+    );
+  }
+
+  res.setHeader('Cache-Control', 'no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data: { access: serializeAdminAccess(authorization) },
+  });
+}
 
 //===============================================================
 
@@ -39,6 +68,7 @@ export async function createPharmacyUserByAdmin(
     res.locals.validated.body,
     adminUserId
   );
+
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.CREATED,
@@ -54,10 +84,12 @@ export async function getAdminPharmacyDocument(
   res: ValidatedResponse<unknown, AdminPharmacyDocumentParams>
 ): Promise<void> {
   const { pharmacyId, documentId } = res.locals.validated.params;
+
   const data = await getAdminPharmacyDocumentContentService(
     pharmacyId,
     documentId
   );
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -71,6 +103,7 @@ export async function updatePharmacyStatusByAdmin(
   if (!adminUserId) return;
 
   const { pharmacyId } = res.locals.validated.params;
+
   const pharmacy = await updatePharmacyStatusByAdminService(
     pharmacyId,
     res.locals.validated.body,
@@ -95,6 +128,7 @@ export async function updateProductRequestStatusByAdmin(
   if (!adminUserId) return;
 
   const { requestId } = res.locals.validated.params;
+
   const data = await moderateProductRequestByAdminService(
     requestId,
     res.locals.validated.body,

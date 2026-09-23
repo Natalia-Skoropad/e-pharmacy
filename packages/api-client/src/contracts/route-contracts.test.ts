@@ -10,6 +10,8 @@ import { InvalidRouteSegmentError, encodeRouteSegment } from './route-segment';
 test('uses resource-oriented backend route builders', () => {
   const id = '64b64b64b64b64b64b64b64b';
 
+  assert.equal(apiRoutes.admin.accessMe, '/admin/access/me');
+
   assert.equal(
     apiRoutes.productRequests.articleAvailability,
     '/product-requests/article-availability'

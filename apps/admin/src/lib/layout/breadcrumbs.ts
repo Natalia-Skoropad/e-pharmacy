@@ -38,6 +38,11 @@ const BREADCRUMB_ROUTES: readonly BreadcrumbRoute[] = [
     parent: { label: 'Settings' },
   },
   {
+    href: ADMIN_ROUTES.SETTINGS_POSITIONS,
+    label: 'Positions',
+    parent: { label: 'Settings' },
+  },
+  {
     href: ADMIN_ROUTES.SETTINGS_SITE_PAGES,
     label: 'Site pages',
     parent: { label: 'Settings' },

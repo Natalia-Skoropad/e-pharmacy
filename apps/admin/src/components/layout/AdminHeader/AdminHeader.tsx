@@ -19,7 +19,11 @@ import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 
 import { getClientAppDestination } from '@/lib/auth/app-destinations';
-import { getAdminNavigationItemByPathname } from '@/lib/layout/navigation';
+
+import {
+  getAdminNavigationItemByPathname,
+  type AdminNavigationItem,
+} from '@/lib/layout/navigation';
 
 import { AdminMobileMenu } from '@/components/layout/AdminMobileMenu/AdminMobileMenu';
 import { useAdminLogoutController } from '@/components/layout/hooks/useAdminLogoutController';
@@ -36,19 +40,21 @@ const DESKTOP_MEDIA_QUERY = '(min-width: 1440px)';
 
 type AdminHeaderProps = Readonly<{
   breadcrumbs: readonly BreadcrumbItem[];
+  navigation: readonly AdminNavigationItem[];
 }>;
 
 //===================================================================
 
-export function AdminHeader({ breadcrumbs }: AdminHeaderProps) {
+export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { isLogoutPending, logoutFromAdmin } = useAdminLogoutController(logout);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const navigationItem = getAdminNavigationItemByPathname(pathname);
+  const navigationItem = getAdminNavigationItemByPathname(pathname, navigation);
   const clientDestination = getClientAppDestination();
+
   const websiteHref = clientDestination.ok
     ? clientDestination.config.destinationUrl
     : null;
@@ -147,6 +153,7 @@ export function AdminHeader({ breadcrumbs }: AdminHeaderProps) {
       <AdminMobileMenu
         id={MOBILE_MENU_ID}
         isOpen={isMenuOpen}
+        items={navigation}
         websiteHref={websiteHref}
         isLogoutPending={isLogoutPending}
         onClose={() => setIsMenuOpen(false)}

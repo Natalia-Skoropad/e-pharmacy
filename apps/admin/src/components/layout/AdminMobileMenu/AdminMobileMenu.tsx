@@ -12,7 +12,7 @@ import { Logo } from '@e-pharmacy/ui/media';
 import { MobileOffcanvasBase } from '@e-pharmacy/ui/overlays';
 import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 
-import { ADMIN_NAVIGATION } from '@/lib/layout/navigation';
+import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
 
 import css from './AdminMobileMenu.module.css';
@@ -21,6 +21,7 @@ import css from './AdminMobileMenu.module.css';
 
 type AdminMobileMenuProps = Readonly<{
   id: string;
+  items: readonly AdminNavigationItem[];
   isOpen: boolean;
   websiteHref: string | null;
   isLogoutPending: boolean;
@@ -32,6 +33,7 @@ type AdminMobileMenuProps = Readonly<{
 
 export function AdminMobileMenu({
   id,
+  items,
   isOpen,
   websiteHref,
   isLogoutPending,
@@ -89,7 +91,7 @@ export function AdminMobileMenu({
 
       <SideMenu
         className={css.menu}
-        items={ADMIN_NAVIGATION}
+        items={items}
         activePath={pathname}
         ariaLabel="Mobile admin navigation"
         showChevron={false}

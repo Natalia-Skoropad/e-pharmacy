@@ -22,12 +22,12 @@ test('verification document content has owner/admin-only route boundaries', () =
 
   assert.match(
     adminRoutes,
-    /adminRoutes\.use\(authenticate, authorizeRoles\(USER_ROLES\.ADMIN\)\)/
+    /adminRoutes\.use\([\s\S]*?authenticate,[\s\S]*?authorizeRoles\(USER_ROLES\.ADMIN\),[\s\S]*?resolveAdminAuthorization[\s\S]*?\);/
   );
 
   assert.match(
     adminRoutes,
-    /'\/pharmacies\/:pharmacyId\/documents\/:documentId'/
+    /'\/pharmacies\/:pharmacyId\/documents\/:documentId'[\s\S]*?requireAdminPermission\(ADMIN_PERMISSIONS\.pharmacies\.view\)/
   );
 
   assert.match(service, /pharmacyId:\s*pharmacy\._id/);

@@ -12,6 +12,10 @@ const segment = (value: string): string => encodeRouteSegment(value);
 export const backendRoutes = {
   health: '/health',
 
+  admin: {
+    accessMe: '/admin/access/me',
+  },
+
   pharmacies: {
     list: '/pharmacies',
     mySummary: '/pharmacies/me/summary',

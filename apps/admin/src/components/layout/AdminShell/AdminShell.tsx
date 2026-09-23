@@ -1,12 +1,19 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 
 import { Container } from '@e-pharmacy/ui/layout';
 
 import { getAdminBreadcrumbsByPathname } from '@/lib/layout/breadcrumbs';
+
+import {
+  getAdminNavigationForAccess,
+  getAdminNavigationItemByPathname,
+} from '@/lib/layout/navigation';
+
+import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { AdminHeader } from '@/components/layout/AdminHeader/AdminHeader';
 import { AdminSidebar } from '@/components/layout/AdminSidebar/AdminSidebar';
@@ -23,9 +30,17 @@ type AdminShellProps = Readonly<{
 
 export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
+  const { access } = useAdminAuthorization();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  const breadcrumbs = getAdminBreadcrumbsByPathname(pathname);
+  const navigation = useMemo(
+    () => getAdminNavigationForAccess(access),
+    [access]
+  );
+
+  const breadcrumbs = getAdminNavigationItemByPathname(pathname, navigation)
+    ? getAdminBreadcrumbsByPathname(pathname)
+    : [];
 
   return (
     <div className={css.shell}>
@@ -37,6 +52,7 @@ export function AdminShell({ children }: AdminShellProps) {
           )}
         >
           <AdminSidebar
+            items={navigation}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapsed={() =>
               setIsSidebarCollapsed((isCollapsed) => !isCollapsed)
@@ -44,7 +60,7 @@ export function AdminShell({ children }: AdminShellProps) {
           />
 
           <div className={css.workspace}>
-            <AdminHeader breadcrumbs={breadcrumbs} />
+            <AdminHeader breadcrumbs={breadcrumbs} navigation={navigation} />
             <div className={css.content}>{children}</div>
           </div>
         </div>

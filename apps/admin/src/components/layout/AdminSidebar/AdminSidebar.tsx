@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
-import { ADMIN_NAVIGATION } from '@/lib/layout/navigation';
+import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
 
 import css from './AdminSidebar.module.css';
@@ -13,6 +13,7 @@ import css from './AdminSidebar.module.css';
 //===================================================================
 
 type AdminSidebarProps = Readonly<{
+  items: readonly AdminNavigationItem[];
   isCollapsed: boolean;
   onToggleCollapsed: () => void;
 }>;
@@ -20,6 +21,7 @@ type AdminSidebarProps = Readonly<{
 //===================================================================
 
 export function AdminSidebar({
+  items,
   isCollapsed,
   onToggleCollapsed,
 }: AdminSidebarProps) {
@@ -28,7 +30,7 @@ export function AdminSidebar({
   return (
     <CabinetSidebar
       className={css.sidebar}
-      items={ADMIN_NAVIGATION}
+      items={items}
       activePath={pathname}
       ariaLabel="Admin navigation"
       logoHref={ADMIN_ROUTES.DASHBOARD}

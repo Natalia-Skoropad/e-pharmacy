@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 
+import { ADMIN_ACCESS_STATUSES } from '../constants/admin-access';
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 import { connectDB } from '../db/connectDB';
+import { AdminAccess } from '../models/adminAccess.model';
+import { AdminAuthorizationState } from '../models/adminAuthorizationState.model';
 import { User } from '../models/user.model';
 import { adminOwnerBootstrapSchema } from '../schemas/admin-bootstrap.schema';
 import { hashPassword } from '../utils/password';
@@ -26,24 +29,80 @@ function readBootstrapInput() {
 
 //===============================================================
 
+async function ensureOwnerAccess(
+  userId: mongoose.Types.ObjectId
+): Promise<void> {
+  const existingAccess = await AdminAccess.findOne({ userId })
+    .select('status isPlatformOwner')
+    .lean<{ status: string; isPlatformOwner: boolean } | null>();
+
+  if (existingAccess) {
+    if (
+      existingAccess.status !== ADMIN_ACCESS_STATUSES.ACTIVE ||
+      existingAccess.isPlatformOwner !== true
+    ) {
+      throw new Error(
+        'Existing admin access is not an active Platform Owner. Refusing to auto-promote it.'
+      );
+    }
+
+    await AdminAuthorizationState.updateOne(
+      { key: 'platform-owner' },
+      { $setOnInsert: { key: 'platform-owner', ownerRevision: 0 } },
+      { upsert: true }
+    );
+
+    return;
+  }
+
+  const session = await mongoose.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      await AdminAccess.create(
+        [
+          {
+            userId,
+            status: ADMIN_ACCESS_STATUSES.ACTIVE,
+            isPlatformOwner: true,
+            permissions: [],
+          },
+        ],
+        { session }
+      );
+
+      await AdminAuthorizationState.updateOne(
+        { key: 'platform-owner' },
+        { $setOnInsert: { key: 'platform-owner', ownerRevision: 0 } },
+        { upsert: true, session }
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
 async function seedAdminOwner(): Promise<void> {
   const input = readBootstrapInput();
 
   await connectDB();
 
   const existingAdmin = await User.findOne({ role: USER_ROLES.ADMIN })
-    .select('email')
-    .lean();
+    .select('_id email')
+    .lean<{ _id: mongoose.Types.ObjectId; email: string } | null>();
 
   if (existingAdmin) {
-    if (existingAdmin.email === input.email) {
-      console.log('Admin owner bootstrap already completed. No changes made.');
-      return;
+    if (existingAdmin.email !== input.email) {
+      throw new Error(
+        'An admin account already exists. Bootstrap can only manage the configured first admin.'
+      );
     }
 
-    throw new Error(
-      'An admin account already exists. Bootstrap can only create the first admin.'
-    );
+    await ensureOwnerAccess(existingAdmin._id);
+    console.log('Admin owner bootstrap already completed. Access is valid.');
+    return;
   }
 
   const existingEmailOwner = await User.findOne({ email: input.email })
@@ -63,16 +122,46 @@ async function seedAdminOwner(): Promise<void> {
   }
 
   const password = await hashPassword(input.password);
+  const session = await mongoose.startSession();
 
-  await User.create({
-    name: input.name,
-    email: input.email,
-    password,
-    phone: input.phone,
-    address: input.address,
-    role: USER_ROLES.ADMIN,
-    status: USER_STATUSES.ACTIVE,
-  });
+  try {
+    await session.withTransaction(async () => {
+      const [user] = await User.create(
+        [
+          {
+            name: input.name,
+            email: input.email,
+            password,
+            phone: input.phone,
+            address: input.address,
+            role: USER_ROLES.ADMIN,
+            status: USER_STATUSES.ACTIVE,
+          },
+        ],
+        { session }
+      );
+
+      await AdminAccess.create(
+        [
+          {
+            userId: user._id,
+            status: ADMIN_ACCESS_STATUSES.ACTIVE,
+            isPlatformOwner: true,
+            permissions: [],
+          },
+        ],
+        { session }
+      );
+
+      await AdminAuthorizationState.updateOne(
+        { key: 'platform-owner' },
+        { $setOnInsert: { key: 'platform-owner', ownerRevision: 0 } },
+        { upsert: true, session }
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
 
   console.log('Admin owner bootstrap completed.');
 }
@@ -89,6 +178,7 @@ void seedAdminOwner()
 
     process.exitCode = 1;
   })
+
   .finally(async () => {
     await mongoose.disconnect();
   });

@@ -11,6 +11,7 @@ export const ADMIN_ROUTES = {
   REVIEWS_PHARMACIES: '/admin/reviews/pharmacies',
   REVIEWS_PRODUCTS: '/admin/reviews/products',
   SETTINGS_EMPLOYEES: '/admin/settings/employees',
+  SETTINGS_POSITIONS: '/admin/settings/positions',
   SETTINGS_SITE_PAGES: '/admin/settings/site-pages',
   SETTINGS_PRODUCT_CATEGORIES: '/admin/settings/categories',
 } as const;

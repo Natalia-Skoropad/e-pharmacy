@@ -43,7 +43,8 @@ test('admin header reuses shared fullscreen and user dropdown mechanics', () => 
 //===================================================================
 
 test('desktop and mobile navigation consume the same canonical admin model', () => {
-  assert.match(sidebarSource, /items=\{ADMIN_NAVIGATION\}/);
-  assert.match(mobileSource, /items=\{ADMIN_NAVIGATION\}/);
+  assert.match(shellSource, /getAdminNavigationForAccess/);
+  assert.match(sidebarSource, /items=\{items\}/);
+  assert.match(mobileSource, /items=\{items\}/);
   assert.match(mobileSource, /onNavigate=\{onClose\}/);
 });
