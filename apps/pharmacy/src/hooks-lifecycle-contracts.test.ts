@@ -68,7 +68,7 @@ test('list and detail effects use AbortController rather than mounted flags', as
 
 //===================================================================
 
-test('URL filters and outside-pointer behavior use shared hooks', async () => {
+test('URL filters use shared timing hooks and header delegates dropdown lifecycle to shared Cabinet UI', async () => {
   const orders = await readSource(
     './components/orders/OrdersPageContent/OrdersPageContent.tsx'
   );
@@ -79,8 +79,11 @@ test('URL filters and outside-pointer behavior use shared hooks', async () => {
 
   assert.match(orders, /@e-pharmacy\/hooks\/timing/);
   assert.match(orders, /useDebouncedValue/);
-  assert.match(header, /@e-pharmacy\/hooks\/dom/);
-  assert.match(header, /useOutsidePointerDown/);
+
+  assert.match(header, /@e-pharmacy\/ui\/cabinet/);
+  assert.match(header, /UserDropdown/);
+  assert.doesNotMatch(header, /@e-pharmacy\/hooks\/dom/);
+  assert.doesNotMatch(header, /useOutsidePointerDown/);
 });
 
 //===================================================================

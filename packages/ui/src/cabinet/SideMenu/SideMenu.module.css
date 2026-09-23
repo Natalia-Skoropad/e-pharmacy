@@ -7,7 +7,8 @@
   box-shadow: var(--shadow-card);
 }
 
-.list {
+.list,
+.children {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -16,8 +17,14 @@
   list-style: none;
 }
 
-.item {
+.item,
+.childItem {
   min-width: 0;
+}
+
+.groupItem {
+  display: grid;
+  gap: 4px;
 }
 
 .link {
@@ -28,7 +35,12 @@
   min-height: 48px;
   padding: 12px 14px;
   color: var(--color-text-secondary);
+  font-family: inherit;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
   border-radius: var(--radius-lg);
   transition:
     color var(--transition-base),
@@ -78,8 +90,45 @@
   line-height: var(--lh-base);
 }
 
-.chevron {
+.chevron,
+.groupChevron {
   flex-shrink: 0;
   color: currentColor;
   opacity: 0.75;
+}
+
+.groupChevron {
+  transition: transform var(--transition-base);
+}
+
+.groupChevronOpen {
+  transform: rotate(180deg);
+}
+
+.children[hidden] {
+  display: none;
+}
+
+.childrenOpen {
+  padding-bottom: 2px;
+}
+
+.childLink {
+  min-height: 42px;
+  padding-block: 9px;
+  padding-left: 20px;
+}
+
+.childMarker {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-inline: 8px 6px;
+  background-color: currentColor;
+  border-radius: 50%;
+  opacity: 0.45;
+}
+
+.childLink.active .childMarker {
+  opacity: 1;
 }

@@ -35,23 +35,35 @@ test('desktop and mobile logout share one pharmacy application lifecycle owner',
 
 //===================================================================
 
-test('fullscreen UI is capability-gated and cleans up browser subscriptions', async () => {
-  const header = await readLayoutSource('./PharmacyHeader/PharmacyHeader.tsx');
+test('shared fullscreen UI is capability-gated and cleans up browser subscriptions', async () => {
+  const [header, fullscreenButton] = await Promise.all([
+    readLayoutSource('./PharmacyHeader/PharmacyHeader.tsx'),
 
-  assert.match(header, /isFullscreenAvailable\(document\)/);
-  assert.match(header, /isFullscreenSupported \? \(/);
+    readLayoutSource(
+      '../../../../../packages/ui/src/cabinet/FullscreenButton/FullscreenButton.tsx'
+    ),
+  ]);
+
+  assert.match(header, /FullscreenButton/);
+
+  assert.doesNotMatch(
+    header,
+    /fullscreenchange|isFullscreenAvailable|toggleFullscreen/
+  );
+
+  assert.match(fullscreenButton, /isFullscreenAvailable\(document\)/);
 
   assert.match(
-    header,
+    fullscreenButton,
     /document\.addEventListener\('fullscreenchange', handleFullscreenChange\)/
   );
 
   assert.match(
-    header,
+    fullscreenButton,
     /document\.removeEventListener\('fullscreenchange', handleFullscreenChange\)/
   );
 
-  assert.doesNotMatch(header, /console\.error/);
+  assert.doesNotMatch(fullscreenButton, /console\.error/);
 });
 
 //===================================================================

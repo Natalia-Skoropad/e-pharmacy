@@ -15,37 +15,51 @@ test('header keeps mobile and desktop account controls mutually available', asyn
     'utf8'
   );
 
-  assert.match(css, /\.userMenuWrap\s*{[\s\S]*display:\s*none;/);
+  assert.match(css, /\.userDropdownDesktop\s*\{[\s\S]*display:\s*none;/);
 
   assert.match(
     css,
-    /@media only screen and \(min-width: 1440px\)[\s\S]*\.userMenuWrap\s*{[\s\S]*display:\s*block;/
+    /@media only screen and \(min-width: 1440px\)[\s\S]*\.userDropdownDesktop\s*\{[\s\S]*display:\s*block;/
   );
 
   assert.match(source, /matchMedia\(DESKTOP_MEDIA_QUERY\)/);
   assert.match(source, /subscribeToDesktopBreakpoint/);
+  assert.match(source, /<UserDropdown/);
 });
 
 //===================================================================
 
-test('account popover uses native link/button semantics and restores focus on Escape', async () => {
-  const source = await readFile(
-    new URL('./PharmacyHeader.tsx', import.meta.url),
-    'utf8'
-  );
+test('shared account popover owns disclosure semantics and Escape focus restoration', async () => {
+  const [headerSource, dropdownSource, dropdownCss] = await Promise.all([
+    readFile(new URL('./PharmacyHeader.tsx', import.meta.url), 'utf8'),
 
-  const css = await readFile(
-    new URL('./PharmacyHeader.module.css', import.meta.url),
-    'utf8'
-  );
+    readFile(
+      new URL(
+        '../../../../../../packages/ui/src/cabinet/UserDropdown/UserDropdown.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
 
-  assert.equal(source.includes('role="menu"'), false);
-  assert.equal(source.includes('role="menuitem"'), false);
-  assert.match(source, /aria-expanded={isUserMenuOpen}/);
-  assert.match(source, /userMenuButtonRef\.current\?\.focus\(\)/);
+    readFile(
+      new URL(
+        '../../../../../../packages/ui/src/cabinet/UserDropdown/UserDropdown.module.css',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+  ]);
+
+  assert.equal(dropdownSource.includes('role="menu"'), false);
+  assert.equal(dropdownSource.includes('role="menuitem"'), false);
+  assert.match(dropdownSource, /aria-expanded=\{isOpen\}/);
+  assert.match(dropdownSource, /triggerRef\.current\?\.focus\(\)/);
 
   assert.match(
-    css,
-    /\.userMenuButton:focus-visible[\s\S]*outline:\s*2px solid var\(--color-white\)/
+    dropdownCss,
+    /\.trigger:focus-visible[\s\S]*outline:\s*2px solid var\(--color-white\)/
   );
+
+  assert.doesNotMatch(headerSource, /useOutsidePointerDown/);
+  assert.doesNotMatch(headerSource, /userMenuButtonRef/);
 });

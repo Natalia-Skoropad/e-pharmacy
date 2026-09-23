@@ -16,186 +16,27 @@
   min-width: 0;
 }
 
-.fullscreenButton,
-.userMenuButton {
-  display: inline-flex;
+.fullscreenDesktop,
+.userDropdownDesktop {
+  display: none;
+}
+
+.fullscreenDesktop {
   align-items: center;
-  justify-content: center;
-  padding: 0;
-  cursor: pointer;
-  color: var(--color-white);
-  background: transparent;
-  border: 0;
-}
-
-.fullscreenButton {
-  display: none;
-  width: 44px;
-  height: 44px;
-  background-color: var(--color-white-alpha-10);
-  border: 1px solid var(--color-white-alpha-22);
-  border-radius: 14px;
-  transition:
-    background-color var(--transition-base),
-    border-color var(--transition-base),
-    opacity var(--transition-base);
-}
-
-.fullscreenButton:hover,
-.fullscreenButton:focus-visible {
-  background-color: var(--color-white-alpha-20);
-  border-color: var(--color-white-alpha-48);
-}
-
-.fullscreenButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.fullscreenButton:focus-visible,
-.userMenuButton:focus-visible {
-  outline: 2px solid var(--color-white);
-  outline-offset: 3px;
-}
-
-.userMenuWrap {
-  position: static;
-  display: none;
 }
 
 .userBadge {
   min-width: 108px;
 }
 
-.userMenu {
-  position: absolute;
-  top: calc(100%);
-  right: 0;
-  z-index: var(--z-dropdown);
-  display: grid;
-  gap: 8px;
-  width: min(240px, calc(100vw - 40px));
-  padding: 18px;
-  color: var(--color-text-primary);
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      var(--color-accent-tint),
-      transparent 34%
-    ),
-    var(--color-surface);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-modal);
-}
-
-.userMenuItem {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-  min-height: 46px;
-  padding: 11px 12px;
-  color: var(--color-text-secondary);
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: var(--lh-base);
-  text-decoration: none;
-  border-radius: var(--radius-md);
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base),
-    opacity var(--transition-base);
-}
-
-.userMenuItem svg {
-  width: 18px;
-  height: 18px;
-  color: currentColor;
-  stroke-width: 2.1;
-}
-
-.userMenuItem:hover,
-.userMenuItem:focus-visible {
-  color: var(--color-accent-hover);
-  background-color: var(--color-accent-soft);
-}
-
-.userMenuItem:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.userMenuItemDisabled {
-  cursor: not-allowed;
-  opacity: 0.48;
-}
-
-.userMenuItemDisabled:hover,
-.userMenuItemDisabled:focus-visible {
-  color: var(--color-text-secondary);
-  background-color: transparent;
-}
-
-.userMenuDivider {
-  width: 104px;
-  height: 1px;
-  margin-inline: 32px auto;
-  background-color: var(--color-border-strong);
-}
-
-.logoutButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 46px;
-  margin-top: 6px;
-  padding: 10px 18px;
-  color: var(--color-white);
-  font-size: var(--fz-14);
-  font-weight: var(--fw-semi-bold);
-  line-height: 1.2;
-  cursor: pointer;
-  background-color: var(--color-accent-hover);
-  border: 1px solid var(--color-accent-hover);
-  border-radius: var(--radius-pill);
-  transition:
-    background-color var(--transition-base),
-    border-color var(--transition-base),
-    opacity var(--transition-base);
-}
-
-.logoutButton svg {
-  flex-shrink: 0;
-  color: currentColor;
-}
-
-.logoutButton:hover:not(:disabled),
-.logoutButton:focus-visible:not(:disabled) {
-  background-color: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-.logoutButton:focus-visible {
-  outline: 2px solid var(--color-white);
-  outline-offset: 3px;
-}
-
-.logoutButton:disabled {
-  cursor: wait;
-  opacity: 0.7;
-}
-
 @media only screen and (min-width: 768px) {
-  .fullscreenButton {
+  .fullscreenDesktop {
     display: inline-flex;
   }
 }
 
 @media only screen and (min-width: 1440px) {
-  .userMenuWrap {
+  .userDropdownDesktop {
     display: block;
   }
 }
