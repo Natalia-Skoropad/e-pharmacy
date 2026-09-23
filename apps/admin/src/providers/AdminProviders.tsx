@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 
 import { ToastProvider } from '@e-pharmacy/ui/feedback';
 
+import { AuthProvider } from './AuthProvider';
+
 //===================================================================
 
 type AdminProvidersProps = Readonly<{
@@ -13,5 +15,9 @@ type AdminProvidersProps = Readonly<{
 //===================================================================
 
 export function AdminProviders({ children }: AdminProvidersProps) {
-  return <ToastProvider>{children}</ToastProvider>;
+  return (
+    <ToastProvider>
+      <AuthProvider>{children}</AuthProvider>
+    </ToastProvider>
+  );
 }

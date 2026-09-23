@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next';
 
-export default function robots(): MetadataRoute.Robots {
+//===================================================================
+
+function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
@@ -8,3 +10,5 @@ export default function robots(): MetadataRoute.Robots {
     },
   };
 }
+
+export default robots;
