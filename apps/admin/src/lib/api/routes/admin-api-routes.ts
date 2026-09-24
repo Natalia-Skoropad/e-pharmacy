@@ -15,6 +15,9 @@ export const adminApiRoutes = {
 
   auth: {
     current: localAuthApiRoutes.current,
+    login: localAuthApiRoutes.login,
     logout: localAuthApiRoutes.logout,
+    passwordResetRequest: localAuthApiRoutes.passwordResetRequest,
+    passwordResetConfirm: localAuthApiRoutes.passwordResetConfirm,
   },
 } as const;

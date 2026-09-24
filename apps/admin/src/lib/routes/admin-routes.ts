@@ -1,6 +1,9 @@
 export const ADMIN_ROUTES = {
   ROOT: '/',
   LOGIN: '/login',
+  PASSWORD_RECOVERY: '/password-recovery',
+  RESET_PASSWORD: '/reset-password',
+  PROFILE: '/admin/profile',
   DASHBOARD: '/admin/dashboard',
   PHARMACY_OWNERS: '/admin/pharmacy-owners',
   PHARMACIES: '/admin/pharmacies',

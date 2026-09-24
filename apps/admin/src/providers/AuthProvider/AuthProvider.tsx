@@ -7,12 +7,17 @@ import {
   type AuthProviderServices,
 } from '@e-pharmacy/auth/react';
 
-import { getCurrentUser, logoutUser } from '@/lib/api/browser/auth.api';
+import {
+  getCurrentUser,
+  loginUser,
+  logoutUser,
+} from '@/lib/api/browser/auth.api';
 
 //===================================================================
 
 const adminAuthServices = {
   getCurrentUser,
+  login: loginUser,
   logout: logoutUser,
 } satisfies AuthProviderServices;
 

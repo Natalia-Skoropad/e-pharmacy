@@ -31,6 +31,51 @@ const protectedRoute = await read(
   'AdminProtectedRoute.tsx'
 );
 
+const guestRoute = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'auth',
+  'AdminGuestOnlyRoute.tsx'
+);
+
+const loginForm = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'auth',
+  'AdminLoginForm.tsx'
+);
+
+const recoveryForm = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'auth',
+  'AdminPasswordRecoveryForm.tsx'
+);
+
+const resetForm = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'auth',
+  'AdminResetPasswordForm.tsx'
+);
+
+const loginDestination = await read(
+  'apps',
+  'admin',
+  'src',
+  'lib',
+  'auth',
+  'resolve-login-destination.ts'
+);
+
 const adminLayout = await read(
   'apps',
   'admin',
@@ -126,6 +171,41 @@ const logoutRoute = await read(
   'route.ts'
 );
 
+const loginRoute = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'api',
+  'auth',
+  'login',
+  'route.ts'
+);
+
+const recoveryRoute = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'api',
+  'auth',
+  'password-reset',
+  'request',
+  'route.ts'
+);
+
+const resetRoute = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'api',
+  'auth',
+  'password-reset',
+  'confirm',
+  'route.ts'
+);
+
 //===================================================================
 
 assert.match(protectedRoute, /^\s*['"]use client['"];?/);
@@ -151,6 +231,24 @@ assert.doesNotMatch(
 
 //===================================================================
 
+assert.match(guestRoute, /^\s*['"]use client['"];?/);
+assert.match(guestRoute, /GuestOnlyRoute/);
+assert.match(guestRoute, /resolveAdminLoginDestination/);
+assert.match(guestRoute, /allowGuestContentWhenUnavailable/);
+assert.match(guestRoute, /Checking admin session/);
+
+assert.match(loginDestination, /getSafeApplicationRedirectPath/);
+
+assert.match(
+  loginDestination,
+  /allowedPrefixes:\s*ADMIN_ALLOWED_REDIRECT_PREFIXES/
+);
+
+assert.match(loginDestination, /fallbackPath:\s*ADMIN_ROUTES\.PROFILE/);
+assert.match(loginDestination, /\['\/admin'\]/);
+
+//===================================================================
+
 assert.doesNotMatch(adminLayout, /['"]use client['"]/);
 assert.match(adminLayout, /AdminProtectedRoute/);
 assert.match(adminLayout, /AdminShell/);
@@ -168,18 +266,35 @@ assert.match(routeAccess, /user\.status === ['"]active['"]/);
 assert.match(authProvider, /^\s*['"]use client['"];?/);
 assert.match(authProvider, /AuthProviderCore/);
 assert.match(authProvider, /getCurrentUser/);
+assert.match(authProvider, /login:\s*loginUser/);
 assert.match(authProvider, /logout:\s*logoutUser/);
 assert.match(authProvider, /bootstrapMode=['"]always['"]/);
 assert.doesNotMatch(authProvider, /\bregister\s*:/);
-assert.doesNotMatch(authProvider, /\blogin\s*:/);
 
 assert.match(adminProviders, /<ToastProvider>/);
 assert.match(adminProviders, /<AuthProvider>\{children\}<\/AuthProvider>/);
 
 //===================================================================
 
-assert.match(apiRoutes, /localAuthApiRoutes\.current/);
-assert.match(apiRoutes, /localAuthApiRoutes\.logout/);
+for (const localRoute of [
+  'current',
+  'login',
+  'logout',
+  'passwordResetRequest',
+  'passwordResetConfirm',
+]) {
+  assert.match(apiRoutes, new RegExp(`localAuthApiRoutes\\.${localRoute}`));
+}
+
+for (const browserMethod of [
+  'loginUser',
+  'requestPasswordReset',
+  'resetPassword',
+  'getCurrentUser',
+  'logoutUser',
+]) {
+  assert.match(browserAuthApi, new RegExp(`function\\s+${browserMethod}`));
+}
 
 assert.match(browserAuthApi, /localApiRequest/);
 assert.match(browserAuthApi, /parseAuthResponse/);
@@ -198,9 +313,84 @@ assert.match(logoutRoute, /backendPath:\s*authRoutes\.logout/);
 assert.match(logoutRoute, /cookieCleanup:\s*['"]always['"]/);
 assert.match(logoutRoute, /authCookieMode:\s*['"]refresh-only['"]/);
 
+assert.match(loginRoute, /createAuthProxyRoute/);
+assert.match(loginRoute, /backendPath:\s*authRoutes\.login/);
+assert.match(loginRoute, /markerAction:\s*['"]set['"]/);
+
+assert.match(recoveryRoute, /createAuthProxyRoute/);
+assert.match(recoveryRoute, /backendPath:\s*authRoutes\.passwordResetRequest/);
+
+assert.match(resetRoute, /createAuthProxyRoute/);
+assert.match(resetRoute, /backendPath:\s*authRoutes\.passwordResetConfirm/);
+assert.match(resetRoute, /cookieCleanup:\s*['"]on-success['"]/);
+
 //===================================================================
 
-assert.match(adminRoutes, /LOGIN:\s*['"]\/login['"]/);
+for (const [name, route] of [
+  ['LOGIN', '/login'],
+  ['PASSWORD_RECOVERY', '/password-recovery'],
+  ['RESET_PASSWORD', '/reset-password'],
+  ['PROFILE', '/admin/profile'],
+]) {
+  assert.match(adminRoutes, new RegExp(`${name}:\\s*['"]${route}['"]`));
+}
+
+assert.match(loginForm, /application:\s*['"]admin['"]/);
+assert.match(loginForm, /resolveAdminLoginDestination/);
+assert.match(loginForm, /ADMIN_ROUTES\.PASSWORD_RECOVERY/);
+assert.doesNotMatch(loginForm, /RadioOption|REGISTER|\/register/);
+
+assert.match(recoveryForm, /application:\s*['"]admin['"]/);
+
+assert.match(
+  recoveryForm,
+  /If an account with that email exists, you will receive password reset instructions/
+);
+
+assert.doesNotMatch(recoveryForm, /RadioOption|REGISTER|\/register/);
+
+assert.match(resetForm, /captureResetPasswordToken/);
+assert.match(resetForm, /clearResetPasswordTokenFromHistoryState/);
+
+assert.doesNotMatch(
+  resetForm,
+  /localStorage|sessionStorage|document\s*\.\s*cookie/
+);
+
+for (const pagePath of [
+  ['(auth)', '(guest)', 'login', 'page.tsx'],
+  ['(auth)', '(guest)', 'password-recovery', 'page.tsx'],
+  ['(auth)', 'reset-password', 'page.tsx'],
+]) {
+  assert.equal(
+    await exists('apps', 'admin', 'src', 'app', ...pagePath),
+    true,
+    `Stage 10.2 auth page must exist: ${pagePath.join('/')}`
+  );
+}
+
+assert.equal(
+  await exists('apps', 'admin', 'src', 'app', 'register', 'page.tsx'),
+  false,
+  'Admin public registration page must not exist'
+);
+
+assert.equal(
+  await exists(
+    'apps',
+    'admin',
+    'src',
+    'app',
+    'api',
+    'auth',
+    'register',
+    'route.ts'
+  ),
+  false,
+  'Admin public registration BFF route must not exist'
+);
+
+//===================================================================
 
 assert.match(destinations, /NEXT_PUBLIC_CLIENT_APP_URL/);
 assert.match(destinations, /NEXT_PUBLIC_PHARMACY_APP_URL/);
@@ -216,40 +406,6 @@ assert.match(
   envExample,
   /NEXT_PUBLIC_PHARMACY_APP_URL=http:\/\/localhost:3002/
 );
-
-//===================================================================
-
-for (const futurePath of [
-  ['login', 'page.tsx'],
-  ['password-recovery', 'page.tsx'],
-  ['reset-password', 'page.tsx'],
-]) {
-  assert.equal(
-    await exists('apps', 'admin', 'src', 'app', ...futurePath),
-    false,
-    `Stage 4 must not create ${futurePath.join('/')}`
-  );
-}
-
-for (const futureApiPath of [
-  ['login', 'route.ts'],
-  ['password-reset', 'request', 'route.ts'],
-  ['password-reset', 'confirm', 'route.ts'],
-]) {
-  assert.equal(
-    await exists(
-      'apps',
-      'admin',
-      'src',
-      'app',
-      'api',
-      'auth',
-      ...futureApiPath
-    ),
-    false,
-    `Stage 4 must not create auth UI BFF ${futureApiPath.join('/')}`
-  );
-}
 
 //===================================================================
 
@@ -272,13 +428,13 @@ assert.equal(
 assert.ok(
   adminCheck.indexOf(protectedCheck) >
     adminCheck.indexOf('pnpm check:admin-auth-foundation'),
-  'Stage 4 check must follow Stage 3 auth foundation check'
+  'Admin protected/auth UI check must follow the auth foundation check'
 );
 
 assert.ok(
   adminCheck.indexOf(protectedCheck) <
     adminCheck.indexOf('pnpm --filter @e-pharmacy/admin lint'),
-  'Stage 4 check must run before lint/type-check/build'
+  'Admin protected/auth UI check must run before lint/type-check/build'
 );
 
 const deploy = rootPackage.scripts['check:before-deploy'].split(/\s*&&\s*/);
@@ -291,7 +447,7 @@ assert.equal(
 
 assert.ok(
   deploy.indexOf(protectedCheck) < deploy.indexOf('pnpm lint'),
-  'Stage 4 check must run before workspace lint'
+  'Admin protected/auth UI check must run before workspace lint'
 );
 
 assert.ok(
@@ -299,4 +455,6 @@ assert.ok(
   'check:before-deploy must not duplicate the full admin check'
 );
 
-console.log('Admin protected-route structural check passed.');
+console.log(
+  'Admin protected-route and Stage 10.2 auth UI structural check passed.'
+);

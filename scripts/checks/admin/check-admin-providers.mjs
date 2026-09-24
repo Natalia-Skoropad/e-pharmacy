@@ -50,9 +50,9 @@ assert.match(authProvider, /^\s*['"]use client['"];?/);
 assert.match(authProvider, /AuthProviderCore/);
 assert.match(authProvider, /bootstrapMode=['"]always['"]/);
 assert.match(authProvider, /getCurrentUser/);
+assert.match(authProvider, /login:\s*loginUser/);
 assert.match(authProvider, /logout:\s*logoutUser/);
 assert.doesNotMatch(authProvider, /\bregister\s*:/);
-assert.doesNotMatch(authProvider, /\blogin\s*:/);
 
 assert.doesNotMatch(
   authProvider,

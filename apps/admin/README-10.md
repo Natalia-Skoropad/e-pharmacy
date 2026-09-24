@@ -5338,3 +5338,19 @@ apps/client/src/app/(public)/(auth)/(guest)/register/page.tsx
 apps/client/src/components/auth/index.ts
 
 //============================================
+
+Привіт) Готово 💙💛
+
+Зібрала Stage 10.2 — Admin Login + Password Recovery + Reset Password окремим patch-архівом: тільки 22 оновлені/додані файли, без node_modules, build artifacts і без функціоналу Stage 10.3+.
+
+📦 Завантажити архів Stage 10.2
+
+Реалізовано /login, /password-recovery, /reset-password, три відповідні BFF routes, AuthProvider → login, жорстко заданий application: 'admin', GuestOnlyRoute, safe redirect лише всередині /admin/\*, default redirect → /admin/profile, shared reset-token flow без localStorage/sessionStorage/cookie, generic password-recovery UX без account enumeration. /register не доданий, fake /admin/profile теж не створювався.
+
+Також оновила старі structural checks Stage 4, які раніше навмисно забороняли login UI/BFF і login у AuthProvider — інакше новий етап сам би ламав попередні перевірки. Маленька архітектурна міна була акуратно знешкоджена 😄
+
+Перевірено: admin unit tests 27/27, React tests 6/6, tsc --noEmit — успішно, всі admin structural checks — успішно.
+
+Коміт для цих змін:
+
+feat(admin): add stage 10.2 authentication flow
