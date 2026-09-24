@@ -16,6 +16,7 @@ type BreadcrumbRoute = Readonly<{
 
 const BREADCRUMB_ROUTES: readonly BreadcrumbRoute[] = [
   { href: ADMIN_ROUTES.DASHBOARD, label: 'Dashboard' },
+  { href: ADMIN_ROUTES.PROFILE, label: 'Profile' },
   { href: ADMIN_ROUTES.PHARMACY_OWNERS, label: 'Pharmacy Owners' },
   { href: ADMIN_ROUTES.PHARMACIES, label: 'Pharmacies' },
   { href: ADMIN_ROUTES.PRODUCTS, label: 'Products' },

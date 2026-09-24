@@ -55,6 +55,7 @@ export type ChangePasswordFormProps = Readonly<{
   isSubmitting?: boolean;
   error?: string;
   resetOnSuccess?: boolean;
+  requireConfirmation?: boolean;
   onSubmit: (
     values: Readonly<ChangePasswordFormValues>
   ) => Promise<void> | void;
@@ -63,7 +64,8 @@ export type ChangePasswordFormProps = Readonly<{
 //===================================================================
 
 function validateValues(
-  values: ChangePasswordUiValues
+  values: ChangePasswordUiValues,
+  requireConfirmation: boolean
 ): ChangePasswordUiErrors {
   const coreErrors = validateChangePasswordForm({
     currentPassword: values.currentPassword,
@@ -72,10 +74,12 @@ function validateValues(
 
   const errors: ChangePasswordUiErrors = { ...coreErrors };
 
-  if (!values.confirmPassword) {
-    errors.confirmPassword = 'Confirm your new password.';
-  } else if (values.confirmPassword !== values.newPassword) {
-    errors.confirmPassword = 'Passwords do not match.';
+  if (requireConfirmation) {
+    if (!values.confirmPassword) {
+      errors.confirmPassword = 'Confirm your new password.';
+    } else if (values.confirmPassword !== values.newPassword) {
+      errors.confirmPassword = 'Passwords do not match.';
+    }
   }
 
   return errors;
@@ -93,6 +97,7 @@ export function ChangePasswordForm({
   isSubmitting = false,
   error = '',
   resetOnSuccess = false,
+  requireConfirmation = true,
   onSubmit,
 }: ChangePasswordFormProps) {
   const [values, setValues] = useState<ChangePasswordUiValues>(INITIAL_VALUES);
@@ -109,7 +114,11 @@ export function ChangePasswordForm({
   const [isSubmittingLocally, setIsSubmittingLocally] = useState(false);
   const [localSubmitError, setLocalSubmitError] = useState('');
 
-  const errors = useMemo(() => validateValues(values), [values]);
+  const errors = useMemo(
+    () => validateValues(values, requireConfirmation),
+    [requireConfirmation, values]
+  );
+
   const submitting = isSubmitting || isSubmittingLocally;
 
   const handleChange = (field: ChangePasswordField, value: string) => {
@@ -121,8 +130,12 @@ export function ChangePasswordForm({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    const fields = requireConfirmation
+      ? ALL_FIELDS
+      : ALL_FIELDS.filter((field) => field !== 'confirmPassword');
+
     const allTouched = Object.fromEntries(
-      ALL_FIELDS.map((field) => [field, true])
+      fields.map((field) => [field, true])
     ) as ChangePasswordUiTouched;
 
     setTouched(allTouched);
@@ -213,24 +226,26 @@ export function ChangePasswordForm({
           onChange={(event) => handleChange('newPassword', event.target.value)}
         />
 
-        <PasswordInput
-          id={`${idPrefix}-confirm`}
-          name="confirmPassword"
-          label="Confirm new password"
-          value={values.confirmPassword}
-          error={errors.confirmPassword}
-          isTouched={Boolean(touched.confirmPassword)}
-          autoComplete="new-password"
-          maxLength={USER_PASSWORD_MAX_LENGTH}
-          disabled={disabled || submitting}
-          isVisible={isConfirmPasswordVisible}
-          onToggleVisibility={() =>
-            setIsConfirmPasswordVisible((current) => !current)
-          }
-          onChange={(event) =>
-            handleChange('confirmPassword', event.target.value)
-          }
-        />
+        {requireConfirmation ? (
+          <PasswordInput
+            id={`${idPrefix}-confirm`}
+            name="confirmPassword"
+            label="Confirm new password"
+            value={values.confirmPassword}
+            error={errors.confirmPassword}
+            isTouched={Boolean(touched.confirmPassword)}
+            autoComplete="new-password"
+            maxLength={USER_PASSWORD_MAX_LENGTH}
+            disabled={disabled || submitting}
+            isVisible={isConfirmPasswordVisible}
+            onToggleVisibility={() =>
+              setIsConfirmPasswordVisible((current) => !current)
+            }
+            onChange={(event) =>
+              handleChange('confirmPassword', event.target.value)
+            }
+          />
+        ) : null}
 
         {displayedSubmitError ? (
           <p className={css.formError} role="alert">

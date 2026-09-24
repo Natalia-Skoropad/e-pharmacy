@@ -13,6 +13,7 @@ import {
   getAdminNavigationItemByPathname,
 } from '@/lib/layout/navigation';
 
+import { ADMIN_ROUTES } from '@/lib/routes';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { AdminHeader } from '@/components/layout/AdminHeader/AdminHeader';
@@ -38,7 +39,11 @@ export function AdminShell({ children }: AdminShellProps) {
     [access]
   );
 
-  const breadcrumbs = getAdminNavigationItemByPathname(pathname, navigation)
+  const hasBreadcrumbs =
+    pathname === ADMIN_ROUTES.PROFILE ||
+    Boolean(getAdminNavigationItemByPathname(pathname, navigation));
+
+  const breadcrumbs = hasBreadcrumbs
     ? getAdminBreadcrumbsByPathname(pathname)
     : [];
 

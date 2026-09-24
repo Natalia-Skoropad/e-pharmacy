@@ -8,7 +8,7 @@ import {
 
 const PROFILE_PICTURE_LABELS: PictureCardLabels = {
   uploadAriaLabel: 'Upload profile photo',
-  hint: 'Upload a lightweight JPG, PNG, or WEBP profile photo.',
+  hint: 'Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved right away.',
   uploadButton: 'Upload photo',
   savingButton: 'Saving...',
   removeButton: 'Remove photo',

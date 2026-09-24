@@ -8,10 +8,7 @@ import {
   ChevronDown,
   CircleAlert,
   Heart,
-  KeyRound,
   LogIn,
-  LogOut,
-  MonitorSmartphone,
   RefreshCw,
   Save,
   ShoppingBag,
@@ -51,13 +48,19 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
-import { PictureCard, TableImagePreview } from '@e-pharmacy/ui/media';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
+
+import {
+  ActiveSessionsPanel,
+  ChangePasswordForm,
+  ProfileIdentityCard,
+  ProfilePictureEditor,
+} from '@e-pharmacy/ui/profile';
 
 import {
   AddressInput,
   DateFilter,
   NameInput,
-  PasswordInput,
   PhoneInput,
   RowsPerPageSelect,
   SearchInput,
@@ -78,25 +81,18 @@ import { formatShortDate } from '@e-pharmacy/utils/date';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
 import {
-  CHANGE_PASSWORD_FORM_FIELDS,
-  CHANGE_PASSWORD_INITIAL_VALUES,
   USER_ADDRESS_MAX_LENGTH,
   USER_NAME_MAX_LENGTH,
-  USER_PASSWORD_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   DATA_PROFILE_FORM_FIELDS,
   hasValidationErrors,
-  isChangePasswordFormDirty,
-  isChangePasswordFormValid,
   isDataProfileFormDirty,
   isDataProfileFormValid,
   markAllFieldsTouched,
   normalizeDataProfileUpdateValues,
   normalizePhoneInput,
-  validateChangePasswordForm,
   validateDataProfileForm,
   type ChangePasswordFormValues,
-  type ChangePasswordTouchedFields,
   type DataProfileFormValues,
   type DataProfileTouchedFields,
 } from '@e-pharmacy/validation/profile';
@@ -187,6 +183,8 @@ type ClientOrdersFilterState = Readonly<{
   createdByType: 'all' | OrderCreatedByType;
 }>;
 
+//===================================================================
+
 const DEFAULT_CLIENT_ORDERS_FILTERS: ClientOrdersFilterState = {
   date: { from: '', to: '' },
   pharmacy: '',
@@ -274,21 +272,13 @@ function AuthenticatedProfilePageContent({
   const [profileTouchedFields, setProfileTouchedFields] =
     useState<DataProfileTouchedFields>({});
 
-  const [passwordValues, setPasswordValues] =
-    useState<ChangePasswordFormValues>(CHANGE_PASSWORD_INITIAL_VALUES);
-
-  const [passwordTouchedFields, setPasswordTouchedFields] =
-    useState<ChangePasswordTouchedFields>({});
-
-  const [isCurrentPasswordVisible, setIsCurrentPasswordVisible] =
-    useState(false);
-
-  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
   const [pictureDraft, setPictureDraft] = useState<string | null | undefined>(
     undefined
   );
+
   const picturePreview =
     pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
+
   const [orders, setOrders] = useState<ClientOrder[]>([]);
 
   const [ordersFilters, setOrdersFilters] = useState<ClientOrdersFilterState>(
@@ -360,17 +350,9 @@ function AuthenticatedProfilePageContent({
     [profileValues]
   );
 
-  const passwordErrors = useMemo(
-    () => validateChangePasswordForm(passwordValues),
-    [passwordValues]
-  );
-
   const profileFormIsValid = isDataProfileFormValid(profileValues);
-
   const profileFormIsDirty = profileDraft !== null;
 
-  const passwordFormIsDirty = isChangePasswordFormDirty(passwordValues);
-  const passwordFormIsValid = isChangePasswordFormValid(passwordValues);
   const effectiveFavoriteProductsCount = canUseAuthFeatures
     ? favoriteProductsCount
     : 0;
@@ -970,34 +952,10 @@ function AuthenticatedProfilePageContent({
     }
   };
 
-  const handlePasswordChange = (
-    field: keyof ChangePasswordFormValues,
-    value: string
+  const handleSavePassword = async (
+    values: Readonly<ChangePasswordFormValues>
   ) => {
-    setPasswordSubmitError('');
-    setPasswordTouchedFields((prev) => ({
-      ...prev,
-      [field]: true,
-    }));
-
-    setPasswordValues((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSavePassword = async () => {
-    const nextErrors = validateChangePasswordForm(passwordValues);
-    setPasswordTouchedFields(markAllFieldsTouched(CHANGE_PASSWORD_FORM_FIELDS));
-
-    if (
-      !canUseAuthFeatures ||
-      hasValidationErrors(nextErrors) ||
-      !passwordFormIsDirty ||
-      passwordMutationInFlightRef.current
-    ) {
-      return;
-    }
+    if (!canUseAuthFeatures || passwordMutationInFlightRef.current) return;
 
     passwordMutationInFlightRef.current = true;
 
@@ -1005,10 +963,8 @@ function AuthenticatedProfilePageContent({
       setIsPasswordSaving(true);
       setPasswordSubmitError('');
 
-      await updateCurrentUserPassword(passwordValues);
+      await updateCurrentUserPassword(values);
       invalidateSession('password_changed');
-      setPasswordValues(CHANGE_PASSWORD_INITIAL_VALUES);
-      setPasswordTouchedFields({});
       toast.success('Password changed. Sign in again.');
       window.location.assign(ROUTES.LOGIN);
     } catch (error) {
@@ -1040,35 +996,26 @@ function AuthenticatedProfilePageContent({
 
           <div className={css.profileShell}>
             <aside className={css.sidebar} aria-label="Profile summary">
-              <PictureCard
+              <ProfileIdentityCard
                 name={user.name}
-                pictureUrl={picturePreview}
-                isSaving={isPictureSaving}
-                accept={PICTURE_ACCEPT}
-                validateFile={(file) => buildPictureFileError(file) || null}
-                validatePictureUrl={(pictureUrl) =>
-                  buildPictureUrlError(pictureUrl) || null
+                email={user.email}
+                roleLabel={USER_ROLE_LABELS[user.role]}
+                statusLabel={USER_STATUS_PRESENTATION[user.status].label}
+                pictureEditor={
+                  <ProfilePictureEditor
+                    name={user.name}
+                    pictureUrl={picturePreview}
+                    isSaving={isPictureSaving}
+                    accept={PICTURE_ACCEPT}
+                    validateFile={(file) => buildPictureFileError(file) || null}
+                    validatePictureUrl={(pictureUrl) =>
+                      buildPictureUrlError(pictureUrl) || null
+                    }
+                    onChange={handlePictureChange}
+                    onError={handlePictureError}
+                  />
                 }
-                onChange={handlePictureChange}
-                onError={handlePictureError}
               />
-
-              <div className={css.nameBlock}>
-                <h2 className={css.name}>{user.name}</h2>
-                <p className={css.email}>{user.email}</p>
-              </div>
-
-              <dl className={css.compactDetails}>
-                <div>
-                  <dt>Role</dt>
-                  <dd>{USER_ROLE_LABELS[user.role]}</dd>
-                </div>
-
-                <div>
-                  <dt>Status</dt>
-                  <dd>{USER_STATUS_PRESENTATION[user.status].label}</dd>
-                </div>
-              </dl>
             </aside>
 
             <div className={css.contentCard}>
@@ -1154,180 +1101,43 @@ function AuthenticatedProfilePageContent({
                     </div>
                   </section>
 
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="password-title"
-                  >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="password-title">
-                        Change password
-                      </h2>
-                      <p className={css.panelText}>
-                        Keep your account more securely locked.
-                      </p>
-                    </div>
-
-                    <Button
-                      className={css.panelAction}
-                      type="button"
-                      disabled={!passwordFormIsValid || isPasswordSaving}
-                      iconLeft={<KeyRound size={18} aria-hidden="true" />}
-                      onClick={() => void handleSavePassword()}
-                    >
-                      {isPasswordSaving ? 'Changing...' : 'Change password'}
-                    </Button>
-
-                    <div className={css.formGrid}>
-                      <PasswordInput
-                        id="current-password"
-                        name="currentPassword"
-                        label="Current password"
-                        value={passwordValues.currentPassword}
-                        autoComplete="current-password"
-                        error={passwordErrors.currentPassword}
-                        isTouched={Boolean(
-                          passwordTouchedFields.currentPassword
-                        )}
-                        isVisible={isCurrentPasswordVisible}
-                        maxLength={USER_PASSWORD_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePasswordChange(
-                            'currentPassword',
-                            event.target.value
-                          )
-                        }
-                        onToggleVisibility={() =>
-                          setIsCurrentPasswordVisible((isVisible) => !isVisible)
-                        }
-                      />
-
-                      <PasswordInput
-                        id="new-password"
-                        name="newPassword"
-                        label="New password"
-                        value={passwordValues.newPassword}
-                        autoComplete="new-password"
-                        error={passwordErrors.newPassword}
-                        isTouched={Boolean(passwordTouchedFields.newPassword)}
-                        isVisible={isNewPasswordVisible}
-                        maxLength={USER_PASSWORD_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePasswordChange(
-                            'newPassword',
-                            event.target.value
-                          )
-                        }
-                        onToggleVisibility={() =>
-                          setIsNewPasswordVisible((isVisible) => !isVisible)
-                        }
-                      />
-                    </div>
-
-                    {passwordSubmitError ? (
-                      <p className={css.error} role="alert">
-                        {passwordSubmitError}
-                      </p>
-                    ) : null}
-                  </section>
+                  <div className={css.passwordPanel}>
+                    <ChangePasswordForm
+                      idPrefix="client-profile-password"
+                      description="Keep your account more securely locked."
+                      isSubmitting={isPasswordSaving}
+                      requireConfirmation={false}
+                      error={passwordSubmitError}
+                      onSubmit={handleSavePassword}
+                    />
+                  </div>
                 </div>
               ) : null}
 
               {activeTab === 'sessions' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <section
-                    className={css.panelSection}
-                    aria-labelledby="sessions-title"
-                  >
-                    <div className={css.sessionsHeader}>
-                      <div className={css.panelHeader}>
-                        <h2 className={css.panelTitle} id="sessions-title">
-                          Active sessions and devices
-                        </h2>
-                        <p className={css.panelText}>
-                          Review devices signed in to your account and revoke
-                          sessions you no longer use.
-                        </p>
-                      </div>
-
-                      {logoutAll ? (
-                        <Button
-                          className={css.sessionsSignOutButton}
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          iconLeft={<LogOut size={18} aria-hidden="true" />}
-                          onClick={() => void handleLogoutAllSessions()}
-                        >
-                          Sign out all devices
-                        </Button>
-                      ) : null}
-                    </div>
-
-                    {isSessionsLoading ? (
-                      <LoadingSpinner label="Loading active sessions..." />
-                    ) : sessionsError ? (
-                      <div className={css.loadErrorState} role="alert">
-                        <span className={css.loadErrorIcon} aria-hidden="true">
-                          <CircleAlert size={28} />
-                        </span>
-                        <div className={css.loadErrorCopy}>
-                          <h3>Active sessions could not be loaded</h3>
-                          <p>{sessionsError}</p>
-
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            iconLeft={
-                              <RefreshCw size={18} aria-hidden="true" />
-                            }
-                            onClick={() =>
-                              setSessionsReloadKey((current) => current + 1)
-                            }
-                          >
-                            Try again
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <ul className={css.sessionsList}>
-                        {sessions.map((session) => (
-                          <li className={css.sessionCard} key={session.id}>
-                            <MonitorSmartphone size={22} aria-hidden="true" />
-                            <div className={css.sessionInfo}>
-                              <strong>
-                                {session.deviceName || 'Unknown device'}
-                              </strong>
-                              <span>{session.ip || 'IP unavailable'}</span>
-                              <span>
-                                Last active:{' '}
-                                {formatShortDate(session.lastUsedAt) ?? '—'}
-                              </span>
-                            </div>
-                            {session.isCurrent ? (
-                              <span className={css.currentSession}>
-                                Current session
-                              </span>
-                            ) : (
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                size="sm"
-                                iconLeft={
-                                  <LogOut size={18} aria-hidden="true" />
-                                }
-                                onClick={() =>
-                                  void handleRevokeSession(session.id)
-                                }
-                              >
-                                Revoke
-                              </Button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
+                  <ActiveSessionsPanel
+                    sessions={sessions}
+                    status={
+                      isSessionsLoading
+                        ? 'loading'
+                        : sessionsError
+                          ? 'error'
+                          : 'success'
+                    }
+                    error={sessionsError}
+                    description="Review devices signed in to your account and revoke sessions you no longer use."
+                    showIp
+                    lastUsedLabel="Last active"
+                    formatLastUsedAt={(value) => formatShortDate(value) ?? '—'}
+                    onRetry={() =>
+                      setSessionsReloadKey((current) => current + 1)
+                    }
+                    onRevoke={handleRevokeSession}
+                    {...(logoutAll
+                      ? { onSignOutAll: handleLogoutAllSessions }
+                      : {})}
+                  />
                 </div>
               ) : null}
 

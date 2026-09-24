@@ -235,6 +235,12 @@
   border-top: 1px solid var(--color-border);
 }
 
+.passwordPanel {
+  min-width: 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
 .profileDataSection {
   gap: 12px;
 }

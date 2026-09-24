@@ -7,6 +7,10 @@ export const adminApiRoutes = {
     current: '/api/admin/access/me',
   },
 
+  adminEmployees: {
+    myProfile: '/api/admin/employees/me/profile',
+  },
+
   audit: {
     list: '/api/admin/audit',
     details: (auditLogId: string) =>

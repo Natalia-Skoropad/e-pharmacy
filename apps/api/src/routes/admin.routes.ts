@@ -9,6 +9,8 @@ import {
   updateProductRequestStatusByAdmin,
 } from '../controllers/admin.controller';
 
+import { updateMyAdminEmployeeProfile } from '../controllers/admin-employee.controller';
+
 import {
   getAdminAuditLogDetails,
   getAdminAuditLogs,
@@ -29,6 +31,8 @@ import {
   pharmacyIdParamsSchema,
   updateAdminPharmacyStatusSchema,
 } from '../schemas/admin.schema';
+
+import { updateMyAdminEmployeeProfileSchema } from '../schemas/admin-employee-profile.schema';
 
 import {
   adminAuditListQuerySchema,
@@ -57,6 +61,14 @@ adminRoutes.use(
 //=================================================================================
 
 adminRoutes.get('/access/me', ctrlWrapper(getCurrentAdminAccess));
+
+//=================================================================================
+
+adminRoutes.patch(
+  '/employees/me/profile',
+  validate({ body: updateMyAdminEmployeeProfileSchema }),
+  ctrlWrapper(updateMyAdminEmployeeProfile)
+);
 
 //=================================================================================
 

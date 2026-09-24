@@ -11,6 +11,12 @@ test('uses resource-oriented backend route builders', () => {
   const id = '64b64b64b64b64b64b64b64b';
 
   assert.equal(apiRoutes.admin.accessMe, '/admin/access/me');
+
+  assert.equal(
+    apiRoutes.admin.employees.myProfile,
+    '/admin/employees/me/profile'
+  );
+
   assert.equal(apiRoutes.admin.audit.list, '/admin/audit');
   assert.equal(apiRoutes.admin.audit.details(id), `/admin/audit/${id}`);
 

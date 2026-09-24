@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Globe2, LogOut } from 'lucide-react';
+import { Globe2, LogOut, UserRound } from 'lucide-react';
 
 import { useAuth } from '@e-pharmacy/auth/react';
 
@@ -19,6 +19,7 @@ import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 
 import { getClientAppDestination } from '@/lib/auth/app-destinations';
+import { ADMIN_ROUTES } from '@/lib/routes';
 
 import {
   getAdminNavigationItemByPathname,
@@ -60,6 +61,12 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
     : null;
 
   const userMenuItems: readonly UserDropdownItem[] = [
+    {
+      type: 'link',
+      label: 'Profile',
+      href: ADMIN_ROUTES.PROFILE,
+      icon: <UserRound size={18} aria-hidden="true" />,
+    },
     websiteHref
       ? {
           type: 'link',

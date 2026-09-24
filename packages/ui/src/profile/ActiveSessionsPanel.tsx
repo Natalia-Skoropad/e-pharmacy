@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+
 import {
   ChevronDown,
   LogOut,
@@ -34,6 +35,9 @@ export type ActiveSessionsPanelProps = Readonly<{
   emptyTitle?: string;
   emptyText?: string;
   initialVisibleCount?: number;
+  showIp?: boolean;
+  lastUsedLabel?: string;
+  formatLastUsedAt?: (value: string) => string;
   revokingSessionId?: string | null;
   isSigningOutAll?: boolean;
   onRetry?: () => Promise<void> | void;
@@ -60,6 +64,9 @@ export function ActiveSessionsPanel({
   emptyTitle = 'No active sessions found',
   emptyText = 'Session data will appear here when the backend returns active login devices.',
   initialVisibleCount = 10,
+  showIp = false,
+  lastUsedLabel = 'Last used',
+  formatLastUsedAt = formatSessionDate,
   revokingSessionId = null,
   isSigningOutAll = false,
   onRetry,
@@ -150,8 +157,11 @@ export function ActiveSessionsPanel({
                         session.userAgent ??
                         'Unknown device'}
                     </strong>
+                    {showIp ? (
+                      <span>{session.ip || 'IP unavailable'}</span>
+                    ) : null}
                     <span>
-                      Last used: {formatSessionDate(session.lastUsedAt)}
+                      {lastUsedLabel}: {formatLastUsedAt(session.lastUsedAt)}
                     </span>
                   </div>
 

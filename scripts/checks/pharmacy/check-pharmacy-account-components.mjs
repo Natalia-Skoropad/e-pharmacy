@@ -100,7 +100,8 @@ const profilePage = await readSource(
   'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
 );
 
-assert.match(profilePage, /<TabPanel/);
+assert.match(profilePage, /<ProfileTabsLayout/);
+assert.match(profilePage, /<ProfileTabPanel/);
 assert.match(profilePage, /idBase=\{PROFILE_TABS_ID_BASE\}/);
 assert.doesNotMatch(profilePage, /role=["']tabpanel["']/);
 

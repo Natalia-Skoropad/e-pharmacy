@@ -18,6 +18,7 @@ test('admin cabinet composes shared shell primitives without business fetching',
   assert.match(shellSource, /<AdminSidebar/);
   assert.match(shellSource, /<AdminHeader/);
   assert.match(shellSource, /getAdminBreadcrumbsByPathname/);
+  assert.match(shellSource, /pathname === ADMIN_ROUTES\.PROFILE/);
 
   assert.doesNotMatch(
     shellSource,
@@ -33,6 +34,7 @@ test('admin header reuses shared fullscreen and user dropdown mechanics', () => 
   assert.match(headerSource, /CabinetTopBar/);
   assert.match(headerSource, /UserBadge/);
   assert.match(headerSource, /useAdminLogoutController/);
+  assert.match(headerSource, /ADMIN_ROUTES\.PROFILE/);
 
   assert.doesNotMatch(
     headerSource,
@@ -47,4 +49,5 @@ test('desktop and mobile navigation consume the same canonical admin model', () 
   assert.match(sidebarSource, /items=\{items\}/);
   assert.match(mobileSource, /items=\{items\}/);
   assert.match(mobileSource, /onNavigate=\{onClose\}/);
+  assert.match(mobileSource, /ADMIN_ROUTES\.PROFILE/);
 });

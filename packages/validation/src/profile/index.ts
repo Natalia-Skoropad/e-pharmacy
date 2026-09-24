@@ -1,3 +1,4 @@
+export * from './account-identity-validation';
 export * from './user-profile-validation';
 
 export {

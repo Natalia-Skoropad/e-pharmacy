@@ -15,6 +15,10 @@ test('flat admin routes derive breadcrumbs from canonical pathname families', ()
   assert.deepEqual(getAdminBreadcrumbsByPathname(ADMIN_ROUTES.ORDERS), [
     { label: 'Orders' },
   ]);
+
+  assert.deepEqual(getAdminBreadcrumbsByPathname(ADMIN_ROUTES.PROFILE), [
+    { label: 'Profile' },
+  ]);
 });
 
 //===================================================================

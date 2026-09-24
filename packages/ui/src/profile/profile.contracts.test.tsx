@@ -107,6 +107,35 @@ test('active sessions panel renders auth sessions without app-specific copy', ()
 
 //===================================================================
 
+test('active sessions panel supports client-compatible IP and date copy', () => {
+  const sessions: ActiveSession[] = [
+    {
+      id: 'session-1',
+      deviceName: 'Unknown device',
+      ip: '46.211.56.205',
+      roleAtLogin: 'client',
+      lastUsedAt: '2026-09-18T10:00:00.000Z' as ISODateTimeString,
+      expiresAt: '2026-10-18T10:00:00.000Z' as ISODateTimeString,
+      isCurrent: false,
+    },
+  ];
+
+  const markup = renderToStaticMarkup(
+    <ActiveSessionsPanel
+      sessions={sessions}
+      status="success"
+      showIp
+      lastUsedLabel="Last active"
+      formatLastUsedAt={() => '18 Sep 2026'}
+    />
+  );
+
+  assert.match(markup, /46\.211\.56\.205/);
+  assert.match(markup, /Last active: 18 Sep 2026/);
+});
+
+//===================================================================
+
 test('shared password form includes explicit password confirmation', () => {
   const markup = renderToStaticMarkup(
     <ChangePasswordForm onSubmit={() => undefined} />
@@ -115,4 +144,19 @@ test('shared password form includes explicit password confirmation', () => {
   assert.match(markup, /Current password/);
   assert.match(markup, /New password/);
   assert.match(markup, /Confirm new password/);
+});
+
+//===================================================================
+
+test('shared password form can preserve legacy two-field profile flows', () => {
+  const markup = renderToStaticMarkup(
+    <ChangePasswordForm
+      requireConfirmation={false}
+      onSubmit={() => undefined}
+    />
+  );
+
+  assert.match(markup, /Current password/);
+  assert.match(markup, /New password/);
+  assert.doesNotMatch(markup, /Confirm new password/);
 });

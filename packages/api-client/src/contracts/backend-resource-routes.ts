@@ -15,6 +15,10 @@ export const backendRoutes = {
   admin: {
     accessMe: '/admin/access/me',
 
+    employees: {
+      myProfile: '/admin/employees/me/profile',
+    },
+
     audit: {
       list: '/admin/audit',
       details: (auditLogId: EntityId) => `/admin/audit/${segment(auditLogId)}`,

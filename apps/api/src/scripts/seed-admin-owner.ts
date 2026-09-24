@@ -21,7 +21,25 @@ function readBootstrapInput() {
   });
 
   if (!result.success) {
-    throw new Error('Invalid ADMIN_OWNER_* bootstrap configuration.');
+    const envNamesByField: Readonly<Record<string, string>> = {
+      name: 'ADMIN_OWNER_NAME',
+      email: 'ADMIN_OWNER_EMAIL',
+      password: 'ADMIN_OWNER_PASSWORD',
+      phone: 'ADMIN_OWNER_PHONE',
+      address: 'ADMIN_OWNER_ADDRESS',
+    };
+
+    const issueLines = result.error.issues.map((issue) => {
+      const field = String(issue.path[0] ?? '');
+      const envName = envNamesByField[field] ?? 'ADMIN_OWNER_*';
+      return `- ${envName}: ${issue.message}`;
+    });
+
+    const details = issueLines.length > 0 ? `\n${issueLines.join('\n')}` : '';
+
+    throw new Error(
+      `Invalid ADMIN_OWNER_* bootstrap configuration.${details}\nConfigure the bootstrap values in apps/api/.env and retry.`
+    );
   }
 
   return result.data;

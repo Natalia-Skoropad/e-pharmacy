@@ -5378,3 +5378,84 @@ Stage 10.4+ не доданий
 Коміт:
 
 refactor(ui): add shared profile foundation
+
+//=============================================================
+
+Продовжила й завершила Stage 10.4 на базі наданого e-pharmacy10-4.zip. Також звірила реалізацію з apps/admin/README-0.md … README-10.md, перевірила повторюваний Profile-функціонал у Client та окремо розібрала помилку seed:admin-owner.
+
+📦 Архів Stage 10.4
+
+Завантажити e-pharmacy-stage-10.4-updated-files.zip
+
+В архіві 35 тільки оновлених/доданих файлів, зі збереженням структури проєкту. Його можна накладати поверх твого актуального проєкту. Stage 10.5 і наступні етапи не додавала.
+
+Основні зміни:
+
+Admin Profile: створено /admin/profile, sidebar з photo/name/email/role/status, Personal information, політика Platform Owner vs regular employee, optimistic revision protection, оновлення AuthProvider після PATCH; додано Profile у desktop UserDropdown, mobile menu та breadcrumbs. Login fallback уже був /admin/profile, тепер він веде на реальну сторінку.
+Backend: додано PATCH /admin/employees/me/profile + Admin BFF /api/admin/employees/me/profile. Regular employee може змінювати лише фото; Platform Owner — фото, name та email. Backend сам визначає isPlatformOwner, не довіряє frontend, захищений від mass-assignment, duplicate email і stale expectedRevision.
+Pharmacy Profile: переведено на Stage 10.3 shared blocks (ProfileTabsLayout, ProfileTabPanel, ProfileIdentityCard, ProfilePictureEditor, DocumentsPanel, ChangePasswordForm, ActiveSessionsPanel) без перенесення pharmacy-specific business logic у shared.
+Client Profile: за твоїми скрінами справді був повторюваний функціонал. Перевикористано ProfileIdentityCard, ProfilePictureEditor, ChangePasswordForm та ActiveSessionsPanel, при цьому залишено client-specific tabs, orders/favorites, IP, Last active, формат дати та двопольову зміну пароля. Тобто ми не влаштовували Profile-компонентам «три однакові квартири в різних районах» 🙂
+Shared Profile: ChangePasswordForm тепер може працювати як із confirm-password, так і в старому Client/Pharmacy режимі без confirmation; ActiveSessionsPanel підтримує client-specific IP/date presentation. Додані regression contract tests.
+seed:admin-owner: покращено діагностику. Замість лише Invalid ADMIN*OWNER*\* bootstrap configuration команда тепер покаже конкретну змінну та її validation error. .env.example також уточнено.
+Чому зараз падає pnpm seed:admin-owner
+
+Це не проблема MongoDB і не проблема самого seed flow. Помилка виникає до підключення до БД, на валідації ADMIN*OWNER*\*.
+
+У apps/api/.env мають бути налаштовані:
+
+ADMIN_OWNER_NAME=Platform Owner
+ADMIN_OWNER_EMAIL=your-admin@example.com
+ADMIN_OWNER_PASSWORD=YourPassword123!
+ADMIN_OWNER_PHONE=+380XXXXXXXXX
+ADMIN_OWNER_ADDRESS=
+
+Обов'язкові NAME, EMAIL, PASSWORD, PHONE. ADDRESS — optional.
+
+Для PHONE формат суворий:
+
++380XXXXXXXXX
+
+тобто +380 + рівно 9 цифр. Пароль — мінімум 8 символів і без пробілів.
+
+Після оновлення:
+
+pnpm seed:admin-owner
+
+якщо щось не так, результат уже буде приблизно таким:
+
+Admin owner bootstrap failed.
+Invalid ADMIN*OWNER*\* bootstrap configuration.
+
+- ADMIN_OWNER_PHONE: ...
+  Configure the bootstrap values in apps/api/.env and retry.
+
+Є ще важливий випадок: якщо перший Admin уже існує в БД, ADMIN_OWNER_EMAIL повинен відповідати email цього Admin. Seed навмисно не буде автоматично перетворювати іншого Admin на Platform Owner.
+
+Перевірки
+
+Structural checks для Admin shell/auth/permissions/audit, Profile, Pharmacy Profile, Client components, API/API-client boundaries, Next BFF routes, validation parity, UI boundaries/styles та shared Cabinet UI пройшли успішно. git diff --check — також чистий.
+
+TypeScript --noEmit успішно перевірено для:
+
+apps/admin
+apps/client
+apps/pharmacy
+packages/ui
+packages/validation
+packages/api-client
+
+Окремі Pharmacy Profile migration tests — 7/7 passed, Admin shell/breadcrumb tests — 6/6 passed, новий Admin self-profile backend contract — 3/3 passed. Нові API-файли додатково пройшли TypeScript syntax/transpile check.
+
+Повний pnpm check:before-deploy у цьому середовищі запустити не можу, бо тут немає повного apps/api/node_modules/pnpm dependency environment. Тому після накладання архіву я б локально запустила саме:
+
+pnpm check:before-deploy
+Commit
+
+Для всього Stage 10.4 підійде:
+
+git add .
+git commit -m "feat(profile): add admin self-profile and reuse shared profile UI"
+
+Цей commit нормально охоплює і Admin Profile, і Pharmacy/Client migration, не приписуючи сюди майбутній Stage 10.5.
+
+//=============================================================

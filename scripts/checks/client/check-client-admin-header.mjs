@@ -150,17 +150,19 @@ assert.doesNotMatch(
 
 assert.doesNotMatch(controller, /fetchAdmin|\/api\/admin|\/admin\/profile/);
 
-// Stage 5 must not spill into later admin-cabinet implementation stages.
+// Keep the historical client/admin-header boundary valid as the admin app evolves.
+// `/admin/profile` is part of Stage 10.4, so it must no longer be treated as
+// forbidden by this Stage 5 regression check. The dashboard is still outside
+// the current stage, and legacy flat shell component paths must remain absent.
 for (const forbiddenPath of [
   'apps/admin/src/app/admin/dashboard/page.tsx',
-  'apps/admin/src/app/admin/profile/page.tsx',
   'apps/admin/src/components/layout/AdminHeader.tsx',
   'apps/admin/src/components/layout/AdminSidebar.tsx',
 ]) {
   assert.equal(
     await exists(forbiddenPath),
     false,
-    `${forbiddenPath} belongs to a later admin stage.`
+    `${forbiddenPath} is outside the current admin stage or is a legacy shell path.`
   );
 }
 
@@ -172,4 +174,6 @@ assert.equal(
   'A client-local AdminUserBadge must not be introduced.'
 );
 
-console.log('Client admin-header Stage 5 contracts passed.');
+console.log(
+  'Client admin-header compatibility contracts passed through Stage 10.4.'
+);
