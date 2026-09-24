@@ -19,7 +19,8 @@
     "./status-pages": "./src/status-pages/index.ts",
     "./statistics": "./src/statistics/index.ts",
     "./styles/*.css": "./src/styles/*.css",
-    "./auth": "./src/auth/index.ts"
+    "./auth": "./src/auth/index.ts",
+    "./profile": "./src/profile/index.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts,.tsx",

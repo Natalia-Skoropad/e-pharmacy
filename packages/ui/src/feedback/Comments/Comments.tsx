@@ -2,7 +2,6 @@
 
 import { MessageSquarePlus, Trash2 } from 'lucide-react';
 
-import type { PharmacyNote } from '@e-pharmacy/types/notes';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import Button from '../../primitives/Button/Button';
@@ -17,6 +16,7 @@ export type CommentComposerProps = Readonly<{
   id: string;
   value: string;
   maxLength: number;
+  label?: string;
   placeholder?: string;
   disabled?: boolean;
   isSaving?: boolean;
@@ -30,6 +30,7 @@ export function CommentComposer({
   id,
   value,
   maxLength,
+  label = 'New comment',
   placeholder = 'Write an internal comment...',
   disabled = false,
   isSaving = false,
@@ -41,7 +42,7 @@ export function CommentComposer({
       <CommentInput
         id={id}
         name="entityComment"
-        label="New manager comment"
+        label={label}
         placeholder={placeholder}
         value={value}
         error=""
@@ -67,23 +68,38 @@ export function CommentComposer({
 
 //===================================================================
 
-export type CommentItemProps = Readonly<{
-  comment: PharmacyNote;
-  title?: string;
-  isDeleting?: boolean;
-  deleteDisabled?: boolean;
-  onDelete?: (comment: PharmacyNote) => void;
+export type CommentListItem = Readonly<{
+  id: string;
+  text: string;
+  createdAt: string;
+  author: Readonly<{
+    displayName: string;
+  }>;
 }>;
 
 //===================================================================
 
-export function CommentItem({
+export type CommentItemProps<
+  TComment extends CommentListItem = CommentListItem,
+> = Readonly<{
+  comment: TComment;
+  title?: string;
+  isDeleting?: boolean;
+  deleteDisabled?: boolean;
+  onDelete?: (comment: TComment) => void;
+}>;
+
+//===================================================================
+
+export function CommentItem<
+  TComment extends CommentListItem = CommentListItem,
+>({
   comment,
   title = 'Comment',
   isDeleting = false,
   deleteDisabled = false,
   onDelete,
-}: CommentItemProps) {
+}: CommentItemProps<TComment>) {
   return (
     <li className={css.comment}>
       <div className={css.commentHead}>
@@ -118,8 +134,10 @@ export function CommentItem({
 
 //===================================================================
 
-export type CommentsListProps = Readonly<{
-  items: readonly PharmacyNote[];
+export type CommentsListProps<
+  TComment extends CommentListItem = CommentListItem,
+> = Readonly<{
+  items: readonly TComment[];
   title?: string;
   commentTitle?: string;
   emptyText?: string;
@@ -127,12 +145,14 @@ export type CommentsListProps = Readonly<{
   isLoading?: boolean;
   deletingId?: string | null;
   deleteDisabled?: boolean;
-  onDelete?: (comment: PharmacyNote) => void;
+  onDelete?: (comment: TComment) => void;
 }>;
 
 //===================================================================
 
-export function CommentsList({
+export function CommentsList<
+  TComment extends CommentListItem = CommentListItem,
+>({
   items,
   title = 'Saved comments',
   commentTitle = 'Comment',
@@ -142,7 +162,7 @@ export function CommentsList({
   deletingId,
   deleteDisabled = false,
   onDelete,
-}: CommentsListProps) {
+}: CommentsListProps<TComment>) {
   return (
     <div className={css.savedComments}>
       <h3>{title}</h3>

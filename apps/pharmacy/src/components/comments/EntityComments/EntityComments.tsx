@@ -126,6 +126,7 @@ function EntityCommentsContent({
 
       <CommentComposer
         id={`${entityKey}-comment`}
+        label="New manager comment"
         value={comments.draft}
         maxLength={PHARMACY_NOTE_MAX_LENGTH}
         placeholder={placeholder}

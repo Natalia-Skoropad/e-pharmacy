@@ -5354,3 +5354,27 @@ apps/client/src/components/auth/index.ts
 Коміт для цих змін:
 
 feat(admin): add stage 10.2 authentication flow
+
+//===========================================================
+
+Готово) Stage 10.3 — Shared Profile UI foundation зібраний поверх стану після 10.2, без заходу в 10.4+.
+
+📦 Завантажити архів Stage 10.3
+
+В архіві 13 оновлених/доданих файлів. Додано canonical export @e-pharmacy/ui/profile і reusable-компоненти ProfileIdentityCard, ProfilePictureEditor, ChangePasswordForm, ActiveSessionsPanel, ProfileTabsLayout + ProfileTabPanel, DocumentsPanel. Великий Admin Profile не створювала, Pharmacy Profile на shared profile-компоненти ще не мігрувала — це вже Stage 10.4.
+
+Також CommentsList / CommentItem більше не залежать від PharmacyNote: тепер вони працюють через generic presentation contract. При цьому pharmacy-specific напис New manager comment залишився в apps/pharmacy, тому тут рефакторинг без маленького UX-сюрпризу 😄
+
+Перевірки:
+
+@e-pharmacy/ui TypeScript — ✅
+UI tests — 47/47 ✅
+нові Stage 10.3 contract tests — 6/6 ✅
+UI style contracts — ✅, 136 CSS files
+UI boundary check — ✅, 1296 source files
+у shared UI більше немає залежності від PharmacyNote
+Stage 10.4+ не доданий
+
+Коміт:
+
+refactor(ui): add shared profile foundation

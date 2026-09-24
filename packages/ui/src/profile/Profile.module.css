@@ -1,0 +1,295 @@
+.identityCard {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+}
+
+.nameBlock {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fz-20);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.email {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.details {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+}
+
+.detailRow {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.detailRow dt {
+  color: var(--color-text-secondary);
+}
+
+.detailRow dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+  color: var(--color-text-primary);
+}
+
+.identityExtra {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.tabsLayout {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  padding: 12px;
+  background-color: var(--color-surface);
+  border-radius: calc(var(--radius-xl) + 4px);
+  box-shadow: var(--shadow-card);
+}
+
+.tabsSidebar {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  justify-items: stretch;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.tabsContent {
+  min-width: 0;
+  max-width: 100%;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.tabPanel {
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+  padding-top: 24px;
+}
+
+.panel {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.panelHeader {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.panelText {
+  max-width: 620px;
+  margin: 0;
+  font-size: var(--fz-16);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.panelAction {
+  width: 100%;
+  justify-content: center;
+}
+
+.formGrid {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.formError {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+}
+
+.documentsList {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.documentItem {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.documentMeta {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.documentName {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+
+.documentSize {
+  margin: 0;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}
+
+.emptyState {
+  display: grid;
+  gap: 8px;
+  padding: 20px;
+  background-color: var(--color-background);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.emptyState h3,
+.emptyState p {
+  margin: 0;
+}
+
+.sessionsList {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sessionCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.sessionInfo {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sessionInfo strong,
+.sessionInfo span {
+  overflow-wrap: anywhere;
+}
+
+.sessionInfo span,
+.currentSession {
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}
+
+.currentSession,
+.sessionAction {
+  grid-column: 1 / -1;
+}
+
+@media only screen and (min-width: 768px) {
+  .tabsLayout {
+    padding: 14px;
+  }
+
+  .tabsSidebar {
+    padding: 28px;
+  }
+
+  .formGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .panel {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .panelHeader {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .panelAction {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: auto;
+    min-width: 180px;
+  }
+
+  .panelBody {
+    grid-column: 1 / -1;
+  }
+
+  .sessionCard {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .currentSession,
+  .sessionAction {
+    grid-column: auto;
+    justify-self: end;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .tabsLayout {
+    grid-template-columns: 320px minmax(0, 1fr);
+    align-items: start;
+  }
+}
