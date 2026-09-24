@@ -72,6 +72,7 @@ app.use(
 for (const routePath of [
   '/auth/pharmacy-documents',
   '/pharmacies/me/documents',
+  '/admin/employees/me/documents',
   '/product-requests',
 ]) {
   app.use(

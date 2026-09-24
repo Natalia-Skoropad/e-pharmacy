@@ -5515,3 +5515,64 @@ git add .
 git commit -m "feat(admin): add password change and active sessions"
 
 Тобто після цього стан проєкту відповідає етапам 1 → 10.5 включно, а 10.6 поки чемно сидить за дверима й не підглядає 😄
+
+//=========================================
+
+Готово 🙂 Stage 10.6 — Admin Documents реалізувала на базі твого актуального e-pharmacy-10-6.zip.
+
+📦 Архів Stage 10.6
+
+Завантажити e-pharmacy-stage-10.6-updated-files.zip
+
+Архів містить 41 тільки оновлений/доданий файл і накладається поверх наданого тобою проєкту. Stage 10.7 Private Comments та все наступне не додавала.
+
+У 10.6 готово:
+
+окремий persistence domain AdminEmployeeDocument, без використання PharmacyDocumentFile;
+ownerUserId є authoritative ownership boundary;
+backend Self API:
+GET /admin/employees/me/documents
+GET /admin/employees/me/documents/:documentId
+POST /admin/employees/me/documents
+PUT /admin/employees/me/documents/:documentId
+DELETE /admin/employees/me/documents/:documentId;
+Regular employee може тільки бачити та завантажувати власні документи;
+Platform Owner додатково може upload / replace / delete;
+знання documentId іншого користувача не дозволяє отримати його документ — ownership входить безпосередньо в Mongo query;
+binary content має select: false і не потрапляє в list response;
+download працює через private BFF із reusable createPrivateDownloadProxyRoute;
+upload/replace використовують окремий Admin document BFF із великим body preset;
+додані fail-closed frontend parsers для document metadata;
+Documents інтегровано в /admin/profile як окрему lazy tab — початкове відкриття Profile не робить document request;
+shared DocumentsPanel розширено capabilities canUpload / canReplace / canDelete, при цьому Pharmacy Profile не отримав дубльованої реалізації;
+спільну низькорівневу document validation/file verification винесено в reusable helper, але Admin і Pharmacy мають окремі domain rules;
+на mobile довгі назви документів переносяться, а не розламують layout;
+mutation UI має single-flight protection;
+Stage 9 Audit інтегрований для:
+admin.employeeDocument.uploaded;
+admin.employeeDocument.replaced;
+admin.employeeDocument.deleted;
+document mutation + AuditLog виконуються в одній Mongo transaction;
+у AuditLog не передаються content, dataUrl, Buffer, sha256 чи інший binary payload;
+Activity History розуміє нові document audit actions/entity;
+старий Stage 9 structural checker також розширений і залишається green;
+додані contract/parser tests саме для нового document domain.
+
+Окремо перевірила scope: жодного AdminEmployeePrivateNote, /employees/me/comments чи UI Comments із 10.7 у зміни не потрапило. Документи цього разу чемно залишили коментарі чекати своєї черги 😄
+
+Також пройшли доступні structural checks для API boundaries, API-client route parity, Profile contracts, Types public API/unused exports, validation parity, UI boundaries/styles, Shared Cabinet UI, усіх наявних Admin checks і Stage 9 Audit. git diff --check — чистий. TypeScript перевірка пройшла для admin, types, validation, api-client та ui; усі змінені TS/TSX файли додатково пройшли syntax transpile. Повний apps/api type-check у цьому контейнері запустити неможливо через відсутність встановлених API dependencies, тому після накладання архіву локально рекомендую одразу:
+
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm test:react
+pnpm build
+pnpm check:before-deploy
+Commit
+
+Якщо Stage 10.6 ще не закомічений:
+
+git add .
+git commit -m "feat(admin): add employee document management"
+
+Тобто після накладання архіву стан проєкту відповідає Stage 1 → Stage 10.6 включно.

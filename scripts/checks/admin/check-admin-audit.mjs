@@ -110,6 +110,14 @@ const ownerService = await read(
   'admin-owner.service.ts'
 );
 
+const adminDocumentService = await read(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'admin-employee-document.service.ts'
+);
+
 const navigation = await read(
   'apps',
   'admin',
@@ -191,9 +199,27 @@ assert.match(auditService, /requestId/);
 assert.match(pharmacyService, /appendAdminAuditLog/);
 assert.match(productRequestService, /appendAdminAuditLog/);
 assert.match(ownerService, /appendAdminAuditLog/);
+assert.match(adminDocumentService, /appendAdminAuditLog/);
 assert.match(pharmacyService, /session\.withTransaction/);
 assert.match(productRequestService, /session\.withTransaction/);
 assert.match(ownerService, /session\.withTransaction/);
+
+assert.equal(
+  (adminDocumentService.match(/session\.withTransaction/g) ?? []).length,
+  3
+);
+
+assert.match(
+  adminDocumentService,
+  /ADMIN_EMPLOYEE_DOCUMENT_(?:UPLOADED|REPLACED|DELETED)/
+);
+
+const adminDocumentAuditSnapshot = adminDocumentService.match(
+  /function auditSnapshot[\s\S]*?(?=\/\/={10,})/
+)?.[0];
+
+assert.ok(adminDocumentAuditSnapshot);
+assert.doesNotMatch(adminDocumentAuditSnapshot, /content|dataUrl|sha256/i);
 
 assert.match(navigation, /Activity history/);
 assert.match(navigation, /ADMIN_PERMISSIONS\.audit\.view/);

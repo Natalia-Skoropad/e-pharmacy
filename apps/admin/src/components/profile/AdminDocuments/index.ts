@@ -1,0 +1,1 @@
+export { AdminDocuments } from './AdminDocuments';

@@ -68,19 +68,32 @@ import { ADMIN_ACCESS_ERROR_CODES } from '@/lib/permissions/admin-access';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
+import { AdminDocuments } from '../AdminDocuments';
+
 import css from './AdminProfilePageContent.module.css';
 
 //===================================================================
 
 const PERSONAL_TAB = 'personal' as const;
+const DOCUMENTS_TAB = 'documents' as const;
 const SESSIONS_TAB = 'sessions' as const;
 
-type ProfileTab = typeof PERSONAL_TAB | typeof SESSIONS_TAB;
+//===================================================================
+
+type ProfileTab =
+  | typeof PERSONAL_TAB
+  | typeof DOCUMENTS_TAB
+  | typeof SESSIONS_TAB;
+
+//===================================================================
 
 const PROFILE_TABS = [
   { value: PERSONAL_TAB, label: 'Personal information' },
+  { value: DOCUMENTS_TAB, label: 'Documents' },
   { value: SESSIONS_TAB, label: 'Active sessions' },
 ] as const;
+
+//===================================================================
 
 const AUTH_EMAIL_CONFLICT = 'AUTH_EMAIL_CONFLICT';
 const AUTH_PROFILE_CONFLICT = 'AUTH_PROFILE_CONFLICT';
@@ -118,12 +131,16 @@ export function AdminProfilePageContent() {
 
   const [identityDraft, setIdentityDraft] =
     useState<AccountIdentityFormValues | null>(null);
+
   const [errors, setErrors] = useState<AccountIdentityFormErrors>({});
+
   const [touchedFields, setTouchedFields] =
     useState<AccountIdentityTouchedFields>({});
+
   const [pictureDraft, setPictureDraft] = useState<string | null | undefined>(
     undefined
   );
+
   const [isSavingIdentity, setIsSavingIdentity] = useState(false);
   const [isSavingPicture, setIsSavingPicture] = useState(false);
   const profileMutationInFlightRef = useRef(false);
@@ -135,11 +152,14 @@ export function AdminProfilePageContent() {
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [sessionsStatus, setSessionsStatus] =
     useState<ActiveSessionsPanelStatus>('loading');
+
   const [sessionsError, setSessionsError] = useState('');
   const [sessionsReloadKey, setSessionsReloadKey] = useState(0);
+
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
     null
   );
+
   const [isSigningOutAll, setIsSigningOutAll] = useState(false);
   const sessionMutationInFlightRef = useRef(false);
 
@@ -460,6 +480,16 @@ export function AdminProfilePageContent() {
                 onSubmit={handlePasswordSubmit}
               />
             </>
+          ) : null}
+        </ProfileTabPanel>
+
+        <ProfileTabPanel
+          idBase="admin-profile"
+          value={DOCUMENTS_TAB}
+          activeValue={activeTab}
+        >
+          {activeTab === DOCUMENTS_TAB ? (
+            <AdminDocuments isPlatformOwner={isPlatformOwner} />
           ) : null}
         </ProfileTabPanel>
 

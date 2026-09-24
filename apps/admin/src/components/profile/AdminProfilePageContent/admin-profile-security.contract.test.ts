@@ -9,15 +9,16 @@ const read = (relativePath: string) =>
 
 //===================================================================
 
-test('admin profile reuses shared password and active-session UI without future profile domains', async () => {
+test('admin profile reuses shared security UI and includes Stage 10.6 documents without future comments', async () => {
   const source = await read('./AdminProfilePageContent.tsx');
 
   assert.match(source, /ChangePasswordForm/);
   assert.match(source, /ActiveSessionsPanel/);
   assert.match(source, /label: 'Personal information'/);
+  assert.match(source, /label: 'Documents'/);
   assert.match(source, /label: 'Active sessions'/);
+  assert.match(source, /<AdminDocuments isPlatformOwner=\{isPlatformOwner\}/);
 
-  assert.doesNotMatch(source, /label: 'Documents'/);
   assert.doesNotMatch(source, /label: 'Comments'/);
 });
 

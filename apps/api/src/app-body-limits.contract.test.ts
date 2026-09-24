@@ -21,6 +21,7 @@ test('ordinary JSON uses a small global parser while document payloads opt into 
   for (const routePath of [
     '/auth/pharmacy-documents',
     '/pharmacies/me/documents',
+    '/admin/employees/me/documents',
     '/product-requests',
   ]) {
     assert.match(appSource, new RegExp(routePath.replaceAll('/', '\\/')));

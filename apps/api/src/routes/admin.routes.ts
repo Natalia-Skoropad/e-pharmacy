@@ -9,7 +9,14 @@ import {
   updateProductRequestStatusByAdmin,
 } from '../controllers/admin.controller';
 
-import { updateMyAdminEmployeeProfile } from '../controllers/admin-employee.controller';
+import {
+  createMyAdminEmployeeDocument,
+  deleteMyAdminEmployeeDocument,
+  getMyAdminEmployeeDocument,
+  listMyAdminEmployeeDocuments,
+  replaceMyAdminEmployeeDocument,
+  updateMyAdminEmployeeProfile,
+} from '../controllers/admin-employee.controller';
 
 import {
   getAdminAuditLogDetails,
@@ -31,6 +38,11 @@ import {
   pharmacyIdParamsSchema,
   updateAdminPharmacyStatusSchema,
 } from '../schemas/admin.schema';
+
+import {
+  adminEmployeeDocumentParamsSchema,
+  adminEmployeeDocumentUploadSchema,
+} from '../schemas/admin-employee-document.schema';
 
 import { updateMyAdminEmployeeProfileSchema } from '../schemas/admin-employee-profile.schema';
 
@@ -68,6 +80,50 @@ adminRoutes.patch(
   '/employees/me/profile',
   validate({ body: updateMyAdminEmployeeProfileSchema }),
   ctrlWrapper(updateMyAdminEmployeeProfile)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/employees/me/documents',
+  ctrlWrapper(listMyAdminEmployeeDocuments)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/employees/me/documents/:documentId',
+  validate({ params: adminEmployeeDocumentParamsSchema }),
+  ctrlWrapper(getMyAdminEmployeeDocument)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/employees/me/documents',
+  validate({ body: adminEmployeeDocumentUploadSchema }),
+  ctrlWrapper(createMyAdminEmployeeDocument)
+);
+
+//=================================================================================
+
+adminRoutes.put(
+  '/employees/me/documents/:documentId',
+
+  validate({
+    params: adminEmployeeDocumentParamsSchema,
+    body: adminEmployeeDocumentUploadSchema,
+  }),
+
+  ctrlWrapper(replaceMyAdminEmployeeDocument)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/employees/me/documents/:documentId',
+  validate({ params: adminEmployeeDocumentParamsSchema }),
+  ctrlWrapper(deleteMyAdminEmployeeDocument)
 );
 
 //=================================================================================

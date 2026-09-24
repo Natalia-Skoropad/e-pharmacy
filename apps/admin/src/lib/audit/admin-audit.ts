@@ -3,6 +3,9 @@ export const ADMIN_AUDIT_ACTIONS = [
   'productRequest.status.changed',
   'admin.platformOwner.granted',
   'admin.platformOwner.revoked',
+  'admin.employeeDocument.uploaded',
+  'admin.employeeDocument.replaced',
+  'admin.employeeDocument.deleted',
 ] as const;
 
 //===================================================================
@@ -15,6 +18,7 @@ export const ADMIN_AUDIT_ENTITY_TYPES = [
   'pharmacy',
   'productRequest',
   'adminAccess',
+  'adminEmployeeDocument',
 ] as const;
 
 //===================================================================

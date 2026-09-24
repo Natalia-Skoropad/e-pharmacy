@@ -17,6 +17,9 @@ export const backendRoutes = {
 
     employees: {
       myProfile: '/admin/employees/me/profile',
+      myDocuments: '/admin/employees/me/documents',
+      myDocument: (documentId: EntityId) =>
+        `/admin/employees/me/documents/${segment(documentId)}`,
     },
 
     audit: {

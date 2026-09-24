@@ -15,6 +15,7 @@ const ROOT_DIR = path.resolve(
 //===================================================================
 
 const ENTRYPOINT_FILES = {
+  admin: 'packages/types/src/admin/index.ts',
   api: 'packages/types/src/api/index.ts',
   auth: 'packages/types/src/auth/index.ts',
   cart: 'packages/types/src/cart/index.ts',

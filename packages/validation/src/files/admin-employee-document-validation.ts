@@ -8,7 +8,7 @@ import {
 
 //===================================================================
 
-export const PHARMACY_DOCUMENT_RULES = {
+export const ADMIN_EMPLOYEE_DOCUMENT_RULES = {
   maxFiles: 6,
   maxSizeBytes: 10 * 1024 * 1024,
   maxTotalSizeBytes: 30 * 1024 * 1024,
@@ -28,37 +28,37 @@ export const PHARMACY_DOCUMENT_RULES = {
 
 //===================================================================
 
-export const PHARMACY_DOCUMENT_ACCEPT = buildDocumentAccept(
-  PHARMACY_DOCUMENT_RULES
+export const ADMIN_EMPLOYEE_DOCUMENT_ACCEPT = buildDocumentAccept(
+  ADMIN_EMPLOYEE_DOCUMENT_RULES
 );
 
 //===================================================================
 
-export type PharmacyDocumentFileLike = DocumentFileLike;
-export type NormalizedPharmacyDocument = NormalizedDocumentFile;
+export type AdminEmployeeDocumentFileLike = DocumentFileLike;
+export type NormalizedAdminEmployeeDocument = NormalizedDocumentFile;
 
 //===================================================================
 
-export function normalizePharmacyDocument(
-  file: PharmacyDocumentFileLike
-): NormalizedPharmacyDocument {
+export function normalizeAdminEmployeeDocument(
+  file: AdminEmployeeDocumentFileLike
+): NormalizedAdminEmployeeDocument {
   return normalizeDocumentFile(file);
 }
 
 //===================================================================
 
-export function validatePharmacyDocuments(
-  files: readonly PharmacyDocumentFileLike[],
+export function validateAdminEmployeeDocuments(
+  files: readonly AdminEmployeeDocumentFileLike[],
   options: Readonly<{ required?: boolean }> = {}
 ): string {
   return validateDocumentFiles(
     files,
-    PHARMACY_DOCUMENT_RULES,
+    ADMIN_EMPLOYEE_DOCUMENT_RULES,
     {
-      required: 'Upload at least one document before verification',
-      count: `You can upload up to ${PHARMACY_DOCUMENT_RULES.maxFiles} documents`,
-      totalSize: 'Pharmacy documents must be no larger than 30 MB in total',
-      nameLength: `Document name must be at most ${PHARMACY_DOCUMENT_RULES.fileNameMaxLength} characters`,
+      required: 'Select at least one document.',
+      count: `You can upload up to ${ADMIN_EMPLOYEE_DOCUMENT_RULES.maxFiles} documents`,
+      totalSize: 'Admin documents must be no larger than 30 MB in total',
+      nameLength: `Document name must be at most ${ADMIN_EMPLOYEE_DOCUMENT_RULES.fileNameMaxLength} characters`,
       format: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP document',
       invalidSize: 'Document size is invalid',
       fileSize: (fileName) =>

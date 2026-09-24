@@ -11,6 +11,9 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'productRequest.status.changed': 'Product request status changed',
   'admin.platformOwner.granted': 'Platform Owner granted',
   'admin.platformOwner.revoked': 'Platform Owner removed',
+  'admin.employeeDocument.uploaded': 'Admin document uploaded',
+  'admin.employeeDocument.replaced': 'Admin document replaced',
+  'admin.employeeDocument.deleted': 'Admin document deleted',
 };
 
 //===================================================================
@@ -19,6 +22,7 @@ const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   pharmacy: 'Pharmacy',
   productRequest: 'Product request',
   adminAccess: 'Admin access',
+  adminEmployeeDocument: 'Admin document',
 };
 
 //===================================================================

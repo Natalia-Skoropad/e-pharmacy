@@ -6,6 +6,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./admin": "./src/admin/index.ts",
     "./api": "./src/api/index.ts",
     "./auth": "./src/auth/index.ts",
     "./cart": "./src/cart/index.ts",

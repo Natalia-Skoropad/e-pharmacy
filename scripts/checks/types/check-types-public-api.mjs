@@ -16,6 +16,7 @@ const ROOT_DIR = path.resolve(
 
 const ALLOWED_EXPORTS = [
   '.',
+  './admin',
   './api',
   './auth',
   './cart',

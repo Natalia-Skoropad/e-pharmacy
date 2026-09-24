@@ -38,6 +38,27 @@ test('audit list parser accepts the canonical paginated contract', () => {
 
 //===================================================================
 
+test('audit list parser accepts Stage 10.6 document mutation actions', () => {
+  const parsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        action: 'admin.employeeDocument.uploaded',
+        entityType: 'adminEmployeeDocument',
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+  });
+
+  assert.equal(parsed.items[0]?.action, 'admin.employeeDocument.uploaded');
+  assert.equal(parsed.items[0]?.entityType, 'adminEmployeeDocument');
+});
+
+//===================================================================
+
 test('audit parsers fail closed for unknown actions and unsafe snapshot values', () => {
   assert.throws(
     () =>
