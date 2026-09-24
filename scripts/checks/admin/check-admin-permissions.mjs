@@ -317,7 +317,6 @@ assert.match(permissionMiddleware, /hasAdminPermission/);
 
 assert.match(apiAdminRoutes, /resolveAdminAuthorization/);
 assert.match(apiAdminRoutes, /['"]\/access\/me['"]/);
-assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.pharmacyOwners\.edit/);
 assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.pharmacies\.view/);
 assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.pharmacies\.moderate/);
 assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.productRequests\.moderate/);

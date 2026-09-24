@@ -1,5 +1,10 @@
 import mongoose, { Types } from 'mongoose';
 
+import {
+  ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+} from '../constants/admin-audit';
+
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../constants/product-request';
 import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
@@ -26,6 +31,7 @@ import type {
 } from '../schemas/product-request.schema';
 
 import { httpError } from '../utils/httpError';
+import { appendAdminAuditLog } from './admin-audit.service';
 
 import {
   isDuplicateProductArticleError,
@@ -682,12 +688,13 @@ async function resolveApprovedProductId(
 //===============================================================
 
 export async function moderateProductRequestByAdminService(
-  requestId: string,
+  productRequestId: string,
   input: ProductRequestModerationInput,
-  adminUserId: string
+  adminUserId: string,
+  auditRequestId?: string
 ) {
   if (
-    !Types.ObjectId.isValid(requestId) ||
+    !Types.ObjectId.isValid(productRequestId) ||
     !Types.ObjectId.isValid(adminUserId)
   ) {
     throw httpError(
@@ -702,7 +709,8 @@ export async function moderateProductRequestByAdminService(
 
   try {
     const moderatedRequest = await session.withTransaction(async () => {
-      const request = await ProductRequest.findById(requestId).session(session);
+      const request =
+        await ProductRequest.findById(productRequestId).session(session);
 
       if (!request) {
         throw httpError(
@@ -712,6 +720,11 @@ export async function moderateProductRequestByAdminService(
           PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
         );
       }
+
+      const previousStatus = request.status;
+      const previousProductId = request.productId
+        ? String(request.productId)
+        : null;
 
       if (!canTransitionProductRequest(request.status, input.status)) {
         throw httpError(
@@ -766,6 +779,33 @@ export async function moderateProductRequestByAdminService(
       ];
 
       await request.save({ session });
+
+      if (auditRequestId) {
+        const nextProductId = request.productId
+          ? String(request.productId)
+          : null;
+        const productChanged = previousProductId !== nextProductId;
+
+        await appendAdminAuditLog({
+          actorUserId: adminUserId,
+          action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_STATUS_CHANGED,
+          entityType: ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
+          entityId: String(request._id),
+          entityLabel: request.name,
+          before: {
+            status: previousStatus,
+            ...(productChanged ? { productId: previousProductId } : {}),
+          },
+          after: {
+            status: request.status,
+            ...(productChanged ? { productId: nextProductId } : {}),
+          },
+          changedFields: ['status', ...(productChanged ? ['productId'] : [])],
+          ...(input.reason?.trim() ? { reason: input.reason.trim() } : {}),
+          requestId: auditRequestId,
+          session,
+        });
+      }
 
       return request.toObject() as unknown as ProductRequestDocument;
     });

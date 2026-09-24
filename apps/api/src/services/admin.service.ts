@@ -1,12 +1,18 @@
+import mongoose, { type HydratedDocument } from 'mongoose';
+
 import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
+import {
+  ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+} from '../constants/admin-audit';
+
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
-import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
 
-import mongoose, { type HydratedDocument } from 'mongoose';
+import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
 
 import type {
   PharmacyEntity,
@@ -14,15 +20,16 @@ import type {
   PharmacyStatus,
 } from '../types/pharmacy';
 
-import { httpError } from '../utils/httpError';
-import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
-
 import {
   isDuplicateEmailError,
   isDuplicatePhoneError,
 } from '../utils/mongoError';
 
 import { hashPassword } from '../utils/password';
+import { httpError } from '../utils/httpError';
+
+import { appendAdminAuditLog } from './admin-audit.service';
+import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
 
 import {
   claimRegistrationPharmacyDocuments,
@@ -171,12 +178,11 @@ export async function createPharmacyUserByAdminService(
   }
 }
 
-//===============================================================
-
 export async function updatePharmacyStatusByAdminService(
   pharmacyId: string,
   input: UpdatePharmacyStatusInput,
-  adminUserId: string
+  adminUserId: string,
+  auditRequestId?: string
 ) {
   const session = await mongoose.startSession();
 
@@ -187,6 +193,8 @@ export async function updatePharmacyStatusByAdminService(
       if (!pharmacy) {
         throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
       }
+
+      const previousStatus = pharmacy.status;
 
       if (
         input.status === PHARMACY_STATUSES.ON_VERIFICATION &&
@@ -295,6 +303,22 @@ export async function updatePharmacyStatusByAdminService(
             'Default pharmacy client could not be created during activation.'
           );
         }
+      }
+
+      if (auditRequestId && previousStatus !== updated.status) {
+        await appendAdminAuditLog({
+          actorUserId: adminUserId,
+          action: ADMIN_AUDIT_ACTIONS.PHARMACY_STATUS_CHANGED,
+          entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+          entityId: String(updated._id),
+          entityLabel: updated.name,
+          before: { status: previousStatus },
+          after: { status: updated.status },
+          changedFields: ['status'],
+          ...(input.reason?.trim() ? { reason: input.reason.trim() } : {}),
+          requestId: auditRequestId,
+          session,
+        });
       }
 
       return updated;

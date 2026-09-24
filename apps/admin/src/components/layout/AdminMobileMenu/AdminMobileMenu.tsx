@@ -96,7 +96,7 @@ export function AdminMobileMenu({
         ariaLabel="Mobile admin navigation"
         showChevron={false}
         onNavigate={onClose}
-        renderLink={({ item: _item, href, className, children, ...props }) => (
+        renderLink={({ href, className, children, ...props }) => (
           <Link href={href} className={className} {...props}>
             {children}
           </Link>

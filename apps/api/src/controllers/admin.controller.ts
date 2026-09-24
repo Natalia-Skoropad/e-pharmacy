@@ -10,17 +10,12 @@ import type {
   UpdateAdminPharmacyStatusInput,
 } from '../schemas/admin.schema';
 
-import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
-
 import type {
   ProductRequestModerationInput,
   ProductRequestParams,
 } from '../schemas/product-request.schema';
 
-import {
-  createPharmacyUserByAdminService,
-  updatePharmacyStatusByAdminService,
-} from '../services/admin.service';
+import { updatePharmacyStatusByAdminService } from '../services/admin.service';
 
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
 import { moderateProductRequestByAdminService } from '../services/product-request.service';
@@ -57,28 +52,6 @@ export async function getCurrentAdminAccess(
 
 //===============================================================
 
-export async function createPharmacyUserByAdmin(
-  req: Request,
-  res: ValidatedResponse<CreatePharmacyUserInput>
-): Promise<void> {
-  const adminUserId = req.user?.id;
-  if (!adminUserId) return;
-
-  const pharmacy = await createPharmacyUserByAdminService(
-    res.locals.validated.body,
-    adminUserId
-  );
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    message: 'Pharmacy was created successfully.',
-    data: { pharmacy },
-  });
-}
-
-//===============================================================
-
 export async function getAdminPharmacyDocument(
   _req: Request,
   res: ValidatedResponse<unknown, AdminPharmacyDocumentParams>
@@ -107,7 +80,8 @@ export async function updatePharmacyStatusByAdmin(
   const pharmacy = await updatePharmacyStatusByAdminService(
     pharmacyId,
     res.locals.validated.body,
-    adminUserId
+    adminUserId,
+    res.locals.requestId
   );
 
   sendSuccessResponse({
@@ -127,12 +101,13 @@ export async function updateProductRequestStatusByAdmin(
   const adminUserId = req.user?.id;
   if (!adminUserId) return;
 
-  const { requestId } = res.locals.validated.params;
+  const { requestId: productRequestId } = res.locals.validated.params;
 
   const data = await moderateProductRequestByAdminService(
-    requestId,
+    productRequestId,
     res.locals.validated.body,
-    adminUserId
+    adminUserId,
+    res.locals.requestId
   );
 
   sendSuccessResponse({

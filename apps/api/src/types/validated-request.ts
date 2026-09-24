@@ -18,5 +18,8 @@ export type ValidatedResponse<
   TQuery = unknown,
 > = Response<
   unknown,
-  { validated: ValidatedRequestData<TBody, TParams, TQuery> }
+  {
+    validated: ValidatedRequestData<TBody, TParams, TQuery>;
+    requestId: string;
+  }
 >;

@@ -14,4 +14,5 @@ export const ADMIN_ROUTES = {
   SETTINGS_POSITIONS: '/admin/settings/positions',
   SETTINGS_SITE_PAGES: '/admin/settings/site-pages',
   SETTINGS_PRODUCT_CATEGORIES: '/admin/settings/categories',
+  SETTINGS_ACTIVITY: '/admin/settings/activity',
 } as const;

@@ -45,7 +45,7 @@ export function AdminSidebar({
           {children}
         </Link>
       )}
-      renderLink={({ item: _item, href, className, children, ...props }) => (
+      renderLink={({ href, className, children, ...props }) => (
         <Link href={href} className={className} {...props}>
           {children}
         </Link>

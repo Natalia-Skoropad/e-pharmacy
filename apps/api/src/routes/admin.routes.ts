@@ -3,12 +3,16 @@ import { USER_ROLES } from '../constants/auth';
 import { ADMIN_PERMISSIONS } from '../constants/admin-permissions';
 
 import {
-  createPharmacyUserByAdmin,
   getCurrentAdminAccess,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
   updateProductRequestStatusByAdmin,
 } from '../controllers/admin.controller';
+
+import {
+  getAdminAuditLogDetails,
+  getAdminAuditLogs,
+} from '../controllers/admin-audit.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
 
@@ -26,7 +30,10 @@ import {
   updateAdminPharmacyStatusSchema,
 } from '../schemas/admin.schema';
 
-import { createPharmacyUserSchema } from '../schemas/auth.schema';
+import {
+  adminAuditListQuerySchema,
+  adminAuditLogParamsSchema,
+} from '../schemas/admin-audit.schema';
 
 import {
   productRequestModerationSchema,
@@ -53,11 +60,20 @@ adminRoutes.get('/access/me', ctrlWrapper(getCurrentAdminAccess));
 
 //=================================================================================
 
-adminRoutes.post(
-  '/pharmacies',
-  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.edit),
-  validate({ body: createPharmacyUserSchema }),
-  ctrlWrapper(createPharmacyUserByAdmin)
+adminRoutes.get(
+  '/audit',
+  requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
+  validate({ query: adminAuditListQuerySchema }),
+  ctrlWrapper(getAdminAuditLogs)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/audit/:auditLogId',
+  requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
+  validate({ params: adminAuditLogParamsSchema }),
+  ctrlWrapper(getAdminAuditLogDetails)
 );
 
 //=================================================================================

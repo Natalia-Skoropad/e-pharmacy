@@ -7,6 +7,12 @@ export const adminApiRoutes = {
     current: '/api/admin/access/me',
   },
 
+  audit: {
+    list: '/api/admin/audit',
+    details: (auditLogId: string) =>
+      `/api/admin/audit/${encodeURIComponent(auditLogId)}`,
+  },
+
   auth: {
     current: localAuthApiRoutes.current,
     logout: localAuthApiRoutes.logout,

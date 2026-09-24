@@ -6,6 +6,7 @@ import {
   Boxes,
   Building2,
   FilePlus2,
+  History,
   LayoutDashboard,
   MessageSquareText,
   Settings,
@@ -149,6 +150,12 @@ export const ADMIN_NAVIGATION_DEFINITIONS: readonly AdminNavigationDefinition[] 
           href: ADMIN_ROUTES.SETTINGS_PRODUCT_CATEGORIES,
           requiredPermission: ADMIN_PERMISSIONS.categories.view,
         },
+        {
+          label: 'Activity history',
+          href: ADMIN_ROUTES.SETTINGS_ACTIVITY,
+          icon: createNavigationIcon(History),
+          requiredPermission: ADMIN_PERMISSIONS.audit.view,
+        },
       ],
     },
   ];
@@ -158,8 +165,16 @@ export const ADMIN_NAVIGATION_DEFINITIONS: readonly AdminNavigationDefinition[] 
 function toNavigationLink(
   definition: AdminNavigationLinkDefinition
 ): AdminNavigationLinkItem {
-  const { requiredPermission: _requiredPermission, ...item } = definition;
-  return item;
+  return {
+    ...(definition.type ? { type: definition.type } : {}),
+    label: definition.label,
+    href: definition.href,
+    ...(definition.icon !== undefined ? { icon: definition.icon } : {}),
+    ...(definition.exact !== undefined ? { exact: definition.exact } : {}),
+    ...(definition.disabled !== undefined
+      ? { disabled: definition.disabled }
+      : {}),
+  };
 }
 
 //===================================================================
@@ -168,8 +183,15 @@ function toNavigationGroup(
   definition: AdminNavigationGroupDefinition,
   children: readonly AdminNavigationLinkItem[]
 ): AdminNavigationGroupItem {
-  const { children: _children, ...group } = definition;
-  return { ...group, children };
+  return {
+    type: 'group',
+    label: definition.label,
+    ...(definition.icon !== undefined ? { icon: definition.icon } : {}),
+    ...(definition.disabled !== undefined
+      ? { disabled: definition.disabled }
+      : {}),
+    children,
+  };
 }
 
 //===================================================================

@@ -14,6 +14,11 @@ export const backendRoutes = {
 
   admin: {
     accessMe: '/admin/access/me',
+
+    audit: {
+      list: '/admin/audit',
+      details: (auditLogId: EntityId) => `/admin/audit/${segment(auditLogId)}`,
+    },
   },
 
   pharmacies: {

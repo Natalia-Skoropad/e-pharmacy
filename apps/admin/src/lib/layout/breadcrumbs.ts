@@ -52,6 +52,11 @@ const BREADCRUMB_ROUTES: readonly BreadcrumbRoute[] = [
     label: 'Product categories',
     parent: { label: 'Settings' },
   },
+  {
+    href: ADMIN_ROUTES.SETTINGS_ACTIVITY,
+    label: 'Activity history',
+    parent: { label: 'Settings' },
+  },
 ];
 
 //===================================================================

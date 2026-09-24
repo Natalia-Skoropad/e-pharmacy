@@ -68,6 +68,7 @@ test('reviews and settings use one-level shared navigation groups including Posi
       ['Positions', ADMIN_ROUTES.SETTINGS_POSITIONS],
       ['Site pages', ADMIN_ROUTES.SETTINGS_SITE_PAGES],
       ['Product categories', ADMIN_ROUTES.SETTINGS_PRODUCT_CATEGORIES],
+      ['Activity history', ADMIN_ROUTES.SETTINGS_ACTIVITY],
     ]
   );
 
@@ -114,6 +115,17 @@ test('limited access filters children and removes empty groups without using pos
   assert.deepEqual(
     settings.children.map((item) => item.label),
     ['Positions']
+  );
+
+  const auditor = getAdminNavigationForAccess({
+    status: 'active',
+    isPlatformOwner: false,
+    permissions: [ADMIN_PERMISSIONS.audit.view],
+  });
+
+  assert.deepEqual(
+    getGroup(auditor, 'Settings').children.map((item) => item.label),
+    ['Activity history']
   );
 });
 

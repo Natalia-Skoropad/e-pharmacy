@@ -36,6 +36,11 @@ test('nested admin routes expose their group and child labels', () => {
     getAdminBreadcrumbsByPathname(ADMIN_ROUTES.SETTINGS_POSITIONS),
     [{ label: 'Settings' }, { label: 'Positions' }]
   );
+
+  assert.deepEqual(
+    getAdminBreadcrumbsByPathname(ADMIN_ROUTES.SETTINGS_ACTIVITY),
+    [{ label: 'Settings' }, { label: 'Activity history' }]
+  );
 });
 
 //===================================================================

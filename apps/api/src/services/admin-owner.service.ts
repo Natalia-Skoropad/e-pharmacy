@@ -5,10 +5,17 @@ import {
   ADMIN_ACCESS_STATUSES,
 } from '../constants/admin-access';
 
+import {
+  ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+} from '../constants/admin-audit';
+
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { AdminAccess } from '../models/adminAccess.model';
 import { AdminAuthorizationState } from '../models/adminAuthorizationState.model';
+import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
+import { appendAdminAuditLog } from './admin-audit.service';
 import { getAdminAuthorizationService } from './admin-access.service';
 
 //===============================================================
@@ -23,7 +30,8 @@ import { getAdminAuthorizationService } from './admin-access.service';
 export async function setPlatformOwnerStatusService(
   actorUserId: string,
   targetUserId: string,
-  isPlatformOwner: boolean
+  isPlatformOwner: boolean,
+  auditRequestId?: string
 ): Promise<void> {
   const session = await mongoose.startSession();
 
@@ -74,6 +82,32 @@ export async function setPlatformOwnerStatusService(
         { $set: { isPlatformOwner } },
         { session }
       );
+
+      if (auditRequestId) {
+        const targetUser = await User.findById(targetUserId)
+          .select('_id name')
+          .session(session)
+          .lean<{ _id: mongoose.Types.ObjectId; name: string } | null>();
+
+        if (!targetUser) {
+          throw new Error('Platform Owner audit target could not be resolved.');
+        }
+
+        await appendAdminAuditLog({
+          actorUserId,
+          action: isPlatformOwner
+            ? ADMIN_AUDIT_ACTIONS.PLATFORM_OWNER_GRANTED
+            : ADMIN_AUDIT_ACTIONS.PLATFORM_OWNER_REVOKED,
+          entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS,
+          entityId: targetUserId,
+          entityLabel: targetUser.name,
+          before: { isPlatformOwner: target.isPlatformOwner },
+          after: { isPlatformOwner },
+          changedFields: ['isPlatformOwner'],
+          requestId: auditRequestId,
+          session,
+        });
+      }
     });
   } finally {
     await session.endSession();
