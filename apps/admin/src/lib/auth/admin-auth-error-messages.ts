@@ -40,6 +40,27 @@ const ADMIN_AUTH_ERROR_MESSAGES: Record<AuthErrorCode, string> = {
 
 //===================================================================
 
+const ADMIN_PASSWORD_CHANGE_ERROR_MESSAGES: Partial<
+  Record<AuthErrorCode, string>
+> = {
+  invalid_credentials: 'Current password is incorrect.',
+  validation_error:
+    'Check your current password and new password, then try again.',
+};
+
+//===================================================================
+
 export function getAdminAuthErrorMessage(code: AuthErrorCode): string {
   return ADMIN_AUTH_ERROR_MESSAGES[code];
+}
+
+//===================================================================
+
+export function getAdminPasswordChangeErrorMessage(
+  code: AuthErrorCode
+): string {
+  return (
+    ADMIN_PASSWORD_CHANGE_ERROR_MESSAGES[code] ??
+    ADMIN_AUTH_ERROR_MESSAGES[code]
+  );
 }

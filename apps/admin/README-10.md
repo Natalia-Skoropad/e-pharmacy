@@ -5459,3 +5459,59 @@ git commit -m "feat(profile): add admin self-profile and reuse shared profile UI
 Цей commit нормально охоплює і Admin Profile, і Pharmacy/Client migration, не приписуючи сюди майбутній Stage 10.5.
 
 //=============================================================
+
+Готово 🙂 Підготувала Stage 10.5 — Change Password + Active Sessions на базі твого актуального e-pharmacy-10-5.zip.
+
+📦 Завантажити архів Stage 10.5
+
+В архіві 10 оновлених/доданих файлів. Він містить тільки зміни цього підетапу, які потрібно накласти поверх поточного проєкту. Stage 10.6 і наступні етапи не додавала — Documents/Comments та їх API тут не з'являються.
+
+У 10.5 зроблено:
+
+додано Admin BFF:
+PATCH /api/auth/password
+GET /api/auth/sessions
+DELETE /api/auth/sessions/:sessionId
+POST /api/auth/logout-all
+AuthProvider Admin тепер отримує logoutAll;
+Admin browser API отримав:
+updateCurrentUserPassword;
+getActiveSessions;
+revokeActiveSession;
+logoutAllUser;
+/admin/profile тепер має дві секції:
+Personal information;
+Active sessions;
+у Personal information підключено вже існуючий shared ChangePasswordForm;
+у Active sessions підключено shared ActiveSessionsPanel;
+сесії завантажуються лише при відкритті вкладки, тобто зайвого request при першому відкритті Profile немає;
+помилка завантаження sessions не перетворюється на фальшивий No active sessions;
+revoke окремої сесії single-flight і після успіху список оновлюється;
+Sign out all devices використовує existing auth lifecycle;
+після успішної зміни пароля:
+backend revoke'ить sessions;
+BFF очищає auth cookies;
+frontend викликає invalidateSession('password_changed');
+Admin переходить на /login;
+для неправильного current password додано окремий зрозумілий текст помилки;
+додано regression contract test саме для security-flow Stage 10.5.
+
+Окремо перевірила, що BFF не дублює backend auth logic: використовуються вже наявні canonical backend endpoints /auth/current/password, /auth/sessions, /auth/logout-all. Тобто новий admin-specific password endpoint не вигадувався — тут архітектура залишилась правильною.
+
+Перевірки, які вдалося виконати на підготовленій ревізії: Admin TypeScript tsc --noEmit пройшов, Stage 10.5 structural contract — пройшов, усі наявні scripts/checks/admin/\*.mjs — пройшли, check:profile-contracts і regression check:client-admin-header — також пройшли. Сам ZIP додатково перевірений на цілісність.
+
+Після накладання архіву у себе я рекомендую запустити вже повний локальний цикл:
+
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm test:react
+pnpm build
+pnpm check:before-deploy
+
+Для цього Stage підійде такий коміт:
+
+git add .
+git commit -m "feat(admin): add password change and active sessions"
+
+Тобто після цього стан проєкту відповідає етапам 1 → 10.5 включно, а 10.6 поки чемно сидить за дверима й не підглядає 😄

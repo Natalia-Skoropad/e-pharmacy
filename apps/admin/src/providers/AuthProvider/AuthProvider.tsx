@@ -10,6 +10,7 @@ import {
 import {
   getCurrentUser,
   loginUser,
+  logoutAllUser,
   logoutUser,
 } from '@/lib/api/browser/auth.api';
 
@@ -19,6 +20,7 @@ const adminAuthServices = {
   getCurrentUser,
   login: loginUser,
   logout: logoutUser,
+  logoutAll: logoutAllUser,
 } satisfies AuthProviderServices;
 
 //===================================================================
