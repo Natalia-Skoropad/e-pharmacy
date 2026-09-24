@@ -68,6 +68,7 @@ test('clears the in-memory history token after a successful reset', () => {
   const clearedState = clearResetPasswordTokenFromHistoryState(
     captured.historyState
   );
+
   const afterSuccess = captureResetPasswordToken(
     'https://client.example.com/reset-password',
     clearedState

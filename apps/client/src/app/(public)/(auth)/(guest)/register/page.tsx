@@ -6,7 +6,9 @@ import {
 
 import { ROUTES, createBreadcrumbs } from '@/lib/routes';
 
-import { AuthFormShell, RegisterForm } from '@/components/auth';
+import { AuthPageShell } from '@e-pharmacy/ui/auth';
+
+import { RegisterForm } from '@/components/auth';
 
 //===================================================================
 
@@ -21,14 +23,14 @@ export const metadata = createPageMetadata({
 
 function RegisterPage() {
   return (
-    <AuthFormShell
+    <AuthPageShell
       title={REGISTER_TITLE}
       text={REGISTER_DESCRIPTION}
       breadcrumbs={createBreadcrumbs(REGISTER_TITLE)}
       showHeader={false}
     >
       <RegisterForm />
-    </AuthFormShell>
+    </AuthPageShell>
   );
 }
 

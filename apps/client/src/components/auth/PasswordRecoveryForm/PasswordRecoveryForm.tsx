@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 
+import { AuthFormLayout } from '@e-pharmacy/ui/auth';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import { EmailInput } from '@e-pharmacy/ui/forms';
@@ -123,7 +124,16 @@ function PasswordRecoveryForm() {
   };
 
   return (
-    <form className={css.form} noValidate onSubmit={handleSubmit}>
+    <AuthFormLayout
+      noValidate
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          Remember your password?{' '}
+          <TextActionButton href={ROUTES.LOGIN}>Log in</TextActionButton>
+        </>
+      }
+    >
       <fieldset className={css.accountTypeGroup}>
         <legend className={css.visuallyHidden}>Account type</legend>
         <div className={css.accountTypeOptions}>
@@ -169,12 +179,7 @@ function PasswordRecoveryForm() {
       >
         {isSubmitting ? 'Sending reset link...' : 'Send reset link'}
       </Button>
-
-      <p className={css.footerText}>
-        Remember your password?{' '}
-        <TextActionButton href={ROUTES.LOGIN}>Log in</TextActionButton>
-      </p>
-    </form>
+    </AuthFormLayout>
   );
 }
 

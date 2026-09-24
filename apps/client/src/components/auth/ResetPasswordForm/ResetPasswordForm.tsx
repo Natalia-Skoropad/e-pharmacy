@@ -12,10 +12,17 @@ import {
 
 import { useRouter } from 'next/navigation';
 
+import { AuthFormLayout } from '@e-pharmacy/ui/auth';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { PasswordInput } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
+
+import {
+  captureResetPasswordToken,
+  clearResetPasswordTokenFromHistoryState,
+} from '@e-pharmacy/auth/reset-password';
+
 import { useAuth } from '@e-pharmacy/auth/react';
 
 import {
@@ -32,12 +39,6 @@ import {
 } from '@e-pharmacy/validation/auth';
 
 import { getClientAuthErrorMessage } from '@/lib/auth';
-
-import {
-  captureResetPasswordToken,
-  clearResetPasswordTokenFromHistoryState,
-} from '@/lib/auth/reset-password-token';
-
 import { ROUTES } from '@/lib/routes';
 import { resetPassword } from '@/lib/api/browser';
 
@@ -200,12 +201,20 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
   }
 
   return (
-    <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <div className={css.head}>
-        <h1 className={css.title}>{title}</h1>
-        <p className={css.text}>{text}</p>
-      </div>
-
+    <AuthFormLayout
+      title={title}
+      description={text}
+      noValidate
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          Need a fresh link?{' '}
+          <TextActionButton href={ROUTES.PASSWORD_RECOVERY}>
+            Send reset link again
+          </TextActionButton>
+        </>
+      }
+    >
       {hasCapturedToken && !token ? (
         <p className={css.submitError} role="alert">
           Password reset link is missing. Please request a new link.
@@ -259,14 +268,7 @@ function ResetPasswordForm({ title, text }: ResetPasswordFormProps) {
       >
         {isSubmitting ? 'Saving new password...' : 'Save new password'}
       </Button>
-
-      <p className={css.footerText}>
-        Need a fresh link?{' '}
-        <TextActionButton href={ROUTES.PASSWORD_RECOVERY}>
-          Send reset link again
-        </TextActionButton>
-      </p>
-    </form>
+    </AuthFormLayout>
   );
 }
 

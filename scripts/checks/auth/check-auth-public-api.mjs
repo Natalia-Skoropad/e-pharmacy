@@ -8,12 +8,15 @@ import { fileURLToPath } from 'node:url';
 const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 const AUTH_DIR = path.join(ROOT_DIR, 'packages', 'auth');
+
 const EXPECTED_EXPORTS = {
   './react': './src/react.ts',
   './next': './src/next.ts',
   './errors': './src/errors/index.ts',
   './routing': './src/routing/index.ts',
+  './reset-password': './src/reset-password.ts',
 };
+
 const IGNORED = new Set([
   'node_modules',
   'dist',
@@ -21,6 +24,7 @@ const IGNORED = new Set([
   '.next',
   'coverage',
 ]);
+
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs']);
 
 //===================================================================
@@ -33,6 +37,8 @@ async function exists(filePath) {
     return false;
   }
 }
+
+//===================================================================
 
 async function collectFiles(directory, output = []) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -50,6 +56,7 @@ async function collectFiles(directory, output = []) {
 const packageJson = JSON.parse(
   await readFile(path.join(AUTH_DIR, 'package.json'), 'utf8')
 );
+
 assert.deepEqual(packageJson.exports, EXPECTED_EXPORTS);
 assert.equal(packageJson.sideEffects, false);
 
@@ -64,6 +71,7 @@ for (const [entrypoint, target] of Object.entries(EXPECTED_EXPORTS)) {
 const publicIndexFiles = Object.values(EXPECTED_EXPORTS).map((target) =>
   path.join(AUTH_DIR, target.replace(/^\.\//, ''))
 );
+
 for (const filePath of publicIndexFiles) {
   const source = await readFile(filePath, 'utf8');
   assert.doesNotMatch(
@@ -81,21 +89,16 @@ for (const legacyEntrypoint of ['src/react/index.ts', 'src/next/index.ts']) {
   );
 }
 
-const reactEntry = await readFile(
-  path.join(AUTH_DIR, 'src/react.ts'),
-  'utf8'
-);
+const reactEntry = await readFile(path.join(AUTH_DIR, 'src/react.ts'), 'utf8');
 assert.match(reactEntry, /AuthProviderCore/);
 assert.match(reactEntry, /useAuth/);
+
 assert.doesNotMatch(
   reactEntry,
   /GuestOnlyRoute|RoleProtectedRoute|AuthSessionSync/
 );
 
-const nextEntry = await readFile(
-  path.join(AUTH_DIR, 'src/next.ts'),
-  'utf8'
-);
+const nextEntry = await readFile(path.join(AUTH_DIR, 'src/next.ts'), 'utf8');
 assert.match(nextEntry, /GuestOnlyRouteProps/);
 assert.match(nextEntry, /RoleProtectedRouteProps/);
 
@@ -103,6 +106,7 @@ const providerSource = await readFile(
   path.join(AUTH_DIR, 'src/core/AuthProviderCore.tsx'),
   'utf8'
 );
+
 assert.match(providerSource, /export function useAuth\(\): AuthContextValue/);
 assert.doesNotMatch(providerSource, /isAuthReady/);
 
@@ -121,9 +125,11 @@ for (const filePath of sourceFiles) {
   if (/(?:from\s*|import\s*\()\s*['"]@e-pharmacy\/auth['"]/.test(source)) {
     violations.push(`${relative}: root auth import`);
   }
+
   if (source.includes('@e-pharmacy/auth/src')) {
     violations.push(`${relative}: deep auth import`);
   }
+
   for (const oldSubpath of ['core', 'guards', 'session']) {
     if (source.includes(`@e-pharmacy/auth/${oldSubpath}`)) {
       violations.push(`${relative}: removed auth subpath ${oldSubpath}`);

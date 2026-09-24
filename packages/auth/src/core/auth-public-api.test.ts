@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import * as errorsApi from '../errors';
 import * as routingApi from '../routing';
+import * as resetPasswordApi from '../reset-password';
 
 //===================================================================
 
@@ -15,11 +16,12 @@ const packageJson = require('../../package.json') as {
 
 //===================================================================
 
-test('package exposes only explicit React, Next, errors, and routing entrypoints', () => {
+test('package exposes only explicit React, Next, errors, routing, and reset-password entrypoints', () => {
   assert.deepEqual(Object.keys(packageJson.exports).sort(), [
     './errors',
     './next',
     './react',
+    './reset-password',
     './routing',
   ]);
 
@@ -28,6 +30,7 @@ test('package exposes only explicit React, Next, errors, and routing entrypoints
     './next': './src/next.ts',
     './errors': './src/errors/index.ts',
     './routing': './src/routing/index.ts',
+    './reset-password': './src/reset-password.ts',
   });
 });
 
@@ -48,6 +51,19 @@ test('routing entrypoint exposes only safe redirect helpers', () => {
   ]);
 
   for (const helper of Object.values(routingApi)) {
+    assert.equal(typeof helper, 'function');
+  }
+});
+
+//===================================================================
+
+test('reset-password entrypoint exposes only token lifecycle helpers', () => {
+  assert.deepEqual(Object.keys(resetPasswordApi).sort(), [
+    'captureResetPasswordToken',
+    'clearResetPasswordTokenFromHistoryState',
+  ]);
+
+  for (const helper of Object.values(resetPasswordApi)) {
     assert.equal(typeof helper, 'function');
   }
 });

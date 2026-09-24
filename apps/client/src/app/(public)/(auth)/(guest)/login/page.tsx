@@ -1,7 +1,14 @@
-import { LOGIN_DESCRIPTION, LOGIN_TITLE, createPageMetadata } from '@/lib/seo/server';
+import {
+  LOGIN_DESCRIPTION,
+  LOGIN_TITLE,
+  createPageMetadata,
+} from '@/lib/seo/server';
+
 import { ROUTES, createBreadcrumbs } from '@/lib/routes';
 
-import { AuthFormShell, LoginForm } from '@/components/auth';
+import { AuthPageShell } from '@e-pharmacy/ui/auth';
+
+import { LoginForm } from '@/components/auth';
 
 //===================================================================
 
@@ -16,14 +23,14 @@ export const metadata = createPageMetadata({
 
 function LoginPage() {
   return (
-    <AuthFormShell
+    <AuthPageShell
       title={LOGIN_TITLE}
       text={LOGIN_DESCRIPTION}
       breadcrumbs={createBreadcrumbs(LOGIN_TITLE)}
       showHeader={false}
     >
       <LoginForm />
-    </AuthFormShell>
+    </AuthPageShell>
   );
 }
 

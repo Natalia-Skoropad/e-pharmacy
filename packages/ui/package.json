@@ -18,7 +18,8 @@
     "./feedback": "./src/feedback/index.ts",
     "./status-pages": "./src/status-pages/index.ts",
     "./statistics": "./src/statistics/index.ts",
-    "./styles/*.css": "./src/styles/*.css"
+    "./styles/*.css": "./src/styles/*.css",
+    "./auth": "./src/auth/index.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts,.tsx",

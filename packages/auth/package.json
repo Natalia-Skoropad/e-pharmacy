@@ -7,7 +7,8 @@
     "./react": "./src/react.ts",
     "./next": "./src/next.ts",
     "./errors": "./src/errors/index.ts",
-    "./routing": "./src/routing/index.ts"
+    "./routing": "./src/routing/index.ts",
+    "./reset-password": "./src/reset-password.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts,.tsx",

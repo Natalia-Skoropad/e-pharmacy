@@ -3,6 +3,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { AuthFormLayout } from '@e-pharmacy/ui/auth';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import { EmailInput, PasswordInput } from '@e-pharmacy/ui/forms';
@@ -165,11 +166,17 @@ function LoginForm() {
   };
 
   return (
-    <form className={css.form} noValidate onSubmit={handleSubmit}>
-      <div className={css.authTitleBlock}>
-        <h1 className={css.authTitle}>{LOGIN_TITLE}</h1>
-      </div>
-
+    <AuthFormLayout
+      title={LOGIN_TITLE}
+      noValidate
+      onSubmit={handleSubmit}
+      footer={
+        <>
+          Don&apos;t have an account yet?{' '}
+          <TextActionButton href={ROUTES.REGISTER}>Register</TextActionButton>
+        </>
+      }
+    >
       <fieldset className={css.accountTypeGroup}>
         <legend className={css.visuallyHidden}>Account type</legend>
         <div className={css.accountTypeOptions}>
@@ -237,12 +244,7 @@ function LoginForm() {
           ? selectedCopy.loading
           : selectedCopy.button}
       </Button>
-
-      <p className={css.footerText}>
-        Don&apos;t have an account yet?{' '}
-        <TextActionButton href={ROUTES.REGISTER}>Register</TextActionButton>
-      </p>
-    </form>
+    </AuthFormLayout>
   );
 }
 

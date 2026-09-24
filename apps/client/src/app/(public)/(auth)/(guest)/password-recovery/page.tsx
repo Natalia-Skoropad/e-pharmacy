@@ -6,7 +6,9 @@ import {
 
 import { createBreadcrumbs, ROUTES } from '@/lib/routes';
 
-import { AuthFormShell, PasswordRecoveryForm } from '@/components/auth';
+import { AuthPageShell } from '@e-pharmacy/ui/auth';
+
+import { PasswordRecoveryForm } from '@/components/auth';
 
 //===================================================================
 
@@ -21,14 +23,14 @@ export const metadata = createPageMetadata({
 
 function PasswordRecoveryPage() {
   return (
-    <AuthFormShell
+    <AuthPageShell
       title={PASSWORD_RECOVERY_TITLE}
       text={PASSWORD_RECOVERY_DESCRIPTION}
       breadcrumbs={createBreadcrumbs(PASSWORD_RECOVERY_TITLE)}
       showDescription={false}
     >
       <PasswordRecoveryForm />
-    </AuthFormShell>
+    </AuthPageShell>
   );
 }
 

@@ -1,33 +1,36 @@
 import { useId, type ReactNode } from 'react';
 import Image from 'next/image';
 
-import { Container } from '@e-pharmacy/ui/layout';
-import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
+import { Container } from '../../layout';
+import { Breadcrumbs, type BreadcrumbItem } from '../../navigation';
 
-import css from './AuthFormShell.module.css';
+import css from './AuthPageShell.module.css';
 
 //===================================================================
 
-type AuthFormShellProps = {
+type AuthPageShellProps = {
   title: string;
   text: string;
   breadcrumbs: BreadcrumbItem[];
   children: ReactNode;
+  illustrationSrc?: string;
+  illustrationAlt?: string;
   showHeader?: boolean;
   showDescription?: boolean;
 };
 
 //===================================================================
 
-function AuthFormShell({
+function AuthPageShell({
   title,
   text,
   breadcrumbs,
   children,
+  illustrationSrc = '/images/auth/authorization.png',
+  illustrationAlt = '',
   showHeader = true,
   showDescription = true,
-}: AuthFormShellProps) {
+}: AuthPageShellProps) {
   const titleId = useId();
 
   return (
@@ -41,11 +44,14 @@ function AuthFormShell({
           <Breadcrumbs items={breadcrumbs} />
 
           <div className={css.grid}>
-            <div className={css.illustration} aria-hidden="true">
+            <div
+              className={css.illustration}
+              aria-hidden={illustrationAlt ? undefined : true}
+            >
               <Image
                 className={css.image}
-                src="/images/auth/authorization.png"
-                alt=""
+                src={illustrationSrc}
+                alt={illustrationAlt}
                 fill
                 priority
                 fetchPriority="high"
@@ -76,4 +82,5 @@ function AuthFormShell({
   );
 }
 
-export default AuthFormShell;
+export type { AuthPageShellProps };
+export default AuthPageShell;
