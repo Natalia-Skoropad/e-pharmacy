@@ -25,7 +25,7 @@ import { httpError } from '../utils/httpError';
 //===============================================================
 
 const SENSITIVE_AUDIT_KEY_PATTERN =
-  /^(?:password|passwordhash|token|accesstoken|refreshtoken|jwt|cookie|authorization|bankdetails|iban|taxid|file|binary|buffer|content)$/i;
+  /^(?:password|passwordhash|token|accesstoken|refreshtoken|jwt|cookie|authorization|bankdetails|iban|taxid|picture|pictureurl|file|binary|buffer|content)$/i;
 
 //===============================================================
 

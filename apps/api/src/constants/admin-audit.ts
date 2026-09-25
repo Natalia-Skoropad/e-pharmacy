@@ -3,9 +3,10 @@ export const ADMIN_AUDIT_ACTIONS = {
   PRODUCT_REQUEST_STATUS_CHANGED: 'productRequest.status.changed',
   PLATFORM_OWNER_GRANTED: 'admin.platformOwner.granted',
   PLATFORM_OWNER_REVOKED: 'admin.platformOwner.revoked',
-  ADMIN_EMPLOYEE_DOCUMENT_UPLOADED: 'admin.employeeDocument.uploaded',
-  ADMIN_EMPLOYEE_DOCUMENT_REPLACED: 'admin.employeeDocument.replaced',
-  ADMIN_EMPLOYEE_DOCUMENT_DELETED: 'admin.employeeDocument.deleted',
+  ADMIN_EMPLOYEE_PROFILE_UPDATED: 'adminEmployee.profile.updated',
+  ADMIN_EMPLOYEE_DOCUMENT_UPLOADED: 'adminEmployee.document.uploaded',
+  ADMIN_EMPLOYEE_DOCUMENT_REPLACED: 'adminEmployee.document.replaced',
+  ADMIN_EMPLOYEE_DOCUMENT_DELETED: 'adminEmployee.document.deleted',
 } as const;
 
 //===============================================================
@@ -31,6 +32,7 @@ export const ADMIN_AUDIT_ENTITY_TYPES = {
   PHARMACY: 'pharmacy',
   PRODUCT_REQUEST: 'productRequest',
   ADMIN_ACCESS: 'adminAccess',
+  ADMIN_EMPLOYEE: 'adminEmployee',
   ADMIN_EMPLOYEE_DOCUMENT: 'adminEmployeeDocument',
 } as const;
 

@@ -9,9 +9,7 @@ const readSource = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), 'src', relativePath), 'utf8');
 
 const serviceSource = readSource('services/admin-employee-profile.service.ts');
-
 const routeSource = readSource('routes/admin.routes.ts');
-
 const controllerSource = readSource('controllers/admin-employee.controller.ts');
 
 //===============================================================
@@ -41,13 +39,31 @@ test('admin self profile uses optimistic revision protection and admin scope', (
 
 //===============================================================
 
-test('admin self profile route stays authenticated, validated and no-store', () => {
+test('admin self profile update and AuditLog commit atomically with a safe snapshot', () => {
+  assert.match(serviceSource, /mongoose\.startSession\(\)/);
+  assert.match(serviceSource, /session\.withTransaction/);
+  assert.match(serviceSource, /appendAdminAuditLog\(/);
+  assert.match(serviceSource, /ADMIN_EMPLOYEE_PROFILE_UPDATED/);
+  assert.match(serviceSource, /ADMIN_AUDIT_ENTITY_TYPES\.ADMIN_EMPLOYEE/);
+  assert.match(serviceSource, /requestId: auditRequestId/);
+  assert.match(serviceSource, /hasPicture = Boolean\(user\.pictureUrl\)/);
+
+  assert.doesNotMatch(
+    serviceSource,
+    /before:\s*\{[^}]*pictureUrl|after:\s*\{[^}]*pictureUrl/
+  );
+});
+
+//===============================================================
+
+test('admin self profile route stays authenticated, validated, request-correlated and no-store', () => {
   assert.match(routeSource, /adminRoutes\.use\([\s\S]*authenticate/);
   assert.match(routeSource, /authorizeRoles\(USER_ROLES\.ADMIN\)/);
   assert.match(routeSource, /resolveAdminAuthorization/);
   assert.match(routeSource, /'\/employees\/me\/profile'/);
   assert.match(routeSource, /updateMyAdminEmployeeProfileSchema/);
   assert.match(routeSource, /updateMyAdminEmployeeProfile/);
+  assert.match(controllerSource, /res\.locals\.requestId/);
   assert.match(controllerSource, /Cache-Control/);
   assert.match(controllerSource, /no-store/);
   assert.match(controllerSource, /data: \{ user \}/);

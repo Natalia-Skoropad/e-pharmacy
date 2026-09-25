@@ -105,6 +105,27 @@ test('admin document mutations and audit records commit in the same transaction'
 
 //===============================================================
 
+test('admin document AuditLog uses the canonical Stage 10 action names', () => {
+  const auditConstants = readSource('constants/admin-audit.ts');
+
+  assert.match(
+    auditConstants,
+    /ADMIN_EMPLOYEE_DOCUMENT_UPLOADED:\s*'adminEmployee\.document\.uploaded'/
+  );
+
+  assert.match(
+    auditConstants,
+    /ADMIN_EMPLOYEE_DOCUMENT_REPLACED:\s*'adminEmployee\.document\.replaced'/
+  );
+
+  assert.match(
+    auditConstants,
+    /ADMIN_EMPLOYEE_DOCUMENT_DELETED:\s*'adminEmployee\.document\.deleted'/
+  );
+});
+
+//===============================================================
+
 test('admin document self routes expose only the Stage 10.6 contract', () => {
   for (const method of ['get', 'post', 'put', 'delete']) {
     assert.match(routeSource, new RegExp(`adminRoutes\\.${method}\\(`));

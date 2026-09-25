@@ -38,12 +38,29 @@ test('audit list parser accepts the canonical paginated contract', () => {
 
 //===================================================================
 
-test('audit list parser accepts Stage 10.6 document mutation actions', () => {
+test('audit list parser accepts canonical Stage 10 profile and document actions', () => {
   const parsed = parseAdminAuditListResponse({
     items: [
       {
         ...item,
-        action: 'admin.employeeDocument.uploaded',
+        action: 'adminEmployee.profile.updated',
+        entityType: 'adminEmployee',
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+  });
+
+  assert.equal(parsed.items[0]?.action, 'adminEmployee.profile.updated');
+  assert.equal(parsed.items[0]?.entityType, 'adminEmployee');
+
+  const documentParsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        action: 'adminEmployee.document.uploaded',
         entityType: 'adminEmployeeDocument',
       },
     ],
@@ -53,8 +70,12 @@ test('audit list parser accepts Stage 10.6 document mutation actions', () => {
     totalPages: 1,
   });
 
-  assert.equal(parsed.items[0]?.action, 'admin.employeeDocument.uploaded');
-  assert.equal(parsed.items[0]?.entityType, 'adminEmployeeDocument');
+  assert.equal(
+    documentParsed.items[0]?.action,
+    'adminEmployee.document.uploaded'
+  );
+
+  assert.equal(documentParsed.items[0]?.entityType, 'adminEmployeeDocument');
 });
 
 //===================================================================

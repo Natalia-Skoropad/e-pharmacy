@@ -5650,3 +5650,18 @@ git commit -m "feat(admin): add self-owned private comments"
 Після цього проєкт містить готові етапи 1 → 10.7 включно, без випередження в 10.8.
 
 //==========================================================================
+
+Готово 🙂 Доробила фінальні правки за аудитом Stage 10 і зібрала архів лише з оновленими/доданими файлами — 16 файлів, без Stage 11+ і без зайвих wrapper/proxy-файлів.
+
+📦 Завантажити e-pharmacy-stage-10.8-final-audit-fixes-updated-files.zip
+
+У ньому закрито знайдені пункти: atomic adminEmployee.profile.updated разом з AuditLog, safe picture audit через hasPicture без base64, canonical adminEmployee.document.\* actions, нові check:admin-auth-ui і check:admin-profile, посилений check:admin-audit, а також додаткові Auth/Profile regression tests.
+
+Перевірки, які вдалося виконати тут, зелені: усі Admin structural checks, 41/41 admin unit tests, 14/14 admin React tests, 13/13 API Stage 10 profile/documents/comments contract tests, syntax transpile змінених TS/TSX і apps/admin TypeScript check. Patch hygiene теж чистий. Повний workspace pnpm lint / type-check / test / build / check:before-deploy варто ще прогнати локально після накладання архіву, оскільки в цьому середовищі немає доступного pnpm package manager/network для його відновлення.
+
+Коміт для цих змін:
+
+git add .
+git commit -m "fix(admin): complete stage 10 audit hardening"
+
+Після накладання цього архіву Stage 10 можна вважати закритим по пунктах фінального аудиту. Маленький audit-болтик нарешті повернули на його законне місце 😄

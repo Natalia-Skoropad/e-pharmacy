@@ -38,6 +38,8 @@ test('admin audit snapshots fail closed for secrets and sensitive business data'
     'bankDetails',
     'iban',
     'taxId',
+    'picture',
+    'pictureUrl',
     'binary',
     'buffer',
   ]) {

@@ -78,7 +78,8 @@ export async function updateMyAdminEmployeeProfile(
   const user = await updateMyAdminEmployeeProfileService(
     userId,
     authorization,
-    res.locals.validated.body
+    res.locals.validated.body,
+    res.locals.requestId
   );
 
   res.setHeader('Cache-Control', 'no-store');
