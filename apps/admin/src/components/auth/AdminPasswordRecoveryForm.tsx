@@ -3,7 +3,7 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { AuthFormLayout } from '@e-pharmacy/ui/auth';
+import { AuthFormLayout, AuthInfoPanel } from '@e-pharmacy/ui/auth';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { EmailInput } from '@e-pharmacy/ui/forms';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -108,6 +108,11 @@ export function AdminPasswordRecoveryForm() {
         </>
       }
     >
+      <AuthInfoPanel
+        title="Admin account"
+        text="Enter your administrator email. We will send a secure link to reset your password and restore access to the admin cabinet."
+      />
+
       <div className={css.fields}>
         <EmailInput
           className={css.fieldFull}

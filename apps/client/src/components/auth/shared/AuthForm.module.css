@@ -73,33 +73,6 @@
   gap: 10px;
 }
 
-.choiceInfo {
-  display: grid;
-  gap: 6px;
-  padding: 14px 16px;
-  background-color: var(--color-accent-soft);
-  border: 1px solid var(--color-accent-border, var(--color-border));
-  border-radius: var(--radius-lg);
-}
-
-.choiceTitle {
-  margin: 0;
-  font-size: var(--fz-16);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-base);
-  color: var(--color-text-primary);
-}
-
-.choiceText {
-  max-width: 560px;
-  min-height: calc(var(--fz-14) * var(--lh-base) * 2);
-  margin: 0;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
-}
-
-
 .authTitleBlock {
   display: grid;
   gap: 8px;
@@ -125,7 +98,6 @@
   white-space: nowrap;
   border: 0;
 }
-
 
 @media only screen and (min-width: 768px) {
   .fields {

@@ -79,6 +79,7 @@ const [
   loginPage,
   recoveryPage,
   resetPage,
+  authLayout,
   loginForm,
   recoveryForm,
   resetForm,
@@ -106,6 +107,7 @@ const [
   ),
 
   read('apps', 'admin', 'src', 'app', '(auth)', 'reset-password', 'page.tsx'),
+  read('apps', 'admin', 'src', 'app', '(auth)', 'layout.tsx'),
   read('apps', 'admin', 'src', 'components', 'auth', 'AdminLoginForm.tsx'),
 
   read(
@@ -204,13 +206,21 @@ for (const clientPage of [
   assert.match(clientPage, /AuthPageShell/);
 }
 
+assert.match(authLayout, /AuthHeader/);
+assert.match(authLayout, /logoHref=\{ADMIN_ROUTES\.LOGIN\}/);
+assert.doesNotMatch(authLayout, /AdminHeader|AdminSidebar|BurgerButton/);
+
 assert.match(loginForm, /AuthFormLayout/);
+assert.match(loginForm, /AuthInfoPanel/);
+assert.match(loginForm, /title="Welcome back"/);
 assert.match(loginForm, /application:\s*['"]admin['"]/);
 assert.match(loginForm, /ADMIN_ROUTES\.PASSWORD_RECOVERY/);
 assert.match(loginForm, /resolveAdminLoginDestination/);
 assert.doesNotMatch(loginForm, /REGISTER|\/register|RadioOption/);
 
 assert.match(recoveryForm, /AuthFormLayout/);
+assert.match(recoveryForm, /AuthInfoPanel/);
+assert.match(recoveryForm, /title="Admin account"/);
 assert.match(recoveryForm, /application:\s*['"]admin['"]/);
 
 assert.match(

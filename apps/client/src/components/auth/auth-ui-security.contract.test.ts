@@ -93,8 +93,19 @@ test('auth-sensitive submit handlers use synchronous refs before starting reques
 
 //===================================================================
 
-test('registration submit remains actionable so validation can explain blocked pharmacy registration', async () => {
+test('registration submit stays disabled until all required registration data is valid', async () => {
   const source = await readSource('./RegisterForm/RegisterForm.tsx');
+
+  assert.match(source, /isRegisterFormValid/);
+  assert.match(
+    source,
+    /const registerFormIsValid =\s*isRegisterFormValid\(values\) &&\s*\(accountType === 'client' \|\| !pharmacyDocumentsError\)/
+  );
+
+  assert.match(
+    source,
+    /disabled=\{\s*isSubmitting \|\| isBootstrapping \|\| !register \|\| !registerFormIsValid\s*\}/
+  );
 
   assert.match(
     source,
@@ -103,18 +114,6 @@ test('registration submit remains actionable so validation can explain blocked p
 
   assert.match(
     source,
-    /<Button[\s\S]*?type="submit"[\s\S]*?disabled=\{isSubmitting \|\| isBootstrapping \|\| !register\}/
-  );
-
-  assert.doesNotMatch(source, /disabled=\{[\s\S]{0,180}!registerFormIsValid/);
-
-  assert.match(
-    source,
     /const documentsError = validatePharmacyDocuments\(pharmacyDocuments,[\s\S]*?if \(documentsError\) \{[\s\S]*?nextErrors\.pharmacyDocuments = documentsError/
-  );
-
-  assert.doesNotMatch(
-    source,
-    /nextErrors\.pharmacyDocuments\s*=\s*[\s\S]{0,120}\|\|\s*undefined/
   );
 });

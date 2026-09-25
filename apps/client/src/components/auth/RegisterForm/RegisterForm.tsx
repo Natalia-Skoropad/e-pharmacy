@@ -3,6 +3,7 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+import { AuthInfoPanel } from '@e-pharmacy/ui/auth';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { DocumentUpload, RadioOption } from '@e-pharmacy/ui/forms';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
@@ -28,6 +29,7 @@ import {
   USER_PHONE_MAX_LENGTH,
   REGISTER_INITIAL_VALUES,
   hasValidationErrors,
+  isRegisterFormValid,
   markAllFieldsTouched,
   normalizePhoneInput,
   normalizeEmail,
@@ -180,6 +182,10 @@ function RegisterForm() {
     accountType === 'pharmacy'
       ? validatePharmacyDocuments(pharmacyDocuments, { required: true })
       : '';
+
+  const registerFormIsValid =
+    isRegisterFormValid(values) &&
+    (accountType === 'client' || !pharmacyDocumentsError);
 
   const handleChange =
     (field: keyof RegisterFormValues) =>
@@ -342,10 +348,7 @@ function RegisterForm() {
         </div>
       </fieldset>
 
-      <div className={css.choiceInfo}>
-        <p className={css.choiceTitle}>{selectedCopy.title}</p>
-        <p className={css.choiceText}>{selectedCopy.text}</p>
-      </div>
+      <AuthInfoPanel title={selectedCopy.title} text={selectedCopy.text} />
 
       <div className={css.fields}>
         <NameInput
@@ -420,7 +423,9 @@ function RegisterForm() {
       <Button
         type="submit"
         fullWidth
-        disabled={isSubmitting || isBootstrapping || !register}
+        disabled={
+          isSubmitting || isBootstrapping || !register || !registerFormIsValid
+        }
       >
         {isSubmitting ? selectedCopy.loading : selectedCopy.button}
       </Button>

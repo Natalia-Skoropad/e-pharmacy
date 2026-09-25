@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
-import { AuthFormLayout } from '@e-pharmacy/ui/auth';
+import { AuthFormLayout, AuthInfoPanel } from '@e-pharmacy/ui/auth';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { EmailInput, PasswordInput } from '@e-pharmacy/ui/forms';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
@@ -102,6 +102,11 @@ export function AdminLoginForm() {
 
   return (
     <AuthFormLayout title="Admin login" noValidate onSubmit={handleSubmit}>
+      <AuthInfoPanel
+        title="Welcome back"
+        text="Sign in with your administrator email and password to securely access the E-PHARMACY admin cabinet."
+      />
+
       <div className={css.fields}>
         <EmailInput
           id="admin-login-email"

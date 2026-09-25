@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { AuthFormLayout } from '@e-pharmacy/ui/auth';
+import { AuthFormLayout, AuthInfoPanel } from '@e-pharmacy/ui/auth';
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import { EmailInput } from '@e-pharmacy/ui/forms';
@@ -154,10 +154,7 @@ function PasswordRecoveryForm() {
         </div>
       </fieldset>
 
-      <div className={css.choiceInfo}>
-        <p className={css.choiceTitle}>{selectedCopy.title}</p>
-        <p className={css.choiceText}>{selectedCopy.text}</p>
-      </div>
+      <AuthInfoPanel title={selectedCopy.title} text={selectedCopy.text} />
 
       <div className={css.fields}>
         <EmailInput

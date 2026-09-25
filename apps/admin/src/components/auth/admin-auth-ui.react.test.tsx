@@ -17,6 +17,7 @@ const recoveryPageSource = read(
 );
 
 const resetPageSource = read('../../app/(auth)/reset-password/page.tsx');
+const authLayoutSource = read('../../app/(auth)/layout.tsx');
 
 //===================================================================
 
@@ -29,6 +30,38 @@ test('admin auth pages reuse the shared auth shell and stay noindex', () => {
       /robots:\s*\{\s*index:\s*false,\s*follow:\s*false\s*\}/
     );
   }
+});
+
+//===================================================================
+
+test('admin auth layout keeps the client-style logo-only auth header', () => {
+  assert.match(authLayoutSource, /AuthHeader/);
+  assert.match(authLayoutSource, /logoHref=\{ADMIN_ROUTES\.LOGIN\}/);
+
+  assert.doesNotMatch(
+    authLayoutSource,
+    /AdminHeader|AdminSidebar|BurgerButton/
+  );
+});
+
+//===================================================================
+
+test('admin login and recovery show shared account guidance panels', () => {
+  assert.match(loginSource, /AuthInfoPanel/);
+  assert.match(loginSource, /title="Welcome back"/);
+
+  assert.match(
+    loginSource,
+    /Sign in with your administrator email and password to securely access the E-PHARMACY admin cabinet\./
+  );
+
+  assert.match(recoverySource, /AuthInfoPanel/);
+  assert.match(recoverySource, /title="Admin account"/);
+
+  assert.match(
+    recoverySource,
+    /Enter your administrator email\. We will send a secure link to reset your password and restore access to the admin cabinet\./
+  );
 });
 
 //===================================================================

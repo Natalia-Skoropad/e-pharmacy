@@ -1,0 +1,16 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background-color: var(--color-background-alpha-90);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(16px);
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  gap: 24px;
+}
