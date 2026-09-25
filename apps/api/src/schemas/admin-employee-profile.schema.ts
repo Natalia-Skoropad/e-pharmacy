@@ -1,10 +1,8 @@
 import { z } from 'zod';
 
 import {
-  sharedEmailSchema,
   sharedExpectedRevisionSchema,
   sharedPictureUrlSchema,
-  sharedUserNameSchema,
 } from './shared-validation.schema';
 
 import { hasMeaningfulValue } from './shared/meaningful-value';
@@ -13,11 +11,12 @@ import { hasMeaningfulValue } from './shared/meaningful-value';
 
 export const updateMyAdminEmployeeProfileSchema = z
   .object({
-    name: sharedUserNameSchema.optional(),
-    email: sharedEmailSchema.optional(),
     pictureUrl: sharedPictureUrlSchema,
     expectedRevision: sharedExpectedRevisionSchema,
   })
+
+  .strict()
+
   .refine(
     (data) =>
       Object.entries(data).some(

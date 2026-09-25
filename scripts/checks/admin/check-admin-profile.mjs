@@ -185,7 +185,8 @@ assert.match(profileContent, /ProfilePictureEditor/);
 assert.match(profileContent, /ChangePasswordForm/);
 assert.match(profileContent, /ActiveSessionsPanel/);
 assert.match(profileContent, /ProfileTabsLayout/);
-assert.match(profileContent, /access\.isPlatformOwner/);
+assert.match(profileContent, /PhoneInput/);
+assert.doesNotMatch(profileContent, /EmailInput/);
 assert.match(profileContent, /expectedRevision:\s*user\.revision/);
 assert.match(profileContent, /applyCurrentUser\(response\.user\)/);
 assert.match(profileContent, /activeTab === DOCUMENTS_TAB \? /);
@@ -212,12 +213,8 @@ assert.match(sessionBff, /authRoutes\.session\(sessionId\)/);
 assert.match(backendRoutes, /'\/employees\/me\/profile'/);
 assert.doesNotMatch(backendRoutes, /employees\/:employeeId\/profile/);
 
-assert.match(profileService, /authorization\.isPlatformOwner/);
-
-assert.match(
-  profileService,
-  /ADMIN_ACCESS_ERROR_CODES\.PLATFORM_OWNER_REQUIRED/
-);
+assert.doesNotMatch(profileService, /authorization\.isPlatformOwner/);
+assert.doesNotMatch(profileService, /input\.name|input\.email/);
 
 assert.match(profileService, /updatedAt:\s*expectedRevision/);
 assert.match(profileService, /appendAdminAuditLog/);
@@ -226,7 +223,7 @@ assert.match(profileService, /session\.withTransaction/);
 assert.match(documentModel, /content:[\s\S]*select:\s*false/);
 assert.doesNotMatch(documentModel, /PharmacyDocumentFile/);
 assert.match(documentService, /ownerUserId:\s*userId/);
-assert.match(documentService, /authorization\.isPlatformOwner/);
+assert.match(documentService, /Admin profile documents are read-only/);
 
 assert.match(privateNoteService, /const filter = \{ ownerUserId: userId \}/);
 assert.match(privateNoteService, /clientRequestId/);

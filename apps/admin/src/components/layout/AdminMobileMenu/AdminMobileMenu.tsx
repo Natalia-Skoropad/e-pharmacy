@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
-import { Globe2, UserRound } from 'lucide-react';
+import { Globe2 } from 'lucide-react';
 
 import { useAuth } from '@e-pharmacy/auth/react';
 import { SideMenu } from '@e-pharmacy/ui/cabinet';
@@ -106,16 +106,6 @@ export function AdminMobileMenu({
       <div className={css.quickLinks} aria-label="Account quick links">
         <span className={css.quickLinksDivider} aria-hidden="true" />
 
-        <Link
-          className={css.quickLink}
-          href={ADMIN_ROUTES.PROFILE}
-          aria-current={pathname === ADMIN_ROUTES.PROFILE ? 'page' : undefined}
-          onClick={onClose}
-        >
-          <UserRound size={23} aria-hidden="true" />
-          <span>Profile</span>
-        </Link>
-
         {websiteHref ? (
           <a
             className={css.quickLink}
@@ -140,12 +130,12 @@ export function AdminMobileMenu({
 
       <div className={css.actions}>
         <UserBadge
+          href={ADMIN_ROUTES.PROFILE}
           name={user?.name}
-          email={user?.email}
           pictureUrl={user?.pictureUrl}
-          fallbackLabel="Admin"
-          meta="Admin cabinet"
+          fallbackLabel="Profile"
           variant="dark"
+          onClick={onClose}
         />
 
         <LogoutButton

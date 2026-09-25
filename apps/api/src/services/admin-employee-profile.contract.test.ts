@@ -14,18 +14,10 @@ const controllerSource = readSource('controllers/admin-employee.controller.ts');
 
 //===============================================================
 
-test('admin self profile keeps owner-only identity policy on the backend', () => {
-  assert.match(serviceSource, /authorization\.isPlatformOwner/);
-
-  assert.match(
-    serviceSource,
-    /input\.name !== undefined \|\| input\.email !== undefined/
-  );
-
-  assert.match(
-    serviceSource,
-    /ADMIN_ACCESS_ERROR_CODES\.PLATFORM_OWNER_REQUIRED/
-  );
+test('admin self profile is picture-only while employee identity stays managed elsewhere', () => {
+  assert.doesNotMatch(serviceSource, /authorization\.isPlatformOwner/);
+  assert.doesNotMatch(serviceSource, /input\.name|input\.email/);
+  assert.match(serviceSource, /'pictureUrl' in input/);
 });
 
 //===============================================================
@@ -34,7 +26,6 @@ test('admin self profile uses optimistic revision protection and admin scope', (
   assert.match(serviceSource, /role: USER_ROLES\.ADMIN/);
   assert.match(serviceSource, /updatedAt: expectedRevision/);
   assert.match(serviceSource, /AUTH_ERROR_CODES\.PROFILE_CONFLICT/);
-  assert.match(serviceSource, /AUTH_ERROR_CODES\.EMAIL_CONFLICT/);
 });
 
 //===============================================================

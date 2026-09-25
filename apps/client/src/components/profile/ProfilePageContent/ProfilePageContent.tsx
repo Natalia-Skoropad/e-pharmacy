@@ -1106,7 +1106,6 @@ function AuthenticatedProfilePageContent({
                       idPrefix="client-profile-password"
                       description="Keep your account more securely locked."
                       isSubmitting={isPasswordSaving}
-                      requireConfirmation={false}
                       error={passwordSubmitError}
                       onSubmit={handleSavePassword}
                     />

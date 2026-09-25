@@ -1728,7 +1728,6 @@ function PharmacyProfilePage({
                   <ChangePasswordForm
                     idPrefix="pharmacy-profile-password"
                     isSubmitting={isPasswordSaving}
-                    requireConfirmation={false}
                     onSubmit={handlePasswordSubmit}
                   />
                 </>

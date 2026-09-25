@@ -1,23 +1,13 @@
 'use client';
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Save } from 'lucide-react';
-
-import { isApiError } from '@e-pharmacy/api-client/transport';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { EmailInput, NameInput } from '@e-pharmacy/ui/forms';
+import { NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 
 import {
   ActiveSessionsPanel,
@@ -29,32 +19,16 @@ import {
   type ActiveSessionsPanelStatus,
 } from '@e-pharmacy/ui/profile';
 
-import { Button } from '@e-pharmacy/ui/primitives';
-
 import {
   PICTURE_ACCEPT,
   buildPictureFileError,
   buildPictureUrlError,
 } from '@e-pharmacy/validation/files';
 
-import {
-  ACCOUNT_IDENTITY_FORM_FIELDS,
-  isAccountIdentityFormDirty,
-  isAccountIdentityFormValid,
-  markAllFieldsTouched,
-  normalizeAccountIdentityValues,
-  validateAccountIdentityForm,
-  type AccountIdentityFormErrors,
-  type AccountIdentityTouchedFields,
-  type AccountIdentityFormValues,
-  type ChangePasswordFormValues,
-} from '@e-pharmacy/validation/profile';
+import type { ChangePasswordFormValues } from '@e-pharmacy/validation/profile';
 
-import {
-  USER_EMAIL_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-} from '@e-pharmacy/validation/auth';
-
+import { getMyAdminDocuments } from '@/lib/api/browser/admin-documents.api';
+import { getMyAdminPrivateComments } from '@/lib/api/browser/admin-private-comments.api';
 import { updateMyAdminEmployeeProfile } from '@/lib/api/browser/admin-profile.api';
 
 import {
@@ -64,7 +38,6 @@ import {
 } from '@/lib/api/browser/auth.api';
 
 import { getAdminPasswordChangeErrorMessage } from '@/lib/auth/admin-auth-error-messages';
-import { ADMIN_ACCESS_ERROR_CODES } from '@/lib/permissions/admin-access';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
@@ -90,70 +63,24 @@ type ProfileTab =
 
 //===================================================================
 
-const PROFILE_TABS = [
-  { value: PERSONAL_TAB, label: 'Personal information' },
-  { value: DOCUMENTS_TAB, label: 'Documents' },
-  { value: COMMENTS_TAB, label: 'Comments' },
-  { value: SESSIONS_TAB, label: 'Active sessions' },
-] as const;
-
-//===================================================================
-
-const AUTH_EMAIL_CONFLICT = 'AUTH_EMAIL_CONFLICT';
-const AUTH_PROFILE_CONFLICT = 'AUTH_PROFILE_CONFLICT';
-
-//===================================================================
-
-function getProfileErrorMessage(error: unknown): string {
-  if (!isApiError(error)) {
-    return 'Could not update the profile. Please try again.';
-  }
-
-  if (error.backendCode === AUTH_EMAIL_CONFLICT) {
-    return 'This email is already used by another account.';
-  }
-
-  if (error.backendCode === AUTH_PROFILE_CONFLICT) {
-    return 'The profile changed in another session. Reload the page and try again.';
-  }
-
-  if (error.backendCode === ADMIN_ACCESS_ERROR_CODES.PLATFORM_OWNER_REQUIRED) {
-    return 'Only a Platform Owner can change the admin name or email.';
-  }
-
-  return 'Could not update the profile. Please try again.';
-}
-
-//===================================================================
-
 export function AdminProfilePageContent() {
   const { user, applyCurrentUser, invalidateSession, logoutAll } = useAuth();
   const { access } = useAdminAuthorization();
   const toast = useToast();
-
   const [activeTab, setActiveTab] = useState<ProfileTab>(PERSONAL_TAB);
-
-  const [identityDraft, setIdentityDraft] =
-    useState<AccountIdentityFormValues | null>(null);
-
-  const [errors, setErrors] = useState<AccountIdentityFormErrors>({});
-
-  const [touchedFields, setTouchedFields] =
-    useState<AccountIdentityTouchedFields>({});
 
   const [pictureDraft, setPictureDraft] = useState<string | null | undefined>(
     undefined
   );
 
-  const [isSavingIdentity, setIsSavingIdentity] = useState(false);
   const [isSavingPicture, setIsSavingPicture] = useState(false);
   const profileMutationInFlightRef = useRef(false);
-
-  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
-  const [passwordSubmitError, setPasswordSubmitError] = useState('');
   const passwordMutationInFlightRef = useRef(false);
-
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
+  const [documentsCount, setDocumentsCount] = useState(0);
+  const [commentsCount, setCommentsCount] = useState(0);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
+
   const [sessionsStatus, setSessionsStatus] =
     useState<ActiveSessionsPanelStatus>('loading');
 
@@ -167,35 +94,49 @@ export function AdminProfilePageContent() {
   const [isSigningOutAll, setIsSigningOutAll] = useState(false);
   const sessionMutationInFlightRef = useRef(false);
 
-  const identityValues = useMemo<AccountIdentityFormValues>(
-    () =>
-      identityDraft ?? {
-        name: user?.name ?? '',
-        email: user?.email ?? '',
-      },
-    [identityDraft, user?.email, user?.name]
-  );
-
-  const initialIdentityValues = useMemo<AccountIdentityFormValues>(
-    () => ({ name: user?.name ?? '', email: user?.email ?? '' }),
-    [user?.email, user?.name]
+  const tabs = useMemo(
+    () => [
+      { value: PERSONAL_TAB, label: 'Personal information' },
+      { value: DOCUMENTS_TAB, label: `Documents ${documentsCount}` },
+      { value: COMMENTS_TAB, label: `Comments ${commentsCount}` },
+      { value: SESSIONS_TAB, label: 'Active sessions' },
+    ],
+    [commentsCount, documentsCount]
   );
 
   useEffect(() => {
-    if (activeTab !== SESSIONS_TAB || !user) return;
+    if (!user) return;
+    const controller = new AbortController();
 
+    void getMyAdminDocuments({ signal: controller.signal })
+      .then((response) => {
+        if (!controller.signal.aborted)
+          setDocumentsCount(response.documents.length);
+      })
+      .catch(() => undefined);
+
+    void getMyAdminPrivateComments(1, { signal: controller.signal })
+      .then((response) => {
+        if (!controller.signal.aborted) setCommentsCount(response.total);
+      })
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [user]);
+
+  useEffect(() => {
+    if (activeTab !== SESSIONS_TAB || !user) return;
     const controller = new AbortController();
 
     void getActiveSessions({ signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
-
         setSessions([...response.sessions]);
         setSessionsStatus('success');
       })
+
       .catch(() => {
         if (controller.signal.aborted) return;
-
         setSessionsError('Could not load active sessions. Please try again.');
         setSessionsStatus('error');
       });
@@ -205,73 +146,14 @@ export function AdminProfilePageContent() {
 
   if (!user) return null;
 
-  const isPlatformOwner = access.isPlatformOwner;
-  const isIdentityDirty = isAccountIdentityFormDirty(
-    identityValues,
-    initialIdentityValues
-  );
-  const isIdentityValid = isAccountIdentityFormValid(identityValues);
   const pictureUrl =
     pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
 
-  const handleIdentityChange =
-    (field: keyof AccountIdentityFormValues) =>
-    (event: ChangeEvent<HTMLInputElement>) => {
-      if (!isPlatformOwner || isSavingIdentity || isSavingPicture) return;
-
-      const nextValues = { ...identityValues, [field]: event.target.value };
-      const nextErrors = validateAccountIdentityForm(nextValues);
-
-      setIdentityDraft(nextValues);
-      setTouchedFields((current) => ({ ...current, [field]: true }));
-      setErrors((current) => ({ ...current, [field]: nextErrors[field] }));
-    };
-
-  const handleIdentitySubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!isPlatformOwner || profileMutationInFlightRef.current) return;
-
-    const nextErrors = validateAccountIdentityForm(identityValues);
-
-    if (Object.keys(nextErrors).length > 0) {
-      setTouchedFields(markAllFieldsTouched(ACCOUNT_IDENTITY_FORM_FIELDS));
-      setErrors(nextErrors);
-      return;
-    }
-
-    if (!isIdentityDirty) return;
-
-    profileMutationInFlightRef.current = true;
-    setIsSavingIdentity(true);
-
-    try {
-      const normalized = normalizeAccountIdentityValues(identityValues);
-      const response = await updateMyAdminEmployeeProfile({
-        ...normalized,
-        expectedRevision: user.revision,
-      });
-
-      applyCurrentUser(response.user);
-      setIdentityDraft(null);
-      setErrors({});
-      setTouchedFields({});
-      toast.success('Personal information was updated.');
-    } catch (error) {
-      toast.error(getProfileErrorMessage(error));
-    } finally {
-      profileMutationInFlightRef.current = false;
-      setIsSavingIdentity(false);
-    }
-  };
-
   const handlePictureChange = async (nextPictureUrl: string | null) => {
     if (profileMutationInFlightRef.current) return;
-
     profileMutationInFlightRef.current = true;
     setPictureDraft(nextPictureUrl);
     setIsSavingPicture(true);
-
     try {
       const response = await updateMyAdminEmployeeProfile({
         pictureUrl: nextPictureUrl,
@@ -285,9 +167,9 @@ export function AdminProfilePageContent() {
           ? 'Profile photo was updated.'
           : 'Profile photo was removed.'
       );
-    } catch (error) {
+    } catch {
       setPictureDraft(undefined);
-      toast.error(getProfileErrorMessage(error));
+      toast.error('Could not update the profile photo. Please try again.');
     } finally {
       profileMutationInFlightRef.current = false;
       setIsSavingPicture(false);
@@ -298,10 +180,8 @@ export function AdminProfilePageContent() {
     values: Readonly<ChangePasswordFormValues>
   ) => {
     if (passwordMutationInFlightRef.current) return;
-
     passwordMutationInFlightRef.current = true;
     setIsPasswordSaving(true);
-    setPasswordSubmitError('');
 
     try {
       await updateCurrentUserPassword(values);
@@ -309,12 +189,7 @@ export function AdminProfilePageContent() {
       toast.success('Password changed. Log in with your new password.');
       window.location.replace(ADMIN_ROUTES.LOGIN);
     } catch (error) {
-      const message = getAdminPasswordChangeErrorMessage(
-        getAuthErrorCode(error)
-      );
-
-      setPasswordSubmitError(message);
-      toast.error(message);
+      toast.error(getAdminPasswordChangeErrorMessage(getAuthErrorCode(error)));
     } finally {
       passwordMutationInFlightRef.current = false;
       setIsPasswordSaving(false);
@@ -323,7 +198,6 @@ export function AdminProfilePageContent() {
 
   const handleRevokeSession = async (sessionId: string) => {
     if (sessionMutationInFlightRef.current) return;
-
     sessionMutationInFlightRef.current = true;
     setRevokingSessionId(sessionId);
 
@@ -344,7 +218,6 @@ export function AdminProfilePageContent() {
 
   const handleLogoutAllSessions = async () => {
     if (!logoutAll || sessionMutationInFlightRef.current) return;
-
     sessionMutationInFlightRef.current = true;
     setIsSigningOutAll(true);
 
@@ -362,29 +235,26 @@ export function AdminProfilePageContent() {
   };
 
   return (
-    <section className={css.page} aria-labelledby="admin-profile-title">
-      <div className={css.heading}>
-        <h1 id="admin-profile-title">Profile</h1>
-        <p>Manage your Admin Cabinet identity and account security.</p>
-      </div>
-
+    <section className={css.page} aria-label="Admin profile">
       <ProfileTabsLayout
         idBase="admin-profile"
-        items={[...PROFILE_TABS]}
+        items={tabs}
         activeValue={activeTab}
         ariaLabel="Admin profile sections"
         sidebar={
           <ProfileIdentityCard
             name={user.name}
             email={user.email}
-            roleLabel={isPlatformOwner ? 'Platform Owner' : 'Admin employee'}
+            roleLabel={
+              access.isPlatformOwner ? 'Platform Owner' : 'Admin employee'
+            }
             statusLabel={USER_STATUS_PRESENTATION[user.status].label}
             pictureEditor={
               <ProfilePictureEditor
                 pictureUrl={pictureUrl}
                 name={user.name}
                 accept={PICTURE_ACCEPT}
-                disabled={isSavingPicture || isSavingIdentity}
+                disabled={isSavingPicture}
                 isSaving={isSavingPicture}
                 validateFile={(file) => buildPictureFileError(file) || null}
                 validatePictureUrl={(value) =>
@@ -401,7 +271,6 @@ export function AdminProfilePageContent() {
             setSessionsStatus('loading');
             setSessionsError('');
           }
-
           setActiveTab(nextTab);
         }}
       >
@@ -412,75 +281,44 @@ export function AdminProfilePageContent() {
         >
           {activeTab === PERSONAL_TAB ? (
             <>
-              <form
+              <section
                 className={css.personalForm}
-                noValidate
-                onSubmit={handleIdentitySubmit}
+                aria-labelledby="admin-personal-information-title"
               >
                 <div className={css.formHeader}>
                   <div>
-                    <h2>Personal information</h2>
+                    <h2 id="admin-personal-information-title">
+                      Personal information
+                    </h2>
                     <p>
-                      {isPlatformOwner
-                        ? 'Keep the Platform Owner name and email up to date.'
-                        : 'Your name and email are managed by the Platform Owner.'}
+                      Employee identity is managed from the Employees section.
                     </p>
                   </div>
-
-                  {isPlatformOwner ? (
-                    <Button
-                      type="submit"
-                      iconLeft={<Save size={18} aria-hidden="true" />}
-                      disabled={
-                        isSavingIdentity ||
-                        isSavingPicture ||
-                        !isIdentityDirty ||
-                        !isIdentityValid
-                      }
-                      isLoading={isSavingIdentity}
-                      loadingLabel="Saving..."
-                    >
-                      Save changes
-                    </Button>
-                  ) : null}
                 </div>
 
                 <div className={css.formGrid}>
                   <NameInput
                     id="admin-profile-name"
                     name="name"
-                    value={identityValues.name}
-                    error={errors.name}
-                    isTouched={Boolean(touchedFields.name)}
-                    required={isPlatformOwner}
-                    maxLength={USER_NAME_MAX_LENGTH}
-                    disabled={
-                      !isPlatformOwner || isSavingIdentity || isSavingPicture
-                    }
-                    onChange={handleIdentityChange('name')}
+                    value={user.name}
+                    disabled
+                    onChange={() => undefined}
                   />
 
-                  <EmailInput
-                    id="admin-profile-email"
-                    name="email"
-                    value={identityValues.email}
-                    error={errors.email}
-                    isTouched={Boolean(touchedFields.email)}
-                    required={isPlatformOwner}
-                    maxLength={USER_EMAIL_MAX_LENGTH}
-                    disabled={
-                      !isPlatformOwner || isSavingIdentity || isSavingPicture
-                    }
-                    onChange={handleIdentityChange('email')}
+                  <PhoneInput
+                    id="admin-profile-phone"
+                    name="phone"
+                    value={user.phone}
+                    disabled
+                    onChange={() => undefined}
                   />
                 </div>
-              </form>
+              </section>
 
               <ChangePasswordForm
                 idPrefix="admin-profile-password"
                 description="Update your password and sign in again on this device."
                 isSubmitting={isPasswordSaving}
-                error={passwordSubmitError}
                 onSubmit={handlePasswordSubmit}
               />
             </>
@@ -492,9 +330,7 @@ export function AdminProfilePageContent() {
           value={DOCUMENTS_TAB}
           activeValue={activeTab}
         >
-          {activeTab === DOCUMENTS_TAB ? (
-            <AdminDocuments isPlatformOwner={isPlatformOwner} />
-          ) : null}
+          {activeTab === DOCUMENTS_TAB ? <AdminDocuments /> : null}
         </ProfileTabPanel>
 
         <ProfileTabPanel
@@ -502,7 +338,9 @@ export function AdminProfilePageContent() {
           value={COMMENTS_TAB}
           activeValue={activeTab}
         >
-          {activeTab === COMMENTS_TAB ? <AdminPrivateComments /> : null}
+          {activeTab === COMMENTS_TAB ? (
+            <AdminPrivateComments onTotalChange={setCommentsCount} />
+          ) : null}
         </ProfileTabPanel>
 
         <ProfileTabPanel

@@ -193,7 +193,7 @@ pharmacyRoutes.get(
 pharmacyRoutes.get(
   '/:pharmacyId/checkout-details',
   authenticate,
-  authorizeRoles(USER_ROLES.CLIENT, USER_ROLES.PHARMACY),
+  authorizeRoles(USER_ROLES.CLIENT, USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
   validate({ params: pharmacyIdParamsSchema }),
   ctrlWrapper(getPharmacyCheckoutDetails)
 );

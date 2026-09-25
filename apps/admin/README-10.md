@@ -5665,3 +5665,45 @@ git add .
 git commit -m "fix(admin): complete stage 10 audit hardening"
 
 Після накладання цього архіву Stage 10 можна вважати закритим по пунктах фінального аудиту. Маленький audit-болтик нарешті повернули на його законне місце 😄
+
+//============================================
+
+Готово 🙂 Внесла зміни поверх актуального Stage 10 з урахуванням попереднього audit-hardening.
+
+📦 Завантажити архів з оновленими/доданими файлами
+
+Що змінилось: на /login, /password-recovery і /reset-password додана шапка в стилі client-частини, але тільки з логотипом; breadcrumbs залишаються в тому самому layout-положенні, що й у client. Для Login додано блок “Welcome back” з admin-specific поясненням, для Password Recovery — блок “Admin account” з коротким поясненням. Обидва використовують новий shared AuthInfoPanel, тому стиль буквально спільний із client auth, а не скопійований CSS.
+
+На client /register кнопка створення акаунта тепер неактивна, доки форма не валідна. Для client перевіряються всі обов'язкові поля, а для pharmacy додатково враховуються обов'язкові документи. Серверна validation при submit при цьому збережена — disabled-кнопка не стала єдиним захистом.
+
+Перевірки пройшли: Admin Auth structural checks ✅, shared UI styles/boundaries ✅, client component styles/boundaries/a11y ✅, Auth contracts ✅, TypeScript для packages/ui, apps/admin, apps/client ✅, Admin auth tests 7/7 ✅, client auth/security tests 3/3 ✅.
+
+Коміт для фінального стану Stage 10:
+
+git add .
+git commit -m "fix(admin): finalize stage 10 auth UI and hardening"
+
+Тепер перед Stage 11 у нас уже не тільки «все працює», а й сторінки входу перестали виглядати так, ніби адмінку впустили через службовий вхід 😄
+
+//====================================================
+
+Готово 🙂 Я внесла правки поверх e-pharmacy-10-10 і зібрала окремий архів лише з файлами, зміненими в цьому проході.
+
+📦 Завантажити архів зі style/profile consolidation правками
+
+Основне, що дороблено: admin на client-сайті тепер має той самий доступ до реквізитів аптек, що й pharmacy-user; пояснення на сторінці товару для admin таке саме, як для pharmacy; Admin Header і mobile menu вирівняні з Pharmacy Cabinet, прибрано зайвий дубль Profile у mobile menu та Admin cabinet із user badge; біля breadcrumbs Profile додана іконка.
+
+По /admin/profile прибрала окремий заголовок сторінки, Personal information тепер показує Name + Phone тільки для перегляду для всіх admin users, а self-profile backend дозволяє змінювати лише фото. Documents переведені в read-only режим: тільки перегляд/скачування, self upload/replace/delete backend теж заблоковані. У tabs одразу підтягуються Documents N і Comments N, а comment-count оновлюється після створення/видалення коментаря.
+
+Для client/pharmacy/admin тепер використовується однаковий shared ChangePasswordForm із трьома полями: Current password, New password, Confirm new password; кнопка неактивна, доки форма не валідна. Shared ActiveSessionsPanel також виправлений один раз для всіх трьох кабінетів: mobile action на всю ширину, Current session відцентрований лише на mobile. Відступ під tabs приведений до того самого profile-pattern.
+
+Перевірки, які вдалося коректно запустити в архівному середовищі, пройшли: check:admin-profile, check:admin-shell, check:admin-audit, check:client-admin-header, check:client-user-state, check:pharmacy-account-components, check:shared-cabinet-ui, check:ui-styles, check:profile-contracts ✅. Також syntax-transpile пройшов для 22 змінених TS/TSX файлів. Повний pnpm pipeline тут недоступний через відсутній workspace package manager/dependencies, тому після накладання архіву варто прогнати локальний pnpm check:before-deploy.
+
+Для цих змін я б використала коміт:
+
+git add .
+git commit -m "fix(profile): unify cabinet styles and read-only admin profile"
+
+Тут уже справді рухаємося в бік «одна система — один набір компонентів», а не три велосипеди, один із яких випадково з квадратними колесами 😄
+
+//=============================================

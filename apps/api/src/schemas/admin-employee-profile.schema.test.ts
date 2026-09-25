@@ -9,16 +9,22 @@ const revision = '2026-09-24T12:00:00.000Z';
 
 //===============================================================
 
-test('admin self profile accepts and normalizes owner identity fields', () => {
-  const parsed = updateMyAdminEmployeeProfileSchema.parse({
-    name: '  Platform Owner  ',
-    email: ' Owner@Example.COM ',
-    expectedRevision: revision,
-  });
+test('admin self profile rejects identity edits', () => {
+  assert.equal(
+    updateMyAdminEmployeeProfileSchema.safeParse({
+      name: 'Platform Owner',
+      expectedRevision: revision,
+    }).success,
+    false
+  );
 
-  assert.equal(parsed.name, 'Platform Owner');
-  assert.equal(parsed.email, 'owner@example.com');
-  assert.equal(parsed.expectedRevision, revision);
+  assert.equal(
+    updateMyAdminEmployeeProfileSchema.safeParse({
+      email: 'owner@example.com',
+      expectedRevision: revision,
+    }).success,
+    false
+  );
 });
 
 //===============================================================

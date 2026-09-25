@@ -56,6 +56,6 @@ test('complete bank details remain owned by the authenticated checkout endpoint'
 
   assert.match(
     routeSource,
-    /'\/:pharmacyId\/checkout-details'[\s\S]*?authenticate[\s\S]*?authorizeRoles\(USER_ROLES\.CLIENT, USER_ROLES\.PHARMACY\)/
+    /'\/:pharmacyId\/checkout-details'[\s\S]*?authenticate[\s\S]*?authorizeRoles\(USER_ROLES\.CLIENT, USER_ROLES\.PHARMACY, USER_ROLES\.ADMIN\)/
   );
 });

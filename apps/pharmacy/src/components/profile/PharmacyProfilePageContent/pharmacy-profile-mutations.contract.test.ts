@@ -168,7 +168,12 @@ test('profile save sections use native form submission and current-account copy'
 
   assert.match(
     source,
-    /<ChangePasswordForm[\s\S]*?requireConfirmation=\{false\}[\s\S]*?onSubmit=\{handlePasswordSubmit\}/
+    /<ChangePasswordForm[\s\S]*?idPrefix="pharmacy-profile-password"[\s\S]*?onSubmit=\{handlePasswordSubmit\}/
+  );
+
+  assert.doesNotMatch(
+    source,
+    /<ChangePasswordForm[\s\S]*?requireConfirmation=\{false\}/
   );
 
   for (const handler of [

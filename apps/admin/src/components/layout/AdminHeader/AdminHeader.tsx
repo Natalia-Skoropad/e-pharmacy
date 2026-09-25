@@ -113,7 +113,12 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
         <CabinetTopBar
           className={css.topbar}
           items={breadcrumbs}
-          leadingIcon={navigationItem?.icon ?? null}
+          leadingIcon={
+            navigationItem?.icon ??
+            (pathname === ADMIN_ROUTES.PROFILE ? (
+              <UserRound size={20} aria-hidden="true" />
+            ) : null)
+          }
           navigationToggle={
             <BurgerButton
               controlsId={MOBILE_MENU_ID}
@@ -145,10 +150,8 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
                     className={css.userBadge}
                     variant="dark"
                     name={user?.name}
-                    email={user?.email}
                     pictureUrl={user?.pictureUrl}
-                    fallbackLabel="Admin"
-                    meta="Admin cabinet"
+                    fallbackLabel="Profile"
                   />
                 }
               />

@@ -37,10 +37,11 @@ function PharmacyDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
 }: PharmacyDetailsPageContentProps) {
-  const { canUseClientFeatures, isActivePharmacyUser } =
+  const { canUseClientFeatures, isActivePharmacyUser, isActiveAdminUser } =
     useClientAuthCapabilities();
 
-  const canShowBankDetails = canUseClientFeatures || isActivePharmacyUser;
+  const canShowBankDetails =
+    canUseClientFeatures || isActivePharmacyUser || isActiveAdminUser;
   const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
   const generatedTabsId = useId();
   const tabsIdBase = `pharmacy-details-${generatedTabsId.replace(/:/g, '')}`;

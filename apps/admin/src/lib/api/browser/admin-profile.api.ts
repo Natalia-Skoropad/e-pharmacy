@@ -12,8 +12,6 @@ import { adminApiRoutes as ADMIN_API_ROUTES } from '@/lib/api/routes/admin-api-r
 //===================================================================
 
 export type UpdateMyAdminEmployeeProfilePayload = Readonly<{
-  name?: string;
-  email?: string;
   pictureUrl?: string | null;
   expectedRevision: ISODateTimeString;
 }>;

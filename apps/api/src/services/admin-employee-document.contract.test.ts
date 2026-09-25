@@ -36,12 +36,9 @@ test('admin employee documents are a separate self-owned persistence domain', ()
 
 //===============================================================
 
-test('admin document mutations remain Platform Owner only on the backend', () => {
-  assert.match(serviceSource, /authorization\.isPlatformOwner/);
-  assert.match(
-    serviceSource,
-    /ADMIN_ACCESS_ERROR_CODES\.PLATFORM_OWNER_REQUIRED/
-  );
+test('admin self-profile document mutations are blocked for every admin', () => {
+  assert.match(serviceSource, /Admin profile documents are read-only/);
+  assert.doesNotMatch(serviceSource, /authorization\.isPlatformOwner/);
 
   for (const mutation of [
     'createMyAdminEmployeeDocumentService',

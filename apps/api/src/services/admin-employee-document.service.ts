@@ -56,14 +56,12 @@ function assertDocumentMutationAllowed(
 ): void {
   assertSelfAdminAuthorization(userId, authorization);
 
-  if (!authorization.isPlatformOwner) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Only a Platform Owner can manage admin documents.',
-      undefined,
-      ADMIN_ACCESS_ERROR_CODES.PLATFORM_OWNER_REQUIRED
-    );
-  }
+  throw httpError(
+    HTTP_STATUS.FORBIDDEN,
+    'Admin profile documents are read-only. Manage employee documents from the Employees section.',
+    undefined,
+    ADMIN_ACCESS_ERROR_CODES.ACCESS_REQUIRED
+  );
 }
 
 //===============================================================

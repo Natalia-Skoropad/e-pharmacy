@@ -17,7 +17,6 @@ import type { AdminAuthorization } from '../types/admin-access';
 import type { AuthUserResponse } from '../types/auth';
 
 import { httpError } from '../utils/httpError';
-import { isDuplicateEmailError } from '../utils/mongoError';
 import { toAuthUserResponse } from '../utils/userResponse';
 import { appendAdminAuditLog } from './admin-audit.service';
 
@@ -47,47 +46,21 @@ function assertSelfAdminAuthorization(
 
 //===============================================================
 
-function assertEditableFields(
-  authorization: AdminAuthorization,
-  input: UpdateMyAdminEmployeeProfileInput
-): void {
-  if (authorization.isPlatformOwner) return;
-
-  if (input.name !== undefined || input.email !== undefined) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Only a Platform Owner can update admin name or email.',
-      undefined,
-      ADMIN_ACCESS_ERROR_CODES.PLATFORM_OWNER_REQUIRED
-    );
-  }
-}
-
-//===============================================================
-
 function getProfileAuditFields(
   input: UpdateMyAdminEmployeeProfileInput
-): Array<'name' | 'email' | 'hasPicture'> {
-  const fields: Array<'name' | 'email' | 'hasPicture'> = [];
-
-  if (input.name !== undefined) fields.push('name');
-  if (input.email !== undefined) fields.push('email');
-  if ('pictureUrl' in input) fields.push('hasPicture');
-
-  return fields;
+): Array<'hasPicture'> {
+  return 'pictureUrl' in input ? ['hasPicture'] : [];
 }
 
 //===============================================================
 
 function buildProfileAuditSnapshot(
   user: ProfileAuditUser,
-  fields: readonly ('name' | 'email' | 'hasPicture')[]
+  fields: readonly 'hasPicture'[]
 ): Record<string, string | boolean> {
   const snapshot: Record<string, string | boolean> = {};
 
   for (const field of fields) {
-    if (field === 'name') snapshot.name = user.name;
-    if (field === 'email') snapshot.email = user.email;
     if (field === 'hasPicture') snapshot.hasPicture = Boolean(user.pictureUrl);
   }
 
@@ -131,18 +104,9 @@ export async function updateMyAdminEmployeeProfileService(
   auditRequestId: string
 ): Promise<AuthUserResponse> {
   assertSelfAdminAuthorization(userId, authorization);
-  assertEditableFields(authorization, input);
 
   const update: Record<string, unknown> = {};
   const unset: Record<string, ''> = {};
-
-  if (authorization.isPlatformOwner && input.name !== undefined) {
-    update.name = input.name;
-  }
-
-  if (authorization.isPlatformOwner && input.email !== undefined) {
-    update.email = input.email;
-  }
 
   if ('pictureUrl' in input) {
     if (input.pictureUrl) update.pictureUrl = input.pictureUrl;
@@ -204,17 +168,6 @@ export async function updateMyAdminEmployeeProfileService(
 
       result = toAuthUserResponse(user);
     });
-  } catch (error) {
-    if (isDuplicateEmailError(error)) {
-      throw httpError(
-        HTTP_STATUS.CONFLICT,
-        API_MESSAGES.EMAIL_IN_USE,
-        undefined,
-        AUTH_ERROR_CODES.EMAIL_CONFLICT
-      );
-    }
-
-    throw error;
   } finally {
     await session.endSession();
   }

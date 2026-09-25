@@ -58,11 +58,14 @@ function createCommentRequestId(): string {
 
 //===================================================================
 
-export function AdminPrivateComments() {
+export function AdminPrivateComments({
+  onTotalChange,
+}: Readonly<{ onTotalChange?: (total: number) => void }>) {
   const toast = useToast();
 
   const [data, setData] =
     useState<AdminEmployeePrivateNotesResponse>(EMPTY_COMMENTS);
+
   const [status, setStatus] = useState<CommentsStatus>('loading');
   const [loadError, setLoadError] = useState('');
   const [draft, setDraftState] = useState('');
@@ -85,10 +88,11 @@ export function AdminPrivateComments() {
   const applyResponse = useCallback(
     (response: AdminEmployeePrivateNotesResponse) => {
       setData(response);
+      onTotalChange?.(response.total);
       setLoadError('');
       setStatus('success');
     },
-    []
+    [onTotalChange]
   );
 
   useEffect(() => {

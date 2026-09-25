@@ -22,7 +22,7 @@ test('admin private comments reuse shared comment presentation and pagination UI
 
 //===================================================================
 
-test('admin private comments are loaded only when their profile tab mounts', async () => {
+test('admin private comment count preloads while the tab body stays lazy', async () => {
   const [profileSource, commentsSource] = await Promise.all([
     read('../AdminProfilePageContent/AdminProfilePageContent.tsx'),
     read('./AdminPrivateComments.tsx'),
@@ -30,7 +30,12 @@ test('admin private comments are loaded only when their profile tab mounts', asy
 
   assert.match(
     profileSource,
-    /activeTab === COMMENTS_TAB \? <AdminPrivateComments \/> : null/
+    /getMyAdminPrivateComments\(1, \{ signal: controller\.signal \}\)[\s\S]*?setCommentsCount\(response\.total\)/
+  );
+
+  assert.match(
+    profileSource,
+    /activeTab === COMMENTS_TAB[\s\S]*?<AdminPrivateComments[\s\S]*?onTotalChange=\{setCommentsCount\}[\s\S]*?\/>/
   );
 
   assert.match(

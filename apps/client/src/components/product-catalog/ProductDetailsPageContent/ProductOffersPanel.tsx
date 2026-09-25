@@ -32,8 +32,12 @@ export function ProductOffersPanel({
   product,
   contextPharmacyId,
 }: ProductOffersPanelProps) {
-  const { canUseClientFeatures, isBootstrapping, isActivePharmacyUser } =
-    useClientAuthCapabilities();
+  const {
+    canUseClientFeatures,
+    isBootstrapping,
+    isActivePharmacyUser,
+    isActiveAdminUser,
+  } = useClientAuthCapabilities();
 
   const { getCollectionStatus, isFavorite, loadCollection } = useFavorites();
   const favoriteCollectionStatus = getCollectionStatus('pharmacy');
@@ -102,7 +106,7 @@ export function ProductOffersPanel({
 
           {!isBootstrapping && !canUseClientFeatures ? (
             <p className={css.authNote}>
-              {isActivePharmacyUser
+              {isActivePharmacyUser || isActiveAdminUser
                 ? 'Ordering is available only for client accounts.'
                 : 'Only logged-in clients can add products to an order.'}
             </p>

@@ -11,61 +11,57 @@ const source = readFileSync(
 
 //===================================================================
 
-test('regular admins keep identity fields read-only while Platform Owner gets Save', () => {
-  assert.match(source, /const isPlatformOwner = access\.isPlatformOwner/);
+test('admin personal information is read-only and shows name plus phone', () => {
+  assert.match(
+    source,
+    /<NameInput[\s\S]*?value=\{user\.name\}[\s\S]*?disabled/
+  );
 
   assert.match(
     source,
-    /\{isPlatformOwner \? \([\s\S]*?Save changes[\s\S]*?\) : null\}/
+    /<PhoneInput[\s\S]*?value=\{user\.phone\}[\s\S]*?disabled/
   );
 
-  assert.equal(
-    (
-      source.match(
-        /disabled=\{\s*!isPlatformOwner \|\| isSavingIdentity \|\| isSavingPicture\s*\}/g
-      ) ?? []
-    ).length,
-    2,
-    'Name and email must both be read-only for a regular admin employee'
-  );
+  assert.doesNotMatch(source, /Save changes/);
+  assert.doesNotMatch(source, /EmailInput/);
 });
 
 //===================================================================
 
-test('profile and picture mutations carry optimistic revision and refresh current user', () => {
-  assert.equal(
-    (source.match(/expectedRevision:\s*user\.revision/g) ?? []).length,
-    2
-  );
-
-  assert.equal(
-    (source.match(/applyCurrentUser\(response\.user\)/g) ?? []).length,
-    2
-  );
-
+test('profile picture mutation keeps optimistic revision and refreshes current user', () => {
+  assert.match(source, /expectedRevision:\s*user\.revision/);
+  assert.match(source, /applyCurrentUser\(response\.user\)/);
   assert.match(source, /pictureUrl:\s*nextPictureUrl/);
   assert.match(source, /profileMutationInFlightRef/);
 });
 
 //===================================================================
 
-test('profile tab resources stay lazy instead of mounting on initial personal view', () => {
+test('document and comment counts preload while tab bodies remain conditional', () => {
+  assert.match(source, /getMyAdminDocuments/);
+  assert.match(source, /setDocumentsCount\(response\.documents\.length\)/);
+  assert.match(source, /getMyAdminPrivateComments\(1/);
+  assert.match(source, /setCommentsCount\(response\.total\)/);
+  assert.match(source, /label: `Documents \$\{documentsCount\}`/);
+  assert.match(source, /label: `Comments \$\{commentsCount\}`/);
+
   assert.match(
     source,
-    /activeTab === DOCUMENTS_TAB \? \([\s\S]*?<AdminDocuments isPlatformOwner=\{isPlatformOwner\}/
+    /activeTab === DOCUMENTS_TAB\s*\?\s*\(?\s*<AdminDocuments\s*\/>\s*\)?\s*:\s*null/
   );
 
   assert.match(
     source,
-    /activeTab === COMMENTS_TAB \? <AdminPrivateComments \/> : null/
+    /activeTab === COMMENTS_TAB\s*\?\s*\(?\s*<AdminPrivateComments\s+onTotalChange=\{setCommentsCount\}\s*\/>\s*\)?\s*:\s*null/
   );
-
-  assert.match(source, /if \(activeTab !== SESSIONS_TAB \|\| !user\) return;/);
 });
 
 //===================================================================
 
-test('password and session security mutations end in the login lifecycle', () => {
+test('password errors are toast-only and session security mutations end in login lifecycle', () => {
+  assert.doesNotMatch(source, /passwordSubmitError/);
+  assert.match(source, /toast\.error\(getAdminPasswordChangeErrorMessage/);
+
   assert.match(
     source,
     /await updateCurrentUserPassword\(values\)[\s\S]*?invalidateSession\('password_changed'\)[\s\S]*?window\.location\.replace\(ADMIN_ROUTES\.LOGIN\)/

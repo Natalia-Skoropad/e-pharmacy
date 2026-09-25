@@ -18,6 +18,7 @@ export type ClientAuthCapabilities = Readonly<{
   isUnavailable: boolean;
   isActiveClient: boolean;
   isActivePharmacyUser: boolean;
+  isActiveAdminUser: boolean;
   canUseClientFeatures: boolean;
   canOpenPharmacyCabinet: boolean;
 }>;
@@ -35,6 +36,9 @@ export function selectClientAuthCapabilities(
   const isActivePharmacyUser =
     auth.isAuthenticated && auth.user?.role === 'pharmacy' && isActiveUser;
 
+  const isActiveAdminUser =
+    auth.isAuthenticated && auth.user?.role === 'admin' && isActiveUser;
+
   return {
     user: auth.user,
     status: auth.status,
@@ -43,6 +47,7 @@ export function selectClientAuthCapabilities(
     isUnavailable: auth.isUnavailable,
     isActiveClient,
     isActivePharmacyUser,
+    isActiveAdminUser,
     canUseClientFeatures: isActiveClient,
     canOpenPharmacyCabinet: isActivePharmacyUser,
   };

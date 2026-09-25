@@ -36,6 +36,7 @@ test('exposes a minimal client-specific projection instead of the full auth cont
     isUnavailable: false,
     isActiveClient: true,
     isActivePharmacyUser: false,
+    isActiveAdminUser: false,
     canUseClientFeatures: true,
     canOpenPharmacyCabinet: false,
   });
@@ -81,4 +82,20 @@ test('distinguishes active pharmacy users from blocked and unauthenticated users
 
   assert.equal(guest.canUseClientFeatures, false);
   assert.equal(guest.canOpenPharmacyCabinet, false);
+});
+
+//===================================================================
+
+test('treats active admin users as privileged viewers without enabling client features', () => {
+  const activeAdmin = selectClientAuthCapabilities({
+    user: { ...CLIENT_USER, role: 'admin' },
+    status: 'authenticated',
+    isAuthenticated: true,
+    isBootstrapping: false,
+    isUnavailable: false,
+  });
+
+  assert.equal(activeAdmin.isActiveAdminUser, true);
+  assert.equal(activeAdmin.canUseClientFeatures, false);
+  assert.equal(activeAdmin.canOpenPharmacyCabinet, false);
 });
