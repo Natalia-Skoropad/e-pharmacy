@@ -5576,3 +5576,77 @@ git add .
 git commit -m "feat(admin): add employee document management"
 
 Тобто після накладання архіву стан проєкту відповідає Stage 1 → Stage 10.6 включно.
+
+//=================================================================================
+
+Готово 🙂 Реалізувала Stage 10.7 — Private Comments на базі твого актуального e-pharmacy-10-7.zip.
+
+📦 Архів Stage 10.7
+
+Завантажити e-pharmacy-stage-10.7-updated-files.zip
+
+В архіві 23 тільки оновлені/додані файли зі збереженою структурою проєкту. Stage 10.8 і наступні етапи не додавала.
+
+У Stage 10.7 готово:
+
+створено окремий persistence domain AdminEmployeePrivateNote;
+модель містить ownerUserId, text, clientRequestId, authorNameSnapshot, timestamps;
+ownerUserId immutable;
+clientRequestId має UUID contract та унікальний індекс у межах owner;
+реалізовано тільки self API:
+GET /admin/employees/me/comments;
+POST /admin/employees/me/comments;
+DELETE /admin/employees/me/comments/:commentId;
+немає GET /admin/employees/:employeeId/comments чи іншого endpoint для читання чужих comments;
+кожен read/delete/replay query прив'язаний до ownerUserId: currentUser.id;
+Platform Owner не отримує жодного override для чужих private comments;
+request body не дозволяє передати ownerUserId, authorNameSnapshot тощо — create schema strict;
+comments мають pagination page / perPage, сортування newest first;
+clientRequestId забезпечує idempotent create:
+той самий request ID + той самий text → повертається наявний note;
+той самий request ID + інший text → 409 Conflict;
+concurrency race також захищений unique index + duplicate-key replay;
+private comment content взагалі не записується в global AdminAuditLog — для private notes не створювала навіть metadata audit event;
+додані canonical backend routes у @e-pharmacy/api-client/contracts;
+додані Admin BFF:
+/api/admin/employees/me/comments;
+/api/admin/employees/me/comments/[commentId];
+додано fail-closed parsing browser responses;
+/admin/profile тепер має рівно:
+Personal information;
+Documents;
+Comments;
+Active sessions;
+Comments завантажуються lazy, лише після відкриття вкладки;
+UI повторно використовує shared:
+CommentComposer;
+CommentsList;
+ConfirmationModal;
+PaginationView;
+Pharmacy Comments не копіювала і не змішувала з Admin domain;
+create/delete мають AbortController та single-flight protection;
+після network failure повторний submit того самого тексту зберігає той самий clientRequestId;
+deletion коректно переходить на попередню сторінку, якщо видалено останній comment поточної сторінки;
+error state не маскується під No private comments.
+
+Окремо перевірила privacy boundary: у service немає isPlatformOwner-винятку, немає target employee ID та немає appendAdminAuditLog. Тут навіть Platform Owner не має «майстер-ключа від чужого щоденника» 😄
+
+Перевірки, які пройшли на підготовленій ревізії: @e-pharmacy/types TypeScript, @e-pharmacy/api-client TypeScript, Admin TypeScript, Types public API/unused exports, API/API-client boundaries та route parity, Profile contracts, Shared Cabinet UI, Admin shell/permissions/audit, Client↔Admin header compatibility. Нові backend privacy/idempotency contracts — 4/4 passed, Admin Private Comments contracts — 3/3 passed, існуючий Admin Profile security contract — 6/6 passed. Сам ZIP також перевірений на цілісність.
+
+Після накладання архіву рекомендую запустити повний локальний цикл:
+
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm test:react
+pnpm build
+pnpm check:before-deploy
+
+Для Stage 10.7 підійде коміт:
+
+git add .
+git commit -m "feat(admin): add self-owned private comments"
+
+Після цього проєкт містить готові етапи 1 → 10.7 включно, без випередження в 10.8.
+
+//==========================================================================

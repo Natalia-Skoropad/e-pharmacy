@@ -10,8 +10,14 @@ export const adminApiRoutes = {
   adminEmployees: {
     myProfile: '/api/admin/employees/me/profile',
     myDocuments: '/api/admin/employees/me/documents',
+
     myDocument: (documentId: string) =>
       `/api/admin/employees/me/documents/${encodeURIComponent(documentId)}`,
+
+    myComments: '/api/admin/employees/me/comments',
+
+    myComment: (commentId: string) =>
+      `/api/admin/employees/me/comments/${encodeURIComponent(commentId)}`,
   },
 
   audit: {

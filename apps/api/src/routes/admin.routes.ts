@@ -11,9 +11,12 @@ import {
 
 import {
   createMyAdminEmployeeDocument,
+  createMyAdminEmployeePrivateNote,
   deleteMyAdminEmployeeDocument,
+  deleteMyAdminEmployeePrivateNote,
   getMyAdminEmployeeDocument,
   listMyAdminEmployeeDocuments,
+  listMyAdminEmployeePrivateNotes,
   replaceMyAdminEmployeeDocument,
   updateMyAdminEmployeeProfile,
 } from '../controllers/admin-employee.controller';
@@ -45,6 +48,12 @@ import {
 } from '../schemas/admin-employee-document.schema';
 
 import { updateMyAdminEmployeeProfileSchema } from '../schemas/admin-employee-profile.schema';
+
+import {
+  adminEmployeePrivateNoteParamsSchema,
+  adminEmployeePrivateNotesQuerySchema,
+  createAdminEmployeePrivateNoteSchema,
+} from '../schemas/admin-employee-note.schema';
 
 import {
   adminAuditListQuerySchema,
@@ -124,6 +133,30 @@ adminRoutes.delete(
   '/employees/me/documents/:documentId',
   validate({ params: adminEmployeeDocumentParamsSchema }),
   ctrlWrapper(deleteMyAdminEmployeeDocument)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/employees/me/comments',
+  validate({ query: adminEmployeePrivateNotesQuerySchema }),
+  ctrlWrapper(listMyAdminEmployeePrivateNotes)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/employees/me/comments',
+  validate({ body: createAdminEmployeePrivateNoteSchema }),
+  ctrlWrapper(createMyAdminEmployeePrivateNote)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/employees/me/comments/:commentId',
+  validate({ params: adminEmployeePrivateNoteParamsSchema }),
+  ctrlWrapper(deleteMyAdminEmployeePrivateNote)
 );
 
 //=================================================================================

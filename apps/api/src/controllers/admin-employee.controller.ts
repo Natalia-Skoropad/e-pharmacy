@@ -10,6 +10,12 @@ import type {
 
 import type { UpdateMyAdminEmployeeProfileInput } from '../schemas/admin-employee-profile.schema';
 
+import type {
+  AdminEmployeePrivateNoteParams,
+  AdminEmployeePrivateNotesQuery,
+  CreateAdminEmployeePrivateNoteInput,
+} from '../schemas/admin-employee-note.schema';
+
 import {
   createMyAdminEmployeeDocumentService,
   deleteMyAdminEmployeeDocumentService,
@@ -19,6 +25,13 @@ import {
 } from '../services/admin-employee-document.service';
 
 import { updateMyAdminEmployeeProfileService } from '../services/admin-employee-profile.service';
+
+import {
+  createMyAdminEmployeePrivateNoteService,
+  deleteMyAdminEmployeePrivateNoteService,
+  listMyAdminEmployeePrivateNotesService,
+} from '../services/admin-employee-note.service';
+
 import type { ValidatedResponse } from '../types/validated-request';
 
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -195,6 +208,69 @@ export async function deleteMyAdminEmployeeDocument(
     authorization,
     documentId,
     res.locals.requestId
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(HTTP_STATUS.NO_CONTENT).end();
+}
+
+//===============================================================
+
+export async function listMyAdminEmployeePrivateNotes(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, AdminEmployeePrivateNotesQuery>
+): Promise<void> {
+  const { userId, authorization } = requireSelfAdminContext(req);
+  const { page, perPage } = res.locals.validated.query;
+
+  const data = await listMyAdminEmployeePrivateNotesService(
+    userId,
+    authorization,
+    page,
+    perPage
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function createMyAdminEmployeePrivateNote(
+  req: Request,
+  res: ValidatedResponse<CreateAdminEmployeePrivateNoteInput>
+): Promise<void> {
+  const { userId, authorization } = requireSelfAdminContext(req);
+
+  const note = await createMyAdminEmployeePrivateNoteService(
+    userId,
+    authorization,
+    res.locals.validated.body
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    message: 'Private comment was created successfully.',
+    data: { note },
+  });
+}
+
+//===============================================================
+
+export async function deleteMyAdminEmployeePrivateNote(
+  req: Request,
+  res: ValidatedResponse<unknown, AdminEmployeePrivateNoteParams>
+): Promise<void> {
+  const { userId, authorization } = requireSelfAdminContext(req);
+  const { commentId } = res.locals.validated.params;
+
+  await deleteMyAdminEmployeePrivateNoteService(
+    userId,
+    authorization,
+    commentId
   );
 
   res.setHeader('Cache-Control', 'no-store');

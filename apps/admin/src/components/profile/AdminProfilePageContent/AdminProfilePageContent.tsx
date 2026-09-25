@@ -69,6 +69,7 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { AdminDocuments } from '../AdminDocuments';
+import { AdminPrivateComments } from '../AdminPrivateComments';
 
 import css from './AdminProfilePageContent.module.css';
 
@@ -76,6 +77,7 @@ import css from './AdminProfilePageContent.module.css';
 
 const PERSONAL_TAB = 'personal' as const;
 const DOCUMENTS_TAB = 'documents' as const;
+const COMMENTS_TAB = 'comments' as const;
 const SESSIONS_TAB = 'sessions' as const;
 
 //===================================================================
@@ -83,6 +85,7 @@ const SESSIONS_TAB = 'sessions' as const;
 type ProfileTab =
   | typeof PERSONAL_TAB
   | typeof DOCUMENTS_TAB
+  | typeof COMMENTS_TAB
   | typeof SESSIONS_TAB;
 
 //===================================================================
@@ -90,6 +93,7 @@ type ProfileTab =
 const PROFILE_TABS = [
   { value: PERSONAL_TAB, label: 'Personal information' },
   { value: DOCUMENTS_TAB, label: 'Documents' },
+  { value: COMMENTS_TAB, label: 'Comments' },
   { value: SESSIONS_TAB, label: 'Active sessions' },
 ] as const;
 
@@ -491,6 +495,14 @@ export function AdminProfilePageContent() {
           {activeTab === DOCUMENTS_TAB ? (
             <AdminDocuments isPlatformOwner={isPlatformOwner} />
           ) : null}
+        </ProfileTabPanel>
+
+        <ProfileTabPanel
+          idBase="admin-profile"
+          value={COMMENTS_TAB}
+          activeValue={activeTab}
+        >
+          {activeTab === COMMENTS_TAB ? <AdminPrivateComments /> : null}
         </ProfileTabPanel>
 
         <ProfileTabPanel

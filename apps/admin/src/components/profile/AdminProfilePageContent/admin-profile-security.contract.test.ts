@@ -9,17 +9,21 @@ const read = (relativePath: string) =>
 
 //===================================================================
 
-test('admin profile reuses shared security UI and includes Stage 10.6 documents without future comments', async () => {
+test('admin profile exposes the complete Stage 10.7 self-service tabs', async () => {
   const source = await read('./AdminProfilePageContent.tsx');
 
   assert.match(source, /ChangePasswordForm/);
   assert.match(source, /ActiveSessionsPanel/);
   assert.match(source, /label: 'Personal information'/);
   assert.match(source, /label: 'Documents'/);
+  assert.match(source, /label: 'Comments'/);
   assert.match(source, /label: 'Active sessions'/);
   assert.match(source, /<AdminDocuments isPlatformOwner=\{isPlatformOwner\}/);
 
-  assert.doesNotMatch(source, /label: 'Comments'/);
+  assert.match(
+    source,
+    /activeTab === COMMENTS_TAB \? <AdminPrivateComments \/> : null/
+  );
 });
 
 //===================================================================

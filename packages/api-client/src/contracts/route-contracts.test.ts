@@ -27,6 +27,16 @@ test('uses resource-oriented backend route builders', () => {
     `/admin/employees/me/documents/${id}`
   );
 
+  assert.equal(
+    apiRoutes.admin.employees.myComments,
+    '/admin/employees/me/comments'
+  );
+
+  assert.equal(
+    apiRoutes.admin.employees.myComment(id),
+    `/admin/employees/me/comments/${id}`
+  );
+
   assert.equal(apiRoutes.admin.audit.list, '/admin/audit');
   assert.equal(apiRoutes.admin.audit.details(id), `/admin/audit/${id}`);
 

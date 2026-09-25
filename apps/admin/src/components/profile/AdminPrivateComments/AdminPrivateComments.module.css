@@ -1,0 +1,74 @@
+.card {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.head {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.titleRow {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.head h2,
+.head p {
+  margin: 0;
+}
+
+.head h2 {
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+}
+
+.head p {
+  color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+}
+
+.countLabel {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.retryRow {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.dangerConfirmButton {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+@media only screen and (min-width: 768px) {
+  .titleRow {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .countLabel {
+    width: auto;
+    flex: 0 1 auto;
+    white-space: nowrap;
+    text-align: left;
+  }
+}

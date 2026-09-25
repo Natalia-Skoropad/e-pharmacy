@@ -18,8 +18,14 @@ export const backendRoutes = {
     employees: {
       myProfile: '/admin/employees/me/profile',
       myDocuments: '/admin/employees/me/documents',
+
       myDocument: (documentId: EntityId) =>
         `/admin/employees/me/documents/${segment(documentId)}`,
+
+      myComments: '/admin/employees/me/comments',
+
+      myComment: (commentId: EntityId) =>
+        `/admin/employees/me/comments/${segment(commentId)}`,
     },
 
     audit: {
