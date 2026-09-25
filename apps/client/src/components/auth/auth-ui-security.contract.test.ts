@@ -31,10 +31,8 @@ test('recovery and password-change UI never prefer arbitrary error.message copy'
     /handleSavePassword[\s\S]*?error\s+instanceof\s+Error[\s\S]*?error\.message/
   );
 
-  assert.match(
-    profileSource,
-    /setPasswordSubmitError\(message\)[\s\S]*?toast\.error\(message\)/
-  );
+  assert.doesNotMatch(profileSource, /setPasswordSubmitError\(message\)/);
+  assert.match(profileSource, /toast\.error\(message\)/);
 });
 
 //===================================================================

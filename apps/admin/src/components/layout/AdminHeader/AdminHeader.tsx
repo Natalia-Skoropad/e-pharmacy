@@ -67,6 +67,7 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
       href: ADMIN_ROUTES.PROFILE,
       icon: <UserRound size={18} aria-hidden="true" />,
     },
+    { type: 'separator' },
     websiteHref
       ? {
           type: 'link',

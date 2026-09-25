@@ -28,6 +28,41 @@ export function isAdminAuditAction(value: unknown): value is AdminAuditAction {
 
 //===============================================================
 
+const LEGACY_ADMIN_AUDIT_ACTION_ALIASES: Readonly<
+  Record<string, AdminAuditAction>
+> = {
+  'admin.employeeDocument.uploaded':
+    ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_UPLOADED,
+  'admin.employeeDocument.replaced':
+    ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_REPLACED,
+  'admin.employeeDocument.deleted':
+    ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_DELETED,
+};
+
+//===============================================================
+
+export function normalizeStoredAdminAuditAction(
+  value: unknown
+): AdminAuditAction | null {
+  if (isAdminAuditAction(value)) return value;
+  if (typeof value !== 'string') return null;
+  return LEGACY_ADMIN_AUDIT_ACTION_ALIASES[value] ?? null;
+}
+
+//===============================================================
+
+export function getStoredAdminAuditActionValues(
+  action: AdminAuditAction
+): readonly string[] {
+  const legacyAliases = Object.entries(LEGACY_ADMIN_AUDIT_ACTION_ALIASES)
+    .filter(([, canonicalAction]) => canonicalAction === action)
+    .map(([legacyAction]) => legacyAction);
+
+  return [action, ...legacyAliases];
+}
+
+//===============================================================
+
 export const ADMIN_AUDIT_ENTITY_TYPES = {
   PHARMACY: 'pharmacy',
   PRODUCT_REQUEST: 'productRequest',
@@ -35,6 +70,8 @@ export const ADMIN_AUDIT_ENTITY_TYPES = {
   ADMIN_EMPLOYEE: 'adminEmployee',
   ADMIN_EMPLOYEE_DOCUMENT: 'adminEmployeeDocument',
 } as const;
+
+//===============================================================
 
 export type AdminAuditEntityType =
   (typeof ADMIN_AUDIT_ENTITY_TYPES)[keyof typeof ADMIN_AUDIT_ENTITY_TYPES];

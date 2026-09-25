@@ -5707,3 +5707,51 @@ git commit -m "fix(profile): unify cabinet styles and read-only admin profile"
 Тут уже справді рухаємося в бік «одна система — один набір компонентів», а не три велосипеди, один із яких випадково з квадратними колесами 😄
 
 //=============================================
+
+Привіт 🙂 Готово. Я опрацювала README-0.md → README-10.md, актуальний e-pharmacy-10-11(1).zip і скріни 1–23. Правки внесені саме поверх цього архіву.
+📦 Архів містить тільки 24 змінені/додані файли:
+e-pharmacy-pre-stage-11-fixes-changed-files.zip
+Що виправлено
+Admin Header
+
+1. У UserDropdown додана риска-сепаратор між Profile і Go to website, як у Pharmacy Header.
+   Admin Mobile Menu
+1. Reviews і Settings тепер мають ті самі стилі, hover/focus та іконки, що й решта пунктів. Причина була в тому, що це group-buttons, а admin-стилі застосовувалися лише до <a>.
+   Admin → Profile
+1. Лічильники табів тепер у форматі Documents (N) та Comments (N).
+1. Registration documents переведено на той самий shared DocumentUpload, який використовується у Pharmacy Profile. При цьому збережена фінальна політика README-10: self-documents в Admin Profile залишаються read-only/download-only, без повернення заборонених upload/replace/delete mutations.
+1. Private comments тепер використовує стандартний shared CountLabel без окремого admin-стайлінгу.
+1. Прибрана зайва висота під неактивними табами. Причина була в shared ProfileTabPanel: display: grid перебивав HTML hidden. Виправлено централізовано через [hidden], тому проблема закрита і для Admin, і для Pharmacy.
+   Pharmacy → Profile
+1. Для невірного Current password тепер показується Current password is incorrect., а не повідомлення про завершення сесії. Доданий окремий mapping auth-errors для password change.
+1. Pharmacy data → фото:
+   - для tablet/desktop використовується потрібна компактна композиція;
+   - додано текст Upload a lightweight JPG, PNG, or WEBP image up to 450 KB.;
+   - кнопки перейменовані на Upload photo / Remove photo;
+   - слово pharmacy з кнопок прибрано.
+1. Reviews → Showing N of N reviews на mobile розтягується на всю ширину та центрується; tablet/desktop не змінені.
+1. Зайва пустота під табами прибрана shared-виправленням.
+   Client → Profile
+1. Помилка Current password is incorrect. прибрана з самого Change password блока — вона залишається тільки в toast.
+1. Tablet-розміщення кнопок фото перевірене: у базовому e-pharmacy-10-11(1).zip shared PictureCard уже має потрібне розміщення як на Pharmacy screenshot №6. Дублюючий client-specific CSS не додавала. Новий desktop compactLayout є opt-in і ввімкнений лише для Pharmacy, тому Client desktop/mobile не зачеплені.
+1. My orders → mobile Showing N of N orders тепер full-width + centered.
+1. Favorite products → аналогічно.
+1. Favorite pharmacies → аналогічно.
+   Admin → Settings → Activity history
+1. Знайдена й виправлена функціональна причина API endpoint response does not match its contract.
+1. Stage 10.6 створював audit actions як admin.employeeDocument.uploaded/replaced/deleted, а фінальний Stage 10 перейшов на adminEmployee.document.\*. Старі Mongo-записи через це ламали strict frontend parser.
+1. Backend тепер сумісно нормалізує лише ці відомі legacy action-и в canonical значення. Невідомі значення й далі fail-closed.
+1. Фільтр за action також шукає canonical + legacy записи.
+1. Доданий regression test для цієї сумісності.
+1. Якщо API справді недоступне, замість сирого технічного повідомлення показується оформлений error-state з нормальною user-facing помилкою та Try again.
+   Видалені файли
+   Немає.
+   Додані 3 нові файли: тест сумісності Admin Audit і окремий Pharmacy password-error mapper з тестом. Решта — зміни існуючих файлів.
+   Перевірки, доступні в архівному середовищі, пройшли: UI styles, shared Cabinet UI, Profile contracts, Admin shell/profile/audit/auth/permissions, Pharmacy account, Client styles/a11y/user-state/admin-header, Auth/API-client contracts, packages/ui TypeScript, syntax-transpile 17 змінених TS/TSX; нові regression-тести також зелені. Повний pnpm check:before-deploy тут не запускався через відсутній повний workspace package manager/dependencies, тому його варто прогнати локально після накладання архіву.
+   Коміт
+   git add .
+   git commit -m "fix(profile): polish cabinet UI and audit history"
+
+Тепер перед Stage 11 профілі стали значно ближчими до принципу «один shared-компонент — одна поведінка», а не «три кабінети, три маленькі CSS-пригоди» 😄
+
+//=========================================================

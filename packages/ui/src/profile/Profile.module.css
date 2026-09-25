@@ -108,6 +108,10 @@
   padding-top: 20px;
 }
 
+.tabPanel[hidden] {
+  display: none;
+}
+
 .panel {
   min-width: 0;
   display: grid;

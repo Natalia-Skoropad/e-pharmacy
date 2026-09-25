@@ -255,7 +255,6 @@ export function AdminPrivateComments({
 
           {status === 'success' ? (
             <CountLabel
-              className={css.countLabel}
               shown={data.items.length}
               total={data.total}
               label="comments"

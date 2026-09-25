@@ -122,4 +122,26 @@
     grid-row: auto;
     margin-top: 0;
   }
+
+  .compactLayout {
+    grid-template-rows: auto auto;
+    align-items: start;
+  }
+
+  .compactLayout .picture {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .compactLayout .hint {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .compactLayout .buttons {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+  }
 }

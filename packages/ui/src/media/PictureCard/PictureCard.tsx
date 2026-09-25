@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
+import clsx from 'clsx';
 import { ImageOff, Upload } from 'lucide-react';
 
 import { ImagePreview, readFileAsDataUrl } from '../../media';
@@ -36,6 +37,7 @@ export type PictureCardProps = {
   pictureUrl: string | null;
   isSaving?: boolean;
   disabled?: boolean;
+  compactLayout?: boolean;
   accept?: string;
   labels?: PictureCardLabels;
   validateFile?: (file: File) => string | null;
@@ -67,6 +69,7 @@ function PictureCard({
   pictureUrl,
   isSaving = false,
   disabled = false,
+  compactLayout = false,
   accept = DEFAULT_PICTURE_ACCEPT,
   labels,
   validateFile,
@@ -129,7 +132,7 @@ function PictureCard({
   };
 
   return (
-    <div className={css.card}>
+    <div className={clsx(css.card, compactLayout && css.compactLayout)}>
       <div className={css.picture} aria-hidden="true">
         {pictureUrl ? (
           <ImagePreview className={css.pictureImage} src={pictureUrl} />

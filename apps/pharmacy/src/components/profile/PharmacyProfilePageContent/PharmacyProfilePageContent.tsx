@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Save, Send } from 'lucide-react';
 
+import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { canPharmacyProfilePerformAction } from '@e-pharmacy/config/pharmacies';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -124,6 +125,7 @@ import {
 
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
+import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-error-messages';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments/EntityComments';
@@ -1162,7 +1164,9 @@ function PharmacyProfilePage({
       toast.success('Password changed. Sign in again.');
       window.location.assign(getSharedLoginUrl());
     } catch (error) {
-      toast.error(getProfileErrorMessage(error, 'Could not change password.'));
+      toast.error(
+        getPharmacyPasswordChangeErrorMessage(getAuthErrorCode(error))
+      );
     } finally {
       passwordMutationInFlightRef.current = false;
       setIsPasswordSaving(false);
@@ -1766,12 +1770,13 @@ function PharmacyProfilePage({
                       pictureUrl={pharmacyPictureUrl}
                       isSaving={isPharmacyPictureSaving}
                       disabled={isProfileReadonly}
+                      compactLayout
                       accept={PICTURE_ACCEPT}
                       labels={{
-                        uploadAriaLabel: 'Upload pharmacy photo',
-                        hint: 'Upload the public pharmacy photo clients will see in the pharmacy profile.',
-                        uploadButton: 'Upload pharmacy photo',
-                        removeButton: 'Remove pharmacy photo',
+                        uploadAriaLabel: 'Upload photo',
+                        hint: 'Upload the public pharmacy photo clients will see in the pharmacy profile. Upload a lightweight JPG, PNG, or WEBP image up to 450 KB.',
+                        uploadButton: 'Upload photo',
+                        removeButton: 'Remove photo',
                         removeTitle: 'Remove pharmacy photo?',
                         removeText:
                           'This public pharmacy photo will be removed from the profile.',
@@ -2257,6 +2262,7 @@ function PharmacyProfilePage({
                   <ReviewsList
                     reviews={[]}
                     initialVisibleCount={INITIAL_VISIBLE_REVIEWS_COUNT}
+                    countFullWidthOnMobile
                     emptyTitle="This pharmacy has no reviews yet."
                     emptyText="Reviews appear only after real client orders are completed and approved."
                   />

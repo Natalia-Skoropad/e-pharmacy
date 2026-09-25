@@ -31,6 +31,7 @@ export type DocumentUploadProps = {
   isTouched?: boolean;
   required?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
   multiple?: boolean;
   maxFiles?: number;
   accept?: string;
@@ -76,6 +77,7 @@ function DocumentUpload({
   isTouched,
   required = false,
   disabled = false,
+  readOnly = false,
   multiple = true,
   maxFiles,
   accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
@@ -211,7 +213,7 @@ function DocumentUpload({
         type="file"
         accept={accept}
         multiple={multiple}
-        disabled={disabled || hasReachedLimit}
+        disabled={disabled || readOnly || hasReachedLimit}
         required={required}
         aria-invalid={hasError || undefined}
         aria-describedby={describedBy || undefined}
@@ -222,9 +224,11 @@ function DocumentUpload({
       <label
         className={clsx(
           css.dropzone,
-          (disabled || hasReachedLimit) && css.dropzoneDisabled
+          (disabled || hasReachedLimit) && css.dropzoneDisabled,
+          readOnly && css.dropzoneReadOnly
         )}
-        htmlFor={id}
+        htmlFor={readOnly ? undefined : id}
+        aria-disabled={readOnly || disabled || hasReachedLimit || undefined}
       >
         <UploadCloud className={css.icon} size={28} aria-hidden="true" />
         <span className={css.title}>{mergedLabels.dropzoneTitle}</span>
@@ -280,15 +284,17 @@ function DocumentUpload({
                 )}
                 <p className={css.fileSize}>{formatFileSize(file.size)}</p>
               </div>
-              <button
-                className={css.removeButton}
-                type="button"
-                disabled={disabled}
-                aria-label={mergedLabels.removeAriaLabel(file.name)}
-                onClick={() => handleRemove(file.id)}
-              >
-                <X size={16} aria-hidden="true" />
-              </button>
+              {!readOnly ? (
+                <button
+                  className={css.removeButton}
+                  type="button"
+                  disabled={disabled}
+                  aria-label={mergedLabels.removeAriaLabel(file.name)}
+                  onClick={() => handleRemove(file.id)}
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              ) : null}
             </li>
           ))}
         </ul>

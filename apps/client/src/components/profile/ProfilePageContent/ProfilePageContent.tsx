@@ -331,7 +331,6 @@ function AuthenticatedProfilePageContent({
     useState(false);
 
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
-  const [passwordSubmitError, setPasswordSubmitError] = useState('');
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isPictureSaving, setIsPictureSaving] = useState(false);
@@ -961,8 +960,6 @@ function AuthenticatedProfilePageContent({
 
     try {
       setIsPasswordSaving(true);
-      setPasswordSubmitError('');
-
       await updateCurrentUserPassword(values);
       invalidateSession('password_changed');
       toast.success('Password changed. Sign in again.');
@@ -972,7 +969,6 @@ function AuthenticatedProfilePageContent({
         getAuthErrorCode(error)
       );
 
-      setPasswordSubmitError(message);
       toast.error(message);
     } finally {
       passwordMutationInFlightRef.current = false;
@@ -1106,7 +1102,6 @@ function AuthenticatedProfilePageContent({
                       idPrefix="client-profile-password"
                       description="Keep your account more securely locked."
                       isSubmitting={isPasswordSaving}
-                      error={passwordSubmitError}
                       onSubmit={handleSavePassword}
                     />
                   </div>
@@ -1213,6 +1208,7 @@ function AuthenticatedProfilePageContent({
                           shown={orders.length}
                           total={effectiveOrdersCount}
                           label="orders"
+                          fullWidthOnMobile
                         />
                       </div>
                     </div>
@@ -1343,6 +1339,7 @@ function AuthenticatedProfilePageContent({
                         shown={visibleFavoriteProducts.length}
                         total={effectiveFavoriteProductsCount}
                         label="items"
+                        fullWidthOnMobile
                       />
                     ) : null}
                   </div>
@@ -1455,6 +1452,7 @@ function AuthenticatedProfilePageContent({
                         shown={visibleFavoritePharmacies.length}
                         total={effectiveFavoritePharmaciesCount}
                         label="pharmacies"
+                        fullWidthOnMobile
                       />
                     ) : null}
                   </div>

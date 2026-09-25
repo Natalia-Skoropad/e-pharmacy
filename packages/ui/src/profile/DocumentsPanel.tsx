@@ -23,6 +23,7 @@ export type DocumentsPanelProps = Readonly<{
   description?: ReactNode;
   value: BrowserUploadFile[];
   editable?: boolean;
+  readOnlyUploadView?: boolean;
   required?: boolean;
   disabled?: boolean;
   isSaving?: boolean;
@@ -89,6 +90,7 @@ export function DocumentsPanel({
   description,
   value,
   editable = true,
+  readOnlyUploadView = false,
   required = false,
   disabled = false,
   isSaving = false,
@@ -336,7 +338,7 @@ export function DocumentsPanel({
 
         {usesResourceActions ? (
           renderDocumentList()
-        ) : canEdit && onChange ? (
+        ) : (canEdit && onChange) || readOnlyUploadView ? (
           <DocumentUpload
             id={id}
             name={name}
@@ -345,6 +347,7 @@ export function DocumentsPanel({
             isTouched={isTouched}
             required={required}
             disabled={disabled || isSaving}
+            readOnly={!canEdit}
             maxFiles={maxFiles}
             accept={accept}
             hint={hint}
@@ -353,7 +356,7 @@ export function DocumentsPanel({
             validateSelection={validateSelection}
             onSelectionError={onSelectionError}
             onDownloadFile={onDownloadFile}
-            onChange={onChange}
+            onChange={onChange ?? (() => undefined)}
           />
         ) : (
           renderDocumentList()

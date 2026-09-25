@@ -15,8 +15,8 @@ test('admin profile exposes the complete Stage 10.7 self-service tabs', async ()
   assert.match(source, /ChangePasswordForm/);
   assert.match(source, /ActiveSessionsPanel/);
   assert.match(source, /label: 'Personal information'/);
-  assert.match(source, /label: `Documents \$\{documentsCount\}`/);
-  assert.match(source, /label: `Comments \$\{commentsCount\}`/);
+  assert.match(source, /label: `Documents \(\$\{documentsCount\}\)`/);
+  assert.match(source, /label: `Comments \(\$\{commentsCount\}\)`/);
   assert.match(source, /label: 'Active sessions'/);
   assert.match(source, /<AdminDocuments \/>/);
 

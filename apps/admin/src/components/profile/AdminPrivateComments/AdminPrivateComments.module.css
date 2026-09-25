@@ -38,14 +38,6 @@
   line-height: var(--lh-base);
 }
 
-.countLabel {
-  display: block;
-  width: 100%;
-  max-width: 100%;
-  white-space: normal;
-  text-align: center;
-}
-
 .retryRow {
   display: flex;
   justify-content: flex-start;
@@ -63,12 +55,5 @@
     gap: 16px;
     align-items: center;
     justify-content: space-between;
-  }
-
-  .countLabel {
-    width: auto;
-    flex: 0 1 auto;
-    white-space: nowrap;
-    text-align: left;
   }
 }

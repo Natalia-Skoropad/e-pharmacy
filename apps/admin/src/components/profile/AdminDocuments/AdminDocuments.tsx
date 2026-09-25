@@ -9,6 +9,11 @@ import { DocumentsPanel } from '@e-pharmacy/ui/profile';
 import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
+  ADMIN_EMPLOYEE_DOCUMENT_ACCEPT,
+  ADMIN_EMPLOYEE_DOCUMENT_RULES,
+} from '@e-pharmacy/validation/files';
+
+import {
   downloadMyAdminDocument,
   getMyAdminDocuments,
 } from '@/lib/api/browser/admin-documents.api';
@@ -81,7 +86,15 @@ export function AdminDocuments() {
       description="Review documents attached to your employee account. Documents are managed from the Employees section."
       value={status === 'success' ? documents.map(toBrowserUploadFile) : []}
       editable={false}
+      readOnlyUploadView={status === 'success'}
       disabled={status !== 'success'}
+      maxFiles={ADMIN_EMPLOYEE_DOCUMENT_RULES.maxFiles}
+      accept={ADMIN_EMPLOYEE_DOCUMENT_ACCEPT}
+      hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${ADMIN_EMPLOYEE_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+      labels={{
+        dropzoneTitle: 'Registration documents',
+        dropzoneText: 'Documents are managed from the Employees section.',
+      }}
       error={status === 'error' ? loadError : ''}
       emptyTitle={
         status === 'loading'

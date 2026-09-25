@@ -1,6 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CircleAlert } from 'lucide-react';
+
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import {
   DataTable,
@@ -77,7 +80,31 @@ const ENTITY_OPTIONS = [
 //===================================================================
 
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong.';
+  if (!isApiError(error)) {
+    return 'Activity history could not be loaded. Please try again.';
+  }
+
+  if (error.transportCode === 'NETWORK_ERROR') {
+    return 'Could not reach the server. Check your connection and try again.';
+  }
+
+  if (error.transportCode === 'TIMEOUT') {
+    return 'The request took too long. Please try again.';
+  }
+
+  if (error.transportCode === 'INVALID_RESPONSE') {
+    return 'Activity history received an unexpected server response. Please retry after refreshing the data.';
+  }
+
+  if (error.httpStatus === 403) {
+    return 'You do not have permission to view Activity history.';
+  }
+
+  if (error.httpStatus && error.httpStatus >= 500) {
+    return 'Activity history is temporarily unavailable. Please try again later.';
+  }
+
+  return 'Activity history could not be loaded. Please try again.';
 }
 
 //===================================================================
@@ -264,11 +291,19 @@ export function ActivityHistory() {
 
   if (!data && listError) {
     return (
-      <section className={css.state} role="alert">
-        <h1>Activity history</h1>
-        <p>{listError}</p>
+      <section className={css.errorState} role="alert">
+        <span className={css.errorIcon} aria-hidden="true">
+          <CircleAlert size={26} />
+        </span>
+
+        <div className={css.errorCopy}>
+          <p className={css.eyebrow}>Settings</p>
+          <h1>Activity history is unavailable</h1>
+          <p>{listError}</p>
+        </div>
+
         <Button type="button" onClick={retryList}>
-          Retry
+          Try again
         </Button>
       </section>
     );
@@ -324,6 +359,7 @@ export function ActivityHistory() {
 
       {listError && data ? (
         <div className={css.inlineError} role="alert">
+          <CircleAlert size={20} aria-hidden="true" />
           <span>{listError}</span>
           <Button type="button" variant="ghost" size="sm" onClick={retryList}>
             Retry

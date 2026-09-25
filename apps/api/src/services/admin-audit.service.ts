@@ -2,8 +2,10 @@ import { Types, type ClientSession } from 'mongoose';
 
 import {
   ADMIN_AUDIT_LIMITS,
+  getStoredAdminAuditActionValues,
   isAdminAuditAction,
   isAdminAuditEntityType,
+  normalizeStoredAdminAuditAction,
   type AdminAuditAction,
   type AdminAuditEntityType,
 } from '../constants/admin-audit';
@@ -250,7 +252,7 @@ type LeanAuditLog = {
   _id: Types.ObjectId;
   actorUserId: Types.ObjectId;
   actorNameSnapshot: string;
-  action: AdminAuditAction;
+  action: string;
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
@@ -265,11 +267,17 @@ type LeanAuditLog = {
 //===============================================================
 
 function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
+  const action = normalizeStoredAdminAuditAction(log.action);
+
+  if (!action) {
+    throw new TypeError('Stored admin audit action is invalid.');
+  }
+
   return {
     id: String(log._id),
     actorUserId: String(log.actorUserId),
     actorNameSnapshot: log.actorNameSnapshot,
-    action: log.action,
+    action,
     entityType: log.entityType,
     entityId: log.entityId,
     entityLabelSnapshot: log.entityLabelSnapshot,
@@ -307,7 +315,9 @@ function endOfUtcDay(value: string): Date {
 export async function listAdminAuditLogsService(query: AdminAuditListQuery) {
   const filter: Record<string, unknown> = {};
 
-  if (query.action) filter.action = query.action;
+  if (query.action) {
+    filter.action = { $in: getStoredAdminAuditActionValues(query.action) };
+  }
   if (query.entityType) filter.entityType = query.entityType;
   if (query.entityId) filter.entityId = query.entityId;
   if (query.actorUserId)

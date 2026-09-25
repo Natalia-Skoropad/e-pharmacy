@@ -42,8 +42,8 @@ test('document and comment counts preload while tab bodies remain conditional', 
   assert.match(source, /setDocumentsCount\(response\.documents\.length\)/);
   assert.match(source, /getMyAdminPrivateComments\(1/);
   assert.match(source, /setCommentsCount\(response\.total\)/);
-  assert.match(source, /label: `Documents \$\{documentsCount\}`/);
-  assert.match(source, /label: `Comments \$\{commentsCount\}`/);
+  assert.match(source, /label: `Documents \(\$\{documentsCount\}\)`/);
+  assert.match(source, /label: `Comments \(\$\{commentsCount\}\)`/);
 
   assert.match(
     source,

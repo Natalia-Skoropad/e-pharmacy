@@ -97,8 +97,8 @@ export function AdminProfilePageContent() {
   const tabs = useMemo(
     () => [
       { value: PERSONAL_TAB, label: 'Personal information' },
-      { value: DOCUMENTS_TAB, label: `Documents ${documentsCount}` },
-      { value: COMMENTS_TAB, label: `Comments ${commentsCount}` },
+      { value: DOCUMENTS_TAB, label: `Documents (${documentsCount})` },
+      { value: COMMENTS_TAB, label: `Comments (${commentsCount})` },
       { value: SESSIONS_TAB, label: 'Active sessions' },
     ],
     [commentsCount, documentsCount]

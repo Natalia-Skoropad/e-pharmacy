@@ -8,3 +8,16 @@
   background-color: var(--color-accent-light);
   border-radius: var(--radius-pill);
 }
+
+.fullWidthOnMobile {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+}
+
+@media only screen and (min-width: 768px) {
+  .fullWidthOnMobile {
+    width: fit-content;
+    text-align: left;
+  }
+}

@@ -28,6 +28,7 @@ export type ReviewsListProps = Readonly<{
   initialVisibleCount?: number;
   visibleCount?: number;
   step?: number;
+  countFullWidthOnMobile?: boolean;
   onVisibleCountChange?: (value: number) => void;
 }>;
 
@@ -45,6 +46,7 @@ function ReviewsList({
   initialVisibleCount = DEFAULT_VISIBLE_REVIEWS_COUNT,
   visibleCount,
   step = DEFAULT_VISIBLE_REVIEWS_COUNT,
+  countFullWidthOnMobile = false,
   onVisibleCountChange,
 }: ReviewsListProps) {
   const titleId = useId();
@@ -85,6 +87,7 @@ function ReviewsList({
             total={reviews.length}
             label="reviews"
             className={css.count}
+            fullWidthOnMobile={countFullWidthOnMobile}
           />
         </div>
       ) : null}
