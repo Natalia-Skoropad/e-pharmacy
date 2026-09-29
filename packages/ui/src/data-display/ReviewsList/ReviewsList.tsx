@@ -25,6 +25,7 @@ export type ReviewsListProps = Readonly<{
   title?: string | null;
   emptyTitle?: string;
   emptyText?: string;
+  emptyVariant?: 'default' | 'profile';
   initialVisibleCount?: number;
   visibleCount?: number;
   step?: number;
@@ -43,6 +44,7 @@ function ReviewsList({
   title = 'Reviews',
   emptyTitle = 'This pharmacy has no reviews yet.',
   emptyText = 'Client feedback will appear here after orders are completed.',
+  emptyVariant = 'default',
   initialVisibleCount = DEFAULT_VISIBLE_REVIEWS_COUNT,
   visibleCount,
   step = DEFAULT_VISIBLE_REVIEWS_COUNT,
@@ -93,7 +95,11 @@ function ReviewsList({
       ) : null}
 
       {reviews.length === 0 ? (
-        <div className={css.empty}>
+        <div
+          className={`${css.empty} ${
+            emptyVariant === 'profile' ? css.profileEmpty : ''
+          }`}
+        >
           <h3 className={css.emptyTitle}>{emptyTitle}</h3>
           <p className={css.emptyText}>{emptyText}</p>
         </div>

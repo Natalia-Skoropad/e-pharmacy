@@ -11,6 +11,7 @@ import {
 
 import { PasswordInput } from '../forms/PasswordInput/PasswordInput';
 import { Button } from '../primitives/Button/Button';
+import { ProfileSectionHeader } from './ProfileSectionHeader';
 
 import css from './Profile.module.css';
 
@@ -172,10 +173,12 @@ export function ChangePasswordForm({
       onSubmit={(event) => void handleSubmit(event)}
     >
       <div className={css.panelHeader}>
-        <h2 className={css.panelTitle} id={`${idPrefix}-title`}>
-          {title}
-        </h2>
-        {description ? <p className={css.panelText}>{description}</p> : null}
+        <ProfileSectionHeader
+          title={title}
+          description={description}
+          titleId={`${idPrefix}-title`}
+          icon={<KeyRound size={22} />}
+        />
       </div>
 
       <Button

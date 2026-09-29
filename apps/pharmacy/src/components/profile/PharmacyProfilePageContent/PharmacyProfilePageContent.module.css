@@ -237,6 +237,30 @@
   color: var(--color-text-primary);
 }
 
+.pharmacyDataForm {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.pharmacyDataBlock {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.pharmacyDataBlock + .pharmacyDataBlock {
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.pharmacyDataAction {
+  width: 100%;
+  margin-top: 24px;
+  justify-content: center;
+}
+
 .pendingBox {
   display: grid;
   gap: 12px;

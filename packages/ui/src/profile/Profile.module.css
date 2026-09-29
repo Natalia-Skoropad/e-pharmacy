@@ -268,6 +268,184 @@
   justify-content: center;
 }
 
+/* Unified profile section header */
+.sectionHeader {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  align-items: start;
+}
+
+.sectionHeaderMain {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.sectionHeaderIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-radius: 50%;
+}
+
+.sectionHeaderCopy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.sectionHeaderTitle {
+  margin: 0;
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.sectionHeaderText {
+  max-width: 620px;
+  margin: 0;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.sectionHeaderAction {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Unified profile loading, error and empty states */
+.resourceState {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 22px;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-selected),
+    var(--color-surface)
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.resourceStateError {
+  border-color: var(--color-border);
+}
+
+.resourceStateEmpty {
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-selected),
+    transparent
+  );
+  border-radius: var(--radius-xl);
+}
+
+.resourceStateWithoutIcon {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.resourceStateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+
+.resourceStateAccentIcon {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+
+.resourceStateErrorIcon {
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+}
+
+.resourceStateLoadingIcon svg {
+  animation: profile-resource-spin 0.8s linear infinite;
+}
+
+@keyframes profile-resource-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.resourceStateCopy {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.resourceStateCopy h3,
+.resourceStateCopy p {
+  margin: 0;
+}
+
+.resourceStateCopy h3 {
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.resourceStateCopy p {
+  max-width: 620px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
+
+.resourceStateAction {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.resourceStateAction > * {
+  width: 100%;
+  justify-content: center;
+}
+
+.resourceStateError .resourceStateAction {
+  margin-top: 2px;
+}
+
+.pageLoaderCard {
+  min-width: 0;
+  padding: 20px;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.pageLoaderBox {
+  display: grid;
+  gap: 16px;
+  place-items: center;
+  min-height: 280px;
+  padding: 32px 20px;
+  text-align: center;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 @media only screen and (min-width: 768px) {
   .tabsLayout {
     padding: 14px;
@@ -327,6 +505,39 @@
 
   .currentSession {
     text-align: left;
+  }
+
+  .sectionHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .sectionHeaderAction {
+    justify-self: end;
+    width: auto;
+  }
+
+  .resourceStateError:not(.resourceStateWithoutIcon) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .resourceStateError .resourceStateAction {
+    grid-column: auto;
+    width: auto;
+    margin-top: 0;
+  }
+
+  .resourceStateError .resourceStateAction > * {
+    width: auto;
+  }
+
+  .resourceStateEmpty .resourceStateAction {
+    width: auto;
+  }
+
+  .resourceStateEmpty .resourceStateAction > * {
+    width: auto;
+    min-width: 220px;
   }
 }
 
@@ -407,4 +618,10 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resourceStateLoadingIcon svg {
+    animation: none;
+  }
 }

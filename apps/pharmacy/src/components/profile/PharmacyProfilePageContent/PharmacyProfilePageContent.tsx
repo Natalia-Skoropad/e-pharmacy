@@ -2,7 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Save, Send } from 'lucide-react';
+
+import {
+  Building2,
+  Camera,
+  Clock3,
+  FileCheck2,
+  FileText,
+  Landmark,
+  Save,
+  Send,
+  Star,
+  UserRound,
+} from 'lucide-react';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
@@ -16,12 +28,14 @@ import {
   ChangePasswordForm,
   DocumentsPanel,
   ProfileIdentityCard,
+  ProfilePageLoader,
   ProfilePictureEditor,
+  ProfileSectionHeader,
   ProfileTabPanel,
   ProfileTabsLayout,
 } from '@e-pharmacy/ui/profile';
 
-import { ReviewsList } from '@e-pharmacy/ui/data-display';
+import { CountLabel, ReviewsList } from '@e-pharmacy/ui/data-display';
 import { Container } from '@e-pharmacy/ui/layout';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 
@@ -36,7 +50,6 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { PageLoader } from '@e-pharmacy/ui/status-pages';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { useAuth } from '@e-pharmacy/auth/react';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
@@ -128,7 +141,7 @@ import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-error-messages';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
-import { EntityComments } from '@/components/comments/EntityComments/EntityComments';
+import { EntityComments } from '@/components/comments/EntityComments';
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
 
@@ -518,7 +531,11 @@ function PharmacyProfilePageContent() {
   const profileError = hasCurrentProfile ? profileSnapshot.error : summaryError;
 
   if (isBootstrapping || !user || isProfileLoading) {
-    return <PageLoader label="Loading pharmacy profile..." />;
+    return (
+      <main className={css.page} aria-label="Loading pharmacy profile">
+        <ProfilePageLoader label="Loading pharmacy profile..." />
+      </main>
+    );
   }
 
   if (!pharmacySummary || !profile) {
@@ -1679,12 +1696,12 @@ function PharmacyProfilePage({
                     }}
                   >
                     <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="account-data-title">
-                        My data
-                      </h2>
-                      <p className={css.panelText}>
-                        These are the details for your current pharmacy account.
-                      </p>
+                      <ProfileSectionHeader
+                        title="My data"
+                        titleId="account-data-title"
+                        description="These are the details for your current pharmacy account."
+                        icon={<UserRound size={22} />}
+                      />
                     </div>
                     <div className={css.formGrid}>
                       <NameInput
@@ -1746,8 +1763,7 @@ function PharmacyProfilePage({
               {activeTab === 'pharmacy-data' ? (
                 <>
                   <form
-                    className={css.panelSection}
-                    aria-labelledby="pharmacy-data-title"
+                    className={css.pharmacyDataForm}
                     noValidate
                     onSubmit={(event) => {
                       event.preventDefault();
@@ -1755,164 +1771,203 @@ function PharmacyProfilePage({
                       void handlePharmacySubmit();
                     }}
                   >
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="pharmacy-data-title">
-                        Pharmacy data
-                      </h2>
-                      <p className={css.panelText}>
-                        Fill in the public pharmacy data required for
-                        verification.
-                      </p>
-                    </div>
-
-                    <PictureCard
-                      name={summaryPharmacyName}
-                      pictureUrl={pharmacyPictureUrl}
-                      isSaving={isPharmacyPictureSaving}
-                      disabled={isProfileReadonly}
-                      compactLayout
-                      accept={PICTURE_ACCEPT}
-                      labels={{
-                        uploadAriaLabel: 'Upload photo',
-                        hint: 'Upload the public pharmacy photo clients will see in the pharmacy profile. Upload a lightweight JPG, PNG, or WEBP image up to 450 KB.',
-                        uploadButton: 'Upload photo',
-                        removeButton: 'Remove photo',
-                        removeTitle: 'Remove pharmacy photo?',
-                        removeText:
-                          'This public pharmacy photo will be removed from the profile.',
-                      }}
-                      validateFile={(file) =>
-                        buildPictureFileError(file) || null
-                      }
-                      validatePictureUrl={(nextPictureUrl) =>
-                        buildPictureUrlError(nextPictureUrl) || null
-                      }
-                      onChange={handlePharmacyPictureChange}
-                      onError={handlePictureError}
-                    />
-
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending pharmacy data"
-                        items={[
-                          {
-                            label: 'Pharmacy name',
-                            value: pharmacy.pendingModeration?.name,
-                          },
-                          {
-                            label: 'Email',
-                            value: pharmacy.pendingModeration?.email,
-                          },
-                          {
-                            label: 'Phone',
-                            value: pharmacy.pendingModeration?.phone,
-                          },
-                          {
-                            label: 'Address',
-                            value: pharmacy.pendingModeration?.address,
-                          },
-                          {
-                            label: 'Working hours',
-                            value: pharmacy.pendingModeration?.workingHours,
-                          },
-                          {
-                            label: 'Photo',
-                            value:
-                              pharmacy.pendingModeration?.imageUrl === null
-                                ? 'Photo will be removed'
-                                : pharmacy.pendingModeration?.imageUrl
-                                  ? 'New photo uploaded'
-                                  : undefined,
-                          },
-                        ]}
+                    <section
+                      className={css.pharmacyDataBlock}
+                      aria-labelledby="pharmacy-photo-title"
+                    >
+                      <ProfileSectionHeader
+                        title="Pharmacy photo"
+                        titleId="pharmacy-photo-title"
+                        description="Upload the public photo clients will see in the pharmacy profile."
+                        icon={<Camera size={22} />}
                       />
-                    ) : null}
 
-                    <div className={css.formGrid}>
-                      <NameInput
-                        id="pharmacy-name"
-                        name="pharmacyName"
-                        hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
-                        label="Pharmacy name"
-                        placeholder="Enter pharmacy name"
-                        value={pharmacyValues.name}
-                        error={pharmacyErrors.name}
-                        isTouched={Boolean(pharmacyTouched.name)}
+                      {pharmacy.status === 'on_moderation' &&
+                      pharmacy.pendingModeration?.imageUrl !== undefined ? (
+                        <PendingModerationBox
+                          title="Pending pharmacy photo"
+                          items={[
+                            {
+                              label: 'Photo',
+                              value:
+                                pharmacy.pendingModeration.imageUrl === null
+                                  ? 'Photo will be removed'
+                                  : 'New photo uploaded',
+                            },
+                          ]}
+                        />
+                      ) : null}
+
+                      <PictureCard
+                        name={summaryPharmacyName}
+                        pictureUrl={pharmacyPictureUrl}
+                        isSaving={isPharmacyPictureSaving}
                         disabled={isProfileReadonly}
-                        maxLength={PHARMACY_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange('name', event.target.value)
+                        compactLayout
+                        accept={PICTURE_ACCEPT}
+                        labels={{
+                          uploadAriaLabel: 'Upload photo',
+                          hint: 'Upload the photo clients will see in the pharmacy profile. Upload a lightweight JPG, PNG, or WEBP img up to 450 KB.',
+                          uploadButton: 'Upload photo',
+                          removeButton: 'Remove photo',
+                          removeTitle: 'Remove pharmacy photo?',
+                          removeText:
+                            'This public pharmacy photo will be removed from the profile.',
+                        }}
+                        validateFile={(file) =>
+                          buildPictureFileError(file) || null
                         }
+                        validatePictureUrl={(nextPictureUrl) =>
+                          buildPictureUrlError(nextPictureUrl) || null
+                        }
+                        onChange={handlePharmacyPictureChange}
+                        onError={handlePictureError}
+                      />
+                    </section>
+
+                    <section
+                      className={css.pharmacyDataBlock}
+                      aria-labelledby="pharmacy-information-title"
+                    >
+                      <ProfileSectionHeader
+                        title="Pharmacy information"
+                        titleId="pharmacy-information-title"
+                        description="Fill in the public pharmacy data required for verification."
+                        icon={<Building2 size={22} />}
                       />
 
-                      <EmailInput
-                        id="pharmacy-email"
-                        name="email"
-                        value={pharmacyValues.email}
-                        hint="Clients will see this email in the pharmacy profile on the website."
-                        error={pharmacyErrors.email}
-                        isTouched={Boolean(pharmacyTouched.email)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_EMAIL_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange(
-                            'email',
-                            normalizeEmail(event.target.value)
-                          )
-                        }
-                      />
+                      {pharmacy.status === 'on_moderation' ? (
+                        <PendingModerationBox
+                          title="Pending pharmacy information"
+                          items={[
+                            {
+                              label: 'Pharmacy name',
+                              value: pharmacy.pendingModeration?.name,
+                            },
+                            {
+                              label: 'Email',
+                              value: pharmacy.pendingModeration?.email,
+                            },
+                            {
+                              label: 'Phone',
+                              value: pharmacy.pendingModeration?.phone,
+                            },
+                            {
+                              label: 'Address',
+                              value: pharmacy.pendingModeration?.address,
+                            },
+                          ]}
+                        />
+                      ) : null}
 
-                      <PhoneInput
-                        id="pharmacy-phone"
-                        name="phone"
-                        value={pharmacyValues.phone}
-                        hint="Clients will see this phone number in the pharmacy profile on the website."
-                        error={pharmacyErrors.phone}
-                        isTouched={Boolean(pharmacyTouched.phone)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_PHONE_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange(
-                            'phone',
-                            normalizePhoneInput(event.target.value)
-                          )
-                        }
-                      />
-
-                      <AddressInput
-                        id="pharmacy-address"
-                        name="address"
-                        className={css.fieldWide}
-                        label="Pharmacy address"
-                        placeholder="Example: 12 Central Street, Kyiv"
-                        hint="Clients will see this address in the pharmacy profile on the website."
-                        value={pharmacyValues.address}
-                        error={pharmacyErrors.address}
-                        isTouched={Boolean(pharmacyTouched.address)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_ADDRESS_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePharmacyChange('address', event.target.value)
-                        }
-                      />
-
-                      <div className={css.fieldWide}>
-                        <WorkingHoursInput
-                          id="pharmacy-working-hours"
-                          value={pharmacyValues.workingHours}
-                          error={pharmacyErrors.workingHours}
-                          isTouched={Boolean(pharmacyTouched.workingHours)}
+                      <div className={css.formGrid}>
+                        <NameInput
+                          id="pharmacy-name"
+                          name="pharmacyName"
+                          hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
+                          label="Pharmacy name"
+                          placeholder="Enter pharmacy name"
+                          value={pharmacyValues.name}
+                          error={pharmacyErrors.name}
+                          isTouched={Boolean(pharmacyTouched.name)}
                           disabled={isProfileReadonly}
-                          onValueChange={(nextValue) =>
-                            handlePharmacyChange('workingHours', nextValue)
+                          maxLength={PHARMACY_NAME_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange('name', event.target.value)
+                          }
+                        />
+
+                        <EmailInput
+                          id="pharmacy-email"
+                          name="email"
+                          value={pharmacyValues.email}
+                          hint="Clients will see this email in the pharmacy profile on the website."
+                          error={pharmacyErrors.email}
+                          isTouched={Boolean(pharmacyTouched.email)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_EMAIL_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'email',
+                              normalizeEmail(event.target.value)
+                            )
+                          }
+                        />
+
+                        <PhoneInput
+                          id="pharmacy-phone"
+                          name="phone"
+                          value={pharmacyValues.phone}
+                          hint="Clients will see this phone number in the pharmacy profile on the website."
+                          error={pharmacyErrors.phone}
+                          isTouched={Boolean(pharmacyTouched.phone)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_PHONE_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'phone',
+                              normalizePhoneInput(event.target.value)
+                            )
+                          }
+                        />
+
+                        <AddressInput
+                          id="pharmacy-address"
+                          name="address"
+                          className={css.fieldWide}
+                          label="Pharmacy address"
+                          placeholder="Example: 12 Central Street, Kyiv"
+                          hint="Clients will see this address in the pharmacy profile on the website."
+                          value={pharmacyValues.address}
+                          error={pharmacyErrors.address}
+                          isTouched={Boolean(pharmacyTouched.address)}
+                          disabled={isProfileReadonly}
+                          maxLength={USER_ADDRESS_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange('address', event.target.value)
                           }
                         />
                       </div>
-                    </div>
+                    </section>
+
+                    <section
+                      className={css.pharmacyDataBlock}
+                      aria-labelledby="pharmacy-working-hours-title"
+                    >
+                      <ProfileSectionHeader
+                        title="Working hours"
+                        titleId="pharmacy-working-hours-title"
+                        description="Set the schedule clients should use when planning a visit or pickup."
+                        icon={<Clock3 size={22} />}
+                      />
+
+                      {pharmacy.status === 'on_moderation' ? (
+                        <PendingModerationBox
+                          title="Pending working hours"
+                          items={[
+                            {
+                              label: 'Working hours',
+                              value: pharmacy.pendingModeration?.workingHours,
+                            },
+                          ]}
+                        />
+                      ) : null}
+
+                      <WorkingHoursInput
+                        id="pharmacy-working-hours"
+                        value={pharmacyValues.workingHours}
+                        error={pharmacyErrors.workingHours}
+                        isTouched={Boolean(pharmacyTouched.workingHours)}
+                        disabled={isProfileReadonly}
+                        onValueChange={(nextValue) =>
+                          handlePharmacyChange('workingHours', nextValue)
+                        }
+                      />
+                    </section>
 
                     {pharmacy.status === 'new' ? (
                       <Button
-                        className={css.panelAction}
+                        className={css.pharmacyDataAction}
                         type="submit"
                         iconLeft={<Save size={18} aria-hidden="true" />}
                         disabled={
@@ -1950,13 +2005,12 @@ function PharmacyProfilePage({
                     }}
                   >
                     <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="about-title">
-                        About pharmacy
-                      </h2>
-                      <p className={css.panelText}>
-                        Add the public pharmacy description clients will read on
-                        the website.
-                      </p>
+                      <ProfileSectionHeader
+                        title="About pharmacy"
+                        titleId="about-title"
+                        description="Add the public pharmacy description clients will read on the website."
+                        icon={<FileText size={22} />}
+                      />
                     </div>
 
                     {pharmacy.status === 'on_moderation' ? (
@@ -2025,12 +2079,12 @@ function PharmacyProfilePage({
                     }}
                   >
                     <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="payment-title">
-                        Payment details
-                      </h2>
-                      <p className={css.panelText}>
-                        These payment details are required before verification.
-                      </p>
+                      <ProfileSectionHeader
+                        title="Payment details"
+                        titleId="payment-title"
+                        description="These payment details are required before verification."
+                        icon={<Landmark size={22} />}
+                      />
                     </div>
 
                     {pharmacy.status === 'on_moderation' ? (
@@ -2211,6 +2265,7 @@ function PharmacyProfilePage({
                     name="documents"
                     title="Registration documents"
                     description="Manage registration documents, license scans, and other files Admin needs for verification."
+                    headerIcon={<FileCheck2 size={22} />}
                     value={documentValues}
                     required
                     disabled={isProfileReadonly || isDocumentsSaving}
@@ -2259,12 +2314,28 @@ function PharmacyProfilePage({
             >
               {activeTab === 'reviews' ? (
                 <>
+                  <ProfileSectionHeader
+                    title="Reviews"
+                    description="Read feedback clients leave after completed orders."
+                    icon={<Star size={22} />}
+                    action={
+                      <CountLabel
+                        shown={0}
+                        total={0}
+                        label="reviews"
+                        fullWidthOnMobile
+                      />
+                    }
+                  />
+
                   <ReviewsList
                     reviews={[]}
+                    title={null}
                     initialVisibleCount={INITIAL_VISIBLE_REVIEWS_COUNT}
                     countFullWidthOnMobile
                     emptyTitle="This pharmacy has no reviews yet."
                     emptyText="Reviews appear only after real client orders are completed and approved."
+                    emptyVariant="profile"
                   />
                 </>
               ) : null}
@@ -2279,6 +2350,9 @@ function PharmacyProfilePage({
                 <>
                   <EntityComments
                     entityKey={`pharmacy:${pharmacy.id}`}
+                    presentation="profile"
+                    emptyTitle="No manager comments yet."
+                    emptyText="The comment drawer is waiting patiently."
                     initialTotal={commentsTotal ?? undefined}
                     load={(page, options) =>
                       getPharmacyNotes('pharmacy', pharmacy.id, page, options)

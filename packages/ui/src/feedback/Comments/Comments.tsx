@@ -138,9 +138,11 @@ export type CommentsListProps<
   TComment extends CommentListItem = CommentListItem,
 > = Readonly<{
   items: readonly TComment[];
-  title?: string;
+  title?: string | null;
   commentTitle?: string;
+  emptyTitle?: string;
   emptyText?: string;
+  emptyVariant?: 'default' | 'profile';
   error?: string;
   isLoading?: boolean;
   deletingId?: string | null;
@@ -156,7 +158,9 @@ export function CommentsList<
   items,
   title = 'Saved comments',
   commentTitle = 'Comment',
+  emptyTitle,
   emptyText = 'No comments yet.',
+  emptyVariant = 'default',
   error,
   isLoading = false,
   deletingId,
@@ -165,13 +169,22 @@ export function CommentsList<
 }: CommentsListProps<TComment>) {
   return (
     <div className={css.savedComments}>
-      <h3>{title}</h3>
+      {title ? <h3>{title}</h3> : null}
 
       {error ? <p className={css.error}>{error}</p> : null}
       {isLoading ? <LoadingSpinner label="Loading comments..." /> : null}
 
       {!isLoading && !error && items.length === 0 ? (
-        <p className={css.empty}>{emptyText}</p>
+        emptyVariant === 'profile' ? (
+          <div className={`${css.empty} ${css.profileEmpty}`}>
+            {emptyTitle ? (
+              <h3 className={css.profileEmptyTitle}>{emptyTitle}</h3>
+            ) : null}
+            <p className={css.profileEmptyText}>{emptyText}</p>
+          </div>
+        ) : (
+          <p className={css.empty}>{emptyText}</p>
+        )
       ) : null}
 
       {!isLoading && items.length > 0 ? (

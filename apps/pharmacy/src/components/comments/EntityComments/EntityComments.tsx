@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { MessageSquareText, RefreshCw } from 'lucide-react';
 
 import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
 import { PHARMACY_NOTE_MAX_LENGTH } from '@e-pharmacy/validation/pharmacy';
@@ -15,6 +15,12 @@ import {
 } from '@e-pharmacy/ui/feedback';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
+
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
@@ -34,7 +40,9 @@ export type EntityCommentsProps = Readonly<{
   title?: string;
   commentTitle?: string;
   placeholder?: string;
+  emptyTitle?: string;
   emptyText?: string;
+  presentation?: 'default' | 'profile';
   initialTotal?: number;
   isEditable?: boolean;
 
@@ -61,7 +69,9 @@ function EntityCommentsContent({
   title = 'Comments',
   commentTitle = 'Comment',
   placeholder = 'Write an internal comment...',
+  emptyTitle,
   emptyText = 'No manager comments yet. The comment drawer is waiting patiently.',
+  presentation = 'default',
   initialTotal,
   isEditable = true,
   load,
@@ -72,6 +82,7 @@ function EntityCommentsContent({
   const toast = useToast();
   const generatedId = useId();
   const titleId = `${entityKey}-${generatedId}-comments-title`;
+  const isProfilePresentation = presentation === 'profile';
 
   const comments = useEntityCommentsResource({
     initialTotal,
@@ -112,17 +123,35 @@ function EntityCommentsContent({
 
   return (
     <section className={css.card} aria-labelledby={titleId}>
-      <div className={css.head}>
-        <h2 id={titleId}>{title}</h2>
-        {comments.status === 'success' ? (
-          <CountLabel
-            className={css.countLabel}
-            shown={comments.data.items.length}
-            total={comments.data.total}
-            label="comments"
-          />
-        ) : null}
-      </div>
+      {isProfilePresentation ? (
+        <ProfileSectionHeader
+          title={title}
+          titleId={titleId}
+          icon={<MessageSquareText size={22} />}
+          action={
+            comments.status === 'success' ? (
+              <CountLabel
+                shown={comments.data.items.length}
+                total={comments.data.total}
+                label="comments"
+                fullWidthOnMobile
+              />
+            ) : null
+          }
+        />
+      ) : (
+        <div className={css.head}>
+          <h2 id={titleId}>{title}</h2>
+          {comments.status === 'success' ? (
+            <CountLabel
+              className={css.countLabel}
+              shown={comments.data.items.length}
+              total={comments.data.total}
+              label="comments"
+            />
+          ) : null}
+        </div>
+      )}
 
       <CommentComposer
         id={`${entityKey}-comment`}
@@ -138,30 +167,64 @@ function EntityCommentsContent({
         onSubmit={() => void handleCreate()}
       />
 
-      <CommentsList
-        items={comments.data.items}
-        commentTitle={commentTitle}
-        emptyText={emptyText}
-        error={comments.error}
-        isLoading={comments.status === 'loading'}
-        deletingId={comments.deletingId}
-        deleteDisabled={
-          !isEditable || Boolean(comments.deletingId) || comments.isSaving
-        }
-        onDelete={comments.requestDelete}
-      />
+      {isProfilePresentation ? (
+        comments.status === 'loading' ? (
+          <ProfileResourceState
+            variant="loading"
+            title="Loading comments"
+            description="Please wait while manager comments are loaded."
+          />
+        ) : comments.status === 'error' ? (
+          <ProfileResourceState
+            variant="error"
+            title="Comments could not be loaded"
+            description={comments.error || 'Please try again.'}
+            retryLabel="Retry comments"
+            onRetry={comments.retry}
+          />
+        ) : (
+          <CommentsList
+            items={comments.data.items}
+            title={null}
+            commentTitle={commentTitle}
+            emptyTitle={emptyTitle}
+            emptyText={emptyText}
+            emptyVariant="profile"
+            deletingId={comments.deletingId}
+            deleteDisabled={
+              !isEditable || Boolean(comments.deletingId) || comments.isSaving
+            }
+            onDelete={comments.requestDelete}
+          />
+        )
+      ) : (
+        <>
+          <CommentsList
+            items={comments.data.items}
+            commentTitle={commentTitle}
+            emptyText={emptyText}
+            error={comments.error}
+            isLoading={comments.status === 'loading'}
+            deletingId={comments.deletingId}
+            deleteDisabled={
+              !isEditable || Boolean(comments.deletingId) || comments.isSaving
+            }
+            onDelete={comments.requestDelete}
+          />
 
-      {comments.status === 'error' ? (
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          iconLeft={<RefreshCw size={17} aria-hidden="true" />}
-          onClick={() => void comments.retry()}
-        >
-          Retry comments
-        </Button>
-      ) : null}
+          {comments.status === 'error' ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              iconLeft={<RefreshCw size={17} aria-hidden="true" />}
+              onClick={() => void comments.retry()}
+            >
+              Retry comments
+            </Button>
+          ) : null}
+        </>
+      )}
 
       {comments.status === 'success' ? (
         <PaginationView

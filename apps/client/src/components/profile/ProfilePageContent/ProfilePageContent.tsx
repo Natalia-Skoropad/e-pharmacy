@@ -6,12 +6,12 @@ import type { ChangeEvent } from 'react';
 import {
   Building2,
   ChevronDown,
-  CircleAlert,
+  ClipboardList,
   Heart,
   LogIn,
-  RefreshCw,
   Save,
   ShoppingBag,
+  UserRound,
 } from 'lucide-react';
 
 import {
@@ -33,7 +33,6 @@ import {
 import {
   Button,
   FiltersButton,
-  LoadingSpinner,
   TextActionButton,
 } from '@e-pharmacy/ui/primitives';
 
@@ -55,6 +54,8 @@ import {
   ChangePasswordForm,
   ProfileIdentityCard,
   ProfilePictureEditor,
+  ProfileResourceState,
+  ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
 import {
@@ -1031,12 +1032,12 @@ function AuthenticatedProfilePageContent({
                     aria-labelledby="personal-data-title"
                   >
                     <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle} id="personal-data-title">
-                        Personal data
-                      </h2>
-                      <p className={css.panelText}>
-                        Keep your contact details ready for fast checkout.
-                      </p>
+                      <ProfileSectionHeader
+                        title="Personal data"
+                        titleId="personal-data-title"
+                        description="Keep your contact details ready for fast checkout."
+                        icon={<UserRound size={22} />}
+                      />
                     </div>
 
                     <Button
@@ -1137,13 +1138,11 @@ function AuthenticatedProfilePageContent({
 
               {activeTab === 'orders' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <div className={css.panelHeader}>
-                    <h2 className={css.panelTitle}>My orders</h2>
-                    <p className={css.panelText}>
-                      Search by order number or pharmacy and narrow the list
-                      with order filters.
-                    </p>
-                  </div>
+                  <ProfileSectionHeader
+                    title="My orders"
+                    description="Search by order number or pharmacy and narrow the list with order filters."
+                    icon={<ClipboardList size={22} />}
+                  />
 
                   <section
                     className={css.ordersFiltersCard}
@@ -1326,45 +1325,36 @@ function AuthenticatedProfilePageContent({
 
               {activeTab === 'favorite-products' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <div className={css.favoritesHeader}>
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle}>Favorite products</h2>
-                      <p className={css.panelText}>
-                        Products you mark with a heart are collected here.
-                      </p>
-                    </div>
-
-                    {!favoriteProductsError ? (
-                      <CountLabel
-                        shown={visibleFavoriteProducts.length}
-                        total={effectiveFavoriteProductsCount}
-                        label="items"
-                        fullWidthOnMobile
-                      />
-                    ) : null}
-                  </div>
+                  <ProfileSectionHeader
+                    title="Favorite products"
+                    description="Products you mark with a heart are collected here."
+                    icon={<Heart size={22} />}
+                    action={
+                      !favoriteProductsError ? (
+                        <CountLabel
+                          shown={visibleFavoriteProducts.length}
+                          total={effectiveFavoriteProductsCount}
+                          label="items"
+                          fullWidthOnMobile
+                        />
+                      ) : null
+                    }
+                  />
 
                   {favoriteProductsError ? (
-                    <div className={css.loadErrorState} role="alert">
-                      <span className={css.loadErrorIcon} aria-hidden="true">
-                        <CircleAlert size={28} />
-                      </span>
-                      <div className={css.loadErrorCopy}>
-                        <h3>Favorite products could not be loaded</h3>
-                        <p>{favoriteProductsError}</p>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          iconLeft={<RefreshCw size={18} aria-hidden="true" />}
-                          onClick={() => void loadFavoriteProducts(1)}
-                        >
-                          Try again
-                        </Button>
-                      </div>
-                    </div>
+                    <ProfileResourceState
+                      variant="error"
+                      title="Favorite products could not be loaded"
+                      description={favoriteProductsError}
+                      retryLabel="Try again"
+                      onRetry={() => loadFavoriteProducts(1)}
+                    />
                   ) : isFavoriteProductsLoading ? (
-                    <LoadingSpinner label="Loading favorite products..." />
+                    <ProfileResourceState
+                      variant="loading"
+                      title="Loading favorite products"
+                      description="Please wait while your saved products are loaded."
+                    />
                   ) : visibleFavoriteProducts.length > 0 ? (
                     <>
                       <div className={css.favoritesGrid}>
@@ -1412,72 +1402,57 @@ function AuthenticatedProfilePageContent({
                       ) : null}
                     </>
                   ) : (
-                    <div className={css.emptyState}>
-                      <span className={css.emptyIcon} aria-hidden="true">
-                        <Heart size={30} />
-                      </span>
-                      <div className={css.emptyCopy}>
-                        <h3 className={css.emptyTitle}>
-                          No favorite products yet
-                        </h3>
-                        <p className={css.panelText}>
-                          Tap the heart on a product card, and it will wait here
-                          nicely — no shelf drama included.
-                        </p>
-                      </div>
-                      <LinkButton
-                        href={ROUTES.PRODUCTS_CATALOG}
-                        iconLeft={<ShoppingBag size={18} aria-hidden="true" />}
-                      >
-                        Browse products
-                      </LinkButton>
-                    </div>
+                    <ProfileResourceState
+                      variant="empty"
+                      title="No favorite products yet"
+                      description="Tap the heart on a product card, and it will wait here nicely – no shelf drama included."
+                      action={
+                        <LinkButton
+                          href={ROUTES.PRODUCTS_CATALOG}
+                          iconLeft={
+                            <ShoppingBag size={18} aria-hidden="true" />
+                          }
+                        >
+                          Browse products
+                        </LinkButton>
+                      }
+                    />
                   )}
                 </div>
               ) : null}
 
               {activeTab === 'favorite-pharmacies' ? (
                 <div className={css.tabPanel} role="tabpanel">
-                  <div className={css.favoritesHeader}>
-                    <div className={css.panelHeader}>
-                      <h2 className={css.panelTitle}>Favorite pharmacies</h2>
-                      <p className={css.panelText}>
-                        Pharmacies you mark with a heart are saved here for
-                        quick access.
-                      </p>
-                    </div>
-
-                    {!favoritePharmaciesError ? (
-                      <CountLabel
-                        shown={visibleFavoritePharmacies.length}
-                        total={effectiveFavoritePharmaciesCount}
-                        label="pharmacies"
-                        fullWidthOnMobile
-                      />
-                    ) : null}
-                  </div>
+                  <ProfileSectionHeader
+                    title="Favorite pharmacies"
+                    description="Pharmacies you mark with a heart are saved here for quick access."
+                    icon={<Building2 size={22} />}
+                    action={
+                      !favoritePharmaciesError ? (
+                        <CountLabel
+                          shown={visibleFavoritePharmacies.length}
+                          total={effectiveFavoritePharmaciesCount}
+                          label="pharmacies"
+                          fullWidthOnMobile
+                        />
+                      ) : null
+                    }
+                  />
 
                   {favoritePharmaciesError ? (
-                    <div className={css.loadErrorState} role="alert">
-                      <span className={css.loadErrorIcon} aria-hidden="true">
-                        <CircleAlert size={28} />
-                      </span>
-                      <div className={css.loadErrorCopy}>
-                        <h3>Favorite pharmacies could not be loaded</h3>
-                        <p>{favoritePharmaciesError}</p>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          iconLeft={<RefreshCw size={18} aria-hidden="true" />}
-                          onClick={() => void loadFavoritePharmacies(1)}
-                        >
-                          Try again
-                        </Button>
-                      </div>
-                    </div>
+                    <ProfileResourceState
+                      variant="error"
+                      title="Favorite pharmacies could not be loaded"
+                      description={favoritePharmaciesError}
+                      retryLabel="Try again"
+                      onRetry={() => loadFavoritePharmacies(1)}
+                    />
                   ) : isFavoritePharmaciesLoading ? (
-                    <LoadingSpinner label="Loading favorite pharmacies..." />
+                    <ProfileResourceState
+                      variant="loading"
+                      title="Loading favorite pharmacies"
+                      description="Please wait while your saved pharmacies are loaded."
+                    />
                   ) : visibleFavoritePharmacies.length > 0 ? (
                     <>
                       <div className={css.favoritesGrid}>
@@ -1527,26 +1502,19 @@ function AuthenticatedProfilePageContent({
                       ) : null}
                     </>
                   ) : (
-                    <div className={css.emptyState}>
-                      <span className={css.emptyIcon} aria-hidden="true">
-                        <Building2 size={30} />
-                      </span>
-                      <div className={css.emptyCopy}>
-                        <h3 className={css.emptyTitle}>
-                          No favorite pharmacies yet
-                        </h3>
-                        <p className={css.panelText}>
-                          Mark a pharmacy with a heart, and it will stay here
-                          for quick access — loyal as a tiny green assistant.
-                        </p>
-                      </div>
-                      <LinkButton
-                        href={ROUTES.PHARMACIES}
-                        iconLeft={<Building2 size={18} aria-hidden="true" />}
-                      >
-                        Browse pharmacies
-                      </LinkButton>
-                    </div>
+                    <ProfileResourceState
+                      variant="empty"
+                      title="No favorite pharmacies yet"
+                      description="Mark a pharmacy with a heart, and it will stay here for quick access – loyal as a tiny green assistant."
+                      action={
+                        <LinkButton
+                          href={ROUTES.PHARMACIES}
+                          iconLeft={<Building2 size={18} aria-hidden="true" />}
+                        >
+                          Browse pharmacies
+                        </LinkButton>
+                      }
+                    />
                   )}
                 </div>
               ) : null}

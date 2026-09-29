@@ -2,19 +2,15 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import {
-  ChevronDown,
-  LogOut,
-  MonitorSmartphone,
-  RefreshCw,
-} from 'lucide-react';
+import { ChevronDown, LogOut, MonitorSmartphone } from 'lucide-react';
 
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import { Button } from '../primitives/Button/Button';
 import { LazyLoadButton } from '../primitives/LazyLoadButton/LazyLoadButton';
-import { LoadingSpinner } from '../primitives/LoadingSpinner/LoadingSpinner';
+import { ProfileResourceState } from './ProfileResourceState';
+import { ProfileSectionHeader } from './ProfileSectionHeader';
 
 import css from './Profile.module.css';
 
@@ -98,10 +94,12 @@ export function ActiveSessionsPanel({
   return (
     <section className={css.panel} aria-labelledby={`${idPrefix}-title`}>
       <div className={css.panelHeader}>
-        <h2 className={css.panelTitle} id={`${idPrefix}-title`}>
-          {title}
-        </h2>
-        {description ? <p className={css.panelText}>{description}</p> : null}
+        <ProfileSectionHeader
+          title={title}
+          description={description}
+          titleId={`${idPrefix}-title`}
+          icon={<MonitorSmartphone size={22} />}
+        />
       </div>
 
       {sessions.length > 0 && onSignOutAll ? (
@@ -122,26 +120,20 @@ export function ActiveSessionsPanel({
 
       <div className={css.panelBody}>
         {status === 'loading' && sessions.length === 0 ? (
-          <LoadingSpinner label={loadingLabel} />
+          <ProfileResourceState
+            variant="loading"
+            title="Loading active sessions"
+            description={loadingLabel}
+          />
         ) : null}
 
         {status === 'error' ? (
-          <div className={css.emptyState} role="alert">
-            <h3>Could not load active sessions</h3>
-            <p>{error || 'Please try again.'}</p>
-
-            {onRetry ? (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                iconLeft={<RefreshCw size={18} aria-hidden="true" />}
-                onClick={() => void onRetry()}
-              >
-                Retry
-              </Button>
-            ) : null}
-          </div>
+          <ProfileResourceState
+            variant="error"
+            title="Active sessions could not be loaded"
+            description={error || 'Please try again.'}
+            onRetry={onRetry}
+          />
         ) : null}
 
         {sessions.length > 0 ? (
@@ -201,10 +193,11 @@ export function ActiveSessionsPanel({
             />
           </>
         ) : status === 'success' ? (
-          <div className={css.emptyState}>
-            <h3>{emptyTitle}</h3>
-            <p>{emptyText}</p>
-          </div>
+          <ProfileResourceState
+            variant="empty"
+            title={emptyTitle}
+            description={emptyText}
+          />
         ) : null}
       </div>
     </section>

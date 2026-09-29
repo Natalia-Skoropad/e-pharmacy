@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { MessageSquareLock } from 'lucide-react';
 
 import type {
   AdminEmployeePrivateNote,
@@ -17,8 +17,13 @@ import {
 } from '@e-pharmacy/ui/feedback';
 
 import { PaginationView } from '@e-pharmacy/ui/navigation';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
+
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
-import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
   createMyAdminPrivateComment,
@@ -249,24 +254,22 @@ export function AdminPrivateComments({
       className={css.card}
       aria-labelledby="admin-private-comments-title"
     >
-      <div className={css.head}>
-        <div className={css.titleRow}>
-          <h2 id="admin-private-comments-title">Private comments</h2>
-
-          {status === 'success' ? (
+      <ProfileSectionHeader
+        title="Comments"
+        titleId="admin-private-comments-title"
+        description="These notes are visible only to you. Platform Owner access never grants access to another employee’s private comments."
+        icon={<MessageSquareLock size={22} />}
+        action={
+          status === 'success' ? (
             <CountLabel
               shown={data.items.length}
               total={data.total}
               label="comments"
+              fullWidthOnMobile
             />
-          ) : null}
-        </div>
-
-        <p>
-          These notes are visible only to you. Platform Owner access never
-          grants access to another employee’s private comments.
-        </p>
-      </div>
+          ) : null
+        }
+      />
 
       <CommentComposer
         id="admin-private-comment"
@@ -280,31 +283,33 @@ export function AdminPrivateComments({
         onSubmit={() => void handleCreate()}
       />
 
-      <CommentsList
-        items={status === 'success' ? data.items : []}
-        title="Saved private comments"
-        commentTitle="Private comment"
-        emptyText="No private comments yet."
-        error={status === 'error' ? loadError : ''}
-        isLoading={status === 'loading'}
-        deletingId={deletingId}
-        deleteDisabled={isSaving}
-        onDelete={setCommentToDelete}
-      />
-
-      {status === 'error' ? (
-        <div className={css.retryRow}>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            iconLeft={<RefreshCw size={17} aria-hidden="true" />}
-            onClick={() => void loadPage(retryPageRef.current)}
-          >
-            Retry comments
-          </Button>
-        </div>
-      ) : null}
+      {status === 'loading' ? (
+        <ProfileResourceState
+          variant="loading"
+          title="Loading comments"
+          description="Please wait while your private comments are loaded."
+        />
+      ) : status === 'error' ? (
+        <ProfileResourceState
+          variant="error"
+          title="Comments could not be loaded"
+          description={loadError}
+          retryLabel="Retry comments"
+          onRetry={() => loadPage(retryPageRef.current)}
+        />
+      ) : (
+        <CommentsList
+          items={data.items}
+          title={null}
+          commentTitle="Private comment"
+          emptyTitle="No manager comments yet."
+          emptyText="The comment drawer is waiting patiently."
+          emptyVariant="profile"
+          deletingId={deletingId}
+          deleteDisabled={isSaving}
+          onDelete={setCommentToDelete}
+        />
+      )}
 
       {status === 'success' ? (
         <PaginationView

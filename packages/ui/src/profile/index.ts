@@ -4,3 +4,6 @@ export * from './DocumentsPanel';
 export * from './ProfileIdentityCard';
 export * from './ProfilePictureEditor';
 export * from './ProfileTabsLayout';
+export * from './ProfilePageLoader';
+export * from './ProfileResourceState';
+export * from './ProfileSectionHeader';

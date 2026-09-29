@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FileBadge2 } from 'lucide-react';
 
 import type { AdminEmployeeDocument } from '@e-pharmacy/types/admin';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { DocumentsPanel } from '@e-pharmacy/ui/profile';
-import { Button } from '@e-pharmacy/ui/primitives';
+import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
   ADMIN_EMPLOYEE_DOCUMENT_ACCEPT,
@@ -17,8 +17,6 @@ import {
   downloadMyAdminDocument,
   getMyAdminDocuments,
 } from '@/lib/api/browser/admin-documents.api';
-
-import css from './AdminDocuments.module.css';
 
 //===================================================================
 
@@ -82,8 +80,9 @@ export function AdminDocuments() {
     <DocumentsPanel
       id="admin-profile-documents"
       name="documents"
-      title="Registration documents"
+      title="Employee documents"
       description="Review documents attached to your employee account. Documents are managed from the Employees section."
+      headerIcon={<FileBadge2 size={22} />}
       value={status === 'success' ? documents.map(toBrowserUploadFile) : []}
       editable={false}
       readOnlyUploadView={status === 'success'}
@@ -92,39 +91,29 @@ export function AdminDocuments() {
       accept={ADMIN_EMPLOYEE_DOCUMENT_ACCEPT}
       hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${ADMIN_EMPLOYEE_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
       labels={{
-        dropzoneTitle: 'Registration documents',
+        dropzoneTitle: 'Employee documents',
         dropzoneText: 'Documents are managed from the Employees section.',
       }}
-      error={status === 'error' ? loadError : ''}
-      emptyTitle={
-        status === 'loading'
-          ? 'Loading documents...'
-          : status === 'error'
-            ? 'Documents are unavailable'
-            : 'No documents yet'
-      }
-      emptyText={
-        status === 'loading'
-          ? 'Please wait while your documents are loaded.'
-          : status === 'error'
-            ? loadError
-            : 'No documents are attached to your employee account.'
-      }
-      beforeDocuments={
-        status === 'error' ? (
-          <div className={css.retryRow}>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setStatus('loading');
-                setLoadError('');
-                setReloadKey((current) => current + 1);
-              }}
-            >
-              Retry
-            </Button>
-          </div>
+      emptyTitle="No documents yet"
+      emptyText="No documents are attached to your employee account."
+      resourceState={
+        status === 'loading' ? (
+          <ProfileResourceState
+            variant="loading"
+            title="Loading employee documents"
+            description="Please wait while your documents are loaded."
+          />
+        ) : status === 'error' ? (
+          <ProfileResourceState
+            variant="error"
+            title="Employee documents could not be loaded"
+            description={loadError}
+            onRetry={() => {
+              setStatus('loading');
+              setLoadError('');
+              setReloadKey((current) => current + 1);
+            }}
+          />
         ) : null
       }
       onDownloadFile={handleDownload}

@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, type ChangeEvent, type ReactNode } from 'react';
-import { Download, RefreshCw, Save, Trash2, UploadCloud } from 'lucide-react';
+import {
+  Download,
+  Files,
+  RefreshCw,
+  Save,
+  Trash2,
+  UploadCloud,
+} from 'lucide-react';
 
 import {
   DocumentUpload,
@@ -11,6 +18,7 @@ import {
 import type { BrowserUploadFile } from '../forms/types';
 import ConfirmationModal from '../overlays/ConfirmationModal/ConfirmationModal';
 import { Button } from '../primitives/Button/Button';
+import { ProfileSectionHeader } from './ProfileSectionHeader';
 
 import css from './Profile.module.css';
 
@@ -21,6 +29,7 @@ export type DocumentsPanelProps = Readonly<{
   name?: string;
   title?: string;
   description?: ReactNode;
+  headerIcon?: ReactNode;
   value: BrowserUploadFile[];
   editable?: boolean;
   readOnlyUploadView?: boolean;
@@ -40,6 +49,7 @@ export type DocumentsPanelProps = Readonly<{
   emptyTitle?: string;
   emptyText?: string;
   beforeDocuments?: ReactNode;
+  resourceState?: ReactNode;
   onChange?: (files: BrowserUploadFile[]) => void;
   validateSelection?: (files: readonly BrowserUploadFile[]) => string;
   onSelectionError?: (message: string) => void;
@@ -88,6 +98,7 @@ export function DocumentsPanel({
   name = 'documents',
   title = 'Documents',
   description,
+  headerIcon = <Files size={22} />,
   value,
   editable = true,
   readOnlyUploadView = false,
@@ -107,6 +118,7 @@ export function DocumentsPanel({
   emptyTitle = 'No documents yet',
   emptyText = 'Documents will appear here after they are uploaded.',
   beforeDocuments,
+  resourceState,
   onChange,
   validateSelection,
   onSelectionError,
@@ -284,10 +296,12 @@ export function DocumentsPanel({
   return (
     <section className={css.panel} aria-labelledby={`${id}-title`}>
       <div className={css.panelHeader}>
-        <h2 className={css.panelTitle} id={`${id}-title`}>
-          {title}
-        </h2>
-        {description ? <p className={css.panelText}>{description}</p> : null}
+        <ProfileSectionHeader
+          title={title}
+          description={description}
+          titleId={`${id}-title`}
+          icon={headerIcon}
+        />
       </div>
 
       {canEdit && onSubmit ? (
@@ -336,7 +350,9 @@ export function DocumentsPanel({
           </div>
         ) : null}
 
-        {usesResourceActions ? (
+        {resourceState ? (
+          resourceState
+        ) : usesResourceActions ? (
           renderDocumentList()
         ) : (canEdit && onChange) || readOnlyUploadView ? (
           <DocumentUpload

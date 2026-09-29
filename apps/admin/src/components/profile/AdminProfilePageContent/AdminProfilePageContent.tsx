@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { UserRound } from 'lucide-react';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
@@ -13,7 +14,9 @@ import {
   ActiveSessionsPanel,
   ChangePasswordForm,
   ProfileIdentityCard,
+  ProfilePageLoader,
   ProfilePictureEditor,
+  ProfileSectionHeader,
   ProfileTabPanel,
   ProfileTabsLayout,
   type ActiveSessionsPanelStatus,
@@ -144,7 +147,13 @@ export function AdminProfilePageContent() {
     return () => controller.abort();
   }, [activeTab, sessionsReloadKey, user]);
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <main className={css.page} aria-label="Loading admin profile">
+        <ProfilePageLoader label="Loading admin profile..." />
+      </main>
+    );
+  }
 
   const pictureUrl =
     pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
@@ -285,16 +294,12 @@ export function AdminProfilePageContent() {
                 className={css.personalForm}
                 aria-labelledby="admin-personal-information-title"
               >
-                <div className={css.formHeader}>
-                  <div>
-                    <h2 id="admin-personal-information-title">
-                      Personal information
-                    </h2>
-                    <p>
-                      Employee identity is managed from the Employees section.
-                    </p>
-                  </div>
-                </div>
+                <ProfileSectionHeader
+                  title="Personal information"
+                  titleId="admin-personal-information-title"
+                  description="Employee identity is managed from the Employees section."
+                  icon={<UserRound size={22} />}
+                />
 
                 <div className={css.formGrid}>
                   <NameInput

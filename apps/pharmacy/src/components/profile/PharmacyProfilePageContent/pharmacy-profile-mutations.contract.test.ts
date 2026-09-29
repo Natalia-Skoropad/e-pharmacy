@@ -197,6 +197,6 @@ test('profile save sections use native form submission and current-account copy'
   assert.doesNotMatch(source, />\s*Owner data\s*</);
   assert.doesNotMatch(source, />\s*Save owner data\s*</);
   assert.doesNotMatch(source, /owner\s+login password/i);
-  assert.match(source, />\s*My data\s*</);
+  assert.match(source, /<ProfileSectionHeader[\s\S]*?title="My data"/);
   assert.match(source, />\s*Save my data\s*</);
 });

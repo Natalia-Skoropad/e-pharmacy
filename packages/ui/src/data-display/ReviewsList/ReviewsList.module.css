@@ -117,3 +117,14 @@
     padding: 20px;
   }
 }
+
+.profileEmpty {
+  text-align: left;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-selected),
+    transparent
+  );
+  border-style: solid;
+  border-color: var(--color-border);
+}

@@ -5755,3 +5755,49 @@ Admin Header
 Тепер перед Stage 11 профілі стали значно ближчими до принципу «один shared-компонент — одна поведінка», а не «три кабінети, три маленькі CSS-пригоди» 😄
 
 //=========================================================
+
+Привіт 🙂 Готово. Я звірила поточну реалізацію з README-0.md–README-10.md, вимогами з першого файлу та скрінами й привела client / pharmacy / admin profiles до однієї візуальної системи, не змішуючи shared presentation із business logic.
+📦 e-pharmacy-profile-style-update.zip
+В архіві 18 змінених + 5 нових файлів. Також є DELETED_FILES.txt: потрібно видалити один застарілий файл apps/admin/src/components/profile/AdminDocuments/AdminDocuments.module.css — після переходу на shared state він більше не використовується. Thin-wrapper на згадку не залишала 🙂
+
+1. Client — /profile
+   Для My data заголовок Personal data тепер оформлений у стилі Bank details: зелена кругла іконка UserRound, заголовок і description. Change password переведений на той самий shared header з KeyRound. Це відповідає пунктам про обидва заголовки. Вставлений текст markdown
+   Для My orders доданий такий самий заголовок з ClipboardList. Саму таблицю, фільтри, pagination та її business logic не змінювала — вона й далі використовує shared DataTable, TableHeaderTitle, CountLabel. Вставлений текст markdown
+   Для Favorite products і Favorite pharmacies іконки перенесені з empty-state до заголовків: Heart та Building2. CountLabel залишився справа від заголовка, а на mobile займає коректну ширину. Loading та error тепер використовують один shared UI, максимально повторюючи Bank details: gradient card, кругла іконка, spinner/error state та Retry. Empty-state зберігає потрібну світлу gradient-card і Browse-кнопку, але вже без дубльованої іконки всередині. Вставлений текст markdown
+   Active sessions and devices також переведений на shared-заголовок із MonitorSmartphone; loading, error + Retry та empty-state тепер мають ту саму систему оформлення. Вставлений текст markdown
+2. Pharmacy — /pharmacy/profile
+   У My data заголовок отримав UserRound, а Change password — shared KeyRound header. Таким чином client, pharmacy та admin більше не малюють цей блок трьома різними способами. Вставлений текст markdown
+   Pharmacy data перебудований на три окремі секції: Pharmacy photo з Camera, Pharmacy information з Building2 і Working hours з Clock3. Між блоками є separator, як у My data. Pending-moderation інформацію теж розділено логічно: photo окремо, contact/public data окремо, working hours окремо. При цьому submit/validation/moderation logic залишилась тією самою. Вставлений текст markdown
+   About pharmacy отримав FileText, а Payment details — Landmark; обидва використовують новий єдиний header. Вставлений текст markdown
+   Registration documents тепер використовує shared DocumentsPanel із заголовком Bank details-style та FileCheck2. Тут важливий технічний момент: у поточному коді pharmacy documents не мають окремого async fetch-state всередині таба — вони приходять у складі pharmacy profile. Тому я не створювала фальшивий loading/error branch. Загальний profile fetch тепер має правильний loader, а validation/upload errors залишилися своїми реальними form errors. Вставлений текст markdown
+   Reviews отримав Star, shared header + canonical CountLabel; внутрішній старий title у ReviewsList прибраний, щоб не було другого заголовка. Empty-state This pharmacy has no reviews yet. тепер оформлений як Favorite empty-state: gradient card, без окремої іконки й без Browse-кнопки. У цій ревізії ReviewsList усе ще отримує reviews={[]} і не має власного API/status state, тому штучні loading/error я не додавала. Вставлений текст markdown
+   Comments отримав MessageSquareText, canonical CountLabel, однакові loading/error states і новий empty card: “No manager comments yet.” + “The comment drawer is waiting patiently.”, без іконки та кнопки. Причому новий presentation увімкнений через opt-in presentation="profile": Orders, Clients, Product Requests та інші місця, де використовується EntityComments, не змінили свій UI. Вставлений текст markdown
+   Active sessions and devices автоматично отримав той самий shared header/loading/error UI, що client та admin. Вставлений текст markdown
+   Для завантаження всієї /pharmacy/profile доданий ProfilePageLoader. Він відтворює структуру loader-а з Order Details: зовнішня surface-card з border/shadow + внутрішній bordered loader box з min-height: 280px. Також додано Next loading.tsx для route transition. Вставлений текст markdown
+3. Admin — /admin/profile
+   Personal information тепер має UserRound, а shared ChangePasswordForm — KeyRound, у тому самому стилі заголовків. Вставлений текст markdown
+   Registration documents перейменувала на Employee documents — це природніше англійською і правильно описує документи конкретного employee account. Додана FileBadge2; loading та load error більше не маскуються під empty-state, а мають нормальні shared loading/error cards + Retry. Для цього DocumentsPanel отримав опціональні headerIcon і resourceState. Старий локальний AdminDocuments.module.css став непотрібним і видаляється. Вставлений текст markdown
+   Comments отримав MessageSquareLock, бо ці notes приватні. Локальний саморобний count прибрано: використовується canonical CountLabel, включно з mobile-поведінкою. Loading/error приведені до Bank details, а empty-state розбитий на title + description і оформлений як Favorites. Зайвий Saved private comments прибраний, щоб не було другого візуального заголовка. Вставлений текст markdown
+   Active sessions and devices використовує той самий MonitorSmartphone header і shared resource states. Вставлений текст markdown
+   Для admin доданий такий самий ProfilePageLoader, route loading.tsx, а fallback !user більше не повертає порожній екран — показує правильний profile loader. Вставлений текст markdown
+   Shared-рівень
+   Щоб це справді стало єдиним стилем, а не трьома копіями CSS, додала в @e-pharmacy/ui/profile три компоненти: ProfileSectionHeader, ProfileResourceState та ProfilePageLoader.
+   Також адаптовані вже наявні ChangePasswordForm, ActiveSessionsPanel і DocumentsPanel. У CommentsList та ReviewsList доданий opt-in profile empty presentation, тому існуючі використання поза профілями не отримують редизайн випадково.
+   Щодо останнього пункту про таблиці: у наданому архіві скрінів є 1, 3–11, 14–16, але немає окремого еталона таблиці (12/13 або іншого reference). Тому новий table design я не вигадувала. My orders залишила на вже існуючих shared DataTable/CountLabel; коли буде конкретний еталон, його краще стандартизувати саме на shared-рівні для всіх наступних таблиць. Вставлений текст markdown
+   Перевірки
+   У поточному sandbox успішно пройшли TypeScript type-check для client, pharmacy, admin та UI package, а також check-ui-style-contracts, check-ui-boundaries, check-profile-contracts, check-admin-profile, check-shared-cabinet-ui, check-pharmacy-account-components, check-client-components-styles і check-client-components-a11y.
+   Повний pnpm check:before-deploy тут не запускався: у середовищі немає локального pnpm 10.33.2, а Corepack намагається завантажити його з npm, тоді як мережевий доступ у sandbox відсутній. Тому після накладання архіву локально я б фінально прогнала саме вашу стандартну команду.
+   Commit
+   feat(profile): unify profile UI across client pharmacy and admin
+
+Або розширений варіант:
+feat(profile): unify profile UI across client pharmacy and admin
+
+- add shared profile headers, resource states and page loader
+- align client favorites, orders and session presentation
+- split pharmacy data into photo, information and working-hours sections
+- standardize pharmacy reviews and profile comments
+- align admin documents, comments and sessions with shared UI
+- replace custom comment counters with CountLabel
+
+📦 e-pharmacy-profile-style-update.zip

@@ -112,3 +112,33 @@
     min-width: 0;
   }
 }
+
+.profileEmpty {
+  padding: 24px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  text-align: left;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent-selected),
+    transparent
+  );
+  border-style: solid;
+  border-color: var(--color-border);
+  border-radius: var(--radius-xl);
+}
+.profileEmptyTitle {
+  margin: 0;
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.profileEmptyText {
+  margin: 8px 0 0;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+}
