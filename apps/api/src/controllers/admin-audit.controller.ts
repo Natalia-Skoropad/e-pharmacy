@@ -9,6 +9,7 @@ import type {
 
 import {
   getAdminAuditLogService,
+  listAdminAuditActorsService,
   listAdminAuditLogsService,
 } from '../services/admin-audit.service';
 
@@ -22,6 +23,22 @@ export async function getAdminAuditLogs(
   res: ValidatedResponse<unknown, unknown, AdminAuditListQuery>
 ): Promise<void> {
   const data = await listAdminAuditLogsService(res.locals.validated.query);
+  res.setHeader('Cache-Control', 'no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data,
+  });
+}
+
+//===============================================================
+
+export async function getAdminAuditActors(
+  _req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await listAdminAuditActorsService();
   res.setHeader('Cache-Control', 'no-store');
 
   sendSuccessResponse({

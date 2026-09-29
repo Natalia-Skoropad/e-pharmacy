@@ -115,6 +115,8 @@
   max-height: 260px;
   padding: 8px;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) var(--color-white);
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: 18px;
@@ -128,6 +130,21 @@
   right: auto;
   bottom: auto;
   left: auto;
+}
+
+.options::-webkit-scrollbar {
+  width: 10px;
+}
+
+.options::-webkit-scrollbar-track {
+  background-color: var(--color-white);
+  border-radius: var(--radius-pill);
+}
+
+.options::-webkit-scrollbar-thumb {
+  background-color: var(--color-text-muted);
+  border: 2px solid var(--color-white);
+  border-radius: var(--radius-pill);
 }
 
 .option {

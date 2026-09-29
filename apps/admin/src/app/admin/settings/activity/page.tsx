@@ -1,6 +1,7 @@
+import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
+
 import { AdminPermissionGate } from '@/components/auth/AdminPermissionGate';
 import { ActivityHistory } from '@/components/activity/ActivityHistory';
-import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 
 //===================================================================
 

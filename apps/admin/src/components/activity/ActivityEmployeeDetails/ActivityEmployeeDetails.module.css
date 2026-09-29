@@ -1,0 +1,62 @@
+.page {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.profileGrid {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.employeePhoto {
+  justify-self: start;
+}
+
+.contextCard {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 18px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.contextCard h2,
+.contextCard p {
+  margin: 0;
+}
+
+.contextCard h2 {
+  color: var(--color-text-primary);
+  font-size: var(--fz-20);
+  line-height: var(--lh-heading);
+}
+
+.contextCard p {
+  max-width: 720px;
+  color: var(--color-text-secondary);
+  line-height: var(--lh-base);
+}
+
+@media only screen and (min-width: 900px) {
+  .profileGrid {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    align-items: start;
+  }
+}

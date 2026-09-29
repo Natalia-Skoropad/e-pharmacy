@@ -22,6 +22,7 @@ export const adminApiRoutes = {
 
   audit: {
     list: '/api/admin/audit',
+    actors: '/api/admin/audit/actors',
     details: (auditLogId: string) =>
       `/api/admin/audit/${encodeURIComponent(auditLogId)}`,
   },

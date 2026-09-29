@@ -5801,3 +5801,40 @@ feat(profile): unify profile UI across client pharmacy and admin
 - replace custom comment counters with CountLabel
 
 📦 e-pharmacy-profile-style-update.zip
+
+//======================================================
+
+Готово 🙂 Сторінку Activity history переробила вже як актуальну версію, а не як надбудову над першою тестовою реалізацією. Основний орієнтир — pharmacy/clients, pharmacy/orders/new і shared-компоненти проєкту.
+e-pharmacy-10-13-activity-history.zip
+В архіві 30 змінених/доданих файлів, зі збереженням структури проєкту.
+Що зроблено по пунктах
+
+1. Шапка Activity history. Перевела на той самий shared PageHeader, який використовується в інших cabinet-сторінках. Заголовок тепер знаходиться в окремій card-секції як на pharmacy/clients. Для сторінки використала іконку History.
+2. Прибрано Settings. Старий eyebrow SETTINGS над заголовком повністю прибраний. Залишився лише Activity history.
+3. Пояснення перенесено в підказку. Текст Review immutable records... більше не стоїть окремим абзацом. Біля заголовка доданий InfoTooltip у тому самому стилі, що й на Clients. Підказка тепер пояснює, що таке immutable audit trail, які дані містить запис і як використовувати пошук/фільтри.
+4. Фільтри перенесено в модалку/drawer. Використаний shared FilterDrawer. На самій сторінці залишилася кнопка Filters з лічильником активних фільтрів.
+5. Для дат використано саме shared DateFilter. Фільтр має From / To, календар відкривається при роботі з полем та іконкою календаря, а курсор на calendar indicator — pointer. Окремий дубль календаря не створювала.
+6. Виправлено scrollbar у select-компонентах. Стилі у shared SelectField і SearchableSelect приведені до тонкого scrollbar-патерну проєкту. Тобто виправлення працюватиме консистентно, а не тільки всередині Activity history.
+7. Rows per page + Showing ... перенесені над таблицею. Використані shared RowsPerPageSelect і CountLabel та та сама схема toolbar, що на Clients.
+8. Сама таблиця переведена на shared DataTable. Тобто це тепер одна цілісна таблиця, а не набір окремо стилізованих шматків першої реалізації. Loading/empty state також передаються в DataTable.
+9. Додано фото співробітника. Перед Employee є окрема колонка Employee photo, яка використовує shared TableImagePreview з initials fallback.
+10. Employee зроблено клікабельним. Ім'я веде на /admin/settings/employees/:employeeId. Щоб це не було посиланням у прекрасну країну 404 😄, додала робочу read-only картку співробітника з фото, ім'ям, email, статусом, ID, телефоном і адресою. Вона захищена тією ж admin access policy.
+11. Додано три пошуки співробітника: Employee name search, Employee ID search, Employee contact search. Вони працюють через SearchableSelect; для contact search враховуються email, телефон та адреса. Для цього доданий read-only audit actors API/BFF endpoint.
+12. До Details додана іконка. Використовується Eye, кнопка лишилася в shared button-system.
+13. Пагінація замінена на shared PaginationView. Поведінка і вигляд тепер відповідають Clients та іншим таблицям cabinet.
+14. Close у Audit details. Використаний shared CloseIconButton, тобто той самий тип кнопки закриття, що й в інших модалках.
+15. Заголовок Audit details. Перероблений на modal header у стилі існуючих модалок: невеликий accent kicker Activity history, нормальний великий Audit details та shared close button справа.
+16. Audit details на mobile. Нижній блок Changes тепер на мобільних залишається компактним рядком field | before | → | after, із меншими gaps/font-size. Він більше не складає кожне значення у величезну вертикальну “ковбасу”.
+17. Loader у Audit details. Використаний shared ProfileResourceState variant="loading", який відповідає патерну resource loading із Bank details.
+18. Error state у Audit details. Так само переведений на ProfileResourceState variant="error" із поясненням помилки та кнопкою Retry.
+19. Колонки дій перейменовані. Колонка з кнопкою тепер називається Actions, а колишня Action — Change, щоб назви не конфліктували за змістом.
+20. Додано Section / page. Колонка показує, де саме сталася зміна, і є клікабельною. Для конкретної аптеки / product request посилання веде одразу на відповідну картку, для розділів — у відповідний admin section. Також у FilterDrawer додано фільтр Section.
+    Тут зробила і backend-частину правильно: для нових audit records додано явне immutable-поле section. Воно записується в момент самої події, тому через кілька етапів нам не доведеться здогадуватися, що adminEmployee означав — Profile чи Employees. Поточні writers уже передають profile, pharmacies, productRequests, employees залежно від місця зміни. Для старих пробних записів залишила fallback, щоб сторінка не падала до моменту їх очищення.
+21. Dropdown пошуків співробітника. Варіанти тепер показують фото + ім'я, як Client select на створенні order. Ті самі співробітники використовуються для name/ID/contact lookup, але пошуковий текст відповідає конкретному виду пошуку.
+22. Поточний статус співробітника під ім'ям. У колонці Employee під ім'ям показується shared StatusBadge (Active / Blocked). Фото та статус беруться з актуального employee record, а audit record залишається історичним записом.
+    Щодо твого уточнення про старі записи: тестові записи не використовувала як контракт для нової таблиці. Видаляти записи з твоєї фактичної MongoDB з архіву коду я, звісно, не можу, тому destructive cleanup/migration навмисно не додавала. Їх можна спокійно очистити в dev-БД; нові записи вже формуються за оновленою схемою з section.
+    Також розширила structural check check-admin-audit, щоб він контролював новий section contract і writers. Перевірки, які доступні в цьому середовищі, пройшли: Admin TypeScript — OK, UI TypeScript — OK, check-admin-audit — OK, frontend audit tests — 4/4, вибрані backend contract/access tests — 15/15. Повний pnpm check:before-deploy тут не запускала, оскільки в робочому середовищі немає повного встановленого API dependency tree/Corepack намагається звертатися до мережі.
+    Коміт:
+    feat(admin): refine activity history and audit section tracking
+
+Ця версія вже закладає один нормальний UI-патерн для майбутніх admin-таблиць, а не ще одного маленького родича таблиці, який “майже такий самий” 😄

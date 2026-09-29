@@ -3,6 +3,7 @@ import mongoose, { Types } from 'mongoose';
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_SECTIONS,
 } from '../constants/admin-audit';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -789,6 +790,7 @@ export async function moderateProductRequestByAdminService(
         await appendAdminAuditLog({
           actorUserId: adminUserId,
           action: ADMIN_AUDIT_ACTIONS.PRODUCT_REQUEST_STATUS_CHANGED,
+          section: ADMIN_AUDIT_SECTIONS.PRODUCT_REQUESTS,
           entityType: ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
           entityId: String(request._id),
           entityLabel: request.name,

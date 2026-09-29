@@ -30,6 +30,7 @@ export const backendRoutes = {
 
     audit: {
       list: '/admin/audit',
+      actors: '/admin/audit/actors',
       details: (auditLogId: EntityId) => `/admin/audit/${segment(auditLogId)}`,
     },
   },

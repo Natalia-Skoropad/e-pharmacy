@@ -29,6 +29,28 @@ export type AdminAuditEntityType = (typeof ADMIN_AUDIT_ENTITY_TYPES)[number];
 
 //===================================================================
 
+export const ADMIN_AUDIT_SECTIONS = [
+  'profile',
+  'pharmacyOwners',
+  'pharmacies',
+  'products',
+  'productRequests',
+  'clients',
+  'orders',
+  'productReviews',
+  'pharmacyReviews',
+  'employees',
+  'positions',
+  'sitePages',
+  'categories',
+] as const;
+
+//===================================================================
+
+export type AdminAuditSection = (typeof ADMIN_AUDIT_SECTIONS)[number];
+
+//===================================================================
+
 export type AdminAuditValue =
   | string
   | number
@@ -42,11 +64,28 @@ export type AdminAuditSnapshot = Readonly<Record<string, AdminAuditValue>>;
 
 //===================================================================
 
+export type AdminAuditActor = Readonly<{
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  pictureUrl?: string;
+  status: 'active' | 'blocked';
+}>;
+
+export type AdminAuditActorsResponse = Readonly<{
+  items: readonly AdminAuditActor[];
+}>;
+
+//===================================================================
+
 export type AdminAuditListItem = Readonly<{
   id: string;
   actorUserId: string;
   actorNameSnapshot: string;
   action: AdminAuditAction;
+  section: AdminAuditSection;
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
@@ -81,6 +120,7 @@ export type AdminAuditQueryParams = Readonly<{
   dateTo?: string;
   action?: AdminAuditAction;
   entityType?: AdminAuditEntityType;
+  section?: AdminAuditSection;
   entityId?: string;
   actorUserId?: string;
   requestId?: string;
@@ -107,6 +147,15 @@ function isAdminAuditEntityType(value: unknown): value is AdminAuditEntityType {
   return (
     typeof value === 'string' &&
     (ADMIN_AUDIT_ENTITY_TYPES as readonly string[]).includes(value)
+  );
+}
+
+//===================================================================
+
+function isAdminAuditSection(value: unknown): value is AdminAuditSection {
+  return (
+    typeof value === 'string' &&
+    (ADMIN_AUDIT_SECTIONS as readonly string[]).includes(value)
   );
 }
 
@@ -159,6 +208,7 @@ function parseListItem(value: unknown): AdminAuditListItem {
     typeof value.actorUserId !== 'string' ||
     typeof value.actorNameSnapshot !== 'string' ||
     !isAdminAuditAction(value.action) ||
+    !isAdminAuditSection(value.section) ||
     !isAdminAuditEntityType(value.entityType) ||
     typeof value.entityId !== 'string' ||
     typeof value.entityLabelSnapshot !== 'string' ||
@@ -175,6 +225,7 @@ function parseListItem(value: unknown): AdminAuditListItem {
     actorUserId: value.actorUserId,
     actorNameSnapshot: value.actorNameSnapshot,
     action: value.action,
+    section: value.section,
     entityType: value.entityType,
     entityId: value.entityId,
     entityLabelSnapshot: value.entityLabelSnapshot,
@@ -183,6 +234,48 @@ function parseListItem(value: unknown): AdminAuditListItem {
     requestId: value.requestId,
     createdAt: value.createdAt,
   };
+}
+
+//===================================================================
+
+function parseAuditActor(value: unknown): AdminAuditActor {
+  if (!isRecord(value)) throw new TypeError('Invalid audit actor.');
+
+  if (
+    typeof value.id !== 'string' ||
+    typeof value.name !== 'string' ||
+    typeof value.email !== 'string' ||
+    typeof value.phone !== 'string' ||
+    (value.address !== undefined && typeof value.address !== 'string') ||
+    (value.pictureUrl !== undefined && typeof value.pictureUrl !== 'string') ||
+    (value.status !== 'active' && value.status !== 'blocked')
+  ) {
+    throw new TypeError('Invalid audit actor.');
+  }
+
+  return {
+    id: value.id,
+    name: value.name,
+    email: value.email,
+    phone: value.phone,
+    ...(typeof value.address === 'string' ? { address: value.address } : {}),
+    ...(typeof value.pictureUrl === 'string'
+      ? { pictureUrl: value.pictureUrl }
+      : {}),
+    status: value.status,
+  };
+}
+
+//===================================================================
+
+export function parseAdminAuditActorsResponse(
+  value: unknown
+): AdminAuditActorsResponse {
+  if (!isRecord(value) || !Array.isArray(value.items)) {
+    throw new TypeError('Invalid audit actors response.');
+  }
+
+  return { items: value.items.map(parseAuditActor) };
 }
 
 //===================================================================

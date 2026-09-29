@@ -207,6 +207,15 @@ const apiClientRoutes = await read(
 
 assert.match(permissions, /audit:\s*\['view'\]/);
 
+assert.match(auditConstants, /ADMIN_AUDIT_SECTIONS/);
+assert.match(model, /section:\s*\{/);
+assert.match(auditService, /section,/);
+assert.match(pharmacyService, /ADMIN_AUDIT_SECTIONS\.PHARMACIES/);
+assert.match(productRequestService, /ADMIN_AUDIT_SECTIONS\.PRODUCT_REQUESTS/);
+assert.match(ownerService, /ADMIN_AUDIT_SECTIONS\.EMPLOYEES/);
+assert.match(profileService, /ADMIN_AUDIT_SECTIONS\.PROFILE/);
+assert.match(adminDocumentService, /ADMIN_AUDIT_SECTIONS\.PROFILE/);
+
 assert.match(
   auditConstants,
   /ADMIN_EMPLOYEE_PROFILE_UPDATED:\s*'adminEmployee\.profile\.updated'/

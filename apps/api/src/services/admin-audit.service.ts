@@ -1,21 +1,28 @@
 import { Types, type ClientSession } from 'mongoose';
 
 import {
+  ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_LIMITS,
+  ADMIN_AUDIT_SECTIONS,
   getStoredAdminAuditActionValues,
   isAdminAuditAction,
   isAdminAuditEntityType,
+  isAdminAuditSection,
   normalizeStoredAdminAuditAction,
   type AdminAuditAction,
   type AdminAuditEntityType,
+  type AdminAuditSection,
 } from '../constants/admin-audit';
 
+import { USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { AdminAuditLog } from '../models/adminAuditLog.model';
 import { User } from '../models/user.model';
 import type { AdminAuditListQuery } from '../schemas/admin-audit.schema';
 
 import type {
+  AdminAuditActorDto,
+  AdminAuditActorsResponseDto,
   AdminAuditDetailsDto,
   AdminAuditListItemDto,
   AdminAuditSnapshot,
@@ -149,6 +156,7 @@ function normalizeChangedFields(
 type AppendAdminAuditLogInput = Readonly<{
   actorUserId: string;
   action: AdminAuditAction;
+  section: AdminAuditSection;
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabel: string;
@@ -165,6 +173,7 @@ type AppendAdminAuditLogInput = Readonly<{
 export async function appendAdminAuditLog({
   actorUserId,
   action,
+  section,
   entityType,
   entityId,
   entityLabel,
@@ -179,8 +188,12 @@ export async function appendAdminAuditLog({
     throw new TypeError('Audit actorUserId is invalid.');
   }
 
-  if (!isAdminAuditAction(action) || !isAdminAuditEntityType(entityType)) {
-    throw new TypeError('Audit action or entity type is invalid.');
+  if (
+    !isAdminAuditAction(action) ||
+    !isAdminAuditSection(section) ||
+    !isAdminAuditEntityType(entityType)
+  ) {
+    throw new TypeError('Audit action, section, or entity type is invalid.');
   }
 
   const before = normalizeAdminAuditSnapshot(
@@ -212,6 +225,7 @@ export async function appendAdminAuditLog({
           ADMIN_AUDIT_LIMITS.actorName
         ),
         action,
+        section,
         entityType,
         entityId: normalizeAuditString(
           entityId,
@@ -253,6 +267,7 @@ type LeanAuditLog = {
   actorUserId: Types.ObjectId;
   actorNameSnapshot: string;
   action: string;
+  section?: AdminAuditSection;
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
@@ -266,6 +281,29 @@ type LeanAuditLog = {
 
 //===============================================================
 
+function getLegacyAuditSection(
+  entityType: AdminAuditEntityType
+): AdminAuditSection {
+  if (
+    entityType === ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE ||
+    entityType === ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT
+  ) {
+    return ADMIN_AUDIT_SECTIONS.PROFILE;
+  }
+
+  if (entityType === ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS) {
+    return ADMIN_AUDIT_SECTIONS.EMPLOYEES;
+  }
+
+  if (entityType === ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST) {
+    return ADMIN_AUDIT_SECTIONS.PRODUCT_REQUESTS;
+  }
+
+  return ADMIN_AUDIT_SECTIONS.PHARMACIES;
+}
+
+//===============================================================
+
 function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
   const action = normalizeStoredAdminAuditAction(log.action);
 
@@ -273,11 +311,18 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
     throw new TypeError('Stored admin audit action is invalid.');
   }
 
+  const section = log.section ?? getLegacyAuditSection(log.entityType);
+
+  if (!isAdminAuditSection(section)) {
+    throw new TypeError('Stored admin audit section is invalid.');
+  }
+
   return {
     id: String(log._id),
     actorUserId: String(log.actorUserId),
     actorNameSnapshot: log.actorNameSnapshot,
     action,
+    section,
     entityType: log.entityType,
     entityId: log.entityId,
     entityLabelSnapshot: log.entityLabelSnapshot,
@@ -312,12 +357,85 @@ function endOfUtcDay(value: string): Date {
 
 //===============================================================
 
+const LEGACY_AUDIT_SECTION_ENTITY_TYPES: Readonly<
+  Record<AdminAuditSection, readonly AdminAuditEntityType[]>
+> = {
+  [ADMIN_AUDIT_SECTIONS.PROFILE]: [
+    ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE,
+    ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
+  ],
+  [ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS]: [],
+  [ADMIN_AUDIT_SECTIONS.PHARMACIES]: [ADMIN_AUDIT_ENTITY_TYPES.PHARMACY],
+  [ADMIN_AUDIT_SECTIONS.PRODUCTS]: [],
+  [ADMIN_AUDIT_SECTIONS.PRODUCT_REQUESTS]: [
+    ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
+  ],
+  [ADMIN_AUDIT_SECTIONS.CLIENTS]: [],
+  [ADMIN_AUDIT_SECTIONS.ORDERS]: [],
+  [ADMIN_AUDIT_SECTIONS.PRODUCT_REVIEWS]: [],
+  [ADMIN_AUDIT_SECTIONS.PHARMACY_REVIEWS]: [],
+  [ADMIN_AUDIT_SECTIONS.EMPLOYEES]: [ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS],
+  [ADMIN_AUDIT_SECTIONS.POSITIONS]: [],
+  [ADMIN_AUDIT_SECTIONS.SITE_PAGES]: [],
+  [ADMIN_AUDIT_SECTIONS.CATEGORIES]: [],
+};
+
+//===============================================================
+
+function applyAuditSectionFilter(
+  filter: Record<string, unknown>,
+  section: AdminAuditSection
+): void {
+  filter.$or = [
+    { section },
+    {
+      section: { $exists: false },
+      entityType: { $in: LEGACY_AUDIT_SECTION_ENTITY_TYPES[section] },
+    },
+  ];
+}
+
+//===============================================================
+
+export async function listAdminAuditActorsService(): Promise<AdminAuditActorsResponseDto> {
+  const actors = await User.find({ role: USER_ROLES.ADMIN })
+    .select('_id name email phone address pictureUrl status')
+    .sort({ name: 1, _id: 1 })
+    .lean<
+      Array<{
+        _id: Types.ObjectId;
+        name: string;
+        email: string;
+        phone: string;
+        address?: string;
+        pictureUrl?: string;
+        status: 'active' | 'blocked';
+      }>
+    >();
+
+  const items: AdminAuditActorDto[] = actors.map((actor) => ({
+    id: String(actor._id),
+    name: actor.name,
+    email: actor.email,
+    phone: actor.phone,
+    ...(actor.address ? { address: actor.address } : {}),
+    ...(actor.pictureUrl ? { pictureUrl: actor.pictureUrl } : {}),
+    status: actor.status,
+  }));
+
+  return { items };
+}
+
+//===============================================================
+
 export async function listAdminAuditLogsService(query: AdminAuditListQuery) {
   const filter: Record<string, unknown> = {};
 
   if (query.action) {
     filter.action = { $in: getStoredAdminAuditActionValues(query.action) };
   }
+
+  if (query.section) applyAuditSectionFilter(filter, query.section);
   if (query.entityType) filter.entityType = query.entityType;
   if (query.entityId) filter.entityId = query.entityId;
   if (query.actorUserId)

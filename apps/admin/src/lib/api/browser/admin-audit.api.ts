@@ -7,8 +7,10 @@ import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { adminApiRoutes as ADMIN_API_ROUTES } from '@/lib/api/routes/admin-api-routes';
 
 import {
+  parseAdminAuditActorsResponse,
   parseAdminAuditDetailsResponse,
   parseAdminAuditListResponse,
+  type AdminAuditActorsResponse,
   type AdminAuditDetailsResponse,
   type AdminAuditListResponse,
   type AdminAuditQueryParams,
@@ -25,6 +27,20 @@ export async function getAdminAuditLogs(
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
     parseAdminAuditListResponse,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getAdminAuditActors(
+  options?: Readonly<{ signal?: AbortSignal }>
+): Promise<AdminAuditActorsResponse> {
+  const path = ADMIN_API_ROUTES.audit.actors;
+
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+    parseAdminAuditActorsResponse,
     { url: path, method: 'GET' }
   );
 }

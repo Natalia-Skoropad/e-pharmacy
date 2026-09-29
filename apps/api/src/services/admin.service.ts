@@ -7,6 +7,7 @@ import { API_MESSAGES } from '../constants/messages';
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_SECTIONS,
 } from '../constants/admin-audit';
 
 import { Pharmacy } from '../models/pharmacy.model';
@@ -309,6 +310,7 @@ export async function updatePharmacyStatusByAdminService(
         await appendAdminAuditLog({
           actorUserId: adminUserId,
           action: ADMIN_AUDIT_ACTIONS.PHARMACY_STATUS_CHANGED,
+          section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
           entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
           entityId: String(updated._id),
           entityLabel: updated.name,

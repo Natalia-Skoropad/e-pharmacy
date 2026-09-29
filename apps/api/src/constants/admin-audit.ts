@@ -94,6 +94,43 @@ export function isAdminAuditEntityType(
 
 //===============================================================
 
+export const ADMIN_AUDIT_SECTIONS = {
+  PROFILE: 'profile',
+  PHARMACY_OWNERS: 'pharmacyOwners',
+  PHARMACIES: 'pharmacies',
+  PRODUCTS: 'products',
+  PRODUCT_REQUESTS: 'productRequests',
+  CLIENTS: 'clients',
+  ORDERS: 'orders',
+  PRODUCT_REVIEWS: 'productReviews',
+  PHARMACY_REVIEWS: 'pharmacyReviews',
+  EMPLOYEES: 'employees',
+  POSITIONS: 'positions',
+  SITE_PAGES: 'sitePages',
+  CATEGORIES: 'categories',
+} as const;
+
+//===============================================================
+
+export type AdminAuditSection =
+  (typeof ADMIN_AUDIT_SECTIONS)[keyof typeof ADMIN_AUDIT_SECTIONS];
+
+export const ADMIN_AUDIT_SECTION_VALUES = Object.freeze(
+  Object.values(ADMIN_AUDIT_SECTIONS) as AdminAuditSection[]
+);
+
+const ADMIN_AUDIT_SECTION_SET = new Set<string>(ADMIN_AUDIT_SECTION_VALUES);
+
+//===============================================================
+
+export function isAdminAuditSection(
+  value: unknown
+): value is AdminAuditSection {
+  return typeof value === 'string' && ADMIN_AUDIT_SECTION_SET.has(value);
+}
+
+//===============================================================
+
 export const ADMIN_AUDIT_LIMITS = {
   actorName: 160,
   entityId: 256,

@@ -3,6 +3,7 @@ import type { Types } from 'mongoose';
 import type {
   AdminAuditAction,
   AdminAuditEntityType,
+  AdminAuditSection,
 } from '../constants/admin-audit';
 
 //===============================================================
@@ -17,6 +18,7 @@ export type AdminAuditLogEntity = {
   actorUserId: Types.ObjectId;
   actorNameSnapshot: string;
   action: AdminAuditAction;
+  section: AdminAuditSection;
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
@@ -30,11 +32,26 @@ export type AdminAuditLogEntity = {
 
 //===============================================================
 
+export type AdminAuditActorDto = Readonly<{
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address?: string;
+  pictureUrl?: string;
+  status: 'active' | 'blocked';
+}>;
+
+export type AdminAuditActorsResponseDto = Readonly<{
+  items: readonly AdminAuditActorDto[];
+}>;
+
 export type AdminAuditListItemDto = Readonly<{
   id: string;
   actorUserId: string;
   actorNameSnapshot: string;
   action: AdminAuditAction;
+  section: AdminAuditSection;
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;

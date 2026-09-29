@@ -4,8 +4,10 @@ import {
   ADMIN_AUDIT_LIMITS,
   isAdminAuditAction,
   isAdminAuditEntityType,
+  isAdminAuditSection,
   type AdminAuditAction,
   type AdminAuditEntityType,
+  type AdminAuditSection,
 } from '../constants/admin-audit';
 
 import { mongoIdSchema } from './shared';
@@ -35,6 +37,10 @@ const auditEntityTypeSchema = z.custom<AdminAuditEntityType>(
   { message: 'Unknown audit entity type.' }
 );
 
+const auditSectionSchema = z.custom<AdminAuditSection>(isAdminAuditSection, {
+  message: 'Unknown audit section.',
+});
+
 //===============================================================
 
 export const adminAuditListQuerySchema = z
@@ -53,6 +59,7 @@ export const adminAuditListQuerySchema = z
     dateTo: calendarDateSchema.optional(),
     action: auditActionSchema.optional(),
     entityType: auditEntityTypeSchema.optional(),
+    section: auditSectionSchema.optional(),
 
     entityId: z
       .string()

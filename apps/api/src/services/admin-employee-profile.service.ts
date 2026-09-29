@@ -5,6 +5,7 @@ import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_SECTIONS,
 } from '../constants/admin-audit';
 
 import { AUTH_ERROR_CODES, USER_ROLES } from '../constants/auth';
@@ -156,6 +157,7 @@ export async function updateMyAdminEmployeeProfileService(
       await appendAdminAuditLog({
         actorUserId: userId,
         action: ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_PROFILE_UPDATED,
+        section: ADMIN_AUDIT_SECTIONS.PROFILE,
         entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE,
         entityId: userId,
         entityLabel: user.name,

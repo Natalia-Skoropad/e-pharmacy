@@ -4,6 +4,7 @@ import {
   ADMIN_AUDIT_ACTION_VALUES,
   ADMIN_AUDIT_ENTITY_TYPE_VALUES,
   ADMIN_AUDIT_LIMITS,
+  ADMIN_AUDIT_SECTION_VALUES,
 } from '../constants/admin-audit';
 
 import type { AdminAuditLogEntity } from '../types/admin-audit';
@@ -29,6 +30,13 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
     action: {
       type: String,
       enum: ADMIN_AUDIT_ACTION_VALUES,
+      required: true,
+      index: true,
+    },
+
+    section: {
+      type: String,
+      enum: ADMIN_AUDIT_SECTION_VALUES,
       required: true,
       index: true,
     },
@@ -99,6 +107,7 @@ adminAuditLogSchema.index({ createdAt: -1, _id: -1 });
 adminAuditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
 adminAuditLogSchema.index({ actorUserId: 1, createdAt: -1 });
 adminAuditLogSchema.index({ action: 1, createdAt: -1 });
+adminAuditLogSchema.index({ section: 1, createdAt: -1 });
 
 //===============================================================
 

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  parseAdminAuditActorsResponse,
   parseAdminAuditDetailsResponse,
   parseAdminAuditListResponse,
 } from './admin-audit';
@@ -13,6 +14,7 @@ const item = {
   actorUserId: '507f1f77bcf86cd799439012',
   actorNameSnapshot: 'Natalia',
   action: 'pharmacy.status.changed',
+  section: 'pharmacies',
   entityType: 'pharmacy',
   entityId: '507f1f77bcf86cd799439013',
   entityLabelSnapshot: 'Pharmacy ABC',
@@ -44,6 +46,7 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
       {
         ...item,
         action: 'adminEmployee.profile.updated',
+        section: 'profile',
         entityType: 'adminEmployee',
       },
     ],
@@ -54,6 +57,7 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
   });
 
   assert.equal(parsed.items[0]?.action, 'adminEmployee.profile.updated');
+  assert.equal(parsed.items[0]?.section, 'profile');
   assert.equal(parsed.items[0]?.entityType, 'adminEmployee');
 
   const documentParsed = parseAdminAuditListResponse({
@@ -61,6 +65,7 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
       {
         ...item,
         action: 'adminEmployee.document.uploaded',
+        section: 'profile',
         entityType: 'adminEmployeeDocument',
       },
     ],
@@ -95,6 +100,18 @@ test('audit parsers fail closed for unknown actions and unsafe snapshot values',
 
   assert.throws(
     () =>
+      parseAdminAuditListResponse({
+        items: [{ ...item, section: 'somewhere' }],
+        page: 1,
+        perPage: 20,
+        total: 1,
+        totalPages: 1,
+      }),
+    /invalid audit item/i
+  );
+
+  assert.throws(
+    () =>
       parseAdminAuditDetailsResponse({
         auditLog: {
           ...item,
@@ -103,5 +120,42 @@ test('audit parsers fail closed for unknown actions and unsafe snapshot values',
         },
       }),
     /invalid audit snapshot value/i
+  );
+});
+
+//===================================================================
+
+test('audit actor parser keeps only current employee presentation fields', () => {
+  const parsed = parseAdminAuditActorsResponse({
+    items: [
+      {
+        id: '507f1f77bcf86cd799439012',
+        name: 'Natalia',
+        email: 'natalia@example.com',
+        phone: '+380501112233',
+        address: 'Kyiv',
+        pictureUrl: 'https://example.com/photo.jpg',
+        status: 'active',
+      },
+    ],
+  });
+
+  assert.equal(parsed.items[0]?.name, 'Natalia');
+  assert.equal(parsed.items[0]?.status, 'active');
+
+  assert.throws(
+    () =>
+      parseAdminAuditActorsResponse({
+        items: [
+          {
+            id: '507f1f77bcf86cd799439012',
+            name: 'Natalia',
+            email: 'natalia@example.com',
+            phone: '+380501112233',
+            status: 'deleted',
+          },
+        ],
+      }),
+    /invalid audit actor/i
   );
 });

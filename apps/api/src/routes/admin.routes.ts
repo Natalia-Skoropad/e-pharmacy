@@ -22,6 +22,7 @@ import {
 } from '../controllers/admin-employee.controller';
 
 import {
+  getAdminAuditActors,
   getAdminAuditLogDetails,
   getAdminAuditLogs,
 } from '../controllers/admin-audit.controller';
@@ -166,6 +167,14 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
   validate({ query: adminAuditListQuerySchema }),
   ctrlWrapper(getAdminAuditLogs)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/audit/actors',
+  requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
+  ctrlWrapper(getAdminAuditActors)
 );
 
 //=================================================================================

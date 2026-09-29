@@ -10,6 +10,7 @@ import {
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_SECTIONS,
 } from '../constants/admin-audit';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -231,6 +232,7 @@ export async function createMyAdminEmployeeDocumentService(
       await appendAdminAuditLog({
         actorUserId: userId,
         action: ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_UPLOADED,
+        section: ADMIN_AUDIT_SECTIONS.PROFILE,
         entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
         entityId: String(createdDocument._id),
         entityLabel: createdDocument.name,
@@ -304,6 +306,7 @@ export async function replaceMyAdminEmployeeDocumentService(
       await appendAdminAuditLog({
         actorUserId: userId,
         action: ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_REPLACED,
+        section: ADMIN_AUDIT_SECTIONS.PROFILE,
         entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
         entityId: String(document._id),
         entityLabel: document.name,
@@ -354,6 +357,7 @@ export async function deleteMyAdminEmployeeDocumentService(
       await appendAdminAuditLog({
         actorUserId: userId,
         action: ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_DELETED,
+        section: ADMIN_AUDIT_SECTIONS.PROFILE,
         entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
         entityId: String(document._id),
         entityLabel: document.name,
