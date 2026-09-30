@@ -35,6 +35,7 @@ export type EntityCommentsMutationResult =
 
 type UseEntityCommentsResourceOptions = Readonly<{
   initialTotal?: number;
+  initialData?: PharmacyNotesResponse;
   isEditable: boolean;
 
   load: (
@@ -61,6 +62,7 @@ function createCommentRequestId(): string {
 
 export function useEntityCommentsResource({
   initialTotal,
+  initialData,
   isEditable,
   load,
   create,
@@ -82,16 +84,21 @@ export function useEntityCommentsResource({
     clientRequestId: string;
   } | null>(null);
 
-  const [data, setData] = useState<PharmacyNotesResponse>({
-    items: [],
-    page: 1,
-    perPage: 10,
-    total: initialTotal ?? 0,
-    totalPages: 1,
-  });
+  const [data, setData] = useState<PharmacyNotesResponse>(
+    () =>
+      initialData ?? {
+        items: [],
+        page: 1,
+        perPage: 10,
+        total: initialTotal ?? 0,
+        totalPages: initialTotal ? 1 : 0,
+      }
+  );
 
   const [draft, setDraftState] = useState('');
-  const [status, setStatus] = useState<EntityCommentsResourceStatus>('loading');
+  const [status, setStatus] = useState<EntityCommentsResourceStatus>(
+    initialData ? 'success' : 'loading'
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -165,30 +172,35 @@ export function useEntityCommentsResource({
 
   useEffect(() => {
     const controller = new AbortController();
-    activeLoadControllerRef.current = controller;
 
-    void loadRef
-      .current(1, { signal: controller.signal })
-      .then((response) => {
-        if (controller.signal.aborted) return;
-        applyResponse(response);
-      })
-      .catch((loadError: unknown) => {
-        if (controller.signal.aborted) return;
+    if (initialData) {
+      onTotalChangeRef.current?.(initialData.total);
+    } else {
+      activeLoadControllerRef.current = controller;
 
-        setError(
-          getSafeApiErrorMessage(
-            loadError,
-            'Could not load comments. Please try again.'
-          )
-        );
-        setStatus('error');
-      })
-      .finally(() => {
-        if (activeLoadControllerRef.current === controller) {
-          activeLoadControllerRef.current = null;
-        }
-      });
+      void loadRef
+        .current(1, { signal: controller.signal })
+        .then((response) => {
+          if (controller.signal.aborted) return;
+          applyResponse(response);
+        })
+        .catch((loadError: unknown) => {
+          if (controller.signal.aborted) return;
+
+          setError(
+            getSafeApiErrorMessage(
+              loadError,
+              'Could not load comments. Please try again.'
+            )
+          );
+          setStatus('error');
+        })
+        .finally(() => {
+          if (activeLoadControllerRef.current === controller) {
+            activeLoadControllerRef.current = null;
+          }
+        });
+    }
 
     return () => {
       controller.abort();
@@ -199,7 +211,7 @@ export function useEntityCommentsResource({
       activeCreateControllerRef.current = null;
       activeDeleteControllerRef.current = null;
     };
-  }, [applyResponse]);
+  }, [applyResponse, initialData]);
 
   const setDraft = useCallback((value: string) => {
     createRequestRef.current = null;

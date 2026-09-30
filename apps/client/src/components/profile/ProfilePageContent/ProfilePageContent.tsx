@@ -1406,6 +1406,7 @@ function AuthenticatedProfilePageContent({
                       variant="empty"
                       title="No favorite products yet"
                       description="Tap the heart on a product card, and it will wait here nicely – no shelf drama included."
+                      sideActionOnDesktop
                       action={
                         <LinkButton
                           href={ROUTES.PRODUCTS_CATALOG}
@@ -1506,6 +1507,7 @@ function AuthenticatedProfilePageContent({
                       variant="empty"
                       title="No favorite pharmacies yet"
                       description="Mark a pharmacy with a heart, and it will stay here for quick access – loyal as a tiny green assistant."
+                      sideActionOnDesktop
                       action={
                         <LinkButton
                           href={ROUTES.PHARMACIES}

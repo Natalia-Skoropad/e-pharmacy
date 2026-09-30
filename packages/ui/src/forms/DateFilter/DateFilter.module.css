@@ -56,13 +56,23 @@
   color: var(--color-text-muted);
 }
 
+.dateControl {
+  position: relative;
+  min-width: 0;
+}
+
 .input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
   font: inherit;
   font-size: var(--fz-16);
   line-height: var(--lh-base);
+  text-align: left;
   color: var(--color-text-primary);
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
@@ -77,7 +87,8 @@
 
 .input:hover,
 .input:focus-visible,
-.inputActive {
+.inputActive,
+.inputOpen {
   background-color: var(--color-surface);
   border-color: var(--color-accent);
   box-shadow: var(--shadow-accent-ring);
@@ -88,12 +99,196 @@
   opacity: 0.6;
 }
 
-.input::-webkit-calendar-picker-indicator {
+.inputValue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inputPlaceholder {
+  color: var(--color-text-muted);
+}
+
+.calendar {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(320px, calc(100vw - 48px));
+  padding: 14px;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.calendarHeader {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.monthLabel {
+  min-width: 0;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.monthActions {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.monthButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.monthButton:hover,
+.monthButton:focus-visible {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  outline: none;
+}
+
+.monthButton:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.35;
+  background-color: transparent;
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.weekdays {
+  margin-bottom: 4px;
+}
+
+.weekdays span {
+  padding-block: 6px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.days {
+  gap: 2px;
+}
+
+.day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  font: inherit;
+  font-size: var(--fz-13);
+  line-height: 1;
+  color: var(--color-text-primary);
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.day:hover,
+.day:focus-visible {
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  outline: none;
+}
+
+.dayOutside {
+  color: var(--color-text-muted);
+  opacity: 0.55;
+}
+
+.dayToday {
+  border-color: var(--color-accent-border-soft);
+}
+
+.daySelected,
+.daySelected:hover,
+.daySelected:focus-visible {
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  opacity: 1;
+}
+
+.day:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.28;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.calendarFooter {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+}
+
+.calendarTextButton {
+  padding: 6px 4px;
+  font: inherit;
+  font-size: var(--fz-13);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  color: var(--color-accent);
+  background-color: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
-.input:disabled::-webkit-calendar-picker-indicator {
+.calendarTextButton:hover,
+.calendarTextButton:focus-visible {
+  color: var(--color-accent-hover);
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.calendarTextButton:disabled {
+  color: var(--color-text-muted);
   cursor: not-allowed;
+  opacity: 0.45;
+  text-decoration: none;
 }
 
 .applyButton {
@@ -140,5 +335,10 @@
 @media only screen and (min-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dateField:last-child .calendar {
+    right: 0;
+    left: auto;
   }
 }

@@ -78,21 +78,20 @@ test('pharmacy profile mutations use scoped synchronous mutex refs', async () =>
 
 //===================================================================
 
-test('profile comments count is owned by EntityComments without an eager duplicate request', async () => {
+test('profile comments count preloads and the tab reuses the first comments page', async () => {
   const source = await readProfileSource();
 
   assert.match(
     source,
-    /const \[commentsTotal, setCommentsTotal\] = useState<number \| null>\(null\)/
+    /getPharmacyNotes\('pharmacy', pharmacy\.id, 1, \{[\s\S]*?signal: controller\.signal[\s\S]*?\}\)[\s\S]*?setCommentsInitialData\(response\)[\s\S]*?setCommentsTotal\(response\.total\)/
   );
-
-  assert.doesNotMatch(source, /async function loadCommentsTotal/);
 
   assert.match(
     source,
     /commentsTotal === null \? 'Comments' : `Comments \(\$\{commentsTotal\}\)`/
   );
 
+  assert.match(source, /initialData=\{commentsInitialData \?\? undefined\}/);
   assert.match(source, /initialTotal=\{commentsTotal \?\? undefined\}/);
   assert.match(source, /onTotalChange=\{setCommentsTotal\}/);
 });

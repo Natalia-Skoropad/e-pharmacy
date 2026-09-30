@@ -186,7 +186,7 @@
   min-width: 0;
   display: grid;
   gap: 24px;
-  padding-top: 25px;
+  padding-top: 20px;
 }
 
 .tabPanel[hidden] {
@@ -198,6 +198,7 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   min-width: 0;
+  padding-bottom: 15px;
 }
 
 .panelSection > :not(.panelHeader):not(.panelAction) {
@@ -250,8 +251,8 @@
 }
 
 .pharmacyDataBlock + .pharmacyDataBlock {
-  padding-top: 24px;
-  margin-top: 24px;
+  padding-top: 40px;
+  margin-top: 40px;
   border-top: 1px solid var(--color-border);
 }
 

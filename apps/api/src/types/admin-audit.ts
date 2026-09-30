@@ -61,6 +61,15 @@ export type AdminAuditListItemDto = Readonly<{
   createdAt: string;
 }>;
 
+export type AdminAuditListResponseDto = Readonly<{
+  items: readonly AdminAuditListItemDto[];
+  page: number;
+  perPage: 20 | 50 | 100;
+  total: number;
+  totalPages: number;
+  earliestCreatedAt: string | null;
+}>;
+
 export type AdminAuditDetailsDto = AdminAuditListItemDto &
   Readonly<{
     before: Record<string, AdminAuditValue>;

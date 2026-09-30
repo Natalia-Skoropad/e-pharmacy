@@ -77,6 +77,7 @@ const SECTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['section']>> =
 type ActivityFiltersDrawerProps = Readonly<{
   filters: ActivityHistoryFilters;
   hasActiveFilters: boolean;
+  minDate?: string;
   onChange: (filters: ActivityHistoryFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -87,6 +88,7 @@ type ActivityFiltersDrawerProps = Readonly<{
 export function ActivityFiltersDrawer({
   filters,
   hasActiveFilters,
+  minDate,
   onChange,
   onClose,
   onReset,
@@ -107,6 +109,8 @@ export function ActivityFiltersDrawer({
         label="Date"
         value={{ from: filters.dateFrom, to: filters.dateTo }}
         isActive={Boolean(filters.dateFrom || filters.dateTo)}
+        minDate={minDate}
+        disabled={!minDate}
         applyOnSubmit
         applyLabel="Apply"
         onChange={(value) =>

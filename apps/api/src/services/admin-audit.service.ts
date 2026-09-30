@@ -25,6 +25,7 @@ import type {
   AdminAuditActorsResponseDto,
   AdminAuditDetailsDto,
   AdminAuditListItemDto,
+  AdminAuditListResponseDto,
   AdminAuditSnapshot,
   AdminAuditValue,
 } from '../types/admin-audit';
@@ -428,7 +429,9 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
 
 //===============================================================
 
-export async function listAdminAuditLogsService(query: AdminAuditListQuery) {
+export async function listAdminAuditLogsService(
+  query: AdminAuditListQuery
+): Promise<AdminAuditListResponseDto> {
   const filter: Record<string, unknown> = {};
 
   if (query.action) {
@@ -451,13 +454,17 @@ export async function listAdminAuditLogsService(query: AdminAuditListQuery) {
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [total, items] = await Promise.all([
+  const [total, items, earliestLog] = await Promise.all([
     AdminAuditLog.countDocuments(filter),
     AdminAuditLog.find(filter)
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(query.perPage)
       .lean<LeanAuditLog[]>(),
+    AdminAuditLog.findOne({})
+      .sort({ createdAt: 1, _id: 1 })
+      .select('createdAt')
+      .lean<{ createdAt: Date } | null>(),
   ]);
 
   return {
@@ -466,6 +473,9 @@ export async function listAdminAuditLogsService(query: AdminAuditListQuery) {
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+    earliestCreatedAt: earliestLog
+      ? earliestLog.createdAt.toISOString().slice(0, 10)
+      : null,
   };
 }
 

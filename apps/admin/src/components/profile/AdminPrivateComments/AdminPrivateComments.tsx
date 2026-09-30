@@ -257,7 +257,7 @@ export function AdminPrivateComments({
       <ProfileSectionHeader
         title="Comments"
         titleId="admin-private-comments-title"
-        description="These notes are visible only to you. Platform Owner access never grants access to another employee’s private comments."
+        description="These notes are visible only to you."
         icon={<MessageSquareLock size={22} />}
         action={
           status === 'success' ? (

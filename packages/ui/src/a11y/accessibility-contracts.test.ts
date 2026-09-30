@@ -75,6 +75,9 @@ test('date filter uses business calendar dates and synchronizes draft state', as
   assert.match(source, /const valueTo = value\.to/);
   assert.match(source, /setDraftValue\(\{ from: valueFrom, to: valueTo \}\)/);
   assert.match(source, /\[valueFrom, valueTo\]/);
+  assert.doesNotMatch(source, /type=\"date\"/);
+  assert.match(source, /role=\"dialog\"/);
+  assert.match(source, /role=\"grid\"/);
   assert.doesNotMatch(source, /toISOString\(\)\.slice\(0, 10\)/);
   assert.doesNotMatch(source, /aria-describedby=\{applyButtonId\}/);
 });

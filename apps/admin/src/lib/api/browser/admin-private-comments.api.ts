@@ -1,9 +1,6 @@
 import 'client-only';
 
-import {
-  parseApiEmptyResponse,
-  parseApiResponseData,
-} from '@e-pharmacy/api-client/response';
+import { parseApiResponseData } from '@e-pharmacy/api-client/response';
 
 import { appendQueryParams } from '@e-pharmacy/api-client/transport';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -74,11 +71,9 @@ export async function deleteMyAdminPrivateComment(
 ): Promise<void> {
   const path = ADMIN_API_ROUTES.adminEmployees.myComment(commentId);
 
-  parseApiEmptyResponse(
-    await localApiRequest(path, {
-      method: 'DELETE',
-      signal: options?.signal,
-    }),
-    { url: path, method: 'DELETE' }
-  );
+  await localApiRequest(path, {
+    method: 'DELETE',
+    responseType: 'no-content',
+    signal: options?.signal,
+  });
 }

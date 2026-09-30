@@ -211,8 +211,8 @@
 
 .tabPanel {
   display: grid;
-  gap: 24px;
-  padding-top: 20px;
+  gap: 20px;
+  padding-top: 40px;
 }
 
 .panelSection,
@@ -237,7 +237,7 @@
 
 .passwordPanel {
   min-width: 0;
-  padding-top: 24px;
+  padding-top: 40px;
   border-top: 1px solid var(--color-border);
 }
 
@@ -313,6 +313,7 @@
 
 .fieldWide {
   min-width: 0;
+  padding-bottom: 15px;
 }
 
 .ordersFiltersCard,

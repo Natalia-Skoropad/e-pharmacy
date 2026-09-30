@@ -1,3 +1,5 @@
+import { isCalendarDateString } from '@e-pharmacy/validation/dates';
+
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
   'productRequest.status.changed',
@@ -107,6 +109,7 @@ export type AdminAuditListResponse = Readonly<{
   perPage: 20 | 50 | 100;
   total: number;
   totalPages: number;
+  earliestCreatedAt: string | null;
 }>;
 
 export type AdminAuditDetailsResponse = Readonly<{
@@ -292,6 +295,8 @@ export function parseAdminAuditListResponse(
     !Number.isInteger(value.perPage) ||
     !Number.isInteger(value.total) ||
     !Number.isInteger(value.totalPages) ||
+    (value.earliestCreatedAt !== null &&
+      !isCalendarDateString(value.earliestCreatedAt)) ||
     (value.perPage !== 20 && value.perPage !== 50 && value.perPage !== 100) ||
     (value.page as number) < 1 ||
     (value.total as number) < 0 ||
@@ -306,6 +311,7 @@ export function parseAdminAuditListResponse(
     perPage: value.perPage as 20 | 50 | 100,
     total: value.total as number,
     totalPages: value.totalPages as number,
+    earliestCreatedAt: value.earliestCreatedAt as string | null,
   };
 }
 

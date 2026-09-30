@@ -8,6 +8,8 @@ import css from './Profile.module.css';
 
 export type ProfileResourceStateVariant = 'loading' | 'error' | 'empty';
 
+//===================================================================
+
 export type ProfileResourceStateProps = Readonly<{
   variant: ProfileResourceStateVariant;
   title: ReactNode;
@@ -16,6 +18,7 @@ export type ProfileResourceStateProps = Readonly<{
   action?: ReactNode;
   retryLabel?: string;
   onRetry?: () => Promise<unknown> | void;
+  sideActionOnDesktop?: boolean;
 }>;
 
 //===================================================================
@@ -28,6 +31,7 @@ export function ProfileResourceState({
   action,
   retryLabel = 'Retry',
   onRetry,
+  sideActionOnDesktop = false,
 }: ProfileResourceStateProps) {
   const resolvedIcon =
     icon ??
@@ -63,7 +67,7 @@ export function ProfileResourceState({
     <div
       className={`${css.resourceState} ${variantClass} ${
         resolvedIcon ? '' : css.resourceStateWithoutIcon
-      }`}
+      } ${sideActionOnDesktop ? css.resourceStateSideAction : ''}`}
       role={role}
     >
       {resolvedIcon ? (

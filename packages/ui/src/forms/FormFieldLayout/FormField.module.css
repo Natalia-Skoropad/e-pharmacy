@@ -2,7 +2,7 @@
   position: relative;
   display: grid;
   gap: 8px;
-  padding-bottom: 12px;
+  padding-bottom: 5px;
 }
 
 .labelRow {
@@ -146,7 +146,7 @@
 .error {
   position: absolute;
   left: 16px;
-  bottom: 2px;
+  bottom: -5px;
   z-index: 2;
   max-width: calc(100% - 32px);
   padding-inline: 8px;

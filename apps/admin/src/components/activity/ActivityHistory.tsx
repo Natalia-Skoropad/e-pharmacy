@@ -63,6 +63,7 @@ import {
 } from './ActivityFiltersDrawer';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
+
 import css from './ActivityHistory.module.css';
 
 //===================================================================
@@ -98,8 +99,7 @@ function getErrorMessage(error: unknown): string {
 //===================================================================
 
 function createEmployeeOptions(
-  actors: readonly AdminAuditActor[],
-  searchBy: 'name' | 'id' | 'contact'
+  actors: readonly AdminAuditActor[]
 ): Array<SearchableSelectOption<string>> {
   return [
     { value: '', label: 'All employees' },
@@ -114,14 +114,9 @@ function createEmployeeOptions(
           size={30}
         />
       ),
-      searchText:
-        searchBy === 'id'
-          ? actor.id
-          : searchBy === 'contact'
-            ? [actor.email, actor.phone, actor.address]
-                .filter(Boolean)
-                .join(' ')
-            : actor.name,
+      searchText: [actor.id, actor.email, actor.phone, actor.address]
+        .filter(Boolean)
+        .join(' '),
     })),
   ];
 }
@@ -224,16 +219,8 @@ export function ActivityHistory() {
     [actors]
   );
 
-  const employeeNameOptions = useMemo(
-    () => createEmployeeOptions(actors, 'name'),
-    [actors]
-  );
-  const employeeIdOptions = useMemo(
-    () => createEmployeeOptions(actors, 'id'),
-    [actors]
-  );
-  const employeeContactOptions = useMemo(
-    () => createEmployeeOptions(actors, 'contact'),
+  const employeeOptions = useMemo(
+    () => createEmployeeOptions(actors),
     [actors]
   );
 
@@ -277,13 +264,11 @@ export function ActivityHistory() {
       {
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Date /', 'time']} />,
-        width: '150px',
         render: (item) => <TableDateTime value={item.createdAt} />,
       },
       {
         key: 'photo',
         title: <TableHeaderTitle parts={['Employee', 'photo']} />,
-        width: '86px',
         render: (item) => {
           const actor = actorById.get(item.actorUserId);
 
@@ -366,8 +351,6 @@ export function ActivityHistory() {
       {
         key: 'details',
         title: 'Actions',
-        align: 'right',
-        width: '120px',
         render: (item) => (
           <Button
             type="button"
@@ -444,7 +427,7 @@ export function ActivityHistory() {
                   {
                     title: 'Find the records you need',
                     description:
-                      'Search by employee name, ID, or contacts, then narrow the history by date, change type, entity type, or Admin Cabinet section.',
+                      'Search by employee name, ID, email, phone number, or address, then narrow the history by date, change type, entity type, or Admin Cabinet section.',
                   },
                 ]}
               />
@@ -462,35 +445,24 @@ export function ActivityHistory() {
 
         <div className={css.searchGrid}>
           <SearchableSelect
-            id="activity-employee-name-search"
-            label="Employee name search"
+            id="activity-employee-search"
+            label="Search by employee"
+            labelAccessory={
+              <InfoTooltip
+                label="Employee search help"
+                title="Employee search"
+                items={[
+                  {
+                    title: 'Search fields',
+                    description:
+                      'Search by employee name, ID, email, phone number, or address.',
+                  },
+                ]}
+              />
+            }
             value={filters.actorUserId}
-            options={employeeNameOptions}
-            placeholder="Employee name"
-            emptyMessage="No employees found"
-            isActive={Boolean(filters.actorUserId)}
-            isLoading={areActorsLoading}
-            onChange={updateEmployee}
-          />
-
-          <SearchableSelect
-            id="activity-employee-id-search"
-            label="Employee ID search"
-            value={filters.actorUserId}
-            options={employeeIdOptions}
-            placeholder="Employee ID"
-            emptyMessage="No employees found"
-            isActive={Boolean(filters.actorUserId)}
-            isLoading={areActorsLoading}
-            onChange={updateEmployee}
-          />
-
-          <SearchableSelect
-            id="activity-employee-contact-search"
-            label="Employee contact search"
-            value={filters.actorUserId}
-            options={employeeContactOptions}
-            placeholder="Email, phone, or address"
+            options={employeeOptions}
+            placeholder="Name, ID, email, phone, or address"
             emptyMessage="No employees found"
             isActive={Boolean(filters.actorUserId)}
             isLoading={areActorsLoading}
@@ -588,6 +560,7 @@ export function ActivityHistory() {
         <ActivityFiltersDrawer
           filters={filters}
           hasActiveFilters={hasFilters}
+          minDate={data?.earliestCreatedAt ?? undefined}
           onChange={updateFilters}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

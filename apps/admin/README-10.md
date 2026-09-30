@@ -5838,3 +5838,29 @@ e-pharmacy-10-13-activity-history.zip
     feat(admin): refine activity history and audit section tracking
 
 Ця версія вже закладає один нормальний UI-патерн для майбутніх admin-таблиць, а не ще одного маленького родича таблиці, який “майже такий самий” 😄
+
+//========================================================
+
+Привіт 🙂 Готово. Я звірила реалізацію з README-0.md–README-10.md, останнім e-pharmacy-10-14 і наданими скрінами та внесла правки поверх цієї версії.
+📦 e-pharmacy-10-15-profile-activity-fixes.zip
+В архіві 21 змінений/доданий файл, зі збереженням структури проєкту. Додатково підготувала git patch: e-pharmacy-10-15-profile-activity-fixes.patch.
+Що змінено
+
+- Client → /profile. Shared DateFilter більше не використовує стандартний браузерний input[type="date"]: календар зроблений власним popup-компонентом у стилях E-pharmacy — зі станами selected/today/disabled, навігацією між місяцями, Clear/Today, обмеженнями minDate/maxDate, outside click та Escape. Через те, що виправлення зроблене саме на shared-рівні, новий календар автоматично працює і в My orders, і в Activity history, без двох окремих велосипедів. У Favorite products та Favorite pharmacies кнопки Browse products / Browse pharmacies на tablet + desktop тепер знаходяться праворуч від текстового empty-state; на mobile компонування залишилося вертикальним, як було.
+- Pharmacy → /pharmacy/profile → Comments. Під Comments додано короткий description: Internal notes for your pharmacy team are collected here.. Перша сторінка comments тепер preload-иться ще при завантаженні профілю, тому Comments (N) з'являється без необхідності спочатку відкривати таб, включно з коректним Comments (0). При цьому я не залишила подвійний запит: отримана перша сторінка передається в EntityComments як initialData, і при відкритті таба компонент використовує вже завантажені дані.
+- Admin → /admin/profile → Comments. Знайдена причина дивної поведінки з видаленням. Backend правильно повертав 204 No Content і реально видаляв comment, але browser API намагався розпарсити порожній body як JSON, отримував INVALID_RESPONSE і показував помилку. Тепер DELETE явно використовує responseType: 'no-content'. Отже, успішне видалення більше не виглядає як помилка. Це також узгоджується з твоїм уточненням: comment, який просто створили й не видаляли, зберігається; “зникнення після refresh” було наслідком того, що попереднє DELETE насправді вже відбулося.
+- Admin → /admin/settings/activity → employee search. Три окремі поля Employee name search, Employee ID search, Employee contact search прибрані. Замість них є один Search by employee. Він шукає за name, ID, email, phone number та address. Біля label додана InfoTooltip у тому самому патерні, що й на інших cabinet-сторінках, із поясненням searchable fields. Сітку search-area теж перебудовано під одне поле + Filters.
+- Activity history → DateFilter. Backend audit-list тепер повертає earliestCreatedAt — дату найпершого audit log у всій історії, а не найстарішого елемента поточної сторінки чи відфільтрованої вибірки. Frontend перевіряє це поле fail-closed як валідну calendar date. Воно передається у DateFilter як minDate. Тобто все до першого логу неактивне, а майбутні дати неактивні завдяки shared maxDate = today. Якщо audit history ще порожня, date-filter disabled замість вигаданої дати.
+- Activity history → mobile. Showing 5 of 5 records тепер займає доступну ширину та центрує текст на mobile, як на твоєму еталонному скріні. На tablet/desktop toolbar лишається двоколонковим: Rows per page зліва, count справа.
+- Regression coverage. Доданий окремий ActivityHistory.contract.test.ts, оновлені contracts для Pharmacy comments preload, Admin 204 delete, shared custom calendar і пов'язаного EntityComments lifecycle. Також поправлений старий contract, який до цієї задачі навмисно забороняв eager preload comments — тепер його очікування відповідають новій вимозі, а не воюють із нею з минулого 😄
+  Перевірки
+  У доступному середовищі успішно пройшли TypeScript checks для client, pharmacy, admin і packages/ui, git diff --check, structural checks для Profile, Admin Profile/Audit, UI styles/boundaries, Pharmacy account components і Client styles.
+  Також повні доступні unit/contract suites зелені: Admin 47/47, Pharmacy 191/191, Client 151/151, UI 40/40. Для змінених API-файлів додатково перевірена TypeScript syntax/transpile та check-admin-audit.
+  Повний pnpm check:before-deploy у цьому sandbox чесно не називаю виконаним: тут немає локального pnpm 10.33.2 і повного API dependency tree, а Corepack потребує мережі. Тому після накладання архіву локально варто фінально прогнати вашу стандартну:
+  pnpm check:before-deploy
+
+Коміт
+git add .
+git commit -m "fix(profile): refine calendars comments and activity filters"
+
+Цього разу найбільш підступним виявився comment, який успішно видалявся, але після цього ще й встигав поскаржитися, що його нібито не видалили. Маленька драма у форматі 204 No Content 😄

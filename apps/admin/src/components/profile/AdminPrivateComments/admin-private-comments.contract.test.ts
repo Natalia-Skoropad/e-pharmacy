@@ -64,3 +64,18 @@ test('admin private comment BFF routes proxy only canonical self endpoints', asy
   assert.match(itemRoute, /export const DELETE/);
   assert.doesNotMatch(collectionRoute + itemRoute, /employeeId|targetUserId/);
 });
+
+//===================================================================
+
+test('admin private comment deletion treats the canonical 204 response as no content', async () => {
+  const browserApi = await read(
+    '../../../lib/api/browser/admin-private-comments.api.ts'
+  );
+
+  assert.match(
+    browserApi,
+    /deleteMyAdminPrivateComment[\s\S]*?method: 'DELETE'[\s\S]*?responseType: 'no-content'/
+  );
+
+  assert.doesNotMatch(browserApi, /parseApiEmptyResponse/);
+});

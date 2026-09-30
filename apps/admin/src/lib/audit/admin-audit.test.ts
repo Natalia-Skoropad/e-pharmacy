@@ -33,6 +33,7 @@ test('audit list parser accepts the canonical paginated contract', () => {
       perPage: 20,
       total: 1,
       totalPages: 1,
+      earliestCreatedAt: '2026-09-24',
     }).items[0]?.action,
     'pharmacy.status.changed'
   );
@@ -54,8 +55,10 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
     perPage: 20,
     total: 1,
     totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
   });
 
+  assert.equal(parsed.earliestCreatedAt, '2026-09-24');
   assert.equal(parsed.items[0]?.action, 'adminEmployee.profile.updated');
   assert.equal(parsed.items[0]?.section, 'profile');
   assert.equal(parsed.items[0]?.entityType, 'adminEmployee');
@@ -73,6 +76,7 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
     perPage: 20,
     total: 1,
     totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
   });
 
   assert.equal(
@@ -94,6 +98,7 @@ test('audit parsers fail closed for unknown actions and unsafe snapshot values',
         perPage: 20,
         total: 1,
         totalPages: 1,
+        earliestCreatedAt: '2026-09-24',
       }),
     /invalid audit item/i
   );
@@ -106,6 +111,7 @@ test('audit parsers fail closed for unknown actions and unsafe snapshot values',
         perPage: 20,
         total: 1,
         totalPages: 1,
+        earliestCreatedAt: '2026-09-24',
       }),
     /invalid audit item/i
   );
@@ -120,6 +126,35 @@ test('audit parsers fail closed for unknown actions and unsafe snapshot values',
         },
       }),
     /invalid audit snapshot value/i
+  );
+});
+
+//===================================================================
+
+test('audit list parser validates earliest audit date metadata', () => {
+  assert.throws(
+    () =>
+      parseAdminAuditListResponse({
+        items: [item],
+        page: 1,
+        perPage: 20,
+        total: 1,
+        totalPages: 1,
+        earliestCreatedAt: '2026-99-99',
+      }),
+    /invalid audit pagination response/i
+  );
+
+  assert.equal(
+    parseAdminAuditListResponse({
+      items: [],
+      page: 1,
+      perPage: 20,
+      total: 0,
+      totalPages: 0,
+      earliestCreatedAt: null,
+    }).earliestCreatedAt,
+    null
   );
 });
 

@@ -53,6 +53,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { useAuth } from '@e-pharmacy/auth/react';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
+import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
 
 import type {
   MyPharmacyProfile,
@@ -614,10 +615,35 @@ function PharmacyProfilePage({
 
   const [activeTab, setActiveTab] = useState<ProfileTab>('data');
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
+
   const [sessionsStatus, setSessionsStatus] =
     useState<SessionsStatus>('loading');
+
   const [sessionsError, setSessionsError] = useState('');
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
+
+  const [commentsInitialData, setCommentsInitialData] =
+    useState<PharmacyNotesResponse | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getPharmacyNotes('pharmacy', pharmacy.id, 1, {
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (controller.signal.aborted) return;
+        setCommentsInitialData(response);
+        setCommentsTotal(response.total);
+      })
+      .catch(() => {
+        if (controller.signal.aborted) return;
+        setCommentsInitialData(null);
+        setCommentsTotal(null);
+      });
+
+    return () => controller.abort();
+  }, [pharmacy.id]);
 
   const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
     createOwnerInitialValues(user)
@@ -2351,9 +2377,11 @@ function PharmacyProfilePage({
                   <EntityComments
                     entityKey={`pharmacy:${pharmacy.id}`}
                     presentation="profile"
+                    description="Notes for your pharmacy team are collected here."
                     emptyTitle="No manager comments yet."
                     emptyText="The comment drawer is waiting patiently."
                     initialTotal={commentsTotal ?? undefined}
+                    initialData={commentsInitialData ?? undefined}
                     load={(page, options) =>
                       getPharmacyNotes('pharmacy', pharmacy.id, page, options)
                     }

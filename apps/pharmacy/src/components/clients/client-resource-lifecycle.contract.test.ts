@@ -143,7 +143,7 @@ test('client resources keep unavailable state separate from successful empty dat
 
   assert.match(
     commentsResourceSource,
-    /useState<EntityCommentsResourceStatus>\(\s*'loading'\s*\)/
+    /useState<EntityCommentsResourceStatus>\(\s*initialData \? 'success' : 'loading'\s*\)/
   );
 
   assert.match(commentsSource, /comments\.status === 'success'/);

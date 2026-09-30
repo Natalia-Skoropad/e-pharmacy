@@ -38,12 +38,14 @@ import css from './EntityComments.module.css';
 export type EntityCommentsProps = Readonly<{
   entityKey: string;
   title?: string;
+  description?: string;
   commentTitle?: string;
   placeholder?: string;
   emptyTitle?: string;
   emptyText?: string;
   presentation?: 'default' | 'profile';
   initialTotal?: number;
+  initialData?: PharmacyNotesResponse;
   isEditable?: boolean;
 
   load: (
@@ -67,12 +69,14 @@ export function EntityComments(props: EntityCommentsProps) {
 function EntityCommentsContent({
   entityKey,
   title = 'Comments',
+  description,
   commentTitle = 'Comment',
   placeholder = 'Write an internal comment...',
   emptyTitle,
   emptyText = 'No manager comments yet. The comment drawer is waiting patiently.',
   presentation = 'default',
   initialTotal,
+  initialData,
   isEditable = true,
   load,
   create,
@@ -86,6 +90,7 @@ function EntityCommentsContent({
 
   const comments = useEntityCommentsResource({
     initialTotal,
+    initialData,
     isEditable,
     load,
     create,
@@ -127,6 +132,7 @@ function EntityCommentsContent({
         <ProfileSectionHeader
           title={title}
           titleId={titleId}
+          description={description}
           icon={<MessageSquareText size={22} />}
           action={
             comments.status === 'success' ? (
