@@ -13,6 +13,7 @@
     "./product-requests": "./src/product-requests/index.ts",
     "./profile": "./src/profile/index.ts",
     "./reviews": "./src/reviews/index.ts",
+    "./reference-data": "./src/reference-data/index.ts",
     "./url": "./src/url/index.ts",
     "./dates": "./src/dates/index.ts",
     "./products": "./src/products/index.ts"

@@ -33,6 +33,22 @@ export const backendRoutes = {
       actors: '/admin/audit/actors',
       details: (auditLogId: EntityId) => `/admin/audit/${segment(auditLogId)}`,
     },
+
+    productCategories: {
+      list: '/admin/product-categories',
+      details: (categoryId: EntityId) =>
+        `/admin/product-categories/${segment(categoryId)}`,
+    },
+
+    positions: {
+      list: '/admin/positions',
+      details: (positionId: EntityId) =>
+        `/admin/positions/${segment(positionId)}`,
+    },
+  },
+
+  productCategories: {
+    list: '/product-categories',
   },
 
   pharmacies: {

@@ -25,6 +25,7 @@ const ENTRYPOINT_FILES = {
   primitives: 'packages/types/src/primitives/index.ts',
   'product-requests': 'packages/types/src/product-requests/index.ts',
   products: 'packages/types/src/products/index.ts',
+  'reference-data': 'packages/types/src/reference-data/index.ts',
   reviews: 'packages/types/src/reviews/index.ts',
 };
 
@@ -69,6 +70,30 @@ const INTENTIONALLY_PUBLIC = new Set([
   'reviews:PendingReviewsResponse',
   'reviews:ReviewModerationResponse',
   'reviews:ReviewModerationStatus',
+
+  // Stage 11.1 publishes the reference-data contracts before the later
+  // persistence/UI sub-stages begin consuming every shape.
+  'reference-data:CreatePositionPayload',
+  'reference-data:CreateProductCategoryPayload',
+  'reference-data:PositionEntity',
+  'reference-data:PositionListItem',
+  'reference-data:PositionListQueryParams',
+  'reference-data:PositionListResponse',
+  'reference-data:PositionResponse',
+  'reference-data:PositionUsage',
+  'reference-data:ProductCategoryEntity',
+  'reference-data:ProductCategoryKind',
+  'reference-data:ProductCategoryListItem',
+  'reference-data:ProductCategoryListQueryParams',
+  'reference-data:ProductCategoryListResponse',
+  'reference-data:ProductCategoryReference',
+  'reference-data:ProductCategoryResponse',
+  'reference-data:ProductCategorySlug',
+  'reference-data:ProductCategoryStatus',
+  'reference-data:ProductCategoryUsage',
+  'reference-data:ReferenceDataListQueryParams',
+  'reference-data:UpdatePositionPayload',
+  'reference-data:UpdateProductCategoryPayload',
 ]);
 
 //===================================================================

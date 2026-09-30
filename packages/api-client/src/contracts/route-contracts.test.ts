@@ -41,6 +41,21 @@ test('uses resource-oriented backend route builders', () => {
   assert.equal(apiRoutes.admin.audit.details(id), `/admin/audit/${id}`);
 
   assert.equal(
+    apiRoutes.admin.productCategories.list,
+    '/admin/product-categories'
+  );
+
+  assert.equal(
+    apiRoutes.admin.productCategories.details(id),
+    `/admin/product-categories/${id}`
+  );
+
+  assert.equal(apiRoutes.admin.positions.list, '/admin/positions');
+  assert.equal(apiRoutes.admin.positions.details(id), `/admin/positions/${id}`);
+
+  assert.equal(apiRoutes.productCategories.list, '/product-categories');
+
+  assert.equal(
     apiRoutes.productRequests.articleAvailability,
     '/product-requests/article-availability'
   );

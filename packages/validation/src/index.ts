@@ -10,3 +10,4 @@ export { normalizeOptionalText } from './shared/optional-values';
 
 export * from './dates';
 export * from './products';
+export * from './reference-data';

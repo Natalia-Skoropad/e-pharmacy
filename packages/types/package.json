@@ -15,6 +15,7 @@
     "./pharmacies": "./src/pharmacies/index.ts",
     "./primitives": "./src/primitives/index.ts",
     "./product-requests": "./src/product-requests/index.ts",
+    "./reference-data": "./src/reference-data/index.ts",
     "./products": "./src/products/index.ts",
     "./reviews": "./src/reviews/index.ts"
   },

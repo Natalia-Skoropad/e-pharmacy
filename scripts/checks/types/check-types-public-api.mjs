@@ -26,6 +26,7 @@ const ALLOWED_EXPORTS = [
   './primitives',
   './product-requests',
   './products',
+  './reference-data',
   './reviews',
 ];
 
