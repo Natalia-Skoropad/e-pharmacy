@@ -82,6 +82,33 @@ const ORDER_MODEL_SOURCE = path.join(
   'order.model.ts'
 );
 
+const REFERENCE_DATA_NAME_VALIDATION_SOURCE = path.join(
+  ROOT_DIR,
+  'packages',
+  'validation',
+  'src',
+  'reference-data',
+  'reference-data-name.ts'
+);
+
+const PRODUCT_CATEGORY_SLUG_VALIDATION_SOURCE = path.join(
+  ROOT_DIR,
+  'packages',
+  'validation',
+  'src',
+  'reference-data',
+  'product-category-slug.ts'
+);
+
+const BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'product-category.ts'
+);
+
 //===================================================================
 
 async function readFixture(filePath) {
@@ -103,6 +130,17 @@ function requireIntegerMatch(source, pattern, label) {
   const value = Number(match[1]);
   assert.equal(Number.isInteger(value), true, `${label} is not an integer`);
   return value;
+}
+
+//===================================================================
+
+function requireRegexLiteral(source, variableName, label) {
+  const match = source.match(
+    new RegExp(`${variableName}\\s*=\\s*\/([^\/]+)\/([a-z]*)`)
+  );
+
+  assert.ok(match, `${label} was not found`);
+  return `/${match[1]}/${match[2]}`;
 }
 
 //===================================================================
@@ -143,6 +181,9 @@ const [
   pharmacyNoteModelSource,
   orderSchemaSource,
   orderModelSource,
+  referenceDataNameValidationSource,
+  productCategorySlugValidationSource,
+  backendProductCategoryConstantsSource,
 ] = await Promise.all([
   readFixture(FRONTEND_FIXTURE),
   readFixture(BACKEND_FIXTURE),
@@ -151,6 +192,9 @@ const [
   readSource(PHARMACY_NOTE_MODEL_SOURCE),
   readSource(ORDER_SCHEMA_SOURCE),
   readSource(ORDER_MODEL_SOURCE),
+  readSource(REFERENCE_DATA_NAME_VALIDATION_SOURCE),
+  readSource(PRODUCT_CATEGORY_SLUG_VALIDATION_SOURCE),
+  readSource(BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE),
 ]);
 
 //===================================================================
@@ -216,6 +260,56 @@ assert.equal(
   storedOrderCommentMaxLength,
   pharmacyNoteMaxLength,
   'Frontend and stored order comment max lengths differ'
+);
+
+const referenceDataNameMaxLength = requireIntegerMatch(
+  referenceDataNameValidationSource,
+  /REFERENCE_DATA_NAME_MAX_LENGTH\s*=\s*(\d+)/,
+  'Shared reference-data name max length'
+);
+
+const backendProductCategoryNameMaxLength = requireIntegerMatch(
+  backendProductCategoryConstantsSource,
+  /PRODUCT_CATEGORY_NAME_MAX_LENGTH\s*=\s*(\d+)/,
+  'Backend product category name max length'
+);
+
+assert.equal(
+  backendProductCategoryNameMaxLength,
+  referenceDataNameMaxLength,
+  'Shared and backend product category name max lengths differ'
+);
+
+assert.equal(
+  requireRegexLiteral(
+    backendProductCategoryConstantsSource,
+    'PRODUCT_CATEGORY_NAME_PATTERN',
+    'Backend product category name pattern'
+  ),
+
+  requireRegexLiteral(
+    referenceDataNameValidationSource,
+    'REFERENCE_DATA_NAME_PATTERN',
+    'Shared reference-data name pattern'
+  ),
+
+  'Shared and backend product category name patterns differ'
+);
+
+assert.equal(
+  requireRegexLiteral(
+    backendProductCategoryConstantsSource,
+    'PRODUCT_CATEGORY_SLUG_PATTERN',
+    'Backend product category slug pattern'
+  ),
+
+  requireRegexLiteral(
+    productCategorySlugValidationSource,
+    'PRODUCT_CATEGORY_SLUG_PATTERN',
+    'Shared product category slug pattern'
+  ),
+
+  'Shared and backend product category slug patterns differ'
 );
 
 console.log(

@@ -1,3 +1,8 @@
+/**
+ * @deprecated Stage 11 migration compatibility only.
+ * New category persistence must use ProductCategory records. Existing product
+ * and product-request string relations are removed in Stages 11.3-11.4.
+ */
 export const PRODUCT_CATEGORIES = [
   'medicine',
   'vitamins',

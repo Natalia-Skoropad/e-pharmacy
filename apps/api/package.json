@@ -12,6 +12,7 @@
     "type-check": "tsc --noEmit",
     "lint": "node ../../scripts/checks/boundaries/check-api-package-boundaries.mjs && eslint src --ext .ts",
     "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts",
+    "migrate:product-categories": "tsx src/scripts/migrate-product-categories.ts",
     "test": "node ../../scripts/test-runners/run-api-tests.mjs src",
     "cart:cleanup-expired": "tsx src/scripts/cleanup-expired-cart-items.ts"
   },

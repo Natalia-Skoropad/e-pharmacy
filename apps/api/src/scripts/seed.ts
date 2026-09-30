@@ -24,6 +24,7 @@ import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
 import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
+import { ensureInitialProductCategories } from '../services/product-category-bootstrap.service';
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { ProductEntity } from '../types/product';
 
@@ -3697,6 +3698,8 @@ const PRODUCT_REQUEST_SEED_STATUSES = [
   'in_progress' as const,
 ] as const;
 
+// Legacy Product Request custom-category sentinel remains only until Stage 11.3.
+// It is not part of the ProductCategory collection seed.
 const PRODUCT_REQUEST_SEED_CATEGORIES = [
   'medicine',
   'vitamins',
@@ -4081,6 +4084,12 @@ async function seedDatabase(): Promise<void> {
   assertProductRequestSeedsAreValid();
 
   await connectDB();
+
+  const categoryBootstrap = await ensureInitialProductCategories();
+  console.log(
+    `Seed completed: ${categoryBootstrap.createdCount} initial product categories created`
+  );
+
   await removeSeededDefaultPharmacyClients();
 
   await Promise.all([
@@ -4170,6 +4179,7 @@ async function seedDatabase(): Promise<void> {
       price: number;
     }>
   );
+
   const restockedOffersCount = await seedOwnProductRestocks();
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
@@ -4177,6 +4187,7 @@ async function seedDatabase(): Promise<void> {
   console.log(
     `Seed completed: ${pharmacyAccountsCount} pharmacy accounts created`
   );
+
   const activePharmacyOrdersCount = await seedActivePharmacyOrder();
   const pharmacyClientsCount = await seedPharmacyClientPortfolio();
   const defaultClientOrdersCount = await seedDefaultClientSuccessfulOrders();

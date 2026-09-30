@@ -18,8 +18,10 @@ import type { ReferenceDataListQueryParams } from './common';
  */
 export type ProductCategorySlug = string;
 
+//===================================================================
+
 export type ProductCategoryStatus = 'active' | 'hidden';
-export type ProductCategoryKind = 'standard' | 'custom_fallback';
+export type ProductCategoryKind = 'standard';
 
 //===================================================================
 
@@ -33,8 +35,8 @@ export type ProductCategoryEntity = Readonly<{
   sortOrder: number;
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
-  createdBy: EntityId;
-  updatedBy: EntityId;
+  createdBy: EntityId | null;
+  updatedBy: EntityId | null;
 }>;
 
 /** Lightweight relation returned with products and product requests later. */

@@ -61,6 +61,14 @@ void categoryReference;
 // @ts-expect-error Category snapshots are readonly.
 category.name = 'Changed';
 
+const invalidCategoryKind: ProductCategoryEntity = {
+  ...category,
+  // @ts-expect-error Custom fallback is not a persisted ProductCategory kind.
+  kind: 'custom_fallback',
+};
+
+void invalidCategoryKind;
+
 //===================================================================
 
 const position: PositionEntity = {

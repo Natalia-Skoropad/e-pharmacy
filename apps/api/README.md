@@ -324,6 +324,7 @@ From the monorepo root:
 pnpm dev:api
 pnpm seed:api
 pnpm seed:admin-owner
+pnpm migrate:product-categories
 pnpm build:api
 pnpm type-check:api
 pnpm check:api
@@ -335,6 +336,7 @@ From `apps/api`:
 pnpm dev
 pnpm seed
 pnpm seed:admin-owner
+pnpm migrate:product-categories
 pnpm build
 pnpm start
 pnpm type-check
@@ -349,6 +351,24 @@ active admin account. The command is not an HTTP endpoint, does not create a
 pharmacy/client profile, and does not overwrite credentials on a repeated run
 for the same admin. Remove the bootstrap secrets from the deployment environment
 after the account exists.
+
+### ProductCategory bootstrap and migration preflight
+
+Stage 11.2 persists product categories in MongoDB. `pnpm seed:api` ensures the
+initial records for Medicine, Vitamins, Beauty, Hygiene, and Medical devices.
+The bootstrap is idempotent and never creates `Other` as a category.
+
+Before the Stage 11.3 relation migration, run:
+
+```bash
+pnpm migrate:product-categories
+```
+
+The command creates the same bootstrap records if needed, validates legacy
+`Product.category` and `ProductRequest.category` strings, and fails closed on
+unknown or malformed product categories. Legacy Product Request `other` values
+are accepted only when `customCategory` is present; they remain compatibility
+data until Stage 11.3 and do not create a ProductCategory record.
 
 ## Deployment Notes
 
