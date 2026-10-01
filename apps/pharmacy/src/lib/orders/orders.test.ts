@@ -36,7 +36,13 @@ function validOrder() {
         productOfferId: '507f1f77bcf86cd799439012',
         name: 'Aspirin',
         article: 'ASP-100',
-        category: 'medicine',
+
+        category: {
+          id: '507f1f77bcf86cd799439099',
+          name: 'Medicine',
+          slug: 'medicine',
+        },
+
         quantity: 2,
         unitPrice: 100,
         totalPrice: 200,

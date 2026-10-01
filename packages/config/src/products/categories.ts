@@ -1,20 +1,8 @@
-import type { ProductCategory } from '@e-pharmacy/types/products';
-
-import type { Assert, IsExactValueSet } from '../internal/type-assertions';
-
-//===================================================================
-
-export const PRODUCT_CATEGORIES = [
-  'medicine',
-  'vitamins',
-  'beauty',
-  'hygiene',
-  'medical_devices',
-  'other',
-] as const satisfies readonly ProductCategory[];
-
-//===================================================================
-
-type _ProductCategoriesAreExhaustive = Assert<
-  IsExactValueSet<ProductCategory, typeof PRODUCT_CATEGORIES>
->;
+/**
+ * Static category membership was removed in Stage 11.4.
+ * Category values and labels are supplied by backend reference data.
+ */
+export const ALL_PRODUCT_CATEGORIES_FILTER_OPTION = {
+  value: 'all',
+  label: 'All categories',
+} as const;

@@ -1,6 +1,6 @@
 import type { ApiPaginationResponse } from '../api';
 import type { CalendarDateString, EntityId } from '../primitives';
-import type { ProductCategory } from './category';
+import type { ProductCategorySlug } from '../reference-data';
 import type { ProductCardSummary } from './product-card-summary';
 import type { ProductDetails } from './product-details';
 import type { ProductStatus } from './product-summary';
@@ -28,7 +28,7 @@ type BaseProductsQueryParams = Readonly<{
   keyword?: string;
   nameKeyword?: string;
   articleKeyword?: string;
-  category?: ProductCategory;
+  category?: ProductCategorySlug;
   minPrice?: number;
   maxPrice?: number;
   sort?: ProductsSortOption;
@@ -67,7 +67,7 @@ type ProductFilterOption<TValue extends string = string> = Readonly<{
 //===================================================================
 
 export type ProductFilterOptionsResponse = Readonly<{
-  categories: readonly ProductFilterOption<'all' | ProductCategory>[];
+  categories: readonly ProductFilterOption<'all' | ProductCategorySlug>[];
   availability: readonly ProductFilterOption<
     'all' | 'in-stock' | 'out-of-stock'
   >[];

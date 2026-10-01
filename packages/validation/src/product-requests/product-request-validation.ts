@@ -1,4 +1,3 @@
-import { isProductCategory } from '../products';
 import { isValidationResultValid } from '../shared';
 
 import {
@@ -57,8 +56,17 @@ export function validateProductRequestForm(
 ): ProductRequestFormErrors {
   const errors: ProductRequestFormErrors = {};
 
-  if (!isProductCategory(values.category)) {
-    errors.category = PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category;
+  if (values.categoryMode === 'catalog') {
+    if (!values.categoryId.trim()) {
+      errors.categoryId = PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category;
+    }
+  } else if (values.categoryMode === 'custom') {
+    if (!values.customCategory.trim()) {
+      errors.customCategory =
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory;
+    }
+  } else {
+    errors.categoryMode = PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category;
   }
 
   const requiredNameError = buildRequiredError(
@@ -193,11 +201,6 @@ export function validateProductRequestForm(
     );
 
     if (error) errors[field] = error;
-  }
-
-  if (values.category === 'other' && !values.customCategory.trim()) {
-    errors.customCategory =
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory;
   }
 
   const productImage = context.productImage;

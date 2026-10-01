@@ -24,11 +24,12 @@ import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 import type { EntityId } from '@e-pharmacy/types/primitives';
+import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import type {
-  ProductCategory,
-  ProductDetails,
-} from '@e-pharmacy/types/products';
+  ProductCategoryReference,
+  ProductCategorySlug,
+} from '@e-pharmacy/types/reference-data';
 
 //===================================================================
 
@@ -58,7 +59,7 @@ export type PharmacyProductRow = Readonly<{
   addedAt: string;
   article: string;
   name: string;
-  category: ProductCategory;
+  category: ProductCategoryReference;
   stockQuantity: number;
   reservedQuantity: number;
   availableQuantity: number;
@@ -76,7 +77,7 @@ export type PharmacyProductsQueryParams = Readonly<{
   addedTo?: string;
   name?: string;
   article?: string;
-  category?: ProductCategory;
+  category?: ProductCategorySlug;
   status?: OwnProductStatus;
   stock?: StockAvailabilityFilter;
 }>;

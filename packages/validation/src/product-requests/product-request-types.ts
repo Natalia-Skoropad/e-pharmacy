@@ -1,4 +1,4 @@
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductRequestCategoryMode } from '@e-pharmacy/types/product-requests';
 import type { ProductRequestFile } from '@e-pharmacy/types/product-requests';
 
 import type { FormErrors } from '../shared';
@@ -12,7 +12,8 @@ export type ProductRequestValidationMode = 'draft' | 'moderation';
 export type ProductRequestFormValues = {
   name: string;
   article: string;
-  category: ProductCategory;
+  categoryMode: ProductRequestCategoryMode;
+  categoryId: string;
   customCategory: string;
   manufacturer: string;
   countryOfOrigin: string;
@@ -53,7 +54,8 @@ export type ProductRequestPayloadFiles = Readonly<{
 export const PRODUCT_REQUEST_INITIAL_VALUES: ProductRequestFormValues = {
   name: '',
   article: '',
-  category: 'medicine',
+  categoryMode: 'catalog',
+  categoryId: '',
   customCategory: '',
   manufacturer: '',
   countryOfOrigin: '',

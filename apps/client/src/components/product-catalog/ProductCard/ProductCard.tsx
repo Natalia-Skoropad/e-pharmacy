@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
@@ -170,9 +169,7 @@ function ProductCard({
           ) : undefined
         }
         metaStart={
-          <span className={css.category}>
-            {PRODUCT_CATEGORY_LABELS[product.category]}
-          </span>
+          <span className={css.category}>{product.category.name}</span>
         }
         metaEnd={
           <RatingSummary

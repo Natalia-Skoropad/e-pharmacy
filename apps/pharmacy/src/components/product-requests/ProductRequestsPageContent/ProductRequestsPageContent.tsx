@@ -23,6 +23,7 @@ import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 import {
+  CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
   DEFAULT_PRODUCT_REQUEST_STATISTICS,
   type ProductRequestRowViewModel,
@@ -31,7 +32,11 @@ import {
   type ProductRequestsFilterState,
 } from '@/lib/product-requests/product-requests';
 
-import { getPharmacyProductRequests } from '@/lib/api/browser';
+import {
+  getPharmacyProductRequests,
+  getProductCategories,
+} from '@/lib/api/browser';
+
 import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 import { PHARMACY_ROUTES } from '@/lib/routes';
@@ -61,7 +66,17 @@ function getProductRequestsQueryParams(
     requestNumber: filters.requestNumber.trim() || undefined,
     productName: filters.productName.trim() || undefined,
     productArticle: filters.productArticle.trim() || undefined,
-    category: filters.category === 'all' ? undefined : filters.category,
+    category:
+      filters.category === 'all' ||
+      filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER
+        ? undefined
+        : filters.category,
+    categoryMode:
+      filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER
+        ? 'custom'
+        : filters.category === 'all'
+          ? undefined
+          : 'catalog',
     status: filters.status === 'all' ? undefined : filters.status,
   };
 }
@@ -83,6 +98,10 @@ function ProductRequestsPageContent({
   const [filters, setFilters] =
     useState<ProductRequestsFilterState>(initialFilters);
 
+  const [categoryOptions, setCategoryOptions] = useState<
+    readonly { value: ProductRequestsFilterState['category']; label: string }[]
+  >([{ value: 'all', label: 'All categories' }]);
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [requests, setRequests] = useState<ProductRequestRowViewModel[]>([]);
@@ -103,6 +122,36 @@ function ProductRequestsPageContent({
   const [retryVersion, setRetryVersion] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCategoryOptions() {
+      try {
+        const categories = await getProductCategories({
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) {
+          setCategoryOptions([
+            { value: 'all', label: 'All categories' },
+            ...categories.map((category) => ({
+              value: category.slug,
+              label: category.name,
+            })),
+            {
+              value: CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
+              label: 'Other / custom category',
+            },
+          ]);
+        }
+      } catch {
+        // Keep the neutral fallback; request data has its own resource state.
+      }
+    }
+
+    void loadCategoryOptions();
+    return () => controller.abort();
+  }, []);
 
   const debouncedRequestNumber = useDebouncedValue(filters.requestNumber, 450);
   const debouncedProductArticle = useDebouncedValue(
@@ -433,6 +482,7 @@ function ProductRequestsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
+          categoryOptions={categoryOptions}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

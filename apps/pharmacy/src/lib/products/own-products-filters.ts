@@ -1,10 +1,10 @@
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 
 import type { OwnProductStatus, StockAvailabilityFilter } from './products';
 
 //===================================================================
 
-export type OwnProductsCategoryFilter = 'all' | ProductCategory;
+export type OwnProductsCategoryFilter = 'all' | ProductCategorySlug;
 export type OwnProductsStatusFilter = 'all' | OwnProductStatus;
 export type OwnProductsStockFilter = 'all' | StockAvailabilityFilter;
 
@@ -15,6 +15,7 @@ export type OwnProductsFilterState = Readonly<{
     from: string;
     to: string;
   };
+
   name: string;
   article: string;
   category: OwnProductsCategoryFilter;
@@ -29,6 +30,7 @@ export const DEFAULT_OWN_PRODUCTS_FILTERS: OwnProductsFilterState = {
     from: '',
     to: '',
   },
+
   name: '',
   article: '',
   category: 'all',

@@ -22,7 +22,13 @@ function item(overrides: Partial<CartItem> = {}): CartItem {
       id: '507f1f77bcf86cd799439013',
       name: 'Aspirin',
       article: 'ASP-100',
-      category: 'medicine',
+
+      category: {
+        id: '507f1f77bcf86cd799439099',
+        name: 'Medicine',
+        slug: 'medicine',
+      },
+
       price: 100,
       pharmacyName: 'Health Pharmacy',
       inStock: true,

@@ -11,7 +11,6 @@ import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
 import {
   PHARMACY_STATUS_PRESENTATION,
-  PRODUCT_CATEGORY_LABELS,
   PRODUCT_STATUS_PRESENTATION,
 } from '@e-pharmacy/config/presentation';
 
@@ -458,7 +457,7 @@ function getProductSummaryItems(
 ): SummaryItem[] {
   const items: SummaryItem[] = [
     { label: 'Article', value: product.article },
-    { label: 'Category', value: PRODUCT_CATEGORY_LABELS[product.category] },
+    { label: 'Category', value: product.category.name },
     {
       label: 'Status',
       value: <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />,
@@ -502,7 +501,7 @@ function getProductCharacteristics(
     product.packageQuantity
       ? { label: 'Package', value: product.packageQuantity }
       : null,
-    { label: 'Category', value: PRODUCT_CATEGORY_LABELS[product.category] },
+    { label: 'Category', value: product.category.name },
   ].filter((item): item is CharacteristicItem => Boolean(item));
 }
 

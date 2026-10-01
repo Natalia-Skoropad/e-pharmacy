@@ -33,7 +33,10 @@ import {
   parseProductRequestsSegments,
 } from '@/lib/product-requests/product-request-paths';
 
-import { DEFAULT_PRODUCT_REQUESTS_FILTERS } from '@/lib/product-requests/product-requests';
+import {
+  CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
+  DEFAULT_PRODUCT_REQUESTS_FILTERS,
+} from '@/lib/product-requests/product-requests';
 
 //===================================================================
 
@@ -98,6 +101,41 @@ test('product request status route roundtrips through its domain builder', () =>
   assert.deepEqual(
     parseProductRequestsSegments({ filters: segments(path) }),
     state
+  );
+});
+
+//===================================================================
+
+test('dynamic and custom product request categories roundtrip without static membership', () => {
+  const dynamicState = {
+    ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
+    category: 'veterinary_care',
+  };
+
+  const dynamicPath = buildProductRequestsPath(dynamicState);
+
+  assert.equal(
+    dynamicPath,
+    '/pharmacy/product-requests/category-veterinary_care'
+  );
+
+  assert.deepEqual(
+    parseProductRequestsSegments({ filters: segments(dynamicPath) }),
+    dynamicState
+  );
+
+  const customState = {
+    ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
+    category: CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
+  };
+
+  const customPath = buildProductRequestsPath(customState);
+
+  assert.equal(customPath, '/pharmacy/product-requests/category-mode-custom');
+
+  assert.deepEqual(
+    parseProductRequestsSegments({ filters: segments(customPath) }),
+    customState
   );
 });
 

@@ -1,11 +1,11 @@
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 
 import type { OwnProductStatus } from './products';
 
 //===================================================================
 
 export type AllProductsAddedToMyPharmacyFilter = 'all' | 'yes' | 'no';
-export type AllProductsCategoryFilter = 'all' | ProductCategory;
+export type AllProductsCategoryFilter = 'all' | ProductCategorySlug;
 export type AllProductsStatusFilter = 'all' | OwnProductStatus;
 
 //===================================================================
@@ -29,6 +29,7 @@ export const DEFAULT_ALL_PRODUCTS_FILTERS: AllProductsFilterState = {
     from: '',
     to: '',
   },
+
   name: '',
   article: '',
   category: 'all',

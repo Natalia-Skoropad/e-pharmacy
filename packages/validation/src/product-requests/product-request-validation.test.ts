@@ -20,7 +20,7 @@ import {
 
 type ProductRequestTextField = Exclude<
   keyof ProductRequestFormValues,
-  'category'
+  'categoryMode' | 'categoryId'
 >;
 
 //=============================================================================
@@ -60,6 +60,8 @@ function createDraftValues(
     ...PRODUCT_REQUEST_INITIAL_VALUES,
     name: 'Paracetamol',
     article: 'med-001',
+    categoryMode: 'catalog',
+    categoryId: '507f1f77bcf86cd799439011',
     ...overrides,
   };
 }
@@ -143,28 +145,49 @@ test('validation rejects non-English product text without changing it', () => {
 
 //=============================================================================
 
-test('validation rejects an unsupported category', () => {
-  const values = createDraftValues();
-  Reflect.set(values, 'category', 'unsupported');
+test('catalog category mode requires a category id without hardcoded membership checks', () => {
+  const missingCategory = validateProductRequestForm(
+    createDraftValues({ categoryId: '   ' }),
+    'draft'
+  );
 
-  assert.ok(validateProductRequestForm(values, 'draft').category);
+  const dynamicCategory = validateProductRequestForm(
+    createDraftValues({ categoryId: 'future-category-id-from-db' }),
+    'draft'
+  );
+
+  assert.ok(missingCategory.categoryId);
+  assert.equal(dynamicCategory.categoryId, undefined);
 });
 
 //=============================================================================
 
-test('custom category is required only for the other category', () => {
+test('validation rejects an unsupported category mode', () => {
+  const values = createDraftValues();
+  Reflect.set(values, 'categoryMode', 'unsupported');
+
+  assert.ok(validateProductRequestForm(values, 'draft').categoryMode);
+});
+
+//=============================================================================
+
+test('custom category is required only in custom category mode', () => {
   const missingCustomCategory = validateProductRequestForm(
-    createDraftValues({ category: 'other', customCategory: '   ' }),
+    createDraftValues({
+      categoryMode: 'custom',
+      categoryId: '',
+      customCategory: '   ',
+    }),
     'draft'
   );
 
-  const regularCategory = validateProductRequestForm(
-    createDraftValues({ category: 'medicine', customCategory: '' }),
+  const catalogCategory = validateProductRequestForm(
+    createDraftValues({ customCategory: '' }),
     'draft'
   );
 
   assert.ok(missingCustomCategory.customCategory);
-  assert.equal(regularCategory.customCategory, undefined);
+  assert.equal(catalogCategory.customCategory, undefined);
 });
 
 //=============================================================================
@@ -337,9 +360,28 @@ test('normalization trims values, uppercases article and removes empty optional 
   );
 
   assert.equal(payload.article, 'MED-001');
+  assert.equal(payload.categoryMode, 'catalog');
+  assert.equal(payload.categoryId, '507f1f77bcf86cd799439011');
   assert.equal(payload.customCategory, undefined);
   assert.equal(payload.fullDescription, 'Complete English description.');
   assert.equal(payload.pharmacyComment, undefined);
+});
+
+//=============================================================================
+
+test('normalization keeps custom category separate from catalog category ids', () => {
+  const payload = normalizeProductRequestForm(
+    createDraftValues({
+      categoryMode: 'custom',
+      categoryId: '',
+      customCategory: '  Veterinary care  ',
+    }),
+    'draft'
+  );
+
+  assert.equal(payload.categoryMode, 'custom');
+  assert.equal(payload.categoryId, undefined);
+  assert.equal(payload.customCategory, 'Veterinary care');
 });
 
 //=============================================================================

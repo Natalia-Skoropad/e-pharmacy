@@ -28,6 +28,7 @@ import type { EntityId } from '@e-pharmacy/types/primitives';
 import type {
   PharmacyProductsQueryParams,
   ProductDetails,
+  ProductFilterOptionsResponse,
 } from '@e-pharmacy/types/products';
 
 import type {
@@ -35,7 +36,12 @@ import type {
   AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
-import { addProductToMyPharmacy, getProducts } from '@/lib/api/browser';
+import {
+  addProductToMyPharmacy,
+  getProductFilters,
+  getProducts,
+} from '@/lib/api/browser';
+
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
@@ -136,6 +142,10 @@ function AllProductsPageContent({
   const [filters, setFilters] =
     useState<AllProductsFilterState>(initialFilters);
 
+  const [categoryOptions, setCategoryOptions] = useState<
+    ProductFilterOptionsResponse['categories']
+  >([{ value: 'all', label: 'All categories' }]);
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<ProductDetails[]>([]);
@@ -157,6 +167,25 @@ function AllProductsPageContent({
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCategoryOptions() {
+      try {
+        const options = await getProductFilters(
+          {},
+          { signal: controller.signal }
+        );
+        if (!controller.signal.aborted) setCategoryOptions(options.categories);
+      } catch {
+        // Keep the neutral fallback; product data has its own resource state.
+      }
+    }
+
+    void loadCategoryOptions();
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     if (!currentPharmacyId) return;
@@ -547,6 +576,7 @@ function AllProductsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
+          categoryOptions={categoryOptions}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

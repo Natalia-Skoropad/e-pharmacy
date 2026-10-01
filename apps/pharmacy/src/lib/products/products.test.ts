@@ -27,7 +27,13 @@ function validProduct() {
     name: 'Aspirin',
     publicSlugId: 'aspirin-pr507f1f77bcf86cd799439013',
     article: 'ASP-100',
-    category: 'medicine',
+
+    category: {
+      id: '507f1f77bcf86cd799439099',
+      name: 'Medicine',
+      slug: 'medicine',
+    },
+
     status: 'active',
     price: 100,
     foundInPharmaciesCount: 1,

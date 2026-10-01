@@ -89,7 +89,12 @@ test('rejects excessive catch-all segment counts before parsing the full URL', (
 
   for (const result of [productResult, pharmacyResult]) {
     assert.equal(result.isCanonical, false);
-    assert.deepEqual(result.issues.map((issue) => issue.code), ['too_many']);
+
+    assert.deepEqual(
+      result.issues.map((issue) => issue.code),
+      ['too_many']
+    );
+
     assert.equal(result.issues[0]?.index, MAX_CATALOG_SEGMENTS);
   }
 });
@@ -115,6 +120,22 @@ test('reports duplicate, malformed and unknown product segments', () => {
 
   assert.equal(result.filters.category, 'medicine');
   assert.equal(result.filters.page, 1);
+});
+
+//===================================================================
+
+test('accepts a future database category slug without compile-time membership', () => {
+  const result = parseProductCatalogSegments({
+    segments: ['category-veterinary_care'],
+  });
+
+  assert.equal(result.isCanonical, true);
+  assert.equal(result.filters.category, 'veterinary_care');
+
+  assert.equal(
+    buildProductCatalogPath(result.filters),
+    '/product-catalog/category-veterinary_care'
+  );
 });
 
 //===================================================================

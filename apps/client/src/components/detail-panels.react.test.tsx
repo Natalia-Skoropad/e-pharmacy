@@ -17,7 +17,13 @@ const product = {
   name: 'Test product',
   publicSlugId: 'test-product',
   article: 'TEST-1',
-  category: 'medicine',
+
+  category: {
+    id: '507f1f77bcf86cd799439099',
+    name: 'Medicine',
+    slug: 'medicine',
+  },
+
   status: 'active',
   price: 0,
   foundInPharmaciesCount: 0,
@@ -30,6 +36,8 @@ const product = {
   createdAt: '2026-08-03T00:00:00.000Z',
   updatedAt: '2026-08-03T00:00:00.000Z',
 } as unknown as ProductDetails;
+
+//===================================================================
 
 const pharmacy = {
   id: 'pharmacy-1',

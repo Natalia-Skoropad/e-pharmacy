@@ -11,8 +11,7 @@ import {
 
 import clsx from 'clsx';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import type {
   OrderSalesStatistics,
@@ -56,7 +55,8 @@ export type SalesValueChartProps = Readonly<{
 }>;
 
 type ChartSeries = Readonly<{
-  category: ProductCategory;
+  category: ProductCategoryReference;
+  colorIndex: number;
   points: Array<{ x: number; y: number; value: number }>;
   linePath: string;
   areaPath: string;
@@ -64,23 +64,23 @@ type ChartSeries = Readonly<{
 
 //===================================================================
 
-function getCategoryColorVar(category: ProductCategory): string {
-  return `var(--color-chart-${category})`;
+function getCategoryColorVar(index: number): string {
+  return `var(--color-chart-series-${(index % SERIES_DASH_PATTERNS.length) + 1})`;
 }
 
 //===================================================================
 
-function getCategoryFillVar(category: ProductCategory): string {
-  return `var(--color-chart-${category}-soft)`;
+function getCategoryFillVar(index: number): string {
+  return `var(--color-chart-series-${(index % SERIES_DASH_PATTERNS.length) + 1}-soft)`;
 }
 
 //===================================================================
 
 function getPointValue(
   point: OrderSalesStatisticsPoint,
-  category: ProductCategory
+  category: ProductCategoryReference
 ): number {
-  return point.values[category]?.amount ?? 0;
+  return point.values[category.slug]?.amount ?? 0;
 }
 
 //===================================================================
@@ -151,13 +151,13 @@ function getVisibleTickIndexes(pointsLength: number): Set<number> {
 
 function getPointAriaLabel(
   point: OrderSalesStatisticsPoint,
-  categories: readonly ProductCategory[]
+  categories: readonly ProductCategoryReference[]
 ): string {
   const values = categories
     .map((category) => {
       const value =
         formatMoney(getPointValue(point, category)) ?? 'not available';
-      return `${PRODUCT_CATEGORY_LABELS[category]}: ${value}`;
+      return `${category.name}: ${value}`;
     })
     .join(', ');
 
@@ -180,16 +180,14 @@ function SalesValueChart({
   const tableId = useId();
   const pointRefs = useRef<Array<SVGRectElement | null>>([]);
   const [activePointIndex, setActivePointIndex] = useState<number | null>(null);
-  const [hiddenCategories, setHiddenCategories] = useState<ProductCategory[]>(
-    []
-  );
+  const [hiddenCategorySlugs, setHiddenCategorySlugs] = useState<string[]>([]);
 
   const visibleCategories = useMemo(
     () =>
       data.categories.filter(
-        (category) => !hiddenCategories.includes(category)
+        (category) => !hiddenCategorySlugs.includes(category.slug)
       ),
-    [data.categories, hiddenCategories]
+    [data.categories, hiddenCategorySlugs]
   );
 
   const hasData = visibleCategories.length > 0 && data.points.length > 0;
@@ -205,6 +203,9 @@ function SalesValueChart({
   const series = useMemo<ChartSeries[]>(
     () =>
       visibleCategories.map((category) => {
+        const colorIndex = data.categories.findIndex(
+          (item) => item.slug === category.slug
+        );
         const points = data.points.map((point, index) => ({
           x: getX(index, data.points.length),
           y: getY(getPointValue(point, category), maxValue),
@@ -213,12 +214,13 @@ function SalesValueChart({
 
         return {
           category,
+          colorIndex,
           points,
           linePath: createPath(points),
           areaPath: createAreaPath(points),
         };
       }),
-    [data.points, maxValue, visibleCategories]
+    [data.categories, data.points, maxValue, visibleCategories]
   );
 
   const tickIndexes = useMemo(
@@ -237,14 +239,14 @@ function SalesValueChart({
     ? `${title}. ${data.points.length} time points and ${visibleCategories.length} visible product categories. Use Left and Right Arrow keys on chart points, or open the data table below.`
     : `${title}. No successful sales are available for the selected period.`;
 
-  const toggleCategory = (category: ProductCategory) => {
-    setHiddenCategories((current) => {
-      if (current.includes(category)) {
-        return current.filter((item) => item !== category);
+  const toggleCategory = (category: ProductCategoryReference) => {
+    setHiddenCategorySlugs((current) => {
+      if (current.includes(category.slug)) {
+        return current.filter((slug) => slug !== category.slug);
       }
 
       if (visibleCategories.length === 1) return current;
-      return [...current, category];
+      return [...current, category.slug];
     });
   };
 
@@ -305,12 +307,15 @@ function SalesValueChart({
           aria-label={categoryControlsLabel}
         >
           {data.categories.map((category) => {
-            const isActive = !hiddenCategories.includes(category);
-            const categoryLabel = PRODUCT_CATEGORY_LABELS[category];
+            const isActive = !hiddenCategorySlugs.includes(category.slug);
+            const categoryLabel = category.name;
+            const colorIndex = data.categories.findIndex(
+              (item) => item.slug === category.slug
+            );
 
             return (
               <button
-                key={category}
+                key={category.id}
                 className={clsx(css.categoryButton, {
                   [css.categoryButtonInactive]: !isActive,
                 })}
@@ -321,7 +326,7 @@ function SalesValueChart({
               >
                 <span
                   className={css.legendDot}
-                  style={{ backgroundColor: getCategoryColorVar(category) }}
+                  style={{ backgroundColor: getCategoryColorVar(colorIndex) }}
                   aria-hidden="true"
                 />
                 {categoryLabel}
@@ -368,20 +373,24 @@ function SalesValueChart({
               <g className={css.areas} aria-hidden="true">
                 {series.map((item) => (
                   <path
-                    key={`${item.category}-area`}
+                    key={`${item.category.id}-area`}
                     d={item.areaPath}
-                    fill={getCategoryFillVar(item.category)}
+                    fill={getCategoryFillVar(item.colorIndex)}
                   />
                 ))}
               </g>
 
               <g className={css.lines} aria-hidden="true">
-                {series.map((item, index) => (
+                {series.map((item) => (
                   <path
-                    key={`${item.category}-line`}
+                    key={`${item.category.id}-line`}
                     d={item.linePath}
-                    stroke={getCategoryColorVar(item.category)}
-                    strokeDasharray={SERIES_DASH_PATTERNS[index]}
+                    stroke={getCategoryColorVar(item.colorIndex)}
+                    strokeDasharray={
+                      SERIES_DASH_PATTERNS[
+                        item.colorIndex % SERIES_DASH_PATTERNS.length
+                      ]
+                    }
                   />
                 ))}
               </g>
@@ -390,11 +399,11 @@ function SalesValueChart({
                 {series.flatMap((item) =>
                   item.points.map((point, index) => (
                     <circle
-                      key={`${item.category}-${data.points[index]?.key}`}
+                      key={`${item.category.id}-${data.points[index]?.key}`}
                       cx={point.x}
                       cy={point.y}
                       r={index === activePointIndex ? 5 : 3.5}
-                      fill={getCategoryColorVar(item.category)}
+                      fill={getCategoryColorVar(item.colorIndex)}
                     />
                   ))
                 )}
@@ -457,18 +466,21 @@ function SalesValueChart({
                 <p className={css.tooltipTitle}>{activePoint.label}</p>
                 <ul className={css.tooltipList}>
                   {visibleCategories.map((category) => {
-                    const value = activePoint.values[category];
+                    const value = activePoint.values[category.slug];
+                    const colorIndex = data.categories.findIndex(
+                      (item) => item.slug === category.slug
+                    );
 
                     return (
-                      <li key={category} className={css.tooltipItem}>
+                      <li key={category.id} className={css.tooltipItem}>
                         <span
                           className={css.tooltipDot}
                           style={{
-                            backgroundColor: getCategoryColorVar(category),
+                            backgroundColor: getCategoryColorVar(colorIndex),
                           }}
                           aria-hidden="true"
                         />
-                        <span>{PRODUCT_CATEGORY_LABELS[category]}</span>
+                        <span>{category.name}</span>
                         <strong>
                           {formatMoney(value?.amount ?? 0) ?? '—'}
                         </strong>
@@ -489,8 +501,8 @@ function SalesValueChart({
                   <tr>
                     <th scope="col">Period</th>
                     {visibleCategories.map((category) => (
-                      <th scope="col" key={category}>
-                        {PRODUCT_CATEGORY_LABELS[category]}
+                      <th scope="col" key={category.id}>
+                        {category.name}
                       </th>
                     ))}
                   </tr>
@@ -500,7 +512,7 @@ function SalesValueChart({
                     <tr key={point.key}>
                       <th scope="row">{point.label}</th>
                       {visibleCategories.map((category) => (
-                        <td key={category}>
+                        <td key={category.id}>
                           {formatMoney(getPointValue(point, category)) ?? '—'}
                         </td>
                       ))}

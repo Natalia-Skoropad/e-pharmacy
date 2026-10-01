@@ -115,22 +115,22 @@ Backend constants remain independent. Contract equality is enforced by CI checks
 
 ## Auth cookie contract
 
-| Cookie | Owner | Browser visibility | Lifetime source | Backend parity |
-| --- | --- | --- | --- | --- |
-| Access token | Next.js BFF / backend auth contract | `httpOnly` | `accessTokenExpiresIn` | checked |
-| Refresh token | Next.js BFF / backend auth contract | `httpOnly` | `refreshTokenExpiresIn` | checked |
-| Legacy token | migration cleanup only | `httpOnly` | expired during cleanup | checked |
-| Auth-ready hint | Next.js BFF | client-readable | `refreshTokenExpiresIn` | frontend-only |
+| Cookie          | Owner                               | Browser visibility | Lifetime source         | Backend parity |
+| --------------- | ----------------------------------- | ------------------ | ----------------------- | -------------- |
+| Access token    | Next.js BFF / backend auth contract | `httpOnly`         | `accessTokenExpiresIn`  | checked        |
+| Refresh token   | Next.js BFF / backend auth contract | `httpOnly`         | `refreshTokenExpiresIn` | checked        |
+| Legacy token    | migration cleanup only              | `httpOnly`         | expired during cleanup  | checked        |
+| Auth-ready hint | Next.js BFF                         | client-readable    | `refreshTokenExpiresIn` | frontend-only  |
 
 The browser may read `AUTH_READY_COOKIE_NAME` during auth bootstrap, but it must not set, refresh, or clear that cookie. The fixed 30-day browser policy and the browser-owned hint storage were removed. The BFF writes and expires the hint together with the refresh-token lifetime, so cookie attributes and expiry have one owner.
 
 ## Product category policy
 
-`PRODUCT_CATEGORY_LABELS` is the only public category-label API. A formatter that merely returned `PRODUCT_CATEGORY_LABELS[category]` is intentionally not exposed.
+Product categories are runtime reference data owned by the backend. Category ids, slugs, names, membership, and ordering must come from API/DB data rather than a compile-time frontend enum or label map.
 
-Building category options from API products is runtime feature work and stays in client/pharmacy product adapters. Config contains neither `Set` processing nor locale-dependent sorting. The caller supplies the locale used by the feature adapter.
+Config exposes only `ALL_PRODUCT_CATEGORIES_FILTER_OPTION`, because the neutral `all` choice is UI state rather than a persisted product category. Client and pharmacy consumers build the remaining options from reference-data or product-filter endpoints.
 
-Frontend and backend category labels are compared by `pnpm check:config-contracts`, not only their raw category values. A copy drift such as `Medical devices` versus `Medical equipment` therefore fails CI.
+`pnpm check:config-contracts` guards this boundary and fails when a static category set or category label map is reintroduced into frontend config.
 
 ## Pharmacy client statistics and filters
 

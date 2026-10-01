@@ -15,7 +15,9 @@ import {
   parsePharmacyProfileResponse,
   parsePharmacyRegistrationDocumentUploadResponse,
   parsePharmacyRegistrationUploadSessionResponse,
+  parseProductCategoryReference,
   parseProductDetails,
+  parseProductFilterOptionsResponse,
   parseProductsResponse,
 } from './shared-dto-parsers';
 
@@ -160,13 +162,68 @@ test('validates active sessions at runtime', () => {
 
 //===================================================================
 
+test('accepts dynamic product categories by canonical shape instead of hardcoded membership', () => {
+  const dynamicCategory = {
+    id: '507f1f77bcf86cd799439099',
+    name: 'Veterinary Care',
+    slug: 'veterinary_care',
+  } as const;
+
+  assert.deepEqual(
+    parseProductCategoryReference(dynamicCategory),
+    dynamicCategory
+  );
+
+  for (const invalidCategory of [
+    { ...dynamicCategory, id: 'invalid-id' },
+    { ...dynamicCategory, name: '   ' },
+    { ...dynamicCategory, slug: 'veterinary-care' },
+    { ...dynamicCategory, slug: 'Veterinary_Care' },
+  ]) {
+    assert.throws(
+      () => parseProductCategoryReference(invalidCategory),
+      ApiError
+    );
+  }
+});
+
+//===================================================================
+
+test('accepts dynamic category filter options and still rejects malformed slugs', () => {
+  const response = {
+    categories: [
+      { value: 'all', label: 'All categories' },
+      { value: 'veterinary_care', label: 'Veterinary care' },
+    ],
+    availability: [{ value: 'all', label: 'All products' }],
+    sort: [{ value: 'newest', label: 'Newest first' }],
+  } as const;
+
+  assert.deepEqual(parseProductFilterOptionsResponse(response), response);
+
+  assert.throws(
+    () =>
+      parseProductFilterOptionsResponse({
+        ...response,
+        categories: [{ value: 'veterinary-care', label: 'Veterinary care' }],
+      }),
+    ApiError
+  );
+});
+
+//===================================================================
+
 test('requires backend-provided typed public slug IDs', () => {
   const product = {
     id: '6a5f5242d9c46211621ad70a',
     name: 'Amlodipine 5 mg Acme',
     publicSlugId: 'amlodipine-5-mg-acme-pr6a5f5242d9c46211621ad70a',
     article: 'AML-5',
-    category: 'prescription',
+    category: {
+      id: '507f1f77bcf86cd799439099',
+      name: 'Prescription',
+      slug: 'prescription',
+    },
     status: 'active',
     price: 100,
     foundInPharmaciesCount: 1,
@@ -441,7 +498,11 @@ function createValidCartResponse() {
           id: '507f1f77bcf86cd799439013',
           name: 'Aspirin',
           article: 'ASP-100',
-          category: 'medicine',
+          category: {
+            id: '507f1f77bcf86cd799439099',
+            name: 'Medicine',
+            slug: 'medicine',
+          },
           price: 100,
           pharmacyName: 'Health Pharmacy',
           inStock: true,
@@ -500,7 +561,14 @@ test('strictly validates transactional cart responses', async () => {
       items: [
         {
           ...valid.items[0],
-          product: { ...valid.items[0].product, category: 'invalid-category' },
+          product: {
+            ...valid.items[0].product,
+            category: {
+              id: '507f1f77bcf86cd799439099',
+              name: 'Invalid',
+              slug: 'invalid-category',
+            },
+          },
         },
       ],
     },

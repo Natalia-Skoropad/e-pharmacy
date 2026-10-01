@@ -1,13 +1,14 @@
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
+import { ALL_PRODUCT_CATEGORIES_FILTER_OPTION } from '@e-pharmacy/config/products';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import type {
   CatalogProductsQueryParams,
-  ProductCategory,
   ProductsSortOption,
 } from '@e-pharmacy/types/products';
+
+import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
+import { isProductCategorySlug } from '@e-pharmacy/validation/reference-data';
 
 import {
   isValidObjectId,
@@ -44,13 +45,7 @@ const PRODUCTS_CATALOG_PER_PAGE = 24;
 //===================================================================
 
 export const FALLBACK_PRODUCT_FILTER_OPTIONS = {
-  categories: [
-    { value: 'all', label: 'All categories' },
-    ...PRODUCT_CATEGORIES.map((value) => ({
-      value,
-      label: PRODUCT_CATEGORY_LABELS[value],
-    })),
-  ],
+  categories: [ALL_PRODUCT_CATEGORIES_FILTER_OPTION],
 
   availability: [
     { value: 'all', label: 'All products' },
@@ -69,7 +64,7 @@ export const FALLBACK_PRODUCT_FILTER_OPTIONS = {
 
 //===================================================================
 
-export type ProductCategoryFilter = 'all' | ProductCategory;
+export type ProductCategoryFilter = 'all' | ProductCategorySlug;
 
 //===================================================================
 
@@ -119,7 +114,7 @@ export type ProductCatalogFilters = {
 export function isProductCategoryFilter(
   value?: string
 ): value is ProductCategoryFilter {
-  return value === 'all' || PRODUCT_CATEGORIES.some((item) => item === value);
+  return value === 'all' || isProductCategorySlug(value);
 }
 
 //===================================================================
@@ -144,12 +139,7 @@ export function getProductCategoryLabel(
   filters: ProductCatalogFilters,
   fallback?: string
 ): string | undefined {
-  return (
-    fallback ??
-    FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
-      (option) => option.value === filters.category
-    )?.label
-  );
+  return filters.category === 'all' ? undefined : fallback;
 }
 
 //===================================================================
@@ -203,7 +193,8 @@ export function mergeProductCatalogFilters(
       routeFilters.availability !== 'all'
         ? routeFilters.availability
         : queryFilters.availability,
-    sort: routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
+    sort:
+      routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
     page: routeFilters.page > 1 ? routeFilters.page : queryFilters.page,
     ...(routeFilters.pharmacyId || queryFilters.pharmacyId
       ? { pharmacyId: routeFilters.pharmacyId ?? queryFilters.pharmacyId }
@@ -247,6 +238,8 @@ export function getProductCatalogActiveFiltersCount(
     Boolean(filters.pharmacyId)
   );
 }
+
+//===================================================================
 
 export function isProductCatalogNoIndex(
   filters: ProductCatalogFilters

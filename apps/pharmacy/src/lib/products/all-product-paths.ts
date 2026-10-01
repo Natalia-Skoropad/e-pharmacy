@@ -1,4 +1,4 @@
-import { isProductCategory } from '@e-pharmacy/validation/products';
+import { isProductCategorySlug } from '@e-pharmacy/validation/reference-data';
 
 import {
   deslugifyArticleSegment,
@@ -118,9 +118,12 @@ export function parseAllProductsSegments(
     }
 
     if (segment.startsWith('category-')) {
-      const category = segment.replace('category-', '').replace(/-/g, '_');
+      const rawCategory = segment.slice('category-'.length);
+      const category = rawCategory.includes('-')
+        ? rawCategory.replace(/-/g, '_')
+        : rawCategory;
 
-      if (isProductCategory(category)) {
+      if (isProductCategorySlug(category)) {
         filters.category = category;
       }
 
@@ -201,7 +204,7 @@ export function buildAllProductsPath(filters: AllProductsFilterState): string {
   }
 
   if (filters.category !== 'all') {
-    segments.push(`category-${filters.category.replace(/_/g, '-')}`);
+    segments.push(`category-${filters.category}`);
   }
 
   if (filters.status !== 'all') {

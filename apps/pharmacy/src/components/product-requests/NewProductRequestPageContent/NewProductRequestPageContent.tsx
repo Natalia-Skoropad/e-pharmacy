@@ -35,15 +35,15 @@ import {
   PRODUCT_REQUEST_STATUS_PRESENTATION,
 } from '@e-pharmacy/config/presentation';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import { PRODUCT_REQUEST_ERROR_CODES } from '@e-pharmacy/config/product-requests';
 import { isApiError } from '@e-pharmacy/api-client/transport';
+
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import type {
   ProductRequestFormPayload,
@@ -84,6 +84,7 @@ import {
   deletePharmacyProductRequest,
   getPharmacyNotes,
   getPharmacyProductRequest,
+  getProductCategories,
   updatePharmacyProductRequest,
 } from '@/lib/api/browser';
 
@@ -101,10 +102,7 @@ import css from './NewProductRequestPageContent.module.css';
 
 //===================================================================
 
-const CATEGORY_OPTIONS = PRODUCT_CATEGORIES.map((category) => ({
-  value: category,
-  label: PRODUCT_CATEGORY_LABELS[category],
-}));
+const CUSTOM_CATEGORY_OPTION_VALUE = '__custom__';
 
 //===================================================================
 
@@ -181,7 +179,8 @@ function toFormState(
   return {
     name: request.name,
     article: request.article,
-    category: request.category,
+    categoryMode: request.categoryMode,
+    categoryId: request.category?.id ?? '',
     customCategory: request.customCategory ?? '',
     manufacturer: request.manufacturer ?? '',
     countryOfOrigin: request.countryOfOrigin ?? '',
@@ -289,6 +288,12 @@ function NewProductRequestPageContent({
     PRODUCT_REQUEST_INITIAL_VALUES
   );
 
+  const [productCategories, setProductCategories] = useState<
+    readonly ProductCategoryReference[]
+  >([]);
+  const [loadedCategory, setLoadedCategory] =
+    useState<ProductCategoryReference | null>(null);
+
   const [productImage, setProductImage] = useState<BrowserUploadFile[]>([]);
 
   const [additionalFiles, setAdditionalFiles] = useState<BrowserUploadFile[]>(
@@ -377,6 +382,30 @@ function NewProductRequestPageContent({
     ? { ...formErrors, article: articleError }
     : formErrors;
 
+  const categoryOptions = useMemo(() => {
+    const categories = [...productCategories];
+
+    if (
+      loadedCategory &&
+      !categories.some((category) => category.id === loadedCategory.id)
+    ) {
+      categories.push(loadedCategory);
+    }
+
+    return [
+      ...categories.map((category) => ({
+        value: category.id,
+        label: category.name,
+      })),
+      { value: CUSTOM_CATEGORY_OPTION_VALUE, label: 'Other / custom category' },
+    ];
+  }, [loadedCategory, productCategories]);
+
+  const selectedCategoryValue =
+    values.categoryMode === 'custom'
+      ? CUSTOM_CATEGORY_OPTION_VALUE
+      : values.categoryId;
+
   const tabs = useMemo<TabItem<RequestTab>[]>(() => {
     const items: TabItem<RequestTab>[] = [
       { value: 'details', label: 'Request details' },
@@ -392,6 +421,24 @@ function NewProductRequestPageContent({
 
     return items;
   }, [commentsTotal, request]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadCategories() {
+      try {
+        const categories = await getProductCategories({
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) setProductCategories(categories);
+      } catch {
+        if (!controller.signal.aborted) setProductCategories([]);
+      }
+    }
+
+    void loadCategories();
+    return () => controller.abort();
+  }, []);
 
   useEffect(
     () => () => {
@@ -428,6 +475,7 @@ function NewProductRequestPageContent({
           return;
         }
 
+        setLoadedCategory(loadedRequest.category ?? null);
         setValues(toFormState(loadedRequest));
         setProductImage(
           loadedRequest.productImage
@@ -1154,12 +1202,20 @@ function NewProductRequestPageContent({
                 label="Category"
                 hint="Select a catalog category for this product or device"
                 required
-                value={values.category}
-                options={CATEGORY_OPTIONS}
+                value={selectedCategoryValue}
+                options={categoryOptions}
                 disabled={!canEdit}
-                onChange={(category) => {
-                  updateValue('category', category);
-                  if (category !== 'other') updateValue('customCategory', '');
+                error={errors.categoryId ?? errors.categoryMode}
+                onChange={(categoryValue) => {
+                  if (categoryValue === CUSTOM_CATEGORY_OPTION_VALUE) {
+                    updateValue('categoryMode', 'custom');
+                    updateValue('categoryId', '');
+                    return;
+                  }
+
+                  updateValue('categoryMode', 'catalog');
+                  updateValue('categoryId', categoryValue);
+                  updateValue('customCategory', '');
                 }}
               />
 
@@ -1172,11 +1228,11 @@ function NewProductRequestPageContent({
                 value={values.customCategory}
                 error={errors.customCategory}
                 isTouched={
-                  values.category === 'other' && Boolean(validationMode)
+                  values.categoryMode === 'custom' && Boolean(validationMode)
                 }
-                required={values.category === 'other'}
+                required={values.categoryMode === 'custom'}
                 maxLength={PRODUCT_REQUEST_LIMITS.customCategoryMax}
-                disabled={!canEdit || values.category !== 'other'}
+                disabled={!canEdit || values.categoryMode !== 'custom'}
                 autoComplete="off"
                 onChange={(event) =>
                   updateValue('customCategory', event.target.value)

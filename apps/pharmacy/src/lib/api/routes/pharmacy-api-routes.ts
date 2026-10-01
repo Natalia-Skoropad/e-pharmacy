@@ -9,6 +9,10 @@ const segment = (value: string): string => encodeRouteSegment(value);
 //===================================================================
 
 export const pharmacyApiRoutes = {
+  productCategories: {
+    list: '/api/product-categories',
+  },
+
   products: {
     list: '/api/products',
     statistics: '/api/products/statistics',

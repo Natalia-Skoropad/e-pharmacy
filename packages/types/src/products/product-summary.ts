@@ -1,5 +1,5 @@
 import type { EntityId, ISODateTimeString } from '../primitives';
-import type { ProductCategory } from './category';
+import type { ProductCategoryReference } from '../reference-data';
 
 //===================================================================
 
@@ -13,7 +13,7 @@ export type ProductSummary = Readonly<{
   publicSlugId: string;
   slug?: string;
   article: string;
-  category: ProductCategory;
+  category: ProductCategoryReference;
   status: ProductStatus;
   price: number;
   imageUrl?: string;

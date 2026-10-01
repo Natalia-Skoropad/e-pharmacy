@@ -6,11 +6,8 @@ import {
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
-import type { ProductCategory } from '@e-pharmacy/types/products';
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
 import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
 import type { ProductRequestsFilterState } from '@/lib/product-requests/product-requests';
 import { PHARMACY_ROUTES } from '@/lib/routes';
@@ -21,22 +18,13 @@ type ProductRequestsFiltersDrawerProps = Readonly<{
   filters: ProductRequestsFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
+  categoryOptions: readonly SelectOption<
+    ProductRequestsFilterState['category']
+  >[];
   onChange: (filters: ProductRequestsFilterState) => void;
   onClose: () => void;
   onReset: () => void;
 }>;
-
-//===================================================================
-
-const CATEGORY_OPTIONS: Array<
-  SelectOption<ProductRequestsFilterState['category']>
-> = [
-  { value: 'all', label: 'All' },
-  ...PRODUCT_CATEGORIES.map((category: ProductCategory) => ({
-    value: category,
-    label: PRODUCT_CATEGORY_LABELS[category],
-  })),
-];
 
 //===================================================================
 
@@ -56,6 +44,7 @@ function ProductRequestsFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
+  categoryOptions,
   onChange,
   onClose,
   onReset,
@@ -88,7 +77,7 @@ function ProductRequestsFiltersDrawer({
         id="product-requests-category"
         label="Product category"
         value={filters.category}
-        options={CATEGORY_OPTIONS}
+        options={categoryOptions}
         isActive={filters.category !== 'all'}
         onChange={(category) => onChange({ ...filters, category })}
       />

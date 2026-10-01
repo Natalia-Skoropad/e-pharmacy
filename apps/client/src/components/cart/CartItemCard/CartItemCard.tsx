@@ -4,7 +4,6 @@ import { QuantityCounter } from '@e-pharmacy/ui/forms';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { CART_ITEM_MAX_QUANTITY } from '@e-pharmacy/config/cart';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types/cart';
 
@@ -56,10 +55,7 @@ function CartItemCard({
       <div className={css.content}>
         <div className={css.head}>
           <div>
-            <p className={css.category}>
-              {PRODUCT_CATEGORY_LABELS[item.product.category] ??
-                item.product.category}
-            </p>
+            <p className={css.category}>{item.product.category.name}</p>
 
             <h2 className={css.title} id={`cart-item-${item.id}`}>
               {item.product.name}

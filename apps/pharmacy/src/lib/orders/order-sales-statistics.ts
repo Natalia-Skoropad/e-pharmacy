@@ -11,7 +11,7 @@ import type {
   OrderSalesStatisticsValue,
 } from '@e-pharmacy/types/orders';
 
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 //===================================================================
 
@@ -102,7 +102,7 @@ function normalizeSalesValue(
 
 function normalizeSalesPoint(
   value: unknown,
-  categories: ProductCategory[]
+  categories: ProductCategoryReference[]
 ): OrderSalesStatisticsPoint {
   if (!isRecord(value)) {
     invalidSalesStatisticsContract(
@@ -125,9 +125,9 @@ function normalizeSalesPoint(
   const values = categories.reduce<OrderSalesStatisticsPoint['values']>(
     (acc, category) => ({
       ...acc,
-      [category]: normalizeSalesValue(
-        rawValues[category],
-        `sales statistics point.values.${category}`
+      [category.slug]: normalizeSalesValue(
+        rawValues[category.slug],
+        `sales statistics point.values.${category.slug}`
       ),
     }),
     {}
@@ -181,7 +181,10 @@ export function normalizeOrderSalesStatistics(
 
   const categories = [...payload.categories];
 
-  if (new Set(categories).size !== categories.length) {
+  if (
+    new Set(categories.map((category) => category.slug)).size !==
+    categories.length
+  ) {
     invalidSalesStatisticsContract(
       'sales statistics categories must be unique.',
       payload

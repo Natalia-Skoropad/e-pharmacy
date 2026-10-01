@@ -5,7 +5,6 @@ import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 import {
   buildProductCatalogCanonicalPath,
   buildProductCatalogPath,
-  FALLBACK_PRODUCT_FILTER_OPTIONS,
   getProductCatalogDescription,
   getProductCatalogTitle,
   isProductCatalogNoIndex,
@@ -18,6 +17,7 @@ import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
 
 import {
   getPharmacyOptions,
+  getProductFilters,
   PUBLIC_DICTIONARY_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
@@ -38,9 +38,20 @@ export async function generateMetadata({
 }: ProductCatalogPageProps) {
   const filters = parseProductCatalogSearchParams(await searchParams);
 
-  const categoryLabel = FALLBACK_PRODUCT_FILTER_OPTIONS.categories.find(
-    (option) => option.value === filters.category
-  )?.label;
+  let categoryLabel: string | undefined;
+  if (filters.category !== 'all') {
+    try {
+      const filterOptions = await getProductFilters(
+        {},
+        PUBLIC_DICTIONARY_CACHE_OPTIONS
+      );
+      categoryLabel = filterOptions.categories.find(
+        (option) => option.value === filters.category
+      )?.label;
+    } catch {
+      categoryLabel = undefined;
+    }
+  }
 
   let pharmacies: readonly PharmacyOption[] = [];
   if (filters.pharmacyId) {
@@ -65,7 +76,9 @@ export async function generateMetadata({
     title: getProductCatalogTitle(filters, seoContext),
     description: getProductCatalogDescription(filters, seoContext),
     path: buildProductCatalogCanonicalPath(filters, pharmacies),
-    noIndex: isProductCatalogNoIndex(filters),
+    noIndex:
+      isProductCatalogNoIndex(filters) ||
+      (filters.category !== 'all' && !categoryLabel),
   });
 }
 

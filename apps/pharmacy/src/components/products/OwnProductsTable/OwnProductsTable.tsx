@@ -11,7 +11,6 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -86,7 +85,7 @@ function OwnProductsTable({
         key: 'category',
         width: '110px',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
+        render: (product) => product.category.name,
       },
       {
         key: 'stockQuantity',

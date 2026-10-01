@@ -9,11 +9,15 @@ import {
 } from '@e-pharmacy/validation/url';
 
 import { PRODUCT_REQUEST_STATUSES } from '@e-pharmacy/config/product-requests';
-import { isProductCategory } from '@e-pharmacy/validation/products';
+import { isProductCategorySlug } from '@e-pharmacy/validation/reference-data';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
-import { DEFAULT_PRODUCT_REQUESTS_FILTERS } from './product-requests';
+import {
+  CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
+  DEFAULT_PRODUCT_REQUESTS_FILTERS,
+} from './product-requests';
+
 import type { ProductRequestsFilterState } from './product-requests';
 
 //===================================================================
@@ -50,6 +54,7 @@ export function isProductRequestsFilterSegment(segment: string): boolean {
     segment.startsWith('product-name-') ||
     segment.startsWith('search-name-') ||
     segment.startsWith('article-') ||
+    segment === 'category-mode-custom' ||
     segment.startsWith('category-') ||
     segment.startsWith('status-') ||
     segment.startsWith('date-from-') ||
@@ -111,10 +116,18 @@ export function parseProductRequestsSegments(
       continue;
     }
 
-    if (segment.startsWith('category-')) {
-      const category = segment.replace('category-', '').replace(/-/g, '_');
+    if (segment === 'category-mode-custom') {
+      filters.category = CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER;
+      continue;
+    }
 
-      if (isProductCategory(category)) {
+    if (segment.startsWith('category-')) {
+      const rawCategory = segment.slice('category-'.length);
+      const category = rawCategory.includes('-')
+        ? rawCategory.replace(/-/g, '_')
+        : rawCategory;
+
+      if (isProductCategorySlug(category)) {
         filters.category = category;
       }
 
@@ -189,8 +202,10 @@ export function buildProductRequestsPath(
     segments.push(`product-name-${slugifySegment(productName)}`);
   }
 
-  if (filters.category !== 'all') {
-    segments.push(`category-${filters.category.replace(/_/g, '-')}`);
+  if (filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER) {
+    segments.push('category-mode-custom');
+  } else if (filters.category !== 'all') {
+    segments.push(`category-${filters.category}`);
   }
 
   if (filters.status !== 'all') {

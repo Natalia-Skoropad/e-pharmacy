@@ -13,7 +13,7 @@ import {
 
 import { PHARMACY_STATUSES } from '../src/pharmacies/index.ts';
 import { PRODUCT_REQUEST_STATUSES } from '../src/product-requests/index.ts';
-import { PRODUCT_CATEGORIES, PRODUCT_STATUSES } from '../src/products/index.ts';
+import { PRODUCT_STATUSES } from '../src/products/index.ts';
 import { USER_STATUSES } from '../src/users/index.ts';
 
 //===================================================================
@@ -30,7 +30,6 @@ const VALUE_SETS = {
   PAYMENT_METHODS,
   ORDER_CREATED_BY_TYPES,
   PHARMACY_NOTE_ENTITY_TYPES,
-  PRODUCT_CATEGORIES,
 } as const;
 
 //===================================================================

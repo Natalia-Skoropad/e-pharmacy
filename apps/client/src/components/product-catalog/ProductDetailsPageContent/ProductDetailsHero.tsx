@@ -6,17 +6,11 @@ import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
-
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
-
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
-import {
-  useClientAuthCapabilities,
-  useFavoriteActions,
-} from '@/hooks';
+import { useClientAuthCapabilities, useFavoriteActions } from '@/hooks';
 
 import {
   getFavoriteActionCopy,
@@ -24,8 +18,8 @@ import {
 } from '@/lib/favorites/favorite-presentation';
 
 import { FavoriteToggleButton } from '@/components/common';
-
 import { ProductOrderInformationPanel } from './ProductOrderInformationPanel';
+
 import css from './ProductDetailsHero.module.css';
 
 //===================================================================
@@ -44,11 +38,8 @@ export function ProductDetailsHero({
   onOpenOffers,
 }: ProductDetailsHeroProps) {
   const toast = useToast();
-  const {
-    isAuthenticated,
-    isBootstrapping,
-    canUseClientFeatures,
-  } = useClientAuthCapabilities();
+  const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
+    useClientAuthCapabilities();
 
   const { isFavorite, isFavoriteLoading, isFavoritePending, toggleFavorite } =
     useFavoriteActions({
@@ -95,9 +86,7 @@ export function ProductDetailsHero({
 
       <div className={css.content}>
         <div className={css.topLine}>
-          <p className={css.category}>
-            {PRODUCT_CATEGORY_LABELS[product.category]}
-          </p>
+          <p className={css.category}>{product.category.name}</p>
 
           {shouldRenderFavoriteControl({
             isAuthenticated,
@@ -151,11 +140,7 @@ export function ProductDetailsHero({
 
         <ProductOrderInformationPanel />
 
-        <Button
-          className={css.action}
-          type="button"
-          onClick={onOpenOffers}
-        >
+        <Button className={css.action} type="button" onClick={onOpenOffers}>
           Find pharmacy offers
         </Button>
       </div>

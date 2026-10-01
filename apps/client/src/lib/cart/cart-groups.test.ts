@@ -10,6 +10,8 @@ import { groupCartItemsByPharmacy } from './cart-groups';
 
 const PHARMACY_ID = '507f1f77bcf86cd799439011';
 
+//===================================================================
+
 function createItem(overrides: Partial<CartItem> = {}): CartItem {
   return {
     id: '507f1f77bcf86cd799439012',
@@ -21,7 +23,11 @@ function createItem(overrides: Partial<CartItem> = {}): CartItem {
       id: '507f1f77bcf86cd799439014',
       name: 'Product',
       article: 'ARTICLE',
-      category: 'medicine',
+      category: {
+        id: '507f1f77bcf86cd799439099',
+        name: 'Medicine',
+        slug: 'medicine',
+      },
       price: 10,
       pharmacyName: 'Alpha Pharmacy',
       inStock: true,

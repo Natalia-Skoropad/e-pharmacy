@@ -75,7 +75,6 @@ import type {
 
 import type { ProductDetails } from '@e-pharmacy/types/products';
 import { getOrderStatusTransitions } from '@e-pharmacy/config/orders';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
@@ -424,9 +423,7 @@ function OrderProductCard({
         <div className={css.itemHead}>
           <div>
             {item.category ? (
-              <p className={css.itemCategory}>
-                {PRODUCT_CATEGORY_LABELS[item.category] ?? item.category}
-              </p>
+              <p className={css.itemCategory}>{item.category.name}</p>
             ) : null}
 
             <h3 className={css.itemTitle} id={`order-product-${item.id}`}>

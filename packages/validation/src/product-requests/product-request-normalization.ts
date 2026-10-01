@@ -1,6 +1,4 @@
-import type {
-  ProductRequestFormPayload,
-} from '@e-pharmacy/types/product-requests';
+import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
 
 import { normalizeOptionalText } from '../shared';
 
@@ -20,10 +18,12 @@ export function normalizeProductRequestForm(
     status,
     name: values.name.trim(),
     article: values.article.trim().toUpperCase(),
-    category: values.category,
+    categoryMode: values.categoryMode,
+    categoryId:
+      values.categoryMode === 'catalog' ? values.categoryId.trim() : undefined,
 
     customCategory:
-      values.category === 'other'
+      values.categoryMode === 'custom'
         ? normalizeOptionalText(values.customCategory)
         : undefined,
 

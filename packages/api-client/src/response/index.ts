@@ -46,6 +46,8 @@ export {
   parsePharmacyRegistrationUploadSessionResponse,
   parsePharmacyProductMutationResponse,
   parseProductCardSummary,
+  parseProductCategoryReference,
+  parseProductCategoryReferencesResponse,
   parseProductDetails,
   parseProductDetailsResponse,
   parseProductFilterOptionsResponse,

@@ -18,7 +18,13 @@ function item(quantity: number, stockQuantity: number): CartItem {
       id: '6a5f5242d9c46211621ad703',
       name: 'Test',
       article: 'TEST-1',
-      category: 'medicine',
+
+      category: {
+        id: '507f1f77bcf86cd799439099',
+        name: 'Medicine',
+        slug: 'medicine',
+      },
+
       price: 10,
       inStock: stockQuantity > 0,
     },

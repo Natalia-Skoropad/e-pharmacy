@@ -10,7 +10,6 @@ import {
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { ProductRequestRowViewModel } from '@/lib/product-requests/product-requests';
 
 import {
@@ -112,16 +111,17 @@ function ProductRequestsTable({
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
         render: (request) =>
-          request.category === 'other' && request.customCategory
-            ? request.customCategory
-            : PRODUCT_CATEGORY_LABELS[request.category],
+          request.categoryMode === 'custom'
+            ? (request.customCategory ?? '—')
+            : (request.category?.name ?? '—'),
       },
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Request', 'status']} />,
         render: (request) => (
-          <StatusBadge {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
-           />
+          <StatusBadge
+            {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
+          />
         ),
       },
     ],

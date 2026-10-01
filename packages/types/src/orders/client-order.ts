@@ -1,6 +1,6 @@
 import type { CompletePharmacyBankDetails } from '../pharmacies';
 import type { EntityId, ISODateTimeString } from '../primitives';
-import type { ProductCategory } from '../products';
+import type { ProductCategorySnapshot } from '../reference-data';
 import type { Delivery } from './delivery';
 
 import type {
@@ -54,7 +54,7 @@ export type ClientOrderItem = Readonly<{
   name: string;
   slug?: string;
   article: string;
-  category?: ProductCategory;
+  category?: ProductCategorySnapshot;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;

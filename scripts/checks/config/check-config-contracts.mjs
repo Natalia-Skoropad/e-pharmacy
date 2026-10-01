@@ -134,23 +134,6 @@ assertSameValues(
 );
 
 assertSameValues(
-  'Product categories',
-  getVariableLiteral(ts, frontendCategories, 'PRODUCT_CATEGORIES'),
-  getVariableLiteral(ts, backendCategories, 'PRODUCT_CATEGORIES')
-);
-
-assert.deepEqual(
-  getVariableLiteral(
-    ts,
-    frontendPresentationProducts,
-    'PRODUCT_CATEGORY_LABELS'
-  ),
-
-  getVariableLiteral(ts, backendCategories, 'PRODUCT_CATEGORY_LABELS'),
-  'Product category labels differ between frontend and backend'
-);
-
-assertSameValues(
   'Product request statuses',
   getVariableLiteral(ts, frontendProductRequests, 'PRODUCT_REQUEST_STATUSES'),
   getVariableLiteral(ts, backendProductRequests, 'PRODUCT_REQUEST_STATUSES')
@@ -584,10 +567,12 @@ assert.match(
 );
 assert.doesNotMatch(clientCartLimitSource, /payload\s+as|message\.includes/);
 
+assert.match(productCategoriesSource, /ALL_PRODUCT_CATEGORIES_FILTER_OPTION/);
+
 assert.doesNotMatch(
   productCategoriesSource,
-  /formatProductCategoryLabel|getProductCategoryOptions|new\s+Set|localeCompare/,
-  'Product category config must not expose formatter aliases or process runtime product data'
+  /(?:export\s+)?const\s+PRODUCT_CATEGORIES\b|PRODUCT_CATEGORY_LABELS\b|['"](?:medicine|vitamins|medical_devices|other)['"]/,
+  'Frontend product category config must not own persisted category membership or labels'
 );
 
 assert.match(categoryOptionsHelperSource, /locale\s*=\s*'en-GB'/);
@@ -595,11 +580,23 @@ assert.match(categoryOptionsHelperSource, /new\s+Set/);
 assert.match(categoryOptionsHelperSource, /localeCompare/);
 
 assert.match(clientCategoryConsumerSource, /getProductFilters/);
-assert.match(clientCategoryConsumerSource, /PRODUCT_CATEGORY_LABELS/);
+assert.match(clientCategoryConsumerSource, /product\.category\.name/);
+
+assert.doesNotMatch(
+  clientCategoryConsumerSource,
+  /PRODUCT_CATEGORY_LABELS|PRODUCT_CATEGORIES/
+);
+
 assert.doesNotMatch(clientCategoryConsumerSource, /PRODUCTS_LIMIT\s*=\s*150/);
 
 assert.match(pharmacyCategoryConsumerSource, /getProductFilters/);
-assert.match(pharmacyCategoryConsumerSource, /PRODUCT_CATEGORY_LABELS/);
+assert.match(pharmacyCategoryConsumerSource, /product\.category\.name/);
+
+assert.doesNotMatch(
+  pharmacyCategoryConsumerSource,
+  /PRODUCT_CATEGORY_LABELS|PRODUCT_CATEGORIES/
+);
+
 assert.doesNotMatch(pharmacyCategoryConsumerSource, /response\.items\.map/);
 
 assert.match(clientStatisticsSource, /export type ClientStatisticsCounts/);
@@ -617,5 +614,5 @@ for (const canonicalCopySource of [
 }
 
 console.log(
-  'Config contract check passed (runtime values, category labels/adapters, status presentation, cart error code, app-local filters/statistics, canonical order copy, notes, and auth-hint ownership).'
+  'Config contract check passed (runtime values, dynamic category consumers, status presentation, cart error code, app-local filters/statistics, canonical order copy, notes, and auth-hint ownership).'
 );

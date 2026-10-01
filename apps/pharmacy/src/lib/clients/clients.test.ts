@@ -105,7 +105,13 @@ test('purchased product response rejects invalid quantities and dates', () => {
     photoUrl: null,
     article: 'ASP-100',
     name: 'Aspirin',
-    category: 'medicine',
+
+    category: {
+      id: '507f1f77bcf86cd799439099',
+      name: 'Medicine',
+      slug: 'medicine',
+    },
+
     quantity: 2,
     totalAmount: 200,
     ordersCount: 2,

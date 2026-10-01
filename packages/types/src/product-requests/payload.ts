@@ -1,6 +1,9 @@
-import type { FileMetadata } from '../primitives';
-import type { ProductCategory } from '../products';
+import type { EntityId, FileMetadata } from '../primitives';
 import type { ProductRequestStatus } from './status';
+
+//=============================================================================
+
+export type ProductRequestCategoryMode = 'catalog' | 'custom';
 
 //=============================================================================
 
@@ -15,7 +18,8 @@ export type ProductRequestFormPayload = Readonly<{
   status: Extract<ProductRequestStatus, 'draft' | 'new'>;
   name: string;
   article: string;
-  category: ProductCategory;
+  categoryMode: ProductRequestCategoryMode;
+  categoryId?: EntityId;
   customCategory?: string;
   productImage?: ProductRequestFile;
   manufacturer?: string;

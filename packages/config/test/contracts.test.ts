@@ -8,12 +8,11 @@ import {
   MAX_PHARMACY_GROUPS_PER_CART,
 } from '../src/cart/index.ts';
 
-import { PRODUCT_CATEGORIES } from '../src/products/index.ts';
+import { ALL_PRODUCT_CATEGORIES_FILTER_OPTION } from '../src/products/index.ts';
 
 import {
   DELIVERY_METHOD_LABELS,
   PAYMENT_METHOD_LABELS,
-  PRODUCT_CATEGORY_LABELS,
 } from '../src/presentation/index.ts';
 
 //===================================================================
@@ -32,18 +31,11 @@ test('keeps auth cookie names unique and browser lifetime-free', () => {
 
 //===================================================================
 
-test('keeps product category labels exhaustive and non-empty', () => {
-  assert.deepEqual(
-    Object.keys(PRODUCT_CATEGORY_LABELS).sort(),
-    [...PRODUCT_CATEGORIES].sort()
-  );
-
-  assert.equal(
-    Object.values(PRODUCT_CATEGORY_LABELS).every(
-      (label) => label.trim().length > 0
-    ),
-    true
-  );
+test('keeps the category fallback limited to the non-domain all option', () => {
+  assert.deepEqual(ALL_PRODUCT_CATEGORIES_FILTER_OPTION, {
+    value: 'all',
+    label: 'All categories',
+  });
 });
 
 //===================================================================

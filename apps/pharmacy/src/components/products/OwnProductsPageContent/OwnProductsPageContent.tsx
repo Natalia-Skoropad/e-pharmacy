@@ -24,6 +24,7 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import type { EntityId } from '@e-pharmacy/types/primitives';
+import type { ProductFilterOptionsResponse } from '@e-pharmacy/types/products';
 
 import type {
   OwnProductStatisticsCounts,
@@ -32,6 +33,7 @@ import type {
 
 import {
   getPharmacyProducts,
+  getProductFilters,
   removeProductFromMyPharmacy,
 } from '@/lib/api/browser';
 
@@ -161,6 +163,10 @@ function OwnProductsPageContent({
   const [filters, setFilters] =
     useState<OwnProductsFilterState>(initialFilters);
 
+  const [categoryOptions, setCategoryOptions] = useState<
+    ProductFilterOptionsResponse['categories']
+  >([{ value: 'all', label: 'All categories' }]);
+
   const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
@@ -187,6 +193,28 @@ function OwnProductsPageContent({
 
   const [refreshVersion, setRefreshVersion] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pharmacyId) return;
+    const currentPharmacyId = pharmacyId;
+
+    const controller = new AbortController();
+
+    async function loadCategoryOptions() {
+      try {
+        const options = await getProductFilters(
+          { pharmacyId: currentPharmacyId },
+          { signal: controller.signal }
+        );
+        if (!controller.signal.aborted) setCategoryOptions(options.categories);
+      } catch {
+        // Keep the neutral fallback; product data has its own resource state.
+      }
+    }
+
+    void loadCategoryOptions();
+    return () => controller.abort();
+  }, [pharmacyId]);
 
   const debouncedName = useDebouncedValue(filters.name, 450);
   const debouncedArticle = useDebouncedValue(filters.article, 450);
@@ -525,6 +553,7 @@ function OwnProductsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
+          categoryOptions={categoryOptions}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

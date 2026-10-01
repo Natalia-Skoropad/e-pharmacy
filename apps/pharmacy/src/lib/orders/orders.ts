@@ -3,7 +3,7 @@ import {
   isISODateTimeString,
 } from '@e-pharmacy/validation/dates';
 
-import { isProductCategory } from '@e-pharmacy/validation/products';
+import { isProductCategorySnapshot } from '@e-pharmacy/validation/products';
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
@@ -35,7 +35,7 @@ import type {
 
 import type { CompletePharmacyBankDetails } from '@e-pharmacy/types/pharmacies';
 import type { EntityId, ISODateTimeString } from '@e-pharmacy/types/primitives';
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type { ProductCategorySnapshot } from '@e-pharmacy/types/reference-data';
 
 //===================================================================
 
@@ -45,7 +45,7 @@ export type PharmacyOrderItem = Readonly<{
   productOfferId: EntityId;
   name: string;
   article: string;
-  category?: ProductCategory;
+  category?: ProductCategorySnapshot;
   imageUrl?: string;
   rating?: number;
   reviewsCount?: number;
@@ -470,7 +470,7 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
   const category =
     rawItem.category === undefined
       ? undefined
-      : isProductCategory(rawItem.category)
+      : isProductCategorySnapshot(rawItem.category)
         ? rawItem.category
         : invalidOrderContract('order item.category is invalid.', rawItem);
 

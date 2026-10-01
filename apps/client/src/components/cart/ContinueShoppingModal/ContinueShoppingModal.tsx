@@ -15,16 +15,16 @@ import { SearchInput } from '@e-pharmacy/ui/forms';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 import type { Cart } from '@e-pharmacy/types/cart';
 
 import type {
   ProductCardSummary,
-  ProductCategory,
   ProductFilterOptionsResponse,
 } from '@e-pharmacy/types/products';
+
+import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 
 import { getProductFilters, getProducts } from '@/lib/api/browser';
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
@@ -67,12 +67,13 @@ function ContinueShoppingModal({
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<
-    ProductCategory | 'all'
+    ProductCategorySlug | 'all'
   >('all');
 
   const [categoryOptions, setCategoryOptions] = useState<
     ProductFilterOptionsResponse['categories']
   >([]);
+
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<ProductCardSummary[]>([]);
   const [page, setPage] = useState(1);
@@ -320,8 +321,7 @@ function ContinueShoppingModal({
                 const isAdding = pendingOfferIds.has(
                   `${pharmacyId}:${product.id}`
                 );
-                const categoryLabel =
-                  PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
+                const categoryLabel = product.category.name;
 
                 return (
                   <li className={css.productItem} key={product.id}>

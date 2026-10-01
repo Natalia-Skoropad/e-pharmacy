@@ -3,8 +3,6 @@
 import { useEffect, useId, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
-
 import {
   Button,
   CloseIconButton,
@@ -16,10 +14,8 @@ import { SearchInput } from '@e-pharmacy/ui/forms';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 
-import type {
-  ProductCategory,
-  ProductDetails,
-} from '@e-pharmacy/types/products';
+import type { ProductDetails } from '@e-pharmacy/types/products';
+import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 
 import type { LabeledOption } from '@e-pharmacy/utils/collections';
 import { formatMoney } from '@e-pharmacy/utils/money';
@@ -57,11 +53,11 @@ function ProductPickerModal({
   const [searchValue, setSearchValue] = useState('');
 
   const [selectedCategory, setSelectedCategory] = useState<
-    ProductCategory | 'all'
+    ProductCategorySlug | 'all'
   >('all');
 
   const [categoryOptions, setCategoryOptions] = useState<
-    readonly LabeledOption<ProductCategory>[]
+    readonly LabeledOption<ProductCategorySlug>[]
   >([]);
 
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
@@ -262,8 +258,7 @@ function ProductPickerModal({
 
                 const isAdding = addingProductIds.has(product.id);
 
-                const categoryLabel =
-                  PRODUCT_CATEGORY_LABELS[product.category] ?? product.category;
+                const categoryLabel = product.category.name;
 
                 const imageSrc = getProductImageSrc(product.imageUrl);
 

@@ -5,7 +5,7 @@ import {
   isCalendarDateString,
 } from '@e-pharmacy/validation/dates';
 
-import { isProductCategory } from '@e-pharmacy/validation/products';
+import { isProductCategorySnapshot } from '@e-pharmacy/validation/products';
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
@@ -21,10 +21,12 @@ import { USER_STATUSES } from '@e-pharmacy/config/users';
 import type { UserStatus } from '@e-pharmacy/types/auth';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
+import type { ProductStatus } from '@e-pharmacy/types/products';
+
 import type {
-  ProductCategory,
-  ProductStatus,
-} from '@e-pharmacy/types/products';
+  ProductCategorySlug,
+  ProductCategorySnapshot,
+} from '@e-pharmacy/types/reference-data';
 
 import type { ClientStatisticsCounts } from '@/lib/statistics/config';
 
@@ -78,7 +80,7 @@ export type PharmacyClientPurchasedProduct = Readonly<{
   photoUrl: string | null;
   article: string;
   name: string;
-  category: ProductCategory;
+  category?: ProductCategorySnapshot;
   quantity: number;
   totalAmount: number;
   ordersCount: number;
@@ -93,7 +95,7 @@ export type PharmacyClientProductsQueryParams = Readonly<{
   dateTo?: string;
   article?: string;
   name?: string;
-  category?: ProductCategory;
+  category?: ProductCategorySlug;
   status?: ProductStatus;
 }>;
 
@@ -424,7 +426,7 @@ function normalizePharmacyClientPurchasedProduct(
     );
   }
 
-  if (!isProductCategory(category)) {
+  if (category !== undefined && !isProductCategorySnapshot(category)) {
     invalidClientContract(
       'pharmacy client purchased product.category is invalid.',
       payload

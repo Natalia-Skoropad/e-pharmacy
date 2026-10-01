@@ -1,4 +1,3 @@
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
 import css from './ProductCharacteristicsPanel.module.css';
@@ -44,14 +43,12 @@ export function ProductCharacteristicsPanel({
 
         <div className={css.item}>
           <dt>Category</dt>
-          <dd>{PRODUCT_CATEGORY_LABELS[product.category]}</dd>
+          <dd>{product.category.name}</dd>
         </div>
       </dl>
 
       <div className={css.description}>
-        <p>
-          {description ?? 'Detailed description is not available yet.'}
-        </p>
+        <p>{description ?? 'Detailed description is not available yet.'}</p>
       </div>
     </div>
   );

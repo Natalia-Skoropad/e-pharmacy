@@ -1,4 +1,8 @@
-import type { ProductCategory } from '../products';
+import type {
+  ProductCategoryReference,
+  ProductCategorySlug,
+} from '../reference-data';
+
 import type { Currency } from './status';
 
 //=============================================================================
@@ -16,13 +20,13 @@ export type OrderSalesStatisticsPoint = Readonly<{
   key: string;
   label: string;
   values: Readonly<
-    Partial<Record<ProductCategory, OrderSalesStatisticsValue>>
+    Partial<Record<ProductCategorySlug, OrderSalesStatisticsValue>>
   >;
 }>;
 
 export type OrderSalesStatistics = Readonly<{
   currency: Currency;
   groupBy: OrderSalesStatisticsGroupBy;
-  categories: readonly ProductCategory[];
+  categories: readonly ProductCategoryReference[];
   points: readonly OrderSalesStatisticsPoint[];
 }>;

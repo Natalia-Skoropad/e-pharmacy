@@ -44,6 +44,13 @@ export type ProductCategoryReference = Readonly<
   Pick<ProductCategoryEntity, 'id' | 'name' | 'slug'>
 >;
 
+/** Historical order snapshots may predate the persisted category id. */
+export type ProductCategorySnapshot = Readonly<{
+  id?: EntityId;
+  name: string;
+  slug: ProductCategorySlug;
+}>;
+
 //===================================================================
 
 export type ProductCategoryUsage = Readonly<{

@@ -1,5 +1,5 @@
 import type { EntityId, ISODateTimeString } from '../primitives';
-import type { ProductCategory } from '../products';
+import type { ProductCategoryReference } from '../reference-data';
 
 //===================================================================
 
@@ -7,7 +7,7 @@ type CartProduct = Readonly<{
   id: EntityId;
   name: string;
   article: string;
-  category: ProductCategory;
+  category: ProductCategoryReference;
   price: number;
   imageUrl?: string;
   pharmacyName?: string;

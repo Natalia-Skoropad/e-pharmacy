@@ -46,6 +46,8 @@ import type {
   SendPharmacyForVerificationResponse,
 } from '@e-pharmacy/types/pharmacies';
 
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
+
 import type {
   PharmacyProductMutationResponse,
   ProductCardSummary,
@@ -279,14 +281,7 @@ const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
 
 //===================================================================
 
-const PRODUCT_CATEGORIES = new Set([
-  'medicine',
-  'vitamins',
-  'beauty',
-  'hygiene',
-  'medical_devices',
-  'other',
-]);
+const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 
 const CART_ISSUE_REASONS = new Set([
   'expired',
@@ -365,6 +360,56 @@ function requireObjectId(
   }
 
   return value;
+}
+
+//===================================================================
+
+export function parseProductCategoryReference(
+  value: unknown,
+  context?: ApiResponseContext
+): ProductCategoryReference {
+  const record = requireRecord(value, 'product category', context);
+
+  requireFields(
+    record,
+    'product category',
+    { id: 'string', name: 'string', slug: 'string' },
+    context
+  );
+
+  requireObjectId(record, 'id', 'product category', context);
+
+  if (!String(record.name).trim()) {
+    throw invalidDto(
+      'product category.name must be a non-empty string.',
+      record,
+      context
+    );
+  }
+
+  if (!PRODUCT_CATEGORY_SLUG_PATTERN.test(String(record.slug))) {
+    throw invalidDto(
+      'product category.slug must be a canonical product category slug.',
+      record,
+      context
+    );
+  }
+
+  return checked<ProductCategoryReference>(record);
+}
+
+//===================================================================
+
+export function parseProductCategoryReferencesResponse(
+  value: unknown,
+  context?: ApiResponseContext
+): readonly ProductCategoryReference[] {
+  return parseArray(
+    value,
+    'product categories',
+    parseProductCategoryReference,
+    context
+  );
 }
 
 //===================================================================
@@ -592,7 +637,7 @@ export function parseProductCardSummary(
       name: 'string',
       publicSlugId: 'string',
       article: 'string',
-      category: 'string',
+      category: 'record',
       status: 'string',
       price: 'number',
       foundInPharmaciesCount: 'number',
@@ -674,7 +719,10 @@ export function parseProductCardSummary(
     context
   );
 
-  return checked<ProductCardSummary>(record);
+  return checked<ProductCardSummary>({
+    ...record,
+    category: parseProductCategoryReference(record.category, context),
+  });
 }
 
 //===================================================================
@@ -691,7 +739,7 @@ export function parseProductDetails(
       name: 'string',
       publicSlugId: 'string',
       article: 'string',
-      category: 'string',
+      category: 'record',
       status: 'string',
       price: 'number',
       foundInPharmaciesCount: 'number',
@@ -741,6 +789,7 @@ export function parseProductDetails(
 
   return checked<ProductDetails>({
     ...record,
+    category: parseProductCategoryReference(record.category, context),
     offers: parseArray(record.offers, 'offers', parseProductOffer, context),
   });
 }
@@ -842,6 +891,28 @@ function parseFilterOption(value: unknown, context?: ApiResponseContext) {
 
 //===================================================================
 
+function parseProductCategoryFilterOption(
+  value: unknown,
+  context?: ApiResponseContext
+) {
+  const option = parseFilterOption(value, context);
+
+  if (
+    option.value !== 'all' &&
+    !PRODUCT_CATEGORY_SLUG_PATTERN.test(String(option.value))
+  ) {
+    throw invalidDto(
+      'product category filter option.value must be all or a canonical slug.',
+      value,
+      context
+    );
+  }
+
+  return option;
+}
+
+//===================================================================
+
 export function parseProductFilterOptionsResponse(
   value: unknown,
   context?: ApiResponseContext
@@ -855,7 +926,7 @@ export function parseProductFilterOptionsResponse(
     categories: parseArray(
       record.categories,
       'categories',
-      parseFilterOption,
+      parseProductCategoryFilterOption,
       context
     ),
 
@@ -2322,7 +2393,7 @@ function parseCartProduct(
       id: 'string',
       name: 'string',
       article: 'string',
-      category: 'string',
+      category: 'record',
       price: 'number',
       inStock: 'boolean',
     },
@@ -2344,14 +2415,6 @@ function parseCartProduct(
   requireObjectId(record, 'id', 'cart product', context);
   requireNonNegativeFiniteNumber(record, 'price', 'cart product', context);
 
-  if (!PRODUCT_CATEGORIES.has(String(record.category))) {
-    throw invalidDto(
-      'cart product.category is not supported.',
-      record,
-      context
-    );
-  }
-
   if (record.rating !== undefined) {
     requireNonNegativeFiniteNumber(record, 'rating', 'cart product', context);
   }
@@ -2365,7 +2428,10 @@ function parseCartProduct(
     );
   }
 
-  return checked<CartItem['product']>(record);
+  return checked<CartItem['product']>({
+    ...record,
+    category: parseProductCategoryReference(record.category, context),
+  });
 }
 
 //===================================================================

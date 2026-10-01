@@ -18,7 +18,6 @@ import {
   DELIVERY_METHOD_LABELS,
   ORDER_STATUS_PRESENTATION,
   PAYMENT_METHOD_LABELS,
-  PRODUCT_CATEGORY_LABELS,
 } from '@e-pharmacy/config/presentation';
 
 import { LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
@@ -32,12 +31,10 @@ import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { ROUTES, buildProductPath, buildPharmacyPath } from '@/lib/routes';
-
 import { getOrderDetails } from '@/lib/api/browser';
-
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -226,7 +223,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                           <div>
                             {item.category ? (
                               <p className={css.itemCategory}>
-                                {PRODUCT_CATEGORY_LABELS[item.category]}
+                                {item.category.name}
                               </p>
                             ) : null}
 

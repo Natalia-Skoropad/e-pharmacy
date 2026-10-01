@@ -13,9 +13,13 @@ import type {
   ISODateTimeString,
 } from '@e-pharmacy/types/primitives';
 
-import type { ProductCategory } from '@e-pharmacy/types/products';
+import type {
+  ProductCategoryReference,
+  ProductCategorySlug,
+} from '@e-pharmacy/types/reference-data';
 
 import type {
+  ProductRequestCategoryMode,
   ProductRequestFile,
   ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
@@ -67,7 +71,13 @@ function parseEarliestCreatedAt(payload: unknown): CalendarDateString | null {
 
 //===================================================================
 
-export type ProductRequestCategoryFilter = 'all' | ProductCategory;
+export const CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER = '__custom__' as const;
+
+export type ProductRequestCategoryFilter =
+  | 'all'
+  | ProductCategorySlug
+  | typeof CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER;
+
 export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
 
 //===================================================================
@@ -89,7 +99,8 @@ export type ProductRequestsQueryParams = Readonly<{
   requestNumber?: string;
   productName?: string;
   productArticle?: string;
-  category?: ProductCategory;
+  category?: ProductCategorySlug;
+  categoryMode?: ProductRequestCategoryMode;
   status?: ProductRequestStatus;
 }>;
 
@@ -110,7 +121,8 @@ export type ProductRequestRowViewModel = Readonly<{
   productImageUrl?: string;
   productArticle: string;
   productName: string;
-  category: ProductCategory;
+  categoryMode: ProductRequestCategoryMode;
+  category?: ProductCategoryReference;
   customCategory?: string;
   status: ProductRequestStatus;
 }>;
@@ -308,11 +320,17 @@ export function normalizeProductRequest(
     normalizeDateTime(rawRequest.updatedAt);
   const status = normalizeProductRequestStatus(rawRequest.status);
 
+  const categoryMode = rawRequest.categoryMode;
+  const category = rawRequest.category;
+  const customCategory = getTrimmedString(rawRequest.customCategory);
+
   if (
     !id ||
     !createdAt ||
     !status.success ||
-    !isProductCategory(rawRequest.category)
+    (categoryMode !== 'catalog' && categoryMode !== 'custom') ||
+    (categoryMode === 'catalog' && !isProductCategory(category)) ||
+    (categoryMode === 'custom' && !customCategory)
   ) {
     return null;
   }
@@ -342,8 +360,6 @@ export function normalizeProductRequest(
 
   if (!productArticle || !productName) return null;
 
-  const customCategory = getTrimmedString(rawRequest.customCategory);
-
   return {
     id,
     requestNumber: getTrimmedString(rawRequest.requestNumber) ?? id,
@@ -352,8 +368,11 @@ export function normalizeProductRequest(
     ...(productImageUrl ? { productImageUrl } : {}),
     productArticle,
     productName,
-    category: rawRequest.category,
-    ...(customCategory ? { customCategory } : {}),
+    categoryMode,
+    ...(categoryMode === 'catalog' && isProductCategory(category)
+      ? { category }
+      : {}),
+    ...(categoryMode === 'custom' && customCategory ? { customCategory } : {}),
     status: status.value,
   };
 }

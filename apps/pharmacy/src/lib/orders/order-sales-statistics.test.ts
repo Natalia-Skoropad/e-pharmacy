@@ -19,13 +19,20 @@ function validStatistics() {
   return {
     currency: '₴',
     groupBy: 'month',
-    categories: ['medicine'],
+    categories: [
+      {
+        id: '507f1f77bcf86cd799439099',
+        name: 'Veterinary care',
+        slug: 'veterinary_care',
+      },
+    ],
+
     points: [
       {
         key: '2026-08',
         label: 'Aug 2026',
         values: {
-          medicine: { quantity: 2, amount: 200 },
+          veterinary_care: { quantity: 2, amount: 200 },
         },
       },
     ],
@@ -44,7 +51,16 @@ test('sales statistics parser rejects malformed values instead of returning zero
     null,
     { ...validStatistics(), currency: 'USD' },
     { ...validStatistics(), groupBy: 'week' },
-    { ...validStatistics(), categories: ['unknown'] },
+    {
+      ...validStatistics(),
+      categories: [
+        {
+          id: '507f1f77bcf86cd799439099',
+          name: 'Broken category',
+          slug: 'broken-category',
+        },
+      ],
+    },
     { ...validStatistics(), points: undefined },
     {
       ...validStatistics(),
@@ -52,7 +68,7 @@ test('sales statistics parser rejects malformed values instead of returning zero
         {
           key: '2026-08',
           label: 'Aug 2026',
-          values: { medicine: { quantity: -1, amount: 200 } },
+          values: { veterinary_care: { quantity: -1, amount: 200 } },
         },
       ],
     },

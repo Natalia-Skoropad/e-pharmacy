@@ -1,6 +1,7 @@
 import type { EntityId, ISODateTimeString } from '../primitives';
-import type { ProductCategory } from '../products';
-import type { ProductRequestFile } from './payload';
+import type { ProductCategoryReference } from '../reference-data';
+
+import type { ProductRequestCategoryMode, ProductRequestFile } from './payload';
 import type { ProductRequestStatus } from './status';
 
 //=============================================================================
@@ -29,7 +30,8 @@ export type ProductRequestResponseDto = Readonly<{
   productName?: string;
   article: string;
   name: string;
-  category: ProductCategory;
+  categoryMode: ProductRequestCategoryMode;
+  category?: ProductCategoryReference;
   customCategory?: string;
   status: ProductRequestStatus;
   productImage?: ProductRequestFile;

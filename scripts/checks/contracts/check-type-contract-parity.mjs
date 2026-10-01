@@ -532,7 +532,6 @@ const [
   frontendUserStatuses,
   frontendPharmacyStatuses,
   frontendProductStatuses,
-  frontendCategories,
   frontendRequestStatuses,
   frontendReview,
   frontendOrderValues,
@@ -542,7 +541,6 @@ const [
   backendAuth,
   backendProductModel,
   backendProductTypes,
-  backendCategories,
   backendRequestStatuses,
   backendOrder,
   backendPharmacyNote,
@@ -553,7 +551,6 @@ const [
   readSource('packages', 'config', 'src', 'users', 'domain-values.ts'),
   readSource('packages', 'config', 'src', 'pharmacies', 'domain-values.ts'),
   readSource('packages', 'config', 'src', 'products', 'domain-values.ts'),
-  readSource('packages', 'config', 'src', 'products', 'categories.ts'),
   readSource('packages', 'config', 'src', 'product-requests', 'statuses.ts'),
   readSource('packages', 'types', 'src', 'reviews', 'review.ts'),
   readSource('packages', 'config', 'src', 'orders', 'domain-values.ts'),
@@ -572,7 +569,6 @@ const [
   readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
   readSource('apps', 'api', 'src', 'models', 'product.model.ts'),
   readSource('apps', 'api', 'src', 'types', 'product.ts'),
-  readSource('apps', 'api', 'src', 'types', 'categories.ts'),
 
   readSource(
     'apps',
@@ -666,14 +662,6 @@ assertSameValues(
   'Order creator types',
   extractArrayValues(frontendOrderValues, 'ORDER_CREATED_BY_TYPES'),
   extractTypeUnionValues(backendOrder, 'OrderCreatedByType')
-);
-
-//===================================================================
-
-assertSameValues(
-  'Product categories',
-  extractArrayValues(frontendCategories, 'PRODUCT_CATEGORIES'),
-  extractArrayValues(backendCategories, 'PRODUCT_CATEGORIES')
 );
 
 //===================================================================

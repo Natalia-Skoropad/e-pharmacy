@@ -329,6 +329,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/product-categories",
+    "backend": "/product-categories",
+    "methods": {
+      "GET": "public"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/products/filters",
     "backend": "/products/filters",
     "methods": {

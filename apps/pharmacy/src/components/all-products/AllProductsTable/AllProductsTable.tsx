@@ -11,14 +11,12 @@ import {
 
 import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import type { ProductDetails } from '@e-pharmacy/types/products';
-import { getPharmacyAllProductPath } from '@/lib/routes';
-
-import { getProductImageSrc } from '@/lib/products/product-images';
-
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import { getPharmacyAllProductPath } from '@/lib/routes';
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 //===================================================================
 
@@ -108,7 +106,7 @@ function AllProductsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (product) => PRODUCT_CATEGORY_LABELS[product.category],
+        render: (product) => product.category.name,
       },
       {
         key: 'status',

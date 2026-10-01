@@ -11,7 +11,6 @@ import {
   Users,
 } from 'lucide-react';
 
-import { PRODUCT_CATEGORIES } from '@e-pharmacy/config/products';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 import { isApiError } from '@e-pharmacy/api-client/transport';
@@ -32,8 +31,6 @@ import {
   PAYMENT_METHOD_LABELS,
   DELIVERY_METHOD_LABELS,
 } from '@e-pharmacy/config/presentation';
-
-import { PRODUCT_CATEGORY_LABELS } from '@e-pharmacy/config/presentation';
 
 import {
   Button,
@@ -76,10 +73,8 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
-import type {
-  ProductCategory,
-  ProductStatus,
-} from '@e-pharmacy/types/products';
+import type { ProductStatus } from '@e-pharmacy/types/products';
+import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount } from '@e-pharmacy/utils/money';
@@ -96,6 +91,7 @@ import {
   deletePharmacyNote,
   getPharmacyNotes,
   getPharmacyOrders,
+  getProductCategories,
 } from '@/lib/api/browser';
 
 import {
@@ -143,7 +139,7 @@ type ClientDetailsError = Readonly<{
 
 type ClientProductFilters = Readonly<{
   date: DateFilterValue;
-  category: 'all' | ProductCategory;
+  category: 'all' | ProductCategorySlug;
   status: 'all' | ProductStatus;
 }>;
 
@@ -226,16 +222,6 @@ const ORDER_CREATED_BY_OPTIONS: Array<
   ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
     value: createdByType,
     label: ORDER_CREATED_BY_LABELS[createdByType],
-  })),
-];
-
-const PRODUCT_CATEGORY_OPTIONS: Array<
-  SelectOption<ClientProductFilters['category']>
-> = [
-  { value: 'all', label: 'All' },
-  ...PRODUCT_CATEGORIES.map((category) => ({
-    value: category,
-    label: PRODUCT_CATEGORY_LABELS[category],
   })),
 ];
 
@@ -367,6 +353,7 @@ type ClientProductsFiltersDrawerProps = Readonly<{
   hasActiveFilters: boolean;
   minDate?: string;
   resetHref: string;
+  categoryOptions: readonly SelectOption<ClientProductFilters['category']>[];
   onChange: (filters: ClientProductFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -377,6 +364,7 @@ function ClientProductsFiltersDrawer({
   hasActiveFilters,
   minDate,
   resetHref,
+  categoryOptions,
   onChange,
   onClose,
   onReset,
@@ -409,7 +397,7 @@ function ClientProductsFiltersDrawer({
         id="client-products-category"
         label="Product category"
         value={filters.category}
-        options={PRODUCT_CATEGORY_OPTIONS}
+        options={categoryOptions}
         isActive={filters.category !== 'all'}
         onChange={(category) => onChange({ ...filters, category })}
       />
@@ -558,6 +546,10 @@ function ClientDetailsPageContentState({
     DEFAULT_PRODUCT_FILTERS
   );
 
+  const [productCategoryOptions, setProductCategoryOptions] = useState<
+    readonly SelectOption<ClientProductFilters['category']>[]
+  >([{ value: 'all', label: 'All categories' }]);
+
   const [productsStatus, setProductsStatus] = useState<ResourceStatus>('idle');
   const [productsError, setProductsError] = useState('');
   const [productsRetryVersion, setProductsRetryVersion] = useState(0);
@@ -565,6 +557,32 @@ function ClientDetailsPageContentState({
     string | null
   >(null);
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadProductCategoryOptions() {
+      try {
+        const categories = await getProductCategories({
+          signal: controller.signal,
+        });
+        if (!controller.signal.aborted) {
+          setProductCategoryOptions([
+            { value: 'all', label: 'All categories' },
+            ...categories.map((category) => ({
+              value: category.slug,
+              label: category.name,
+            })),
+          ]);
+        }
+      } catch {
+        // Keep the neutral fallback; the products resource reports its own state.
+      }
+    }
+
+    void loadProductCategoryOptions();
+    return () => controller.abort();
+  }, []);
 
   const productsRequestKey = JSON.stringify({
     clientId,
@@ -983,7 +1001,7 @@ function ClientDetailsPageContentState({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (item) => PRODUCT_CATEGORY_LABELS[item.category],
+        render: (item) => item.category?.name ?? '—',
       },
       {
         key: 'quantity',
@@ -1515,6 +1533,7 @@ function ClientDetailsPageContentState({
           hasActiveFilters={hasProductFilters}
           minDate={productsEarliestCreatedAt ?? undefined}
           resetHref={getPharmacyClientPath(clientId)}
+          categoryOptions={productCategoryOptions}
           onChange={(filters) => {
             setProductFilters(filters);
             setProductsPageState({ searchKey: productSearchKey, page: 1 });

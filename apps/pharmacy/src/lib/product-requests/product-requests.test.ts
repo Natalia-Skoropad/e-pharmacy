@@ -29,7 +29,14 @@ function validRequest() {
     productName: 'Aspirin',
     article: 'ASP-100',
     name: 'Aspirin',
-    category: 'medicine',
+    categoryMode: 'catalog',
+
+    category: {
+      id: '507f1f77bcf86cd799439099',
+      name: 'Medicine',
+      slug: 'medicine',
+    },
+
     status: 'in_progress',
 
     history: [
