@@ -352,23 +352,25 @@ pharmacy/client profile, and does not overwrite credentials on a repeated run
 for the same admin. Remove the bootstrap secrets from the deployment environment
 after the account exists.
 
-### ProductCategory bootstrap and migration preflight
+### ProductCategory bootstrap and legacy relation migration
 
-Stage 11.2 persists product categories in MongoDB. `pnpm seed:api` ensures the
-initial records for Medicine, Vitamins, Beauty, Hygiene, and Medical devices.
-The bootstrap is idempotent and never creates `Other` as a category.
+Product categories are persisted reference data in MongoDB. `pnpm seed:api`
+ensures the initial records for Medicine, Vitamins, Beauty, Hygiene, and
+Medical devices. The bootstrap is idempotent and never creates `Other` as a
+category.
 
-Before the Stage 11.3 relation migration, run:
+Deployments that may still contain pre-relation product data should run:
 
 ```bash
 pnpm migrate:product-categories
 ```
 
-The command creates the same bootstrap records if needed, validates legacy
-`Product.category` and `ProductRequest.category` strings, and fails closed on
-unknown or malformed product categories. Legacy Product Request `other` values
-are accepted only when `customCategory` is present; they remain compatibility
-data until Stage 11.3 and do not create a ProductCategory record.
+The command validates and migrates legacy `Product.category`,
+`ProductRequest.category`, and Order snapshot category strings to canonical
+ProductCategory relations. Unknown or malformed legacy values fail closed.
+Legacy Product Request `other` is converted only to custom-request metadata
+when `customCategory` is present; it never becomes a ProductCategory record.
+The migration is idempotent and safe to rerun after an interrupted deployment.
 
 ## Deployment Notes
 
@@ -408,7 +410,7 @@ Allowed transitions are `new -> in_progress | rejected` and `in_progress -> succ
 
 ### Canonical shared names
 
-Use only `PaymentMethod`, `DeliveryMethod`, `postal_delivery`, `ProductCategory`, and `PRODUCT_CATEGORIES`.
+Use only `PaymentMethod`, `DeliveryMethod`, `postal_delivery`, and dynamic `ProductCategory` reference-data relations. Do not reintroduce a compile-time product-category value set.
 
 
 ## Trusted BFF authentication response

@@ -40,7 +40,7 @@ for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
     true,
-    `Stage 11.5 file must exist: ${file.join('/')}`
+    `Admin Settings backend file must exist: ${file.join('/')}`
   );
 }
 

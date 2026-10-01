@@ -54,3 +54,43 @@ test('Category color is audited and can change without renaming an in-use catego
   assert.match(source, /usage\.total > 0 && isIdentityChange/);
   assert.match(source, /its name cannot be edited/);
 });
+
+//===============================================================
+
+test('Settings mutations distinguish stale resources from in-use conflicts', () => {
+  assert.ok((source.match(/HTTP_STATUS\.NOT_FOUND/g) ?? []).length >= 4);
+  assert.match(source, /Product category was not found/);
+  assert.match(source, /Position was not found/);
+  assert.match(source, /usage\.total > 0 && isIdentityChange/);
+  assert.match(source, /usage\.total > 0/);
+  assert.match(source, /HTTP_STATUS\.CONFLICT/);
+});
+
+//===============================================================
+
+test('Category usage is re-read inside mutation transactions before edit and delete', () => {
+  assert.equal(
+    (source.match(/getCategoryUsageInSession\(category\._id, session\)/g) ?? [])
+      .length,
+    2
+  );
+
+  assert.match(
+    source,
+    /updateAdminProductCategoryService[\s\S]*?getCategoryUsageInSession[\s\S]*?category\.save\(\{ session \}\)/
+  );
+
+  assert.match(
+    source,
+    /deleteAdminProductCategoryService[\s\S]*?getCategoryUsageInSession[\s\S]*?ProductCategory\.deleteOne/
+  );
+});
+
+//===============================================================
+
+test('Settings date filters include complete UTC calendar-day boundaries', () => {
+  assert.match(source, /T00:00:00\.000Z/);
+  assert.match(source, /T23:59:59\.999Z/);
+  assert.match(source, /\$gte:\s*startOfUtcDay/);
+  assert.match(source, /\$lte:\s*endOfUtcDay/);
+});

@@ -1,9 +1,6 @@
 import { Types, type Connection } from 'mongoose';
 
-import {
-  LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY,
-  PRODUCT_CATEGORY_SEED_DEFINITIONS,
-} from '../constants/product-category';
+import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../constants/product-category';
 
 import { Product } from '../models/product.model';
 import { ProductCategory } from '../models/productCategory.model';
@@ -12,6 +9,7 @@ import { ensureInitialProductCategories } from './product-category-bootstrap.ser
 
 //===============================================================
 
+const LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY = 'other';
 const LEGACY_CATEGORY_ALIASES = new Map<string, string>();
 
 for (const definition of PRODUCT_CATEGORY_SEED_DEFINITIONS) {
@@ -28,12 +26,6 @@ export type LegacyProductCategoryResolution =
   | Readonly<{ kind: 'category'; slug: string }>
   | Readonly<{ kind: 'custom_request' }>
   | Readonly<{ kind: 'unsupported'; value: string }>;
-
-export type ProductCategoryMigrationPreparationResult = Readonly<{
-  seededCreatedCount: number;
-  categorySlugs: readonly string[];
-  legacyCustomProductRequests: number;
-}>;
 
 export type ProductCategoryRelationMigrationResult = Readonly<{
   seededCreatedCount: number;
@@ -515,30 +507,11 @@ async function buildRelationMigrationPlan(
 //===============================================================
 
 /**
- * Stage 11.2 compatibility preflight. Kept for the standalone preparation
- * command and tests; Stage 11.3 uses migrateProductCategoryRelations below.
- */
-export async function prepareProductCategoryMigration(
-  db: NonNullable<Connection['db']>
-): Promise<ProductCategoryMigrationPreparationResult> {
-  const bootstrap = await ensureInitialProductCategories();
-  const plan = await buildRelationMigrationPlan(db);
-
-  return {
-    seededCreatedCount: bootstrap.createdCount,
-    categorySlugs: plan.categorySlugs,
-    legacyCustomProductRequests: plan.legacyCustomProductRequests,
-  };
-}
-
-//===============================================================
-
-/**
- * Stage 11.3 category relation migration.
+ * Migrates legacy string category data to persisted ProductCategory relations.
  *
  * The complete migration plan is validated before relation writes start. The
- * writes themselves are idempotent, so rerunning after an interrupted deploy
- * safely continues from the persisted relation fields.
+ * writes are idempotent, so rerunning after an interrupted deploy safely
+ * continues from the persisted relation fields.
  */
 export async function migrateProductCategoryRelations(
   db: NonNullable<Connection['db']>
@@ -569,8 +542,8 @@ export async function migrateProductCategoryRelations(
     );
   }
 
-  // Drop legacy category indexes and materialize the relation indexes declared
-  // by the Stage 11.3 models only after data is compatible with those models.
+  // Drop legacy category indexes and materialize the relation indexes only
+  // after all persisted data is compatible with the relation-based models.
   await Product.syncIndexes();
   await ProductRequest.syncIndexes();
 

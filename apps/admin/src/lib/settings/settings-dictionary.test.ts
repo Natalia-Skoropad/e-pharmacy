@@ -79,3 +79,49 @@ test('position parser stays color-free and validates its own usage shape', () =>
   assert.equal(parsed.items[0]?.name, 'Content manager');
   assert.equal('color' in (parsed.items[0] ?? {}), false);
 });
+
+//===================================================================
+
+test('settings list parsers accept an empty database response', () => {
+  const categories = parseProductCategoryListResponse({
+    items: [],
+    page: 1,
+    perPage: 20,
+    total: 0,
+    totalPages: 0,
+    earliestCreatedAt: null,
+  });
+
+  const positions = parsePositionListResponse({
+    items: [],
+    page: 1,
+    perPage: 20,
+    total: 0,
+    totalPages: 0,
+    earliestCreatedAt: null,
+  });
+
+  assert.deepEqual(categories.items, []);
+  assert.equal(categories.totalPages, 0);
+  assert.equal(categories.earliestCreatedAt, null);
+
+  assert.deepEqual(positions.items, []);
+  assert.equal(positions.totalPages, 0);
+  assert.equal(positions.earliestCreatedAt, null);
+});
+
+//===================================================================
+
+test('category parser rejects malformed dynamic slugs', () => {
+  assert.throws(() =>
+    parseProductCategoryMutationResponse({
+      category: { ...category, slug: 'medical-devices' },
+    })
+  );
+
+  assert.throws(() =>
+    parseProductCategoryMutationResponse({
+      category: { ...category, slug: 'Other' },
+    })
+  );
+});

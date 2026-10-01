@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY,
   PRODUCT_CATEGORY_KINDS,
   PRODUCT_CATEGORY_SEED_DEFINITIONS,
 } from '../constants/product-category';
@@ -26,10 +25,7 @@ test('initial ProductCategory seed contains only real categories', () => {
     ({ name }) => name
   );
 
-  assert.equal(
-    seedSlugs.includes(LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY),
-    false
-  );
+  assert.equal(seedSlugs.includes('other'), false);
 
   assert.equal(seedNames.includes('Other'), false);
   assert.deepEqual(PRODUCT_CATEGORY_KINDS, ['standard']);
@@ -57,7 +53,7 @@ test('ProductCategory seed uses idempotent upserts with setOnInsert only', () =>
 
 //===============================================================
 
-test('legacy Other is a ProductRequest compatibility sentinel, not a category record', () => {
+test('legacy Other migrates to custom request metadata, not a category record', () => {
   assert.deepEqual(resolveLegacyProductCategory('other'), {
     kind: 'custom_request',
   });

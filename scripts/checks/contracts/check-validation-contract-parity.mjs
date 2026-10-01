@@ -100,6 +100,15 @@ const PRODUCT_CATEGORY_SLUG_VALIDATION_SOURCE = path.join(
   'product-category-slug.ts'
 );
 
+const BACKEND_SETTINGS_DICTIONARY_CONSTANTS_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'settings-dictionary.ts'
+);
+
 const BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE = path.join(
   ROOT_DIR,
   'apps',
@@ -183,6 +192,7 @@ const [
   orderModelSource,
   referenceDataNameValidationSource,
   productCategorySlugValidationSource,
+  backendSettingsDictionaryConstantsSource,
   backendProductCategoryConstantsSource,
 ] = await Promise.all([
   readFixture(FRONTEND_FIXTURE),
@@ -194,6 +204,7 @@ const [
   readSource(ORDER_MODEL_SOURCE),
   readSource(REFERENCE_DATA_NAME_VALIDATION_SOURCE),
   readSource(PRODUCT_CATEGORY_SLUG_VALIDATION_SOURCE),
+  readSource(BACKEND_SETTINGS_DICTIONARY_CONSTANTS_SOURCE),
   readSource(BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE),
 ]);
 
@@ -268,23 +279,23 @@ const referenceDataNameMaxLength = requireIntegerMatch(
   'Shared reference-data name max length'
 );
 
-const backendProductCategoryNameMaxLength = requireIntegerMatch(
-  backendProductCategoryConstantsSource,
-  /PRODUCT_CATEGORY_NAME_MAX_LENGTH\s*=\s*(\d+)/,
-  'Backend product category name max length'
+const backendDictionaryNameMaxLength = requireIntegerMatch(
+  backendSettingsDictionaryConstantsSource,
+  /SETTINGS_DICTIONARY_NAME_MAX_LENGTH\s*=\s*(\d+)/,
+  'Backend settings dictionary name max length'
 );
 
 assert.equal(
-  backendProductCategoryNameMaxLength,
+  backendDictionaryNameMaxLength,
   referenceDataNameMaxLength,
-  'Shared and backend product category name max lengths differ'
+  'Shared and backend settings dictionary name max lengths differ'
 );
 
 assert.equal(
   requireRegexLiteral(
-    backendProductCategoryConstantsSource,
-    'PRODUCT_CATEGORY_NAME_PATTERN',
-    'Backend product category name pattern'
+    backendSettingsDictionaryConstantsSource,
+    'SETTINGS_DICTIONARY_NAME_PATTERN',
+    'Backend settings dictionary name pattern'
   ),
 
   requireRegexLiteral(
@@ -293,7 +304,19 @@ assert.equal(
     'Shared reference-data name pattern'
   ),
 
-  'Shared and backend product category name patterns differ'
+  'Shared and backend settings dictionary name patterns differ'
+);
+
+assert.match(
+  backendProductCategoryConstantsSource,
+  /PRODUCT_CATEGORY_NAME_MAX_LENGTH\s*=\s*SETTINGS_DICTIONARY_NAME_MAX_LENGTH/,
+  'Product categories must reuse the backend settings dictionary name max length'
+);
+
+assert.match(
+  backendProductCategoryConstantsSource,
+  /PRODUCT_CATEGORY_NAME_PATTERN\s*=\s*SETTINGS_DICTIONARY_NAME_PATTERN/,
+  'Product categories must reuse the backend settings dictionary name pattern'
 );
 
 assert.equal(

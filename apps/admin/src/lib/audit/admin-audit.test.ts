@@ -194,3 +194,41 @@ test('audit actor parser keeps only current employee presentation fields', () =>
     /invalid audit actor/i
   );
 });
+
+//===================================================================
+
+test('audit list parser renders product-category and position dictionary events', () => {
+  const parsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        action: 'productCategory.updated',
+        section: 'categories',
+        entityType: 'productCategory',
+        entityLabelSnapshot: 'Baby care',
+        changedFields: ['name', 'slug', 'color'],
+      },
+      {
+        ...item,
+        id: '507f1f77bcf86cd799439099',
+        action: 'position.deleted',
+        section: 'positions',
+        entityType: 'position',
+        entityLabelSnapshot: 'Manager',
+        changedFields: ['exists', 'name'],
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 2,
+    totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
+  });
+
+  assert.equal(parsed.items[0]?.action, 'productCategory.updated');
+  assert.equal(parsed.items[0]?.section, 'categories');
+  assert.equal(parsed.items[0]?.entityType, 'productCategory');
+  assert.equal(parsed.items[1]?.action, 'position.deleted');
+  assert.equal(parsed.items[1]?.section, 'positions');
+  assert.equal(parsed.items[1]?.entityType, 'position');
+});

@@ -11,7 +11,7 @@ async function read(relativePath: string): Promise<string> {
 
 //===================================================================
 
-test('Stage 11.3 product domain stores ProductCategory relations instead of static category strings', async () => {
+test('product domain stores ProductCategory relations instead of static category strings', async () => {
   const [productModel, requestModel, orderModel] = await Promise.all([
     read('src/models/product.model.ts'),
     read('src/models/productRequest.model.ts'),
@@ -46,7 +46,7 @@ test('Stage 11.3 product domain stores ProductCategory relations instead of stat
 
 //===================================================================
 
-test('Stage 11.3 query validation accepts dynamic category slugs without the static enum', async () => {
+test('query validation accepts dynamic category slugs without a static enum', async () => {
   const [productSchema, clientSchema, requestSchema] = await Promise.all([
     read('src/schemas/product.schema.ts'),
     read('src/schemas/client.schema.ts'),
@@ -61,7 +61,7 @@ test('Stage 11.3 query validation accepts dynamic category slugs without the sta
 
 //===================================================================
 
-test('Stage 11.3 custom Product Request behavior is metadata-based and public categories have a canonical read route', async () => {
+test('custom Product Request behavior is metadata-based and public categories have a canonical read route', async () => {
   const [requestService, categoryConstants, routes, categoryService] =
     await Promise.all([
       read('src/services/product-request.service.ts'),
@@ -73,11 +73,14 @@ test('Stage 11.3 custom Product Request behavior is metadata-based and public ca
   assert.match(requestService, /categoryMode === 'custom'/);
   assert.doesNotMatch(requestService, /category\s*===\s*['"]other['"]/);
 
-  assert.match(categoryConstants, /LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY/);
-
   assert.doesNotMatch(
     categoryConstants,
     /name:\s*['"]Other['"][\s\S]*?PRODUCT_CATEGORY_SEED_DEFINITIONS/
+  );
+
+  assert.doesNotMatch(
+    categoryConstants,
+    /PRODUCT_CATEGORIES|PRODUCT_CATEGORY_LABELS/
   );
 
   assert.match(
@@ -93,5 +96,28 @@ test('Stage 11.3 custom Product Request behavior is metadata-based and public ca
   assert.match(
     categoryService,
     /\.sort\(\{ sortOrder: 1, name: 1, _id: 1 \}\)/
+  );
+});
+
+//===================================================================
+
+test('legacy relation migration covers products, product requests and order snapshots without making legacy values authoritative', async () => {
+  const migration = await read(
+    'src/services/product-category-migration.service.ts'
+  );
+
+  assert.match(migration, /collection\('products'\)/);
+  assert.match(migration, /collection\('productrequests'\)/);
+  assert.match(migration, /collection\('orders'\)/);
+
+  assert.match(migration, /\$unset:\s*\{[\s\S]*?category:\s*''/);
+  assert.match(migration, /categoryMode = 'custom'/);
+  assert.match(migration, /categoryNameSnapshot/);
+  assert.match(migration, /categorySlugSnapshot/);
+  assert.match(migration, /migratedOrderSnapshots/);
+
+  assert.doesNotMatch(
+    migration,
+    /export\s+const\s+PRODUCT_CATEGORIES|PRODUCT_CATEGORY_LABELS/
   );
 });

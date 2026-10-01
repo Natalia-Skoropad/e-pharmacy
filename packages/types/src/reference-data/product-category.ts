@@ -13,8 +13,8 @@ import type { ReferenceDataListQueryParams } from './common';
 /**
  * Persistence slug for a dynamic product category.
  *
- * Stage 11 keeps the existing snake_case category keys compatible with the
- * migration path. Public URL formatting is a separate presentation concern.
+ * Stored slugs use the reference-data contract; public URL formatting is a
+ * separate presentation concern.
  */
 export type ProductCategorySlug = string;
 
@@ -25,7 +25,7 @@ export type ProductCategoryKind = 'standard';
 
 //===================================================================
 
-/** Canonical persisted category contract introduced by Stage 11. */
+/** Canonical persisted product-category contract. */
 export type ProductCategoryEntity = Readonly<{
   id: EntityId;
   name: string;
@@ -40,7 +40,7 @@ export type ProductCategoryEntity = Readonly<{
   updatedBy: EntityId | null;
 }>;
 
-/** Lightweight relation returned with products and product requests later. */
+/** Lightweight relation returned with products and product requests. */
 export type ProductCategoryReference = Readonly<
   Pick<ProductCategoryEntity, 'id' | 'name' | 'slug'>
 >;

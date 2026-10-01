@@ -5,8 +5,7 @@ import type { ProductCategoryReference } from '../reference-data/product-categor
 /**
  * Dynamic category relation returned with product DTOs.
  *
- * Kept as a products-domain alias during Stage 11 so existing explicit
- * `@e-pharmacy/types/products` imports can migrate without reintroducing a
- * compile-time category value set.
+ * This products-domain alias intentionally points at reference data instead of
+ * defining compile-time category values.
  */
 export type ProductCategory = ProductCategoryReference;

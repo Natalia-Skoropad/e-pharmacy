@@ -71,8 +71,8 @@ const INTENTIONALLY_PUBLIC = new Set([
   'reviews:ReviewModerationResponse',
   'reviews:ReviewModerationStatus',
 
-  // Stage 11.1 publishes the reference-data contracts before the later
-  // persistence/UI sub-stages begin consuming every shape.
+  // Reference-data contracts are public cross-application API shapes. Some
+  // remain intentionally available before every consumer needs them.
   'reference-data:CreatePositionPayload',
   'reference-data:CreateProductCategoryPayload',
   'reference-data:PositionEntity',
@@ -169,6 +169,7 @@ for (const [entrypoint, relativeFile] of Object.entries(ENTRYPOINT_FILES)) {
   const sourceFile = typeProgram.getSourceFile(
     path.join(ROOT_DIR, relativeFile)
   );
+
   const moduleSymbol = sourceFile && checker.getSymbolAtLocation(sourceFile);
 
   assert.ok(moduleSymbol, `Could not read public exports from ${relativeFile}`);

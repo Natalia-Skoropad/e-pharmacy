@@ -165,6 +165,19 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         }
 
         setData(response);
+
+        setFormState((current) => {
+          if (current?.mode !== 'edit') return current;
+
+          const refreshedItem = response.items.find(
+            (item) => item.id === current.item.id
+          );
+
+          return refreshedItem
+            ? { mode: 'edit', item: refreshedItem }
+            : current;
+        });
+
         setListError(null);
       })
       .catch((error: unknown) => {
@@ -224,14 +237,27 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         reload();
       }
     } catch (error) {
-      setMutationError(
-        getRequestErrorMessage(
-          error,
-          `${config.singularLabel} could not be saved. Please try again.`
-        )
+      const message = getRequestErrorMessage(
+        error,
+        `${config.singularLabel} could not be saved. Please try again.`
       );
 
-      if (isApiError(error) && error.httpStatus === 409) reload();
+      if (
+        isApiError(error) &&
+        error.httpStatus === 404 &&
+        formState.mode === 'edit'
+      ) {
+        setFormState(null);
+        setMutationError(null);
+        toast.error(message);
+        reload();
+      } else {
+        setMutationError(message);
+
+        if (isApiError(error) && error.httpStatus === 409) {
+          reload();
+        }
+      }
     } finally {
       setIsMutating(false);
     }

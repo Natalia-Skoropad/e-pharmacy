@@ -1,6 +1,6 @@
 /**
- * Dynamic category persistence slugs stay snake_case during Stage 11 so the
- * seeded records can preserve existing category keys such as medical_devices.
+ * Persisted product-category slugs use lowercase snake_case. URL presentation
+ * may transform the slug without changing the stored reference-data identity.
  */
 export const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 

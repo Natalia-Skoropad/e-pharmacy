@@ -78,14 +78,6 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
 
 //===============================================================
 
-/**
- * Legacy Product Request sentinel only. It must never become a ProductCategory
- * record. Stage 11.3 removes the backend dependency on this value.
- */
-export const LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY = 'other' as const;
-
-//===============================================================
-
 export function normalizeProductCategoryName(value: string): string {
   return normalizeSettingsDictionaryName(value);
 }
