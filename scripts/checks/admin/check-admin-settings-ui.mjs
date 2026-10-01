@@ -89,13 +89,42 @@ const requiredFiles = [
     'SettingsDictionaryFormModal.tsx',
   ],
   ['packages', 'ui', 'src', 'forms', 'ColorPicker', 'ColorPicker.tsx'],
+  [
+    'apps',
+    'admin',
+    'src',
+    'app',
+    'admin',
+    'settings',
+    'categories',
+    'page.tsx',
+  ],
+  ['apps', 'admin', 'src', 'app', 'admin', 'settings', 'positions', 'page.tsx'],
+  [
+    'apps',
+    'admin',
+    'src',
+    'components',
+    'settings',
+    'ProductCategoriesSettings',
+    'ProductCategoriesSettings.tsx',
+  ],
+  [
+    'apps',
+    'admin',
+    'src',
+    'components',
+    'settings',
+    'PositionsSettings',
+    'PositionsSettings.tsx',
+  ],
 ];
 
 for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
     true,
-    `Stage 11.6 file must exist: ${file.join('/')}`
+    `Admin Settings file must exist: ${file.join('/')}`
   );
 }
 
@@ -235,4 +264,88 @@ assert.match(categoryModel, /PRODUCT_CATEGORY_COLOR_PATTERN/);
 assert.match(categorySchema, /createAdminProductCategorySchema/);
 assert.match(categorySchema, /productCategoryColorSchema/);
 
-console.log('Admin Settings BFF and shared CRUD UI structural checks passed.');
+//===================================================================
+
+const categoriesRoutePage = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'admin',
+  'settings',
+  'categories',
+  'page.tsx'
+);
+
+const positionsRoutePage = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'admin',
+  'settings',
+  'positions',
+  'page.tsx'
+);
+
+assert.match(categoriesRoutePage, /AdminPermissionGate/);
+assert.match(categoriesRoutePage, /ADMIN_PERMISSIONS\.categories\.view/);
+assert.match(categoriesRoutePage, /ProductCategoriesSettings/);
+
+assert.match(positionsRoutePage, /AdminPermissionGate/);
+assert.match(positionsRoutePage, /ADMIN_PERMISSIONS\.positions\.view/);
+assert.match(positionsRoutePage, /PositionsSettings/);
+
+const categoriesSettings = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'settings',
+  'ProductCategoriesSettings',
+  'ProductCategoriesSettings.tsx'
+);
+
+for (const token of [
+  'SettingsDictionaryPage',
+  'getAdminProductCategories',
+  'createAdminProductCategory',
+  'updateAdminProductCategory',
+  'deleteAdminProductCategory',
+  'ADMIN_PERMISSIONS.categories.create',
+  'ADMIN_PERMISSIONS.categories.edit',
+  'ADMIN_PERMISSIONS.categories.delete',
+  'allowColorEditWhenInUse',
+  'productsCount',
+  'productRequestsCount',
+]) {
+  assert.match(categoriesSettings, new RegExp(token.replaceAll('.', '\\.')));
+}
+
+const positionsSettings = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'settings',
+  'PositionsSettings',
+  'PositionsSettings.tsx'
+);
+
+for (const token of [
+  'SettingsDictionaryPage',
+  'getAdminPositions',
+  'createAdminPosition',
+  'updateAdminPosition',
+  'deleteAdminPosition',
+  'ADMIN_PERMISSIONS.positions.create',
+  'ADMIN_PERMISSIONS.positions.edit',
+  'ADMIN_PERMISSIONS.positions.delete',
+  'employeesCount',
+]) {
+  assert.match(positionsSettings, new RegExp(token.replaceAll('.', '\\.')));
+}
+
+assert.doesNotMatch(positionsSettings, /ColorPicker|defaultColor|color:/);
+
+console.log('Admin Settings CRUD pages structural checks passed.');

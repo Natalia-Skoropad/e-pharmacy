@@ -155,9 +155,12 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
       .then((response) => {
         if (controller.signal.aborted) return;
 
-        if (response.totalPages > 0 && page > response.totalPages) {
+        if (
+          page > 1 &&
+          (response.totalPages === 0 || page > response.totalPages)
+        ) {
           keepLoadingForPageCorrection = true;
-          setPage(response.totalPages);
+          setPage(Math.max(1, response.totalPages));
           return;
         }
 
@@ -328,6 +331,23 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           const editDisabled = !canEdit || (isInUse && !canEditInUse);
           const deleteDisabled = !canDelete || isInUse;
 
+          let editDisabledReason: string | undefined;
+          let deleteDisabledReason: string | undefined;
+
+          if (!canEdit) {
+            editDisabledReason =
+              'You do not have permission to edit this item.';
+          } else if (editDisabled && isInUse) {
+            editDisabledReason = config.usageLockMessage;
+          }
+
+          if (!canDelete) {
+            deleteDisabledReason =
+              'You do not have permission to delete this item.';
+          } else if (deleteDisabled && isInUse) {
+            deleteDisabledReason = config.usageLockMessage;
+          }
+
           return (
             <span className={css.actionsCell}>
               <Button
@@ -336,9 +356,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
                 size="sm"
                 iconLeft={<Pencil size={16} aria-hidden="true" />}
                 disabled={editDisabled}
-                title={
-                  editDisabled && isInUse ? config.usageLockMessage : undefined
-                }
+                title={editDisabledReason}
                 onClick={() => openEdit(item)}
               >
                 Edit
@@ -350,11 +368,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
                 size="sm"
                 iconLeft={<Trash2 size={16} aria-hidden="true" />}
                 disabled={deleteDisabled}
-                title={
-                  deleteDisabled && isInUse
-                    ? config.usageLockMessage
-                    : undefined
-                }
+                title={deleteDisabledReason}
                 onClick={() => setDeleteItem(item)}
               >
                 Delete

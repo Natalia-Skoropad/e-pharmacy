@@ -236,9 +236,7 @@ for (const futurePage of [
   ['reviews', 'pharmacies', 'page.tsx'],
   ['reviews', 'products', 'page.tsx'],
   ['settings', 'employees', 'page.tsx'],
-  ['settings', 'positions', 'page.tsx'],
   ['settings', 'site-pages', 'page.tsx'],
-  ['settings', 'categories', 'page.tsx'],
 ]) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', 'admin', ...futurePage),

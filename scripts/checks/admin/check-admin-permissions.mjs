@@ -407,13 +407,11 @@ for (const file of uiFiles.filter((file) => /\.(?:ts|tsx)$/.test(file))) {
 
 for (const futurePage of [
   ['settings', 'employees', 'page.tsx'],
-  ['settings', 'positions', 'page.tsx'],
   ['pharmacies', 'page.tsx'],
   ['products', 'page.tsx'],
   ['reviews', 'pharmacies', 'page.tsx'],
   ['reviews', 'products', 'page.tsx'],
   ['settings', 'site-pages', 'page.tsx'],
-  ['settings', 'categories', 'page.tsx'],
 ]) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', 'admin', ...futurePage),
