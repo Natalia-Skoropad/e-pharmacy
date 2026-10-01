@@ -3022,3 +3022,5 @@ pnpm check:before-deploy
 feat(admin): add permission and platform owner foundation
 
 Тепер permission-фундамент стоїть перед CRUD, як і планували — отже наступні сторінки вже не доведеться потім масово лікувати від if (role === 'щось*дуже*спеціальне') 😄
+
+//=========================================

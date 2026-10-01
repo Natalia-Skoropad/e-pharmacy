@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  PRODUCT_CATEGORY_COLOR_PATTERN,
   REFERENCE_DATA_NAME_MAX_LENGTH,
   buildReferenceDataNameError,
+  isProductCategoryColor,
   isProductCategorySlug,
   isReferenceDataNameValid,
+  normalizeProductCategoryColor,
   normalizeReferenceDataName,
   normalizeReferenceDataNameKey,
 } from './index';
@@ -65,4 +68,16 @@ test('dynamic product-category slugs preserve the existing snake_case key format
   assert.equal(isProductCategorySlug('medical-devices'), false);
   assert.equal(isProductCategorySlug('medical__devices'), false);
   assert.equal(isProductCategorySlug(''), false);
+});
+
+//===================================================================
+
+test('product-category color uses a canonical six-digit hex contract', () => {
+  assert.equal(PRODUCT_CATEGORY_COLOR_PATTERN.test('#3B82F6'), true);
+  assert.equal(isProductCategoryColor('#abcdef'), true);
+  assert.equal(isProductCategoryColor('#ABCDEF'), true);
+  assert.equal(isProductCategoryColor('#FFF'), false);
+  assert.equal(isProductCategoryColor('3B82F6'), false);
+  assert.equal(isProductCategoryColor('#GG82F6'), false);
+  assert.equal(normalizeProductCategoryColor('  #abcdef  '), '#ABCDEF');
 });

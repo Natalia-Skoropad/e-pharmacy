@@ -33,6 +33,11 @@ test('initial ProductCategory seed contains only real categories', () => {
 
   assert.equal(seedNames.includes('Other'), false);
   assert.deepEqual(PRODUCT_CATEGORY_KINDS, ['standard']);
+
+  assert.deepEqual(
+    PRODUCT_CATEGORY_SEED_DEFINITIONS.map(({ color }) => color),
+    ['#3B82F6', '#22C55E', '#EC4899', '#14B8A6', '#8B5CF6']
+  );
 });
 
 //===============================================================

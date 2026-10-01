@@ -6,7 +6,9 @@ import type {
   AdminPositionParams,
   AdminProductCategoryParams,
   AdminSettingsDictionaryListQuery,
+  CreateAdminProductCategoryInput,
   CreateAdminSettingsDictionaryItemInput,
+  UpdateAdminProductCategoryInput,
   UpdateAdminSettingsDictionaryItemInput,
 } from '../schemas/admin-settings.schema';
 
@@ -50,7 +52,7 @@ export async function listAdminProductCategories(
 
 export async function createAdminProductCategory(
   req: Request,
-  res: ValidatedResponse<CreateAdminSettingsDictionaryItemInput>
+  res: ValidatedResponse<CreateAdminProductCategoryInput>
 ): Promise<void> {
   const category = await createAdminProductCategoryService(
     res.locals.validated.body,
@@ -73,7 +75,7 @@ export async function createAdminProductCategory(
 export async function updateAdminProductCategory(
   req: Request,
   res: ValidatedResponse<
-    UpdateAdminSettingsDictionaryItemInput,
+    UpdateAdminProductCategoryInput,
     AdminProductCategoryParams
   >
 ): Promise<void> {

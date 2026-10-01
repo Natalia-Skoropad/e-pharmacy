@@ -1757,3 +1757,5 @@ refactor(ui): prepare shared cabinet UI for admin
 pnpm check:before-deploy
 
 І Stage 6 можна відправляти на його улюблений екзамен 😄
+
+//=========================================

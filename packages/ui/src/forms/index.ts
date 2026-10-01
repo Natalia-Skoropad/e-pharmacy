@@ -1,5 +1,6 @@
 export * from './AddressInput';
 export * from './CommentInput';
+export * from './ColorPicker';
 export * from './DateFilter';
 export * from './DocumentUpload';
 export * from './EmailInput';

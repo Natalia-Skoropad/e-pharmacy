@@ -3,6 +3,8 @@ import { Schema, model, models } from 'mongoose';
 import {
   PRODUCT_CATEGORY_KINDS,
   PRODUCT_CATEGORY_NAME_MAX_LENGTH,
+  PRODUCT_CATEGORY_COLOR_PATTERN,
+  PRODUCT_CATEGORY_DEFAULT_COLOR,
   PRODUCT_CATEGORY_NAME_PATTERN,
   PRODUCT_CATEGORY_SLUG_PATTERN,
   PRODUCT_CATEGORY_STATUSES,
@@ -69,6 +71,18 @@ const productCategorySchema = new Schema<ProductCategoryPersistenceEntity>(
         validator: Number.isInteger,
         message: 'Product category sort order must be an integer',
       },
+    },
+
+    color: {
+      type: String,
+      required: [true, 'Product category color is required'],
+      trim: true,
+      uppercase: true,
+      default: PRODUCT_CATEGORY_DEFAULT_COLOR,
+      match: [
+        PRODUCT_CATEGORY_COLOR_PATTERN,
+        'Product category color must use #RRGGBB format',
+      ],
     },
 
     createdBy: {

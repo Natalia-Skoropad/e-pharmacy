@@ -33,6 +33,7 @@ export type ProductCategoryEntity = Readonly<{
   status: ProductCategoryStatus;
   kind: ProductCategoryKind;
   sortOrder: number;
+  color: string;
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
   createdBy: EntityId | null;
@@ -62,7 +63,14 @@ export type ProductCategoryUsage = Readonly<{
 export type ProductCategoryListItem = Readonly<
   Pick<
     ProductCategoryEntity,
-    'id' | 'name' | 'slug' | 'status' | 'kind' | 'sortOrder' | 'createdAt'
+    | 'id'
+    | 'name'
+    | 'slug'
+    | 'status'
+    | 'kind'
+    | 'sortOrder'
+    | 'color'
+    | 'createdAt'
   > & {
     usage: ProductCategoryUsage;
   }
@@ -80,10 +88,12 @@ export type ProductCategoryListResponse = Readonly<
 
 export type CreateProductCategoryPayload = Readonly<{
   name: string;
+  color: string;
 }>;
 
 export type UpdateProductCategoryPayload = Readonly<{
   name: string;
+  color: string;
 }>;
 
 export type ProductCategoryResponse = Readonly<{

@@ -2485,3 +2485,5 @@ if (!isAdmin) return ...
 Окремо тут я б зафіксувала одну зміну порівняно з первинним коротким планом: blocked admin не потрібно вручну logout-ити другим HTTP-запитом у AdminProtectedRoute. Поточний backend повертає AUTH_USER_BLOCKED, shared private BFF уже очищає auth cookies, а AuthProviderCore переводить session у unauthenticated state. Guard після цього лише направляє на /login. Це чистіше й не дублює auth lifecycle.
 
 І ще один важливий результат звірки: Stage 4 справді потребує GET /api/auth/me, POST /api/auth/logout та Admin AuthProvider. Без них сам AdminProtectedRoute був би красивою дверною ручкою без дверей 😄
+
+//=========================================

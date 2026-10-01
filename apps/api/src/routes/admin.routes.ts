@@ -71,7 +71,9 @@ import {
   adminPositionParamsSchema,
   adminProductCategoryParamsSchema,
   adminSettingsDictionaryListQuerySchema,
+  createAdminProductCategorySchema,
   createAdminSettingsDictionaryItemSchema,
+  updateAdminProductCategorySchema,
   updateAdminSettingsDictionaryItemSchema,
 } from '../schemas/admin-settings.schema';
 
@@ -193,7 +195,7 @@ adminRoutes.get(
 adminRoutes.post(
   '/product-categories',
   requireAdminPermission(ADMIN_PERMISSIONS.categories.create),
-  validate({ body: createAdminSettingsDictionaryItemSchema }),
+  validate({ body: createAdminProductCategorySchema }),
   ctrlWrapper(createAdminProductCategory)
 );
 
@@ -205,7 +207,7 @@ adminRoutes.patch(
 
   validate({
     params: adminProductCategoryParamsSchema,
-    body: updateAdminSettingsDictionaryItemSchema,
+    body: updateAdminProductCategorySchema,
   }),
 
   ctrlWrapper(updateAdminProductCategory)

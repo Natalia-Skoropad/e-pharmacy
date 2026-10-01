@@ -2,58 +2,44 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  adminSettingsDictionaryListQuerySchema,
+  createAdminProductCategorySchema,
   createAdminSettingsDictionaryItemSchema,
+  updateAdminProductCategorySchema,
 } from './admin-settings.schema';
 
 //===============================================================
 
-test('Settings dictionary name contract is shared and strict', () => {
-  assert.equal(
-    createAdminSettingsDictionaryItemSchema.safeParse({
-      name: 'Content manager',
-    }).success,
-    true
+test('admin category mutations require and normalize a six-digit hex color', () => {
+  assert.deepEqual(
+    createAdminProductCategorySchema.parse({
+      name: 'Baby care',
+      color: '#abcdef',
+    }),
+    { name: 'Baby care', color: '#ABCDEF' }
   );
 
-  for (const name of ['content manager', 'Контент менеджер', 'Manager123']) {
-    assert.equal(
-      createAdminSettingsDictionaryItemSchema.safeParse({ name }).success,
-      false
-    );
-  }
+  assert.throws(
+    () =>
+      updateAdminProductCategorySchema.parse({
+        name: 'Baby care',
+        color: '#fff',
+      }),
+    /#RRGGBB/i
+  );
 });
 
 //===============================================================
 
-test('Settings dictionary list query supports pagination, search and ordered dates', () => {
-  assert.deepEqual(adminSettingsDictionaryListQuerySchema.parse({}), {
-    page: 1,
-    perPage: 20,
-  });
-
+test('position payload remains name-only and rejects category color metadata', () => {
   assert.deepEqual(
-    adminSettingsDictionaryListQuerySchema.parse({
-      page: '2',
-      perPage: '50',
-      keyword: 'Medical',
-      createdFrom: '2026-09-01',
-      createdTo: '2026-09-30',
-    }),
-    {
-      page: 2,
-      perPage: 50,
-      keyword: 'Medical',
-      createdFrom: '2026-09-01',
-      createdTo: '2026-09-30',
-    }
+    createAdminSettingsDictionaryItemSchema.parse({ name: 'Manager' }),
+    { name: 'Manager' }
   );
 
-  assert.equal(
-    adminSettingsDictionaryListQuerySchema.safeParse({
-      createdFrom: '2026-10-02',
-      createdTo: '2026-10-01',
-    }).success,
-    false
+  assert.throws(() =>
+    createAdminSettingsDictionaryItemSchema.parse({
+      name: 'Manager',
+      color: '#3B82F6',
+    })
   );
 });

@@ -25,6 +25,7 @@ export type AdminProductCategoryDto = Readonly<{
   status: ProductCategoryStatus;
   kind: ProductCategoryKind;
   sortOrder: number;
+  color: string;
   usage: ProductCategoryUsageDto;
   createdAt: string;
   updatedAt: string;

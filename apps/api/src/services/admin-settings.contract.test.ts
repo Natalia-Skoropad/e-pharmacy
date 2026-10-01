@@ -45,3 +45,12 @@ test('Settings duplicate failures are translated from Mongo unique indexes', () 
   assert.match(source, /A category with this name already exists/);
   assert.match(source, /A position with this name already exists/);
 });
+
+//===============================================================
+
+test('Category color is audited and can change without renaming an in-use category', () => {
+  assert.match(source, /normalizeProductCategoryColor/);
+  assert.match(source, /changedFields\.push\('color'\)/);
+  assert.match(source, /usage\.total > 0 && isIdentityChange/);
+  assert.match(source, /its name cannot be edited/);
+});

@@ -21,6 +21,7 @@ test('ProductCategory normalizes persistence name and uniqueness key', async () 
   assert.equal(category.normalizedName, 'medical devices');
   assert.equal(category.createdBy, null);
   assert.equal(category.updatedBy, null);
+  assert.equal(category.color, '#64748B');
 });
 
 //===============================================================
@@ -49,6 +50,15 @@ test('ProductCategory rejects invalid name, slug and sort order', async () => {
   });
 
   await assert.rejects(invalidSortOrder.validate(), /integer/i);
+
+  const invalidColor = new ProductCategory({
+    name: 'Medicine',
+    slug: 'medicine',
+    sortOrder: 10,
+    color: 'blue',
+  });
+
+  await assert.rejects(invalidColor.validate(), /#RRGGBB/i);
 });
 
 //===============================================================

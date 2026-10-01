@@ -7,7 +7,9 @@ import {
 } from '../constants/admin-audit';
 
 import {
+  PRODUCT_CATEGORY_DEFAULT_COLOR,
   createProductCategorySlugFromName,
+  normalizeProductCategoryColor,
   normalizeProductCategoryNameKey,
   type ProductCategoryKind,
   type ProductCategoryStatus,
@@ -34,7 +36,9 @@ import type { PositionPersistenceEntity } from '../types/position';
 
 import type {
   AdminSettingsDictionaryListQuery,
+  CreateAdminProductCategoryInput,
   CreateAdminSettingsDictionaryItemInput,
+  UpdateAdminProductCategoryInput,
   UpdateAdminSettingsDictionaryItemInput,
 } from '../schemas/admin-settings.schema';
 
@@ -163,6 +167,7 @@ function serializeCategory(
     status: category.status,
     kind: category.kind,
     sortOrder: category.sortOrder,
+    color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
     usage,
     createdAt: category.createdAt.toISOString(),
     updatedAt: category.updatedAt.toISOString(),
@@ -189,6 +194,7 @@ function buildCategoryAuditSnapshot(category: {
   status: ProductCategoryStatus;
   kind: ProductCategoryKind;
   sortOrder: number;
+  color: string;
 }) {
   return {
     name: category.name,
@@ -196,6 +202,7 @@ function buildCategoryAuditSnapshot(category: {
     status: category.status,
     kind: category.kind,
     sortOrder: category.sortOrder,
+    color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
   };
 }
 
@@ -333,7 +340,7 @@ async function getNextCategorySortOrder(
 //===============================================================
 
 export async function createAdminProductCategoryService(
-  input: CreateAdminSettingsDictionaryItemInput,
+  input: CreateAdminProductCategoryInput,
   adminUserId: string,
   auditRequestId: string
 ): Promise<AdminProductCategoryDto> {
@@ -354,6 +361,7 @@ export async function createAdminProductCategoryService(
             status: 'active',
             kind: 'standard',
             sortOrder,
+            color: normalizeProductCategoryColor(input.color),
             createdBy: adminUserId,
             updatedBy: adminUserId,
           },
@@ -377,6 +385,7 @@ export async function createAdminProductCategoryService(
           'status',
           'kind',
           'sortOrder',
+          'color',
         ],
         requestId: auditRequestId,
         session,
@@ -405,7 +414,7 @@ export async function createAdminProductCategoryService(
 
 export async function updateAdminProductCategoryService(
   categoryId: string,
-  input: UpdateAdminSettingsDictionaryItemInput,
+  input: UpdateAdminProductCategoryInput,
   adminUserId: string,
   auditRequestId: string
 ): Promise<AdminProductCategoryDto> {
@@ -425,20 +434,27 @@ export async function updateAdminProductCategoryService(
       }
 
       const usage = await getCategoryUsageInSession(category._id, session);
+      const nextName = input.name.trim();
+      const nextSlug = createProductCategorySlugFromName(input.name);
+      const nextColor = normalizeProductCategoryColor(input.color);
+      const isIdentityChange =
+        category.name !== nextName || category.slug !== nextSlug;
 
-      if (usage.total > 0) {
+      if (usage.total > 0 && isIdentityChange) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'This category is already in use and cannot be edited.'
+          'This category is already in use and its name cannot be edited.'
         );
       }
 
-      const nextSlug = createProductCategorySlugFromName(input.name);
       const previous = buildCategoryAuditSnapshot(category);
       const changedFields: string[] = [];
 
-      if (category.name !== input.name.trim()) changedFields.push('name');
+      if (category.name !== nextName) changedFields.push('name');
       if (category.slug !== nextSlug) changedFields.push('slug');
+      if ((category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR) !== nextColor) {
+        changedFields.push('color');
+      }
 
       if (changedFields.length === 0) {
         result = serializeCategory(
@@ -450,6 +466,7 @@ export async function updateAdminProductCategoryService(
 
       category.name = input.name;
       category.slug = nextSlug;
+      category.color = nextColor;
       category.updatedBy = new Types.ObjectId(adminUserId);
       await category.save({ session });
 
@@ -534,6 +551,7 @@ export async function deleteAdminProductCategoryService(
           'status',
           'kind',
           'sortOrder',
+          'color',
         ],
         requestId: auditRequestId,
         session,

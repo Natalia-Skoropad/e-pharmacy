@@ -19,6 +19,7 @@ import {
 } from './shared/date.schema';
 
 import { sharedSearchSchema } from './shared-validation.schema';
+import { PRODUCT_CATEGORY_COLOR_PATTERN } from '../constants/product-category';
 
 //===============================================================
 
@@ -66,6 +67,32 @@ export const adminSettingsDictionaryListQuerySchema = z.preprocess(
 
 //===============================================================
 
+export const productCategoryColorSchema = z
+  .string()
+  .trim()
+
+  .regex(
+    PRODUCT_CATEGORY_COLOR_PATTERN,
+    'Choose a valid color in #RRGGBB format'
+  )
+
+  .transform((value) => value.toUpperCase());
+
+//===============================================================
+
+export const createAdminProductCategorySchema = z
+  .object({
+    name: settingsDictionaryNameSchema,
+    color: productCategoryColorSchema,
+  })
+
+  .strict();
+
+//===============================================================
+
+export const updateAdminProductCategorySchema =
+  createAdminProductCategorySchema;
+
 export const createAdminSettingsDictionaryItemSchema = z
   .object({ name: settingsDictionaryNameSchema })
   .strict();
@@ -87,6 +114,14 @@ export const adminPositionParamsSchema = z.object({
 
 export type AdminSettingsDictionaryListQuery = z.infer<
   typeof adminSettingsDictionaryListQuerySchema
+>;
+
+export type CreateAdminProductCategoryInput = z.infer<
+  typeof createAdminProductCategorySchema
+>;
+
+export type UpdateAdminProductCategoryInput = z.infer<
+  typeof updateAdminProductCategorySchema
 >;
 
 export type CreateAdminSettingsDictionaryItemInput = z.infer<

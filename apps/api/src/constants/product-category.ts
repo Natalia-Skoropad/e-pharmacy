@@ -13,6 +13,8 @@ export const PRODUCT_CATEGORY_NAME_MAX_LENGTH =
 export const PRODUCT_CATEGORY_NAME_PATTERN = SETTINGS_DICTIONARY_NAME_PATTERN;
 export const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 export const PRODUCT_CATEGORY_SLUG_MAX_LENGTH = 100;
+export const PRODUCT_CATEGORY_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
+export const PRODUCT_CATEGORY_DEFAULT_COLOR = '#64748B';
 
 //===============================================================
 
@@ -27,6 +29,7 @@ export type ProductCategoryKind = (typeof PRODUCT_CATEGORY_KINDS)[number];
 export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   {
     name: 'Medicine',
+    color: '#3B82F6',
     slug: 'medicine',
     status: 'active',
     kind: 'standard',
@@ -34,6 +37,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Vitamins',
+    color: '#22C55E',
     slug: 'vitamins',
     status: 'active',
     kind: 'standard',
@@ -41,6 +45,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Beauty',
+    color: '#EC4899',
     slug: 'beauty',
     status: 'active',
     kind: 'standard',
@@ -48,6 +53,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Hygiene',
+    color: '#14B8A6',
     slug: 'hygiene',
     status: 'active',
     kind: 'standard',
@@ -55,6 +61,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Medical devices',
+    color: '#8B5CF6',
     slug: 'medical_devices',
     status: 'active',
     kind: 'standard',
@@ -66,6 +73,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   status: ProductCategoryStatus;
   kind: ProductCategoryKind;
   sortOrder: number;
+  color: string;
 }[];
 
 //===============================================================
@@ -86,6 +94,12 @@ export function normalizeProductCategoryName(value: string): string {
 
 export function normalizeProductCategoryNameKey(value: string): string {
   return normalizeSettingsDictionaryNameKey(value);
+}
+
+//===============================================================
+
+export function normalizeProductCategoryColor(value: string): string {
+  return value.trim().toUpperCase();
 }
 
 //===============================================================

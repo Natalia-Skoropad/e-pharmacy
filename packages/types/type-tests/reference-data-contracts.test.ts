@@ -44,6 +44,7 @@ const category: ProductCategoryEntity = {
   status: 'active',
   kind: 'standard',
   sortOrder: 50,
+  color: '#3B82F6',
   createdAt: instant,
   updatedAt: instant,
   createdBy: id,
@@ -87,6 +88,7 @@ position.name = 'Changed';
 
 const categoryPayload: CreateProductCategoryPayload = {
   name: 'Baby care',
+  color: '#22C55E',
 };
 
 const positionPayload: CreatePositionPayload = {
@@ -102,6 +104,7 @@ declare const categories: ProductCategoryListResponse;
 declare const positions: PositionListResponse;
 
 void categories.earliestCreatedAt;
+void categories.items[0]?.color;
 void categories.items[0]?.usage.productsCount;
 void categories.items[0]?.usage.productRequestsCount;
 void positions.earliestCreatedAt;

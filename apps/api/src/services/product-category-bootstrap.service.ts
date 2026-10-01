@@ -1,4 +1,5 @@
 import {
+  PRODUCT_CATEGORY_DEFAULT_COLOR,
   PRODUCT_CATEGORY_SEED_DEFINITIONS,
   normalizeProductCategoryNameKey,
 } from '../constants/product-category';
@@ -52,6 +53,24 @@ export async function ensureInitialProductCategories(): Promise<ProductCategoryB
     buildProductCategorySeedOperations(),
     { ordered: true }
   );
+
+  await ProductCategory.bulkWrite([
+    ...PRODUCT_CATEGORY_SEED_DEFINITIONS.map((definition) => ({
+      updateOne: {
+        filter: {
+          slug: definition.slug,
+          $or: [{ color: { $exists: false } }, { color: null }],
+        },
+        update: { $set: { color: definition.color } },
+      },
+    })),
+    {
+      updateMany: {
+        filter: { $or: [{ color: { $exists: false } }, { color: null }] },
+        update: { $set: { color: PRODUCT_CATEGORY_DEFAULT_COLOR } },
+      },
+    },
+  ]);
 
   return {
     createdCount: result.upsertedCount,

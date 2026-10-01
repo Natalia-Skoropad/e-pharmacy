@@ -20,6 +20,18 @@ export const adminApiRoutes = {
       `/api/admin/employees/me/comments/${encodeURIComponent(commentId)}`,
   },
 
+  productCategories: {
+    list: '/api/admin/product-categories',
+    details: (categoryId: string) =>
+      `/api/admin/product-categories/${encodeURIComponent(categoryId)}`,
+  },
+
+  positions: {
+    list: '/api/admin/positions',
+    details: (positionId: string) =>
+      `/api/admin/positions/${encodeURIComponent(positionId)}`,
+  },
+
   audit: {
     list: '/api/admin/audit',
     actors: '/api/admin/audit/actors',
