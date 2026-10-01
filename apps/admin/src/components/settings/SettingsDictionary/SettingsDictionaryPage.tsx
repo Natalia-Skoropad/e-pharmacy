@@ -308,13 +308,18 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   }, []);
 
   const columns = useMemo<Array<DataTableColumn<TItem>>>(() => {
-    const columnWidth = config.color ? '20%' : '25%';
+    const hasColor = Boolean(config.color);
+    const createdWidth = hasColor ? '12%' : '16%';
+    const colorWidth = '10%';
+    const nameWidth = hasColor ? '20%' : '25%';
+    const usageWidth = hasColor ? '36%' : '37%';
+    const actionsWidth = '22%';
 
     const baseColumns: Array<DataTableColumn<TItem>> = [
       {
         key: 'createdAt',
         title: 'Created',
-        width: columnWidth,
+        width: createdWidth,
         render: (item) => <TableDateTime value={item.createdAt} />,
       },
     ];
@@ -323,7 +328,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
       baseColumns.push({
         key: 'color',
         title: 'Color',
-        width: columnWidth,
+        width: colorWidth,
         render: (item) => {
           const color = config.color?.getColor(item) ?? '';
 
@@ -343,7 +348,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
     baseColumns.push({
       key: 'name',
       title: 'Name',
-      width: columnWidth,
+      width: nameWidth,
       render: (item) => <strong className={css.itemName}>{item.name}</strong>,
     });
 
@@ -351,13 +356,13 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
       {
         key: 'usage',
         title: config.appliedToColumnTitle ?? 'Applied to',
-        width: columnWidth,
+        width: usageWidth,
         render: config.renderUsage,
       },
       {
         key: 'actions',
         title: 'Actions',
-        width: columnWidth,
+        width: actionsWidth,
         render: (item) => {
           const isInUse = item.usage.total > 0;
           const editDisabled = !canEdit || isInUse;
@@ -519,7 +524,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           items={items}
           getItemKey={(item) => item.id}
           isLoading={isLoading && !data}
-          minWidth={0}
+          minWidth={config.color ? 900 : 840}
           ariaLabel={`${config.title} table`}
           labels={{
             loading: `Loading ${config.pluralLabel}...`,

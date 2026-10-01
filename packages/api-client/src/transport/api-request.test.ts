@@ -192,6 +192,23 @@ test('separates strict no-content from JSON success envelopes', async () => {
       undefined
     );
 
+    class StreamBackedNoContentResponse extends Response {
+      override get body(): Response['body'] {
+        return new ReadableStream() as Response['body'];
+      }
+    }
+
+    globalThis.fetch = async () =>
+      new StreamBackedNoContentResponse(null, { status: 204 });
+
+    assert.equal(
+      await apiRequest('/resource', {
+        ...requestOptions,
+        responseType: 'no-content',
+      }),
+      undefined
+    );
+
     globalThis.fetch = async () =>
       new Response('<html></html>', {
         status: 200,

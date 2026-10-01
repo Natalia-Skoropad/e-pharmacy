@@ -122,11 +122,7 @@ function assertNoContentResponse(
   const hasDeclaredBody =
     contentLength !== null && Number.parseInt(contentLength, 10) > 0;
 
-  if (
-    (response.status !== 204 && response.status !== 205) ||
-    response.body !== null ||
-    hasDeclaredBody
-  ) {
+  if ((response.status !== 204 && response.status !== 205) || hasDeclaredBody) {
     throw invalidResponse(
       'The API response does not satisfy the no-content contract.',
       response,

@@ -78,10 +78,6 @@
   overflow-wrap: anywhere;
 }
 
-.dictionaryTable table {
-  table-layout: fixed;
-}
-
 .colorSwatch {
   display: inline-block;
   width: 26px;
@@ -94,11 +90,12 @@
 
 .actionsCell {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   width: 100%;
+  white-space: nowrap;
 }
 
 .editButton {

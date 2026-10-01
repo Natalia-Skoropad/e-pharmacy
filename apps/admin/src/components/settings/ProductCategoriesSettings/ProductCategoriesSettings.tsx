@@ -56,7 +56,7 @@ const PRODUCT_CATEGORIES_CONFIG: SettingsDictionaryConfig<ProductCategoryListIte
     pageIcon: <Tags size={23} aria-hidden="true" />,
     singularLabel: 'product category',
     pluralLabel: 'categories',
-    addLabel: 'Додати категорію',
+    addLabel: 'Add category',
     infoTitle: 'Product categories',
     infoIcon: <Tags size={20} aria-hidden="true" />,
     infoItems: [

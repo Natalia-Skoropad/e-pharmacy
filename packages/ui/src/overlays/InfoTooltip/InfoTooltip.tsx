@@ -65,7 +65,7 @@ function InfoTooltip({
 
     const rect = trigger.getBoundingClientRect();
     const viewportPadding = 16;
-    const width = Math.min(300, Math.max(220, window.innerWidth - 32));
+    const width = Math.min(320, Math.max(240, window.innerWidth - 32));
     const maxLeft = Math.max(viewportPadding, window.innerWidth - width - 16);
     const left = Math.min(Math.max(viewportPadding, rect.left), maxLeft);
     const arrowLeft = Math.min(
@@ -108,12 +108,15 @@ function InfoTooltip({
           : undefined
       }
     >
-      <span className={css.topicIcon} aria-hidden="true">
-        {icon ?? <UsersRound size={20} strokeWidth={2} />}
+      <span className={css.heading}>
+        <span className={css.topicIcon} aria-hidden="true">
+          {icon ?? <UsersRound size={20} strokeWidth={2} />}
+        </span>
+
+        <strong className={css.title}>{title}</strong>
       </span>
 
       <span className={css.content}>
-        <strong className={css.title}>{title}</strong>
         {items?.length ? (
           <span className={css.items}>
             {items.map((item) => (

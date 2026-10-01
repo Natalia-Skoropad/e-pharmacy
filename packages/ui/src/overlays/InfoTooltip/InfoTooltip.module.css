@@ -40,7 +40,6 @@
   top: calc(100% + 12px);
   left: 50%;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
   gap: 12px;
   width: min(340px, calc(100vw - 32px));
   padding: 16px;
@@ -84,8 +83,17 @@
   transform: translate(-50%, 0);
 }
 
+.heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  text-align: center;
+}
+
 .topicIcon {
   display: inline-grid;
+  flex: 0 0 auto;
   place-items: center;
   width: 38px;
   height: 38px;
@@ -97,12 +105,12 @@
 
 .content {
   display: grid;
-  gap: 5px;
   min-width: 0;
 }
 
 .title {
   display: block;
+  min-width: 0;
   margin: 0;
   color: var(--color-text-primary);
   font-size: var(--fz-16);
@@ -185,7 +193,7 @@
 @media only screen and (min-width: 768px) {
   .tooltip {
     left: 0;
-    width: min(300px, calc(100vw - 24px));
+    width: min(320px, calc(100vw - 24px));
     transform: translate(0, -6px);
   }
 

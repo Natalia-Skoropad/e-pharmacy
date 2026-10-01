@@ -38,7 +38,7 @@ const POSITIONS_CONFIG: SettingsDictionaryConfig<PositionListItem> = {
   pageIcon: <BriefcaseBusiness size={23} aria-hidden="true" />,
   singularLabel: 'position',
   pluralLabel: 'positions',
-  addLabel: 'Додати позицію',
+  addLabel: 'Add position',
   infoTitle: 'Employee positions',
   infoIcon: <BriefcaseBusiness size={20} aria-hidden="true" />,
   infoItems: [

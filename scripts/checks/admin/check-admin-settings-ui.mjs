@@ -216,7 +216,7 @@ assert.match(page, /canAdmin/);
 assert.match(page, /config\.pageIcon/);
 assert.match(page, /config\.infoItems/);
 assert.match(page, /config\.addLabel/);
-assert.match(page, /minWidth=\{0\}/);
+assert.match(page, /minWidth=\{config\.color \? 900 : 840\}/);
 
 const formModal = await read(
   'apps',
@@ -242,7 +242,9 @@ const colorPicker = await read(
   'ColorPicker.tsx'
 );
 
-assert.match(colorPicker, /type="color"/);
+assert.doesNotMatch(colorPicker, /type="color"/);
+assert.match(colorPicker, /customPalette/);
+assert.match(colorPicker, /type="range"/);
 assert.match(colorPicker, /normalizeProductCategoryColor/);
 assert.match(colorPicker, /aria-invalid/);
 assert.match(colorPicker, /COLOR_PRESETS/);
@@ -320,7 +322,7 @@ for (const token of [
   'ADMIN_PERMISSIONS.categories.create',
   'ADMIN_PERMISSIONS.categories.edit',
   'ADMIN_PERMISSIONS.categories.delete',
-  'Додати категорію',
+  'Add category',
   'productsCount',
   'productRequestsCount',
 ]) {
@@ -346,7 +348,7 @@ for (const token of [
   'ADMIN_PERMISSIONS.positions.create',
   'ADMIN_PERMISSIONS.positions.edit',
   'ADMIN_PERMISSIONS.positions.delete',
-  'Додати позицію',
+  'Add position',
   'employeesCount',
 ]) {
   assert.match(positionsSettings, new RegExp(token.replaceAll('.', '\\.')));

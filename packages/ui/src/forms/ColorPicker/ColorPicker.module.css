@@ -104,7 +104,6 @@
 }
 
 .moreColorsButton {
-  position: relative;
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -113,6 +112,7 @@
   min-height: 40px;
   padding: 9px 16px;
   color: var(--color-accent);
+  font: inherit;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   cursor: pointer;
@@ -125,33 +125,271 @@
     border-color var(--transition-base);
 }
 
-.moreColorsButton:hover,
-.moreColorsButton:focus-within {
+.moreColorsButton:hover:not(:disabled),
+.moreColorsButton:focus-visible:not(:disabled) {
   color: var(--color-white);
   background-color: var(--color-accent);
   border-color: var(--color-accent);
 }
 
-.moreColorsDisabled {
+.moreColorsButton:focus-visible,
+.customPaletteClose:focus-visible,
+.customCancelButton:focus-visible,
+.customApplyButton:focus-visible,
+.colorField:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.moreColorsButton:disabled {
   cursor: not-allowed;
 }
 
-.nativeInput {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.customPalette {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.customPaletteHeader {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.customPaletteTitle {
+  color: var(--color-text-primary);
+  font-size: var(--fz-16);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+}
+
+.customPaletteClose {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--color-text-secondary);
   cursor: pointer;
-  opacity: 0;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
 }
 
-.nativeInput:disabled {
+.customPaletteClose:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-accent-border-soft);
+}
+
+.colorField {
+  --custom-picker-hue: hsl(210deg 100% 50%);
+
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  touch-action: none;
+  cursor: crosshair;
+  background:
+    linear-gradient(to top, rgb(0 0 0 / 100%), rgb(0 0 0 / 0%)),
+    linear-gradient(to right, #fff, var(--custom-picker-hue));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.colorFieldPointer {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  border: 3px solid var(--color-white);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgb(15 23 42 / 35%);
+  transform: translate(-50%, -50%);
+}
+
+.rangeField {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-13);
+  font-weight: var(--fw-medium);
+}
+
+.rangeInput {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.hueRange {
+  height: 12px;
+  appearance: none;
+  background: linear-gradient(
+    to right,
+    #ef4444,
+    #f59e0b,
+    #eab308,
+    #22c55e,
+    #06b6d4,
+    #3b82f6,
+    #8b5cf6,
+    #ec4899,
+    #ef4444
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.hueRange::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  appearance: none;
+  background-color: var(--color-white);
+  border: 2px solid var(--color-text-primary);
+  border-radius: 50%;
+  box-shadow: var(--shadow-card);
+}
+
+.hueRange::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background-color: var(--color-white);
+  border: 2px solid var(--color-text-primary);
+  border-radius: 50%;
+  box-shadow: var(--shadow-card);
+}
+
+.compactRanges {
+  display: grid;
+  gap: 10px;
+}
+
+.compactRange {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr) 42px;
+  gap: 10px;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-12);
+}
+
+.compactRange > span:last-child {
+  text-align: right;
+}
+
+.hexRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.customPreview {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.hexField {
+  display: grid;
+  gap: 5px;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+}
+
+.hexField input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 12px;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--fz-14);
+  text-transform: uppercase;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+}
+
+.hexField input:focus {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-accent-ring);
+}
+
+.hexField input[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.customPaletteActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.customCancelButton,
+.customApplyButton {
+  min-height: 40px;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  border-radius: var(--radius-pill);
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.customCancelButton {
+  color: var(--color-text-secondary);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+}
+
+.customCancelButton:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-muted);
+}
+
+.customApplyButton {
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.customApplyButton:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.customApplyButton:disabled {
   cursor: not-allowed;
+  opacity: 0.55;
 }
 
 @media only screen and (min-width: 768px) {
   .customRow {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+  }
+
+  .customPalette {
+    padding: 18px;
   }
 }
