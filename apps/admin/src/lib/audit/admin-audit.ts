@@ -9,6 +9,12 @@ export const ADMIN_AUDIT_ACTIONS = [
   'adminEmployee.document.uploaded',
   'adminEmployee.document.replaced',
   'adminEmployee.document.deleted',
+  'productCategory.created',
+  'productCategory.updated',
+  'productCategory.deleted',
+  'position.created',
+  'position.updated',
+  'position.deleted',
 ] as const;
 
 //===================================================================
@@ -23,6 +29,8 @@ export const ADMIN_AUDIT_ENTITY_TYPES = [
   'adminAccess',
   'adminEmployee',
   'adminEmployeeDocument',
+  'productCategory',
+  'position',
 ] as const;
 
 //===================================================================

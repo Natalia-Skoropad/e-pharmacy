@@ -19,6 +19,12 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'adminEmployee.document.uploaded': 'Admin document uploaded',
   'adminEmployee.document.replaced': 'Admin document replaced',
   'adminEmployee.document.deleted': 'Admin document deleted',
+  'productCategory.created': 'Product category created',
+  'productCategory.updated': 'Product category updated',
+  'productCategory.deleted': 'Product category deleted',
+  'position.created': 'Position created',
+  'position.updated': 'Position updated',
+  'position.deleted': 'Position deleted',
 };
 
 //===================================================================
@@ -29,6 +35,8 @@ const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   adminAccess: 'Admin access',
   adminEmployee: 'Admin employee',
   adminEmployeeDocument: 'Admin document',
+  productCategory: 'Product category',
+  position: 'Position',
 };
 
 //===================================================================

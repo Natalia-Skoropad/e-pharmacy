@@ -7,6 +7,12 @@ export const ADMIN_AUDIT_ACTIONS = {
   ADMIN_EMPLOYEE_DOCUMENT_UPLOADED: 'adminEmployee.document.uploaded',
   ADMIN_EMPLOYEE_DOCUMENT_REPLACED: 'adminEmployee.document.replaced',
   ADMIN_EMPLOYEE_DOCUMENT_DELETED: 'adminEmployee.document.deleted',
+  PRODUCT_CATEGORY_CREATED: 'productCategory.created',
+  PRODUCT_CATEGORY_UPDATED: 'productCategory.updated',
+  PRODUCT_CATEGORY_DELETED: 'productCategory.deleted',
+  POSITION_CREATED: 'position.created',
+  POSITION_UPDATED: 'position.updated',
+  POSITION_DELETED: 'position.deleted',
 } as const;
 
 //===============================================================
@@ -69,6 +75,8 @@ export const ADMIN_AUDIT_ENTITY_TYPES = {
   ADMIN_ACCESS: 'adminAccess',
   ADMIN_EMPLOYEE: 'adminEmployee',
   ADMIN_EMPLOYEE_DOCUMENT: 'adminEmployeeDocument',
+  PRODUCT_CATEGORY: 'productCategory',
+  POSITION: 'position',
 } as const;
 
 //===============================================================

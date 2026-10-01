@@ -1,6 +1,16 @@
-export const PRODUCT_CATEGORY_NAME_MAX_LENGTH = 100;
+import {
+  SETTINGS_DICTIONARY_NAME_MAX_LENGTH,
+  SETTINGS_DICTIONARY_NAME_PATTERN,
+  normalizeSettingsDictionaryName,
+  normalizeSettingsDictionaryNameKey,
+} from './settings-dictionary';
 
-export const PRODUCT_CATEGORY_NAME_PATTERN = /^[A-Z][A-Za-z ]*$/;
+//===============================================================
+
+export const PRODUCT_CATEGORY_NAME_MAX_LENGTH =
+  SETTINGS_DICTIONARY_NAME_MAX_LENGTH;
+
+export const PRODUCT_CATEGORY_NAME_PATTERN = SETTINGS_DICTIONARY_NAME_PATTERN;
 export const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 export const PRODUCT_CATEGORY_SLUG_MAX_LENGTH = 100;
 
@@ -69,11 +79,17 @@ export const LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY = 'other' as const;
 //===============================================================
 
 export function normalizeProductCategoryName(value: string): string {
-  return value.trim();
+  return normalizeSettingsDictionaryName(value);
 }
 
 //===============================================================
 
 export function normalizeProductCategoryNameKey(value: string): string {
-  return normalizeProductCategoryName(value).replace(/\s+/g, ' ').toLowerCase();
+  return normalizeSettingsDictionaryNameKey(value);
+}
+
+//===============================================================
+
+export function createProductCategorySlugFromName(value: string): string {
+  return normalizeProductCategoryNameKey(value).replaceAll(' ', '_');
 }

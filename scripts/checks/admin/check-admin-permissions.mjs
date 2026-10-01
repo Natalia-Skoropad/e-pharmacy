@@ -320,6 +320,15 @@ assert.match(apiAdminRoutes, /['"]\/access\/me['"]/);
 assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.pharmacies\.view/);
 assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.pharmacies\.moderate/);
 assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.productRequests\.moderate/);
+
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.categories\.view/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.categories\.create/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.categories\.edit/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.categories\.delete/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.positions\.view/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.positions\.create/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.positions\.edit/);
+assert.match(apiAdminRoutes, /ADMIN_PERMISSIONS\.positions\.delete/);
 assert.match(adminController, /Cache-Control['"],\s*['"]no-store/);
 
 assert.doesNotMatch(jwt, /permissions|isPlatformOwner/);

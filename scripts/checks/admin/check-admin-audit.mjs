@@ -35,6 +35,7 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'],
   ['apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'],
   ['apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin-settings.service.ts'],
   ['apps', 'admin', 'src', 'lib', 'audit', 'admin-audit.ts'],
   ['apps', 'admin', 'src', 'lib', 'api', 'browser', 'admin-audit.api.ts'],
   ['apps', 'admin', 'src', 'components', 'activity', 'ActivityHistory.tsx'],
@@ -143,6 +144,14 @@ const privateNoteService = await read(
   'src',
   'services',
   'admin-employee-note.service.ts'
+);
+
+const adminSettingsService = await read(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'admin-settings.service.ts'
 );
 
 const navigation = await read(
@@ -269,6 +278,33 @@ assert.match(ownerService, /appendAdminAuditLog/);
 assert.match(profileService, /appendAdminAuditLog/);
 assert.match(adminDocumentService, /appendAdminAuditLog/);
 assert.doesNotMatch(privateNoteService, /appendAdminAuditLog|AdminAuditLog/);
+
+assert.match(adminSettingsService, /appendAdminAuditLog/);
+
+assert.equal(
+  (adminSettingsService.match(/session\.withTransaction/g) ?? []).length,
+  6
+);
+
+for (const [key, action] of [
+  ['PRODUCT_CATEGORY_CREATED', 'productCategory.created'],
+  ['PRODUCT_CATEGORY_UPDATED', 'productCategory.updated'],
+  ['PRODUCT_CATEGORY_DELETED', 'productCategory.deleted'],
+  ['POSITION_CREATED', 'position.created'],
+  ['POSITION_UPDATED', 'position.updated'],
+  ['POSITION_DELETED', 'position.deleted'],
+]) {
+  assert.match(
+    auditConstants,
+    new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
+  );
+  assert.match(adminAuditParser, new RegExp(action.replaceAll('.', '\\.')));
+}
+
+assert.match(auditConstants, /PRODUCT_CATEGORY:\s*'productCategory'/);
+assert.match(auditConstants, /POSITION:\s*'position'/);
+assert.match(adminAuditParser, /'productCategory'/);
+assert.match(adminAuditParser, /'position'/);
 
 assert.match(pharmacyService, /session\.withTransaction/);
 assert.match(productRequestService, /session\.withTransaction/);

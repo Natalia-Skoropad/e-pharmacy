@@ -22,6 +22,17 @@ import {
 } from '../controllers/admin-employee.controller';
 
 import {
+  createAdminPosition,
+  createAdminProductCategory,
+  deleteAdminPosition,
+  deleteAdminProductCategory,
+  listAdminPositions,
+  listAdminProductCategories,
+  updateAdminPosition,
+  updateAdminProductCategory,
+} from '../controllers/admin-settings.controller';
+
+import {
   getAdminAuditActors,
   getAdminAuditLogDetails,
   getAdminAuditLogs,
@@ -55,6 +66,14 @@ import {
   adminEmployeePrivateNotesQuerySchema,
   createAdminEmployeePrivateNoteSchema,
 } from '../schemas/admin-employee-note.schema';
+
+import {
+  adminPositionParamsSchema,
+  adminProductCategoryParamsSchema,
+  adminSettingsDictionaryListQuerySchema,
+  createAdminSettingsDictionaryItemSchema,
+  updateAdminSettingsDictionaryItemSchema,
+} from '../schemas/admin-settings.schema';
 
 import {
   adminAuditListQuerySchema,
@@ -158,6 +177,88 @@ adminRoutes.delete(
   '/employees/me/comments/:commentId',
   validate({ params: adminEmployeePrivateNoteParamsSchema }),
   ctrlWrapper(deleteMyAdminEmployeePrivateNote)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-categories',
+  requireAdminPermission(ADMIN_PERMISSIONS.categories.view),
+  validate({ query: adminSettingsDictionaryListQuerySchema }),
+  ctrlWrapper(listAdminProductCategories)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/product-categories',
+  requireAdminPermission(ADMIN_PERMISSIONS.categories.create),
+  validate({ body: createAdminSettingsDictionaryItemSchema }),
+  ctrlWrapper(createAdminProductCategory)
+);
+
+//=================================================================================
+
+adminRoutes.patch(
+  '/product-categories/:categoryId',
+  requireAdminPermission(ADMIN_PERMISSIONS.categories.edit),
+
+  validate({
+    params: adminProductCategoryParamsSchema,
+    body: updateAdminSettingsDictionaryItemSchema,
+  }),
+
+  ctrlWrapper(updateAdminProductCategory)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/product-categories/:categoryId',
+  requireAdminPermission(ADMIN_PERMISSIONS.categories.delete),
+  validate({ params: adminProductCategoryParamsSchema }),
+  ctrlWrapper(deleteAdminProductCategory)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/positions',
+  requireAdminPermission(ADMIN_PERMISSIONS.positions.view),
+  validate({ query: adminSettingsDictionaryListQuerySchema }),
+  ctrlWrapper(listAdminPositions)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/positions',
+  requireAdminPermission(ADMIN_PERMISSIONS.positions.create),
+  validate({ body: createAdminSettingsDictionaryItemSchema }),
+  ctrlWrapper(createAdminPosition)
+);
+
+//=================================================================================
+
+adminRoutes.patch(
+  '/positions/:positionId',
+  requireAdminPermission(ADMIN_PERMISSIONS.positions.edit),
+
+  validate({
+    params: adminPositionParamsSchema,
+    body: updateAdminSettingsDictionaryItemSchema,
+  }),
+
+  ctrlWrapper(updateAdminPosition)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/positions/:positionId',
+  requireAdminPermission(ADMIN_PERMISSIONS.positions.delete),
+  validate({ params: adminPositionParamsSchema }),
+  ctrlWrapper(deleteAdminPosition)
 );
 
 //=================================================================================
