@@ -211,9 +211,12 @@ for (const token of [
 }
 
 assert.match(page, /config\.color/);
-assert.match(page, /allowColorEditWhenInUse/);
 assert.match(page, /usage\.total/);
 assert.match(page, /canAdmin/);
+assert.match(page, /config\.pageIcon/);
+assert.match(page, /config\.infoItems/);
+assert.match(page, /config\.addLabel/);
+assert.match(page, /minWidth=\{0\}/);
 
 const formModal = await read(
   'apps',
@@ -242,6 +245,8 @@ const colorPicker = await read(
 assert.match(colorPicker, /type="color"/);
 assert.match(colorPicker, /normalizeProductCategoryColor/);
 assert.match(colorPicker, /aria-invalid/);
+assert.match(colorPicker, /COLOR_PRESETS/);
+assert.match(colorPicker, /More colors/);
 
 const categoryModel = await read(
   'apps',
@@ -315,7 +320,7 @@ for (const token of [
   'ADMIN_PERMISSIONS.categories.create',
   'ADMIN_PERMISSIONS.categories.edit',
   'ADMIN_PERMISSIONS.categories.delete',
-  'allowColorEditWhenInUse',
+  'Додати категорію',
   'productsCount',
   'productRequestsCount',
 ]) {
@@ -341,6 +346,7 @@ for (const token of [
   'ADMIN_PERMISSIONS.positions.create',
   'ADMIN_PERMISSIONS.positions.edit',
   'ADMIN_PERMISSIONS.positions.delete',
+  'Додати позицію',
   'employeesCount',
 ]) {
   assert.match(positionsSettings, new RegExp(token.replaceAll('.', '\\.')));

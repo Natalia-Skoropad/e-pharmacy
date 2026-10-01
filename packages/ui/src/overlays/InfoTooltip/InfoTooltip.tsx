@@ -20,6 +20,7 @@ import css from './InfoTooltip.module.css';
 export type InfoTooltipItem = Readonly<{
   title: string;
   description: ReactNode;
+  icon?: ReactNode;
 }>;
 
 type InfoTooltipProps = Readonly<{
@@ -116,9 +117,20 @@ function InfoTooltip({
         {items?.length ? (
           <span className={css.items}>
             {items.map((item) => (
-              <span className={css.item} key={item.title}>
-                <strong>{item.title}</strong>
-                <span>{item.description}</span>
+              <span
+                className={clsx(css.item, !item.icon && css.itemWithoutIcon)}
+                key={item.title}
+              >
+                {item.icon ? (
+                  <span className={css.itemIcon} aria-hidden="true">
+                    {item.icon}
+                  </span>
+                ) : null}
+
+                <span className={css.itemCopy}>
+                  <strong>{item.title}</strong>
+                  <span>{item.description}</span>
+                </span>
               </span>
             ))}
           </span>

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import type { CalendarDateString } from '@e-pharmacy/types/primitives';
 import type { RowsPerPageValue } from '@e-pharmacy/ui/forms';
+import type { InfoTooltipItem } from '@e-pharmacy/ui/overlays';
 
 import type { AdminPermission } from '@/lib/permissions/admin-permissions';
 import type { SettingsDictionaryListQuery } from '@/lib/settings/settings-dictionary';
@@ -63,7 +64,6 @@ export type SettingsDictionaryColorConfig<
 > = Readonly<{
   defaultColor: string;
   getColor: (item: TItem) => string;
-  allowColorEditWhenInUse?: boolean;
 }>;
 
 //===================================================================
@@ -71,10 +71,13 @@ export type SettingsDictionaryColorConfig<
 export type SettingsDictionaryConfig<TItem extends SettingsDictionaryItem> =
   Readonly<{
     title: string;
+    pageIcon: ReactNode;
     singularLabel: string;
     pluralLabel: string;
+    addLabel: string;
     infoTitle: string;
-    infoDescription: ReactNode;
+    infoIcon?: ReactNode;
+    infoItems: readonly InfoTooltipItem[];
     searchPlaceholder: string;
     appliedToColumnTitle?: ReactNode;
     renderUsage: (item: TItem) => ReactNode;

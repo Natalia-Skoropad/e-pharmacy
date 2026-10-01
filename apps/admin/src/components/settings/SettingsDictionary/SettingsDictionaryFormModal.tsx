@@ -1,9 +1,9 @@
 'use client';
 
+import { Plus, Save, X } from 'lucide-react';
 import { useId, useRef, useState, type FormEvent } from 'react';
 
 import { ColorPicker, NameInput } from '@e-pharmacy/ui/forms';
-
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 
@@ -27,6 +27,7 @@ type SettingsDictionaryFormModalProps<TItem extends SettingsDictionaryItem> =
   Readonly<{
     mode: 'create' | 'edit';
     item?: TItem;
+    contextLabel: string;
     singularLabel: string;
     defaultColor?: string;
     currentColor?: string;
@@ -39,11 +40,20 @@ type SettingsDictionaryFormModalProps<TItem extends SettingsDictionaryItem> =
 
 //===================================================================
 
+function isDuplicateNameError(message: string | null | undefined): boolean {
+  return Boolean(
+    message && /\bwith this name already exists\.?$/i.test(message.trim())
+  );
+}
+
+//===================================================================
+
 export function SettingsDictionaryFormModal<
   TItem extends SettingsDictionaryItem,
 >({
   mode,
   item,
+  contextLabel,
   singularLabel,
   defaultColor,
   currentColor,
@@ -63,8 +73,17 @@ export function SettingsDictionaryFormModal<
   const [color, setColor] = useState(initialColor);
   const [nameTouched, setNameTouched] = useState(false);
   const [colorTouched, setColorTouched] = useState(false);
+  const [lastSubmittedName, setLastSubmittedName] = useState<string | null>(
+    null
+  );
 
-  const nameError = buildReferenceDataNameError(name);
+  const clientNameError = buildReferenceDataNameError(name);
+  const duplicateNameError =
+    isDuplicateNameError(submitError) && lastSubmittedName === name.trim()
+      ? (submitError ?? null)
+      : null;
+  const nameError = clientNameError || duplicateNameError || '';
+  const isNameTouched = nameTouched || Boolean(duplicateNameError);
   const colorError = defaultColor
     ? isProductCategoryColor(color)
       ? ''
@@ -72,6 +91,8 @@ export function SettingsDictionaryFormModal<
     : '';
 
   const title = `${mode === 'create' ? 'Create' : 'Edit'} ${singularLabel}`;
+  const nonFieldSubmitError =
+    submitError && !isDuplicateNameError(submitError) ? submitError : null;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -80,8 +101,11 @@ export function SettingsDictionaryFormModal<
 
     if (nameError || colorError || isSubmitting) return;
 
+    const normalizedName = name.trim();
+    setLastSubmittedName(normalizedName);
+
     await onSubmit({
-      name: name.trim(),
+      name: normalizedName,
       ...(defaultColor ? { color: normalizeProductCategoryColor(color) } : {}),
     });
   };
@@ -98,9 +122,12 @@ export function SettingsDictionaryFormModal<
         onClose={onClose}
       >
         <div className={css.modalHeader}>
-          <h2 className={css.modalTitle} id={titleId}>
-            {title}
-          </h2>
+          <div className={css.modalHeaderCopy}>
+            <p className={css.modalKicker}>{contextLabel}</p>
+            <h2 className={css.modalTitle} id={titleId}>
+              {title}
+            </h2>
+          </div>
 
           <CloseIconButton
             label={`Close ${title.toLowerCase()}`}
@@ -120,11 +147,11 @@ export function SettingsDictionaryFormModal<
             disabled={nameDisabled || isSubmitting}
             hint={
               nameDisabled
-                ? 'The name is locked while this item is in use. Other editable metadata can still be updated.'
+                ? 'The name is locked while this item is in use.'
                 : 'Use Latin letters and spaces, starting with an uppercase letter.'
             }
             error={nameError}
-            isTouched={nameTouched}
+            isTouched={isNameTouched}
             onChange={(event) => setName(event.target.value)}
           />
 
@@ -140,18 +167,20 @@ export function SettingsDictionaryFormModal<
             />
           ) : null}
 
-          {submitError ? (
+          {nonFieldSubmitError ? (
             <p className={css.formError} role="alert">
-              {submitError}
+              {nonFieldSubmitError}
             </p>
           ) : null}
 
           <div className={css.modalActions}>
             <Button
               ref={cancelButtonRef}
+              className={css.cancelButton}
               type="button"
-              variant="secondary"
+              variant="ghost"
               disabled={isSubmitting}
+              iconLeft={<X size={18} aria-hidden="true" />}
               onClick={onClose}
             >
               Cancel
@@ -161,6 +190,13 @@ export function SettingsDictionaryFormModal<
               type="submit"
               isLoading={isSubmitting}
               loadingLabel={mode === 'create' ? 'Creating...' : 'Saving...'}
+              iconLeft={
+                mode === 'create' ? (
+                  <Plus size={18} aria-hidden="true" />
+                ) : (
+                  <Save size={18} aria-hidden="true" />
+                )
+              }
             >
               {mode === 'create' ? 'Create' : 'Save changes'}
             </Button>

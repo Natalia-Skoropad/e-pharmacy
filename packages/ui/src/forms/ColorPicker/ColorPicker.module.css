@@ -1,10 +1,7 @@
-.control {
+.picker {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: center;
-  min-height: 48px;
-  padding: 6px 14px 6px 8px;
+  gap: 14px;
+  padding: 14px;
   background-color: var(--color-white);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -14,37 +11,129 @@
     opacity var(--transition-base);
 }
 
-.control:focus-within {
+.picker:focus-within {
   border-color: var(--color-accent);
   box-shadow: var(--shadow-accent-ring);
 }
 
-.controlError {
+.pickerError {
   border-color: var(--color-error);
 }
 
-.controlDisabled {
-  cursor: not-allowed;
+.pickerDisabled {
   opacity: 0.6;
 }
 
-.swatchWrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+.palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 8px;
+}
+
+.swatchButton {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 2px;
   cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base),
+    transform var(--transition-base);
+}
+
+.swatchButton:hover:not(:disabled),
+.swatchButton:focus-visible:not(:disabled),
+.selected {
+  background-color: var(--color-background);
+  border-color: var(--color-accent-border-soft);
+}
+
+.swatchButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.swatchButton:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.swatchButton:disabled {
+  cursor: not-allowed;
 }
 
 .swatch {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--color-white);
+  border: 1px solid
+    color-mix(in srgb, var(--color-text-primary) 16%, transparent);
+  border-radius: 50%;
   box-shadow: var(--shadow-card);
+}
+
+.customRow {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.selectedPreview {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+}
+
+.selectedSwatch {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  box-shadow: var(--shadow-card);
+}
+
+.moreColorsButton {
+  position: relative;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 40px;
+  padding: 9px 16px;
+  color: var(--color-accent);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-pill);
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.moreColorsButton:hover,
+.moreColorsButton:focus-within {
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.moreColorsDisabled {
+  cursor: not-allowed;
 }
 
 .nativeInput {
@@ -56,25 +145,13 @@
   opacity: 0;
 }
 
-.nativeInput:disabled,
-.controlDisabled .swatchWrap {
+.nativeInput:disabled {
   cursor: not-allowed;
 }
 
-.textInput {
-  width: 100%;
-  min-width: 0;
-  padding: 0;
-  font: inherit;
-  font-size: var(--fz-16);
-  line-height: var(--lh-base);
-  color: var(--color-text-primary);
-  text-transform: uppercase;
-  background: transparent;
-  border: 0;
-  outline: 0;
-}
-
-.textInput::placeholder {
-  color: var(--color-text-muted);
+@media only screen and (min-width: 768px) {
+  .customRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
 }

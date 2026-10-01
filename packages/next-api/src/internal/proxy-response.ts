@@ -38,13 +38,24 @@ export function createProxyResponse(
   response: Response,
   options: ProxyResponseOptions
 ): NextResponse {
+  const headers = createProxyResponseHeaders(
+    response.headers,
+    options.cacheControl,
+    options.requestId
+  );
+
+  if (response.status === 204 || response.status === 205) {
+    headers.delete('content-length');
+    headers.delete('content-type');
+
+    return new NextResponse(null, {
+      status: response.status,
+      headers,
+    });
+  }
+
   return new NextResponse(response.body, {
     status: response.status,
-
-    headers: createProxyResponseHeaders(
-      response.headers,
-      options.cacheControl,
-      options.requestId
-    ),
+    headers,
   });
 }

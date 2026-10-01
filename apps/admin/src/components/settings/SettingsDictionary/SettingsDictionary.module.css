@@ -3,6 +3,7 @@
   gap: 20px;
   width: 100%;
   min-width: 0;
+  margin-inline: 0;
 }
 
 .titleWithHelp {
@@ -49,6 +50,10 @@
   min-width: 0;
 }
 
+.createButton {
+  width: 100%;
+}
+
 .countLabel {
   justify-self: start;
   justify-content: center;
@@ -73,18 +78,15 @@
   overflow-wrap: anywhere;
 }
 
-.colorCell {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  white-space: nowrap;
+.dictionaryTable table {
+  table-layout: fixed;
 }
 
 .colorSwatch {
   display: inline-block;
-  flex: 0 0 auto;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
+  vertical-align: middle;
   border: 1px solid var(--color-border);
   border-radius: 50%;
   box-shadow: var(--shadow-card);
@@ -93,13 +95,44 @@
 .actionsCell {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.editButton {
+  color: var(--color-warning);
+  background-color: var(--color-warning-light);
+  border-color: color-mix(in srgb, var(--color-warning) 32%, transparent);
+}
+
+.editButton:hover:not(:disabled),
+.editButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.deleteButton,
+.cancelButton {
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+.deleteButton:hover:not(:disabled),
+.deleteButton:focus-visible:not(:disabled),
+.cancelButton:hover:not(:disabled),
+.cancelButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .formDialog {
-  width: min(540px, calc(100vw - 32px));
-  max-height: min(760px, calc(100vh - 32px));
+  width: min(560px, calc(100vw - 32px));
+  max-height: min(820px, calc(100vh - 32px));
   overflow: auto;
 }
 
@@ -111,8 +144,27 @@
   margin-bottom: 24px;
 }
 
+.modalHeaderCopy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.modalKicker,
 .modalTitle {
   margin: 0;
+}
+
+.modalKicker {
+  color: var(--color-accent);
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+}
+
+.modalTitle {
   color: var(--color-text-primary);
   font-size: var(--fz-24);
   font-weight: var(--fw-bold);
@@ -134,11 +186,14 @@
 }
 
 .modalActions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
-  justify-content: flex-end;
   margin-top: 6px;
+}
+
+.modalActions > * {
+  width: 100%;
 }
 
 @media only screen and (min-width: 768px) {
@@ -148,7 +203,7 @@
   }
 
   .toolbar {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: end;
   }
 
@@ -164,6 +219,21 @@
     justify-self: end;
     width: unset;
   }
+
+  .createButton {
+    grid-column: 3;
+    grid-row: 1;
+    width: auto;
+  }
+
+  .modalActions {
+    grid-template-columns: repeat(2, max-content);
+    justify-content: end;
+  }
+
+  .modalActions > * {
+    width: auto;
+  }
 }
 
 @media only screen and (max-width: 640px) {
@@ -174,9 +244,5 @@
   .formDialog {
     width: min(100%, calc(100vw - 20px));
     padding-inline: 16px;
-  }
-
-  .modalActions > * {
-    flex: 1 1 140px;
   }
 }

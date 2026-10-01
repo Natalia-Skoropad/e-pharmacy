@@ -308,16 +308,14 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   }, []);
 
   const columns = useMemo<Array<DataTableColumn<TItem>>>(() => {
+    const columnWidth = config.color ? '20%' : '25%';
+
     const baseColumns: Array<DataTableColumn<TItem>> = [
       {
         key: 'createdAt',
         title: 'Created',
+        width: columnWidth,
         render: (item) => <TableDateTime value={item.createdAt} />,
-      },
-      {
-        key: 'name',
-        title: 'Name',
-        render: (item) => <strong className={css.itemName}>{item.name}</strong>,
       },
     ];
 
@@ -325,36 +323,44 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
       baseColumns.push({
         key: 'color',
         title: 'Color',
+        width: columnWidth,
         render: (item) => {
           const color = config.color?.getColor(item) ?? '';
 
           return (
-            <span className={css.colorCell}>
-              <span
-                className={css.colorSwatch}
-                style={{ backgroundColor: color }}
-                aria-hidden="true"
-              />
-              <span>{color}</span>
-            </span>
+            <span
+              className={css.colorSwatch}
+              style={{ backgroundColor: color }}
+              role="img"
+              aria-label={`Color ${color}`}
+              title={color}
+            />
           );
         },
       });
     }
 
+    baseColumns.push({
+      key: 'name',
+      title: 'Name',
+      width: columnWidth,
+      render: (item) => <strong className={css.itemName}>{item.name}</strong>,
+    });
+
     baseColumns.push(
       {
         key: 'usage',
         title: config.appliedToColumnTitle ?? 'Applied to',
+        width: columnWidth,
         render: config.renderUsage,
       },
       {
         key: 'actions',
         title: 'Actions',
+        width: columnWidth,
         render: (item) => {
           const isInUse = item.usage.total > 0;
-          const canEditInUse = Boolean(config.color?.allowColorEditWhenInUse);
-          const editDisabled = !canEdit || (isInUse && !canEditInUse);
+          const editDisabled = !canEdit || isInUse;
           const deleteDisabled = !canDelete || isInUse;
 
           let editDisabledReason: string | undefined;
@@ -377,6 +383,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           return (
             <span className={css.actionsCell}>
               <Button
+                className={css.editButton}
                 type="button"
                 variant="ghost"
                 size="sm"
@@ -389,6 +396,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
               </Button>
 
               <Button
+                className={css.deleteButton}
                 type="button"
                 variant="ghost"
                 size="sm"
@@ -412,41 +420,28 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   const selectedEditItem =
     formState?.mode === 'edit' ? formState.item : undefined;
 
-  const nameDisabled = Boolean(
-    selectedEditItem &&
-    selectedEditItem.usage.total > 0 &&
-    config.color?.allowColorEditWhenInUse
-  );
-
   return (
-    <section className={css.page} aria-label={config.title}>
-      <PageHeader
-        title={
-          <span className={css.titleWithHelp}>
-            <span>{config.title}</span>
-            <InfoTooltip
-              label={`About ${config.title}`}
-              title={config.infoTitle}
-              escapeOverflow
-            >
-              {config.infoDescription}
-            </InfoTooltip>
-          </span>
-        }
-        actions={
-          canCreate ? (
-            <Button
-              type="button"
-              iconLeft={<Plus size={18} aria-hidden="true" />}
-              onClick={openCreate}
-            >
-              Add
-            </Button>
-          ) : null
-        }
-      />
+    <main className={css.page} aria-labelledby="settings-dictionary-title">
+      <section className={css.card} aria-labelledby="settings-dictionary-title">
+        <PageHeader
+          title={
+            <span className={css.titleWithHelp}>
+              <span>{config.title}</span>
+              <InfoTooltip
+                label={`About ${config.title}`}
+                title={config.infoTitle}
+                icon={config.infoIcon}
+                items={config.infoItems}
+                escapeOverflow
+              />
+            </span>
+          }
+          titleId="settings-dictionary-title"
+          icon={config.pageIcon}
+        />
+      </section>
 
-      <div className={css.card}>
+      <section className={css.card} aria-label={`${config.title} filters`}>
         <div className={css.searchGrid}>
           <SearchInput
             id="settings-dictionary-search"
@@ -468,7 +463,9 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
             />
           </div>
         </div>
+      </section>
 
+      <section className={css.card} aria-label={`${config.title} table`}>
         <div className={css.toolbar}>
           <div className={css.rowsControl}>
             <RowsPerPageSelect
@@ -482,6 +479,17 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
               }}
             />
           </div>
+
+          {canCreate ? (
+            <Button
+              className={css.createButton}
+              type="button"
+              iconLeft={<Plus size={18} aria-hidden="true" />}
+              onClick={openCreate}
+            >
+              {config.addLabel}
+            </Button>
+          ) : null}
 
           <CountLabel
             className={css.countLabel}
@@ -506,11 +514,12 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         ) : null}
 
         <DataTable
+          className={css.dictionaryTable}
           columns={columns}
           items={items}
           getItemKey={(item) => item.id}
           isLoading={isLoading && !data}
-          minWidth={config.color ? 820 : 720}
+          minWidth={0}
           ariaLabel={`${config.title} table`}
           labels={{
             loading: `Loading ${config.pluralLabel}...`,
@@ -528,7 +537,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
             setPage(nextPage);
           }}
         />
-      </div>
+      </section>
 
       {isFiltersOpen ? (
         <SettingsDictionaryFilters
@@ -557,6 +566,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           }
           mode={formState.mode}
           item={selectedEditItem}
+          contextLabel={config.title}
           singularLabel={config.singularLabel}
           defaultColor={config.color?.defaultColor}
           currentColor={
@@ -564,7 +574,6 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
               ? config.color.getColor(selectedEditItem)
               : undefined
           }
-          nameDisabled={nameDisabled}
           isSubmitting={isMutating}
           submitError={mutationError}
           onSubmit={submitForm}
@@ -588,6 +597,6 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           }}
         />
       ) : null}
-    </section>
+    </main>
   );
 }

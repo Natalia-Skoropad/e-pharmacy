@@ -1,9 +1,8 @@
 'use client';
 
-import type { ProductCategoryListItem } from '@e-pharmacy/types/reference-data';
+import { Boxes, LockKeyhole, Palette, Tags, Trash2 } from 'lucide-react';
 
-import { SettingsDictionaryPage } from '@/components/settings/SettingsDictionary/SettingsDictionaryPage';
-import type { SettingsDictionaryConfig } from '@/components/settings/SettingsDictionary/settings-dictionary.types';
+import type { ProductCategoryListItem } from '@e-pharmacy/types/reference-data';
 
 import {
   createAdminProductCategory,
@@ -13,6 +12,9 @@ import {
 } from '@/lib/api/browser/admin-product-categories.api';
 
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
+
+import { SettingsDictionaryPage } from '@/components/settings/SettingsDictionary/SettingsDictionaryPage';
+import type { SettingsDictionaryConfig } from '@/components/settings/SettingsDictionary/settings-dictionary.types';
 
 //===================================================================
 
@@ -51,19 +53,45 @@ function renderCategoryUsage(item: ProductCategoryListItem): string {
 const PRODUCT_CATEGORIES_CONFIG: SettingsDictionaryConfig<ProductCategoryListItem> =
   {
     title: 'Product categories',
+    pageIcon: <Tags size={23} aria-hidden="true" />,
     singularLabel: 'product category',
     pluralLabel: 'categories',
+    addLabel: 'Додати категорію',
     infoTitle: 'Product categories',
-
-    infoDescription:
-      'Categories are used by products and product requests across the platform. Categories that are already in use cannot be renamed or deleted, but their display color can still be updated.',
+    infoIcon: <Tags size={20} aria-hidden="true" />,
+    infoItems: [
+      {
+        title: 'Where categories are used',
+        description:
+          'Categories organize products and product requests across the platform and are also used by catalog filters.',
+        icon: <Boxes size={17} aria-hidden="true" />,
+      },
+      {
+        title: 'Category color',
+        description:
+          'The selected color is presentation metadata used to distinguish categories visually in the interface.',
+        icon: <Palette size={17} aria-hidden="true" />,
+      },
+      {
+        title: 'Editing rules',
+        description:
+          'When a category is already used by products or product requests, editing is disabled so its name, slug, and color remain stable.',
+        icon: <LockKeyhole size={17} aria-hidden="true" />,
+      },
+      {
+        title: 'Safe deletion',
+        description:
+          'A category can be deleted only while it is unused. The backend checks usage again at deletion time.',
+        icon: <Trash2 size={17} aria-hidden="true" />,
+      },
+    ],
 
     searchPlaceholder: 'Search product categories',
     appliedToColumnTitle: 'Applied to',
     renderUsage: renderCategoryUsage,
 
     usageLockMessage:
-      'This category is used by products or product requests. Its name cannot be edited and the category cannot be deleted.',
+      'This category is used by products or product requests and cannot be edited or deleted.',
 
     emptyLabel: 'No product categories have been created yet.',
 
@@ -104,7 +132,6 @@ const PRODUCT_CATEGORIES_CONFIG: SettingsDictionaryConfig<ProductCategoryListIte
     color: {
       defaultColor: DEFAULT_CATEGORY_COLOR,
       getColor: (item) => item.color,
-      allowColorEditWhenInUse: true,
     },
   };
 
