@@ -20,6 +20,11 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { httpError } from '../utils/httpError';
 import { getCartItemUnavailableReason } from './cart-item-availability';
 
+import {
+  getProductCategoryReferenceMap,
+  getProductCategoryReferenceOrThrow,
+} from './product-category.service';
+
 import type {
   CartIssueResponseDto,
   CartProductResponseDto,
@@ -205,6 +210,10 @@ async function serializeCartWithCleanup(
   const productMap = new Map(
     products.map((product) => [String(product._id), product])
   );
+  const categoryMap = await getProductCategoryReferenceMap(
+    products.map((product) => product.categoryId),
+    session
+  );
 
   const pharmacyMap = new Map(
     pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy])
@@ -259,7 +268,10 @@ async function serializeCartWithCleanup(
       id: String(product._id),
       name: product.name,
       article: product.article,
-      category: product.category,
+      category: getProductCategoryReferenceOrThrow(
+        categoryMap,
+        product.categoryId
+      ),
       price: unitPrice,
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       pharmacyName: pharmacy.name,

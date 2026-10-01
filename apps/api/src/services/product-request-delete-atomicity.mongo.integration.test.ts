@@ -8,6 +8,7 @@ import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
 
 import { deleteProductRequestService } from './product-request.service';
+import { getTestProductCategoryId } from './product-category-test.helper';
 
 //===================================================================
 
@@ -33,13 +34,15 @@ async function createDraftAggregate(
     pharmacyId: Types.ObjectId;
     ownerId: Types.ObjectId;
     article: string;
+    categoryId: Types.ObjectId;
   }>
 ) {
   const request = await ProductRequest.create({
     pharmacyId: input.pharmacyId,
     name: `Delete atomicity ${input.article}`,
     article: input.article,
-    category: 'medicine',
+    categoryMode: 'catalog',
+    categoryId: input.categoryId,
     status: 'draft',
   });
 
@@ -64,6 +67,7 @@ test(
   { skip: shouldSkip },
   async (context) => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
@@ -89,6 +93,7 @@ test(
             pharmacyId,
             ownerId,
             article: `DEL-OK-${suffix.slice(-8)}`,
+            categoryId: medicineCategoryId,
           });
 
           requestIds.push(aggregate.requestId);
@@ -116,6 +121,7 @@ test(
             pharmacyId,
             ownerId,
             article: `DEL-NOTE-${suffix.slice(-8)}`,
+            categoryId: medicineCategoryId,
           });
 
           requestIds.push(aggregate.requestId);
@@ -159,6 +165,7 @@ test(
             pharmacyId,
             ownerId,
             article: `DEL-REQ-${suffix.slice(-8)}`,
+            categoryId: medicineCategoryId,
           });
 
           requestIds.push(aggregate.requestId);

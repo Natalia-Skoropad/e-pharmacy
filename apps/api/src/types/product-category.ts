@@ -19,3 +19,17 @@ export type ProductCategoryPersistenceEntity = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+//===============================================================
+
+export type ProductCategoryReferenceDto = Readonly<{
+  id: string;
+  name: string;
+  slug: string;
+}>;
+
+export type ProductCategorySnapshotDto = Readonly<{
+  id?: string;
+  name: string;
+  slug: string;
+}>;

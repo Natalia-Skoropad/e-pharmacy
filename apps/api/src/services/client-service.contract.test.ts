@@ -119,8 +119,15 @@ test('purchased products stay historical and paginate inside Mongo aggregation',
 
   assert.match(
     pipelineSource,
-    /category:\s*\{[\s\S]*productSnapshot\.category[\s\S]*'other'/
+    /categoryId:\s*\{[\s\S]*productSnapshot\.categoryId[\s\S]*\$toString/
   );
+
+  assert.match(pipelineSource, /categoryName:\s*\{[\s\S]*categoryNameSnapshot/);
+
+  assert.match(pipelineSource, /categorySlug:\s*\{[\s\S]*categorySlugSnapshot/);
+
+  assert.doesNotMatch(pipelineSource, /productSnapshot\.category(?![A-Z])/);
+  assert.doesNotMatch(pipelineSource, /'other'/);
 
   assert.match(pipelineSource, /currentProductExists:/);
   assert.match(pipelineSource, /currentStatus:/);

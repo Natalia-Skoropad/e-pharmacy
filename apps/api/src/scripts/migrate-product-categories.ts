@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 import { env } from '../config/env';
-import { prepareProductCategoryMigration } from '../services/product-category-migration.service';
+import { migrateProductCategoryRelations } from '../services/product-category-migration.service';
 
 //===============================================================
 
@@ -11,18 +11,19 @@ async function migrateProductCategories(): Promise<void> {
   const db = mongoose.connection.db;
   if (!db) throw new Error('MongoDB connection is unavailable.');
 
-  const result = await prepareProductCategoryMigration(db);
+  const result = await migrateProductCategoryRelations(db);
 
   console.log(
-    `ProductCategory migration preflight completed: ${result.seededCreatedCount} category record(s) created.`
+    `Product category relation migration completed: ${result.seededCreatedCount} category record(s) created, ${result.migratedProducts} product(s), ${result.migratedProductRequests} product request(s), and ${result.migratedOrderSnapshots} order snapshot(s) migrated.`
   );
+
   console.log(
-    `Legacy category mappings prepared: ${result.categorySlugs.join(', ') || 'none'}.`
+    `Resolved category slugs: ${result.categorySlugs.join(', ') || 'none'}.`
   );
 
   if (result.legacyCustomProductRequests > 0) {
     console.log(
-      `${result.legacyCustomProductRequests} legacy custom ProductRequest record(s) kept for Stage 11.3; no "Other" ProductCategory was created.`
+      `${result.legacyCustomProductRequests} legacy custom ProductRequest record(s) migrated to categoryMode="custom"; no "Other" ProductCategory was created.`
     );
   }
 }
@@ -31,7 +32,7 @@ async function migrateProductCategories(): Promise<void> {
 
 void migrateProductCategories()
   .catch((error: unknown) => {
-    console.error('ProductCategory migration preflight failed.');
+    console.error('Product category relation migration failed.');
 
     if (error instanceof Error) {
       console.error(error.message);
@@ -41,6 +42,7 @@ void migrateProductCategories()
 
     process.exitCode = 1;
   })
+
   .finally(async () => {
     await mongoose.disconnect();
   });

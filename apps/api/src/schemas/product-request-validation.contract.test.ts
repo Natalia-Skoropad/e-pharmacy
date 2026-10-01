@@ -12,7 +12,8 @@ const validDraft = {
   status: 'draft' as const,
   name: 'Paracetamol',
   article: 'MED-001',
-  category: 'medicine' as const,
+  categoryMode: 'catalog' as const,
+  categoryId: '507f1f77bcf86cd799439011',
 };
 
 const validProductImage = {
@@ -98,11 +99,12 @@ test('product request schema normalizes blank optional text to undefined', () =>
 
 //===============================================================
 
-test('product request schema requires custom category for other', () => {
+test('product request schema requires custom category metadata in custom mode', () => {
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validDraft,
-      category: 'other',
+      categoryMode: 'custom',
+      categoryId: undefined,
       customCategory: '',
     }).success,
     false
@@ -111,7 +113,8 @@ test('product request schema requires custom category for other', () => {
   assert.equal(
     productRequestFormSchema.safeParse({
       ...validDraft,
-      category: 'other',
+      categoryMode: 'custom',
+      categoryId: undefined,
       customCategory: 'Other medicine',
     }).success,
     true

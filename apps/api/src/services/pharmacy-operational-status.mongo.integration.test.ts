@@ -11,6 +11,8 @@ import { ProductRequest } from '../models/productRequest.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
+
 import {
   createManagerOrderService,
   createOrderManagerCommentService,
@@ -71,6 +73,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
     await Promise.all([Order.syncIndexes(), ProductRequest.init()]);
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -106,7 +109,7 @@ test(
         _id: productId,
         name: `Operational Product ${suffix.slice(-6)}`,
         article: `OPS-${suffix.slice(-10)}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         inStock: true,
       }),
@@ -186,7 +189,8 @@ test(
           status: 'draft',
           name: 'Operational request update',
           article: requestUpdateArticle,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId.toString(),
         }
       );
 
@@ -196,7 +200,8 @@ test(
           status: 'draft',
           name: 'Operational request delete',
           article: requestDeleteArticle,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId.toString(),
         }
       );
 
@@ -218,7 +223,8 @@ test(
               status: 'draft',
               name: 'Foreign update attempt',
               article: requestUpdateArticle,
-              category: 'medicine',
+              categoryMode: 'catalog',
+              categoryId: medicineCategoryId.toString(),
             }
           ),
         404
@@ -305,7 +311,8 @@ test(
               status: 'draft',
               name: 'Blocked update attempt',
               article: requestUpdateArticle,
-              category: 'medicine',
+              categoryMode: 'catalog',
+              categoryId: medicineCategoryId.toString(),
             }
           ),
         403
@@ -320,7 +327,8 @@ test(
               status: 'new',
               name: 'Blocked submit attempt',
               article: requestUpdateArticle,
-              category: 'medicine',
+              categoryMode: 'catalog',
+              categoryId: medicineCategoryId.toString(),
             }
           ),
         403
@@ -406,7 +414,8 @@ test(
           status: 'new',
           name: 'Submitted while on moderation',
           article: requestUpdateArticle,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId.toString(),
         }
       );
 

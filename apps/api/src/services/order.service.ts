@@ -36,6 +36,11 @@ import { getCartService } from './cart.service';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import { createManagerOrderRequestFingerprint } from './manager-order-request-fingerprint';
 
+import {
+  getProductCategoryReferenceMap,
+  getProductCategoryReferenceOrThrow,
+} from './product-category.service';
+
 import type {
   CheckoutOrderInput,
   CreateManagerOrderInput,
@@ -60,8 +65,12 @@ import type {
   OrderStatus,
 } from '../types/order';
 
-import { PRODUCT_CATEGORIES, type ProductCategory } from '../types/categories';
 import type { ProductEntity, ProductOfferEntity } from '../types/product';
+
+import type {
+  ProductCategoryReferenceDto,
+  ProductCategorySnapshotDto,
+} from '../types/product-category';
 
 import type {
   CompletePharmacyBankDetails,
@@ -131,9 +140,33 @@ type UserDocument = {
 
 //===============================================================
 
-type ProductFallbackMap = Map<string, ProductDocument>;
+type ProductFallbackMap = Map<
+  string,
+  Readonly<{
+    category?: ProductCategoryReferenceDto;
+    rating?: number;
+    reviewsCount?: number;
+  }>
+>;
+
 type OfferFallbackMap = Map<string, ProductOfferDocument>;
 type ClientUserMap = Map<string, UserDocument>;
+
+//===============================================================
+
+function getCategorySnapshot(
+  snapshot: OrderItemEntity['productSnapshot']
+): ProductCategorySnapshotDto | undefined {
+  if (!snapshot.categoryNameSnapshot || !snapshot.categorySlugSnapshot) {
+    return undefined;
+  }
+
+  return {
+    ...(snapshot.categoryId ? { id: String(snapshot.categoryId) } : {}),
+    name: snapshot.categoryNameSnapshot,
+    slug: snapshot.categorySlugSnapshot,
+  };
+}
 
 //===============================================================
 
@@ -552,7 +585,7 @@ function serializeOrder(
       const productFallback = productFallbacks?.get(item.productId.toString());
       const offerFallback = offerFallbacks?.get(item.productOfferId.toString());
       const category =
-        item.productSnapshot.category ?? productFallback?.category;
+        getCategorySnapshot(item.productSnapshot) ?? productFallback?.category;
 
       const rating =
         typeof item.productSnapshot.rating === 'number'
@@ -610,7 +643,8 @@ async function getOrderProductFallbacks(
   const missingProductDetailsIds = order.items
     .filter(
       (item) =>
-        !item.productSnapshot.category ||
+        !item.productSnapshot.categoryNameSnapshot ||
+        !item.productSnapshot.categorySlugSnapshot ||
         typeof item.productSnapshot.rating !== 'number' ||
         typeof item.productSnapshot.reviewsCount !== 'number'
     )
@@ -621,10 +655,26 @@ async function getOrderProductFallbacks(
   const products = await Product.find({
     _id: { $in: missingProductDetailsIds },
   })
-    .select('category rating reviewsCount')
+    .select('categoryId rating reviewsCount')
     .lean<ProductDocument[]>();
 
-  return new Map(products.map((product) => [String(product._id), product]));
+  const categoryMap = await getProductCategoryReferenceMap(
+    products.map((product) => product.categoryId)
+  );
+
+  return new Map(
+    products.map((product) => [
+      String(product._id),
+      {
+        category: getProductCategoryReferenceOrThrow(
+          categoryMap,
+          product.categoryId
+        ),
+        rating: product.rating,
+        reviewsCount: product.reviewsCount,
+      },
+    ])
+  );
 }
 
 //===============================================================
@@ -874,6 +924,11 @@ export async function checkoutOrderService(
         .session(session)
         .lean<ProductDocument[]>();
 
+      const categoryMap = await getProductCategoryReferenceMap(
+        products.map((product) => product.categoryId),
+        session
+      );
+
       const { offerMap, productMap } = validateCheckoutCartItemsOrThrow({
         cartItems: orderCartItems,
         offers,
@@ -902,6 +957,10 @@ export async function checkoutOrderService(
         }
 
         const unitPrice = offer.price;
+        const category = getProductCategoryReferenceOrThrow(
+          categoryMap,
+          product.categoryId
+        );
 
         return {
           productId: offer.productId,
@@ -910,7 +969,9 @@ export async function checkoutOrderService(
             name: product.name,
             ...(product.slug ? { slug: product.slug } : {}),
             article: product.article,
-            category: product.category,
+            categoryId: product.categoryId,
+            categoryNameSnapshot: category.name,
+            categorySlugSnapshot: category.slug,
             ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
             ...(product.manufacturer
               ? { manufacturer: product.manufacturer }
@@ -1201,6 +1262,10 @@ export async function createManagerOrderService(
       const productMap = new Map(
         products.map((product) => [String(product._id), product])
       );
+      const categoryMap = await getProductCategoryReferenceMap(
+        products.map((product) => product.categoryId),
+        session
+      );
 
       const orderItems = offers.map((offer) => {
         const product = productMap.get(String(offer.productId));
@@ -1220,7 +1285,15 @@ export async function createManagerOrderService(
           );
         }
 
-        return createOrderItemFromProductOffer({ offer, product, quantity });
+        return createOrderItemFromProductOffer({
+          offer,
+          product,
+          category: getProductCategoryReferenceOrThrow(
+            categoryMap,
+            product.categoryId
+          ),
+          quantity,
+        });
       });
 
       const orderId = new Types.ObjectId();
@@ -1440,11 +1513,13 @@ async function assertCanEditPharmacyOrder(
 function createOrderItemFromProductOffer({
   offer,
   product,
+  category,
   quantity,
   previousItem,
 }: {
   offer: ProductOfferDocument;
   product: ProductDocument;
+  category: ProductCategoryReferenceDto;
   quantity: number;
   previousItem?: OrderItemEntity;
 }): OrderItemEntity {
@@ -1456,7 +1531,9 @@ function createOrderItemFromProductOffer({
       name: product.name,
       ...(product.slug ? { slug: product.slug } : {}),
       article: product.article,
-      category: product.category,
+      categoryId: product.categoryId,
+      categoryNameSnapshot: category.name,
+      categorySlugSnapshot: category.slug,
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
       ...(product.dosage ? { dosage: product.dosage } : {}),
@@ -1595,6 +1672,10 @@ export async function updateOrderDetailsService(
         const productMap: Map<string, ProductDocument> = new Map(
           products.map((product) => [String(product._id), product])
         );
+        const categoryMap = await getProductCategoryReferenceMap(
+          products.map((product) => product.categoryId),
+          session
+        );
 
         for (const oldItem of order.items) {
           const nextQuantity =
@@ -1676,6 +1757,10 @@ export async function updateOrderDetailsService(
             return createOrderItemFromProductOffer({
               offer,
               product,
+              category: getProductCategoryReferenceOrThrow(
+                categoryMap,
+                product.categoryId
+              ),
               quantity,
               previousItem: existingByOfferId.get(offerId),
             });
@@ -2156,7 +2241,9 @@ async function getOrderStatistics(filter: Record<string, unknown>) {
 type OrderSalesAggregationRow = {
   _id: {
     period: string;
-    category: ProductCategory | null;
+    categoryId: Types.ObjectId | null;
+    categoryName: string | null;
+    categorySlug: string | null;
   };
   quantity: number;
   amount: number;
@@ -2237,11 +2324,13 @@ function formatSalesPeriodLabel(
 
 //===============================================================
 
-function createEmptySalesValues(categories: readonly ProductCategory[]) {
+function createEmptySalesValues(
+  categories: readonly ProductCategoryReferenceDto[]
+) {
   return categories.reduce<
-    Partial<Record<ProductCategory, { quantity: number; amount: number }>>
+    Partial<Record<string, { quantity: number; amount: number }>>
   >((acc, category) => {
-    acc[category] = { quantity: 0, amount: 0 };
+    acc[category.slug] = { quantity: 0, amount: 0 };
     return acc;
   }, {});
 }
@@ -2259,15 +2348,15 @@ function createSalesPoints({
   dateFrom: string;
   dateTo: string;
   groupBy: OrderSalesStatisticsGroupBy;
-  categories: ProductCategory[];
+  categories: ProductCategoryReferenceDto[];
 }): OrderSalesStatisticsDto['points'] {
   const rowMap = new Map<string, OrderSalesAggregationRow>();
 
   for (const row of rows) {
-    const category = row._id.category;
-    if (!category || !PRODUCT_CATEGORIES.includes(category)) continue;
+    const categorySlug = row._id.categorySlug;
+    if (!categorySlug) continue;
 
-    rowMap.set(`${row._id.period}:${category}`, row);
+    rowMap.set(`${row._id.period}:${categorySlug}`, row);
   }
 
   const points: OrderSalesStatisticsDto['points'] = [];
@@ -2285,10 +2374,10 @@ function createSalesPoints({
     const values = createEmptySalesValues(categories);
 
     for (const category of categories) {
-      const row = rowMap.get(`${key}:${category}`);
+      const row = rowMap.get(`${key}:${category.slug}`);
       if (!row) continue;
 
-      values[category] = {
+      values[category.slug] = {
         quantity: row.quantity,
         amount: row.amount,
       };
@@ -2401,17 +2490,44 @@ export async function getOrderSalesStatisticsService(
               timezone: 'UTC',
             },
           },
-          category: { $ifNull: ['$items.productSnapshot.category', 'other'] },
+          categoryId: {
+            $ifNull: ['$items.productSnapshot.categoryId', null],
+          },
+          categoryName: {
+            $ifNull: ['$items.productSnapshot.categoryNameSnapshot', null],
+          },
+          categorySlug: {
+            $ifNull: ['$items.productSnapshot.categorySlugSnapshot', null],
+          },
         },
         quantity: { $sum: '$items.quantity' },
         amount: { $sum: '$items.totalPrice' },
       },
     },
-    { $sort: { '_id.period': 1, '_id.category': 1 } },
+    { $sort: { '_id.period': 1, '_id.categorySlug': 1 } },
   ]);
 
-  const categories = PRODUCT_CATEGORIES.filter((category) =>
-    rows.some((row) => row._id.category === category && row.amount > 0)
+  const categories = [
+    ...new Map(
+      rows
+        .filter(
+          (row) =>
+            row.amount > 0 &&
+            row._id.categoryId &&
+            row._id.categoryName &&
+            row._id.categorySlug
+        )
+        .map((row) => [
+          `${String(row._id.categoryId)}:${row._id.categorySlug}`,
+          {
+            id: String(row._id.categoryId),
+            name: row._id.categoryName!,
+            slug: row._id.categorySlug!,
+          },
+        ])
+    ).values(),
+  ].sort((left, right) =>
+    left.name.localeCompare(right.name, 'en', { sensitivity: 'base' })
   );
 
   return {

@@ -1,5 +1,5 @@
 import type { Types } from 'mongoose';
-import type { ProductCategory } from './categories';
+import type { ProductCategoryReferenceDto } from './product-category';
 
 //===============================================================
 
@@ -23,7 +23,7 @@ export type CartProductResponseDto = {
   id: string;
   name: string;
   article: string;
-  category: ProductCategory;
+  category: ProductCategoryReferenceDto;
   price: number;
   imageUrl?: string;
   pharmacyName?: string;

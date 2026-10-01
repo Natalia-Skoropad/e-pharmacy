@@ -1,12 +1,16 @@
 import type { Types } from 'mongoose';
 
+import type { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/product-request';
 import type { PRODUCT_REQUEST_STATUSES } from '../constants/product-request-validation';
-import type { ProductCategory } from './categories';
+import type { ProductCategoryReferenceDto } from './product-category';
 import type { CalendarDateString, ISODateTimeString } from './date';
 
 //===============================================================
 
 export type ProductRequestStatus = (typeof PRODUCT_REQUEST_STATUSES)[number];
+
+export type ProductRequestCategoryMode =
+  (typeof PRODUCT_REQUEST_CATEGORY_MODES)[number];
 
 //===============================================================
 
@@ -30,7 +34,8 @@ export type ProductRequestEntity = {
   pharmacyId: Types.ObjectId;
   name: string;
   article: string;
-  category: ProductCategory;
+  categoryMode: ProductRequestCategoryMode;
+  categoryId?: Types.ObjectId;
   customCategory?: string;
   status: ProductRequestStatus;
   productId?: Types.ObjectId;
@@ -64,7 +69,8 @@ export type ProductRequestResponseDto = {
   productName?: string;
   article: string;
   name: string;
-  category: ProductCategory;
+  categoryMode: ProductRequestCategoryMode;
+  category?: ProductCategoryReferenceDto;
   customCategory?: string;
   status: ProductRequestStatus;
   productImage?: ProductRequestFile;

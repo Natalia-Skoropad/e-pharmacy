@@ -10,6 +10,8 @@ import { ProductOffer } from '../models/productOffer.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
+
 import {
   createManagerOrderService,
   createOrderManagerCommentService,
@@ -63,6 +65,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
     await Order.syncIndexes();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -98,7 +101,7 @@ test(
         _id: productId,
         name: `Tenant Product ${suffix.slice(-6)}`,
         article: `TP-${suffix.slice(-10)}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         inStock: true,
       }),

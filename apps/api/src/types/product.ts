@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-import type { ProductCategory } from './categories';
+import type { ProductCategoryReferenceDto } from './product-category';
 import type { ISODateTimeString } from './date';
 
 //===============================================================
@@ -15,7 +15,7 @@ export type ProductEntity = {
   slug?: string;
   article: string;
   description?: string;
-  category: ProductCategory;
+  categoryId: Types.ObjectId;
   status: ProductStatus;
   price?: number;
   imageUrl?: string;
@@ -71,7 +71,7 @@ export type ProductCardSummaryResponseDto = {
   name: string;
   publicSlugId: string;
   article: string;
-  category: ProductCategory;
+  category: ProductCategoryReferenceDto;
   status: ProductStatus;
   price: number;
   minPrice: number | null;
@@ -95,7 +95,7 @@ export type ProductResponseDto = {
   slug?: string;
   article: string;
   description?: string;
-  category: ProductCategory;
+  category: ProductCategoryReferenceDto;
   status: ProductStatus;
   price: number;
   imageUrl?: string;
@@ -123,7 +123,7 @@ export type ProductFilterOptionDto<TValue extends string = string> = {
 //===============================================================
 
 export type ProductFilterOptionsResponseDto = {
-  categories: ProductFilterOptionDto<'all' | ProductCategory>[];
+  categories: ProductFilterOptionDto[];
   availability: ProductFilterOptionDto<'all' | 'in-stock' | 'out-of-stock'>[];
 
   sort: ProductFilterOptionDto<

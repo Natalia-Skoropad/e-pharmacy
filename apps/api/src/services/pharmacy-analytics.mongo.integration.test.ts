@@ -7,6 +7,7 @@ import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductRequest } from '../models/productRequest.model';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
 import { getManagedProductStatisticsService } from './product.service';
 import { getProductRequestStatisticsService } from './product-request.service';
 
@@ -34,6 +35,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
     const ownerA = new Types.ObjectId();
@@ -70,7 +72,8 @@ test(
           pharmacyId: pharmacyA,
           name: 'Analytics draft A1',
           article: `AN-D1-${suffix.slice(-8)}`,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
           status: 'draft',
         },
         {
@@ -78,7 +81,8 @@ test(
           pharmacyId: pharmacyA,
           name: 'Analytics draft A2',
           article: `AN-D2-${suffix.slice(-8)}`,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
           status: 'draft',
         },
         {
@@ -86,7 +90,8 @@ test(
           pharmacyId: pharmacyA,
           name: 'Analytics approved A',
           article: `AN-A1-${suffix.slice(-8)}`,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
           status: 'approved',
         },
         {
@@ -94,7 +99,8 @@ test(
           pharmacyId: pharmacyA,
           name: 'Analytics rejected A',
           article: `AN-R1-${suffix.slice(-8)}`,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
           status: 'rejected',
         },
         {
@@ -102,7 +108,8 @@ test(
           pharmacyId: pharmacyB,
           name: 'Analytics new B1',
           article: `AN-N1-${suffix.slice(-8)}`,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
           status: 'new',
         },
         {
@@ -110,7 +117,8 @@ test(
           pharmacyId: pharmacyB,
           name: 'Analytics new B2',
           article: `AN-N2-${suffix.slice(-8)}`,
-          category: 'medicine',
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
           status: 'new',
         },
       ]);
@@ -156,6 +164,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
     const ownerA = new Types.ObjectId();
@@ -193,35 +202,35 @@ test(
           name: 'Analytics active added A',
           article: `AN-P1-${suffix.slice(-8)}`,
           status: 'active',
-          category: 'medicine',
+          categoryId: medicineCategoryId,
         },
         {
           _id: productIds[1],
           name: 'Analytics blocked added A',
           article: `AN-P2-${suffix.slice(-8)}`,
           status: 'blocked',
-          category: 'medicine',
+          categoryId: medicineCategoryId,
         },
         {
           _id: productIds[2],
           name: 'Analytics active added B',
           article: `AN-P3-${suffix.slice(-8)}`,
           status: 'active',
-          category: 'medicine',
+          categoryId: medicineCategoryId,
         },
         {
           _id: productIds[3],
           name: 'Analytics blocked no offer',
           article: `AN-P4-${suffix.slice(-8)}`,
           status: 'blocked',
-          category: 'medicine',
+          categoryId: medicineCategoryId,
         },
         {
           _id: productIds[4],
           name: 'Analytics new excluded',
           article: `AN-P5-${suffix.slice(-8)}`,
           status: 'new',
-          category: 'medicine',
+          categoryId: medicineCategoryId,
         },
       ]);
 

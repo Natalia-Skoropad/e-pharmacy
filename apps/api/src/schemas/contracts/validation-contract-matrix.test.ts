@@ -151,7 +151,8 @@ function evaluateProductRequestCase(
   const payload = {
     status: 'draft' as const,
     name: 'Product',
-    category: 'medicine' as const,
+    categoryMode: 'catalog' as const,
+    categoryId: '507f1f77bcf86cd799439011',
     ...(contractCase.contract === 'productRequestArticle'
       ? { article: contractCase.input }
       : { article: 'MED-001', fullDescription: contractCase.input }),

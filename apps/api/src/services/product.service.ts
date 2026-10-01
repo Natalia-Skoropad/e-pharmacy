@@ -9,6 +9,7 @@ import { API_MESSAGES } from '../constants/messages';
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
+import { ProductCategory } from '../models/productCategory.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductReview } from '../models/productReview.model';
 import { Order } from '../models/order.model';
@@ -29,15 +30,18 @@ import type {
   ReviewModerationStatus,
 } from '../types/product';
 
-import type { ProductCategory } from '../types/categories';
+import type { ProductCategoryReferenceDto } from '../types/product-category';
 import type { UserRole } from '../types/user';
 
-import {
-  PRODUCT_CATEGORIES,
-  PRODUCT_CATEGORY_LABELS,
-} from '../types/categories';
-
 import { recordInitialStockArrival } from './stockMovement.service';
+
+import {
+  findProductCategoryBySlug,
+  getProductCategoryReferenceMap,
+  getProductCategoryReferenceOrThrow,
+  serializeProductCategoryReference,
+} from './product-category.service';
+
 import { httpError } from '../utils/httpError';
 
 import {
@@ -297,6 +301,7 @@ async function getOfferSummaryByProductIds(
 
 function serializeProductCardSummary(
   product: ProductDocument,
+  category: ProductCategoryReferenceDto,
   offerSummary: ProductOfferSummary | undefined,
   favoriteIds: Set<string>
 ): ProductCardSummaryResponseDto {
@@ -314,7 +319,7 @@ function serializeProductCardSummary(
       productId
     ),
     article: product.article ?? '',
-    category: product.category,
+    category,
     status: product.status,
     price: minPrice ?? product.price ?? 0,
     minPrice,
@@ -336,6 +341,7 @@ function serializeProductCardSummary(
 
 function serializeProductDetails(
   product: ProductDocument,
+  category: ProductCategoryReferenceDto,
   offers: ProductOfferResponseDto[],
   favoriteIds: Set<string>
 ): ProductResponseDto {
@@ -359,7 +365,7 @@ function serializeProductDetails(
     ...(product.slug ? { slug: product.slug } : {}),
     article: product.article ?? '',
     ...(product.description ? { description: product.description } : {}),
-    category: product.category,
+    category,
     status: product.status,
     price: minPrice,
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
@@ -387,45 +393,47 @@ function serializeProductDetails(
 
 async function getAvailableFilterCategories(
   query: ProductFiltersQuery
-): Promise<ProductCategory[]> {
-  if (!query.pharmacyId && typeof query.inStock !== 'boolean') {
-    return [...PRODUCT_CATEGORIES];
+): Promise<ProductCategoryReferenceDto[]> {
+  let categoryIds: Types.ObjectId[] | undefined;
+
+  if (query.pharmacyId || typeof query.inStock === 'boolean') {
+    const offerFilter: Record<string, unknown> = {};
+
+    if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+
+    if (query.inStock === false && !query.pharmacyId) {
+      const availableProductIds = await ProductOffer.distinct('productId', {
+        availableQuantity: { $gt: 0 },
+      });
+
+      categoryIds = await Product.distinct('categoryId', {
+        _id: { $nin: availableProductIds },
+        status: 'active',
+      });
+    } else {
+      if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
+      if (query.inStock === false) offerFilter.availableQuantity = 0;
+
+      const productIds = await ProductOffer.distinct('productId', offerFilter);
+
+      if (!productIds.length) return [];
+
+      categoryIds = await Product.distinct('categoryId', {
+        _id: { $in: productIds },
+        status: 'active',
+      });
+    }
   }
 
-  const offerFilter: Record<string, unknown> = {};
-
-  if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
-
-  if (query.inStock === false && !query.pharmacyId) {
-    const availableProductIds = await ProductOffer.distinct('productId', {
-      availableQuantity: { $gt: 0 },
-    });
-
-    const categories = await Product.distinct('category', {
-      _id: { $nin: availableProductIds },
-      status: 'active',
-    });
-
-    const categorySet = new Set(categories.map(String));
-
-    return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
-  }
-
-  if (query.inStock === true) offerFilter.availableQuantity = { $gt: 0 };
-  if (query.inStock === false) offerFilter.availableQuantity = 0;
-
-  const productIds = await ProductOffer.distinct('productId', offerFilter);
-
-  if (!productIds.length) return [];
-
-  const categories = await Product.distinct('category', {
-    _id: { $in: productIds },
+  const categories = await ProductCategory.find({
     status: 'active',
-  });
+    ...(categoryIds ? { _id: { $in: categoryIds } } : {}),
+  })
+    .sort({ sortOrder: 1, name: 1, _id: 1 })
+    .select('_id name slug')
+    .lean<Array<{ _id: Types.ObjectId; name: string; slug: string }>>();
 
-  const categorySet = new Set(categories.map(String));
-
-  return PRODUCT_CATEGORIES.filter((category) => categorySet.has(category));
+  return categories.map(serializeProductCategoryReference);
 }
 
 //===============================================================
@@ -438,9 +446,9 @@ export async function getProductFiltersService(
   return {
     categories: [
       { value: 'all', label: 'All categories' },
-      ...categories.map((value) => ({
-        value,
-        label: PRODUCT_CATEGORY_LABELS[value],
+      ...categories.map((category) => ({
+        value: category.slug,
+        label: category.name,
       })),
     ],
 
@@ -617,7 +625,12 @@ async function getProductsByScope(
   if (query.articleKeyword) {
     filter.article = createSafeRegExp(query.articleKeyword);
   }
-  if (query.category) filter.category = query.category;
+  if (query.category) {
+    const category = await findProductCategoryBySlug(query.category, {
+      activeOnly: scope === 'public',
+    });
+    filter.categoryId = category?._id ?? null;
+  }
 
   if (!query.pharmacyId && (query.addedFrom || query.addedTo)) {
     filter.createdAt = {
@@ -737,6 +750,9 @@ async function getProductsByScope(
   ]);
 
   const productIds = products.map((product) => product._id);
+  const categoryMap = await getProductCategoryReferenceMap(
+    products.map((product) => product.categoryId)
+  );
 
   const items = options.includeOffers
     ? await (async () => {
@@ -749,6 +765,7 @@ async function getProductsByScope(
         return products.map((product) =>
           serializeProductDetails(
             product,
+            getProductCategoryReferenceOrThrow(categoryMap, product.categoryId),
             offerMap.get(String(product._id)) ?? [],
             favorites.products
           )
@@ -763,6 +780,7 @@ async function getProductsByScope(
         return products.map((product) =>
           serializeProductCardSummary(
             product,
+            getProductCategoryReferenceOrThrow(categoryMap, product.categoryId),
             summaryMap.get(String(product._id)),
             favorites.products
           )
@@ -1017,6 +1035,9 @@ export async function getFavoriteProductsService(
   const summaryMap = await getOfferSummaryByProductIds(
     products.map((product) => product._id)
   );
+  const categoryMap = await getProductCategoryReferenceMap(
+    products.map((product) => product.categoryId)
+  );
 
   const favoriteIds = new Set(favoriteProductIds.map(String));
 
@@ -1024,6 +1045,7 @@ export async function getFavoriteProductsService(
     items: products.map((product) =>
       serializeProductCardSummary(
         product,
+        getProductCategoryReferenceOrThrow(categoryMap, product.categoryId),
         summaryMap.get(String(product._id)),
         favoriteIds
       )
@@ -1060,10 +1082,14 @@ async function getProductDetailsByScope(
     favorites.pharmacies,
     offerVisibility
   );
+  const categoryMap = await getProductCategoryReferenceMap([
+    product.categoryId,
+  ]);
 
   return {
     product: serializeProductDetails(
       product,
+      getProductCategoryReferenceOrThrow(categoryMap, product.categoryId),
       offerMap.get(String(product._id)) ?? [],
       favorites.products
     ),

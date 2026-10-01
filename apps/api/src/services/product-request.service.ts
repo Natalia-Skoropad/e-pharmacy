@@ -22,6 +22,7 @@ import type {
   ProductRequestStatus,
 } from '../types/product-request';
 
+import type { ProductCategoryReferenceDto } from '../types/product-category';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 import type {
@@ -35,6 +36,13 @@ import { httpError } from '../utils/httpError';
 import { appendAdminAuditLog } from './admin-audit.service';
 
 import {
+  getProductCategoryReferenceMap,
+  getProductCategoryReferenceOrThrow,
+  findProductCategoryBySlug,
+  requireProductCategoryById,
+} from './product-category.service';
+
+import {
   isDuplicateProductArticleError,
   isDuplicateProductRequestArticleError,
 } from '../utils/mongoError';
@@ -46,6 +54,7 @@ import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
 
 type ProductRequestProductDocument = {
   _id: Types.ObjectId;
+  categoryId?: Types.ObjectId;
   imageUrl?: string;
   article?: string;
   name?: string;
@@ -289,7 +298,8 @@ function getFallbackHistory(
 
 function serializeProductRequest(
   request: ProductRequestDocument,
-  commentsTotal = 0
+  commentsTotal = 0,
+  category?: ProductCategoryReferenceDto
 ): ProductRequestResponseDto {
   const hasPersistedHistory = Boolean(request.history?.length);
   const history = hasPersistedHistory
@@ -313,8 +323,11 @@ function serializeProductRequest(
       : request.name,
     article: request.article,
     name: request.name,
-    category: request.category,
-    customCategory: request.customCategory,
+    categoryMode: request.categoryMode,
+    ...(category ? { category } : {}),
+    ...(request.customCategory
+      ? { customCategory: request.customCategory }
+      : {}),
     status: request.status,
     productImage: request.productImage,
     manufacturer: request.manufacturer,
@@ -342,14 +355,23 @@ function serializeProductRequest(
 
 //===============================================================
 
-function getRequestFormUpdate(input: ProductRequestFormInput) {
+async function getRequestFormUpdate(input: ProductRequestFormInput) {
+  const categoryId =
+    input.categoryMode === 'catalog'
+      ? (
+          await requireProductCategoryById(input.categoryId!, {
+            activeOnly: true,
+          })
+        )._id
+      : undefined;
+
   return {
     name: input.name.trim(),
     article: input.article,
-    category: input.category,
-
+    categoryMode: input.categoryMode,
+    categoryId,
     customCategory:
-      input.category === 'other' ? input.customCategory : undefined,
+      input.categoryMode === 'custom' ? input.customCategory : undefined,
 
     productImage: input.productImage,
     manufacturer: input.manufacturer,
@@ -391,12 +413,13 @@ export async function createProductRequestService(
 
   const now = new Date();
   const historyCopy = getStatusHistoryCopy(input.status);
+  const formUpdate = await getRequestFormUpdate(input);
 
   try {
     const request = await ProductRequest.create({
       pharmacyId: pharmacy._id,
       status: input.status,
-      ...getRequestFormUpdate(input),
+      ...formUpdate,
       history: [
         {
           status: input.status,
@@ -406,9 +429,17 @@ export async function createProductRequestService(
       ],
     });
 
+    const categoryMap = request.categoryId
+      ? await getProductCategoryReferenceMap([request.categoryId])
+      : new Map<string, ProductCategoryReferenceDto>();
+
     return {
       request: serializeProductRequest(
-        request.toObject() as unknown as ProductRequestDocument
+        request.toObject() as unknown as ProductRequestDocument,
+        0,
+        request.categoryId
+          ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
+          : undefined
       ),
     };
   } catch (error) {
@@ -477,8 +508,10 @@ export async function updateProductRequestService(
 
   await assertArticleAvailable(input.article, requestId);
 
+  const formUpdate = await getRequestFormUpdate(input);
+
   request.set({
-    ...getRequestFormUpdate(input),
+    ...formUpdate,
     status: input.status,
   });
 
@@ -520,10 +553,17 @@ export async function updateProductRequestService(
     entityId: request._id,
   });
 
+  const categoryMap = request.categoryId
+    ? await getProductCategoryReferenceMap([request.categoryId])
+    : new Map<string, ProductCategoryReferenceDto>();
+
   return {
     request: serializeProductRequest(
       request.toObject() as unknown as ProductRequestDocument,
-      commentsTotal
+      commentsTotal,
+      request.categoryId
+        ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
+        : undefined
     ),
   };
 }
@@ -628,22 +668,72 @@ function canTransitionProductRequest(
 
 //===============================================================
 
-async function resolveApprovedProductId(
+type ApprovedProductResolution = Readonly<{
+  productId: Types.ObjectId;
+  categoryId: Types.ObjectId;
+}>;
+
+async function assertApprovalCategoryMatchesRequest(
+  request: ProductRequestDocument,
+  categoryId: Types.ObjectId,
+  inputCategoryId: string | undefined,
+  session: mongoose.ClientSession
+): Promise<void> {
+  if (request.categoryMode === 'catalog') {
+    if (
+      !request.categoryId ||
+      String(request.categoryId) !== String(categoryId)
+    ) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'The selected catalog product uses a different product category.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
+      );
+    }
+
+    if (inputCategoryId && String(request.categoryId) !== inputCategoryId) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        'Catalog product category cannot be changed while approving this request.',
+        undefined,
+        PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
+      );
+    }
+
+    return;
+  }
+
+  if (inputCategoryId && inputCategoryId !== String(categoryId)) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'The selected catalog product does not match the assigned product category.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
+    );
+  }
+
+  await requireProductCategoryById(categoryId, { activeOnly: true, session });
+}
+
+async function resolveApprovedProduct(
   request: ProductRequestDocument,
   input: ProductRequestModerationInput,
   adminUserId: string,
   session: mongoose.ClientSession
-): Promise<Types.ObjectId> {
+): Promise<ApprovedProductResolution> {
   const normalizedArticle = request.article.trim().toUpperCase();
 
   if (input.productId) {
     const linkedProduct = await Product.findById(input.productId)
+      .select('_id article categoryId')
       .session(session)
       .lean<ProductRequestProductDocument | null>();
 
     if (
       !linkedProduct ||
-      linkedProduct.article?.toUpperCase() !== normalizedArticle
+      linkedProduct.article?.toUpperCase() !== normalizedArticle ||
+      !linkedProduct.categoryId
     ) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
@@ -653,15 +743,54 @@ async function resolveApprovedProductId(
       );
     }
 
-    return linkedProduct._id;
+    await assertApprovalCategoryMatchesRequest(
+      request,
+      linkedProduct.categoryId,
+      input.categoryId,
+      session
+    );
+
+    return {
+      productId: linkedProduct._id,
+      categoryId: linkedProduct.categoryId,
+    };
   }
 
   const existingProduct = await Product.findOne({ article: normalizedArticle })
     .session(session)
-    .select('_id article')
+    .select('_id article categoryId')
     .lean<ProductRequestProductDocument | null>();
 
-  if (existingProduct) return existingProduct._id;
+  if (existingProduct?.categoryId) {
+    await assertApprovalCategoryMatchesRequest(
+      request,
+      existingProduct.categoryId,
+      input.categoryId,
+      session
+    );
+
+    return {
+      productId: existingProduct._id,
+      categoryId: existingProduct.categoryId,
+    };
+  }
+
+  const approvalCategoryId =
+    request.categoryMode === 'catalog' ? request.categoryId : input.categoryId;
+
+  if (!approvalCategoryId) {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'A catalog category is required when approving a custom category request.',
+      undefined,
+      PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
+    );
+  }
+
+  const category = await requireProductCategoryById(approvalCategoryId, {
+    activeOnly: true,
+    session,
+  });
 
   const [createdProduct] = await Product.create(
     [
@@ -669,7 +798,7 @@ async function resolveApprovedProductId(
         name: request.name,
         article: normalizedArticle,
         description: request.fullDescription,
-        category: request.category,
+        categoryId: category._id,
         status: 'active',
         imageUrl: request.productImage?.dataUrl,
         manufacturer: request.manufacturer,
@@ -683,7 +812,10 @@ async function resolveApprovedProductId(
     { session }
   );
 
-  return createdProduct._id as Types.ObjectId;
+  return {
+    productId: createdProduct._id as Types.ObjectId,
+    categoryId: category._id,
+  };
 }
 
 //===============================================================
@@ -726,6 +858,9 @@ export async function moderateProductRequestByAdminService(
       const previousProductId = request.productId
         ? String(request.productId)
         : null;
+      const previousCategoryId = request.categoryId
+        ? String(request.categoryId)
+        : null;
 
       if (!canTransitionProductRequest(request.status, input.status)) {
         throw httpError(
@@ -745,10 +880,10 @@ export async function moderateProductRequestByAdminService(
         );
       }
 
-      let approvedProductId: Types.ObjectId | undefined;
+      let approvedProduct: ApprovedProductResolution | undefined;
 
       if (input.status === 'approved') {
-        approvedProductId = await resolveApprovedProductId(
+        approvedProduct = await resolveApprovedProduct(
           request.toObject() as unknown as ProductRequestDocument,
           input,
           adminUserId,
@@ -758,8 +893,11 @@ export async function moderateProductRequestByAdminService(
 
       request.status = input.status;
 
-      if (approvedProductId) {
-        request.productId = approvedProductId;
+      if (approvedProduct) {
+        request.productId = approvedProduct.productId;
+        if (request.categoryMode === 'custom') {
+          request.categoryId = approvedProduct.categoryId;
+        }
         request.rejectionReason = undefined;
       } else if (input.status === 'rejected') {
         request.rejectionReason = input.reason?.trim();
@@ -785,7 +923,11 @@ export async function moderateProductRequestByAdminService(
         const nextProductId = request.productId
           ? String(request.productId)
           : null;
+        const nextCategoryId = request.categoryId
+          ? String(request.categoryId)
+          : null;
         const productChanged = previousProductId !== nextProductId;
+        const categoryChanged = previousCategoryId !== nextCategoryId;
 
         await appendAdminAuditLog({
           actorUserId: adminUserId,
@@ -797,12 +939,18 @@ export async function moderateProductRequestByAdminService(
           before: {
             status: previousStatus,
             ...(productChanged ? { productId: previousProductId } : {}),
+            ...(categoryChanged ? { categoryId: previousCategoryId } : {}),
           },
           after: {
             status: request.status,
             ...(productChanged ? { productId: nextProductId } : {}),
+            ...(categoryChanged ? { categoryId: nextCategoryId } : {}),
           },
-          changedFields: ['status', ...(productChanged ? ['productId'] : [])],
+          changedFields: [
+            'status',
+            ...(productChanged ? ['productId'] : []),
+            ...(categoryChanged ? ['categoryId'] : []),
+          ],
           ...(input.reason?.trim() ? { reason: input.reason.trim() } : {}),
           requestId: auditRequestId,
           session,
@@ -818,7 +966,22 @@ export async function moderateProductRequestByAdminService(
       );
     }
 
-    return { request: serializeProductRequest(moderatedRequest) };
+    const categoryMap = moderatedRequest.categoryId
+      ? await getProductCategoryReferenceMap([moderatedRequest.categoryId])
+      : new Map<string, ProductCategoryReferenceDto>();
+
+    return {
+      request: serializeProductRequest(
+        moderatedRequest,
+        0,
+        moderatedRequest.categoryId
+          ? getProductCategoryReferenceOrThrow(
+              categoryMap,
+              moderatedRequest.categoryId
+            )
+          : undefined
+      ),
+    };
   } catch (error) {
     if (isDuplicateProductArticleError(error)) {
       throw httpError(
@@ -911,7 +1074,13 @@ export async function getProductRequestsService(
     filter.article = createSafeRegExp(productArticle);
   }
 
-  if (query.category) filter.category = query.category;
+  if (query.category) {
+    const category = await findProductCategoryBySlug(query.category);
+    filter.categoryMode = 'catalog';
+    filter.categoryId = category?._id ?? null;
+  } else if (query.categoryMode) {
+    filter.categoryMode = query.categoryMode;
+  }
   if (query.status) filter.status = query.status;
 
   const skip = (query.page - 1) * query.perPage;
@@ -930,8 +1099,23 @@ export async function getProductRequestsService(
       .lean<{ createdAt: Date } | null>(),
   ]);
 
+  const categoryMap = await getProductCategoryReferenceMap(
+    requests.flatMap((request) =>
+      request.categoryId ? [request.categoryId] : []
+    )
+  );
+
   return {
-    items: requests.map((request) => serializeProductRequest(request)),
+    items: requests.map((request) =>
+      serializeProductRequest(
+        request,
+        0,
+        request.categoryId
+          ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
+          : undefined
+      )
+    ),
+
     page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
@@ -981,5 +1165,17 @@ export async function getProductRequestByIdService(
     entityId: request._id,
   });
 
-  return { request: serializeProductRequest(request, commentsTotal) };
+  const categoryMap = request.categoryId
+    ? await getProductCategoryReferenceMap([request.categoryId])
+    : new Map<string, ProductCategoryReferenceDto>();
+
+  return {
+    request: serializeProductRequest(
+      request,
+      commentsTotal,
+      request.categoryId
+        ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
+        : undefined
+    ),
+  };
 }

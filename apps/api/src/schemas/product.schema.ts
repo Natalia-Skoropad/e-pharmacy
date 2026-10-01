@@ -20,7 +20,7 @@ import {
   sharedSearchSchema,
 } from './shared-validation.schema';
 
-import { PRODUCT_CATEGORIES } from '../types/categories';
+import { productCategorySlugSchema } from './product-category.schema';
 
 //===============================================================
 
@@ -62,7 +62,7 @@ const baseProductsQueryShape = {
   keyword: sharedSearchSchema,
   nameKeyword: sharedSearchSchema,
   articleKeyword: sharedSearchSchema,
-  category: z.enum(PRODUCT_CATEGORIES).optional(),
+  category: productCategorySlugSchema.optional(),
   pharmacyId: mongoIdSchema.optional(),
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),

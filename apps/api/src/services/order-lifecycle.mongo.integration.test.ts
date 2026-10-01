@@ -15,6 +15,7 @@ import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { User } from '../models/user.model';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
+import { getTestProductCategoryId } from './product-category-test.helper';
 
 import {
   checkoutOrderService,
@@ -81,6 +82,7 @@ type CheckoutFixture = Readonly<{
   pharmacyId: Types.ObjectId;
   pharmacyOwnerId: Types.ObjectId;
   productId: Types.ObjectId;
+  categoryId: Types.ObjectId;
   offerId: Types.ObjectId;
   cartId: Types.ObjectId;
   cartItemId: Types.ObjectId;
@@ -103,6 +105,7 @@ async function createCheckoutFixture(options?: {
   const pharmacyId = new Types.ObjectId();
   const productId = new Types.ObjectId();
   const offerId = new Types.ObjectId();
+  const categoryId = await getTestProductCategoryId();
 
   const clientName = 'Checkout Test Client';
   const clientPhone = `+38050${getPhoneSuffix(suffix)}`;
@@ -128,7 +131,7 @@ async function createCheckoutFixture(options?: {
       name: `Checkout Test Product ${suffix}`,
       article: `CT-${suffix}`,
       status: 'active',
-      category: 'medicine',
+      categoryId,
       inStock: true,
     }),
 
@@ -198,6 +201,7 @@ async function createCheckoutFixture(options?: {
     pharmacyId,
     pharmacyOwnerId,
     productId,
+    categoryId,
     offerId,
     cartId: cart._id,
     cartItemId: cartItem._id,
@@ -634,13 +638,15 @@ test(
         { $set: { createdAt: previousMonth } }
       );
 
+      const beautyCategoryId = await getTestProductCategoryId('beauty');
+
       await Promise.all([
         Product.updateOne(
           { _id: fixture.productId },
           {
             $set: {
               name: 'Renamed after successful order',
-              category: 'beauty',
+              categoryId: beautyCategoryId,
             },
           }
         ),
@@ -698,7 +704,13 @@ test(
       );
 
       assert.equal(statistics.points.length, 1);
-      assert.deepEqual(statistics.categories, ['medicine']);
+      assert.deepEqual(statistics.categories, [
+        {
+          id: fixture.categoryId.toString(),
+          name: 'Medicine',
+          slug: 'medicine',
+        },
+      ]);
       assert.equal(statistics.points[0]?.values.medicine?.quantity, 1);
 
       assert.equal(
@@ -718,7 +730,13 @@ test(
       );
 
       assert.equal(dailyStatistics.points.length, 1);
-      assert.deepEqual(dailyStatistics.categories, ['medicine']);
+      assert.deepEqual(dailyStatistics.categories, [
+        {
+          id: fixture.categoryId.toString(),
+          name: 'Medicine',
+          slug: 'medicine',
+        },
+      ]);
       assert.equal(
         dailyStatistics.points[0]?.values.medicine?.amount,
         CHECKOUT_OFFER_PRICE
@@ -852,7 +870,7 @@ test(
         (pointsTotal, point) =>
           pointsTotal +
           Object.values(point.values).reduce(
-            (pointTotal, value) => pointTotal + value.amount,
+            (pointTotal, value) => pointTotal + (value?.amount ?? 0),
             0
           ),
         0

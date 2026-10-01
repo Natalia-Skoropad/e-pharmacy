@@ -2,6 +2,7 @@ export const PRODUCT_CATEGORY_NAME_MAX_LENGTH = 100;
 
 export const PRODUCT_CATEGORY_NAME_PATTERN = /^[A-Z][A-Za-z ]*$/;
 export const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
+export const PRODUCT_CATEGORY_SLUG_MAX_LENGTH = 100;
 
 //===============================================================
 

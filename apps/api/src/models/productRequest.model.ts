@@ -1,7 +1,5 @@
 import { Schema, model, models } from 'mongoose';
 
-import { PRODUCT_CATEGORIES } from '../types/categories';
-
 import {
   PRODUCT_REQUEST_ARTICLE_PATTERN,
   PRODUCT_REQUEST_ATTACHMENT_RULES,
@@ -12,6 +10,8 @@ import {
   PRODUCT_REQUEST_STATUSES,
   PRODUCT_REQUEST_VALIDATION_MESSAGES,
 } from '../constants/product-request-validation';
+
+import { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/product-request';
 
 import type { ProductRequestEntity } from '../types/product-request';
 
@@ -214,11 +214,16 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       ],
     },
 
-    category: {
+    categoryMode: {
       type: String,
-      enum: PRODUCT_CATEGORIES,
-      default: 'medicine',
+      enum: PRODUCT_REQUEST_CATEGORY_MODES,
       required: true,
+    },
+
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ProductCategory',
+      default: undefined,
     },
 
     customCategory: {
@@ -398,9 +403,29 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
 
 //===============================================================
 
+productRequestSchema.pre('validate', function validateCategoryRelation() {
+  if (this.categoryMode === 'catalog' && !this.categoryId) {
+    this.invalidate('categoryId', 'Product category is required');
+  }
+
+  if (this.categoryMode === 'custom' && !this.customCategory?.trim()) {
+    this.invalidate(
+      'customCategory',
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory
+    );
+  }
+
+  if (this.categoryMode === 'catalog') {
+    this.customCategory = undefined;
+  }
+});
+
+//===============================================================
+
 productRequestSchema.index({ pharmacyId: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, status: 1, createdAt: -1 });
-productRequestSchema.index({ pharmacyId: 1, category: 1, createdAt: -1 });
+productRequestSchema.index({ pharmacyId: 1, categoryId: 1, createdAt: -1 });
+productRequestSchema.index({ pharmacyId: 1, categoryMode: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, article: 1 });
 
 productRequestSchema.index(

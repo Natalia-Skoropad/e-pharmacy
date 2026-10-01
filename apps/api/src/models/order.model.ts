@@ -1,7 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../constants/validation';
-import { PRODUCT_CATEGORIES } from '../types/categories';
 import type { OrderEntity } from '../types/order';
 
 //===============================================================
@@ -72,9 +71,16 @@ const orderProductSnapshotSchema = new Schema(
     slug: { type: String, trim: true, default: undefined },
     article: { type: String, required: true, trim: true },
 
-    category: {
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ProductCategory',
+      default: undefined,
+    },
+    categoryNameSnapshot: { type: String, trim: true, default: undefined },
+    categorySlugSnapshot: {
       type: String,
-      enum: Object.values(PRODUCT_CATEGORIES),
+      trim: true,
+      lowercase: true,
       default: undefined,
     },
 

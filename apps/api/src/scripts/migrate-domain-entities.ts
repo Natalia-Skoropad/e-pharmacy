@@ -11,7 +11,6 @@ import { ProductReview } from '../models/productReview.model';
 
 const LEGACY_AVAILABLE_QUANTITY_KEY = ['active', 'Quantity'].join('');
 const LEGACY_OFFER_AVAILABILITY_KEY = ['in', 'Stock'].join('');
-const LEGACY_MEDICAL_DEVICES_CATEGORY = ['medical', 'devices'].join('-');
 const LEGACY_POSTAL_DELIVERY_METHOD = ['po', 'st'].join('');
 
 //===============================================================
@@ -127,15 +126,10 @@ async function migrate(): Promise<void> {
 
     const status =
       product.status === 'inactive' ? 'blocked' : (product.status ?? 'active');
-    const category =
-      product.category === LEGACY_MEDICAL_DEVICES_CATEGORY
-        ? 'medical_devices'
-        : product.category;
-
     await products.updateOne(
       { _id: product._id },
       {
-        $set: { status, category },
+        $set: { status },
         $unset: { offers: '', reviews: '' },
       }
     );
@@ -400,6 +394,22 @@ async function migrate(): Promise<void> {
           name: item.productSnapshot?.name,
           slug: item.productSnapshot?.slug,
           article: item.productSnapshot?.article,
+          ...(item.productSnapshot?.category
+            ? { category: item.productSnapshot.category }
+            : {}),
+          ...(item.productSnapshot?.categoryId
+            ? { categoryId: item.productSnapshot.categoryId }
+            : {}),
+          ...(item.productSnapshot?.categoryNameSnapshot
+            ? {
+                categoryNameSnapshot: item.productSnapshot.categoryNameSnapshot,
+              }
+            : {}),
+          ...(item.productSnapshot?.categorySlugSnapshot
+            ? {
+                categorySlugSnapshot: item.productSnapshot.categorySlugSnapshot,
+              }
+            : {}),
           imageUrl: item.productSnapshot?.imageUrl,
           manufacturer: item.productSnapshot?.manufacturer,
           dosage: item.productSnapshot?.dosage,

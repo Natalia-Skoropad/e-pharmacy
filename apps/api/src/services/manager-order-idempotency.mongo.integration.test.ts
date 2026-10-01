@@ -11,6 +11,7 @@ import { ProductOffer } from '../models/productOffer.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
 import { createManagerOrderService } from './order.service';
 
 //===================================================================
@@ -46,6 +47,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
     await Order.syncIndexes();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -70,7 +72,7 @@ test(
         _id: productId,
         name: `Replay Product ${suffix.slice(-8)}`,
         article: `RP-${suffix.slice(-12)}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         price: 100,
         inStock: true,

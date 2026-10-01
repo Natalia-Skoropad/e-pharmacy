@@ -12,6 +12,8 @@ import { Product } from '../models/product.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
+
 import {
   getClientByIdService,
   getClientPurchasedProductsService,
@@ -60,11 +62,13 @@ async function createSuccessfulOrder({
   pharmacyId,
   userId,
   productId,
+  categoryId,
   orderNumber,
 }: Readonly<{
   pharmacyId: Types.ObjectId;
   userId: Types.ObjectId;
   productId: Types.ObjectId;
+  categoryId: Types.ObjectId;
   orderNumber: string;
 }>) {
   const createdAt = new Date('2026-09-01T10:00:00.000Z');
@@ -80,7 +84,9 @@ async function createSuccessfulOrder({
         productSnapshot: {
           name: 'Tenant Isolation Product',
           article: `TENANT-${orderNumber}`,
-          category: 'medicine',
+          categoryId,
+          categoryNameSnapshot: 'Medicine',
+          categorySlugSnapshot: 'medicine',
         },
         quantity: 1,
         unitPrice: 100,
@@ -117,6 +123,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerA = new Types.ObjectId();
     const managerA = new Types.ObjectId();
@@ -173,7 +180,7 @@ test(
         _id: productA,
         name: 'Tenant Product A',
         article: `TENANT-A-${suffix}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         inStock: true,
       }),
@@ -182,7 +189,7 @@ test(
         _id: productB,
         name: 'Tenant Product B',
         article: `TENANT-B-${suffix}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         inStock: true,
       }),
@@ -193,6 +200,7 @@ test(
         pharmacyId: pharmacyA,
         userId: clientA,
         productId: productA,
+        categoryId: medicineCategoryId,
         orderNumber: `TENANT-A-${suffix}`,
       }),
 
@@ -200,6 +208,7 @@ test(
         pharmacyId: pharmacyB,
         userId: clientB,
         productId: productB,
+        categoryId: medicineCategoryId,
         orderNumber: `TENANT-B-${suffix}`,
       }),
     ]);

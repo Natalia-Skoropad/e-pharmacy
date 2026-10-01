@@ -71,6 +71,7 @@ export const PRODUCT_REQUEST_LONG_TEXT_PATTERN =
 
 export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
   required: {
+    category: 'Select a product category',
     name: 'Product name is required',
     article: 'Product article is required',
     customCategory: 'Enter the category name',

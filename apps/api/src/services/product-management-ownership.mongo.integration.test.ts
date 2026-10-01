@@ -14,6 +14,8 @@ import {
   getProductDetailsService,
 } from './product.service';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
+
 //===================================================================
 
 const TEST_MONGODB_URI = process.env.E_PHARMACY_TEST_MONGODB_URI;
@@ -38,6 +40,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
     const foreignOwnerId = new Types.ObjectId();
@@ -48,7 +51,7 @@ test(
     const product = await Product.create({
       name: `Ownership Product ${suffix}`,
       article: `OWN-${suffix}`,
-      category: 'medicine',
+      categoryId: medicineCategoryId,
       status: 'active',
       price: 120,
       inStock: true,

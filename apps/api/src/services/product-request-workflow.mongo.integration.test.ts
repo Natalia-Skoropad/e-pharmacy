@@ -15,6 +15,8 @@ import {
   updateProductRequestService,
 } from './product-request.service';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
+
 //===================================================================
 
 const TEST_MONGODB_URI = process.env.E_PHARMACY_TEST_MONGODB_URI;
@@ -48,6 +50,7 @@ test(
   async (context) => {
     await mongoose.connect(getTestMongoUri());
     await Promise.all([Product.init(), ProductRequest.init()]);
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
     const ownerA = new Types.ObjectId();
@@ -88,7 +91,8 @@ test(
             status: 'draft' as const,
             name: 'Concurrent request product',
             article,
-            category: 'medicine' as const,
+            categoryMode: 'catalog' as const,
+            categoryId: medicineCategoryId.toString(),
           };
 
           const results = await Promise.allSettled([
@@ -133,7 +137,8 @@ test(
             pharmacyId: pharmacyA,
             name: 'Own availability request',
             article: ownArticle,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'draft',
           });
 
@@ -141,7 +146,8 @@ test(
             pharmacyId: pharmacyB,
             name: 'Foreign availability request',
             article: `REQ-FOREIGN-${suffix.slice(-10)}`,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'draft',
           });
 
@@ -202,7 +208,8 @@ test(
             pharmacyId: pharmacyB,
             name: 'Occupied request',
             article: occupiedArticle,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'draft',
           });
 
@@ -210,7 +217,8 @@ test(
             pharmacyId: pharmacyA,
             name: 'Editable request',
             article: editableArticle,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'draft',
           });
 
@@ -224,7 +232,8 @@ test(
               status: 'draft',
               name: 'Conflicting create',
               article: occupiedArticle,
-              category: 'medicine',
+              categoryMode: 'catalog',
+              categoryId: medicineCategoryId.toString(),
             }),
 
             (error: unknown) => {
@@ -244,7 +253,8 @@ test(
                 status: 'draft',
                 name: 'Conflicting update',
                 article: occupiedArticle,
-                category: 'medicine',
+                categoryMode: 'catalog',
+                categoryId: medicineCategoryId.toString(),
               }
             ),
 
@@ -272,7 +282,8 @@ test(
             pharmacyId: pharmacyA,
             name: 'Invalid transition product',
             article: `REQ-INVALID-${suffix.slice(-10)}`,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'draft',
           });
 
@@ -304,7 +315,8 @@ test(
             pharmacyId: pharmacyA,
             name: 'Approved request product',
             article,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'in_progress',
             fullDescription: 'Approved product description.',
             manufacturer: 'Workflow Manufacturer',
@@ -348,13 +360,96 @@ test(
       );
 
       await context.test(
+        'custom category metadata survives approval while the request gains a canonical category relation',
+        async () => {
+          const article = `REQ-CUSTOM-${suffix.slice(-10)}`;
+
+          const request = await ProductRequest.create({
+            pharmacyId: pharmacyA,
+            name: 'Custom category request product',
+            article,
+            categoryMode: 'custom',
+            customCategory: 'Herbal wellness blends',
+            status: 'in_progress',
+            fullDescription:
+              'Custom metadata must remain historical request data.',
+          });
+
+          requestIds.push(request._id as Types.ObjectId);
+
+          const result = await moderateProductRequestByAdminService(
+            String(request._id),
+            {
+              status: 'approved',
+              categoryId: medicineCategoryId.toString(),
+            },
+            adminUserId.toString()
+          );
+
+          assert.equal(result.request.categoryMode, 'custom');
+          assert.equal(result.request.customCategory, 'Herbal wellness blends');
+
+          assert.deepEqual(result.request.category, {
+            id: medicineCategoryId.toString(),
+            name: 'Medicine',
+            slug: 'medicine',
+          });
+
+          assert.ok(result.request.productId);
+
+          const product = await Product.findById(result.request.productId)
+            .select('_id categoryId')
+            .lean<{
+              _id: Types.ObjectId;
+              categoryId: Types.ObjectId;
+            } | null>();
+
+          assert.ok(product);
+
+          assert.equal(
+            String(product.categoryId),
+            medicineCategoryId.toString()
+          );
+
+          productIds.push(product._id);
+
+          const persistedRequest = await ProductRequest.findById(request._id)
+            .select('categoryMode categoryId customCategory productId')
+            .lean<{
+              categoryMode: string;
+              categoryId?: Types.ObjectId;
+              customCategory?: string;
+              productId?: Types.ObjectId;
+            } | null>();
+
+          assert.equal(persistedRequest?.categoryMode, 'custom');
+
+          assert.equal(
+            String(persistedRequest?.categoryId),
+            medicineCategoryId.toString()
+          );
+
+          assert.equal(
+            persistedRequest?.customCategory,
+            'Herbal wellness blends'
+          );
+
+          assert.equal(
+            String(persistedRequest?.productId),
+            String(product._id)
+          );
+        }
+      );
+
+      await context.test(
         'approval rejects an explicitly mismatched catalog product',
         async () => {
           const request = await ProductRequest.create({
             pharmacyId: pharmacyA,
             name: 'Mismatched approval request',
             article: `REQ-MISMATCH-${suffix.slice(-10)}`,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'in_progress',
           });
 
@@ -363,7 +458,7 @@ test(
           const otherProduct = await Product.create({
             name: 'Different catalog product',
             article: `PRODUCT-OTHER-${suffix.slice(-10)}`,
-            category: 'medicine',
+            categoryId: medicineCategoryId,
             status: 'active',
             inStock: false,
           });
@@ -403,7 +498,8 @@ test(
             pharmacyId: pharmacyA,
             name: 'Concurrent moderation request',
             article,
-            category: 'medicine',
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId,
             status: 'in_progress',
           });
 

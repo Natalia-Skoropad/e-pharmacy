@@ -22,11 +22,73 @@ import { Cart } from '../models/cart.model';
 import { StockMovement } from '../models/stockMovement.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
+import { ProductCategory } from '../models/productCategory.model';
 import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
 import { ensureInitialProductCategories } from '../services/product-category-bootstrap.service';
 import type { PharmacyEntity } from '../types/pharmacy';
 import type { ProductEntity } from '../types/product';
+
+//===============================================================
+
+type SeedProductCategory = Readonly<{
+  _id: Types.ObjectId;
+  name: string;
+  slug: string;
+}>;
+
+//===============================================================
+
+async function getSeedProductCategories(): Promise<SeedProductCategory[]> {
+  return ProductCategory.find({})
+    .select('_id name slug')
+    .lean<SeedProductCategory[]>();
+}
+
+//===============================================================
+
+function createSeedCategoryBySlugMap(
+  categories: readonly SeedProductCategory[]
+): Map<string, SeedProductCategory> {
+  return new Map(categories.map((category) => [category.slug, category]));
+}
+
+//===============================================================
+
+function createSeedCategoryByIdMap(
+  categories: readonly SeedProductCategory[]
+): Map<string, SeedProductCategory> {
+  return new Map(
+    categories.map((category) => [String(category._id), category])
+  );
+}
+
+//===============================================================
+
+function getSeedCategoryOrThrow(
+  categoryMap: ReadonlyMap<string, SeedProductCategory>,
+  key: Types.ObjectId | string
+): SeedProductCategory {
+  const category = categoryMap.get(String(key));
+  if (!category) {
+    throw new Error(`Seed ProductCategory "${String(key)}" was not found.`);
+  }
+  return category;
+}
+
+//===============================================================
+
+function createSeedCategorySnapshot(
+  categoryId: Types.ObjectId,
+  categoryById: ReadonlyMap<string, SeedProductCategory>
+) {
+  const category = getSeedCategoryOrThrow(categoryById, categoryId);
+  return {
+    categoryId,
+    categoryNameSnapshot: category.name,
+    categorySlugSnapshot: category.slug,
+  };
+}
 
 //===============================================================
 
@@ -1017,18 +1079,22 @@ function createSeedPharmacies() {
 
 //===============================================================
 
-function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
+function createSeedProducts(
+  pharmacies: SeedPharmacyDocument[],
+  categoryBySlug: ReadonlyMap<string, SeedProductCategory>
+) {
   return Array.from({ length: 126 }, (_, index) => {
     const productNumber = index + 1;
 
     const [
       baseName,
-      category,
+      categorySlug,
       manufacturer,
       dosage,
       packageQuantity,
       imageUrl,
     ] = PRODUCT_BLUEPRINTS[index % PRODUCT_BLUEPRINTS.length];
+    const category = getSeedCategoryOrThrow(categoryBySlug, categorySlug);
 
     const status = index >= 122 ? ('blocked' as const) : ('active' as const);
     const variantIndex = Math.floor(index / PRODUCT_BLUEPRINTS.length);
@@ -1099,7 +1165,7 @@ function createSeedProducts(pharmacies: SeedPharmacyDocument[]) {
       slug: createSlug(name),
       article: `EPH-${String(productNumber).padStart(4, '0')}`,
       description: `${name} is a realistic demo catalog item for testing product cards, price formatting, long review text, filters, sorting, pharmacy availability, and responsive catalog layouts.`,
-      category,
+      categoryId: category._id,
       status,
       price: offers.length > 0 ? basePrice : 0,
       imageUrl,
@@ -1209,7 +1275,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     name: string;
     slug?: string;
     article: string;
-    category: string;
+    categoryId: Types.ObjectId;
     imageUrl?: string;
     manufacturer?: string;
     dosage?: string;
@@ -1240,6 +1306,10 @@ async function seedActivePharmacyOrder(): Promise<number> {
   ).lean<SeedProductLean | null>();
 
   if (!product) return 0;
+
+  const categoryById = createSeedCategoryByIdMap(
+    await getSeedProductCategories()
+  );
 
   const offer = await ProductOffer.findOne({
     pharmacyId: pharmacy._id,
@@ -1387,7 +1457,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     name: product.name,
     ...(product.slug ? { slug: product.slug } : {}),
     article: product.article,
-    category: product.category,
+    ...createSeedCategorySnapshot(product.categoryId, categoryById),
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
     ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
     ...(product.dosage ? { dosage: product.dosage } : {}),
@@ -1700,7 +1770,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
     name: string;
     slug?: string;
     article: string;
-    category: string;
+    categoryId: Types.ObjectId;
     imageUrl?: string;
     manufacturer?: string;
     dosage?: string;
@@ -1779,9 +1849,13 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
     _id: { $in: offers.map((offer) => offer.productId) },
   })
     .select(
-      '_id name slug article category imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+      '_id name slug article categoryId imageUrl manufacturer dosage packageQuantity rating reviewsCount'
     )
     .lean<DemoProduct[]>();
+
+  const categoryById = createSeedCategoryByIdMap(
+    await getSeedProductCategories()
+  );
 
   const productsById = new Map(
     products.map((product) => [String(product._id), product])
@@ -2309,7 +2383,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
             name: product.name,
             ...(product.slug ? { slug: product.slug } : {}),
             article: product.article,
-            category: product.category,
+            ...createSeedCategorySnapshot(product.categoryId, categoryById),
             ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
             ...(product.manufacturer
               ? { manufacturer: product.manufacturer }
@@ -2636,7 +2710,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     status: 'active',
   })
     .select(
-      '_id name slug article category imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+      '_id name slug article categoryId imageUrl manufacturer dosage packageQuantity rating reviewsCount'
     )
     .lean<
       Array<
@@ -2645,7 +2719,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           | 'name'
           | 'slug'
           | 'article'
-          | 'category'
+          | 'categoryId'
           | 'imageUrl'
           | 'manufacturer'
           | 'dosage'
@@ -2655,6 +2729,10 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
         > & { _id: Types.ObjectId }
       >
     >();
+
+  const categoryById = createSeedCategoryByIdMap(
+    await getSeedProductCategories()
+  );
 
   const productMap = new Map(
     products.map((product) => [String(product._id), product])
@@ -2865,7 +2943,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       name: product.name,
       ...(product.slug ? { slug: product.slug } : {}),
       article: product.article,
-      category: product.category,
+      ...createSeedCategorySnapshot(product.categoryId, categoryById),
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
       ...(product.dosage ? { dosage: product.dosage } : {}),
@@ -2997,7 +3075,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
     name: string;
     slug?: string;
     article: string;
-    category: string;
+    categoryId: Types.ObjectId;
     imageUrl?: string;
     manufacturer?: string;
     dosage?: string;
@@ -3034,9 +3112,13 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
     .sort({ article: 1, _id: 1 })
     .limit(4)
     .select(
-      '_id name slug article category imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+      '_id name slug article categoryId imageUrl manufacturer dosage packageQuantity rating reviewsCount'
     )
     .lean<SelloutProduct[]>();
+
+  const categoryById = createSeedCategoryByIdMap(
+    await getSeedProductCategories()
+  );
 
   const soldOutOffers = await ProductOffer.find({
     pharmacyId: pharmacy._id,
@@ -3107,7 +3189,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
         name: product.name,
         ...(product.slug ? { slug: product.slug } : {}),
         article: product.article,
-        category: product.category,
+        ...createSeedCategorySnapshot(product.categoryId, categoryById),
         ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
         ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
         ...(product.dosage ? { dosage: product.dosage } : {}),
@@ -3698,15 +3780,12 @@ const PRODUCT_REQUEST_SEED_STATUSES = [
   'in_progress' as const,
 ] as const;
 
-// Legacy Product Request custom-category sentinel remains only until Stage 11.3.
-// It is not part of the ProductCategory collection seed.
-const PRODUCT_REQUEST_SEED_CATEGORIES = [
+const PRODUCT_REQUEST_SEED_CATEGORY_SLUGS = [
   'medicine',
   'vitamins',
   'hygiene',
   'medical_devices',
   'beauty',
-  'other',
 ] as const;
 
 const PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT = '%PDF-1.4\n%%EOF\n';
@@ -3792,7 +3871,7 @@ type ProductRequestSeedApprovedProduct = Readonly<{
   _id: Types.ObjectId;
   name: string;
   article: string;
-  category: (typeof PRODUCT_REQUEST_SEED_CATEGORIES)[number];
+  categoryId: Types.ObjectId;
   manufacturer?: string;
 }>;
 
@@ -3806,9 +3885,11 @@ function normalizeProductRequestSeedShortText(value: string): string {
 
 function createProductRequestSeeds(
   pharmacyId: Types.ObjectId,
-  approvedProducts: readonly ProductRequestSeedApprovedProduct[]
+  approvedProducts: readonly ProductRequestSeedApprovedProduct[],
+  categoryBySlug: ReadonlyMap<string, SeedProductCategory>
 ) {
   const baseDate = new Date('2026-06-25T08:30:00.000Z');
+  const categoryById = createSeedCategoryByIdMap([...categoryBySlug.values()]);
 
   return PRODUCT_REQUEST_SEED_NAMES.map((seedName, index) => {
     const status = PRODUCT_REQUEST_SEED_STATUSES[index];
@@ -3819,11 +3900,14 @@ function createProductRequestSeeds(
     const createdAt = new Date(
       baseDate.getTime() + index * 24 * 60 * 60 * 1000
     );
-    const category =
-      approvedProduct?.category ??
-      PRODUCT_REQUEST_SEED_CATEGORIES[
-        index % PRODUCT_REQUEST_SEED_CATEGORIES.length
+    const categorySlug =
+      PRODUCT_REQUEST_SEED_CATEGORY_SLUGS[
+        index % PRODUCT_REQUEST_SEED_CATEGORY_SLUGS.length
       ];
+    const useCustomCategory = !approvedProduct && index % 3 === 2;
+    const category = approvedProduct
+      ? getSeedCategoryOrThrow(categoryById, approvedProduct.categoryId)
+      : getSeedCategoryOrThrow(categoryBySlug, categorySlug);
     const name = normalizeProductRequestSeedShortText(
       approvedProduct?.name ?? seedName
     );
@@ -3843,8 +3927,11 @@ function createProductRequestSeeds(
       pharmacyId,
       name,
       article,
-      category,
-      customCategory: category === 'other' ? 'Wellness accessories' : undefined,
+      categoryMode: useCustomCategory
+        ? ('custom' as const)
+        : ('catalog' as const),
+      categoryId: useCustomCategory ? undefined : category._id,
+      customCategory: useCustomCategory ? 'Wellness accessories' : undefined,
       status,
       productId: approvedProduct?._id,
       productImage: {
@@ -3861,11 +3948,11 @@ function createProductRequestSeeds(
       packageSize: index % 2 === 0 ? '30 tablets' : '100 ml',
       form: ['tablets', 'spray', 'capsules', 'medical device'][index % 4],
       activeSubstance:
-        category === 'medical_devices'
+        category.slug === 'medical_devices'
           ? 'Not applicable / device material'
           : `Active component ${index + 1}`,
       prescriptionType:
-        category === 'medicine' ? 'non_prescription' : 'not_applicable',
+        category.slug === 'medicine' ? 'non_prescription' : 'not_applicable',
       fullDescription:
         'The request contains complete sample product information for checking draft editing, moderation states, internal comments, and the change history.',
       pharmacyComment:
@@ -3901,10 +3988,17 @@ async function seedProductRequests(): Promise<number> {
   const approvedProducts = await Product.find({ status: 'active' })
     .sort({ createdAt: 1 })
     .limit(14)
-    .select('_id name article category manufacturer')
+    .select('_id name article categoryId manufacturer')
     .lean<ProductRequestSeedApprovedProduct[]>();
 
-  const requests = createProductRequestSeeds(pharmacy._id, approvedProducts);
+  const categoryBySlug = createSeedCategoryBySlugMap(
+    await getSeedProductCategories()
+  );
+  const requests = createProductRequestSeeds(
+    pharmacy._id,
+    approvedProducts,
+    categoryBySlug
+  );
 
   await ProductRequest.insertMany(requests);
   return requests.length;
@@ -4058,7 +4152,18 @@ function assertPharmacyAccountSeedsAreValid(): void {
 //===============================================================
 
 function assertProductRequestSeedsAreValid(): void {
-  const requests = createProductRequestSeeds(new Types.ObjectId(), []);
+  const categoryBySlug = createSeedCategoryBySlugMap(
+    PRODUCT_REQUEST_SEED_CATEGORY_SLUGS.map((slug) => ({
+      _id: new Types.ObjectId(),
+      name: slug,
+      slug,
+    }))
+  );
+  const requests = createProductRequestSeeds(
+    new Types.ObjectId(),
+    [],
+    categoryBySlug
+  );
 
   for (const [index, request] of requests.entries()) {
     const validationError = new ProductRequest(request).validateSync();
@@ -4088,6 +4193,9 @@ async function seedDatabase(): Promise<void> {
   const categoryBootstrap = await ensureInitialProductCategories();
   console.log(
     `Seed completed: ${categoryBootstrap.createdCount} initial product categories created`
+  );
+  const categoryBySlug = createSeedCategoryBySlugMap(
+    await getSeedProductCategories()
   );
 
   await removeSeededDefaultPharmacyClients();
@@ -4121,7 +4229,7 @@ async function seedDatabase(): Promise<void> {
     )
   );
 
-  const seedProducts = createSeedProducts(createdPharmacies);
+  const seedProducts = createSeedProducts(createdPharmacies, categoryBySlug);
   const createdProducts = await Product.insertMany(
     seedProducts.map(({ offers, reviews, ...product }) => {
       void offers;

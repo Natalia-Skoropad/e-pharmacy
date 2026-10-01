@@ -13,7 +13,7 @@ import {
   dateQuerySchema,
 } from './shared/date.schema';
 
-import { PRODUCT_CATEGORIES } from '../types/categories';
+import { productCategorySlugSchema } from './product-category.schema';
 
 import {
   USER_SEARCH_MAX_LENGTH,
@@ -76,7 +76,7 @@ export const clientProductsQuerySchema = z.preprocess(
       dateTo: dateQuerySchema,
       article: sharedSearchSchema,
       name: sharedSearchSchema,
-      category: z.enum(PRODUCT_CATEGORIES).optional(),
+      category: productCategorySlugSchema.optional(),
       status: z.enum(['new', 'active', 'blocked']).optional(),
     })
 

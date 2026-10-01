@@ -1,6 +1,11 @@
 import type { Types } from 'mongoose';
 import type { CompletePharmacyBankDetails } from './pharmacy';
-import type { ProductCategory } from './categories';
+
+import type {
+  ProductCategoryReferenceDto,
+  ProductCategorySnapshotDto,
+} from './product-category';
+
 import type { CalendarDateString, ISODateTimeString } from './date';
 
 //===============================================================
@@ -48,7 +53,9 @@ export type OrderProductSnapshot = {
   name: string;
   slug?: string;
   article: string;
-  category?: ProductCategory;
+  categoryId?: Types.ObjectId;
+  categoryNameSnapshot?: string;
+  categorySlugSnapshot?: string;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;
@@ -148,7 +155,7 @@ export type OrderItemResponseDto = {
   name: string;
   slug?: string;
   article: string;
-  category?: ProductCategory;
+  category?: ProductCategorySnapshotDto;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;
@@ -251,13 +258,13 @@ export type OrderSalesStatisticsValueDto = { quantity: number; amount: number };
 export type OrderSalesStatisticsPointDto = {
   key: string;
   label: string;
-  values: Partial<Record<ProductCategory, OrderSalesStatisticsValueDto>>;
+  values: Partial<Record<string, OrderSalesStatisticsValueDto>>;
 };
 
 export type OrderSalesStatisticsDto = {
   currency: Currency;
   groupBy: OrderSalesStatisticsGroupBy;
-  categories: ProductCategory[];
+  categories: ProductCategoryReferenceDto[];
   points: OrderSalesStatisticsPointDto[];
 };
 

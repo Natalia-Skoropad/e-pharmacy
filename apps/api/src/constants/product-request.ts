@@ -7,3 +7,7 @@ export const PRODUCT_REQUEST_ERROR_CODES = {
   REJECTION_REASON_REQUIRED: 'PRODUCT_REQUEST_REJECTION_REASON_REQUIRED',
   APPROVAL_PRODUCT_CONFLICT: 'PRODUCT_REQUEST_APPROVAL_PRODUCT_CONFLICT',
 } as const;
+
+//===============================================================
+
+export const PRODUCT_REQUEST_CATEGORY_MODES = ['catalog', 'custom'] as const;

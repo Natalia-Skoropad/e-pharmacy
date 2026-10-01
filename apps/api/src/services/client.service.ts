@@ -15,7 +15,7 @@ import type {
 } from '../schemas/client.schema';
 
 import type { ProductStatus } from '../types/product';
-import type { ProductCategory } from '../types/categories';
+import type { ProductCategorySnapshotDto } from '../types/product-category';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 //===============================================================
@@ -68,7 +68,7 @@ type ClientPurchasedProductRow = Readonly<{
   photoUrl: string | null;
   article: string;
   name: string;
-  category: ProductCategory;
+  category?: ProductCategorySnapshotDto;
   quantity: number;
   totalAmount: number;
   ordersCount: number;
@@ -78,9 +78,12 @@ type ClientPurchasedProductRow = Readonly<{
 
 type AggregatedClientPurchasedProductRow = Omit<
   ClientPurchasedProductRow,
-  'firstOrderDate'
+  'firstOrderDate' | 'category'
 > & {
   firstOrderDate: Date;
+  categoryId: string | null;
+  categoryName: string | null;
+  categorySlug: string | null;
 };
 
 type ClientPurchasedProductsAggregationResult = Readonly<{
@@ -552,7 +555,7 @@ function buildClientProductFilterStages(
   }
 
   if (query.category) {
-    match.category = query.category;
+    match.categorySlug = query.category;
   }
 
   if (query.status) {
@@ -632,8 +635,24 @@ function buildClientProductsAggregationPipeline(
         },
         article: { $first: '$items.productSnapshot.article' },
         name: { $first: '$items.productSnapshot.name' },
-        category: {
-          $first: { $ifNull: ['$items.productSnapshot.category', 'other'] },
+        categoryId: {
+          $first: {
+            $cond: [
+              { $ne: ['$items.productSnapshot.categoryId', null] },
+              { $toString: '$items.productSnapshot.categoryId' },
+              null,
+            ],
+          },
+        },
+        categoryName: {
+          $first: {
+            $ifNull: ['$items.productSnapshot.categoryNameSnapshot', null],
+          },
+        },
+        categorySlug: {
+          $first: {
+            $ifNull: ['$items.productSnapshot.categorySlugSnapshot', null],
+          },
         },
         quantity: { $sum: '$items.quantity' },
         totalAmount: { $sum: '$items.totalPrice' },
@@ -663,7 +682,9 @@ function buildClientProductsAggregationPipeline(
         photoUrl: 1,
         article: 1,
         name: 1,
-        category: 1,
+        categoryId: 1,
+        categoryName: 1,
+        categorySlug: 1,
         quantity: 1,
         totalAmount: 1,
         ordersCount: { $size: '$orderIds' },
@@ -745,10 +766,21 @@ export async function getClientPurchasedProductsService(
   }
 
   return {
-    items: (result?.items ?? []).map((row) => ({
-      ...row,
-      firstOrderDate: row.firstOrderDate.toISOString(),
-    })),
+    items: (result?.items ?? []).map(
+      ({ categoryId, categoryName, categorySlug, ...row }) => ({
+        ...row,
+        ...(categoryName && categorySlug
+          ? {
+              category: {
+                ...(categoryId ? { id: categoryId } : {}),
+                name: categoryName,
+                slug: categorySlug,
+              },
+            }
+          : {}),
+        firstOrderDate: row.firstOrderDate.toISOString(),
+      })
+    ),
     page,
     perPage: query.perPage,
     total,

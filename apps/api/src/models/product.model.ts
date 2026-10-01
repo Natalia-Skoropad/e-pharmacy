@@ -2,7 +2,6 @@ import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../constants/validation';
 import type { ProductEntity } from '../types/product';
-import { PRODUCT_CATEGORIES } from '../types/categories';
 
 //===============================================================
 
@@ -49,10 +48,9 @@ const productSchema = new Schema<ProductEntity>(
       index: true,
     },
 
-    category: {
-      type: String,
-      enum: PRODUCT_CATEGORIES,
-      default: 'medicine',
+    categoryId: {
+      type: Schema.Types.ObjectId,
+      ref: 'ProductCategory',
       required: true,
     },
 
@@ -150,9 +148,9 @@ productSchema.index({
 //===============================================================
 
 productSchema.index({ article: 1 }, { unique: true });
-productSchema.index({ category: 1 });
+productSchema.index({ categoryId: 1 });
 productSchema.index({ status: 1, rating: -1 });
-productSchema.index({ status: 1, category: 1, rating: -1 });
+productSchema.index({ status: 1, categoryId: 1, rating: -1 });
 productSchema.index({ pharmacyId: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ rating: -1 });

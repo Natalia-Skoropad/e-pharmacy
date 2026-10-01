@@ -11,6 +11,7 @@ import { StockMovement } from '../models/stockMovement.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
 import { createManagerOrderService } from './order.service';
 
 import {
@@ -51,6 +52,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
     const ownerId = new Types.ObjectId();
@@ -73,7 +75,7 @@ test(
         _id: productId,
         name: `Atomic Product ${suffix.slice(-8)}`,
         article: `AT-${suffix.slice(-12)}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         price: 100,
         inStock: true,

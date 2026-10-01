@@ -16,7 +16,8 @@ import {
 } from './shared/date.schema';
 
 import { optionalTrimmedTextSchema } from './shared/optional-text.schema';
-import { PRODUCT_CATEGORIES } from '../types/categories';
+import { productCategorySlugSchema } from './product-category.schema';
+import { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/product-request';
 
 import {
   PRODUCT_REQUEST_ARTICLE_PATTERN,
@@ -167,13 +168,18 @@ export const productRequestsQuerySchema = z.preprocess(
       productArticle: sharedSearchSchema,
       name: sharedSearchSchema,
       article: sharedSearchSchema,
-      category: z.enum(PRODUCT_CATEGORIES).optional(),
+      category: productCategorySlugSchema.optional(),
+      categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES).optional(),
       status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
     })
     .strict()
     .refine((query) => isDateRangeOrdered(query.dateFrom, query.dateTo), {
       path: ['dateTo'],
       message: DATE_RANGE_MESSAGE,
+    })
+    .refine((query) => !(query.category && query.categoryMode === 'custom'), {
+      path: ['category'],
+      message: 'A category slug can be used only for catalog categories.',
     })
 );
 
@@ -210,7 +216,9 @@ export const productRequestFormSchema = z
       )
       .transform((value) => value.toUpperCase()),
 
-    category: z.enum(PRODUCT_CATEGORIES),
+    categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES),
+
+    categoryId: mongoIdSchema.optional(),
 
     customCategory: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.customCategoryMax,
@@ -297,7 +305,23 @@ export const productRequestFormSchema = z
   })
 
   .superRefine((value, context) => {
-    if (value.category === 'other' && !value.customCategory?.trim()) {
+    if (value.categoryMode === 'catalog' && !value.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category,
+      });
+    }
+
+    if (value.categoryMode === 'custom' && value.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message: 'Custom category requests must not select a catalog category.',
+      });
+    }
+
+    if (value.categoryMode === 'custom' && !value.customCategory?.trim()) {
       context.addIssue({
         code: 'custom',
         path: ['customCategory'],
@@ -383,6 +407,7 @@ export const productRequestModerationSchema = z
     status: z.enum(['in_progress', 'approved', 'rejected']),
     reason: z.string().trim().max(1000).optional(),
     productId: mongoIdSchema.optional(),
+    categoryId: mongoIdSchema.optional(),
   })
 
   .superRefine((value, context) => {
@@ -399,6 +424,15 @@ export const productRequestModerationSchema = z
         code: 'custom',
         path: ['productId'],
         message: 'Catalog product can be linked only when approving a request.',
+      });
+    }
+
+    if (value.status !== 'approved' && value.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message:
+          'Product category can be assigned only when approving a request.',
       });
     }
   });

@@ -61,7 +61,14 @@ test('admin moderation endpoint owns the request transition graph and approved p
 
   assert.match(service, /mongoose\.startSession\(\)/);
   assert.match(service, /session\.withTransaction/);
-  assert.match(service, /resolveApprovedProductId/);
-  assert.match(service, /request\.productId = approvedProductId/);
+  assert.match(service, /resolveApprovedProduct/);
+  assert.match(service, /request\.productId = approvedProduct\.productId/);
+
+  assert.match(
+    service,
+    /request\.categoryMode === 'custom'[\s\S]*?request\.categoryId = approvedProduct\.categoryId/
+  );
+
+  assert.match(service, /requireProductCategoryById/);
   assert.match(service, /request\.history = \[/);
 });

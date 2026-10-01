@@ -8,6 +8,8 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
 import { User } from '../models/user.model';
 
+import { getTestProductCategoryId } from './product-category-test.helper';
+
 import {
   getClientPurchasedProductsService,
   getClientsService,
@@ -62,7 +64,9 @@ async function createSuccessfulOrder({
   snapshot: Readonly<{
     name: string;
     article: string;
-    category: 'medicine' | 'other';
+    categoryId: Types.ObjectId;
+    categoryNameSnapshot: string;
+    categorySlugSnapshot: string;
     imageUrl?: string;
   }>;
 }>) {
@@ -105,6 +109,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
@@ -147,7 +152,9 @@ test(
     const snapshot = {
       name: 'Historical Medicine',
       article: `HIST-${suffix.toUpperCase()}`,
-      category: 'medicine' as const,
+      categoryId: medicineCategoryId,
+      categoryNameSnapshot: 'Medicine',
+      categorySlugSnapshot: 'medicine',
     };
 
     await Promise.all([
@@ -240,6 +247,8 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
+    const beautyCategoryId = await getTestProductCategoryId('beauty');
 
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
@@ -271,7 +280,7 @@ test(
         _id: productId,
         name: 'Aspirin Forte',
         article: `NEW-${suffix}`,
-        category: 'other',
+        categoryId: beautyCategoryId,
         imageUrl: 'https://example.com/current.jpg',
         status: 'active',
         inStock: true,
@@ -289,7 +298,9 @@ test(
       snapshot: {
         name: 'Aspirin 100',
         article: `OLD-${suffix}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
+        categoryNameSnapshot: 'Medicine',
+        categorySlugSnapshot: 'medicine',
         imageUrl: 'https://example.com/historical.jpg',
       },
     });
@@ -305,7 +316,11 @@ test(
       assert.ok(currentItem);
       assert.equal(currentItem.name, 'Aspirin 100');
       assert.equal(currentItem.article, `OLD-${suffix}`);
-      assert.equal(currentItem.category, 'medicine');
+      assert.deepEqual(currentItem.category, {
+        id: medicineCategoryId.toString(),
+        name: 'Medicine',
+        slug: 'medicine',
+      });
       assert.equal(currentItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(currentItem.totalAmount, 250);
       assert.equal(currentItem.currentProductExists, true);
@@ -326,7 +341,11 @@ test(
       assert.ok(blockedItem);
       assert.equal(blockedItem.name, 'Aspirin 100');
       assert.equal(blockedItem.article, `OLD-${suffix}`);
-      assert.equal(blockedItem.category, 'medicine');
+      assert.deepEqual(blockedItem.category, {
+        id: medicineCategoryId.toString(),
+        name: 'Medicine',
+        slug: 'medicine',
+      });
       assert.equal(blockedItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(blockedItem.currentProductExists, true);
       assert.equal(blockedItem.currentStatus, 'blocked');
@@ -343,7 +362,11 @@ test(
       assert.ok(deletedItem);
       assert.equal(deletedItem.name, 'Aspirin 100');
       assert.equal(deletedItem.article, `OLD-${suffix}`);
-      assert.equal(deletedItem.category, 'medicine');
+      assert.deepEqual(deletedItem.category, {
+        id: medicineCategoryId.toString(),
+        name: 'Medicine',
+        slug: 'medicine',
+      });
       assert.equal(deletedItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(deletedItem.currentProductExists, false);
       assert.equal(deletedItem.currentStatus, null);
@@ -367,6 +390,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
@@ -398,7 +422,7 @@ test(
         _id: productId,
         name: 'Current Aggregate Product',
         article: `EPH-${suffix}`,
-        category: 'medicine',
+        categoryId: medicineCategoryId,
         status: 'active',
         inStock: true,
       }),
@@ -416,7 +440,9 @@ test(
         snapshot: {
           name: 'Historical Aggregate Product',
           article: `EPH-${suffix}`,
-          category: 'medicine',
+          categoryId: medicineCategoryId,
+          categoryNameSnapshot: 'Medicine',
+          categorySlugSnapshot: 'medicine',
         },
       }),
 
@@ -431,7 +457,9 @@ test(
         snapshot: {
           name: 'Historical Aggregate Product',
           article: `EPH-${suffix}`,
-          category: 'medicine',
+          categoryId: medicineCategoryId,
+          categoryNameSnapshot: 'Medicine',
+          categorySlugSnapshot: 'medicine',
         },
       }),
     ]);
