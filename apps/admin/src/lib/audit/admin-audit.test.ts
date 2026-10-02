@@ -8,6 +8,7 @@ import {
 } from './admin-audit';
 
 import {
+  getAdminAuditActionLabel,
   getAdminAuditChangeTone,
   getAdminAuditStatusTransitionLabel,
 } from './admin-audit-presentation';
@@ -114,6 +115,40 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
   );
 
   assert.equal(documentParsed.items[0]?.entityType, 'adminEmployeeDocument');
+});
+
+//===================================================================
+
+test('audit parser accepts pharmacy owner lifecycle events', () => {
+  const parsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        action: 'pharmacyOwner.status.changed',
+        section: 'pharmacyOwners',
+        entityType: 'pharmacyOwner',
+        entityId: '507f1f77bcf86cd799439088',
+        entityLabelSnapshot: 'Owner Example',
+        statusBefore: 'new',
+        statusAfter: 'active',
+        changedFields: ['status'],
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
+  });
+
+  assert.equal(parsed.items[0]?.action, 'pharmacyOwner.status.changed');
+  assert.equal(parsed.items[0]?.section, 'pharmacyOwners');
+  assert.equal(parsed.items[0]?.entityType, 'pharmacyOwner');
+
+  assert.equal(
+    getAdminAuditActionLabel(parsed.items[0]!.action),
+    'Pharmacy owner status changed'
+  );
 });
 
 //===================================================================

@@ -2,6 +2,7 @@ import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
+  'pharmacyOwner.status.changed',
   'productRequest.status.changed',
   'admin.platformOwner.granted',
   'admin.platformOwner.revoked',
@@ -25,6 +26,7 @@ export type AdminAuditAction = (typeof ADMIN_AUDIT_ACTIONS)[number];
 
 export const ADMIN_AUDIT_ENTITY_TYPES = [
   'pharmacy',
+  'pharmacyOwner',
   'productRequest',
   'adminAccess',
   'adminEmployee',

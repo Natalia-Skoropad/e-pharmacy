@@ -18,6 +18,7 @@ import type {
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.status.changed': 'Pharmacy status changed',
+  'pharmacyOwner.status.changed': 'Pharmacy owner status changed',
   'productRequest.status.changed': 'Product request status changed',
   'admin.platformOwner.granted': 'Platform Owner granted',
   'admin.platformOwner.revoked': 'Platform Owner removed',
@@ -78,6 +79,7 @@ const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 
 const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   pharmacy: 'Pharmacy',
+  pharmacyOwner: 'Pharmacy owner',
   productRequest: 'Product request',
   adminAccess: 'Admin access',
   adminEmployee: 'Admin employee',

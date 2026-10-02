@@ -1046,6 +1046,74 @@ async function seedPharmacyAccounts(): Promise<number> {
 
 //===============================================================
 
+function createDemoPharmacyOwnerName(pharmacyName: string): string {
+  const words = pharmacyName.match(/[A-Za-z]+(?:-[A-Za-z]+)?/g) ?? [];
+  const candidate = `${words.slice(0, 3).join(' ')} Owner`.trim();
+
+  return candidate.length >= 2 && candidate.length <= 50
+    ? candidate
+    : 'Demo Pharmacy Owner';
+}
+
+//===============================================================
+
+async function seedDemoPharmacyOwners(
+  pharmacySeeds: ReturnType<typeof createSeedPharmacies>
+): Promise<number> {
+  const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
+  let ownerCount = 0;
+
+  for (const seed of pharmacySeeds) {
+    const existing = await User.findOne({ email: seed.email })
+      .select('_id role')
+      .lean<{ _id: Types.ObjectId; role: string } | null>();
+
+    if (existing && existing.role !== USER_ROLES.PHARMACY) {
+      throw new Error(
+        `Seed demo pharmacy owner email ${seed.email} is already used by a non-pharmacy user.`
+      );
+    }
+
+    const owner = await User.findOneAndUpdate(
+      { email: seed.email },
+      {
+        $set: {
+          name: createDemoPharmacyOwnerName(seed.name),
+          email: seed.email,
+          password,
+          role: USER_ROLES.PHARMACY,
+          status: USER_STATUSES.ACTIVE,
+          phone: seed.phone,
+          address: seed.address,
+        },
+        $unset: { statusReason: '' },
+        $setOnInsert: { _id: seed.ownerId },
+      },
+      {
+        returnDocument: 'after',
+        upsert: true,
+        runValidators: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    if (!owner) {
+      throw new Error(
+        `Seed demo pharmacy owner ${seed.email} could not be created.`
+      );
+    }
+
+    // Reuse an existing demo owner id on repeated seed runs. This keeps the
+    // relationship valid without accumulating stale owner accounts.
+    seed.ownerId = owner._id;
+    ownerCount += 1;
+  }
+
+  return ownerCount;
+}
+
+//===============================================================
+
 function createSeedPharmacies() {
   return Array.from({ length: 98 }, (_, index) => {
     const pharmacyNumber = index + 1;
@@ -4105,6 +4173,31 @@ function assertSeedPharmaciesAreValid(
 
 //===============================================================
 
+function assertDemoPharmacyOwnerSeedsAreValid(
+  pharmacySeeds: ReturnType<typeof createSeedPharmacies>
+): void {
+  for (const [index, seed] of pharmacySeeds.entries()) {
+    const validationError = new User({
+      _id: seed.ownerId,
+      name: createDemoPharmacyOwnerName(seed.name),
+      email: seed.email,
+      password: PHARMACY_ACCOUNT_PASSWORD,
+      role: USER_ROLES.PHARMACY,
+      status: USER_STATUSES.ACTIVE,
+      phone: seed.phone,
+      address: seed.address,
+    }).validateSync();
+
+    if (validationError) {
+      throw new Error(
+        `Seed preflight failed for demo pharmacy owner ${index + 1} before database reset: ${validationError.message}`
+      );
+    }
+  }
+}
+
+//===============================================================
+
 function assertPharmacyAccountSeedsAreValid(): void {
   for (const seed of PHARMACY_ACCOUNT_SEEDS) {
     const ownerId = new Types.ObjectId();
@@ -4185,6 +4278,7 @@ async function seedDatabase(): Promise<void> {
 
   const pharmacySeeds = createSeedPharmacies();
   assertSeedPharmaciesAreValid(pharmacySeeds);
+  assertDemoPharmacyOwnerSeedsAreValid(pharmacySeeds);
   assertPharmacyAccountSeedsAreValid();
   assertProductRequestSeedsAreValid();
 
@@ -4194,9 +4288,12 @@ async function seedDatabase(): Promise<void> {
   console.log(
     `Seed completed: ${categoryBootstrap.createdCount} initial product categories created`
   );
+
   const categoryBySlug = createSeedCategoryBySlugMap(
     await getSeedProductCategories()
   );
+
+  const demoPharmacyOwnersCount = await seedDemoPharmacyOwners(pharmacySeeds);
 
   await removeSeededDefaultPharmacyClients();
 
@@ -4291,7 +4388,13 @@ async function seedDatabase(): Promise<void> {
   const restockedOffersCount = await seedOwnProductRestocks();
 
   console.log(`Seed completed: ${createdPharmacies.length} pharmacies created`);
+
+  console.log(
+    `Seed completed: ${demoPharmacyOwnersCount} demo pharmacy owners created or updated`
+  );
+
   console.log(`Seed completed: ${seedProducts.length} products created`);
+
   console.log(
     `Seed completed: ${pharmacyAccountsCount} pharmacy accounts created`
   );

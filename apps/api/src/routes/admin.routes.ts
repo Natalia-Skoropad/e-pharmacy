@@ -4,6 +4,7 @@ import { ADMIN_PERMISSIONS } from '../constants/admin-permissions';
 
 import {
   getCurrentAdminAccess,
+  updatePharmacyOwnerStatusByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
   updateProductRequestStatusByAdmin,
@@ -53,6 +54,11 @@ import {
   pharmacyIdParamsSchema,
   updateAdminPharmacyStatusSchema,
 } from '../schemas/admin.schema';
+
+import {
+  adminPharmacyOwnerParamsSchema,
+  updateAdminPharmacyOwnerStatusSchema,
+} from '../schemas/admin-pharmacy-owner.schema';
 
 import {
   adminEmployeeDocumentParamsSchema,
@@ -287,6 +293,20 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
   validate({ params: adminAuditLogParamsSchema }),
   ctrlWrapper(getAdminAuditLogDetails)
+);
+
+//=================================================================================
+
+adminRoutes.patch(
+  '/pharmacy-owners/:ownerId/status',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.edit),
+
+  validate({
+    params: adminPharmacyOwnerParamsSchema,
+    body: updateAdminPharmacyOwnerStatusSchema,
+  }),
+
+  ctrlWrapper(updatePharmacyOwnerStatusByAdmin)
 );
 
 //=================================================================================

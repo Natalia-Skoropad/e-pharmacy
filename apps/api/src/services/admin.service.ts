@@ -24,6 +24,7 @@ import { appendAdminAuditLog } from './admin-audit.service';
 import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
 
 import { reconcileAttachedPharmacyDocumentStorage } from './pharmacy-document.service';
+import { activateNewPharmacyOwnerForPharmacy } from './pharmacy-owner-lifecycle.service';
 
 //===============================================================
 
@@ -203,6 +204,13 @@ export async function updatePharmacyStatusByAdminService(
             'Default pharmacy client could not be created during activation.'
           );
         }
+
+        await activateNewPharmacyOwnerForPharmacy(
+          updated,
+          adminUserId,
+          auditRequestId,
+          session
+        );
       }
 
       if (auditRequestId && previousStatus !== updated.status) {

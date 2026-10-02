@@ -11,11 +11,17 @@ import type {
 } from '../schemas/admin.schema';
 
 import type {
+  AdminPharmacyOwnerParams,
+  UpdateAdminPharmacyOwnerStatusInput,
+} from '../schemas/admin-pharmacy-owner.schema';
+
+import type {
   ProductRequestModerationInput,
   ProductRequestParams,
 } from '../schemas/product-request.schema';
 
 import { updatePharmacyStatusByAdminService } from '../services/admin.service';
+import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-owner-lifecycle.service';
 
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
 import { moderateProductRequestByAdminService } from '../services/product-request.service';
@@ -64,6 +70,40 @@ export async function getAdminPharmacyDocument(
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function updatePharmacyOwnerStatusByAdmin(
+  req: Request,
+  res: ValidatedResponse<
+    UpdateAdminPharmacyOwnerStatusInput,
+    AdminPharmacyOwnerParams
+  >
+): Promise<void> {
+  const adminUserId = req.user?.id;
+  if (!adminUserId) return;
+
+  const { ownerId } = res.locals.validated.params;
+  const requestId = res.locals.requestId;
+
+  if (!requestId) {
+    throw new Error('Request id is required for owner lifecycle audit.');
+  }
+
+  const owner = await updatePharmacyOwnerStatusByAdminService(
+    ownerId,
+    res.locals.validated.body,
+    adminUserId,
+    requestId
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Pharmacy owner status was updated successfully.',
+    data: { owner },
+  });
 }
 
 //===============================================================

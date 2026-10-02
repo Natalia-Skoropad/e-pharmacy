@@ -1,4 +1,4 @@
-import type { Connection } from 'mongoose';
+import type { Connection, Types } from 'mongoose';
 
 import {
   PHARMACY_STATUSES,
@@ -17,6 +17,42 @@ type IndexInfo = Readonly<{
   unique?: boolean;
 }>;
 
+type LegacyPharmacy = Readonly<{
+  _id: unknown;
+  ownerId: unknown;
+  name?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  address?: unknown;
+  status?: unknown;
+  createdAt?: unknown;
+}>;
+
+type OwnerUser = Readonly<{
+  _id: Types.ObjectId;
+  role?: unknown;
+  status?: unknown;
+  email?: unknown;
+  phone?: unknown;
+}>;
+
+type DemoOwnerCandidate = Readonly<{
+  _id: Types.ObjectId;
+  name: string;
+  email: string;
+  password: string;
+  role: typeof USER_ROLES.PHARMACY;
+  status: typeof USER_STATUSES.NEW | typeof USER_STATUSES.ACTIVE;
+  phone: string;
+  address?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}>;
+
+export type PharmacyOwnerFoundationMigrationOptions = Readonly<{
+  demoOwnerPasswordHash: string;
+}>;
+
 //===============================================================
 
 const OWNER_INDEXES = [
@@ -33,6 +69,15 @@ const OWNER_INDEXES = [
 
 //===============================================================
 
+const LEGACY_DEMO_PHARMACY_EMAIL_PATTERN =
+  /^pharmacy\.(\d+)@e-pharmacy\.example\.com$/i;
+
+const UKRAINE_PHONE_PATTERN = /^\+380\d{9}$/;
+const DEMO_OWNER_NAME_FALLBACK = 'Demo Pharmacy Owner';
+const USER_NAME_MAX_LENGTH = 50;
+
+//===============================================================
+
 export type PharmacyOwnerFoundationMigrationResult = Readonly<{
   droppedUniqueOwnerIndexes: number;
   ownerIndexes: readonly string[];
@@ -41,6 +86,7 @@ export type PharmacyOwnerFoundationMigrationResult = Readonly<{
   newOwners: number;
   blockedOwners: number;
   modifiedOwnerAccounts: number;
+  createdDemoOwnerAccounts: number;
   unresolvedOwnerIds: number;
   unresolvedOwnerIdSamples: readonly string[];
 }>;
@@ -131,8 +177,199 @@ function objectIdSet(values: readonly unknown[]): Set<string> {
 
 //===============================================================
 
+function getLegacyDemoPharmacyNumber(pharmacy: LegacyPharmacy): number | null {
+  if (typeof pharmacy.email !== 'string') return null;
+
+  const match = pharmacy.email.trim().match(LEGACY_DEMO_PHARMACY_EMAIL_PATTERN);
+  if (!match) return null;
+
+  const value = Number(match[1]);
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+//===============================================================
+
+function isLegacyDemoPharmacy(pharmacy: LegacyPharmacy): boolean {
+  return getLegacyDemoPharmacyNumber(pharmacy) !== null;
+}
+
+//===============================================================
+
+function getDemoOwnerPhone(pharmacy: LegacyPharmacy): string {
+  if (
+    typeof pharmacy.phone === 'string' &&
+    UKRAINE_PHONE_PATTERN.test(pharmacy.phone.trim())
+  ) {
+    return pharmacy.phone.trim();
+  }
+
+  const pharmacyNumber = getLegacyDemoPharmacyNumber(pharmacy);
+  if (pharmacyNumber === null) {
+    throw new Error(
+      'Cannot derive a demo owner phone for a non-demo pharmacy.'
+    );
+  }
+
+  return `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`;
+}
+
+//===============================================================
+
+function createDemoOwnerName(pharmacyName: unknown): string {
+  if (typeof pharmacyName !== 'string') return DEMO_OWNER_NAME_FALLBACK;
+
+  const words = pharmacyName.match(/[A-Za-z]+(?:-[A-Za-z]+)?/g) ?? [];
+  const meaningfulWords = words.slice(0, 3);
+  if (!meaningfulWords.length) return DEMO_OWNER_NAME_FALLBACK;
+
+  const candidate = `${meaningfulWords.join(' ')} Owner`;
+  return candidate.length <= USER_NAME_MAX_LENGTH
+    ? candidate
+    : DEMO_OWNER_NAME_FALLBACK;
+}
+
+//===============================================================
+
+function toCreatedAt(value: unknown): Date {
+  return value instanceof Date && !Number.isNaN(value.getTime())
+    ? value
+    : new Date();
+}
+
+//===============================================================
+
+function assertUniqueCandidateCredentials(
+  candidates: readonly DemoOwnerCandidate[]
+): void {
+  const emails = new Set<string>();
+  const phones = new Set<string>();
+
+  for (const candidate of candidates) {
+    if (emails.has(candidate.email)) {
+      throw new Error(
+        `Cannot create demo pharmacy owners because email ${candidate.email} is shared by multiple unresolved owner ids.`
+      );
+    }
+
+    if (phones.has(candidate.phone)) {
+      throw new Error(
+        `Cannot create demo pharmacy owners because phone ${candidate.phone} is shared by multiple unresolved owner ids.`
+      );
+    }
+
+    emails.add(candidate.email);
+    phones.add(candidate.phone);
+  }
+}
+
+//===============================================================
+
+async function createMissingDemoOwnerUsers(
+  db: Database,
+  unresolvedOwnerIds: readonly unknown[],
+  demoOwnerPasswordHash: string
+): Promise<number> {
+  if (!unresolvedOwnerIds.length) return 0;
+
+  const pharmacies = db.collection('pharmacies');
+  const users = db.collection('users');
+
+  const unresolvedPharmacies = (await pharmacies
+    .find(
+      { ownerId: { $in: unresolvedOwnerIds } },
+      {
+        projection: {
+          _id: 1,
+          ownerId: 1,
+          name: 1,
+          email: 1,
+          phone: 1,
+          address: 1,
+          status: 1,
+          createdAt: 1,
+        },
+      }
+    )
+    .sort({ createdAt: 1, _id: 1 })
+    .toArray()) as LegacyPharmacy[];
+
+  const byOwnerId = new Map<string, LegacyPharmacy[]>();
+
+  for (const pharmacy of unresolvedPharmacies) {
+    const ownerId = String(pharmacy.ownerId);
+    const current = byOwnerId.get(ownerId) ?? [];
+    current.push(pharmacy);
+    byOwnerId.set(ownerId, current);
+  }
+
+  const candidates: DemoOwnerCandidate[] = [];
+
+  for (const ownerId of unresolvedOwnerIds) {
+    const linkedPharmacies = byOwnerId.get(String(ownerId)) ?? [];
+
+    // Only the controlled 98 demo pharmacies from the original client seed are
+    // repaired automatically. Unknown real/legacy orphan references remain
+    // unresolved instead of being assigned an invented account.
+    if (
+      !linkedPharmacies.length ||
+      !linkedPharmacies.every(isLegacyDemoPharmacy)
+    ) {
+      continue;
+    }
+
+    const primary = linkedPharmacies[0];
+    const createdAt = toCreatedAt(primary.createdAt);
+    const hasActivePharmacy = linkedPharmacies.some(
+      (pharmacy) => pharmacy.status === PHARMACY_STATUSES.ACTIVE
+    );
+
+    candidates.push({
+      _id: ownerId as Types.ObjectId,
+      name: createDemoOwnerName(primary.name),
+      email: String(primary.email).trim().toLowerCase(),
+      password: demoOwnerPasswordHash,
+      role: USER_ROLES.PHARMACY,
+      status: hasActivePharmacy ? USER_STATUSES.ACTIVE : USER_STATUSES.NEW,
+      phone: getDemoOwnerPhone(primary),
+      ...(typeof primary.address === 'string' && primary.address.trim()
+        ? { address: primary.address.trim() }
+        : {}),
+      createdAt,
+      updatedAt: createdAt,
+    });
+  }
+
+  if (!candidates.length) return 0;
+
+  assertUniqueCandidateCredentials(candidates);
+
+  const existingCredentialUsers = (await users
+    .find(
+      {
+        $or: [
+          { email: { $in: candidates.map((candidate) => candidate.email) } },
+          { phone: { $in: candidates.map((candidate) => candidate.phone) } },
+        ],
+      },
+      { projection: { _id: 1, email: 1, phone: 1, role: 1 } }
+    )
+    .toArray()) as OwnerUser[];
+
+  if (existingCredentialUsers.length > 0) {
+    throw new Error(
+      `Cannot create demo pharmacy owners because ${existingCredentialUsers.length} candidate email/phone value(s) are already used by other User records. Conflicting user ids: ${existingCredentialUsers.map((user) => String(user._id)).join(', ')}.`
+    );
+  }
+
+  const insertResult = await users.insertMany(candidates, { ordered: true });
+  return insertResult.insertedCount;
+}
+
+//===============================================================
+
 export async function migratePharmacyOwnerFoundation(
-  db: Database
+  db: Database,
+  options: PharmacyOwnerFoundationMigrationOptions
 ): Promise<PharmacyOwnerFoundationMigrationResult> {
   const pharmacies = db.collection('pharmacies');
   const users = db.collection('users');
@@ -141,19 +378,21 @@ export async function migratePharmacyOwnerFoundation(
     ownerId: { $exists: true, $ne: null },
   });
 
-  const ownerUsers =
+  let ownerUsers =
     ownerIds.length > 0
-      ? await users
+      ? ((await users
           .find(
             { _id: { $in: ownerIds } },
             { projection: { _id: 1, role: 1, status: 1 } }
           )
-          .toArray()
+          .toArray()) as OwnerUser[])
       : [];
 
-  const foundOwnerIdSet = objectIdSet(ownerUsers.map((owner) => owner._id));
-  const unresolvedOwnerIds = ownerIds.filter(
-    (ownerId) => !foundOwnerIdSet.has(String(ownerId))
+  const initialFoundOwnerIdSet = objectIdSet(
+    ownerUsers.map((owner) => owner._id)
+  );
+  const initialUnresolvedOwnerIds = ownerIds.filter(
+    (ownerId) => !initialFoundOwnerIdSet.has(String(ownerId))
   );
 
   const invalidRoleOwners = ownerUsers.filter(
@@ -166,10 +405,36 @@ export async function migratePharmacyOwnerFoundation(
     );
   }
 
-  // Index migration is intentionally independent from legacy orphan references.
-  // We must not synthesize or delete users/pharmacies just to make old data fit
-  // the new relation. Existing resolvable owners are migrated; unresolved owner
-  // ids are reported to the caller for follow-up cleanup.
+  const createdDemoOwnerAccounts = await createMissingDemoOwnerUsers(
+    db,
+    initialUnresolvedOwnerIds,
+    options.demoOwnerPasswordHash
+  );
+
+  if (createdDemoOwnerAccounts > 0) {
+    ownerUsers = (await users
+      .find(
+        { _id: { $in: ownerIds } },
+        { projection: { _id: 1, role: 1, status: 1 } }
+      )
+      .toArray()) as OwnerUser[];
+  }
+
+  const foundOwnerIdSet = objectIdSet(ownerUsers.map((owner) => owner._id));
+  const unresolvedOwnerIds = ownerIds.filter(
+    (ownerId) => !foundOwnerIdSet.has(String(ownerId))
+  );
+
+  const invalidRoleOwnersAfterRepair = ownerUsers.filter(
+    (owner) => owner.role !== USER_ROLES.PHARMACY
+  );
+
+  if (invalidRoleOwnersAfterRepair.length > 0) {
+    throw new Error(
+      `Cannot migrate pharmacy owners because Pharmacy.ownerId must reference role="pharmacy" users. Invalid owner ids: ${invalidRoleOwnersAfterRepair.map((owner) => String(owner._id)).join(', ')}.`
+    );
+  }
+
   const ownerIndexNames: string[] = [];
   let droppedUniqueOwnerIndexes = 0;
 
@@ -190,6 +455,7 @@ export async function migratePharmacyOwnerFoundation(
       newOwners: 0,
       blockedOwners: 0,
       modifiedOwnerAccounts: 0,
+      createdDemoOwnerAccounts,
       unresolvedOwnerIds: unresolvedOwnerIds.length,
       unresolvedOwnerIdSamples: unresolvedOwnerIds.slice(0, 10).map(String),
     };
@@ -253,6 +519,7 @@ export async function migratePharmacyOwnerFoundation(
     newOwners: newOwners.length,
     blockedOwners: blockedOwners.length,
     modifiedOwnerAccounts: activeUpdate.modifiedCount + newUpdate.modifiedCount,
+    createdDemoOwnerAccounts,
     unresolvedOwnerIds: unresolvedOwnerIds.length,
     unresolvedOwnerIdSamples: unresolvedOwnerIds.slice(0, 10).map(String),
   };

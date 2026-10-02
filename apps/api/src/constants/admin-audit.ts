@@ -1,5 +1,6 @@
 export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_STATUS_CHANGED: 'pharmacy.status.changed',
+  PHARMACY_OWNER_STATUS_CHANGED: 'pharmacyOwner.status.changed',
   PRODUCT_REQUEST_STATUS_CHANGED: 'productRequest.status.changed',
   PLATFORM_OWNER_GRANTED: 'admin.platformOwner.granted',
   PLATFORM_OWNER_REVOKED: 'admin.platformOwner.revoked',
@@ -71,6 +72,7 @@ export function getStoredAdminAuditActionValues(
 
 export const ADMIN_AUDIT_ENTITY_TYPES = {
   PHARMACY: 'pharmacy',
+  PHARMACY_OWNER: 'pharmacyOwner',
   PRODUCT_REQUEST: 'productRequest',
   ADMIN_ACCESS: 'adminAccess',
   ADMIN_EMPLOYEE: 'adminEmployee',
