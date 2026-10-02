@@ -200,6 +200,7 @@ const userSchema = new Schema<UserEntity>(
 //===============================================================
 
 userSchema.index({ role: 1, status: 1 });
+userSchema.index({ role: 1, createdAt: -1 });
 userSchema.index({ approvedBy: 1 });
 
 userSchema.index(

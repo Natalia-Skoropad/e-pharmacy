@@ -71,6 +71,16 @@ const INTENTIONALLY_PUBLIC = new Set([
   'reviews:ReviewModerationResponse',
   'reviews:ReviewModerationStatus',
 
+  // Stage 13 Pharmacy Owners read contracts are intentionally public before
+  // the Admin BFF/UI consumers arrive in later Stage 13 sub-stages.
+  'admin:AdminPharmacyOwnerDetail',
+  'admin:AdminPharmacyOwnerListItem',
+  'admin:AdminPharmacyOwnerListResponse',
+  'admin:AdminPharmacyOwnerOption',
+  'admin:AdminPharmacyOwnerPharmaciesResponse',
+  'admin:AdminPharmacyOwnerPharmacySummary',
+  'admin:AdminPharmacyOwnerStatistics',
+
   // Reference-data contracts are public cross-application API shapes. Some
   // remain intentionally available before every consumer needs them.
   'reference-data:CreatePositionPayload',

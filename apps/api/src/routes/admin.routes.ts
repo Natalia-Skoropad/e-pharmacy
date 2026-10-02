@@ -4,6 +4,11 @@ import { ADMIN_PERMISSIONS } from '../constants/admin-permissions';
 
 import {
   getCurrentAdminAccess,
+  getPharmacyOwnerDetailByAdmin,
+  getPharmacyOwnerSummaryByAdmin,
+  listPharmacyOwnerOptionsByAdmin,
+  listPharmacyOwnerPharmaciesByAdmin,
+  listPharmacyOwnersByAdmin,
   updatePharmacyOwnerStatusByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
@@ -56,7 +61,10 @@ import {
 } from '../schemas/admin.schema';
 
 import {
+  adminPharmacyOwnerListQuerySchema,
+  adminPharmacyOwnerOptionsQuerySchema,
   adminPharmacyOwnerParamsSchema,
+  adminPharmacyOwnerPharmaciesQuerySchema,
   updateAdminPharmacyOwnerStatusSchema,
 } from '../schemas/admin-pharmacy-owner.schema';
 
@@ -293,6 +301,55 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
   validate({ params: adminAuditLogParamsSchema }),
   ctrlWrapper(getAdminAuditLogDetails)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ query: adminPharmacyOwnerListQuerySchema }),
+  ctrlWrapper(listPharmacyOwnersByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/summary',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  ctrlWrapper(getPharmacyOwnerSummaryByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/options',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ query: adminPharmacyOwnerOptionsQuerySchema }),
+  ctrlWrapper(listPharmacyOwnerOptionsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ params: adminPharmacyOwnerParamsSchema }),
+  ctrlWrapper(getPharmacyOwnerDetailByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/pharmacies',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+
+  validate({
+    params: adminPharmacyOwnerParamsSchema,
+    query: adminPharmacyOwnerPharmaciesQuerySchema,
+  }),
+
+  ctrlWrapper(listPharmacyOwnerPharmaciesByAdmin)
 );
 
 //=================================================================================

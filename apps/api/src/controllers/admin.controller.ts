@@ -11,7 +11,10 @@ import type {
 } from '../schemas/admin.schema';
 
 import type {
+  AdminPharmacyOwnerListQuery,
+  AdminPharmacyOwnerOptionsQuery,
   AdminPharmacyOwnerParams,
+  AdminPharmacyOwnerPharmaciesQuery,
   UpdateAdminPharmacyOwnerStatusInput,
 } from '../schemas/admin-pharmacy-owner.schema';
 
@@ -22,6 +25,14 @@ import type {
 
 import { updatePharmacyStatusByAdminService } from '../services/admin.service';
 import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-owner-lifecycle.service';
+
+import {
+  getAdminPharmacyOwnerDetailService,
+  getAdminPharmacyOwnerStatisticsService,
+  listAdminPharmacyOwnerOptionsService,
+  listAdminPharmacyOwnerPharmaciesService,
+  listAdminPharmacyOwnersService,
+} from '../services/admin-pharmacy-owner-read.service';
 
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
 import { moderateProductRequestByAdminService } from '../services/product-request.service';
@@ -69,6 +80,77 @@ export async function getAdminPharmacyDocument(
     documentId
   );
 
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyOwnersByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, AdminPharmacyOwnerListQuery>
+): Promise<void> {
+  const data = await listAdminPharmacyOwnersService(res.locals.validated.query);
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyOwnerSummaryByAdmin(
+  _req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getAdminPharmacyOwnerStatisticsService();
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyOwnerOptionsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, AdminPharmacyOwnerOptionsQuery>
+): Promise<void> {
+  const data = await listAdminPharmacyOwnerOptionsService(
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyOwnerDetailByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyOwnerParams>
+): Promise<void> {
+  const data = await getAdminPharmacyOwnerDetailService(
+    res.locals.validated.params.ownerId
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyOwnerPharmaciesByAdmin(
+  _req: Request,
+  res: ValidatedResponse<
+    unknown,
+    AdminPharmacyOwnerParams,
+    AdminPharmacyOwnerPharmaciesQuery
+  >
+): Promise<void> {
+  const data = await listAdminPharmacyOwnerPharmaciesService(
+    res.locals.validated.params.ownerId,
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
