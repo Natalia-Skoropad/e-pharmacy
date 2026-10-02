@@ -62,6 +62,20 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
       maxlength: ADMIN_AUDIT_LIMITS.entityLabel,
     },
 
+    scopeEntityType: {
+      type: String,
+      enum: ADMIN_AUDIT_ENTITY_TYPE_VALUES,
+      default: undefined,
+      index: true,
+    },
+
+    scopeEntityId: {
+      type: String,
+      trim: true,
+      maxlength: ADMIN_AUDIT_LIMITS.entityId,
+      default: undefined,
+    },
+
     before: {
       type: Schema.Types.Mixed,
       required: true,
@@ -105,6 +119,14 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
 
 adminAuditLogSchema.index({ createdAt: -1, _id: -1 });
 adminAuditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
+
+adminAuditLogSchema.index({
+  scopeEntityType: 1,
+  scopeEntityId: 1,
+  createdAt: -1,
+  _id: -1,
+});
+
 adminAuditLogSchema.index({ actorUserId: 1, createdAt: -1 });
 adminAuditLogSchema.index({ action: 1, createdAt: -1 });
 adminAuditLogSchema.index({ section: 1, createdAt: -1 });

@@ -8,9 +8,11 @@ import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
 import {
   ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ACTOR_TYPES,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
   type AdminAuditAction,
+  type AdminAuditActorType,
   type AdminAuditEntityType,
   type AdminAuditSection,
 } from '@/lib/audit/admin-audit';
@@ -29,7 +31,9 @@ export type ActivityHistoryFilters = Readonly<{
   action: '' | AdminAuditAction;
   entityType: '' | AdminAuditEntityType;
   section: '' | AdminAuditSection;
-  actorUserId: string;
+  actorType: '' | AdminAuditActorType;
+  employeeUserId: string;
+  ownerUserId: string;
 }>;
 
 //===================================================================
@@ -40,7 +44,9 @@ export const DEFAULT_ACTIVITY_HISTORY_FILTERS: ActivityHistoryFilters = {
   action: '',
   entityType: '',
   section: '',
-  actorUserId: '',
+  actorType: '',
+  employeeUserId: '',
+  ownerUserId: '',
 };
 
 //===================================================================
@@ -71,6 +77,21 @@ const SECTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['section']>> =
       label: getAdminAuditSectionLabel(section),
     })),
   ];
+
+const ACTOR_TYPE_LABELS: Readonly<Record<AdminAuditActorType, string>> = {
+  employee: 'Employee',
+  pharmacyOwner: 'Pharmacy owner',
+};
+
+const ACTOR_TYPE_OPTIONS: Array<
+  SelectOption<ActivityHistoryFilters['actorType']>
+> = [
+  { value: '', label: 'All' },
+  ...ADMIN_AUDIT_ACTOR_TYPES.map((actorType) => ({
+    value: actorType,
+    label: ACTOR_TYPE_LABELS[actorType],
+  })),
+];
 
 //===================================================================
 
@@ -138,6 +159,22 @@ export function ActivityFiltersDrawer({
         options={ENTITY_OPTIONS}
         isActive={Boolean(filters.entityType)}
         onChange={(entityType) => onChange({ ...filters, entityType })}
+      />
+
+      <SelectField
+        id="admin-audit-actor-type-filter"
+        label="Changed by"
+        value={filters.actorType}
+        options={ACTOR_TYPE_OPTIONS}
+        isActive={Boolean(filters.actorType)}
+        onChange={(actorType) =>
+          onChange({
+            ...filters,
+            actorType,
+            ...(actorType === 'employee' ? { ownerUserId: '' } : {}),
+            ...(actorType === 'pharmacyOwner' ? { employeeUserId: '' } : {}),
+          })
+        }
       />
 
       <SelectField

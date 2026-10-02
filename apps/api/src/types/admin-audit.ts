@@ -2,6 +2,7 @@ import type { Types } from 'mongoose';
 
 import type {
   AdminAuditAction,
+  AdminAuditActorType,
   AdminAuditEntityType,
   AdminAuditSection,
 } from '../constants/admin-audit';
@@ -22,6 +23,8 @@ export type AdminAuditLogEntity = {
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
+  scopeEntityType?: AdminAuditEntityType;
+  scopeEntityId?: string;
   before: Record<string, AdminAuditValue>;
   after: Record<string, AdminAuditValue>;
   changedFields: string[];
@@ -38,7 +41,9 @@ export type AdminAuditActorDto = Readonly<{
   email: string;
   phone: string;
   pictureUrl?: string;
-  status: 'active' | 'blocked';
+  role: 'admin' | 'pharmacy';
+  actorType: AdminAuditActorType;
+  status: 'new' | 'active' | 'blocked';
 }>;
 
 export type AdminAuditActorsResponseDto = Readonly<{
@@ -54,6 +59,8 @@ export type AdminAuditListItemDto = Readonly<{
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
+  scopeEntityType?: AdminAuditEntityType;
+  scopeEntityId?: string;
   changedFields: string[];
   statusBefore?: string;
   statusAfter?: string;

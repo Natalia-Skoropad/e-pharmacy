@@ -96,6 +96,8 @@ async function appendOwnerStatusAudit(
     entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
     entityId: String(owner._id),
     entityLabel: owner.name,
+    scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+    scopeEntityId: String(owner._id),
     before: { status: previousStatus },
     after: { status: nextStatus },
     changedFields: ['status'],
@@ -109,6 +111,7 @@ async function appendOwnerStatusAudit(
 
 async function appendCascadePharmacyAudits(
   pharmacies: readonly PharmacyDocument[],
+  ownerId: string,
   adminUserId: string,
   reason: string,
   auditRequestId: string,
@@ -124,6 +127,8 @@ async function appendCascadePharmacyAudits(
       entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
       entityId: String(pharmacy._id),
       entityLabel: pharmacy.name,
+      scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+      scopeEntityId: ownerId,
       before: { status: pharmacy.status },
       after: { status: PHARMACY_STATUSES.BLOCKED },
       changedFields: ['status'],
@@ -293,6 +298,7 @@ export async function updatePharmacyOwnerStatusByAdminService(
 
         await appendCascadePharmacyAudits(
           pharmacies,
+          String(owner._id),
           adminUserId,
           reason,
           auditRequestId,

@@ -8,6 +8,7 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 
 import type {
   AdminAuditAction,
+  AdminAuditActorType,
   AdminAuditEntityType,
   AdminAuditListItem,
   AdminAuditSection,
@@ -18,7 +19,13 @@ import type {
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.status.changed': 'Pharmacy status changed',
+  'pharmacyOwner.profile.updated': 'Pharmacy owner profile updated',
+  'pharmacyOwner.photo.updated': 'Pharmacy owner photo updated',
   'pharmacyOwner.status.changed': 'Pharmacy owner status changed',
+  'pharmacyOwner.document.uploaded': 'Pharmacy owner document uploaded',
+  'pharmacyOwner.document.deleted': 'Pharmacy owner document deleted',
+  'pharmacyOwner.comment.created': 'Pharmacy owner comment created',
+  'pharmacyOwner.comment.deleted': 'Pharmacy owner comment deleted',
   'productRequest.status.changed': 'Product request status changed',
   'admin.platformOwner.granted': 'Platform Owner granted',
   'admin.platformOwner.revoked': 'Platform Owner removed',
@@ -57,6 +64,8 @@ type KnownAuditStatus = keyof typeof STATUS_PRESENTATION_BY_VALUE;
 const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'admin.platformOwner.granted',
   'adminEmployee.document.uploaded',
+  'pharmacyOwner.document.uploaded',
+  'pharmacyOwner.comment.created',
   'productCategory.created',
   'position.created',
 ]);
@@ -64,12 +73,16 @@ const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'admin.platformOwner.revoked',
   'adminEmployee.document.deleted',
+  'pharmacyOwner.document.deleted',
+  'pharmacyOwner.comment.deleted',
   'productCategory.deleted',
   'position.deleted',
 ]);
 
 const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'adminEmployee.profile.updated',
+  'pharmacyOwner.profile.updated',
+  'pharmacyOwner.photo.updated',
   'adminEmployee.document.replaced',
   'productCategory.updated',
   'position.updated',
@@ -80,6 +93,8 @@ const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   pharmacy: 'Pharmacy',
   pharmacyOwner: 'Pharmacy owner',
+  pharmacyOwnerDocument: 'Pharmacy owner document',
+  pharmacyOwnerComment: 'Pharmacy owner comment',
   productRequest: 'Product request',
   adminAccess: 'Admin access',
   adminEmployee: 'Admin employee',
@@ -136,6 +151,14 @@ export type AdminAuditLocation = Readonly<{
 
 export function getAdminAuditActionLabel(action: AdminAuditAction): string {
   return ACTION_LABELS[action];
+}
+
+//===================================================================
+
+export function getAdminAuditActorTypeLabel(
+  actorType: AdminAuditActorType
+): string {
+  return actorType === 'employee' ? 'employee' : 'pharmacy owner';
 }
 
 //===================================================================

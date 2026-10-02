@@ -9,6 +9,12 @@ import mongoose, { type ClientSession, type HydratedDocument } from 'mongoose';
 
 import { env } from '../config/env';
 
+import {
+  ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_SECTIONS,
+} from '../constants/admin-audit';
+
 import { AUTH_ERROR_CODES, USER_ROLES, USER_STATUSES } from '../constants/auth';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
@@ -54,6 +60,7 @@ import { buildPasswordResetUrl } from '../utils/password-reset-url';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { getInitialAccountStatusForRole } from '../utils/account-status';
 import { toAuthUserResponse } from '../utils/userResponse';
+import { appendAdminAuditLog } from './admin-audit.service';
 import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
 
 import {
@@ -1040,10 +1047,181 @@ export async function getUserByIdService(
 
 //===============================================================
 
+async function updatePharmacyOwnerUserProfileWithAudit(
+  userId: string,
+  input: UpdateProfileInput,
+  auditRequestId: string | undefined
+): Promise<AuthUserResponse> {
+  if (!auditRequestId) {
+    throw new TypeError('Owner profile updates require an audit request ID.');
+  }
+
+  const normalizedPhone =
+    typeof input.phone === 'string'
+      ? normalizePhoneForLookup(input.phone)
+      : undefined;
+
+  if (normalizedPhone) {
+    await ensurePhoneIsAvailable(normalizedPhone, userId);
+  }
+
+  const expectedRevision = new Date(input.expectedRevision);
+  const session = await mongoose.startSession();
+
+  try {
+    const result = await session.withTransaction(async () => {
+      const user = await User.findOne({
+        _id: userId,
+        role: USER_ROLES.PHARMACY,
+      }).session(session);
+
+      if (!user) {
+        throw httpError(
+          HTTP_STATUS.UNAUTHORIZED,
+          API_MESSAGES.USER_NOT_FOUND,
+          undefined,
+          AUTH_ERROR_CODES.SESSION_INVALID
+        );
+      }
+
+      if (user.updatedAt.getTime() !== expectedRevision.getTime()) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Profile changed in another session. Reload the latest data and try again.',
+          undefined,
+          AUTH_ERROR_CODES.PROFILE_CONFLICT
+        );
+      }
+
+      const ownerLink = await Pharmacy.exists({ ownerId: user._id }).session(
+        session
+      );
+
+      if (!ownerLink) {
+        throw new Error('Pharmacy owner link could not be resolved.');
+      }
+
+      const beforeProfile: Record<string, string | null> = {};
+      const afterProfile: Record<string, string | null> = {};
+      const changedProfileFields: string[] = [];
+
+      if (typeof input.name === 'string' && input.name !== user.name) {
+        beforeProfile.name = user.name;
+        afterProfile.name = input.name;
+        changedProfileFields.push('name');
+        user.name = input.name;
+      }
+
+      if (normalizedPhone && normalizedPhone !== user.phone) {
+        beforeProfile.phone = user.phone;
+        afterProfile.phone = normalizedPhone;
+        changedProfileFields.push('phone');
+        user.phone = normalizedPhone;
+      }
+
+      if ('address' in input) {
+        const beforeAddress = user.address ?? null;
+        const afterAddress = input.address ?? null;
+
+        if (beforeAddress !== afterAddress) {
+          beforeProfile.address = beforeAddress;
+          afterProfile.address = afterAddress;
+          changedProfileFields.push('address');
+          user.address = input.address ?? undefined;
+        }
+      }
+
+      const pictureChanged =
+        'pictureUrl' in input &&
+        (user.pictureUrl ?? null) !== (input.pictureUrl ?? null);
+
+      if (pictureChanged) {
+        user.pictureUrl = input.pictureUrl ?? undefined;
+      }
+
+      if (changedProfileFields.length === 0 && !pictureChanged) {
+        return toAuthUserResponse(user);
+      }
+
+      await user.save({ session });
+
+      if (changedProfileFields.length > 0) {
+        await appendAdminAuditLog({
+          actorUserId: userId,
+          action: ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PROFILE_UPDATED,
+          section: ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS,
+          entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+          entityId: userId,
+          entityLabel: user.name,
+          scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+          scopeEntityId: userId,
+          before: beforeProfile,
+          after: afterProfile,
+          changedFields: changedProfileFields,
+          requestId: auditRequestId,
+          session,
+        });
+      }
+
+      if (pictureChanged) {
+        await appendAdminAuditLog({
+          actorUserId: userId,
+          action: ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PHOTO_UPDATED,
+          section: ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS,
+          entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+          entityId: userId,
+          entityLabel: user.name,
+          scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+          scopeEntityId: userId,
+          before: { profilePhotoChanged: false },
+          after: { profilePhotoChanged: true },
+          changedFields: ['profilePhotoChanged'],
+          requestId: auditRequestId,
+          session,
+        });
+      }
+
+      return toAuthUserResponse(user);
+    });
+
+    if (!result) {
+      throw new Error('Owner profile transaction completed without a result.');
+    }
+
+    return result;
+  } catch (error) {
+    if (isDuplicatePhoneError(error)) {
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        API_MESSAGES.PHONE_IN_USE,
+        undefined,
+        AUTH_ERROR_CODES.PHONE_CONFLICT
+      );
+    }
+
+    throw error;
+  } finally {
+    await session.endSession();
+  }
+}
+
+//===============================================================
+
 export async function updateUserProfileService(
   userId: string,
-  input: UpdateProfileInput
+  input: UpdateProfileInput,
+  auditRequestId?: string
 ): Promise<AuthUserResponse> {
+  const isPharmacyOwner = await Pharmacy.exists({ ownerId: userId });
+
+  if (isPharmacyOwner) {
+    return updatePharmacyOwnerUserProfileWithAudit(
+      userId,
+      input,
+      auditRequestId
+    );
+  }
+
   const update: Record<string, unknown> = {};
   const unset: Record<string, ''> = {};
 

@@ -2,7 +2,13 @@ import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
+  'pharmacyOwner.profile.updated',
+  'pharmacyOwner.photo.updated',
   'pharmacyOwner.status.changed',
+  'pharmacyOwner.document.uploaded',
+  'pharmacyOwner.document.deleted',
+  'pharmacyOwner.comment.created',
+  'pharmacyOwner.comment.deleted',
   'productRequest.status.changed',
   'admin.platformOwner.granted',
   'admin.platformOwner.revoked',
@@ -27,6 +33,8 @@ export type AdminAuditAction = (typeof ADMIN_AUDIT_ACTIONS)[number];
 export const ADMIN_AUDIT_ENTITY_TYPES = [
   'pharmacy',
   'pharmacyOwner',
+  'pharmacyOwnerDocument',
+  'pharmacyOwnerComment',
   'productRequest',
   'adminAccess',
   'adminEmployee',
@@ -38,6 +46,12 @@ export const ADMIN_AUDIT_ENTITY_TYPES = [
 //===================================================================
 
 export type AdminAuditEntityType = (typeof ADMIN_AUDIT_ENTITY_TYPES)[number];
+
+//===================================================================
+
+export const ADMIN_AUDIT_ACTOR_TYPES = ['employee', 'pharmacyOwner'] as const;
+
+export type AdminAuditActorType = (typeof ADMIN_AUDIT_ACTOR_TYPES)[number];
 
 //===================================================================
 
@@ -82,7 +96,9 @@ export type AdminAuditActor = Readonly<{
   email: string;
   phone: string;
   pictureUrl?: string;
-  status: 'active' | 'blocked';
+  role: 'admin' | 'pharmacy';
+  actorType: AdminAuditActorType;
+  status: 'new' | 'active' | 'blocked';
 }>;
 
 export type AdminAuditActorsResponse = Readonly<{
@@ -100,6 +116,8 @@ export type AdminAuditListItem = Readonly<{
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
+  scopeEntityType?: AdminAuditEntityType;
+  scopeEntityId?: string;
   changedFields: readonly string[];
   statusBefore?: string;
   statusAfter?: string;
@@ -137,6 +155,9 @@ export type AdminAuditQueryParams = Readonly<{
   section?: AdminAuditSection;
   entityId?: string;
   actorUserId?: string;
+  actorType?: AdminAuditActorType;
+  scopeEntityType?: AdminAuditEntityType;
+  scopeEntityId?: string;
   requestId?: string;
 }>;
 
@@ -161,6 +182,15 @@ function isAdminAuditEntityType(value: unknown): value is AdminAuditEntityType {
   return (
     typeof value === 'string' &&
     (ADMIN_AUDIT_ENTITY_TYPES as readonly string[]).includes(value)
+  );
+}
+
+//===================================================================
+
+function isAdminAuditActorType(value: unknown): value is AdminAuditActorType {
+  return (
+    typeof value === 'string' &&
+    (ADMIN_AUDIT_ACTOR_TYPES as readonly string[]).includes(value)
   );
 }
 
@@ -217,6 +247,9 @@ function parseAuditSnapshot(value: unknown): AdminAuditSnapshot {
 function parseListItem(value: unknown): AdminAuditListItem {
   if (!isRecord(value)) throw new TypeError('Invalid audit item.');
 
+  const hasScope =
+    value.scopeEntityType !== undefined || value.scopeEntityId !== undefined;
+
   if (
     typeof value.id !== 'string' ||
     typeof value.actorUserId !== 'string' ||
@@ -226,6 +259,9 @@ function parseListItem(value: unknown): AdminAuditListItem {
     !isAdminAuditEntityType(value.entityType) ||
     typeof value.entityId !== 'string' ||
     typeof value.entityLabelSnapshot !== 'string' ||
+    (hasScope &&
+      (!isAdminAuditEntityType(value.scopeEntityType) ||
+        typeof value.scopeEntityId !== 'string')) ||
     typeof value.requestId !== 'string' ||
     typeof value.createdAt !== 'string' ||
     Number.isNaN(Date.parse(value.createdAt)) ||
@@ -247,6 +283,12 @@ function parseListItem(value: unknown): AdminAuditListItem {
     entityType: value.entityType,
     entityId: value.entityId,
     entityLabelSnapshot: value.entityLabelSnapshot,
+    ...(hasScope
+      ? {
+          scopeEntityType: value.scopeEntityType as AdminAuditEntityType,
+          scopeEntityId: value.scopeEntityId as string,
+        }
+      : {}),
     changedFields: parseStringArray(value.changedFields, 'changedFields'),
     ...(typeof value.statusBefore === 'string'
       ? { statusBefore: value.statusBefore }
@@ -272,7 +314,13 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     typeof value.phone !== 'string' ||
     value.address !== undefined ||
     (value.pictureUrl !== undefined && typeof value.pictureUrl !== 'string') ||
-    (value.status !== 'active' && value.status !== 'blocked')
+    (value.role !== 'admin' && value.role !== 'pharmacy') ||
+    !isAdminAuditActorType(value.actorType) ||
+    (value.role === 'admin' && value.actorType !== 'employee') ||
+    (value.role === 'pharmacy' && value.actorType !== 'pharmacyOwner') ||
+    (value.status !== 'new' &&
+      value.status !== 'active' &&
+      value.status !== 'blocked')
   ) {
     throw new TypeError('Invalid audit actor.');
   }
@@ -285,6 +333,8 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     ...(typeof value.pictureUrl === 'string'
       ? { pictureUrl: value.pictureUrl }
       : {}),
+    role: value.role,
+    actorType: value.actorType,
     status: value.status,
   };
 }

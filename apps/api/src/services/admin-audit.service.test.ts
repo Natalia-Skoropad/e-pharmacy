@@ -11,6 +11,7 @@ test('admin audit snapshots accept only small explicit scalar values', () => {
       {
         status: 'active',
         isPlatformOwner: true,
+        profilePhotoChanged: true,
         productId: null,
         permissions: ['products.view', 'orders.view'],
       },
@@ -19,6 +20,7 @@ test('admin audit snapshots accept only small explicit scalar values', () => {
     {
       status: 'active',
       isPlatformOwner: true,
+      profilePhotoChanged: true,
       productId: null,
       permissions: ['products.view', 'orders.view'],
     }
@@ -40,8 +42,15 @@ test('admin audit snapshots fail closed for secrets and sensitive business data'
     'taxId',
     'picture',
     'pictureUrl',
+    'photo',
+    'photoUrl',
+    'image',
+    'imageUrl',
+    'base64',
+    'dataUrl',
     'binary',
     'buffer',
+    'content',
   ]) {
     assert.throws(
       () => normalizeAdminAuditSnapshot({ [key]: 'secret' }, 'Snapshot'),

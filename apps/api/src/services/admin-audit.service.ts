@@ -1,6 +1,7 @@
 import { Types, type ClientSession } from 'mongoose';
 
 import {
+  ADMIN_AUDIT_ACTOR_TYPES,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_LIMITS,
   ADMIN_AUDIT_SECTIONS,
@@ -10,6 +11,7 @@ import {
   isAdminAuditSection,
   normalizeStoredAdminAuditAction,
   type AdminAuditAction,
+  type AdminAuditActorType,
   type AdminAuditEntityType,
   type AdminAuditSection,
 } from '../constants/admin-audit';
@@ -17,6 +19,7 @@ import {
 import { USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { AdminAuditLog } from '../models/adminAuditLog.model';
+import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 import type { AdminAuditListQuery } from '../schemas/admin-audit.schema';
 
@@ -35,7 +38,7 @@ import { httpError } from '../utils/httpError';
 //===============================================================
 
 const SENSITIVE_AUDIT_KEY_PATTERN =
-  /^(?:password|passwordhash|token|accesstoken|refreshtoken|jwt|cookie|authorization|bankdetails|iban|taxid|picture|pictureurl|file|binary|buffer|content)$/i;
+  /^(?:password|passwordhash|token|accesstoken|refreshtoken|jwt|cookie|authorization|bankdetails|iban|taxid|picture|pictureurl|photo|photourl|image|imageurl|base64|dataurl|file|binary|buffer|content)$/i;
 
 //===============================================================
 
@@ -161,6 +164,8 @@ type AppendAdminAuditLogInput = Readonly<{
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabel: string;
+  scopeEntityType?: AdminAuditEntityType;
+  scopeEntityId?: string;
   before: AdminAuditSnapshot;
   after: AdminAuditSnapshot;
   changedFields: readonly string[];
@@ -178,6 +183,8 @@ export async function appendAdminAuditLog({
   entityType,
   entityId,
   entityLabel,
+  scopeEntityType,
+  scopeEntityId,
   before: rawBefore,
   after: rawAfter,
   changedFields: rawChangedFields,
@@ -195,6 +202,16 @@ export async function appendAdminAuditLog({
     !isAdminAuditEntityType(entityType)
   ) {
     throw new TypeError('Audit action, section, or entity type is invalid.');
+  }
+
+  if (Boolean(scopeEntityType) !== Boolean(scopeEntityId)) {
+    throw new TypeError(
+      'Audit scope entity type and id must be provided together.'
+    );
+  }
+
+  if (scopeEntityType && !isAdminAuditEntityType(scopeEntityType)) {
+    throw new TypeError('Audit scope entity type is invalid.');
   }
 
   const before = normalizeAdminAuditSnapshot(
@@ -238,6 +255,16 @@ export async function appendAdminAuditLog({
           'Audit entity label',
           ADMIN_AUDIT_LIMITS.entityLabel
         ),
+        ...(scopeEntityType && scopeEntityId
+          ? {
+              scopeEntityType,
+              scopeEntityId: normalizeAuditString(
+                scopeEntityId,
+                'Audit scope entity id',
+                ADMIN_AUDIT_LIMITS.entityId
+              ),
+            }
+          : {}),
         before,
         after,
         changedFields,
@@ -272,6 +299,8 @@ type LeanAuditLog = {
   entityType: AdminAuditEntityType;
   entityId: string;
   entityLabelSnapshot: string;
+  scopeEntityType?: AdminAuditEntityType;
+  scopeEntityId?: string;
   before: Record<string, AdminAuditValue>;
   after: Record<string, AdminAuditValue>;
   changedFields: string[];
@@ -336,6 +365,12 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
     entityType: log.entityType,
     entityId: log.entityId,
     entityLabelSnapshot: log.entityLabelSnapshot,
+    ...(log.scopeEntityType && log.scopeEntityId
+      ? {
+          scopeEntityType: log.scopeEntityType,
+          scopeEntityId: log.scopeEntityId,
+        }
+      : {}),
     changedFields: [...log.changedFields],
     ...(statusBefore ? { statusBefore } : {}),
     ...(statusAfter ? { statusAfter } : {}),
@@ -410,8 +445,15 @@ function applyAuditSectionFilter(
 //===============================================================
 
 export async function listAdminAuditActorsService(): Promise<AdminAuditActorsResponseDto> {
-  const actors = await User.find({ role: USER_ROLES.ADMIN })
-    .select('_id name email phone pictureUrl status')
+  const ownerIds = await Pharmacy.distinct('ownerId');
+
+  const actors = await User.find({
+    $or: [
+      { role: USER_ROLES.ADMIN },
+      { role: USER_ROLES.PHARMACY, _id: { $in: ownerIds } },
+    ],
+  })
+    .select('_id name email phone pictureUrl role status')
     .sort({ name: 1, _id: 1 })
     .lean<
       Array<{
@@ -420,7 +462,8 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
         email: string;
         phone: string;
         pictureUrl?: string;
-        status: 'active' | 'blocked';
+        role: 'admin' | 'pharmacy';
+        status: 'new' | 'active' | 'blocked';
       }>
     >();
 
@@ -430,10 +473,31 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
     email: actor.email,
     phone: actor.phone,
     ...(actor.pictureUrl ? { pictureUrl: actor.pictureUrl } : {}),
+    role: actor.role,
+    actorType:
+      actor.role === USER_ROLES.ADMIN
+        ? ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE
+        : ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER,
     status: actor.status,
   }));
 
   return { items };
+}
+
+//===============================================================
+
+async function getAuditActorIdsByType(
+  actorType: AdminAuditActorType
+): Promise<Types.ObjectId[]> {
+  if (actorType === ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE) {
+    return User.find({ role: USER_ROLES.ADMIN }).distinct('_id');
+  }
+
+  const ownerIds = await Pharmacy.distinct('ownerId');
+  return User.find({
+    role: USER_ROLES.PHARMACY,
+    _id: { $in: ownerIds },
+  }).distinct('_id');
 }
 
 //===============================================================
@@ -450,8 +514,23 @@ export async function listAdminAuditLogsService(
   if (query.section) applyAuditSectionFilter(filter, query.section);
   if (query.entityType) filter.entityType = query.entityType;
   if (query.entityId) filter.entityId = query.entityId;
-  if (query.actorUserId)
+  if (query.scopeEntityType) filter.scopeEntityType = query.scopeEntityType;
+  if (query.scopeEntityId) filter.scopeEntityId = query.scopeEntityId;
+
+  if (query.actorType) {
+    const actorIds = await getAuditActorIdsByType(query.actorType);
+
+    if (query.actorUserId) {
+      const actorUserId = new Types.ObjectId(query.actorUserId);
+      const matchesActorType = actorIds.some((id) => id.equals(actorUserId));
+      filter.actorUserId = matchesActorType ? actorUserId : { $in: [] };
+    } else {
+      filter.actorUserId = { $in: actorIds };
+    }
+  } else if (query.actorUserId) {
     filter.actorUserId = new Types.ObjectId(query.actorUserId);
+  }
+
   if (query.requestId) filter.requestId = query.requestId;
 
   if (query.dateFrom || query.dateTo) {

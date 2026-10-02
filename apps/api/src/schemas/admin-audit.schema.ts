@@ -3,9 +3,11 @@ import { z } from 'zod';
 import {
   ADMIN_AUDIT_LIMITS,
   isAdminAuditAction,
+  isAdminAuditActorType,
   isAdminAuditEntityType,
   isAdminAuditSection,
   type AdminAuditAction,
+  type AdminAuditActorType,
   type AdminAuditEntityType,
   type AdminAuditSection,
 } from '../constants/admin-audit';
@@ -35,6 +37,13 @@ const auditActionSchema = z.custom<AdminAuditAction>(isAdminAuditAction, {
 const auditEntityTypeSchema = z.custom<AdminAuditEntityType>(
   isAdminAuditEntityType,
   { message: 'Unknown audit entity type.' }
+);
+
+const auditActorTypeSchema = z.custom<AdminAuditActorType>(
+  isAdminAuditActorType,
+  {
+    message: 'Unknown audit actor type.',
+  }
 );
 
 const auditSectionSchema = z.custom<AdminAuditSection>(isAdminAuditSection, {
@@ -69,6 +78,16 @@ export const adminAuditListQuerySchema = z
       .optional(),
 
     actorUserId: mongoIdSchema.optional(),
+    actorType: auditActorTypeSchema.optional(),
+
+    scopeEntityType: auditEntityTypeSchema.optional(),
+
+    scopeEntityId: z
+      .string()
+      .trim()
+      .min(1)
+      .max(ADMIN_AUDIT_LIMITS.entityId)
+      .optional(),
 
     requestId: z
       .string()
@@ -84,6 +103,14 @@ export const adminAuditListQuerySchema = z
         code: 'custom',
         path: ['dateTo'],
         message: 'dateTo must not be earlier than dateFrom.',
+      });
+    }
+
+    if (Boolean(query.scopeEntityType) !== Boolean(query.scopeEntityId)) {
+      context.addIssue({
+        code: 'custom',
+        path: query.scopeEntityType ? ['scopeEntityId'] : ['scopeEntityType'],
+        message: 'scopeEntityType and scopeEntityId must be provided together.',
       });
     }
   });

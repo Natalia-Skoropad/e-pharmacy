@@ -280,7 +280,11 @@ export async function updateCurrentUser(
 
   if (!userId) return;
 
-  const user = await updateUserProfileService(userId, input);
+  const user = await updateUserProfileService(
+    userId,
+    input,
+    res.locals.requestId
+  );
 
   sendSuccessResponse({
     res,

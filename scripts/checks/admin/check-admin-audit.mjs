@@ -88,6 +88,14 @@ const model = await read(
   'adminAuditLog.model.ts'
 );
 
+const auditSchema = await read(
+  'apps',
+  'api',
+  'src',
+  'schemas',
+  'admin-audit.schema.ts'
+);
+
 const routes = await read('apps', 'api', 'src', 'routes', 'admin.routes.ts');
 
 const auditService = await read(
@@ -120,6 +128,30 @@ const ownerService = await read(
   'src',
   'services',
   'admin-owner.service.ts'
+);
+
+const ownerLifecycleService = await read(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'pharmacy-owner-lifecycle.service.ts'
+);
+
+const authService = await read(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'auth.service.ts'
+);
+
+const authController = await read(
+  'apps',
+  'api',
+  'src',
+  'controllers',
+  'auth.controller.ts'
 );
 
 const profileService = await read(
@@ -191,6 +223,24 @@ const adminAuditParser = await read(
   'lib',
   'audit',
   'admin-audit.ts'
+);
+
+const activityHistory = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'activity',
+  'ActivityHistory.tsx'
+);
+
+const activityFilters = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'activity',
+  'ActivityFiltersDrawer.tsx'
 );
 
 const bffList = await read(
@@ -305,6 +355,118 @@ assert.match(auditConstants, /PRODUCT_CATEGORY:\s*'productCategory'/);
 assert.match(auditConstants, /POSITION:\s*'position'/);
 assert.match(adminAuditParser, /'productCategory'/);
 assert.match(adminAuditParser, /'position'/);
+
+for (const [key, action] of [
+  ['PHARMACY_OWNER_PROFILE_UPDATED', 'pharmacyOwner.profile.updated'],
+  ['PHARMACY_OWNER_PHOTO_UPDATED', 'pharmacyOwner.photo.updated'],
+  ['PHARMACY_OWNER_STATUS_CHANGED', 'pharmacyOwner.status.changed'],
+  ['PHARMACY_OWNER_DOCUMENT_UPLOADED', 'pharmacyOwner.document.uploaded'],
+  ['PHARMACY_OWNER_DOCUMENT_DELETED', 'pharmacyOwner.document.deleted'],
+  ['PHARMACY_OWNER_COMMENT_CREATED', 'pharmacyOwner.comment.created'],
+  ['PHARMACY_OWNER_COMMENT_DELETED', 'pharmacyOwner.comment.deleted'],
+]) {
+  assert.match(
+    auditConstants,
+    new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
+  );
+
+  assert.match(adminAuditParser, new RegExp(action.replaceAll('.', '\\.')));
+}
+
+assert.match(auditConstants, /PHARMACY_OWNER:\s*'pharmacyOwner'/);
+
+assert.match(
+  auditConstants,
+  /PHARMACY_OWNER_DOCUMENT:\s*'pharmacyOwnerDocument'/
+);
+
+assert.match(
+  auditConstants,
+  /PHARMACY_OWNER_COMMENT:\s*'pharmacyOwnerComment'/
+);
+
+assert.match(auditConstants, /EMPLOYEE:\s*'employee'/);
+assert.match(auditConstants, /PHARMACY_OWNER:\s*'pharmacyOwner'/);
+
+assert.match(model, /scopeEntityType:\s*\{/);
+assert.match(model, /scopeEntityId:\s*\{/);
+
+assert.match(
+  model,
+  /scopeEntityType:\s*1,[\s\S]*?scopeEntityId:\s*1,[\s\S]*?createdAt:\s*-1/
+);
+
+assert.match(auditSchema, /actorType:\s*auditActorTypeSchema\.optional\(\)/);
+
+assert.match(
+  auditSchema,
+  /scopeEntityType:\s*auditEntityTypeSchema\.optional\(\)/
+);
+
+assert.match(auditSchema, /scopeEntityId:[\s\S]*?\.optional\(\)/);
+
+assert.match(
+  auditSchema,
+  /scopeEntityType and scopeEntityId must be provided together/
+);
+
+assert.match(auditService, /Pharmacy\.distinct\(['"]ownerId['"]\)/);
+assert.match(auditService, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_OWNER/);
+assert.match(auditService, /filter\.scopeEntityType = query\.scopeEntityType/);
+assert.match(auditService, /filter\.scopeEntityId = query\.scopeEntityId/);
+assert.match(auditService, /query\.actorType/);
+
+assert.match(
+  pharmacyService,
+  /scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER/
+);
+
+assert.match(pharmacyService, /scopeEntityId:\s*String\(updated\.ownerId\)/);
+
+assert.match(
+  ownerLifecycleService,
+  /scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER/
+);
+
+assert.match(ownerLifecycleService, /scopeEntityId:/);
+
+assert.match(
+  authController,
+  /updateUserProfileService\([\s\S]*?res\.locals\.requestId[\s\S]*?\)/
+);
+
+const ownerProfileAudit = authService.match(
+  /async function updatePharmacyOwnerUserProfileWithAudit[\s\S]*?(?=\/\/={10,}\n\nexport async function updateUserProfileService)/
+)?.[0];
+
+assert.ok(ownerProfileAudit);
+assert.match(ownerProfileAudit, /PHARMACY_OWNER_PROFILE_UPDATED/);
+assert.match(ownerProfileAudit, /PHARMACY_OWNER_PHOTO_UPDATED/);
+
+assert.match(
+  ownerProfileAudit,
+  /scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER/
+);
+
+assert.match(ownerProfileAudit, /scopeEntityId:\s*userId/);
+assert.match(ownerProfileAudit, /profilePhotoChanged/);
+
+assert.doesNotMatch(
+  ownerProfileAudit,
+  /before:\s*\{[^}]*pictureUrl|after:\s*\{[^}]*pictureUrl/
+);
+
+assert.match(auditService, /photo\|photourl\|image\|imageurl\|base64\|dataurl/);
+
+assert.match(activityHistory, /label="Search by employee"/);
+assert.match(activityHistory, /label="Search by pharmacy owner"/);
+assert.match(activityHistory, /title:\s*'Changed by'/);
+assert.match(activityHistory, /getAdminAuditActorTypeLabel/);
+assert.match(activityFilters, /label="Changed by"/);
+assert.match(activityFilters, /pharmacyOwner:\s*'Pharmacy owner'/);
+assert.match(adminAuditParser, /scopeEntityType/);
+assert.match(adminAuditParser, /scopeEntityId/);
+assert.match(adminAuditParser, /actorType/);
 
 assert.match(pharmacyService, /session\.withTransaction/);
 assert.match(productRequestService, /session\.withTransaction/);

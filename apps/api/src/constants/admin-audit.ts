@@ -1,6 +1,12 @@
 export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_STATUS_CHANGED: 'pharmacy.status.changed',
+  PHARMACY_OWNER_PROFILE_UPDATED: 'pharmacyOwner.profile.updated',
+  PHARMACY_OWNER_PHOTO_UPDATED: 'pharmacyOwner.photo.updated',
   PHARMACY_OWNER_STATUS_CHANGED: 'pharmacyOwner.status.changed',
+  PHARMACY_OWNER_DOCUMENT_UPLOADED: 'pharmacyOwner.document.uploaded',
+  PHARMACY_OWNER_DOCUMENT_DELETED: 'pharmacyOwner.document.deleted',
+  PHARMACY_OWNER_COMMENT_CREATED: 'pharmacyOwner.comment.created',
+  PHARMACY_OWNER_COMMENT_DELETED: 'pharmacyOwner.comment.deleted',
   PRODUCT_REQUEST_STATUS_CHANGED: 'productRequest.status.changed',
   PLATFORM_OWNER_GRANTED: 'admin.platformOwner.granted',
   PLATFORM_OWNER_REVOKED: 'admin.platformOwner.revoked',
@@ -73,6 +79,8 @@ export function getStoredAdminAuditActionValues(
 export const ADMIN_AUDIT_ENTITY_TYPES = {
   PHARMACY: 'pharmacy',
   PHARMACY_OWNER: 'pharmacyOwner',
+  PHARMACY_OWNER_DOCUMENT: 'pharmacyOwnerDocument',
+  PHARMACY_OWNER_COMMENT: 'pharmacyOwnerComment',
   PRODUCT_REQUEST: 'productRequest',
   ADMIN_ACCESS: 'adminAccess',
   ADMIN_EMPLOYEE: 'adminEmployee',
@@ -100,6 +108,34 @@ export function isAdminAuditEntityType(
   value: unknown
 ): value is AdminAuditEntityType {
   return typeof value === 'string' && ADMIN_AUDIT_ENTITY_TYPE_SET.has(value);
+}
+
+//===============================================================
+
+export const ADMIN_AUDIT_ACTOR_TYPES = {
+  EMPLOYEE: 'employee',
+  PHARMACY_OWNER: 'pharmacyOwner',
+} as const;
+
+//===============================================================
+
+export type AdminAuditActorType =
+  (typeof ADMIN_AUDIT_ACTOR_TYPES)[keyof typeof ADMIN_AUDIT_ACTOR_TYPES];
+
+export const ADMIN_AUDIT_ACTOR_TYPE_VALUES = Object.freeze(
+  Object.values(ADMIN_AUDIT_ACTOR_TYPES) as AdminAuditActorType[]
+);
+
+const ADMIN_AUDIT_ACTOR_TYPE_SET = new Set<string>(
+  ADMIN_AUDIT_ACTOR_TYPE_VALUES
+);
+
+//===============================================================
+
+export function isAdminAuditActorType(
+  value: unknown
+): value is AdminAuditActorType {
+  return typeof value === 'string' && ADMIN_AUDIT_ACTOR_TYPE_SET.has(value);
 }
 
 //===============================================================

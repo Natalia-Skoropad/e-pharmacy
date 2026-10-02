@@ -63,6 +63,7 @@ import {
 
 import {
   getAdminAuditActionLabel,
+  getAdminAuditActorTypeLabel,
   getAdminAuditChangeTone,
   getAdminAuditEntityLabel,
   getAdminAuditLocation,
@@ -131,21 +132,48 @@ function createEmployeeOptions(
 ): Array<SearchableSelectOption<string>> {
   return [
     { value: '', label: 'All employees' },
-    ...actors.map((actor) => ({
-      value: actor.id,
-      label: actor.name,
-      leading: (
-        <TableImagePreview
-          src={actor.pictureUrl}
-          alt={`${actor.name} photo`}
-          fallback={formatInitials(actor.name, 'A')}
-          size={30}
-        />
-      ),
-      searchText: [actor.id, actor.email, actor.phone]
-        .filter(Boolean)
-        .join(' '),
-    })),
+    ...actors
+      .filter((actor) => actor.actorType === 'employee')
+      .map((actor) => ({
+        value: actor.id,
+        label: actor.name,
+        leading: (
+          <TableImagePreview
+            src={actor.pictureUrl}
+            alt={`${actor.name} photo`}
+            fallback={formatInitials(actor.name, 'A')}
+            size={30}
+          />
+        ),
+        searchText: [actor.id, actor.email, actor.phone]
+          .filter(Boolean)
+          .join(' '),
+      })),
+  ];
+}
+
+//===================================================================
+
+function createOwnerOptions(
+  actors: readonly AdminAuditActor[]
+): Array<SearchableSelectOption<string>> {
+  return [
+    { value: '', label: 'All pharmacy owners' },
+    ...actors
+      .filter((actor) => actor.actorType === 'pharmacyOwner')
+      .map((actor) => ({
+        value: actor.id,
+        label: actor.name,
+        leading: (
+          <TableImagePreview
+            src={actor.pictureUrl}
+            alt={`${actor.name} photo`}
+            fallback={formatInitials(actor.name, 'O')}
+            size={30}
+          />
+        ),
+        searchText: [actor.email, actor.phone].filter(Boolean).join(' '),
+      })),
   ];
 }
 
@@ -201,7 +229,10 @@ export function ActivityHistory() {
         ...(filters.action ? { action: filters.action } : {}),
         ...(filters.entityType ? { entityType: filters.entityType } : {}),
         ...(filters.section ? { section: filters.section } : {}),
-        ...(filters.actorUserId ? { actorUserId: filters.actorUserId } : {}),
+        ...(filters.actorType ? { actorType: filters.actorType } : {}),
+        ...(filters.employeeUserId || filters.ownerUserId
+          ? { actorUserId: filters.employeeUserId || filters.ownerUserId }
+          : {}),
       },
       { signal: controller.signal }
     )
@@ -252,12 +283,16 @@ export function ActivityHistory() {
     [actors]
   );
 
+  const ownerOptions = useMemo(() => createOwnerOptions(actors), [actors]);
+
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
     filters.action,
     filters.entityType,
     filters.section,
-    filters.actorUserId,
+    filters.actorType,
+    filters.employeeUserId,
+    filters.ownerUserId,
   ].filter(Boolean).length;
 
   const hasFilters = activeFiltersCount > 0;
@@ -296,7 +331,7 @@ export function ActivityHistory() {
       },
       {
         key: 'photo',
-        title: <TableHeaderTitle parts={['Employee', 'photo']} />,
+        title: <TableHeaderTitle parts={['Profile', 'photo']} />,
         render: (item) => {
           const actor = actorById.get(item.actorUserId);
 
@@ -311,19 +346,29 @@ export function ActivityHistory() {
       },
       {
         key: 'actor',
-        title: 'Employee',
+        title: 'Changed by',
         render: (item) => {
           const actor = actorById.get(item.actorUserId);
 
+          const actorLabel = actor
+            ? `${item.actorNameSnapshot} (${getAdminAuditActorTypeLabel(
+                actor.actorType
+              )})`
+            : item.actorNameSnapshot;
+
           return (
             <span className={css.employeeCell}>
-              <TextActionButton
-                href={`${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(
-                  item.actorUserId
-                )}`}
-              >
-                {item.actorNameSnapshot}
-              </TextActionButton>
+              {actor?.actorType === 'employee' ? (
+                <TextActionButton
+                  href={`${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(
+                    item.actorUserId
+                  )}`}
+                >
+                  {actorLabel}
+                </TextActionButton>
+              ) : (
+                <strong>{actorLabel}</strong>
+              )}
 
               {actor ? (
                 <StatusBadge {...USER_STATUS_PRESENTATION[actor.status]} />
@@ -482,8 +527,22 @@ export function ActivityHistory() {
     setPage(1);
   };
 
-  const updateEmployee = (actorUserId: string) => {
-    updateFilters({ ...filters, actorUserId });
+  const updateEmployee = (employeeUserId: string) => {
+    updateFilters({
+      ...filters,
+      employeeUserId,
+      ownerUserId: '',
+      actorType: filters.actorType === 'pharmacyOwner' ? '' : filters.actorType,
+    });
+  };
+
+  const updateOwner = (ownerUserId: string) => {
+    updateFilters({
+      ...filters,
+      ownerUserId,
+      employeeUserId: '',
+      actorType: filters.actorType === 'employee' ? '' : filters.actorType,
+    });
   };
 
   const updatePerPage = (value: RowsPerPageValue) => {
@@ -534,7 +593,7 @@ export function ActivityHistory() {
                   {
                     title: 'Find the records you need',
                     description:
-                      'Search by employee name, ID, email, or phone number, then narrow the history by date, change type, entity type, or Admin Cabinet section.',
+                      'Search separately by employee or pharmacy owner, then narrow the history by actor type, date, change type, entity type, or Admin Cabinet section.',
                     icon: <ListFilter size={17} aria-hidden="true" />,
                   },
                 ]}
@@ -570,13 +629,40 @@ export function ActivityHistory() {
                 ]}
               />
             }
-            value={filters.actorUserId}
+            value={filters.employeeUserId}
             options={employeeOptions}
             placeholder="Name, ID, email, or phone"
             emptyMessage="No employees found"
-            isActive={Boolean(filters.actorUserId)}
+            isActive={Boolean(filters.employeeUserId)}
             isLoading={areActorsLoading}
             onChange={updateEmployee}
+          />
+
+          <SearchableSelect
+            id="activity-owner-search"
+            label="Search by pharmacy owner"
+            labelAccessory={
+              <InfoTooltip
+                label="Pharmacy owner search help"
+                title="Pharmacy owner search"
+                icon={<UsersRound size={20} aria-hidden="true" />}
+                items={[
+                  {
+                    title: 'Search fields',
+                    description:
+                      'Search by pharmacy owner name, email, or phone number.',
+                    icon: <Search size={17} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            }
+            value={filters.ownerUserId}
+            options={ownerOptions}
+            placeholder="Name, email, or phone"
+            emptyMessage="No pharmacy owners found"
+            isActive={Boolean(filters.ownerUserId)}
+            isLoading={areActorsLoading}
+            onChange={updateOwner}
           />
 
           <div className={css.searchAction}>
@@ -680,6 +766,7 @@ export function ActivityHistory() {
       <AuditDetailsModal
         isOpen={selectedAuditId !== null}
         details={details}
+        actor={details ? (actorById.get(details.actorUserId) ?? null) : null}
         isLoading={isDetailsLoading}
         error={detailsError}
         onClose={closeDetails}

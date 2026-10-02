@@ -39,6 +39,44 @@ test('activity history employee search excludes private address data', async () 
 
 //===================================================================
 
+test('activity history has a separate pharmacy-owner search and actor-type filter', async () => {
+  const [historySource, drawerSource] = await Promise.all([
+    read('./ActivityHistory.tsx'),
+    read('./ActivityFiltersDrawer.tsx'),
+  ]);
+
+  assert.match(historySource, /label="Search by pharmacy owner"/);
+  assert.match(historySource, /title="Pharmacy owner search"/);
+
+  assert.match(
+    historySource,
+    /createOwnerOptions[\s\S]*?actor\.email[\s\S]*?actor\.phone/
+  );
+
+  assert.match(drawerSource, /label="Changed by"/);
+  assert.match(drawerSource, /employee: 'Employee'/);
+  assert.match(drawerSource, /pharmacyOwner: 'Pharmacy owner'/);
+
+  assert.match(historySource, /title: 'Changed by'/);
+  assert.match(historySource, /getAdminAuditActorTypeLabel/);
+  assert.doesNotMatch(historySource, /title: 'Employee'/);
+
+  const employeeUpdater = historySource.match(
+    /const updateEmployee = \(employeeUserId: string\) => \{[\s\S]*?\n  \};/
+  )?.[0];
+
+  const ownerUpdater = historySource.match(
+    /const updateOwner = \(ownerUserId: string\) => \{[\s\S]*?\n  \};/
+  )?.[0];
+
+  assert.ok(employeeUpdater);
+  assert.ok(ownerUpdater);
+  assert.doesNotMatch(employeeUpdater, /actorType:\s*'employee'/);
+  assert.doesNotMatch(ownerUpdater, /actorType:\s*'pharmacyOwner'/);
+});
+
+//===================================================================
+
 test('activity date filter is bounded by the first audit log and the shared calendar handles today as the upper bound', async () => {
   const [historySource, drawerSource, serviceSource] = await Promise.all([
     read('./ActivityHistory.tsx'),

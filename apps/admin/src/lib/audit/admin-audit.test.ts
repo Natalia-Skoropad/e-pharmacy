@@ -129,6 +129,8 @@ test('audit parser accepts pharmacy owner lifecycle events', () => {
         entityType: 'pharmacyOwner',
         entityId: '507f1f77bcf86cd799439088',
         entityLabelSnapshot: 'Owner Example',
+        scopeEntityType: 'pharmacyOwner',
+        scopeEntityId: '507f1f77bcf86cd799439088',
         statusBefore: 'new',
         statusAfter: 'active',
         changedFields: ['status'],
@@ -144,10 +146,74 @@ test('audit parser accepts pharmacy owner lifecycle events', () => {
   assert.equal(parsed.items[0]?.action, 'pharmacyOwner.status.changed');
   assert.equal(parsed.items[0]?.section, 'pharmacyOwners');
   assert.equal(parsed.items[0]?.entityType, 'pharmacyOwner');
+  assert.equal(parsed.items[0]?.scopeEntityType, 'pharmacyOwner');
+  assert.equal(parsed.items[0]?.scopeEntityId, '507f1f77bcf86cd799439088');
 
   assert.equal(
     getAdminAuditActionLabel(parsed.items[0]!.action),
     'Pharmacy owner status changed'
+  );
+});
+
+//===================================================================
+
+test('audit parser accepts reserved owner document and comment actions', () => {
+  const parsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        action: 'pharmacyOwner.document.uploaded',
+        section: 'pharmacyOwners',
+        entityType: 'pharmacyOwnerDocument',
+        entityId: '507f1f77bcf86cd799439081',
+        entityLabelSnapshot: 'License.pdf',
+        scopeEntityType: 'pharmacyOwner',
+        scopeEntityId: '507f1f77bcf86cd799439088',
+        changedFields: ['name', 'size', 'type'],
+      },
+      {
+        ...item,
+        id: '507f1f77bcf86cd799439082',
+        action: 'pharmacyOwner.comment.created',
+        section: 'pharmacyOwners',
+        entityType: 'pharmacyOwnerComment',
+        entityId: '507f1f77bcf86cd799439083',
+        entityLabelSnapshot: 'Admin comment',
+        scopeEntityType: 'pharmacyOwner',
+        scopeEntityId: '507f1f77bcf86cd799439088',
+        changedFields: ['text'],
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 2,
+    totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
+  });
+
+  assert.equal(parsed.items[0]?.entityType, 'pharmacyOwnerDocument');
+  assert.equal(parsed.items[1]?.entityType, 'pharmacyOwnerComment');
+});
+
+//===================================================================
+
+test('audit parser rejects a partial owner scope', () => {
+  assert.throws(
+    () =>
+      parseAdminAuditListResponse({
+        items: [
+          {
+            ...item,
+            scopeEntityType: 'pharmacyOwner',
+          },
+        ],
+        page: 1,
+        perPage: 20,
+        total: 1,
+        totalPages: 1,
+        earliestCreatedAt: '2026-09-24',
+      }),
+    /invalid audit item/i
   );
 });
 
@@ -224,7 +290,7 @@ test('audit list parser validates earliest audit date metadata', () => {
 
 //===================================================================
 
-test('audit actor parser keeps only non-address employee presentation fields', () => {
+test('audit actor parser accepts employees and pharmacy owners without private address data', () => {
   const parsed = parseAdminAuditActorsResponse({
     items: [
       {
@@ -233,13 +299,27 @@ test('audit actor parser keeps only non-address employee presentation fields', (
         email: 'natalia@example.com',
         phone: '+380501112233',
         pictureUrl: 'https://example.com/photo.jpg',
+        role: 'admin',
+        actorType: 'employee',
         status: 'active',
+      },
+      {
+        id: '507f1f77bcf86cd799439088',
+        name: 'Owner Example',
+        email: 'owner@example.com',
+        phone: '+380501112244',
+        role: 'pharmacy',
+        actorType: 'pharmacyOwner',
+        status: 'new',
       },
     ],
   });
 
   assert.equal(parsed.items[0]?.name, 'Natalia');
   assert.equal(parsed.items[0]?.status, 'active');
+  assert.equal(parsed.items[0]?.actorType, 'employee');
+  assert.equal(parsed.items[1]?.actorType, 'pharmacyOwner');
+  assert.equal(parsed.items[1]?.status, 'new');
 
   assert.throws(
     () =>
@@ -251,6 +331,8 @@ test('audit actor parser keeps only non-address employee presentation fields', (
             email: 'natalia@example.com',
             phone: '+380501112233',
             address: 'Private address',
+            role: 'admin',
+            actorType: 'employee',
             status: 'active',
           },
         ],
@@ -267,7 +349,27 @@ test('audit actor parser keeps only non-address employee presentation fields', (
             name: 'Natalia',
             email: 'natalia@example.com',
             phone: '+380501112233',
+            role: 'admin',
+            actorType: 'employee',
             status: 'deleted',
+          },
+        ],
+      }),
+    /invalid audit actor/i
+  );
+
+  assert.throws(
+    () =>
+      parseAdminAuditActorsResponse({
+        items: [
+          {
+            id: '507f1f77bcf86cd799439012',
+            name: 'Natalia',
+            email: 'natalia@example.com',
+            phone: '+380501112233',
+            role: 'admin',
+            actorType: 'pharmacyOwner',
+            status: 'active',
           },
         ],
       }),

@@ -17,11 +17,15 @@ import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { CloseIconButton, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
-import type { AdminAuditDetails } from '@/lib/audit/admin-audit';
+import type {
+  AdminAuditActor,
+  AdminAuditDetails,
+} from '@/lib/audit/admin-audit';
 
 import {
   formatAdminAuditValue,
   getAdminAuditActionLabel,
+  getAdminAuditActorTypeLabel,
   getAdminAuditChangeTone,
   getAdminAuditEntityLabel,
   getAdminAuditLocation,
@@ -35,6 +39,7 @@ import css from './ActivityHistory.module.css';
 type AuditDetailsModalProps = Readonly<{
   isOpen: boolean;
   details: AdminAuditDetails | null;
+  actor: AdminAuditActor | null;
   isLoading: boolean;
   error: string | null;
   onClose: () => void;
@@ -90,6 +95,7 @@ function getChangeToneClassName(
 export function AuditDetailsModal({
   isOpen,
   details,
+  actor,
   isLoading,
   error,
   onClose,
@@ -173,7 +179,13 @@ export function AuditDetailsModal({
                   <UserRound size={16} aria-hidden="true" />
                   Changed by
                 </dt>
-                <dd>{details.actorNameSnapshot}</dd>
+                <dd>
+                  {actor
+                    ? `${details.actorNameSnapshot} (${getAdminAuditActorTypeLabel(
+                        actor.actorType
+                      )})`
+                    : details.actorNameSnapshot}
+                </dd>
               </div>
 
               <div className={css.detailsMetaItem}>

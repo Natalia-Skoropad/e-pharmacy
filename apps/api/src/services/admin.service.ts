@@ -221,6 +221,8 @@ export async function updatePharmacyStatusByAdminService(
           entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
           entityId: String(updated._id),
           entityLabel: updated.name,
+          scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+          scopeEntityId: String(updated.ownerId),
           before: { status: previousStatus },
           after: { status: updated.status },
           changedFields: ['status'],
