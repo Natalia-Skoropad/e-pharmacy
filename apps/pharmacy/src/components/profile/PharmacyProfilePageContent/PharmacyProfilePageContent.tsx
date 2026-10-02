@@ -620,7 +620,7 @@ function PharmacyProfilePage({
     useState<SessionsStatus>('loading');
 
   const [sessionsError, setSessionsError] = useState('');
-  const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
+  const [commentsTotal, setCommentsTotal] = useState(0);
 
   const [commentsInitialData, setCommentsInitialData] =
     useState<PharmacyNotesResponse | null>(null);
@@ -639,7 +639,7 @@ function PharmacyProfilePage({
       .catch(() => {
         if (controller.signal.aborted) return;
         setCommentsInitialData(null);
-        setCommentsTotal(null);
+        setCommentsTotal(0);
       });
 
     return () => controller.abort();
@@ -1052,8 +1052,7 @@ function PharmacyProfilePage({
     if (tab.value === 'comments') {
       return {
         ...tab,
-        label:
-          commentsTotal === null ? 'Comments' : `Comments (${commentsTotal})`,
+        label: `Comments (${commentsTotal})`,
       };
     }
 
@@ -2380,7 +2379,7 @@ function PharmacyProfilePage({
                     description="Notes for your pharmacy team are collected here."
                     emptyTitle="No manager comments yet."
                     emptyText="The comment drawer is waiting patiently."
-                    initialTotal={commentsTotal ?? undefined}
+                    initialTotal={commentsTotal}
                     initialData={commentsInitialData ?? undefined}
                     load={(page, options) =>
                       getPharmacyNotes('pharmacy', pharmacy.id, page, options)

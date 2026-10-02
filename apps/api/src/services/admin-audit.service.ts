@@ -313,6 +313,15 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
   }
 
   const section = log.section ?? getLegacyAuditSection(log.entityType);
+  const hasStatusChange = log.changedFields.includes('status');
+  const statusBefore =
+    hasStatusChange && typeof log.before.status === 'string'
+      ? log.before.status
+      : undefined;
+  const statusAfter =
+    hasStatusChange && typeof log.after.status === 'string'
+      ? log.after.status
+      : undefined;
 
   if (!isAdminAuditSection(section)) {
     throw new TypeError('Stored admin audit section is invalid.');
@@ -328,6 +337,8 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
     entityId: log.entityId,
     entityLabelSnapshot: log.entityLabelSnapshot,
     changedFields: [...log.changedFields],
+    ...(statusBefore ? { statusBefore } : {}),
+    ...(statusAfter ? { statusAfter } : {}),
     ...(log.reason ? { reason: log.reason } : {}),
     requestId: log.requestId,
     createdAt: log.createdAt.toISOString(),
@@ -400,7 +411,7 @@ function applyAuditSectionFilter(
 
 export async function listAdminAuditActorsService(): Promise<AdminAuditActorsResponseDto> {
   const actors = await User.find({ role: USER_ROLES.ADMIN })
-    .select('_id name email phone address pictureUrl status')
+    .select('_id name email phone pictureUrl status')
     .sort({ name: 1, _id: 1 })
     .lean<
       Array<{
@@ -408,7 +419,6 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
         name: string;
         email: string;
         phone: string;
-        address?: string;
         pictureUrl?: string;
         status: 'active' | 'blocked';
       }>
@@ -419,7 +429,6 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
     name: actor.name,
     email: actor.email,
     phone: actor.phone,
-    ...(actor.address ? { address: actor.address } : {}),
     ...(actor.pictureUrl ? { pictureUrl: actor.pictureUrl } : {}),
     status: actor.status,
   }));

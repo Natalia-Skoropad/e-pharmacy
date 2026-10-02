@@ -108,10 +108,86 @@
   overflow-wrap: anywhere;
 }
 
+.changeHeader {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.changeCell {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.changeAction,
+.changeTransition {
+  overflow-wrap: anywhere;
+}
+
+.changeAction {
+  font-weight: var(--fw-regular);
+}
+
+.changeTransition {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-regular);
+}
+
+.changeReason {
+  max-width: 260px;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+
+.changeSuccess,
+.legendSuccess {
+  color: var(--color-success);
+}
+
+.changeDanger,
+.legendDanger {
+  color: var(--color-error);
+}
+
+.changePending,
+.legendPending {
+  color: var(--color-warning);
+}
+
+.changeInfo {
+  color: var(--color-info);
+}
+
+.changeWarning {
+  color: var(--color-status-beauty);
+}
+
+.changeNeutral {
+  color: var(--color-text-secondary);
+}
+
+.detailsButton.detailsButton {
+  color: var(--color-info);
+  background-color: var(--color-info-soft);
+  border-color: var(--color-info-border-medium);
+}
+
+.detailsButton.detailsButton:hover:not(:disabled),
+.detailsButton.detailsButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-info);
+  border-color: var(--color-info);
+}
+
 .detailsDialog {
-  width: min(760px, calc(100vw - 32px));
-  max-height: min(780px, calc(100vh - 32px));
-  overflow: auto;
+  --modal-width: 860px;
+  --modal-max-height: min(820px, calc(100vh - 32px));
+  --modal-overflow: auto;
+  --modal-dialog-background: var(--color-surface);
 }
 
 .detailsHeader {
@@ -119,12 +195,36 @@
   gap: 16px;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .detailsHeaderCopy {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.detailsHeaderIcon,
+.detailsReasonIcon,
+.changesHeadingIcon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: var(--radius-lg);
+}
+
+.detailsHeaderIcon {
+  width: 44px;
+  height: 44px;
+}
+
+.detailsHeadingText {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -152,30 +252,65 @@
 
 .detailsBody {
   display: grid;
-  gap: 28px;
+  gap: 24px;
 }
 
 .detailsMeta {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 24px;
+  gap: 12px;
   margin: 0;
 }
 
-.detailsMeta div {
+.detailsMetaItem {
   min-width: 0;
+  padding: 14px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .detailsMeta dt {
-  margin-bottom: 4px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  margin-bottom: 7px;
   color: var(--color-text-secondary);
   font-size: var(--fz-12);
   font-weight: var(--fw-bold);
 }
 
+.detailsMeta dt svg {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+}
+
 .detailsMeta dd {
   margin: 0;
+  color: var(--color-text-primary);
   overflow-wrap: anywhere;
+}
+
+.detailsActionCopy {
+  display: grid;
+  gap: 5px;
+  justify-items: start;
+}
+
+.detailsActionPill {
+  display: inline-flex;
+  width: fit-content;
+  padding: 5px 9px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-bold);
+  background-color: var(--color-background);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+.detailsTransition {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
 }
 
 .codeValue {
@@ -183,29 +318,77 @@
   font-size: var(--fz-13);
 }
 
+.detailsReason {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  background-color: var(--color-info-soft);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-lg);
+}
+
+.detailsReasonIcon {
+  width: 36px;
+  height: 36px;
+  color: var(--color-info);
+  background-color: var(--color-white);
+  border-color: var(--color-info-border);
+}
+
+.detailsReasonCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.detailsReasonCopy strong {
+  color: var(--color-info);
+  font-size: var(--fz-13);
+}
+
+.detailsReasonCopy span {
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+
 .changes {
   display: grid;
   gap: 12px;
 }
 
-.changeRow {
-  display: grid;
-  grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 12px;
+.changesHeading {
+  display: flex;
+  gap: 10px;
   align-items: center;
-  padding: 12px 0;
-  border-top: 1px solid var(--color-border);
 }
 
-.changeRow span,
-.changeRow strong {
-  min-width: 0;
+.changesHeadingIcon {
+  width: 34px;
+  height: 34px;
+}
+
+.changes h3 {
+  color: var(--color-text-primary);
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+}
+
+.changeFieldName,
+.changeValue {
   overflow-wrap: anywhere;
 }
 
-.changeArrow {
-  color: var(--color-text-muted);
-  text-align: center;
+.changeFieldName {
+  color: var(--color-text-primary);
+}
+
+.changeValue {
+  color: var(--color-text-secondary);
 }
 
 @media only screen and (min-width: 768px) {
@@ -242,19 +425,5 @@
 
   .detailsMeta {
     grid-template-columns: 1fr;
-  }
-
-  .changeRow {
-    grid-template-columns: minmax(72px, 0.7fr) minmax(0, 1fr) auto minmax(
-        0,
-        1fr
-      );
-    gap: 6px;
-    padding-block: 10px;
-    font-size: var(--fz-12);
-  }
-
-  .changeRow strong {
-    font-size: var(--fz-12);
   }
 }

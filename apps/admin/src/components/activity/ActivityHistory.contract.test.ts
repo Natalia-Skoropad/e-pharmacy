@@ -9,17 +9,27 @@ const read = (relativePath: string) =>
 
 //===================================================================
 
-test('activity history uses one employee search across identity and contact fields', async () => {
-  const source = await read('./ActivityHistory.tsx');
+test('activity history employee search excludes private address data', async () => {
+  const [source, employeeDetailsSource, serviceSource] = await Promise.all([
+    read('./ActivityHistory.tsx'),
+    read('./ActivityEmployeeDetails/ActivityEmployeeDetails.tsx'),
+    read('../../../../api/src/services/admin-audit.service.ts'),
+  ]);
 
-  assert.match(source, /label=\"Search by employee\"/);
+  assert.match(source, /label="Search by employee"/);
 
   assert.match(
     source,
-    /searchText:[\s\S]*?actor\.id[\s\S]*?actor\.email[\s\S]*?actor\.phone[\s\S]*?actor\.address/
+    /searchText:[\s\S]*?actor\.id[\s\S]*?actor\.email[\s\S]*?actor\.phone/
   );
 
-  assert.match(source, /title=\"Employee search\"/);
+  assert.doesNotMatch(source, /actor\.address/);
+  assert.doesNotMatch(source, /phone number, or address|phone, or address/);
+  assert.doesNotMatch(employeeDetailsSource, /employee\.address/);
+  assert.doesNotMatch(employeeDetailsSource, /label: 'Address'/);
+
+  assert.match(source, /title="Employee search"/);
+  assert.doesNotMatch(serviceSource, /\.select\([^)]*address[^)]*\)/);
 
   assert.doesNotMatch(
     source,

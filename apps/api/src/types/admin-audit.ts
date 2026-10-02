@@ -37,7 +37,6 @@ export type AdminAuditActorDto = Readonly<{
   name: string;
   email: string;
   phone: string;
-  address?: string;
   pictureUrl?: string;
   status: 'active' | 'blocked';
 }>;
@@ -56,6 +55,8 @@ export type AdminAuditListItemDto = Readonly<{
   entityId: string;
   entityLabelSnapshot: string;
   changedFields: string[];
+  statusBefore?: string;
+  statusAfter?: string;
   reason?: string;
   requestId: string;
   createdAt: string;

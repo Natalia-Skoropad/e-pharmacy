@@ -1,7 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Eye, History } from 'lucide-react';
+import {
+  CirclePlus,
+  Eye,
+  History,
+  ListFilter,
+  Palette,
+  PencilLine,
+  RefreshCw,
+  ScanSearch,
+  Search,
+  ShieldCheck,
+  Trash2,
+  UsersRound,
+} from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
@@ -50,8 +63,10 @@ import {
 
 import {
   getAdminAuditActionLabel,
+  getAdminAuditChangeTone,
   getAdminAuditEntityLabel,
   getAdminAuditLocation,
+  getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
 import { ADMIN_ROUTES } from '@/lib/routes';
@@ -98,6 +113,19 @@ function getErrorMessage(error: unknown): string {
 
 //===================================================================
 
+function getChangeToneClassName(
+  tone: ReturnType<typeof getAdminAuditChangeTone>
+): string {
+  if (tone === 'success') return css.changeSuccess;
+  if (tone === 'danger') return css.changeDanger;
+  if (tone === 'pending') return css.changePending;
+  if (tone === 'warning') return css.changeWarning;
+  if (tone === 'neutral') return css.changeNeutral;
+  return css.changeInfo;
+}
+
+//===================================================================
+
 function createEmployeeOptions(
   actors: readonly AdminAuditActor[]
 ): Array<SearchableSelectOption<string>> {
@@ -114,7 +142,7 @@ function createEmployeeOptions(
           size={30}
         />
       ),
-      searchText: [actor.id, actor.email, actor.phone, actor.address]
+      searchText: [actor.id, actor.email, actor.phone]
         .filter(Boolean)
         .join(' '),
     })),
@@ -320,8 +348,83 @@ export function ActivityHistory() {
       },
       {
         key: 'action',
-        title: 'Change',
-        render: (item) => getAdminAuditActionLabel(item.action),
+        title: (
+          <span className={css.changeHeader}>
+            Change
+            <InfoTooltip
+              label="Change color help"
+              title="Change colors"
+              icon={<Palette size={20} aria-hidden="true" />}
+              escapeOverflow
+              items={[
+                {
+                  title: 'Added',
+                  description:
+                    'Green marks newly created records and other successful additions.',
+                  icon: (
+                    <CirclePlus
+                      className={css.legendSuccess}
+                      size={17}
+                      aria-hidden="true"
+                    />
+                  ),
+                },
+                {
+                  title: 'Updated',
+                  description:
+                    'Yellow marks edits and replacements to existing records.',
+                  icon: (
+                    <PencilLine
+                      className={css.legendPending}
+                      size={17}
+                      aria-hidden="true"
+                    />
+                  ),
+                },
+                {
+                  title: 'Deleted',
+                  description: 'Red marks deleted or revoked records.',
+                  icon: (
+                    <Trash2
+                      className={css.legendDanger}
+                      size={17}
+                      aria-hidden="true"
+                    />
+                  ),
+                },
+                {
+                  title: 'Status changes',
+                  description:
+                    'Status changes use the color of the new status, so the result is visible at a glance.',
+                  icon: <RefreshCw size={17} aria-hidden="true" />,
+                },
+              ]}
+            />
+          </span>
+        ),
+        render: (item) => {
+          const tone = getAdminAuditChangeTone(item);
+          const toneClassName = getChangeToneClassName(tone);
+          const transition = getAdminAuditStatusTransitionLabel(item);
+
+          return (
+            <span className={css.changeCell}>
+              <strong className={`${css.changeAction} ${toneClassName}`}>
+                {getAdminAuditActionLabel(item.action)}
+              </strong>
+
+              {transition ? (
+                <span className={`${css.changeTransition} ${toneClassName}`}>
+                  {transition}
+                </span>
+              ) : null}
+
+              {item.reason ? (
+                <span className={css.changeReason}>Reason: {item.reason}</span>
+              ) : null}
+            </span>
+          );
+        },
       },
       {
         key: 'location',
@@ -356,6 +459,7 @@ export function ActivityHistory() {
             type="button"
             variant="ghost"
             size="sm"
+            className={css.detailsButton}
             iconLeft={<Eye size={16} aria-hidden="true" />}
             onClick={() => openDetails(item.id)}
           >
@@ -413,21 +517,25 @@ export function ActivityHistory() {
               <InfoTooltip
                 label="About Activity history"
                 title="Activity history"
+                icon={<History size={20} aria-hidden="true" />}
                 items={[
                   {
                     title: 'Immutable audit trail',
                     description:
                       'Critical Admin Cabinet changes are recorded as immutable history entries, so the original record remains available for review even when related data changes later.',
+                    icon: <ShieldCheck size={17} aria-hidden="true" />,
                   },
                   {
                     title: 'What each record shows',
                     description:
                       'See who made the change, what was affected, where it happened, which fields changed, and the request trace. Open Details to compare the saved before and after values.',
+                    icon: <ScanSearch size={17} aria-hidden="true" />,
                   },
                   {
                     title: 'Find the records you need',
                     description:
-                      'Search by employee name, ID, email, phone number, or address, then narrow the history by date, change type, entity type, or Admin Cabinet section.',
+                      'Search by employee name, ID, email, or phone number, then narrow the history by date, change type, entity type, or Admin Cabinet section.',
+                    icon: <ListFilter size={17} aria-hidden="true" />,
                   },
                 ]}
               />
@@ -451,18 +559,20 @@ export function ActivityHistory() {
               <InfoTooltip
                 label="Employee search help"
                 title="Employee search"
+                icon={<UsersRound size={20} aria-hidden="true" />}
                 items={[
                   {
                     title: 'Search fields',
                     description:
-                      'Search by employee name, ID, email, phone number, or address.',
+                      'Search by employee name, ID, email, or phone number.',
+                    icon: <Search size={17} aria-hidden="true" />,
                   },
                 ]}
               />
             }
             value={filters.actorUserId}
             options={employeeOptions}
-            placeholder="Name, ID, email, phone, or address"
+            placeholder="Name, ID, email, or phone"
             emptyMessage="No employees found"
             isActive={Boolean(filters.actorUserId)}
             isLoading={areActorsLoading}

@@ -7,6 +7,11 @@ import {
   parseAdminAuditListResponse,
 } from './admin-audit';
 
+import {
+  getAdminAuditChangeTone,
+  getAdminAuditStatusTransitionLabel,
+} from './admin-audit-presentation';
+
 //===================================================================
 
 const item = {
@@ -37,6 +42,30 @@ test('audit list parser accepts the canonical paginated contract', () => {
     }).items[0]?.action,
     'pharmacy.status.changed'
   );
+});
+
+//===================================================================
+
+test('audit list parser keeps status transition metadata and reason text', () => {
+  const parsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        statusBefore: 'active',
+        statusAfter: 'blocked',
+        reason: 'Verification documents expired.',
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
+  });
+
+  assert.equal(parsed.items[0]?.statusBefore, 'active');
+  assert.equal(parsed.items[0]?.statusAfter, 'blocked');
+  assert.equal(parsed.items[0]?.reason, 'Verification documents expired.');
 });
 
 //===================================================================
@@ -160,7 +189,7 @@ test('audit list parser validates earliest audit date metadata', () => {
 
 //===================================================================
 
-test('audit actor parser keeps only current employee presentation fields', () => {
+test('audit actor parser keeps only non-address employee presentation fields', () => {
   const parsed = parseAdminAuditActorsResponse({
     items: [
       {
@@ -168,7 +197,6 @@ test('audit actor parser keeps only current employee presentation fields', () =>
         name: 'Natalia',
         email: 'natalia@example.com',
         phone: '+380501112233',
-        address: 'Kyiv',
         pictureUrl: 'https://example.com/photo.jpg',
         status: 'active',
       },
@@ -177,6 +205,23 @@ test('audit actor parser keeps only current employee presentation fields', () =>
 
   assert.equal(parsed.items[0]?.name, 'Natalia');
   assert.equal(parsed.items[0]?.status, 'active');
+
+  assert.throws(
+    () =>
+      parseAdminAuditActorsResponse({
+        items: [
+          {
+            id: '507f1f77bcf86cd799439012',
+            name: 'Natalia',
+            email: 'natalia@example.com',
+            phone: '+380501112233',
+            address: 'Private address',
+            status: 'active',
+          },
+        ],
+      }),
+    /invalid audit actor/i
+  );
 
   assert.throws(
     () =>
@@ -231,4 +276,47 @@ test('audit list parser renders product-category and position dictionary events'
   assert.equal(parsed.items[1]?.action, 'position.deleted');
   assert.equal(parsed.items[1]?.section, 'positions');
   assert.equal(parsed.items[1]?.entityType, 'position');
+});
+
+//===================================================================
+
+test('audit change presentation uses CRUD colors and target status colors', () => {
+  assert.equal(
+    getAdminAuditChangeTone({ action: 'position.created' }),
+    'success'
+  );
+
+  assert.equal(
+    getAdminAuditChangeTone({ action: 'position.updated' }),
+    'pending'
+  );
+
+  assert.equal(
+    getAdminAuditChangeTone({ action: 'position.deleted' }),
+    'danger'
+  );
+
+  assert.equal(
+    getAdminAuditChangeTone({
+      action: 'pharmacy.status.changed',
+      statusAfter: 'blocked',
+    }),
+    'danger'
+  );
+
+  assert.equal(
+    getAdminAuditChangeTone({
+      action: 'pharmacy.status.changed',
+      statusAfter: 'active',
+    }),
+    'success'
+  );
+
+  assert.equal(
+    getAdminAuditStatusTransitionLabel({
+      statusBefore: 'active',
+      statusAfter: 'blocked',
+    }),
+    'Active → Blocked'
+  );
 });

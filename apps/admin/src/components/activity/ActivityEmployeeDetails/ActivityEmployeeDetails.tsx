@@ -111,7 +111,6 @@ export function ActivityEmployeeDetails({
               details={[
                 { label: 'Employee ID', value: employee.id },
                 { label: 'Phone', value: employee.phone || '—' },
-                { label: 'Address', value: employee.address || '—' },
               ]}
             />
 

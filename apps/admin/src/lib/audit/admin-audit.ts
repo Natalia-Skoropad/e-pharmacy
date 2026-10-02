@@ -79,7 +79,6 @@ export type AdminAuditActor = Readonly<{
   name: string;
   email: string;
   phone: string;
-  address?: string;
   pictureUrl?: string;
   status: 'active' | 'blocked';
 }>;
@@ -100,6 +99,8 @@ export type AdminAuditListItem = Readonly<{
   entityId: string;
   entityLabelSnapshot: string;
   changedFields: readonly string[];
+  statusBefore?: string;
+  statusAfter?: string;
   reason?: string;
   requestId: string;
   createdAt: string;
@@ -226,6 +227,10 @@ function parseListItem(value: unknown): AdminAuditListItem {
     typeof value.requestId !== 'string' ||
     typeof value.createdAt !== 'string' ||
     Number.isNaN(Date.parse(value.createdAt)) ||
+    (value.statusBefore !== undefined &&
+      typeof value.statusBefore !== 'string') ||
+    (value.statusAfter !== undefined &&
+      typeof value.statusAfter !== 'string') ||
     (value.reason !== undefined && typeof value.reason !== 'string')
   ) {
     throw new TypeError('Invalid audit item.');
@@ -241,6 +246,12 @@ function parseListItem(value: unknown): AdminAuditListItem {
     entityId: value.entityId,
     entityLabelSnapshot: value.entityLabelSnapshot,
     changedFields: parseStringArray(value.changedFields, 'changedFields'),
+    ...(typeof value.statusBefore === 'string'
+      ? { statusBefore: value.statusBefore }
+      : {}),
+    ...(typeof value.statusAfter === 'string'
+      ? { statusAfter: value.statusAfter }
+      : {}),
     ...(typeof value.reason === 'string' ? { reason: value.reason } : {}),
     requestId: value.requestId,
     createdAt: value.createdAt,
@@ -257,7 +268,7 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     typeof value.name !== 'string' ||
     typeof value.email !== 'string' ||
     typeof value.phone !== 'string' ||
-    (value.address !== undefined && typeof value.address !== 'string') ||
+    value.address !== undefined ||
     (value.pictureUrl !== undefined && typeof value.pictureUrl !== 'string') ||
     (value.status !== 'active' && value.status !== 'blocked')
   ) {
@@ -269,7 +280,6 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     name: value.name,
     email: value.email,
     phone: value.phone,
-    ...(typeof value.address === 'string' ? { address: value.address } : {}),
     ...(typeof value.pictureUrl === 'string'
       ? { pictureUrl: value.pictureUrl }
       : {}),

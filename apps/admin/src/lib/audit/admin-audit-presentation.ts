@@ -1,3 +1,9 @@
+import {
+  PHARMACY_STATUS_PRESENTATION,
+  PRODUCT_REQUEST_STATUS_PRESENTATION,
+  type StatusPresentationTone,
+} from '@e-pharmacy/config/presentation';
+
 import { ADMIN_ROUTES } from '@/lib/routes';
 
 import type {
@@ -26,6 +32,47 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'position.updated': 'Position updated',
   'position.deleted': 'Position deleted',
 };
+
+//===================================================================
+
+const STATUS_PRESENTATION_BY_VALUE = {
+  active: PHARMACY_STATUS_PRESENTATION.active,
+  blocked: PHARMACY_STATUS_PRESENTATION.blocked,
+  new: PHARMACY_STATUS_PRESENTATION.new,
+  on_verification: PHARMACY_STATUS_PRESENTATION.on_verification,
+  on_moderation: PHARMACY_STATUS_PRESENTATION.on_moderation,
+  draft: PRODUCT_REQUEST_STATUS_PRESENTATION.draft,
+  in_progress: PRODUCT_REQUEST_STATUS_PRESENTATION.in_progress,
+  approved: PRODUCT_REQUEST_STATUS_PRESENTATION.approved,
+  rejected: PRODUCT_REQUEST_STATUS_PRESENTATION.rejected,
+} as const;
+
+//===================================================================
+
+type KnownAuditStatus = keyof typeof STATUS_PRESENTATION_BY_VALUE;
+
+//===================================================================
+
+const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
+  'admin.platformOwner.granted',
+  'adminEmployee.document.uploaded',
+  'productCategory.created',
+  'position.created',
+]);
+
+const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
+  'admin.platformOwner.revoked',
+  'adminEmployee.document.deleted',
+  'productCategory.deleted',
+  'position.deleted',
+]);
+
+const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
+  'adminEmployee.profile.updated',
+  'adminEmployee.document.replaced',
+  'productCategory.updated',
+  'position.updated',
+]);
 
 //===================================================================
 
@@ -166,4 +213,47 @@ export function formatAdminAuditValue(
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (Array.isArray(value)) return value.length ? value.join(', ') : 'None';
   return String(value);
+}
+
+//===================================================================
+
+function isKnownAuditStatus(value: string): value is KnownAuditStatus {
+  return Object.prototype.hasOwnProperty.call(
+    STATUS_PRESENTATION_BY_VALUE,
+    value
+  );
+}
+
+//===================================================================
+
+export function getAdminAuditChangeTone(
+  item: Pick<AdminAuditListItem, 'action' | 'statusAfter'>
+): StatusPresentationTone {
+  if (item.statusAfter && isKnownAuditStatus(item.statusAfter)) {
+    return STATUS_PRESENTATION_BY_VALUE[item.statusAfter].tone;
+  }
+
+  if (CREATE_ACTIONS.has(item.action)) return 'success';
+  if (DELETE_ACTIONS.has(item.action)) return 'danger';
+  if (UPDATE_ACTIONS.has(item.action)) return 'pending';
+
+  return 'info';
+}
+
+//===================================================================
+
+export function getAdminAuditStatusTransitionLabel(
+  item: Pick<AdminAuditListItem, 'statusBefore' | 'statusAfter'>
+): string | null {
+  if (!item.statusBefore || !item.statusAfter) return null;
+
+  const before = isKnownAuditStatus(item.statusBefore)
+    ? STATUS_PRESENTATION_BY_VALUE[item.statusBefore].label
+    : item.statusBefore;
+
+  const after = isKnownAuditStatus(item.statusAfter)
+    ? STATUS_PRESENTATION_BY_VALUE[item.statusAfter].label
+    : item.statusAfter;
+
+  return `${before} → ${after}`;
 }
