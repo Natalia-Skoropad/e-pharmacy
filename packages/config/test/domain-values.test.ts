@@ -14,7 +14,13 @@ import {
 import { PHARMACY_STATUSES } from '../src/pharmacies/index.ts';
 import { PRODUCT_REQUEST_STATUSES } from '../src/product-requests/index.ts';
 import { PRODUCT_STATUSES } from '../src/products/index.ts';
-import { USER_STATUSES } from '../src/users/index.ts';
+
+import {
+  ADMIN_ACCOUNT_STATUSES,
+  CLIENT_ACCOUNT_STATUSES,
+  PHARMACY_OWNER_ACCOUNT_STATUSES,
+  USER_STATUSES,
+} from '../src/users/index.ts';
 
 //===================================================================
 
@@ -22,6 +28,9 @@ const VALUE_SETS = {
   AUTH_APPLICATIONS,
   USER_ROLES,
   USER_STATUSES,
+  CLIENT_ACCOUNT_STATUSES,
+  ADMIN_ACCOUNT_STATUSES,
+  PHARMACY_OWNER_ACCOUNT_STATUSES,
   PHARMACY_STATUSES,
   PRODUCT_STATUSES,
   PRODUCT_REQUEST_STATUSES,
@@ -63,4 +72,17 @@ test('keeps the expected product and order runtime contracts', () => {
   ]);
 
   assert.deepEqual(ORDER_CREATED_BY_TYPES, ['client', 'manager']);
+});
+
+//===================================================================
+
+test('keeps new account status scoped to pharmacy owners', () => {
+  assert.deepEqual(CLIENT_ACCOUNT_STATUSES, ['active', 'blocked']);
+  assert.deepEqual(ADMIN_ACCOUNT_STATUSES, ['active', 'blocked']);
+
+  assert.deepEqual(PHARMACY_OWNER_ACCOUNT_STATUSES, [
+    'new',
+    'active',
+    'blocked',
+  ]);
 });

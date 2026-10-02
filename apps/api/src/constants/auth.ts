@@ -15,9 +15,32 @@ export const USER_ROLES = {
 //===============================================================
 
 export const USER_STATUSES = {
+  NEW: 'new',
   ACTIVE: 'active',
   BLOCKED: 'blocked',
 } as const;
+
+//===============================================================
+
+export const CLIENT_ACCOUNT_STATUSES = [
+  USER_STATUSES.ACTIVE,
+  USER_STATUSES.BLOCKED,
+] as const;
+
+//===============================================================
+
+export const ADMIN_ACCOUNT_STATUSES = [
+  USER_STATUSES.ACTIVE,
+  USER_STATUSES.BLOCKED,
+] as const;
+
+//===============================================================
+
+export const PHARMACY_OWNER_ACCOUNT_STATUSES = [
+  USER_STATUSES.NEW,
+  USER_STATUSES.ACTIVE,
+  USER_STATUSES.BLOCKED,
+] as const;
 
 //===============================================================
 

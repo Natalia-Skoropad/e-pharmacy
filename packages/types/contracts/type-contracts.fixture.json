@@ -1,10 +1,8 @@
 {
   "values": {
     "authApplications": ["client", "pharmacy", "admin"],
-
     "userRoles": ["client", "pharmacy", "admin"],
-
-    "userStatuses": ["active", "blocked"],
+    "userStatuses": ["new", "active", "blocked"],
 
     "pharmacyStatuses": [
       "new",
@@ -15,9 +13,7 @@
     ],
 
     "productStatuses": ["new", "active", "blocked"],
-
     "reviewStatuses": ["on_moderation", "approved", "rejected"],
-
     "orderStatuses": ["new", "in_progress", "successful", "rejected"],
 
     "productRequestStatuses": [
@@ -29,11 +25,10 @@
     ],
 
     "deliveryMethods": ["pickup", "postal_delivery"],
-
     "paymentMethods": ["cash", "bank_transfer"],
-
     "noteEntityTypes": ["client", "product", "pharmacy", "product_request"]
   },
+
   "cartPharmacyLimit": 15,
   "shapes": {
     "pagination": {

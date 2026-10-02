@@ -1,6 +1,6 @@
 import mongoose, { type HydratedDocument } from 'mongoose';
 
-import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+import { PHARMACY_STATUSES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
@@ -11,9 +11,6 @@ import {
 } from '../constants/admin-audit';
 
 import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
-
-import type { CreatePharmacyUserInput } from '../schemas/auth.schema';
 
 import type {
   PharmacyEntity,
@@ -21,21 +18,12 @@ import type {
   PharmacyStatus,
 } from '../types/pharmacy';
 
-import {
-  isDuplicateEmailError,
-  isDuplicatePhoneError,
-} from '../utils/mongoError';
-
-import { hashPassword } from '../utils/password';
 import { httpError } from '../utils/httpError';
 
 import { appendAdminAuditLog } from './admin-audit.service';
 import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
 
-import {
-  claimRegistrationPharmacyDocuments,
-  reconcileAttachedPharmacyDocumentStorage,
-} from './pharmacy-document.service';
+import { reconcileAttachedPharmacyDocumentStorage } from './pharmacy-document.service';
 
 //===============================================================
 
@@ -89,95 +77,6 @@ type UpdatePharmacyStatusInput = {
 };
 
 //===============================================================
-
-export async function createPharmacyUserByAdminService(
-  input: CreatePharmacyUserInput,
-  adminUserId: string
-) {
-  const phone = input.phone.trim();
-  const existingUserWithEmail = await User.exists({ email: input.email });
-
-  if (existingUserWithEmail) {
-    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
-  }
-
-  const existingUserWithPhone = await User.exists({ phone });
-
-  if (existingUserWithPhone) {
-    throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
-  }
-
-  const hashedPassword = await hashPassword(input.password);
-  const session = await mongoose.startSession();
-
-  try {
-    const pharmacy = await session.withTransaction(async () => {
-      const [user] = await User.create(
-        [
-          {
-            name: input.name,
-            email: input.email,
-            password: hashedPassword,
-            role: USER_ROLES.PHARMACY,
-            phone,
-            address: input.address,
-            createdBy: adminUserId,
-          },
-        ],
-        { session }
-      );
-
-      const [createdPharmacy] = await Pharmacy.create(
-        [
-          {
-            ownerId: user._id,
-            managerUserIds: [],
-            name: input.pharmacyName ?? user.name,
-            address: user.address ?? 'Address pending verification',
-            phone: user.phone,
-            email: user.email,
-            documents: [],
-            status: PHARMACY_STATUSES.NEW,
-            createdBy: adminUserId,
-          },
-        ],
-        { session }
-      );
-
-      const documents = await claimRegistrationPharmacyDocuments(
-        input.pharmacyDocuments ?? [],
-        createdPharmacy._id,
-        user._id,
-        session
-      );
-
-      createdPharmacy.documents = documents;
-      await createdPharmacy.save({ session });
-
-      return createdPharmacy;
-    });
-
-    if (!pharmacy) {
-      throw new Error(
-        'Admin pharmacy registration transaction returned no pharmacy.'
-      );
-    }
-
-    return serializePharmacyProfile(pharmacy);
-  } catch (error) {
-    if (isDuplicateEmailError(error)) {
-      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.EMAIL_IN_USE);
-    }
-
-    if (isDuplicatePhoneError(error)) {
-      throw httpError(HTTP_STATUS.CONFLICT, API_MESSAGES.PHONE_IN_USE);
-    }
-
-    throw error;
-  } finally {
-    await session.endSession();
-  }
-}
 
 export async function updatePharmacyStatusByAdminService(
   pharmacyId: string,

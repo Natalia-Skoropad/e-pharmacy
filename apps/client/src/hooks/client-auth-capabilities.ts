@@ -36,6 +36,11 @@ export function selectClientAuthCapabilities(
   const isActivePharmacyUser =
     auth.isAuthenticated && auth.user?.role === 'pharmacy' && isActiveUser;
 
+  const canOpenPharmacyCabinet =
+    auth.isAuthenticated &&
+    auth.user?.role === 'pharmacy' &&
+    auth.user.status !== 'blocked';
+
   const isActiveAdminUser =
     auth.isAuthenticated && auth.user?.role === 'admin' && isActiveUser;
 
@@ -49,6 +54,6 @@ export function selectClientAuthCapabilities(
     isActivePharmacyUser,
     isActiveAdminUser,
     canUseClientFeatures: isActiveClient,
-    canOpenPharmacyCabinet: isActivePharmacyUser,
+    canOpenPharmacyCabinet,
   };
 }

@@ -46,12 +46,13 @@ for (const value of ['CLIENT', 'PHARMACY', 'ADMIN']) {
 
 const registerBlock = schema.slice(
   schema.indexOf('export const registerSchema'),
-  schema.indexOf('export const createPharmacyUserSchema')
+  schema.indexOf('export const uploadRegistrationPharmacyDocumentSchema')
 );
 
 assert.match(registerBlock, /USER_ROLES\.CLIENT/);
 assert.match(registerBlock, /USER_ROLES\.PHARMACY/);
 assert.doesNotMatch(registerBlock, /USER_ROLES\.ADMIN/);
+assert.doesNotMatch(schema, /createPharmacyUserSchema/);
 
 const authService = await read(
   'apps',

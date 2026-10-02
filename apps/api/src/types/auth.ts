@@ -9,7 +9,11 @@ import type {
   updateProfileSchema,
 } from '../schemas/auth.schema';
 
-import type { UserRole, UserStatus } from './user';
+import type {
+  AdminAccountStatus,
+  ClientAccountStatus,
+  PharmacyOwnerAccountStatus,
+} from './user';
 
 //===============================================================
 
@@ -22,17 +26,31 @@ export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;
 
 //===============================================================
 
-export type AuthUserResponse = {
+type AuthUserResponseBase = {
   id: string;
   name: string;
   email: string;
-  role: UserRole;
-  status: UserStatus;
   phone: string;
   address?: string;
   pictureUrl?: string;
   revision: string;
 };
+
+//===============================================================
+
+export type AuthUserResponse =
+  | (AuthUserResponseBase & {
+      role: 'client';
+      status: ClientAccountStatus;
+    })
+  | (AuthUserResponseBase & {
+      role: 'pharmacy';
+      status: PharmacyOwnerAccountStatus;
+    })
+  | (AuthUserResponseBase & {
+      role: 'admin';
+      status: AdminAccountStatus;
+    });
 
 //===============================================================
 

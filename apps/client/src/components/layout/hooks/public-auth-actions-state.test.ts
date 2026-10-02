@@ -12,15 +12,43 @@ const retryAuthBootstrap = async () => null;
 
 //===================================================================
 
-const CLIENT_USER = {
+const BASE_USER = {
   id: '507f1f77bcf86cd799439011',
   name: 'Client User',
   email: 'client@example.com',
   phone: '+380501112233',
+  revision: '2026-08-14T12:00:00.000Z' as AuthUser['revision'],
+} as const;
+
+const CLIENT_USER = {
+  ...BASE_USER,
   role: 'client',
   status: 'active',
-  revision: '2026-08-14T12:00:00.000Z',
-} as AuthUser;
+} satisfies AuthUser;
+
+const PHARMACY_USER = {
+  ...BASE_USER,
+  role: 'pharmacy',
+  status: 'active',
+} satisfies AuthUser;
+
+const NEW_PHARMACY_USER = {
+  ...BASE_USER,
+  role: 'pharmacy',
+  status: 'new',
+} satisfies AuthUser;
+
+const ADMIN_USER = {
+  ...BASE_USER,
+  role: 'admin',
+  status: 'active',
+} satisfies AuthUser;
+
+const BLOCKED_CLIENT_USER = {
+  ...BASE_USER,
+  role: 'client',
+  status: 'blocked',
+} satisfies AuthUser;
 
 //===================================================================
 
@@ -73,7 +101,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
 
   assert.equal(
     selectPublicAuthActionsState({
-      user: { ...CLIENT_USER, role: 'pharmacy' },
+      user: PHARMACY_USER,
       status: 'authenticated',
       logout,
       retryAuthBootstrap,
@@ -84,7 +112,18 @@ test('maps authenticated users to role-specific presentation modes', () => {
 
   assert.equal(
     selectPublicAuthActionsState({
-      user: { ...CLIENT_USER, role: 'admin' },
+      user: NEW_PHARMACY_USER,
+      status: 'authenticated',
+      logout,
+      retryAuthBootstrap,
+    }).mode,
+
+    'authenticated-pharmacy'
+  );
+
+  assert.equal(
+    selectPublicAuthActionsState({
+      user: ADMIN_USER,
       status: 'authenticated',
       logout,
       retryAuthBootstrap,
@@ -95,7 +134,7 @@ test('maps authenticated users to role-specific presentation modes', () => {
 
   assert.equal(
     selectPublicAuthActionsState({
-      user: { ...CLIENT_USER, status: 'blocked' },
+      user: BLOCKED_CLIENT_USER,
       status: 'authenticated',
       logout,
       retryAuthBootstrap,
@@ -106,7 +145,11 @@ test('maps authenticated users to role-specific presentation modes', () => {
 
   assert.equal(
     selectPublicAuthActionsState({
-      user: { ...CLIENT_USER, role: 'future-role' as never },
+      user: {
+        ...BASE_USER,
+        role: 'future-role',
+        status: 'active',
+      } as unknown as AuthUser,
       status: 'authenticated',
       logout,
       retryAuthBootstrap,

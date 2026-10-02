@@ -17,8 +17,8 @@ import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
-import { USER_STATUSES } from '@e-pharmacy/config/users';
-import type { UserStatus } from '@e-pharmacy/types/auth';
+import { CLIENT_ACCOUNT_STATUSES } from '@e-pharmacy/config/users';
+import type { ClientAccountStatus } from '@e-pharmacy/types/auth';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import type { ProductStatus } from '@e-pharmacy/types/products';
@@ -32,7 +32,7 @@ import type { ClientStatisticsCounts } from '@/lib/statistics/config';
 
 //===================================================================
 
-export type ClientStatus = UserStatus;
+export type ClientStatus = ClientAccountStatus;
 
 //===================================================================
 
@@ -117,7 +117,7 @@ function invalidClientContract(message: string, payload: unknown): never {
 //===================================================================
 
 function isClientStatus(value: unknown): value is ClientStatus {
-  return USER_STATUSES.includes(value as UserStatus);
+  return CLIENT_ACCOUNT_STATUSES.includes(value as ClientAccountStatus);
 }
 
 //===================================================================

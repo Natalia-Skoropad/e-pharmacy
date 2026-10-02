@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  InvalidAuthResponseError,
-  parseAuthResponse,
-} from './auth-response';
+import { InvalidAuthResponseError, parseAuthResponse } from './auth-response';
 
 //===================================================================
 
@@ -30,16 +27,38 @@ test('parses a complete AuthResponse at the browser boundary', () => {
 
 //===================================================================
 
-test('accepts every declared role and status combination', () => {
-  for (const role of ['client', 'pharmacy', 'admin'] as const) {
-    for (const status of ['active', 'blocked'] as const) {
-      const response = parseAuthResponse({
-        user: { ...VALID_RESPONSE.user, role, status },
-      });
+test('accepts only role-aware account status combinations', () => {
+  const supported = [
+    ['client', 'active'],
+    ['client', 'blocked'],
+    ['admin', 'active'],
+    ['admin', 'blocked'],
+    ['pharmacy', 'new'],
+    ['pharmacy', 'active'],
+    ['pharmacy', 'blocked'],
+  ] as const;
 
-      assert.equal(response.user.role, role);
-      assert.equal(response.user.status, status);
-    }
+  for (const [role, status] of supported) {
+    const response = parseAuthResponse({
+      user: { ...VALID_RESPONSE.user, role, status },
+    });
+
+    assert.equal(response.user.role, role);
+    assert.equal(response.user.status, status);
+  }
+});
+
+//===================================================================
+
+test('rejects new status for client and admin accounts', () => {
+  for (const role of ['client', 'admin'] as const) {
+    assert.throws(
+      () =>
+        parseAuthResponse({
+          user: { ...VALID_RESPONSE.user, role, status: 'new' },
+        }),
+      InvalidAuthResponseError
+    );
   }
 });
 

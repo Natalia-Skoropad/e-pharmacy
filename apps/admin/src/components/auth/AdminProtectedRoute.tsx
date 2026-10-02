@@ -83,7 +83,7 @@ export function AdminProtectedRoute({ children }: AdminProtectedRouteProps) {
   }
 
   const pharmacyDestination =
-    user?.role === 'pharmacy' && user.status === 'active'
+    user?.role === 'pharmacy' && user.status !== 'blocked'
       ? getPharmacyAppDestination()
       : null;
 

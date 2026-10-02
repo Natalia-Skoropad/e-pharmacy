@@ -263,10 +263,14 @@ assert.match(backendAuthSchema, /registerSchema[\s\S]*?USER_ROLES\.PHARMACY/);
 
 const registerSchemaBlock = backendAuthSchema.slice(
   backendAuthSchema.indexOf('export const registerSchema'),
-  backendAuthSchema.indexOf('export const createPharmacyUserSchema')
+
+  backendAuthSchema.indexOf(
+    'export const uploadRegistrationPharmacyDocumentSchema'
+  )
 );
 
 assert.doesNotMatch(registerSchemaBlock, /USER_ROLES\.ADMIN/);
+assert.doesNotMatch(backendAuthSchema, /createPharmacyUserSchema/);
 
 assert.match(frontendPayloads, /role\?:\s*Extract<UserRole/);
 
@@ -294,9 +298,29 @@ const frontendResponses = await read(
 const backendAuthTypes = await read('apps', 'api', 'src', 'types', 'auth.ts');
 
 assert.deepEqual(
-  extractTypeFields(frontendAuthTypes, 'AuthUser'),
-  extractTypeFields(backendAuthTypes, 'AuthUserResponse')
+  extractTypeFields(frontendAuthTypes, 'AuthUserBase'),
+  extractTypeFields(backendAuthTypes, 'AuthUserResponseBase')
 );
+
+for (const [role, frontendType, statusType] of [
+  ['client', 'ClientAuthUser', 'ClientAccountStatus'],
+  ['pharmacy', 'PharmacyAuthUser', 'PharmacyOwnerAccountStatus'],
+  ['admin', 'AdminAuthUser', 'AdminAccountStatus'],
+]) {
+  assert.match(
+    frontendAuthTypes,
+    new RegExp(
+      String.raw`type\s+${frontendType}[\s\S]*?role:\s*['"]${role}['"][\s\S]*?status:\s*${statusType}`
+    )
+  );
+
+  assert.match(
+    backendAuthTypes,
+    new RegExp(
+      String.raw`role:\s*['"]${role}['"][\s\S]*?status:\s*${statusType}`
+    )
+  );
+}
 
 assert.match(frontendResponses, /user:\s*AuthUser/);
 assert.match(backendAuthTypes, /user:\s*AuthUserResponse/);

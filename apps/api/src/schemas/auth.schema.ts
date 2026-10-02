@@ -5,7 +5,6 @@ import { VALIDATION_MESSAGES } from '../constants/validation';
 import {
   sharedEmailSchema,
   sharedUserNameSchema,
-  sharedPharmacyNameSchema,
   sharedClearableAddressSchema,
   sharedOptionalAddressSchema,
   sharedExpectedRevisionSchema,
@@ -56,29 +55,6 @@ export const registerSchema = z
   .superRefine((data, ctx) => {
     if (data.role !== USER_ROLES.PHARMACY) return;
 
-    if (!data.pharmacyDocuments || data.pharmacyDocuments.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pharmacyDocuments'],
-        message: 'Pharmacy documents are required',
-      });
-    }
-  });
-
-//===============================================================
-
-export const createPharmacyUserSchema = z
-  .object({
-    name: sharedUserNameSchema,
-    email: sharedEmailSchema,
-    password: sharedPasswordSchema,
-    phone: sharedRequiredPhoneSchema,
-    address: sharedOptionalAddressSchema,
-    pharmacyName: sharedPharmacyNameSchema.optional(),
-    pharmacyDocuments: pharmacyRegistrationDocumentClaimsSchema.optional(),
-  })
-
-  .superRefine((data, ctx) => {
     if (!data.pharmacyDocuments || data.pharmacyDocuments.length === 0) {
       ctx.addIssue({
         code: 'custom',
@@ -151,7 +127,3 @@ export const updatePasswordSchema = z.object({
   currentPassword: currentPasswordSchema,
   newPassword: sharedPasswordSchema,
 });
-
-//===============================================================
-
-export type CreatePharmacyUserInput = z.infer<typeof createPharmacyUserSchema>;

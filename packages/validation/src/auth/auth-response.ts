@@ -1,15 +1,21 @@
 import { USER_ROLES } from '@e-pharmacy/config/auth';
-import { USER_STATUSES } from '@e-pharmacy/config/users';
+import {
+  ADMIN_ACCOUNT_STATUSES,
+  CLIENT_ACCOUNT_STATUSES,
+  PHARMACY_OWNER_ACCOUNT_STATUSES,
+} from '@e-pharmacy/config/users';
 
 import { buildEmailError, buildPhoneError } from '../shared';
 import { buildPictureUrlError } from '../files/picture-validation';
 import { isISODateTimeString } from '../dates';
 
 import type {
+  AdminAccountStatus,
   AuthResponse,
   AuthUser,
+  ClientAccountStatus,
+  PharmacyOwnerAccountStatus,
   UserRole,
-  UserStatus,
 } from '@e-pharmacy/types/auth';
 
 //===================================================================
@@ -80,8 +86,22 @@ function isUserRole(value: string): value is UserRole {
 
 //===================================================================
 
-function isUserStatus(value: string): value is UserStatus {
-  return (USER_STATUSES as readonly string[]).includes(value);
+function isClientAccountStatus(value: string): value is ClientAccountStatus {
+  return (CLIENT_ACCOUNT_STATUSES as readonly string[]).includes(value);
+}
+
+//===================================================================
+
+function isAdminAccountStatus(value: string): value is AdminAccountStatus {
+  return (ADMIN_ACCOUNT_STATUSES as readonly string[]).includes(value);
+}
+
+//===================================================================
+
+function isPharmacyOwnerAccountStatus(
+  value: string
+): value is PharmacyOwnerAccountStatus {
+  return (PHARMACY_OWNER_ACCOUNT_STATUSES as readonly string[]).includes(value);
 }
 
 //===================================================================
@@ -101,9 +121,13 @@ export function parseAuthResponse(value: unknown): AuthResponse {
     );
   }
 
-  if (!isUserStatus(status)) {
+  if (
+    (role === 'client' && !isClientAccountStatus(status)) ||
+    (role === 'admin' && !isAdminAccountStatus(status)) ||
+    (role === 'pharmacy' && !isPharmacyOwnerAccountStatus(status))
+  ) {
     throw new InvalidAuthResponseError(
-      'Authentication response contains an unsupported user status.'
+      'Authentication response contains a user status that is invalid for the user role.'
     );
   }
 
@@ -136,10 +160,7 @@ export function parseAuthResponse(value: unknown): AuthResponse {
     );
   }
 
-  if (
-    buildPhoneError(phone, { required: true }) ||
-    phone !== phone.trim()
-  ) {
+  if (buildPhoneError(phone, { required: true }) || phone !== phone.trim()) {
     throw new InvalidAuthResponseError(
       'Authentication response contains an invalid phone.'
     );
@@ -154,17 +175,29 @@ export function parseAuthResponse(value: unknown): AuthResponse {
     );
   }
 
-  return {
-    user: {
-      id,
-      name: readRequiredString(source, 'name'),
-      email,
-      phone,
-      role,
-      status,
-      revision,
-      ...(address !== undefined ? { address } : {}),
-      ...(pictureUrl !== undefined ? { pictureUrl } : {}),
-    },
+  const commonUser = {
+    id,
+    name: readRequiredString(source, 'name'),
+    email,
+    phone,
+    revision,
+    ...(address !== undefined ? { address } : {}),
+    ...(pictureUrl !== undefined ? { pictureUrl } : {}),
   };
+
+  if (role === 'client' && isClientAccountStatus(status)) {
+    return { user: { ...commonUser, role, status } };
+  }
+
+  if (role === 'admin' && isAdminAccountStatus(status)) {
+    return { user: { ...commonUser, role, status } };
+  }
+
+  if (role === 'pharmacy' && isPharmacyOwnerAccountStatus(status)) {
+    return { user: { ...commonUser, role, status } };
+  }
+
+  throw new InvalidAuthResponseError(
+    'Authentication response contains an invalid role/status combination.'
+  );
 }

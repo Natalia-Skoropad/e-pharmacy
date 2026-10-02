@@ -59,18 +59,16 @@ export function resolveLoginDestination({
   user: AuthUser;
   requestedRedirect: string | null;
 }): string {
-  if (user.status !== 'active') {
-    return ROUTES.HOME;
-  }
-
   if (user.role === 'pharmacy') {
+    if (user.status === 'blocked') return ROUTES.HOME;
+
     return resolvePharmacyLoginDestination(
       requestedRedirect,
       requirePharmacyAppConfiguration()
     );
   }
 
-  if (user.role !== 'client') {
+  if (user.role !== 'client' || user.status !== 'active') {
     return ROUTES.HOME;
   }
 

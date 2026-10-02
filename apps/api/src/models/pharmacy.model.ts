@@ -63,10 +63,12 @@ const pharmacyVerificationDocumentSchema =
         type: String,
         required: true,
         trim: true,
+
         maxlength: [
           PHARMACY_DOCUMENT_RULES.fileNameMaxLength,
           PHARMACY_DOCUMENT_VALIDATION_MESSAGES.nameLength,
         ],
+
         match: [
           PHARMACY_DOCUMENT_RULES.fileNamePattern,
           PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
@@ -77,6 +79,7 @@ const pharmacyVerificationDocumentSchema =
         type: Number,
         required: true,
         min: 1,
+
         max: [
           PHARMACY_DOCUMENT_RULES.maxSizeBytes,
           PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size,
@@ -87,6 +90,7 @@ const pharmacyVerificationDocumentSchema =
         type: String,
         required: true,
         trim: true,
+
         enum: {
           values: [...PHARMACY_DOCUMENT_RULES.mimeTypes],
           message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
@@ -102,6 +106,7 @@ const pharmacyVerificationDocumentSchema =
       uploadedAt: {
         type: String,
         required: true,
+
         validate: {
           validator: (value: string) => {
             const parsed = new Date(value);
@@ -109,6 +114,7 @@ const pharmacyVerificationDocumentSchema =
               !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value
             );
           },
+
           message: 'Document uploadedAt must be a canonical ISO datetime.',
         },
       },
@@ -361,8 +367,6 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      unique: true,
-      index: true,
     },
 
     managerUserIds: {
@@ -426,7 +430,9 @@ const pharmacySchema = new Schema<PharmacyEntity>(
 
 pharmacySchema.index({ name: 'text', address: 'text', city: 'text' });
 pharmacySchema.index({ city: 1 });
+pharmacySchema.index({ ownerId: 1 });
 pharmacySchema.index({ ownerId: 1, status: 1 });
+pharmacySchema.index({ ownerId: 1, createdAt: -1 });
 pharmacySchema.index({ status: 1 });
 pharmacySchema.index({ status: 1, rating: -1 });
 

@@ -1,4 +1,4 @@
-import { USER_STATUSES } from '@e-pharmacy/config/users';
+import { CLIENT_ACCOUNT_STATUSES } from '@e-pharmacy/config/users';
 
 import {
   isDateParam,
@@ -158,7 +158,7 @@ export function parseClientsSegments(
     if (segment.startsWith('status-')) {
       const status = normalizeSlugEnumValue(
         segment.replace('status-', ''),
-        USER_STATUSES
+        CLIENT_ACCOUNT_STATUSES
       );
 
       if (status) {

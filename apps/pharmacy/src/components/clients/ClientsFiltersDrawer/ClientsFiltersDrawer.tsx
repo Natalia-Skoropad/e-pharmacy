@@ -1,4 +1,4 @@
-import { USER_STATUSES } from '@e-pharmacy/config/users';
+import { CLIENT_ACCOUNT_STATUSES } from '@e-pharmacy/config/users';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
@@ -30,7 +30,7 @@ type ClientsFiltersDrawerProps = Readonly<{
 const CLIENT_STATUS_OPTIONS: Array<SelectOption<ClientsFilterState['status']>> =
   [
     { value: 'all', label: 'All' },
-    ...USER_STATUSES.map((status) => ({
+    ...CLIENT_ACCOUNT_STATUSES.map((status) => ({
       value: status,
       label: USER_STATUS_PRESENTATION[status].label,
     })),

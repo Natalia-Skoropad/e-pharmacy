@@ -7,15 +7,43 @@ import { selectClientAuthCapabilities } from './client-auth-capabilities';
 
 //===================================================================
 
-const CLIENT_USER = {
+const BASE_USER = {
   id: '507f1f77bcf86cd799439011',
   name: 'Client User',
   email: 'client@example.com',
   phone: '+380501112233',
+  revision: '2026-08-14T12:00:00.000Z' as AuthUser['revision'],
+} as const;
+
+const CLIENT_USER = {
+  ...BASE_USER,
   role: 'client',
   status: 'active',
-  revision: '2026-08-14T12:00:00.000Z',
-} as AuthUser;
+} satisfies AuthUser;
+
+const ACTIVE_PHARMACY_USER = {
+  ...BASE_USER,
+  role: 'pharmacy',
+  status: 'active',
+} satisfies AuthUser;
+
+const NEW_PHARMACY_USER = {
+  ...BASE_USER,
+  role: 'pharmacy',
+  status: 'new',
+} satisfies AuthUser;
+
+const BLOCKED_CLIENT_USER = {
+  ...BASE_USER,
+  role: 'client',
+  status: 'blocked',
+} satisfies AuthUser;
+
+const ACTIVE_ADMIN_USER = {
+  ...BASE_USER,
+  role: 'admin',
+  status: 'active',
+} satisfies AuthUser;
 
 //===================================================================
 
@@ -50,7 +78,7 @@ test('exposes a minimal client-specific projection instead of the full auth cont
 
 test('distinguishes active pharmacy users from blocked and unauthenticated users', () => {
   const activePharmacy = selectClientAuthCapabilities({
-    user: { ...CLIENT_USER, role: 'pharmacy' },
+    user: ACTIVE_PHARMACY_USER,
     status: 'authenticated',
     isAuthenticated: true,
     isBootstrapping: false,
@@ -61,8 +89,20 @@ test('distinguishes active pharmacy users from blocked and unauthenticated users
   assert.equal(activePharmacy.canOpenPharmacyCabinet, true);
   assert.equal(activePharmacy.canUseClientFeatures, false);
 
+  const newPharmacy = selectClientAuthCapabilities({
+    user: NEW_PHARMACY_USER,
+    status: 'authenticated',
+    isAuthenticated: true,
+    isBootstrapping: false,
+    isUnavailable: false,
+  });
+
+  assert.equal(newPharmacy.isActivePharmacyUser, false);
+  assert.equal(newPharmacy.canOpenPharmacyCabinet, true);
+  assert.equal(newPharmacy.canUseClientFeatures, false);
+
   const blockedClient = selectClientAuthCapabilities({
-    user: { ...CLIENT_USER, status: 'blocked' },
+    user: BLOCKED_CLIENT_USER,
     status: 'authenticated',
     isAuthenticated: true,
     isBootstrapping: false,
@@ -88,7 +128,7 @@ test('distinguishes active pharmacy users from blocked and unauthenticated users
 
 test('treats active admin users as privileged viewers without enabling client features', () => {
   const activeAdmin = selectClientAuthCapabilities({
-    user: { ...CLIENT_USER, role: 'admin' },
+    user: ACTIVE_ADMIN_USER,
     status: 'authenticated',
     isAuthenticated: true,
     isBootstrapping: false,

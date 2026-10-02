@@ -2,7 +2,7 @@
   "values": {
     "authApplications": ["client", "pharmacy", "admin"],
     "userRoles": ["client", "pharmacy", "admin"],
-    "userStatuses": ["active", "blocked"],
+    "userStatuses": ["new", "active", "blocked"],
 
     "pharmacyStatuses": [
       "new",

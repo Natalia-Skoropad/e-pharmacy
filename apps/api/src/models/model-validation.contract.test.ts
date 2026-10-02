@@ -9,7 +9,10 @@ import { User } from './user.model';
 
 //===============================================================
 
-type ReviewSchemaIndex = ReturnType<typeof ProductReview.schema.indexes>[number];
+type PharmacySchemaIndex = ReturnType<typeof Pharmacy.schema.indexes>[number];
+type ReviewSchemaIndex = ReturnType<
+  typeof ProductReview.schema.indexes
+>[number];
 
 //===============================================================
 
@@ -51,6 +54,71 @@ test('User model enforces the same name, email, phone and address invariants as 
 
 //===============================================================
 
+test('User model allows new only for pharmacy accounts', () => {
+  const base = {
+    name: 'Owner Status',
+    email: 'owner-status@example.com',
+    password: 'password123',
+    phone: '+380501234568',
+  };
+
+  const pharmacyOwner = new User({
+    ...base,
+    role: 'pharmacy',
+    status: 'new',
+  });
+
+  assert.equal(pharmacyOwner.validateSync(), undefined);
+
+  const client = new User({
+    ...base,
+    email: 'client-status@example.com',
+    phone: '+380501234569',
+    role: 'client',
+    status: 'new',
+  });
+
+  assert.ok(client.validateSync()?.errors.status);
+
+  const admin = new User({
+    ...base,
+    email: 'admin-status@example.com',
+    phone: '+380501234570',
+    role: 'admin',
+    status: 'new',
+  });
+
+  assert.ok(admin.validateSync()?.errors.status);
+});
+
+//===============================================================
+
+test('Pharmacy owner indexes are non-unique and support one owner with many pharmacies', () => {
+  const indexes = Pharmacy.schema.indexes();
+
+  const ownerOnly = indexes.find(
+    ([keys]: PharmacySchemaIndex) =>
+      Object.keys(keys).length === 1 && keys.ownerId === 1
+  );
+
+  const ownerStatus = indexes.find(
+    ([keys]: PharmacySchemaIndex) => keys.ownerId === 1 && keys.status === 1
+  );
+
+  const ownerCreatedAt = indexes.find(
+    ([keys]: PharmacySchemaIndex) => keys.ownerId === 1 && keys.createdAt === -1
+  );
+
+  assert.ok(ownerOnly);
+  assert.ok(ownerStatus);
+  assert.ok(ownerCreatedAt);
+  assert.notEqual(ownerOnly[1].unique, true);
+  assert.notEqual(ownerStatus[1].unique, true);
+  assert.notEqual(ownerCreatedAt[1].unique, true);
+});
+
+//===============================================================
+
 test('Pharmacy model protects contact, schedule, bank and picture invariants', () => {
   const pharmacy = new Pharmacy({
     ownerId: new Types.ObjectId(),
@@ -60,6 +128,7 @@ test('Pharmacy model protects contact, schedule, bank and picture invariants', (
     email: ' CONTACT@EXAMPLE.COM ',
     workingHours: validWorkingHours,
     imageUrl: 'https://example.com/pharmacy.webp',
+
     bankDetails: {
       recipientName: 'Health Pharmacy LLC',
       taxId: '12345678',

@@ -23,6 +23,8 @@ import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 
 import type { UserEntity } from '../types/user';
 
+import { isAccountStatusAllowedForRole } from '../utils/account-status';
+
 //===============================================================
 
 const userSchema = new Schema<UserEntity>(
@@ -64,6 +66,26 @@ const userSchema = new Schema<UserEntity>(
       enum: Object.values(USER_STATUSES),
       default: USER_STATUSES.ACTIVE,
       required: true,
+
+      validate: {
+        validator(this: unknown, value: unknown) {
+          const context = this as {
+            get?: (path: string) => unknown;
+            role?: unknown;
+          };
+          const role = context.get?.('role') ?? context.role;
+
+          if (!Object.values(USER_ROLES).includes(role as UserEntity['role'])) {
+            return true;
+          }
+
+          return isAccountStatusAllowedForRole(
+            role as UserEntity['role'],
+            value as UserEntity['status']
+          );
+        },
+        message: 'Account status is invalid for this user role',
+      },
     },
 
     statusReason: {
@@ -90,10 +112,12 @@ const userSchema = new Schema<UserEntity>(
         USER_ADDRESS_MIN_LENGTH,
         VALIDATION_MESSAGES.limits.addressMin,
       ],
+
       maxlength: [
         USER_ADDRESS_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.addressMax,
       ],
+
       match: [ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address],
       default: undefined,
     },
@@ -114,6 +138,7 @@ const userSchema = new Schema<UserEntity>(
         },
         message: VALIDATION_MESSAGES.format.picture,
       },
+
       default: undefined,
     },
 

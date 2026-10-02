@@ -52,6 +52,7 @@ import { logger } from '../utils/logger';
 import { resolvePasswordResetAppUrl } from '../utils/password-reset-app-url';
 import { buildPasswordResetUrl } from '../utils/password-reset-url';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
+import { getInitialAccountStatusForRole } from '../utils/account-status';
 import { toAuthUserResponse } from '../utils/userResponse';
 import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
 
@@ -307,13 +308,16 @@ export async function registerUserService(
   try {
     user =
       (await mongoSession.withTransaction(async () => {
+        const role = input.role || USER_ROLES.CLIENT;
+
         const [createdUser] = await User.create(
           [
             {
               name: input.name,
               email: input.email,
               password: hashedPassword,
-              role: input.role || USER_ROLES.CLIENT,
+              role,
+              status: getInitialAccountStatusForRole(role),
               phone,
               address: input.address,
             },

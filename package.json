@@ -10,6 +10,7 @@
     "seed:api": "pnpm --filter @e-pharmacy/api seed",
     "seed:admin-owner": "pnpm --filter @e-pharmacy/api seed:admin-owner",
     "migrate:product-categories": "pnpm --filter @e-pharmacy/api migrate:product-categories",
+    "migrate:pharmacy-owner-foundation": "pnpm --filter @e-pharmacy/api migrate:pharmacy-owner-foundation",
     "build": "turbo build",
     "build:client": "pnpm --filter @e-pharmacy/client build",
     "build:api": "pnpm --filter @e-pharmacy/api build",

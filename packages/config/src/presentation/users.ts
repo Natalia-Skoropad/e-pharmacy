@@ -13,8 +13,7 @@ export const USER_ROLE_LABELS = {
 //===================================================================
 
 export const USER_STATUS_PRESENTATION = {
+  new: { label: 'New', tone: 'info' },
   active: { label: 'Active', tone: 'success' },
   blocked: { label: 'Blocked', tone: 'danger' },
-} as const satisfies Readonly<
-  Record<UserStatus, StatusPresentation>
->;
+} as const satisfies Readonly<Record<UserStatus, StatusPresentation>>;

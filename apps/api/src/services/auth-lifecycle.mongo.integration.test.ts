@@ -14,10 +14,7 @@ import { Session } from '../models/session.model';
 import { User } from '../models/user.model';
 import { comparePassword, hashPassword } from '../utils/password';
 
-import {
-  createPharmacyUserByAdminService,
-  updatePharmacyStatusByAdminService,
-} from './admin.service';
+import { updatePharmacyStatusByAdminService } from './admin.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,
@@ -554,44 +551,6 @@ test(
     } finally {
       await cleanup(identity.email);
       await cleanup(pharmacyIdentity.email);
-      await mongoose.disconnect();
-    }
-  }
-);
-
-//===============================================================
-
-test(
-  'admin-created pharmacy rolls User back when Pharmacy creation fails',
-  { skip: shouldSkip },
-  async () => {
-    await mongoose.connect(getTestMongoUri());
-    const identity = uniqueIdentity('admin-pharmacy-rollback');
-    const originalCreate = Pharmacy.create.bind(Pharmacy);
-
-    try {
-      Pharmacy.create = (async () => {
-        throw new Error('forced pharmacy create failure');
-      }) as typeof Pharmacy.create;
-
-      await assert.rejects(
-        () =>
-          createPharmacyUserByAdminService(
-            {
-              name: 'Admin Pharmacy Rollback',
-              email: identity.email,
-              phone: identity.phone,
-              password: 'SecurePassword123!',
-            },
-            new Types.ObjectId().toHexString()
-          ),
-        /forced pharmacy create failure/
-      );
-
-      assert.equal(await User.exists({ email: identity.email }), null);
-    } finally {
-      Pharmacy.create = originalCreate as typeof Pharmacy.create;
-      await cleanup(identity.email);
       await mongoose.disconnect();
     }
   }

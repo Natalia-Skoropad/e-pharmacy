@@ -25,10 +25,11 @@ type ClientGuestOnlyRouteProps = {
 
 function ClientGuestOnlyRoute({ children }: ClientGuestOnlyRouteProps) {
   const { status, user } = useAuth();
+
   const pharmacyConfiguration =
     status === 'authenticated' &&
     user?.role === 'pharmacy' &&
-    user.status === 'active'
+    user.status !== 'blocked'
       ? getPharmacyAppConfiguration()
       : null;
 

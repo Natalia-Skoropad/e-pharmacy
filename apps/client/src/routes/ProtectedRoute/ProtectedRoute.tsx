@@ -60,8 +60,9 @@ function AuthUnavailableState() {
 
 function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
   const { user } = useAuth();
+
   const pharmacyConfiguration =
-    user?.role === 'pharmacy' && user.status === 'active'
+    user?.role === 'pharmacy' && user.status !== 'blocked'
       ? getPharmacyAppConfiguration()
       : null;
 

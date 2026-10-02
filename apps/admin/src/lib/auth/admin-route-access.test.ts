@@ -17,33 +17,33 @@ const BASE_USER = {
 
 //===================================================================
 
-function createUser(
-  role: AuthUser['role'],
-  status: AuthUser['status']
-): AuthUser {
-  return { ...BASE_USER, role, status };
-}
-
-//===================================================================
-
 test('only an active admin can access private admin routes', () => {
-  assert.equal(
-    canAccessAdminPrivateRoutes(createUser('admin', 'active')),
-    true
-  );
+  const activeAdmin = {
+    ...BASE_USER,
+    role: 'admin',
+    status: 'active',
+  } satisfies AuthUser;
 
-  assert.equal(
-    canAccessAdminPrivateRoutes(createUser('admin', 'blocked')),
-    false
-  );
+  const blockedAdmin = {
+    ...BASE_USER,
+    role: 'admin',
+    status: 'blocked',
+  } satisfies AuthUser;
 
-  assert.equal(
-    canAccessAdminPrivateRoutes(createUser('client', 'active')),
-    false
-  );
+  const activeClient = {
+    ...BASE_USER,
+    role: 'client',
+    status: 'active',
+  } satisfies AuthUser;
 
-  assert.equal(
-    canAccessAdminPrivateRoutes(createUser('pharmacy', 'active')),
-    false
-  );
+  const activePharmacyOwner = {
+    ...BASE_USER,
+    role: 'pharmacy',
+    status: 'active',
+  } satisfies AuthUser;
+
+  assert.equal(canAccessAdminPrivateRoutes(activeAdmin), true);
+  assert.equal(canAccessAdminPrivateRoutes(blockedAdmin), false);
+  assert.equal(canAccessAdminPrivateRoutes(activeClient), false);
+  assert.equal(canAccessAdminPrivateRoutes(activePharmacyOwner), false);
 });
