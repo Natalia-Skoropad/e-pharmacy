@@ -9,6 +9,7 @@ import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { SvgIcon } from '@e-pharmacy/ui/primitives';
 import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { CartItem } from '@e-pharmacy/types/cart';
 import type { ProductOffer } from '@e-pharmacy/types/products';
 
@@ -43,12 +44,6 @@ function formatDaysCount(days: number): string {
 
 //===================================================================
 
-function getOfferAddress(offer: ProductOffer): string {
-  return [offer.pharmacyCity, offer.pharmacyAddress].filter(Boolean).join(', ');
-}
-
-//===================================================================
-
 export function ProductOfferCard({
   productName,
   offer,
@@ -64,6 +59,7 @@ export function ProductOfferCard({
 }: ProductOfferCardProps) {
   const quantity = cartItem?.quantity ?? pendingQuantity ?? 0;
   const phoneHref = getTelephoneHref(offer.pharmacyPhone);
+  const pharmacyLocation = formatPharmacyLocation(offer.pharmacyLocation);
 
   return (
     <article className={css.card}>
@@ -97,8 +93,8 @@ export function ProductOfferCard({
         <div className={css.info}>
           <h3 className={css.title}>{offer.pharmacyName}</h3>
 
-          {getOfferAddress(offer) ? (
-            <p className={css.address}>{getOfferAddress(offer)}</p>
+          {pharmacyLocation ? (
+            <p className={css.address}>{pharmacyLocation}</p>
           ) : null}
 
           {offer.pharmacyPhone ? (

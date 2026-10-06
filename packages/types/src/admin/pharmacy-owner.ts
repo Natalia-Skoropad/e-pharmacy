@@ -1,6 +1,6 @@
 import type { ApiPaginationResponse } from '../api';
 import type { PharmacyOwnerAccountStatus } from '../auth';
-import type { PharmacyStatus } from '../pharmacies';
+import type { PharmacyLocationDraft, PharmacyStatus } from '../pharmacies';
 import type { EntityId, ISODateTimeString } from '../primitives';
 
 //===================================================================
@@ -71,8 +71,7 @@ export type AdminPharmacyOwnerPharmacySummary = Readonly<{
   name: string;
   email?: string;
   phone?: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
   imageUrl?: string;
   createdAt: ISODateTimeString;
   status: PharmacyStatus;

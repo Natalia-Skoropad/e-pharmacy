@@ -76,6 +76,7 @@ import type {
   CompletePharmacyBankDetails,
   EditablePharmacyBankDetails,
   PharmacyEntity,
+  PharmacyLocationDraft,
 } from '../types/pharmacy';
 
 import type { UserRole } from '../types/user';
@@ -333,6 +334,7 @@ async function findManagerOrderReplay(
   if (session) clientQuery = clientQuery.session(session);
 
   const client = await clientQuery.lean<UserDocument | null>();
+
   const clientMap = client
     ? new Map([[String(client._id), client]])
     : undefined;
@@ -370,14 +372,65 @@ function createOrderNumber(orderId: Types.ObjectId): string {
 
 //===============================================================
 
-function getPharmacyAddress(
-  pharmacySnapshot: OrderEntity['pharmacySnapshot']
-): string | undefined {
-  const address = [pharmacySnapshot.address, pharmacySnapshot.city]
-    .filter(Boolean)
-    .join(', ');
+function createOrderPharmacyLocationSnapshot(
+  location: PharmacyEntity['location']
+): PharmacyLocationDraft | undefined {
+  if (!location) return undefined;
 
-  return address || undefined;
+  const snapshot: PharmacyLocationDraft = {
+    ...(location.address ? { address: location.address } : {}),
+    ...(location.settlement ? { settlement: location.settlement } : {}),
+    ...(location.region ? { region: location.region } : {}),
+    ...(location.countryCode ? { countryCode: location.countryCode } : {}),
+  };
+
+  return Object.keys(snapshot).length > 0 ? snapshot : undefined;
+}
+
+//===============================================================
+
+function createOrderPharmacySnapshot(
+  pharmacy: PharmacyDocument
+): OrderEntity['pharmacySnapshot'] {
+  const location = createOrderPharmacyLocationSnapshot(pharmacy.location);
+
+  return {
+    name: pharmacy.name,
+    ...(location ? { location } : {}),
+    ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+    ...(pharmacy.email ? { email: pharmacy.email } : {}),
+    ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+    ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+    ...(typeof pharmacy.rating === 'number' ? { rating: pharmacy.rating } : {}),
+    ...(typeof pharmacy.reviewsCount === 'number'
+      ? { reviewsCount: pharmacy.reviewsCount }
+      : {}),
+    ...(hasCompleteBankDetails(pharmacy.bankDetails)
+      ? { bankDetails: pharmacy.bankDetails }
+      : {}),
+  };
+}
+
+//===============================================================
+
+function getOrderPharmacyLocation(
+  pharmacySnapshot: OrderEntity['pharmacySnapshot']
+): PharmacyLocationDraft | undefined {
+  const canonical = createOrderPharmacyLocationSnapshot(
+    pharmacySnapshot.location
+  );
+
+  if (canonical) return canonical;
+
+  const address = pharmacySnapshot.address?.trim();
+  const settlement = pharmacySnapshot.city?.trim();
+
+  if (!address && !settlement) return undefined;
+
+  return {
+    ...(address ? { address } : {}),
+    ...(settlement ? { settlement } : {}),
+  };
 }
 
 //===============================================================
@@ -444,6 +497,7 @@ function serializeManagerComments(order: OrderDocument): ManagerCommentDto[] {
     text: comment.text,
     createdAt: comment.createdAt.toISOString(),
     createdBy: comment.createdBy.toString(),
+
     author: {
       userId: comment.createdBy.toString(),
       displayName: comment.authorDisplayName?.trim() || 'Pharmacy member',
@@ -483,23 +537,31 @@ function serializeOrder(
   const clientUser = clientUsers?.get(order.userId.toString());
   const clientSnapshot = order.clientSnapshot;
   const clientIdentity = clientSnapshot ?? clientUser;
+
   const isDefaultPharmacyClient = Boolean(
     clientIdentity?.isDefaultPharmacyClient
   );
+
   const hasClientIdentity = Boolean(clientIdentity);
+
   const clientName = isDefaultPharmacyClient
     ? 'Walk-in client'
     : (clientIdentity?.name ?? clientIdentity?.email);
+
   const clientPhotoUrl = isDefaultPharmacyClient
     ? order.pharmacySnapshot.imageUrl
     : clientIdentity?.pictureUrl;
+
   const clientPhone = isDefaultPharmacyClient
     ? undefined
     : clientIdentity?.phone;
+
   const clientAddress = isDefaultPharmacyClient
     ? undefined
     : clientIdentity?.address;
+
   const managerComments = serializeManagerComments(order);
+  const pharmacyLocation = getOrderPharmacyLocation(order.pharmacySnapshot);
 
   return {
     id: order._id.toString(),
@@ -537,9 +599,7 @@ function serializeOrder(
     ...(order.pharmacySnapshot.email
       ? { pharmacyEmail: order.pharmacySnapshot.email }
       : {}),
-    ...(getPharmacyAddress(order.pharmacySnapshot)
-      ? { pharmacyAddress: getPharmacyAddress(order.pharmacySnapshot) }
-      : {}),
+    ...(pharmacyLocation ? { pharmacyLocation } : {}),
     ...(order.pharmacySnapshot.workingHours
       ? { pharmacyWorkingHours: order.pharmacySnapshot.workingHours }
       : {}),
@@ -548,12 +608,14 @@ function serializeOrder(
     currency: order.currency,
     status: order.status,
     createdByType: order.createdByType ?? 'client',
+
     statusHistory: order.statusHistory.map((entry) => ({
       status: entry.status,
       changedAt: entry.changedAt.toISOString(),
       changedBy: entry.changedBy.toString(),
       ...(entry.comment ? { comment: entry.comment } : {}),
     })),
+
     activityHistory: (order.activityHistory ?? []).map((entry) => ({
       type: entry.type,
       occurredAt: entry.occurredAt.toISOString(),
@@ -1025,33 +1087,13 @@ export async function checkoutOrderService(
             userId: new Types.ObjectId(clientUserId),
             clientSnapshot: createOrderClientSnapshot(client),
             pharmacyId: pharmacy._id,
-            pharmacySnapshot: {
-              name: pharmacy.name,
-              address: pharmacy.location?.address ?? '',
-              ...(pharmacy.location?.settlement
-                ? { city: pharmacy.location.settlement }
-                : {}),
-              ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
-              ...(pharmacy.email ? { email: pharmacy.email } : {}),
-              ...(pharmacy.workingHours
-                ? { workingHours: pharmacy.workingHours }
-                : {}),
-              ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
-              ...(typeof pharmacy.rating === 'number'
-                ? { rating: pharmacy.rating }
-                : {}),
-              ...(typeof pharmacy.reviewsCount === 'number'
-                ? { reviewsCount: pharmacy.reviewsCount }
-                : {}),
-              ...(hasCompleteBankDetails(pharmacy.bankDetails)
-                ? { bankDetails: pharmacy.bankDetails }
-                : {}),
-            },
+            pharmacySnapshot: createOrderPharmacySnapshot(pharmacy),
             items: orderItems,
             totalItems,
             totalPrice,
             currency: '₴',
             paymentMethod: input.paymentMethod,
+
             delivery:
               input.deliveryMethod === 'pickup'
                 ? { method: 'pickup' }
@@ -1062,6 +1104,7 @@ export async function checkoutOrderService(
             ...(input.comment ? { comment: input.comment } : {}),
             status: 'new',
             createdByType: 'client',
+
             statusHistory: [
               {
                 status: 'new',
@@ -1264,6 +1307,7 @@ export async function createManagerOrderService(
       const productMap = new Map(
         products.map((product) => [String(product._id), product])
       );
+
       const categoryMap = await getProductCategoryReferenceMap(
         products.map((product) => product.categoryId),
         session
@@ -1317,6 +1361,7 @@ export async function createManagerOrderService(
         (sum, item) => sum + item.quantity,
         0
       );
+
       const totalPrice = orderItems.reduce(
         (sum, item) => sum + item.totalPrice,
         0
@@ -1329,33 +1374,13 @@ export async function createManagerOrderService(
             userId: client._id,
             clientSnapshot: createOrderClientSnapshot(client),
             pharmacyId: pharmacy._id,
-            pharmacySnapshot: {
-              name: pharmacy.name,
-              address: pharmacy.location?.address ?? '',
-              ...(pharmacy.location?.settlement
-                ? { city: pharmacy.location.settlement }
-                : {}),
-              ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
-              ...(pharmacy.email ? { email: pharmacy.email } : {}),
-              ...(pharmacy.workingHours
-                ? { workingHours: pharmacy.workingHours }
-                : {}),
-              ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
-              ...(typeof pharmacy.rating === 'number'
-                ? { rating: pharmacy.rating }
-                : {}),
-              ...(typeof pharmacy.reviewsCount === 'number'
-                ? { reviewsCount: pharmacy.reviewsCount }
-                : {}),
-              ...(hasCompleteBankDetails(pharmacy.bankDetails)
-                ? { bankDetails: pharmacy.bankDetails }
-                : {}),
-            },
+            pharmacySnapshot: createOrderPharmacySnapshot(pharmacy),
             items: orderItems,
             totalItems,
             totalPrice,
             currency: '₴',
             paymentMethod: input.paymentMethod,
+
             delivery:
               input.deliveryMethod === 'pickup'
                 ? { method: 'pickup' }
@@ -1364,10 +1389,12 @@ export async function createManagerOrderService(
                     details: input.deliveryDetails,
                   },
             ...(input.comment ? { comment: input.comment } : {}),
+
             status: 'in_progress',
             createdByType: 'manager',
             managerRequestId: input.clientRequestId,
             managerRequestFingerprint: requestFingerprint,
+
             statusHistory: [
               {
                 status: 'in_progress',
@@ -1550,10 +1577,12 @@ function createOrderItemFromProductOffer({
         : {}),
     },
     quantity,
+
     unitPrice:
       previousItem && quantity <= previousItem.quantity
         ? previousItem.unitPrice
         : offer.price,
+
     totalPrice:
       quantity *
       (previousItem && quantity <= previousItem.quantity
@@ -1676,6 +1705,7 @@ export async function updateOrderDetailsService(
         const productMap: Map<string, ProductDocument> = new Map(
           products.map((product) => [String(product._id), product])
         );
+
         const categoryMap = await getProductCategoryReferenceMap(
           products.map((product) => product.categoryId),
           session
@@ -1819,10 +1849,12 @@ export async function updateOrderDetailsService(
         });
 
         set.items = nextItems;
+
         set.totalItems = nextItems.reduce(
           (sum, item) => sum + item.quantity,
           0
         );
+
         set.totalPrice = nextItems.reduce(
           (sum, item) => sum + item.totalPrice,
           0
@@ -1962,6 +1994,7 @@ export async function createOrderManagerCommentService(
         .lean<UserDocument | null>();
 
       const authorDisplayName = getManagerCommentAuthorDisplayName(author);
+
       const comment: OrderManagerCommentEntity = {
         _id: new Types.ObjectId(),
         text: normalizedText,
@@ -2408,6 +2441,7 @@ export async function getOrderSalesStatisticsService(
 ): Promise<OrderSalesStatisticsDto> {
   const pharmacyId =
     role === USER_ROLES.PHARMACY ? await getCurrentPharmacyId(userId) : null;
+
   const { dateFrom, dateTo } = getDefaultSalesDateRange(query);
   const groupBy = query.groupBy;
 

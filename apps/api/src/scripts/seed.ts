@@ -591,8 +591,22 @@ function createOffer(
   return {
     pharmacyId: pharmacy._id,
     pharmacyName: pharmacy.name,
-    pharmacyCity: pharmacy.location?.settlement,
-    pharmacyAddress: pharmacy.location?.address,
+    pharmacyLocation: pharmacy.location
+      ? {
+          ...(pharmacy.location.address
+            ? { address: pharmacy.location.address }
+            : {}),
+          ...(pharmacy.location.settlement
+            ? { settlement: pharmacy.location.settlement }
+            : {}),
+          ...(pharmacy.location.region
+            ? { region: pharmacy.location.region }
+            : {}),
+          ...(pharmacy.location.countryCode
+            ? { countryCode: pharmacy.location.countryCode }
+            : {}),
+        }
+      : undefined,
     pharmacyPhone: pharmacy.phone,
     pharmacyImageUrl: pharmacy.imageUrl,
     pharmacyRating: pharmacy.rating,
@@ -1560,8 +1574,20 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
   const pharmacySnapshot = {
     name: pharmacy.name,
-    address: pharmacy.location.address ?? '',
-    city: pharmacy.location.settlement,
+
+    location: {
+      ...(pharmacy.location.address
+        ? { address: pharmacy.location.address }
+        : {}),
+      ...(pharmacy.location.settlement
+        ? { settlement: pharmacy.location.settlement }
+        : {}),
+      ...(pharmacy.location.region ? { region: pharmacy.location.region } : {}),
+      ...(pharmacy.location.countryCode
+        ? { countryCode: pharmacy.location.countryCode }
+        : {}),
+    },
+
     phone: pharmacy.phone,
     email: pharmacy.email,
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -2362,8 +2388,18 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   const pharmacySnapshot = {
     name: pharmacy.name,
-    address: pharmacy.location.address ?? '',
-    city: pharmacy.location.settlement,
+    location: {
+      ...(pharmacy.location.address
+        ? { address: pharmacy.location.address }
+        : {}),
+      ...(pharmacy.location.settlement
+        ? { settlement: pharmacy.location.settlement }
+        : {}),
+      ...(pharmacy.location.region ? { region: pharmacy.location.region } : {}),
+      ...(pharmacy.location.countryCode
+        ? { countryCode: pharmacy.location.countryCode }
+        : {}),
+    },
     phone: pharmacy.phone,
     email: pharmacy.email,
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -2969,8 +3005,24 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
 
   const pharmacySnapshot = {
     name: pharmacy.name,
-    address: pharmacy.location?.address ?? '',
-    city: pharmacy.location?.settlement,
+    ...(pharmacy.location
+      ? {
+          location: {
+            ...(pharmacy.location.address
+              ? { address: pharmacy.location.address }
+              : {}),
+            ...(pharmacy.location.settlement
+              ? { settlement: pharmacy.location.settlement }
+              : {}),
+            ...(pharmacy.location.region
+              ? { region: pharmacy.location.region }
+              : {}),
+            ...(pharmacy.location.countryCode
+              ? { countryCode: pharmacy.location.countryCode }
+              : {}),
+          },
+        }
+      : {}),
     phone: pharmacy.phone,
     email: pharmacy.email,
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),

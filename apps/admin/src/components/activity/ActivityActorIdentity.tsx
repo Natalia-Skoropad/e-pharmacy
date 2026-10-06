@@ -47,6 +47,8 @@ export function ActivityActorIdentity({
     )
   ) : null;
 
+  const isInlineStatus = statusPlacement === 'inline';
+
   const name = href ? (
     <TextActionButton className={css.actorIdentityNameLink} href={href}>
       {actorLabel}
@@ -57,7 +59,11 @@ export function ActivityActorIdentity({
 
   return (
     <span className={css.employeeCell}>
-      <span className={css.actorIdentityMain}>
+      <span
+        className={`${css.actorIdentityMain} ${
+          isInlineStatus ? css.actorIdentityMainInline : ''
+        }`}
+      >
         {showPhoto ? (
           <TableImagePreview
             className={css.actorIdentityPhoto}
@@ -68,10 +74,18 @@ export function ActivityActorIdentity({
           />
         ) : null}
 
-        <span className={css.actorIdentityCopy}>
-          <span className={css.actorIdentityNameRow}>
+        <span
+          className={`${css.actorIdentityCopy} ${
+            isInlineStatus ? css.actorIdentityCopyInline : ''
+          }`}
+        >
+          <span
+            className={`${css.actorIdentityNameRow} ${
+              isInlineStatus ? css.actorIdentityNameRowInline : ''
+            }`}
+          >
             {name}
-            {statusPlacement === 'inline' ? status : null}
+            {isInlineStatus ? status : null}
           </span>
 
           {statusPlacement === 'stacked' ? status : null}

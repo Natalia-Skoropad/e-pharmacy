@@ -23,14 +23,14 @@ export type ProductOffersToolbarProps = Readonly<{
   isOpen: boolean;
   pharmacyNameQuery: string;
   pharmacyAddressQuery: string;
-  cityFilter: string;
-  cityOptions: readonly Readonly<{ value: string; label: string }>[];
+  locationFilter: string;
+  locationOptions: readonly Readonly<{ value: string; label: string }>[];
   offerSort: ProductOfferSort;
   sanitizeSearchValue: (value: string) => string;
   onToggle: () => void;
   onPharmacyNameChange: (value: string) => void;
   onPharmacyAddressChange: (value: string) => void;
-  onCityChange: (value: string) => void;
+  onLocationChange: (value: string) => void;
   onSortChange: (value: ProductOfferSort) => void;
 }>;
 
@@ -40,14 +40,14 @@ export function ProductOffersToolbar({
   isOpen,
   pharmacyNameQuery,
   pharmacyAddressQuery,
-  cityFilter,
-  cityOptions,
+  locationFilter,
+  locationOptions,
   offerSort,
   sanitizeSearchValue,
   onToggle,
   onPharmacyNameChange,
   onPharmacyAddressChange,
-  onCityChange,
+  onLocationChange,
   onSortChange,
 }: ProductOffersToolbarProps) {
   return (
@@ -92,21 +92,21 @@ export function ProductOffersToolbar({
           id="pharmacy-address-search"
           label="Search by address"
           value={pharmacyAddressQuery}
-          placeholder="Enter city or address"
+          placeholder="Enter address, settlement, or region"
           maxLength={USER_SEARCH_MAX_LENGTH}
           sanitizeValue={sanitizeSearchValue}
           onChange={onPharmacyAddressChange}
         />
 
         <SearchableSelect
-          id="pharmacy-city-filter"
-          label="City"
-          value={cityFilter}
-          options={[...cityOptions]}
-          placeholder="All cities"
-          isActive={cityFilter !== 'all'}
+          id="pharmacy-location-filter"
+          label="Location"
+          value={locationFilter}
+          options={[...locationOptions]}
+          placeholder="All locations"
+          isActive={locationFilter !== 'all'}
           sanitizeQuery={sanitizeSearchValue}
-          onChange={onCityChange}
+          onChange={onLocationChange}
         />
 
         <SelectField

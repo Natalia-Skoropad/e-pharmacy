@@ -77,6 +77,7 @@ import type { ProductDetails } from '@e-pharmacy/types/products';
 import { getOrderStatusTransitions } from '@e-pharmacy/config/orders';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 
 import {
@@ -622,6 +623,7 @@ function DeliveryTab({
 }>) {
   const workingHours =
     getWorkingHoursDisplayItems(order.pharmacyWorkingHours ?? '') ?? [];
+  const pharmacyLocation = formatPharmacyLocation(order.pharmacyLocation);
 
   return (
     <section className={css.methodCard} aria-labelledby="delivery-title">
@@ -715,10 +717,10 @@ function DeliveryTab({
                   )}
                 </li>
 
-                {order.pharmacyAddress ? (
+                {pharmacyLocation ? (
                   <li>
                     <MapPin size={18} aria-hidden="true" />
-                    <span>{order.pharmacyAddress}</span>
+                    <span>{pharmacyLocation}</span>
                   </li>
                 ) : null}
               </ul>
@@ -1321,12 +1323,8 @@ function OrderDetailsPageContent({
             activityHistory: [],
             managerCommentsCount: 0,
             ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
-            ...([pharmacy.address, pharmacy.city].filter(Boolean).length
-              ? {
-                  pharmacyAddress: [pharmacy.address, pharmacy.city]
-                    .filter(Boolean)
-                    .join(', '),
-                }
+            ...(pharmacy.location
+              ? { pharmacyLocation: pharmacy.location }
               : {}),
             ...(pharmacy.workingHours
               ? { pharmacyWorkingHours: pharmacy.workingHours }

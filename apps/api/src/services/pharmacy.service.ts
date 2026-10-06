@@ -774,11 +774,8 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
     pharmacy: {
       id: String(pharmacy._id),
       name: pharmacy.name,
-      ...(pharmacy.location?.address
-        ? { address: pharmacy.location.address }
-        : {}),
-      ...(pharmacy.location?.settlement
-        ? { city: pharmacy.location.settlement }
+      ...(pharmacy.location
+        ? { location: clonePharmacyLocation(pharmacy.location) }
         : {}),
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
       ...(pharmacy.email ? { email: pharmacy.email } : {}),

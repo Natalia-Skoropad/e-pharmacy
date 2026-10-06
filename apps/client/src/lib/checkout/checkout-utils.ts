@@ -5,6 +5,7 @@ import type {
 
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 import { hasCartGroupStockConflict } from '@/lib/cart/cart-stock';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 
 //===================================================================
 
@@ -35,12 +36,7 @@ export function getPharmacyWorkingHours(
 export function getPharmacyAddress(
   pharmacy?: Partial<PharmacyCheckoutDetails> | null
 ): string {
-  if (!pharmacy) return '';
-
-  return [pharmacy.address, pharmacy.city]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(', ');
+  return formatPharmacyLocation(pharmacy?.location);
 }
 
 //===================================================================

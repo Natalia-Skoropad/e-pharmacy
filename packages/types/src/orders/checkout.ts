@@ -22,10 +22,12 @@ export type CheckoutOrderPayload =
       pharmacyId: EntityId;
       paymentMethod: PaymentMethod;
       deliveryMethod: 'postal_delivery';
+
       deliveryDetails: {
         recipientName: string;
         recipientPhone: string;
         address: string;
       };
+
       comment?: string;
     });

@@ -33,7 +33,11 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
-import type { CompletePharmacyBankDetails } from '@e-pharmacy/types/pharmacies';
+import type {
+  CompletePharmacyBankDetails,
+  PharmacyLocationDraft,
+} from '@e-pharmacy/types/pharmacies';
+
 import type { EntityId, ISODateTimeString } from '@e-pharmacy/types/primitives';
 import type { ProductCategorySnapshot } from '@e-pharmacy/types/reference-data';
 
@@ -121,7 +125,7 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     clientPhone?: string;
     clientAddress?: string;
     pharmacyPhone?: string;
-    pharmacyAddress?: string;
+    pharmacyLocation?: PharmacyLocationDraft;
     pharmacyWorkingHours?: string;
     pharmacyEmail?: string;
     bankDetails?: CompletePharmacyBankDetails;
@@ -156,6 +160,28 @@ export type PharmacyOrdersResponse = Readonly<
     earliestCreatedAt: string | null;
   }
 >;
+
+//===================================================================
+
+function normalizePharmacyLocation(
+  value: unknown
+): PharmacyLocationDraft | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const address = getTrimmedString(value.address);
+  const settlement = getTrimmedString(value.settlement);
+  const region = getTrimmedString(value.region);
+  const countryCode = getTrimmedString(value.countryCode);
+
+  const location: PharmacyLocationDraft = {
+    ...(address ? { address } : {}),
+    ...(settlement ? { settlement } : {}),
+    ...(region ? { region } : {}),
+    ...(countryCode ? { countryCode } : {}),
+  };
+
+  return Object.keys(location).length > 0 ? location : undefined;
+}
 
 //===================================================================
 
@@ -604,10 +630,12 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
     clientPhotoUrl: getClientPhotoUrl(rawOrder),
     deliveryMethod: getDeliveryMethod(rawOrder),
     paymentMethod: rawOrder.paymentMethod,
+
     clientComment:
       getTrimmedString(rawOrder.clientComment) ??
       getTrimmedString(rawOrder.comment) ??
       '',
+
     totalQuantity,
     totalAmount,
     status: rawOrder.status,
@@ -689,6 +717,7 @@ function normalizeActivityHistory(
     );
 
     const quantityDelta = entry.quantityDelta;
+
     if (
       typeof quantityDelta !== 'number' ||
       !Number.isSafeInteger(quantityDelta)
@@ -857,9 +886,12 @@ export function normalizePharmacyOrderDetails(
   if (!row) return null;
 
   const delivery = isRecord(payload.delivery) ? payload.delivery : undefined;
+
   const deliveryDetails =
     delivery && isRecord(delivery.details) ? delivery.details : undefined;
+
   const bankDetails = normalizeBankDetails(payload.bankDetails);
+  const pharmacyLocation = normalizePharmacyLocation(payload.pharmacyLocation);
 
   return {
     ...row,
@@ -886,9 +918,7 @@ export function normalizePharmacyOrderDetails(
     ...(getTrimmedString(payload.pharmacyPhone)
       ? { pharmacyPhone: getTrimmedString(payload.pharmacyPhone) }
       : {}),
-    ...(getTrimmedString(payload.pharmacyAddress)
-      ? { pharmacyAddress: getTrimmedString(payload.pharmacyAddress) }
-      : {}),
+    ...(pharmacyLocation ? { pharmacyLocation } : {}),
     ...(getTrimmedString(payload.pharmacyWorkingHours)
       ? {
           pharmacyWorkingHours: getTrimmedString(payload.pharmacyWorkingHours),

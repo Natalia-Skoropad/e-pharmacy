@@ -534,8 +534,7 @@ function parseProductOffer(
     record,
     'product offer',
     {
-      pharmacyCity: 'string',
-      pharmacyAddress: 'string',
+      pharmacyLocation: 'record',
       pharmacyPhone: 'string',
       pharmacyImageUrl: 'string',
       totalQuantity: 'number',
@@ -544,6 +543,22 @@ function parseProductOffer(
     },
     context
   );
+
+  rejectFields(
+    record,
+    ['pharmacyCity', 'pharmacyAddress'],
+    'product offer',
+    context
+  );
+
+  const pharmacyLocation =
+    record.pharmacyLocation === undefined
+      ? undefined
+      : parsePharmacyLocationDraft(
+          record.pharmacyLocation,
+          'product offer pharmacyLocation',
+          context
+        );
 
   requireSafeNonNegativeInteger(
     record,
@@ -619,7 +634,10 @@ function parseProductOffer(
     );
   }
 
-  return checked<ProductDetails['offers'][number]>(record);
+  return checked<ProductDetails['offers'][number]>({
+    ...record,
+    ...(pharmacyLocation ? { pharmacyLocation } : {}),
+  });
 }
 
 //===================================================================
@@ -1310,8 +1328,7 @@ function parsePharmacyCheckoutDetails(
     record,
     'pharmacy checkout details',
     {
-      address: 'string',
-      city: 'string',
+      location: 'record',
       phone: 'string',
       email: 'string',
       workingHours: 'string',
@@ -1319,6 +1336,22 @@ function parsePharmacyCheckoutDetails(
     },
     context
   );
+
+  rejectFields(
+    record,
+    ['address', 'city'],
+    'pharmacy checkout details',
+    context
+  );
+
+  const location =
+    record.location === undefined
+      ? undefined
+      : parsePharmacyLocationDraft(
+          record.location,
+          'pharmacy checkout details location',
+          context
+        );
 
   let bankDetails: PharmacyCheckoutDetails['bankDetails'];
 
@@ -1366,6 +1399,7 @@ function parsePharmacyCheckoutDetails(
 
   return checked<PharmacyCheckoutDetails>({
     ...record,
+    ...(location ? { location } : {}),
     ...(bankDetails ? { bankDetails } : {}),
   });
 }
@@ -2967,11 +3001,25 @@ function parseClientOrder(
   requireOptionalFields(
     record,
     'client order',
-    { pharmacyImageUrl: 'string' },
+    { pharmacyImageUrl: 'string', pharmacyLocation: 'record' },
     context
   );
 
-  return checked<ClientOrder>(record);
+  rejectFields(record, ['pharmacyAddress'], 'client order', context);
+
+  const pharmacyLocation =
+    record.pharmacyLocation === undefined
+      ? undefined
+      : parsePharmacyLocationDraft(
+          record.pharmacyLocation,
+          'client order pharmacyLocation',
+          context
+        );
+
+  return checked<ClientOrder>({
+    ...record,
+    ...(pharmacyLocation ? { pharmacyLocation } : {}),
+  });
 }
 
 //===================================================================

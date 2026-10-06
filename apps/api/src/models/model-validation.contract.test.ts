@@ -3,6 +3,7 @@ import test from 'node:test';
 import { Types } from 'mongoose';
 
 import { AdminAuditLog } from './adminAuditLog.model';
+import { Order } from './order.model';
 import { Pharmacy } from './pharmacy.model';
 import { PharmacyReview } from './pharmacyReview.model';
 import { ProductReview } from './productReview.model';
@@ -150,6 +151,18 @@ test('Pharmacy model stores location canonically and indexes settlement/address 
 
   assert.ok(locationText);
   assert.ok(settlement);
+});
+
+//===============================================================
+
+test('Order pharmacy snapshots write canonical location while retaining legacy history fields', () => {
+  assert.ok(Order.schema.path('pharmacySnapshot.location.address'));
+  assert.ok(Order.schema.path('pharmacySnapshot.location.settlement'));
+  assert.ok(Order.schema.path('pharmacySnapshot.location.region'));
+  assert.ok(Order.schema.path('pharmacySnapshot.location.countryCode'));
+
+  assert.ok(Order.schema.path('pharmacySnapshot.address'));
+  assert.ok(Order.schema.path('pharmacySnapshot.city'));
 });
 
 //===============================================================

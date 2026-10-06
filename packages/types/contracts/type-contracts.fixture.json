@@ -165,7 +165,7 @@
         "pharmacyPhone",
         "pharmacyEmail",
         "pharmacyImageUrl",
-        "pharmacyAddress",
+        "pharmacyLocation",
         "pharmacyWorkingHours",
         "rejectionReason",
         "rejectedAt",

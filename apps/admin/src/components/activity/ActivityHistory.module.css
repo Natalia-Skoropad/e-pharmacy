@@ -98,6 +98,12 @@
   max-width: 100%;
 }
 
+.actorIdentityMainInline {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  width: 100%;
+}
+
 .actorIdentityPhoto {
   flex: 0 0 auto;
 }
@@ -108,12 +114,23 @@
   min-width: 0;
 }
 
+.actorIdentityCopyInline {
+  width: 100%;
+}
+
 .actorIdentityNameRow {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   min-width: 0;
+}
+
+.actorIdentityNameRowInline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  width: 100%;
 }
 
 .actorIdentityName,

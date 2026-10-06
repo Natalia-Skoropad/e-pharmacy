@@ -7,6 +7,7 @@ import { parseApiEmptyResponse, parseApiResponseData } from './api-response';
 import {
   parseActiveSessionsResponse,
   parseCurrentPharmacySummaryResponse,
+  parseClientOrderDetailsResponse,
   parseFavoriteMutationResponse,
   parseHealthResponse,
   parsePharmaciesResponse,
@@ -286,6 +287,14 @@ test('requires backend-provided typed public slug IDs', () => {
     pharmacyRating: 5,
     pharmacyReviewsCount: 2,
     pharmacyIsFavorite: false,
+
+    pharmacyLocation: {
+      address: '1 Pharmacy Street',
+      settlement: 'Lviv',
+      region: 'Lviv region',
+      countryCode: 'UA',
+    },
+
     price: 100,
     totalQuantity: 10,
     availableQuantity: 8,
@@ -295,11 +304,27 @@ test('requires backend-provided typed public slug IDs', () => {
     updatedAt: '2026-07-31T00:00:00.000Z',
   };
 
-  assert.equal(
-    parseProductDetails({ ...product, offers: [validOffer] }).offers[0]
-      ?.availableQuantity,
-    8
-  );
+  const parsedOffer = parseProductDetails({
+    ...product,
+    offers: [validOffer],
+  }).offers[0];
+
+  assert.equal(parsedOffer?.availableQuantity, 8);
+  assert.deepEqual(parsedOffer?.pharmacyLocation, validOffer.pharmacyLocation);
+
+  for (const legacyLocationField of [
+    { pharmacyCity: 'Lviv' },
+    { pharmacyAddress: '1 Pharmacy Street' },
+  ]) {
+    assert.throws(
+      () =>
+        parseProductDetails({
+          ...product,
+          offers: [{ ...validOffer, ...legacyLocationField }],
+        }),
+      ApiError
+    );
+  }
 
   const publicOffer = {
     ...validOffer,
@@ -536,17 +561,45 @@ test('requires backend-provided typed public slug IDs', () => {
     paymentPurpose: 'Order payment',
   };
 
-  assert.deepEqual(
-    parsePharmacyCheckoutDetailsResponse({
-      pharmacy: {
-        id: pharmacy.id,
-        name: pharmacy.name,
-        bankTransferAvailable: true,
-        bankDetails: checkoutBankDetails,
-      },
-    }).pharmacy.bankDetails,
-    checkoutBankDetails
-  );
+  const checkoutLocation = {
+    address: '108 Medical Lane',
+    settlement: 'Cherkasy',
+    region: 'Cherkasy region',
+    countryCode: 'UA',
+  };
+
+  const parsedCheckout = parsePharmacyCheckoutDetailsResponse({
+    pharmacy: {
+      id: pharmacy.id,
+      name: pharmacy.name,
+      location: checkoutLocation,
+      bankTransferAvailable: true,
+      bankDetails: checkoutBankDetails,
+    },
+  }).pharmacy;
+
+  assert.deepEqual(parsedCheckout.bankDetails, checkoutBankDetails);
+  assert.deepEqual(parsedCheckout.location, checkoutLocation);
+
+  for (const legacyLocationField of [
+    { address: '108 Medical Lane' },
+    { city: 'Cherkasy' },
+  ]) {
+    assert.throws(
+      () =>
+        parsePharmacyCheckoutDetailsResponse({
+          pharmacy: {
+            id: pharmacy.id,
+            name: pharmacy.name,
+            location: checkoutLocation,
+            bankTransferAvailable: true,
+            bankDetails: checkoutBankDetails,
+            ...legacyLocationField,
+          },
+        }),
+      ApiError
+    );
+  }
 
   assert.throws(
     () =>
@@ -556,6 +609,50 @@ test('requires backend-provided typed public slug IDs', () => {
           name: pharmacy.name,
           bankTransferAvailable: true,
         },
+      }),
+    ApiError
+  );
+});
+
+//===================================================================
+
+test('client order parser keeps canonical pharmacy location and rejects the retired flat address field', () => {
+  const pharmacyLocation = {
+    address: '10 Historic Street',
+    settlement: 'Lviv',
+    region: 'Lviv region',
+    countryCode: 'UA',
+  };
+
+  const order = {
+    id: '507f1f77bcf86cd799439021',
+    orderNumber: 'EP-2026-000001',
+    createdAt: '2026-10-06T12:00:00.000Z',
+    pharmacyId: '507f1f77bcf86cd799439014',
+    pharmacyName: 'Historical Pharmacy',
+    pharmacyLocation,
+    totalItems: 0,
+    totalPrice: 0,
+    currency: '₴',
+    status: 'new',
+    createdByType: 'client',
+    statusHistory: [],
+    activityHistory: [],
+    paymentMethod: 'cash',
+    delivery: { method: 'pickup' },
+    managerCommentsCount: 0,
+    items: [],
+  };
+
+  assert.deepEqual(
+    parseClientOrderDetailsResponse({ order }).order.pharmacyLocation,
+    pharmacyLocation
+  );
+
+  assert.throws(
+    () =>
+      parseClientOrderDetailsResponse({
+        order: { ...order, pharmacyAddress: '10 Historic Street' },
       }),
     ApiError
   );
@@ -577,11 +674,13 @@ function createValidCartResponse() {
           id: '507f1f77bcf86cd799439013',
           name: 'Aspirin',
           article: 'ASP-100',
+
           category: {
             id: '507f1f77bcf86cd799439099',
             name: 'Medicine',
             slug: 'medicine',
           },
+
           price: 100,
           pharmacyName: 'Health Pharmacy',
           inStock: true,

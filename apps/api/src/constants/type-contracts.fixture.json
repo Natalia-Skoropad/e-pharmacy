@@ -30,6 +30,7 @@
   },
 
   "cartPharmacyLimit": 15,
+
   "shapes": {
     "pagination": {
       "required": ["items", "page", "perPage", "total", "totalPages"],
@@ -150,7 +151,7 @@
         "pharmacyPhone",
         "pharmacyEmail",
         "pharmacyImageUrl",
-        "pharmacyAddress",
+        "pharmacyLocation",
         "pharmacyWorkingHours",
         "rejectionReason",
         "rejectedAt",

@@ -1,4 +1,8 @@
-import type { CompletePharmacyBankDetails } from '../pharmacies';
+import type {
+  CompletePharmacyBankDetails,
+  PharmacyLocationDraft,
+} from '../pharmacies';
+
 import type { EntityId, ISODateTimeString } from '../primitives';
 import type { ProductCategorySnapshot } from '../reference-data';
 import type { Delivery } from './delivery';
@@ -94,7 +98,7 @@ export type ClientOrder = Readonly<{
   pharmacyReviewsCount?: number;
   pharmacyPhone?: string;
   pharmacyEmail?: string;
-  pharmacyAddress?: string;
+  pharmacyLocation?: PharmacyLocationDraft;
   pharmacyWorkingHours?: string;
   totalItems: number;
   totalPrice: number;

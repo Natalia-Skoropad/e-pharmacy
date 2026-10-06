@@ -17,6 +17,8 @@ import type {
   AdminPharmacyOwnerPharmaciesQuery,
 } from '../schemas/admin-pharmacy-owner.schema';
 
+import type { PharmacyLocationDraft } from '../types/pharmacy';
+
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
@@ -105,8 +107,7 @@ type OwnerPharmacyAggregateRow = Readonly<{
   name: string;
   email: string | null;
   phone: string | null;
-  address: string | null;
-  city: string | null;
+  location: PharmacyLocationDraft | null;
   imageUrl: string | null;
   createdAt: Date;
   status: 'new' | 'on_verification' | 'on_moderation' | 'active' | 'blocked';
@@ -600,12 +601,15 @@ function buildPagedPharmacyItemsPipeline(
               successfulOrdersCount: {
                 $ifNull: [{ $arrayElemAt: ['$successful.count', 0] }, 0],
               },
+
               successfulRevenue: {
                 $ifNull: [{ $arrayElemAt: ['$successful.revenue', 0] }, 0],
               },
+
               activeOrderClientsCount: {
                 $ifNull: [{ $arrayElemAt: ['$clients.activeCount', 0] }, 0],
               },
+
               orderClientIds: {
                 $ifNull: [{ $arrayElemAt: ['$clients.ids', 0] }, []],
               },
@@ -681,18 +685,20 @@ function buildPagedPharmacyItemsPipeline(
         name: 1,
         email: { $ifNull: ['$email', null] },
         phone: { $ifNull: ['$phone', null] },
-        address: { $ifNull: ['$location.address', null] },
-        city: { $ifNull: ['$location.settlement', null] },
+        location: { $ifNull: ['$location', null] },
         imageUrl: { $ifNull: ['$imageUrl', null] },
         createdAt: 1,
         status: 1,
         activeClientsCount: 1,
+
         successfulOrdersCount: {
           $ifNull: ['$orderStatistics.successfulOrdersCount', 0],
         },
+
         successfulRevenue: {
           $ifNull: ['$orderStatistics.successfulRevenue', 0],
         },
+
         rating: { $ifNull: ['$rating', 0] },
         reviewsCount: { $ifNull: ['$reviewsCount', 0] },
       },
@@ -737,8 +743,7 @@ export async function listAdminPharmacyOwnerPharmaciesService(
       name: pharmacy.name,
       ...(pharmacy.email ? { email: pharmacy.email } : {}),
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
-      ...(pharmacy.address ? { address: pharmacy.address } : {}),
-      ...(pharmacy.city ? { city: pharmacy.city } : {}),
+      ...(pharmacy.location ? { location: pharmacy.location } : {}),
       ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
       createdAt: pharmacy.createdAt.toISOString(),
       status: pharmacy.status,

@@ -196,11 +196,23 @@ async function getOffersByProductIds(
       id: String(offer._id),
       pharmacyId: String(pharmacy._id),
       pharmacyName: pharmacy.name,
-      ...(pharmacy.location?.settlement
-        ? { pharmacyCity: pharmacy.location.settlement }
-        : {}),
-      ...(pharmacy.location?.address
-        ? { pharmacyAddress: pharmacy.location.address }
+      ...(pharmacy.location
+        ? {
+            pharmacyLocation: {
+              ...(pharmacy.location.address
+                ? { address: pharmacy.location.address }
+                : {}),
+              ...(pharmacy.location.settlement
+                ? { settlement: pharmacy.location.settlement }
+                : {}),
+              ...(pharmacy.location.region
+                ? { region: pharmacy.location.region }
+                : {}),
+              ...(pharmacy.location.countryCode
+                ? { countryCode: pharmacy.location.countryCode }
+                : {}),
+            },
+          }
         : {}),
       ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
       ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),

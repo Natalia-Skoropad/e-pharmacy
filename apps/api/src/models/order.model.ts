@@ -5,9 +5,34 @@ import type { OrderEntity } from '../types/order';
 
 //===============================================================
 
+const orderPharmacyLocationSnapshotSchema = new Schema(
+  {
+    address: { type: String, trim: true, default: undefined },
+    settlement: { type: String, trim: true, default: undefined },
+    region: { type: String, trim: true, default: undefined },
+
+    countryCode: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: undefined,
+    },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
 const orderPharmacySnapshotSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
+
+    location: {
+      type: orderPharmacyLocationSnapshotSchema,
+      default: undefined,
+    },
+
+    // Historical snapshots created before Stage 13.4.6 keep these fields.
     address: { type: String, trim: true, default: undefined },
     city: { type: String, trim: true, default: undefined },
     phone: { type: String, trim: true, default: undefined },
@@ -76,7 +101,9 @@ const orderProductSnapshotSchema = new Schema(
       ref: 'ProductCategory',
       default: undefined,
     },
+
     categoryNameSnapshot: { type: String, trim: true, default: undefined },
+
     categorySlugSnapshot: {
       type: String,
       trim: true,
@@ -107,6 +134,7 @@ const orderProductSnapshotSchema = new Schema(
 const orderItemSchema = new Schema(
   {
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+
     productOfferId: {
       type: Schema.Types.ObjectId,
       ref: 'ProductOffer',
@@ -262,6 +290,7 @@ const orderSchema = new Schema<OrderEntity>(
     },
 
     comment: { type: String, trim: true, maxlength: 500, default: undefined },
+
     managerComment: {
       type: String,
       trim: true,
@@ -281,6 +310,7 @@ const orderSchema = new Schema<OrderEntity>(
 
     statusHistory: { type: [statusHistorySchema], default: [] },
     activityHistory: { type: [activityHistorySchema], default: [] },
+
     rejectionReason: {
       type: String,
       trim: true,
@@ -290,6 +320,7 @@ const orderSchema = new Schema<OrderEntity>(
 
     successfulAt: { type: Date, default: undefined },
     rejectedAt: { type: Date, default: undefined },
+
     rejectedBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',

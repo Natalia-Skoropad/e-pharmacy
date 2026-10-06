@@ -184,3 +184,30 @@ test('owner detail and linked-pharmacy reads support one owner with many pharmac
     /listAdminPharmacyOwnerPharmaciesService[\s\S]*?Pharmacy\.findOne\(\{\s*ownerId/
   );
 });
+
+//===================================================================
+
+test('linked pharmacy admin read model exposes canonical location instead of address/city aliases', () => {
+  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const contracts = read(
+    '../../../../packages/types/src/admin/pharmacy-owner.ts'
+  );
+
+  assert.match(contracts, /location\?: PharmacyLocationDraft/);
+  assert.doesNotMatch(contracts, /\bcity\?: string/);
+
+  assert.match(
+    service,
+    /location: \{ \$ifNull: \[['"]\$location['"], null\] \}/
+  );
+
+  assert.match(
+    service,
+    /pharmacy\.location \? \{ location: pharmacy\.location \} : \{\}/
+  );
+
+  assert.doesNotMatch(
+    service,
+    /city: \{ \$ifNull: \[['"]\$location\.settlement/
+  );
+});

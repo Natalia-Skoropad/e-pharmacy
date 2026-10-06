@@ -25,8 +25,7 @@ export type PublicPharmacy = Readonly<{
 export type PharmacyCheckoutDetails = Readonly<{
   id: EntityId;
   name: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
   phone?: string;
   email?: string;
   workingHours?: string;

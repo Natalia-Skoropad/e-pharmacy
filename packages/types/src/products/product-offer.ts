@@ -1,4 +1,5 @@
 import type { EntityId, ISODateTimeString } from '../primitives';
+import type { PharmacyLocationDraft } from '../pharmacies/location';
 
 //===================================================================
 
@@ -6,8 +7,7 @@ export type ProductOffer = Readonly<{
   id: EntityId;
   pharmacyId: EntityId;
   pharmacyName: string;
-  pharmacyCity?: string;
-  pharmacyAddress?: string;
+  pharmacyLocation?: PharmacyLocationDraft;
   pharmacyPhone?: string;
   pharmacyImageUrl?: string;
   pharmacyRating: number;

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import type { ProductOffer } from '@e-pharmacy/types/products';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 
 import {
   normalizeCatalogSearchValue,
@@ -16,18 +17,67 @@ import {
 
 //===================================================================
 
-function getOfferAddress(offer: ProductOffer): string {
-  return [offer.pharmacyCity, offer.pharmacyAddress].filter(Boolean).join(', ');
+type ProductOfferLocationOption = Readonly<{
+  value: string;
+  label: string;
+}>;
+
+//===================================================================
+
+function getOfferLocationFilterValue(offer: ProductOffer): string {
+  const settlement = offer.pharmacyLocation?.settlement?.trim();
+  if (!settlement) return '';
+
+  const region = offer.pharmacyLocation?.region?.trim() ?? '';
+
+  return [settlement, region]
+    .map((part) => normalizeCatalogSearchValue(part))
+    .join('::');
 }
 
 //===================================================================
 
-function getUniqueOfferCities(offers: readonly ProductOffer[]): string[] {
-  const cities = offers
-    .map((offer) => offer.pharmacyCity?.trim())
-    .filter((city): city is string => Boolean(city));
+function getUniqueOfferLocations(
+  offers: readonly ProductOffer[]
+): ProductOfferLocationOption[] {
+  const locations = new Map<
+    string,
+    Readonly<{ settlement: string; region?: string }>
+  >();
 
-  return [...new Set(cities)].sort((a, b) => a.localeCompare(b, 'en'));
+  for (const offer of offers) {
+    const settlement = offer.pharmacyLocation?.settlement?.trim();
+    if (!settlement) continue;
+
+    const region = offer.pharmacyLocation?.region?.trim() || undefined;
+    const value = getOfferLocationFilterValue(offer);
+
+    if (!locations.has(value)) {
+      locations.set(value, { settlement, ...(region ? { region } : {}) });
+    }
+  }
+
+  const settlementVariants = new Map<string, number>();
+
+  for (const location of locations.values()) {
+    const key = normalizeCatalogSearchValue(location.settlement);
+    settlementVariants.set(key, (settlementVariants.get(key) ?? 0) + 1);
+  }
+
+  return [...locations.entries()]
+    .map(([value, location]) => {
+      const settlementKey = normalizeCatalogSearchValue(location.settlement);
+      const needsRegion = (settlementVariants.get(settlementKey) ?? 0) > 1;
+
+      return {
+        value,
+        label:
+          needsRegion && location.region
+            ? `${location.settlement} (${location.region})`
+            : location.settlement,
+      };
+    })
+    .sort((first, second) => first.label.localeCompare(second.label, 'en'));
 }
 
 //===================================================================
@@ -39,7 +89,7 @@ export function useProductOffersView(
 ) {
   const [pharmacyNameQuery, setPharmacyNameQuery] = useState('');
   const [pharmacyAddressQuery, setPharmacyAddressQuery] = useState('');
-  const [cityFilter, setCityFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
   const [offerSort, setOfferSort] = useState<ProductOfferSort>('newest');
 
   const [visibleOffersCount, setVisibleOffersCount] = useState(
@@ -53,13 +103,10 @@ export function useProductOffersView(
     [offers]
   );
 
-  const cityOptions = useMemo(
+  const locationOptions = useMemo(
     () => [
-      { value: 'all', label: 'All cities' },
-      ...getUniqueOfferCities(availableOffers).map((city) => ({
-        value: city,
-        label: city,
-      })),
+      { value: 'all', label: 'All locations' },
+      ...getUniqueOfferLocations(availableOffers),
     ],
     [availableOffers]
   );
@@ -77,13 +124,14 @@ export function useProductOffersView(
         ).includes(normalizedNameQuery);
 
         const addressMatches = normalizeCatalogSearchValue(
-          getOfferAddress(offer)
+          formatPharmacyLocation(offer.pharmacyLocation)
         ).includes(normalizedAddressQuery);
 
-        const cityMatches =
-          cityFilter === 'all' || offer.pharmacyCity?.trim() === cityFilter;
+        const locationMatches =
+          locationFilter === 'all' ||
+          getOfferLocationFilterValue(offer) === locationFilter;
 
-        return nameMatches && addressMatches && cityMatches;
+        return nameMatches && addressMatches && locationMatches;
       })
       .sort((a, b) => {
         const isAFavorite = favoritePharmacyIds
@@ -125,9 +173,9 @@ export function useProductOffersView(
       .map(({ offer }) => offer);
   }, [
     availableOffers,
-    cityFilter,
     contextPharmacyId,
     favoritePharmacyIds,
+    locationFilter,
     offerSort,
     pharmacyAddressQuery,
     pharmacyNameQuery,
@@ -138,7 +186,7 @@ export function useProductOffersView(
   const hasActiveFilters =
     Boolean(pharmacyNameQuery.trim()) ||
     Boolean(pharmacyAddressQuery.trim()) ||
-    cityFilter !== 'all';
+    locationFilter !== 'all';
 
   const resetVisibleCount = () =>
     setVisibleOffersCount(PRODUCT_OFFERS_PER_PAGE);
@@ -147,10 +195,10 @@ export function useProductOffersView(
     availableOffers,
     filteredOffers,
     visibleOffers,
-    cityOptions,
+    locationOptions,
     pharmacyNameQuery,
     pharmacyAddressQuery,
-    cityFilter,
+    locationFilter,
     offerSort,
     areFiltersOpen,
     hasActiveFilters,
@@ -165,8 +213,8 @@ export function useProductOffersView(
       resetVisibleCount();
     },
 
-    setCityFilter: (value: string) => {
-      setCityFilter(value);
+    setLocationFilter: (value: string) => {
+      setLocationFilter(value);
       resetVisibleCount();
     },
 

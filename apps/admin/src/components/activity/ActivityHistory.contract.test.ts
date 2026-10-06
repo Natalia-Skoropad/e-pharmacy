@@ -146,9 +146,10 @@ test('activity table keeps reasons out of rows while details modal preserves the
 //===================================================================
 
 test('audit details reuse actor identity with photo and profile link', async () => {
-  const [modalSource, identitySource] = await Promise.all([
+  const [modalSource, identitySource, styles] = await Promise.all([
     read('./AuditDetailsModal.tsx'),
     read('./ActivityActorIdentity.tsx'),
+    read('./ActivityHistory.module.css'),
   ]);
 
   assert.match(
@@ -165,6 +166,12 @@ test('audit details reuse actor identity with photo and profile link', async () 
   );
 
   assert.match(modalSource, /statusPlacement="inline"/);
+  assert.match(identitySource, /css\.actorIdentityNameRowInline/);
+
+  assert.match(
+    styles,
+    /\.actorIdentityNameRowInline \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;/
+  );
 });
 
 //===================================================================

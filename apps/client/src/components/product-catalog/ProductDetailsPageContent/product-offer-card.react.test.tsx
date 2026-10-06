@@ -14,8 +14,14 @@ const offer = {
   id: '507f1f77bcf86cd799439010',
   pharmacyId: '507f1f77bcf86cd799439011',
   pharmacyName: 'Care Pharmacy',
-  pharmacyCity: 'Lviv',
-  pharmacyAddress: '1 Test Street',
+
+  pharmacyLocation: {
+    address: '1 Test Street',
+    settlement: 'Lviv',
+    region: 'Lviv region',
+    countryCode: 'UA',
+  },
+
   pharmacyPhone: '+380 44 123 45 67',
   pharmacyRating: 4.8,
   pharmacyReviewsCount: 12,

@@ -77,7 +77,7 @@ export function ProductOffersPanel({
 
   const emptyText = isProductAvailable
     ? view.hasActiveFilters
-      ? 'Try changing the pharmacy name, city, or address search.'
+      ? 'Try changing the pharmacy name, location, or address search.'
       : 'No pharmacies match the current offers list.'
     : 'There are no pharmacies where this product is currently available.';
 
@@ -124,14 +124,14 @@ export function ProductOffersPanel({
         isOpen={view.areFiltersOpen}
         pharmacyNameQuery={view.pharmacyNameQuery}
         pharmacyAddressQuery={view.pharmacyAddressQuery}
-        cityFilter={view.cityFilter}
-        cityOptions={view.cityOptions}
+        locationFilter={view.locationFilter}
+        locationOptions={view.locationOptions}
         offerSort={view.offerSort}
         sanitizeSearchValue={view.sanitizeSearchValue}
         onToggle={view.toggleFilters}
         onPharmacyNameChange={view.setPharmacyNameQuery}
         onPharmacyAddressChange={view.setPharmacyAddressQuery}
-        onCityChange={view.setCityFilter}
+        onLocationChange={view.setLocationFilter}
         onSortChange={view.setOfferSort}
       />
 

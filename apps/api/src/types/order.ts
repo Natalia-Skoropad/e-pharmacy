@@ -1,5 +1,9 @@
 import type { Types } from 'mongoose';
-import type { CompletePharmacyBankDetails } from './pharmacy';
+
+import type {
+  CompletePharmacyBankDetails,
+  PharmacyLocationDraft,
+} from './pharmacy';
 
 import type {
   ProductCategoryReferenceDto,
@@ -38,7 +42,10 @@ export type OrderClientSnapshot = {
 
 export type OrderPharmacySnapshot = {
   name: string;
+  location?: PharmacyLocationDraft;
+  /** @deprecated Historical snapshot compatibility only. */
   address?: string;
+  /** @deprecated Historical snapshot compatibility only. */
   city?: string;
   phone?: string;
   email?: string;
@@ -193,7 +200,7 @@ export type OrderResponseDto = {
   pharmacyReviewsCount?: number;
   pharmacyPhone?: string;
   pharmacyEmail?: string;
-  pharmacyAddress?: string;
+  pharmacyLocation?: PharmacyLocationDraft;
   pharmacyWorkingHours?: string;
   totalItems: number;
   totalPrice: number;

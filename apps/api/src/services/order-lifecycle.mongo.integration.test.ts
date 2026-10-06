@@ -118,8 +118,14 @@ async function createCheckoutFixture(options?: {
       managerUserIds: [],
       documents: [],
       name: `Checkout Test Pharmacy ${suffix}`,
-      address: 'Kyiv, Main Street 10',
-      city: 'Kyiv',
+
+      location: {
+        address: 'Main Street 10',
+        settlement: 'Kyiv',
+        region: 'Kyiv region',
+        countryCode: 'UA',
+      },
+
       phone: '+380501234567',
       email: `checkout-${suffix.toLowerCase()}@example.com`,
       status: 'active',
@@ -148,6 +154,7 @@ async function createCheckoutFixture(options?: {
   ]);
 
   const stock = options?.stock ?? 5;
+
   await ProductOffer.create({
     _id: offerId,
     productId,
@@ -184,6 +191,7 @@ async function createCheckoutFixture(options?: {
   assert.equal(cart.items.length, 1);
 
   const cartItem = cart.items[0];
+
   const groupFingerprint = createCheckoutGroupFingerprint({
     pharmacyId: pharmacyId.toString(),
     items: [
@@ -271,7 +279,12 @@ test(
         { _id: fixture.pharmacyId },
         {
           $set: {
-            address: 'Kyiv, Changed Street 99',
+            location: {
+              address: 'Changed Street 99',
+              settlement: 'Lviv',
+              region: 'Lviv region',
+              countryCode: 'UA',
+            },
             bankDetails: BANK_DETAILS_B,
           },
         }
@@ -282,11 +295,15 @@ test(
         response.order.id
       );
 
-      assert.equal(
-        historical.order.pharmacyAddress,
-        'Kyiv, Main Street 10, Kyiv'
-      );
+      assert.deepEqual(historical.order.pharmacyLocation, {
+        address: 'Main Street 10',
+        settlement: 'Kyiv',
+        region: 'Kyiv region',
+        countryCode: 'UA',
+      });
+
       assert.equal(historical.order.bankDetails?.iban, BANK_DETAILS_A.iban);
+
       assert.equal(
         historical.order.bankDetails?.receiptEmail,
         BANK_DETAILS_A.receiptEmail
@@ -458,6 +475,7 @@ test(
 
     const first = await createCheckoutFixture({ stock: 1 });
     const secondClientUserId = new Types.ObjectId();
+
     const secondCart = await Cart.create({
       clientUserId: secondClientUserId,
       revision: 0,
@@ -472,6 +490,7 @@ test(
 
     const secondCartSnapshot = await Cart.findById(secondCart._id).lean<{
       revision: number;
+
       items: Array<{
         _id: Types.ObjectId;
         productOfferId: Types.ObjectId;
@@ -480,6 +499,7 @@ test(
     } | null>();
 
     assert.ok(secondCartSnapshot);
+
     const secondFingerprint = createCheckoutGroupFingerprint({
       pharmacyId: first.pharmacyId.toString(),
       items: secondCartSnapshot.items.map((item) => ({
@@ -704,6 +724,7 @@ test(
       );
 
       assert.equal(statistics.points.length, 1);
+
       assert.deepEqual(statistics.categories, [
         {
           id: fixture.categoryId.toString(),
@@ -711,6 +732,7 @@ test(
           slug: 'medicine',
         },
       ]);
+
       assert.equal(statistics.points[0]?.values.medicine?.quantity, 1);
 
       assert.equal(
@@ -719,6 +741,7 @@ test(
       );
 
       const successfulDay = successfulAt.toISOString().slice(0, 10);
+
       const dailyStatistics = await getOrderSalesStatisticsService(
         fixture.pharmacyOwnerId.toString(),
         {
@@ -730,6 +753,7 @@ test(
       );
 
       assert.equal(dailyStatistics.points.length, 1);
+
       assert.deepEqual(dailyStatistics.categories, [
         {
           id: fixture.categoryId.toString(),
@@ -737,6 +761,7 @@ test(
           slug: 'medicine',
         },
       ]);
+
       assert.equal(
         dailyStatistics.points[0]?.values.medicine?.amount,
         CHECKOUT_OFFER_PRICE
@@ -757,6 +782,7 @@ test(
     await mongoose.connect(getTestMongoUri());
 
     const fixture = await createCheckoutFixture();
+
     const actor = {
       id: fixture.pharmacyOwnerId.toString(),
       role: 'pharmacy' as const,
@@ -783,6 +809,7 @@ test(
       assert.equal(rejectedOrder.successfulAt, undefined);
 
       const year = new Date().getUTCFullYear();
+
       const statistics = await getOrderSalesStatisticsService(
         fixture.pharmacyOwnerId.toString(),
         {
@@ -893,6 +920,7 @@ test(
     await mongoose.connect(getTestMongoUri());
 
     const fixture = await createCheckoutFixture({ stock: 5 });
+
     const actor = {
       id: fixture.pharmacyOwnerId.toString(),
       role: 'pharmacy' as const,
@@ -909,6 +937,7 @@ test(
         updateOrderStatusService(actor, checkout.order.id, {
           status: 'successful',
         }),
+
         updateOrderStatusService(actor, checkout.order.id, {
           status: 'rejected',
           rejectionReason: 'Concurrent rejection test',
@@ -918,6 +947,7 @@ test(
       const fulfilled = results.filter(
         (result) => result.status === 'fulfilled'
       );
+
       const rejected = results.filter((result) => result.status === 'rejected');
 
       assert.equal(fulfilled.length, 1);
@@ -931,6 +961,7 @@ test(
           status: 'successful' | 'rejected';
           statusHistory: Array<{ status: string }>;
         } | null>(),
+
         ProductOffer.findById(fixture.offerId).lean<{
           totalQuantity: number;
           availableQuantity: number;
@@ -941,6 +972,7 @@ test(
       assert.ok(order);
       assert.ok(offer);
       assert.ok(order.status === 'successful' || order.status === 'rejected');
+
       assert.equal(
         order.statusHistory.filter(
           (entry) =>
@@ -948,6 +980,7 @@ test(
         ).length,
         1
       );
+
       assert.equal(offer.reservedQuantity, 0);
 
       if (order.status === 'successful') {

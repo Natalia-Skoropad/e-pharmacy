@@ -1,5 +1,6 @@
 import type { Types } from 'mongoose';
 
+import type { PharmacyLocationDraft } from './pharmacy';
 import type { ProductCategoryReferenceDto } from './product-category';
 import type { ISODateTimeString } from './date';
 
@@ -49,8 +50,7 @@ export type ProductOfferResponseDto = {
   id: string;
   pharmacyId: string;
   pharmacyName: string;
-  pharmacyCity?: string;
-  pharmacyAddress?: string;
+  pharmacyLocation?: PharmacyLocationDraft;
   pharmacyPhone?: string;
   pharmacyImageUrl?: string;
   pharmacyRating?: number;
