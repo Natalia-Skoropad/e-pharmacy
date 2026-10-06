@@ -81,6 +81,7 @@ const SECTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['section']>> =
 const ACTOR_TYPE_LABELS: Readonly<Record<AdminAuditActorType, string>> = {
   employee: 'Employee',
   pharmacyOwner: 'Pharmacy owner',
+  pharmacyEmployee: 'Pharmacy employee',
 };
 
 const ACTOR_TYPE_OPTIONS: Array<
@@ -171,8 +172,8 @@ export function ActivityFiltersDrawer({
           onChange({
             ...filters,
             actorType,
-            ...(actorType === 'employee' ? { ownerUserId: '' } : {}),
-            ...(actorType === 'pharmacyOwner' ? { employeeUserId: '' } : {}),
+            ...(actorType !== 'pharmacyOwner' ? { ownerUserId: '' } : {}),
+            ...(actorType !== 'employee' ? { employeeUserId: '' } : {}),
           })
         }
       />

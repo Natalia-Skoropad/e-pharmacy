@@ -466,8 +466,7 @@ const PRODUCT_BLUEPRINTS = [
 type SeedPharmacyDocument = {
   _id: Types.ObjectId;
   name: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyEntity['location'];
   phone?: string;
   rating?: number;
   imageUrl?: string;
@@ -592,8 +591,8 @@ function createOffer(
   return {
     pharmacyId: pharmacy._id,
     pharmacyName: pharmacy.name,
-    pharmacyCity: pharmacy.city,
-    pharmacyAddress: pharmacy.address,
+    pharmacyCity: pharmacy.location?.settlement,
+    pharmacyAddress: pharmacy.location?.address,
     pharmacyPhone: pharmacy.phone,
     pharmacyImageUrl: pharmacy.imageUrl,
     pharmacyRating: pharmacy.rating,
@@ -636,6 +635,7 @@ type PharmacyAccountSeed = {
   phone: string;
   ownerName: string;
   address: string;
+  settlement: string;
   pharmacyName: string;
 
   status:
@@ -658,6 +658,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     phone: '+380661234005',
     ownerName: 'Nata Five',
     address: '25 Health Avenue, Kyiv',
+    settlement: 'Kyiv',
     pharmacyName: 'Nata Care Pharmacy New',
     status: PHARMACY_STATUSES.NEW,
     statusReason:
@@ -669,6 +670,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     phone: '+380661234777',
     ownerName: 'Nata Six',
     address: '777 Wellness Street, Lviv',
+    settlement: 'Lviv',
     pharmacyName: 'Care Pharmacy Lviv',
     status: PHARMACY_STATUSES.ACTIVE,
     imageUrl: '/images/seed/pharmacies/pharmacy-021.png',
@@ -681,6 +683,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     phone: '+380661234007',
     ownerName: 'Nata Seven',
     address: '27 Health Avenue, Kyiv',
+    settlement: 'Kyiv',
     pharmacyName: 'Nata Care Pharmacy Verification',
     status: PHARMACY_STATUSES.ON_VERIFICATION,
     imageUrl: '/images/seed/pharmacies/pharmacy-005.png',
@@ -910,9 +913,11 @@ async function seedOwnProductRestocks(): Promise<number> {
     .limit(4)
     .select('_id')
     .lean<Array<{ _id: Types.ObjectId }>>();
+
   const selloutProductIds = new Set(
     selloutProducts.map((product) => String(product._id))
   );
+
   const offers = await ProductOffer.find({ pharmacyId: pharmacy._id }).sort({
     productId: 1,
   });
@@ -983,21 +988,31 @@ async function seedPharmacyAccounts(): Promise<number> {
       {
         $set: {
           name: seed.pharmacyName,
-          address: seed.address,
-          city: seed.address.endsWith('Kyiv') ? 'Kyiv' : 'Lviv',
+
+          location: {
+            address: seed.address,
+            settlement: seed.settlement,
+            countryCode: 'UA',
+          },
+
           phone: seed.phone,
           email: seed.publicEmail ?? seed.email,
+
           workingHours:
             seed.workingHours ??
             'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+
           bankDetails: createPharmacyAccountBankDetails(seed),
           rating: 0,
+
           imageUrl: createSeedAssetUrl(
             seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL
           ),
+
           description:
             seed.description ??
             createPharmacyAccountDescription(seed.pharmacyName),
+
           reviewsCount: 0,
           managerUserIds: [],
           documents: createVerificationDocuments(seed.email),
@@ -1012,6 +1027,7 @@ async function seedPharmacyAccounts(): Promise<number> {
             : {}),
           updatedBy: user._id,
         },
+
         $unset: {
           pendingModeration: '',
           ...(seed.statusReason ? {} : { statusReason: '' }),
@@ -1019,6 +1035,7 @@ async function seedPharmacyAccounts(): Promise<number> {
             ? {}
             : { approvedBy: '', approvedAt: '', activatedAt: '' }),
         },
+
         $setOnInsert: {
           ownerId: user._id,
           createdBy: user._id,
@@ -1084,7 +1101,7 @@ async function seedDemoPharmacyOwners(
           role: USER_ROLES.PHARMACY,
           status: USER_STATUSES.ACTIVE,
           phone: seed.phone,
-          address: seed.address,
+          address: seed.location?.address,
         },
         $unset: { statusReason: '' },
         $setOnInsert: { _id: seed.ownerId },
@@ -1126,12 +1143,17 @@ function createSeedPharmacies() {
 
     return {
       name: pharmacyName,
-      address: `${12 + index} ${street}`,
-      city,
+      location: {
+        address: `${12 + index} ${street}`,
+        settlement: city,
+        countryCode: 'UA',
+      },
       phone: `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`,
       email: `pharmacy.${pharmacyNumber}@e-pharmacy.example.com`,
+
       workingHours:
         'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+
       bankDetails: createBankDetails(pharmacyName, pharmacyNumber),
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createPharmacyImageUrl(index),
@@ -1162,6 +1184,7 @@ function createSeedProducts(
       packageQuantity,
       imageUrl,
     ] = PRODUCT_BLUEPRINTS[index % PRODUCT_BLUEPRINTS.length];
+
     const category = getSeedCategoryOrThrow(categoryBySlug, categorySlug);
 
     const status = index >= 122 ? ('blocked' as const) : ('active' as const);
@@ -1327,8 +1350,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
   type SeedPharmacyLean = {
     _id: Types.ObjectId;
     name: string;
-    address: string;
-    city: string;
+    location: NonNullable<PharmacyEntity['location']>;
     phone: string;
     email: string;
     workingHours?: string;
@@ -1363,7 +1385,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
     .select(
-      '_id name address city phone email workingHours imageUrl rating reviewsCount bankDetails'
+      '_id name location phone email workingHours imageUrl rating reviewsCount bankDetails'
     )
     .lean<SeedPharmacyLean | null>();
 
@@ -1538,8 +1560,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
   const pharmacySnapshot = {
     name: pharmacy.name,
-    address: pharmacy.address,
-    city: pharmacy.city,
+    address: pharmacy.location.address ?? '',
+    city: pharmacy.location.settlement,
     phone: pharmacy.phone,
     email: pharmacy.email,
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -1561,6 +1583,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
       quantity: config.quantity,
       createdAt: config.createdAt,
       statusChangedAt: config.statusChangedAt,
+
       document: {
         _id: orderId,
         userId: clientUser._id,
@@ -1576,13 +1599,16 @@ async function seedActivePharmacyOrder(): Promise<number> {
             totalPrice,
           },
         ],
+
         totalItems: config.quantity,
         totalPrice,
         currency: '₴',
+
         paymentMethod:
           config.status === 'new' || config.status === 'rejected'
             ? 'cash'
             : 'bank_transfer',
+
         delivery:
           config.status === 'new' || config.status === 'successful'
             ? { method: 'pickup' }
@@ -1597,6 +1623,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
         comment: `Demo order for ${product.name}.`,
         status: config.status,
         statusHistory: createStatusHistory(config),
+
         activityHistory: [
           {
             type: 'product_added',
@@ -1873,13 +1900,12 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
     .select(
-      '_id name address city phone email workingHours imageUrl rating reviewsCount bankDetails'
+      '_id name location phone email workingHours imageUrl rating reviewsCount bankDetails'
     )
     .lean<{
       _id: Types.ObjectId;
       name: string;
-      address: string;
-      city: string;
+      location: NonNullable<PharmacyEntity['location']>;
       phone: string;
       email: string;
       workingHours?: string;
@@ -2336,8 +2362,8 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   const pharmacySnapshot = {
     name: pharmacy.name,
-    address: pharmacy.address,
-    city: pharmacy.city,
+    address: pharmacy.location.address ?? '',
+    city: pharmacy.location.settlement,
     phone: pharmacy.phone,
     email: pharmacy.email,
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -2362,11 +2388,13 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         first.clientIndex - second.clientIndex
     );
   const portfolioOrderCount = portfolioOrderSlots.length;
+
   const portfolioStatusTargets = {
     new: 10,
     inProgress: 8,
     rejected: 6,
   } as const;
+
   const portfolioStatusBySlot = new Map<string, DemoClientStatus>();
 
   portfolioOrderSlots.forEach((slot, index) => {
@@ -2432,6 +2460,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       );
       const orderNumber = createSeedOrderNumber(orderId, createdAt);
       const itemCount = 5 + ((clientIndex + orderIndex) % 2);
+
       const selectedItems = Array.from(
         { length: itemCount },
         (_, itemIndex) => {
@@ -2537,9 +2566,11 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
                 },
               }
             : { method: 'pickup' },
+
         comment: `Demo portfolio order for ${client.name}.`,
         status,
         statusHistory,
+
         activityHistory: selectedItems.map((item) => ({
           type: 'product_added',
           occurredAt: createdAt,
@@ -2711,14 +2742,13 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 async function seedDefaultClientSuccessfulOrders(): Promise<number> {
   const pharmacy = await Pharmacy.findOne({ email: 'care_pharmacy@ukr.net' })
     .select(
-      '_id name address city phone email workingHours imageUrl rating reviewsCount bankDetails ownerId activatedAt approvedAt createdAt'
+      '_id name location phone email workingHours imageUrl rating reviewsCount bankDetails ownerId activatedAt approvedAt createdAt'
     )
     .lean<
       | (Pick<
           PharmacyEntity,
           | 'name'
-          | 'address'
-          | 'city'
+          | 'location'
           | 'phone'
           | 'email'
           | 'workingHours'
@@ -2805,6 +2835,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
   const productMap = new Map(
     products.map((product) => [String(product._id), product])
   );
+
   const usableOffers = offers.filter((offer) =>
     productMap.has(String(offer.productId))
   );
@@ -2938,8 +2969,8 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
 
   const pharmacySnapshot = {
     name: pharmacy.name,
-    address: pharmacy.address,
-    city: pharmacy.city,
+    address: pharmacy.location?.address ?? '',
+    city: pharmacy.location?.settlement,
     phone: pharmacy.phone,
     email: pharmacy.email,
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -3007,6 +3038,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     const orderId = new Types.ObjectId();
     const orderNumber = createSeedOrderNumber(orderId, createdAt);
     const totalPrice = quantity * unitPrice;
+
     const productSnapshot = {
       name: product.name,
       ...(product.slug ? { slug: product.slug } : {}),
@@ -3027,6 +3059,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       userId: defaultClient._id,
       pharmacyId: pharmacy._id,
       pharmacySnapshot,
+
       items: [
         {
           productId: product._id,
@@ -3037,6 +3070,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           totalPrice,
         },
       ],
+
       totalItems: quantity,
       totalPrice,
       currency: '₴',
@@ -3046,6 +3080,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       status: 'successful',
       successfulAt: completedAt,
       createdByType: 'manager',
+
       statusHistory: [
         {
           status: 'in_progress',
@@ -3224,6 +3259,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
   const productsById = new Map<string, SelloutProduct>(
     soldOutProducts.map((product) => [String(product._id), product])
   );
+
   const selloutPriceTimelineByOfferId = await getOfferPriceTimeline(
     soldOutOffers.map((offer) => offer._id)
   );
@@ -3239,6 +3275,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
       productIndex * 10,
       productIndex * 10 + 10
     );
+
     const baseQuantity = Math.floor(offer.totalQuantity / 10);
     const remainder = offer.totalQuantity % 10;
     let total = offer.totalQuantity;
@@ -3252,7 +3289,9 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
         offer._id,
         order.createdAt
       );
+
       const totalPrice = quantity * unitPrice;
+
       const productSnapshot = {
         name: product.name,
         ...(product.slug ? { slug: product.slug } : {}),
@@ -3267,6 +3306,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
         rating: product.rating ?? 0,
         reviewsCount: product.reviewsCount ?? 0,
       };
+
       const completedAt =
         [...order.statusHistory]
           .reverse()
@@ -3388,12 +3428,14 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
     { _id: { $in: soldOutProducts.slice(0, 2).map((product) => product._id) } },
     { $set: { status: 'blocked', inStock: false } }
   );
+
   await Product.updateMany(
     { _id: { $in: soldOutProducts.slice(2).map((product) => product._id) } },
     { $set: { status: 'active', inStock: false } }
   );
 
   const soldOutProductIds = soldOutProducts.map((product) => product._id);
+
   const lowStockProducts = await Product.find({
     _id: {
       $nin: [STOCK_MOVEMENT_DEMO_PRODUCT_ID, ...soldOutProductIds],
@@ -3436,8 +3478,10 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
       reservedAfter: offer.reservedQuantity,
       availableAfter: targetAvailable,
       unitPrice: offer.price,
+
       comment:
         'Inventory reconciliation left fewer than ten units after recent sales.',
+
       occurredAt: new Date(
         new Date('2026-07-16T16:00:00.000Z').getTime() +
           lowStockCount * 15 * 60 * 1000
@@ -3672,10 +3716,12 @@ async function seedOwnProductManagerNotes(): Promise<number> {
     const addedAt = new Date(offer.createdAt);
     const firstNoteAt = new Date(addedAt.getTime() + 6 * 60 * 60 * 1000);
     const rangeEnd = Math.max(firstNoteAt.getTime(), latestNoteAt.getTime());
+
     const step =
       notesCount > 1
         ? Math.floor((rangeEnd - firstNoteAt.getTime()) / (notesCount - 1))
         : 0;
+
     const productName =
       productNames.get(String(offer.productId)) ?? 'This product';
 
@@ -3744,6 +3790,7 @@ async function seedClientManagerNotes(): Promise<number> {
     .lean<Array<{ userId: Types.ObjectId; createdAt: Date }>>();
 
   const firstOrderByClientId = new Map<string, Date>();
+
   for (const order of orders) {
     const clientId = String(order.userId);
     if (!firstOrderByClientId.has(clientId)) {
@@ -3774,14 +3821,18 @@ async function seedClientManagerNotes(): Promise<number> {
     >();
 
   const latestNoteAt = new Date('2026-07-16T19:00:00.000Z');
+
   const notes = clients.flatMap((client, clientIndex) => {
     const notesCount = 10 + (clientIndex % 3);
+
     const addedAt =
       firstOrderByClientId.get(String(client._id)) ??
       pharmacy.approvedAt ??
       pharmacy.createdAt;
+
     const firstNoteAt = new Date(addedAt.getTime() + 3 * 60 * 60 * 1000);
     const rangeEnd = Math.max(firstNoteAt.getTime(), latestNoteAt.getTime());
+
     const step =
       notesCount > 1
         ? Math.floor((rangeEnd - firstNoteAt.getTime()) / (notesCount - 1))
@@ -3857,10 +3908,12 @@ const PRODUCT_REQUEST_SEED_CATEGORY_SLUGS = [
 ] as const;
 
 const PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT = '%PDF-1.4\n%%EOF\n';
+
 const PRODUCT_REQUEST_SEED_ATTACHMENT_SIZE = Buffer.byteLength(
   PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
   'utf8'
 );
+
 const PRODUCT_REQUEST_SEED_ATTACHMENT_DATA_URL = `data:application/pdf;base64,${Buffer.from(
   PRODUCT_REQUEST_SEED_ATTACHMENT_CONTENT,
   'utf8'
@@ -3961,30 +4014,39 @@ function createProductRequestSeeds(
 
   return PRODUCT_REQUEST_SEED_NAMES.map((seedName, index) => {
     const status = PRODUCT_REQUEST_SEED_STATUSES[index];
+
     const approvedProduct =
       status === 'approved' && approvedProducts.length > 0
         ? approvedProducts[index % approvedProducts.length]
         : undefined;
+
     const createdAt = new Date(
       baseDate.getTime() + index * 24 * 60 * 60 * 1000
     );
+
     const categorySlug =
       PRODUCT_REQUEST_SEED_CATEGORY_SLUGS[
         index % PRODUCT_REQUEST_SEED_CATEGORY_SLUGS.length
       ];
+
     const useCustomCategory = !approvedProduct && index % 3 === 2;
+
     const category = approvedProduct
       ? getSeedCategoryOrThrow(categoryById, approvedProduct.categoryId)
       : getSeedCategoryOrThrow(categoryBySlug, categorySlug);
+
     const name = normalizeProductRequestSeedShortText(
       approvedProduct?.name ?? seedName
     );
+
     const article =
       approvedProduct?.article ?? `REQ-${String(index + 1).padStart(4, '0')}`;
+
     const rejectionReason =
       status === 'rejected'
         ? 'The manufacturer document does not match the package data. Correct the document and create a new request.'
         : undefined;
+
     const history = createProductRequestSeedHistory(
       status,
       createdAt,
@@ -3995,36 +4057,46 @@ function createProductRequestSeeds(
       pharmacyId,
       name,
       article,
+
       categoryMode: useCustomCategory
         ? ('custom' as const)
         : ('catalog' as const),
+
       categoryId: useCustomCategory ? undefined : category._id,
       customCategory: useCustomCategory ? 'Wellness accessories' : undefined,
       status,
       productId: approvedProduct?._id,
+
       productImage: {
         name: `product-image-${index + 1}.jpg`,
         type: 'image/jpeg',
         size: 320000 + index * 1500,
       },
+
       manufacturer: normalizeProductRequestSeedShortText(
         approvedProduct?.manufacturer ??
           ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4]
       ),
+
       countryOfOrigin: ['Ukraine', 'Poland', 'Germany', 'Italy'][index % 4],
       dosage: index % 3 === 0 ? '500 mg' : index % 3 === 1 ? '10 ml' : '1 unit',
       packageSize: index % 2 === 0 ? '30 tablets' : '100 ml',
       form: ['tablets', 'spray', 'capsules', 'medical device'][index % 4],
+
       activeSubstance:
         category.slug === 'medical_devices'
           ? 'Not applicable / device material'
           : `Active component ${index + 1}`,
+
       prescriptionType:
         category.slug === 'medicine' ? 'non_prescription' : 'not_applicable',
+
       fullDescription:
         'The request contains complete sample product information for checking draft editing, moderation states, internal comments, and the change history.',
+
       pharmacyComment:
         'Optional note for Admin: the product is planned for the pharmacy assortment and is not currently available in the global catalog.',
+
       additionalFiles:
         index % 4 === 0
           ? [
@@ -4036,6 +4108,7 @@ function createProductRequestSeeds(
               },
             ]
           : undefined,
+
       rejectionReason,
       history,
       createdAt,
@@ -4062,6 +4135,7 @@ async function seedProductRequests(): Promise<number> {
   const categoryBySlug = createSeedCategoryBySlugMap(
     await getSeedProductCategories()
   );
+
   const requests = createProductRequestSeeds(
     pharmacy._id,
     approvedProducts,
@@ -4185,7 +4259,7 @@ function assertDemoPharmacyOwnerSeedsAreValid(
       role: USER_ROLES.PHARMACY,
       status: USER_STATUSES.ACTIVE,
       phone: seed.phone,
-      address: seed.address,
+      address: seed.location?.address,
     }).validateSync();
 
     if (validationError) {
@@ -4203,20 +4277,29 @@ function assertPharmacyAccountSeedsAreValid(): void {
     const ownerId = new Types.ObjectId();
     const validationError = new Pharmacy({
       name: seed.pharmacyName,
-      address: seed.address,
-      city: seed.address.endsWith('Kyiv') ? 'Kyiv' : 'Lviv',
+
+      location: {
+        address: seed.address,
+        settlement: seed.settlement,
+        countryCode: 'UA',
+      },
+
       phone: seed.phone,
       email: seed.publicEmail ?? seed.email,
       workingHours:
         seed.workingHours ??
         'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+
       bankDetails: createPharmacyAccountBankDetails(seed),
       rating: 0,
+
       imageUrl: createSeedAssetUrl(
         seed.imageUrl ?? PHARMACY_ACCOUNT_FALLBACK_IMAGE_URL
       ),
+
       description:
         seed.description ?? createPharmacyAccountDescription(seed.pharmacyName),
+
       reviewsCount: 0,
       ownerId,
       managerUserIds: [],
@@ -4252,6 +4335,7 @@ function assertProductRequestSeedsAreValid(): void {
       slug,
     }))
   );
+
   const requests = createProductRequestSeeds(
     new Types.ObjectId(),
     [],
@@ -4327,6 +4411,7 @@ async function seedDatabase(): Promise<void> {
   );
 
   const seedProducts = createSeedProducts(createdPharmacies, categoryBySlug);
+
   const createdProducts = await Product.insertMany(
     seedProducts.map(({ offers, reviews, ...product }) => {
       void offers;
@@ -4377,6 +4462,7 @@ async function seedDatabase(): Promise<void> {
   );
 
   const pharmacyAccountsCount = await seedPharmacyAccounts();
+
   const activePharmacyOffersCount = await seedActivePharmacyProductOffers(
     createdProducts as Array<{
       _id: Types.ObjectId;
@@ -4477,6 +4563,7 @@ seedDatabase()
 
     process.exitCode = 1;
   })
+
   .finally(async () => {
     await mongoose.disconnect();
   });

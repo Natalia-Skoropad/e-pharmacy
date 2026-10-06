@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Types } from 'mongoose';
 
+import { AdminAuditLog } from './adminAuditLog.model';
 import { Pharmacy } from './pharmacy.model';
 import { PharmacyReview } from './pharmacyReview.model';
 import { ProductReview } from './productReview.model';
@@ -10,6 +11,11 @@ import { User } from './user.model';
 //===============================================================
 
 type PharmacySchemaIndex = ReturnType<typeof Pharmacy.schema.indexes>[number];
+
+type AdminAuditSchemaIndex = ReturnType<
+  typeof AdminAuditLog.schema.indexes
+>[number];
+
 type ReviewSchemaIndex = ReturnType<
   typeof ProductReview.schema.indexes
 >[number];
@@ -119,11 +125,60 @@ test('Pharmacy owner indexes are non-unique and support one owner with many phar
 
 //===============================================================
 
+test('Pharmacy model stores location canonically and indexes settlement/address instead of legacy city/address fields', () => {
+  assert.equal(Pharmacy.schema.path('address'), undefined);
+  assert.equal(Pharmacy.schema.path('city'), undefined);
+  assert.ok(Pharmacy.schema.path('location.address'));
+  assert.ok(Pharmacy.schema.path('location.settlement'));
+  assert.ok(Pharmacy.schema.path('location.countryCode'));
+
+  const indexes = Pharmacy.schema.indexes();
+
+  const locationText = indexes.find(
+    ([keys, options]: PharmacySchemaIndex) =>
+      options.name === 'pharmacy_location_text' &&
+      keys.name === 'text' &&
+      keys['location.address'] === 'text' &&
+      keys['location.settlement'] === 'text'
+  );
+
+  const settlement = indexes.find(
+    ([keys, options]: PharmacySchemaIndex) =>
+      options.name === 'pharmacy_location_settlement' &&
+      keys['location.settlement'] === 1
+  );
+
+  assert.ok(locationText);
+  assert.ok(settlement);
+});
+
+//===============================================================
+
+test('Admin audit model expires Activity history after at most three years', () => {
+  const retentionIndex = AdminAuditLog.schema
+    .indexes()
+    .find(
+      ([keys, options]: AdminAuditSchemaIndex) =>
+        keys.createdAt === 1 && options.name === 'admin_audit_retention_ttl'
+    );
+
+  assert.ok(retentionIndex);
+  assert.equal(retentionIndex[1].expireAfterSeconds, 94_608_000);
+});
+
+//===============================================================
+
 test('Pharmacy model protects contact, schedule, bank and picture invariants', () => {
   const pharmacy = new Pharmacy({
     ownerId: new Types.ObjectId(),
     name: 'Health Pharmacy',
-    address: 'Kyiv, Main Street 10',
+
+    location: {
+      address: 'Kyiv, Main Street 10',
+      settlement: 'Kyiv',
+      countryCode: 'UA',
+    },
+
     phone: '+380501234567',
     email: ' CONTACT@EXAMPLE.COM ',
     workingHours: validWorkingHours,

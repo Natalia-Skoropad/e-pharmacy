@@ -1859,6 +1859,8 @@ formal data retention policy
 
 Не випадково через Mongo index.
 
+> **Update Stage 13.4.3.** Таке окреме бізнес-рішення тепер прийняте: Activity history зберігається не більше 3 років. Тому початкове Stage 9 правило `no TTL` вважається історичним і з Stage 13.4.3 замінене на TTL index для `AdminAuditLog.createdAt` з retention `94_608_000` секунд. Immutable означає, що записи не редагуються вручну протягом retention window; планове TTL-видалення після завершення retention не є mutable audit operation.
+
 ---
 
 # 54. Cascade delete не робимо
@@ -4443,7 +4445,7 @@ Stage 9 завершений, коли:
 - [ ] немає public create AuditLog endpoint;
 - [ ] немає AuditLog update endpoint;
 - [ ] немає AuditLog delete endpoint;
-- [ ] немає AuditLog TTL;
+- [ ] немає AuditLog TTL; *(Stage 9 historical requirement; superseded by the 3-year retention policy in Stage 13.4.3)*
 - [ ] видалення actor/entity не видаляє audit history;
 - [ ] passwords не можуть потрапити в AuditLog;
 - [ ] JWT/tokens не можуть потрапити в AuditLog;

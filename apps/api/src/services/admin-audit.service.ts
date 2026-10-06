@@ -447,6 +447,7 @@ function applyAuditSectionFilter(
 export async function listAdminAuditActorsService(): Promise<AdminAuditActorsResponseDto> {
   const actors = await AdminAuditLog.aggregate<{
     _id: Types.ObjectId;
+    actorType: AdminAuditActorType;
     user: {
       _id: Types.ObjectId;
       name: string;
@@ -476,12 +477,23 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
       },
     },
     {
+      $lookup: {
+        from: Pharmacy.collection.name,
+        localField: '_id',
+        foreignField: 'managerUserIds',
+        as: 'managedPharmacies',
+      },
+    },
+    {
       $match: {
         $or: [
           { 'users.role': USER_ROLES.ADMIN },
           {
             'users.role': USER_ROLES.PHARMACY,
-            'ownedPharmacies.0': { $exists: true },
+            $or: [
+              { 'ownedPharmacies.0': { $exists: true } },
+              { 'managedPharmacies.0': { $exists: true } },
+            ],
           },
         ],
       },
@@ -498,22 +510,32 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
           role: '$users.role',
           status: '$users.status',
         },
+        actorType: {
+          $cond: [
+            { $eq: ['$users.role', USER_ROLES.ADMIN] },
+            ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE,
+            {
+              $cond: [
+                { $gt: [{ $size: '$ownedPharmacies' }, 0] },
+                ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER,
+                ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_EMPLOYEE,
+              ],
+            },
+          ],
+        },
       },
     },
     { $sort: { 'user.name': 1, _id: 1 } },
   ]);
 
-  const items: AdminAuditActorDto[] = actors.map(({ user }) => ({
+  const items: AdminAuditActorDto[] = actors.map(({ user, actorType }) => ({
     id: String(user._id),
     name: user.name,
     email: user.email,
     phone: user.phone,
     ...(user.pictureUrl ? { pictureUrl: user.pictureUrl } : {}),
     role: user.role,
-    actorType:
-      user.role === USER_ROLES.ADMIN
-        ? ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE
-        : ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER,
+    actorType,
     status: user.status,
   }));
 
@@ -530,6 +552,16 @@ async function getAuditActorIdsByType(
   }
 
   const ownerIds = await Pharmacy.distinct('ownerId');
+
+  if (actorType === ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_EMPLOYEE) {
+    const managerUserIds = await Pharmacy.distinct('managerUserIds');
+
+    return User.find({
+      role: USER_ROLES.PHARMACY,
+      _id: { $in: managerUserIds, $nin: ownerIds },
+    }).distinct('_id');
+  }
+
   return User.find({
     role: USER_ROLES.PHARMACY,
     _id: { $in: ownerIds },

@@ -1,5 +1,7 @@
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
+//===================================================================
+
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
   'pharmacy.registrationDocuments.attached',
@@ -51,7 +53,11 @@ export type AdminAuditEntityType = (typeof ADMIN_AUDIT_ENTITY_TYPES)[number];
 
 //===================================================================
 
-export const ADMIN_AUDIT_ACTOR_TYPES = ['employee', 'pharmacyOwner'] as const;
+export const ADMIN_AUDIT_ACTOR_TYPES = [
+  'employee',
+  'pharmacyOwner',
+  'pharmacyEmployee',
+] as const;
 
 export type AdminAuditActorType = (typeof ADMIN_AUDIT_ACTOR_TYPES)[number];
 
@@ -319,7 +325,9 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     (value.role !== 'admin' && value.role !== 'pharmacy') ||
     !isAdminAuditActorType(value.actorType) ||
     (value.role === 'admin' && value.actorType !== 'employee') ||
-    (value.role === 'pharmacy' && value.actorType !== 'pharmacyOwner') ||
+    (value.role === 'pharmacy' &&
+      value.actorType !== 'pharmacyOwner' &&
+      value.actorType !== 'pharmacyEmployee') ||
     (value.status !== 'new' &&
       value.status !== 'active' &&
       value.status !== 'blocked')

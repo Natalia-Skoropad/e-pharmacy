@@ -46,10 +46,12 @@ import { isDuplicatePharmacyReviewError } from '../utils/mongoError';
 import { createFlexibleSearchRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
+
 import {
   reconcileAttachedPharmacyDocumentStorage,
   resolvePrivatePharmacyDocumentSelections,
 } from './pharmacy-document.service';
+
 import {
   findPharmacyForProfileAccess,
   findPharmacyForSummaryAccess,
@@ -189,8 +191,12 @@ function serializePharmacyCardSummary(
       pharmacy.name,
       pharmacyId
     ),
-    ...(pharmacy.address ? { address: pharmacy.address } : {}),
-    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.location?.address
+      ? { address: pharmacy.location.address }
+      : {}),
+    ...(pharmacy.location?.settlement
+      ? { city: pharmacy.location.settlement }
+      : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
@@ -217,8 +223,12 @@ function serializePublicPharmacy(
       pharmacy.name,
       pharmacyId
     ),
-    ...(pharmacy.address ? { address: pharmacy.address } : {}),
-    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.location?.address
+      ? { address: pharmacy.location.address }
+      : {}),
+    ...(pharmacy.location?.settlement
+      ? { city: pharmacy.location.settlement }
+      : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -309,8 +319,12 @@ function serializePharmacyProfile(
     id: String(pharmacy._id),
     membershipRole,
     name: pharmacy.name,
-    ...(pharmacy.address ? { address: pharmacy.address } : {}),
-    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.location?.address
+      ? { address: pharmacy.location.address }
+      : {}),
+    ...(pharmacy.location?.settlement
+      ? { city: pharmacy.location.settlement }
+      : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -342,10 +356,11 @@ function serializePharmacyProfile(
 //===============================================================
 
 export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptionsResponseDto> {
-  const cities = await Pharmacy.distinct('city', {
+  const cities = await Pharmacy.distinct('location.settlement', {
     status: PUBLIC_PHARMACY_STATUS_FILTER,
-    city: { $type: 'string', $ne: '' },
+    'location.settlement': { $type: 'string', $ne: '' },
   });
+
   return {
     cities: cities.sort().map((value) => ({ value, label: value })),
     sort: [
@@ -448,8 +463,8 @@ export async function getPharmaciesService(
   if (query.keyword) {
     filter.$or = [
       { name: createFlexibleSearchRegExp(query.keyword) },
-      { address: createFlexibleSearchRegExp(query.keyword) },
-      { city: createFlexibleSearchRegExp(query.keyword) },
+      { 'location.address': createFlexibleSearchRegExp(query.keyword) },
+      { 'location.settlement': createFlexibleSearchRegExp(query.keyword) },
     ];
   }
 
@@ -462,14 +477,22 @@ export async function getPharmaciesService(
       ...(Array.isArray(filter.$and) ? filter.$and : []),
       {
         $or: [
-          { address: createFlexibleSearchRegExp(query.addressKeyword) },
-          { city: createFlexibleSearchRegExp(query.addressKeyword) },
+          {
+            'location.address': createFlexibleSearchRegExp(
+              query.addressKeyword
+            ),
+          },
+          {
+            'location.settlement': createFlexibleSearchRegExp(
+              query.addressKeyword
+            ),
+          },
         ],
       },
     ];
   }
 
-  if (query.city) filter.city = query.city;
+  if (query.city) filter['location.settlement'] = query.city;
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-asc'
       ? { name: 1 }
@@ -542,13 +565,12 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
     _id: pharmacyId,
     status: PUBLIC_PHARMACY_STATUS_FILTER,
   })
-    .select('name address city phone email workingHours bankDetails')
+    .select('name location phone email workingHours bankDetails')
     .lean<Pick<
       PharmacyDocument,
       | '_id'
       | 'name'
-      | 'address'
-      | 'city'
+      | 'location'
       | 'phone'
       | 'email'
       | 'workingHours'
@@ -563,8 +585,12 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
     pharmacy: {
       id: String(pharmacy._id),
       name: pharmacy.name,
-      ...(pharmacy.address ? { address: pharmacy.address } : {}),
-      ...(pharmacy.city ? { city: pharmacy.city } : {}),
+      ...(pharmacy.location?.address
+        ? { address: pharmacy.location.address }
+        : {}),
+      ...(pharmacy.location?.settlement
+        ? { city: pharmacy.location.settlement }
+        : {}),
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
       ...(pharmacy.email ? { email: pharmacy.email } : {}),
       ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -776,13 +802,13 @@ export async function setFavoritePharmacyService(
 
 //===============================================================
 
-//===============================================================
-
 function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
   const bankDetails = pharmacy.bankDetails;
   const requiredFields: Record<string, unknown> = {
     name: pharmacy.name,
-    address: pharmacy.address,
+    address: pharmacy.location?.address,
+    settlement: pharmacy.location?.settlement,
+    countryCode: pharmacy.location?.countryCode,
     phone: pharmacy.phone,
     email: pharmacy.email,
     workingHours: pharmacy.workingHours,
@@ -1012,13 +1038,19 @@ export async function updateMyPharmacyProfileService(
       };
 
       if (resolvedInput.name !== undefined) update.name = resolvedInput.name;
-      applyClearableField('address', resolvedInput.address);
-      applyClearableField('city', resolvedInput.city);
+      applyClearableField('location.address', resolvedInput.address);
+      applyClearableField('location.settlement', resolvedInput.city);
+
+      if (!pharmacy.location?.countryCode) {
+        update['location.countryCode'] = 'UA';
+      }
+
       applyClearableField('phone', resolvedInput.phone);
       applyClearableField('email', resolvedInput.email);
       applyClearableField('workingHours', resolvedInput.workingHours);
       applyClearableField('imageUrl', resolvedInput.imageUrl);
       applyClearableField('description', resolvedInput.description);
+
       if (resolvedInput.documents !== undefined)
         update.documents = resolvedInput.documents;
 

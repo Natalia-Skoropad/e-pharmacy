@@ -15,6 +15,7 @@
     "migrate:product-categories": "tsx src/scripts/migrate-product-categories.ts",
     "migrate:pharmacy-owner-foundation": "tsx src/scripts/migrate-pharmacy-owner-foundation.ts",
     "migrate:pharmacy-owner-registration-audit": "tsx src/scripts/migrate-pharmacy-owner-registration-audit.ts",
+    "migrate:pharmacy-location": "tsx src/scripts/migrate-pharmacy-location.ts",
     "test": "node ../../scripts/test-runners/run-api-tests.mjs src",
     "cart:cleanup-expired": "tsx src/scripts/cleanup-expired-cart-items.ts"
   },

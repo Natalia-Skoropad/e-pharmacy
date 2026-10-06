@@ -197,8 +197,8 @@ function buildPharmacyMatch(
       'name',
       'email',
       'phone',
-      'address',
-      'city',
+      'location.address',
+      'location.settlement',
     ]);
   }
 
@@ -681,8 +681,8 @@ function buildPagedPharmacyItemsPipeline(
         name: 1,
         email: { $ifNull: ['$email', null] },
         phone: { $ifNull: ['$phone', null] },
-        address: { $ifNull: ['$address', null] },
-        city: { $ifNull: ['$city', null] },
+        address: { $ifNull: ['$location.address', null] },
+        city: { $ifNull: ['$location.settlement', null] },
         imageUrl: { $ifNull: ['$imageUrl', null] },
         createdAt: 1,
         status: 1,

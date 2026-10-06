@@ -105,8 +105,7 @@ export type PharmacyPendingModerationResponseDto = Omit<
 
 export type PharmacyEntity = {
   name: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
   phone?: string;
   email?: string;
   workingHours?: string;

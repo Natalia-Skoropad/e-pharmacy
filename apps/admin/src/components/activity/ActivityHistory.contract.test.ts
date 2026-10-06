@@ -25,7 +25,7 @@ test('activity history employee search excludes private address data', async () 
 
   assert.doesNotMatch(source, /actor\.address/);
   assert.doesNotMatch(source, /phone number, or address|phone, or address/);
-  assert.doesNotMatch(employeeDetailsSource, /employee\.address/);
+  assert.doesNotMatch(employeeDetailsSource, /actor\.address/);
   assert.doesNotMatch(employeeDetailsSource, /label: 'Address'/);
 
   assert.match(source, /title="Employee search"/);
@@ -63,9 +63,10 @@ test('activity history has a separate pharmacy-owner search and actor-type filte
   assert.match(drawerSource, /label="Changed by"/);
   assert.match(drawerSource, /employee: 'Employee'/);
   assert.match(drawerSource, /pharmacyOwner: 'Pharmacy owner'/);
+  assert.match(drawerSource, /pharmacyEmployee: 'Pharmacy employee'/);
 
   assert.match(historySource, /title: 'Changed by'/);
-  assert.match(historySource, /getAdminAuditActorTypeLabel/);
+  assert.match(historySource, /<ActivityActorIdentity/);
   assert.doesNotMatch(historySource, /title: 'Employee'/);
 
   const employeeUpdater = historySource.match(
@@ -80,6 +81,79 @@ test('activity history has a separate pharmacy-owner search and actor-type filte
   assert.ok(ownerUpdater);
   assert.doesNotMatch(employeeUpdater, /actorType:\s*'employee'/);
   assert.doesNotMatch(ownerUpdater, /actorType:\s*'pharmacyOwner'/);
+});
+
+//===================================================================
+
+test('activity actor identity links employees and pharmacy owners to dedicated cards', async () => {
+  const [
+    identitySource,
+    presentationSource,
+    actorDetailsSource,
+    ownerPageSource,
+  ] = await Promise.all([
+    read('./ActivityActorIdentity.tsx'),
+    read('../../lib/audit/admin-audit-presentation.ts'),
+    read('./ActivityEmployeeDetails/ActivityEmployeeDetails.tsx'),
+    read('../../app/admin/pharmacy-owners/[ownerId]/page.tsx'),
+  ]);
+
+  assert.match(identitySource, /getAdminAuditActorHref/);
+  assert.match(identitySource, /<TextActionButton href=\{href\}>/);
+
+  assert.match(
+    presentationSource,
+    /actor\.actorType === 'employee'[\s\S]*?SETTINGS_EMPLOYEES/
+  );
+
+  assert.match(
+    presentationSource,
+    /actor\.actorType === 'pharmacyOwner'[\s\S]*?PHARMACY_OWNERS/
+  );
+
+  assert.match(actorDetailsSource, /function ActivityActorDetails/);
+  assert.match(actorDetailsSource, /export function ActivityEmployeeDetails/);
+
+  assert.match(
+    actorDetailsSource,
+    /export function ActivityPharmacyOwnerDetails/
+  );
+
+  assert.match(
+    ownerPageSource,
+    /<ActivityPharmacyOwnerDetails ownerId=\{ownerId\}/
+  );
+});
+
+//===================================================================
+
+test('activity table keeps reasons out of rows while details modal preserves them', async () => {
+  const [historySource, modalSource] = await Promise.all([
+    read('./ActivityHistory.tsx'),
+    read('./AuditDetailsModal.tsx'),
+  ]);
+
+  assert.doesNotMatch(historySource, /Reason:\s*\{item\.reason\}/);
+  assert.doesNotMatch(historySource, /changeReason/);
+  assert.match(modalSource, /details\.reason/);
+  assert.match(modalSource, /Reason/);
+});
+
+//===================================================================
+
+test('audit details reuse actor identity with photo and profile link', async () => {
+  const [modalSource, identitySource] = await Promise.all([
+    read('./AuditDetailsModal.tsx'),
+    read('./ActivityActorIdentity.tsx'),
+  ]);
+
+  assert.match(
+    modalSource,
+    /<ActivityActorIdentity[\s\S]*?actor=\{actor\}[\s\S]*?showPhoto/
+  );
+
+  assert.match(identitySource, /<TableImagePreview/);
+  assert.match(identitySource, /<TextActionButton href=\{href\}>/);
 });
 
 //===================================================================

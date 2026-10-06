@@ -49,8 +49,12 @@ function serializePharmacyProfile(
   return {
     id: String(pharmacy._id),
     name: pharmacy.name,
-    address: pharmacy.address,
-    ...(pharmacy.city ? { city: pharmacy.city } : {}),
+    ...(pharmacy.location?.address
+      ? { address: pharmacy.location.address }
+      : {}),
+    ...(pharmacy.location?.settlement
+      ? { city: pharmacy.location.settlement }
+      : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -128,12 +132,24 @@ export async function updatePharmacyStatusByAdminService(
 
       if (input.status === PHARMACY_STATUSES.ACTIVE) {
         const pendingModeration = pharmacy.pendingModeration ?? {};
-        const { bankDetails, ...pendingRootFields } = pendingModeration;
+        const { address, city, bankDetails, ...pendingRootFields } =
+          pendingModeration;
         const approvedAt = new Date();
 
         for (const [key, value] of Object.entries(pendingRootFields)) {
           if (value === null) unsetFields[key] = '';
           else if (value !== undefined) nextUpdate[key] = value;
+        }
+
+        if (address === null) unsetFields['location.address'] = '';
+        else if (address !== undefined)
+          nextUpdate['location.address'] = address;
+
+        if (city === null) unsetFields['location.settlement'] = '';
+        else if (city !== undefined) nextUpdate['location.settlement'] = city;
+
+        if (!pharmacy.location?.countryCode) {
+          nextUpdate['location.countryCode'] = 'UA';
         }
 
         if (bankDetails) {

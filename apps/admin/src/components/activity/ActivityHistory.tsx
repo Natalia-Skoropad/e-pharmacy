@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   CountLabel,
@@ -48,7 +47,6 @@ import {
 } from '@e-pharmacy/ui/primitives';
 
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   getAdminAuditActors,
@@ -64,14 +62,11 @@ import {
 
 import {
   getAdminAuditActionLabel,
-  getAdminAuditActorTypeLabel,
   getAdminAuditChangeTone,
   getAdminAuditEntityLabel,
   getAdminAuditLocation,
   getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
-
-import { ADMIN_ROUTES } from '@/lib/routes';
 
 import {
   ActivityFiltersDrawer,
@@ -80,6 +75,7 @@ import {
 } from './ActivityFiltersDrawer';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
+import { ActivityActorIdentity } from './ActivityActorIdentity';
 
 import css from './ActivityHistory.module.css';
 
@@ -353,32 +349,11 @@ export function ActivityHistory() {
         render: (item) => {
           const actor = actorById.get(item.actorUserId);
 
-          const actorLabel = actor
-            ? `${item.actorNameSnapshot} (${getAdminAuditActorTypeLabel(
-                actor.actorType
-              )})`
-            : item.actorNameSnapshot;
-
           return (
-            <span className={css.employeeCell}>
-              {actor?.actorType === 'employee' ? (
-                <TextActionButton
-                  href={`${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(
-                    item.actorUserId
-                  )}`}
-                >
-                  {actorLabel}
-                </TextActionButton>
-              ) : (
-                <strong>{actorLabel}</strong>
-              )}
-
-              {actor ? (
-                <StatusBadge {...USER_STATUS_PRESENTATION[actor.status]} />
-              ) : (
-                <span className={css.employeeStatusFallback}>Unavailable</span>
-              )}
-            </span>
+            <ActivityActorIdentity
+              actor={actor}
+              actorNameSnapshot={item.actorNameSnapshot}
+            />
           );
         },
       },
@@ -466,10 +441,6 @@ export function ActivityHistory() {
                   {transition}
                 </span>
               ) : null}
-
-              {item.reason ? (
-                <span className={css.changeReason}>Reason: {item.reason}</span>
-              ) : null}
             </span>
           );
         },
@@ -535,7 +506,10 @@ export function ActivityHistory() {
       ...filters,
       employeeUserId,
       ownerUserId: '',
-      actorType: filters.actorType === 'pharmacyOwner' ? '' : filters.actorType,
+      actorType:
+        employeeUserId && filters.actorType !== 'employee'
+          ? ''
+          : filters.actorType,
     });
   };
 
@@ -544,7 +518,10 @@ export function ActivityHistory() {
       ...filters,
       ownerUserId,
       employeeUserId: '',
-      actorType: filters.actorType === 'employee' ? '' : filters.actorType,
+      actorType:
+        ownerUserId && filters.actorType !== 'pharmacyOwner'
+          ? ''
+          : filters.actorType,
     });
   };
 

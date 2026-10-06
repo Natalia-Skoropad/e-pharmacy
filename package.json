@@ -12,6 +12,7 @@
     "migrate:product-categories": "pnpm --filter @e-pharmacy/api migrate:product-categories",
     "migrate:pharmacy-owner-foundation": "pnpm --filter @e-pharmacy/api migrate:pharmacy-owner-foundation",
     "migrate:pharmacy-owner-registration-audit": "pnpm --filter @e-pharmacy/api migrate:pharmacy-owner-registration-audit",
+    "migrate:pharmacy-location": "pnpm --filter @e-pharmacy/api migrate:pharmacy-location",
     "build": "turbo build",
     "build:client": "pnpm --filter @e-pharmacy/client build",
     "build:api": "pnpm --filter @e-pharmacy/api build",

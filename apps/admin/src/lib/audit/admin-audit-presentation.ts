@@ -8,6 +8,7 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 
 import type {
   AdminAuditAction,
+  AdminAuditActor,
   AdminAuditActorType,
   AdminAuditEntityType,
   AdminAuditListItem,
@@ -162,7 +163,25 @@ export function getAdminAuditActionLabel(action: AdminAuditAction): string {
 export function getAdminAuditActorTypeLabel(
   actorType: AdminAuditActorType
 ): string {
-  return actorType === 'employee' ? 'employee' : 'pharmacy owner';
+  if (actorType === 'employee') return 'employee';
+  if (actorType === 'pharmacyOwner') return 'pharmacy owner';
+  return 'pharmacy employee';
+}
+
+//===================================================================
+
+export function getAdminAuditActorHref(
+  actor: Pick<AdminAuditActor, 'id' | 'actorType'>
+): string | null {
+  if (actor.actorType === 'employee') {
+    return `${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(actor.id)}`;
+  }
+
+  if (actor.actorType === 'pharmacyOwner') {
+    return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(actor.id)}`;
+  }
+
+  return null;
 }
 
 //===================================================================

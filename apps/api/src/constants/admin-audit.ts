@@ -120,6 +120,7 @@ export function isAdminAuditEntityType(
 export const ADMIN_AUDIT_ACTOR_TYPES = {
   EMPLOYEE: 'employee',
   PHARMACY_OWNER: 'pharmacyOwner',
+  PHARMACY_EMPLOYEE: 'pharmacyEmployee',
 } as const;
 
 //===============================================================
@@ -193,3 +194,8 @@ export const ADMIN_AUDIT_LIMITS = {
   stringValue: 2000,
   stringArray: 100,
 } as const;
+
+//===============================================================
+
+/** MongoDB TTL retention for Activity history: at most three 365-day years. */
+export const ADMIN_AUDIT_RETENTION_SECONDS = 60 * 60 * 24 * 365 * 3;

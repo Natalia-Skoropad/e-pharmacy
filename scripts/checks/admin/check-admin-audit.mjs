@@ -46,6 +46,25 @@ const requiredFiles = [
   ['apps', 'admin', 'src', 'lib', 'audit', 'admin-audit.ts'],
   ['apps', 'admin', 'src', 'lib', 'api', 'browser', 'admin-audit.api.ts'],
   ['apps', 'admin', 'src', 'components', 'activity', 'ActivityHistory.tsx'],
+  [
+    'apps',
+    'admin',
+    'src',
+    'components',
+    'activity',
+    'ActivityActorIdentity.tsx',
+  ],
+  ['apps', 'admin', 'src', 'components', 'activity', 'AuditDetailsModal.tsx'],
+  [
+    'apps',
+    'admin',
+    'src',
+    'app',
+    'admin',
+    'pharmacy-owners',
+    '[ownerId]',
+    'page.tsx',
+  ],
   ['apps', 'admin', 'src', 'app', 'admin', 'settings', 'activity', 'page.tsx'],
   ['apps', 'admin', 'src', 'app', 'api', 'admin', 'audit', 'route.ts'],
   [
@@ -249,6 +268,44 @@ const activityHistory = await read(
   'ActivityHistory.tsx'
 );
 
+const activityActorIdentity = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'activity',
+  'ActivityActorIdentity.tsx'
+);
+
+const auditDetailsModal = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'activity',
+  'AuditDetailsModal.tsx'
+);
+
+const auditPresentation = await read(
+  'apps',
+  'admin',
+  'src',
+  'lib',
+  'audit',
+  'admin-audit-presentation.ts'
+);
+
+const pharmacyOwnerDetailsPage = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'admin',
+  'pharmacy-owners',
+  '[ownerId]',
+  'page.tsx'
+);
+
 const activityFilters = await read(
   'apps',
   'admin',
@@ -316,7 +373,15 @@ assert.match(
   /timestamps:\s*\{\s*createdAt:\s*true,\s*updatedAt:\s*false\s*\}/
 );
 
-assert.doesNotMatch(model, /expires|expireAfterSeconds/i);
+assert.match(
+  auditConstants,
+  /ADMIN_AUDIT_RETENTION_SECONDS\s*=\s*60\s*\*\s*60\s*\*\s*24\s*\*\s*365\s*\*\s*3/
+);
+
+assert.match(
+  model,
+  /createdAt:\s*1[\s\S]*?expireAfterSeconds:\s*ADMIN_AUDIT_RETENTION_SECONDS[\s\S]*?name:\s*'admin_audit_retention_ttl'/
+);
 
 assert.match(
   routes,
@@ -407,6 +472,7 @@ assert.match(
 
 assert.match(auditConstants, /EMPLOYEE:\s*'employee'/);
 assert.match(auditConstants, /PHARMACY_OWNER:\s*'pharmacyOwner'/);
+assert.match(auditConstants, /PHARMACY_EMPLOYEE:\s*'pharmacyEmployee'/);
 
 assert.match(model, /scopeEntityType:\s*\{/);
 assert.match(model, /scopeEntityId:\s*\{/);
@@ -435,7 +501,9 @@ assert.match(auditService, /AdminAuditLog\.aggregate/);
 assert.match(auditService, /\$group:\s*\{ _id:\s*['"]\$actorUserId['"] \}/);
 assert.match(auditService, /from:\s*User\.collection\.name/);
 assert.match(auditService, /from:\s*Pharmacy\.collection\.name/);
+assert.match(auditService, /foreignField:\s*'managerUserIds'/);
 assert.match(auditService, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_OWNER/);
+assert.match(auditService, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_EMPLOYEE/);
 assert.match(auditService, /filter\.scopeEntityType = query\.scopeEntityType/);
 assert.match(auditService, /filter\.scopeEntityId = query\.scopeEntityId/);
 assert.match(auditService, /query\.actorType/);
@@ -530,9 +598,27 @@ assert.match(
 );
 
 assert.match(activityHistory, /title:\s*'Changed by'/);
-assert.match(activityHistory, /getAdminAuditActorTypeLabel/);
+assert.match(activityHistory, /<ActivityActorIdentity/);
+assert.doesNotMatch(activityHistory, /Reason:\s*\{item\.reason\}/);
+assert.match(activityActorIdentity, /getAdminAuditActorHref/);
+assert.match(activityActorIdentity, /<TextActionButton href=\{href\}>/);
+assert.match(activityActorIdentity, /<TableImagePreview/);
+assert.match(auditDetailsModal, /<ActivityActorIdentity[\s\S]*?showPhoto/);
+
+assert.match(
+  auditPresentation,
+  /actor\.actorType === 'employee'[\s\S]*?SETTINGS_EMPLOYEES/
+);
+
+assert.match(
+  auditPresentation,
+  /actor\.actorType === 'pharmacyOwner'[\s\S]*?PHARMACY_OWNERS/
+);
+
+assert.match(pharmacyOwnerDetailsPage, /ActivityPharmacyOwnerDetails/);
 assert.match(activityFilters, /label="Changed by"/);
 assert.match(activityFilters, /pharmacyOwner:\s*'Pharmacy owner'/);
+assert.match(activityFilters, /pharmacyEmployee:\s*'Pharmacy employee'/);
 assert.match(adminAuditParser, /scopeEntityType/);
 assert.match(adminAuditParser, /scopeEntityId/);
 assert.match(adminAuditParser, /actorType/);

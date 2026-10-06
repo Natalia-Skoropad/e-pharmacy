@@ -15,23 +15,36 @@ import {
 } from '@e-pharmacy/ui/profile';
 
 import { getAdminAuditActors } from '@/lib/api/browser/admin-audit.api';
-import type { AdminAuditActor } from '@/lib/audit/admin-audit';
+
+import type {
+  AdminAuditActor,
+  AdminAuditActorType,
+} from '@/lib/audit/admin-audit';
+
 import { ADMIN_ROUTES } from '@/lib/routes';
 
 import css from './ActivityEmployeeDetails.module.css';
 
 //===================================================================
 
-type ActivityEmployeeDetailsProps = Readonly<{
-  employeeId: string;
+type ActivityActorDetailsProps = Readonly<{
+  actorId: string;
+  actorType: Extract<AdminAuditActorType, 'employee' | 'pharmacyOwner'>;
+  pageTitle: string;
+  resourceLabel: string;
+  roleLabel: string;
 }>;
 
 //===================================================================
 
-export function ActivityEmployeeDetails({
-  employeeId,
-}: ActivityEmployeeDetailsProps) {
-  const [employee, setEmployee] = useState<AdminAuditActor | null>(null);
+function ActivityActorDetails({
+  actorId,
+  actorType,
+  pageTitle,
+  resourceLabel,
+  roleLabel,
+}: ActivityActorDetailsProps) {
+  const [actor, setActor] = useState<AdminAuditActor | null>(null);
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
     'loading'
   );
@@ -44,26 +57,26 @@ export function ActivityEmployeeDetails({
       .then((response) => {
         if (controller.signal.aborted) return;
 
-        const matchedEmployee = response.items.find(
-          (item) => item.id === employeeId
+        const matchedActor = response.items.find(
+          (item) => item.id === actorId && item.actorType === actorType
         );
 
-        setEmployee(matchedEmployee ?? null);
-        setStatus(matchedEmployee ? 'success' : 'error');
+        setActor(matchedActor ?? null);
+        setStatus(matchedActor ? 'success' : 'error');
       })
       .catch(() => {
         if (!controller.signal.aborted) setStatus('error');
       });
 
     return () => controller.abort();
-  }, [employeeId, retryVersion]);
+  }, [actorId, actorType, retryVersion]);
 
   return (
-    <main className={css.page} aria-labelledby="audit-employee-page-title">
+    <main className={css.page} aria-labelledby="audit-actor-page-title">
       <section className={css.card}>
         <PageHeader
-          title="Employee details"
-          titleId="audit-employee-page-title"
+          title={pageTitle}
+          titleId="audit-actor-page-title"
           icon={<UserRound size={23} aria-hidden="true" />}
           actions={
             <TextActionButton href={ADMIN_ROUTES.SETTINGS_ACTIVITY}>
@@ -73,18 +86,18 @@ export function ActivityEmployeeDetails({
         />
       </section>
 
-      <section className={css.card} aria-label="Employee card">
+      <section className={css.card} aria-label={`${resourceLabel} card`}>
         {status === 'loading' ? (
           <ProfileResourceState
             variant="loading"
-            title="Loading employee"
-            description="Please wait while the employee profile used by Activity history is loaded."
+            title={`Loading ${resourceLabel}`}
+            description={`Please wait while the ${resourceLabel} profile used by Activity history is loaded.`}
           />
-        ) : status === 'error' || !employee ? (
+        ) : status === 'error' || !actor ? (
           <ProfileResourceState
             variant="error"
-            title="Employee could not be loaded"
-            description="The employee may no longer be available, or the profile could not be loaded right now."
+            title={`${pageTitle} could not be loaded`}
+            description={`The ${resourceLabel} may no longer be available, or the profile could not be loaded right now.`}
             retryLabel="Try again"
             onRetry={() => {
               setStatus('loading');
@@ -94,40 +107,88 @@ export function ActivityEmployeeDetails({
         ) : (
           <div className={css.profileGrid}>
             <ProfileIdentityCard
-              name={employee.name}
-              email={employee.email}
-              roleLabel="Admin employee"
-              statusLabel={USER_STATUS_PRESENTATION[employee.status].label}
-              ariaLabel={`${employee.name} employee summary`}
+              name={actor.name}
+              email={actor.email}
+              roleLabel={roleLabel}
+              statusLabel={USER_STATUS_PRESENTATION[actor.status].label}
+              ariaLabel={`${actor.name} ${resourceLabel} summary`}
               pictureEditor={
                 <TableImagePreview
                   className={css.employeePhoto}
-                  src={employee.pictureUrl}
-                  alt={`${employee.name} photo`}
-                  fallback={formatInitials(employee.name, 'A')}
+                  src={actor.pictureUrl}
+                  alt={`${actor.name} photo`}
+                  fallback={formatInitials(actor.name, 'A')}
                   size={96}
                 />
               }
               details={[
-                { label: 'Employee ID', value: employee.id },
-                { label: 'Phone', value: employee.phone || '—' },
+                {
+                  label:
+                    actorType === 'pharmacyOwner' ? 'Owner ID' : 'Employee ID',
+                  value: actor.id,
+                },
+                { label: 'Phone', value: actor.phone || '—' },
               ]}
             />
 
             <section
               className={css.contextCard}
-              aria-labelledby="audit-employee-context-title"
+              aria-labelledby="audit-actor-context-title"
             >
-              <h2 id="audit-employee-context-title">Activity context</h2>
+              <h2 id="audit-actor-context-title">Activity context</h2>
               <p>
-                This read-only card shows the employee identity currently linked
-                to Activity history records. The audit rows themselves keep the
-                original employee-name snapshot saved when each change occurred.
+                This read-only card shows the {resourceLabel} identity currently
+                linked to Activity history records. The audit rows themselves
+                keep the original name snapshot saved when each change occurred.
               </p>
             </section>
           </div>
         )}
       </section>
     </main>
+  );
+}
+
+//===================================================================
+
+type ActivityEmployeeDetailsProps = Readonly<{
+  employeeId: string;
+}>;
+
+//===================================================================
+
+export function ActivityEmployeeDetails({
+  employeeId,
+}: ActivityEmployeeDetailsProps) {
+  return (
+    <ActivityActorDetails
+      actorId={employeeId}
+      actorType="employee"
+      pageTitle="Employee details"
+      resourceLabel="employee"
+      roleLabel="Admin employee"
+    />
+  );
+}
+
+//===================================================================
+
+type ActivityPharmacyOwnerDetailsProps = Readonly<{
+  ownerId: string;
+}>;
+
+//===================================================================
+
+export function ActivityPharmacyOwnerDetails({
+  ownerId,
+}: ActivityPharmacyOwnerDetailsProps) {
+  return (
+    <ActivityActorDetails
+      actorId={ownerId}
+      actorType="pharmacyOwner"
+      pageTitle="Pharmacy owner details"
+      resourceLabel="pharmacy owner"
+      roleLabel="Pharmacy owner"
+    />
   );
 }

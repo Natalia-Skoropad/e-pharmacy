@@ -5,6 +5,7 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ACTOR_TYPES,
   ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_RETENTION_SECONDS,
   getStoredAdminAuditActionValues,
   isAdminAuditActorType,
   normalizeStoredAdminAuditAction,
@@ -81,7 +82,10 @@ test('Stage 13.4 reserves owner audit entities, actions, and actor types', () =>
 
   assert.equal(ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE, 'employee');
   assert.equal(ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER, 'pharmacyOwner');
+  assert.equal(ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_EMPLOYEE, 'pharmacyEmployee');
   assert.equal(isAdminAuditActorType('employee'), true);
   assert.equal(isAdminAuditActorType('pharmacyOwner'), true);
+  assert.equal(isAdminAuditActorType('pharmacyEmployee'), true);
   assert.equal(isAdminAuditActorType('pharmacyManager'), false);
+  assert.equal(ADMIN_AUDIT_RETENTION_SECONDS, 94_608_000);
 });

@@ -1027,8 +1027,10 @@ export async function checkoutOrderService(
             pharmacyId: pharmacy._id,
             pharmacySnapshot: {
               name: pharmacy.name,
-              address: pharmacy.address,
-              ...(pharmacy.city ? { city: pharmacy.city } : {}),
+              address: pharmacy.location?.address ?? '',
+              ...(pharmacy.location?.settlement
+                ? { city: pharmacy.location.settlement }
+                : {}),
               ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
               ...(pharmacy.email ? { email: pharmacy.email } : {}),
               ...(pharmacy.workingHours
@@ -1329,8 +1331,10 @@ export async function createManagerOrderService(
             pharmacyId: pharmacy._id,
             pharmacySnapshot: {
               name: pharmacy.name,
-              address: pharmacy.address,
-              ...(pharmacy.city ? { city: pharmacy.city } : {}),
+              address: pharmacy.location?.address ?? '',
+              ...(pharmacy.location?.settlement
+                ? { city: pharmacy.location.settlement }
+                : {}),
               ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
               ...(pharmacy.email ? { email: pharmacy.email } : {}),
               ...(pharmacy.workingHours

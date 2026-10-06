@@ -90,6 +90,18 @@
   min-width: 0;
 }
 
+.actorIdentityMain {
+  display: inline-flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+}
+
+.actorIdentityName {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .employeeStatusFallback {
   color: var(--color-text-muted);
   font-size: var(--fz-12);
@@ -133,14 +145,6 @@
 .changeTransition {
   font-size: var(--fz-12);
   font-weight: var(--fw-regular);
-}
-
-.changeReason {
-  max-width: 260px;
-  color: var(--color-text-secondary);
-  font-size: var(--fz-12);
-  line-height: var(--lh-base);
-  overflow-wrap: anywhere;
 }
 
 .changeSuccess,

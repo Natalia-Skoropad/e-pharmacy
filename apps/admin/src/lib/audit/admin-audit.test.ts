@@ -345,7 +345,7 @@ test('audit list parser validates earliest audit date metadata', () => {
 
 //===================================================================
 
-test('audit actor parser accepts employees and pharmacy owners without private address data', () => {
+test('audit actor parser accepts admin, pharmacy-owner, and pharmacy-employee actors without private address data', () => {
   const parsed = parseAdminAuditActorsResponse({
     items: [
       {
@@ -367,6 +367,15 @@ test('audit actor parser accepts employees and pharmacy owners without private a
         actorType: 'pharmacyOwner',
         status: 'new',
       },
+      {
+        id: '507f1f77bcf86cd799439089',
+        name: 'Pharmacy Employee',
+        email: 'pharmacy.employee@example.com',
+        phone: '+380501112255',
+        role: 'pharmacy',
+        actorType: 'pharmacyEmployee',
+        status: 'active',
+      },
     ],
   });
 
@@ -375,6 +384,8 @@ test('audit actor parser accepts employees and pharmacy owners without private a
   assert.equal(parsed.items[0]?.actorType, 'employee');
   assert.equal(parsed.items[1]?.actorType, 'pharmacyOwner');
   assert.equal(parsed.items[1]?.status, 'new');
+  assert.equal(parsed.items[2]?.actorType, 'pharmacyEmployee');
+  assert.equal(parsed.items[2]?.status, 'active');
 
   assert.throws(
     () =>

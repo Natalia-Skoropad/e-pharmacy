@@ -25,12 +25,13 @@ import type {
 import {
   formatAdminAuditValue,
   getAdminAuditActionLabel,
-  getAdminAuditActorTypeLabel,
   getAdminAuditChangeTone,
   getAdminAuditEntityLabel,
   getAdminAuditLocation,
   getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
+
+import { ActivityActorIdentity } from './ActivityActorIdentity';
 
 import css from './ActivityHistory.module.css';
 
@@ -180,11 +181,12 @@ export function AuditDetailsModal({
                   Changed by
                 </dt>
                 <dd>
-                  {actor
-                    ? `${details.actorNameSnapshot} (${getAdminAuditActorTypeLabel(
-                        actor.actorType
-                      )})`
-                    : details.actorNameSnapshot}
+                  <ActivityActorIdentity
+                    actor={actor}
+                    actorNameSnapshot={details.actorNameSnapshot}
+                    showPhoto
+                    photoSize={34}
+                  />
                 </dd>
               </div>
 

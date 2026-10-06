@@ -344,6 +344,7 @@ export async function registerUserService(
                 ownerId: createdUser._id,
                 managerUserIds: [],
                 name: '',
+                location: { countryCode: 'UA' },
                 phone: createdUser.phone,
                 email: createdUser.email,
                 documents: [],

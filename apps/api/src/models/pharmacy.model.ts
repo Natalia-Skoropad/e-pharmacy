@@ -19,6 +19,7 @@ import {
   PHARMACY_NAME_PATTERN,
   PICTURE_DATA_URL_MAX_LENGTH,
   PICTURE_HTTP_URL_MAX_LENGTH,
+  SEARCH_TEXT_PATTERN,
   TAX_ID_PATTERN,
   TEXT_EDITOR_MAX_LENGTH,
   TEXT_EDITOR_PATTERN,
@@ -27,6 +28,7 @@ import {
   USER_EMAIL_MAX_LENGTH,
   USER_PHONE_MAX_LENGTH,
   USER_PHONE_MIN_LENGTH,
+  USER_SEARCH_MAX_LENGTH,
   VALIDATION_MESSAGES,
   WORKING_HOURS_MAX_LENGTH,
   WORKING_HOURS_PATTERN,
@@ -124,32 +126,39 @@ const pharmacyVerificationDocumentSchema =
 
 //===============================================================
 
-const pharmacySchema = new Schema<PharmacyEntity>(
+const pharmacyGeoPointSchema = new Schema(
   {
-    name: {
+    type: {
       type: String,
-      required: false,
-      trim: true,
-      default: '',
-      maxlength: [
-        PHARMACY_NAME_MAX_LENGTH,
-        VALIDATION_MESSAGES.limits.pharmacyNameMax,
-      ],
-
-      validate: [
-        {
-          validator: (value: string) =>
-            !value || value.length >= PHARMACY_NAME_MIN_LENGTH,
-          message: VALIDATION_MESSAGES.limits.pharmacyNameMin,
-        },
-        {
-          validator: (value: string) =>
-            !value || PHARMACY_NAME_PATTERN.test(value),
-          message: VALIDATION_MESSAGES.format.pharmacyName,
-        },
-      ],
+      enum: ['Point'],
+      required: true,
     },
 
+    coordinates: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: (value: number[]) =>
+          Array.isArray(value) &&
+          value.length === 2 &&
+          Number.isFinite(value[0]) &&
+          Number.isFinite(value[1]) &&
+          value[0] >= -180 &&
+          value[0] <= 180 &&
+          value[1] >= -90 &&
+          value[1] <= 90,
+        message:
+          'Geo must be a valid GeoJSON Point with [longitude, latitude].',
+      },
+    },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
+const pharmacyLocationSchema = new Schema(
+  {
     address: {
       type: String,
       required: false,
@@ -169,10 +178,93 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       default: undefined,
     },
 
-    city: {
+    settlement: {
       type: String,
+      required: false,
       trim: true,
-      maxlength: [80, 'City must be at most 80 characters'],
+
+      maxlength: [
+        USER_SEARCH_MAX_LENGTH,
+        `Settlement must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
+      ],
+
+      match: [
+        SEARCH_TEXT_PATTERN,
+        'Settlement contains unsupported characters',
+      ],
+
+      default: undefined,
+    },
+
+    region: {
+      type: String,
+      required: false,
+      trim: true,
+
+      maxlength: [
+        USER_SEARCH_MAX_LENGTH,
+        `Region must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
+      ],
+
+      match: [SEARCH_TEXT_PATTERN, 'Region contains unsupported characters'],
+      default: undefined,
+    },
+
+    countryCode: {
+      type: String,
+      required: false,
+      trim: true,
+      uppercase: true,
+
+      match: [
+        /^[A-Z]{2}$/,
+        'Country code must contain two uppercase Latin letters',
+      ],
+
+      default: undefined,
+    },
+
+    geo: {
+      type: pharmacyGeoPointSchema,
+      required: false,
+      default: undefined,
+    },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
+const pharmacySchema = new Schema<PharmacyEntity>(
+  {
+    name: {
+      type: String,
+      required: false,
+      trim: true,
+      default: '',
+
+      maxlength: [
+        PHARMACY_NAME_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.pharmacyNameMax,
+      ],
+
+      validate: [
+        {
+          validator: (value: string) =>
+            !value || value.length >= PHARMACY_NAME_MIN_LENGTH,
+          message: VALIDATION_MESSAGES.limits.pharmacyNameMin,
+        },
+        {
+          validator: (value: string) =>
+            !value || PHARMACY_NAME_PATTERN.test(value),
+          message: VALIDATION_MESSAGES.format.pharmacyName,
+        },
+      ],
+    },
+
+    location: {
+      type: pharmacyLocationSchema,
+      required: false,
       default: undefined,
     },
 
@@ -428,8 +520,20 @@ const pharmacySchema = new Schema<PharmacyEntity>(
 
 //===============================================================
 
-pharmacySchema.index({ name: 'text', address: 'text', city: 'text' });
-pharmacySchema.index({ city: 1 });
+pharmacySchema.index(
+  {
+    name: 'text',
+    'location.address': 'text',
+    'location.settlement': 'text',
+  },
+  { name: 'pharmacy_location_text' }
+);
+
+pharmacySchema.index(
+  { 'location.settlement': 1 },
+  { name: 'pharmacy_location_settlement' }
+);
+
 pharmacySchema.index({ ownerId: 1 });
 pharmacySchema.index({ ownerId: 1, status: 1 });
 pharmacySchema.index({ ownerId: 1, createdAt: -1 });
