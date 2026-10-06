@@ -172,17 +172,7 @@ test('reports duplicate and unknown pharmacy segments', () => {
 
 //===================================================================
 
-test('recognizes legacy city paths and canonicalizes location plus region paths', () => {
-  const legacyResult = parsePharmacySegments({ segments: ['city-kyiv'] });
-
-  assert.equal(legacyResult.filters.settlement, 'kyiv');
-  assert.equal(legacyResult.isCanonical, false);
-
-  assert.deepEqual(
-    legacyResult.issues.map((issue) => issue.code),
-    ['legacy']
-  );
-
+test('parses canonical pharmacy location plus region paths', () => {
   const canonicalResult = parsePharmacySegments({
     segments: ['location-nova-ivanivka', 'region-odesa-region'],
   });
@@ -320,16 +310,20 @@ test('uses semantic, neutral catalog SEO content', () => {
 
 //===================================================================
 
-test('treats known pharmacy catalog prefixes as catalog segments before legacy detail lookup', () => {
+test('treats only canonical pharmacy catalog prefixes as catalog segments before detail lookup', () => {
   for (const segment of [
     'location-aaaaaaaaaaaaaaaaaaaaaaaa',
     'region-aaaaaaaaaaaaaaaaaaaaaaaa',
-    'city-aaaaaaaaaaaaaaaaaaaaaaaa',
     'address-aaaaaaaaaaaaaaaaaaaaaaaa',
     'search-name-aaaaaaaaaaaaaaaaaaaaaaaa',
   ]) {
     assert.equal(isPharmacyCatalogSegment(segment), true);
   }
+
+  assert.equal(
+    isPharmacyCatalogSegment('city-aaaaaaaaaaaaaaaaaaaaaaaa'),
+    false
+  );
 
   assert.equal(
     isPharmacyCatalogSegment('care-pharmacy-aaaaaaaaaaaaaaaaaaaaaaaa'),
@@ -362,7 +356,7 @@ test('uses path filters as canonical authority and query filters only as compati
   }).filters;
 
   const queryPharmacyFilters = parsePharmacySearchParams({
-    city: 'Lviv',
+    settlement: 'Lviv',
     sort: 'rating-desc',
   });
 

@@ -3,7 +3,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
-import { buildLegacyPharmacyLocationMigrationPlan } from './pharmacy-location-migration.service';
+import {
+  buildLegacyPendingModerationMigrationPlan,
+  buildLegacyPharmacyLocationMigrationPlan,
+} from './pharmacy-location-migration.service';
 
 //===============================================================
 
@@ -125,4 +128,93 @@ test('Stage 13.4.3 reports malformed legacy location values as invalid', () => {
 
   assert.equal(plan.invalid, true);
   assert.equal(plan.alreadyMigrated, false);
+});
+
+//===============================================================
+
+test('Stage 13.4.7 migrates legacy pending moderation address/city into one canonical location snapshot', () => {
+  const plan = buildLegacyPendingModerationMigrationPlan({
+    approvedLocation: {
+      address: '10 Pharmacy Street',
+      settlement: 'Odesa',
+      region: 'Odesa region',
+      countryCode: 'UA',
+    },
+
+    pendingModeration: {
+      city: 'Bolhrad',
+      phone: '+380501234567',
+    },
+  });
+
+  assert.equal(plan.invalid, false);
+  assert.equal(plan.shouldUpdate, true);
+
+  assert.deepEqual(plan.pendingModeration, {
+    location: {
+      address: '10 Pharmacy Street',
+      settlement: 'Bolhrad',
+      region: 'Odesa region',
+      countryCode: 'UA',
+    },
+    phone: '+380501234567',
+  });
+});
+
+//===============================================================
+
+test('Stage 13.4.7 removes persisted pending legacy fields without overwriting an existing canonical location', () => {
+  const plan = buildLegacyPendingModerationMigrationPlan({
+    approvedLocation: {
+      address: '10 Pharmacy Street',
+      settlement: 'Odesa',
+      countryCode: 'UA',
+    },
+
+    pendingModeration: {
+      address: 'Legacy address',
+      city: 'Legacy city',
+
+      location: {
+        address: '25 Medical Lane',
+        settlement: 'Reni',
+        countryCode: 'UA',
+      },
+      description: 'Pending description',
+    },
+  });
+
+  assert.equal(plan.invalid, false);
+  assert.equal(plan.shouldUpdate, true);
+
+  assert.deepEqual(plan.pendingModeration, {
+    location: {
+      address: '25 Medical Lane',
+      settlement: 'Reni',
+      countryCode: 'UA',
+    },
+    description: 'Pending description',
+  });
+});
+
+//===============================================================
+
+test('Stage 13.4.7 pending moderation cleanup is a no-op for canonical records', () => {
+  const plan = buildLegacyPendingModerationMigrationPlan({
+    approvedLocation: {
+      address: '10 Pharmacy Street',
+      settlement: 'Odesa',
+      countryCode: 'UA',
+    },
+
+    pendingModeration: {
+      location: {
+        address: '25 Medical Lane',
+        settlement: 'Reni',
+        countryCode: 'UA',
+      },
+    },
+  });
+
+  assert.deepEqual(plan, { shouldUpdate: false, invalid: false });
 });

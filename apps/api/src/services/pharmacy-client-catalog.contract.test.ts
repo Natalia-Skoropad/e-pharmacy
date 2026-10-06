@@ -82,11 +82,18 @@ test('Stage 13.4.5 address search covers address, settlement and region and loca
   assert.match(catalogService, /'location\.address'/);
   assert.match(catalogService, /'location\.settlement'/);
   assert.match(catalogService, /'location\.region'/);
-  assert.match(catalogService, /query\.settlement \?\? query\.city/);
+
+  assert.match(
+    catalogService,
+    /if \(query\.settlement\) filter\['location\.settlement'\] = query\.settlement/
+  );
+
+  assert.doesNotMatch(catalogService, /query\.city/);
   assert.match(catalogService, /query\.region/);
 
   assert.match(schemaSource, /settlement:\s*sharedSearchSchema/);
   assert.match(schemaSource, /region:\s*sharedSearchSchema/);
+  assert.doesNotMatch(schemaSource, /\bcity:\s*sharedSearchSchema/);
 });
 
 //===================================================================

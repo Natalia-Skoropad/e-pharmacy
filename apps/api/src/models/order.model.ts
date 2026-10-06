@@ -32,7 +32,7 @@ const orderPharmacySnapshotSchema = new Schema(
       default: undefined,
     },
 
-    // Historical snapshots created before Stage 13.4.6 keep these fields.
+    // Stage 13.4.7 exception: historical pre-location snapshots keep these fields.
     address: { type: String, trim: true, default: undefined },
     city: { type: String, trim: true, default: undefined },
     phone: { type: String, trim: true, default: undefined },

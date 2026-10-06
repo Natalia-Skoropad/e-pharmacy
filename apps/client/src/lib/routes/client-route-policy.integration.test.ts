@@ -178,7 +178,7 @@ test('catalog routes keep path authority, reject malformed pagination and bound 
     ['too_many']
   );
 
-  assert.equal(isPharmacyCatalogSegment(`city-${'a'.repeat(24)}`), true);
+  assert.equal(isPharmacyCatalogSegment(`city-${'a'.repeat(24)}`), false);
 });
 
 //===================================================================

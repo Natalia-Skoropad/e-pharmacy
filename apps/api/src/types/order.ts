@@ -43,9 +43,9 @@ export type OrderClientSnapshot = {
 export type OrderPharmacySnapshot = {
   name: string;
   location?: PharmacyLocationDraft;
-  /** @deprecated Historical snapshot compatibility only. */
+  /** @deprecated Stage 13.4.7 historical order snapshot compatibility only. */
   address?: string;
-  /** @deprecated Historical snapshot compatibility only. */
+  /** @deprecated Stage 13.4.7 historical order snapshot compatibility only. */
   city?: string;
   phone?: string;
   email?: string;

@@ -27,7 +27,6 @@ const PHARMACY_CATALOG_SEGMENT_PREFIXES = [
   'address-',
   'location-',
   'region-',
-  'city-',
   'sort-',
   'page-',
 ] as const;
@@ -141,25 +140,6 @@ export function parsePharmacySegments(
         return true;
       });
 
-      continue;
-    }
-
-    if (segment.startsWith('city-')) {
-      if (seen.has('settlement')) {
-        issues.push({ code: 'duplicate', segment, index });
-        continue;
-      }
-
-      seen.add('settlement');
-      const value = deslugifyNameSegment(segment.slice('city-'.length));
-
-      if (!value) {
-        issues.push({ code: 'malformed', segment, index });
-        continue;
-      }
-
-      filters.settlement = value;
-      issues.push({ code: 'legacy', segment, index });
       continue;
     }
 

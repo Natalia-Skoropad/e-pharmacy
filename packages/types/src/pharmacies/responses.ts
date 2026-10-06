@@ -31,8 +31,6 @@ export type PharmaciesQueryParams = Readonly<{
   addressKeyword?: string;
   settlement?: string;
   region?: string;
-  /** @deprecated Legacy compatibility only; use settlement + region. */
-  city?: string;
   sort?: PharmaciesSortFilter;
 }>;
 

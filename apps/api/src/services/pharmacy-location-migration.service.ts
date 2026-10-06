@@ -2,6 +2,7 @@ import type { Types } from 'mongoose';
 
 import { Pharmacy } from '../models/pharmacy.model';
 import { pharmacyLocationDraftSchema } from '../schemas/shared/pharmacy-location.schema';
+
 import type {
   PharmacyGeoPoint,
   PharmacyLocationDraft,
@@ -20,6 +21,7 @@ type LegacyPharmacyLocationRow = Readonly<{
   address?: unknown;
   city?: unknown;
   location?: unknown;
+  pendingModeration?: unknown;
 }>;
 
 type PharmacyIndexDescription = Readonly<{
@@ -42,6 +44,8 @@ export type PharmacyLocationMigrationResult = Readonly<{
   missingSettlement: number;
   alreadyMigrated: number;
   invalid: number;
+  pendingModerationMigrated: number;
+  pendingModerationInvalid: number;
 }>;
 
 //===============================================================
@@ -255,6 +259,116 @@ export function buildLegacyPharmacyLocationMigrationPlan(
 
 //===============================================================
 
+type PendingModerationMigrationPlan = Readonly<{
+  pendingModeration?: Record<string, unknown>;
+  shouldUpdate: boolean;
+  invalid: boolean;
+}>;
+
+//===============================================================
+
+export function buildLegacyPendingModerationMigrationPlan(
+  source: Readonly<{
+    approvedLocation?: unknown;
+    pendingModeration?: unknown;
+  }>
+): PendingModerationMigrationPlan {
+  const value = source.pendingModeration;
+
+  if (value === undefined || value === null) {
+    return { shouldUpdate: false, invalid: false };
+  }
+
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    return { shouldUpdate: false, invalid: true };
+  }
+
+  const pending = value as Record<string, unknown>;
+  const hasLegacyAddress = hasOwn(pending, 'address');
+  const hasLegacyCity = hasOwn(pending, 'city');
+
+  if (!hasLegacyAddress && !hasLegacyCity) {
+    return { shouldUpdate: false, invalid: false };
+  }
+
+  let location: PharmacyLocationDraft;
+
+  if (pending.location !== undefined) {
+    const parsedPendingLocation = pharmacyLocationDraftSchema.safeParse(
+      pending.location
+    );
+
+    if (!parsedPendingLocation.success) {
+      return { shouldUpdate: false, invalid: true };
+    }
+
+    location = parsedPendingLocation.data;
+  } else {
+    const approved = parseExistingLocation(source.approvedLocation);
+
+    if (approved.invalid) {
+      return { shouldUpdate: false, invalid: true };
+    }
+
+    const nextLocation: {
+      address?: string;
+      settlement?: string;
+      region?: string;
+      countryCode?: string;
+      geo?: PharmacyGeoPoint;
+    } = { ...approved.location };
+
+    if (hasLegacyAddress) {
+      if (pending.address === null) {
+        delete nextLocation.address;
+      } else {
+        const address = normalizeOptionalString(pending.address);
+        if (address.invalid || !address.value) {
+          return { shouldUpdate: false, invalid: true };
+        }
+        nextLocation.address = address.value;
+      }
+    }
+
+    if (hasLegacyCity) {
+      if (pending.city === null) {
+        delete nextLocation.settlement;
+      } else {
+        const settlement = normalizeOptionalString(pending.city);
+        if (settlement.invalid || !settlement.value) {
+          return { shouldUpdate: false, invalid: true };
+        }
+        nextLocation.settlement = settlement.value;
+      }
+    }
+
+    if (!nextLocation.countryCode) {
+      nextLocation.countryCode = DEFAULT_PHARMACY_COUNTRY_CODE;
+    }
+
+    const parsedLocation = pharmacyLocationDraftSchema.safeParse(nextLocation);
+
+    if (!parsedLocation.success) {
+      return { shouldUpdate: false, invalid: true };
+    }
+
+    location = parsedLocation.data;
+  }
+
+  const nextPending = { ...pending };
+  delete nextPending.address;
+  delete nextPending.city;
+  nextPending.location = location;
+
+  return {
+    pendingModeration: nextPending,
+    shouldUpdate: true,
+    invalid: false,
+  };
+}
+
+//===============================================================
+
 function getIndexKeyEntries(
   index: PharmacyIndexDescription
 ): Array<[string, unknown]> {
@@ -383,7 +497,18 @@ async function migratePharmacyLocationIndexes(): Promise<void> {
 
 export async function migratePharmacyLocations(): Promise<PharmacyLocationMigrationResult> {
   const rows = (await Pharmacy.collection
-    .find({}, { projection: { _id: 1, address: 1, city: 1, location: 1 } })
+    .find(
+      {},
+      {
+        projection: {
+          _id: 1,
+          address: 1,
+          city: 1,
+          location: 1,
+          pendingModeration: 1,
+        },
+      }
+    )
     .toArray()) as unknown as LegacyPharmacyLocationRow[];
 
   let migrated = 0;
@@ -391,6 +516,8 @@ export async function migratePharmacyLocations(): Promise<PharmacyLocationMigrat
   let missingSettlement = 0;
   let alreadyMigrated = 0;
   let invalid = 0;
+  let pendingModerationMigrated = 0;
+  let pendingModerationInvalid = 0;
 
   for (const row of rows) {
     const plan = buildLegacyPharmacyLocationMigrationPlan(row);
@@ -403,20 +530,44 @@ export async function migratePharmacyLocations(): Promise<PharmacyLocationMigrat
       continue;
     }
 
+    const pendingPlan = buildLegacyPendingModerationMigrationPlan({
+      approvedLocation: plan.location,
+      pendingModeration: row.pendingModeration,
+    });
+
+    if (pendingPlan.invalid) pendingModerationInvalid += 1;
+
+    const setFields: Record<string, unknown> = {};
+    const unsetFields: Record<string, ''> = {};
+
     if (plan.alreadyMigrated) {
       alreadyMigrated += 1;
-      continue;
+    } else {
+      setFields.location = plan.location;
+      unsetFields.address = '';
+      unsetFields.city = '';
+      migrated += 1;
     }
 
-    await Pharmacy.collection.updateOne(
-      { _id: row._id },
-      {
-        $set: { location: plan.location },
-        $unset: { address: '', city: '' },
-      }
-    );
+    if (pendingPlan.shouldUpdate && pendingPlan.pendingModeration) {
+      setFields.pendingModeration = pendingPlan.pendingModeration;
+      pendingModerationMigrated += 1;
+    }
 
-    migrated += 1;
+    if (
+      Object.keys(setFields).length > 0 ||
+      Object.keys(unsetFields).length > 0
+    ) {
+      await Pharmacy.collection.updateOne(
+        { _id: row._id },
+        {
+          ...(Object.keys(setFields).length > 0 ? { $set: setFields } : {}),
+          ...(Object.keys(unsetFields).length > 0
+            ? { $unset: unsetFields }
+            : {}),
+        }
+      );
+    }
   }
 
   await migratePharmacyLocationIndexes();
@@ -428,5 +579,7 @@ export async function migratePharmacyLocations(): Promise<PharmacyLocationMigrat
     missingSettlement,
     alreadyMigrated,
     invalid,
+    pendingModerationMigrated,
+    pendingModerationInvalid,
   };
 }

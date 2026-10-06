@@ -30,13 +30,6 @@ import { activateNewPharmacyOwnerForPharmacy } from './pharmacy-owner-lifecycle.
 
 //===============================================================
 
-type LegacyPharmacyPendingModeration = PharmacyPendingModeration & {
-  address?: string | null;
-  city?: string | null;
-};
-
-//===============================================================
-
 function clonePharmacyLocation(
   location?: PharmacyLocationDraft
 ): PharmacyLocationDraft | undefined {
@@ -68,43 +61,31 @@ function clonePharmacyLocation(
 //===============================================================
 
 function normalizePendingModeration(
-  current: PharmacyPendingModeration | undefined,
-  approvedLocation?: PharmacyLocationDraft
+  current: PharmacyPendingModeration | undefined
 ): PharmacyPendingModeration | undefined {
   if (!current) return undefined;
 
-  const legacy = current as LegacyPharmacyPendingModeration;
-  const pending: PharmacyPendingModeration = { ...current };
-  const pendingRecord = pending as Record<string, unknown>;
-  delete pendingRecord.address;
-  delete pendingRecord.city;
-
-  if (current.location) {
-    pending.location = clonePharmacyLocation(current.location);
-    return pending;
-  }
-
-  if (legacy.address === undefined && legacy.city === undefined) {
-    return pending;
-  }
-
-  const location: {
-    address?: string;
-    settlement?: string;
-    region?: string;
-    countryCode?: string;
-    geo?: PharmacyLocationDraft['geo'];
-  } = { ...(clonePharmacyLocation(approvedLocation) ?? {}) };
-
-  if (legacy.address === null) delete location.address;
-  else if (legacy.address !== undefined) location.address = legacy.address;
-
-  if (legacy.city === null) delete location.settlement;
-  else if (legacy.city !== undefined) location.settlement = legacy.city;
-
-  if (!location.countryCode) location.countryCode = 'UA';
-  pending.location = location;
-  return pending;
+  return {
+    ...(current.name !== undefined ? { name: current.name } : {}),
+    ...(current.location
+      ? { location: clonePharmacyLocation(current.location) }
+      : {}),
+    ...(current.phone !== undefined ? { phone: current.phone } : {}),
+    ...(current.email !== undefined ? { email: current.email } : {}),
+    ...(current.workingHours !== undefined
+      ? { workingHours: current.workingHours }
+      : {}),
+    ...(current.imageUrl !== undefined ? { imageUrl: current.imageUrl } : {}),
+    ...(current.description !== undefined
+      ? { description: current.description }
+      : {}),
+    ...(current.documents !== undefined
+      ? { documents: [...current.documents] }
+      : {}),
+    ...(current.bankDetails !== undefined
+      ? { bankDetails: { ...current.bankDetails } }
+      : {}),
+  };
 }
 
 //===============================================================
@@ -147,8 +128,7 @@ function serializePharmacyProfile(
     ...(pharmacy.pendingModeration
       ? {
           pendingModeration: normalizePendingModeration(
-            pharmacy.pendingModeration,
-            pharmacy.location
+            pharmacy.pendingModeration
           ),
         }
       : {}),
@@ -215,10 +195,7 @@ export async function updatePharmacyStatusByAdminService(
 
       if (input.status === PHARMACY_STATUSES.ACTIVE) {
         const pendingModeration =
-          normalizePendingModeration(
-            pharmacy.pendingModeration,
-            pharmacy.location
-          ) ?? {};
+          normalizePendingModeration(pharmacy.pendingModeration) ?? {};
 
         const { location, bankDetails, ...pendingRootFields } =
           pendingModeration;

@@ -55,8 +55,6 @@ export const pharmaciesQuerySchema = z.preprocess(
       addressKeyword: sharedSearchSchema,
       settlement: sharedSearchSchema,
       region: sharedSearchSchema,
-      // Temporary Stage 13 compatibility for legacy catalog URLs/clients.
-      city: sharedSearchSchema,
 
       sort: z
         .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])

@@ -163,7 +163,7 @@ const REVIEW_COMMENTS = [
 
 //===============================================================
 
-const CITIES = [
+const SETTLEMENTS = [
   'Kyiv',
   'Lviv',
   'Odesa',
@@ -1148,18 +1148,18 @@ async function seedDemoPharmacyOwners(
 function createSeedPharmacies() {
   return Array.from({ length: 98 }, (_, index) => {
     const pharmacyNumber = index + 1;
-    const city = CITIES[index % CITIES.length];
+    const settlement = SETTLEMENTS[index % SETTLEMENTS.length];
     const brand = PHARMACY_BRANDS[index % PHARMACY_BRANDS.length];
     const street = STREETS[index % STREETS.length];
     const reviewsCount = index < 34 ? 26 + (index % 9) : 6 + (index % 18);
 
-    const pharmacyName = `${brand} ${city} ${pharmacyNumber}`;
+    const pharmacyName = `${brand} ${settlement} ${pharmacyNumber}`;
 
     return {
       name: pharmacyName,
       location: {
         address: `${12 + index} ${street}`,
-        settlement: city,
+        settlement,
         countryCode: 'UA',
       },
       phone: `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`,
@@ -1171,7 +1171,7 @@ function createSeedPharmacies() {
       bankDetails: createBankDetails(pharmacyName, pharmacyNumber),
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createPharmacyImageUrl(index),
-      description: `${brand} in ${city} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local clients.`,
+      description: `${brand} in ${settlement} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local clients.`,
       ownerId: new mongoose.Types.ObjectId(),
       managerUserIds: [],
       status: PHARMACY_STATUSES.ACTIVE,

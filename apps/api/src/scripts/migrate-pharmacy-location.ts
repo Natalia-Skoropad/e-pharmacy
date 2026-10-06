@@ -33,6 +33,12 @@ async function migrate(): Promise<void> {
   console.log(`Missing settlement: ${result.missingSettlement}`);
   console.log(`Already migrated: ${result.alreadyMigrated}`);
   console.log(`Invalid: ${result.invalid}`);
+
+  console.log(
+    `Pending moderation migrated: ${result.pendingModerationMigrated}`
+  );
+
+  console.log(`Pending moderation invalid: ${result.pendingModerationInvalid}`);
 }
 
 //===============================================================

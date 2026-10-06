@@ -44,8 +44,6 @@ export type PharmacySearchParams = Record<string, CatalogSearchParamValue> & {
   address?: CatalogSearchParamValue;
   settlement?: CatalogSearchParamValue;
   region?: CatalogSearchParamValue;
-  /** Legacy Stage 13 URL compatibility. */
-  city?: CatalogSearchParamValue;
   sort?: CatalogSearchParamValue;
   page?: CatalogSearchParamValue;
 };
@@ -196,9 +194,7 @@ export function parsePharmacySearchParams(
   const name = getSingleSearchParam(params.name);
   const address = getSingleSearchParam(params.address);
 
-  const settlement =
-    getSingleSearchParam(params.settlement) ||
-    getSingleSearchParam(params.city);
+  const settlement = getSingleSearchParam(params.settlement);
 
   const region = getSingleSearchParam(params.region);
   const sort = getSingleSearchParam(params.sort);

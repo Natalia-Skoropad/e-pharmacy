@@ -48,8 +48,8 @@ test('new order snapshots persist canonical location while legacy address/city s
     /location:\s*\{[\s\S]*?orderPharmacyLocationSnapshotSchema/
   );
 
-  // Historical fields remain persistence-only compatibility until 13.4.7.
-  assert.match(model, /Historical snapshots created before Stage 13\.4\.6/);
+  // Stage 13.4.7 explicitly keeps historical order snapshot compatibility.
+  assert.match(model, /Stage 13\.4\.7 exception/);
   assert.match(model, /address:\s*\{ type: String/);
   assert.match(model, /city:\s*\{ type: String/);
 
