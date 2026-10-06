@@ -25,6 +25,8 @@ import type { CatalogSegmentIssue } from './product-catalog-paths';
 const PHARMACY_CATALOG_SEGMENT_PREFIXES = [
   'search-name-',
   'address-',
+  'location-',
+  'region-',
   'city-',
   'sort-',
   'page-',
@@ -54,7 +56,8 @@ export function parsePharmacySegments(
   const filters: PharmacyFilters = {
     name: '',
     address: '',
-    city: '',
+    settlement: '',
+    region: '',
     sort: 'newest',
     page: 1,
   };
@@ -119,14 +122,44 @@ export function parsePharmacySegments(
       continue;
     }
 
-    if (segment.startsWith('city-')) {
-      apply('city', segment, index, () => {
-        const value = deslugifyNameSegment(segment.slice('city-'.length));
+    if (segment.startsWith('location-')) {
+      apply('settlement', segment, index, () => {
+        const value = deslugifyNameSegment(segment.slice('location-'.length));
         if (!value) return false;
-        filters.city = value;
+        filters.settlement = value;
         return true;
       });
 
+      continue;
+    }
+
+    if (segment.startsWith('region-')) {
+      apply('region', segment, index, () => {
+        const value = deslugifyNameSegment(segment.slice('region-'.length));
+        if (!value) return false;
+        filters.region = value;
+        return true;
+      });
+
+      continue;
+    }
+
+    if (segment.startsWith('city-')) {
+      if (seen.has('settlement')) {
+        issues.push({ code: 'duplicate', segment, index });
+        continue;
+      }
+
+      seen.add('settlement');
+      const value = deslugifyNameSegment(segment.slice('city-'.length));
+
+      if (!value) {
+        issues.push({ code: 'malformed', segment, index });
+        continue;
+      }
+
+      filters.settlement = value;
+      issues.push({ code: 'legacy', segment, index });
       continue;
     }
 
@@ -154,6 +187,18 @@ export function parsePharmacySegments(
     issues.push({ code: 'unknown', segment, index });
   }
 
+  if (filters.region && !filters.settlement) {
+    const regionIndex = segments.findIndex((segment) =>
+      segment.startsWith('region-')
+    );
+
+    issues.push({
+      code: 'malformed',
+      segment: regionIndex >= 0 ? (segments[regionIndex] ?? '') : '',
+      index: Math.max(regionIndex, 0),
+    });
+  }
+
   return {
     filters,
     issues,
@@ -176,9 +221,14 @@ export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
     if (value) segments.push(`address-${value}`);
   }
 
-  if (filters.city) {
-    const value = slugifySegment(filters.city);
-    if (value) segments.push(`city-${value}`);
+  if (filters.settlement) {
+    const settlement = slugifySegment(filters.settlement);
+    if (settlement) segments.push(`location-${settlement}`);
+
+    if (filters.region) {
+      const region = slugifySegment(filters.region);
+      if (region) segments.push(`region-${region}`);
+    }
   }
 
   if (
@@ -203,7 +253,10 @@ export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
 export function buildPharmacyIndexedPath(
   filters: Partial<PharmacyFilters>
 ): string {
-  return buildPharmacyPath({ city: filters.city });
+  return buildPharmacyPath({
+    settlement: filters.settlement,
+    region: filters.region,
+  });
 }
 
 //===================================================================

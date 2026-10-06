@@ -66,6 +66,8 @@ type PharmaciesQuery = {
   keyword?: string;
   nameKeyword?: string;
   addressKeyword?: string;
+  settlement?: string;
+  region?: string;
   city?: string;
   sort?: 'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc';
 
@@ -195,12 +197,25 @@ function serializePharmacyCardSummary(
       pharmacy.name,
       pharmacyId
     ),
-    ...(pharmacy.location?.address
-      ? { address: pharmacy.location.address }
+    ...(pharmacy.location
+      ? {
+          location: {
+            ...(pharmacy.location.address
+              ? { address: pharmacy.location.address }
+              : {}),
+            ...(pharmacy.location.settlement
+              ? { settlement: pharmacy.location.settlement }
+              : {}),
+            ...(pharmacy.location.region
+              ? { region: pharmacy.location.region }
+              : {}),
+            ...(pharmacy.location.countryCode
+              ? { countryCode: pharmacy.location.countryCode }
+              : {}),
+          },
+        }
       : {}),
-    ...(pharmacy.location?.settlement
-      ? { city: pharmacy.location.settlement }
-      : {}),
+    ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     rating: pharmacy.rating ?? 0,
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
@@ -227,11 +242,23 @@ function serializePublicPharmacy(
       pharmacy.name,
       pharmacyId
     ),
-    ...(pharmacy.location?.address
-      ? { address: pharmacy.location.address }
-      : {}),
-    ...(pharmacy.location?.settlement
-      ? { city: pharmacy.location.settlement }
+    ...(pharmacy.location
+      ? {
+          location: {
+            ...(pharmacy.location.address
+              ? { address: pharmacy.location.address }
+              : {}),
+            ...(pharmacy.location.settlement
+              ? { settlement: pharmacy.location.settlement }
+              : {}),
+            ...(pharmacy.location.region
+              ? { region: pharmacy.location.region }
+              : {}),
+            ...(pharmacy.location.countryCode
+              ? { countryCode: pharmacy.location.countryCode }
+              : {}),
+          },
+        }
       : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
@@ -453,13 +480,71 @@ function serializePharmacyProfile(
 //===============================================================
 
 export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptionsResponseDto> {
-  const cities = await Pharmacy.distinct('location.settlement', {
-    status: PUBLIC_PHARMACY_STATUS_FILTER,
+  const pharmacies = await Pharmacy.find({
+    status: PHARMACY_STATUSES.ACTIVE,
     'location.settlement': { $type: 'string', $ne: '' },
+  })
+    .select('location.settlement location.region')
+    .lean<Array<{ location?: PharmacyLocationDraft }>>();
+
+  const uniqueLocations = new Map<
+    string,
+    { settlement: string; region?: string }
+  >();
+
+  for (const pharmacy of pharmacies) {
+    const settlement = pharmacy.location?.settlement?.trim();
+    if (!settlement) continue;
+
+    const region = pharmacy.location?.region?.trim() || undefined;
+    const key = [settlement, region ?? '']
+      .map((value) => value.normalize('NFKC').toLocaleLowerCase('uk-UA'))
+      .join('\u0000');
+
+    if (!uniqueLocations.has(key)) {
+      uniqueLocations.set(key, {
+        settlement,
+        ...(region ? { region } : {}),
+      });
+    }
+  }
+
+  const locations = [...uniqueLocations.values()].sort((left, right) => {
+    const settlementOrder = left.settlement.localeCompare(
+      right.settlement,
+      'uk-UA'
+    );
+
+    return settlementOrder !== 0
+      ? settlementOrder
+      : (left.region ?? '').localeCompare(right.region ?? '', 'uk-UA');
   });
 
+  const settlementCounts = new Map<string, number>();
+
+  for (const location of locations) {
+    const key = location.settlement
+      .normalize('NFKC')
+      .toLocaleLowerCase('uk-UA');
+    settlementCounts.set(key, (settlementCounts.get(key) ?? 0) + 1);
+  }
+
   return {
-    cities: cities.sort().map((value) => ({ value, label: value })),
+    locations: locations.map((location) => {
+      const settlementKey = location.settlement
+        .normalize('NFKC')
+        .toLocaleLowerCase('uk-UA');
+
+      const isDuplicateSettlement =
+        (settlementCounts.get(settlementKey) ?? 0) > 1;
+
+      return {
+        ...location,
+        label: isDuplicateSettlement
+          ? `${location.settlement} (${location.region ?? 'region not specified'})`
+          : location.settlement,
+      };
+    }),
     sort: [
       { value: 'newest', label: 'Newest first' },
       { value: 'rating-desc', label: 'Rating: highest first' },
@@ -562,6 +647,7 @@ export async function getPharmaciesService(
       { name: createFlexibleSearchRegExp(query.keyword) },
       { 'location.address': createFlexibleSearchRegExp(query.keyword) },
       { 'location.settlement': createFlexibleSearchRegExp(query.keyword) },
+      { 'location.region': createFlexibleSearchRegExp(query.keyword) },
     ];
   }
 
@@ -584,12 +670,17 @@ export async function getPharmaciesService(
               query.addressKeyword
             ),
           },
+          {
+            'location.region': createFlexibleSearchRegExp(query.addressKeyword),
+          },
         ],
       },
     ];
   }
 
-  if (query.city) filter['location.settlement'] = query.city;
+  const settlement = query.settlement ?? query.city;
+  if (settlement) filter['location.settlement'] = settlement;
+  if (query.region) filter['location.region'] = query.region;
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-asc'
       ? { name: 1 }

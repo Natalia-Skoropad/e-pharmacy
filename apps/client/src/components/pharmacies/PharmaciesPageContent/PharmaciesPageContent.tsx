@@ -1,13 +1,19 @@
+import type {
+  PharmacyCardSummary,
+  PharmacyLocationFilterOption,
+} from '@e-pharmacy/types/pharmacies';
+
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
-import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 
 import type { ResourceState } from '@/lib/api/resource-state';
 import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
 
 import {
   buildPharmacyPath,
+  formatPharmacyLocationLabel,
   getPharmaciesSeoContent,
   getPharmacyTitle,
+  normalizeLocationKey,
   shouldShowPharmaciesSeoText,
   type PharmacyFilters,
 } from '@/lib/catalog/pharmacies-catalog';
@@ -27,7 +33,7 @@ export type PharmaciesPageContentProps = Readonly<{
   total: number;
   totalPages: number;
   filters: PharmacyFilters;
-  cityOptions: string[];
+  locationOptions: readonly PharmacyLocationFilterOption[];
   resourceState: CatalogResourceState;
   filtersState: ResourceState;
 }>;
@@ -45,14 +51,30 @@ function PharmaciesPageContent({
   total,
   totalPages,
   filters,
-  cityOptions,
+  locationOptions,
   resourceState,
 }: PharmaciesPageContentProps) {
   const pageTitle = getPharmacyTitle(filters);
   const showSeoText = total > 0 && shouldShowPharmaciesSeoText(filters);
   const seoContent = getPharmaciesSeoContent(filters);
+
   const emptyIsFiltered =
     resourceState.status === 'empty' && resourceState.reason === 'no-matches';
+
+  const selectedLocation = filters.settlement
+    ? locationOptions.find(
+        (option) =>
+          normalizeLocationKey(option.settlement) ===
+            normalizeLocationKey(filters.settlement) &&
+          normalizeLocationKey(option.region ?? '') ===
+            normalizeLocationKey(filters.region)
+      )
+    : undefined;
+
+  const selectedLocationLabel = filters.settlement
+    ? (selectedLocation?.label ??
+      formatPharmacyLocationLabel(filters.settlement, filters.region))
+    : '';
 
   return (
     <CatalogPageShell
@@ -61,12 +83,12 @@ function PharmaciesPageContent({
       breadcrumbs={[
         { label: 'Home', href: ROUTES.HOME },
         { label: 'Pharmacies', href: ROUTES.PHARMACIES },
-        ...(filters.city ? [{ label: filters.city }] : []),
+        ...(selectedLocationLabel ? [{ label: selectedLocationLabel }] : []),
       ]}
       filters={
         <PharmaciesCatalogFiltersForm
           filters={filters}
-          cityOptions={cityOptions}
+          locationOptions={locationOptions}
           visiblePharmaciesCount={pharmacies.length}
           pharmaciesCount={total}
         />
@@ -82,7 +104,8 @@ function PharmaciesPageContent({
           }
           emptyMessage={
             emptyIsFiltered
-              ? 'No pharmacies match the selected city or search. Try changing or resetting the filters.'
+              ? 'No pharmacies match the selected location or search. ' +
+                'Try changing or resetting the filters.'
               : 'No pharmacies are available in the catalog yet.'
           }
           unavailableMessage="Pharmacies are loading."
@@ -109,9 +132,9 @@ function PharmaciesPageContent({
             titleId="pharmacies-seo-title"
           >
             <p>
-              {filters.city ? (
+              {selectedLocationLabel ? (
                 <>
-                  Browse <strong>pharmacies in {filters.city}</strong>{' '}
+                  Browse <strong>pharmacies in {selectedLocationLabel}</strong>{' '}
                   participating in E-PHARMACY.
                 </>
               ) : (

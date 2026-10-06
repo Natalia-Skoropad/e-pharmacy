@@ -29,6 +29,9 @@ export type PharmaciesQueryParams = Readonly<{
   keyword?: string;
   nameKeyword?: string;
   addressKeyword?: string;
+  settlement?: string;
+  region?: string;
+  /** @deprecated Legacy compatibility only; use settlement + region. */
   city?: string;
   sort?: PharmaciesSortFilter;
 }>;
@@ -44,10 +47,14 @@ export type PharmacyOptionsResponse = Readonly<{
 
 //=============================================================================
 
-type PharmacyFilterOption = Readonly<{ value: string; label: string }>;
+export type PharmacyLocationFilterOption = Readonly<{
+  settlement: string;
+  region?: string;
+  label: string;
+}>;
 
 export type PharmacyFilterOptionsResponse = Readonly<{
-  cities: readonly PharmacyFilterOption[];
+  locations: readonly PharmacyLocationFilterOption[];
   sort: readonly Readonly<{
     value: PharmaciesSortFilter;
     label: string;

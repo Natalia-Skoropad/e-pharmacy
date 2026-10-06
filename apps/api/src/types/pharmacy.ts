@@ -142,8 +142,14 @@ export type PharmacyFilterOptionDto<TValue extends string = string> = {
 
 //===============================================================
 
+export type PharmacyLocationFilterOptionDto = {
+  settlement: string;
+  region?: string;
+  label: string;
+};
+
 export type PharmacyFilterOptionsResponseDto = {
-  cities: PharmacyFilterOptionDto[];
+  locations: PharmacyLocationFilterOptionDto[];
 
   sort: PharmacyFilterOptionDto<
     'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc'
@@ -156,8 +162,8 @@ export type PharmacyCardSummaryResponseDto = {
   id: string;
   name: string;
   publicSlugId: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
+  email?: string;
   phone?: string;
   rating: number;
   imageUrl?: string;
@@ -170,8 +176,7 @@ export type PublicPharmacyResponseDto = {
   id: string;
   name: string;
   publicSlugId: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
   phone?: string;
   email?: string;
   workingHours?: string;

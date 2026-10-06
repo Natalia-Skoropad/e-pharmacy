@@ -21,6 +21,7 @@ type ActivityActorIdentityProps = Readonly<{
   showPhoto?: boolean;
   showStatus?: boolean;
   photoSize?: number;
+  statusPlacement?: 'stacked' | 'inline';
 }>;
 
 //===================================================================
@@ -31,42 +32,51 @@ export function ActivityActorIdentity({
   showPhoto = false,
   showStatus = true,
   photoSize = 34,
+  statusPlacement = 'stacked',
 }: ActivityActorIdentityProps) {
   const href = actor ? getAdminAuditActorHref(actor) : null;
   const actorLabel = actor
     ? `${actorNameSnapshot} (${getAdminAuditActorTypeLabel(actor.actorType)})`
     : actorNameSnapshot;
 
-  const identity = (
-    <span className={css.actorIdentityMain}>
-      {showPhoto ? (
-        <TableImagePreview
-          src={actor?.pictureUrl}
-          alt={`${actorNameSnapshot} photo`}
-          fallback={formatInitials(actorNameSnapshot, 'A')}
-          size={photoSize}
-        />
-      ) : null}
+  const status = showStatus ? (
+    actor ? (
+      <StatusBadge {...USER_STATUS_PRESENTATION[actor.status]} />
+    ) : (
+      <span className={css.employeeStatusFallback}>Unavailable</span>
+    )
+  ) : null;
 
-      <span className={css.actorIdentityName}>{actorLabel}</span>
-    </span>
+  const name = href ? (
+    <TextActionButton className={css.actorIdentityNameLink} href={href}>
+      {actorLabel}
+    </TextActionButton>
+  ) : (
+    <span className={css.actorIdentityName}>{actorLabel}</span>
   );
 
   return (
     <span className={css.employeeCell}>
-      {href ? (
-        <TextActionButton href={href}>{identity}</TextActionButton>
-      ) : (
-        identity
-      )}
+      <span className={css.actorIdentityMain}>
+        {showPhoto ? (
+          <TableImagePreview
+            className={css.actorIdentityPhoto}
+            src={actor?.pictureUrl}
+            alt={`${actorNameSnapshot} photo`}
+            fallback={formatInitials(actorNameSnapshot, 'A')}
+            size={photoSize}
+          />
+        ) : null}
 
-      {showStatus ? (
-        actor ? (
-          <StatusBadge {...USER_STATUS_PRESENTATION[actor.status]} />
-        ) : (
-          <span className={css.employeeStatusFallback}>Unavailable</span>
-        )
-      ) : null}
+        <span className={css.actorIdentityCopy}>
+          <span className={css.actorIdentityNameRow}>
+            {name}
+            {statusPlacement === 'inline' ? status : null}
+          </span>
+
+          {statusPlacement === 'stacked' ? status : null}
+        </span>
+      </span>
     </span>
   );
 }

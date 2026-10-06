@@ -49,12 +49,15 @@ function createInfoDocument(
     path: ROUTES.USER_AGREEMENT,
     title: 'User Agreement',
     description: 'Terms',
+
     metadata: {
       version: approvalStatus === 'approved' ? '2026-08' : 'draft-2026-08',
+
       effectiveAt:
         approvalStatus === 'approved'
           ? { iso: '2026-08-18', label: '18 August 2026' }
           : null,
+
       updatedAt: { iso: '2026-08-18', label: '18 August 2026' },
       contentOwner: approvalStatus === 'approved' ? 'Legal' : null,
       approvalStatus,
@@ -62,6 +65,7 @@ function createInfoDocument(
       supportRoute: null,
       reviewId: approvalStatus === 'approved' ? 'LEGAL-2026-08' : null,
     },
+
     sections: [],
   };
 }
@@ -97,6 +101,7 @@ test('product SEO canonical keeps indexed dimensions and removes noindex noise',
   };
 
   assert.equal(isProductCatalogNoIndex(filters), true);
+
   assert.equal(
     buildProductCatalogCanonicalPath(filters),
     `${ROUTES.PRODUCTS_CATALOG}/category-medicine`
@@ -105,19 +110,21 @@ test('product SEO canonical keeps indexed dimensions and removes noindex noise',
 
 //===================================================================
 
-test('pharmacy SEO canonical keeps the indexed city dimension and removes noindex noise', () => {
+test('pharmacy SEO canonical keeps the indexed location dimension and removes noindex noise', () => {
   const filters: PharmacyFilters = {
     name: 'health',
     address: 'main street',
-    city: 'Kyiv',
+    settlement: 'Nova Ivanivka',
+    region: 'Odesa region',
     sort: 'rating-desc',
     page: 3,
   };
 
   assert.equal(isPharmacyNoIndex(filters), true);
+
   assert.equal(
     buildPharmacyCanonicalPath(filters),
-    `${ROUTES.PHARMACIES}/city-kyiv`
+    `${ROUTES.PHARMACIES}/location-nova-ivanivka/region-odesa-region`
   );
 });
 

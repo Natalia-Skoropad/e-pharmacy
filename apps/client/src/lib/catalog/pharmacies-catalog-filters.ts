@@ -1,6 +1,10 @@
-import { sanitizeTextParam } from '@e-pharmacy/validation/url';
+import type {
+  PharmaciesSortFilter,
+  PharmacyLocationFilterOption,
+} from '@e-pharmacy/types/pharmacies';
+
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import type { PharmaciesSortFilter } from '@e-pharmacy/types/pharmacies';
+import { sanitizeTextParam } from '@e-pharmacy/validation/url';
 
 import {
   getSingleSearchParam,
@@ -38,6 +42,9 @@ const PHARMACIES_PER_PAGE = 24;
 export type PharmacySearchParams = Record<string, CatalogSearchParamValue> & {
   name?: CatalogSearchParamValue;
   address?: CatalogSearchParamValue;
+  settlement?: CatalogSearchParamValue;
+  region?: CatalogSearchParamValue;
+  /** Legacy Stage 13 URL compatibility. */
   city?: CatalogSearchParamValue;
   sort?: CatalogSearchParamValue;
   page?: CatalogSearchParamValue;
@@ -50,7 +57,8 @@ export type PharmacyRouteParams = {
 export type PharmacyFilters = {
   name: string;
   address: string;
-  city: string;
+  settlement: string;
+  region: string;
   sort: PharmaciesSortFilter;
   page: number;
 };
@@ -60,7 +68,8 @@ export type PharmacyApiParams = {
   perPage: number;
   nameKeyword?: string;
   addressKeyword?: string;
-  city?: string;
+  settlement?: string;
+  region?: string;
   sort?: PharmaciesSortFilter;
 };
 
@@ -74,7 +83,7 @@ export function isPharmacySortFilter(
 
 //===================================================================
 
-export function normalizeCityKey(value: string): string {
+export function normalizeLocationKey(value: string): string {
   return value
     .normalize('NFKC')
     .toLocaleLowerCase('uk-UA')
@@ -83,7 +92,7 @@ export function normalizeCityKey(value: string): string {
 
 //===================================================================
 
-function formatCityFallback(value: string): string {
+function formatLocationPartFallback(value: string): string {
   return value
     .normalize('NFKC')
     .toLocaleLowerCase('uk-UA')
@@ -94,38 +103,88 @@ function formatCityFallback(value: string): string {
 
 //===================================================================
 
-export function formatPharmacyCityLabel(value: string): string {
-  const sanitizedCity = sanitizeTextParam(value);
+export function formatPharmacyLocationLabel(
+  settlement: string,
+  region?: string
+): string {
+  const sanitizedSettlement = sanitizeTextParam(settlement);
+  if (!sanitizedSettlement) return '';
 
-  return sanitizedCity ? formatCityFallback(sanitizedCity) : '';
+  const sanitizedRegion = sanitizeTextParam(region);
+
+  return sanitizedRegion
+    ? `${sanitizedSettlement} (${sanitizedRegion})`
+    : sanitizedSettlement;
 }
 
 //===================================================================
 
-export function resolvePharmacyCity(value: string, cities: string[]): string {
-  const sanitizedCity = sanitizeTextParam(value);
-  if (!sanitizedCity) return '';
+export function resolvePharmacyLocation(
+  settlement: string,
+  region: string,
+  locations: readonly PharmacyLocationFilterOption[]
+): Readonly<{ settlement: string; region: string }> {
+  const sanitizedSettlement = sanitizeTextParam(settlement);
+  if (!sanitizedSettlement) return { settlement: '', region: '' };
 
-  const normalizedCity = normalizeCityKey(sanitizedCity);
+  const sanitizedRegion = sanitizeTextParam(region);
+  const settlementKey = normalizeLocationKey(sanitizedSettlement);
 
-  const matchedCity = cities.find(
-    (city) => normalizeCityKey(city) === normalizedCity
+  const matchingSettlements = locations.filter(
+    (location) => normalizeLocationKey(location.settlement) === settlementKey
   );
 
-  return matchedCity ?? formatPharmacyCityLabel(sanitizedCity);
+  if (sanitizedRegion) {
+    const regionKey = normalizeLocationKey(sanitizedRegion);
+    const exactMatch = matchingSettlements.find(
+      (location) => normalizeLocationKey(location.region ?? '') === regionKey
+    );
+
+    if (exactMatch) {
+      return {
+        settlement: exactMatch.settlement,
+        region: exactMatch.region ?? '',
+      };
+    }
+  } else if (matchingSettlements.length === 1) {
+    const [onlyMatch] = matchingSettlements;
+
+    return {
+      settlement: onlyMatch?.settlement ?? sanitizedSettlement,
+      region: onlyMatch?.region ?? '',
+    };
+  } else if (matchingSettlements.length > 1) {
+    return {
+      settlement: matchingSettlements[0]?.settlement ?? sanitizedSettlement,
+      region: '',
+    };
+  }
+
+  return {
+    settlement: formatLocationPartFallback(sanitizedSettlement),
+    region: sanitizedRegion ? formatLocationPartFallback(sanitizedRegion) : '',
+  };
 }
 
 //===================================================================
 
-export function normalizePharmacyFiltersCity(
+export function normalizePharmacyFiltersLocation(
   filters: PharmacyFilters,
-  cities: string[]
+  locations: readonly PharmacyLocationFilterOption[]
 ): PharmacyFilters {
-  if (!filters.city) return filters;
+  if (!filters.settlement) {
+    return filters.region ? { ...filters, region: '' } : filters;
+  }
+
+  const normalizedLocation = resolvePharmacyLocation(
+    filters.settlement,
+    filters.region,
+    locations
+  );
 
   return {
     ...filters,
-    city: resolvePharmacyCity(filters.city, cities),
+    ...normalizedLocation,
   };
 }
 
@@ -136,14 +195,21 @@ export function parsePharmacySearchParams(
 ): PharmacyFilters {
   const name = getSingleSearchParam(params.name);
   const address = getSingleSearchParam(params.address);
-  const city = getSingleSearchParam(params.city);
+
+  const settlement =
+    getSingleSearchParam(params.settlement) ||
+    getSingleSearchParam(params.city);
+
+  const region = getSingleSearchParam(params.region);
   const sort = getSingleSearchParam(params.sort);
   const page = getSingleSearchParam(params.page);
+  const sanitizedSettlement = sanitizeTextParam(settlement);
 
   return {
     name: sanitizeTextParam(name),
     address: sanitizeTextParam(address),
-    city: sanitizeTextParam(city),
+    settlement: sanitizedSettlement,
+    region: sanitizedSettlement ? sanitizeTextParam(region) : '',
     sort: isPharmacySortFilter(sort) ? sort : 'newest',
     page: parsePositivePageParam(page),
   };
@@ -155,11 +221,17 @@ export function mergePharmacyCatalogFilters(
   routeFilters: PharmacyFilters,
   queryFilters: PharmacyFilters
 ): PharmacyFilters {
+  const settlement = routeFilters.settlement || queryFilters.settlement;
+
   return {
     name: routeFilters.name || queryFilters.name,
     address: routeFilters.address || queryFilters.address,
-    city: routeFilters.city || queryFilters.city,
-    sort: routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
+    settlement,
+    region: settlement ? routeFilters.region || queryFilters.region : '',
+
+    sort:
+      routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
+
     page: routeFilters.page > 1 ? routeFilters.page : queryFilters.page,
   };
 }
@@ -174,7 +246,8 @@ export function buildPharmacyApiParams(
     perPage: PHARMACIES_PER_PAGE,
     nameKeyword: filters.name || undefined,
     addressKeyword: filters.address || undefined,
-    city: filters.city || undefined,
+    settlement: filters.settlement || undefined,
+    region: filters.region || undefined,
     sort: filters.sort,
   };
 }
@@ -187,7 +260,7 @@ export function getPharmacyActiveFiltersCount(
   return countTrueConditions(
     Boolean(filters.name),
     Boolean(filters.address),
-    Boolean(filters.city)
+    Boolean(filters.settlement)
   );
 }
 

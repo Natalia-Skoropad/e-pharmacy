@@ -159,6 +159,14 @@ test('public product queries reject management-only lifecycle filters', () => {
 //===============================================================
 
 test('public cacheable query schemas reject unknown parameters', () => {
+  assert.equal(
+    pharmaciesQuerySchema.safeParse({
+      settlement: 'Nova Ivanivka',
+      region: 'Odesa region',
+    }).success,
+    true
+  );
+
   assert.equal(pharmaciesQuerySchema.safeParse({ junk: 'a' }).success, false);
 
   assert.equal(

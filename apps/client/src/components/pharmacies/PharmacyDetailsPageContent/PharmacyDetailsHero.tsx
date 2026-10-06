@@ -69,7 +69,9 @@ export function PharmacyDetailsHero({
 
       <div className={css.content}>
         <div className={css.topLine}>
-          <p className={css.kicker}>{pharmacy.city ?? 'Pharmacy profile'}</p>
+          <p className={css.kicker}>
+            {pharmacy.location?.settlement ?? 'Pharmacy profile'}
+          </p>
 
           {shouldRenderFavoriteControl({
             isAuthenticated,

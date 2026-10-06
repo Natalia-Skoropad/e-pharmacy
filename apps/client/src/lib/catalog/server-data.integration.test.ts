@@ -55,7 +55,14 @@ test('preserves independent degraded states for product catalog resources', () =
 
 test('does not represent a pharmacy filter outage as an available empty list', () => {
   const page = createPharmaciesCatalogPageData({
-    filters: { name: '', address: '', city: '', sort: 'rating-desc', page: 1 },
+    filters: {
+      name: '',
+      address: '',
+      settlement: '',
+      region: '',
+      sort: 'rating-desc',
+      page: 1,
+    },
 
     pharmaciesState: {
       status: 'success',
@@ -67,7 +74,7 @@ test('does not represent a pharmacy filter outage as an available empty list', (
 
   assert.equal(page.resourceState.status, 'empty');
   assert.equal(page.filtersState.status, 'unavailable');
-  assert.deepEqual(page.cityOptions, []);
+  assert.deepEqual(page.locationOptions, []);
 });
 
 //===================================================================
@@ -104,7 +111,8 @@ test('classifies filtered empty results separately from an empty catalog', () =>
     filters: {
       name: 'Care',
       address: '',
-      city: '',
+      settlement: '',
+      region: '',
       sort: 'newest',
       page: 1,
     },
@@ -114,7 +122,7 @@ test('classifies filtered empty results separately from an empty catalog', () =>
       data: { items: [], page: 1, perPage: 24, total: 0, totalPages: 0 },
     },
 
-    filterState: { status: 'success', data: { cities: [], sort: [] } },
+    filterState: { status: 'success', data: { locations: [], sort: [] } },
   });
 
   assert.deepEqual(page.resourceState, {

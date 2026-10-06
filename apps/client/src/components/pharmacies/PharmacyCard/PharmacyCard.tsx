@@ -4,6 +4,7 @@ import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
@@ -59,6 +60,8 @@ function PharmacyCard({
     [pharmacy]
   );
 
+  const locationLabel = formatPharmacyLocation(pharmacy.location);
+
   const pharmacyHref = buildPharmacyPath(
     pharmacy.name,
     pharmacy.id,
@@ -89,7 +92,9 @@ function PharmacyCard({
         ) : undefined
       }
       metaStart={
-        pharmacy.city ? <span className={css.city}>{pharmacy.city}</span> : null
+        locationLabel ? (
+          <span className={css.location}>{locationLabel}</span>
+        ) : null
       }
       metaEnd={
         <RatingSummary
@@ -102,15 +107,26 @@ function PharmacyCard({
       summaryItems={
         <>
           <div>
-            <dt>Address</dt>
-            <dd>{pharmacy.address ?? 'Not specified'}</dd>
+            <dt>Email</dt>
+            <dd>
+              {pharmacy.email ? (
+                <a
+                  className={css.contactLink}
+                  href={`mailto:${pharmacy.email}`}
+                >
+                  {pharmacy.email}
+                </a>
+              ) : (
+                'Not specified'
+              )}
+            </dd>
           </div>
 
           {pharmacy.phone ? (
             <div>
               <dt>Phone</dt>
               <dd>
-                <a className={css.phoneLink} href={`tel:${pharmacy.phone}`}>
+                <a className={css.contactLink} href={`tel:${pharmacy.phone}`}>
                   {pharmacy.phone}
                 </a>
               </dd>

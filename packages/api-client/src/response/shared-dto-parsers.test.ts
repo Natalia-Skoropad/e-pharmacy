@@ -12,6 +12,7 @@ import {
   parsePharmaciesResponse,
   parsePharmacyCheckoutDetailsResponse,
   parsePharmacyDetailsResponse,
+  parsePharmacyFilterOptionsResponse,
   parsePharmacyProfileResponse,
   parsePharmacyRegistrationDocumentUploadResponse,
   parsePharmacyRegistrationUploadSessionResponse,
@@ -213,6 +214,38 @@ test('accepts dynamic category filter options and still rejects malformed slugs'
 
 //===================================================================
 
+test('parses structured pharmacy location filter options', () => {
+  const response = {
+    locations: [
+      { settlement: 'Cherkasy', label: 'Cherkasy' },
+      {
+        settlement: 'Nova Ivanivka',
+        region: 'Odesa region',
+        label: 'Nova Ivanivka (Odesa region)',
+      },
+      {
+        settlement: 'Nova Ivanivka',
+        region: 'Kharkiv region',
+        label: 'Nova Ivanivka (Kharkiv region)',
+      },
+    ],
+    sort: [{ value: 'newest', label: 'Newest first' }],
+  } as const;
+
+  assert.deepEqual(parsePharmacyFilterOptionsResponse(response), response);
+
+  assert.throws(
+    () =>
+      parsePharmacyFilterOptionsResponse({
+        ...response,
+        locations: [{ value: 'Cherkasy', label: 'Cherkasy' }],
+      }),
+    ApiError
+  );
+});
+
+//===================================================================
+
 test('requires backend-provided typed public slug IDs', () => {
   const product = {
     id: '6a5f5242d9c46211621ad70a',
@@ -386,6 +419,12 @@ test('requires backend-provided typed public slug IDs', () => {
     id: '6a5f5244a3defb1d037f06e7',
     name: 'Pharmacy Care Pharmacy Lviv',
     publicSlugId: 'pharmacy-care-pharmacy-lviv-ph6a5f5244a3defb1d037f06e7',
+    location: {
+      address: '108 Medical Lane',
+      settlement: 'Cherkasy',
+      region: 'Cherkasy region',
+      countryCode: 'UA',
+    },
     rating: 5,
     availableProductsCount: 10,
     reviewsCount: 2,
@@ -398,6 +437,13 @@ test('requires backend-provided typed public slug IDs', () => {
     id: pharmacy.id,
     name: pharmacy.name,
     publicSlugId: pharmacy.publicSlugId,
+    location: {
+      address: '108 Medical Lane',
+      settlement: 'Cherkasy',
+      countryCode: 'UA',
+    },
+    email: 'care@example.com',
+    phone: '+380441234567',
     rating: pharmacy.rating,
     availableProductsCount: pharmacy.availableProductsCount,
     reviewsCount: pharmacy.reviewsCount,
@@ -427,10 +473,41 @@ test('requires backend-provided typed public slug IDs', () => {
     ApiError
   );
 
-  assert.equal(
-    parsePharmacyDetailsResponse({ pharmacy }).pharmacy.publicSlugId,
-    pharmacy.publicSlugId
-  );
+  for (const legacyLocationField of [
+    { address: '108 Medical Lane' },
+    { city: 'Cherkasy' },
+  ]) {
+    assert.throws(
+      () =>
+        parsePharmaciesResponse({
+          items: [{ ...pharmacySummary, ...legacyLocationField }],
+          page: 1,
+          perPage: 10,
+          total: 1,
+          totalPages: 1,
+        }),
+      ApiError
+    );
+  }
+
+  const publicPharmacy = parsePharmacyDetailsResponse({ pharmacy }).pharmacy;
+
+  assert.equal(publicPharmacy.publicSlugId, pharmacy.publicSlugId);
+  assert.equal(publicPharmacy.location?.settlement, 'Cherkasy');
+  assert.equal(publicPharmacy.location?.region, 'Cherkasy region');
+
+  for (const legacyLocationField of [
+    { address: '108 Medical Lane' },
+    { city: 'Cherkasy' },
+  ]) {
+    assert.throws(
+      () =>
+        parsePharmacyDetailsResponse({
+          pharmacy: { ...pharmacy, ...legacyLocationField },
+        }),
+      ApiError
+    );
+  }
 
   assert.throws(
     () =>

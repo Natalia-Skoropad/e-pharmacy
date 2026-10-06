@@ -99,7 +99,11 @@ test('activity actor identity links employees and pharmacy owners to dedicated c
   ]);
 
   assert.match(identitySource, /getAdminAuditActorHref/);
-  assert.match(identitySource, /<TextActionButton href=\{href\}>/);
+
+  assert.match(
+    identitySource,
+    /<TextActionButton[\s\S]*?className=\{css\.actorIdentityNameLink\}[\s\S]*?href=\{href\}/
+  );
 
   assert.match(
     presentationSource,
@@ -153,7 +157,14 @@ test('audit details reuse actor identity with photo and profile link', async () 
   );
 
   assert.match(identitySource, /<TableImagePreview/);
-  assert.match(identitySource, /<TextActionButton href=\{href\}>/);
+  assert.match(identitySource, /className=\{css\.actorIdentityPhoto\}/);
+
+  assert.match(
+    identitySource,
+    /<TextActionButton[\s\S]*?className=\{css\.actorIdentityNameLink\}[\s\S]*?href=\{href\}/
+  );
+
+  assert.match(modalSource, /statusPlacement="inline"/);
 });
 
 //===================================================================

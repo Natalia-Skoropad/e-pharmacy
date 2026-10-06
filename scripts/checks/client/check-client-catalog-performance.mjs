@@ -119,8 +119,19 @@ requirePattern(
   'PharmaciesResponse must paginate PharmacyCardSummary.'
 );
 
+requirePattern(
+  pharmacySummary,
+  /location\?:\s*PharmacyLocationDraft/,
+  'PharmacyCardSummary must use structured location data.'
+);
+
+requirePattern(
+  pharmacySummary,
+  /email\?:\s*string/,
+  'PharmacyCardSummary must include the card contact email.'
+);
+
 for (const forbidden of [
-  'email',
   'workingHours',
   'description',
   'updatedAt',
@@ -195,8 +206,15 @@ const pharmacyBudgetFixture = {
   id: '507f1f77bcf86cd799439012',
   name: 'Representative pharmacy',
   publicSlugId: 'representative-pharmacy-ph507f1f77bcf86cd799439012',
-  address: '1 Representative Street',
-  city: 'Kyiv',
+
+  location: {
+    address: '1 Representative Street',
+    settlement: 'Kyiv',
+    region: 'Kyiv region',
+    countryCode: 'UA',
+  },
+
+  email: 'representative@example.test',
   phone: '+380441234567',
   rating: 4.9,
   imageUrl: 'https://example.test/pharmacies/representative-pharmacy.webp',

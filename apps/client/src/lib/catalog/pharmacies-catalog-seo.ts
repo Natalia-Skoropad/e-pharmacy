@@ -1,5 +1,5 @@
 import {
-  formatPharmacyCityLabel,
+  formatPharmacyLocationLabel,
   isPharmacyNoIndex,
   type PharmacyFilters,
 } from './pharmacies-catalog-filters';
@@ -14,22 +14,36 @@ export type PharmaciesCatalogSeoContent = Readonly<{
 
 //===================================================================
 
-export function getPharmacyTitle(filters: PharmacyFilters): string {
-  if (filters.city) {
-    return `Choose a pharmacy in ${formatPharmacyCityLabel(filters.city)}`;
-  }
+function getSelectedLocationLabel(filters: PharmacyFilters): string {
+  return filters.settlement
+    ? formatPharmacyLocationLabel(filters.settlement, filters.region)
+    : '';
+}
 
-  return 'Pharmacies';
+//===================================================================
+
+export function getPharmacyTitle(filters: PharmacyFilters): string {
+  const locationLabel = getSelectedLocationLabel(filters);
+
+  return locationLabel ? `Choose a pharmacy in ${locationLabel}` : 'Pharmacies';
 }
 
 //===================================================================
 
 export function getPharmacyDescription(filters: PharmacyFilters): string {
-  if (filters.city) {
-    return `Find active E-PHARMACY pharmacies in ${formatPharmacyCityLabel(filters.city)}, compare ratings, addresses, contact details, and available products before preparing an order.`;
+  const locationLabel = getSelectedLocationLabel(filters);
+
+  if (locationLabel) {
+    return (
+      `Find active E-PHARMACY pharmacies in ${locationLabel}, compare ratings, ` +
+      'addresses, contact details, and available products before preparing an order.'
+    );
   }
 
-  return 'Find active E-PHARMACY pharmacies, compare ratings, addresses, contact details, and available products before preparing an order.';
+  return (
+    'Find active E-PHARMACY pharmacies, compare ratings, addresses, contact ' +
+    'details, and available products before preparing an order.'
+  );
 }
 
 //===================================================================
@@ -37,18 +51,22 @@ export function getPharmacyDescription(filters: PharmacyFilters): string {
 export function getPharmaciesSeoContent(
   filters: PharmacyFilters
 ): PharmaciesCatalogSeoContent {
-  const cityText = filters.city
-    ? `pharmacies in ${formatPharmacyCityLabel(filters.city)}`
+  const locationLabel = getSelectedLocationLabel(filters);
+
+  const locationText = locationLabel
+    ? `pharmacies in ${locationLabel}`
     : 'active pharmacies';
 
   return {
-    intro: `Browse ${cityText} participating in E-PHARMACY.`,
+    intro: `Browse ${locationText} participating in E-PHARMACY.`,
 
     comparison:
-      'Compare ratings, addresses, contact details, and the number of currently available products before opening a pharmacy page.',
+      'Compare ratings, addresses, contact details, and the number of currently ' +
+      'available products before opening a pharmacy page.',
 
     ordering:
-      'Choose a pharmacy to view its catalog and prepare an order. Availability, pickup, delivery, and final sale conditions are confirmed by the selected pharmacy.',
+      'Choose a pharmacy to view its catalog and prepare an order. Availability, ' +
+      'pickup, delivery, and final sale conditions are confirmed by the selected pharmacy.',
   };
 }
 

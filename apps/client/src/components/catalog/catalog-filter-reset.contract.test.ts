@@ -10,14 +10,14 @@ async function readSource(relativePath: string): Promise<string> {
 
 //===================================================================
 
-test('pharmacy reset clears name, address, city and sorting together', async () => {
+test('pharmacy reset clears name, address, location and sorting together', async () => {
   const source = await readSource(
     '../pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm.tsx'
   );
 
   assert.match(
     source,
-    /createPharmaciesResetFiltersHref[\s\S]*?name:\s*''[\s\S]*?address:\s*''[\s\S]*?city:\s*''[\s\S]*?sort:\s*'newest'/
+    /createPharmaciesResetFiltersHref[\s\S]*?name:\s*''[\s\S]*?address:\s*''[\s\S]*?settlement:\s*''[\s\S]*?region:\s*''[\s\S]*?sort:\s*'newest'/
   );
 
   assert.match(source, /resetDraft\(\{ name: '', address: '' \}\)/);

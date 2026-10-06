@@ -1,5 +1,4 @@
 import type {
-  PublicPharmacy,
   PublicPaymentBankDetails,
   PharmacyCheckoutDetails,
 } from '@e-pharmacy/types/pharmacies';
@@ -10,7 +9,7 @@ import { hasCartGroupStockConflict } from '@/lib/cart/cart-stock';
 //===================================================================
 
 export function getPharmacyEmail(
-  pharmacy?: Partial<PublicPharmacy> | null
+  pharmacy?: Partial<PharmacyCheckoutDetails> | null
 ): string {
   return pharmacy?.email?.trim() ?? '';
 }
@@ -18,7 +17,7 @@ export function getPharmacyEmail(
 //===================================================================
 
 export function getPharmacyPhone(
-  pharmacy?: Partial<PublicPharmacy> | null
+  pharmacy?: Partial<PharmacyCheckoutDetails> | null
 ): string {
   return pharmacy?.phone?.trim() ?? '';
 }
@@ -26,7 +25,7 @@ export function getPharmacyPhone(
 //===================================================================
 
 export function getPharmacyWorkingHours(
-  pharmacy?: Partial<PublicPharmacy> | null
+  pharmacy?: Partial<PharmacyCheckoutDetails> | null
 ): string {
   return pharmacy?.workingHours?.trim() ?? '';
 }
@@ -34,7 +33,7 @@ export function getPharmacyWorkingHours(
 //===================================================================
 
 export function getPharmacyAddress(
-  pharmacy?: Partial<PublicPharmacy> | null
+  pharmacy?: Partial<PharmacyCheckoutDetails> | null
 ): string {
   if (!pharmacy) return '';
 
@@ -47,7 +46,7 @@ export function getPharmacyAddress(
 //===================================================================
 
 export function getPharmacyBankDetails(
-  pharmacy?: (Partial<PublicPharmacy> & PharmacyCheckoutDetails) | null
+  pharmacy?: Partial<PharmacyCheckoutDetails> | null
 ): PublicPaymentBankDetails | null {
   return pharmacy?.bankDetails ?? null;
 }

@@ -11,11 +11,11 @@ import {
 import { getCatalogRedirectPage } from './catalog-resource-state';
 
 import {
-  formatPharmacyCityLabel,
-  normalizeCityKey,
-  resolvePharmacyCity,
+  formatPharmacyLocationLabel,
   mergePharmacyCatalogFilters,
+  normalizeLocationKey,
   parsePharmacySearchParams,
+  resolvePharmacyLocation,
 } from './pharmacies-catalog-filters';
 
 import {
@@ -40,28 +40,43 @@ import { getProductCatalogSeoContent } from './product-catalog-seo';
 
 //===================================================================
 
-test('normalizes Ukrainian cities without collapsing distinct values', () => {
-  assert.equal(normalizeCityKey('Київ'), 'київ');
-  assert.equal(normalizeCityKey('Львів'), 'львів');
-  assert.notEqual(normalizeCityKey('Київ'), normalizeCityKey('Львів'));
+test('normalizes settlements and resolves same-name locations by region', () => {
+  assert.equal(normalizeLocationKey('Київ'), 'київ');
+  assert.equal(normalizeLocationKey('Львів'), 'львів');
+  assert.notEqual(normalizeLocationKey('Київ'), normalizeLocationKey('Львів'));
 
-  assert.equal(
-    resolvePharmacyCity('івано-франківськ', ['Івано-Франківськ']),
-    'Івано-Франківськ'
+  const locations = [
+    { settlement: 'Cherkasy', label: 'Cherkasy' },
+    {
+      settlement: 'Nova Ivanivka',
+      region: 'Odesa region',
+      label: 'Nova Ivanivka (Odesa region)',
+    },
+    {
+      settlement: 'Nova Ivanivka',
+      region: 'Kharkiv region',
+      label: 'Nova Ivanivka (Kharkiv region)',
+    },
+  ] as const;
+
+  assert.deepEqual(resolvePharmacyLocation('cherkasy', '', locations), {
+    settlement: 'Cherkasy',
+    region: '',
+  });
+
+  assert.deepEqual(
+    resolvePharmacyLocation('nova ivanivka', 'odesa region', locations),
+    { settlement: 'Nova Ivanivka', region: 'Odesa region' }
   );
 
-  assert.equal(
-    resolvePharmacyCity('кам’янець-подільський', ['Кам’янець-Подільський']),
-    'Кам’янець-Подільський'
-  );
-
-  assert.equal(formatPharmacyCityLabel('cherkasy'), 'Cherkasy');
-
-  assert.equal(formatPharmacyCityLabel('ivano-frankivsk'), 'Ivano-Frankivsk');
+  assert.deepEqual(resolvePharmacyLocation('nova ivanivka', '', locations), {
+    settlement: 'Nova Ivanivka',
+    region: '',
+  });
 
   assert.equal(
-    formatPharmacyCityLabel('кам’янець-подільський'),
-    'Кам’янець-Подільський'
+    formatPharmacyLocationLabel('nova ivanivka', 'odesa region'),
+    'nova ivanivka (odesa region)'
   );
 });
 
@@ -142,7 +157,7 @@ test('accepts a future database category slug without compile-time membership', 
 
 test('reports duplicate and unknown pharmacy segments', () => {
   const result = parsePharmacySegments({
-    segments: ['city-київ', 'city-львів', 'page-1e3', 'other'],
+    segments: ['location-київ', 'location-львів', 'page-1e3', 'other'],
   });
 
   assert.equal(result.isCanonical, false);
@@ -152,12 +167,41 @@ test('reports duplicate and unknown pharmacy segments', () => {
     ['duplicate', 'malformed', 'unknown']
   );
 
-  assert.equal(result.filters.city, 'київ');
+  assert.equal(result.filters.settlement, 'київ');
 });
 
 //===================================================================
 
-test('builds typed canonical pharmacy filter paths and recognizes legacy paths', () => {
+test('recognizes legacy city paths and canonicalizes location plus region paths', () => {
+  const legacyResult = parsePharmacySegments({ segments: ['city-kyiv'] });
+
+  assert.equal(legacyResult.filters.settlement, 'kyiv');
+  assert.equal(legacyResult.isCanonical, false);
+
+  assert.deepEqual(
+    legacyResult.issues.map((issue) => issue.code),
+    ['legacy']
+  );
+
+  const canonicalResult = parsePharmacySegments({
+    segments: ['location-nova-ivanivka', 'region-odesa-region'],
+  });
+
+  assert.equal(canonicalResult.isCanonical, true);
+
+  assert.deepEqual(canonicalResult.filters, {
+    name: '',
+    address: '',
+    settlement: 'nova ivanivka',
+    region: 'odesa region',
+    sort: 'newest',
+    page: 1,
+  });
+});
+
+//===================================================================
+
+test('builds typed canonical pharmacy filter paths and recognizes legacy product pharmacy paths', () => {
   const pharmacyId = '6a5f5244a3defb1d037f06e7';
 
   const pharmacies = [
@@ -258,7 +302,8 @@ test('uses semantic, neutral catalog SEO content', () => {
   const pharmacyContent = getPharmaciesSeoContent({
     name: '',
     address: '',
-    city: '',
+    settlement: '',
+    region: '',
     sort: 'newest',
     page: 1,
   });
@@ -277,6 +322,8 @@ test('uses semantic, neutral catalog SEO content', () => {
 
 test('treats known pharmacy catalog prefixes as catalog segments before legacy detail lookup', () => {
   for (const segment of [
+    'location-aaaaaaaaaaaaaaaaaaaaaaaa',
+    'region-aaaaaaaaaaaaaaaaaaaaaaaa',
     'city-aaaaaaaaaaaaaaaaaaaaaaaa',
     'address-aaaaaaaaaaaaaaaaaaaaaaaa',
     'search-name-aaaaaaaaaaaaaaaaaaaaaaaa',
@@ -311,7 +358,7 @@ test('uses path filters as canonical authority and query filters only as compati
   assert.equal(productFilters.sort, 'rating-desc');
 
   const routePharmacyFilters = parsePharmacySegments({
-    segments: ['city-kyiv'],
+    segments: ['location-kyiv'],
   }).filters;
 
   const queryPharmacyFilters = parsePharmacySearchParams({
@@ -324,7 +371,7 @@ test('uses path filters as canonical authority and query filters only as compati
     queryPharmacyFilters
   );
 
-  assert.equal(pharmacyFilters.city, 'kyiv');
+  assert.equal(pharmacyFilters.settlement, 'kyiv');
   assert.equal(pharmacyFilters.sort, 'rating-desc');
 });
 
@@ -339,22 +386,27 @@ test('drops duplicate query values and recognizes any query form as compatibilit
     'all'
   );
 
-  assert.equal(parsePharmacySearchParams({ city: ['Kyiv', 'Lviv'] }).city, '');
+  assert.equal(
+    parsePharmacySearchParams({ settlement: ['Kyiv', 'Lviv'] }).settlement,
+    ''
+  );
+
   assert.equal(hasCatalogSearchParams({ foo: 'bar' }), true);
   assert.equal(hasCatalogSearchParams({}), false);
 });
 
 //===================================================================
 
-test('pharmacy noindex canonical keeps only the indexed city dimension', () => {
+test('pharmacy noindex canonical keeps only the indexed location dimension', () => {
   assert.equal(
     buildPharmacyCanonicalPath({
       name: 'Care',
       address: 'Main Street',
-      city: 'Київ',
+      settlement: 'Nova Ivanivka',
+      region: 'Odesa region',
       sort: 'rating-desc',
       page: 3,
     }),
-    '/pharmacies/city-київ'
+    '/pharmacies/location-nova-ivanivka/region-odesa-region'
   );
 });

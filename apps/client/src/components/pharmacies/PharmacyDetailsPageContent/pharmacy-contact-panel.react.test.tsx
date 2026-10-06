@@ -13,12 +13,20 @@ const pharmacy = {
   id: 'pharmacy-1',
   publicSlugId: 'care-pharmacy',
   name: 'Care Pharmacy',
-  address: '1 Test Street',
-  city: 'Lviv',
+
+  location: {
+    address: '1 Test Street',
+    settlement: 'Lviv',
+    region: 'Lviv region',
+    countryCode: 'UA',
+  },
+
   phone: '+380 44 123 45 67',
   email: 'contact@example.com',
+
   workingHours:
     'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
+
   rating: 4.9,
   availableProductsCount: 24,
   reviewsCount: 10,

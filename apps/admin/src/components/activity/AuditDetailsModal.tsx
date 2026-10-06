@@ -186,6 +186,7 @@ export function AuditDetailsModal({
                     actorNameSnapshot={details.actorNameSnapshot}
                     showPhoto
                     photoSize={34}
+                    statusPlacement="inline"
                   />
                 </dd>
               </div>

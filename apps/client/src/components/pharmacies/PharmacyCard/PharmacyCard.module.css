@@ -1,24 +1,23 @@
-.city {
+.location {
   display: block;
   min-width: 0;
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
   line-height: 1.3;
-  color: var(--color-accent);
-  text-transform: uppercase;
-  letter-spacing: var(--ls-wide);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
 }
 
 .ratingSummary {
   justify-content: flex-end;
 }
 
-.phoneLink {
+.contactLink {
   transition: color var(--transition-base);
 }
 
-.phoneLink:hover,
-.phoneLink:focus-visible {
+.contactLink:hover,
+.contactLink:focus-visible {
   color: var(--color-accent);
 }
 

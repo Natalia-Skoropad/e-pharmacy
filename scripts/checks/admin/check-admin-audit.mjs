@@ -601,7 +601,14 @@ assert.match(activityHistory, /title:\s*'Changed by'/);
 assert.match(activityHistory, /<ActivityActorIdentity/);
 assert.doesNotMatch(activityHistory, /Reason:\s*\{item\.reason\}/);
 assert.match(activityActorIdentity, /getAdminAuditActorHref/);
-assert.match(activityActorIdentity, /<TextActionButton href=\{href\}>/);
+
+assert.match(
+  activityActorIdentity,
+  /<TextActionButton[\s\S]*?className=\{css\.actorIdentityNameLink\}[\s\S]*?href=\{href\}/
+);
+
+assert.match(activityActorIdentity, /className=\{css\.actorIdentityPhoto\}/);
+assert.match(auditDetailsModal, /statusPlacement="inline"/);
 assert.match(activityActorIdentity, /<TableImagePreview/);
 assert.match(auditDetailsModal, /<ActivityActorIdentity[\s\S]*?showPhoto/);
 

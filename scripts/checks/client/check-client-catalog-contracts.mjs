@@ -19,11 +19,13 @@ const forbidPattern = (source, pattern, message) => {
 const [
   productSummary,
   pharmacySummary,
+  publicPharmacy,
   productResponses,
   pharmacyResponses,
   resourceState,
   productCard,
   pharmacyCard,
+  pharmacyContactPanel,
   productFilters,
   pharmacyFilters,
   offerList,
@@ -35,6 +37,7 @@ const [
 ] = await Promise.all([
   read('packages/types/src/products/product-card-summary.ts'),
   read('packages/types/src/pharmacies/pharmacy-card-summary.ts'),
+  read('packages/types/src/pharmacies/public-pharmacy.ts'),
   read('packages/types/src/products/responses.ts'),
   read('packages/types/src/pharmacies/responses.ts'),
   read('apps/client/src/lib/catalog/catalog-resource-state.ts'),
@@ -44,6 +47,10 @@ const [
   ),
 
   read('apps/client/src/components/pharmacies/PharmacyCard/PharmacyCard.tsx'),
+
+  read(
+    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyContactPanel.tsx'
+  ),
 
   read(
     'apps/client/src/components/product-catalog/ProductCatalogFiltersForm/ProductCatalogFiltersForm.tsx'
@@ -92,7 +99,6 @@ requirePattern(
 );
 
 for (const field of [
-  'email',
   'workingHours',
   'description',
   'updatedAt',
@@ -110,6 +116,47 @@ requirePattern(
   'PharmaciesResponse must use PharmacyCardSummary.'
 );
 
+requirePattern(
+  pharmacySummary,
+  /location\?:\s*PharmacyLocationDraft/,
+  'PharmacyCardSummary must expose canonical structured location.'
+);
+
+requirePattern(
+  pharmacySummary,
+  /email\?:\s*string/,
+  'PharmacyCardSummary must expose contact email for catalog cards.'
+);
+
+const publicPharmacyContract = publicPharmacy.slice(
+  publicPharmacy.indexOf('export type PublicPharmacy'),
+  publicPharmacy.indexOf('export type PharmacyCheckoutDetails')
+);
+
+requirePattern(
+  publicPharmacyContract,
+  /location\?:\s*PharmacyLocationDraft/,
+  'PublicPharmacy must expose canonical structured location.'
+);
+
+forbidPattern(
+  publicPharmacyContract,
+  /\b(?:address|city)\?:\s*string/,
+  'PublicPharmacy must not expose legacy top-level address/city fields.'
+);
+
+requirePattern(
+  pharmacyResponses,
+  /type PharmacyLocationFilterOption[\s\S]*?settlement:\s*string[\s\S]*?region\?:\s*string[\s\S]*?label:\s*string/,
+  'Pharmacy filters must expose settlement + optional region Location options.'
+);
+
+requirePattern(
+  pharmacyResponses,
+  /locations:\s*readonly PharmacyLocationFilterOption\[\]/,
+  'PharmacyFilterOptionsResponse must expose Location options.'
+);
+
 forbidPattern(
   productCard,
   /product\.offers/,
@@ -118,8 +165,50 @@ forbidPattern(
 
 forbidPattern(
   pharmacyCard,
-  /pharmacy\.(?:email|workingHours|description|bankDetails)/,
+  /pharmacy\.(?:workingHours|description|bankDetails)/,
   'PharmacyCard must not depend on detail-only fields.'
+);
+
+requirePattern(
+  pharmacyCard,
+  /formatPharmacyLocation\(pharmacy\.location\)/,
+  'PharmacyCard must render its full structured location once in metadata.'
+);
+
+requirePattern(
+  pharmacyCard,
+  /<dt>Email<\/dt>/,
+  'PharmacyCard must show email instead of a duplicated address row.'
+);
+
+forbidPattern(
+  pharmacyCard,
+  /<dt>Address<\/dt>|pharmacy\.city/,
+  'PharmacyCard must not render the legacy city or duplicated address row.'
+);
+
+requirePattern(
+  pharmacyContactPanel,
+  /formatPharmacyLocation\(pharmacy\.location\)/,
+  'Public pharmacy details must render canonical structured location.'
+);
+
+forbidPattern(
+  pharmacyContactPanel,
+  /pharmacy\.(?:address|city)/,
+  'Public pharmacy details must not read legacy top-level address/city fields.'
+);
+
+requirePattern(
+  pharmacyFilters,
+  /label="Location"/,
+  'Pharmacy catalog filters must label the selector as Location.'
+);
+
+requirePattern(
+  pharmacyFilters,
+  /All locations/,
+  'Pharmacy catalog filters must include the All locations option.'
 );
 
 for (const status of ['success', 'empty', 'unavailable']) {
@@ -224,5 +313,5 @@ if (violations.length > 0) {
 }
 
 console.log(
-  'Client catalog contract check passed (summary DTOs, resource states, filters, offers, bank details and review totals).'
+  'Client catalog contract check passed (structured locations, summary/public DTOs, resource states, filters, offers, bank details and review totals).'
 );

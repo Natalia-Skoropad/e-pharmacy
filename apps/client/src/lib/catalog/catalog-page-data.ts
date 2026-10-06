@@ -1,6 +1,7 @@
 import type {
   PharmacyOption,
   PharmacyCardSummary,
+  PharmacyLocationFilterOption,
 } from '@e-pharmacy/types/pharmacies';
 
 import type {
@@ -109,7 +110,7 @@ export type PharmaciesCatalogPageData = Readonly<{
   total: number;
   totalPages: number;
   filters: PharmacyFilters;
-  cityOptions: string[];
+  locationOptions: readonly PharmacyLocationFilterOption[];
   resourceState: CatalogResourceState;
   filtersState: ResourceState;
 }>;
@@ -134,10 +135,8 @@ export function createPharmaciesCatalogPageData({
     totalPages: pharmaciesData?.totalPages ?? 0,
     filters,
 
-    cityOptions:
-      filterState.status === 'success'
-        ? filterState.data.cities.map((city) => city.value)
-        : [],
+    locationOptions:
+      filterState.status === 'success' ? filterState.data.locations : [],
 
     resourceState:
       pharmaciesState.status === 'unavailable'

@@ -53,6 +53,9 @@ export const pharmaciesQuerySchema = z.preprocess(
       keyword: sharedSearchSchema,
       nameKeyword: sharedSearchSchema,
       addressKeyword: sharedSearchSchema,
+      settlement: sharedSearchSchema,
+      region: sharedSearchSchema,
+      // Temporary Stage 13 compatibility for legacy catalog URLs/clients.
       city: sharedSearchSchema,
 
       sort: z

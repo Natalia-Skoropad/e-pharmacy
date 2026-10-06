@@ -2,17 +2,21 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
+import type {
+  PharmaciesSortFilter,
+  PharmacyLocationFilterOption,
+} from '@e-pharmacy/types/pharmacies';
+
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { FiltersButton, ResetFiltersButton } from '@e-pharmacy/ui/primitives';
 
 import {
-  SearchableSelect,
   SearchInput,
+  SearchableSelect,
   SelectField,
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-import type { PharmaciesSortFilter } from '@e-pharmacy/types/pharmacies';
+import { FiltersButton, ResetFiltersButton } from '@e-pharmacy/ui/primitives';
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 
 import { CATALOG_SEARCH_UPDATE_DELAY } from '@/lib/catalog/catalog-config';
@@ -34,7 +38,7 @@ import { useCatalogSearchDraft } from '@/components/catalog/hooks/useCatalogSear
 
 type PharmaciesCatalogFiltersFormProps = Readonly<{
   filters: PharmacyFilters;
-  cityOptions: string[];
+  locationOptions: readonly PharmacyLocationFilterOption[];
   visiblePharmaciesCount: number;
   pharmaciesCount: number;
 }>;
@@ -56,11 +60,20 @@ function buildPharmacyFiltersHref(filters: PharmaciesHrefFilters) {
 
 //===================================================================
 
+function getLocationOptionValue(
+  option: Pick<PharmacyLocationFilterOption, 'settlement' | 'region'>
+): string {
+  return `${encodeURIComponent(option.settlement)}|${encodeURIComponent(option.region ?? '')}`;
+}
+
+//===================================================================
+
 function createPharmaciesResetFiltersHref() {
   return buildPharmacyFiltersHref({
     name: '',
     address: '',
-    city: '',
+    settlement: '',
+    region: '',
     sort: 'newest',
   });
 }
@@ -69,7 +82,7 @@ function createPharmaciesResetFiltersHref() {
 
 function PharmaciesCatalogFiltersForm({
   filters,
-  cityOptions,
+  locationOptions,
   visiblePharmaciesCount,
   pharmaciesCount,
 }: PharmaciesCatalogFiltersFormProps) {
@@ -116,13 +129,25 @@ function PharmaciesCatalogFiltersForm({
   const hasActiveFilters = activeFiltersCount > 0;
   const resetHref = createPharmaciesResetFiltersHref();
 
-  const citySelectOptions = useMemo(
+  const locationSelectOptions = useMemo(
     () => [
-      { value: 'all', label: 'All cities' },
-      ...cityOptions.map((city) => ({ value: city, label: city })),
+      { value: 'all', label: 'All locations' },
+      ...locationOptions.map((location) => ({
+        value: getLocationOptionValue(location),
+        label: location.label,
+      })),
     ],
-    [cityOptions]
+    [locationOptions]
   );
+
+  const selectedLocationValue = useMemo(() => {
+    if (!filters.settlement) return 'all';
+
+    return getLocationOptionValue({
+      settlement: filters.settlement,
+      ...(filters.region ? { region: filters.region } : {}),
+    });
+  }, [filters.region, filters.settlement]);
 
   const clearSearchDraft = () => {
     resetDraft({ name: '', address: '' });
@@ -133,21 +158,36 @@ function PharmaciesCatalogFiltersForm({
     setIsFiltersOpen(false);
   };
 
-  const cityControl = (idSuffix: string) => (
+  const locationControl = (idSuffix: string) => (
     <SearchableSelect
-      id={`pharmacies-city-${idSuffix}`}
-      label="City"
-      value={filters.city || 'all'}
-      options={citySelectOptions}
-      placeholder="All cities"
-      emptyMessage="No cities found"
-      isActive={Boolean(filters.city)}
+      id={`pharmacies-location-${idSuffix}`}
+      label="Location"
+      value={selectedLocationValue}
+      options={locationSelectOptions}
+      placeholder="All locations"
+      emptyMessage="No locations found"
+      isActive={Boolean(filters.settlement)}
       disabled={isPending}
       maxLength={USER_SEARCH_MAX_LENGTH}
       sanitizeQuery={sanitizeCatalogTextSearch}
-      onChange={(city: string) =>
-        updateCatalog({ ...filters, city: city === 'all' ? '' : city })
-      }
+      onChange={(value: string) => {
+        if (value === 'all') {
+          updateCatalog({ ...filters, settlement: '', region: '' });
+          return;
+        }
+
+        const location = locationOptions.find(
+          (option) => getLocationOptionValue(option) === value
+        );
+
+        if (!location) return;
+
+        updateCatalog({
+          ...filters,
+          settlement: location.settlement,
+          region: location.region ?? '',
+        });
+      }}
     />
   );
 
@@ -188,7 +228,7 @@ function PharmaciesCatalogFiltersForm({
             id="pharmacies-address-search"
             label="Search by address"
             value={draft.address}
-            placeholder="Address"
+            placeholder="Address, settlement or region"
             isActive={Boolean(draft.address.trim())}
             maxLength={USER_SEARCH_MAX_LENGTH}
             sanitizeValue={sanitizeCatalogTextSearch}
@@ -196,7 +236,7 @@ function PharmaciesCatalogFiltersForm({
           />
         </>
       }
-      desktopFilterFields={cityControl('desktop')}
+      desktopFilterFields={locationControl('desktop')}
       resetAction={
         <ResetFiltersButton
           href={resetHref}
@@ -236,7 +276,7 @@ function PharmaciesCatalogFiltersForm({
             setIsFiltersOpen(false);
           }}
         >
-          {cityControl('mobile')}
+          {locationControl('mobile')}
           {sortControl('pharmacies-sort-mobile')}
         </FilterDrawer>
       }

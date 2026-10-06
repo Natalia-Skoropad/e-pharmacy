@@ -21,7 +21,7 @@ import {
 import {
   buildPharmacyApiParams,
   buildPharmacyPath,
-  normalizePharmacyFiltersCity,
+  normalizePharmacyFiltersLocation,
   type PharmacyFilters,
 } from './pharmacies-catalog';
 
@@ -34,13 +34,11 @@ export async function resolvePharmaciesCatalogFilters(
     getPharmacyFilters(PUBLIC_DICTIONARY_CACHE_OPTIONS)
   );
 
-  const cityOptions =
-    filterState.status === 'success'
-      ? filterState.data.cities.map((city) => city.value)
-      : [];
+  const locationOptions =
+    filterState.status === 'success' ? filterState.data.locations : [];
 
   return {
-    filters: normalizePharmacyFiltersCity(parsedFilters, cityOptions),
+    filters: normalizePharmacyFiltersLocation(parsedFilters, locationOptions),
     filterState,
   };
 }
@@ -61,9 +59,12 @@ export async function loadPharmaciesCatalogPageData(
   ]);
 
   const { filters, filterState } = filterResolution;
-  const shouldRefetchWithNormalizedCity = filters.city !== parsedFilters.city;
 
-  const pharmaciesState = shouldRefetchWithNormalizedCity
+  const shouldRefetchWithNormalizedLocation =
+    filters.settlement !== parsedFilters.settlement ||
+    filters.region !== parsedFilters.region;
+
+  const pharmaciesState = shouldRefetchWithNormalizedLocation
     ? await resolveServerDataState(
         getPharmacies(
           buildPharmacyApiParams(filters),

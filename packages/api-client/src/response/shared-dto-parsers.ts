@@ -1054,13 +1054,22 @@ export function parsePharmacyCardSummary(
     record,
     'pharmacy card summary',
     {
-      address: 'string',
-      city: 'string',
+      location: 'record',
+      email: 'string',
       phone: 'string',
       imageUrl: 'string',
     },
     context
   );
+
+  const location =
+    record.location === undefined
+      ? undefined
+      : parsePharmacyLocationDraft(
+          record.location,
+          'pharmacy card summary location',
+          context
+        );
 
   requireSafeNonNegativeInteger(
     record,
@@ -1079,7 +1088,8 @@ export function parsePharmacyCardSummary(
   rejectFields(
     record,
     [
-      'email',
+      'address',
+      'city',
       'workingHours',
       'description',
       'updatedAt',
@@ -1090,7 +1100,10 @@ export function parsePharmacyCardSummary(
     context
   );
 
-  return checked<PharmacyCardSummary>(record);
+  return checked<PharmacyCardSummary>({
+    ...record,
+    ...(location ? { location } : {}),
+  });
 }
 
 //===================================================================
@@ -1122,8 +1135,7 @@ function parsePublicPharmacy(
     record,
     'pharmacy',
     {
-      address: 'string',
-      city: 'string',
+      location: 'record',
       phone: 'string',
       email: 'string',
       workingHours: 'string',
@@ -1133,6 +1145,15 @@ function parsePublicPharmacy(
     context
   );
 
+  const location =
+    record.location === undefined
+      ? undefined
+      : parsePharmacyLocationDraft(
+          record.location,
+          'pharmacy.location',
+          context
+        );
+
   requireSafeNonNegativeInteger(
     record,
     'availableProductsCount',
@@ -1141,9 +1162,12 @@ function parsePublicPharmacy(
   );
 
   requireSafeNonNegativeInteger(record, 'reviewsCount', 'pharmacy', context);
-  rejectFields(record, ['bankDetails'], 'pharmacy', context);
+  rejectFields(record, ['address', 'city', 'bankDetails'], 'pharmacy', context);
 
-  return checked<PublicPharmacy>(record);
+  return checked<PublicPharmacy>({
+    ...record,
+    ...(location ? { location } : {}),
+  });
 }
 
 //===================================================================
@@ -1199,6 +1223,39 @@ export function parsePharmacyOptionsResponse(
 
 //===================================================================
 
+function parsePharmacyLocationFilterOption(
+  value: unknown,
+  context?: ApiResponseContext
+): PharmacyFilterOptionsResponse['locations'][number] {
+  const record = requireRecord(
+    value,
+    'pharmacy location filter option',
+    context
+  );
+
+  requireFields(
+    record,
+    'pharmacy location filter option',
+    { settlement: 'string', label: 'string' },
+    context
+  );
+
+  requireOptionalFields(
+    record,
+    'pharmacy location filter option',
+    { region: 'string' },
+    context
+  );
+
+  return checked<PharmacyFilterOptionsResponse['locations'][number]>({
+    settlement: record.settlement,
+    ...(typeof record.region === 'string' ? { region: record.region } : {}),
+    label: record.label,
+  });
+}
+
+//===================================================================
+
 export function parsePharmacyFilterOptionsResponse(
   value: unknown,
   context?: ApiResponseContext
@@ -1210,7 +1267,12 @@ export function parsePharmacyFilterOptionsResponse(
   );
 
   return checked<PharmacyFilterOptionsResponse>({
-    cities: parseArray(record.cities, 'cities', parseFilterOption, context),
+    locations: parseArray(
+      record.locations,
+      'locations',
+      parsePharmacyLocationFilterOption,
+      context
+    ),
     sort: parseArray(record.sort, 'sort', parseFilterOption, context),
   });
 }

@@ -5,6 +5,7 @@ import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import { getTelephoneHref } from '@/lib/contact/telephone';
@@ -29,18 +30,19 @@ export function PharmacyContactPanel({
 }: PharmacyContactPanelProps) {
   const workingHours = pharmacy.workingHours?.trim() ?? '';
   const phoneHref = getTelephoneHref(pharmacy.phone);
+  const location = formatPharmacyLocation(pharmacy.location);
 
   return (
     <>
       <dl className={css.list}>
-        {pharmacy.address ? (
+        {location ? (
           <div className={css.item}>
             <dt>
               <MapPin size={18} aria-hidden="true" />
               Address
             </dt>
 
-            <dd>{pharmacy.address}</dd>
+            <dd>{location}</dd>
           </div>
         ) : null}
 
