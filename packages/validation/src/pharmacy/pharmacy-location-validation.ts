@@ -21,6 +21,7 @@ export type PharmacyLocationValidationErrors = Partial<
 //===================================================================
 
 export const PHARMACY_COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/;
+export const PHARMACY_LOCATION_TEXT_MAX_LENGTH = USER_SEARCH_MAX_LENGTH;
 
 export const PHARMACY_LOCATION_VALIDATION_MESSAGES = {
   required: {
@@ -116,12 +117,15 @@ export function validatePharmacyLocation(
   const required = mode === 'verification';
 
   const addressError = buildAddressError(location.address ?? '', { required });
+
   const settlementError = buildLocationTextError(
     location.settlement,
     'settlement',
     { required }
   );
+
   const regionError = buildLocationTextError(location.region, 'region');
+
   const countryCodeError = buildCountryCodeError(location.countryCode, {
     required,
   });

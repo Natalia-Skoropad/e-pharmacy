@@ -36,6 +36,7 @@ import type {
   PharmacyOptionsResponse,
   MyPharmacyProfile,
   PharmacyProfile,
+  PharmacyLocationDraft,
   PharmacyProfileResponse,
   PharmacyProfileDocumentUploadResponse,
   PharmacyProfileVerificationDocument,
@@ -825,6 +826,7 @@ export function parseProductsWithOffersResponse(
   context?: ApiResponseContext
 ): ProductsWithOffersResponse {
   const record = requireRecord(value, 'products with offers response', context);
+
   const pagination = requirePaginatedResponse(
     normalizePaginatedResponse(record, {
       normalizeItem: (item) => parseProductDetails(item, context),
@@ -862,6 +864,7 @@ export function parsePharmacyProductMutationResponse(
   context?: ApiResponseContext
 ): PharmacyProductMutationResponse {
   const record = requireRecord(value, 'product mutation response', context);
+
   requireFields(
     record,
     'product mutation response',
@@ -879,6 +882,7 @@ export function parsePharmacyProductMutationResponse(
 
 function parseFilterOption(value: unknown, context?: ApiResponseContext) {
   const record = requireRecord(value, 'filter option', context);
+
   requireFields(
     record,
     'filter option',
@@ -922,6 +926,7 @@ export function parseProductFilterOptionsResponse(
     'product filter options response',
     context
   );
+
   return checked<ProductFilterOptionsResponse>({
     categories: parseArray(
       record.categories,
@@ -948,6 +953,7 @@ function parseProductStockMovement(
   context?: ApiResponseContext
 ): ProductStockMovement {
   const record = requireRecord(value, 'stock movement', context);
+
   requireFields(
     record,
     'stock movement',
@@ -1094,6 +1100,7 @@ function parsePublicPharmacy(
   context?: ApiResponseContext
 ): PublicPharmacy {
   const record = requireRecord(value, 'pharmacy', context);
+
   requireFields(
     record,
     'pharmacy',
@@ -1134,7 +1141,6 @@ function parsePublicPharmacy(
   );
 
   requireSafeNonNegativeInteger(record, 'reviewsCount', 'pharmacy', context);
-
   rejectFields(record, ['bankDetails'], 'pharmacy', context);
 
   return checked<PublicPharmacy>(record);
@@ -1226,6 +1232,7 @@ function parsePharmacyCheckoutDetails(
   context?: ApiResponseContext
 ): PharmacyCheckoutDetails {
   const record = requireRecord(value, 'pharmacy checkout details', context);
+
   requireFields(
     record,
     'pharmacy checkout details',
@@ -1513,6 +1520,8 @@ function isHttpPictureUrl(value: string): boolean {
   }
 }
 
+//===================================================================
+
 function hasCompleteWorkingHours(value: string): boolean {
   if (!PROFILE_WORKING_HOURS_PATTERN.test(value)) return false;
 
@@ -1541,6 +1550,109 @@ function validateProfileStringPattern(
 
 //===================================================================
 
+function parsePharmacyLocationDraft(
+  value: unknown,
+  label: string,
+  context?: ApiResponseContext
+): PharmacyLocationDraft {
+  const record = requireRecord(value, label, context);
+
+  requireOptionalFields(
+    record,
+    label,
+    {
+      address: 'string',
+      settlement: 'string',
+      region: 'string',
+      countryCode: 'string',
+      geo: 'record',
+    },
+    context
+  );
+
+  if (typeof record.address === 'string') {
+    validateProfileStringPattern(
+      record.address,
+      `${label}.address`,
+      PROFILE_ADDRESS_PATTERN,
+      record,
+      context
+    );
+  }
+
+  for (const field of ['settlement', 'region'] as const) {
+    const fieldValue = record[field];
+    if (
+      typeof fieldValue === 'string' &&
+      !PROFILE_SEARCH_TEXT_PATTERN.test(fieldValue)
+    ) {
+      throw invalidDto(`${label}.${field} is invalid.`, record, context);
+    }
+  }
+
+  if (
+    typeof record.countryCode === 'string' &&
+    !/^[A-Z]{2}$/.test(record.countryCode)
+  ) {
+    throw invalidDto(`${label}.countryCode is invalid.`, record, context);
+  }
+
+  let geo: PharmacyLocationDraft['geo'];
+  if (record.geo !== undefined) {
+    const geoRecord = requireRecord(record.geo, `${label}.geo`, context);
+    requireFields(
+      geoRecord,
+      `${label}.geo`,
+      { type: 'string', coordinates: 'array' },
+      context
+    );
+
+    if (geoRecord.type !== 'Point') {
+      throw invalidDto(`${label}.geo.type is invalid.`, geoRecord, context);
+    }
+
+    const coordinates = geoRecord.coordinates as unknown[];
+    if (
+      coordinates.length !== 2 ||
+      typeof coordinates[0] !== 'number' ||
+      !Number.isFinite(coordinates[0]) ||
+      coordinates[0] < -180 ||
+      coordinates[0] > 180 ||
+      typeof coordinates[1] !== 'number' ||
+      !Number.isFinite(coordinates[1]) ||
+      coordinates[1] < -90 ||
+      coordinates[1] > 90
+    ) {
+      throw invalidDto(
+        `${label}.geo.coordinates are invalid.`,
+        geoRecord,
+        context
+      );
+    }
+
+    geo = {
+      type: 'Point',
+      coordinates: [coordinates[0], coordinates[1]],
+    };
+  }
+
+  return {
+    ...(record.address !== undefined
+      ? { address: record.address as string }
+      : {}),
+    ...(record.settlement !== undefined
+      ? { settlement: record.settlement as string }
+      : {}),
+    ...(record.region !== undefined ? { region: record.region as string } : {}),
+    ...(record.countryCode !== undefined
+      ? { countryCode: record.countryCode as string }
+      : {}),
+    ...(geo ? { geo } : {}),
+  };
+}
+
+//===================================================================
+
 function validateOptionalPharmacyProfileSemantics(
   record: UnknownRecord,
   context?: ApiResponseContext
@@ -1550,23 +1662,6 @@ function validateOptionalPharmacyProfileSemantics(
     (record.name.length > 0 && !PROFILE_PHARMACY_NAME_PATTERN.test(record.name))
   ) {
     throw invalidDto('pharmacy profile.name is invalid.', record, context);
-  }
-
-  if (typeof record.address === 'string') {
-    validateProfileStringPattern(
-      record.address,
-      'pharmacy profile.address',
-      PROFILE_ADDRESS_PATTERN,
-      record,
-      context
-    );
-  }
-
-  if (
-    typeof record.city === 'string' &&
-    !PROFILE_SEARCH_TEXT_PATTERN.test(record.city)
-  ) {
-    throw invalidDto('pharmacy profile.city is invalid.', record, context);
   }
 
   if (
@@ -1734,6 +1829,7 @@ function parsePendingPharmacyBankDetails(
       (entry): entry is [string, string] => typeof entry[1] === 'string'
     )
   );
+
   parseEditablePharmacyBankDetails(stringOnly, context);
 
   return checked<
@@ -1751,12 +1847,18 @@ function parsePharmacyPendingModeration(
 ): PharmacyProfile['pendingModeration'] {
   if (value === undefined) return undefined;
   const record = requireRecord(value, 'pharmacy pending moderation', context);
+
+  rejectFields(
+    record,
+    ['address', 'city'],
+    'pharmacy pending moderation',
+    context
+  );
+
   const result: Record<string, unknown> = {};
 
   for (const key of [
     'name',
-    'address',
-    'city',
     'phone',
     'email',
     'workingHours',
@@ -1785,25 +1887,15 @@ function parsePharmacyPendingModeration(
       context
     );
   }
-  if (typeof record.address === 'string') {
-    validateProfileStringPattern(
-      record.address,
-      'pharmacy pending moderation.address',
-      PROFILE_ADDRESS_PATTERN,
-      record,
+
+  if (record.location !== undefined) {
+    result.location = parsePharmacyLocationDraft(
+      record.location,
+      'pharmacy pending moderation.location',
       context
     );
   }
-  if (
-    typeof record.city === 'string' &&
-    !PROFILE_SEARCH_TEXT_PATTERN.test(record.city)
-  ) {
-    throw invalidDto(
-      'pharmacy pending moderation.city is invalid.',
-      record,
-      context
-    );
-  }
+
   if (
     typeof record.description === 'string' &&
     !PROFILE_TEXT_EDITOR_PATTERN.test(record.description)
@@ -1824,6 +1916,7 @@ function parsePharmacyPendingModeration(
       context
     );
   }
+
   if (typeof record.phone === 'string') {
     validateProfileStringPattern(
       record.phone,
@@ -1833,6 +1926,7 @@ function parsePharmacyPendingModeration(
       context
     );
   }
+
   if (
     typeof record.workingHours === 'string' &&
     !hasCompleteWorkingHours(record.workingHours)
@@ -1892,6 +1986,7 @@ function parsePharmacyProfile(
 ): MyPharmacyProfile {
   const record = requireRecord(value, 'pharmacy profile', context);
   const id = requireObjectId(record, 'id', 'pharmacy profile', context);
+
   const updatedAt = requireCanonicalIsoDateTime(
     record,
     'updatedAt',
@@ -1918,8 +2013,7 @@ function parsePharmacyProfile(
     record,
     'pharmacy profile',
     {
-      address: 'string',
-      city: 'string',
+      location: 'record',
       phone: 'string',
       email: 'string',
       workingHours: 'string',
@@ -1930,6 +2024,7 @@ function parsePharmacyProfile(
     context
   );
 
+  rejectFields(record, ['address', 'city'], 'pharmacy profile', context);
   validateOptionalPharmacyProfileSemantics(record, context);
 
   if (!PHARMACY_MEMBERSHIP_ROLES.has(record.membershipRole as string)) {
@@ -1950,6 +2045,7 @@ function parsePharmacyProfile(
     'pharmacy profile',
     context
   );
+
   if (rating > 5) {
     throw invalidDto(
       'pharmacy profile.rating must not exceed 5.',
@@ -1970,11 +2066,17 @@ function parsePharmacyProfile(
     membershipRole: checked<MyPharmacyProfile['membershipRole']>(
       record.membershipRole
     ),
+
     name: record.name as string,
-    ...(record.address !== undefined
-      ? { address: record.address as string }
+    ...(record.location !== undefined
+      ? {
+          location: parsePharmacyLocationDraft(
+            record.location,
+            'pharmacy profile.location',
+            context
+          ),
+        }
       : {}),
-    ...(record.city !== undefined ? { city: record.city as string } : {}),
     ...(record.phone !== undefined ? { phone: record.phone as string } : {}),
     ...(record.email !== undefined ? { email: record.email as string } : {}),
     ...(record.workingHours !== undefined
@@ -1989,11 +2091,13 @@ function parsePharmacyProfile(
         }
       : {}),
     bankTransferAvailable: record.bankTransferAvailable as boolean,
+
     documents: parsePharmacyProfileVerificationDocuments(
       record.documents,
       'pharmacy profile.documents',
       context
     ),
+
     status: checked<PharmacyProfile['status']>(record.status),
     rating,
     ...(record.imageUrl !== undefined
@@ -2110,6 +2214,7 @@ export function parsePharmacyRegistrationDocumentUploadResponse(
       context
     );
   }
+
   return {
     document: parsePharmacyVerificationDocument(record.document, context),
     claimToken: record.claimToken,
@@ -2127,6 +2232,7 @@ export function parsePharmacyProfileDocumentUploadResponse(
     'pharmacy profile document upload response',
     context
   );
+
   return {
     document: parsePharmacyVerificationDocument(record.document, context),
   };
@@ -2438,6 +2544,7 @@ function parseCartProduct(
 
 function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
   const record = requireRecord(value, 'cart item', context);
+
   requireFields(
     record,
     'cart item',
@@ -2658,6 +2765,7 @@ function parseCartIssue(
   context?: ApiResponseContext
 ): CartIssue {
   const record = requireRecord(value, 'cart issue', context);
+
   requireFields(
     record,
     'cart issue',
@@ -2769,6 +2877,7 @@ function parseClientOrder(
   context?: ApiResponseContext
 ): ClientOrder {
   const record = requireRecord(value, 'client order', context);
+
   requireFields(
     record,
     'client order',

@@ -54,6 +54,7 @@ import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { useAuth } from '@e-pharmacy/auth/react';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 
 import type {
   MyPharmacyProfile,
@@ -82,6 +83,7 @@ import {
   PHARMACY_ABOUT_FORM_FIELDS,
   PHARMACY_PAYMENT_FORM_FIELDS,
   PHARMACY_CONTACT_FORM_FIELDS,
+  PHARMACY_LOCATION_TEXT_MAX_LENGTH,
   PAYMENT_PURPOSE_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   PHARMACY_NAME_MAX_LENGTH,
@@ -212,7 +214,9 @@ function createPharmacyInitialValues(
 ): PharmacyContactFormValues {
   return {
     name: createPharmacyNameInitialValue(user, pharmacy),
-    address: pharmacy.address ?? '',
+    settlement: pharmacy.location?.settlement ?? '',
+    region: pharmacy.location?.region ?? '',
+    address: pharmacy.location?.address ?? '',
     phone: pharmacy.phone ?? user.phone ?? '',
     email: pharmacy.email ?? user.email ?? '',
     workingHours: pharmacy.workingHours ?? '',
@@ -1878,8 +1882,12 @@ function PharmacyProfilePage({
                               value: pharmacy.pendingModeration?.phone,
                             },
                             {
-                              label: 'Address',
-                              value: pharmacy.pendingModeration?.address,
+                              label: 'Location',
+                              value: pharmacy.pendingModeration?.location
+                                ? formatPharmacyLocation(
+                                    pharmacy.pendingModeration.location
+                                  )
+                                : undefined,
                             },
                           ]}
                         />
@@ -1936,13 +1944,50 @@ function PharmacyProfilePage({
                           }
                         />
 
+                        <NameInput
+                          id="pharmacy-settlement"
+                          name="settlement"
+                          label="Settlement"
+                          placeholder="Example: Bolhrad"
+                          hint="Enter the city, town, village, or other settlement where the pharmacy is located."
+                          autoComplete="address-level2"
+                          value={pharmacyValues.settlement}
+                          error={pharmacyErrors.settlement}
+                          isTouched={Boolean(pharmacyTouched.settlement)}
+                          disabled={isProfileReadonly}
+                          maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'settlement',
+                              event.target.value
+                            )
+                          }
+                        />
+
+                        <NameInput
+                          id="pharmacy-region"
+                          name="region"
+                          label="Region (optional)"
+                          placeholder="Example: Odesa region"
+                          hint="Add the region when it helps distinguish the settlement."
+                          autoComplete="address-level1"
+                          value={pharmacyValues.region}
+                          error={pharmacyErrors.region}
+                          isTouched={Boolean(pharmacyTouched.region)}
+                          disabled={isProfileReadonly}
+                          maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange('region', event.target.value)
+                          }
+                        />
+
                         <AddressInput
                           id="pharmacy-address"
                           name="address"
                           className={css.fieldWide}
                           label="Pharmacy address"
-                          placeholder="Example: 12 Central Street, Kyiv"
-                          hint="Clients will see this address in the pharmacy profile on the website."
+                          placeholder="Example: 36 Bolharskykh Opolchentsiv Street"
+                          hint="Enter the street address only; settlement and region are stored separately."
                           value={pharmacyValues.address}
                           error={pharmacyErrors.address}
                           isTouched={Boolean(pharmacyTouched.address)}

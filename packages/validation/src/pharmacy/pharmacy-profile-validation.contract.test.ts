@@ -11,11 +11,10 @@ import {
 
 test('draft pharmacy normalization distinguishes unchanged empty values from explicit clears', () => {
   assert.deepEqual(
-    normalizePharmacyAboutForm(
-      { description: '' },
-      'draft',
-      { description: 'Existing description' }
-    ),
+    normalizePharmacyAboutForm({ description: '' }, 'draft', {
+      description: 'Existing description',
+    }),
+
     { description: null }
   );
 
@@ -23,6 +22,8 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
     normalizePharmacyContactForm(
       {
         name: 'Example Pharmacy',
+        settlement: 'Kyiv',
+        region: '',
         address: '',
         phone: '',
         email: '',
@@ -31,7 +32,9 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
       'draft',
       {
         name: 'Example Pharmacy',
-        address: 'Kyiv, Main Street 1',
+        settlement: 'Kyiv',
+        region: 'Kyiv region',
+        address: 'Main Street 1',
         phone: '+380501234567',
         email: 'pharmacy@example.com',
         workingHours: 'Mon: 09:00-18:00',
@@ -39,7 +42,10 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
     ),
     {
       name: 'Example Pharmacy',
-      address: null,
+      location: {
+        region: null,
+        address: null,
+      },
       phone: null,
       email: null,
       workingHours: null,
@@ -81,7 +87,44 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
 
 test('draft pharmacy normalization omits fields that were already empty', () => {
   assert.deepEqual(
-    normalizePharmacyAboutForm({ description: '' }, 'draft', { description: '' }),
+    normalizePharmacyAboutForm({ description: '' }, 'draft', {
+      description: '',
+    }),
     {}
+  );
+});
+
+//===================================================================
+
+test('draft pharmacy normalization keeps location changes nested', () => {
+  assert.deepEqual(
+    normalizePharmacyContactForm(
+      {
+        name: 'Example Pharmacy',
+        settlement: 'Bolhrad',
+        region: 'Odesa region',
+        address: '36 Bolharskykh Opolchentsiv Street',
+        phone: '+380501234567',
+        email: 'pharmacy@example.com',
+        workingHours: 'Mon: 09:00-18:00',
+      },
+      'draft',
+      {
+        name: 'Example Pharmacy',
+        settlement: 'Odesa',
+        region: 'Odesa region',
+        address: '36 Bolharskykh Opolchentsiv Street',
+        phone: '+380501234567',
+        email: 'pharmacy@example.com',
+        workingHours: 'Mon: 09:00-18:00',
+      }
+    ),
+    {
+      name: 'Example Pharmacy',
+      location: { settlement: 'Bolhrad' },
+      phone: '+380501234567',
+      email: 'pharmacy@example.com',
+      workingHours: 'Mon: 09:00-18:00',
+    }
   );
 });

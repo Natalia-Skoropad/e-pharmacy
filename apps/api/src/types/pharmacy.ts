@@ -1,4 +1,6 @@
 import type { Types } from 'mongoose';
+import type { z } from 'zod';
+
 import type { PHARMACY_STATUSES } from '../constants/auth';
 
 import type {
@@ -6,7 +8,6 @@ import type {
   updateMyPharmacyProfileSchema,
 } from '../schemas/pharmacy.schema';
 
-import type { z } from 'zod';
 import type { ISODateTimeString } from './date';
 
 //===============================================================
@@ -85,8 +86,7 @@ export type CompletePharmacyBankDetails = {
 
 export type PharmacyPendingModeration = {
   name?: string;
-  address?: string | null;
-  city?: string | null;
+  location?: PharmacyLocationDraft;
   phone?: string | null;
   email?: string | null;
   workingHours?: string | null;
@@ -144,6 +144,7 @@ export type PharmacyFilterOptionDto<TValue extends string = string> = {
 
 export type PharmacyFilterOptionsResponseDto = {
   cities: PharmacyFilterOptionDto[];
+
   sort: PharmacyFilterOptionDto<
     'newest' | 'rating-desc' | 'rating-asc' | 'name-asc' | 'name-desc'
   >[];
@@ -205,8 +206,7 @@ export type CurrentPharmacySummaryResponseDto = {
 export type PharmacyProfileResponseDto = {
   id: string;
   name: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
   phone?: string;
   email?: string;
   workingHours?: string;

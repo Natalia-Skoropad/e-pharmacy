@@ -1,5 +1,6 @@
 import type { EntityId, ISODateTimeString } from '../primitives';
 import type { PharmacyProfileVerificationDocument } from './verification-document';
+import type { PharmacyLocationDraft } from './location';
 import type { EditablePharmacyBankDetails } from './bank-details';
 import type { PharmacyStatus } from './status';
 
@@ -17,8 +18,7 @@ type ClearableEditablePharmacyBankDetails = Partial<{
 
 export type PharmacyPendingModeration = Readonly<{
   name?: string;
-  address?: string | null;
-  city?: string | null;
+  location?: PharmacyLocationDraft;
   phone?: string | null;
   email?: string | null;
   workingHours?: string | null;
@@ -43,8 +43,7 @@ export type CurrentPharmacySummary = Readonly<{
 export type PharmacyProfile = Readonly<{
   id: EntityId;
   name: string;
-  address?: string;
-  city?: string;
+  location?: PharmacyLocationDraft;
   phone?: string;
   email?: string;
   workingHours?: string;
@@ -72,8 +71,13 @@ export type MyPharmacyProfile = PharmacyProfile &
 
 export type PharmacyProfileUpdateChanges = {
   name?: string;
-  address?: string | null;
-  city?: string | null;
+
+  location?: Partial<{
+    address: string | null;
+    settlement: string | null;
+    region: string | null;
+  }>;
+
   phone?: string | null;
   email?: string | null;
   workingHours?: string | null;

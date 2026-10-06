@@ -23,7 +23,6 @@ import {
   sharedPharmacyNameSchema,
   sharedBankRecipientNameSchema,
   sharedBankNameSchema,
-  sharedRequiredAddressSchema,
   sharedRequiredPhoneSchema,
   sharedPictureUrlSchema,
   sharedClearableWorkingHoursSchema,
@@ -33,6 +32,8 @@ import {
   sharedClearablePaymentPurposeSchema,
   sharedExpectedRevisionSchema,
 } from './shared-validation.schema';
+
+import { pharmacyEditableLocationPatchSchema } from './shared/pharmacy-location.schema';
 
 //===============================================================
 
@@ -53,6 +54,7 @@ export const pharmaciesQuerySchema = z.preprocess(
       nameKeyword: sharedSearchSchema,
       addressKeyword: sharedSearchSchema,
       city: sharedSearchSchema,
+
       sort: z
         .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])
         .default('newest'),
@@ -105,33 +107,35 @@ export const createPharmacyReviewSchema = z.object({
 
 //===============================================================
 
-const pharmacyProfileUpdateChangesSchema = z.object({
-  name: sharedPharmacyNameSchema.optional(),
-  address: clearableSchema(sharedRequiredAddressSchema),
-  city: clearableSchema(sharedSearchSchema.unwrap()),
-  phone: clearableSchema(sharedRequiredPhoneSchema),
-  email: clearableSchema(sharedEmailSchema),
-  workingHours: sharedClearableWorkingHoursSchema,
-  imageUrl: sharedPictureUrlSchema,
-  description: sharedClearableTextEditorSchema,
-  documents: pharmacyProfileDocumentSelectionsSchema.optional(),
+const pharmacyProfileUpdateChangesSchema = z
+  .object({
+    name: sharedPharmacyNameSchema.optional(),
+    location: pharmacyEditableLocationPatchSchema.optional(),
+    phone: clearableSchema(sharedRequiredPhoneSchema),
+    email: clearableSchema(sharedEmailSchema),
+    workingHours: sharedClearableWorkingHoursSchema,
+    imageUrl: sharedPictureUrlSchema,
+    description: sharedClearableTextEditorSchema,
+    documents: pharmacyProfileDocumentSelectionsSchema.optional(),
 
-  bankDetails: z
-    .object({
-      recipientName: clearableSchema(sharedBankRecipientNameSchema),
-      taxId: sharedClearableTaxIdSchema,
-      iban: sharedClearableIbanSchema,
-      bankName: clearableSchema(sharedBankNameSchema),
-      receiptEmail: clearableSchema(sharedEmailSchema),
-      paymentPurpose: sharedClearablePaymentPurposeSchema,
-    })
-    .optional(),
-});
+    bankDetails: z
+      .object({
+        recipientName: clearableSchema(sharedBankRecipientNameSchema),
+        taxId: sharedClearableTaxIdSchema,
+        iban: sharedClearableIbanSchema,
+        bankName: clearableSchema(sharedBankNameSchema),
+        receiptEmail: clearableSchema(sharedEmailSchema),
+        paymentPurpose: sharedClearablePaymentPurposeSchema,
+      })
+      .optional(),
+  })
+  .strict();
 
 //===============================================================
 
 export const updateMyPharmacyProfileSchema = pharmacyProfileUpdateChangesSchema
   .extend({ expectedRevision: sharedExpectedRevisionSchema })
+
   .refine(
     (data) =>
       Object.entries(data).some(
@@ -163,6 +167,7 @@ export const sendMyPharmacyForVerificationSchema = z.object({
 export type PharmaciesQuery = z.infer<typeof pharmaciesQuerySchema>;
 export type PharmacyIdParams = z.infer<typeof pharmacyIdParamsSchema>;
 export type PharmacyReviewParams = z.infer<typeof pharmacyReviewParamsSchema>;
+
 export type PharmacyDocumentParams = z.infer<
   typeof pharmacyDocumentParamsSchema
 >;

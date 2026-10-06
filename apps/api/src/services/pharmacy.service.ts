@@ -30,6 +30,7 @@ import type {
   PharmacyFilterOptionsResponseDto,
   PharmacyPendingModeration,
   PharmacyPendingModerationResponseDto,
+  PharmacyLocationDraft,
   PharmacyProfileVerificationDocumentResponseDto,
   PharmacyVerificationDocumentMetadata,
   PublicPharmacyResponseDto,
@@ -140,9 +141,11 @@ function hasCompleteBankDetails(
 
 async function getFavoritePharmacyIds(userId?: string): Promise<Set<string>> {
   if (!userId) return new Set();
+
   const client = await Client.findOne({ userId })
     .select('favoritePharmacyIds')
     .lean<{ favoritePharmacyIds?: Types.ObjectId[] } | null>();
+
   return new Set((client?.favoritePharmacyIds ?? []).map(String));
 }
 
@@ -171,6 +174,7 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
     { $match: { 'product.status': 'active' } },
     { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
   ]);
+
   return new Map(rows.map((row) => [String(row._id), row.count]));
 }
 
@@ -274,36 +278,131 @@ function serializeProfileVerificationDocument(
 
 //===============================================================
 
+type LegacyPharmacyPendingModeration = PharmacyPendingModeration & {
+  address?: string | null;
+  city?: string | null;
+};
+
+//===============================================================
+
+function clonePharmacyLocation(
+  location?: PharmacyLocationDraft
+): PharmacyLocationDraft | undefined {
+  if (!location) return undefined;
+
+  return {
+    ...(location.address !== undefined ? { address: location.address } : {}),
+    ...(location.settlement !== undefined
+      ? { settlement: location.settlement }
+      : {}),
+    ...(location.region !== undefined ? { region: location.region } : {}),
+    ...(location.countryCode !== undefined
+      ? { countryCode: location.countryCode }
+      : {}),
+    ...(location.geo !== undefined
+      ? {
+          geo: {
+            type: 'Point',
+            coordinates: [
+              location.geo.coordinates[0],
+              location.geo.coordinates[1],
+            ],
+          },
+        }
+      : {}),
+  };
+}
+
+//===============================================================
+
+function applyEditableLocationPatch(
+  baseLocation: PharmacyLocationDraft | undefined,
+  patch: NonNullable<ResolvedPharmacyProfileUpdate['location']>
+): PharmacyLocationDraft {
+  const nextLocation: {
+    address?: string;
+    settlement?: string;
+    region?: string;
+    countryCode?: string;
+    geo?: PharmacyLocationDraft['geo'];
+  } = { ...(clonePharmacyLocation(baseLocation) ?? {}) };
+
+  for (const field of ['address', 'settlement', 'region'] as const) {
+    const value = patch[field];
+    if (value === undefined) continue;
+    if (value === null) delete nextLocation[field];
+    else nextLocation[field] = value;
+  }
+
+  if (!nextLocation.countryCode) nextLocation.countryCode = 'UA';
+  return nextLocation;
+}
+
+//===============================================================
+
+function normalizePendingModerationPayload(
+  current: PharmacyPendingModeration | undefined,
+  approvedLocation?: PharmacyLocationDraft
+): PharmacyPendingModeration {
+  if (!current) return {};
+
+  const legacyCurrent = current as LegacyPharmacyPendingModeration;
+  const pending: PharmacyPendingModeration = { ...current };
+  const pendingRecord = pending as Record<string, unknown>;
+  delete pendingRecord.address;
+  delete pendingRecord.city;
+
+  if (current.location !== undefined) {
+    pending.location = clonePharmacyLocation(current.location);
+    return pending;
+  }
+
+  if (legacyCurrent.address !== undefined || legacyCurrent.city !== undefined) {
+    pending.location = applyEditableLocationPatch(approvedLocation, {
+      ...(legacyCurrent.address !== undefined
+        ? { address: legacyCurrent.address }
+        : {}),
+      ...(legacyCurrent.city !== undefined
+        ? { settlement: legacyCurrent.city }
+        : {}),
+    });
+  }
+
+  return pending;
+}
+
+//===============================================================
+
 function serializePendingModerationForProfile(
-  pendingModeration: PharmacyPendingModeration
+  pendingModeration: PharmacyPendingModeration,
+  approvedLocation?: PharmacyLocationDraft
 ): PharmacyPendingModerationResponseDto {
+  const normalized = normalizePendingModerationPayload(
+    pendingModeration,
+    approvedLocation
+  );
+
   const result: PharmacyPendingModerationResponseDto = {};
 
-  if (pendingModeration.name !== undefined)
-    result.name = pendingModeration.name;
-  if (pendingModeration.address !== undefined)
-    result.address = pendingModeration.address;
-  if (pendingModeration.city !== undefined)
-    result.city = pendingModeration.city;
-  if (pendingModeration.phone !== undefined)
-    result.phone = pendingModeration.phone;
-  if (pendingModeration.email !== undefined)
-    result.email = pendingModeration.email;
-  if (pendingModeration.workingHours !== undefined)
-    result.workingHours = pendingModeration.workingHours;
-  if (pendingModeration.imageUrl !== undefined)
-    result.imageUrl = pendingModeration.imageUrl;
-  if (pendingModeration.description !== undefined)
-    result.description = pendingModeration.description;
+  if (normalized.name !== undefined) result.name = normalized.name;
+  if (normalized.location !== undefined)
+    result.location = clonePharmacyLocation(normalized.location);
+  if (normalized.phone !== undefined) result.phone = normalized.phone;
+  if (normalized.email !== undefined) result.email = normalized.email;
+  if (normalized.workingHours !== undefined)
+    result.workingHours = normalized.workingHours;
+  if (normalized.imageUrl !== undefined) result.imageUrl = normalized.imageUrl;
+  if (normalized.description !== undefined)
+    result.description = normalized.description;
 
-  if (pendingModeration.documents !== undefined) {
-    result.documents = pendingModeration.documents.map(
+  if (normalized.documents !== undefined) {
+    result.documents = normalized.documents.map(
       serializeProfileVerificationDocument
     );
   }
 
-  if (pendingModeration.bankDetails !== undefined) {
-    result.bankDetails = pendingModeration.bankDetails;
+  if (normalized.bankDetails !== undefined) {
+    result.bankDetails = normalized.bankDetails;
   }
 
   return result;
@@ -319,11 +418,8 @@ function serializePharmacyProfile(
     id: String(pharmacy._id),
     membershipRole,
     name: pharmacy.name,
-    ...(pharmacy.location?.address
-      ? { address: pharmacy.location.address }
-      : {}),
-    ...(pharmacy.location?.settlement
-      ? { city: pharmacy.location.settlement }
+    ...(pharmacy.location
+      ? { location: clonePharmacyLocation(pharmacy.location) }
       : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
@@ -344,7 +440,8 @@ function serializePharmacyProfile(
     ...(membershipRole !== 'manager' && pharmacy.pendingModeration
       ? {
           pendingModeration: serializePendingModerationForProfile(
-            pharmacy.pendingModeration
+            pharmacy.pendingModeration,
+            pharmacy.location
           ),
         }
       : {}),
@@ -523,6 +620,7 @@ export async function getPharmaciesService(
         favoriteIds
       )
     ),
+
     page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
@@ -688,6 +786,7 @@ export async function getPendingPharmacyReviewsService(
   })
     .select('name')
     .lean();
+
   const names = new Map(
     pharmacies.map((pharmacy) => [String(pharmacy._id), pharmacy.name])
   );
@@ -750,6 +849,7 @@ export async function moderatePharmacyReviewService(
         ).toFixed(1)
       )
     : 0;
+
   await Pharmacy.updateOne(
     { _id: pharmacyId },
     { $set: { rating, reviewsCount: approved.length } }
@@ -804,6 +904,7 @@ export async function setFavoritePharmacyService(
 
 function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
   const bankDetails = pharmacy.bankDetails;
+
   const requiredFields: Record<string, unknown> = {
     name: pharmacy.name,
     address: pharmacy.location?.address,
@@ -880,8 +981,7 @@ function hasModeratedProfileChanges(
 ): boolean {
   return Boolean(
     input.name !== undefined ||
-    input.address !== undefined ||
-    input.city !== undefined ||
+    input.location !== undefined ||
     input.phone !== undefined ||
     input.email !== undefined ||
     input.workingHours !== undefined ||
@@ -896,13 +996,18 @@ function hasModeratedProfileChanges(
 
 function buildPendingModerationPayload(
   current: PharmacyPendingModeration | undefined,
-  input: ResolvedPharmacyProfileUpdate
+  input: ResolvedPharmacyProfileUpdate,
+  approvedLocation?: PharmacyLocationDraft
 ): PharmacyPendingModeration {
-  const pending: PharmacyPendingModeration = { ...(current ?? {}) };
+  const pending = normalizePendingModerationPayload(current, approvedLocation);
 
   if (input.name !== undefined) pending.name = input.name;
-  if (input.address !== undefined) pending.address = input.address;
-  if (input.city !== undefined) pending.city = input.city;
+  if (input.location !== undefined) {
+    pending.location = applyEditableLocationPatch(
+      pending.location ?? approvedLocation,
+      input.location
+    );
+  }
   if (input.phone !== undefined) pending.phone = input.phone;
   if (input.email !== undefined) pending.email = input.email;
   if (input.workingHours !== undefined)
@@ -976,6 +1081,7 @@ export async function updateMyPharmacyProfileService(
         expectedRevision,
         ...profileFields
       } = input;
+
       const resolvedInput: ResolvedPharmacyProfileUpdate = {
         ...profileFields,
         ...(documentSelections !== undefined
@@ -995,7 +1101,8 @@ export async function updateMyPharmacyProfileService(
       ) {
         const pendingModeration = buildPendingModerationPayload(
           pharmacy.pendingModeration,
-          resolvedInput
+          resolvedInput,
+          pharmacy.location
         );
 
         const updatedPharmacy = await Pharmacy.findOneAndUpdate(
@@ -1038,8 +1145,15 @@ export async function updateMyPharmacyProfileService(
       };
 
       if (resolvedInput.name !== undefined) update.name = resolvedInput.name;
-      applyClearableField('location.address', resolvedInput.address);
-      applyClearableField('location.settlement', resolvedInput.city);
+
+      if (resolvedInput.location) {
+        for (const field of ['address', 'settlement', 'region'] as const) {
+          applyClearableField(
+            `location.${field}`,
+            resolvedInput.location[field]
+          );
+        }
+      }
 
       if (!pharmacy.location?.countryCode) {
         update['location.countryCode'] = 'UA';
@@ -1170,9 +1284,13 @@ export async function submitMyPharmacyModerationService(
       const pendingModeration = hasNewChanges
         ? buildPendingModerationPayload(
             pharmacy.pendingModeration,
-            resolvedChanges
+            resolvedChanges,
+            pharmacy.location
           )
-        : pharmacy.pendingModeration;
+        : normalizePendingModerationPayload(
+            pharmacy.pendingModeration,
+            pharmacy.location
+          );
 
       const updatedPharmacy = await Pharmacy.findOneAndUpdate(
         {

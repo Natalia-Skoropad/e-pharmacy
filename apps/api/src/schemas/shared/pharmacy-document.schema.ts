@@ -14,10 +14,12 @@ const documentMetadataShape = {
     .string()
     .trim()
     .min(1, PHARMACY_DOCUMENT_VALIDATION_MESSAGES.requiredName)
+
     .max(
       PHARMACY_DOCUMENT_RULES.fileNameMaxLength,
       PHARMACY_DOCUMENT_VALIDATION_MESSAGES.nameLength
     )
+
     .regex(
       PHARMACY_DOCUMENT_RULES.fileNamePattern,
       PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format
@@ -27,6 +29,7 @@ const documentMetadataShape = {
     .number()
     .int()
     .positive()
+
     .max(
       PHARMACY_DOCUMENT_RULES.maxSizeBytes,
       PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size
@@ -42,10 +45,12 @@ export const pharmacyDocumentUploadSchema = z.object({
   dataUrl: z
     .string()
     .min(1, 'Document content is required')
+
     .max(
       Math.ceil((PHARMACY_DOCUMENT_RULES.maxSizeBytes * 4) / 3) + 256,
       PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size
     )
+
     .regex(
       /^data:[^;,]+;base64,[A-Za-z0-9+/=]+$/,
       'Document content must be a base64 data URL'
@@ -67,6 +72,7 @@ export const pharmacyRegistrationDocumentUploadSchema =
 
 export const pharmacyRegistrationDocumentClaimSchema = z.object({
   documentId: mongoIdSchema,
+
   claimToken: z
     .string()
     .trim()
@@ -77,6 +83,7 @@ export const pharmacyRegistrationDocumentClaimSchema = z.object({
 
 export const pharmacyRegistrationDocumentClaimsSchema = z
   .array(pharmacyRegistrationDocumentClaimSchema)
+
   .max(
     PHARMACY_DOCUMENT_RULES.maxFiles,
     PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count
@@ -92,6 +99,7 @@ export const pharmacyProfileDocumentSelectionSchema = z.object({
 
 export const pharmacyProfileDocumentSelectionsSchema = z
   .array(pharmacyProfileDocumentSelectionSchema)
+
   .max(
     PHARMACY_DOCUMENT_RULES.maxFiles,
     PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count

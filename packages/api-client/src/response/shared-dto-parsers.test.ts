@@ -219,11 +219,13 @@ test('requires backend-provided typed public slug IDs', () => {
     name: 'Amlodipine 5 mg Acme',
     publicSlugId: 'amlodipine-5-mg-acme-pr6a5f5242d9c46211621ad70a',
     article: 'AML-5',
+
     category: {
       id: '507f1f77bcf86cd799439099',
       name: 'Prescription',
       slug: 'prescription',
     },
+
     status: 'active',
     price: 100,
     foundInPharmaciesCount: 1,
@@ -682,17 +684,33 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     id: '6a5f5240d9c46211621acef3',
     membershipRole: 'owner',
     name: '',
+
+    location: {
+      address: '36 Bolharskykh Opolchentsiv Street',
+      settlement: 'Bolhrad',
+      region: 'Odesa region',
+      countryCode: 'UA',
+    },
+
     bankTransferAvailable: false,
     documents: [document],
     status: 'new',
     rating: 0,
     reviewsCount: 0,
     updatedAt: '2026-08-13T08:00:00.000Z',
+
     bankDetails: {
       iban: 'UA123456789012345678901234567',
       receiptEmail: 'billing@example.com',
     },
+
     pendingModeration: {
+      location: {
+        address: '1 New Street',
+        settlement: 'Odesa',
+        countryCode: 'UA',
+      },
+
       phone: null,
       description: null,
       bankDetails: { receiptEmail: null },
@@ -716,6 +734,9 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
   const ownerProfile = parsePharmacyProfileResponse({
     pharmacy: profile,
   }).pharmacy;
+
+  assert.equal(ownerProfile.location?.settlement, 'Bolhrad');
+  assert.equal(ownerProfile.pendingModeration?.location?.settlement, 'Odesa');
   assert.equal(ownerProfile.pendingModeration?.phone, null);
   assert.equal(ownerProfile.pendingModeration?.description, null);
   assert.equal(ownerProfile.pendingModeration?.bankDetails?.receiptEmail, null);
@@ -746,10 +767,17 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     { ...profile, documents: [document, document] },
     { ...profile, bankDetails: { iban: 123 } },
     { ...profile, bankDetails: { iban: 'UA123' } },
+    { ...profile, address: 'Legacy address' },
+    { ...profile, city: 'Legacy city' },
+    { ...profile, location: { ...profile.location, countryCode: 'Ukraine' } },
+    { ...profile, location: { ...profile.location, settlement: '<script>' } },
     { ...profile, email: 'not-an-email' },
     { ...profile, phone: '0501234567' },
     { ...profile, workingHours: 'Open every day' },
     { ...profile, imageUrl: 'javascript:alert(1)' },
+    { ...profile, pendingModeration: { address: 'Legacy address' } },
+    { ...profile, pendingModeration: { city: 'Legacy city' } },
+    { ...profile, pendingModeration: { location: { countryCode: 'U' } } },
     { ...profile, pendingModeration: { documents: [null] } },
     { ...profile, pendingModeration: { phone: '0501234567' } },
   ]) {

@@ -123,6 +123,8 @@ test('picture transport distinguishes data URLs, HTTP URLs and blob previews', (
 test('pharmacy draft and verification validation modes are explicit', () => {
   const emptyContact = {
     name: '',
+    settlement: '',
+    region: '',
     address: '',
     phone: '',
     email: '',
@@ -139,12 +141,14 @@ test('pharmacy draft and verification validation modes are explicit', () => {
   };
 
   assert.deepEqual(validatePharmacyContactForm(emptyContact, 'draft'), {});
+
   assert.notDeepEqual(
     validatePharmacyContactForm(emptyContact, 'verification'),
     {}
   );
 
   assert.deepEqual(validatePharmacyPaymentForm(emptyPayment, 'draft'), {});
+
   assert.notDeepEqual(
     validatePharmacyPaymentForm(emptyPayment, 'verification'),
     {}

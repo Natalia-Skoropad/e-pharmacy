@@ -90,6 +90,7 @@ async function cleanup(email: string): Promise<void> {
         { scopeEntityId: String(user._id) },
       ],
     }),
+
     Client.deleteMany({ userId: user._id }),
     Pharmacy.deleteMany({ ownerId: user._id }),
     Session.deleteMany({ userId: user._id }),
@@ -98,6 +99,7 @@ async function cleanup(email: string): Promise<void> {
       _id: { $in: registrationUploadSessionIds },
     }),
   ]);
+
   await User.deleteOne({ _id: user._id });
 }
 
@@ -427,6 +429,7 @@ test(
         password: await hashPassword(oldPassword),
         role: 'client',
       });
+
       await Client.create({ userId: user._id });
 
       const first = await loginUserService({
@@ -479,6 +482,7 @@ test(
         password: await hashPassword(password),
         role: 'client',
       });
+
       await Client.create({ userId: user._id });
 
       await User.create({
@@ -730,6 +734,7 @@ test(
     } finally {
       Pharmacy.findByIdAndUpdate =
         originalFindByIdAndUpdate as typeof Pharmacy.findByIdAndUpdate;
+
       await cleanup(identity.email);
       await PharmacyDocumentFile.deleteMany({ name: 'atomic-license.pdf' });
       await mongoose.disconnect();
@@ -910,6 +915,7 @@ test(
           _id: uploadSessionId,
         });
       }
+
       await mongoose.disconnect();
     }
   }
@@ -969,6 +975,7 @@ test(
 
       const bytesSession =
         await createRegistrationPharmacyDocumentUploadSessionService();
+
       uploadSessionIds.push(bytesSession.uploadSessionId);
       await PharmacyRegistrationUploadSession.updateOne(
         { _id: bytesSession.uploadSessionId },
@@ -995,6 +1002,7 @@ test(
 
       const expiredSession =
         await createRegistrationPharmacyDocumentUploadSessionService();
+
       uploadSessionIds.push(expiredSession.uploadSessionId);
       await PharmacyRegistrationUploadSession.updateOne(
         { _id: expiredSession.uploadSessionId },
@@ -1015,9 +1023,11 @@ test(
       await PharmacyDocumentFile.deleteMany({
         registrationUploadSessionId: { $in: uploadSessionIds },
       });
+
       await PharmacyRegistrationUploadSession.deleteMany({
         _id: { $in: uploadSessionIds },
       });
+
       await mongoose.disconnect();
     }
   }
@@ -1038,8 +1048,10 @@ test(
     try {
       const firstSession =
         await createRegistrationPharmacyDocumentUploadSessionService();
+
       const secondSession =
         await createRegistrationPharmacyDocumentUploadSessionService();
+
       uploadSessionIds.push(
         firstSession.uploadSessionId,
         secondSession.uploadSessionId
@@ -1053,6 +1065,7 @@ test(
         uploadSessionId: firstSession.uploadSessionId,
         uploadToken: firstSession.uploadToken,
       });
+
       const second = await createRegistrationPharmacyDocumentUploadService({
         name: 'second-license.pdf',
         size: content.byteLength,
@@ -1061,6 +1074,7 @@ test(
         uploadSessionId: secondSession.uploadSessionId,
         uploadToken: secondSession.uploadToken,
       });
+
       documentIds.push(first.document.id, second.document.id);
 
       await assert.rejects(() =>
@@ -1070,6 +1084,7 @@ test(
           phone: identity.phone,
           password: 'SecurePassword123!',
           role: 'pharmacy',
+
           pharmacyDocuments: [
             { documentId: first.document.id, claimToken: first.claimToken },
             { documentId: second.document.id, claimToken: second.claimToken },
@@ -1083,7 +1098,9 @@ test(
       const storedDocuments = await PharmacyDocumentFile.find({
         _id: { $in: documentIds },
       });
+
       assert.equal(storedDocuments.length, 2);
+
       for (const document of storedDocuments) {
         assert.equal(document.claimedByPharmacyId, undefined);
         assert.equal(document.uploadedByUserId, undefined);
@@ -1098,9 +1115,11 @@ test(
       );
     } finally {
       await PharmacyDocumentFile.deleteMany({ _id: { $in: documentIds } });
+
       await PharmacyRegistrationUploadSession.deleteMany({
         _id: { $in: uploadSessionIds },
       });
+
       await cleanup(identity.email);
       await mongoose.disconnect();
     }
@@ -1190,6 +1209,7 @@ test(
       const storedSecondDocument = await PharmacyDocumentFile.findById(
         second.document.id
       );
+
       assert.ok(storedSecondDocument?.attachedAt);
       assert.equal(storedSecondDocument?.expiresAt, undefined);
 
@@ -1197,8 +1217,10 @@ test(
         documents: [],
         expectedRevision: secondUpdate.pharmacy.updatedAt,
       });
+
       persisted = await Pharmacy.findById(pharmacy._id);
       assert.deepEqual(persisted?.documents, []);
+
       assert.equal(
         await PharmacyDocumentFile.exists({ _id: second.document.id }),
         null
@@ -1267,6 +1289,7 @@ test(
         },
         { new: true }
       );
+
       assert.ok(activePharmacy);
 
       const firstPending = await createPrivatePharmacyDocumentUploadService(
@@ -1427,6 +1450,7 @@ test(
           $in: [ownerIdentity.email, conflictIdentity.email, conflictEmail],
         },
       });
+
       await Pharmacy.deleteMany({ email: ownerIdentity.email });
       await mongoose.disconnect();
     }
@@ -1544,6 +1568,7 @@ test(
       );
 
       await refreshAuthSessionService(second.tokens.refreshToken);
+
       await revokeAllUserSessionsByRefreshTokensService([
         second.tokens.refreshToken,
       ]);
@@ -1576,6 +1601,7 @@ test(
         password: await hashPassword(password),
         role: 'client',
       });
+
       await Client.create({ userId: user._id });
 
       const login = await loginUserService({
@@ -1587,6 +1613,7 @@ test(
       const before = await Session.findOne({ userId: user._id }).select(
         '+refreshTokenHash +previousRefreshTokenHash absoluteExpiresAt expiresAt'
       );
+
       assert.ok(before?.absoluteExpiresAt);
       const absoluteBefore = before.absoluteExpiresAt.getTime();
 
@@ -1599,6 +1626,7 @@ test(
         firstRefresh.tokens.refreshToken,
         login.tokens.refreshToken
       );
+
       assert.equal(
         parallelRefresh.tokens.refreshToken,
         firstRefresh.tokens.refreshToken
@@ -1607,15 +1635,18 @@ test(
       const after = await Session.findById(before._id).select(
         '+refreshTokenHash +previousRefreshTokenHash previousRefreshTokenValidUntil absoluteExpiresAt expiresAt'
       );
+
       assert.ok(after?.absoluteExpiresAt);
       assert.equal(after.absoluteExpiresAt.getTime(), absoluteBefore);
       assert.ok(after.expiresAt <= after.absoluteExpiresAt);
+
       assert.equal(
         after.refreshTokenHash,
         createHash('sha256')
           .update(firstRefresh.tokens.refreshToken)
           .digest('hex')
       );
+
       assert.equal(
         after.previousRefreshTokenHash,
         createHash('sha256').update(login.tokens.refreshToken).digest('hex')
@@ -1645,6 +1676,7 @@ test(
       const afterStaleCookie = await Session.findById(after._id).select(
         'revokedAt'
       );
+
       assert.equal(afterStaleCookie?.revokedAt, undefined);
 
       const secondRotation = await refreshAuthSessionService(
@@ -1654,7 +1686,9 @@ test(
       const afterSecondRotation = await Session.findById(after._id).select(
         'revokedAt +previousRefreshTokenHash previousRefreshTokenValidUntil'
       );
+
       assert.equal(afterSecondRotation?.revokedAt, undefined);
+
       assert.equal(
         afterSecondRotation?.previousRefreshTokenHash,
         createHash('sha256')
@@ -1829,6 +1863,7 @@ test(
 
       assert.equal(submitted.pharmacy.description, 'Approved description');
       assert.equal(submitted.pharmacy.status, 'on_moderation');
+
       assert.equal(
         submitted.pharmacy.pendingModeration?.description,
         'Pending description'
@@ -1842,12 +1877,119 @@ test(
 
       assert.equal(persisted?.description, 'Approved description');
       assert.equal(persisted?.status, 'on_moderation');
+
       assert.equal(
         persisted?.pendingModeration?.description,
         'Pending description'
       );
     } finally {
       await cleanup(identity.email);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'active pharmacy location stays approved until the atomic pending location is approved',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const ownerIdentity = uniqueIdentity('location-moderation-owner');
+    const adminIdentity = uniqueIdentity('location-moderation-admin');
+
+    try {
+      const owner = await User.create({
+        name: 'Location Moderation Owner',
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'pharmacy',
+      });
+
+      const admin = await User.create({
+        name: 'Location Moderation Admin',
+        email: adminIdentity.email,
+        phone: adminIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'admin',
+      });
+
+      const pharmacy = await Pharmacy.create({
+        ownerId: owner._id,
+        managerUserIds: [],
+        name: 'Location Moderation Pharmacy',
+
+        location: {
+          address: '36 Bolharskykh Opolchentsiv Street',
+          settlement: 'Odesa',
+          region: 'Odesa region',
+          countryCode: 'UA',
+        },
+
+        email: ownerIdentity.email,
+        phone: ownerIdentity.phone,
+        documents: [],
+        status: 'active',
+        approvedAt: new Date(),
+        activatedAt: new Date(),
+      });
+
+      const drafted = await updateMyPharmacyProfileService(String(owner._id), {
+        location: { settlement: 'Bolhrad' },
+        expectedRevision: pharmacy.updatedAt.toISOString(),
+      });
+
+      assert.equal(drafted.pharmacy.location?.settlement, 'Odesa');
+
+      assert.deepEqual(drafted.pharmacy.pendingModeration?.location, {
+        address: '36 Bolharskykh Opolchentsiv Street',
+        settlement: 'Bolhrad',
+        region: 'Odesa region',
+        countryCode: 'UA',
+      });
+
+      let persisted = await Pharmacy.findById(pharmacy._id).lean();
+      assert.equal(persisted?.location?.settlement, 'Odesa');
+
+      assert.equal(
+        persisted?.pendingModeration?.location?.settlement,
+        'Bolhrad'
+      );
+
+      const submitted = await submitMyPharmacyModerationService(
+        String(owner._id),
+        {
+          changes: {},
+          expectedRevision: drafted.pharmacy.updatedAt,
+        }
+      );
+
+      assert.equal(submitted.pharmacy.status, 'on_moderation');
+      assert.equal(submitted.pharmacy.location?.settlement, 'Odesa');
+
+      assert.equal(
+        submitted.pharmacy.pendingModeration?.location?.settlement,
+        'Bolhrad'
+      );
+
+      const approved = await updatePharmacyStatusByAdminService(
+        String(pharmacy._id),
+        { status: 'active' },
+        String(admin._id)
+      );
+
+      assert.equal(approved.location?.settlement, 'Bolhrad');
+      assert.equal(approved.location?.region, 'Odesa region');
+      assert.equal(approved.pendingModeration, undefined);
+
+      persisted = await Pharmacy.findById(pharmacy._id).lean();
+      assert.equal(persisted?.location?.settlement, 'Bolhrad');
+      assert.equal(persisted?.pendingModeration, undefined);
+    } finally {
+      await cleanup(ownerIdentity.email);
+      await cleanup(adminIdentity.email);
       await mongoose.disconnect();
     }
   }
@@ -1882,6 +2024,7 @@ test(
       });
 
       const initialRevision = pharmacy.updatedAt.toISOString();
+
       const newer = await updateMyPharmacyProfileService(String(owner._id), {
         description: 'Saved in Tab B',
         expectedRevision: initialRevision,

@@ -125,6 +125,7 @@ test('client contact search accepts email, phone and postal address values', () 
     '27 Wellness Street, Lviv',
   ]) {
     const result = clientsQuerySchema.safeParse({ contact });
+
     assert.equal(
       result.success,
       true,
@@ -224,6 +225,49 @@ test('strict pagination query schemas preserve the supported limit alias', () =>
 
   assert.equal(
     ordersQuerySchema.safeParse({ page: ['1', '2'] }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('pharmacy profile location updates use the canonical nested contract', () => {
+  const parsed = updateMyPharmacyProfileSchema.parse({
+    expectedRevision: EXPECTED_REVISION,
+    location: {
+      address: '  36 Bolharskykh Opolchentsiv Street  ',
+      settlement: '  Bolhrad  ',
+      region: '  Odesa region  ',
+    },
+  });
+
+  assert.deepEqual(parsed.location, {
+    address: '36 Bolharskykh Opolchentsiv Street',
+    settlement: 'Bolhrad',
+    region: 'Odesa region',
+  });
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      address: 'Legacy address',
+    }).success,
+    false
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      city: 'Legacy city',
+    }).success,
+    false
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      location: { countryCode: 'UA' },
+    }).success,
     false
   );
 });

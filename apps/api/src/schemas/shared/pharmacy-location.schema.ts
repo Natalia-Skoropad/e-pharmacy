@@ -5,12 +5,12 @@ import {
   USER_SEARCH_MAX_LENGTH,
 } from '../../constants/validation';
 
-import { optionalSchema } from './optional-text.schema';
+import { clearableSchema, optionalSchema } from './optional-text.schema';
 import { sharedRequiredAddressSchema } from '../shared-validation.schema';
 
 //===============================================================
 
-const requiredSettlementSchema = z
+export const pharmacySettlementSchema = z
   .string()
   .trim()
   .min(1, 'Settlement is required')
@@ -24,18 +24,19 @@ const requiredSettlementSchema = z
 
 //===============================================================
 
-const optionalRegionSchema = optionalSchema(
-  z
-    .string()
-    .trim()
+const pharmacyRegionValueSchema = z
+  .string()
+  .trim()
+  .min(1, 'Region must not be empty')
 
-    .max(
-      USER_SEARCH_MAX_LENGTH,
-      `Region must be at most ${USER_SEARCH_MAX_LENGTH} characters`
-    )
+  .max(
+    USER_SEARCH_MAX_LENGTH,
+    `Region must be at most ${USER_SEARCH_MAX_LENGTH} characters`
+  )
 
-    .regex(SEARCH_TEXT_PATTERN, 'Region contains unsupported characters')
-);
+  .regex(SEARCH_TEXT_PATTERN, 'Region contains unsupported characters');
+
+export const pharmacyRegionSchema = optionalSchema(pharmacyRegionValueSchema);
 
 //===============================================================
 
@@ -65,8 +66,8 @@ export const pharmacyGeoPointSchema = z
 export const pharmacyLocationSchema = z
   .object({
     address: sharedRequiredAddressSchema,
-    settlement: requiredSettlementSchema,
-    region: optionalRegionSchema,
+    settlement: pharmacySettlementSchema,
+    region: pharmacyRegionSchema,
     countryCode: requiredCountryCodeSchema,
     geo: pharmacyGeoPointSchema.optional(),
   })
@@ -74,3 +75,21 @@ export const pharmacyLocationSchema = z
 
 /** Incomplete location accepted while the pharmacy remains a new draft. */
 export const pharmacyLocationDraftSchema = pharmacyLocationSchema.partial();
+
+//===============================================================
+
+/** Owner-editable location patch. Country and geo remain system-managed. */
+export const pharmacyEditableLocationPatchSchema = z
+  .object({
+    address: clearableSchema(sharedRequiredAddressSchema),
+    settlement: clearableSchema(pharmacySettlementSchema),
+    region: clearableSchema(pharmacyRegionValueSchema),
+  })
+
+  .strict()
+
+  .refine(
+    (value) =>
+      Object.values(value).some((fieldValue) => fieldValue !== undefined),
+    { message: 'At least one location field is required' }
+  );
