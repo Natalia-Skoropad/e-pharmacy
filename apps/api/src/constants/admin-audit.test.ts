@@ -50,6 +50,16 @@ test('Stage 13.4 reserves owner audit entities, actions, and actor types', () =>
   );
 
   assert.equal(
+    ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_ACCOUNT_CREATED,
+    'pharmacyOwner.account.created'
+  );
+
+  assert.equal(
+    ADMIN_AUDIT_ACTIONS.PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED,
+    'pharmacy.registrationDocuments.attached'
+  );
+
+  assert.equal(
     ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PROFILE_UPDATED,
     'pharmacyOwner.profile.updated'
   );

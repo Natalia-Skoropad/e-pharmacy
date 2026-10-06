@@ -19,6 +19,8 @@ import type {
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.status.changed': 'Pharmacy status changed',
+  'pharmacy.registrationDocuments.attached': 'Registration documents attached',
+  'pharmacyOwner.account.created': 'Pharmacy owner account created',
   'pharmacyOwner.profile.updated': 'Pharmacy owner profile updated',
   'pharmacyOwner.photo.updated': 'Pharmacy owner photo updated',
   'pharmacyOwner.status.changed': 'Pharmacy owner status changed',
@@ -62,6 +64,8 @@ type KnownAuditStatus = keyof typeof STATUS_PRESENTATION_BY_VALUE;
 //===================================================================
 
 const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
+  'pharmacy.registrationDocuments.attached',
+  'pharmacyOwner.account.created',
   'admin.platformOwner.granted',
   'adminEmployee.document.uploaded',
   'pharmacyOwner.document.uploaded',

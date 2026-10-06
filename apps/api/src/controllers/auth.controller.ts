@@ -160,7 +160,12 @@ export async function registerUser(
   res: ValidatedResponse<RegisterInput>
 ): Promise<void> {
   const input = res.locals.validated.body;
-  const data = await registerUserService(input, getSessionContext(req));
+
+  const data = await registerUserService(
+    input,
+    getSessionContext(req),
+    res.locals.requestId
+  );
 
   sendSuccessResponse({
     res,

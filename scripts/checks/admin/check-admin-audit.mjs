@@ -31,6 +31,13 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'models', 'adminAuditLog.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-audit.schema.ts'],
   ['apps', 'api', 'src', 'services', 'admin-audit.service.ts'],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'pharmacy-owner-registration-audit-migration.service.ts',
+  ],
   ['apps', 'api', 'src', 'controllers', 'admin-audit.controller.ts'],
   ['apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'],
   ['apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'],
@@ -104,6 +111,14 @@ const auditService = await read(
   'src',
   'services',
   'admin-audit.service.ts'
+);
+
+const ownerRegistrationAuditMigration = await read(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'pharmacy-owner-registration-audit-migration.service.ts'
 );
 
 const pharmacyService = await read(
@@ -357,6 +372,11 @@ assert.match(adminAuditParser, /'productCategory'/);
 assert.match(adminAuditParser, /'position'/);
 
 for (const [key, action] of [
+  ['PHARMACY_OWNER_ACCOUNT_CREATED', 'pharmacyOwner.account.created'],
+  [
+    'PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED',
+    'pharmacy.registrationDocuments.attached',
+  ],
   ['PHARMACY_OWNER_PROFILE_UPDATED', 'pharmacyOwner.profile.updated'],
   ['PHARMACY_OWNER_PHOTO_UPDATED', 'pharmacyOwner.photo.updated'],
   ['PHARMACY_OWNER_STATUS_CHANGED', 'pharmacyOwner.status.changed'],
@@ -411,6 +431,10 @@ assert.match(
 );
 
 assert.match(auditService, /Pharmacy\.distinct\(['"]ownerId['"]\)/);
+assert.match(auditService, /AdminAuditLog\.aggregate/);
+assert.match(auditService, /\$group:\s*\{ _id:\s*['"]\$actorUserId['"] \}/);
+assert.match(auditService, /from:\s*User\.collection\.name/);
+assert.match(auditService, /from:\s*Pharmacy\.collection\.name/);
 assert.match(auditService, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_OWNER/);
 assert.match(auditService, /filter\.scopeEntityType = query\.scopeEntityType/);
 assert.match(auditService, /filter\.scopeEntityId = query\.scopeEntityId/);
@@ -433,6 +457,11 @@ assert.match(ownerLifecycleService, /scopeEntityId:/);
 assert.match(
   authController,
   /updateUserProfileService\([\s\S]*?res\.locals\.requestId[\s\S]*?\)/
+);
+
+assert.match(
+  authController,
+  /registerUserService\([\s\S]*?res\.locals\.requestId[\s\S]*?\)/
 );
 
 const ownerProfileAudit = authService.match(
@@ -458,8 +487,48 @@ assert.doesNotMatch(
 
 assert.match(auditService, /photo\|photourl\|image\|imageurl\|base64\|dataurl/);
 
+const registrationAudit = authService.match(
+  /export async function registerUserService[\s\S]*?(?=\/\/={10,}\n\nexport async function loginUserService)/
+)?.[0];
+
+assert.ok(registrationAudit);
+assert.match(registrationAudit, /PHARMACY_OWNER_ACCOUNT_CREATED/);
+assert.match(registrationAudit, /PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED/);
+assert.doesNotMatch(registrationAudit, /PHARMACY_OWNER_DOCUMENT_UPLOADED/);
+
+assert.match(
+  registrationAudit,
+  /scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER/
+);
+
+assert.doesNotMatch(
+  registrationAudit,
+  /after:\s*\{[^}]*sha256|after:\s*\{[^}]*base64|after:\s*\{[^}]*content/
+);
+
+assert.match(ownerRegistrationAuditMigration, /AdminAuditLog\.exists/);
+assert.match(ownerRegistrationAuditMigration, /\$setOnInsert/);
+assert.match(ownerRegistrationAuditMigration, /upsert:\s*true/);
+assert.match(ownerRegistrationAuditMigration, /timestamps:\s*false/);
+
+assert.match(
+  ownerRegistrationAuditMigration,
+  /createdAt:\s*getHistoricalCreatedAt\(owner\.createdAt/
+);
+
+assert.doesNotMatch(
+  ownerRegistrationAuditMigration,
+  /document\.sha256|document\.content|dataUrl|base64/i
+);
+
 assert.match(activityHistory, /label="Search by employee"/);
 assert.match(activityHistory, /label="Search by pharmacy owner"/);
+
+assert.match(
+  activityHistory,
+  /createOwnerOptions[\s\S]*?actor\.id[\s\S]*?actor\.email[\s\S]*?actor\.phone/
+);
+
 assert.match(activityHistory, /title:\s*'Changed by'/);
 assert.match(activityHistory, /getAdminAuditActorTypeLabel/);
 assert.match(activityFilters, /label="Changed by"/);
@@ -481,10 +550,12 @@ assert.equal(
 assert.match(profileService, /ADMIN_EMPLOYEE_PROFILE_UPDATED/);
 assert.match(profileService, /ADMIN_AUDIT_ENTITY_TYPES\.ADMIN_EMPLOYEE/);
 assert.match(profileService, /hasPicture = Boolean\(user\.pictureUrl\)/);
+
 assert.doesNotMatch(
   profileService,
   /before:\s*\{[^}]*pictureUrl|after:\s*\{[^}]*pictureUrl/
 );
+
 assert.doesNotMatch(profileService, /password|currentPassword|newPassword/i);
 
 assert.match(

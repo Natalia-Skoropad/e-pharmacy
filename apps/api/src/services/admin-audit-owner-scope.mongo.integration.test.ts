@@ -71,7 +71,7 @@ async function cleanup(userIds: readonly Types.ObjectId[]): Promise<void> {
 //===============================================================
 
 test(
-  'owner profile changes are globally visible, owner-scoped, and expose owner/admin actors safely',
+  'owner profile changes are globally visible, owner-scoped, and actor options only include users with audit rows',
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
@@ -201,8 +201,7 @@ test(
 
       assert.equal(ownerActor?.actorType, 'pharmacyOwner');
       assert.equal(ownerActor?.role, 'pharmacy');
-      assert.equal(adminActor?.actorType, 'employee');
-      assert.equal(adminActor?.role, 'admin');
+      assert.equal(adminActor, undefined);
     } finally {
       await cleanup([owner._id, admin._id]);
       await mongoose.disconnect();

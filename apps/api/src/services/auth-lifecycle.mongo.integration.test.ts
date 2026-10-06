@@ -5,6 +5,7 @@ import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
+import { AdminAuditLog } from '../models/adminAuditLog.model';
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import type { PharmacyVerificationDocumentMetadata } from '../types/pharmacy';
@@ -82,6 +83,13 @@ async function cleanup(email: string): Promise<void> {
   }).distinct('registrationUploadSessionId');
 
   await Promise.all([
+    AdminAuditLog.deleteMany({
+      $or: [
+        { actorUserId: user._id },
+        { entityId: String(user._id) },
+        { scopeEntityId: String(user._id) },
+      ],
+    }),
     Client.deleteMany({ userId: user._id }),
     Pharmacy.deleteMany({ ownerId: user._id }),
     Session.deleteMany({ userId: user._id }),
@@ -742,6 +750,7 @@ test(
     try {
       const uploadSession =
         await createRegistrationPharmacyDocumentUploadSessionService();
+
       const uploaded = await createRegistrationPharmacyDocumentUploadService({
         name: 'license.pdf',
         size: content.byteLength,
@@ -772,6 +781,7 @@ test(
       assert.ok(pharmacy);
       assert.equal(pharmacy.documents.length, 1);
       assert.equal(pharmacy.documents[0]?.sha256, uploaded.document.sha256);
+
       assert.equal(
         await PharmacyRegistrationUploadSession.exists({
           _id: uploadSession.uploadSessionId,
@@ -798,9 +808,57 @@ test(
 
       assert.deepEqual(ownerContent.content, content);
       assert.equal(ownerContent.document.type, 'application/pdf');
+
       assert.equal(
         adminContent.dataUrl,
         `data:application/pdf;base64,${content.toString('base64')}`
+      );
+
+      const auditLogs = await AdminAuditLog.find({
+        scopeEntityType: 'pharmacyOwner',
+        scopeEntityId: registration.user.id,
+      })
+        .sort({ createdAt: 1, _id: 1 })
+        .lean();
+
+      assert.equal(auditLogs.length, 2);
+      assert.equal(auditLogs[0]?.action, 'pharmacyOwner.account.created');
+      assert.deepEqual(auditLogs[0]?.before, {});
+
+      assert.deepEqual(auditLogs[0]?.after, {
+        status: 'new',
+        name: 'Document Storage',
+        email: identity.email,
+        phone: identity.phone,
+      });
+
+      assert.equal(
+        auditLogs[1]?.action,
+        'pharmacy.registrationDocuments.attached'
+      );
+
+      assert.deepEqual(auditLogs[1]?.after.registrationDocuments, [
+        'license.pdf',
+      ]);
+
+      assert.equal(auditLogs[1]?.after.documentCount, 1);
+
+      assert.deepEqual(auditLogs[1]?.after.documentMimeTypes, [
+        'application/pdf',
+      ]);
+
+      assert.deepEqual(auditLogs[1]?.after.documentSizesBytes, [
+        String(content.byteLength),
+      ]);
+
+      assert.equal(
+        auditLogs[1]?.after.totalDocumentSizeBytes,
+        content.byteLength
+      );
+
+      assert.doesNotMatch(
+        JSON.stringify(auditLogs[1]),
+        /sha256|base64|dataUrl|content|binary/i
       );
     } finally {
       await cleanup(identity.email);

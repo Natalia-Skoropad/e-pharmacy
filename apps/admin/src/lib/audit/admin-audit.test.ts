@@ -157,6 +157,61 @@ test('audit parser accepts pharmacy owner lifecycle events', () => {
 
 //===================================================================
 
+test('audit parser accepts owner account creation and registration document events', () => {
+  const parsed = parseAdminAuditListResponse({
+    items: [
+      {
+        ...item,
+        action: 'pharmacyOwner.account.created',
+        section: 'pharmacyOwners',
+        entityType: 'pharmacyOwner',
+        entityId: '507f1f77bcf86cd799439088',
+        entityLabelSnapshot: 'Owner Example',
+        scopeEntityType: 'pharmacyOwner',
+        scopeEntityId: '507f1f77bcf86cd799439088',
+        statusAfter: 'new',
+        changedFields: ['email', 'name', 'phone', 'status'],
+      },
+      {
+        ...item,
+        id: '507f1f77bcf86cd799439089',
+        action: 'pharmacy.registrationDocuments.attached',
+        section: 'pharmacies',
+        entityType: 'pharmacy',
+        entityId: '507f1f77bcf86cd799439090',
+        entityLabelSnapshot: 'owner@example.com',
+        scopeEntityType: 'pharmacyOwner',
+        scopeEntityId: '507f1f77bcf86cd799439088',
+        changedFields: ['documentCount', 'registrationDocuments'],
+      },
+    ],
+    page: 1,
+    perPage: 20,
+    total: 2,
+    totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
+  });
+
+  assert.equal(parsed.items[0]?.action, 'pharmacyOwner.account.created');
+
+  assert.equal(
+    getAdminAuditActionLabel(parsed.items[0]!.action),
+    'Pharmacy owner account created'
+  );
+
+  assert.equal(
+    parsed.items[1]?.action,
+    'pharmacy.registrationDocuments.attached'
+  );
+
+  assert.equal(
+    getAdminAuditActionLabel(parsed.items[1]!.action),
+    'Registration documents attached'
+  );
+});
+
+//===================================================================
+
 test('audit parser accepts reserved owner document and comment actions', () => {
   const parsed = parseAdminAuditListResponse({
     items: [

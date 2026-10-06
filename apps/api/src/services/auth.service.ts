@@ -292,7 +292,8 @@ async function buildAuthSessionResult(
 
 export async function registerUserService(
   input: RegisterInput,
-  context?: SessionContext
+  context?: SessionContext,
+  auditRequestId?: string
 ): Promise<AuthSessionResult> {
   const phone = normalizePhoneForLookup(input.phone);
   const existingUserWithEmail = await User.exists({ email: input.email });
@@ -361,6 +362,75 @@ export async function registerUserService(
 
           createdPharmacy.documents = documents;
           await createdPharmacy.save({ session: mongoSession });
+
+          const registrationAuditRequestId =
+            auditRequestId?.trim() ||
+            `service-registration:${String(createdUser._id)}`;
+
+          await appendAdminAuditLog({
+            actorUserId: String(createdUser._id),
+            action: ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_ACCOUNT_CREATED,
+            section: ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS,
+            entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+            entityId: String(createdUser._id),
+            entityLabel: createdUser.name,
+            scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+            scopeEntityId: String(createdUser._id),
+            before: {},
+            after: {
+              status: createdUser.status,
+              name: createdUser.name,
+              email: createdUser.email,
+              phone: createdUser.phone,
+            },
+            changedFields: ['status', 'name', 'email', 'phone'],
+            requestId: registrationAuditRequestId,
+            session: mongoSession,
+          });
+
+          if (documents.length > 0) {
+            await appendAdminAuditLog({
+              actorUserId: String(createdUser._id),
+              action:
+                ADMIN_AUDIT_ACTIONS.PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED,
+              section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
+              entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+              entityId: String(createdPharmacy._id),
+              entityLabel: createdUser.email,
+              scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+              scopeEntityId: String(createdUser._id),
+              before: {
+                registrationDocuments: [],
+                documentCount: 0,
+                documentMimeTypes: [],
+                documentSizesBytes: [],
+                totalDocumentSizeBytes: 0,
+              },
+              after: {
+                registrationDocuments: documents.map(
+                  (document) => document.name
+                ),
+                documentCount: documents.length,
+                documentMimeTypes: documents.map((document) => document.type),
+                documentSizesBytes: documents.map((document) =>
+                  String(document.size)
+                ),
+                totalDocumentSizeBytes: documents.reduce(
+                  (total, document) => total + document.size,
+                  0
+                ),
+              },
+              changedFields: [
+                'registrationDocuments',
+                'documentCount',
+                'documentMimeTypes',
+                'documentSizesBytes',
+                'totalDocumentSizeBytes',
+              ],
+              requestId: registrationAuditRequestId,
+              session: mongoSession,
+            });
+          }
         }
 
         return createdUser;

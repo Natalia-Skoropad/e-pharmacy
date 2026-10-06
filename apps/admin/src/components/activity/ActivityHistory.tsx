@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import {
   CirclePlus,
   Eye,
@@ -172,7 +173,9 @@ function createOwnerOptions(
             size={30}
           />
         ),
-        searchText: [actor.email, actor.phone].filter(Boolean).join(' '),
+        searchText: [actor.id, actor.email, actor.phone]
+          .filter(Boolean)
+          .join(' '),
       })),
   ];
 }
@@ -650,7 +653,7 @@ export function ActivityHistory() {
                   {
                     title: 'Search fields',
                     description:
-                      'Search by pharmacy owner name, email, or phone number.',
+                      'Search by pharmacy owner name, ID, email, or phone number.',
                     icon: <Search size={17} aria-hidden="true" />,
                   },
                 ]}
@@ -658,7 +661,7 @@ export function ActivityHistory() {
             }
             value={filters.ownerUserId}
             options={ownerOptions}
-            placeholder="Name, email, or phone"
+            placeholder="Name, ID, email, or phone"
             emptyMessage="No pharmacy owners found"
             isActive={Boolean(filters.ownerUserId)}
             isLoading={areActorsLoading}

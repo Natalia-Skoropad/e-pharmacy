@@ -43,12 +43,28 @@ test('registration commits User and role profile before creating a browser sessi
 
   assert.match(registration, /Client\.create\([\s\S]*session: mongoSession/);
   assert.match(registration, /Pharmacy\.create\([\s\S]*session: mongoSession/);
+  assert.match(registration, /PHARMACY_OWNER_ACCOUNT_CREATED/);
+  assert.match(registration, /PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED/);
+
+  assert.match(
+    registration,
+    /appendAdminAuditLog\([\s\S]*session: mongoSession/
+  );
 
   const transactionEnd = registration.indexOf(
     'await mongoSession.endSession()'
   );
 
+  const accountAudit = registration.indexOf('PHARMACY_OWNER_ACCOUNT_CREATED');
+
+  const documentsAudit = registration.indexOf(
+    'PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED'
+  );
+
   const authSessionBuild = registration.indexOf('buildAuthSessionResult');
+
+  assert.ok(accountAudit >= 0 && accountAudit < transactionEnd);
+  assert.ok(documentsAudit >= 0 && documentsAudit < transactionEnd);
   assert.ok(transactionEnd >= 0 && authSessionBuild > transactionEnd);
   assert.match(registration, /AUTH_ERROR_CODES\.REGISTRATION_SESSION_FAILED/);
 });
@@ -108,6 +124,7 @@ test('refresh rotates tokens, caps sliding expiry with an absolute lifetime, and
   assert.match(refresh, /revokedReason:\s*'token_reuse'/);
   assert.match(refresh, /!matchesCurrentToken && !matchesPreviousToken/);
   assert.match(refresh, /AUTH_ERROR_CODES\.SESSION_INVALID/);
+
   assert.doesNotMatch(
     refresh,
     /session\.expiresAt\s*=\s*getRefreshTokenExpiresAt/

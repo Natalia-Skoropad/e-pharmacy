@@ -445,40 +445,76 @@ function applyAuditSectionFilter(
 //===============================================================
 
 export async function listAdminAuditActorsService(): Promise<AdminAuditActorsResponseDto> {
-  const ownerIds = await Pharmacy.distinct('ownerId');
+  const actors = await AdminAuditLog.aggregate<{
+    _id: Types.ObjectId;
+    user: {
+      _id: Types.ObjectId;
+      name: string;
+      email: string;
+      phone: string;
+      pictureUrl?: string;
+      role: 'admin' | 'pharmacy';
+      status: 'new' | 'active' | 'blocked';
+    };
+  }>([
+    { $group: { _id: '$actorUserId' } },
+    {
+      $lookup: {
+        from: User.collection.name,
+        localField: '_id',
+        foreignField: '_id',
+        as: 'users',
+      },
+    },
+    { $unwind: '$users' },
+    {
+      $lookup: {
+        from: Pharmacy.collection.name,
+        localField: '_id',
+        foreignField: 'ownerId',
+        as: 'ownedPharmacies',
+      },
+    },
+    {
+      $match: {
+        $or: [
+          { 'users.role': USER_ROLES.ADMIN },
+          {
+            'users.role': USER_ROLES.PHARMACY,
+            'ownedPharmacies.0': { $exists: true },
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        user: {
+          _id: '$users._id',
+          name: '$users.name',
+          email: '$users.email',
+          phone: '$users.phone',
+          pictureUrl: '$users.pictureUrl',
+          role: '$users.role',
+          status: '$users.status',
+        },
+      },
+    },
+    { $sort: { 'user.name': 1, _id: 1 } },
+  ]);
 
-  const actors = await User.find({
-    $or: [
-      { role: USER_ROLES.ADMIN },
-      { role: USER_ROLES.PHARMACY, _id: { $in: ownerIds } },
-    ],
-  })
-    .select('_id name email phone pictureUrl role status')
-    .sort({ name: 1, _id: 1 })
-    .lean<
-      Array<{
-        _id: Types.ObjectId;
-        name: string;
-        email: string;
-        phone: string;
-        pictureUrl?: string;
-        role: 'admin' | 'pharmacy';
-        status: 'new' | 'active' | 'blocked';
-      }>
-    >();
-
-  const items: AdminAuditActorDto[] = actors.map((actor) => ({
-    id: String(actor._id),
-    name: actor.name,
-    email: actor.email,
-    phone: actor.phone,
-    ...(actor.pictureUrl ? { pictureUrl: actor.pictureUrl } : {}),
-    role: actor.role,
+  const items: AdminAuditActorDto[] = actors.map(({ user }) => ({
+    id: String(user._id),
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    ...(user.pictureUrl ? { pictureUrl: user.pictureUrl } : {}),
+    role: user.role,
     actorType:
-      actor.role === USER_ROLES.ADMIN
+      user.role === USER_ROLES.ADMIN
         ? ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE
         : ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER,
-    status: actor.status,
+    status: user.status,
   }));
 
   return { items };
