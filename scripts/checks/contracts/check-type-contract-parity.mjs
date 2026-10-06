@@ -217,6 +217,21 @@ async function assertActualTypeShapes(frontendFixture) {
       'ApiPaginationResponse',
     ],
     [
+      'pharmacyGeoPoint',
+      'packages/types/src/pharmacies/location.ts',
+      'PharmacyGeoPoint',
+    ],
+    [
+      'pharmacyLocation',
+      'packages/types/src/pharmacies/location.ts',
+      'PharmacyLocation',
+    ],
+    [
+      'pharmacyLocationDraft',
+      'packages/types/src/pharmacies/location.ts',
+      'PharmacyLocationDraft',
+    ],
+    [
       'editableBankDetails',
       'packages/types/src/pharmacies/bank-details.ts',
       'EditablePharmacyBankDetails',
@@ -317,6 +332,13 @@ async function assertActualTypeShapes(frontendFixture) {
   }
 
   const backendContracts = [
+    ['pharmacyGeoPoint', 'apps/api/src/types/pharmacy.ts', 'PharmacyGeoPoint'],
+    ['pharmacyLocation', 'apps/api/src/types/pharmacy.ts', 'PharmacyLocation'],
+    [
+      'pharmacyLocationDraft',
+      'apps/api/src/types/pharmacy.ts',
+      'PharmacyLocationDraft',
+    ],
     [
       'editableBankDetails',
       'apps/api/src/types/pharmacy.ts',

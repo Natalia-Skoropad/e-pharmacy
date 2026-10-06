@@ -11,6 +11,8 @@ import type {
 import type {
   CompletePharmacyBankDetails,
   EditablePharmacyBankDetails,
+  PharmacyLocation,
+  PharmacyLocationDraft,
 } from '../src/pharmacies';
 
 import type {
@@ -141,3 +143,36 @@ void labels;
 
 const editablePayload: EditablePharmacyBankDetails = {};
 editablePayload.iban = 'UA111111111111111111111111111';
+
+//===================================================================
+// Pharmacy location drafts may be incomplete; verification locations may not.
+
+const draftLocation: PharmacyLocationDraft = {
+  settlement: 'Bolhrad',
+};
+
+// @ts-expect-error A draft without address/countryCode is not verification-ready.
+const verificationLocationFromDraft: PharmacyLocation = draftLocation;
+
+const verificationLocation: PharmacyLocation = {
+  address: '36 Bolharskykh Opolchentsiv Street',
+  settlement: 'Bolhrad',
+  countryCode: 'UA',
+
+  geo: {
+    type: 'Point',
+    coordinates: [28.611, 45.682],
+  },
+};
+
+const invalidGeoLocation: PharmacyLocation = {
+  address: '36 Bolharskykh Opolchentsiv Street',
+  settlement: 'Bolhrad',
+  countryCode: 'UA',
+  // @ts-expect-error GeoJSON Point coordinates must contain exactly two numbers.
+  geo: { type: 'Point', coordinates: [28.611, 45.682, 0] },
+};
+
+void verificationLocationFromDraft;
+void verificationLocation;
+void invalidGeoLocation;

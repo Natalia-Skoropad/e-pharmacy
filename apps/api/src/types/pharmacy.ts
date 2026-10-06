@@ -20,6 +20,24 @@ export type PharmacyMembershipRole = 'owner' | 'manager';
 
 //===============================================================
 
+export type PharmacyGeoPoint = Readonly<{
+  type: 'Point';
+  coordinates: readonly [longitude: number, latitude: number];
+}>;
+
+export type PharmacyLocation = Readonly<{
+  address: string;
+  settlement: string;
+  region?: string;
+  countryCode: string;
+  geo?: PharmacyGeoPoint;
+}>;
+
+/** Draft persistence may remain incomplete while Pharmacy.status === 'new'. */
+export type PharmacyLocationDraft = Readonly<Partial<PharmacyLocation>>;
+
+//===============================================================
+
 export type ReviewModerationStatus = 'on_moderation' | 'approved' | 'rejected';
 
 //===============================================================

@@ -1,5 +1,6 @@
 export * from './field-input-attributes';
 export * from './pharmacy-field-errors';
+export * from './pharmacy-location-validation';
 export * from './pharmacy-profile-validation';
 export * from './working-hours';
 

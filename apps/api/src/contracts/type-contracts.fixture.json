@@ -36,6 +36,21 @@
       "optional": []
     },
 
+    "pharmacyGeoPoint": {
+      "required": ["type", "coordinates"],
+      "optional": []
+    },
+
+    "pharmacyLocation": {
+      "required": ["address", "settlement", "countryCode"],
+      "optional": ["region", "geo"]
+    },
+
+    "pharmacyLocationDraft": {
+      "required": [],
+      "optional": ["address", "settlement", "region", "countryCode", "geo"]
+    },
+
     "editableBankDetails": {
       "required": [],
       "optional": [
