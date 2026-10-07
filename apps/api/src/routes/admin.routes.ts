@@ -4,10 +4,13 @@ import { ADMIN_PERMISSIONS } from '../constants/admin-permissions';
 
 import {
   getCurrentAdminAccess,
+  createPharmacyOwnerAdminCommentByAdmin,
+  deletePharmacyOwnerAdminCommentByAdmin,
   downloadPharmacyOwnerDocumentByAdmin,
   getPharmacyOwnerDetailByAdmin,
   getPharmacyOwnerSummaryByAdmin,
   listPharmacyOwnerDocumentsByAdmin,
+  listPharmacyOwnerAdminCommentsByAdmin,
   listPharmacyOwnerOptionsByAdmin,
   listPharmacyOwnerPharmaciesByAdmin,
   listPharmacyOwnersByAdmin,
@@ -77,6 +80,11 @@ import {
 
 import { updateMyAdminEmployeeProfileSchema } from '../schemas/admin-employee-profile.schema';
 import { adminPharmacyOwnerDocumentParamsSchema } from '../schemas/pharmacy-owner-document.schema';
+
+import {
+  createPharmacyOwnerAdminCommentSchema,
+  pharmacyOwnerAdminCommentParamsSchema,
+} from '../schemas/pharmacy-owner-admin-comment.schema';
 
 import {
   adminEmployeePrivateNoteParamsSchema,
@@ -371,6 +379,38 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
   validate({ params: adminPharmacyOwnerDocumentParamsSchema }),
   ctrlWrapper(downloadPharmacyOwnerDocumentByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/comments',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ params: adminPharmacyOwnerParamsSchema }),
+  ctrlWrapper(listPharmacyOwnerAdminCommentsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/pharmacy-owners/:ownerId/comments',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.edit),
+
+  validate({
+    params: adminPharmacyOwnerParamsSchema,
+    body: createPharmacyOwnerAdminCommentSchema,
+  }),
+
+  ctrlWrapper(createPharmacyOwnerAdminCommentByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/pharmacy-owners/:ownerId/comments/:commentId',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.edit),
+  validate({ params: pharmacyOwnerAdminCommentParamsSchema }),
+  ctrlWrapper(deletePharmacyOwnerAdminCommentByAdmin)
 );
 
 //=================================================================================

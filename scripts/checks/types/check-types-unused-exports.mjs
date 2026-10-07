@@ -85,6 +85,10 @@ const INTENTIONALLY_PUBLIC = new Set([
   'admin:AdminPharmacyOwnerPharmaciesResponse',
   'admin:AdminPharmacyOwnerPharmacySummary',
   'admin:AdminPharmacyOwnerStatistics',
+  'admin:AdminPharmacyOwnerComment',
+  'admin:AdminPharmacyOwnerCommentResponse',
+  'admin:AdminPharmacyOwnerCommentsResponse',
+  'admin:CreateAdminPharmacyOwnerCommentPayload',
 
   // Reference-data contracts are public cross-application API shapes. Some
   // remain intentionally available before every consumer needs them.

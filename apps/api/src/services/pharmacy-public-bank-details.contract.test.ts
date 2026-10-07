@@ -11,13 +11,13 @@ test('generic public pharmacy details expose availability but never payment cred
       resolve(process.cwd(), 'src/services/pharmacy.service.ts'),
       'utf8'
     ),
-    
+
     readFile(resolve(process.cwd(), 'src/types/pharmacy.ts'), 'utf8'),
   ]);
 
   const publicSerializer = serviceSource.slice(
     serviceSource.indexOf('function serializePublicPharmacy'),
-    serviceSource.indexOf('function serializePharmacyProfile')
+    serviceSource.indexOf('function serializeCurrentPharmacySummary')
   );
 
   const publicDto = typeSource.slice(
