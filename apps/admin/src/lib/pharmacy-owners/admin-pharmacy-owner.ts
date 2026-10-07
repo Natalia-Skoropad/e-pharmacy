@@ -13,6 +13,9 @@ import type {
   AdminPharmacyOwnerStatusMutationResponse,
 } from '@e-pharmacy/types/admin';
 
+import { PHARMACY_OWNER_ACCOUNT_STATUSES } from '@e-pharmacy/config/users';
+
+import type { PharmacyOwnerAccountStatus } from '@e-pharmacy/types/auth';
 import type { PharmacyLocationDraft } from '@e-pharmacy/types/pharmacies';
 import type { ISODateTimeString } from '@e-pharmacy/types/primitives';
 import { isISODateTimeString } from '@e-pharmacy/validation/dates';
@@ -20,11 +23,9 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 //===================================================================
 
-export const ADMIN_PHARMACY_OWNER_STATUSES = [
-  'new',
-  'active',
-  'blocked',
-] as const;
+export const ADMIN_PHARMACY_OWNER_STATUSES = PHARMACY_OWNER_ACCOUNT_STATUSES;
+
+//===================================================================
 
 export const ADMIN_OWNER_PHARMACY_STATUSES = [
   'new',
@@ -44,8 +45,7 @@ export const ADMIN_OWNER_RATING_FILTERS = [
 
 //===================================================================
 
-export type AdminPharmacyOwnerStatus =
-  (typeof ADMIN_PHARMACY_OWNER_STATUSES)[number];
+export type AdminPharmacyOwnerStatus = PharmacyOwnerAccountStatus;
 
 export type AdminOwnerPharmacyStatus =
   (typeof ADMIN_OWNER_PHARMACY_STATUSES)[number];
@@ -215,6 +215,8 @@ function parseOwnerListItem(value: unknown): AdminPharmacyOwnerListItem {
     ),
   };
 }
+
+//===================================================================
 
 export function parseAdminPharmacyOwnerListResponse(
   value: unknown

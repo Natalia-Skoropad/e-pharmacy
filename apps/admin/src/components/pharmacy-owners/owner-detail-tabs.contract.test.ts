@@ -34,7 +34,7 @@ test('owner documents are read-only in Admin and support download', () => {
   assert.match(source, /getAdminPharmacyOwnerDocuments/);
   assert.match(source, /downloadAdminPharmacyOwnerDocument/);
   assert.match(source, /editable=\{false\}/);
-  assert.match(source, /readOnlyUploadView=\{status === 'success'\}/);
+  assert.match(source, /readOnlyUploadView=\{effectiveStatus === 'success'\}/);
   assert.match(source, /onDownloadFile=\{handleDownload\}/);
   assert.doesNotMatch(source, /onUploadFiles|onDeleteFile|canUpload|canDelete/);
 });

@@ -14,6 +14,7 @@ import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 
 import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
+import { useAdminPharmacyOwnerNavigationBadge } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
 
 import css from './AdminMobileMenu.module.css';
 
@@ -43,6 +44,7 @@ export function AdminMobileMenu({
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
   const { user } = useAuth();
+  const { newOwnerCount } = useAdminPharmacyOwnerNavigationBadge();
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -96,11 +98,35 @@ export function AdminMobileMenu({
         ariaLabel="Mobile admin navigation"
         showChevron={false}
         onNavigate={onClose}
-        renderLink={({ href, className, children, ...props }) => (
-          <Link href={href} className={className} {...props}>
-            {children}
-          </Link>
-        )}
+        renderLink={({ item, href, className, children, ...props }) => {
+          const isPharmacyOwnersLink =
+            item.href === ADMIN_ROUTES.PHARMACY_OWNERS;
+          const showNewOwnerBadge =
+            isPharmacyOwnersLink && newOwnerCount !== null && newOwnerCount > 0;
+
+          return (
+            <Link
+              href={href}
+              className={
+                isPharmacyOwnersLink
+                  ? `${className} ${css.pharmacyOwnersLink}`
+                  : className
+              }
+              {...props}
+            >
+              {children}
+
+              {showNewOwnerBadge ? (
+                <span
+                  className={css.badge}
+                  aria-label={`${newOwnerCount} new pharmacy owners`}
+                >
+                  {newOwnerCount > 99 ? '99+' : newOwnerCount}
+                </span>
+              ) : null}
+            </Link>
+          );
+        }}
       />
 
       <div className={css.quickLinks} aria-label="Account quick links">

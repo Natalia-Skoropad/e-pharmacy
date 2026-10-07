@@ -7,6 +7,7 @@ import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
 import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
+import { useAdminPharmacyOwnerNavigationBadge } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
 
 import css from './AdminSidebar.module.css';
 
@@ -26,6 +27,7 @@ export function AdminSidebar({
   onToggleCollapsed,
 }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { newOwnerCount } = useAdminPharmacyOwnerNavigationBadge();
 
   return (
     <CabinetSidebar
@@ -45,11 +47,41 @@ export function AdminSidebar({
           {children}
         </Link>
       )}
-      renderLink={({ href, className, children, ...props }) => (
-        <Link href={href} className={className} {...props}>
-          {children}
-        </Link>
-      )}
+      renderLink={({ item, href, className, children, ...props }) => {
+        const isPharmacyOwnersLink = item.href === ADMIN_ROUTES.PHARMACY_OWNERS;
+        const showNewOwnerBadge =
+          isPharmacyOwnersLink && newOwnerCount !== null && newOwnerCount > 0;
+
+        return (
+          <Link
+            href={href}
+            className={
+              isPharmacyOwnersLink
+                ? `${className} ${css.pharmacyOwnersLink}`
+                : className
+            }
+            {...props}
+          >
+            {children}
+
+            {showNewOwnerBadge ? (
+              isCollapsed ? (
+                <span
+                  className={css.collapsedBadge}
+                  aria-label={`${newOwnerCount} new pharmacy owners`}
+                />
+              ) : (
+                <span
+                  className={css.badge}
+                  aria-label={`${newOwnerCount} new pharmacy owners`}
+                >
+                  {newOwnerCount > 99 ? '99+' : newOwnerCount}
+                </span>
+              )
+            ) : null}
+          </Link>
+        );
+      }}
     />
   );
 }

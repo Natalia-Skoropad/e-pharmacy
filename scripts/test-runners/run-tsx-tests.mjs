@@ -9,6 +9,32 @@ const argumentsList = process.argv.slice(2);
 const requestedDirectory =
   argumentsList.find((argument) => !argument.startsWith('--')) ?? 'src';
 
+let matchSuffixes = ['.test.ts'];
+let excludeSuffixes = [];
+
+for (const argument of argumentsList) {
+  if (argument.startsWith('--match=')) {
+    matchSuffixes = argument
+      .slice('--match='.length)
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+
+  if (argument.startsWith('--exclude=')) {
+    excludeSuffixes = argument
+      .slice('--exclude='.length)
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+}
+
+if (matchSuffixes.length === 0) {
+  console.error('Provide at least one non-empty --match suffix.');
+  process.exit(1);
+}
+
 const testRoot = path.resolve(process.cwd(), requestedDirectory);
 
 //===================================================================
@@ -25,7 +51,12 @@ async function collectTestFiles(directory) {
       continue;
     }
 
-    if (entry.name.endsWith('.test.ts')) files.push(absolutePath);
+    const matches = matchSuffixes.some((suffix) => entry.name.endsWith(suffix));
+    const excluded = excludeSuffixes.some((suffix) =>
+      entry.name.endsWith(suffix)
+    );
+
+    if (matches && !excluded) files.push(absolutePath);
   }
 
   return files;
@@ -38,7 +69,9 @@ const testFiles = (await collectTestFiles(testRoot)).sort();
 //===================================================================
 
 if (testFiles.length === 0) {
-  console.error(`No .test.ts files found under ${requestedDirectory}`);
+  console.error(
+    `No test files matching ${matchSuffixes.join(', ')} found under ${requestedDirectory}`
+  );
   process.exitCode = 1;
 } else {
   const requireFromPackage = createRequire(
@@ -46,6 +79,7 @@ if (testFiles.length === 0) {
   );
 
   const tsxCliPath = requireFromPackage.resolve('tsx/cli');
+
   const result = spawnSync(
     process.execPath,
     [tsxCliPath, '--test', ...testFiles],

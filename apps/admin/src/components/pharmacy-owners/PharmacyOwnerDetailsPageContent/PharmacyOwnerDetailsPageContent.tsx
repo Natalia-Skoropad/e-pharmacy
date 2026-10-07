@@ -55,6 +55,7 @@ import {
 import { canAdmin } from '@/lib/permissions/can-admin';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { ADMIN_ROUTES } from '@/lib/routes';
+import { requestPharmacyOwnerNavigationBadgeRefresh } from '@/lib/pharmacy-owners/pharmacy-owner-navigation-badge-refresh';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
@@ -288,6 +289,7 @@ function PharmacyOwnerDetailsPageContent({
 
       const refreshed = await loadDetail();
       setDetail(refreshed);
+      requestPharmacyOwnerNavigationBadgeRefresh();
       setLoadError(null);
       setActionState(null);
 
