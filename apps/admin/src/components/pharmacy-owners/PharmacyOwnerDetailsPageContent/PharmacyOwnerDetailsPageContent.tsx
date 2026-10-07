@@ -50,6 +50,7 @@ import {
   buildAdminPharmacyOwnerDetailUrl,
   type AdminPharmacyOwnerDetailTab,
   type AdminPharmacyOwnerDetailUrlState,
+  type AdminPharmacyOwnerPharmaciesUrlState,
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 
 import { canAdmin } from '@/lib/permissions/can-admin';
@@ -57,6 +58,8 @@ import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
+
+import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
 
 import css from './PharmacyOwnerDetailsPageContent.module.css';
 
@@ -75,6 +78,7 @@ const ZERO_TAB_COUNTS = {
 type PharmacyOwnerDetailsPageContentProps = Readonly<{
   ownerId: string;
   initialState: AdminPharmacyOwnerDetailUrlState;
+  initialPharmaciesState: AdminPharmacyOwnerPharmaciesUrlState;
 }>;
 
 type DetailLoadError = 'not-found' | 'forbidden' | 'error' | null;
@@ -148,6 +152,7 @@ function formatOwnerDate(value: string): string {
 function PharmacyOwnerDetailsPageContent({
   ownerId,
   initialState,
+  initialPharmaciesState,
 }: PharmacyOwnerDetailsPageContentProps) {
   const router = useRouter();
   const toast = useToast();
@@ -188,6 +193,7 @@ function PharmacyOwnerDetailsPageContent({
         setDetail(response);
         setIsLoading(false);
       })
+
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setDetail(null);
@@ -577,6 +583,11 @@ function PharmacyOwnerDetailsPageContent({
                 </section>
               </div>
             )
+          ) : activeTab === 'pharmacies' ? (
+            <LinkedPharmaciesTab
+              ownerId={ownerId}
+              initialState={initialPharmaciesState}
+            />
           ) : (
             <section className={css.futureTabState} aria-live="polite">
               <FileCheck2 size={28} aria-hidden="true" />

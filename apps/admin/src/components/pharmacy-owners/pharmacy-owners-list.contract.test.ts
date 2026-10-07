@@ -64,12 +64,13 @@ test('pharmacy owners list covers analytics search filters pagination and distin
 test('owners table links ids and names to owner detail and uses canonical status badges', async () => {
   const table = await read('./PharmacyOwnersTable/PharmacyOwnersTable.tsx');
 
-  assert.match(table, /Registration/);
+  assert.match(table, /key: 'registeredAt'/);
+  assert.match(table, /parts=\{\['Reg\.', 'date'\]\}/);
   assert.match(table, /Owner's[\s\S]*?photo/);
-  assert.match(table, /Operating[\s\S]*?pharmacies/);
-  assert.match(table, /Non-working[\s\S]*?pharmacies/);
+  assert.match(table, /parts=\{\['Active', 'pharms'\]\}/);
+  assert.match(table, /parts=\{\['Inactive', 'pharms'\]\}/);
   assert.match(table, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
   assert.match(table, /USER_STATUS_PRESENTATION\[owner\.status\]/);
-  assert.match(table, /minWidth=\{1120\}/);
+  assert.match(table, /minWidth=\{0\}/);
   assert.doesNotMatch(table, /Create|Add owner/);
 });
