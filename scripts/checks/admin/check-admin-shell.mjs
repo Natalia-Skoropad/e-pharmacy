@@ -227,7 +227,6 @@ assert.match(
 
 for (const futurePage of [
   ['dashboard', 'page.tsx'],
-  ['pharmacy-owners', 'page.tsx'],
   ['pharmacies', 'page.tsx'],
   ['products', 'page.tsx'],
   ['product-requests', 'page.tsx'],

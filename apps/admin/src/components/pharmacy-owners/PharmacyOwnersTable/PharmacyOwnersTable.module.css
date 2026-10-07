@@ -1,0 +1,5 @@
+.breakableLink,
+.breakableText {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
