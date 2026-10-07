@@ -1,0 +1,68 @@
+.resourceCard {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.permissionNote {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle, #f7faf8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.dangerConfirmButton {
+  background-color: var(--color-danger, #e14949) !important;
+  border-color: var(--color-danger, #e14949) !important;
+}
+
+.activityStack {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.activityToolbar {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.activityCount {
+  margin-left: auto;
+}
+
+.inlineError {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid var(--color-danger-border, #efc6c6);
+  border-radius: var(--radius-md);
+}
+
+@media only screen and (max-width: 640px) {
+  .resourceCard {
+    padding: 14px;
+  }
+
+  .activityToolbar,
+  .inlineError {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .activityCount {
+    margin-left: 0;
+  }
+}

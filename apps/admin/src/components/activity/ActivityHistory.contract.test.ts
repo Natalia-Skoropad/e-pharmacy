@@ -201,3 +201,34 @@ test('activity count label is centered on mobile', async () => {
     /\.countLabel \{[\s\S]*?justify-content: center;[\s\S]*?text-align: center;/
   );
 });
+
+//===================================================================
+
+test('activity history removes duplicated entity-type UI and renders section icons', async () => {
+  const [historySource, drawerSource, modalSource, sectionLinkSource] =
+    await Promise.all([
+      read('./ActivityHistory.tsx'),
+      read('./ActivityFiltersDrawer.tsx'),
+      read('./AuditDetailsModal.tsx'),
+      read('./ActivitySectionLink.tsx'),
+    ]);
+
+  assert.doesNotMatch(drawerSource, /label="Entity type"/);
+  assert.doesNotMatch(drawerSource, /admin-audit-entity-filter/);
+  assert.doesNotMatch(historySource, /filters\.entityType/);
+
+  assert.match(
+    historySource,
+    /key: 'entity'[\s\S]*?render: \(item\) => <strong>\{item\.entityLabelSnapshot\}<\/strong>/
+  );
+
+  assert.doesNotMatch(historySource, /getAdminAuditEntityLabel/);
+  assert.match(modalSource, /<dd>\{details\.entityLabelSnapshot\}<\/dd>/);
+  assert.doesNotMatch(modalSource, /getAdminAuditEntityLabel/);
+
+  assert.match(historySource, /<ActivitySectionLink item=\{item\} \/>/);
+  assert.match(modalSource, /<ActivitySectionLink item=\{details\} \/>/);
+  assert.match(sectionLinkSource, /function SectionIcon/);
+  assert.match(sectionLinkSource, /case 'categories'/);
+  assert.match(sectionLinkSource, /case 'pharmacyOwners'/);
+});

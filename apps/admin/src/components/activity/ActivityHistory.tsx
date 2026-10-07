@@ -40,11 +40,7 @@ import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
-import {
-  Button,
-  FiltersButton,
-  TextActionButton,
-} from '@e-pharmacy/ui/primitives';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
@@ -63,8 +59,6 @@ import {
 import {
   getAdminAuditActionLabel,
   getAdminAuditChangeTone,
-  getAdminAuditEntityLabel,
-  getAdminAuditLocation,
   getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
@@ -76,6 +70,7 @@ import {
 
 import { AuditDetailsModal } from './AuditDetailsModal';
 import { ActivityActorIdentity } from './ActivityActorIdentity';
+import { ActivitySectionLink } from './ActivitySectionLink';
 
 import css from './ActivityHistory.module.css';
 
@@ -182,6 +177,7 @@ export function ActivityHistory() {
   const [filters, setFilters] = useState<ActivityHistoryFilters>(
     DEFAULT_ACTIVITY_HISTORY_FILTERS
   );
+
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState<RowsPerPageValue>(20);
   const [data, setData] = useState<AdminAuditListResponse | null>(null);
@@ -226,7 +222,6 @@ export function ActivityHistory() {
         ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters.action ? { action: filters.action } : {}),
-        ...(filters.entityType ? { entityType: filters.entityType } : {}),
         ...(filters.section ? { section: filters.section } : {}),
         ...(filters.actorType ? { actorType: filters.actorType } : {}),
         ...(filters.employeeUserId || filters.ownerUserId
@@ -240,10 +235,12 @@ export function ActivityHistory() {
         setData(response);
         setListError(null);
       })
+
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setListError(getErrorMessage(error));
       })
+
       .finally(() => {
         if (!controller.signal.aborted) setIsLoading(false);
       });
@@ -262,9 +259,11 @@ export function ActivityHistory() {
       .then((response) => {
         if (!controller.signal.aborted) setDetails(response.auditLog);
       })
+
       .catch((error: unknown) => {
         if (!controller.signal.aborted) setDetailsError(getErrorMessage(error));
       })
+
       .finally(() => {
         if (!controller.signal.aborted) setIsDetailsLoading(false);
       });
@@ -287,7 +286,6 @@ export function ActivityHistory() {
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
     filters.action,
-    filters.entityType,
     filters.section,
     filters.actorType,
     filters.employeeUserId,
@@ -360,14 +358,7 @@ export function ActivityHistory() {
       {
         key: 'entity',
         title: 'Entity',
-        render: (item) => (
-          <span>
-            <strong>{item.entityLabelSnapshot}</strong>
-            <span className={css.entityType}>
-              {getAdminAuditEntityLabel(item.entityType)}
-            </span>
-          </span>
-        ),
+        render: (item) => <strong>{item.entityLabelSnapshot}</strong>,
       },
       {
         key: 'action',
@@ -449,16 +440,7 @@ export function ActivityHistory() {
         key: 'location',
         title: <TableHeaderTitle parts={['Section /', 'page']} />,
         render: (item) => {
-          const location = getAdminAuditLocation(item);
-
-          return (
-            <TextActionButton
-              className={css.breakableLink}
-              href={location.href}
-            >
-              {location.label}
-            </TextActionButton>
-          );
+          return <ActivitySectionLink item={item} />;
         },
       },
       {
@@ -573,7 +555,7 @@ export function ActivityHistory() {
                   {
                     title: 'Find the records you need',
                     description:
-                      'Search separately by employee or pharmacy owner, then narrow the history by actor type, date, change type, entity type, or Admin Cabinet section.',
+                      'Search separately by employee or pharmacy owner, then narrow the history by actor type, date, change type, or Admin Cabinet section.',
                     icon: <ListFilter size={17} aria-hidden="true" />,
                   },
                 ]}

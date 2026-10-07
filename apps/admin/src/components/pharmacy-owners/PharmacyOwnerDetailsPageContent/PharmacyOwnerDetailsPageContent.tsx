@@ -8,7 +8,6 @@ import {
   Building2,
   CircleCheckBig,
   Clock3,
-  FileCheck2,
   Mail,
   MapPin,
   Phone,
@@ -60,6 +59,9 @@ import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
+import { OwnerActivityTab } from './OwnerActivityTab';
+import { OwnerCommentsTab } from './OwnerCommentsTab';
+import { OwnerDocumentsTab } from './OwnerDocumentsTab';
 
 import css from './PharmacyOwnerDetailsPageContent.module.css';
 
@@ -205,6 +207,33 @@ function PharmacyOwnerDetailsPageContent({
   }, [loadDetail, reloadVersion]);
 
   const tabCounts = detail?.tabCounts ?? ZERO_TAB_COUNTS;
+
+  const updateTabCount = useCallback(
+    (key: 'documents' | 'comments', count: number) => {
+      setDetail((current) =>
+        current
+          ? {
+              ...current,
+              tabCounts: {
+                ...current.tabCounts,
+                [key]: count,
+              },
+            }
+          : current
+      );
+    },
+    []
+  );
+
+  const updateDocumentsCount = useCallback(
+    (count: number) => updateTabCount('documents', count),
+    [updateTabCount]
+  );
+
+  const updateCommentsCount = useCallback(
+    (count: number) => updateTabCount('comments', count),
+    [updateTabCount]
+  );
 
   const tabs = useMemo<Array<TabItem<AdminPharmacyOwnerDetailTab>>>(() => {
     return [
@@ -588,17 +617,19 @@ function PharmacyOwnerDetailsPageContent({
               ownerId={ownerId}
               initialState={initialPharmaciesState}
             />
+          ) : activeTab === 'documents' ? (
+            <OwnerDocumentsTab
+              ownerId={ownerId}
+              onCountChange={updateDocumentsCount}
+            />
+          ) : activeTab === 'comments' ? (
+            <OwnerCommentsTab
+              ownerId={ownerId}
+              canManage={canEditOwner}
+              onCountChange={updateCommentsCount}
+            />
           ) : (
-            <section className={css.futureTabState} aria-live="polite">
-              <FileCheck2 size={28} aria-hidden="true" />
-              <div>
-                <h2>{tabs.find((tab) => tab.value === activeTab)?.label}</h2>
-                <p>
-                  This section is reserved in the owner detail layout. Its data
-                  view is not connected in the current implementation yet.
-                </p>
-              </div>
-            </section>
+            <OwnerActivityTab ownerId={ownerId} />
           )}
         </div>
       </section>

@@ -9,17 +9,14 @@ import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ACTOR_TYPES,
-  ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
   type AdminAuditAction,
   type AdminAuditActorType,
-  type AdminAuditEntityType,
   type AdminAuditSection,
 } from '@/lib/audit/admin-audit';
 
 import {
   getAdminAuditActionLabel,
-  getAdminAuditEntityLabel,
   getAdminAuditSectionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
@@ -29,7 +26,6 @@ export type ActivityHistoryFilters = Readonly<{
   dateFrom: string;
   dateTo: string;
   action: '' | AdminAuditAction;
-  entityType: '' | AdminAuditEntityType;
   section: '' | AdminAuditSection;
   actorType: '' | AdminAuditActorType;
   employeeUserId: string;
@@ -42,7 +38,6 @@ export const DEFAULT_ACTIVITY_HISTORY_FILTERS: ActivityHistoryFilters = {
   dateFrom: '',
   dateTo: '',
   action: '',
-  entityType: '',
   section: '',
   actorType: '',
   employeeUserId: '',
@@ -56,16 +51,6 @@ const ACTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['action']>> = [
   ...ADMIN_AUDIT_ACTIONS.map((action) => ({
     value: action,
     label: getAdminAuditActionLabel(action),
-  })),
-];
-
-const ENTITY_OPTIONS: Array<
-  SelectOption<ActivityHistoryFilters['entityType']>
-> = [
-  { value: '', label: 'All entity types' },
-  ...ADMIN_AUDIT_ENTITY_TYPES.map((entityType) => ({
-    value: entityType,
-    label: getAdminAuditEntityLabel(entityType),
   })),
 ];
 
@@ -151,15 +136,6 @@ export function ActivityFiltersDrawer({
         options={ACTION_OPTIONS}
         isActive={Boolean(filters.action)}
         onChange={(action) => onChange({ ...filters, action })}
-      />
-
-      <SelectField
-        id="admin-audit-entity-filter"
-        label="Entity type"
-        value={filters.entityType}
-        options={ENTITY_OPTIONS}
-        isActive={Boolean(filters.entityType)}
-        onChange={(entityType) => onChange({ ...filters, entityType })}
       />
 
       <SelectField

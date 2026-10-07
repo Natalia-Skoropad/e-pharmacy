@@ -3,9 +3,9 @@
 import {
   CalendarClock,
   Fingerprint,
+  FilePenLine,
   History,
   ListChecks,
-  MapPin,
   MessageSquareText,
   RefreshCw,
   Shapes,
@@ -14,7 +14,7 @@ import {
 
 import { DataTable, type DataTableColumn } from '@e-pharmacy/ui/data-display';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
-import { CloseIconButton, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { CloseIconButton } from '@e-pharmacy/ui/primitives';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import type {
@@ -26,12 +26,11 @@ import {
   formatAdminAuditValue,
   getAdminAuditActionLabel,
   getAdminAuditChangeTone,
-  getAdminAuditEntityLabel,
-  getAdminAuditLocation,
   getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
 import { ActivityActorIdentity } from './ActivityActorIdentity';
+import { ActivitySectionLink } from './ActivitySectionLink';
 
 import css from './ActivityHistory.module.css';
 
@@ -103,9 +102,9 @@ export function AuditDetailsModal({
   onRetry,
 }: AuditDetailsModalProps) {
   const titleId = 'admin-audit-details-title';
-  const location = details ? getAdminAuditLocation(details) : null;
   const tone = details ? getAdminAuditChangeTone(details) : 'info';
   const toneClassName = getChangeToneClassName(tone);
+
   const statusTransition = details
     ? getAdminAuditStatusTransitionLabel(details)
     : null;
@@ -217,10 +216,7 @@ export function AuditDetailsModal({
                   <Shapes size={16} aria-hidden="true" />
                   Entity
                 </dt>
-                <dd>
-                  {getAdminAuditEntityLabel(details.entityType)} ·{' '}
-                  {details.entityLabelSnapshot}
-                </dd>
+                <dd>{details.entityLabelSnapshot}</dd>
               </div>
 
               <div className={css.detailsMetaItem}>
@@ -231,19 +227,15 @@ export function AuditDetailsModal({
                 <dd className={css.codeValue}>{details.entityId}</dd>
               </div>
 
-              {location ? (
-                <div className={css.detailsMetaItem}>
-                  <dt>
-                    <MapPin size={16} aria-hidden="true" />
-                    Section / page
-                  </dt>
-                  <dd>
-                    <TextActionButton href={location.href}>
-                      {location.label}
-                    </TextActionButton>
-                  </dd>
-                </div>
-              ) : null}
+              <div className={css.detailsMetaItem}>
+                <dt>
+                  <FilePenLine size={16} aria-hidden="true" />
+                  Section / page
+                </dt>
+                <dd>
+                  <ActivitySectionLink item={details} />
+                </dd>
+              </div>
 
               <div className={css.detailsMetaItem}>
                 <dt>
