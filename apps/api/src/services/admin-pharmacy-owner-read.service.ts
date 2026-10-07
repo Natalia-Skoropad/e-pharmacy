@@ -1,6 +1,9 @@
 import { Types, type PipelineStage } from 'mongoose';
 
-import { ADMIN_AUDIT_ENTITY_TYPES } from '../constants/admin-audit';
+import {
+  ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+} from '../constants/admin-audit';
 
 import {
   PHARMACY_STATUSES,
@@ -9,8 +12,11 @@ import {
 } from '../constants/auth';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
+import { AdminAuditLog } from '../models/adminAuditLog.model';
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { PharmacyOwnerAdminComment } from '../models/pharmacyOwnerAdminComment.model';
+import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
 import { User } from '../models/user.model';
 
 import type {
@@ -104,6 +110,12 @@ type OwnerDetailAggregateRow = Readonly<{
     onModeration: number;
     active: number;
     blocked: number;
+  }>;
+
+  tabCounts: Readonly<{
+    pharmacies: number;
+    documents: number;
+    comments: number;
   }>;
 }>;
 
@@ -485,6 +497,86 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
       },
     },
     {
+      $lookup: {
+        from: AdminAuditLog.collection.name,
+        let: { ownerId: { $toString: '$_id' } },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  {
+                    $eq: [
+                      '$scopeEntityType',
+                      ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+                    ],
+                  },
+                  { $eq: ['$scopeEntityId', '$$ownerId'] },
+                  {
+                    $in: [
+                      '$action',
+                      [
+                        ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_ACCOUNT_CREATED,
+                        ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PROFILE_UPDATED,
+                        ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PHOTO_UPDATED,
+                      ],
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+          { $sort: { createdAt: -1, _id: -1 } },
+          { $limit: 1 },
+          { $project: { _id: 0, createdAt: 1 } },
+        ],
+        as: 'lastPersonalDataUpdate',
+      },
+    },
+    {
+      $lookup: {
+        from: PharmacyOwnerDocument.collection.name,
+        let: { ownerId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$ownerUserId', '$$ownerId'] },
+            },
+          },
+          { $count: 'count' },
+        ],
+        as: 'documentCount',
+      },
+    },
+    {
+      $lookup: {
+        from: PharmacyOwnerAdminComment.collection.name,
+        let: { ownerId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ['$ownerUserId', '$$ownerId'] },
+            },
+          },
+          { $count: 'count' },
+        ],
+        as: 'commentCount',
+      },
+    },
+    {
+      $set: {
+        tabCounts: {
+          pharmacies: '$pharmacyStatistics.all',
+          documents: {
+            $ifNull: [{ $arrayElemAt: ['$documentCount.count', 0] }, 0],
+          },
+          comments: {
+            $ifNull: [{ $arrayElemAt: ['$commentCount.count', 0] }, 0],
+          },
+        },
+      },
+    },
+    {
       $project: {
         _id: 0,
         id: { $toString: '$_id' },
@@ -496,8 +588,16 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
         status: 1,
         statusReason: { $ifNull: ['$statusReason', null] },
         registeredAt: '$createdAt',
-        lastPersonalDataUpdateAt: '$updatedAt',
+
+        lastPersonalDataUpdateAt: {
+          $ifNull: [
+            { $arrayElemAt: ['$lastPersonalDataUpdate.createdAt', 0] },
+            '$createdAt',
+          ],
+        },
+
         pharmacyStatistics: 1,
+        tabCounts: 1,
       },
     },
   ]);
@@ -518,6 +618,7 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
     registeredAt: owner.registeredAt.toISOString(),
     lastPersonalDataUpdateAt: owner.lastPersonalDataUpdateAt.toISOString(),
     pharmacyStatistics: owner.pharmacyStatistics,
+    tabCounts: owner.tabCounts,
   };
 }
 

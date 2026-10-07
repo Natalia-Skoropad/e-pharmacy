@@ -40,14 +40,12 @@ export function PharmacyOwnersTable({
     () => [
       {
         key: 'registeredAt',
-        title: <TableHeaderTitle parts={['Registration', 'date']} />,
-        width: '11%',
+        title: <TableHeaderTitle parts={['Reg.', 'date']} />,
         render: (owner) => <TableDateTime value={owner.registeredAt} />,
       },
       {
         key: 'photo',
         title: <TableHeaderTitle parts={["Owner's", 'photo']} />,
-        width: '7%',
         render: (owner) => (
           <TableImagePreview
             src={owner.pictureUrl}
@@ -59,7 +57,6 @@ export function PharmacyOwnersTable({
       {
         key: 'id',
         title: <TableHeaderTitle parts={['Owner', 'ID']} />,
-        width: '15%',
         render: (owner) => (
           <TextActionButton
             className={css.breakableLink}
@@ -72,7 +69,6 @@ export function PharmacyOwnersTable({
       {
         key: 'name',
         title: <TableHeaderTitle parts={["Owner's", 'name']} />,
-        width: '13%',
         render: (owner) => (
           <TextActionButton href={buildAdminPharmacyOwnerDetailUrl(owner.id)}>
             {owner.name}
@@ -82,7 +78,6 @@ export function PharmacyOwnersTable({
       {
         key: 'email',
         title: 'Email',
-        width: '13%',
         render: (owner) => (
           <span className={css.breakableText}>{owner.email}</span>
         ),
@@ -90,27 +85,21 @@ export function PharmacyOwnersTable({
       {
         key: 'phone',
         title: 'Phone',
-        width: '10%',
         render: (owner) => owner.phone,
       },
       {
         key: 'operatingPharmaciesCount',
-        title: <TableHeaderTitle parts={['Operating', 'pharmacies']} />,
-        width: '10%',
-        align: 'center',
+        title: <TableHeaderTitle parts={['Active', 'pharms']} />,
         render: (owner) => owner.operatingPharmaciesCount,
       },
       {
         key: 'nonWorkingPharmaciesCount',
-        title: <TableHeaderTitle parts={['Non-working', 'pharmacies']} />,
-        width: '11%',
-        align: 'center',
+        title: <TableHeaderTitle parts={['Inactive', 'pharms']} />,
         render: (owner) => owner.nonWorkingPharmaciesCount,
       },
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Account', 'status']} />,
-        width: '10%',
         render: (owner) => (
           <StatusBadge {...USER_STATUS_PRESENTATION[owner.status]} />
         ),
@@ -125,7 +114,7 @@ export function PharmacyOwnersTable({
       items={owners}
       getItemKey={(owner) => owner.id}
       isLoading={isLoading}
-      minWidth={1120}
+      minWidth={0}
       ariaLabel="Pharmacy owners"
       labels={{
         loading: 'Loading pharmacy owners...',

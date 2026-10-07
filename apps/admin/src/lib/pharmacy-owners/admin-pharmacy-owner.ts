@@ -325,6 +325,26 @@ function parsePharmacyStatistics(value: unknown) {
 
 //===================================================================
 
+function parseTabCounts(value: unknown) {
+  const record = requireRecord(value, 'pharmacy owner tab counts');
+
+  return {
+    pharmacies: requireNonNegativeInteger(
+      record.pharmacies,
+      'pharmacies tab count'
+    ),
+
+    documents: requireNonNegativeInteger(
+      record.documents,
+      'documents tab count'
+    ),
+
+    comments: requireNonNegativeInteger(record.comments, 'comments tab count'),
+  };
+}
+
+//===================================================================
+
 export function parseAdminPharmacyOwnerDetail(
   value: unknown
 ): AdminPharmacyOwnerDetail {
@@ -348,6 +368,13 @@ export function parseAdminPharmacyOwnerDetail(
     'pharmacy owner statusReason'
   );
 
+  const pharmacyStatistics = parsePharmacyStatistics(record.pharmacyStatistics);
+  const tabCounts = parseTabCounts(record.tabCounts);
+
+  if (tabCounts.pharmacies !== pharmacyStatistics.all) {
+    throw new TypeError('Invalid pharmacy owner pharmacies tab count.');
+  }
+
   return {
     id: requireObjectId(record.id, 'pharmacy owner id'),
     name: requireNonEmptyString(record.name, 'pharmacy owner name'),
@@ -368,7 +395,8 @@ export function parseAdminPharmacyOwnerDetail(
       'pharmacy owner lastPersonalDataUpdateAt'
     ),
 
-    pharmacyStatistics: parsePharmacyStatistics(record.pharmacyStatistics),
+    pharmacyStatistics,
+    tabCounts,
   };
 }
 

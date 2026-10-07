@@ -37,13 +37,28 @@
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
-  background-color: var(--color-error-soft);
-  border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
   border-radius: var(--radius-lg);
 }
 
 .notice svg {
   margin-top: 1px;
+}
+
+.accent {
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
+}
+
+.accent svg {
+  color: var(--color-accent);
+}
+
+.danger {
+  background-color: var(--color-error-soft);
+  border: 1px solid color-mix(in srgb, var(--color-error) 25%, transparent);
+}
+
+.danger svg {
   color: var(--color-error);
 }
 
@@ -52,6 +67,17 @@
   min-height: 190px;
   max-height: 190px;
   resize: none;
+}
+
+.requestError {
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-lg);
 }
 
 .actions {
@@ -69,14 +95,14 @@
   bottom: 8px;
 }
 
-.confirmButton {
+.dangerButton {
   color: var(--color-white);
   background-color: var(--color-error);
   border-color: var(--color-error);
 }
 
-.confirmButton:hover:not(:disabled),
-.confirmButton:focus-visible:not(:disabled) {
+.dangerButton:hover:not(:disabled),
+.dangerButton:focus-visible:not(:disabled) {
   color: var(--color-white);
   background-color: color-mix(in srgb, var(--color-error) 86%, black);
   border-color: color-mix(in srgb, var(--color-error) 86%, black);

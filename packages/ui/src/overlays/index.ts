@@ -4,3 +4,4 @@ export * from './InfoTooltip';
 export * from './MobileOffcanvasBase';
 export * from './ModalBase';
 export * from './ModalRoot';
+export * from './ReasonModal';

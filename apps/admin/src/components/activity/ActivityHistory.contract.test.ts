@@ -85,7 +85,7 @@ test('activity history has a separate pharmacy-owner search and actor-type filte
 
 //===================================================================
 
-test('activity actor identity links employees and pharmacy owners to dedicated cards', async () => {
+test('activity actor identity links employees and pharmacy owners to their canonical detail routes', async () => {
   const [
     identitySource,
     presentationSource,
@@ -118,15 +118,9 @@ test('activity actor identity links employees and pharmacy owners to dedicated c
   assert.match(actorDetailsSource, /function ActivityActorDetails/);
   assert.match(actorDetailsSource, /export function ActivityEmployeeDetails/);
 
-  assert.match(
-    actorDetailsSource,
-    /export function ActivityPharmacyOwnerDetails/
-  );
-
-  assert.match(
-    ownerPageSource,
-    /<ActivityPharmacyOwnerDetails ownerId=\{ownerId\}/
-  );
+  assert.match(ownerPageSource, /ADMIN_PERMISSIONS\.pharmacyOwners\.view/);
+  assert.match(ownerPageSource, /PharmacyOwnerDetailsPageContent/);
+  assert.doesNotMatch(ownerPageSource, /ActivityPharmacyOwnerDetails/);
 });
 
 //===================================================================

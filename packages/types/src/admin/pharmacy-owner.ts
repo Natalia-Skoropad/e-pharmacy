@@ -66,6 +66,12 @@ export type AdminPharmacyOwnerDetail = Readonly<{
     active: number;
     blocked: number;
   }>;
+
+  tabCounts: Readonly<{
+    pharmacies: number;
+    documents: number;
+    comments: number;
+  }>;
 }>;
 
 //===================================================================
@@ -97,7 +103,7 @@ export type UpdateAdminPharmacyOwnerStatusPayload = Readonly<{
   reason: string;
 }>;
 
-export type AdminPharmacyOwnerStatusMutation = Readonly<{
+type AdminPharmacyOwnerStatusMutation = Readonly<{
   ownerId: EntityId;
   status: Extract<PharmacyOwnerAccountStatus, 'active' | 'blocked'>;
   blockedPharmacies: number;

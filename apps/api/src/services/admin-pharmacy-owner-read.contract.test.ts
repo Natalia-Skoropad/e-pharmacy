@@ -231,3 +231,55 @@ test('owner activity reuses canonical audit logs while preserving pharmacyOwners
     /listAdminPharmacyOwnerActivityService[\s\S]*?listAdminAuditLogsService\(\{[\s\S]*?scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER[\s\S]*?scopeEntityId:\s*ownerId/
   );
 });
+
+//===================================================================
+
+test('owner detail bootstrap returns tab counts without loading tab lists', () => {
+  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const contracts = read(
+    '../../../../packages/types/src/admin/pharmacy-owner.ts'
+  );
+
+  assert.match(
+    contracts,
+    /tabCounts:\s*Readonly<\{[\s\S]*?pharmacies: number;[\s\S]*?documents: number;[\s\S]*?comments: number;/
+  );
+
+  assert.match(
+    service,
+    /getAdminPharmacyOwnerDetailService[\s\S]*?PharmacyOwnerDocument\.collection\.name[\s\S]*?PharmacyOwnerAdminComment\.collection\.name[\s\S]*?tabCounts/
+  );
+
+  assert.match(service, /pharmacies: ['"]\$pharmacyStatistics\.all['"]/);
+
+  assert.match(
+    service,
+    /documents:[\s\S]*?\$arrayElemAt: \[['"]\$documentCount\.count['"], 0\]/
+  );
+
+  assert.match(
+    service,
+    /comments:[\s\S]*?\$arrayElemAt: \[['"]\$commentCount\.count['"], 0\]/
+  );
+});
+
+//===================================================================
+
+test('owner detail derives the last personal-data change from owner profile/photo audit rather than account status updates', () => {
+  const service = read('./admin-pharmacy-owner-read.service.ts');
+
+  assert.match(
+    service,
+    /getAdminPharmacyOwnerDetailService[\s\S]*?AdminAuditLog\.collection\.name[\s\S]*?PHARMACY_OWNER_ACCOUNT_CREATED[\s\S]*?PHARMACY_OWNER_PROFILE_UPDATED[\s\S]*?PHARMACY_OWNER_PHOTO_UPDATED/
+  );
+
+  const detailSection = service.slice(
+    service.indexOf('export async function getAdminPharmacyOwnerDetailService'),
+    service.indexOf('function buildPagedPharmacyItemsPipeline')
+  );
+
+  assert.doesNotMatch(
+    detailSection,
+    /lastPersonalDataUpdateAt:\s*['"]\$updatedAt['"]/
+  );
+});

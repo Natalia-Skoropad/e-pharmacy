@@ -53,9 +53,44 @@ test('parses owner list/detail/status network contracts fail-closed', () => {
       active: 2,
       blocked: 0,
     },
+
+    tabCounts: {
+      pharmacies: 3,
+      documents: 4,
+      comments: 7,
+    },
   });
 
   assert.equal(detail.pharmacyStatistics.all, 3);
+
+  assert.deepEqual(detail.tabCounts, {
+    pharmacies: 3,
+    documents: 4,
+    comments: 7,
+  });
+
+  assert.throws(() =>
+    parseAdminPharmacyOwnerDetail({
+      id: OWNER_ID,
+      name: 'Natalia Owner',
+      email: 'owner@example.com',
+      phone: '+380000000000',
+      status: 'active',
+      registeredAt: '2026-10-01T10:00:00.000Z',
+      lastPersonalDataUpdateAt: '2026-10-02T10:00:00.000Z',
+
+      pharmacyStatistics: {
+        all: 3,
+        new: 0,
+        onVerification: 1,
+        onModeration: 0,
+        active: 2,
+        blocked: 0,
+      },
+
+      tabCounts: { pharmacies: 2, documents: 4, comments: 7 },
+    })
+  );
 
   const mutation = parseAdminPharmacyOwnerStatusMutationResponse({
     owner: {
