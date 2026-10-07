@@ -20,6 +20,36 @@ export const adminApiRoutes = {
       `/api/admin/employees/me/comments/${encodeURIComponent(commentId)}`,
   },
 
+  pharmacyOwners: {
+    list: '/api/admin/pharmacy-owners',
+    summary: '/api/admin/pharmacy-owners/summary',
+    options: '/api/admin/pharmacy-owners/options',
+
+    details: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}`,
+
+    status: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/status`,
+
+    pharmacies: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/pharmacies`,
+
+    documents: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/documents`,
+
+    document: (ownerId: string, documentId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/documents/${encodeURIComponent(documentId)}`,
+
+    comments: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/comments`,
+
+    comment: (ownerId: string, commentId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/comments/${encodeURIComponent(commentId)}`,
+
+    activity: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/activity`,
+  },
+
   productCategories: {
     list: '/api/admin/product-categories',
     details: (categoryId: string) =>

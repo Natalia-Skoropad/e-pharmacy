@@ -30,11 +30,32 @@ export const backendRoutes = {
 
     pharmacyOwners: {
       list: '/admin/pharmacy-owners',
+      summary: '/admin/pharmacy-owners/summary',
+      options: '/admin/pharmacy-owners/options',
+
+      details: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}`,
+
+      status: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/status`,
+
+      pharmacies: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/pharmacies`,
+
       documents: (ownerId: EntityId) =>
         `/admin/pharmacy-owners/${segment(ownerId)}/documents`,
 
       document: (ownerId: EntityId, documentId: EntityId) =>
         `/admin/pharmacy-owners/${segment(ownerId)}/documents/${segment(documentId)}`,
+
+      comments: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/comments`,
+
+      comment: (ownerId: EntityId, commentId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/comments/${segment(commentId)}`,
+
+      activity: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/activity`,
     },
 
     audit: {

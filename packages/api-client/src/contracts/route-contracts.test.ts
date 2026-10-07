@@ -37,6 +37,33 @@ test('uses resource-oriented backend route builders', () => {
     `/admin/employees/me/comments/${id}`
   );
 
+  assert.equal(apiRoutes.admin.pharmacyOwners.list, '/admin/pharmacy-owners');
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.summary,
+    '/admin/pharmacy-owners/summary'
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.options,
+    '/admin/pharmacy-owners/options'
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.details(id),
+    `/admin/pharmacy-owners/${id}`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.status(id),
+    `/admin/pharmacy-owners/${id}/status`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.pharmacies(id),
+    `/admin/pharmacy-owners/${id}/pharmacies`
+  );
+
   assert.equal(
     apiRoutes.admin.pharmacyOwners.documents(id),
     `/admin/pharmacy-owners/${id}/documents`
@@ -45,6 +72,21 @@ test('uses resource-oriented backend route builders', () => {
   assert.equal(
     apiRoutes.admin.pharmacyOwners.document(id, id),
     `/admin/pharmacy-owners/${id}/documents/${id}`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.comments(id),
+    `/admin/pharmacy-owners/${id}/comments`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.comment(id, id),
+    `/admin/pharmacy-owners/${id}/comments/${id}`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyOwners.activity(id),
+    `/admin/pharmacy-owners/${id}/activity`
   );
 
   assert.equal(

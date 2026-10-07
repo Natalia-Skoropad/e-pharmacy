@@ -11,6 +11,7 @@ import type {
 } from '../schemas/admin.schema';
 
 import type {
+  AdminPharmacyOwnerActivityQuery,
   AdminPharmacyOwnerListQuery,
   AdminPharmacyOwnerOptionsQuery,
   AdminPharmacyOwnerParams,
@@ -36,6 +37,7 @@ import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-ow
 import {
   getAdminPharmacyOwnerDetailService,
   getAdminPharmacyOwnerStatisticsService,
+  listAdminPharmacyOwnerActivityService,
   listAdminPharmacyOwnerOptionsService,
   listAdminPharmacyOwnerPharmaciesService,
   listAdminPharmacyOwnersService,
@@ -165,6 +167,25 @@ export async function listPharmacyOwnerPharmaciesByAdmin(
   >
 ): Promise<void> {
   const data = await listAdminPharmacyOwnerPharmaciesService(
+    res.locals.validated.params.ownerId,
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyOwnerActivityByAdmin(
+  _req: Request,
+  res: ValidatedResponse<
+    unknown,
+    AdminPharmacyOwnerParams,
+    AdminPharmacyOwnerActivityQuery
+  >
+): Promise<void> {
+  const data = await listAdminPharmacyOwnerActivityService(
     res.locals.validated.params.ownerId,
     res.locals.validated.query
   );

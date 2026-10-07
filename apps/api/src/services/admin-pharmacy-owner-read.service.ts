@@ -1,5 +1,7 @@
 import { Types, type PipelineStage } from 'mongoose';
 
+import { ADMIN_AUDIT_ENTITY_TYPES } from '../constants/admin-audit';
+
 import {
   PHARMACY_STATUSES,
   USER_ROLES,
@@ -12,6 +14,7 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
 import type {
+  AdminPharmacyOwnerActivityQuery,
   AdminPharmacyOwnerListQuery,
   AdminPharmacyOwnerOptionsQuery,
   AdminPharmacyOwnerPharmaciesQuery,
@@ -22,6 +25,8 @@ import type { PharmacyLocationDraft } from '../types/pharmacy';
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
 import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
+
+import { listAdminAuditLogsService } from './admin-audit.service';
 
 //===============================================================
 
@@ -768,3 +773,25 @@ export const ADMIN_PHARMACY_OWNER_READ_DEFINITIONS = {
   nonWorkingPharmacyStatuses: NON_WORKING_PHARMACY_STATUSES,
   ratingBounds: RATING_BOUNDS,
 } as const;
+
+//===============================================================
+
+export async function listAdminPharmacyOwnerActivityService(
+  ownerId: string,
+  query: AdminPharmacyOwnerActivityQuery
+) {
+  const ownerExists = await User.exists({
+    _id: new Types.ObjectId(ownerId),
+    role: USER_ROLES.PHARMACY,
+  });
+
+  if (!ownerExists) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy owner was not found.');
+  }
+
+  return listAdminAuditLogsService({
+    ...query,
+    scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+    scopeEntityId: ownerId,
+  });
+}

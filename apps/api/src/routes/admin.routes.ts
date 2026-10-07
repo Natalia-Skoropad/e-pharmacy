@@ -9,6 +9,7 @@ import {
   downloadPharmacyOwnerDocumentByAdmin,
   getPharmacyOwnerDetailByAdmin,
   getPharmacyOwnerSummaryByAdmin,
+  listPharmacyOwnerActivityByAdmin,
   listPharmacyOwnerDocumentsByAdmin,
   listPharmacyOwnerAdminCommentsByAdmin,
   listPharmacyOwnerOptionsByAdmin,
@@ -66,6 +67,7 @@ import {
 } from '../schemas/admin.schema';
 
 import {
+  adminPharmacyOwnerActivityQuerySchema,
   adminPharmacyOwnerListQuerySchema,
   adminPharmacyOwnerOptionsQuerySchema,
   adminPharmacyOwnerParamsSchema,
@@ -361,6 +363,20 @@ adminRoutes.get(
   }),
 
   ctrlWrapper(listPharmacyOwnerPharmaciesByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/activity',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+
+  validate({
+    params: adminPharmacyOwnerParamsSchema,
+    query: adminPharmacyOwnerActivityQuerySchema,
+  }),
+
+  ctrlWrapper(listPharmacyOwnerActivityByAdmin)
 );
 
 //=================================================================================

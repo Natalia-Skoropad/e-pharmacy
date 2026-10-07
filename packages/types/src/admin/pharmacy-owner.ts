@@ -40,6 +40,10 @@ export type AdminPharmacyOwnerOption = Readonly<{
   pictureUrl?: string;
 }>;
 
+export type AdminPharmacyOwnerOptionsResponse = Readonly<{
+  items: readonly AdminPharmacyOwnerOption[];
+}>;
+
 //===================================================================
 
 export type AdminPharmacyOwnerDetail = Readonly<{
@@ -85,3 +89,20 @@ export type AdminPharmacyOwnerPharmacySummary = Readonly<{
 export type AdminPharmacyOwnerPharmaciesResponse = Readonly<
   ApiPaginationResponse<AdminPharmacyOwnerPharmacySummary>
 >;
+
+//===================================================================
+
+export type UpdateAdminPharmacyOwnerStatusPayload = Readonly<{
+  status: Extract<PharmacyOwnerAccountStatus, 'active' | 'blocked'>;
+  reason: string;
+}>;
+
+export type AdminPharmacyOwnerStatusMutation = Readonly<{
+  ownerId: EntityId;
+  status: Extract<PharmacyOwnerAccountStatus, 'active' | 'blocked'>;
+  blockedPharmacies: number;
+}>;
+
+export type AdminPharmacyOwnerStatusMutationResponse = Readonly<{
+  owner: AdminPharmacyOwnerStatusMutation;
+}>;

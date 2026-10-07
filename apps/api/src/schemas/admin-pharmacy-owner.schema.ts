@@ -143,6 +143,18 @@ export const adminPharmacyOwnerPharmaciesQuerySchema = z.preprocess(
 
 //===============================================================
 
+export const adminPharmacyOwnerActivityQuerySchema = z.preprocess(
+  normalizePaginationQuery,
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: adminOwnerPerPageSchema,
+    })
+    .strict()
+);
+
+//===============================================================
+
 export const adminPharmacyOwnerParamsSchema = z.object({
   ownerId: mongoIdSchema,
 });
@@ -166,6 +178,10 @@ export type AdminPharmacyOwnerOptionsQuery = z.infer<
 
 export type AdminPharmacyOwnerPharmaciesQuery = z.infer<
   typeof adminPharmacyOwnerPharmaciesQuerySchema
+>;
+
+export type AdminPharmacyOwnerActivityQuery = z.infer<
+  typeof adminPharmacyOwnerActivityQuerySchema
 >;
 
 export type AdminPharmacyOwnerParams = z.infer<

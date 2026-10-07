@@ -20,6 +20,7 @@ test('pharmacy-owner read routes are view-permission protected and expose the St
     '/pharmacy-owners/options',
     '/pharmacy-owners/:ownerId',
     '/pharmacy-owners/:ownerId/pharmacies',
+    '/pharmacy-owners/:ownerId/activity',
   ]) {
     const escaped = route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -74,6 +75,8 @@ test('owner and pharmacy list queries are pagination-aware and include the Stage
   assert.match(schema, /createdTo: dateQuerySchema/);
   assert.match(schema, /status: adminPharmacyStatusQuerySchema/);
   assert.match(schema, /rating: adminPharmacyRatingQuerySchema/);
+
+  assert.match(schema, /adminPharmacyOwnerActivityQuerySchema/);
 });
 
 //===================================================================
@@ -209,5 +212,22 @@ test('linked pharmacy admin read model exposes canonical location instead of add
   assert.doesNotMatch(
     service,
     /city: \{ \$ifNull: \[['"]\$location\.settlement/
+  );
+});
+
+//===================================================================
+
+test('owner activity reuses canonical audit logs while preserving pharmacyOwners.view permission', () => {
+  const routes = read('../routes/admin.routes.ts');
+  const service = read('./admin-pharmacy-owner-read.service.ts');
+
+  assert.match(
+    routes,
+    /get\(\s*['"]\/pharmacy-owners\/:ownerId\/activity['"][\s\S]*?ADMIN_PERMISSIONS\.pharmacyOwners\.view/
+  );
+
+  assert.match(
+    service,
+    /listAdminPharmacyOwnerActivityService[\s\S]*?listAdminAuditLogsService\(\{[\s\S]*?scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER[\s\S]*?scopeEntityId:\s*ownerId/
   );
 });
