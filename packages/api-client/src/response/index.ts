@@ -60,3 +60,9 @@ export {
 } from './shared-dto-parsers';
 
 export type { HealthResponse, MessageResponse } from './shared-dto-parsers';
+
+export {
+  parsePharmacyOwnerDocument,
+  parsePharmacyOwnerDocumentResponse,
+  parsePharmacyOwnerDocumentsResponse,
+} from './pharmacy-owner-document-parsers';

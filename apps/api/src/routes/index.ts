@@ -12,6 +12,7 @@ import { productCategoryRoutes } from './product-category.routes';
 import { productRequestRoutes } from './product-request.routes';
 import { productRoutes } from './product.routes';
 import { pharmacyRoutes } from './pharmacy.routes';
+import { pharmacyOwnerRoutes } from './pharmacy-owner.routes';
 
 //===============================================================
 
@@ -30,4 +31,5 @@ routes.use('/products', productRoutes);
 routes.use('/product-categories', productCategoryRoutes);
 routes.use('/product-requests', productRequestRoutes);
 routes.use('/pharmacies', pharmacyRoutes);
+routes.use('/pharmacy-owners', pharmacyOwnerRoutes);
 routes.use('/pharmacy', pharmacyRoutes);

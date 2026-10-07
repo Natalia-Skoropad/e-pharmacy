@@ -13,6 +13,7 @@
     "./notes": "./src/notes/index.ts",
     "./orders": "./src/orders/index.ts",
     "./pharmacies": "./src/pharmacies/index.ts",
+    "./pharmacy-owners": "./src/pharmacy-owners/index.ts",
     "./primitives": "./src/primitives/index.ts",
     "./product-requests": "./src/product-requests/index.ts",
     "./reference-data": "./src/reference-data/index.ts",

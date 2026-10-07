@@ -23,6 +23,7 @@ const ALLOWED_EXPORTS = [
   './notes',
   './orders',
   './pharmacies',
+  './pharmacy-owners',
   './primitives',
   './product-requests',
   './products',

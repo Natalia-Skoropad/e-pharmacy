@@ -493,6 +493,24 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacy-owners/me/documents",
+    "backend": "/pharmacy-owners/me/documents",
+    "methods": {
+      "GET": "private",
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacy-owners/me/documents/[documentId]",
+    "backend": "/pharmacy-owners/me/documents/:documentId",
+    "methods": {
+      "GET": "private",
+      "DELETE": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/summary",
     "backend": "/pharmacies/me/summary",
     "methods": {

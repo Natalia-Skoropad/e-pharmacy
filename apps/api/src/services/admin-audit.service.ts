@@ -38,7 +38,7 @@ import { httpError } from '../utils/httpError';
 //===============================================================
 
 const SENSITIVE_AUDIT_KEY_PATTERN =
-  /^(?:password|passwordhash|token|accesstoken|refreshtoken|jwt|cookie|authorization|bankdetails|iban|taxid|picture|pictureurl|photo|photourl|image|imageurl|base64|dataurl|file|binary|buffer|content)$/i;
+  /^(?:password|passwordhash|token|accesstoken|refreshtoken|jwt|cookie|authorization|bankdetails|iban|taxid|picture|pictureurl|photo|photourl|image|imageurl|base64|dataurl|sha256|file|binary|buffer|content)$/i;
 
 //===============================================================
 
@@ -343,10 +343,12 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
 
   const section = log.section ?? getLegacyAuditSection(log.entityType);
   const hasStatusChange = log.changedFields.includes('status');
+
   const statusBefore =
     hasStatusChange && typeof log.before.status === 'string'
       ? log.before.status
       : undefined;
+
   const statusAfter =
     hasStatusChange && typeof log.after.status === 'string'
       ? log.after.status
@@ -612,11 +614,13 @@ export async function listAdminAuditLogsService(
 
   const [total, items, earliestLog] = await Promise.all([
     AdminAuditLog.countDocuments(filter),
+
     AdminAuditLog.find(filter)
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(query.perPage)
       .lean<LeanAuditLog[]>(),
+
     AdminAuditLog.findOne({})
       .sort({ createdAt: 1, _id: 1 })
       .select('createdAt')
@@ -629,6 +633,7 @@ export async function listAdminAuditLogsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
     earliestCreatedAt: earliestLog
       ? earliestLog.createdAt.toISOString().slice(0, 10)
       : null,

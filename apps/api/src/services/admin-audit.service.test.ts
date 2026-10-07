@@ -48,6 +48,7 @@ test('admin audit snapshots fail closed for secrets and sensitive business data'
     'imageUrl',
     'base64',
     'dataUrl',
+    'sha256',
     'binary',
     'buffer',
     'content',

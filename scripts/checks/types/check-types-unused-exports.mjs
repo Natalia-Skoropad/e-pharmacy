@@ -21,11 +21,16 @@ const ENTRYPOINT_FILES = {
   cart: 'packages/types/src/cart/index.ts',
   notes: 'packages/types/src/notes/index.ts',
   orders: 'packages/types/src/orders/index.ts',
+
   pharmacies: 'packages/types/src/pharmacies/index.ts',
+  'pharmacy-owners': 'packages/types/src/pharmacy-owners/index.ts',
+
   primitives: 'packages/types/src/primitives/index.ts',
   'product-requests': 'packages/types/src/product-requests/index.ts',
+
   products: 'packages/types/src/products/index.ts',
   'reference-data': 'packages/types/src/reference-data/index.ts',
+
   reviews: 'packages/types/src/reviews/index.ts',
 };
 

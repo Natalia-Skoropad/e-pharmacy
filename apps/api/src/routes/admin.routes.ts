@@ -4,8 +4,10 @@ import { ADMIN_PERMISSIONS } from '../constants/admin-permissions';
 
 import {
   getCurrentAdminAccess,
+  downloadPharmacyOwnerDocumentByAdmin,
   getPharmacyOwnerDetailByAdmin,
   getPharmacyOwnerSummaryByAdmin,
+  listPharmacyOwnerDocumentsByAdmin,
   listPharmacyOwnerOptionsByAdmin,
   listPharmacyOwnerPharmaciesByAdmin,
   listPharmacyOwnersByAdmin,
@@ -74,6 +76,7 @@ import {
 } from '../schemas/admin-employee-document.schema';
 
 import { updateMyAdminEmployeeProfileSchema } from '../schemas/admin-employee-profile.schema';
+import { adminPharmacyOwnerDocumentParamsSchema } from '../schemas/pharmacy-owner-document.schema';
 
 import {
   adminEmployeePrivateNoteParamsSchema,
@@ -350,6 +353,24 @@ adminRoutes.get(
   }),
 
   ctrlWrapper(listPharmacyOwnerPharmaciesByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/documents',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ params: adminPharmacyOwnerParamsSchema }),
+  ctrlWrapper(listPharmacyOwnerDocumentsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/documents/:documentId',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ params: adminPharmacyOwnerDocumentParamsSchema }),
+  ctrlWrapper(downloadPharmacyOwnerDocumentByAdmin)
 );
 
 //=================================================================================

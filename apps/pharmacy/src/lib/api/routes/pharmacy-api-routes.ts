@@ -69,6 +69,12 @@ export const pharmacyApiRoutes = {
       `/api/pharmacy-notes/${segment(entityType)}/${segment(entityId)}/${segment(noteId)}`,
   },
 
+  pharmacyOwners: {
+    myDocuments: '/api/pharmacy-owners/me/documents',
+    myDocument: (documentId: string) =>
+      `/api/pharmacy-owners/me/documents/${segment(documentId)}`,
+  },
+
   pharmacies: {
     checkoutDetails: (pharmacyId: string) =>
       `/api/pharmacies/${segment(pharmacyId)}/checkout-details`,

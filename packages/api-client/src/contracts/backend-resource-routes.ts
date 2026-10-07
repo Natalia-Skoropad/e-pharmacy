@@ -28,6 +28,15 @@ export const backendRoutes = {
         `/admin/employees/me/comments/${segment(commentId)}`,
     },
 
+    pharmacyOwners: {
+      list: '/admin/pharmacy-owners',
+      documents: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/documents`,
+
+      document: (ownerId: EntityId, documentId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/documents/${segment(documentId)}`,
+    },
+
     audit: {
       list: '/admin/audit',
       actors: '/admin/audit/actors',
@@ -45,6 +54,12 @@ export const backendRoutes = {
       details: (positionId: EntityId) =>
         `/admin/positions/${segment(positionId)}`,
     },
+  },
+
+  pharmacyOwners: {
+    myDocuments: '/pharmacy-owners/me/documents',
+    myDocument: (documentId: EntityId) =>
+      `/pharmacy-owners/me/documents/${segment(documentId)}`,
   },
 
   productCategories: {

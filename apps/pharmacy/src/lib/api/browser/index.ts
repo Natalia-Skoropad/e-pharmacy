@@ -5,5 +5,5 @@ export * from './orders.api';
 export * from './clients.api';
 export * from './product-requests.api';
 export * from './pharmacy-notes.api';
-
 export * from './product-categories.api';
+export * from './pharmacy-owner-documents.api';

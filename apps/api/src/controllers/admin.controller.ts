@@ -18,6 +18,8 @@ import type {
   UpdateAdminPharmacyOwnerStatusInput,
 } from '../schemas/admin-pharmacy-owner.schema';
 
+import type { AdminPharmacyOwnerDocumentParams } from '../schemas/pharmacy-owner-document.schema';
+
 import type {
   ProductRequestModerationInput,
   ProductRequestParams,
@@ -35,6 +37,12 @@ import {
 } from '../services/admin-pharmacy-owner-read.service';
 
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
+
+import {
+  getPharmacyOwnerDocumentContentService,
+  listPharmacyOwnerDocumentsService,
+} from '../services/pharmacy-owner-document.service';
+
 import { moderateProductRequestByAdminService } from '../services/product-request.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
@@ -152,6 +160,53 @@ export async function listPharmacyOwnerPharmaciesByAdmin(
 
   res.setHeader('Cache-Control', 'no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyOwnerDocumentsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyOwnerParams>
+): Promise<void> {
+  const documents = await listPharmacyOwnerDocumentsService(
+    res.locals.validated.params.ownerId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data: { documents },
+  });
+}
+
+//===============================================================
+
+export async function downloadPharmacyOwnerDocumentByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyOwnerDocumentParams>
+): Promise<void> {
+  const { ownerId, documentId } = res.locals.validated.params;
+
+  const { document, content } = await getPharmacyOwnerDocumentContentService(
+    ownerId,
+    documentId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Type', document.type);
+  res.setHeader('Content-Length', String(content.byteLength));
+
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename*=UTF-8''${encodeURIComponent(document.name).replace(
+      /[!'()*]/g,
+      (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
+    )}`
+  );
+
+  res.status(HTTP_STATUS.OK).send(content);
 }
 
 //===============================================================

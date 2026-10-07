@@ -145,6 +145,7 @@ import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+import { OwnerDocumentsPanel } from '../OwnerDocumentsPanel';
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
 
@@ -2373,6 +2374,10 @@ function PharmacyProfilePage({
                       ? { onSubmit: handleDocumentsSubmit }
                       : {})}
                   />
+
+                  {pharmacy.membershipRole === 'owner' ? (
+                    <OwnerDocumentsPanel />
+                  ) : null}
                 </>
               ) : null}
             </ProfileTabPanel>
