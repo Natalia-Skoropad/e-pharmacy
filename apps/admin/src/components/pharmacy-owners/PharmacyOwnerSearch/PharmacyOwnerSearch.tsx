@@ -1,26 +1,28 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { LoaderCircle, Search, X } from 'lucide-react';
-import clsx from 'clsx';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, UsersRound } from 'lucide-react';
 
-import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { AdminPharmacyOwnerOption } from '@e-pharmacy/types/admin';
 import { formatInitials } from '@e-pharmacy/ui/data-display';
+
+import {
+  SearchableSelect,
+  type SearchableSelectOption,
+} from '@e-pharmacy/ui/forms';
+
 import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import { getAdminPharmacyOwnerOptions } from '@/lib/api/browser/admin-pharmacy-owners.api';
-
-import css from './PharmacyOwnerSearch.module.css';
 
 //===================================================================
 
 type PharmacyOwnerSearchProps = Readonly<{
   value: string;
   disabled?: boolean;
-  onChange: (value: string) => void;
-  onSelect: (owner: AdminPharmacyOwnerOption) => void;
+  onChange: (ownerId: string) => void;
 }>;
 
 //===================================================================
@@ -31,15 +33,38 @@ function sanitizeSearch(value: string): string {
 
 //===================================================================
 
+function toSearchableOption(
+  owner: AdminPharmacyOwnerOption
+): SearchableSelectOption<string> {
+  return {
+    value: owner.id,
+    label: owner.name,
+    leading: (
+      <TableImagePreview
+        src={owner.pictureUrl}
+        alt={`${owner.name} photo`}
+        fallback={formatInitials(owner.name, 'O')}
+        size={30}
+      />
+    ),
+    searchText: [owner.id, owner.email, owner.phone].join(' '),
+  };
+}
+
+//===================================================================
+
 export function PharmacyOwnerSearch({
   value,
   disabled = false,
   onChange,
-  onSelect,
 }: PharmacyOwnerSearchProps) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(query.trim(), 250);
+
+  const [selectedOwnerResult, setSelectedOwnerResult] = useState<Readonly<{
+    value: string;
+    owner: AdminPharmacyOwnerOption | null;
+  }> | null>(null);
 
   const [suggestionsResult, setSuggestionsResult] = useState<Readonly<{
     query: string;
@@ -47,225 +72,154 @@ export function PharmacyOwnerSearch({
     unavailable: boolean;
   }> | null>(null);
 
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const debouncedValue = useDebouncedValue(value.trim(), 250);
-
-  const hasCurrentSuggestions =
-    Boolean(debouncedValue) && suggestionsResult?.query === debouncedValue;
-
-  const items = hasCurrentSuggestions ? suggestionsResult.items : [];
-  const isLoading = Boolean(debouncedValue) && !hasCurrentSuggestions;
-
-  const suggestionsUnavailable = hasCurrentSuggestions
-    ? suggestionsResult.unavailable
-    : false;
-
-  useOutsidePointerDown({
-    refs: [rootRef],
-    enabled: isOpen,
-    onOutside: () => setIsOpen(false),
-  });
-
   useEffect(() => {
-    if (!debouncedValue) return;
-
     const controller = new AbortController();
-    const query = debouncedValue;
+    const requestQuery = debouncedQuery;
 
     void getAdminPharmacyOwnerOptions(
-      { search: query, limit: 8 },
+      {
+        ...(requestQuery ? { search: requestQuery } : {}),
+        limit: 20,
+      },
       { signal: controller.signal }
     )
       .then((response) => {
         if (controller.signal.aborted) return;
+
         setSuggestionsResult({
-          query,
+          query: requestQuery,
           items: response.items,
           unavailable: false,
         });
-        setActiveIndex(response.items.length ? 0 : -1);
       })
-
       .catch(() => {
         if (controller.signal.aborted) return;
-        setSuggestionsResult({ query, items: [], unavailable: true });
-        setActiveIndex(-1);
+
+        setSuggestionsResult({
+          query: requestQuery,
+          items: [],
+          unavailable: true,
+        });
       });
 
     return () => controller.abort();
-  }, [debouncedValue]);
+  }, [debouncedQuery]);
 
-  const listboxId = 'pharmacy-owner-search-suggestions';
-  const activeOption = activeIndex >= 0 ? items[activeIndex] : undefined;
+  useEffect(() => {
+    if (!value || selectedOwnerResult?.value === value) return;
 
-  const activeOptionId = activeOption
-    ? `${listboxId}-option-${activeOption.id}`
-    : undefined;
+    const controller = new AbortController();
 
-  const statusText = useMemo(() => {
-    if (isLoading) return 'Loading owner suggestions...';
-    if (suggestionsUnavailable) {
-      return 'Suggestions are temporarily unavailable.';
+    void getAdminPharmacyOwnerOptions(
+      { search: value, limit: 8 },
+      { signal: controller.signal }
+    )
+      .then((response) => {
+        if (controller.signal.aborted) return;
+
+        setSelectedOwnerResult({
+          value,
+          owner: response.items.find((owner) => owner.id === value) ?? null,
+        });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setSelectedOwnerResult({ value, owner: null });
+        }
+      });
+
+    return () => controller.abort();
+  }, [selectedOwnerResult?.value, value]);
+
+  const selectedOwner =
+    selectedOwnerResult?.value === value ? selectedOwnerResult.owner : null;
+
+  const hasCurrentSuggestions = suggestionsResult?.query === debouncedQuery;
+  const owners = hasCurrentSuggestions ? suggestionsResult.items : [];
+
+  const isOptionsLoading =
+    !hasCurrentSuggestions ||
+    Boolean(value && selectedOwnerResult?.value !== value);
+
+  const suggestionsUnavailable = Boolean(
+    hasCurrentSuggestions && suggestionsResult.unavailable
+  );
+
+  const options = useMemo<Array<SearchableSelectOption<string>>>(() => {
+    const ownerOptions = owners.map(toSearchableOption);
+
+    if (
+      !query.trim() &&
+      selectedOwner &&
+      value === selectedOwner.id &&
+      !ownerOptions.some((option) => option.value === selectedOwner.id)
+    ) {
+      ownerOptions.unshift(toSearchableOption(selectedOwner));
+    } else if (
+      !query.trim() &&
+      value &&
+      selectedOwnerResult?.value === value &&
+      !ownerOptions.some((option) => option.value === value)
+    ) {
+      ownerOptions.unshift({ value, label: value });
     }
 
-    if (debouncedValue && items.length === 0)
-      return 'No matching owners found.';
-    return '';
-  }, [debouncedValue, isLoading, items.length, suggestionsUnavailable]);
-
-  const chooseOwner = (owner: AdminPharmacyOwnerOption) => {
-    onSelect(owner);
-    setIsOpen(false);
-    setActiveIndex(-1);
-    inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') {
-      setIsOpen(false);
-      return;
+    if (!query.trim()) {
+      ownerOptions.unshift({ value: '', label: 'All pharmacy owners' });
     }
 
-    if (!isOpen || items.length === 0) return;
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setActiveIndex((index) => (index + 1) % items.length);
-      return;
-    }
-
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setActiveIndex((index) => (index <= 0 ? items.length - 1 : index - 1));
-      return;
-    }
-
-    if (event.key === 'Enter' && activeOption) {
-      event.preventDefault();
-      chooseOwner(activeOption);
-    }
-  };
+    return ownerOptions;
+  }, [owners, query, selectedOwner, selectedOwnerResult?.value, value]);
 
   return (
-    <div className={css.field} ref={rootRef}>
-      <label className={css.label} htmlFor="pharmacy-owner-search">
-        Pharmacy owner search
-      </label>
+    <SearchableSelect
+      id="pharmacy-owner-search"
+      label="Pharmacy owner search"
+      labelAccessory={
+        <InfoTooltip
+          label="Pharmacy owner search help"
+          title="Pharmacy owner search"
+          icon={<UsersRound size={20} aria-hidden="true" />}
+          items={[
+            {
+              title: 'Search fields',
+              description:
+                'Search by pharmacy owner name, ID, email, or phone number.',
+              icon: <Search size={17} aria-hidden="true" />,
+            },
+          ]}
+        />
+      }
+      value={value}
+      options={options}
+      placeholder="Name, ID, email, or phone"
+      emptyMessage={
+        suggestionsUnavailable
+          ? 'Suggestions are temporarily unavailable.'
+          : 'No pharmacy owners found'
+      }
+      loadingMessage="Loading pharmacy owners..."
+      isActive={Boolean(value)}
+      isOptionsLoading={isOptionsLoading}
+      filterOptions={false}
+      disabled={disabled}
+      maxLength={120}
+      sanitizeQuery={sanitizeSearch}
+      onQueryChange={setQuery}
+      onChange={(nextValue) => {
+        if (!nextValue) {
+          setSelectedOwnerResult(null);
+          onChange('');
+          return;
+        }
 
-      <div className={css.root}>
-        <div
-          className={clsx(
-            css.inputWrap,
-            value && css.inputWrapActive,
-            disabled && css.inputWrapDisabled
-          )}
-        >
-          <Search className={css.searchIcon} size={18} aria-hidden="true" />
-
-          <input
-            ref={inputRef}
-            id="pharmacy-owner-search"
-            className={css.input}
-            type="search"
-            role="combobox"
-            value={value}
-            placeholder="Name, owner ID, email, or phone"
-            autoComplete="off"
-            maxLength={120}
-            disabled={disabled}
-            aria-autocomplete="list"
-            aria-expanded={isOpen}
-            aria-controls={isOpen ? listboxId : undefined}
-            aria-activedescendant={isOpen ? activeOptionId : undefined}
-            onFocus={() => {
-              if (value.trim()) setIsOpen(true);
-            }}
-            onChange={(event) => {
-              const nextValue = sanitizeSearch(event.target.value);
-              onChange(nextValue);
-              setIsOpen(Boolean(nextValue.trim()));
-              setActiveIndex(-1);
-            }}
-            onKeyDown={handleKeyDown}
-          />
-
-          {isLoading ? (
-            <LoaderCircle
-              className={css.spinner}
-              size={18}
-              aria-hidden="true"
-            />
-          ) : value ? (
-            <button
-              className={css.clearButton}
-              type="button"
-              disabled={disabled}
-              aria-label="Clear pharmacy owner search"
-              onClick={() => {
-                onChange('');
-                setSuggestionsResult(null);
-                setActiveIndex(-1);
-                setIsOpen(false);
-                inputRef.current?.focus();
-              }}
-            >
-              <X size={16} aria-hidden="true" />
-            </button>
-          ) : (
-            <span className={css.trailingSpace} aria-hidden="true" />
-          )}
-        </div>
-
-        {isOpen ? (
-          <div className={css.suggestionsPanel}>
-            {items.length > 0 ? (
-              <ul
-                className={css.suggestions}
-                id={listboxId}
-                role="listbox"
-                aria-label="Pharmacy owner suggestions"
-              >
-                {items.map((owner, index) => (
-                  <li
-                    className={clsx(
-                      css.suggestion,
-                      index === activeIndex && css.suggestionActive
-                    )}
-                    id={`${listboxId}-option-${owner.id}`}
-                    key={owner.id}
-                    role="option"
-                    aria-selected={index === activeIndex}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => chooseOwner(owner)}
-                  >
-                    <TableImagePreview
-                      src={owner.pictureUrl}
-                      alt={`${owner.name} photo`}
-                      fallback={formatInitials(owner.name, 'O')}
-                      size={34}
-                    />
-
-                    <span className={css.suggestionCopy}>
-                      <strong className={css.suggestionName}>
-                        {owner.name}
-                      </strong>
-                      <span className={css.suggestionMeta}>
-                        {owner.email} · {owner.phone}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : statusText ? (
-              <p className={css.suggestionState} role="status">
-                {statusText}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-    </div>
+        const owner = owners.find((item) => item.id === nextValue);
+        if (owner) {
+          setSelectedOwnerResult({ value: owner.id, owner });
+        }
+        onChange(nextValue);
+      }}
+    />
   );
 }
 

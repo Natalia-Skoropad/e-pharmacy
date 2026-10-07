@@ -8,6 +8,8 @@ import {
   parseAdminPharmacyOwnerDetailSearchParams,
   parseAdminPharmacyOwnerPharmaciesSearchParams,
   parseAdminPharmacyOwnersListSearchParams,
+  parseAdminPharmacyOwnersListSegments,
+  resolveAdminPharmacyOwnersRoute,
 } from './admin-pharmacy-owner-url';
 
 //===================================================================
@@ -39,7 +41,7 @@ test('normalizes invalid owner list query values safely', () => {
 
 //===================================================================
 
-test('builds canonical owner list URLs without default noise', () => {
+test('builds canonical owner list paths without query noise or search PII', () => {
   assert.equal(
     buildAdminPharmacyOwnersListUrl({
       search: 'nata@example.com',
@@ -49,8 +51,68 @@ test('builds canonical owner list URLs without default noise', () => {
       page: 2,
       perPage: 50,
     }),
-    '/admin/pharmacy-owners?search=nata%40example.com&status=new&registeredFrom=2026-09-01&registeredTo=2026-10-02&page=2&perPage=50'
+    '/admin/pharmacy-owners/status-new/registered-from-2026-09-01/registered-to-2026-10-02/page-2/per-page-50'
   );
+
+  assert.equal(
+    buildAdminPharmacyOwnersListUrl({
+      search: 'nata@example.com',
+      status: 'all',
+      registeredFrom: '',
+      registeredTo: '',
+      page: 1,
+      perPage: 20,
+    }),
+    '/admin/pharmacy-owners'
+  );
+
+  assert.equal(
+    buildAdminPharmacyOwnersListUrl({
+      search: OWNER_ID,
+      status: 'active',
+      registeredFrom: '',
+      registeredTo: '',
+      page: 1,
+      perPage: 20,
+    }),
+    `/admin/pharmacy-owners/owner-id-${OWNER_ID}/status-active`
+  );
+});
+
+//===================================================================
+
+test('resolves and parses canonical owner filter path segments', () => {
+  const filters = [
+    `owner-id-${OWNER_ID}`,
+    'status-active',
+    'registered-from-2026-09-01',
+    'registered-to-2026-10-02',
+    'page-3',
+    'per-page-100',
+  ];
+
+  assert.deepEqual(resolveAdminPharmacyOwnersRoute(filters), {
+    kind: 'filters',
+    filters,
+  });
+
+  assert.deepEqual(parseAdminPharmacyOwnersListSegments({ filters }), {
+    search: OWNER_ID,
+    status: 'active',
+    registeredFrom: '2026-09-01',
+    registeredTo: '2026-10-02',
+    page: 3,
+    perPage: 100,
+  });
+
+  assert.deepEqual(resolveAdminPharmacyOwnersRoute([OWNER_ID]), {
+    kind: 'detail',
+    ownerId: OWNER_ID,
+  });
+
+  assert.deepEqual(resolveAdminPharmacyOwnersRoute(['unknown-segment']), {
+    kind: 'invalid',
+  });
 });
 
 //===================================================================

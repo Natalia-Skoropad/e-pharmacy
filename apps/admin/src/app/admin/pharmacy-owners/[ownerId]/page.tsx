@@ -1,12 +1,17 @@
+import { notFound } from 'next/navigation';
+
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 
 import {
   parseAdminPharmacyOwnerDetailSearchParams,
   parseAdminPharmacyOwnerPharmaciesSearchParams,
+  parseAdminPharmacyOwnersListSegments,
+  resolveAdminPharmacyOwnersRoute,
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 
 import { AdminPermissionGate } from '@/components/auth/AdminPermissionGate';
 import { PharmacyOwnerDetailsPageContent } from '@/components/pharmacy-owners/PharmacyOwnerDetailsPageContent';
+import { PharmacyOwnersPageContent } from '@/components/pharmacy-owners/PharmacyOwnersPageContent/PharmacyOwnersPageContent';
 
 //===================================================================
 
@@ -26,6 +31,24 @@ export default async function AdminPharmacyOwnerDetailsPage({
     searchParams,
   ]);
 
+  const route = resolveAdminPharmacyOwnersRoute([ownerId]);
+
+  if (route.kind === 'invalid') {
+    notFound();
+  }
+
+  if (route.kind === 'filters') {
+    return (
+      <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
+        <PharmacyOwnersPageContent
+          initialState={parseAdminPharmacyOwnersListSegments({
+            filters: route.filters,
+          })}
+        />
+      </AdminPermissionGate>
+    );
+  }
+
   const initialState =
     parseAdminPharmacyOwnerDetailSearchParams(resolvedSearchParams);
 
@@ -35,7 +58,7 @@ export default async function AdminPharmacyOwnerDetailsPage({
   return (
     <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
       <PharmacyOwnerDetailsPageContent
-        ownerId={ownerId}
+        ownerId={route.ownerId}
         initialState={initialState}
         initialPharmaciesState={initialPharmaciesState}
       />

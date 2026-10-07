@@ -28,15 +28,10 @@ import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { LinkButton, Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip, ReasonModal } from '@e-pharmacy/ui/overlays';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { StatsCard, StatsGrid, StatusBadge } from '@e-pharmacy/ui/statistics';
-
-import {
-  ErrorPage,
-  NotFoundPage,
-  StatusPageLayout,
-} from '@e-pharmacy/ui/status-pages';
-
+import { NotFoundPage, StatusPageLayout } from '@e-pharmacy/ui/status-pages';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -343,17 +338,26 @@ function PharmacyOwnerDetailsPageContent({
 
   if (!isLoading && loadError === 'error') {
     return (
-      <ErrorPage
-        title="Pharmacy owner is temporarily unavailable"
-        description="We could not load this owner record. Retry the request or return to the owners list."
-        retryLabel="Retry owner details"
-        homeHref={ADMIN_ROUTES.PHARMACY_OWNERS}
-        homeLabel="Back to pharmacy owners"
-        variant="brand"
-        landmark="main"
-        image={STATUS_PAGE_IMAGE}
-        onRetry={() => setReloadVersion((version) => version + 1)}
-      />
+      <main className={css.page} aria-labelledby="pharmacy-owner-details-title">
+        <section className={css.card}>
+          <PageHeader
+            title="Pharmacy owner details"
+            titleId="pharmacy-owner-details-title"
+            icon={<UserRound size={23} aria-hidden="true" />}
+          />
+        </section>
+
+        <section className={css.card} aria-label="Pharmacy owner details error">
+          <ProfileResourceState
+            variant="error"
+            title="Pharmacy owner details could not be loaded"
+            description="The pharmacy owner may no longer be available, or the profile could not be loaded right now."
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={() => setReloadVersion((version) => version + 1)}
+          />
+        </section>
+      </main>
     );
   }
 

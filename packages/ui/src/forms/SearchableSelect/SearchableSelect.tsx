@@ -37,13 +37,17 @@ export type SearchableSelectProps<TValue extends string = string> = Readonly<{
   options: readonly SearchableSelectOption<TValue>[];
   placeholder?: string;
   emptyMessage?: string;
+  loadingMessage?: string;
   isActive?: boolean;
   isLoading?: boolean;
+  isOptionsLoading?: boolean;
+  filterOptions?: boolean;
   disabled?: boolean;
   error?: string;
   describedBy?: string;
   maxLength?: number;
   sanitizeQuery?: (value: string) => string;
+  onQueryChange?: (value: string) => void;
   onChange: (value: TValue) => void;
 }>;
 
@@ -57,13 +61,17 @@ function SearchableSelect<TValue extends string = string>({
   options,
   placeholder = 'Search option',
   emptyMessage = 'No options found',
+  loadingMessage = 'Loading options...',
   isActive = false,
   isLoading = false,
+  isOptionsLoading = false,
+  filterOptions = true,
   disabled = false,
   error,
   describedBy,
   maxLength = 80,
   sanitizeQuery,
+  onQueryChange,
   onChange,
 }: SearchableSelectProps<TValue>) {
   const generatedId = useId();
@@ -86,19 +94,20 @@ function SearchableSelect<TValue extends string = string>({
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
-    if (!normalizedQuery) return options;
+    if (!normalizedQuery || !filterOptions) return options;
 
     return options.filter((option) =>
       `${option.label} ${option.searchText ?? ''}`
         .toLocaleLowerCase()
         .includes(normalizedQuery)
     );
-  }, [options, query]);
+  }, [filterOptions, options, query]);
 
   const isOptionDisabled = useCallback(
     (index: number) => Boolean(filteredOptions[index]?.disabled),
     [filteredOptions]
   );
+
   const {
     activeIndex,
     moveActiveIndex,
@@ -107,6 +116,7 @@ function SearchableSelect<TValue extends string = string>({
     resetActiveIndex,
     setActiveIndex,
   } = useListboxNavigation(filteredOptions.length, 0, isOptionDisabled);
+
   const activeOption =
     activeIndex >= 0 ? filteredOptions[activeIndex] : undefined;
 
@@ -126,18 +136,21 @@ function SearchableSelect<TValue extends string = string>({
     onOutside: () => {
       setIsOpen(false);
       setQuery('');
+      onQueryChange?.('');
     },
   });
 
   const closeSelect = () => {
     setIsOpen(false);
     setQuery('');
+    onQueryChange?.('');
   };
 
   const openSelect = () => {
     if (disabled || isLoading) return;
     setIsOpen(true);
     setQuery('');
+    onQueryChange?.('');
     resetActiveIndex(0);
   };
 
@@ -152,7 +165,10 @@ function SearchableSelect<TValue extends string = string>({
     if (disabled || isLoading) return;
 
     const sanitizedQuery = sanitizeQuery ? sanitizeQuery(nextQuery) : nextQuery;
-    setQuery(sanitizedQuery.slice(0, maxLength));
+
+    const normalizedQuery = sanitizedQuery.slice(0, maxLength);
+    setQuery(normalizedQuery);
+    onQueryChange?.(normalizedQuery);
     resetActiveIndex(0);
     setIsOpen(true);
   };
@@ -250,7 +266,7 @@ function SearchableSelect<TValue extends string = string>({
               inputRef.current?.focus();
             }}
           >
-            {isLoading ? (
+            {isLoading || isOptionsLoading ? (
               <LoaderCircle
                 className={css.spinner}
                 size={18}
@@ -279,7 +295,11 @@ function SearchableSelect<TValue extends string = string>({
             role="listbox"
             aria-label={label}
           >
-            {filteredOptions.length ? (
+            {isOptionsLoading && filteredOptions.length === 0 ? (
+              <li className={css.empty} role="status">
+                {loadingMessage}
+              </li>
+            ) : filteredOptions.length ? (
               filteredOptions.map((option, index) => {
                 const isSelected = option.value === value;
                 const isOptionActive = index === activeIndex;

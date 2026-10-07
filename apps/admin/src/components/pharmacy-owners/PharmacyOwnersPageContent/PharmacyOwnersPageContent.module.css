@@ -23,44 +23,31 @@
   align-items: center;
 }
 
+.statisticsBlock {
+  display: none;
+  min-width: 0;
+}
+
 .statistics {
   display: grid;
 }
 
-.statisticsState,
-.statisticsError p,
-.inlineError p {
+.statisticsError p {
   margin: 0;
   color: var(--color-text-secondary);
   line-height: var(--lh-base);
 }
 
-.statisticsError,
-.inlineError {
+.statisticsError {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: space-between;
-}
-
-.statisticsError {
   padding: 14px 16px;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-}
-
-.inlineError {
-  padding: 12px 16px;
-  color: var(--color-error);
-  background-color: var(--color-error-soft);
-  border: 1px solid var(--color-error-border);
-  border-radius: var(--radius-lg);
-}
-
-.inlineError p {
-  color: var(--color-error);
 }
 
 .searchGrid {
@@ -111,6 +98,10 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .statisticsBlock {
+    display: grid;
+  }
+
   .searchGrid {
     grid-template-columns: minmax(0, 1fr) minmax(140px, max-content);
     align-items: end;

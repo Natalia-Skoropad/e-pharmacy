@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Ban, Building2, CircleCheckBig } from 'lucide-react';
 
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { AdminPharmacyOwnerListItem } from '@e-pharmacy/types/admin';
@@ -14,6 +15,7 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
@@ -89,7 +91,31 @@ export function PharmacyOwnersTable({
       },
       {
         key: 'operatingPharmaciesCount',
-        title: <TableHeaderTitle parts={['Active', 'pharms']} />,
+        title: (
+          <span className={css.headerWithHelp}>
+            <TableHeaderTitle parts={['Active', 'pharms']} />
+            <InfoTooltip
+              label="What do active and inactive pharmacies mean?"
+              title="Active and inactive pharmacies"
+              icon={<Building2 size={20} aria-hidden="true" />}
+              escapeOverflow
+              items={[
+                {
+                  title: 'Active pharmacies',
+                  description:
+                    'Pharmacies with Active or On moderation status. These pharmacies are currently available for work.',
+                  icon: <CircleCheckBig size={17} aria-hidden="true" />,
+                },
+                {
+                  title: 'Inactive pharmacies',
+                  description:
+                    'Pharmacies with any other status. They are temporarily not working and are not activated for work.',
+                  icon: <Ban size={17} aria-hidden="true" />,
+                },
+              ]}
+            />
+          </span>
+        ),
         render: (owner) => owner.operatingPharmaciesCount,
       },
       {

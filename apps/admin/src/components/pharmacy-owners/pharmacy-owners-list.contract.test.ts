@@ -46,10 +46,13 @@ test('pharmacy owners list covers analytics search filters pagination and distin
   assert.match(content, /PaginationView/);
   assert.match(content, /No pharmacy owners match the selected filters\./);
   assert.match(content, /No pharmacy owners have registered yet\./);
-  assert.match(content, /Retry owners/);
+  assert.match(content, /Pharmacy owners could not be loaded/);
+  assert.match(content, /StatsLoadingSkeleton/);
+  assert.match(content, /<UserCog/);
 
   assert.match(search, /getAdminPharmacyOwnerOptions/);
-  assert.match(search, /role="combobox"/);
+  assert.match(search, /SearchableSelect/);
+  assert.match(search, /InfoTooltip/);
   assert.match(search, /TableImagePreview/);
   assert.match(search, /owner\.name/);
 
@@ -68,6 +71,8 @@ test('owners table links ids and names to owner detail and uses canonical status
   assert.match(table, /parts=\{\['Reg\.', 'date'\]\}/);
   assert.match(table, /Owner's[\s\S]*?photo/);
   assert.match(table, /parts=\{\['Active', 'pharms'\]\}/);
+  assert.match(table, /Active and inactive pharmacies/);
+  assert.match(table, /InfoTooltip/);
   assert.match(table, /parts=\{\['Inactive', 'pharms'\]\}/);
   assert.match(table, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
   assert.match(table, /USER_STATUS_PRESENTATION\[owner\.status\]/);

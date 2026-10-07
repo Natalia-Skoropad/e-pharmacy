@@ -1,4 +1,5 @@
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
+import { isValidObjectId, slugifyStatus } from '@e-pharmacy/validation/url';
 
 import { ADMIN_ROUTES } from '@/lib/routes/admin-routes';
 
@@ -25,6 +26,15 @@ export type AdminPharmacyOwnersListUrlState = Readonly<{
   page: number;
   perPage: 20 | 50 | 100;
 }>;
+
+export type AdminPharmacyOwnersRouteParams = Readonly<{
+  filters?: string[];
+}>;
+
+export type AdminPharmacyOwnersRouteResolution =
+  | Readonly<{ kind: 'filters'; filters: string[] }>
+  | Readonly<{ kind: 'detail'; ownerId: string }>
+  | Readonly<{ kind: 'invalid' }>;
 
 //===================================================================
 
@@ -157,6 +167,94 @@ function buildQuery(
 
 //===================================================================
 
+export function isAdminPharmacyOwnersFilterSegment(segment: string): boolean {
+  return (
+    segment.startsWith('owner-id-') ||
+    segment.startsWith('status-') ||
+    segment.startsWith('registered-from-') ||
+    segment.startsWith('registered-to-') ||
+    segment.startsWith('page-') ||
+    segment.startsWith('per-page-')
+  );
+}
+
+//===================================================================
+
+export function resolveAdminPharmacyOwnersRoute(
+  segments: string[] | undefined
+): AdminPharmacyOwnersRouteResolution {
+  if (!segments?.length) return { kind: 'filters', filters: [] };
+
+  if (segments.every(isAdminPharmacyOwnersFilterSegment)) {
+    return { kind: 'filters', filters: segments };
+  }
+
+  if (segments.length === 1 && isValidObjectId(segments[0])) {
+    return { kind: 'detail', ownerId: segments[0] };
+  }
+
+  return { kind: 'invalid' };
+}
+
+//===================================================================
+
+export function parseAdminPharmacyOwnersListSegments(
+  params: AdminPharmacyOwnersRouteParams = {}
+): AdminPharmacyOwnersListUrlState {
+  let search = '';
+  let status: AdminPharmacyOwnerStatus | 'all' = 'all';
+  let registeredFrom = '';
+  let registeredTo = '';
+  let page = 1;
+  let perPage: 20 | 50 | 100 = 20;
+
+  for (const segment of params.filters ?? []) {
+    if (segment.startsWith('owner-id-')) {
+      const candidate = segment.replace('owner-id-', '');
+      search = isValidObjectId(candidate) ? candidate : '';
+      continue;
+    }
+
+    if (segment.startsWith('status-')) {
+      const candidate = segment.replace('status-', '').replace(/-/g, '_');
+      status = isOwnerStatus(candidate) ? candidate : 'all';
+      continue;
+    }
+
+    if (segment.startsWith('registered-from-')) {
+      registeredFrom = parseDate(segment.replace('registered-from-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('registered-to-')) {
+      registeredTo = parseDate(segment.replace('registered-to-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('page-')) {
+      page = parsePage(segment.replace('page-', ''));
+      continue;
+    }
+
+    if (segment.startsWith('per-page-')) {
+      perPage = parsePerPage(segment.replace('per-page-', ''));
+    }
+  }
+
+  const range = normalizeDateRange(registeredFrom, registeredTo);
+
+  return {
+    search,
+    status,
+    registeredFrom: range.from,
+    registeredTo: range.to,
+    page,
+    perPage,
+  };
+}
+
+//===================================================================
+
 export function parseAdminPharmacyOwnersListSearchParams(
   params: AdminSearchParams = {}
 ): AdminPharmacyOwnersListUrlState {
@@ -164,9 +262,10 @@ export function parseAdminPharmacyOwnersListSearchParams(
   const registeredTo = parseDate(getSingle(params.registeredTo));
   const range = normalizeDateRange(registeredFrom, registeredTo);
   const status = getSingle(params.status);
+  const search = normalizeSearch(getSingle(params.search));
 
   return {
-    search: normalizeSearch(getSingle(params.search)),
+    search: isValidObjectId(search) ? search : '',
     status: isOwnerStatus(status) ? status : 'all',
     registeredFrom: range.from,
     registeredTo: range.to,
@@ -185,15 +284,27 @@ export function buildAdminPharmacyOwnersListUrl(
     parseDate(state.registeredTo)
   );
 
-  return `${ADMIN_ROUTES.PHARMACY_OWNERS}${buildQuery({
-    search: normalizeSearch(state.search) || undefined,
-    status: isOwnerStatus(state.status) ? state.status : undefined,
-    registeredFrom: range.from || undefined,
-    registeredTo: range.to || undefined,
-    page: state.page > 1 ? parsePage(String(state.page)) : undefined,
-    perPage:
-      state.perPage === 20 ? undefined : parsePerPage(String(state.perPage)),
-  })}`;
+  const segments: string[] = [];
+
+  const search = normalizeSearch(state.search);
+  if (isValidObjectId(search)) segments.push(`owner-id-${search}`);
+
+  if (isOwnerStatus(state.status)) {
+    segments.push(`status-${slugifyStatus(state.status)}`);
+  }
+
+  if (range.from) segments.push(`registered-from-${range.from}`);
+  if (range.to) segments.push(`registered-to-${range.to}`);
+
+  const page = parsePage(String(state.page));
+  if (page > 1) segments.push(`page-${page}`);
+
+  const perPage = parsePerPage(String(state.perPage));
+  if (perPage !== 20) segments.push(`per-page-${perPage}`);
+
+  return segments.length
+    ? `${ADMIN_ROUTES.PHARMACY_OWNERS}/${segments.join('/')}`
+    : ADMIN_ROUTES.PHARMACY_OWNERS;
 }
 
 //===================================================================

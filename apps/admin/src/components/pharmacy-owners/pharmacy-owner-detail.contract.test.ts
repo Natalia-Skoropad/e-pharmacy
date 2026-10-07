@@ -88,7 +88,9 @@ test('owner personal information is read-only and has explicit not-found, forbid
   assert.match(detail, /Last personal data change/);
   assert.match(detail, /NotFoundPage/);
   assert.match(detail, /loadError === ['"]forbidden['"]/);
-  assert.match(detail, /ErrorPage/);
+  assert.match(detail, /ProfileResourceState/);
+  assert.match(detail, /Pharmacy owner details could not be loaded/);
+  assert.match(detail, /sideActionOnDesktop/);
 
   assert.doesNotMatch(
     detail,

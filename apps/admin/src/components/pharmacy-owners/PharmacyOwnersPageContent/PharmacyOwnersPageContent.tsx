@@ -1,11 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Ban, ShieldCheck, UserRoundPlus, UsersRound } from 'lucide-react';
+
+import {
+  Ban,
+  ShieldCheck,
+  UserCog,
+  UserRoundPlus,
+  UsersRound,
+} from 'lucide-react';
+
 import { useRouter } from 'next/navigation';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 
 import type {
   AdminPharmacyOwnerListResponse,
@@ -17,8 +24,14 @@ import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-import { StatsCard, StatsGrid } from '@e-pharmacy/ui/statistics';
+
+import {
+  StatsCard,
+  StatsGrid,
+  StatsLoadingSkeleton,
+} from '@e-pharmacy/ui/statistics';
 
 import {
   getAdminPharmacyOwnerSummary,
@@ -116,16 +129,6 @@ export function PharmacyOwnersPageContent({
       ? optimisticNavigation.state
       : initialState;
 
-  const [searchDraft, setSearchDraft] = useState<Readonly<{
-    baseSearch: string;
-    value: string;
-  }> | null>(null);
-
-  const searchInput =
-    searchDraft?.baseSearch === state.search ? searchDraft.value : state.search;
-
-  const debouncedSearch = useDebouncedValue(searchInput, 350);
-
   const [listReloadVersion, setListReloadVersion] = useState(0);
   const listRequestKey = `${getStateKey(state)}|${listReloadVersion}`;
 
@@ -178,20 +181,6 @@ export function PharmacyOwnersPageContent({
   );
 
   useEffect(() => {
-    const normalizedSearch = debouncedSearch.trim();
-    if (normalizedSearch === state.search) return;
-
-    router.replace(
-      buildAdminPharmacyOwnersListUrl({
-        ...state,
-        search: normalizedSearch,
-        page: 1,
-      }),
-      { scroll: false }
-    );
-  }, [debouncedSearch, router, state]);
-
-  useEffect(() => {
     const controller = new AbortController();
     const requestKey = listRequestKey;
 
@@ -236,7 +225,6 @@ export function PharmacyOwnersPageContent({
           setStatisticsResult({ version, data: response, error: null });
         }
       })
-
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
           setStatisticsResult({
@@ -263,7 +251,6 @@ export function PharmacyOwnersPageContent({
   ].filter(Boolean).length;
 
   const resetFilters = () => {
-    setSearchDraft(null);
     navigate({
       search: '',
       status: 'all',
@@ -316,6 +303,8 @@ export function PharmacyOwnersPageContent({
     [statistics]
   );
 
+  const hasFatalListError = Boolean(listError && !data);
+
   return (
     <main className={css.page} aria-labelledby="pharmacy-owners-page-title">
       <section
@@ -329,165 +318,176 @@ export function PharmacyOwnersPageContent({
               <InfoTooltip
                 label="About Pharmacy Owners"
                 title="Pharmacy Owners"
+                icon={<UserCog size={20} aria-hidden="true" />}
                 items={[
                   {
                     title: 'New',
                     description:
                       'A newly registered owner whose first pharmacy has not been activated yet.',
+                    icon: <UserRoundPlus size={17} aria-hidden="true" />,
                   },
                   {
                     title: 'Active',
                     description:
                       'An owner with active access to the pharmacy cabinet. Owner status is separate from each pharmacy moderation status.',
+                    icon: <ShieldCheck size={17} aria-hidden="true" />,
                   },
                   {
                     title: 'Blocked',
                     description:
                       'An owner whose account access has been deactivated by Admin.',
+                    icon: <Ban size={17} aria-hidden="true" />,
                   },
                 ]}
               />
             </span>
           }
           titleId="pharmacy-owners-page-title"
-          icon={<UsersRound size={23} aria-hidden="true" />}
+          icon={<UserCog size={23} aria-hidden="true" />}
         />
 
-        {statistics ? (
-          <StatsGrid
-            className={css.statistics}
-            columns={4}
-            tabletColumns={2}
-            ariaLabel="Pharmacy owner status statistics"
-          >
-            {analytics.map((item) => (
-              <StatsCard
-                key={item.key}
-                title={item.title}
-                value={item.value ?? 0}
-                tone={item.tone}
-                icon={item.icon}
-                href={buildAdminPharmacyOwnersListUrl({
-                  ...state,
-                  status: item.status,
-                  page: 1,
-                })}
-                ariaLabel={`Filter pharmacy owners by ${item.title.toLowerCase()}`}
+        {!hasFatalListError ? (
+          <div className={css.statisticsBlock}>
+            {statistics ? (
+              <StatsGrid
+                className={css.statistics}
+                columns={4}
+                tabletColumns={2}
+                ariaLabel="Pharmacy owner status statistics"
+              >
+                {analytics.map((item) => (
+                  <StatsCard
+                    key={item.key}
+                    title={item.title}
+                    value={item.value ?? 0}
+                    tone={item.tone}
+                    icon={item.icon}
+                    href={buildAdminPharmacyOwnersListUrl({
+                      ...state,
+                      status: item.status,
+                      page: 1,
+                    })}
+                    ariaLabel={`Filter pharmacy owners by ${item.title.toLowerCase()}`}
+                  />
+                ))}
+              </StatsGrid>
+            ) : statisticsError ? (
+              <div className={css.statisticsError} role="alert">
+                <p>{statisticsError}</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() =>
+                    setStatisticsReloadVersion((version) => version + 1)
+                  }
+                >
+                  Retry statistics
+                </Button>
+              </div>
+            ) : (
+              <StatsLoadingSkeleton
+                count={4}
+                columns={4}
+                tabletColumns={2}
+                label="Loading owner status statistics"
               />
-            ))}
-          </StatsGrid>
-        ) : statisticsError ? (
-          <div className={css.statisticsError} role="alert">
-            <p>{statisticsError}</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() =>
-                setStatisticsReloadVersion((version) => version + 1)
-              }
-            >
-              Retry statistics
-            </Button>
+            )}
           </div>
-        ) : (
-          <p className={css.statisticsState} role="status">
-            Loading owner status statistics...
-          </p>
-        )}
-      </section>
-
-      <section
-        className={css.card}
-        aria-labelledby="pharmacy-owners-search-title"
-      >
-        <h2 className={css.visuallyHidden} id="pharmacy-owners-search-title">
-          Pharmacy owners search and filters
-        </h2>
-
-        <div className={css.searchGrid}>
-          <PharmacyOwnerSearch
-            value={searchInput}
-            disabled={isLoading && !data}
-            onChange={(value) =>
-              setSearchDraft({ baseSearch: state.search, value })
-            }
-            onSelect={(owner) => {
-              setSearchDraft(null);
-              navigate({ ...state, search: owner.id, page: 1 });
-            }}
-          />
-
-          <div className={css.searchAction}>
-            <FiltersButton
-              activeCount={activeFiltersCount}
-              controlsId="pharmacy-owners-filters-panel"
-              isExpanded={isFiltersOpen}
-              className={css.filterButton}
-              onClick={() => setIsFiltersOpen(true)}
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className={css.card} aria-label="Pharmacy owners table">
-        <div className={css.toolbar}>
-          <div className={css.rowsControl}>
-            <RowsPerPageSelect
-              id="pharmacy-owners-rows-per-page"
-              value={state.perPage}
-              disabled={isLoading && !data}
-              onChange={handleRowsPerPageChange}
-            />
-          </div>
-
-          {data && !listError ? (
-            <CountLabel
-              className={css.countLabel}
-              shown={data.items.length}
-              total={data.total}
-              label="owners"
-              fullWidthOnMobile
-            />
-          ) : null}
-        </div>
-
-        {listError ? (
-          <div className={css.inlineError} role="alert">
-            <p>{listError}</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setListReloadVersion((version) => version + 1)}
-            >
-              Retry owners
-            </Button>
-          </div>
-        ) : (
-          <PharmacyOwnersTable
-            owners={data?.items ?? []}
-            isLoading={isLoading}
-            emptyMessage={
-              hasActiveFilters
-                ? 'No pharmacy owners match the selected filters.'
-                : 'No pharmacy owners have registered yet.'
-            }
-          />
-        )}
-
-        {data && !listError ? (
-          <PaginationView
-            currentPage={data.page}
-            totalPages={data.totalPages}
-            disabled={isLoading}
-            ariaLabel="Pharmacy owners pagination"
-            onPageChange={(page) => navigate({ ...state, page })}
-          />
         ) : null}
       </section>
 
-      {isFiltersOpen ? (
+      {hasFatalListError ? (
+        <section className={css.card} aria-label="Pharmacy owners error">
+          <ProfileResourceState
+            variant="error"
+            title="Pharmacy owners could not be loaded"
+            description={listError}
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={() => setListReloadVersion((version) => version + 1)}
+          />
+        </section>
+      ) : (
+        <>
+          <section
+            className={css.card}
+            aria-labelledby="pharmacy-owners-search-title"
+          >
+            <h2
+              className={css.visuallyHidden}
+              id="pharmacy-owners-search-title"
+            >
+              Pharmacy owners search and filters
+            </h2>
+
+            <div className={css.searchGrid}>
+              <PharmacyOwnerSearch
+                value={state.search}
+                disabled={isLoading && !data}
+                onChange={(ownerId) => {
+                  navigate({ ...state, search: ownerId, page: 1 });
+                }}
+              />
+
+              <div className={css.searchAction}>
+                <FiltersButton
+                  activeCount={activeFiltersCount}
+                  controlsId="pharmacy-owners-filters-panel"
+                  isExpanded={isFiltersOpen}
+                  className={css.filterButton}
+                  onClick={() => setIsFiltersOpen(true)}
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className={css.card} aria-label="Pharmacy owners table">
+            <div className={css.toolbar}>
+              <div className={css.rowsControl}>
+                <RowsPerPageSelect
+                  id="pharmacy-owners-rows-per-page"
+                  value={state.perPage}
+                  disabled={isLoading && !data}
+                  onChange={handleRowsPerPageChange}
+                />
+              </div>
+
+              {data && !listError ? (
+                <CountLabel
+                  className={css.countLabel}
+                  shown={data.items.length}
+                  total={data.total}
+                  label="owners"
+                  fullWidthOnMobile
+                />
+              ) : null}
+            </div>
+
+            <PharmacyOwnersTable
+              owners={data?.items ?? []}
+              isLoading={isLoading}
+              emptyMessage={
+                hasActiveFilters
+                  ? 'No pharmacy owners match the selected filters.'
+                  : 'No pharmacy owners have registered yet.'
+              }
+            />
+
+            {data && !listError ? (
+              <PaginationView
+                currentPage={data.page}
+                totalPages={data.totalPages}
+                disabled={isLoading}
+                ariaLabel="Pharmacy owners pagination"
+                onPageChange={(page) => navigate({ ...state, page })}
+              />
+            ) : null}
+          </section>
+        </>
+      )}
+
+      {isFiltersOpen && !hasFatalListError ? (
         <PharmacyOwnersFiltersDrawer
           state={state}
           hasActiveFilters={hasActiveFilters}
