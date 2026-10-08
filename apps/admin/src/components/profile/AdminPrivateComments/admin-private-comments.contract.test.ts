@@ -15,6 +15,8 @@ test('admin private comments reuse shared comment presentation and pagination UI
   assert.match(source, /CommentComposer/);
   assert.match(source, /CommentsList/);
   assert.match(source, /ConfirmationModal/);
+  assert.match(source, /confirmIconLeft=\{<Trash2/);
+  assert.match(source, /cancelIconLeft=\{<X/);
   assert.match(source, /PaginationView/);
   assert.match(source, /clientRequestId/);
   assert.match(source, /globalThis\.crypto\?\.randomUUID/);

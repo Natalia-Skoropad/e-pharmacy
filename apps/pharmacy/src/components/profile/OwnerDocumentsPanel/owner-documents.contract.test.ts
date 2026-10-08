@@ -17,22 +17,26 @@ test('owner documents reuse the shared DocumentsPanel without duplicating docume
 
   assert.match(
     source,
-    /import \{ DocumentsPanel \} from '@e-pharmacy\/ui\/profile'/
+    /DocumentsPanel[\s\S]*?ProfileResourceState[\s\S]*?from '@e-pharmacy\/ui\/profile'/
   );
 
   assert.match(source, /<DocumentsPanel/);
+  assert.match(source, /confirmRemove/);
+  assert.match(source, /onChange=\{handleValuesChange\}/);
+  assert.match(source, /dropzoneTitle: 'Upload owner documents'/);
+  assert.doesNotMatch(source, /canUpload|canDelete|onUploadFiles|onDeleteFile/);
   assert.doesNotMatch(source, /<ul[^>]*aria-label="Documents"/);
   assert.doesNotMatch(source, /documentActions|documentItem|documentsList/);
 });
 
 //===================================================================
 
-test('pharmacy profile keeps registration documents and adds owner documents only for the owner membership', () => {
+test('pharmacy profile keeps pharmacy documents and adds owner documents only for the owner membership', () => {
   const source = read(
     'src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   );
 
-  assert.match(source, /title="Registration documents"/);
+  assert.match(source, /title="Документи аптеки"/);
   assert.match(source, /<OwnerDocumentsPanel \/>/);
   assert.match(source, /pharmacy\.membershipRole === 'owner'/);
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 
 import {
   Building2,
@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Heart,
   LogIn,
+  MonitorSmartphone,
   Save,
   ShoppingBag,
   UserRound,
@@ -159,12 +160,33 @@ type ProfileTab =
 const TABS: Array<{
   value: ProfileTab;
   label: string;
+  icon: ReactNode;
 }> = [
-  { value: 'data', label: 'My data' },
-  { value: 'orders', label: 'My orders' },
-  { value: 'favorite-products', label: 'Favorite products' },
-  { value: 'favorite-pharmacies', label: 'Favorite pharmacies' },
-  { value: 'sessions', label: 'Active sessions' },
+  {
+    value: 'data',
+    label: 'My data',
+    icon: <UserRound size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'orders',
+    label: 'My orders',
+    icon: <ClipboardList size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'favorite-products',
+    label: 'Favorite products',
+    icon: <Heart size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'favorite-pharmacies',
+    label: 'Favorite pharmacies',
+    icon: <Building2 size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'sessions',
+    label: 'Active sessions',
+    icon: <MonitorSmartphone size={17} aria-hidden="true" />,
+  },
 ];
 
 //===================================================================

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 
 import {
   Building2,
@@ -10,6 +10,8 @@ import {
   FileCheck2,
   FileText,
   Landmark,
+  MessageSquareText,
+  MonitorSmartphone,
   Save,
   Send,
   Star,
@@ -186,16 +188,48 @@ const PROFILE_TABS_ID_BASE = 'pharmacy-profile-tabs';
 
 //===================================================================
 
-const TABS: Array<{ value: ProfileTab; label: string }> = [
-  { value: 'data', label: 'My data' },
-  { value: 'pharmacy-data', label: 'Pharmacy data' },
-  { value: 'about', label: 'About pharmacy' },
-  { value: 'payment', label: 'Payment details' },
-  { value: 'documents', label: 'Documents' },
-  { value: 'reviews', label: 'Reviews' },
-  { value: 'comments', label: 'Comments' },
-  { value: 'sessions', label: 'Active sessions' },
-];
+const TABS = [
+  {
+    value: 'data',
+    label: 'My data',
+    icon: <UserRound size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'pharmacy-data',
+    label: 'Pharmacy data',
+    icon: <Building2 size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'about',
+    label: 'About pharmacy',
+    icon: <FileText size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'payment',
+    label: 'Payment details',
+    icon: <Landmark size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'documents',
+    label: 'Documents',
+    icon: <FileCheck2 size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'reviews',
+    label: 'Reviews',
+    icon: <Star size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'comments',
+    label: 'Comments',
+    icon: <MessageSquareText size={17} aria-hidden="true" />,
+  },
+  {
+    value: 'sessions',
+    label: 'Active sessions',
+    icon: <MonitorSmartphone size={17} aria-hidden="true" />,
+  },
+] satisfies Array<{ value: ProfileTab; label: string; icon: ReactNode }>;
 
 //===================================================================
 
@@ -1968,6 +2002,7 @@ function PharmacyProfilePage({
                         <NameInput
                           id="pharmacy-region"
                           name="region"
+                          className={css.fieldWide}
                           label="Region (optional)"
                           placeholder="Example: Odesa region"
                           hint="Add the region when it helps distinguish the settlement."
@@ -2334,8 +2369,8 @@ function PharmacyProfilePage({
                   <DocumentsPanel
                     id="pharmacy-profile-documents"
                     name="documents"
-                    title="Registration documents"
-                    description="Manage registration documents, license scans, and other files Admin needs for verification."
+                    title="Документи аптеки"
+                    description="Upload and manage documents that belong to this specific pharmacy and are used for its verification."
                     headerIcon={<FileCheck2 size={22} />}
                     value={documentValues}
                     required
@@ -2360,7 +2395,7 @@ function PharmacyProfilePage({
                     beforeDocuments={
                       pharmacy.status === 'on_moderation' ? (
                         <PendingModerationBox
-                          title="Pending registration documents"
+                          title="Pending pharmacy documents"
                           items={(
                             pharmacy.pendingModeration?.documents ?? []
                           ).map((document, index) => ({

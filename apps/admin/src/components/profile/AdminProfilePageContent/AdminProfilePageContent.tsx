@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { UserRound } from 'lucide-react';
+
+import {
+  FileBadge2,
+  MessageSquareLock,
+  MonitorSmartphone,
+  UserRound,
+} from 'lucide-react';
 
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
@@ -99,10 +105,26 @@ export function AdminProfilePageContent() {
 
   const tabs = useMemo(
     () => [
-      { value: PERSONAL_TAB, label: 'Personal information' },
-      { value: DOCUMENTS_TAB, label: `Documents (${documentsCount})` },
-      { value: COMMENTS_TAB, label: `Comments (${commentsCount})` },
-      { value: SESSIONS_TAB, label: 'Active sessions' },
+      {
+        value: PERSONAL_TAB,
+        label: 'Personal information',
+        icon: <UserRound size={17} aria-hidden="true" />,
+      },
+      {
+        value: DOCUMENTS_TAB,
+        label: `Documents (${documentsCount})`,
+        icon: <FileBadge2 size={17} aria-hidden="true" />,
+      },
+      {
+        value: COMMENTS_TAB,
+        label: `Comments (${commentsCount})`,
+        icon: <MessageSquareLock size={17} aria-hidden="true" />,
+      },
+      {
+        value: SESSIONS_TAB,
+        label: 'Active sessions',
+        icon: <MonitorSmartphone size={17} aria-hidden="true" />,
+      },
     ],
     [commentsCount, documentsCount]
   );

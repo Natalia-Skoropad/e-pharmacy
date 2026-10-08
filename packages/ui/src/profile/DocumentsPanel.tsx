@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type ChangeEvent, type ReactNode } from 'react';
+
 import {
   Download,
   Files,
@@ -8,6 +9,7 @@ import {
   Save,
   Trash2,
   UploadCloud,
+  X,
 } from 'lucide-react';
 
 import {
@@ -385,6 +387,8 @@ export function DocumentsPanel({
           text={`The document “${pendingDeleteFile.name}” will be permanently deleted.`}
           confirmLabel="Delete document"
           cancelLabel="Keep document"
+          confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+          cancelIconLeft={<X size={17} aria-hidden="true" />}
           onConfirm={() => void handleDelete()}
           onCancel={() => setPendingDeleteFile(null)}
         />

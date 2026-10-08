@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { Download, FileText, UploadCloud, X } from 'lucide-react';
+import { Download, FileText, Trash2, UploadCloud, X } from 'lucide-react';
 import clsx from 'clsx';
 
 import type { BrowserUploadFile } from '../types';
@@ -306,6 +306,8 @@ function DocumentUpload({
           text={mergedLabels.removeText(pendingRemoveFile.name)}
           confirmLabel={mergedLabels.removeConfirm}
           cancelLabel={mergedLabels.removeCancel}
+          confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+          cancelIconLeft={<X size={17} aria-hidden="true" />}
           onConfirm={handleConfirmRemove}
           onCancel={() => setPendingRemoveFileId(null)}
         />

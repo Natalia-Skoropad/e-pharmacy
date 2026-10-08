@@ -237,14 +237,13 @@ export function LinkedPharmaciesTab({
 
   return (
     <div className={css.linkedPharmaciesStack}>
+      <ProfileSectionHeader
+        title="Linked pharmacies"
+        titleId="owner-linked-pharmacies-title"
+        description="Review every pharmacy linked to this owner and narrow the list by pharmacy details, status, rating, or creation date."
+        icon={<Building2 size={22} />}
+      />
       <section className={css.tabSectionCard}>
-        <ProfileSectionHeader
-          title="Linked pharmacies"
-          titleId="owner-linked-pharmacies-title"
-          description="Review every pharmacy linked to this owner and narrow the list by pharmacy details, status, rating, or creation date."
-          icon={<Building2 size={22} />}
-        />
-
         <div className={css.linkedPharmaciesSearchGrid}>
           <LinkedPharmacySearch
             ownerId={ownerId}

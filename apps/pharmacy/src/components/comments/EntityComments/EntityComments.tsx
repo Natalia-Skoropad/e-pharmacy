@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { MessageSquareText, RefreshCw } from 'lucide-react';
+import { MessageSquareText, RefreshCw, Trash2, X } from 'lucide-react';
 
 import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
 import { PHARMACY_NOTE_MAX_LENGTH } from '@e-pharmacy/validation/pharmacy';
@@ -248,6 +248,8 @@ function EntityCommentsContent({
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"
         confirmButtonClassName={css.dangerConfirmButton}
+        confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         isLoading={Boolean(comments.deletingId)}
         onConfirm={() => void handleDelete()}
         onCancel={comments.cancelDelete}

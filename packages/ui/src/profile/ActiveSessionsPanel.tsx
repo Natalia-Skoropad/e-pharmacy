@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-
-import { ChevronDown, LogOut, MonitorSmartphone } from 'lucide-react';
+import { ChevronDown, LogOut, MonitorSmartphone, X } from 'lucide-react';
 
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import { Button } from '../primitives/Button/Button';
 import { LazyLoadButton } from '../primitives/LazyLoadButton/LazyLoadButton';
+import { ConfirmationModal } from '../overlays/ConfirmationModal/ConfirmationModal';
 import { ProfileResourceState } from './ProfileResourceState';
 import { ProfileSectionHeader } from './ProfileSectionHeader';
 
@@ -74,6 +74,16 @@ export function ActiveSessionsPanel({
     normalizedInitialVisibleCount
   );
 
+  const [pendingRevokeSessionId, setPendingRevokeSessionId] = useState<
+    string | null
+  >(null);
+
+  const [isSignOutAllConfirmationOpen, setIsSignOutAllConfirmationOpen] =
+    useState(false);
+
+  const [isConfirmingRevoke, setIsConfirmingRevoke] = useState(false);
+  const [isConfirmingSignOutAll, setIsConfirmingSignOutAll] = useState(false);
+
   useEffect(() => {
     setVisibleCount((current) =>
       Math.max(
@@ -90,6 +100,46 @@ export function ActiveSessionsPanel({
     () => sessions.slice(0, visibleCount),
     [sessions, visibleCount]
   );
+
+  const pendingRevokeSession = useMemo(
+    () =>
+      sessions.find((session) => session.id === pendingRevokeSessionId) ?? null,
+    [pendingRevokeSessionId, sessions]
+  );
+
+  const isPendingRevokeLoading = Boolean(
+    isConfirmingRevoke ||
+    (pendingRevokeSession && revokingSessionId === pendingRevokeSession.id)
+  );
+
+  const isSignOutAllConfirmationLoading =
+    isConfirmingSignOutAll || isSigningOutAll;
+
+  const handleConfirmRevoke = async () => {
+    if (!pendingRevokeSession || !onRevoke || isPendingRevokeLoading) return;
+
+    setIsConfirmingRevoke(true);
+
+    try {
+      await onRevoke(pendingRevokeSession.id);
+    } finally {
+      setIsConfirmingRevoke(false);
+      setPendingRevokeSessionId(null);
+    }
+  };
+
+  const handleConfirmSignOutAll = async () => {
+    if (!onSignOutAll || isSignOutAllConfirmationLoading) return;
+
+    setIsConfirmingSignOutAll(true);
+
+    try {
+      await onSignOutAll();
+    } finally {
+      setIsConfirmingSignOutAll(false);
+      setIsSignOutAllConfirmationOpen(false);
+    }
+  };
 
   return (
     <section className={css.panel} aria-labelledby={`${idPrefix}-title`}>
@@ -112,7 +162,7 @@ export function ActiveSessionsPanel({
           disabled={isSigningOutAll}
           isLoading={isSigningOutAll}
           loadingLabel="Signing out..."
-          onClick={() => void onSignOutAll()}
+          onClick={() => setIsSignOutAllConfirmationOpen(true)}
         >
           Sign out all devices
         </Button>
@@ -171,7 +221,7 @@ export function ActiveSessionsPanel({
                       disabled={Boolean(
                         revokingSessionId && revokingSessionId !== session.id
                       )}
-                      onClick={() => void onRevoke(session.id)}
+                      onClick={() => setPendingRevokeSessionId(session.id)}
                     >
                       Revoke
                     </Button>
@@ -200,6 +250,45 @@ export function ActiveSessionsPanel({
           />
         ) : null}
       </div>
+
+      <ConfirmationModal
+        isOpen={Boolean(pendingRevokeSession)}
+        title="Revoke this session?"
+        description={
+          pendingRevokeSession
+            ? `The session on ${pendingRevokeSession.deviceName ?? pendingRevokeSession.userAgent ?? 'this device'} will be signed out.`
+            : undefined
+        }
+        confirmLabel="Revoke session"
+        cancelLabel="Keep session"
+        confirmIconLeft={<LogOut size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        isLoading={isPendingRevokeLoading}
+        closeOnBackdrop={!isPendingRevokeLoading}
+        closeOnEscape={!isPendingRevokeLoading}
+        onConfirm={() => void handleConfirmRevoke()}
+        onCancel={() => {
+          if (!isPendingRevokeLoading) setPendingRevokeSessionId(null);
+        }}
+      />
+
+      <ConfirmationModal
+        isOpen={isSignOutAllConfirmationOpen}
+        title="Sign out all devices?"
+        description="All active sessions, including this device, will be signed out. You will need to sign in again."
+        confirmLabel="Sign out all devices"
+        cancelLabel="Keep sessions"
+        confirmIconLeft={<LogOut size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        isLoading={isSignOutAllConfirmationLoading}
+        closeOnBackdrop={!isSignOutAllConfirmationLoading}
+        closeOnEscape={!isSignOutAllConfirmationLoading}
+        onConfirm={() => void handleConfirmSignOutAll()}
+        onCancel={() => {
+          if (!isSignOutAllConfirmationLoading)
+            setIsSignOutAllConfirmationOpen(false);
+        }}
+      />
     </section>
   );
 }

@@ -50,7 +50,8 @@
   gap: 10px;
 }
 
-.buttons > * {
+.card .buttons > * {
+  min-width: 0;
   width: 100%;
   justify-content: center;
 }

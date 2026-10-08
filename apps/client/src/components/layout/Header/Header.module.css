@@ -134,7 +134,7 @@
     display: inline;
   }
 
-  .mobileCartLink {
+  .container .mobileCartLink {
     display: none;
   }
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MessageSquareLock } from 'lucide-react';
+import { MessageSquareLock, Trash2, X } from 'lucide-react';
 
 import type {
   AdminEmployeePrivateNote,
@@ -327,6 +327,8 @@ export function AdminPrivateComments({
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"
         confirmButtonClassName={css.dangerConfirmButton}
+        confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         isLoading={Boolean(deletingId)}
         onConfirm={() => void handleDelete()}
         onCancel={() => {

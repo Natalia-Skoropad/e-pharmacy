@@ -7,8 +7,7 @@ import type { PharmacyOwnerDocument } from '@e-pharmacy/types/pharmacy-owners';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
-import { DocumentsPanel } from '@e-pharmacy/ui/profile';
-import { Button } from '@e-pharmacy/ui/primitives';
+import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
   PHARMACY_OWNER_DOCUMENT_ACCEPT,
@@ -200,20 +199,42 @@ export function OwnerDocumentsPanel() {
     }
   };
 
+  const handleValuesChange = (nextFiles: BrowserUploadFile[]) => {
+    if (isUploading || pendingDocumentId || status !== 'success') return;
+
+    const currentIds = new Set(values.map((file) => file.id));
+    const nextIds = new Set(nextFiles.map((file) => file.id));
+    const removedFile = values.find((file) => !nextIds.has(file.id));
+
+    if (removedFile) {
+      void handleDelete(removedFile);
+      return;
+    }
+
+    const addedFiles = nextFiles
+      .filter((file) => !currentIds.has(file.id))
+      .map((file) => file.file)
+      .filter((file): file is File => Boolean(file));
+
+    if (addedFiles.length > 0) {
+      void handleUpload(addedFiles);
+    }
+  };
+
   const resourceState =
     status === 'loading' ? (
-      <p role="status">Loading owner documents...</p>
+      <ProfileResourceState
+        variant="loading"
+        title="Loading owner documents"
+        description="Please wait while your owner documents are loaded."
+      />
     ) : status === 'error' ? (
-      <div role="alert">
-        <p>{error}</p>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => void loadDocuments()}
-        >
-          Try again
-        </Button>
-      </div>
+      <ProfileResourceState
+        variant="error"
+        title="Owner documents could not be loaded"
+        description={error}
+        onRetry={loadDocuments}
+      />
     ) : undefined;
 
   return (
@@ -224,19 +245,22 @@ export function OwnerDocumentsPanel() {
       description="Private documents that belong to your owner account and stay available across the pharmacies you own."
       headerIcon={<Files size={22} />}
       value={values}
-      disabled={status !== 'success'}
+      disabled={
+        status !== 'success' || isUploading || Boolean(pendingDocumentId)
+      }
+      isSaving={isUploading || Boolean(pendingDocumentId)}
       maxFiles={PHARMACY_OWNER_DOCUMENT_RULES.maxFiles}
       accept={PHARMACY_OWNER_DOCUMENT_ACCEPT}
       hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_OWNER_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
       validateSelection={validatePharmacyOwnerDocuments}
       onSelectionError={(message) => toast.error(message)}
       onDownloadFile={handleDownload}
-      canUpload
-      canDelete
-      isUploading={isUploading}
-      pendingDocumentId={pendingDocumentId}
-      onUploadFiles={handleUpload}
-      onDeleteFile={handleDelete}
+      confirmRemove
+      labels={{
+        dropzoneTitle: 'Upload owner documents',
+        dropzoneText: 'PDF, DOC, JPG or PNG files are supported.',
+      }}
+      onChange={handleValuesChange}
       resourceState={resourceState}
       emptyTitle="No owner documents yet"
       emptyText="Upload documents that belong to your owner account rather than to a specific pharmacy."
