@@ -34,12 +34,8 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/images/seed/products/:path*',
-        destination: `${apiBaseUrl}/images/seed/products/:path*`,
-      },
-      {
-        source: '/images/seed/clients/:path*',
-        destination: `${apiBaseUrl}/images/seed/clients/:path*`,
+        source: '/images/seed/:path*',
+        destination: `${apiBaseUrl}/images/seed/:path*`,
       },
     ];
   },

@@ -1,5 +1,18 @@
 import type { NextConfig } from 'next';
 
+import {
+  resolveApiBaseUrl,
+  resolveNodeEnvironment,
+} from '../../packages/next-api/src/contracts/api-base-url';
+
+//===============================================================
+
+const apiBaseUrl = resolveApiBaseUrl(
+  process.env.API_BASE_URL,
+  resolveNodeEnvironment(process.env.NODE_ENV),
+  { allowInsecureLoopbackInProduction: true }
+).replace(/\/+$/, '');
+
 //===============================================================
 
 const nextConfig: NextConfig = {
@@ -14,6 +27,15 @@ const nextConfig: NextConfig = {
     '@e-pharmacy/utils',
     '@e-pharmacy/validation',
   ],
+
+  async rewrites() {
+    return [
+      {
+        source: '/images/seed/:path*',
+        destination: `${apiBaseUrl}/images/seed/:path*`,
+      },
+    ];
+  },
 
   async headers() {
     return [
