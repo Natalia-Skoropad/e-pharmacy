@@ -670,7 +670,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   {
     email: 'nata5@ukr.net',
     phone: '+380661234005',
-    ownerName: 'Nata Five',
+    ownerName: 'Nataliia Hrytsenko',
     address: '25 Health Avenue, Kyiv',
     settlement: 'Kyiv',
     pharmacyName: 'Nata Care Pharmacy New',
@@ -682,7 +682,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
     email: 'nata6@ukr.net',
     publicEmail: 'care_pharmacy@ukr.net',
     phone: '+380661234777',
-    ownerName: 'Nata Six',
+    ownerName: 'Olha Moroz',
     address: '777 Wellness Street, Lviv',
     settlement: 'Lviv',
     pharmacyName: 'Care Pharmacy Lviv',
@@ -695,7 +695,7 @@ const PHARMACY_ACCOUNT_SEEDS: PharmacyAccountSeed[] = [
   {
     email: 'nata7@ukr.net',
     phone: '+380661234007',
-    ownerName: 'Nata Seven',
+    ownerName: 'Yevheniia Lysenko',
     address: '27 Health Avenue, Kyiv',
     settlement: 'Kyiv',
     pharmacyName: 'Nata Care Pharmacy Verification',
@@ -981,6 +981,9 @@ async function seedPharmacyAccounts(): Promise<number> {
       {
         $set: {
           name: seed.ownerName,
+          pictureUrl: createSeedAssetUrl(
+            seed.imageUrl ?? '/images/seed/pharmacies/pharmacy-001.png'
+          ),
           email: seed.email,
           password,
           role: USER_ROLES.PHARMACY,
@@ -1077,13 +1080,43 @@ async function seedPharmacyAccounts(): Promise<number> {
 
 //===============================================================
 
-function createDemoPharmacyOwnerName(pharmacyName: string): string {
-  const words = pharmacyName.match(/[A-Za-z]+(?:-[A-Za-z]+)?/g) ?? [];
-  const candidate = `${words.slice(0, 3).join(' ')} Owner`.trim();
+const DEMO_OWNER_FIRST_NAMES = [
+  'Vasyl',
+  'Olena',
+  'Andrii',
+  'Iryna',
+  'Maksym',
+  'Tetiana',
+  'Dmytro',
+  'Oksana',
+  'Roman',
+  'Kateryna',
+  'Bohdan',
+  'Sofiia',
+  'Mykhailo',
+  'Yuliia',
+];
 
-  return candidate.length >= 2 && candidate.length <= 50
-    ? candidate
-    : 'Demo Pharmacy Owner';
+const DEMO_OWNER_LAST_NAMES = [
+  'Volkanov',
+  'Kovalenko',
+  'Shevchenko',
+  'Bondarenko',
+  'Melnyk',
+  'Tkachenko',
+  'Kravchenko',
+  'Polishchuk',
+];
+
+function createDemoPharmacyOwnerName(index: number): string {
+  const firstName =
+    DEMO_OWNER_FIRST_NAMES[index % DEMO_OWNER_FIRST_NAMES.length];
+  const lastName =
+    DEMO_OWNER_LAST_NAMES[
+      Math.floor(index / DEMO_OWNER_FIRST_NAMES.length) %
+        DEMO_OWNER_LAST_NAMES.length
+    ];
+  return `${firstName} ${lastName}`;
 }
 
 //===============================================================
@@ -1094,7 +1127,7 @@ async function seedDemoPharmacyOwners(
   const password = await hashPassword(PHARMACY_ACCOUNT_PASSWORD);
   let ownerCount = 0;
 
-  for (const seed of pharmacySeeds) {
+  for (const [index, seed] of pharmacySeeds.entries()) {
     const existing = await User.findOne({ email: seed.email })
       .select('_id role')
       .lean<{ _id: Types.ObjectId; role: string } | null>();
@@ -1109,7 +1142,8 @@ async function seedDemoPharmacyOwners(
       { email: seed.email },
       {
         $set: {
-          name: createDemoPharmacyOwnerName(seed.name),
+          name: createDemoPharmacyOwnerName(index),
+          pictureUrl: createSeedAssetUrl(seed.imageUrl),
           email: seed.email,
           password,
           role: USER_ROLES.PHARMACY,
@@ -4305,7 +4339,8 @@ function assertDemoPharmacyOwnerSeedsAreValid(
   for (const [index, seed] of pharmacySeeds.entries()) {
     const validationError = new User({
       _id: seed.ownerId,
-      name: createDemoPharmacyOwnerName(seed.name),
+      name: createDemoPharmacyOwnerName(index),
+      pictureUrl: createSeedAssetUrl(seed.imageUrl),
       email: seed.email,
       password: PHARMACY_ACCOUNT_PASSWORD,
       role: USER_ROLES.PHARMACY,

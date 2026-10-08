@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search, UsersRound } from 'lucide-react';
+import { Search, UserCog } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { AdminPharmacyOwnerOption } from '@e-pharmacy/types/admin';
@@ -179,12 +179,12 @@ export function PharmacyOwnerSearch({
         <InfoTooltip
           label="Pharmacy owner search help"
           title="Pharmacy owner search"
-          icon={<UsersRound size={20} aria-hidden="true" />}
+          icon={<UserCog size={20} aria-hidden="true" />}
           items={[
             {
               title: 'Search fields',
               description:
-                'Search by pharmacy owner name, ID, email, or phone number.',
+                'Find a pharmacy owner by their full name, account ID, email address, or phone number.',
               icon: <Search size={17} aria-hidden="true" />,
             },
           ]}

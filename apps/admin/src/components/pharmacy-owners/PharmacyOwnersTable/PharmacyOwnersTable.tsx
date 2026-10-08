@@ -103,13 +103,13 @@ export function PharmacyOwnersTable({
                 {
                   title: 'Active pharmacies',
                   description:
-                    'Pharmacies with Active or On moderation status. These pharmacies are currently available for work.',
+                    'Number of linked pharmacies with Active or On moderation status.',
                   icon: <CircleCheckBig size={17} aria-hidden="true" />,
                 },
                 {
                   title: 'Inactive pharmacies',
                   description:
-                    'Pharmacies with any other status. They are temporarily not working and are not activated for work.',
+                    'Number of linked pharmacies with New or Blocked status.',
                   icon: <Ban size={17} aria-hidden="true" />,
                 },
               ]}
