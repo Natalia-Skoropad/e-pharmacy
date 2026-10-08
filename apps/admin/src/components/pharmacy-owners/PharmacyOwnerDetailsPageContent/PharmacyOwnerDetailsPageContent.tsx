@@ -4,16 +4,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
+  BadgeCheck,
   Ban,
   Building2,
   CircleCheckBig,
+  CirclePlus,
   Clock3,
+  Files,
+  History,
   Mail,
-  MapPin,
+  MessageSquareText,
   Phone,
   ShieldCheck,
+  UserCog,
   UserRound,
-  UsersRound,
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
@@ -28,9 +32,21 @@ import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { LinkButton, Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip, ReasonModal } from '@e-pharmacy/ui/overlays';
-import { ProfileResourceState } from '@e-pharmacy/ui/profile';
-import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
-import { StatsCard, StatsGrid, StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
+
+import { Button } from '@e-pharmacy/ui/primitives';
+
+import {
+  StatsCard,
+  StatsGrid,
+  StatsLoadingSkeleton,
+  StatusBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { NotFoundPage, StatusPageLayout } from '@e-pharmacy/ui/status-pages';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -47,6 +63,7 @@ import {
   type AdminPharmacyOwnerPharmaciesUrlState,
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 
+import { dispatchAdminBreadcrumbLabel } from '@/lib/layout/breadcrumb-label-event';
 import { canAdmin } from '@/lib/permissions/can-admin';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { ADMIN_ROUTES } from '@/lib/routes';
@@ -173,6 +190,14 @@ function PharmacyOwnerDetailsPageContent({
     setActiveTab(initialState.tab);
   }, [initialState.tab]);
 
+  useEffect(() => {
+    dispatchAdminBreadcrumbLabel(`Owner #${ownerId}`);
+  }, [ownerId]);
+
+  useEffect(() => {
+    if (detail?.name) dispatchAdminBreadcrumbLabel(detail.name);
+  }, [detail?.name]);
+
   const loadDetail = useCallback(
     async (signal?: AbortSignal): Promise<AdminPharmacyOwnerDetail> => {
       return getAdminPharmacyOwnerDetail(ownerId, { signal });
@@ -233,11 +258,31 @@ function PharmacyOwnerDetailsPageContent({
 
   const tabs = useMemo<Array<TabItem<AdminPharmacyOwnerDetailTab>>>(() => {
     return [
-      { value: 'personal', label: 'Personal information' },
-      { value: 'pharmacies', label: `Pharmacies (${tabCounts.pharmacies})` },
-      { value: 'documents', label: `Documents (${tabCounts.documents})` },
-      { value: 'comments', label: `Comments (${tabCounts.comments})` },
-      { value: 'activity', label: 'Activity history' },
+      {
+        value: 'personal',
+        label: 'Personal information',
+        icon: <UserRound size={17} aria-hidden="true" />,
+      },
+      {
+        value: 'pharmacies',
+        label: `Pharmacies (${tabCounts.pharmacies})`,
+        icon: <Building2 size={17} aria-hidden="true" />,
+      },
+      {
+        value: 'documents',
+        label: `Documents (${tabCounts.documents})`,
+        icon: <Files size={17} aria-hidden="true" />,
+      },
+      {
+        value: 'comments',
+        label: `Comments (${tabCounts.comments})`,
+        icon: <MessageSquareText size={17} aria-hidden="true" />,
+      },
+      {
+        value: 'activity',
+        label: 'Activity history',
+        icon: <History size={17} aria-hidden="true" />,
+      },
     ];
   }, [tabCounts.comments, tabCounts.documents, tabCounts.pharmacies]);
 
@@ -338,16 +383,8 @@ function PharmacyOwnerDetailsPageContent({
 
   if (!isLoading && loadError === 'error') {
     return (
-      <main className={css.page} aria-labelledby="pharmacy-owner-details-title">
+      <main className={css.page} aria-label="Pharmacy owner details error">
         <section className={css.card}>
-          <PageHeader
-            title="Pharmacy owner details"
-            titleId="pharmacy-owner-details-title"
-            icon={<UserRound size={23} aria-hidden="true" />}
-          />
-        </section>
-
-        <section className={css.card} aria-label="Pharmacy owner details error">
           <ProfileResourceState
             variant="error"
             title="Pharmacy owner details could not be loaded"
@@ -373,136 +410,104 @@ function PharmacyOwnerDetailsPageContent({
       <section className={css.card}>
         <div className={css.headerStack}>
           <PageHeader
+            className={css.ownerPageHeader}
             title={
               <span className={css.titleWithHelp}>
                 {detail?.name ?? 'Pharmacy owner'}
                 <InfoTooltip
                   label="About pharmacy owner details"
                   title="Pharmacy owner details"
+                  icon={<UserCog size={20} aria-hidden="true" />}
                   items={[
                     {
                       title: 'Owner account status',
                       description:
                         'New, Active, or Blocked controls the owner account access and is managed separately from pharmacy moderation.',
+                      icon: <ShieldCheck size={17} aria-hidden="true" />,
                     },
                     {
-                      title: 'Pharmacy status statistics',
+                      title: 'Pharmacy moderation statuses',
                       description:
-                        'These counters describe moderation states of pharmacies linked to this owner, not the owner account itself.',
+                        'These are pharmacy moderation statuses. They are separate from the owner account status.',
+                      icon: <Building2 size={17} aria-hidden="true" />,
                     },
                   ]}
                 />
               </span>
             }
             titleId="pharmacy-owner-details-title"
-            icon={<UsersRound size={23} aria-hidden="true" />}
+            icon={<UserCog size={23} aria-hidden="true" />}
             actions={
               detail && canEditOwner ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  className={isDeactivateAction ? css.dangerButton : undefined}
-                  iconLeft={
-                    isDeactivateAction ? (
-                      <Ban size={17} aria-hidden="true" />
-                    ) : (
-                      <ShieldCheck size={17} aria-hidden="true" />
-                    )
-                  }
-                  onClick={openStatusAction}
-                >
-                  {isDeactivateAction ? 'Deactivate owner' : 'Activate owner'}
-                </Button>
+                <div className={css.ownerStatusAction}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className={
+                      isDeactivateAction ? css.dangerButton : undefined
+                    }
+                    iconLeft={
+                      isDeactivateAction ? (
+                        <Ban size={17} aria-hidden="true" />
+                      ) : (
+                        <ShieldCheck size={17} aria-hidden="true" />
+                      )
+                    }
+                    onClick={openStatusAction}
+                  >
+                    {isDeactivateAction ? 'Deactivate owner' : 'Activate owner'}
+                  </Button>
+                </div>
               ) : undefined
             }
           />
 
-          <div className={css.accountStatusRow}>
-            <div className={css.accountStatusCopy}>
-              <span className={css.eyebrow}>Owner account status</span>
-              <div className={css.accountStatusValue}>
-                {detail ? (
-                  <StatusBadge {...USER_STATUS_PRESENTATION[detail.status]} />
-                ) : (
-                  <span className={css.loadingText}>Loading status...</span>
-                )}
-              </div>
-            </div>
-
-            <div className={css.ownerIdBlock}>
-              <span>Owner ID</span>
-              <strong>{ownerId}</strong>
-            </div>
-          </div>
-
-          {detail?.status === 'blocked' && detail.statusReason ? (
-            <div className={css.statusReason}>
-              <strong>Deactivation reason</strong>
-              <p>{detail.statusReason}</p>
-            </div>
-          ) : null}
-
           <div className={css.statisticsSection}>
-            <div className={css.sectionHeading}>
-              <div>
-                <p className={css.eyebrow}>Linked pharmacies</p>
-                <h2>Pharmacy status statistics</h2>
-              </div>
-
-              <p>
-                These are pharmacy moderation statuses. They are separate from
-                the owner account status above.
-              </p>
-            </div>
-
             {statistics ? (
               <StatsGrid
                 className={css.statistics}
                 ariaLabel="Linked pharmacy status statistics"
-                columns={6}
+                columns={5}
                 tabletColumns={3}
               >
-                <StatsCard
-                  title="All"
-                  value={statistics.all}
-                  tone="neutral"
-                  icon={<Building2 size={20} aria-hidden="true" />}
-                />
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.new.label}
                   value={statistics.new}
                   tone="blue"
-                  status={PHARMACY_STATUS_PRESENTATION.new}
+                  icon={<CirclePlus size={26} aria-hidden="true" />}
                 />
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.on_verification.label}
                   value={statistics.onVerification}
-                  tone="yellow"
-                  status={PHARMACY_STATUS_PRESENTATION.on_verification}
+                  tone="purple"
+                  icon={<BadgeCheck size={26} aria-hidden="true" />}
                 />
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.on_moderation.label}
                   value={statistics.onModeration}
-                  tone="accent"
-                  status={PHARMACY_STATUS_PRESENTATION.on_moderation}
+                  tone="orange"
+                  icon={<Clock3 size={26} aria-hidden="true" />}
                 />
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.active.label}
                   value={statistics.active}
                   tone="green"
-                  status={PHARMACY_STATUS_PRESENTATION.active}
+                  icon={<ShieldCheck size={26} aria-hidden="true" />}
                 />
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.blocked.label}
                   value={statistics.blocked}
                   tone="red"
-                  status={PHARMACY_STATUS_PRESENTATION.blocked}
+                  icon={<Ban size={26} aria-hidden="true" />}
                 />
               </StatsGrid>
             ) : (
-              <div className={css.statisticsLoading} role="status">
-                <LoadingSpinner label="Loading pharmacy statistics..." />
-              </div>
+              <StatsLoadingSkeleton
+                count={5}
+                columns={5}
+                tabletColumns={3}
+                label="Loading pharmacy statistics"
+              />
             )}
           </div>
         </div>
@@ -521,103 +526,139 @@ function PharmacyOwnerDetailsPageContent({
           />
 
           {activeTab === 'personal' ? (
-            isLoading || !detail ? (
-              <div className={css.personalLoading} role="status">
-                <LoadingSpinner label="Loading owner information..." />
-              </div>
-            ) : (
-              <div className={css.detailsGrid}>
-                <section className={css.visualCard} aria-label="Owner photo">
-                  {detail.pictureUrl ? (
-                    <span className={css.imageFrame}>
-                      <ShimmerImage
-                        src={detail.pictureUrl}
-                        alt={detail.name}
-                        className={css.ownerImage}
-                        sizes="(max-width: 767px) calc(100vw - 72px), (max-width: 1439px) 360px, 44vw"
-                        unoptimized
-                      />
-                    </span>
-                  ) : (
-                    <div className={css.imagePlaceholder} aria-hidden="true">
-                      <UserRound size={72} />
-                    </div>
-                  )}
-                </section>
+            <div className={css.personalTabStack}>
+              <ProfileSectionHeader
+                title="Personal information"
+                titleId="owner-personal-information-title"
+                description="Review the pharmacy owner's account identity and read-only contact details."
+                icon={<UserRound size={22} />}
+              />
 
-                <section className={css.detailsCard}>
-                  <h2>Personal information</h2>
-
-                  <dl className={css.detailsList}>
-                    <div>
-                      <dt>Account status</dt>
-                      <dd>
-                        <StatusBadge
-                          {...USER_STATUS_PRESENTATION[detail.status]}
+              {isLoading || !detail ? (
+                <ProfileResourceState
+                  variant="loading"
+                  title="Loading personal information"
+                  description="Please wait while the pharmacy owner details are loaded."
+                />
+              ) : (
+                <div className={css.detailsGrid}>
+                  <section className={css.visualCard} aria-label="Owner photo">
+                    {detail.pictureUrl ? (
+                      <span className={css.imageFrame}>
+                        <ShimmerImage
+                          src={detail.pictureUrl}
+                          alt={detail.name}
+                          className={css.ownerImage}
+                          sizes="(max-width: 767px) calc(100vw - 72px), (max-width: 1439px) 360px, 44vw"
+                          unoptimized
                         />
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Name</dt>
-                      <dd>{detail.name}</dd>
-                    </div>
-                    <div>
-                      <dt>Email</dt>
-                      <dd>
-                        <a href={`mailto:${detail.email}`}>
-                          <Mail size={17} aria-hidden="true" />
-                          {detail.email}
-                        </a>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Phone</dt>
-                      <dd>
-                        <a href={`tel:${detail.phone}`}>
-                          <Phone size={17} aria-hidden="true" />
-                          {detail.phone}
-                        </a>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Address</dt>
-                      <dd>
-                        {detail.address ? (
+                      </span>
+                    ) : (
+                      <div className={css.imagePlaceholder} aria-hidden="true">
+                        <UserRound size={72} />
+                      </div>
+                    )}
+                  </section>
+
+                  <section
+                    className={css.detailsCard}
+                    aria-labelledby="owner-personal-information-title"
+                  >
+                    <dl className={css.detailsList}>
+                      <div>
+                        <dt>Account status</dt>
+                        <dd>
+                          <StatusBadge
+                            {...USER_STATUS_PRESENTATION[detail.status]}
+                          />
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Owner ID</dt>
+                        <dd>{detail.id}</dd>
+                      </div>
+                      <div>
+                        <dt>Name</dt>
+                        <dd>{detail.name}</dd>
+                      </div>
+                      <div>
+                        <dt>Email</dt>
+                        <dd>
+                          <a href={`mailto:${detail.email}`}>
+                            <Mail size={17} aria-hidden="true" />
+                            {detail.email}
+                          </a>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Phone</dt>
+                        <dd>
+                          <a href={`tel:${detail.phone}`}>
+                            <Phone size={17} aria-hidden="true" />
+                            {detail.phone}
+                          </a>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Registration date</dt>
+                        <dd>
                           <span className={css.detailValueWithIcon}>
-                            <MapPin size={17} aria-hidden="true" />
-                            {detail.address}
+                            <CircleCheckBig size={17} aria-hidden="true" />
+                            <time dateTime={detail.registeredAt}>
+                              {formatOwnerDate(detail.registeredAt)}
+                            </time>
                           </span>
-                        ) : (
-                          '—'
-                        )}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Registration date</dt>
-                      <dd>
-                        <span className={css.detailValueWithIcon}>
-                          <CircleCheckBig size={17} aria-hidden="true" />
-                          <time dateTime={detail.registeredAt}>
-                            {formatOwnerDate(detail.registeredAt)}
-                          </time>
-                        </span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>Last personal data change</dt>
-                      <dd>
-                        <span className={css.detailValueWithIcon}>
-                          <Clock3 size={17} aria-hidden="true" />
-                          <time dateTime={detail.lastPersonalDataUpdateAt}>
-                            {formatOwnerDate(detail.lastPersonalDataUpdateAt)}
-                          </time>
-                        </span>
-                      </dd>
-                    </div>
-                  </dl>
-                </section>
-              </div>
-            )
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Last personal data change</dt>
+                        <dd>
+                          <span className={css.detailValueWithIcon}>
+                            <Clock3 size={17} aria-hidden="true" />
+                            <time dateTime={detail.lastPersonalDataUpdateAt}>
+                              {formatOwnerDate(detail.lastPersonalDataUpdateAt)}
+                            </time>
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+
+                    {detail.status === 'blocked' ? (
+                      <div
+                        className={`${css.statusSummary} ${css.statusSummaryBlocked}`}
+                      >
+                        <strong>Blocked owner</strong>
+                        <p>
+                          {detail.statusReason ||
+                            'The owner account is blocked and cannot access pharmacy management.'}
+                        </p>
+                      </div>
+                    ) : detail.status === 'active' ? (
+                      <div
+                        className={`${css.statusSummary} ${css.statusSummaryActive}`}
+                      >
+                        <strong>Active owner</strong>
+                        <p>
+                          The owner account is active and can access pharmacy
+                          management without account restrictions.
+                        </p>
+                      </div>
+                    ) : (
+                      <div
+                        className={`${css.statusSummary} ${css.statusSummaryNew}`}
+                      >
+                        <strong>New owner</strong>
+                        <p>
+                          The account is waiting for the first linked pharmacy
+                          to complete verification or moderation before it
+                          becomes active.
+                        </p>
+                      </div>
+                    )}
+                  </section>
+                </div>
+              )}
+            </div>
           ) : activeTab === 'pharmacies' ? (
             <LinkedPharmaciesTab
               ownerId={ownerId}

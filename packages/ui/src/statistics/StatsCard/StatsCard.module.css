@@ -84,6 +84,8 @@
 .blue,
 .green,
 .success,
+.purple,
+.orange,
 .yellow,
 .red,
 .gray {
@@ -99,6 +101,10 @@
 .green::after,
 .success::before,
 .success::after,
+.purple::before,
+.purple::after,
+.orange::before,
+.orange::after,
 .yellow::before,
 .yellow::after,
 .red::before,
@@ -116,6 +122,8 @@
 .blue::before,
 .green::before,
 .success::before,
+.purple::before,
+.orange::before,
 .yellow::before,
 .red::before,
 .gray::before {
@@ -129,6 +137,8 @@
 .blue::after,
 .green::after,
 .success::after,
+.purple::after,
+.orange::after,
 .yellow::after,
 .red::after,
 .gray::after {
@@ -146,6 +156,10 @@
 .green .value,
 .success .title,
 .success .value,
+.purple .title,
+.purple .value,
+.orange .title,
+.orange .value,
 .yellow .title,
 .yellow .value,
 .red .title,
@@ -159,6 +173,8 @@
 .blue .meta,
 .green .meta,
 .success .meta,
+.purple .meta,
+.orange .meta,
 .yellow .meta,
 .red .meta,
 .gray .meta {
@@ -169,13 +185,17 @@
 .blue .icon,
 .green .icon,
 .success .icon,
+.purple .icon,
+.orange .icon,
 .yellow .icon,
 .red .icon,
 .gray .icon {
   color: var(--color-white);
   background-color: var(--color-white-alpha-16);
   border: 1px solid var(--color-white-alpha-24);
-  filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--color-black) 12%, transparent));
+  filter: drop-shadow(
+    0 4px 10px color-mix(in srgb, var(--color-black) 12%, transparent)
+  );
 }
 
 .accent,
@@ -189,6 +209,14 @@
 
 .blue {
   background: var(--gradient-stat-info);
+}
+
+.purple {
+  background: var(--gradient-stat-purple);
+}
+
+.orange {
+  background: var(--gradient-stat-orange);
 }
 
 .yellow {

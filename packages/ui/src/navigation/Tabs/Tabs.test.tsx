@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { renderToStaticMarkup } from 'react-dom/server';
+import { UserRound } from 'lucide-react';
 
 import { TabPanel, Tabs } from './Tabs';
 
@@ -37,4 +38,31 @@ test('connects tabs and tabpanels with unique ARIA relationships', () => {
   assert.match(markup, /role="tabpanel"/);
   assert.match(markup, /aria-labelledby="details-tab-overview"/);
   assert.match(markup, /id="details-panel-reviews"[^>]*hidden/);
+});
+
+//===================================================================
+
+test('renders an optional icon before a tab label', () => {
+  const markup = renderToStaticMarkup(
+    <Tabs
+      idBase="icon-tabs"
+      items={[
+        {
+          value: 'personal',
+          label: 'Personal information',
+          icon: <UserRound data-testid="personal-tab-icon" />,
+        },
+      ]}
+      activeValue="personal"
+      ariaLabel="Owner details"
+      onChange={() => undefined}
+    />
+  );
+
+  assert.match(markup, /data-testid="personal-tab-icon"/);
+
+  assert.match(
+    markup,
+    /data-testid="personal-tab-icon"[\s\S]*Personal information/
+  );
 });

@@ -1,5 +1,6 @@
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 
+import { resolveAdminPharmacyOwnersRoute } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { ADMIN_ROUTES } from '@/lib/routes';
 
 //===================================================================
@@ -69,8 +70,30 @@ function isPathWithinRoute(pathname: string, route: string): boolean {
 //===================================================================
 
 export function getAdminBreadcrumbsByPathname(
-  pathname: string
+  pathname: string,
+  currentDetailLabel?: string
 ): readonly BreadcrumbItem[] {
+  if (isPathWithinRoute(pathname, ADMIN_ROUTES.PHARMACY_OWNERS)) {
+    const suffix = pathname
+      .slice(ADMIN_ROUTES.PHARMACY_OWNERS.length)
+      .replace(/^\/+|\/+$/g, '');
+
+    const route = resolveAdminPharmacyOwnersRoute(
+      suffix ? suffix.split('/') : []
+    );
+
+    if (route.kind === 'detail') {
+      return [
+        { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+        {
+          label: currentDetailLabel ?? `Owner #${route.ownerId}`,
+        },
+      ];
+    }
+
+    return [{ label: 'Pharmacy Owners' }];
+  }
+
   const route = BREADCRUMB_ROUTES.find((candidate) =>
     isPathWithinRoute(pathname, candidate.href)
   );

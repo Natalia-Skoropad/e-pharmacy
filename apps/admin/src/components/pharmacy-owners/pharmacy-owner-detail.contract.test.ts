@@ -46,18 +46,28 @@ test('owner detail implements account lifecycle actions with a required reason a
 
 //===================================================================
 
-test('owner detail keeps account status separate from linked pharmacy moderation statistics', () => {
+test('owner detail presents pharmacy moderation statistics without duplicating owner account UI', () => {
   const detail = read(
     './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
   );
 
   assert.match(detail, /InfoTooltip/);
+  assert.match(detail, /icon=\{<UserCog/);
   assert.match(detail, /Owner account status/);
-  assert.match(detail, /Pharmacy status statistics/);
+  assert.match(detail, /Pharmacy moderation statuses/);
   assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_verification/);
   assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_moderation/);
   assert.match(detail, /USER_STATUS_PRESENTATION\[detail\.status\]/);
-  assert.match(detail, /They are separate from[\s\S]*owner account status/);
+  assert.match(detail, /These are pharmacy moderation statuses\./);
+  assert.match(detail, /StatsLoadingSkeleton/);
+  assert.match(detail, /count=\{5\}/);
+  assert.match(detail, /tone="purple"/);
+  assert.match(detail, /tone="orange"/);
+
+  assert.doesNotMatch(detail, /Pharmacy status statistics/);
+  assert.doesNotMatch(detail, /<h2>Linked pharmacies<\/h2>/);
+  assert.doesNotMatch(detail, /css\.accountStatusRow/);
+  assert.doesNotMatch(detail, /statistics\.all/);
 });
 
 //===================================================================
@@ -83,15 +93,22 @@ test('owner personal information is read-only and has explicit not-found, forbid
     './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
   );
 
+  assert.match(detail, /ProfileSectionHeader/);
   assert.match(detail, /Personal information/);
+  assert.match(detail, /Owner ID/);
+  assert.match(detail, /detail\.id/);
   assert.match(detail, /Registration date/);
   assert.match(detail, /Last personal data change/);
+  assert.match(detail, /Loading personal information/);
+  assert.match(detail, /Active owner/);
+  assert.match(detail, /Blocked owner/);
   assert.match(detail, /NotFoundPage/);
   assert.match(detail, /loadError === ['"]forbidden['"]/);
   assert.match(detail, /ProfileResourceState/);
   assert.match(detail, /Pharmacy owner details could not be loaded/);
   assert.match(detail, /sideActionOnDesktop/);
 
+  assert.doesNotMatch(detail, /<dt>Address<\/dt>|MapPin|detail\.address/);
   assert.doesNotMatch(
     detail,
     /update.*Profile|save.*Personal|PersonalDataForm/

@@ -49,6 +49,34 @@ test('nested admin routes expose their group and child labels', () => {
 
 //===================================================================
 
+test('pharmacy owner detail breadcrumbs link back to the list and accept the loaded owner name', () => {
+  const ownerId = '507f1f77bcf86cd799439011';
+  const pathname = `${ADMIN_ROUTES.PHARMACY_OWNERS}/${ownerId}`;
+
+  assert.deepEqual(getAdminBreadcrumbsByPathname(pathname), [
+    { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+    { label: `Owner #${ownerId}` },
+  ]);
+
+  assert.deepEqual(getAdminBreadcrumbsByPathname(pathname, 'Nata Six'), [
+    { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+    { label: 'Nata Six' },
+  ]);
+});
+
+//===================================================================
+
+test('pharmacy owner filter routes keep the list breadcrumb only', () => {
+  assert.deepEqual(
+    getAdminBreadcrumbsByPathname(
+      `${ADMIN_ROUTES.PHARMACY_OWNERS}/status-active`
+    ),
+    [{ label: 'Pharmacy Owners' }]
+  );
+});
+
+//===================================================================
+
 test('unknown admin routes do not invent breadcrumb labels', () => {
   assert.deepEqual(getAdminBreadcrumbsByPathname('/admin/unknown'), []);
 });

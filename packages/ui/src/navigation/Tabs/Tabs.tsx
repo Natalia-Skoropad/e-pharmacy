@@ -21,6 +21,7 @@ import css from './Tabs.module.css';
 export type TabItem<TValue extends string = string> = {
   value: TValue;
   label: string;
+  icon?: ReactNode;
 };
 
 export type TabsLabels = {
@@ -358,7 +359,12 @@ function Tabs<TValue extends string = string>({
               aria-checked={isActive}
               onClick={() => handleTabClick(item.value)}
             >
-              {item.label}
+              {item.icon ? (
+                <span className={css.tabIcon} aria-hidden="true">
+                  {item.icon}
+                </span>
+              ) : null}
+              <span>{item.label}</span>
             </button>
           );
         })}
@@ -403,7 +409,12 @@ function Tabs<TValue extends string = string>({
             onClick={() => handleTabClick(item.value)}
             onKeyDown={(event) => handleTabKeyDown(event, index)}
           >
-            {item.label}
+            {item.icon ? (
+              <span className={css.tabIcon} aria-hidden="true">
+                {item.icon}
+              </span>
+            ) : null}
+            <span>{item.label}</span>
           </button>
         );
       })}

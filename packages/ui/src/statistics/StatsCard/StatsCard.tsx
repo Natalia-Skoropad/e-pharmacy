@@ -14,6 +14,8 @@ export type StatsCardTone =
   | 'blue'
   | 'green'
   | 'success'
+  | 'purple'
+  | 'orange'
   | 'yellow'
   | 'red'
   | 'gray';

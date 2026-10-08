@@ -18,6 +18,8 @@ test('admin cabinet composes shared shell primitives without business fetching',
   assert.match(shellSource, /<AdminSidebar/);
   assert.match(shellSource, /<AdminHeader/);
   assert.match(shellSource, /getAdminBreadcrumbsByPathname/);
+  assert.match(shellSource, /subscribeToAdminBreadcrumbLabels/);
+  assert.match(shellSource, /currentDetailLabel/);
   assert.match(shellSource, /pathname === ADMIN_ROUTES\.PROFILE/);
 
   assert.doesNotMatch(

@@ -17,6 +17,7 @@
 .tab,
 .tabActive {
   display: inline-flex;
+  gap: 9px;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
@@ -31,6 +32,18 @@
     color var(--transition-base),
     background-color var(--transition-base),
     border-color var(--transition-base);
+}
+
+.tabIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+}
+
+.tabIcon svg {
+  width: 17px;
+  height: 17px;
 }
 
 .tab {
@@ -104,7 +117,9 @@
 
 .moreItem,
 .moreItemActive {
-  display: block;
+  display: flex;
+  gap: 9px;
+  align-items: center;
   width: 100%;
   min-height: 40px;
   padding: 8px 12px;
