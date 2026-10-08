@@ -91,10 +91,6 @@
   width: 100%;
 }
 
-.commentError {
-  bottom: 8px;
-}
-
 .dangerButton {
   color: var(--color-white);
   background-color: var(--color-error);

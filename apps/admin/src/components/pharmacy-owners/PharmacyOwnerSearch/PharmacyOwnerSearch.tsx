@@ -135,7 +135,11 @@ export function PharmacyOwnerSearch({
     selectedOwnerResult?.value === value ? selectedOwnerResult.owner : null;
 
   const hasCurrentSuggestions = suggestionsResult?.query === debouncedQuery;
-  const owners = hasCurrentSuggestions ? suggestionsResult.items : [];
+
+  const owners = useMemo(
+    () => (hasCurrentSuggestions ? (suggestionsResult?.items ?? []) : []),
+    [hasCurrentSuggestions, suggestionsResult]
+  );
 
   const isOptionsLoading =
     !hasCurrentSuggestions ||

@@ -26,6 +26,8 @@ export type ConfirmationModalProps = {
   cancelButtonClassName?: string;
   confirmButtonVariant?: ButtonVariant;
   cancelButtonVariant?: ButtonVariant;
+  confirmIconLeft?: ReactNode;
+  cancelIconLeft?: ReactNode;
   buttonSize?: ButtonSize;
   closeOnBackdrop?: boolean;
   closeOnEscape?: boolean;
@@ -47,6 +49,8 @@ function ConfirmationModal({
   cancelButtonClassName,
   confirmButtonVariant = 'primary',
   cancelButtonVariant = 'secondary',
+  confirmIconLeft,
+  cancelIconLeft,
   buttonSize = 'md',
   closeOnBackdrop = true,
   closeOnEscape = true,
@@ -87,6 +91,7 @@ function ConfirmationModal({
             className={confirmButtonClassName}
             variant={confirmButtonVariant}
             size={buttonSize}
+            iconLeft={confirmIconLeft}
             isLoading={isLoading}
             disabled={isLoading}
             onClick={onConfirm}
@@ -100,6 +105,7 @@ function ConfirmationModal({
             className={cancelButtonClassName}
             variant={cancelButtonVariant}
             size={buttonSize}
+            iconLeft={cancelIconLeft}
             disabled={isLoading}
             onClick={onCancel}
           >

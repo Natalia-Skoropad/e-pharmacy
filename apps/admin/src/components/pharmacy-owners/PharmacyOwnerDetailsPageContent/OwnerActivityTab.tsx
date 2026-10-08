@@ -1,16 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import {
   CirclePlus,
   Eye,
+  History,
   Palette,
   PencilLine,
   RefreshCw,
+  Search,
   Trash2,
+  UsersRound,
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
+
 import {
   CountLabel,
   DataTable,
@@ -19,26 +24,37 @@ import {
   TableHeaderTitle,
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
+
 import {
   RowsPerPageSelect,
+  SearchableSelect,
   type RowsPerPageValue,
+  type SearchableSelectOption,
 } from '@e-pharmacy/ui/forms';
+
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-import { Button } from '@e-pharmacy/ui/primitives';
-import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
 
 import {
   getAdminAuditActors,
   getAdminAuditLogDetails,
 } from '@/lib/api/browser/admin-audit.api';
+
 import { getAdminPharmacyOwnerActivity } from '@/lib/api/browser/admin-pharmacy-owners.api';
+
 import type {
   AdminAuditActor,
   AdminAuditDetails,
   AdminAuditListResponse,
 } from '@/lib/audit/admin-audit';
+
 import {
   getAdminAuditActionLabel,
   getAdminAuditChangeTone,
@@ -46,6 +62,13 @@ import {
 } from '@/lib/audit/admin-audit-presentation';
 
 import { ActivityActorIdentity } from '@/components/activity/ActivityActorIdentity';
+
+import {
+  ActivityFiltersDrawer,
+  DEFAULT_ACTIVITY_HISTORY_FILTERS,
+  type ActivityHistoryFilters,
+} from '@/components/activity/ActivityFiltersDrawer';
+
 import { AuditDetailsModal } from '@/components/activity/AuditDetailsModal';
 import activityCss from '@/components/activity/ActivityHistory.module.css';
 
@@ -66,8 +89,16 @@ function getErrorMessage(error: unknown): string {
     return 'The request took too long. Please try again.';
   }
 
+  if (error.transportCode === 'INVALID_RESPONSE') {
+    return 'Activity history received an unexpected server response. Please try again.';
+  }
+
   if (error.httpStatus === 403) {
     return 'You do not have permission to view this activity history.';
+  }
+
+  if (error.httpStatus && error.httpStatus >= 500) {
+    return 'Activity history is temporarily unavailable. Please try again later.';
   }
 
   return 'Activity history could not be loaded. Please try again.';
@@ -88,6 +119,60 @@ function getChangeToneClassName(
 
 //===================================================================
 
+function createEmployeeOptions(
+  actors: readonly AdminAuditActor[]
+): Array<SearchableSelectOption<string>> {
+  return [
+    { value: '', label: 'All employees' },
+    ...actors
+      .filter((actor) => actor.actorType === 'employee')
+      .map((actor) => ({
+        value: actor.id,
+        label: actor.name,
+        leading: (
+          <TableImagePreview
+            src={actor.pictureUrl}
+            alt={`${actor.name} photo`}
+            fallback={formatInitials(actor.name, 'A')}
+            size={30}
+          />
+        ),
+        searchText: [actor.id, actor.email, actor.phone]
+          .filter(Boolean)
+          .join(' '),
+      })),
+  ];
+}
+
+//===================================================================
+
+function createOwnerOptions(
+  actors: readonly AdminAuditActor[]
+): Array<SearchableSelectOption<string>> {
+  return [
+    { value: '', label: 'All pharmacy owners' },
+    ...actors
+      .filter((actor) => actor.actorType === 'pharmacyOwner')
+      .map((actor) => ({
+        value: actor.id,
+        label: actor.name,
+        leading: (
+          <TableImagePreview
+            src={actor.pictureUrl}
+            alt={`${actor.name} photo`}
+            fallback={formatInitials(actor.name, 'O')}
+            size={30}
+          />
+        ),
+        searchText: [actor.id, actor.email, actor.phone]
+          .filter(Boolean)
+          .join(' '),
+      })),
+  ];
+}
+
+//===================================================================
+
 type OwnerActivityTabProps = Readonly<{
   ownerId: string;
 }>;
@@ -95,26 +180,47 @@ type OwnerActivityTabProps = Readonly<{
 //===================================================================
 
 export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
+  const [filters, setFilters] = useState<ActivityHistoryFilters>(
+    DEFAULT_ACTIVITY_HISTORY_FILTERS
+  );
+
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState<RowsPerPageValue>(20);
   const [data, setData] = useState<AdminAuditListResponse | null>(null);
   const [dataOwnerId, setDataOwnerId] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
   const [reloadVersion, setReloadVersion] = useState(0);
-  const [settledRequestKey, setSettledRequestKey] = useState<string | null>(null);
 
+  const [settledRequestKey, setSettledRequestKey] = useState<string | null>(
+    null
+  );
+
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [actors, setActors] = useState<readonly AdminAuditActor[]>([]);
+  const [areActorsLoading, setAreActorsLoading] = useState(true);
   const [selectedAuditId, setSelectedAuditId] = useState<string | null>(null);
   const [details, setDetails] = useState<AdminAuditDetails | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [detailsReloadVersion, setDetailsReloadVersion] = useState(0);
 
-  const requestKey = `${ownerId}:${page}:${perPage}:${reloadVersion}`;
+  const requestKey = [
+    ownerId,
+    page,
+    perPage,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.action,
+    filters.section,
+    filters.actorType,
+    filters.employeeUserId,
+    filters.ownerUserId,
+    reloadVersion,
+  ].join('|');
+
   const isLoading = settledRequestKey !== requestKey;
   const visibleData = dataOwnerId === ownerId ? data : null;
-  const visibleListError =
-    settledRequestKey === requestKey ? listError : null;
+  const visibleListError = settledRequestKey === requestKey ? listError : null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -123,8 +229,13 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
       .then((response) => {
         if (!controller.signal.aborted) setActors(response.items);
       })
+
       .catch(() => {
         if (!controller.signal.aborted) setActors([]);
+      })
+
+      .finally(() => {
+        if (!controller.signal.aborted) setAreActorsLoading(false);
       });
 
     return () => controller.abort();
@@ -132,10 +243,22 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
 
   useEffect(() => {
     const controller = new AbortController();
+    const currentRequestKey = requestKey;
 
     void getAdminPharmacyOwnerActivity(
       ownerId,
-      { page, perPage },
+      {
+        page,
+        perPage,
+        ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
+        ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
+        ...(filters.action ? { action: filters.action } : {}),
+        ...(filters.section ? { section: filters.section } : {}),
+        ...(filters.actorType ? { actorType: filters.actorType } : {}),
+        ...(filters.employeeUserId || filters.ownerUserId
+          ? { actorUserId: filters.employeeUserId || filters.ownerUserId }
+          : {}),
+      },
       { signal: controller.signal }
     )
       .then((response) => {
@@ -143,16 +266,18 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
         setData(response);
         setDataOwnerId(ownerId);
         setListError(null);
-        setSettledRequestKey(requestKey);
+        setSettledRequestKey(currentRequestKey);
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
+        setData(null);
+        setDataOwnerId(ownerId);
         setListError(getErrorMessage(error));
-        setSettledRequestKey(requestKey);
+        setSettledRequestKey(currentRequestKey);
       });
 
     return () => controller.abort();
-  }, [ownerId, page, perPage, requestKey]);
+  }, [filters, ownerId, page, perPage, reloadVersion, requestKey]);
 
   useEffect(() => {
     if (!selectedAuditId) return;
@@ -165,9 +290,11 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
       .then((response) => {
         if (!controller.signal.aborted) setDetails(response.auditLog);
       })
+
       .catch((error: unknown) => {
         if (!controller.signal.aborted) setDetailsError(getErrorMessage(error));
       })
+
       .finally(() => {
         if (!controller.signal.aborted) setIsDetailsLoading(false);
       });
@@ -179,6 +306,24 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
     () => new Map(actors.map((actor) => [actor.id, actor] as const)),
     [actors]
   );
+
+  const employeeOptions = useMemo(
+    () => createEmployeeOptions(actors),
+    [actors]
+  );
+
+  const ownerOptions = useMemo(() => createOwnerOptions(actors), [actors]);
+
+  const activeFiltersCount = [
+    filters.dateFrom || filters.dateTo,
+    filters.action,
+    filters.section,
+    filters.actorType,
+    filters.employeeUserId,
+    filters.ownerUserId,
+  ].filter(Boolean).length;
+
+  const hasFilters = activeFiltersCount > 0;
 
   const openDetails = useCallback((auditLogId: string) => {
     setDetails(null);
@@ -239,7 +384,8 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
               items={[
                 {
                   title: 'Added',
-                  description: 'Green marks newly created records and additions.',
+                  description:
+                    'Green marks newly created records and additions.',
                   icon: (
                     <CirclePlus
                       className={activityCss.legendSuccess}
@@ -272,7 +418,8 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
                 },
                 {
                   title: 'Status changes',
-                  description: 'Status changes use the color of the resulting status.',
+                  description:
+                    'Status changes use the color of the resulting status.',
                   icon: <RefreshCw size={17} aria-hidden="true" />,
                 },
               ]}
@@ -286,7 +433,9 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
 
           return (
             <span className={activityCss.changeCell}>
-              <strong className={`${activityCss.changeAction} ${toneClassName}`}>
+              <strong
+                className={`${activityCss.changeAction} ${toneClassName}`}
+              >
                 {getAdminAuditActionLabel(item.action)}
               </strong>
               {transition ? (
@@ -329,36 +478,146 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
     [actorById, openDetails]
   );
 
+  const updateFilters = (nextFilters: ActivityHistoryFilters) => {
+    setFilters(nextFilters);
+    setPage(1);
+  };
+
+  const updateEmployee = (employeeUserId: string) => {
+    updateFilters({
+      ...filters,
+      employeeUserId,
+      ownerUserId: '',
+      actorType:
+        employeeUserId && filters.actorType !== 'employee'
+          ? ''
+          : filters.actorType,
+    });
+  };
+
+  const updateOwner = (ownerUserId: string) => {
+    updateFilters({
+      ...filters,
+      ownerUserId,
+      employeeUserId: '',
+      actorType:
+        ownerUserId && filters.actorType !== 'pharmacyOwner'
+          ? ''
+          : filters.actorType,
+    });
+  };
+
   const retryList = () => {
     setListError(null);
     setReloadVersion((value) => value + 1);
   };
 
+  const resetFilters = () => updateFilters(DEFAULT_ACTIVITY_HISTORY_FILTERS);
+
   return (
-    <section className={css.resourceCard} aria-label="Pharmacy owner activity history">
-      <div className={css.activityStack}>
-        <div className={css.activityToolbar}>
-          <RowsPerPageSelect
-            id="owner-activity-rows-per-page"
-            value={perPage}
-            disabled={isLoading}
-            onChange={(value) => {
-              setPerPage(value);
-              setPage(1);
-            }}
+    <section
+      className={css.resourceCard}
+      aria-labelledby="owner-activity-history-title"
+    >
+      <ProfileSectionHeader
+        title="Activity history"
+        titleId="owner-activity-history-title"
+        description="Review the immutable history of changes related to this pharmacy owner, including owner, document, comment, and linked-pharmacy events."
+        icon={<History size={22} />}
+      />
+
+      <div className={activityCss.searchGrid}>
+        <SearchableSelect
+          id="owner-activity-employee-search"
+          label="Search by employee"
+          labelAccessory={
+            <InfoTooltip
+              label="Employee search help"
+              title="Employee search"
+              icon={<UsersRound size={20} aria-hidden="true" />}
+              items={[
+                {
+                  title: 'Search fields',
+                  description:
+                    'Search by employee name, ID, email, or phone number.',
+                  icon: <Search size={17} aria-hidden="true" />,
+                },
+              ]}
+            />
+          }
+          value={filters.employeeUserId}
+          options={employeeOptions}
+          placeholder="Name, ID, email, or phone"
+          emptyMessage="No employees found"
+          isActive={Boolean(filters.employeeUserId)}
+          isLoading={areActorsLoading}
+          onChange={updateEmployee}
+        />
+
+        <SearchableSelect
+          id="owner-activity-owner-search"
+          label="Search by pharmacy owner"
+          labelAccessory={
+            <InfoTooltip
+              label="Pharmacy owner search help"
+              title="Pharmacy owner search"
+              icon={<UsersRound size={20} aria-hidden="true" />}
+              items={[
+                {
+                  title: 'Search fields',
+                  description:
+                    'Search by pharmacy owner name, ID, email, or phone number.',
+                  icon: <Search size={17} aria-hidden="true" />,
+                },
+              ]}
+            />
+          }
+          value={filters.ownerUserId}
+          options={ownerOptions}
+          placeholder="Name, ID, email, or phone"
+          emptyMessage="No pharmacy owners found"
+          isActive={Boolean(filters.ownerUserId)}
+          isLoading={areActorsLoading}
+          onChange={updateOwner}
+        />
+
+        <div className={activityCss.searchAction}>
+          <FiltersButton
+            activeCount={activeFiltersCount}
+            controlsId="activity-history-filters-panel"
+            isExpanded={isFiltersOpen}
+            onClick={() => setIsFiltersOpen(true)}
+            className={activityCss.filterButton}
           />
+        </div>
+      </div>
+
+      <div className={css.activityStack}>
+        <div className={activityCss.toolbar}>
+          <div className={activityCss.rowsControl}>
+            <RowsPerPageSelect
+              id="owner-activity-rows-per-page"
+              value={perPage}
+              disabled={isLoading}
+              onChange={(value) => {
+                setPerPage(value);
+                setPage(1);
+              }}
+            />
+          </div>
 
           {visibleData ? (
             <CountLabel
-              className={css.activityCount}
+              className={activityCss.countLabel}
               shown={visibleData.items.length}
               total={visibleData.total}
               label="records"
+              fullWidthOnMobile
             />
           ) : null}
         </div>
 
-        {!visibleData && visibleListError ? (
+        {visibleListError ? (
           <ProfileResourceState
             variant="error"
             title="Activity history could not be loaded"
@@ -368,15 +627,6 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
           />
         ) : (
           <>
-            {visibleListError && visibleData ? (
-              <div className={css.inlineError} role="alert">
-                <span>{visibleListError}</span>
-                <Button type="button" variant="secondary" size="sm" onClick={retryList}>
-                  Retry
-                </Button>
-              </div>
-            ) : null}
-
             <DataTable
               columns={columns}
               items={visibleData?.items ?? []}
@@ -388,7 +638,9 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
                 loading: visibleData
                   ? 'Refreshing owner activity history...'
                   : 'Loading owner activity history...',
-                empty: 'Activity history is empty.',
+                empty: hasFilters
+                  ? 'No activity matches the selected filters.'
+                  : 'Activity history is empty.',
               }}
             />
 
@@ -398,14 +650,23 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
                 totalPages={visibleData.totalPages}
                 disabled={isLoading}
                 ariaLabel="Pharmacy owner activity pagination"
-                onPageChange={(nextPage) => {
-                  setPage(nextPage);
-                }}
+                onPageChange={setPage}
               />
             ) : null}
           </>
         )}
       </div>
+
+      {isFiltersOpen ? (
+        <ActivityFiltersDrawer
+          filters={filters}
+          hasActiveFilters={hasFilters}
+          minDate={visibleData?.earliestCreatedAt ?? undefined}
+          onChange={updateFilters}
+          onClose={() => setIsFiltersOpen(false)}
+          onReset={resetFilters}
+        />
+      ) : null}
 
       <AuditDetailsModal
         isOpen={selectedAuditId !== null}

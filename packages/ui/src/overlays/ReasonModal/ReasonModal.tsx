@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquareText } from 'lucide-react';
+import { Ban, CircleCheckBig, MessageSquareText, X } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 import clsx from 'clsx';
 
@@ -105,7 +105,6 @@ function ReasonModal({
           required
           value={value}
           error={error}
-          errorClassName={css.commentError}
           isTouched
           maxLength={maxLength}
           disabled={isLoading}
@@ -124,6 +123,7 @@ function ReasonModal({
           <Button
             type="button"
             variant="secondary"
+            iconLeft={<X size={17} aria-hidden="true" />}
             disabled={isLoading}
             onClick={handleCancel}
           >
@@ -133,6 +133,13 @@ function ReasonModal({
           <Button
             className={tone === 'danger' ? css.dangerButton : undefined}
             type="button"
+            iconLeft={
+              tone === 'danger' ? (
+                <Ban size={17} aria-hidden="true" />
+              ) : (
+                <CircleCheckBig size={17} aria-hidden="true" />
+              )
+            }
             isLoading={isLoading}
             disabled={Boolean(error) || isLoading}
             onClick={onConfirm}

@@ -53,12 +53,13 @@ test('owner detail presents pharmacy moderation statistics without duplicating o
 
   assert.match(detail, /InfoTooltip/);
   assert.match(detail, /icon=\{<UserCog/);
+  assert.match(detail, /escapeOverflow/);
   assert.match(detail, /Owner account status/);
-  assert.match(detail, /Pharmacy moderation statuses/);
+  assert.match(detail, /Linked pharmacy overview/);
   assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_verification/);
   assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_moderation/);
   assert.match(detail, /USER_STATUS_PRESENTATION\[detail\.status\]/);
-  assert.match(detail, /These are pharmacy moderation statuses\./);
+  assert.match(detail, /These are pharmacy-level values/);
   assert.match(detail, /StatsLoadingSkeleton/);
   assert.match(detail, /count=\{5\}/);
   assert.match(detail, /tone="purple"/);
@@ -107,6 +108,8 @@ test('owner personal information is read-only and has explicit not-found, forbid
   assert.match(detail, /ProfileResourceState/);
   assert.match(detail, /Pharmacy owner details could not be loaded/);
   assert.match(detail, /sideActionOnDesktop/);
+  assert.match(detail, /No profile photo yet/);
+  assert.match(detail, /ImageOff/);
 
   assert.doesNotMatch(detail, /<dt>Address<\/dt>|MapPin|detail\.address/);
   assert.doesNotMatch(
@@ -130,5 +133,7 @@ test('order cancellation reuses the shared reason modal styles and behavior', ()
   assert.match(orderModal, /buildOrderRejectionReasonError/);
   assert.match(sharedModal, /CommentInput/);
   assert.match(sharedModal, /MessageSquareText/);
+  assert.match(sharedModal, /iconLeft=\{<X/);
+  assert.match(sharedModal, /tone === 'danger'/);
   assert.match(sharedModal, /requestError/);
 });

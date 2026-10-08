@@ -29,40 +29,8 @@
   min-width: 0;
 }
 
-.activityToolbar {
-  display: flex;
-  gap: 16px;
-  align-items: end;
-  justify-content: space-between;
-  min-width: 0;
-}
-
-.activityCount {
-  margin-left: auto;
-}
-
-.inlineError {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border: 1px solid var(--color-danger-border, #efc6c6);
-  border-radius: var(--radius-md);
-}
-
 @media only screen and (max-width: 640px) {
   .resourceCard {
     padding: 14px;
-  }
-
-  .activityToolbar,
-  .inlineError {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .activityCount {
-    margin-left: 0;
   }
 }

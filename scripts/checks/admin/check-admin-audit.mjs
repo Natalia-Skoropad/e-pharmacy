@@ -622,7 +622,8 @@ assert.match(
   /actor\.actorType === 'pharmacyOwner'[\s\S]*?PHARMACY_OWNERS/
 );
 
-assert.match(pharmacyOwnerDetailsPage, /ActivityPharmacyOwnerDetails/);
+assert.match(pharmacyOwnerDetailsPage, /PharmacyOwnerDetailsPageContent/);
+assert.doesNotMatch(pharmacyOwnerDetailsPage, /ActivityPharmacyOwnerDetails/);
 assert.match(activityFilters, /label="Changed by"/);
 assert.match(activityFilters, /pharmacyOwner:\s*'Pharmacy owner'/);
 assert.match(activityFilters, /pharmacyEmployee:\s*'Pharmacy employee'/);

@@ -27,6 +27,7 @@ import { adminApiRoutes as ADMIN_API_ROUTES } from '@/lib/api/routes/admin-api-r
 
 import {
   parseAdminAuditListResponse,
+  type AdminAuditQueryParams,
   type AdminAuditListResponse,
 } from '@/lib/audit/admin-audit';
 
@@ -71,10 +72,19 @@ export type AdminPharmacyOwnerPharmaciesQueryParams = Readonly<{
   perPage?: 20 | 50 | 100;
 }>;
 
-export type AdminPharmacyOwnerActivityQueryParams = Readonly<{
-  page?: number;
-  perPage?: 20 | 50 | 100;
-}>;
+export type AdminPharmacyOwnerActivityQueryParams = Readonly<
+  Pick<
+    AdminAuditQueryParams,
+    | 'page'
+    | 'perPage'
+    | 'dateFrom'
+    | 'dateTo'
+    | 'action'
+    | 'section'
+    | 'actorUserId'
+    | 'actorType'
+  >
+>;
 
 //===================================================================
 

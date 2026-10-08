@@ -12,6 +12,7 @@ import {
   Clock3,
   Files,
   History,
+  ImageOff,
   Mail,
   MessageSquareText,
   Phone,
@@ -418,17 +419,18 @@ function PharmacyOwnerDetailsPageContent({
                   label="About pharmacy owner details"
                   title="Pharmacy owner details"
                   icon={<UserCog size={20} aria-hidden="true" />}
+                  escapeOverflow
                   items={[
                     {
                       title: 'Owner account status',
                       description:
-                        'New, Active, or Blocked controls the owner account access and is managed separately from pharmacy moderation.',
+                        'The account status controls whether the owner can access the cabinet. Activate or Deactivate changes this owner-level access state.',
                       icon: <ShieldCheck size={17} aria-hidden="true" />,
                     },
                     {
-                      title: 'Pharmacy moderation statuses',
+                      title: 'Linked pharmacy overview',
                       description:
-                        'These are pharmacy moderation statuses. They are separate from the owner account status.',
+                        'The colored cards summarize linked pharmacies by their current moderation status. These are pharmacy-level values, not a second owner account status.',
                       icon: <Building2 size={17} aria-hidden="true" />,
                     },
                   ]}
@@ -554,8 +556,25 @@ function PharmacyOwnerDetailsPageContent({
                         />
                       </span>
                     ) : (
-                      <div className={css.imagePlaceholder} aria-hidden="true">
-                        <UserRound size={72} />
+                      <div className={css.imagePlaceholder}>
+                        <div
+                          className={css.imagePlaceholderVisual}
+                          aria-hidden="true"
+                        >
+                          <span className={css.imagePlaceholderIcon}>
+                            <UserRound size={58} />
+                          </span>
+                          <span className={css.imagePlaceholderBadge}>
+                            <ImageOff size={16} />
+                          </span>
+                        </div>
+
+                        <div className={css.imagePlaceholderCopy}>
+                          <strong>No profile photo yet</strong>
+                          <span>
+                            The pharmacy owner has not uploaded a profile photo.
+                          </span>
+                        </div>
                       </div>
                     )}
                   </section>

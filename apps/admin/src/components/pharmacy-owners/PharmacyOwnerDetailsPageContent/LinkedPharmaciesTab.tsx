@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Building2 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
@@ -10,7 +11,12 @@ import type { AdminPharmacyOwnerPharmaciesResponse } from '@e-pharmacy/types/adm
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
 
 import { getAdminPharmacyOwnerPharmacies } from '@/lib/api/browser/admin-pharmacy-owners.api';
 
@@ -232,7 +238,12 @@ export function LinkedPharmaciesTab({
   return (
     <div className={css.linkedPharmaciesStack}>
       <section className={css.tabSectionCard}>
-        <h2>Linked pharmacies</h2>
+        <ProfileSectionHeader
+          title="Linked pharmacies"
+          titleId="owner-linked-pharmacies-title"
+          description="Review every pharmacy linked to this owner and narrow the list by pharmacy details, status, rating, or creation date."
+          icon={<Building2 size={22} />}
+        />
 
         <div className={css.linkedPharmaciesSearchGrid}>
           <LinkedPharmacySearch
@@ -287,17 +298,13 @@ export function LinkedPharmaciesTab({
           </div>
 
           {listError ? (
-            <div className={css.linkedPharmaciesError} role="alert">
-              <p>{listError}</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => setReloadVersion((version) => version + 1)}
-              >
-                Retry pharmacies
-              </Button>
-            </div>
+            <ProfileResourceState
+              variant="error"
+              title="Linked pharmacies could not be loaded"
+              description={listError}
+              retryLabel="Retry pharmacies"
+              onRetry={() => setReloadVersion((version) => version + 1)}
+            />
           ) : (
             <LinkedPharmaciesTable
               pharmacies={data?.items ?? []}

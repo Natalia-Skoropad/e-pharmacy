@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MessageSquareLock } from 'lucide-react';
+import { MessageSquareLock, Trash2, X } from 'lucide-react';
 
 import type { AdminPharmacyOwnerComment } from '@e-pharmacy/types/admin';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -291,6 +291,8 @@ export function OwnerCommentsTab({
         description="The comment will be permanently removed. The deletion itself remains recorded in Activity history."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"
+        confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         confirmButtonClassName={css.dangerConfirmButton}
         isLoading={Boolean(deletingId)}
         onConfirm={() => void handleDelete()}

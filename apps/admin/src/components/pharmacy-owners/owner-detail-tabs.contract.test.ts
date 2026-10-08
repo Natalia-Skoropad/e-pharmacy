@@ -57,6 +57,8 @@ test('owner admin comments show author data and update tab count after create an
   );
 
   assert.match(source, /The owner cannot see these notes/);
+  assert.match(source, /confirmIconLeft=\{<Trash2/);
+  assert.match(source, /cancelIconLeft=\{<X/);
 });
 
 //===================================================================
@@ -69,6 +71,12 @@ test('owner activity uses the scoped owner endpoint and mirrors global audit pre
   assert.match(source, /getAdminAuditStatusTransitionLabel/);
   assert.match(source, /<ActivityActorIdentity/);
   assert.match(source, /<AuditDetailsModal/);
+  assert.match(source, /<ProfileSectionHeader/);
+  assert.match(source, /<SearchableSelect/);
+  assert.match(source, /<ActivityFiltersDrawer/);
+  assert.match(source, /label="Search by employee"/);
+  assert.match(source, /label="Search by pharmacy owner"/);
+  assert.match(source, /fullWidthOnMobile/);
   assert.match(source, /key: 'entity'/);
   assert.match(source, /key: 'fields'/);
   assert.match(source, /key: 'details'/);

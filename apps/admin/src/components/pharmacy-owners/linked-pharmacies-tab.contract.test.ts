@@ -36,6 +36,9 @@ test('linked pharmacies tab is URL-driven and includes search, modal filters, ro
   assert.match(tab, /buildAdminPharmacyOwnerPharmaciesApiParams/);
   assert.match(tab, /buildAdminPharmacyOwnerPharmaciesUrl/);
   assert.match(tab, /LinkedPharmacySearch/);
+  assert.match(tab, /ProfileSectionHeader/);
+  assert.match(tab, /Linked pharmacies/);
+  assert.match(tab, /ProfileResourceState/);
   assert.match(tab, /LinkedPharmaciesFiltersDrawer/);
   assert.match(tab, /RowsPerPageSelect/);
   assert.match(tab, /CountLabel/);

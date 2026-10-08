@@ -17,6 +17,8 @@ import {
   positivePageSchema,
 } from './shared';
 
+import { adminAuditListQuerySchema } from './admin-audit.schema';
+
 //===============================================================
 
 const ADMIN_OWNER_SEARCH_MAX_LENGTH = 120;
@@ -143,15 +145,7 @@ export const adminPharmacyOwnerPharmaciesQuerySchema = z.preprocess(
 
 //===============================================================
 
-export const adminPharmacyOwnerActivityQuerySchema = z.preprocess(
-  normalizePaginationQuery,
-  z
-    .object({
-      page: positivePageSchema,
-      perPage: adminOwnerPerPageSchema,
-    })
-    .strict()
-);
+export const adminPharmacyOwnerActivityQuerySchema = adminAuditListQuerySchema;
 
 //===============================================================
 
