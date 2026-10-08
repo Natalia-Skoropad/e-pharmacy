@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import mongoose, { Types } from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
@@ -508,8 +510,26 @@ const PHARMACY_IMAGE_URLS = [
 //===============================================================
 
 function createSeedAssetUrl(value: string): string {
-  if (value.startsWith('data:')) return value;
-  return new URL(value, env.CLIENT_APP_URL).toString();
+  if (value.startsWith('data:') || /^https?:\/\//i.test(value)) return value;
+
+  // Seed images are served by apps/api at /images, not by the client app.
+  // PUBLIC_ASSET_BASE_URL can point to the publicly accessible API origin.
+  const assetOrigin =
+    process.env.PUBLIC_ASSET_BASE_URL ?? `http://localhost:${env.PORT}`;
+
+  // The supplied demo archive contains pharmacy-021.png, but not 001–020.
+  // Use the available pharmacy photo until individual images are supplied.
+  // Keeping the file check allows unique pictures to work when added later.
+  const pharmacyImageMatch = value.match(
+    /^\/images\/seed\/pharmacies\/pharmacy-\d{3}\.png$/
+  );
+  const resolvedPath =
+    pharmacyImageMatch &&
+    !existsSync(path.resolve(__dirname, '..', '..', 'public', value.slice(1)))
+      ? '/images/seed/pharmacies/pharmacy-021.png'
+      : value;
+
+  return new URL(resolvedPath, assetOrigin).toString();
 }
 
 //===============================================================
