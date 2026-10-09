@@ -5,21 +5,26 @@ import {
   FilePlus2,
   FileText,
   MessageSquareText,
-  Settings,
+  BriefcaseBusiness,
   ShoppingBag,
   Tags,
   UserCog,
-  UserRound,
   Users,
 } from 'lucide-react';
 
+import { formatInitials } from '@e-pharmacy/ui/data-display';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 
 import type {
   AdminAuditListItem,
   AdminAuditSection,
 } from '@/lib/audit/admin-audit';
-import { getAdminAuditLocation } from '@/lib/audit/admin-audit-presentation';
+
+import {
+  getAdminAuditLocation,
+  getAdminAuditPageLocation,
+} from '@/lib/audit/admin-audit-presentation';
 
 import css from './ActivityHistory.module.css';
 
@@ -30,7 +35,7 @@ function SectionIcon({ section }: Readonly<{ section: AdminAuditSection }>) {
 
   switch (section) {
     case 'profile':
-      return <UserRound {...props} />;
+      return <UserCog {...props} />;
     case 'pharmacyOwners':
       return <UserCog {...props} />;
     case 'pharmacies':
@@ -49,7 +54,7 @@ function SectionIcon({ section }: Readonly<{ section: AdminAuditSection }>) {
     case 'employees':
       return <UserCog {...props} />;
     case 'positions':
-      return <Settings {...props} />;
+      return <BriefcaseBusiness {...props} />;
     case 'sitePages':
       return <FileText {...props} />;
     case 'categories':
@@ -69,6 +74,8 @@ type ActivitySectionLinkProps = Readonly<{
     | 'entityLabelSnapshot'
     | 'entityType'
     | 'section'
+    | 'scopeEntityType'
+    | 'scopeEntityId'
   >;
 }>;
 
@@ -80,7 +87,35 @@ export function ActivitySectionLink({ item }: ActivitySectionLinkProps) {
   return (
     <TextActionButton className={css.sectionLink} href={location.href}>
       <SectionIcon section={location.section} />
-      <span>{location.label}</span>
+      <span className={css.sectionLinkLabel}>{location.label}</span>
+    </TextActionButton>
+  );
+}
+
+//===================================================================
+
+export function ActivityPageLink({
+  item,
+  photoUrl,
+  pageName,
+}: ActivitySectionLinkProps &
+  Readonly<{ photoUrl?: string; pageName?: string }>) {
+  const location = getAdminAuditPageLocation(item);
+  if (!location) return <span className={css.pageLinkEmpty}>—</span>;
+  return (
+    <TextActionButton className={css.sectionLink} href={location.href}>
+      {location.section === 'pharmacyOwners' ||
+      location.section === 'employees' ? (
+        <TableImagePreview
+          src={photoUrl}
+          alt=""
+          fallback={formatInitials(pageName ?? location.label, 'P')}
+          size={22}
+        />
+      ) : (
+        <SectionIcon section={location.section} />
+      )}
+      <span className={css.sectionLinkLabel}>{pageName ?? location.label}</span>
     </TextActionButton>
   );
 }

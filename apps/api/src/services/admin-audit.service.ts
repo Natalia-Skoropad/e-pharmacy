@@ -318,7 +318,7 @@ function getLegacyAuditSection(
     entityType === ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE ||
     entityType === ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT
   ) {
-    return ADMIN_AUDIT_SECTIONS.PROFILE;
+    return ADMIN_AUDIT_SECTIONS.EMPLOYEES;
   }
 
   if (entityType === ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS) {
@@ -341,7 +341,13 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
     throw new TypeError('Stored admin audit action is invalid.');
   }
 
-  const section = log.section ?? getLegacyAuditSection(log.entityType);
+  const storedSection = log.section ?? getLegacyAuditSection(log.entityType);
+
+  const section =
+    storedSection === ADMIN_AUDIT_SECTIONS.PROFILE
+      ? ADMIN_AUDIT_SECTIONS.EMPLOYEES
+      : storedSection;
+
   const hasStatusChange = log.changedFields.includes('status');
 
   const statusBefore =
@@ -423,7 +429,11 @@ const LEGACY_AUDIT_SECTION_ENTITY_TYPES: Readonly<
   [ADMIN_AUDIT_SECTIONS.ORDERS]: [],
   [ADMIN_AUDIT_SECTIONS.PRODUCT_REVIEWS]: [],
   [ADMIN_AUDIT_SECTIONS.PHARMACY_REVIEWS]: [],
-  [ADMIN_AUDIT_SECTIONS.EMPLOYEES]: [ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS],
+  [ADMIN_AUDIT_SECTIONS.EMPLOYEES]: [
+    ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS,
+    ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE,
+    ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
+  ],
   [ADMIN_AUDIT_SECTIONS.POSITIONS]: [],
   [ADMIN_AUDIT_SECTIONS.SITE_PAGES]: [],
   [ADMIN_AUDIT_SECTIONS.CATEGORIES]: [],
@@ -436,7 +446,9 @@ function applyAuditSectionFilter(
   section: AdminAuditSection
 ): void {
   filter.$or = [
-    { section },
+    ...(section === ADMIN_AUDIT_SECTIONS.EMPLOYEES
+      ? [{ section }, { section: ADMIN_AUDIT_SECTIONS.PROFILE }]
+      : [{ section }]),
     {
       section: { $exists: false },
       entityType: { $in: LEGACY_AUDIT_SECTION_ENTITY_TYPES[section] },
@@ -460,7 +472,13 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
       status: 'new' | 'active' | 'blocked';
     };
   }>([
-    { $group: { _id: '$actorUserId' } },
+    {
+      $group: {
+        _id: '$actorUserId',
+        auditedActions: { $addToSet: '$action' },
+        auditedEntities: { $addToSet: '$entityType' },
+      },
+    },
     {
       $lookup: {
         from: User.collection.name,
@@ -486,18 +504,11 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
         as: 'managedPharmacies',
       },
     },
+    // A pharmacy owner may have audit entries before the first pharmacy is linked
+    // (registration documents, for example). Do not hide this actor from history.
     {
       $match: {
-        $or: [
-          { 'users.role': USER_ROLES.ADMIN },
-          {
-            'users.role': USER_ROLES.PHARMACY,
-            $or: [
-              { 'ownedPharmacies.0': { $exists: true } },
-              { 'managedPharmacies.0': { $exists: true } },
-            ],
-          },
-        ],
+        'users.role': { $in: [USER_ROLES.ADMIN, USER_ROLES.PHARMACY] },
       },
     },
     {
@@ -518,7 +529,29 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
             ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE,
             {
               $cond: [
-                { $gt: [{ $size: '$ownedPharmacies' }, 0] },
+                {
+                  $or: [
+                    { $gt: [{ $size: '$ownedPharmacies' }, 0] },
+                    {
+                      $in: [
+                        ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+                        '$auditedEntities',
+                      ],
+                    },
+                    {
+                      $in: [
+                        ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER_DOCUMENT,
+                        '$auditedEntities',
+                      ],
+                    },
+                    {
+                      $in: [
+                        'pharmacy.registrationDocuments.attached',
+                        '$auditedActions',
+                      ],
+                    },
+                  ],
+                },
                 ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER,
                 ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_EMPLOYEE,
               ],
@@ -553,7 +586,32 @@ async function getAuditActorIdsByType(
     return User.find({ role: USER_ROLES.ADMIN }).distinct('_id');
   }
 
-  const ownerIds = await Pharmacy.distinct('ownerId');
+  // Owners can perform audited actions before their first pharmacy is created.
+  // Keep the Changed by filter consistent with the actors returned to the UI.
+  const [pharmacyOwnerIds, auditedOwnerIds] = await Promise.all([
+    Pharmacy.distinct('ownerId'),
+    AdminAuditLog.distinct('actorUserId', {
+      $or: [
+        {
+          entityType: {
+            $in: [
+              ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+              ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER_DOCUMENT,
+            ],
+          },
+        },
+        { action: 'pharmacy.registrationDocuments.attached' },
+      ],
+    }),
+  ]);
+
+  const ownerIds = [
+    ...new Map(
+      [...pharmacyOwnerIds, ...auditedOwnerIds]
+        .filter(Boolean)
+        .map((id) => [String(id), id] as const)
+    ).values(),
+  ];
 
   if (actorType === ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_EMPLOYEE) {
     const managerUserIds = await Pharmacy.distinct('managerUserIds');

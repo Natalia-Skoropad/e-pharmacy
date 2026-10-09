@@ -15,6 +15,7 @@ import {
 import { DataTable, type DataTableColumn } from '@e-pharmacy/ui/data-display';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { CloseIconButton } from '@e-pharmacy/ui/primitives';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import type {
@@ -26,12 +27,18 @@ import {
   formatAdminAuditValue,
   getAdminAuditActionLabel,
   getAdminAuditChangeTone,
-  getAdminAuditStatusTransitionLabel,
+  getAdminAuditStatusPresentation,
 } from '@/lib/audit/admin-audit-presentation';
 
 import { ActivityActorIdentity } from './ActivityActorIdentity';
-import { ActivitySectionLink } from './ActivitySectionLink';
+import { ActivityPageLink, ActivitySectionLink } from './ActivitySectionLink';
 
+import {
+  getAdminAuditFieldLabel,
+  getAuditColorSwatch,
+} from '@/lib/audit/admin-audit-fields';
+
+import type { AdminAuditValue } from '@/lib/audit/admin-audit';
 import css from './ActivityHistory.module.css';
 
 //===================================================================
@@ -40,6 +47,8 @@ type AuditDetailsModalProps = Readonly<{
   isOpen: boolean;
   details: AdminAuditDetails | null;
   actor: AdminAuditActor | null;
+  pagePhotoUrl?: string;
+  pageName?: string;
   isLoading: boolean;
   error: string | null;
   onClose: () => void;
@@ -48,32 +57,59 @@ type AuditDetailsModalProps = Readonly<{
 
 type AuditChangeRow = Readonly<{
   field: string;
-  before: string;
-  after: string;
+  label: string;
+  before: AdminAuditValue | undefined;
+  after: AdminAuditValue | undefined;
 }>;
+
+//===================================================================
+
+function RenderAuditValue({
+  value,
+}: Readonly<{ value: AdminAuditValue | undefined }>) {
+  const color = getAuditColorSwatch(value);
+  return (
+    <span className={css.changeValue}>
+      {color ? (
+        <span
+          className={css.colorSwatch}
+          style={{ backgroundColor: color }}
+          aria-label={`Color ${color}`}
+        />
+      ) : null}
+      {formatAdminAuditValue(value)}
+    </span>
+  );
+}
 
 //===================================================================
 
 const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
   {
+    key: 'label',
+    title: 'Changed field',
+    width: '27%',
+    render: (item) => <span className={css.changeFieldName}>{item.label}</span>,
+  },
+  {
     key: 'field',
     title: 'Field',
-    width: '30%',
+    width: '23%',
     render: (item) => (
-      <strong className={css.changeFieldName}>{item.field}</strong>
+      <code className={css.changeDeveloperField}>{item.field}</code>
     ),
   },
   {
     key: 'before',
     title: 'Before',
-    width: '35%',
-    render: (item) => <span className={css.changeValue}>{item.before}</span>,
+    width: '25%',
+    render: (item) => <RenderAuditValue value={item.before} />,
   },
   {
     key: 'after',
     title: 'After',
-    width: '35%',
-    render: (item) => <span className={css.changeValue}>{item.after}</span>,
+    width: '25%',
+    render: (item) => <RenderAuditValue value={item.after} />,
   },
 ];
 
@@ -96,6 +132,8 @@ export function AuditDetailsModal({
   isOpen,
   details,
   actor,
+  pagePhotoUrl,
+  pageName,
   isLoading,
   error,
   onClose,
@@ -105,15 +143,12 @@ export function AuditDetailsModal({
   const tone = details ? getAdminAuditChangeTone(details) : 'info';
   const toneClassName = getChangeToneClassName(tone);
 
-  const statusTransition = details
-    ? getAdminAuditStatusTransitionLabel(details)
-    : null;
-
   const changeRows: AuditChangeRow[] = details
     ? details.changedFields.map((field) => ({
         field,
-        before: formatAdminAuditValue(details.before[field]),
-        after: formatAdminAuditValue(details.after[field]),
+        label: getAdminAuditFieldLabel(field),
+        before: details.before[field],
+        after: details.after[field],
       }))
     : [];
 
@@ -193,7 +228,7 @@ export function AuditDetailsModal({
               <div className={css.detailsMetaItem}>
                 <dt>
                   <RefreshCw size={16} aria-hidden="true" />
-                  Change
+                  Change type
                 </dt>
                 <dd className={css.detailsActionCopy}>
                   <strong
@@ -201,13 +236,6 @@ export function AuditDetailsModal({
                   >
                     {getAdminAuditActionLabel(details.action)}
                   </strong>
-                  {statusTransition ? (
-                    <span
-                      className={`${css.detailsTransition} ${toneClassName}`}
-                    >
-                      {statusTransition}
-                    </span>
-                  ) : null}
                 </dd>
               </div>
 
@@ -221,22 +249,33 @@ export function AuditDetailsModal({
 
               <div className={css.detailsMetaItem}>
                 <dt>
-                  <Fingerprint size={16} aria-hidden="true" />
-                  Entity ID
-                </dt>
-                <dd className={css.codeValue}>{details.entityId}</dd>
-              </div>
-
-              <div className={css.detailsMetaItem}>
-                <dt>
                   <FilePenLine size={16} aria-hidden="true" />
-                  Section / page
+                  Section name
                 </dt>
                 <dd>
                   <ActivitySectionLink item={details} />
                 </dd>
               </div>
-
+              <div className={css.detailsMetaItem}>
+                <dt>
+                  <FilePenLine size={16} aria-hidden="true" />
+                  Page name
+                </dt>
+                <dd>
+                  <ActivityPageLink
+                    item={details}
+                    photoUrl={pagePhotoUrl}
+                    pageName={pageName}
+                  />
+                </dd>
+              </div>
+              <div className={css.detailsMetaItem}>
+                <dt>
+                  <Fingerprint size={16} aria-hidden="true" />
+                  Entity ID
+                </dt>
+                <dd className={css.codeValue}>{details.entityId}</dd>
+              </div>
               <div className={css.detailsMetaItem}>
                 <dt>
                   <Fingerprint size={16} aria-hidden="true" />
@@ -246,14 +285,37 @@ export function AuditDetailsModal({
               </div>
             </dl>
 
-            {details.reason ? (
+            {details.reason || (details.statusBefore && details.statusAfter) ? (
               <section className={css.detailsReason} aria-label="Change reason">
                 <span className={css.detailsReasonIcon} aria-hidden="true">
                   <MessageSquareText size={18} />
                 </span>
                 <span className={css.detailsReasonCopy}>
                   <strong>Reason / description</strong>
-                  <span>{details.reason}</span>
+                  {details.statusBefore && details.statusAfter ? (
+                    <span className={css.statusTransitionBadges}>
+                      {getAdminAuditStatusPresentation(details.statusBefore) ? (
+                        <StatusBadge
+                          {...getAdminAuditStatusPresentation(
+                            details.statusBefore
+                          )!}
+                        />
+                      ) : (
+                        <span>{details.statusBefore}</span>
+                      )}
+                      <span aria-hidden="true">→</span>
+                      {getAdminAuditStatusPresentation(details.statusAfter) ? (
+                        <StatusBadge
+                          {...getAdminAuditStatusPresentation(
+                            details.statusAfter
+                          )!}
+                        />
+                      ) : (
+                        <span>{details.statusAfter}</span>
+                      )}
+                    </span>
+                  ) : null}
+                  {details.reason ? <span>{details.reason}</span> : null}
                 </span>
               </section>
             ) : null}
@@ -273,7 +335,7 @@ export function AuditDetailsModal({
                 columns={CHANGE_COLUMNS}
                 items={changeRows}
                 getItemKey={(item) => item.field}
-                minWidth={560}
+                minWidth={650}
                 ariaLabel="Audit changes"
                 labels={{ empty: 'No field-level changes were recorded.' }}
               />

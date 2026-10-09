@@ -57,11 +57,15 @@ const ACTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['action']>> = [
 const SECTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['section']>> =
   [
     { value: '', label: 'All sections' },
-    ...ADMIN_AUDIT_SECTIONS.map((section) => ({
-      value: section,
-      label: getAdminAuditSectionLabel(section),
-    })),
+    ...ADMIN_AUDIT_SECTIONS.filter((section) => section !== 'profile').map(
+      (section) => ({
+        value: section,
+        label: getAdminAuditSectionLabel(section),
+      })
+    ),
   ];
+
+//===================================================================
 
 const ACTOR_TYPE_LABELS: Readonly<Record<AdminAuditActorType, string>> = {
   employee: 'Employee',
@@ -165,7 +169,7 @@ export function ActivityFiltersDrawer({
 
       <SelectField
         id="admin-audit-section-filter"
-        label="Section"
+        label="Section name"
         value={filters.section}
         options={SECTION_OPTIONS}
         isActive={Boolean(filters.section)}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import {
   CirclePlus,
@@ -15,6 +16,7 @@ import {
   ShieldCheck,
   Trash2,
   UsersRound,
+  UserCog,
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
@@ -67,6 +69,16 @@ import {
   DEFAULT_ACTIVITY_HISTORY_FILTERS,
   type ActivityHistoryFilters,
 } from './ActivityFiltersDrawer';
+
+import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
+import { getAdminAuditPageLocation } from '@/lib/audit/admin-audit-presentation';
+import { getAdminAuditFieldsSummary } from '@/lib/audit/admin-audit-fields';
+
+import {
+  buildAdminActivityUrl,
+  DEFAULT_ACTIVITY_URL_STATE,
+  type ActivityUrlState,
+} from '@/lib/audit/admin-activity-url';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
 import { ActivityActorIdentity } from './ActivityActorIdentity';
@@ -173,13 +185,21 @@ function createOwnerOptions(
 
 //===================================================================
 
-export function ActivityHistory() {
-  const [filters, setFilters] = useState<ActivityHistoryFilters>(
-    DEFAULT_ACTIVITY_HISTORY_FILTERS
+export function ActivityHistory({
+  initialState = DEFAULT_ACTIVITY_URL_STATE,
+}: Readonly<{ initialState?: ActivityUrlState }>) {
+  const router = useRouter();
+  const initialStateKey = JSON.stringify(initialState);
+  const [syncedInitialStateKey, setSyncedInitialStateKey] =
+    useState(initialStateKey);
+  const [filters, setFilters] = useState<ActivityHistoryFilters>(initialState);
+
+  const [page, setPage] = useState(initialState.page);
+
+  const [perPage, setPerPage] = useState<RowsPerPageValue>(
+    initialState.perPage
   );
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState<RowsPerPageValue>(20);
   const [data, setData] = useState<AdminAuditListResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [listError, setListError] = useState<string | null>(null);
@@ -194,6 +214,36 @@ export function ActivityHistory() {
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [detailsReloadVersion, setDetailsReloadVersion] = useState(0);
+
+  const [ownerPagePreview, setOwnerPagePreview] = useState<{
+    id: string;
+    name: string;
+    pictureUrl?: string;
+  } | null>(null);
+
+  // Update URL-derived state during render when browser navigation changes it.
+  // This preserves the open filters drawer without a cascading effect update.
+  if (syncedInitialStateKey !== initialStateKey) {
+    setSyncedInitialStateKey(initialStateKey);
+    setFilters({ ...initialState });
+    setPage(initialState.page);
+    setPerPage(initialState.perPage);
+  }
+
+  const navigateToState = (
+    nextFilters: ActivityHistoryFilters,
+    nextPage: number,
+    nextPerPage: RowsPerPageValue
+  ) => {
+    router.replace(
+      buildAdminActivityUrl({
+        ...nextFilters,
+        page: nextPage,
+        perPage: nextPerPage,
+      }),
+      { scroll: false }
+    );
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -271,6 +321,29 @@ export function ActivityHistory() {
     return () => controller.abort();
   }, [detailsReloadVersion, selectedAuditId]);
 
+  useEffect(() => {
+    const page = details ? getAdminAuditPageLocation(details) : null;
+    if (!page || page.section !== 'pharmacyOwners') return;
+    const controller = new AbortController();
+
+    void getAdminPharmacyOwnerDetail(page.entityId, {
+      signal: controller.signal,
+    })
+      .then((owner) => {
+        if (!controller.signal.aborted) {
+          setOwnerPagePreview({
+            id: owner.id,
+            name: owner.name,
+            pictureUrl: owner.pictureUrl,
+          });
+        }
+      })
+      .catch(() => {
+        // Old/deleted owners still have immutable audit snapshots and a usable link.
+      });
+    return () => controller.abort();
+  }, [details]);
+
   const actorById = useMemo(
     () => new Map(actors.map((actor) => [actor.id, actor] as const)),
     [actors]
@@ -282,6 +355,13 @@ export function ActivityHistory() {
   );
 
   const ownerOptions = useMemo(() => createOwnerOptions(actors), [actors]);
+  const pageLocation = details ? getAdminAuditPageLocation(details) : null;
+
+  const matchingOwnerPreview =
+    pageLocation?.section === 'pharmacyOwners' &&
+    ownerPagePreview?.id === pageLocation.entityId
+      ? ownerPagePreview
+      : null;
 
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
@@ -296,6 +376,7 @@ export function ActivityHistory() {
 
   const openDetails = useCallback((auditLogId: string) => {
     setDetails(null);
+    setOwnerPagePreview(null);
     setDetailsError(null);
     setIsDetailsLoading(true);
     setSelectedAuditId(auditLogId);
@@ -358,13 +439,13 @@ export function ActivityHistory() {
       {
         key: 'entity',
         title: 'Entity',
-        render: (item) => <strong>{item.entityLabelSnapshot}</strong>,
+        render: (item) => <span>{item.entityLabelSnapshot}</span>,
       },
       {
         key: 'action',
         title: (
           <span className={css.changeHeader}>
-            Change
+            Change type
             <InfoTooltip
               label="Change color help"
               title="Change colors"
@@ -426,7 +507,6 @@ export function ActivityHistory() {
               <strong className={`${css.changeAction} ${toneClassName}`}>
                 {getAdminAuditActionLabel(item.action)}
               </strong>
-
               {transition ? (
                 <span className={`${css.changeTransition} ${toneClassName}`}>
                   {transition}
@@ -438,7 +518,7 @@ export function ActivityHistory() {
       },
       {
         key: 'location',
-        title: <TableHeaderTitle parts={['Section /', 'page']} />,
+        title: 'Section name',
         render: (item) => {
           return <ActivitySectionLink item={item} />;
         },
@@ -448,7 +528,7 @@ export function ActivityHistory() {
         title: <TableHeaderTitle parts={['Changed', 'fields']} />,
         render: (item) => (
           <span className={css.changedFields}>
-            {item.changedFields.join(', ')}
+            {getAdminAuditFieldsSummary(item.changedFields)}
           </span>
         ),
       },
@@ -481,6 +561,7 @@ export function ActivityHistory() {
     beginListRefresh();
     setFilters(nextFilters);
     setPage(1);
+    navigateToState(nextFilters, 1, perPage);
   };
 
   const updateEmployee = (employeeUserId: string) => {
@@ -511,11 +592,13 @@ export function ActivityHistory() {
     beginListRefresh();
     setPerPage(value);
     setPage(1);
+    navigateToState(filters, 1, value);
   };
 
   const updatePage = (nextPage: number) => {
     beginListRefresh();
     setPage(nextPage);
+    navigateToState(filters, nextPage, perPage);
   };
 
   const retryList = () => {
@@ -607,7 +690,7 @@ export function ActivityHistory() {
               <InfoTooltip
                 label="Pharmacy owner search help"
                 title="Pharmacy owner search"
-                icon={<UsersRound size={20} aria-hidden="true" />}
+                icon={<UserCog size={20} aria-hidden="true" />}
                 items={[
                   {
                     title: 'Search fields',
@@ -729,6 +812,18 @@ export function ActivityHistory() {
         isOpen={selectedAuditId !== null}
         details={details}
         actor={details ? (actorById.get(details.actorUserId) ?? null) : null}
+        pagePhotoUrl={
+          pageLocation
+            ? (matchingOwnerPreview?.pictureUrl ??
+              actorById.get(pageLocation.entityId)?.pictureUrl)
+            : undefined
+        }
+        pageName={
+          matchingOwnerPreview?.name ??
+          (pageLocation?.section === 'employees'
+            ? actorById.get(pageLocation.entityId)?.name
+            : undefined)
+        }
         isLoading={isDetailsLoading}
         error={detailsError}
         onClose={closeDetails}

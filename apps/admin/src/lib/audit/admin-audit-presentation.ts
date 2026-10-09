@@ -111,7 +111,7 @@ const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
 //===================================================================
 
 const SECTION_LABELS: Record<AdminAuditSection, string> = {
-  profile: 'Profile',
+  profile: 'Employees',
   pharmacyOwners: 'Pharmacy owners',
   pharmacies: 'Pharmacies',
   products: 'Products',
@@ -201,54 +201,107 @@ export function getAdminAuditSectionLabel(section: AdminAuditSection): string {
 //===================================================================
 
 export function getAdminAuditLocation(
+  item: Pick<AdminAuditListItem, 'section'>
+): AdminAuditLocation {
+  const section = item.section === 'profile' ? 'employees' : item.section;
+  return {
+    section,
+    label: SECTION_LABELS[section],
+    href: SECTION_ROUTES[section],
+  };
+}
+
+//===================================================================
+
+export type AdminAuditPageLocation = Readonly<{
+  href: string;
+  label: string;
+  section: AdminAuditSection;
+  entityId: string;
+}>;
+
+//===================================================================
+
+export function getAdminAuditPageLocation(
   item: Pick<
     AdminAuditListItem,
-    | 'actorUserId'
+    | 'section'
+    | 'entityType'
     | 'entityId'
     | 'entityLabelSnapshot'
-    | 'entityType'
-    | 'section'
+    | 'scopeEntityType'
+    | 'scopeEntityId'
+    | 'actorUserId'
   >
-): AdminAuditLocation {
-  const sectionLabel = SECTION_LABELS[item.section];
+): AdminAuditPageLocation | null {
+  const section = item.section === 'profile' ? 'employees' : item.section;
 
-  if (item.section === 'pharmacies' && item.entityType === 'pharmacy') {
+  // Detail routes for pharmacies and requests must use their own entity ID,
+  // not a parent owner/employee ID from the audit scope.
+  const id = item.entityId;
+
+  if (section === 'pharmacies' && item.entityType === 'pharmacy') {
     return {
-      section: item.section,
-      label: `${sectionLabel} · ${item.entityLabelSnapshot}`,
-      href: `${ADMIN_ROUTES.PHARMACIES}/${encodeURIComponent(item.entityId)}`,
+      section,
+      entityId: id,
+      label: item.entityLabelSnapshot,
+      href: `${ADMIN_ROUTES.PHARMACIES}/${encodeURIComponent(id)}`,
     };
   }
 
-  if (
-    item.section === 'productRequests' &&
-    item.entityType === 'productRequest'
-  ) {
+  if (section === 'pharmacyOwners') {
+    const ownerId =
+      item.entityType === 'pharmacyOwner'
+        ? item.entityId
+        : item.scopeEntityType === 'pharmacyOwner'
+          ? item.scopeEntityId
+          : null;
+
+    if (ownerId)
+      return {
+        section,
+        entityId: ownerId,
+        label:
+          item.entityType === 'pharmacyOwner'
+            ? item.entityLabelSnapshot
+            : 'Pharmacy owner',
+        href: `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}`,
+      };
+  }
+
+  if (section === 'productRequests' && item.entityType === 'productRequest') {
     return {
-      section: item.section,
-      label: `${sectionLabel} · ${item.entityLabelSnapshot}`,
-      href: `${ADMIN_ROUTES.PRODUCT_REQUESTS}/${encodeURIComponent(item.entityId)}`,
+      section,
+      entityId: id,
+      label: item.entityLabelSnapshot,
+      href: `${ADMIN_ROUTES.PRODUCT_REQUESTS}/${encodeURIComponent(id)}`,
     };
   }
 
-  if (item.section === 'employees') {
+  if (section === 'employees') {
     const employeeId =
       item.entityType === 'adminEmployee' || item.entityType === 'adminAccess'
         ? item.entityId
-        : item.actorUserId;
+        : item.scopeEntityType === 'adminEmployee'
+          ? item.scopeEntityId
+          : item.section === 'profile' ||
+              item.entityType === 'adminEmployeeDocument'
+            ? item.actorUserId
+            : null;
 
-    return {
-      section: item.section,
-      label: `${sectionLabel} · ${item.entityLabelSnapshot}`,
-      href: `${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(employeeId)}`,
-    };
+    if (employeeId)
+      return {
+        section,
+        entityId: employeeId,
+        label:
+          item.entityType === 'adminEmployee'
+            ? item.entityLabelSnapshot
+            : 'Employee profile',
+        href: `${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(employeeId)}`,
+      };
   }
-
-  return {
-    section: item.section,
-    label: sectionLabel,
-    href: SECTION_ROUTES[item.section],
-  };
+  // Positions and categories have only the parent list page (no detail route).
+  return null;
 }
 
 //===================================================================
@@ -304,4 +357,12 @@ export function getAdminAuditStatusTransitionLabel(
     : item.statusAfter;
 
   return `${before} → ${after}`;
+}
+
+//===================================================================
+
+export function getAdminAuditStatusPresentation(status: string) {
+  return isKnownAuditStatus(status)
+    ? STATUS_PRESENTATION_BY_VALUE[status]
+    : null;
 }

@@ -157,7 +157,7 @@ export async function updateMyAdminEmployeeProfileService(
       await appendAdminAuditLog({
         actorUserId: userId,
         action: ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_PROFILE_UPDATED,
-        section: ADMIN_AUDIT_SECTIONS.PROFILE,
+        section: ADMIN_AUDIT_SECTIONS.EMPLOYEES,
         entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE,
         entityId: userId,
         entityLabel: user.name,

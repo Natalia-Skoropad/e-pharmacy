@@ -43,7 +43,7 @@ export function ActivityActorIdentity({
     actor ? (
       <StatusBadge {...USER_STATUS_PRESENTATION[actor.status]} />
     ) : (
-      <span className={css.employeeStatusFallback}>Unavailable</span>
+      <span className={css.employeeStatusFallback}>Historical account</span>
     )
   ) : null;
 

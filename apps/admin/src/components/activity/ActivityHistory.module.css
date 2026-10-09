@@ -393,7 +393,7 @@
   font-size: var(--fz-13);
 }
 
-.detailsReasonCopy span {
+.detailsReasonCopy > span {
   color: var(--color-text-secondary);
   font-size: var(--fz-14);
   line-height: var(--lh-base);
@@ -488,4 +488,64 @@
 .sectionLink > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Only the text (never the section icon or photo) is underlined on hover. */
+.sectionLink.sectionLink {
+  text-decoration: none;
+  color: var(--color-success);
+}
+.sectionLink.sectionLink:hover,
+.sectionLink.sectionLink:focus-visible {
+  text-decoration: none;
+}
+.sectionLink:hover .sectionLinkLabel,
+.sectionLink:focus-visible .sectionLinkLabel {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sectionLink > svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.8;
+}
+.pageLinkEmpty {
+  color: var(--color-text-muted);
+}
+.changeDeveloperField {
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fz-12);
+  overflow-wrap: anywhere;
+}
+.colorSwatch {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.changeValue {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.statusTransitionBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.statusTransitionBadges > span {
+  color: var(--color-text-secondary);
+}
+
+.detailsReasonCopy .statusTransitionBadges > span:not(:nth-child(2)) {
+  font-size: inherit;
+}
+.detailsReasonCopy .statusTransitionBadges > span:nth-child(2) {
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
 }

@@ -344,8 +344,8 @@ assert.match(auditService, /section,/);
 assert.match(pharmacyService, /ADMIN_AUDIT_SECTIONS\.PHARMACIES/);
 assert.match(productRequestService, /ADMIN_AUDIT_SECTIONS\.PRODUCT_REQUESTS/);
 assert.match(ownerService, /ADMIN_AUDIT_SECTIONS\.EMPLOYEES/);
-assert.match(profileService, /ADMIN_AUDIT_SECTIONS\.PROFILE/);
-assert.match(adminDocumentService, /ADMIN_AUDIT_SECTIONS\.PROFILE/);
+assert.match(profileService, /ADMIN_AUDIT_SECTIONS\.EMPLOYEES/);
+assert.match(adminDocumentService, /ADMIN_AUDIT_SECTIONS\.EMPLOYEES/);
 
 assert.match(
   auditConstants,
@@ -498,7 +498,7 @@ assert.match(
 
 assert.match(auditService, /Pharmacy\.distinct\(['"]ownerId['"]\)/);
 assert.match(auditService, /AdminAuditLog\.aggregate/);
-assert.match(auditService, /\$group:\s*\{ _id:\s*['"]\$actorUserId['"] \}/);
+assert.match(auditService, /\$group:\s*\{ _id:\s*['"]\$actorUserId['"]/);
 assert.match(auditService, /from:\s*User\.collection\.name/);
 assert.match(auditService, /from:\s*Pharmacy\.collection\.name/);
 assert.match(auditService, /foreignField:\s*'managerUserIds'/);

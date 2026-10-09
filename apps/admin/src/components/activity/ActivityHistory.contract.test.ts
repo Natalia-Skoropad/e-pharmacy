@@ -30,7 +30,7 @@ test('activity history employee search excludes private address data', async () 
 
   assert.match(source, /title="Employee search"/);
   assert.match(serviceSource, /AdminAuditLog\.aggregate/);
-  assert.match(serviceSource, /\$group:\s*\{ _id:\s*'\$actorUserId' \}/);
+  assert.match(serviceSource, /\$group:\s*\{ _id:\s*'\$actorUserId'/);
   assert.doesNotMatch(serviceSource, /\.select\([^)]*address[^)]*\)/);
 
   assert.doesNotMatch(
@@ -219,7 +219,7 @@ test('activity history removes duplicated entity-type UI and renders section ico
 
   assert.match(
     historySource,
-    /key: 'entity'[\s\S]*?render: \(item\) => <strong>\{item\.entityLabelSnapshot\}<\/strong>/
+    /key: 'entity'[\s\S]*?render: \(item\) => <span>\{item\.entityLabelSnapshot\}<\/span>/
   );
 
   assert.doesNotMatch(historySource, /getAdminAuditEntityLabel/);
