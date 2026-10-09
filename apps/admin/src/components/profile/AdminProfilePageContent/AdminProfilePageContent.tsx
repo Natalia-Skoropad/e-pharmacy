@@ -16,6 +16,7 @@ import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   ActiveSessionsPanel,
@@ -287,7 +288,9 @@ export function AdminProfilePageContent() {
             roleLabel={
               access.isPlatformOwner ? 'Platform Owner' : 'Admin employee'
             }
-            statusLabel={USER_STATUS_PRESENTATION[user.status].label}
+            statusContent={
+              <StatusBadge {...USER_STATUS_PRESENTATION[user.status]} />
+            }
             pictureEditor={
               <ProfilePictureEditor
                 pictureUrl={pictureUrl}

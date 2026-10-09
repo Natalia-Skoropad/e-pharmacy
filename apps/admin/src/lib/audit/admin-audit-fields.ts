@@ -46,7 +46,9 @@ export function getAdminAuditFieldLabel(field: string): string {
 //===================================================================
 
 export function getAdminAuditFieldsSummary(fields: readonly string[]): string {
-  return fields.map(getAdminAuditFieldLabel).join(', ');
+  const preview = fields.slice(0, 3).map(getAdminAuditFieldLabel).join(', ');
+  const remaining = fields.length - 3;
+  return remaining > 0 ? `${preview} … ${remaining} more changes` : preview;
 }
 
 //===================================================================

@@ -37,6 +37,7 @@ export type ClientOrdersQueryParams = Readonly<{
   dateFrom?: string;
   dateTo?: string;
   pharmacy?: string;
+  pharmacyId?: string;
   orderNumber?: string;
   deliveryMethod?: DeliveryMethod;
   paymentMethod?: PaymentMethod;

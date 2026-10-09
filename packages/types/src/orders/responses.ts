@@ -15,8 +15,19 @@ export type ClientOrdersResponse = Readonly<
   ApiPaginationResponse<ClientOrder> & {
     statistics: OrderStatisticsCounts;
     earliestCreatedAt: CalendarDateString | null;
+
+    pharmacyOptions?: readonly Readonly<{
+      id: string;
+      name: string;
+      phone?: string;
+      email?: string;
+      address?: string;
+      imageUrl?: string;
+    }>[];
   }
 >;
+
+//=============================================================================
 
 export type CheckoutOrderResponse = Readonly<{
   order: ClientOrder;

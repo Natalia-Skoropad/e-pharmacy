@@ -70,6 +70,7 @@ import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { requestPharmacyOwnerNavigationBadgeRefresh } from '@/lib/pharmacy-owners/pharmacy-owner-navigation-badge-refresh';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
+import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
@@ -95,6 +96,7 @@ type PharmacyOwnerDetailsPageContentProps = Readonly<{
   ownerId: string;
   initialState: AdminPharmacyOwnerDetailUrlState;
   initialPharmaciesState: AdminPharmacyOwnerPharmaciesUrlState;
+  initialActivityState?: ActivityUrlState;
 }>;
 
 type DetailLoadError = 'not-found' | 'forbidden' | 'error' | null;
@@ -169,6 +171,7 @@ function PharmacyOwnerDetailsPageContent({
   ownerId,
   initialState,
   initialPharmaciesState,
+  initialActivityState,
 }: PharmacyOwnerDetailsPageContentProps) {
   const router = useRouter();
   const toast = useToast();
@@ -695,7 +698,10 @@ function PharmacyOwnerDetailsPageContent({
               onCountChange={updateCommentsCount}
             />
           ) : (
-            <OwnerActivityTab ownerId={ownerId} />
+            <OwnerActivityTab
+              ownerId={ownerId}
+              initialState={initialActivityState}
+            />
           )}
         </div>
       </section>

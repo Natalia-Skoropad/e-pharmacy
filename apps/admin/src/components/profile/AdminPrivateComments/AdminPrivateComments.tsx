@@ -323,6 +323,7 @@ export function AdminPrivateComments({
       <ConfirmationModal
         isOpen={Boolean(commentToDelete)}
         title="Delete this private comment?"
+        eyebrow="Private comments"
         description="The comment will be permanently removed from your private notes."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"

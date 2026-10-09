@@ -25,6 +25,7 @@ import { canPharmacyProfilePerformAction } from '@e-pharmacy/config/pharmacies';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { MarkdownTextarea } from '@e-pharmacy/ui/forms';
 import { PictureCard, readFileAsDataUrl } from '@e-pharmacy/ui/media';
+import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   ActiveSessionsPanel,
@@ -1696,8 +1697,8 @@ function PharmacyProfilePage({
                 roleLabel={
                   isProfileOwner ? 'Pharmacy owner' : 'Pharmacy manager'
                 }
-                statusLabel={
-                  PHARMACY_STATUS_PRESENTATION[pharmacy.status].label
+                statusContent={
+                  <StatusBadge {...USER_STATUS_PRESENTATION[user.status]} />
                 }
                 pictureEditor={
                   <ProfilePictureEditor
@@ -1716,7 +1717,7 @@ function PharmacyProfilePage({
               >
                 <div className={getStatusNoteClassName(pharmacy.status)}>
                   <div className={css.statusNoteHeader}>
-                    <h3>Profile status</h3>
+                    <h3>Pharmacy status</h3>
                     <StatusBadge
                       {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
                     />
@@ -1916,6 +1917,7 @@ function PharmacyProfilePage({
                           uploadButton: 'Upload photo',
                           removeButton: 'Remove photo',
                           removeTitle: 'Remove pharmacy photo?',
+                          removeEyebrow: 'Pharmacy photo',
                           removeText:
                             'This public pharmacy photo will be removed from the profile.',
                         }}

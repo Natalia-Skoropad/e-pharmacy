@@ -16,6 +16,7 @@ import css from './ConfirmationModal.module.css';
 
 export type ConfirmationModalProps = {
   title: ReactNode;
+  eyebrow?: string;
   text?: ReactNode;
   description?: ReactNode;
   confirmLabel?: string;
@@ -40,6 +41,7 @@ export type ConfirmationModalProps = {
 
 function ConfirmationModal({
   title,
+  eyebrow,
   text,
   description,
   confirmLabel = 'Confirm',
@@ -77,6 +79,7 @@ function ConfirmationModal({
         closeOnEscape={closeOnEscape}
         onClose={onCancel}
       >
+        {eyebrow ? <span className={css.eyebrow}>{eyebrow}</span> : null}
         <h2 className={css.title} id={titleId}>
           {title}
         </h2>

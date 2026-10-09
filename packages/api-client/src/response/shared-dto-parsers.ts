@@ -3060,6 +3060,36 @@ export function parseClientOrdersResponse(
     ...pagination,
     statistics,
     earliestCreatedAt,
+
+    pharmacyOptions: Array.isArray(record.pharmacyOptions)
+      ? record.pharmacyOptions.flatMap((raw) => {
+          if (!raw || typeof raw !== 'object') return [];
+          const pharmacy = raw as Record<string, unknown>;
+          if (
+            typeof pharmacy.id !== 'string' ||
+            typeof pharmacy.name !== 'string'
+          )
+            return [];
+          return [
+            {
+              id: pharmacy.id,
+              name: pharmacy.name,
+              ...(typeof pharmacy.phone === 'string'
+                ? { phone: pharmacy.phone }
+                : {}),
+              ...(typeof pharmacy.email === 'string'
+                ? { email: pharmacy.email }
+                : {}),
+              ...(typeof pharmacy.address === 'string'
+                ? { address: pharmacy.address }
+                : {}),
+              ...(typeof pharmacy.imageUrl === 'string'
+                ? { imageUrl: pharmacy.imageUrl }
+                : {}),
+            },
+          ];
+        })
+      : undefined,
   });
 }
 

@@ -678,22 +678,24 @@ export async function listAdminAuditLogsService(
     scopeFilter.scopeEntityType = query.scopeEntityType;
   if (query.scopeEntityId) scopeFilter.scopeEntityId = query.scopeEntityId;
 
-  const [total, items, earliestLog, storedActions] = await Promise.all([
-    AdminAuditLog.countDocuments(filter),
+  const [total, items, earliestLog, storedActions, storedSections] =
+    await Promise.all([
+      AdminAuditLog.countDocuments(filter),
 
-    AdminAuditLog.find(filter)
-      .sort({ createdAt: -1, _id: -1 })
-      .skip(skip)
-      .limit(query.perPage)
-      .lean<LeanAuditLog[]>(),
+      AdminAuditLog.find(filter)
+        .sort({ createdAt: -1, _id: -1 })
+        .skip(skip)
+        .limit(query.perPage)
+        .lean<LeanAuditLog[]>(),
 
-    AdminAuditLog.findOne(scopeFilter)
-      .sort({ createdAt: 1, _id: 1 })
-      .select('createdAt')
-      .lean<{ createdAt: Date } | null>(),
+      AdminAuditLog.findOne(scopeFilter)
+        .sort({ createdAt: 1, _id: 1 })
+        .select('createdAt')
+        .lean<{ createdAt: Date } | null>(),
 
-    AdminAuditLog.distinct('action', scopeFilter),
-  ]);
+      AdminAuditLog.distinct('action', scopeFilter),
+      AdminAuditLog.distinct('section', scopeFilter),
+    ]);
 
   return {
     items: items.map(serializeAuditListItem),
@@ -705,6 +707,10 @@ export async function listAdminAuditLogsService(
     earliestCreatedAt: earliestLog
       ? earliestLog.createdAt.toISOString().slice(0, 10)
       : null,
+
+    availableSections: storedSections.filter(
+      (section): section is AdminAuditSection => isAdminAuditSection(section)
+    ),
 
     availableActions: storedActions
       .map((action) => normalizeStoredAdminAuditAction(String(action)))

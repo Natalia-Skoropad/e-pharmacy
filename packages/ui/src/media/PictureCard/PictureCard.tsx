@@ -25,6 +25,7 @@ export type PictureCardLabels = {
   savingButton?: string;
   removeButton?: string;
   removeTitle?: string;
+  removeEyebrow?: string;
   removeText?: string;
   removeConfirm?: string;
   removingConfirm?: string;
@@ -55,6 +56,7 @@ const DEFAULT_LABELS: Required<PictureCardLabels> = {
   savingButton: 'Saving...',
   removeButton: 'Remove photo',
   removeTitle: 'Remove photo?',
+  removeEyebrow: 'Photo',
   removeText: 'This photo will be removed. Are you sure?',
   removeConfirm: 'Remove photo',
   removingConfirm: 'Removing...',
@@ -185,6 +187,7 @@ function PictureCard({
       {isConfirmOpen ? (
         <ConfirmationModal
           title={mergedLabels.removeTitle}
+          eyebrow={mergedLabels.removeEyebrow}
           text={mergedLabels.removeText}
           confirmLabel={
             isSaving ? mergedLabels.removingConfirm : mergedLabels.removeConfirm

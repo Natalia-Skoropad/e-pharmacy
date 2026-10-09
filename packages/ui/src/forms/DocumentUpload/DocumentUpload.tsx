@@ -303,6 +303,7 @@ function DocumentUpload({
       {pendingRemoveFile ? (
         <ConfirmationModal
           title={mergedLabels.removeTitle}
+          eyebrow="Documents"
           text={mergedLabels.removeText(pendingRemoveFile.name)}
           confirmLabel={mergedLabels.removeConfirm}
           cancelLabel={mergedLabels.removeCancel}

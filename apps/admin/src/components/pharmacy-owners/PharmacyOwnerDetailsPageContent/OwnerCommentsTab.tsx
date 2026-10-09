@@ -288,6 +288,7 @@ export function OwnerCommentsTab({
       <ConfirmationModal
         isOpen={Boolean(commentToDelete)}
         title="Delete this comment?"
+        eyebrow="Comments"
         description="The comment will be permanently removed. The deletion itself remains recorded in Activity history."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"

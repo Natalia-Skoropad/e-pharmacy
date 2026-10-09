@@ -1,3 +1,13 @@
+.eyebrow {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-success);
+}
+
 .title {
   font-size: var(--fz-24);
   font-family: inherit;

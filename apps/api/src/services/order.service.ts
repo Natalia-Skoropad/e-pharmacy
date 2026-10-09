@@ -59,6 +59,7 @@ import type {
   OrderItemEntity,
   OrderManagerCommentEntity,
   OrderResponseDto,
+  OrderPharmacySnapshot,
   OrdersResponseDto,
   OrderSalesStatisticsDto,
   OrderSalesStatisticsGroupBy,
@@ -2634,7 +2635,25 @@ export async function getOrdersService(
   }
 
   if (query.pharmacy?.trim()) {
-    filter['pharmacySnapshot.name'] = createSafeRegExp(query.pharmacy.trim());
+    const search = createSafeRegExp(query.pharmacy.trim());
+    filter.$and = [
+      ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+      {
+        $or: [
+          { 'pharmacySnapshot.name': search },
+          { 'pharmacySnapshot.phone': search },
+          { 'pharmacySnapshot.email': search },
+          { 'pharmacySnapshot.address': search },
+          { 'pharmacySnapshot.location.address': search },
+          { 'pharmacySnapshot.location.settlement': search },
+        ],
+      },
+    ];
+  }
+
+  // Never let a user-supplied pharmacy ID override the authenticated pharmacy's tenant boundary.
+  if (query.pharmacyId && role !== USER_ROLES.PHARMACY) {
+    filter.pharmacyId = new Types.ObjectId(query.pharmacyId);
   }
 
   if (query.clientId) {
@@ -2698,14 +2717,39 @@ export async function getOrdersService(
     filter.status = query.status;
   }
 
-  const [total, statistics, earliestOrder] = await Promise.all([
-    Order.countDocuments(filter),
-    getOrderStatistics(statisticsFilter),
-    Order.findOne(earliestDateFilter)
-      .sort({ createdAt: 1 })
-      .select('createdAt')
-      .lean<{ createdAt: Date } | null>(),
-  ]);
+  const [total, statistics, earliestOrder, pharmacyOptions] = await Promise.all(
+    [
+      Order.countDocuments(filter),
+      getOrderStatistics(statisticsFilter),
+
+      Order.findOne(earliestDateFilter)
+        .sort({ createdAt: 1 })
+        .select('createdAt')
+        .lean<{ createdAt: Date } | null>(),
+
+      role === USER_ROLES.PHARMACY
+        ? Promise.resolve(
+            [] as Array<{
+              _id: Types.ObjectId;
+              snapshot: OrderPharmacySnapshot;
+            }>
+          )
+        : Order.aggregate<{
+            _id: Types.ObjectId;
+            snapshot: OrderPharmacySnapshot;
+          }>([
+            { $match: { userId: new Types.ObjectId(userId) } },
+            { $sort: { createdAt: -1 } },
+            {
+              $group: {
+                _id: '$pharmacyId',
+                snapshot: { $first: '$pharmacySnapshot' },
+              },
+            },
+            { $sort: { 'snapshot.name': 1 } },
+          ]),
+    ]
+  );
 
   const totalPages = Math.ceil(total / query.perPage);
   const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
@@ -2736,6 +2780,18 @@ export async function getOrdersService(
     total,
     totalPages,
     statistics,
+
+    pharmacyOptions: pharmacyOptions.map(({ _id, snapshot }) => ({
+      id: String(_id),
+      name: snapshot.name,
+      ...(snapshot.phone ? { phone: snapshot.phone } : {}),
+      ...(snapshot.email ? { email: snapshot.email } : {}),
+      ...(snapshot.location?.address || snapshot.address
+        ? { address: snapshot.location?.address || snapshot.address }
+        : {}),
+      ...(snapshot.imageUrl ? { imageUrl: snapshot.imageUrl } : {}),
+    })),
+
     earliestCreatedAt: earliestOrder
       ? earliestOrder.createdAt.toISOString().slice(0, 10)
       : null,

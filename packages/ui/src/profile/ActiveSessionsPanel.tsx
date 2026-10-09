@@ -254,6 +254,7 @@ export function ActiveSessionsPanel({
       <ConfirmationModal
         isOpen={Boolean(pendingRevokeSession)}
         title="Revoke this session?"
+        eyebrow="Active sessions"
         description={
           pendingRevokeSession
             ? `The session on ${pendingRevokeSession.deviceName ?? pendingRevokeSession.userAgent ?? 'this device'} will be signed out.`
@@ -275,6 +276,7 @@ export function ActiveSessionsPanel({
       <ConfirmationModal
         isOpen={isSignOutAllConfirmationOpen}
         title="Sign out all devices?"
+        eyebrow="Active sessions"
         description="All active sessions, including this device, will be signed out. You will need to sign in again."
         confirmLabel="Sign out all devices"
         cancelLabel="Keep sessions"

@@ -77,6 +77,7 @@ export type AdminAuditListResponseDto = Readonly<{
   totalPages: number;
   earliestCreatedAt: string | null;
   availableActions: readonly AdminAuditAction[];
+  availableSections: readonly AdminAuditSection[];
 }>;
 
 export type AdminAuditDetailsDto = AdminAuditListItemDto &

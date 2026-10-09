@@ -279,6 +279,8 @@ export type OrderStatisticsValueDto = { count: number; amount: number };
 
 export type OrderStatisticsDto = Record<OrderStatus, OrderStatisticsValueDto>;
 
+//===============================================================
+
 export type OrdersResponseDto = {
   items: OrderResponseDto[];
   page: number;
@@ -287,4 +289,13 @@ export type OrdersResponseDto = {
   totalPages: number;
   statistics: OrderStatisticsDto;
   earliestCreatedAt: CalendarDateString | null;
+
+  pharmacyOptions?: Array<{
+    id: string;
+    name: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+    imageUrl?: string;
+  }>;
 };

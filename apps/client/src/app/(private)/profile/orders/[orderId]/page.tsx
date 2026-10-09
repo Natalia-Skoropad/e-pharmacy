@@ -3,6 +3,8 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import {
   ORDER_DETAILS_DESCRIPTION,
   ORDER_DETAILS_TITLE,
+  PROFILE_TITLE,
+  PROFILE_DESCRIPTION,
   createPageMetadata,
 } from '@/lib/seo/server';
 
@@ -12,7 +14,12 @@ import {
   ROUTES,
 } from '@/lib/routes';
 
-import { OrderDetailsPageContent } from '@/components/profile';
+import { isClientOrdersFilterSegment } from '@/lib/profile/client-orders-url';
+
+import {
+  OrderDetailsPageContent,
+  ProfilePageContent,
+} from '@/components/profile';
 
 //===================================================================
 
@@ -26,6 +33,16 @@ type OrderDetailsPageProps = {
 
 export async function generateMetadata({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
+
+  if (isClientOrdersFilterSegment(orderId)) {
+    return createPageMetadata({
+      title: PROFILE_TITLE,
+      description: PROFILE_DESCRIPTION,
+      path: `${ROUTES.PROFILE}/orders/${orderId}`,
+      noIndex: true,
+    });
+  }
+
   const cleanOrderId = getOrderIdFromPathParam(orderId);
 
   return createPageMetadata({
@@ -40,6 +57,7 @@ export async function generateMetadata({ params }: OrderDetailsPageProps) {
 
 async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
   const { orderId } = await params;
+  if (isClientOrdersFilterSegment(orderId)) return <ProfilePageContent />;
   const legacyRedirectPath = getLegacyOrderRedirectPath(orderId);
 
   if (legacyRedirectPath) permanentRedirect(legacyRedirectPath);

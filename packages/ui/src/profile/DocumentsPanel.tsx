@@ -384,6 +384,7 @@ export function DocumentsPanel({
       {pendingDeleteFile ? (
         <ConfirmationModal
           title="Remove document?"
+          eyebrow="Documents"
           text={`The document “${pendingDeleteFile.name}” will be permanently deleted.`}
           confirmLabel="Remove document"
           cancelLabel="Keep document"

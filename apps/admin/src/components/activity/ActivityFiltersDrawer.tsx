@@ -90,6 +90,7 @@ type ActivityFiltersDrawerProps = Readonly<{
   hasActiveFilters: boolean;
   minDate?: string;
   availableActions?: readonly AdminAuditAction[];
+  availableSections?: readonly AdminAuditSection[];
   onChange: (filters: ActivityHistoryFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -102,6 +103,7 @@ export function ActivityFiltersDrawer({
   hasActiveFilters,
   minDate,
   availableActions,
+  availableSections,
   onChange,
   onClose,
   onReset,
@@ -171,7 +173,17 @@ export function ActivityFiltersDrawer({
         id="admin-audit-section-filter"
         label="Section name"
         value={filters.section}
-        options={SECTION_OPTIONS}
+        options={
+          availableSections
+            ? [
+                { value: '', label: 'All sections' },
+                ...availableSections.map((section) => ({
+                  value: section,
+                  label: getAdminAuditSectionLabel(section),
+                })),
+              ]
+            : SECTION_OPTIONS
+        }
         isActive={Boolean(filters.section)}
         onChange={(section) => onChange({ ...filters, section })}
       />

@@ -243,3 +243,10 @@
     padding-inline: 16px;
   }
 }
+
+.hexValue {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fz-12);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}

@@ -549,3 +549,54 @@
   color: var(--color-text-secondary);
   font-size: var(--fz-14);
 }
+
+/* Keep the remaining-change counter readable even for long field names. */
+.changedFields {
+  display: grid;
+  gap: 4px;
+  max-width: 175px;
+  font-size: var(--fz-12);
+}
+
+.changedFieldsPreview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.moreFields {
+  color: var(--color-text-secondary);
+  font-weight: var(--fw-semibold);
+}
+
+.sectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-success);
+}
+.sectionLink > .sectionIcon > svg {
+  width: 16px;
+  height: 16px;
+}
+.sectionLinkLabel {
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .searchGrid.ownerSearchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(130px, 160px);
+  }
+  .ownerSearchGrid .searchAction {
+    width: 100%;
+  }
+}

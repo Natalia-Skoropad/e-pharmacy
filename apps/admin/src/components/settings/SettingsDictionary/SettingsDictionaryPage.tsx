@@ -310,9 +310,10 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   const columns = useMemo<Array<DataTableColumn<TItem>>>(() => {
     const hasColor = Boolean(config.color);
     const createdWidth = hasColor ? '12%' : '16%';
-    const colorWidth = '10%';
-    const nameWidth = hasColor ? '20%' : '25%';
-    const usageWidth = hasColor ? '36%' : '37%';
+    const colorWidth = '7%';
+    const hexWidth = '12%';
+    const nameWidth = hasColor ? '17%' : '25%';
+    const usageWidth = hasColor ? '32%' : '37%';
     const actionsWidth = '22%';
 
     const baseColumns: Array<DataTableColumn<TItem>> = [
@@ -342,6 +343,19 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
             />
           );
         },
+      });
+    }
+
+    if (config.color) {
+      baseColumns.push({
+        key: 'hex',
+        title: 'HEX',
+        width: hexWidth,
+        render: (item) => (
+          <code className={css.hexValue}>
+            {config.color?.getColor(item).toUpperCase()}
+          </code>
+        ),
       });
     }
 

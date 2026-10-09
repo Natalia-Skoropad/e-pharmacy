@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 
 import {
   Building2,
@@ -67,13 +68,13 @@ import {
   PhoneInput,
   RowsPerPageSelect,
   SearchInput,
+  SearchableSelect,
   SelectField,
   type RowsPerPageValue,
   type SelectOption,
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
-
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -118,6 +119,8 @@ import type {
 
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import { getClientPasswordChangeErrorMessage } from '@/lib/auth';
 import { PROFILE_TITLE } from '@/lib/seo/metadata-copy';
@@ -140,9 +143,13 @@ import {
   updateCurrentUserPassword,
 } from '@/lib/api/browser';
 
+import {
+  buildClientOrdersUrl,
+  parseClientOrdersUrl,
+} from '@/lib/profile/client-orders-url';
+
 import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { isCurrentFavoriteRequest } from './favorite-request-lifecycle';
 import css from './ProfilePageContent.module.css';
@@ -276,12 +283,16 @@ function AuthenticatedProfilePageContent({
   const toast = useToast();
   const canUseAuthFeatures = canRenderAuthenticatedContent;
   const pathname = usePathname();
+  const router = useRouter();
   const routeTab = pathname.slice(`${ROUTES.PROFILE}/`.length);
 
   const activeTab: ProfileTab =
     pathname.startsWith(`${ROUTES.PROFILE}/`) &&
-    TABS.some(({ value }) => value === routeTab)
-      ? (routeTab as ProfileTab)
+    (TABS.some(({ value }) => value === routeTab) ||
+      routeTab.startsWith('orders/'))
+      ? routeTab.startsWith('orders/')
+        ? 'orders'
+        : (routeTab as ProfileTab)
       : 'data';
 
   const serverProfileValues = useMemo<DataProfileFormValues>(
@@ -312,16 +323,41 @@ function AuthenticatedProfilePageContent({
 
   const [orders, setOrders] = useState<ClientOrder[]>([]);
 
-  const [ordersFilters, setOrdersFilters] = useState<ClientOrdersFilterState>(
-    DEFAULT_CLIENT_ORDERS_FILTERS
+  const ordersPathState = parseClientOrdersUrl(
+    pathname.startsWith('/profile/orders/')
+      ? pathname.slice('/profile/orders/'.length).split('/')
+      : []
   );
 
-  const [ordersRowsPerPage, setOrdersRowsPerPage] =
-    useState<RowsPerPageValue>(20);
+  const ordersUrlKey = JSON.stringify(ordersPathState);
+  const [syncedOrdersUrlKey, setSyncedOrdersUrlKey] = useState(ordersUrlKey);
 
-  const [ordersCurrentPage, setOrdersCurrentPage] = useState(1);
+  const [ordersFilters, setOrdersFilters] =
+    useState<ClientOrdersFilterState>(ordersPathState);
+
+  const [pharmacyOptions, setPharmacyOptions] = useState<
+    NonNullable<
+      import('@e-pharmacy/types/orders').ClientOrdersResponse['pharmacyOptions']
+    >
+  >([]);
+
+  const [ordersRowsPerPage, setOrdersRowsPerPage] = useState<RowsPerPageValue>(
+    ordersPathState.perPage
+  );
+
+  const [ordersCurrentPage, setOrdersCurrentPage] = useState(
+    ordersPathState.page
+  );
+
   const [ordersTotal, setOrdersTotal] = useState(0);
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
+
+  if (ordersUrlKey !== syncedOrdersUrlKey) {
+    setSyncedOrdersUrlKey(ordersUrlKey);
+    setOrdersFilters(ordersPathState);
+    setOrdersRowsPerPage(ordersPathState.perPage);
+    setOrdersCurrentPage(ordersPathState.page);
+  }
 
   const [ordersEarliestCreatedAt, setOrdersEarliestCreatedAt] = useState<
     string | null
@@ -432,7 +468,9 @@ function AuthenticatedProfilePageContent({
       perPage: ordersRowsPerPage,
       dateFrom: ordersFilters.date.from || undefined,
       dateTo: ordersFilters.date.to || undefined,
-      pharmacy: ordersFilters.pharmacy.trim() || undefined,
+      ...(/^[0-9a-f]{24}$/i.test(ordersFilters.pharmacy)
+        ? { pharmacyId: ordersFilters.pharmacy }
+        : { pharmacy: ordersFilters.pharmacy.trim() || undefined }),
       orderNumber: ordersFilters.orderNumber.trim() || undefined,
       deliveryMethod:
         ordersFilters.deliveryMethod === 'all'
@@ -765,6 +803,7 @@ function AuthenticatedProfilePageContent({
           setOrdersTotal(response.total);
           setOrdersTotalPages(response.totalPages);
           setOrdersEarliestCreatedAt(response.earliestCreatedAt);
+          setPharmacyOptions(response.pharmacyOptions ?? []);
         }
       } catch {
         if (!controller.signal.aborted) {
@@ -857,16 +896,43 @@ function AuthenticatedProfilePageContent({
   const handleOrdersFiltersChange = (nextFilters: ClientOrdersFilterState) => {
     setOrdersFilters(nextFilters);
     setOrdersCurrentPage(1);
+
+    router.replace(
+      buildClientOrdersUrl({
+        ...nextFilters,
+        page: 1,
+        perPage: ordersRowsPerPage,
+      }),
+      { scroll: false }
+    );
   };
 
   const handleOrdersRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
     setOrdersRowsPerPage(nextRowsPerPage);
     setOrdersCurrentPage(1);
+
+    router.replace(
+      buildClientOrdersUrl({
+        ...ordersFilters,
+        page: 1,
+        perPage: nextRowsPerPage,
+      }),
+      { scroll: false }
+    );
   };
 
   const resetOrdersFilters = () => {
     setOrdersFilters(DEFAULT_CLIENT_ORDERS_FILTERS);
     setOrdersCurrentPage(1);
+
+    router.replace(
+      buildClientOrdersUrl({
+        ...DEFAULT_CLIENT_ORDERS_FILTERS,
+        page: 1,
+        perPage: ordersRowsPerPage,
+      }),
+      { scroll: false }
+    );
   };
 
   //===================================================================
@@ -1053,7 +1119,9 @@ function AuthenticatedProfilePageContent({
                 name={user.name}
                 email={user.email}
                 roleLabel={USER_ROLE_LABELS[user.role]}
-                statusLabel={USER_STATUS_PRESENTATION[user.status].label}
+                statusContent={
+                  <StatusBadge {...USER_STATUS_PRESENTATION[user.status]} />
+                }
                 pictureEditor={
                   <ProfilePictureEditor
                     name={user.name}
@@ -1219,12 +1287,50 @@ function AuthenticatedProfilePageContent({
                         }
                       />
 
-                      <SearchInput
+                      <SearchableSelect
                         id="profile-orders-pharmacy-search"
                         label="Pharmacy name search"
+                        labelAccessory={
+                          <InfoTooltip
+                            label="Pharmacy search help"
+                            title="Pharmacy search"
+                            icon={<Building2 size={20} aria-hidden="true" />}
+                            items={[
+                              {
+                                title: 'Search fields',
+                                description:
+                                  'Find pharmacies with orders by name, phone number, email address, or pharmacy street address.',
+                                icon: <Search size={17} aria-hidden="true" />,
+                              },
+                            ]}
+                          />
+                        }
                         value={ordersFilters.pharmacy}
-                        placeholder="Pharmacy name"
+                        placeholder="Pharmacy name, phone, email, or address"
+                        options={[
+                          { value: '', label: 'All pharmacies' },
+                          ...pharmacyOptions.map((pharmacy) => ({
+                            value: pharmacy.id,
+                            label: `${pharmacy.name}${pharmacy.address ? ` · ${pharmacy.address}` : ''}`,
+                            leading: (
+                              <TableImagePreview
+                                src={pharmacy.imageUrl}
+                                alt={`${pharmacy.name} photo`}
+                                fallback={formatInitials(pharmacy.name, 'P')}
+                                size={30}
+                              />
+                            ),
+                            searchText: [
+                              pharmacy.phone,
+                              pharmacy.email,
+                              pharmacy.address,
+                            ]
+                              .filter(Boolean)
+                              .join(' '),
+                          })),
+                        ]}
                         isActive={Boolean(ordersFilters.pharmacy)}
+                        emptyMessage="No pharmacies with orders found"
                         onChange={(pharmacy) =>
                           handleOrdersFiltersChange({
                             ...ordersFilters,
@@ -1285,7 +1391,17 @@ function AuthenticatedProfilePageContent({
                     <PaginationView
                       currentPage={ordersCurrentPage}
                       totalPages={ordersTotalPages}
-                      onPageChange={setOrdersCurrentPage}
+                      onPageChange={(page) => {
+                        setOrdersCurrentPage(page);
+                        router.replace(
+                          buildClientOrdersUrl({
+                            ...ordersFilters,
+                            page,
+                            perPage: ordersRowsPerPage,
+                          }),
+                          { scroll: false }
+                        );
+                      }}
                     />
                   </div>
 

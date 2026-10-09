@@ -244,6 +244,7 @@ function EntityCommentsContent({
       <ConfirmationModal
         isOpen={Boolean(comments.commentToDelete)}
         title="Delete this comment?"
+        eyebrow="Comments"
         description="The comment will be permanently removed."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"

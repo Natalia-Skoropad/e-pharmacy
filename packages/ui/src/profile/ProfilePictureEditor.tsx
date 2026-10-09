@@ -13,6 +13,7 @@ const PROFILE_PICTURE_LABELS: PictureCardLabels = {
   savingButton: 'Saving...',
   removeButton: 'Remove photo',
   removeTitle: 'Remove profile photo?',
+  removeEyebrow: 'Profile photo',
   removeText: 'This profile photo will be removed. Are you sure?',
   removeConfirm: 'Remove photo',
   removingConfirm: 'Removing...',

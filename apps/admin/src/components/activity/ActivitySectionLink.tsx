@@ -86,7 +86,9 @@ export function ActivitySectionLink({ item }: ActivitySectionLinkProps) {
 
   return (
     <TextActionButton className={css.sectionLink} href={location.href}>
-      <SectionIcon section={location.section} />
+      <span className={css.sectionIcon}>
+        <SectionIcon section={location.section} />
+      </span>
       <span className={css.sectionLinkLabel}>{location.label}</span>
     </TextActionButton>
   );
@@ -113,7 +115,9 @@ export function ActivityPageLink({
           size={22}
         />
       ) : (
-        <SectionIcon section={location.section} />
+        <span className={css.sectionIcon}>
+          <SectionIcon section={location.section} />
+        </span>
       )}
       <span className={css.sectionLinkLabel}>{pageName ?? location.label}</span>
     </TextActionButton>

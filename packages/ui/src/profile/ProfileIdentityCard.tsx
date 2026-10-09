@@ -14,6 +14,7 @@ export type ProfileIdentityCardProps = Readonly<{
   email?: string | null;
   roleLabel?: string | null;
   statusLabel?: string | null;
+  statusContent?: ReactNode;
   pictureEditor?: ReactNode;
   details?: readonly ProfileIdentityDetail[];
   children?: ReactNode;
@@ -27,6 +28,7 @@ export function ProfileIdentityCard({
   email,
   roleLabel,
   statusLabel,
+  statusContent,
   pictureEditor,
   details = [],
   children,
@@ -34,7 +36,9 @@ export function ProfileIdentityCard({
 }: ProfileIdentityCardProps) {
   const identityDetails: ProfileIdentityDetail[] = [
     ...(roleLabel ? [{ label: 'Role', value: roleLabel }] : []),
-    ...(statusLabel ? [{ label: 'Status', value: statusLabel }] : []),
+    ...(statusContent || statusLabel
+      ? [{ label: 'Profile status', value: statusContent ?? statusLabel }]
+      : []),
     ...details,
   ];
 

@@ -30,15 +30,16 @@ import {
   getAdminAuditStatusPresentation,
 } from '@/lib/audit/admin-audit-presentation';
 
-import { ActivityActorIdentity } from './ActivityActorIdentity';
-import { ActivityPageLink, ActivitySectionLink } from './ActivitySectionLink';
-
 import {
   getAdminAuditFieldLabel,
   getAuditColorSwatch,
 } from '@/lib/audit/admin-audit-fields';
 
 import type { AdminAuditValue } from '@/lib/audit/admin-audit';
+
+import { ActivityActorIdentity } from './ActivityActorIdentity';
+import { ActivityPageLink, ActivitySectionLink } from './ActivitySectionLink';
+
 import css from './ActivityHistory.module.css';
 
 //===================================================================
@@ -66,8 +67,15 @@ type AuditChangeRow = Readonly<{
 
 function RenderAuditValue({
   value,
-}: Readonly<{ value: AdminAuditValue | undefined }>) {
+  isStatus = false,
+}: Readonly<{ value: AdminAuditValue | undefined; isStatus?: boolean }>) {
   const color = getAuditColorSwatch(value);
+
+  const status =
+    isStatus && typeof value === 'string'
+      ? getAdminAuditStatusPresentation(value)
+      : null;
+
   return (
     <span className={css.changeValue}>
       {color ? (
@@ -77,7 +85,7 @@ function RenderAuditValue({
           aria-label={`Color ${color}`}
         />
       ) : null}
-      {formatAdminAuditValue(value)}
+      {status ? <StatusBadge {...status} /> : formatAdminAuditValue(value)}
     </span>
   );
 }
@@ -103,13 +111,23 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
     key: 'before',
     title: 'Before',
     width: '25%',
-    render: (item) => <RenderAuditValue value={item.before} />,
+    render: (item) => (
+      <RenderAuditValue
+        value={item.before}
+        isStatus={item.field === 'status' || item.field.endsWith('.status')}
+      />
+    ),
   },
   {
     key: 'after',
     title: 'After',
     width: '25%',
-    render: (item) => <RenderAuditValue value={item.after} />,
+    render: (item) => (
+      <RenderAuditValue
+        value={item.after}
+        isStatus={item.field === 'status' || item.field.endsWith('.status')}
+      />
+    ),
   },
 ];
 
@@ -250,7 +268,7 @@ export function AuditDetailsModal({
               <div className={css.detailsMetaItem}>
                 <dt>
                   <FilePenLine size={16} aria-hidden="true" />
-                  Section name
+                  Link to section
                 </dt>
                 <dd>
                   <ActivitySectionLink item={details} />
@@ -259,7 +277,7 @@ export function AuditDetailsModal({
               <div className={css.detailsMetaItem}>
                 <dt>
                   <FilePenLine size={16} aria-hidden="true" />
-                  Page name
+                  Link to page
                 </dt>
                 <dd>
                   <ActivityPageLink
@@ -285,36 +303,13 @@ export function AuditDetailsModal({
               </div>
             </dl>
 
-            {details.reason || (details.statusBefore && details.statusAfter) ? (
+            {details.reason ? (
               <section className={css.detailsReason} aria-label="Change reason">
                 <span className={css.detailsReasonIcon} aria-hidden="true">
                   <MessageSquareText size={18} />
                 </span>
                 <span className={css.detailsReasonCopy}>
                   <strong>Reason / description</strong>
-                  {details.statusBefore && details.statusAfter ? (
-                    <span className={css.statusTransitionBadges}>
-                      {getAdminAuditStatusPresentation(details.statusBefore) ? (
-                        <StatusBadge
-                          {...getAdminAuditStatusPresentation(
-                            details.statusBefore
-                          )!}
-                        />
-                      ) : (
-                        <span>{details.statusBefore}</span>
-                      )}
-                      <span aria-hidden="true">→</span>
-                      {getAdminAuditStatusPresentation(details.statusAfter) ? (
-                        <StatusBadge
-                          {...getAdminAuditStatusPresentation(
-                            details.statusAfter
-                          )!}
-                        />
-                      ) : (
-                        <span>{details.statusAfter}</span>
-                      )}
-                    </span>
-                  ) : null}
                   {details.reason ? <span>{details.reason}</span> : null}
                 </span>
               </section>

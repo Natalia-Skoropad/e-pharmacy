@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 
+import { parseAdminActivityUrl } from '@/lib/audit/admin-activity-url';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 
 import {
@@ -30,6 +31,21 @@ export default async function AdminPharmacyOwnersFilteredPage({
     params,
     searchParams,
   ]);
+
+  if (/^[a-f0-9]{24}$/i.test(ownerId) && filters[0] === 'activity') {
+    return (
+      <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
+        <PharmacyOwnerDetailsPageContent
+          ownerId={ownerId}
+          initialState={{ tab: 'activity' }}
+          initialPharmaciesState={parseAdminPharmacyOwnerPharmaciesSearchParams(
+            query
+          )}
+          initialActivityState={parseAdminActivityUrl(filters.slice(1))}
+        />
+      </AdminPermissionGate>
+    );
+  }
 
   if (
     /^[a-f0-9]{24}$/i.test(ownerId) &&

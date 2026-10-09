@@ -41,9 +41,7 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -64,21 +62,21 @@ import {
   getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
-import {
-  ActivityFiltersDrawer,
-  DEFAULT_ACTIVITY_HISTORY_FILTERS,
-  type ActivityHistoryFilters,
-} from './ActivityFiltersDrawer';
-
 import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
 import { getAdminAuditPageLocation } from '@/lib/audit/admin-audit-presentation';
-import { getAdminAuditFieldsSummary } from '@/lib/audit/admin-audit-fields';
+import { getAdminAuditFieldLabel } from '@/lib/audit/admin-audit-fields';
 
 import {
   buildAdminActivityUrl,
   DEFAULT_ACTIVITY_URL_STATE,
   type ActivityUrlState,
 } from '@/lib/audit/admin-activity-url';
+
+import {
+  ActivityFiltersDrawer,
+  DEFAULT_ACTIVITY_HISTORY_FILTERS,
+  type ActivityHistoryFilters,
+} from './ActivityFiltersDrawer';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
 import { ActivityActorIdentity } from './ActivityActorIdentity';
@@ -187,11 +185,14 @@ function createOwnerOptions(
 
 export function ActivityHistory({
   initialState = DEFAULT_ACTIVITY_URL_STATE,
-}: Readonly<{ initialState?: ActivityUrlState }>) {
+  scopeOwnerId,
+}: Readonly<{ initialState?: ActivityUrlState; scopeOwnerId?: string }>) {
   const router = useRouter();
-  const initialStateKey = JSON.stringify(initialState);
+  const initialStateKey = JSON.stringify({ initialState, scopeOwnerId });
+
   const [syncedInitialStateKey, setSyncedInitialStateKey] =
     useState(initialStateKey);
+
   const [filters, setFilters] = useState<ActivityHistoryFilters>(initialState);
 
   const [page, setPage] = useState(initialState.page);
@@ -235,12 +236,17 @@ export function ActivityHistory({
     nextPage: number,
     nextPerPage: RowsPerPageValue
   ) => {
+    const globalUrl = buildAdminActivityUrl({
+      ...nextFilters,
+      ownerUserId: scopeOwnerId ? '' : nextFilters.ownerUserId,
+      page: nextPage,
+      perPage: nextPerPage,
+    });
+
     router.replace(
-      buildAdminActivityUrl({
-        ...nextFilters,
-        page: nextPage,
-        perPage: nextPerPage,
-      }),
+      scopeOwnerId
+        ? `/admin/pharmacy-owners/${scopeOwnerId}/activity${globalUrl.replace('/admin/settings/activity', '')}`
+        : globalUrl,
       { scroll: false }
     );
   };
@@ -274,8 +280,14 @@ export function ActivityHistory({
         ...(filters.action ? { action: filters.action } : {}),
         ...(filters.section ? { section: filters.section } : {}),
         ...(filters.actorType ? { actorType: filters.actorType } : {}),
-        ...(filters.employeeUserId || filters.ownerUserId
-          ? { actorUserId: filters.employeeUserId || filters.ownerUserId }
+        ...(filters.employeeUserId
+          ? { actorUserId: filters.employeeUserId }
+          : {}),
+        ...(scopeOwnerId || filters.ownerUserId
+          ? {
+              scopeEntityType: 'pharmacyOwner',
+              scopeEntityId: scopeOwnerId || filters.ownerUserId,
+            }
           : {}),
       },
       { signal: controller.signal }
@@ -296,7 +308,7 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [filters, page, perPage, reloadVersion]);
+  }, [filters, page, perPage, reloadVersion, scopeOwnerId]);
 
   useEffect(() => {
     if (!selectedAuditId) return;
@@ -369,7 +381,7 @@ export function ActivityHistory({
     filters.section,
     filters.actorType,
     filters.employeeUserId,
-    filters.ownerUserId,
+    scopeOwnerId ? '' : filters.ownerUserId,
   ].filter(Boolean).length;
 
   const hasFilters = activeFiltersCount > 0;
@@ -445,7 +457,7 @@ export function ActivityHistory({
         key: 'action',
         title: (
           <span className={css.changeHeader}>
-            Change type
+            <TableHeaderTitle parts={['Changed', 'type']} />
             <InfoTooltip
               label="Change color help"
               title="Change colors"
@@ -528,7 +540,17 @@ export function ActivityHistory({
         title: <TableHeaderTitle parts={['Changed', 'fields']} />,
         render: (item) => (
           <span className={css.changedFields}>
-            {getAdminAuditFieldsSummary(item.changedFields)}
+            <span className={css.changedFieldsPreview}>
+              {item.changedFields
+                .slice(0, 3)
+                .map(getAdminAuditFieldLabel)
+                .join(', ') || '—'}
+            </span>
+            {item.changedFields.length > 3 ? (
+              <span className={css.moreFields}>
+                +{item.changedFields.length - 3} more changes
+              </span>
+            ) : null}
           </span>
         ),
       },
@@ -609,53 +631,57 @@ export function ActivityHistory({
   const resetFilters = () => updateFilters(DEFAULT_ACTIVITY_HISTORY_FILTERS);
 
   return (
-    <main className={css.page} aria-labelledby="activity-history-page-title">
-      <section
-        className={css.card}
-        aria-labelledby="activity-history-page-title"
-      >
-        <PageHeader
-          title={
-            <span className={css.titleWithHelp}>
-              Activity history
-              <InfoTooltip
-                label="About Activity history"
-                title="Activity history"
-                icon={<History size={20} aria-hidden="true" />}
-                items={[
-                  {
-                    title: 'Immutable audit trail',
-                    description:
-                      'Critical Admin Cabinet changes are recorded as immutable history entries, so the original record remains available for review even when related data changes later.',
-                    icon: <ShieldCheck size={17} aria-hidden="true" />,
-                  },
-                  {
-                    title: 'What each record shows',
-                    description:
-                      'See who made the change, what was affected, where it happened, which fields changed, and the request trace. Open Details to compare the saved before and after values.',
-                    icon: <ScanSearch size={17} aria-hidden="true" />,
-                  },
-                  {
-                    title: 'Find the records you need',
-                    description:
-                      'Search separately by employee or pharmacy owner, then narrow the history by actor type, date, change type, or Admin Cabinet section.',
-                    icon: <ListFilter size={17} aria-hidden="true" />,
-                  },
-                ]}
-              />
-            </span>
-          }
-          titleId="activity-history-page-title"
-          icon={<History size={23} aria-hidden="true" />}
-        />
-      </section>
+    <main className={css.page} aria-label="Activity history">
+      {!scopeOwnerId ? (
+        <section
+          className={css.card}
+          aria-labelledby="activity-history-page-title"
+        >
+          <PageHeader
+            title={
+              <span className={css.titleWithHelp}>
+                Activity history
+                <InfoTooltip
+                  label="About Activity history"
+                  title="Activity history"
+                  icon={<History size={20} aria-hidden="true" />}
+                  items={[
+                    {
+                      title: 'Immutable audit trail',
+                      description:
+                        'Critical Admin Cabinet changes are recorded as immutable history entries, so the original record remains available for review even when related data changes later.',
+                      icon: <ShieldCheck size={17} aria-hidden="true" />,
+                    },
+                    {
+                      title: 'What each record shows',
+                      description:
+                        'See who made the change, what was affected, where it happened, which fields changed, and the request trace. Open Details to compare the saved before and after values.',
+                      icon: <ScanSearch size={17} aria-hidden="true" />,
+                    },
+                    {
+                      title: 'Find the records you need',
+                      description:
+                        'Search separately by employee or pharmacy owner, then narrow the history by actor type, date, change type, or Admin Cabinet section.',
+                      icon: <ListFilter size={17} aria-hidden="true" />,
+                    },
+                  ]}
+                />
+              </span>
+            }
+            titleId="activity-history-page-title"
+            icon={<History size={23} aria-hidden="true" />}
+          />
+        </section>
+      ) : null}
 
       <section className={css.card} aria-labelledby="activity-search-title">
         <h2 className={css.visuallyHidden} id="activity-search-title">
           Activity history search
         </h2>
 
-        <div className={css.searchGrid}>
+        <div
+          className={`${css.searchGrid} ${scopeOwnerId ? css.ownerSearchGrid : ''}`}
+        >
           <SearchableSelect
             id="activity-employee-search"
             label="Search by employee"
@@ -683,32 +709,34 @@ export function ActivityHistory({
             onChange={updateEmployee}
           />
 
-          <SearchableSelect
-            id="activity-owner-search"
-            label="Search by pharmacy owner"
-            labelAccessory={
-              <InfoTooltip
-                label="Pharmacy owner search help"
-                title="Pharmacy owner search"
-                icon={<UserCog size={20} aria-hidden="true" />}
-                items={[
-                  {
-                    title: 'Search fields',
-                    description:
-                      'Search by pharmacy owner name, ID, email, or phone number.',
-                    icon: <Search size={17} aria-hidden="true" />,
-                  },
-                ]}
-              />
-            }
-            value={filters.ownerUserId}
-            options={ownerOptions}
-            placeholder="Name, ID, email, or phone"
-            emptyMessage="No pharmacy owners found"
-            isActive={Boolean(filters.ownerUserId)}
-            isLoading={areActorsLoading}
-            onChange={updateOwner}
-          />
+          {!scopeOwnerId ? (
+            <SearchableSelect
+              id="activity-owner-search"
+              label="Search by pharmacy owner"
+              labelAccessory={
+                <InfoTooltip
+                  label="Pharmacy owner search help"
+                  title="Pharmacy owner search"
+                  icon={<UserCog size={20} aria-hidden="true" />}
+                  items={[
+                    {
+                      title: 'Search fields',
+                      description:
+                        'Search by pharmacy owner name, ID, email, or phone number.',
+                      icon: <Search size={17} aria-hidden="true" />,
+                    },
+                  ]}
+                />
+              }
+              value={filters.ownerUserId}
+              options={ownerOptions}
+              placeholder="Name, ID, email, or phone"
+              emptyMessage="No pharmacy owners found"
+              isActive={Boolean(filters.ownerUserId)}
+              isLoading={areActorsLoading}
+              onChange={updateOwner}
+            />
+          ) : null}
 
           <div className={css.searchAction}>
             <FiltersButton
@@ -802,6 +830,16 @@ export function ActivityHistory({
           filters={filters}
           hasActiveFilters={hasFilters}
           minDate={data?.earliestCreatedAt ?? undefined}
+          availableActions={
+            scopeOwnerId || filters.ownerUserId
+              ? data?.availableActions
+              : undefined
+          }
+          availableSections={
+            scopeOwnerId || filters.ownerUserId
+              ? data?.availableSections
+              : undefined
+          }
           onChange={updateFilters}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
