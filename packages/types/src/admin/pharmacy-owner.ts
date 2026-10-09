@@ -27,7 +27,9 @@ export type AdminPharmacyOwnerListItem = Readonly<{
 }>;
 
 export type AdminPharmacyOwnerListResponse = Readonly<
-  ApiPaginationResponse<AdminPharmacyOwnerListItem>
+  ApiPaginationResponse<AdminPharmacyOwnerListItem> & {
+    earliestCreatedAt: string | null;
+  }
 >;
 
 //===================================================================

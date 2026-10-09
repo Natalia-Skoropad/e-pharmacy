@@ -293,6 +293,7 @@ export function OwnerCommentsTab({
         cancelLabel="Keep comment"
         confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
         cancelIconLeft={<X size={17} aria-hidden="true" />}
+        destructive
         confirmButtonClassName={css.dangerConfirmButton}
         isLoading={Boolean(deletingId)}
         onConfirm={() => void handleDelete()}

@@ -63,7 +63,7 @@ test('owner admin comments show author data and update tab count after create an
 
 //===================================================================
 
-test('owner activity uses the scoped owner endpoint and mirrors global audit presentation without Section page column', () => {
+test('owner activity uses the scoped owner endpoint and mirrors global audit presentation with Section / page', () => {
   const source = read('./PharmacyOwnerDetailsPageContent/OwnerActivityTab.tsx');
 
   assert.match(source, /getAdminPharmacyOwnerActivity/);
@@ -75,11 +75,11 @@ test('owner activity uses the scoped owner endpoint and mirrors global audit pre
   assert.match(source, /<SearchableSelect/);
   assert.match(source, /<ActivityFiltersDrawer/);
   assert.match(source, /label="Search by employee"/);
-  assert.match(source, /label="Search by pharmacy owner"/);
+  assert.doesNotMatch(source, /label="Search by pharmacy owner"/);
   assert.match(source, /fullWidthOnMobile/);
   assert.match(source, /key: 'entity'/);
   assert.match(source, /key: 'fields'/);
   assert.match(source, /key: 'details'/);
   assert.doesNotMatch(source, /key: 'location'/);
-  assert.doesNotMatch(source, /Section \/ page/);
+  assert.match(source, /key: 'section'/);
 });

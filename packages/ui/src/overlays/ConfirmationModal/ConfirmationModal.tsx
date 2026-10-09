@@ -25,6 +25,7 @@ export type ConfirmationModalProps = {
   confirmButtonClassName?: string;
   cancelButtonClassName?: string;
   confirmButtonVariant?: ButtonVariant;
+  destructive?: boolean;
   cancelButtonVariant?: ButtonVariant;
   confirmIconLeft?: ReactNode;
   cancelIconLeft?: ReactNode;
@@ -48,6 +49,7 @@ function ConfirmationModal({
   confirmButtonClassName,
   cancelButtonClassName,
   confirmButtonVariant = 'primary',
+  destructive = false,
   cancelButtonVariant = 'secondary',
   confirmIconLeft,
   cancelIconLeft,
@@ -88,7 +90,13 @@ function ConfirmationModal({
         <div className={css.actions}>
           <Button
             type="button"
-            className={confirmButtonClassName}
+            className={
+              destructive
+                ? [css.dangerConfirmButton, confirmButtonClassName]
+                    .filter(Boolean)
+                    .join(' ')
+                : confirmButtonClassName
+            }
             variant={confirmButtonVariant}
             size={buttonSize}
             iconLeft={confirmIconLeft}

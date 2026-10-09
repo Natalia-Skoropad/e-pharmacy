@@ -62,6 +62,7 @@ import {
 } from '@/lib/audit/admin-audit-presentation';
 
 import { ActivityActorIdentity } from '@/components/activity/ActivityActorIdentity';
+import { ActivitySectionLink } from '@/components/activity/ActivitySectionLink';
 
 import {
   ActivityFiltersDrawer,
@@ -134,33 +135,6 @@ function createEmployeeOptions(
             src={actor.pictureUrl}
             alt={`${actor.name} photo`}
             fallback={formatInitials(actor.name, 'A')}
-            size={30}
-          />
-        ),
-        searchText: [actor.id, actor.email, actor.phone]
-          .filter(Boolean)
-          .join(' '),
-      })),
-  ];
-}
-
-//===================================================================
-
-function createOwnerOptions(
-  actors: readonly AdminAuditActor[]
-): Array<SearchableSelectOption<string>> {
-  return [
-    { value: '', label: 'All pharmacy owners' },
-    ...actors
-      .filter((actor) => actor.actorType === 'pharmacyOwner')
-      .map((actor) => ({
-        value: actor.id,
-        label: actor.name,
-        leading: (
-          <TableImagePreview
-            src={actor.pictureUrl}
-            alt={`${actor.name} photo`}
-            fallback={formatInitials(actor.name, 'O')}
             size={30}
           />
         ),
@@ -255,8 +229,8 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
         ...(filters.action ? { action: filters.action } : {}),
         ...(filters.section ? { section: filters.section } : {}),
         ...(filters.actorType ? { actorType: filters.actorType } : {}),
-        ...(filters.employeeUserId || filters.ownerUserId
-          ? { actorUserId: filters.employeeUserId || filters.ownerUserId }
+        ...(filters.employeeUserId
+          ? { actorUserId: filters.employeeUserId }
           : {}),
       },
       { signal: controller.signal }
@@ -311,8 +285,6 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
     () => createEmployeeOptions(actors),
     [actors]
   );
-
-  const ownerOptions = useMemo(() => createOwnerOptions(actors), [actors]);
 
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
@@ -375,7 +347,7 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
         key: 'action',
         title: (
           <span className={activityCss.changeHeader}>
-            Change
+            Change type
             <InfoTooltip
               label="Change color help"
               title="Change colors"
@@ -450,6 +422,11 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
         },
       },
       {
+        key: 'section',
+        title: <TableHeaderTitle parts={['Section /', 'page']} />,
+        render: (item) => <ActivitySectionLink item={item} />,
+      },
+      {
         key: 'fields',
         title: <TableHeaderTitle parts={['Changed', 'fields']} />,
         render: (item) => (
@@ -495,18 +472,6 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
     });
   };
 
-  const updateOwner = (ownerUserId: string) => {
-    updateFilters({
-      ...filters,
-      ownerUserId,
-      employeeUserId: '',
-      actorType:
-        ownerUserId && filters.actorType !== 'pharmacyOwner'
-          ? ''
-          : filters.actorType,
-    });
-  };
-
   const retryList = () => {
     setListError(null);
     setReloadVersion((value) => value + 1);
@@ -516,7 +481,7 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
 
   return (
     <section
-      className={css.resourceCard}
+      className={css.activitySection}
       aria-labelledby="owner-activity-history-title"
     >
       <ProfileSectionHeader
@@ -526,73 +491,48 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
         icon={<History size={22} />}
       />
 
-      <div className={activityCss.searchGrid}>
-        <SearchableSelect
-          id="owner-activity-employee-search"
-          label="Search by employee"
-          labelAccessory={
-            <InfoTooltip
-              label="Employee search help"
-              title="Employee search"
-              icon={<UsersRound size={20} aria-hidden="true" />}
-              items={[
-                {
-                  title: 'Search fields',
-                  description:
-                    'Search by employee name, ID, email, or phone number.',
-                  icon: <Search size={17} aria-hidden="true" />,
-                },
-              ]}
-            />
-          }
-          value={filters.employeeUserId}
-          options={employeeOptions}
-          placeholder="Name, ID, email, or phone"
-          emptyMessage="No employees found"
-          isActive={Boolean(filters.employeeUserId)}
-          isLoading={areActorsLoading}
-          onChange={updateEmployee}
-        />
-
-        <SearchableSelect
-          id="owner-activity-owner-search"
-          label="Search by pharmacy owner"
-          labelAccessory={
-            <InfoTooltip
-              label="Pharmacy owner search help"
-              title="Pharmacy owner search"
-              icon={<UsersRound size={20} aria-hidden="true" />}
-              items={[
-                {
-                  title: 'Search fields',
-                  description:
-                    'Search by pharmacy owner name, ID, email, or phone number.',
-                  icon: <Search size={17} aria-hidden="true" />,
-                },
-              ]}
-            />
-          }
-          value={filters.ownerUserId}
-          options={ownerOptions}
-          placeholder="Name, ID, email, or phone"
-          emptyMessage="No pharmacy owners found"
-          isActive={Boolean(filters.ownerUserId)}
-          isLoading={areActorsLoading}
-          onChange={updateOwner}
-        />
-
-        <div className={activityCss.searchAction}>
-          <FiltersButton
-            activeCount={activeFiltersCount}
-            controlsId="activity-history-filters-panel"
-            isExpanded={isFiltersOpen}
-            onClick={() => setIsFiltersOpen(true)}
-            className={activityCss.filterButton}
+      <div className={css.resourceCard}>
+        <div className={activityCss.searchGrid}>
+          <SearchableSelect
+            id="owner-activity-employee-search"
+            label="Search by employee"
+            labelAccessory={
+              <InfoTooltip
+                label="Employee search help"
+                title="Employee search"
+                icon={<UsersRound size={20} aria-hidden="true" />}
+                items={[
+                  {
+                    title: 'Search fields',
+                    description:
+                      'Search by employee name, ID, email, or phone number.',
+                    icon: <Search size={17} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            }
+            value={filters.employeeUserId}
+            options={employeeOptions}
+            placeholder="Name, ID, email, or phone"
+            emptyMessage="No employees found"
+            isActive={Boolean(filters.employeeUserId)}
+            isLoading={areActorsLoading}
+            onChange={updateEmployee}
           />
+
+          <div className={activityCss.searchAction}>
+            <FiltersButton
+              activeCount={activeFiltersCount}
+              controlsId="activity-history-filters-panel"
+              isExpanded={isFiltersOpen}
+              onClick={() => setIsFiltersOpen(true)}
+              className={activityCss.filterButton}
+            />
+          </div>
         </div>
       </div>
 
-      <div className={css.activityStack}>
+      <div className={`${css.resourceCard} ${css.activityStack}`}>
         <div className={activityCss.toolbar}>
           <div className={activityCss.rowsControl}>
             <RowsPerPageSelect
@@ -662,6 +602,7 @@ export function OwnerActivityTab({ ownerId }: OwnerActivityTabProps) {
           filters={filters}
           hasActiveFilters={hasFilters}
           minDate={visibleData?.earliestCreatedAt ?? undefined}
+          availableActions={visibleData?.availableActions}
           onChange={updateFilters}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

@@ -326,6 +326,7 @@ export function AdminPrivateComments({
         description="The comment will be permanently removed from your private notes."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"
+        destructive
         confirmButtonClassName={css.dangerConfirmButton}
         confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
         cancelIconLeft={<X size={17} aria-hidden="true" />}

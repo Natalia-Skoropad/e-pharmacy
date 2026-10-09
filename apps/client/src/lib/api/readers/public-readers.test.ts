@@ -89,6 +89,6 @@ test('pharmacy reader shares route and runtime parsing behavior', async () => {
   assert.equal(
     calls[0],
     '/pharmacies?settlement=%D0%9A%D0%B8%D1%97%D0%B2&region=' +
-      '%D0%9A%D0%B8%D1%97%D0%B2%D1%81%D1%8C%D0%BA%D0%B0%20%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C'
+      '%D0%9A%D0%B8%D1%97%D0%B2%D1%81%D1%8C%D0%BA%D0%B0+%D0%BE%D0%B1%D0%BB%D0%B0%D1%81%D1%82%D1%8C'
   );
 });

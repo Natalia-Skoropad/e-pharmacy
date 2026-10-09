@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import clsx from 'clsx';
-import { ImageOff, Upload } from 'lucide-react';
+import { ImageOff, Upload, Trash2, X } from 'lucide-react';
 
 import { ImagePreview, readFileAsDataUrl } from '../../media';
 import Button from '../../primitives/Button/Button';
@@ -191,6 +191,9 @@ function PictureCard({
           }
           cancelLabel={mergedLabels.removeCancel}
           isLoading={isSaving}
+          destructive
+          confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+          cancelIconLeft={<X size={17} aria-hidden="true" />}
           onConfirm={() => void handleRemove()}
           onCancel={() => setIsConfirmOpen(false)}
         />

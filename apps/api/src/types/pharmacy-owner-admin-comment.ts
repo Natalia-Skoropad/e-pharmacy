@@ -7,5 +7,6 @@ export type PharmacyOwnerAdminCommentDto = Readonly<{
   author: Readonly<{
     userId: string;
     displayName: string;
+    pictureUrl?: string;
   }>;
 }>;

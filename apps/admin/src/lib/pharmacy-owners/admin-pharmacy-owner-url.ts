@@ -324,8 +324,8 @@ export function buildAdminPharmacyOwnerDetailUrl(
 ): string {
   assertAdminPharmacyOwnerEntityId(ownerId, 'owner id');
   const tab = isDetailTab(state.tab) ? state.tab : 'personal';
-  const query = tab === 'personal' ? '' : `?tab=${encodeURIComponent(tab)}`;
-  return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}${query}`;
+  const suffix = tab === 'personal' ? '' : `/${tab}`;
+  return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}${suffix}`;
 }
 
 //===================================================================
@@ -362,9 +362,8 @@ export function buildAdminPharmacyOwnerPharmaciesUrl(
     parseDate(state.createdTo)
   );
 
-  return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}${buildQuery(
+  return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}/pharmacies${buildQuery(
     {
-      tab: 'pharmacies',
       pharmacySearch: normalizeSearch(state.search) || undefined,
       pharmacyStatus: isPharmacyStatus(state.status) ? state.status : undefined,
       pharmacyCreatedFrom: range.from || undefined,

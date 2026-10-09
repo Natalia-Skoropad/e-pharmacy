@@ -11,6 +11,7 @@ export type AdminEmployeePrivateNote = Readonly<{
   author: Readonly<{
     userId: EntityId;
     displayName: string;
+    pictureUrl?: string;
   }>;
 }>;
 

@@ -491,6 +491,7 @@ export function PharmacyOwnersPageContent({
         <PharmacyOwnersFiltersDrawer
           state={state}
           hasActiveFilters={hasActiveFilters}
+          minDate={data?.earliestCreatedAt ?? undefined}
           onChange={navigate}
           onReset={resetFilters}
           onClose={() => setIsFiltersOpen(false)}

@@ -230,6 +230,10 @@ export function parseAdminPharmacyOwnerListResponse(
   return {
     items: record.items.map(parseOwnerListItem),
     ...parsePagination(record),
+    earliestCreatedAt:
+      typeof record.earliestCreatedAt === 'string'
+        ? record.earliestCreatedAt
+        : null,
   };
 }
 
@@ -556,6 +560,9 @@ function parseOwnerComment(value: unknown): AdminPharmacyOwnerComment {
         author.displayName,
         'owner comment author displayName'
       ),
+      ...(typeof author.pictureUrl === 'string' && author.pictureUrl.trim()
+        ? { pictureUrl: author.pictureUrl.trim() }
+        : {}),
     },
   };
 }

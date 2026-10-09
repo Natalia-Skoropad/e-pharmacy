@@ -147,6 +147,7 @@ export type AdminAuditListResponse = Readonly<{
   total: number;
   totalPages: number;
   earliestCreatedAt: string | null;
+  availableActions?: readonly AdminAuditAction[];
 }>;
 
 export type AdminAuditDetailsResponse = Readonly<{
@@ -392,6 +393,10 @@ export function parseAdminAuditListResponse(
     total: value.total as number,
     totalPages: value.totalPages as number,
     earliestCreatedAt: value.earliestCreatedAt as string | null,
+
+    availableActions: Array.isArray(value.availableActions)
+      ? value.availableActions.filter(isAdminAuditAction)
+      : undefined,
   };
 }
 

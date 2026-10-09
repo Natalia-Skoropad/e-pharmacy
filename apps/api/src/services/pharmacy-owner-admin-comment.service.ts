@@ -29,7 +29,8 @@ type CommentRecord = Readonly<{
 //===============================================================
 
 function serializeComment(
-  comment: CommentRecord
+  comment: CommentRecord,
+  pictureUrl?: string
 ): PharmacyOwnerAdminCommentDto {
   return {
     id: String(comment._id),
@@ -40,6 +41,7 @@ function serializeComment(
     author: {
       userId: String(comment.createdByAdminUserId),
       displayName: comment.authorNameSnapshot,
+      ...(pictureUrl ? { pictureUrl } : {}),
     },
   };
 }
@@ -166,7 +168,24 @@ export async function listPharmacyOwnerAdminCommentsService(
     .sort({ createdAt: -1, _id: -1 })
     .lean<CommentRecord[]>();
 
-  return comments.map(serializeComment);
+  const authorIds = [
+    ...new Set(comments.map((comment) => String(comment.createdByAdminUserId))),
+  ];
+
+  const authors = await User.find({ _id: { $in: authorIds } })
+    .select('_id pictureUrl')
+    .lean<Array<{ _id: Types.ObjectId; pictureUrl?: string }>>();
+
+  const avatarById = new Map(
+    authors.map((author) => [String(author._id), author.pictureUrl])
+  );
+
+  return comments.map((comment) =>
+    serializeComment(
+      comment,
+      avatarById.get(String(comment.createdByAdminUserId))
+    )
+  );
 }
 
 //===============================================================
@@ -271,7 +290,18 @@ export async function createPharmacyOwnerAdminCommentService(
     throw new Error('Owner comment transaction did not commit.');
   }
 
-  return result;
+  const savedComment: PharmacyOwnerAdminCommentDto = result;
+
+  const author = await User.findById(adminUserId)
+    .select('pictureUrl')
+    .lean<{ pictureUrl?: string } | null>();
+
+  return author?.pictureUrl
+    ? {
+        ...savedComment,
+        author: { ...savedComment.author, pictureUrl: author.pictureUrl },
+      }
+    : savedComment;
 }
 
 //===============================================================

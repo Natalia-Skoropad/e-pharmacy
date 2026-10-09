@@ -7,6 +7,8 @@ import { formatDateTime } from '@e-pharmacy/utils/date';
 import Button from '../../primitives/Button/Button';
 import LoadingSpinner from '../../primitives/LoadingSpinner/LoadingSpinner';
 import CommentInput from '../../forms/CommentInput/CommentInput';
+import { TableImagePreview } from '../../media';
+import { formatInitials } from '../../data-display/format-initials';
 
 import css from './Comments.module.css';
 
@@ -74,6 +76,7 @@ export type CommentListItem = Readonly<{
   createdAt: string;
   author: Readonly<{
     displayName: string;
+    pictureUrl?: string;
   }>;
 }>;
 
@@ -103,12 +106,20 @@ export function CommentItem<
   return (
     <li className={css.comment}>
       <div className={css.commentHead}>
-        <div>
-          <strong>{comment.author.displayName || title}</strong>
+        <div className={css.authorDetails}>
+          <TableImagePreview
+            src={comment.author.pictureUrl}
+            alt={`${comment.author.displayName || title} photo`}
+            fallback={formatInitials(comment.author.displayName || title, 'U')}
+            size={38}
+          />
+          <div className={css.authorText}>
+            <strong>{comment.author.displayName || title}</strong>
 
-          <time dateTime={comment.createdAt}>
-            {formatDateTime(comment.createdAt) ?? '—'}
-          </time>
+            <time dateTime={comment.createdAt}>
+              {formatDateTime(comment.createdAt) ?? '—'}
+            </time>
+          </div>
         </div>
 
         {onDelete ? (

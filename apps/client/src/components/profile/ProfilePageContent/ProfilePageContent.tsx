@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 import {
   Building2,
@@ -274,7 +275,14 @@ function AuthenticatedProfilePageContent({
 
   const toast = useToast();
   const canUseAuthFeatures = canRenderAuthenticatedContent;
-  const [activeTab, setActiveTab] = useState<ProfileTab>('data');
+  const pathname = usePathname();
+  const routeTab = pathname.slice(`${ROUTES.PROFILE}/`.length);
+
+  const activeTab: ProfileTab =
+    pathname.startsWith(`${ROUTES.PROFILE}/`) &&
+    TABS.some(({ value }) => value === routeTab)
+      ? (routeTab as ProfileTab)
+      : 'data';
 
   const serverProfileValues = useMemo<DataProfileFormValues>(
     () => ({
@@ -378,9 +386,11 @@ function AuthenticatedProfilePageContent({
   const effectiveFavoriteProductsCount = canUseAuthFeatures
     ? favoriteProductsCount
     : 0;
+
   const effectiveFavoritePharmaciesCount = canUseAuthFeatures
     ? favoritePharmaciesCount
     : 0;
+
   const effectiveOrdersCount = canUseAuthFeatures ? ordersTotal : 0;
 
   const tabs = useMemo(
@@ -806,18 +816,42 @@ function AuthenticatedProfilePageContent({
     };
   }, [activeTab, canUseAuthFeatures, sessionsReloadKey]);
 
-  const handleTabChange = (nextTab: ProfileTab) => {
-    setActiveTab(nextTab);
-
+  useEffect(() => {
     if (!canUseAuthFeatures) return;
 
-    if (nextTab === 'favorite-products' && favoriteProductsPage === 0) {
-      void loadFavoriteProducts();
-    }
+    // Start lazy data requests after the effect, rather than synchronously
+    // invoking callbacks that update React state during the effect itself.
+    // The cancellation guard also prevents stale work in Strict Mode.
+    let cancelled = false;
 
-    if (nextTab === 'favorite-pharmacies' && favoritePharmaciesPage === 0) {
-      void loadFavoritePharmacies();
-    }
+    void Promise.resolve().then(() => {
+      if (cancelled) return;
+
+      if (activeTab === 'favorite-products' && favoriteProductsPage === 0) {
+        void loadFavoriteProducts();
+      }
+      if (activeTab === 'favorite-pharmacies' && favoritePharmaciesPage === 0) {
+        void loadFavoritePharmacies();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeTab,
+    canUseAuthFeatures,
+    favoriteProductsPage,
+    favoritePharmaciesPage,
+    loadFavoriteProducts,
+    loadFavoritePharmacies,
+  ]);
+
+  const handleTabChange = (nextTab: ProfileTab) => {
+    if (nextTab === activeTab) return;
+    const url =
+      nextTab === 'data' ? ROUTES.PROFILE : `${ROUTES.PROFILE}/${nextTab}`;
+    window.history.pushState(null, '', url);
   };
 
   const handleOrdersFiltersChange = (nextFilters: ClientOrdersFilterState) => {
@@ -1042,8 +1076,8 @@ function AuthenticatedProfilePageContent({
                 items={tabs}
                 activeValue={activeTab}
                 ariaLabel="Profile sections"
-                mobileVisibleCount={2}
-                tabletVisibleCount={4}
+                mobileVisibleCount={1}
+                tabletVisibleCount={3}
                 onChange={handleTabChange}
               />
 

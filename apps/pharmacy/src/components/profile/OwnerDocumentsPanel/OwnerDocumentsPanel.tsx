@@ -45,7 +45,11 @@ function toBrowserUploadFile(
 
 //===================================================================
 
-export function OwnerDocumentsPanel() {
+export function OwnerDocumentsPanel({
+  onCountChange,
+}: {
+  onCountChange?: (count: number) => void;
+}) {
   const toast = useToast();
   const [documents, setDocuments] = useState<PharmacyOwnerDocument[]>([]);
   const [status, setStatus] = useState<ResourceStatus>('loading');
@@ -126,6 +130,10 @@ export function OwnerDocumentsPanel() {
   }, []);
 
   const values = useMemo(() => documents.map(toBrowserUploadFile), [documents]);
+
+  useEffect(() => {
+    if (status === 'success') onCountChange?.(documents.length);
+  }, [documents.length, onCountChange, status]);
 
   const handleUpload = async (files: readonly File[]) => {
     if (isUploading || pendingDocumentId) return;

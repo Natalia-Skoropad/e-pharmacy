@@ -187,7 +187,7 @@ test('activity date filter is bounded by the first audit log and the shared cale
 
   assert.match(
     serviceSource,
-    /AdminAuditLog\.findOne\(\{\}\)[\s\S]*?sort\(\{ createdAt: 1, _id: 1 \}\)[\s\S]*?earliestCreatedAt/
+    /AdminAuditLog\.findOne\(scopeFilter\)[\s\S]*?sort\(\{ createdAt: 1, _id: 1 \}\)[\s\S]*?earliestCreatedAt/
   );
 });
 

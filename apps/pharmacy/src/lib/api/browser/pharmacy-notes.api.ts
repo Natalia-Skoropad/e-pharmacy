@@ -54,6 +54,9 @@ function normalizeComment(value: unknown): PharmacyNote | null {
         author: {
           userId: authorUserId,
           displayName: authorDisplayName,
+          ...(getTrimmedString(author?.pictureUrl)
+            ? { pictureUrl: getTrimmedString(author?.pictureUrl) }
+            : {}),
         },
       }
     : null;

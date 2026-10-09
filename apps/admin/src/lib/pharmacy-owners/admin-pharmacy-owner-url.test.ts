@@ -124,7 +124,7 @@ test('normalizes detail tabs and validates owner ids in builders', () => {
 
   assert.equal(
     buildAdminPharmacyOwnerDetailUrl(OWNER_ID, { tab: 'comments' }),
-    `/admin/pharmacy-owners/${OWNER_ID}?tab=comments`
+    `/admin/pharmacy-owners/${OWNER_ID}/comments`
   );
 
   assert.throws(() => buildAdminPharmacyOwnerDetailUrl('bad-id'));
@@ -147,6 +147,6 @@ test('parses and builds namespaced pharmacy-tab filters', () => {
 
   assert.equal(
     buildAdminPharmacyOwnerPharmaciesUrl(OWNER_ID, state),
-    `/admin/pharmacy-owners/${OWNER_ID}?tab=pharmacies&pharmacySearch=Bolhrad+Medical+Lane&pharmacyStatus=active&pharmacyCreatedFrom=2026-09-01&pharmacyCreatedTo=2026-10-02&pharmacyRating=4-5&pharmacyPage=2&pharmacyPerPage=100`
+    `/admin/pharmacy-owners/${OWNER_ID}/pharmacies?pharmacySearch=Bolhrad+Medical+Lane&pharmacyStatus=active&pharmacyCreatedFrom=2026-09-01&pharmacyCreatedTo=2026-10-02&pharmacyRating=4-5&pharmacyPage=2&pharmacyPerPage=100`
   );
 });

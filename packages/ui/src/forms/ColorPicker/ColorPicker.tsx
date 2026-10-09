@@ -6,8 +6,8 @@ import {
   type KeyboardEvent,
   type PointerEvent,
 } from 'react';
-import { Check, Palette, X } from 'lucide-react';
 
+import { Check, Palette, X } from 'lucide-react';
 import clsx from 'clsx';
 
 import {
@@ -60,12 +60,16 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+//===================================================================
+
 function toHexChannel(value: number): string {
   return Math.round(clamp(value, 0, 255))
     .toString(16)
     .padStart(2, '0')
     .toUpperCase();
 }
+
+//===================================================================
 
 function hsvToHex({ h, s, v }: HsvColor): string {
   const hue = ((h % 360) + 360) % 360;
@@ -106,6 +110,8 @@ function hsvToHex({ h, s, v }: HsvColor): string {
     (green + match) * 255
   )}${toHexChannel((blue + match) * 255)}`;
 }
+
+//===================================================================
 
 function hexToHsv(value: string): HsvColor {
   const normalized = normalizeProductCategoryColor(value);
@@ -171,14 +177,17 @@ export function ColorPicker({
   onChange,
 }: ColorPickerProps) {
   const hasError = Boolean(isTouched && error);
+
   const selectedColor = isProductCategoryColor(value)
     ? normalizeProductCategoryColor(value)
     : '#64748B';
 
   const [isCustomOpen, setIsCustomOpen] = useState(false);
+
   const [draftHsv, setDraftHsv] = useState<HsvColor>(() =>
     hexToHsv(selectedColor)
   );
+
   const [draftHex, setDraftHex] = useState(selectedColor);
 
   const describedBy =
@@ -475,7 +484,7 @@ export function ColorPicker({
                 type="button"
                 onClick={closeCustomPalette}
               >
-                Cancel
+                <X size={17} aria-hidden="true" /> Cancel
               </button>
 
               <button
@@ -484,7 +493,7 @@ export function ColorPicker({
                 disabled={!HEX_COLOR_PATTERN.test(draftHex)}
                 onClick={applyCustomColor}
               >
-                Apply color
+                <Check size={17} aria-hidden="true" /> Apply color
               </button>
             </div>
           </div>

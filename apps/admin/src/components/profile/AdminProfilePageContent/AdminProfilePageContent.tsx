@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 import {
   FileBadge2,
@@ -76,7 +77,14 @@ export function AdminProfilePageContent() {
   const { user, applyCurrentUser, invalidateSession, logoutAll } = useAuth();
   const { access } = useAdminAuthorization();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<ProfileTab>(PERSONAL_TAB);
+  const pathname = usePathname();
+  const routeTab = pathname.slice(`${ADMIN_ROUTES.PROFILE}/`.length);
+
+  const activeTab: ProfileTab =
+    pathname.startsWith(`${ADMIN_ROUTES.PROFILE}/`) &&
+    ([DOCUMENTS_TAB, COMMENTS_TAB, SESSIONS_TAB] as string[]).includes(routeTab)
+      ? (routeTab as ProfileTab)
+      : PERSONAL_TAB;
 
   const [pictureDraft, setPictureDraft] = useState<string | null | undefined>(
     undefined
@@ -107,7 +115,7 @@ export function AdminProfilePageContent() {
     () => [
       {
         value: PERSONAL_TAB,
-        label: 'Personal information',
+        label: 'My data',
         icon: <UserRound size={17} aria-hidden="true" />,
       },
       {
@@ -302,7 +310,11 @@ export function AdminProfilePageContent() {
             setSessionsStatus('loading');
             setSessionsError('');
           }
-          setActiveTab(nextTab);
+          const url =
+            nextTab === PERSONAL_TAB
+              ? ADMIN_ROUTES.PROFILE
+              : `${ADMIN_ROUTES.PROFILE}/${nextTab}`;
+          window.history.pushState(null, '', url);
         }}
       >
         <ProfileTabPanel

@@ -612,7 +612,15 @@ export async function listAdminAuditLogsService(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const [total, items, earliestLog] = await Promise.all([
+  // Keep the calendar bounds and action facets scoped to the selected owner,
+  // but independent of pagination and the currently selected filters.
+  const scopeFilter: Record<string, unknown> = {};
+
+  if (query.scopeEntityType)
+    scopeFilter.scopeEntityType = query.scopeEntityType;
+  if (query.scopeEntityId) scopeFilter.scopeEntityId = query.scopeEntityId;
+
+  const [total, items, earliestLog, storedActions] = await Promise.all([
     AdminAuditLog.countDocuments(filter),
 
     AdminAuditLog.find(filter)
@@ -621,10 +629,12 @@ export async function listAdminAuditLogsService(
       .limit(query.perPage)
       .lean<LeanAuditLog[]>(),
 
-    AdminAuditLog.findOne({})
+    AdminAuditLog.findOne(scopeFilter)
       .sort({ createdAt: 1, _id: 1 })
       .select('createdAt')
       .lean<{ createdAt: Date } | null>(),
+
+    AdminAuditLog.distinct('action', scopeFilter),
   ]);
 
   return {
@@ -637,6 +647,11 @@ export async function listAdminAuditLogsService(
     earliestCreatedAt: earliestLog
       ? earliestLog.createdAt.toISOString().slice(0, 10)
       : null,
+
+    availableActions: storedActions
+      .map((action) => normalizeStoredAdminAuditAction(String(action)))
+      .filter((action): action is AdminAuditAction => action !== null)
+      .filter((action, index, actions) => actions.indexOf(action) === index),
   };
 }
 

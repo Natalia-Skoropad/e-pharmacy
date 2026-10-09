@@ -13,6 +13,7 @@ export type PharmacyNoteEntityType =
 type PharmacyNoteAuthor = Readonly<{
   userId: EntityId;
   displayName: string;
+  pictureUrl?: string;
 }>;
 
 //===================================================================

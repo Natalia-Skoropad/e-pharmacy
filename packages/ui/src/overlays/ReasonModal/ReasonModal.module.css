@@ -112,5 +112,5 @@
 
 /* Validation error spacing */
 .dialog textarea[aria-invalid='true'] {
-  margin-bottom: -5px;
+  margin-bottom: -7px;
 }

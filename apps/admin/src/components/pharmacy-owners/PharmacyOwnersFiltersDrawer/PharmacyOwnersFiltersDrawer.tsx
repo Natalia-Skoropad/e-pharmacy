@@ -20,6 +20,7 @@ import type { AdminPharmacyOwnersListUrlState } from '@/lib/pharmacy-owners/admi
 type PharmacyOwnersFiltersDrawerProps = Readonly<{
   state: AdminPharmacyOwnersListUrlState;
   hasActiveFilters: boolean;
+  minDate?: string;
   onChange: (state: AdminPharmacyOwnersListUrlState) => void;
   onReset: () => void;
   onClose: () => void;
@@ -42,6 +43,7 @@ const OWNER_STATUS_OPTIONS: Array<
 export function PharmacyOwnersFiltersDrawer({
   state,
   hasActiveFilters,
+  minDate,
   onChange,
   onReset,
   onClose,
@@ -62,6 +64,8 @@ export function PharmacyOwnersFiltersDrawer({
         label="Registration date"
         value={{ from: state.registeredFrom, to: state.registeredTo }}
         isActive={Boolean(state.registeredFrom || state.registeredTo)}
+        minDate={minDate}
+        disabled={!minDate}
         applyOnSubmit
         applyLabel="Apply"
         onChange={({ from, to }) =>

@@ -36,8 +36,13 @@ test('pharmacy profile keeps pharmacy documents and adds owner documents only fo
     'src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   );
 
-  assert.match(source, /title="Документи аптеки"/);
-  assert.match(source, /<OwnerDocumentsPanel \/>/);
+  assert.match(source, /title="Pharmacy documents"/);
+
+  assert.match(
+    source,
+    /<OwnerDocumentsPanel onCountChange=\{setOwnerDocumentsCount\} \/>/
+  );
+
   assert.match(source, /pharmacy\.membershipRole === 'owner'/);
 });
 

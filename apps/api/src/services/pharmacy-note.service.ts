@@ -106,13 +106,16 @@ async function assertEntityAccess(
 
 //===============================================================
 
-function serializePharmacyNote(note: {
-  _id: unknown;
-  text: string;
-  createdAt: Date;
-  createdBy: unknown;
-  authorDisplayName?: string;
-}) {
+function serializePharmacyNote(
+  note: {
+    _id: unknown;
+    text: string;
+    createdAt: Date;
+    createdBy: unknown;
+    authorDisplayName?: string;
+  },
+  pictureUrl?: string
+) {
   return {
     id: String(note._id),
     text: note.text,
@@ -120,6 +123,7 @@ function serializePharmacyNote(note: {
     author: {
       userId: String(note.createdBy),
       displayName: note.authorDisplayName?.trim() || 'Pharmacy member',
+      ...(pictureUrl ? { pictureUrl } : {}),
     },
   };
 }
@@ -201,8 +205,20 @@ export async function getPharmacyNotesService(
     .limit(perPage)
     .lean();
 
+  const authorIds = [...new Set(notes.map((note) => String(note.createdBy)))];
+
+  const authors = await User.find({ _id: { $in: authorIds } })
+    .select('_id pictureUrl')
+    .lean<Array<{ _id: Types.ObjectId; pictureUrl?: string }>>();
+
+  const avatars = new Map(
+    authors.map((author) => [String(author._id), author.pictureUrl])
+  );
+
   return {
-    items: notes.map(serializePharmacyNote),
+    items: notes.map((note) =>
+      serializePharmacyNote(note, avatars.get(String(note.createdBy)))
+    ),
 
     page: safePage,
     perPage,
@@ -249,8 +265,8 @@ export async function createPharmacyNoteService(
   );
 
   const author = await User.findById(actor.id)
-    .select('name email')
-    .lean<PharmacyNoteAuthorUser | null>();
+    .select('name email pictureUrl')
+    .lean<(PharmacyNoteAuthorUser & { pictureUrl?: string }) | null>();
 
   const authorDisplayName = getPharmacyNoteAuthorDisplayName(author);
 
@@ -265,7 +281,7 @@ export async function createPharmacyNoteService(
       clientRequestId: input.clientRequestId,
     });
 
-    return { note: serializePharmacyNote(note) };
+    return { note: serializePharmacyNote(note, author?.pictureUrl) };
   } catch (error) {
     if (!isDuplicateKeyError(error)) throw error;
 

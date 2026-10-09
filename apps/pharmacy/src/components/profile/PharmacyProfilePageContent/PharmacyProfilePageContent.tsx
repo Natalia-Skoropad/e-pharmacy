@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { usePathname } from 'next/navigation';
 
 import {
   Building2,
@@ -131,6 +132,7 @@ import {
   getActiveSessions,
   getMyPharmacyDocument,
   getMyPharmacyProfile,
+  getMyPharmacyOwnerDocuments,
   getPharmacyNotes,
   revokeActiveSession,
   sendMyPharmacyForVerification,
@@ -143,6 +145,7 @@ import {
 
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
+import { PHARMACY_ROUTES } from '@/lib/routes/pharmacy-routes';
 import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-error-messages';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -652,7 +655,14 @@ function PharmacyProfilePage({
     [user.email, user.name, user.phone]
   );
 
-  const [activeTab, setActiveTab] = useState<ProfileTab>('data');
+  const pathname = usePathname();
+  const routeTab = pathname.slice(`${PHARMACY_ROUTES.PROFILE}/`.length);
+
+  const activeTab: ProfileTab =
+    pathname.startsWith(`${PHARMACY_ROUTES.PROFILE}/`) &&
+    TABS.some(({ value }) => value === routeTab)
+      ? (routeTab as ProfileTab)
+      : 'data';
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
 
   const [sessionsStatus, setSessionsStatus] =
@@ -660,9 +670,28 @@ function PharmacyProfilePage({
 
   const [sessionsError, setSessionsError] = useState('');
   const [commentsTotal, setCommentsTotal] = useState(0);
+  const [ownerDocumentsCount, setOwnerDocumentsCount] = useState(0);
 
   const [commentsInitialData, setCommentsInitialData] =
     useState<PharmacyNotesResponse | null>(null);
+
+  // The Documents tab is lazy, but its badge must include owner documents
+  // even before the user opens that tab.
+  useEffect(() => {
+    if (pharmacy.membershipRole !== 'owner') return;
+
+    const controller = new AbortController();
+
+    void getMyPharmacyOwnerDocuments({ signal: controller.signal })
+      .then((response) => {
+        if (!controller.signal.aborted) {
+          setOwnerDocumentsCount(response.documents.length);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [pharmacy.membershipRole]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1077,7 +1106,10 @@ function PharmacyProfilePage({
     !isSendingVerification;
 
   const reviewsCount = pharmacy.reviewsCount ?? 0;
-  const documentsCount = documentValues.length;
+
+  const documentsCount =
+    documentValues.length +
+    (pharmacy.membershipRole === 'owner' ? ownerDocumentsCount : 0);
 
   const tabs = TABS.map((tab) => {
     if (tab.value === 'reviews') {
@@ -1284,6 +1316,7 @@ function PharmacyProfilePage({
       setPharmacyValues(nextValues);
       setInitialPharmacyValues(nextValues);
       setPharmacyTouched({});
+
       toast.success(
         response.pharmacy.status === 'on_moderation'
           ? 'Changes sent for moderation.'
@@ -1328,6 +1361,7 @@ function PharmacyProfilePage({
       setAboutValues(nextValues);
       setInitialAboutValues(nextValues);
       setAboutTouched({});
+
       toast.success(
         response.pharmacy.status === 'on_moderation'
           ? 'Changes sent for moderation.'
@@ -1647,7 +1681,14 @@ function PharmacyProfilePage({
             sidebarAriaLabel="Pharmacy profile summary"
             mobileVisibleCount={1}
             tabletVisibleCount={3}
-            onChange={setActiveTab}
+            onChange={(nextTab) => {
+              if (nextTab === activeTab) return;
+              const url =
+                nextTab === 'data'
+                  ? PHARMACY_ROUTES.PROFILE
+                  : `${PHARMACY_ROUTES.PROFILE}/${nextTab}`;
+              window.history.pushState(null, '', url);
+            }}
             sidebar={
               <ProfileIdentityCard
                 name={summaryOwnerName}
@@ -2369,7 +2410,7 @@ function PharmacyProfilePage({
                   <DocumentsPanel
                     id="pharmacy-profile-documents"
                     name="documents"
-                    title="Документи аптеки"
+                    title="Pharmacy documents"
                     description="Upload and manage documents that belong to this specific pharmacy and are used for its verification."
                     headerIcon={<FileCheck2 size={22} />}
                     value={documentValues}
@@ -2411,7 +2452,9 @@ function PharmacyProfilePage({
                   />
 
                   {pharmacy.membershipRole === 'owner' ? (
-                    <OwnerDocumentsPanel />
+                    <OwnerDocumentsPanel
+                      onCountChange={setOwnerDocumentsCount}
+                    />
                   ) : null}
                 </>
               ) : null}

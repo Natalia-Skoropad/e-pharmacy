@@ -1,5 +1,7 @@
 .title {
   font-size: var(--fz-24);
+  font-family: inherit;
+  letter-spacing: -0.02em;
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
@@ -26,4 +28,14 @@
   .actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.dangerConfirmButton {
+  background-color: var(--color-error, #d92d20) !important;
+  border-color: var(--color-error, #d92d20) !important;
+  color: #fff !important;
+}
+
+.dangerConfirmButton:hover:not(:disabled) {
+  filter: brightness(0.9);
 }

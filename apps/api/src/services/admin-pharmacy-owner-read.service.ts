@@ -308,6 +308,11 @@ export async function listAdminPharmacyOwnersService(
 
   const total = result?.total[0]?.count ?? 0;
 
+  const earliestOwner = await User.findOne({ role: USER_ROLES.PHARMACY })
+    .sort({ createdAt: 1, _id: 1 })
+    .select('createdAt')
+    .lean<{ createdAt: Date } | null>();
+
   return {
     items: (result?.items ?? []).map((owner) => ({
       id: owner.id,
@@ -325,6 +330,9 @@ export async function listAdminPharmacyOwnersService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
+    earliestCreatedAt:
+      earliestOwner?.createdAt?.toISOString().slice(0, 10) ?? null,
   };
 }
 
@@ -843,6 +851,11 @@ export async function listAdminPharmacyOwnerPharmaciesService(
 
   const total = result?.total[0]?.count ?? 0;
 
+  const earliestOwner = await User.findOne({ role: USER_ROLES.PHARMACY })
+    .sort({ createdAt: 1, _id: 1 })
+    .select('createdAt')
+    .lean<{ createdAt: Date } | null>();
+
   return {
     items: (result?.items ?? []).map((pharmacy) => ({
       id: pharmacy.id,
@@ -864,6 +877,9 @@ export async function listAdminPharmacyOwnerPharmaciesService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
+    earliestCreatedAt:
+      earliestOwner?.createdAt?.toISOString().slice(0, 10) ?? null,
   };
 }
 

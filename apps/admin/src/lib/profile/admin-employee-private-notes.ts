@@ -52,6 +52,10 @@ export function parseAdminEmployeePrivateNote(
         value.author.displayName,
         'author displayName'
       ),
+      ...(typeof value.author.pictureUrl === 'string' &&
+      value.author.pictureUrl.trim()
+        ? { pictureUrl: value.author.pictureUrl.trim() }
+        : {}),
     },
   };
 }

@@ -247,6 +247,7 @@ function EntityCommentsContent({
         description="The comment will be permanently removed."
         confirmLabel="Delete comment"
         cancelLabel="Keep comment"
+        destructive
         confirmButtonClassName={css.dangerConfirmButton}
         confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
         cancelIconLeft={<X size={17} aria-hidden="true" />}

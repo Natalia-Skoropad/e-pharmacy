@@ -11,6 +11,7 @@ export type AdminPharmacyOwnerComment = Readonly<{
   author: Readonly<{
     userId: EntityId;
     displayName: string;
+    pictureUrl?: string;
   }>;
 }>;
 

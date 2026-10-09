@@ -97,11 +97,15 @@ export function matchPharmacyRoute(pathname: string): PharmacyRouteMatch {
     };
   }
 
-  if (normalizedPathname === PHARMACY_ROUTES.PROFILE) {
+  if (
+    normalizedPathname === PHARMACY_ROUTES.PROFILE ||
+    normalizedPathname.startsWith(`${PHARMACY_ROUTES.PROFILE}/`)
+  ) {
     return {
       family: 'profile',
       basePath: PHARMACY_ROUTES.PROFILE,
-      segments: [],
+      segments:
+        getRouteSegments(normalizedPathname, PHARMACY_ROUTES.PROFILE) ?? [],
     };
   }
 

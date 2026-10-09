@@ -85,6 +85,7 @@ type ActivityFiltersDrawerProps = Readonly<{
   filters: ActivityHistoryFilters;
   hasActiveFilters: boolean;
   minDate?: string;
+  availableActions?: readonly AdminAuditAction[];
   onChange: (filters: ActivityHistoryFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -96,6 +97,7 @@ export function ActivityFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
+  availableActions,
   onChange,
   onClose,
   onReset,
@@ -133,7 +135,14 @@ export function ActivityFiltersDrawer({
         id="admin-audit-action-filter"
         label="Change type"
         value={filters.action}
-        options={ACTION_OPTIONS}
+        options={
+          availableActions
+            ? ACTION_OPTIONS.filter(
+                (option) =>
+                  !option.value || availableActions.includes(option.value)
+              )
+            : ACTION_OPTIONS
+        }
         isActive={Boolean(filters.action)}
         onChange={(action) => onChange({ ...filters, action })}
       />

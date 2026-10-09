@@ -28,10 +28,9 @@ const CANCELLATION_SOURCE = path.join(
   'OrderCancellationModal.tsx'
 );
 
-const CANCELLATION_STYLES = path.join(
+const REASON_MODAL_STYLES = path.resolve(
   CURRENT_DIR,
-  'OrderCancellationModal',
-  'OrderCancellationModal.module.css'
+  '../../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.module.css'
 );
 
 //===================================================================
@@ -124,11 +123,11 @@ test('orders share one status summary layout across draft and persisted states',
 test('cancellation modal keeps mobile actions stacked and desktop actions inline', async () => {
   const [source, styles] = await Promise.all([
     readFile(CANCELLATION_SOURCE, 'utf8'),
-    readFile(CANCELLATION_STYLES, 'utf8'),
+    readFile(REASON_MODAL_STYLES, 'utf8'),
   ]);
 
-  assert.match(source, /errorClassName=\{css\.commentError\}/);
-  assert.match(styles, /\.commentError\s*\{[\s\S]{0,60}bottom:\s*8px/);
+  assert.match(source, /<ReasonModal/);
+  assert.match(source, /tone="danger"/);
 
   assert.match(
     styles,

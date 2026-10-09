@@ -383,10 +383,11 @@ export function DocumentsPanel({
 
       {pendingDeleteFile ? (
         <ConfirmationModal
-          title="Delete document?"
+          title="Remove document?"
           text={`The document “${pendingDeleteFile.name}” will be permanently deleted.`}
-          confirmLabel="Delete document"
+          confirmLabel="Remove document"
           cancelLabel="Keep document"
+          destructive
           confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
           cancelIconLeft={<X size={17} aria-hidden="true" />}
           onConfirm={() => void handleDelete()}

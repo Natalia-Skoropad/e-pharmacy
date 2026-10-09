@@ -36,14 +36,16 @@ function assertSelfAdminAuthorization(
 
 //===============================================================
 
-function serializePrivateNote(note: PrivateNoteRecord) {
+function serializePrivateNote(note: PrivateNoteRecord, pictureUrl?: string) {
   return {
     id: String(note._id),
     text: note.text,
     createdAt: note.createdAt.toISOString(),
+
     author: {
       userId: String(note.ownerUserId),
       displayName: note.authorNameSnapshot,
+      ...(pictureUrl ? { pictureUrl } : {}),
     },
   };
 }
@@ -107,8 +109,12 @@ export async function listMyAdminEmployeePrivateNotesService(
     .limit(perPage)
     .lean<PrivateNoteRecord[]>();
 
+  const author = await User.findById(userId)
+    .select('pictureUrl')
+    .lean<{ pictureUrl?: string } | null>();
+
   return {
-    items: notes.map(serializePrivateNote),
+    items: notes.map((note) => serializePrivateNote(note, author?.pictureUrl)),
     page: safePage,
     perPage,
     total,
@@ -130,12 +136,17 @@ export async function createMyAdminEmployeePrivateNoteService(
 
   if (existing) {
     assertReplayMatches(existing, normalizedText);
-    return serializePrivateNote(existing);
+
+    const author = await User.findById(userId)
+      .select('pictureUrl')
+      .lean<{ pictureUrl?: string } | null>();
+
+    return serializePrivateNote(existing, author?.pictureUrl);
   }
 
   const owner = await User.findOne({ _id: userId })
-    .select('name email')
-    .lean<{ name?: string; email?: string } | null>();
+    .select('name email pictureUrl')
+    .lean<{ name?: string; email?: string; pictureUrl?: string } | null>();
 
   const authorNameSnapshot =
     owner?.name?.trim() || owner?.email?.trim() || 'Admin employee';
@@ -148,7 +159,7 @@ export async function createMyAdminEmployeePrivateNoteService(
       authorNameSnapshot,
     });
 
-    return serializePrivateNote(note);
+    return serializePrivateNote(note, owner?.pictureUrl);
   } catch (error) {
     if (!isDuplicateKeyError(error)) throw error;
 
@@ -156,7 +167,7 @@ export async function createMyAdminEmployeePrivateNoteService(
     if (!replay) throw error;
 
     assertReplayMatches(replay, normalizedText);
-    return serializePrivateNote(replay);
+    return serializePrivateNote(replay, owner?.pictureUrl);
   }
 }
 

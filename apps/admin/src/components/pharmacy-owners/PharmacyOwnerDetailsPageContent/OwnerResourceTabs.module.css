@@ -34,3 +34,9 @@
     padding: 14px;
   }
 }
+
+.activitySection {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
