@@ -1962,6 +1962,7 @@ function parsePharmacyPendingModeration(
   ] as const) {
     const fieldValue = record[key];
     if (fieldValue === undefined) continue;
+
     if (fieldValue !== null && typeof fieldValue !== 'string') {
       throw invalidDto(
         `pharmacy pending moderation.${key} must be a string or null when present.`,
@@ -2116,6 +2117,10 @@ function parsePharmacyProfile(
       imageUrl: 'string',
       description: 'string',
       statusReason: 'string',
+      reviewState: 'string',
+      reviewFeedback: 'string',
+      reviewedAt: 'string',
+      reviewedBy: 'string',
     },
     context
   );
@@ -2133,6 +2138,50 @@ function parsePharmacyProfile(
 
   if (!PHARMACY_STATUSES.has(record.status as string)) {
     throw invalidDto('pharmacy profile.status is invalid.', record, context);
+  }
+
+  if (
+    record.reviewState !== undefined &&
+    record.reviewState !== 'pending' &&
+    record.reviewState !== 'changes_requested'
+  ) {
+    throw invalidDto(
+      'pharmacy profile.reviewState is invalid.',
+      record,
+      context
+    );
+  }
+  if (
+    record.reviewState !== undefined &&
+    record.status !== 'on_verification' &&
+    record.status !== 'on_moderation'
+  ) {
+    throw invalidDto(
+      'pharmacy profile.reviewState is incompatible with status.',
+      record,
+      context
+    );
+  }
+  if (
+    record.reviewedAt !== undefined &&
+    (Number.isNaN(Date.parse(record.reviewedAt as string)) ||
+      new Date(record.reviewedAt as string).toISOString() !== record.reviewedAt)
+  ) {
+    throw invalidDto(
+      'pharmacy profile.reviewedAt is invalid.',
+      record,
+      context
+    );
+  }
+  if (
+    record.reviewedBy !== undefined &&
+    !/^[0-9a-f]{24}$/i.test(record.reviewedBy as string)
+  ) {
+    throw invalidDto(
+      'pharmacy profile.reviewedBy is invalid.',
+      record,
+      context
+    );
   }
 
   const rating = requireNonNegativeFiniteNumber(
@@ -2204,6 +2253,22 @@ function parsePharmacyProfile(
       : {}),
     ...(record.statusReason !== undefined
       ? { statusReason: record.statusReason as string }
+      : {}),
+    ...(record.reviewState !== undefined
+      ? { reviewState: record.reviewState as 'pending' | 'changes_requested' }
+      : {}),
+    ...(record.reviewFeedback !== undefined
+      ? { reviewFeedback: record.reviewFeedback as string }
+      : {}),
+    ...(record.reviewedAt !== undefined
+      ? {
+          reviewedAt: checked<PharmacyProfile['reviewedAt']>(record.reviewedAt),
+        }
+      : {}),
+    ...(record.reviewedBy !== undefined
+      ? {
+          reviewedBy: checked<PharmacyProfile['reviewedBy']>(record.reviewedBy),
+        }
       : {}),
     ...(record.pendingModeration !== undefined
       ? {

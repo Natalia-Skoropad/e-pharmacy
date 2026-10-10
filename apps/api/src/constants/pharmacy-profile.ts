@@ -46,9 +46,24 @@ export const PHARMACY_PROFILE_ACTIONS_BY_STATUS = {
 
 export function canPharmacyProfilePerformAction(
   status: keyof typeof PHARMACY_PROFILE_ACTIONS_BY_STATUS,
-  action: PharmacyProfileAction
+  action: PharmacyProfileAction,
+  reviewState?: 'pending' | 'changes_requested'
 ): boolean {
+  if (
+    (status === 'on_verification' || status === 'on_moderation') &&
+    reviewState === 'changes_requested'
+  ) {
+    return (
+      action === 'edit' ||
+      (status === 'on_verification'
+        ? action === 'submit_for_verification'
+        : action === 'submit_for_moderation')
+    );
+  }
+
   return (
-    PHARMACY_PROFILE_ACTIONS_BY_STATUS[status] as readonly PharmacyProfileAction[]
+    PHARMACY_PROFILE_ACTIONS_BY_STATUS[
+      status
+    ] as readonly PharmacyProfileAction[]
   ).includes(action);
 }

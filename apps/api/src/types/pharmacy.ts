@@ -103,6 +103,8 @@ export type PharmacyPendingModerationResponseDto = Omit<
   documents?: PharmacyProfileVerificationDocumentResponseDto[];
 };
 
+export type PharmacyModerationReviewState = 'pending' | 'changes_requested';
+
 export type PharmacyEntity = {
   name: string;
   location?: PharmacyLocationDraft;
@@ -117,6 +119,10 @@ export type PharmacyEntity = {
   imageUrl?: string;
   description?: string;
   statusReason?: string;
+  reviewState?: PharmacyModerationReviewState;
+  reviewFeedback?: string;
+  reviewedAt?: Date;
+  reviewedBy?: Types.ObjectId;
   pendingModeration?: PharmacyPendingModeration;
   reviewsCount?: number;
   ownerId: Types.ObjectId;
@@ -223,6 +229,10 @@ export type PharmacyProfileResponseDto = {
   imageUrl?: string;
   description?: string;
   statusReason?: string;
+  reviewState?: PharmacyModerationReviewState;
+  reviewFeedback?: string;
+  reviewedAt?: ISODateTimeString;
+  reviewedBy?: string;
   pendingModeration?: PharmacyPendingModerationResponseDto;
   reviewsCount: number;
   updatedAt: ISODateTimeString;

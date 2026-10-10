@@ -3,6 +3,7 @@ import type { PharmacyProfileVerificationDocument } from './verification-documen
 import type { PharmacyLocationDraft } from './location';
 import type { EditablePharmacyBankDetails } from './bank-details';
 import type { PharmacyStatus } from './status';
+import type { PharmacyModerationReview } from './moderation-review';
 
 //=============================================================================
 
@@ -40,25 +41,26 @@ export type CurrentPharmacySummary = Readonly<{
 
 //=============================================================================
 
-export type PharmacyProfile = Readonly<{
-  id: EntityId;
-  name: string;
-  location?: PharmacyLocationDraft;
-  phone?: string;
-  email?: string;
-  workingHours?: string;
-  bankDetails?: EditablePharmacyBankDetails;
-  bankTransferAvailable: boolean;
-  documents: readonly PharmacyProfileVerificationDocument[];
-  status: PharmacyStatus;
-  rating: number;
-  imageUrl?: string;
-  description?: string;
-  statusReason?: string;
-  pendingModeration?: PharmacyPendingModeration;
-  reviewsCount: number;
-  updatedAt: ISODateTimeString;
-}>;
+export type PharmacyProfile = PharmacyModerationReview &
+  Readonly<{
+    id: EntityId;
+    name: string;
+    location?: PharmacyLocationDraft;
+    phone?: string;
+    email?: string;
+    workingHours?: string;
+    bankDetails?: EditablePharmacyBankDetails;
+    bankTransferAvailable: boolean;
+    documents: readonly PharmacyProfileVerificationDocument[];
+    status: PharmacyStatus;
+    rating: number;
+    imageUrl?: string;
+    description?: string;
+    statusReason?: string;
+    pendingModeration?: PharmacyPendingModeration;
+    reviewsCount: number;
+    updatedAt: ISODateTimeString;
+  }>;
 
 //=============================================================================
 

@@ -1,6 +1,11 @@
 import type { ClientSession, HydratedDocument, Types } from 'mongoose';
 
-import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
+import {
+  PHARMACY_STATUSES,
+  USER_ROLES,
+  USER_STATUSES,
+} from '../constants/auth';
+
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import {
@@ -10,6 +15,7 @@ import {
 } from '../constants/pharmacy-profile';
 
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 
 import type { PharmacyEntity, PharmacyMembershipRole } from '../types/pharmacy';
 import type { UserRole } from '../types/user';
@@ -164,6 +170,20 @@ export async function findPharmacyForProfileAccess(
       undefined,
       PHARMACY_OWNER_REQUIRED_ERROR_CODE
     );
+  }
+
+  if (capability !== 'read_profile') {
+    const owner = await User.findOne({
+      _id: pharmacy.ownerId,
+      role: USER_ROLES.PHARMACY,
+    }).session(session ?? null);
+
+    if (!owner || owner.status === USER_STATUSES.BLOCKED) {
+      throw httpError(
+        HTTP_STATUS.FORBIDDEN,
+        'Blocked or missing owner cannot edit or resubmit pharmacy data.'
+      );
+    }
   }
 
   return { pharmacy, membershipRole };

@@ -247,18 +247,81 @@ function createOwnerInitialValues(user: AuthUser): DataProfileFormValues {
 
 //===================================================================
 
+function getEditablePharmacyProfile(
+  pharmacy: PharmacyProfile
+): PharmacyProfile {
+  if (
+    pharmacy.status !== 'on_moderation' ||
+    pharmacy.reviewState !== 'changes_requested' ||
+    !pharmacy.pendingModeration
+  )
+    return pharmacy;
+
+  const pending = pharmacy.pendingModeration;
+  const mergedBankDetails = { ...(pharmacy.bankDetails ?? {}) };
+
+  if (pending.bankDetails) {
+    for (const [field, value] of Object.entries(pending.bankDetails)) {
+      if (value === null)
+        delete (mergedBankDetails as Record<string, string>)[field];
+      else if (value !== undefined)
+        (mergedBankDetails as Record<string, string>)[field] = value;
+    }
+  }
+
+  const mergedLocation: Record<string, unknown> = {
+    ...(pharmacy.location ?? {}),
+  };
+
+  if (pending.location) {
+    for (const [field, value] of Object.entries(pending.location)) {
+      if (value === null) delete mergedLocation[field];
+      else if (value !== undefined) mergedLocation[field] = value;
+    }
+  }
+
+  return {
+    ...pharmacy,
+    ...(pending.name !== undefined ? { name: pending.name } : {}),
+    ...(pending.location !== undefined
+      ? { location: mergedLocation as unknown as PharmacyProfile['location'] }
+      : {}),
+    ...(pending.phone !== undefined ? { phone: pending.phone ?? '' } : {}),
+    ...(pending.email !== undefined ? { email: pending.email ?? '' } : {}),
+    ...(pending.workingHours !== undefined
+      ? { workingHours: pending.workingHours ?? '' }
+      : {}),
+    ...(pending.description !== undefined
+      ? { description: pending.description ?? '' }
+      : {}),
+    ...(pending.imageUrl !== undefined
+      ? { imageUrl: pending.imageUrl ?? '' }
+      : {}),
+    ...(pending.documents !== undefined
+      ? { documents: pending.documents }
+      : {}),
+    ...(pending.bankDetails !== undefined
+      ? { bankDetails: mergedBankDetails }
+      : {}),
+  };
+}
+
+//===================================================================
+
 function createPharmacyInitialValues(
   user: ProfileUserDefaults,
   pharmacy: PharmacyProfile
 ): PharmacyContactFormValues {
+  const edit = getEditablePharmacyProfile(pharmacy);
+
   return {
-    name: createPharmacyNameInitialValue(user, pharmacy),
-    settlement: pharmacy.location?.settlement ?? '',
-    region: pharmacy.location?.region ?? '',
-    address: pharmacy.location?.address ?? '',
-    phone: pharmacy.phone ?? user.phone ?? '',
-    email: pharmacy.email ?? user.email ?? '',
-    workingHours: pharmacy.workingHours ?? '',
+    name: createPharmacyNameInitialValue(user, edit),
+    settlement: edit.location?.settlement ?? '',
+    region: edit.location?.region ?? '',
+    address: edit.location?.address ?? '',
+    phone: edit.phone ?? user.phone ?? '',
+    email: edit.email ?? user.email ?? '',
+    workingHours: edit.workingHours ?? '',
   };
 }
 
@@ -268,7 +331,7 @@ function createAboutInitialValues(
   pharmacy: PharmacyProfile
 ): PharmacyAboutFormValues {
   return {
-    description: pharmacy.description ?? '',
+    description: getEditablePharmacyProfile(pharmacy).description ?? '',
   };
 }
 
@@ -278,7 +341,8 @@ function createPaymentInitialValues(
   user: ProfileUserDefaults,
   pharmacy: PharmacyProfile
 ): PharmacyPaymentFormValues {
-  const recipientName = pharmacy.bankDetails?.recipientName?.trim() ?? '';
+  const edit = getEditablePharmacyProfile(pharmacy);
+  const recipientName = edit.bankDetails?.recipientName?.trim() ?? '';
   const ownerName = user.name?.trim() ?? '';
 
   const shouldClearOwnerNameFallback =
@@ -286,12 +350,14 @@ function createPaymentInitialValues(
 
   return {
     recipientName: shouldClearOwnerNameFallback ? '' : recipientName,
-    taxId: pharmacy.bankDetails?.taxId ?? '',
-    iban: pharmacy.bankDetails?.iban ?? '',
-    bankName: pharmacy.bankDetails?.bankName ?? '',
+    taxId: edit.bankDetails?.taxId ?? '',
+    iban: edit.bankDetails?.iban ?? '',
+    bankName: edit.bankDetails?.bankName ?? '',
+
     receiptEmail:
-      pharmacy.bankDetails?.receiptEmail ?? pharmacy.email ?? user.email ?? '',
-    paymentPurpose: pharmacy.bankDetails?.paymentPurpose ?? '',
+      edit.bankDetails?.receiptEmail ?? edit.email ?? user.email ?? '',
+
+    paymentPurpose: edit.bankDetails?.paymentPurpose ?? '',
   };
 }
 
@@ -365,8 +431,11 @@ function createTouchedUpdater<TValues extends object>(
 
 //===================================================================
 
-function isReadonlyStatus(status: PharmacyStatus): boolean {
-  return !canPharmacyProfilePerformAction(status, 'edit');
+function isReadonlyStatus(
+  status: PharmacyStatus,
+  reviewState?: PharmacyProfile['reviewState']
+): boolean {
+  return !canPharmacyProfilePerformAction(status, 'edit', reviewState);
 }
 
 //===================================================================
@@ -730,12 +799,12 @@ function PharmacyProfilePage({
   );
 
   const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
-    pharmacy.imageUrl ?? null
+    getEditablePharmacyProfile(pharmacy).imageUrl ?? null
   );
 
   const [initialPharmacyPictureUrl, setInitialPharmacyPictureUrl] = useState<
     string | null
-  >(pharmacy.imageUrl ?? null);
+  >(getEditablePharmacyProfile(pharmacy).imageUrl ?? null);
 
   const [pharmacyValues, setPharmacyValues] =
     useState<PharmacyContactFormValues>(() =>
@@ -774,12 +843,12 @@ function PharmacyProfilePage({
     useState<PharmacyPaymentTouchedFields>({});
 
   const [documentValues, setDocumentValues] = useState<BrowserUploadFile[]>(
-    () => createDocumentValues(pharmacy.documents)
+    () => createDocumentValues(getEditablePharmacyProfile(pharmacy).documents)
   );
 
   const [initialDocumentValues, setInitialDocumentValues] = useState<
     BrowserUploadFile[]
-  >(() => createDocumentValues(pharmacy.documents));
+  >(() => createDocumentValues(getEditablePharmacyProfile(pharmacy).documents));
 
   const [documentsTouched, setDocumentsTouched] = useState(false);
   const [documentsError, setDocumentsError] = useState('');
@@ -953,8 +1022,11 @@ function PharmacyProfilePage({
     pharmacy
   );
 
-  const canonicalDocumentValues = createDocumentValues(pharmacy.documents);
-  const canonicalPharmacyPictureUrl = pharmacy.imageUrl ?? null;
+  const canonicalDocumentValues = createDocumentValues(
+    getEditablePharmacyProfile(pharmacy).documents
+  );
+  const canonicalPharmacyPictureUrl =
+    getEditablePharmacyProfile(pharmacy).imageUrl ?? null;
 
   const pharmacyCanonicalChanged = isPharmacyContactFormDirty(
     canonicalPharmacyValues,
@@ -1045,7 +1117,8 @@ function PharmacyProfilePage({
   }
 
   const isProfileOwner = pharmacy.membershipRole === 'owner';
-  const isProfileReadonly = !isProfileOwner || isReadonlyStatus(pharmacyStatus);
+  const isProfileReadonly =
+    !isProfileOwner || isReadonlyStatus(pharmacyStatus, pharmacy.reviewState);
 
   const pharmacyDocumentsError = validatePharmacyDocuments(documentValues, {
     required: true,
@@ -1060,7 +1133,8 @@ function PharmacyProfilePage({
     isProfileOwner &&
     canPharmacyProfilePerformAction(
       pharmacyStatus,
-      'submit_for_verification'
+      'submit_for_verification',
+      pharmacy.reviewState
     ) &&
     pharmacyDocumentsAreReady &&
     pharmacyPictureIsReady &&
@@ -1098,7 +1172,11 @@ function PharmacyProfilePage({
 
   const canSendForModeration =
     isProfileOwner &&
-    canPharmacyProfilePerformAction(pharmacyStatus, 'submit_for_moderation') &&
+    canPharmacyProfilePerformAction(
+      pharmacyStatus,
+      'submit_for_moderation',
+      pharmacy.reviewState
+    ) &&
     moderationFormHasChanges &&
     moderationFormIsValid &&
     !isPharmacySaving &&
@@ -1193,7 +1271,11 @@ function PharmacyProfilePage({
   const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
     if (isProfileReadonly || pharmacyMutationInFlightRef.current) return;
 
-    if (pharmacy.status === 'active') {
+    if (
+      pharmacy.status === 'active' ||
+      (pharmacy.status === 'on_moderation' &&
+        pharmacy.reviewState === 'changes_requested')
+    ) {
       setPharmacyPictureUrl(nextPictureUrl);
       toast.success(
         nextPictureUrl
@@ -1212,8 +1294,12 @@ function PharmacyProfilePage({
         expectedRevision: pharmacy.updatedAt,
       });
       syncProfile(response.pharmacy);
-      setPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
-      setInitialPharmacyPictureUrl(response.pharmacy.imageUrl ?? null);
+      setPharmacyPictureUrl(
+        getEditablePharmacyProfile(response.pharmacy).imageUrl ?? null
+      );
+      setInitialPharmacyPictureUrl(
+        getEditablePharmacyProfile(response.pharmacy).imageUrl ?? null
+      );
       toast.success(
         nextPictureUrl
           ? 'Pharmacy photo was updated.'
@@ -1320,7 +1406,7 @@ function PharmacyProfilePage({
 
       toast.success(
         response.pharmacy.status === 'on_moderation'
-          ? 'Changes sent for moderation.'
+          ? 'Corrections saved. Resubmit when ready.'
           : 'Pharmacy data saved successfully.'
       );
     } catch (error) {
@@ -1365,7 +1451,7 @@ function PharmacyProfilePage({
 
       toast.success(
         response.pharmacy.status === 'on_moderation'
-          ? 'Changes sent for moderation.'
+          ? 'Corrections saved. Resubmit when ready.'
           : 'About pharmacy saved successfully.'
       );
     } catch (error) {
@@ -1409,7 +1495,7 @@ function PharmacyProfilePage({
       setPaymentTouched({});
       toast.success(
         response.pharmacy.status === 'on_moderation'
-          ? 'Changes sent for moderation.'
+          ? 'Corrections saved. Resubmit when ready.'
           : 'Payment details saved successfully.'
       );
     } catch (error) {
@@ -1477,7 +1563,7 @@ function PharmacyProfilePage({
       });
 
       const nextDocumentValues = createDocumentValues(
-        response.pharmacy.documents
+        getEditablePharmacyProfile(response.pharmacy).documents
       );
 
       syncProfile(response.pharmacy);
@@ -1488,7 +1574,7 @@ function PharmacyProfilePage({
 
       toast.success(
         response.pharmacy.status === 'on_moderation'
-          ? 'Changes sent for moderation.'
+          ? 'Corrections saved. Resubmit when ready.'
           : 'Documents saved successfully.'
       );
     } catch (error) {
@@ -1539,11 +1625,17 @@ function PharmacyProfilePage({
     const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
     const nextAboutValues = createAboutInitialValues(nextPharmacy);
     const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
-    const nextDocumentValues = createDocumentValues(nextPharmacy.documents);
+    const nextDocumentValues = createDocumentValues(
+      getEditablePharmacyProfile(nextPharmacy).documents
+    );
 
     syncProfile(nextPharmacy);
-    setPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
-    setInitialPharmacyPictureUrl(nextPharmacy.imageUrl ?? null);
+    setPharmacyPictureUrl(
+      getEditablePharmacyProfile(nextPharmacy).imageUrl ?? null
+    );
+    setInitialPharmacyPictureUrl(
+      getEditablePharmacyProfile(nextPharmacy).imageUrl ?? null
+    );
     setPharmacyValues(nextPharmacyValues);
     setInitialPharmacyValues(nextPharmacyValues);
     setAboutValues(nextAboutValues);
@@ -1743,19 +1835,42 @@ function PharmacyProfilePage({
                   ) : null}
                   {pharmacy.status === 'on_verification' ? (
                     <p>
-                      The profile is waiting for Admin verification. Submitted
-                      fields are read-only until the decision is made.
+                      {pharmacy.reviewState === 'changes_requested'
+                        ? 'Admin requested corrections. Edit the fields, save your updates, then resubmit for verification.'
+                        : 'The profile is waiting for Admin verification. Submitted fields are read-only until the decision is made.'}
                     </p>
                   ) : null}
                   {pharmacy.status === 'on_moderation' ? (
                     <p>
-                      Profile changes are on moderation. Approved public data
-                      remains visible until Admin reviews the changes.
+                      {pharmacy.reviewState === 'changes_requested'
+                        ? 'Admin requested corrections to the pending draft. Public approved data stays unchanged until approval.'
+                        : 'Profile changes are on moderation. Approved public data remains visible until Admin reviews the changes.'}
                     </p>
+                  ) : null}
+                  {isProfileOwner &&
+                  pharmacy.reviewState === 'changes_requested' &&
+                  pharmacy.reviewFeedback ? (
+                    <div aria-live="polite">
+                      <strong>Corrections requested</strong>
+                      <p className={css.statusReason}>
+                        {pharmacy.reviewFeedback}
+                      </p>
+                      {pharmacy.reviewedAt ? (
+                        <p>
+                          Reviewed:{' '}
+                          {new Date(pharmacy.reviewedAt).toLocaleString(
+                            'en-GB'
+                          )}
+                        </p>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
 
-                {isProfileOwner && pharmacy.status === 'new' ? (
+                {isProfileOwner &&
+                (pharmacy.status === 'new' ||
+                  (pharmacy.status === 'on_verification' &&
+                    pharmacy.reviewState === 'changes_requested')) ? (
                   <Button
                     type="button"
                     fullWidth
@@ -1765,11 +1880,16 @@ function PharmacyProfilePage({
                     loadingLabel="Sending..."
                     onClick={handleSendForVerification}
                   >
-                    Send for verification
+                    {pharmacy.status === 'new'
+                      ? 'Send for verification'
+                      : 'Resubmit for verification'}
                   </Button>
                 ) : null}
 
-                {isProfileOwner && pharmacy.status === 'active' ? (
+                {isProfileOwner &&
+                (pharmacy.status === 'active' ||
+                  (pharmacy.status === 'on_moderation' &&
+                    pharmacy.reviewState === 'changes_requested')) ? (
                   <Button
                     type="button"
                     fullWidth
@@ -1779,7 +1899,9 @@ function PharmacyProfilePage({
                     loadingLabel="Sending..."
                     onClick={handleSendForModeration}
                   >
-                    Send for moderation
+                    {pharmacy.status === 'active'
+                      ? 'Send for moderation'
+                      : 'Resubmit corrections'}
                   </Button>
                 ) : null}
               </ProfileIdentityCard>

@@ -4,6 +4,7 @@ import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
+  'pharmacy.corrections.requested',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
   'pharmacyOwner.profile.updated',

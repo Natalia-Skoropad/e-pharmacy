@@ -8,6 +8,7 @@ import type {
   AdminPharmacyDocumentParams,
   AdminPharmacyParams,
   UpdateAdminPharmacyStatusInput,
+  RequestAdminPharmacyCorrectionsInput,
 } from '../schemas/admin.schema';
 
 import type {
@@ -31,7 +32,11 @@ import type {
   ProductRequestParams,
 } from '../schemas/product-request.schema';
 
-import { updatePharmacyStatusByAdminService } from '../services/admin.service';
+import {
+  requestPharmacyCorrectionsByAdminService,
+  updatePharmacyStatusByAdminService,
+} from '../services/admin.service';
+
 import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-owner-lifecycle.service';
 
 import {
@@ -377,6 +382,34 @@ export async function updatePharmacyStatusByAdmin(
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Pharmacy status was updated successfully.',
+    data: { pharmacy },
+  });
+}
+
+//===============================================================
+
+export async function requestPharmacyCorrectionsByAdmin(
+  req: Request,
+
+  res: ValidatedResponse<
+    RequestAdminPharmacyCorrectionsInput,
+    AdminPharmacyParams
+  >
+): Promise<void> {
+  const adminUserId = req.user?.id;
+  if (!adminUserId) return;
+
+  const pharmacy = await requestPharmacyCorrectionsByAdminService(
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body,
+    adminUserId,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Corrections were requested successfully.',
     data: { pharmacy },
   });
 }

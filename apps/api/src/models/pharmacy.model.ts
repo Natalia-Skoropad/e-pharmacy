@@ -350,10 +350,12 @@ const pharmacySchema = new Schema<PharmacyEntity>(
         type: String,
         required: false,
         trim: true,
+
         maxlength: [
           BANK_NAME_MAX_LENGTH,
           VALIDATION_MESSAGES.limits.bankNameMax,
         ],
+
         validate: [
           {
             validator: (value?: string) =>
@@ -411,6 +413,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     imageUrl: {
       type: String,
       trim: true,
+
       validate: {
         validator: (value?: string) => {
           if (!value) return true;
@@ -421,18 +424,22 @@ const pharmacySchema = new Schema<PharmacyEntity>(
             return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
           return false;
         },
+
         message: VALIDATION_MESSAGES.format.picture,
       },
+
       default: undefined,
     },
 
     description: {
       type: String,
       trim: true,
+
       maxlength: [
         TEXT_EDITOR_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.textEditorMax,
       ],
+
       match: [TEXT_EDITOR_PATTERN, VALIDATION_MESSAGES.format.textEditor],
       default: undefined,
     },
@@ -441,6 +448,28 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       type: String,
       trim: true,
       maxlength: [1000, 'Status reason must be at most 1000 characters'],
+      default: undefined,
+    },
+
+    reviewState: {
+      type: String,
+      enum: ['pending', 'changes_requested'],
+      default: undefined,
+    },
+
+    reviewFeedback: {
+      type: String,
+      trim: true,
+      minlength: 1,
+      maxlength: [1000, 'Feedback must be at most 1000 characters'],
+      default: undefined,
+    },
+
+    reviewedAt: { type: Date, default: undefined },
+
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
       default: undefined,
     },
 
@@ -469,11 +498,13 @@ const pharmacySchema = new Schema<PharmacyEntity>(
 
     documents: {
       type: [pharmacyVerificationDocumentSchema],
+
       validate: {
         validator: (documents: PharmacyVerificationDocumentMetadata[]) =>
           documents.length <= PHARMACY_DOCUMENT_RULES.maxFiles,
         message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count,
       },
+
       default: [],
     },
 

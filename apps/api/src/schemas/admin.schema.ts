@@ -18,15 +18,22 @@ export const adminPharmacyDocumentParamsSchema = z.object({
 //===============================================================
 
 export const updateAdminPharmacyStatusSchema = z.object({
-  status: z.enum([
-    PHARMACY_STATUSES.NEW,
-    PHARMACY_STATUSES.ON_VERIFICATION,
-    PHARMACY_STATUSES.ON_MODERATION,
-    PHARMACY_STATUSES.ACTIVE,
-    PHARMACY_STATUSES.BLOCKED,
-  ]),
+  status: z.enum([PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.BLOCKED]),
   reason: z.string().trim().max(1000).optional(),
 });
+
+//===============================================================
+
+export const requestAdminPharmacyCorrectionsSchema = z.object({
+  feedback: z.string().trim().min(1).max(1000),
+  expectedRevision: z.string().datetime({ offset: true }),
+});
+
+//===============================================================
+
+export type RequestAdminPharmacyCorrectionsInput = z.infer<
+  typeof requestAdminPharmacyCorrectionsSchema
+>;
 
 //===============================================================
 

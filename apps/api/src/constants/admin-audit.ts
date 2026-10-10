@@ -1,5 +1,6 @@
 export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_STATUS_CHANGED: 'pharmacy.status.changed',
+  PHARMACY_CORRECTIONS_REQUESTED: 'pharmacy.corrections.requested',
 
   PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED:
     'pharmacy.registrationDocuments.attached',

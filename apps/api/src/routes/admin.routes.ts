@@ -18,6 +18,7 @@ import {
   updatePharmacyOwnerStatusByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
+  requestPharmacyCorrectionsByAdmin,
   updateProductRequestStatusByAdmin,
 } from '../controllers/admin.controller';
 
@@ -64,6 +65,7 @@ import {
   adminPharmacyDocumentParamsSchema,
   pharmacyIdParamsSchema,
   updateAdminPharmacyStatusSchema,
+  requestAdminPharmacyCorrectionsSchema,
 } from '../schemas/admin.schema';
 
 import {
@@ -464,6 +466,20 @@ adminRoutes.patch(
   }),
 
   ctrlWrapper(updatePharmacyStatusByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/pharmacies/:pharmacyId/review/corrections',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.moderate),
+
+  validate({
+    params: pharmacyIdParamsSchema,
+    body: requestAdminPharmacyCorrectionsSchema,
+  }),
+
+  ctrlWrapper(requestPharmacyCorrectionsByAdmin)
 );
 
 //=================================================================================

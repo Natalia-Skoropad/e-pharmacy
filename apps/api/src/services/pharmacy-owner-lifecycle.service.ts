@@ -285,9 +285,12 @@ export async function updatePharmacyOwnerStatusByAdminService(
                 statusReason: reason,
                 updatedBy: new Types.ObjectId(adminUserId),
               },
+
               $unset: {
-                approvedBy: '',
-                approvedAt: '',
+                reviewState: '',
+                reviewFeedback: '',
+                reviewedAt: '',
+                reviewedBy: '',
               },
             },
             { session }

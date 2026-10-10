@@ -11,6 +11,10 @@ import {
 } from '../constants/admin-audit';
 
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
+import { Order } from '../models/order.model';
+import { PHARMACY_OWNER_ACTIVE_ORDER_STATUSES } from '../constants/pharmacy-owner-lifecycle';
+import { USER_ROLES, USER_STATUSES } from '../constants/auth';
 
 import type {
   PharmacyEntity,
@@ -125,6 +129,14 @@ function serializePharmacyProfile(
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
+    ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
+    ...(pharmacy.reviewFeedback
+      ? { reviewFeedback: pharmacy.reviewFeedback }
+      : {}),
+    ...(pharmacy.reviewedAt
+      ? { reviewedAt: pharmacy.reviewedAt.toISOString() }
+      : {}),
+    ...(pharmacy.reviewedBy ? { reviewedBy: String(pharmacy.reviewedBy) } : {}),
     ...(pharmacy.pendingModeration
       ? {
           pendingModeration: normalizePendingModeration(
@@ -144,7 +156,142 @@ type UpdatePharmacyStatusInput = {
   reason?: string;
 };
 
+export type RequestPharmacyCorrectionsInput = {
+  feedback: string;
+  expectedRevision: string;
+};
+
 //===============================================================
+
+async function assertPharmacyOwnerCanOperate(
+  ownerId: PharmacyEntity['ownerId'],
+  session: mongoose.ClientSession
+): Promise<void> {
+  const owner = await User.findOne({
+    _id: ownerId,
+    role: USER_ROLES.PHARMACY,
+  }).session(session);
+
+  if (!owner || owner.status === USER_STATUSES.BLOCKED) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'A blocked or missing pharmacy owner cannot have a pharmacy activated.'
+    );
+  }
+}
+
+//===============================================================
+
+async function assertPharmacyHasNoActiveOrders(
+  pharmacyId: mongoose.Types.ObjectId,
+  session: mongoose.ClientSession
+): Promise<void> {
+  const activeOrders = await Order.countDocuments({
+    pharmacyId,
+    status: { $in: PHARMACY_OWNER_ACTIVE_ORDER_STATUSES },
+  }).session(session);
+
+  if (activeOrders > 0) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'A pharmacy with unfinished orders cannot be blocked.'
+    );
+  }
+}
+
+//=================================================================
+
+/** Same-status moderation decision; owner-visible feedback, no publication. */
+export async function requestPharmacyCorrectionsByAdminService(
+  pharmacyId: string,
+  input: RequestPharmacyCorrectionsInput,
+  adminUserId: string,
+  auditRequestId?: string
+): Promise<PharmacyProfileResponseDto> {
+  const session = await mongoose.startSession();
+
+  try {
+    const updated = await session.withTransaction(async () => {
+      const pharmacy = await Pharmacy.findById(pharmacyId).session(session);
+
+      if (!pharmacy) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+      }
+      if (
+        pharmacy.status !== PHARMACY_STATUSES.ON_VERIFICATION &&
+        pharmacy.status !== PHARMACY_STATUSES.ON_MODERATION
+      ) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Pharmacy is not awaiting review.'
+        );
+      }
+      if (pharmacy.updatedAt.toISOString() !== input.expectedRevision) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Pharmacy review has changed. Refresh and retry.'
+        );
+      }
+
+      const feedback = input.feedback.trim();
+
+      const updatedPharmacy = await Pharmacy.findOneAndUpdate(
+        {
+          _id: pharmacy._id,
+          status: pharmacy.status,
+          updatedAt: new Date(input.expectedRevision),
+          reviewState: { $ne: 'changes_requested' },
+        },
+        {
+          $set: {
+            reviewState: 'changes_requested',
+            reviewFeedback: feedback,
+            reviewedAt: new Date(),
+            reviewedBy: adminUserId,
+            updatedBy: adminUserId,
+          },
+        },
+        { new: true, runValidators: true, session }
+      );
+
+      if (!updatedPharmacy) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Review changed while requesting corrections.'
+        );
+      }
+      // Feedback is owner-visible; never include bank details/documents in audit.
+      if (auditRequestId) {
+        await appendAdminAuditLog({
+          actorUserId: adminUserId,
+          action: ADMIN_AUDIT_ACTIONS.PHARMACY_CORRECTIONS_REQUESTED,
+          section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
+          entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+          entityId: String(updatedPharmacy._id),
+          entityLabel: updatedPharmacy.name,
+          scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+          scopeEntityId: String(updatedPharmacy.ownerId),
+          before: { reviewState: pharmacy.reviewState ?? 'pending' },
+          after: { reviewState: 'changes_requested' },
+          changedFields: ['reviewState'],
+          reason: feedback,
+          requestId: auditRequestId,
+          session,
+        });
+      }
+
+      return updatedPharmacy;
+    });
+    if (!updated)
+      throw new Error('Request corrections transaction did not commit.');
+
+    return serializePharmacyProfile(updated);
+  } finally {
+    await session.endSession();
+  }
+}
+
+//=================================================================
 
 export async function updatePharmacyStatusByAdminService(
   pharmacyId: string,
@@ -163,27 +310,52 @@ export async function updatePharmacyStatusByAdminService(
       }
 
       const previousStatus = pharmacy.status;
-
+      // Only Admin approval or blocking are transitions here. A review decision
+      // with no status change uses /review/corrections, not PATCH status.
+      if (previousStatus === input.status) return pharmacy;
       if (
-        input.status === PHARMACY_STATUSES.ON_VERIFICATION &&
-        (pharmacy.status === PHARMACY_STATUSES.ACTIVE || pharmacy.approvedAt)
+        input.status !== PHARMACY_STATUSES.ACTIVE &&
+        input.status !== PHARMACY_STATUSES.BLOCKED
       ) {
         throw httpError(
-          HTTP_STATUS.BAD_REQUEST,
-          'Activated pharmacy cannot be returned to On verification.'
+          HTTP_STATUS.CONFLICT,
+          'This pharmacy status transition is not allowed.'
         );
       }
-
-      if (
-        input.status === PHARMACY_STATUSES.NEW &&
-        (pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION ||
-          pharmacy.status === PHARMACY_STATUSES.ON_MODERATION) &&
-        !input.reason?.trim()
-      ) {
+      if (previousStatus === PHARMACY_STATUSES.BLOCKED) {
+        // Explicit reactivation procedure is reserved for Stage 14.3.
         throw httpError(
-          HTTP_STATUS.BAD_REQUEST,
-          'Reason is required when returning pharmacy to New status.'
+          HTTP_STATUS.CONFLICT,
+          'Blocked pharmacies require a separate reactivation review.'
         );
+      }
+      if (input.status === PHARMACY_STATUSES.ACTIVE) {
+        if (
+          previousStatus !== PHARMACY_STATUSES.ON_VERIFICATION &&
+          previousStatus !== PHARMACY_STATUSES.ON_MODERATION
+        ) {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Pharmacy is not ready for approval.'
+          );
+        }
+        if (pharmacy.reviewState === 'changes_requested') {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Owner must resubmit corrections before approval.'
+          );
+        }
+
+        await assertPharmacyOwnerCanOperate(pharmacy.ownerId, session);
+      } else {
+        if (!input.reason?.trim()) {
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Blocking requires a reason.'
+          );
+        }
+
+        await assertPharmacyHasNoActiveOrders(pharmacy._id, session);
       }
 
       const nextUpdate: Record<string, unknown> = {
@@ -229,19 +401,18 @@ export async function updatePharmacyStatusByAdminService(
 
         unsetFields.pendingModeration = '';
         unsetFields.statusReason = '';
-      } else if (input.status === PHARMACY_STATUSES.NEW) {
-        nextUpdate.approvedBy = undefined;
-        nextUpdate.approvedAt = undefined;
-        nextUpdate.statusReason = input.reason?.trim();
-        unsetFields.pendingModeration = '';
+        unsetFields.reviewState = '';
+        unsetFields.reviewFeedback = '';
+        unsetFields.reviewedAt = '';
+        unsetFields.reviewedBy = '';
       } else {
-        nextUpdate.approvedBy = undefined;
-        nextUpdate.approvedAt = undefined;
-        if (input.reason?.trim()) {
-          nextUpdate.statusReason = input.reason.trim();
-        } else {
-          unsetFields.statusReason = '';
-        }
+        // Blocking retains historical approval/activation timestamps and any
+        // pending draft; neither makes a blocked pharmacy operational.
+        nextUpdate.statusReason = input.reason?.trim();
+        unsetFields.reviewState = '';
+        unsetFields.reviewFeedback = '';
+        unsetFields.reviewedAt = '';
+        unsetFields.reviewedBy = '';
       }
 
       const updateQuery: Record<string, unknown> = { $set: nextUpdate };

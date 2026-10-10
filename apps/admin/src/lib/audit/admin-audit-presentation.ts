@@ -20,6 +20,7 @@ import type {
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.status.changed': 'Pharmacy status changed',
+  'pharmacy.corrections.requested': 'Pharmacy corrections requested',
   'pharmacy.registrationDocuments.attached': 'Registration documents attached',
   'pharmacyOwner.account.created': 'Pharmacy owner account created',
   'pharmacyOwner.profile.updated': 'Pharmacy owner profile updated',
@@ -85,6 +86,7 @@ const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 ]);
 
 const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
+  'pharmacy.corrections.requested',
   'adminEmployee.profile.updated',
   'pharmacyOwner.profile.updated',
   'pharmacyOwner.photo.updated',
