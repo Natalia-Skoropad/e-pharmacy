@@ -24,22 +24,20 @@ test('feedback endpoint is permissioned and cannot silently modify public status
 
   assert.match(
     admin,
-    /requestPharmacyCorrectionsByAdminService[\s\S]*?reviewState: 'changes_requested'/
+    /case 'request_corrections':[\s\S]*?nextUpdate\.reviewState = nextReviewState/
   );
 
   const feedbackMutation = admin
-    .split('export async function requestPharmacyCorrectionsByAdminService')[1]
-    .split('export async function updatePharmacyStatusByAdminService')[0];
+    .split("case 'request_corrections':")[1]
+    .split("case 'approve':")[0];
 
   assert.doesNotMatch(
     feedbackMutation,
     /pendingModeration:|approvedAt:|activatedAt:|status: PHARMACY_STATUSES\.NEW/
   );
 
-  assert.match(
-    feedbackMutation,
-    /updatedAt: new Date\(input.expectedRevision\)/
-  );
+  assert.match(admin, /updatedAt: expectedDate/);
+  assert.match(admin, /action: 'request_corrections'/);
 
   assert.match(
     schema,
@@ -97,8 +95,8 @@ test('approval retains first activation, blocking retains historic approval and 
   assert.match(admin, /reviewState === 'changes_requested'/);
 
   const block = admin
-    .split('// Blocking retains historical approval/activation timestamps')[1]
-    .split('const updateQuery')[0];
+    .split("case 'block':")[1]
+    .split("case 'review_reactivation':")[0];
 
   assert.doesNotMatch(block, /approvedAt|approvedBy/);
   assert.doesNotMatch(owner, /\$unset:\s*\{\s*approvedBy:/);

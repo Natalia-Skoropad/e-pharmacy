@@ -2,7 +2,7 @@
 
 Private administration application on **http://localhost:3001**.
 
-**Status:** Admin shell, authentication, permissions, audit and Stage 13 Pharmacy Owners are implemented. Stage 14.1 is documentation/read-only policy audit only; the Admin Pharmacies registry and moderation UI are not part of this milestone.
+**Status:** Admin shell, authentication, permissions, audit and Stage 13 Pharmacy Owners are implemented. Stage 14.3 implements backend pharmacy moderation decisions with atomic audit, revisions, and idempotency. The Admin Pharmacies registry and moderation UI are not yet part of this milestone. See [README-14.3.md](README-14.3.md).
 
 ## Local development
 

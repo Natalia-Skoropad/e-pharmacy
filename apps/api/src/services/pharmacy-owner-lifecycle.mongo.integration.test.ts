@@ -42,6 +42,7 @@ function getTestMongoUri(): string {
 
 function uniqueIdentity(prefix: string) {
   const suffix = new Types.ObjectId().toHexString();
+
   return {
     email: `${prefix}-${suffix}@example.com`,
     phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
@@ -95,6 +96,7 @@ async function cleanupUsersAndOwnerData(userIds: readonly Types.ObjectId[]) {
         { userId: { $in: allUserIds } },
       ],
     }),
+
     Client.deleteMany({ userId: { $in: allUserIds } }),
     Session.deleteMany({ userId: { $in: allUserIds } }),
 
@@ -126,6 +128,7 @@ function createActiveOrder(
     pharmacyId,
     userId: clientUserId,
     pharmacySnapshot: { name: 'Owner lifecycle pharmacy' },
+
     items: [
       {
         productId,
@@ -139,6 +142,7 @@ function createActiveOrder(
         totalPrice: 100,
       },
     ],
+
     totalItems: 1,
     totalPrice: 100,
     currency: '₴',
@@ -193,7 +197,12 @@ test(
 
       await updatePharmacyStatusByAdminService(
         String(firstPharmacy._id),
-        { status: 'active' },
+        {
+          status: 'active',
+          reason: 'Verified and approved',
+          expectedRevision: firstPharmacy.updatedAt.toISOString(),
+        },
+
         String(admin._id),
         `owner-auto-first-${new Types.ObjectId().toHexString()}`
       );
@@ -213,7 +222,12 @@ test(
 
       await updatePharmacyStatusByAdminService(
         String(secondPharmacy._id),
-        { status: 'active' },
+        {
+          status: 'active',
+          reason: 'Verified and approved',
+          expectedRevision: secondPharmacy.updatedAt.toISOString(),
+        },
+
         String(admin._id),
         `owner-auto-second-${new Types.ObjectId().toHexString()}`
       );
@@ -312,6 +326,7 @@ test(
         userId: owner._id,
         revokedAt: undefined,
       });
+
       assert.ok(activeSession);
 
       const order = await createActiveOrder(
@@ -328,6 +343,7 @@ test(
             String(admin._id),
             `owner-block-guard-${new Types.ObjectId().toHexString()}`
           ),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -355,6 +371,7 @@ test(
       const blocked = await updatePharmacyOwnerStatusByAdminService(
         String(owner._id),
         { status: 'blocked', reason: 'Compliance review.' },
+
         String(admin._id),
         `owner-block-${new Types.ObjectId().toHexString()}`
       );
@@ -365,10 +382,12 @@ test(
       const [blockedOwner, linkedPharmacies, revokedSession] =
         await Promise.all([
           User.findById(owner._id).select('status').lean(),
+
           Pharmacy.find({ ownerId: owner._id })
             .select('status')
             .sort({ _id: 1 })
             .lean(),
+
           Session.findById(activeSession._id).lean(),
         ]);
 
@@ -389,6 +408,7 @@ test(
             password: TEST_PASSWORD,
             application: 'pharmacy',
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -404,6 +424,7 @@ test(
 
       assert.equal(reactivated.status, 'active');
       assert.equal(reactivated.blockedPharmacies, 0);
+
       assert.equal(
         (await User.findById(owner._id).select('status').lean())?.status,
         'active'

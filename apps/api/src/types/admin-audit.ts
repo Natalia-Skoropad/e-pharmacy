@@ -30,6 +30,7 @@ export type AdminAuditLogEntity = {
   changedFields: string[];
   reason?: string;
   requestId: string;
+  mutationKey?: string;
   createdAt: Date;
 };
 

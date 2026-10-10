@@ -17,19 +17,57 @@ export const adminPharmacyDocumentParamsSchema = z.object({
 
 //===============================================================
 
-export const updateAdminPharmacyStatusSchema = z.object({
-  status: z.enum([PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.BLOCKED]),
-  reason: z.string().trim().max(1000).optional(),
-});
+const pharmacyModerationRevision = z.string().datetime({ offset: true });
+const pharmacyModerationReason = z.string().trim().min(1).max(1000);
+const pharmacyModerationMutationKey = z.string().trim().min(8).max(128);
 
 //===============================================================
 
-export const requestAdminPharmacyCorrectionsSchema = z.object({
-  feedback: z.string().trim().min(1).max(1000),
-  expectedRevision: z.string().datetime({ offset: true }),
-});
+export const pharmacyModerationDecisionSchema = z
+  .object({
+    action: z.enum([
+      'approve',
+      'request_corrections',
+      'block',
+      'review_reactivation',
+    ]),
+
+    reason: pharmacyModerationReason,
+    expectedRevision: pharmacyModerationRevision,
+    clientRequestId: pharmacyModerationMutationKey,
+  })
+
+  .strict();
 
 //===============================================================
+
+// Backward-compatible paths are thin adapters to the canonical decision service.
+export const updateAdminPharmacyStatusSchema = z
+  .object({
+    status: z.enum([PHARMACY_STATUSES.ACTIVE, PHARMACY_STATUSES.BLOCKED]),
+    reason: pharmacyModerationReason,
+    expectedRevision: pharmacyModerationRevision,
+    clientRequestId: pharmacyModerationMutationKey,
+  })
+
+  .strict();
+
+//===============================================================
+
+export const requestAdminPharmacyCorrectionsSchema = z
+  .object({
+    feedback: pharmacyModerationReason,
+    expectedRevision: pharmacyModerationRevision,
+    clientRequestId: pharmacyModerationMutationKey,
+  })
+
+  .strict();
+
+//===============================================================
+
+export type PharmacyModerationDecisionInput = z.infer<
+  typeof pharmacyModerationDecisionSchema
+>;
 
 export type RequestAdminPharmacyCorrectionsInput = z.infer<
   typeof requestAdminPharmacyCorrectionsSchema

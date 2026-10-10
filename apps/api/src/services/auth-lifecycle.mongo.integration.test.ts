@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { ADMIN_AUDIT_ACTIONS } from '../constants/admin-audit';
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
 import { AdminAuditLog } from '../models/adminAuditLog.model';
 import { Client } from '../models/client.model';
@@ -56,6 +57,7 @@ function getTestMongoUri(): string {
       'E_PHARMACY_TEST_MONGODB_URI is required for Mongo integration tests.'
     );
   }
+
   return TEST_MONGODB_URI;
 }
 
@@ -63,6 +65,7 @@ function getTestMongoUri(): string {
 
 function uniqueIdentity(prefix: string) {
   const suffix = new Types.ObjectId().toHexString();
+
   return {
     email: `${prefix}-${suffix}@example.com`,
     phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
@@ -75,6 +78,7 @@ async function cleanup(email: string): Promise<void> {
   const user = await User.findOne({ email }).lean<{
     _id: Types.ObjectId;
   } | null>();
+
   if (!user) return;
 
   const registrationUploadSessionIds = await PharmacyDocumentFile.find({
@@ -95,6 +99,7 @@ async function cleanup(email: string): Promise<void> {
     Pharmacy.deleteMany({ ownerId: user._id }),
     Session.deleteMany({ userId: user._id }),
     PharmacyDocumentFile.deleteMany({ uploadedByUserId: user._id }),
+
     PharmacyRegistrationUploadSession.deleteMany({
       _id: { $in: registrationUploadSessionIds },
     }),
@@ -156,6 +161,7 @@ test(
           phone: identity.phone,
           password: 'SecurePassword123!',
           role: 'pharmacy',
+
           pharmacyDocuments: [
             {
               documentId: new Types.ObjectId().toHexString(),
@@ -182,12 +188,14 @@ test(
   async () => {
     await mongoose.connect(getTestMongoUri());
     const identity = uniqueIdentity('session-failure');
-    const originalCreate = Session.create.bind(Session);
+    const originalSave = Session.prototype.save;
 
     try {
-      Session.create = (async () => {
+      // Session creation uses `new Session(...).save()` in auth.service.ts.
+      // Force that write path to fail so the assertion exercises recovery.
+      Session.prototype.save = (async () => {
         throw new Error('forced session failure');
-      }) as typeof Session.create;
+      }) as typeof Session.prototype.save;
 
       await assert.rejects(
         () =>
@@ -198,6 +206,7 @@ test(
             password: 'SecurePassword123!',
             role: 'client',
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -208,7 +217,7 @@ test(
       assert.ok(user);
       assert.ok(await Client.exists({ userId: user._id }));
     } finally {
-      Session.create = originalCreate as typeof Session.create;
+      Session.prototype.save = originalSave;
       await cleanup(identity.email);
       await mongoose.disconnect();
     }
@@ -542,6 +551,7 @@ test(
             password: 'WrongPassword123!',
             application: 'client',
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -555,6 +565,7 @@ test(
             password,
             application: 'client',
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -611,7 +622,7 @@ test(
     await mongoose.connect(getTestMongoUri());
     const identity = uniqueIdentity('profile-document-atomicity');
     const content = Buffer.from('%PDF-1.4');
-    const originalFindByIdAndUpdate = Pharmacy.findByIdAndUpdate.bind(Pharmacy);
+    const originalFindOneAndUpdate = Pharmacy.findOneAndUpdate;
 
     try {
       const user = await User.create({
@@ -651,6 +662,7 @@ test(
             documents: [{ documentId: uploaded.document.id }],
             expectedRevision: pharmacy.updatedAt.toISOString(),
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -664,9 +676,9 @@ test(
       pharmacy.status = 'new';
       await pharmacy.save();
 
-      Pharmacy.findByIdAndUpdate = (async () => {
+      Pharmacy.findOneAndUpdate = (async () => {
         throw new Error('forced pharmacy profile write failure');
-      }) as unknown as typeof Pharmacy.findByIdAndUpdate;
+      }) as unknown as typeof Pharmacy.findOneAndUpdate;
 
       await assert.rejects(
         () =>
@@ -681,8 +693,15 @@ test(
       assert.ok(stored?.expiresAt);
       assert.equal(stored.attachedAt, undefined);
 
-      Pharmacy.findByIdAndUpdate =
-        originalFindByIdAndUpdate as typeof Pharmacy.findByIdAndUpdate;
+      assert.equal(
+        await AdminAuditLog.countDocuments({
+          entityId: String(pharmacy._id),
+          action: ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED,
+        }),
+        0
+      );
+
+      Pharmacy.findOneAndUpdate = originalFindOneAndUpdate;
 
       // Mongo TTL cleanup is asynchronous. An expired-but-not-yet-deleted
       // private upload must be rejected by the selection query itself instead
@@ -731,9 +750,20 @@ test(
       stored = await PharmacyDocumentFile.findById(uploaded.document.id);
       assert.ok(stored?.attachedAt);
       assert.equal(stored.expiresAt, undefined);
+
+      const profileAudits = await AdminAuditLog.find({
+        entityId: String(pharmacy._id),
+        action: ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED,
+      }).lean();
+
+      assert.equal(profileAudits.length, 1);
+
+      assert.equal(
+        profileAudits[0]?.entityLabelSnapshot,
+        `Pharmacy ${String(pharmacy._id)}`
+      );
     } finally {
-      Pharmacy.findByIdAndUpdate =
-        originalFindByIdAndUpdate as typeof Pharmacy.findByIdAndUpdate;
+      Pharmacy.findOneAndUpdate = originalFindOneAndUpdate;
 
       await cleanup(identity.email);
       await PharmacyDocumentFile.deleteMany({ name: 'atomic-license.pdf' });
@@ -799,7 +829,7 @@ test(
       ).select('+content');
 
       assert.ok(stored?.content);
-      assert.deepEqual(stored.content, content);
+      assert.deepEqual(Buffer.from(stored.content), content);
 
       const ownerContent = await getPrivatePharmacyDocumentContentService(
         registration.user.id,
@@ -811,7 +841,7 @@ test(
         uploaded.document.id
       );
 
-      assert.deepEqual(ownerContent.content, content);
+      assert.deepEqual(Buffer.from(ownerContent.content), content);
       assert.equal(ownerContent.document.type, 'application/pdf');
 
       assert.equal(
@@ -1388,6 +1418,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const adminIdentity = uniqueIdentity('activation-user-admin');
     const ownerIdentity = uniqueIdentity('activation-user-rollback');
     const conflictIdentity = uniqueIdentity('activation-user-conflict');
     let conflictEmail = '';
@@ -1406,7 +1437,15 @@ test(
         name: 'Activation Rollback Pharmacy',
         email: ownerIdentity.email,
         phone: ownerIdentity.phone,
-        status: 'new',
+        status: 'on_verification',
+      });
+
+      const admin = await User.create({
+        name: 'Activation Transaction Admin',
+        email: adminIdentity.email,
+        phone: adminIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'admin',
       });
 
       conflictEmail = `walk-in+${String(pharmacy._id)}@e-pharmacy.local`;
@@ -1422,8 +1461,12 @@ test(
       await assert.rejects(() =>
         updatePharmacyStatusByAdminService(
           String(pharmacy._id),
-          { status: 'active' },
-          new Types.ObjectId().toHexString()
+          {
+            status: 'active',
+            reason: 'Approve verification',
+            expectedRevision: pharmacy.updatedAt.toISOString(),
+          },
+          String(admin._id)
         )
       );
 
@@ -1433,7 +1476,7 @@ test(
         activatedAt?: Date;
       } | null>();
 
-      assert.equal(persisted?.status, 'new');
+      assert.equal(persisted?.status, 'on_verification');
       assert.equal(persisted?.approvedAt, undefined);
       assert.equal(persisted?.activatedAt, undefined);
 
@@ -1452,6 +1495,7 @@ test(
       });
 
       await Pharmacy.deleteMany({ email: ownerIdentity.email });
+      await cleanup(adminIdentity.email);
       await mongoose.disconnect();
     }
   }
@@ -1464,6 +1508,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+    const adminIdentity = uniqueIdentity('activation-admin');
     const ownerIdentity = uniqueIdentity('activation-client-rollback');
     const originalFindOneAndUpdate = Client.findOneAndUpdate;
 
@@ -1481,7 +1526,15 @@ test(
         name: 'Activation Client Rollback Pharmacy',
         email: ownerIdentity.email,
         phone: ownerIdentity.phone,
-        status: 'new',
+        status: 'on_verification',
+      });
+
+      const admin = await User.create({
+        name: 'Activation Transaction Admin',
+        email: adminIdentity.email,
+        phone: adminIdentity.phone,
+        password: await hashPassword('SecurePassword123!'),
+        role: 'admin',
       });
 
       Object.defineProperty(Client, 'findOneAndUpdate', {
@@ -1496,8 +1549,12 @@ test(
         () =>
           updatePharmacyStatusByAdminService(
             String(pharmacy._id),
-            { status: 'active' },
-            new Types.ObjectId().toHexString()
+            {
+              status: 'active',
+              reason: 'Approved',
+              expectedRevision: pharmacy.updatedAt.toISOString(),
+            },
+            String(admin._id)
           ),
         /forced default client creation failure/
       );
@@ -1506,7 +1563,7 @@ test(
         status: string;
       } | null>();
 
-      assert.equal(persisted?.status, 'new');
+      assert.equal(persisted?.status, 'on_verification');
 
       assert.equal(
         await User.exists({
@@ -1523,6 +1580,7 @@ test(
       });
 
       await cleanup(ownerIdentity.email);
+      await cleanup(adminIdentity.email);
       await mongoose.disconnect();
     }
   }
@@ -1976,7 +2034,11 @@ test(
 
       const approved = await updatePharmacyStatusByAdminService(
         String(pharmacy._id),
-        { status: 'active' },
+        {
+          status: 'active',
+          reason: 'Approved updated address',
+          expectedRevision: submitted.pharmacy.updatedAt,
+        },
         String(admin._id)
       );
 
@@ -2095,6 +2157,7 @@ test(
         status: 'active',
         approvedAt: new Date(),
         activatedAt: new Date(),
+
         bankDetails: {
           recipientName: 'Membership Pharmacy LLC',
           taxId: '12345678',
@@ -2124,6 +2187,7 @@ test(
             description: 'Manager must not change this',
             expectedRevision: membershipPharmacy.updatedAt.toISOString(),
           }),
+
         (error: unknown) =>
           typeof error === 'object' &&
           error !== null &&

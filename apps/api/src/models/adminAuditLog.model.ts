@@ -102,6 +102,14 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
       default: undefined,
     },
 
+    // Stable client idempotency key, distinct from the tracing request ID.
+    mutationKey: {
+      type: String,
+      trim: true,
+      maxlength: ADMIN_AUDIT_LIMITS.requestId,
+      default: undefined,
+    },
+
     requestId: {
       type: String,
       required: true,
@@ -113,6 +121,19 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
   {
     timestamps: { createdAt: true, updatedAt: false },
     versionKey: false,
+    // Preserve empty creation snapshots (before: {}) in persisted audit rows.
+    minimize: false,
+  }
+);
+
+//===============================================================
+
+adminAuditLogSchema.index(
+  { entityType: 1, entityId: 1, mutationKey: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { mutationKey: { $type: 'string' } },
+    name: 'audit_entity_mutation_key_unique',
   }
 );
 
@@ -121,6 +142,8 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
 adminAuditLogSchema.index({ createdAt: -1, _id: -1 });
 adminAuditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
 
+//===============================================================
+
 adminAuditLogSchema.index({
   scopeEntityType: 1,
   scopeEntityId: 1,
@@ -128,9 +151,13 @@ adminAuditLogSchema.index({
   _id: -1,
 });
 
+//===============================================================
+
 adminAuditLogSchema.index({ actorUserId: 1, createdAt: -1 });
 adminAuditLogSchema.index({ action: 1, createdAt: -1 });
 adminAuditLogSchema.index({ section: 1, createdAt: -1 });
+
+//===============================================================
 
 adminAuditLogSchema.index(
   { createdAt: 1 },

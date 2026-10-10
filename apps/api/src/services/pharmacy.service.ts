@@ -1,6 +1,18 @@
-import mongoose, { Types, type HydratedDocument } from 'mongoose';
+import mongoose, {
+  Types,
+  type HydratedDocument,
+  type ClientSession,
+} from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../constants/auth';
+
+import {
+  ADMIN_AUDIT_ACTIONS,
+  ADMIN_AUDIT_ENTITY_TYPES,
+  ADMIN_AUDIT_SECTIONS,
+} from '../constants/admin-audit';
+
+import { appendAdminAuditLog } from './admin-audit.service';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { REVIEW_ERROR_CODES } from '../constants/reviews';
 import { API_MESSAGES } from '../constants/messages';
@@ -675,6 +687,7 @@ export async function getPharmaciesService(
 
   if (query.settlement) filter['location.settlement'] = query.settlement;
   if (query.region) filter['location.region'] = query.region;
+
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-asc'
       ? { name: 1 }
@@ -943,6 +956,7 @@ export async function moderatePharmacyReviewService(
         ? 'Pharmacy review was approved.'
         : 'Pharmacy review was rejected.',
     rating,
+
     reviewsCount: approved.length,
     moderatedAt: review.moderatedAt?.toISOString(),
   };
@@ -1084,12 +1098,14 @@ function buildPendingModerationPayload(
   const pending = normalizePendingModerationPayload(current);
 
   if (input.name !== undefined) pending.name = input.name;
+
   if (input.location !== undefined) {
     pending.location = applyEditableLocationPatch(
       pending.location ?? approvedLocation,
       input.location
     );
   }
+
   if (input.phone !== undefined) pending.phone = input.phone;
   if (input.email !== undefined) pending.email = input.email;
   if (input.workingHours !== undefined)
@@ -1132,9 +1148,80 @@ function assertPharmacyProfileRevision(
 
 //===============================================================
 
+// Owner and pharmacy employees can mutate a profile: record who actually wrote it.
+// Audit only status/revision and section labels; never document bytes, bank details,
+// personal profile values, or owner-visible text.
+function safePharmacyEditedSections(fields: object): string[] {
+  const names: Record<string, string> = {
+    bankDetails: 'paymentSettings',
+    documents: 'verificationDocuments',
+    imageUrl: 'profileImage',
+    location: 'location',
+  };
+
+  return [
+    ...new Set(Object.keys(fields).map((key) => names[key] ?? key)),
+  ].sort();
+}
+
+async function appendPharmacyOwnerMutationAudit(
+  userId: string,
+  before: PharmacyHydratedDocument,
+  after: PharmacyHydratedDocument,
+
+  action:
+    | typeof ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED
+    | typeof ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
+
+  sections: string[],
+  session: ClientSession,
+  requestId?: string
+): Promise<void> {
+  const beforeSnapshot = {
+    status: before.status,
+    reviewState: before.reviewState ?? 'pending',
+    revision: before.updatedAt.toISOString(),
+    editedSections: [] as string[],
+  };
+
+  const afterSnapshot = {
+    status: after.status,
+    reviewState: after.reviewState ?? 'pending',
+    revision: after.updatedAt.toISOString(),
+    editedSections: sections,
+  };
+
+  const changedFields = ['revision', 'editedSections'];
+
+  if (before.status !== after.status) changedFields.push('status');
+  if (beforeSnapshot.reviewState !== afterSnapshot.reviewState)
+    changedFields.push('reviewState');
+
+  await appendAdminAuditLog({
+    actorUserId: userId,
+    action,
+    section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
+    entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+    entityId: String(after._id),
+    // A new pharmacy may still have an empty name while its profile is being completed.
+    // Keep the audit label non-empty without exposing private profile fields.
+    entityLabel: after.name.trim() || `Pharmacy ${String(after._id)}`,
+    scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+    scopeEntityId: String(after.ownerId),
+    before: beforeSnapshot,
+    after: afterSnapshot,
+    changedFields,
+    requestId: requestId ?? new Types.ObjectId().toHexString(),
+    session,
+  });
+}
+
+//===============================================================
+
 export async function updateMyPharmacyProfileService(
   userId: string,
-  input: UpdateMyPharmacyProfileInput
+  input: UpdateMyPharmacyProfileInput,
+  auditRequestId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
   const mongoSession = await mongoose.startSession();
   let result: { pharmacy: MyPharmacyProfileResponseDto } | null = null;
@@ -1223,6 +1310,16 @@ export async function updateMyPharmacyProfileService(
           mongoSession
         );
 
+        await appendPharmacyOwnerMutationAudit(
+          userId,
+          pharmacy,
+          updatedPharmacy,
+          ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED,
+          safePharmacyEditedSections(resolvedInput),
+          mongoSession,
+          auditRequestId
+        );
+
         result = {
           pharmacy: serializePharmacyProfile(
             updatedPharmacy as PharmacyDocument,
@@ -1291,6 +1388,16 @@ export async function updateMyPharmacyProfileService(
         mongoSession
       );
 
+      await appendPharmacyOwnerMutationAudit(
+        userId,
+        pharmacy,
+        updatedPharmacy,
+        ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED,
+        safePharmacyEditedSections(resolvedInput),
+        mongoSession,
+        auditRequestId
+      );
+
       result = {
         pharmacy: serializePharmacyProfile(
           updatedPharmacy as PharmacyDocument,
@@ -1313,7 +1420,8 @@ export async function updateMyPharmacyProfileService(
 
 export async function submitMyPharmacyModerationService(
   userId: string,
-  input: SubmitMyPharmacyModerationInput
+  input: SubmitMyPharmacyModerationInput,
+  auditRequestId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
   const mongoSession = await mongoose.startSession();
 
@@ -1431,6 +1539,20 @@ export async function submitMyPharmacyModerationService(
         mongoSession
       );
 
+      await appendPharmacyOwnerMutationAudit(
+        userId,
+        pharmacy,
+        updatedPharmacy,
+        ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
+
+        safePharmacyEditedSections(
+          hasNewChanges ? resolvedChanges : (pharmacy.pendingModeration ?? {})
+        ),
+
+        mongoSession,
+        auditRequestId
+      );
+
       result = {
         pharmacy: serializePharmacyProfile(
           updatedPharmacy as PharmacyDocument,
@@ -1455,7 +1577,8 @@ export async function submitMyPharmacyModerationService(
 //===============================================================
 
 export async function sendMyPharmacyForVerificationService(
-  userId: string
+  userId: string,
+  auditRequestId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
   const session = await mongoose.startSession();
 
@@ -1507,6 +1630,16 @@ export async function sendMyPharmacyForVerificationService(
       );
 
       if (!saved) throwPharmacyProfileConflict();
+
+      await appendPharmacyOwnerMutationAudit(
+        userId,
+        pharmacy,
+        saved,
+        ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
+        ['verificationSubmission'],
+        session,
+        auditRequestId
+      );
 
       return {
         pharmacy: serializePharmacyProfile(

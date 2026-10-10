@@ -9,6 +9,7 @@ import type {
   AdminPharmacyParams,
   UpdateAdminPharmacyStatusInput,
   RequestAdminPharmacyCorrectionsInput,
+  PharmacyModerationDecisionInput,
 } from '../schemas/admin.schema';
 
 import type {
@@ -35,6 +36,7 @@ import type {
 import {
   requestPharmacyCorrectionsByAdminService,
   updatePharmacyStatusByAdminService,
+  decidePharmacyModerationByAdminService,
 } from '../services/admin.service';
 
 import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-owner-lifecycle.service';
@@ -362,6 +364,29 @@ export async function updatePharmacyOwnerStatusByAdmin(
 
 //===============================================================
 
+export async function decidePharmacyModerationByAdmin(
+  req: Request,
+  res: ValidatedResponse<PharmacyModerationDecisionInput, AdminPharmacyParams>
+): Promise<void> {
+  if (!req.user?.id) return;
+
+  const pharmacy = await decidePharmacyModerationByAdminService(
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body,
+    req.user.id,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Pharmacy moderation decision was applied successfully.',
+    data: { pharmacy },
+  });
+}
+
+//===============================================================
+
 export async function updatePharmacyStatusByAdmin(
   req: Request,
   res: ValidatedResponse<UpdateAdminPharmacyStatusInput, AdminPharmacyParams>
@@ -390,7 +415,6 @@ export async function updatePharmacyStatusByAdmin(
 
 export async function requestPharmacyCorrectionsByAdmin(
   req: Request,
-
   res: ValidatedResponse<
     RequestAdminPharmacyCorrectionsInput,
     AdminPharmacyParams

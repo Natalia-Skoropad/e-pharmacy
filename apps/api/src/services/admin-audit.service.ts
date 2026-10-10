@@ -171,6 +171,7 @@ type AppendAdminAuditLogInput = Readonly<{
   changedFields: readonly string[];
   reason?: string;
   requestId: string;
+  mutationKey?: string;
   session: ClientSession;
 }>;
 
@@ -190,6 +191,7 @@ export async function appendAdminAuditLog({
   changedFields: rawChangedFields,
   reason,
   requestId,
+  mutationKey,
   session,
 }: AppendAdminAuditLogInput): Promise<void> {
   if (!Types.ObjectId.isValid(actorUserId)) {
@@ -242,19 +244,23 @@ export async function appendAdminAuditLog({
           'Audit actor name',
           ADMIN_AUDIT_LIMITS.actorName
         ),
+
         action,
         section,
         entityType,
+
         entityId: normalizeAuditString(
           entityId,
           'Audit entity id',
           ADMIN_AUDIT_LIMITS.entityId
         ),
+
         entityLabelSnapshot: normalizeAuditString(
           entityLabel,
           'Audit entity label',
           ADMIN_AUDIT_LIMITS.entityLabel
         ),
+
         ...(scopeEntityType && scopeEntityId
           ? {
               scopeEntityType,
@@ -268,6 +274,17 @@ export async function appendAdminAuditLog({
         before,
         after,
         changedFields,
+
+        ...(mutationKey
+          ? {
+              mutationKey: normalizeAuditString(
+                mutationKey,
+                'Mutation key',
+                ADMIN_AUDIT_LIMITS.requestId
+              ),
+            }
+          : {}),
+
         ...(normalizedReason
           ? {
               reason: normalizeAuditString(
@@ -277,6 +294,7 @@ export async function appendAdminAuditLog({
               ),
             }
           : {}),
+
         requestId: normalizeAuditString(
           requestId,
           'Audit request id',
@@ -523,6 +541,7 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
           role: '$users.role',
           status: '$users.status',
         },
+
         actorType: {
           $cond: [
             { $eq: ['$users.role', USER_ROLES.ADMIN] },
@@ -590,6 +609,7 @@ async function getAuditActorIdsByType(
   // Keep the Changed by filter consistent with the actors returned to the UI.
   const [pharmacyOwnerIds, auditedOwnerIds] = await Promise.all([
     Pharmacy.distinct('ownerId'),
+
     AdminAuditLog.distinct('actorUserId', {
       $or: [
         {

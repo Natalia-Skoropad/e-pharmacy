@@ -523,7 +523,7 @@ assert.match(
   /scopeEntityType:\s*ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY_OWNER/
 );
 
-assert.match(pharmacyService, /scopeEntityId:\s*String\(updated\.ownerId\)/);
+assert.match(pharmacyService, /scopeEntityId:\s*String\(saved\.ownerId\)/);
 
 assert.match(
   ownerLifecycleService,

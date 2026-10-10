@@ -62,6 +62,7 @@ export async function uploadMyPharmacyDocument(
   res: ValidatedResponse<PharmacyDocumentUploadInput>
 ): Promise<void> {
   const input = res.locals.validated.body;
+
   const data = await createPrivatePharmacyDocumentUploadService(
     req.user?.id ?? '',
     input
@@ -86,10 +87,12 @@ export async function getMyPharmacyDocument(
   res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('Content-Type', document.type);
   res.setHeader('Content-Length', String(content.byteLength));
+
   res.setHeader(
     'Content-Disposition',
     `attachment; filename*=UTF-8''${encodeContentDispositionFilename(document.name)}`
   );
+
   res.status(HTTP_STATUS.OK).send(content);
 }
 
@@ -120,7 +123,12 @@ export async function updateMyPharmacyProfile(
   res: ValidatedResponse<UpdateMyPharmacyProfileInput>
 ): Promise<void> {
   const { body } = res.locals.validated;
-  const data = await updateMyPharmacyProfileService(req.user?.id ?? '', body);
+
+  const data = await updateMyPharmacyProfileService(
+    req.user?.id ?? '',
+    body,
+    res.locals.requestId
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -132,9 +140,11 @@ export async function submitMyPharmacyModeration(
   res: ValidatedResponse<SubmitMyPharmacyModerationInput>
 ): Promise<void> {
   const { body } = res.locals.validated;
+
   const data = await submitMyPharmacyModerationService(
     req.user?.id ?? '',
-    body
+    body,
+    res.locals.requestId
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
@@ -146,7 +156,11 @@ export async function sendMyPharmacyForVerification(
   req: Request,
   res: ValidatedResponse<SendMyPharmacyForVerificationInput>
 ): Promise<void> {
-  const data = await sendMyPharmacyForVerificationService(req.user?.id ?? '');
+  const data = await sendMyPharmacyForVerificationService(
+    req.user?.id ?? '',
+    res.locals.requestId
+  );
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -157,6 +171,7 @@ export async function getPharmacies(
   res: ValidatedResponse<unknown, unknown, PharmaciesQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
+
   const data = await getPharmaciesService(
     query,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
@@ -214,6 +229,7 @@ export async function getPharmacyDetails(
   res: ValidatedResponse<unknown, PharmacyIdParams>
 ): Promise<void> {
   const { pharmacyId } = res.locals.validated.params;
+
   const data = await getPharmacyDetailsService(
     pharmacyId,
     req.user?.role === USER_ROLES.CLIENT ? req.user.id : undefined
@@ -265,6 +281,7 @@ export async function createPharmacyReview(
   res: ValidatedResponse<CreatePharmacyReviewInput, PharmacyIdParams>
 ): Promise<void> {
   const { body, params } = res.locals.validated;
+
   const data = await createPharmacyReviewService(params.pharmacyId, {
     userId: req.user?.id ?? '',
     userName: req.user?.name ?? 'client',
@@ -282,6 +299,7 @@ export async function moderatePharmacyReview(
   res: ValidatedResponse<ModeratePharmacyReviewInput, PharmacyReviewParams>
 ): Promise<void> {
   const { body, params } = res.locals.validated;
+
   const data = await moderatePharmacyReviewService(
     params.pharmacyId,
     params.reviewId,
@@ -302,6 +320,7 @@ export async function setFavoritePharmacy(
   res: ValidatedResponse<unknown, PharmacyIdParams>
 ): Promise<void> {
   const { pharmacyId } = res.locals.validated.params;
+
   const data = await setFavoritePharmacyService(
     pharmacyId,
     req.user?.id ?? '',
