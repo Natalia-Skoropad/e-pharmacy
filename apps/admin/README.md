@@ -2,7 +2,7 @@
 
 Private administration application on **http://localhost:3001**.
 
-**Status:** application shell, shared status fallbacks, shared/backend admin auth foundation, and centralized protected-route session boundary implemented; admin auth UI and business modules pending.
+**Status:** Admin shell, authentication, permissions, audit and Stage 13 Pharmacy Owners are implemented. Stage 14.1 is documentation/read-only policy audit only; the Admin Pharmacies registry and moderation UI are not part of this milestone.
 
 ## Local development
 
@@ -97,3 +97,11 @@ do not add application declarations to that generated file.
 - Stage 4 does not add Login/Recovery/Reset UI, admin cabinet shell/navigation,
   Dashboard, permissions, employees, or any business module.
 - `check:admin-protected-route` protects the Stage 4 boundary contract.
+
+## Stage 14.1 — Pharmacy moderation policy audit
+
+- [README-14.md](./README-14.md) — Stage 14 roadmap (only 14.1 audited; 14.2–14.17 remain planned).
+- [README-14.1.md](./README-14.1.md) — canonical pharmacy/owner transition policy, current-vs-target matrices, access rights, order guards, published/pending separation, timestamps and concurrency risks.
+- `apps/api/src/services/pharmacy-moderation-policy.audit.contract.test.ts` — read-only contract checks for existing guarantees.
+
+Stage 14.1 does **not** change business mutations, API routes, database schemas, or UI. Stage 12 remains deferred. Integrate the Stage 14.1 files on top of `e-pharmacy-14.zip`, retaining the existing READMEs 0–11 and 13.
