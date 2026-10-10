@@ -2,7 +2,7 @@
   display: block;
   margin-bottom: 4px;
   font-size: var(--fz-12);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-semi-bold);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
   color: var(--color-success);

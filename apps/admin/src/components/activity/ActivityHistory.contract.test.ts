@@ -30,7 +30,7 @@ test('activity history employee search excludes private address data', async () 
 
   assert.match(source, /title="Employee search"/);
   assert.match(serviceSource, /AdminAuditLog\.aggregate/);
-  assert.match(serviceSource, /\$group:\s*\{ _id:\s*'\$actorUserId'/);
+  assert.match(serviceSource, /\$group:\s*\{\s*_id:\s*'\$actorUserId'/);
   assert.doesNotMatch(serviceSource, /\.select\([^)]*address[^)]*\)/);
 
   assert.doesNotMatch(
@@ -65,7 +65,11 @@ test('activity history has a separate pharmacy-owner search and actor-type filte
   assert.match(drawerSource, /pharmacyOwner: 'Pharmacy owner'/);
   assert.match(drawerSource, /pharmacyEmployee: 'Pharmacy employee'/);
 
-  assert.match(historySource, /title: 'Changed by'/);
+  assert.match(
+    historySource,
+    /title:\s*<TableHeaderTitle parts=\{\['Changed', 'by'\]\} \/>/
+  );
+
   assert.match(historySource, /<ActivityActorIdentity/);
   assert.doesNotMatch(historySource, /title: 'Employee'/);
 

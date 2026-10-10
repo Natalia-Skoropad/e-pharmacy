@@ -33,6 +33,8 @@ const activitySource = read(
   './PharmacyOwnerDetailsPageContent/OwnerActivityTab.tsx'
 );
 
+const sharedActivitySource = read('../activity/ActivityHistory.tsx');
+
 const providerSource = read(
   '../../providers/AdminPharmacyOwnerNavigationBadgeProvider/AdminPharmacyOwnerNavigationBadgeProvider.tsx'
 );
@@ -81,7 +83,21 @@ test('Stage 13.12 keeps owner lifecycle modal, tab counters and resource tabs co
 
   assert.match(documentsSource, /editable=\{false\}/);
   assert.match(commentsSource, /The owner cannot see these notes/);
-  assert.match(activitySource, /getAdminPharmacyOwnerActivity/);
+
+  // Owner activity intentionally reuses the global audit UI with an owner scope.
+  assert.match(
+    activitySource,
+    /<ActivityHistory\s+scopeOwnerId=\{ownerId\}\s+initialState=\{initialState\}\s*\/>/
+  );
+
+  assert.match(sharedActivitySource, /scopeEntityType:\s*'pharmacyOwner'/);
+
+  assert.match(
+    sharedActivitySource,
+    /scopeEntityId:\s*scopeOwnerId\s*\|\|\s*filters\.ownerUserId/
+  );
+
+  assert.doesNotMatch(activitySource, /getAdminPharmacyOwnerActivity/);
 });
 
 //===================================================================

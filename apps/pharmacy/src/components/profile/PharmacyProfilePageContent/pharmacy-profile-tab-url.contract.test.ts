@@ -57,6 +57,6 @@ test('documents tab badge preloads owner document count independently of tab con
 
   assert.match(
     component,
-    /documentValues\.length \+ \(pharmacy\.membershipRole === 'owner' \? ownerDocumentsCount : 0\)/
+    /documentValues\.length\s*\+\s*\(pharmacy\.membershipRole === 'owner' \? ownerDocumentsCount : 0\)/
   );
 });

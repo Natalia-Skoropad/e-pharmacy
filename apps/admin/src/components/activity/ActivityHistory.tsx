@@ -41,7 +41,9 @@ import { PageHeader } from '@e-pharmacy/ui/layout';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -62,6 +64,12 @@ import {
   getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
+import {
+  ActivityFiltersDrawer,
+  DEFAULT_ACTIVITY_HISTORY_FILTERS,
+  type ActivityHistoryFilters,
+} from './ActivityFiltersDrawer';
+
 import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
 import { getAdminAuditPageLocation } from '@/lib/audit/admin-audit-presentation';
 import { getAdminAuditFieldLabel } from '@/lib/audit/admin-audit-fields';
@@ -71,12 +79,6 @@ import {
   DEFAULT_ACTIVITY_URL_STATE,
   type ActivityUrlState,
 } from '@/lib/audit/admin-activity-url';
-
-import {
-  ActivityFiltersDrawer,
-  DEFAULT_ACTIVITY_HISTORY_FILTERS,
-  type ActivityHistoryFilters,
-} from './ActivityFiltersDrawer';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
 import { ActivityActorIdentity } from './ActivityActorIdentity';
@@ -189,10 +191,8 @@ export function ActivityHistory({
 }: Readonly<{ initialState?: ActivityUrlState; scopeOwnerId?: string }>) {
   const router = useRouter();
   const initialStateKey = JSON.stringify({ initialState, scopeOwnerId });
-
   const [syncedInitialStateKey, setSyncedInitialStateKey] =
     useState(initialStateKey);
-
   const [filters, setFilters] = useState<ActivityHistoryFilters>(initialState);
 
   const [page, setPage] = useState(initialState.page);
@@ -242,7 +242,6 @@ export function ActivityHistory({
       page: nextPage,
       perPage: nextPerPage,
     });
-
     router.replace(
       scopeOwnerId
         ? `/admin/pharmacy-owners/${scopeOwnerId}/activity${globalUrl.replace('/admin/settings/activity', '')}`
@@ -436,7 +435,7 @@ export function ActivityHistory({
       },
       {
         key: 'actor',
-        title: 'Changed by',
+        title: <TableHeaderTitle parts={['Changed', 'by']} />,
         render: (item) => {
           const actor = actorById.get(item.actorUserId);
 
@@ -455,6 +454,7 @@ export function ActivityHistory({
       },
       {
         key: 'action',
+        width: '15%',
         title: (
           <span className={css.changeHeader}>
             <TableHeaderTitle parts={['Changed', 'type']} />
@@ -530,7 +530,8 @@ export function ActivityHistory({
       },
       {
         key: 'location',
-        title: 'Section name',
+        width: '19%',
+        title: <TableHeaderTitle parts={['Section', 'name']} />,
         render: (item) => {
           return <ActivitySectionLink item={item} />;
         },
@@ -800,7 +801,7 @@ export function ActivityHistory({
               items={data?.items ?? []}
               getItemKey={(item) => item.id}
               isLoading={isLoading}
-              minWidth={0}
+              minWidth={950}
               ariaLabel="Admin activity history"
               labels={{
                 loading: data

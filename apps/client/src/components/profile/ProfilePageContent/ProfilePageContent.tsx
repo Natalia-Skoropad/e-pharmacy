@@ -1379,7 +1379,7 @@ function AuthenticatedProfilePageContent({
                       items={canUseAuthFeatures ? orders : []}
                       getItemKey={(order) => String(order.id)}
                       isLoading={isOrdersLoading}
-                      minWidth={0}
+                      minWidth={800}
                       labels={{
                         loading: 'Loading orders...',
                         empty: hasActiveOrdersFilters

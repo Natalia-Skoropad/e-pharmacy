@@ -236,7 +236,7 @@
 }
 
 .statusSummary strong {
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-semi-bold);
 }
 
 .statusSummary p {

@@ -47,8 +47,16 @@ test('Stage 13.12 allows a new pharmacy Owner into the pharmacy app while blocke
 //===================================================================
 
 test('Stage 13.12 keeps Owner profile and Owner document mutations available only in the owner membership surface', () => {
-  assert.match(profileSource, /pharmacy\.membershipRole === 'owner'/);
-  assert.match(profileSource, /<OwnerDocumentsPanel \/>/);
+  const ownerDocumentsRender = profileSource.match(
+    /pharmacy\.membershipRole === 'owner'\s*\?\s*\(\s*<OwnerDocumentsPanel\b([^>]*)\/>\s*\)\s*:\s*null/
+  );
+
+  assert.ok(ownerDocumentsRender, 'Owner documents must remain owner-only.');
+
+  assert.match(
+    ownerDocumentsRender[1],
+    /\bonCountChange=\{setOwnerDocumentsCount\}/
+  );
 
   assert.match(ownerDocumentsSource, /getMyPharmacyOwnerDocuments/);
   assert.match(ownerDocumentsSource, /uploadMyPharmacyOwnerDocument/);

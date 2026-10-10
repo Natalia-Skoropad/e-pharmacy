@@ -46,6 +46,7 @@ const requiredFiles = [
   ['apps', 'admin', 'src', 'lib', 'audit', 'admin-audit.ts'],
   ['apps', 'admin', 'src', 'lib', 'api', 'browser', 'admin-audit.api.ts'],
   ['apps', 'admin', 'src', 'components', 'activity', 'ActivityHistory.tsx'],
+  ['apps', 'admin', 'src', 'components', 'activity', 'ActivitySectionLink.tsx'],
   [
     'apps',
     'admin',
@@ -266,6 +267,15 @@ const activityHistory = await read(
   'components',
   'activity',
   'ActivityHistory.tsx'
+);
+
+const activitySectionLinks = await read(
+  'apps',
+  'admin',
+  'src',
+  'components',
+  'activity',
+  'ActivitySectionLink.tsx'
 );
 
 const activityActorIdentity = await read(
@@ -498,7 +508,7 @@ assert.match(
 
 assert.match(auditService, /Pharmacy\.distinct\(['"]ownerId['"]\)/);
 assert.match(auditService, /AdminAuditLog\.aggregate/);
-assert.match(auditService, /\$group:\s*\{ _id:\s*['"]\$actorUserId['"]/);
+assert.match(auditService, /\$group:\s*\{\s*_id:\s*['"]\$actorUserId['"]/);
 assert.match(auditService, /from:\s*User\.collection\.name/);
 assert.match(auditService, /from:\s*Pharmacy\.collection\.name/);
 assert.match(auditService, /foreignField:\s*'managerUserIds'/);
@@ -597,8 +607,86 @@ assert.match(
   /createOwnerOptions[\s\S]*?actor\.id[\s\S]*?actor\.email[\s\S]*?actor\.phone/
 );
 
-assert.match(activityHistory, /title:\s*'Changed by'/);
+assert.match(
+  activityHistory,
+  /<TableHeaderTitle parts=\{\['Changed', 'by'\]\} \/>/
+);
 assert.match(activityHistory, /<ActivityActorIdentity/);
+
+// Keep the shared audit table and its links aligned across the global history
+// and the pharmacy-owner detail view. Icons/photos are intentionally NOT links.
+assert.match(activityHistory, /<ActivitySectionLink item=\{item\} \/>/);
+assert.match(activityHistory, /scopeEntityType:\s*'pharmacyOwner'/);
+
+assert.match(
+  activityHistory,
+  /scopeEntityId:\s*scopeOwnerId\s*\|\|\s*filters\.ownerUserId/
+);
+
+assert.match(activityHistory, /buildAdminActivityUrl/);
+
+const sectionColumn = activityHistory.match(
+  /key:\s*'location',\s*width:\s*'(\d+)%'/
+);
+
+const changeTypeColumn = activityHistory.match(
+  /key:\s*'action',\s*width:\s*'(\d+)%'/
+);
+
+assert.ok(
+  sectionColumn && changeTypeColumn,
+  'Audit columns need explicit widths.'
+);
+
+assert.ok(
+  Number(sectionColumn[1]) > Number(changeTypeColumn[1]),
+  'Section name should have more space than Changed type.'
+);
+
+assert.match(activityHistory, /\.slice\(0,\s*3\)/);
+assert.match(activityHistory, /item\.changedFields\.length\s*-\s*3/);
+
+const activityTableWidth = activityHistory.match(
+  /<DataTable[\s\S]*?\bminWidth=\{(\d+)\}/
+);
+
+assert.ok(
+  activityTableWidth,
+  'Activity history table needs a fixed minimum width.'
+);
+
+assert.ok(
+  Number(activityTableWidth[1]) >= 950,
+  'Activity history table must allow horizontal scrolling without squashing columns.'
+);
+
+const [sectionLinkComponent, pageLinkComponent] = activitySectionLinks.split(
+  'export function ActivityPageLink'
+);
+
+assert.ok(pageLinkComponent, 'Page link component must be present.');
+
+// Same shared TextActionButton class as Changed by; no standalone link styles.
+for (const component of [sectionLinkComponent, pageLinkComponent]) {
+  assert.match(
+    component,
+    /<TextActionButton\s+className=\{css\.actorIdentityNameLink\}\s+href=\{location\.href\}/
+  );
+  assert.match(component, /<span className=\{css\.sectionLink\}>/);
+}
+
+assert.match(
+  sectionLinkComponent,
+  /<span className=\{css\.sectionIcon\} aria-hidden="true">[\s\S]*?<\/span>\s*<TextActionButton/
+);
+
+assert.match(
+  pageLinkComponent,
+  /<TableImagePreview[\s\S]*?\/>[\s\S]*?\)\}\s*<TextActionButton/
+);
+
+assert.match(auditDetailsModal, /Link to section[\s\S]*?<ActivitySectionLink/);
+assert.match(auditDetailsModal, /Link to page[\s\S]*?<ActivityPageLink/);
 assert.doesNotMatch(activityHistory, /Reason:\s*\{item\.reason\}/);
 assert.match(activityActorIdentity, /getAdminAuditActorHref/);
 

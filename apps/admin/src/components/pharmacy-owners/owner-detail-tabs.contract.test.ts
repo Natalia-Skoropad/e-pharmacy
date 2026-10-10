@@ -10,14 +10,15 @@ function read(relativePath: string): string {
 
 //===================================================================
 
-test('Stage 13.11 connects documents comments and activity tabs to owner detail', () => {
+test('Stage 13.12 connects documents comments and shared activity history to owner detail', () => {
   const detail = read(
     './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
   );
 
   assert.match(detail, /<OwnerDocumentsTab/);
   assert.match(detail, /<OwnerCommentsTab/);
-  assert.match(detail, /<OwnerActivityTab ownerId=\{ownerId\}/);
+  assert.match(detail, /<OwnerActivityTab\s+ownerId=\{ownerId\}/);
+  assert.match(detail, /initialState=\{initialActivityState\}/);
   assert.match(detail, /onCountChange=\{updateDocumentsCount\}/);
   assert.match(detail, /onCountChange=\{updateCommentsCount\}/);
   assert.match(detail, /canManage=\{canEditOwner\}/);
@@ -63,23 +64,38 @@ test('owner admin comments show author data and update tab count after create an
 
 //===================================================================
 
-test('owner activity uses the scoped owner endpoint and mirrors global audit presentation with Section / page', () => {
+test('owner activity reuses global audit UI and fetches only the selected owner history', () => {
   const source = read('./PharmacyOwnerDetailsPageContent/OwnerActivityTab.tsx');
+  const history = read('../activity/ActivityHistory.tsx');
 
-  assert.match(source, /getAdminPharmacyOwnerActivity/);
-  assert.match(source, /getAdminAuditChangeTone/);
-  assert.match(source, /getAdminAuditStatusTransitionLabel/);
-  assert.match(source, /<ActivityActorIdentity/);
-  assert.match(source, /<AuditDetailsModal/);
+  // A single presentation owns the columns, filters, links, and Details modal.
   assert.match(source, /<ProfileSectionHeader/);
-  assert.match(source, /<SearchableSelect/);
-  assert.match(source, /<ActivityFiltersDrawer/);
-  assert.match(source, /label="Search by employee"/);
-  assert.doesNotMatch(source, /label="Search by pharmacy owner"/);
-  assert.match(source, /fullWidthOnMobile/);
-  assert.match(source, /key: 'entity'/);
-  assert.match(source, /key: 'fields'/);
-  assert.match(source, /key: 'details'/);
-  assert.doesNotMatch(source, /key: 'location'/);
-  assert.match(source, /key: 'section'/);
+
+  assert.match(
+    source,
+    /<ActivityHistory scopeOwnerId=\{ownerId\} initialState=\{initialState\} \/>/
+  );
+
+  assert.doesNotMatch(
+    source,
+    /<DataTable|<AuditDetailsModal|<ActivityFiltersDrawer/
+  );
+
+  // The same API query is scoped to the owner *entity*, not merely to its actor.
+  assert.match(history, /getAdminAuditLogs\(/);
+  assert.match(history, /scopeEntityType:\s*'pharmacyOwner'/);
+
+  assert.match(
+    history,
+    /scopeEntityId:\s*scopeOwnerId \|\| filters\.ownerUserId/
+  );
+
+  assert.match(history, /<ActivityFiltersDrawer/);
+  assert.match(history, /<AuditDetailsModal/);
+  assert.match(history, /<ActivityActorIdentity/);
+  assert.match(history, /<ActivitySectionLink item=\{item\} \/>/);
+  assert.match(history, /key: 'entity'/);
+  assert.match(history, /key: 'fields'/);
+  assert.match(history, /key: 'details'/);
+  assert.match(history, /key: 'location'/);
 });

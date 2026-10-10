@@ -15,11 +15,14 @@ test('activity list and filters use the same section and change names', async ()
     source('./ActivityFiltersDrawer.tsx'),
   ]);
 
-  assert.match(history, /Change type/);
-  assert.match(history, /title: 'Section name'/);
+  assert.match(history, /parts=\{\['Changed', 'type'\]\}/);
+  assert.match(history, /parts=\{\['Section', 'name'\]\}/);
+  assert.match(history, /parts=\{\['Changed', 'fields'\]\}/);
   assert.match(filters, /label="Section name"/);
   assert.match(filters, /section !== 'profile'/);
-  assert.match(history, /getAdminAuditFieldsSummary/);
+  assert.match(history, /\.slice\(0, 3\)\s*\.map\(getAdminAuditFieldLabel\)/);
+  assert.match(history, /item\.changedFields\.length > 3/);
+  assert.match(history, /\+\{item\.changedFields\.length - 3\} more changes/);
 
   assert.match(
     history,
@@ -38,12 +41,25 @@ test('audit modal separates section and page and has accessible change values', 
     source('./ActivityHistory.module.css'),
   ]);
 
-  assert.match(modal, /Section name/);
-  assert.match(modal, /Page name/);
+  assert.match(modal, /Link to section/);
+  assert.match(modal, /Link to page/);
+  assert.match(modal, /<ActivitySectionLink item=\{details\} \/>/);
+  assert.match(modal, /<ActivityPageLink/);
   assert.match(modal, /getAdminAuditFieldLabel/);
   assert.match(modal, /getAuditColorSwatch/);
   assert.match(modal, /<StatusBadge/);
   assert.match(modal, /Reason \/ description/);
   assert.match(presentation, /getAdminAuditPageLocation/);
-  assert.match(styles, /\.sectionLink:hover \.sectionLinkLabel/);
+
+  const sectionLink = await source('./ActivitySectionLink.tsx');
+  assert.match(sectionLink, /className=\{css\.actorIdentityNameLink\}/);
+
+  assert.match(
+    sectionLink,
+    /<span className=\{css\.sectionIcon\} aria-hidden="true">/
+  );
+
+  assert.match(sectionLink, /<TextActionButton/);
+  assert.match(styles, /\.actorIdentityNameLink \{/);
+  assert.doesNotMatch(styles, /\.sectionLink:hover \.sectionLinkLabel/);
 });

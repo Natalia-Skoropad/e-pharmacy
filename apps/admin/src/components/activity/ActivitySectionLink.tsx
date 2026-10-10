@@ -85,12 +85,17 @@ export function ActivitySectionLink({ item }: ActivitySectionLinkProps) {
   const location = getAdminAuditLocation(item);
 
   return (
-    <TextActionButton className={css.sectionLink} href={location.href}>
-      <span className={css.sectionIcon}>
+    <span className={css.sectionLink}>
+      <span className={css.sectionIcon} aria-hidden="true">
         <SectionIcon section={location.section} />
       </span>
-      <span className={css.sectionLinkLabel}>{location.label}</span>
-    </TextActionButton>
+      <TextActionButton
+        className={css.actorIdentityNameLink}
+        href={location.href}
+      >
+        {location.label}
+      </TextActionButton>
+    </span>
   );
 }
 
@@ -105,7 +110,7 @@ export function ActivityPageLink({
   const location = getAdminAuditPageLocation(item);
   if (!location) return <span className={css.pageLinkEmpty}>—</span>;
   return (
-    <TextActionButton className={css.sectionLink} href={location.href}>
+    <span className={css.sectionLink}>
       {location.section === 'pharmacyOwners' ||
       location.section === 'employees' ? (
         <TableImagePreview
@@ -115,11 +120,16 @@ export function ActivityPageLink({
           size={22}
         />
       ) : (
-        <span className={css.sectionIcon}>
+        <span className={css.sectionIcon} aria-hidden="true">
           <SectionIcon section={location.section} />
         </span>
       )}
-      <span className={css.sectionLinkLabel}>{pageName ?? location.label}</span>
-    </TextActionButton>
+      <TextActionButton
+        className={css.actorIdentityNameLink}
+        href={location.href}
+      >
+        {pageName ?? location.label}
+      </TextActionButton>
+    </span>
   );
 }

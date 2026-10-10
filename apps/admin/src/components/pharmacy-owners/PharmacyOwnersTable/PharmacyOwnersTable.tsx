@@ -140,7 +140,7 @@ export function PharmacyOwnersTable({
       items={owners}
       getItemKey={(owner) => owner.id}
       isLoading={isLoading}
-      minWidth={0}
+      minWidth={1000}
       ariaLabel="Pharmacy owners"
       labels={{
         loading: 'Loading pharmacy owners...',

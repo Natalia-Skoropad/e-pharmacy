@@ -76,6 +76,8 @@ test('owners table links ids and names to owner detail and uses canonical status
   assert.match(table, /parts=\{\['Inactive', 'pharms'\]\}/);
   assert.match(table, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
   assert.match(table, /USER_STATUS_PRESENTATION\[owner\.status\]/);
-  assert.match(table, /minWidth=\{0\}/);
+
+  // Preserve readable desktop-sized columns with horizontal scrolling on narrow screens.
+  assert.match(table, /minWidth=\{1000\}/);
   assert.doesNotMatch(table, /Create|Add owner/);
 });
