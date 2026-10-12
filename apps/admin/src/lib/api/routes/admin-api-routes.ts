@@ -20,6 +20,22 @@ export const adminApiRoutes = {
       `/api/admin/employees/me/comments/${encodeURIComponent(commentId)}`,
   },
 
+  pharmacyDocuments: {
+    list: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/documents`,
+
+    download: (pharmacyId: string, documentId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/documents/${encodeURIComponent(documentId)}`,
+  },
+
+  pharmacyComments: {
+    list: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/comments`,
+
+    detail: (pharmacyId: string, commentId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/comments/${encodeURIComponent(commentId)}`,
+  },
+
   pharmacyRegistry: {
     list: '/api/admin/pharmacies',
     summary: '/api/admin/pharmacies/summary',

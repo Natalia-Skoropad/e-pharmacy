@@ -19,6 +19,10 @@ import {
   getPharmacyRegistryStatisticsByAdmin,
   listPharmacyRegistryOptionsByAdmin,
   getPharmacyDetailByAdmin,
+  listPharmacyDocumentsByAdmin,
+  listPharmacyAdminCommentsByAdmin,
+  createPharmacyAdminCommentByAdmin,
+  deletePharmacyAdminCommentByAdmin,
   updatePharmacyOwnerStatusByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
@@ -95,6 +99,11 @@ import {
 
 import { updateMyAdminEmployeeProfileSchema } from '../schemas/admin-employee-profile.schema';
 import { adminPharmacyOwnerDocumentParamsSchema } from '../schemas/pharmacy-owner-document.schema';
+
+import {
+  createPharmacyAdminCommentSchema,
+  pharmacyAdminCommentParamsSchema,
+} from '../schemas/pharmacy-admin-comment.schema';
 
 import {
   createPharmacyOwnerAdminCommentSchema,
@@ -491,6 +500,48 @@ adminRoutes.patch(
   }),
 
   ctrlWrapper(updatePharmacyOwnerStatusByAdmin)
+);
+
+//=================================================================================
+
+// Stage 14.6: documents are read-only and always pharmacy-scoped.
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/documents',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(listPharmacyDocumentsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/comments',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(listPharmacyAdminCommentsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.post(
+  '/pharmacies/:pharmacyId/comments',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.edit),
+
+  validate({
+    params: pharmacyIdParamsSchema,
+    body: createPharmacyAdminCommentSchema,
+  }),
+
+  ctrlWrapper(createPharmacyAdminCommentByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.delete(
+  '/pharmacies/:pharmacyId/comments/:commentId',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.edit),
+  validate({ params: pharmacyAdminCommentParamsSchema }),
+  ctrlWrapper(deletePharmacyAdminCommentByAdmin)
 );
 
 //=================================================================================

@@ -62,7 +62,22 @@ import {
 } from '../services/admin-pharmacy-registry-read.service';
 
 import { getAdminPharmacyDetailService } from '../services/admin-pharmacy-detail-read.service';
-import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
+
+import {
+  downloadAdminPharmacyDocumentService,
+  listAdminPharmacyDocumentsService,
+} from '../services/pharmacy-document.service';
+
+import {
+  createPharmacyAdminCommentService,
+  deletePharmacyAdminCommentService,
+  listPharmacyAdminCommentsService,
+} from '../services/pharmacy-admin-comment.service';
+
+import type {
+  CreatePharmacyAdminCommentInput,
+  PharmacyAdminCommentParams,
+} from '../schemas/pharmacy-admin-comment.schema';
 
 import {
   getPharmacyOwnerDocumentContentService,
@@ -115,12 +130,109 @@ export async function getAdminPharmacyDocument(
 ): Promise<void> {
   const { pharmacyId, documentId } = res.locals.validated.params;
 
-  const data = await getAdminPharmacyDocumentContentService(
+  const { document, content } = await downloadAdminPharmacyDocumentService(
     pharmacyId,
     documentId
   );
 
-  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Type', document.type);
+  res.setHeader('Content-Length', String(content.byteLength));
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename*=UTF-8''${encodeURIComponent(document.name).replace(
+      /[!'()*]/g,
+      (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
+    )}`
+  );
+
+  res.status(HTTP_STATUS.OK).send(content);
+}
+
+//===============================================================
+
+export async function listPharmacyDocumentsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyParams>
+): Promise<void> {
+  const documents = await listAdminPharmacyDocumentsService(
+    res.locals.validated.params.pharmacyId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data: { documents } });
+}
+
+//===============================================================
+
+export async function listPharmacyAdminCommentsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyParams>
+): Promise<void> {
+  const comments = await listPharmacyAdminCommentsService(
+    res.locals.validated.params.pharmacyId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data: { comments } });
+}
+
+//===============================================================
+
+export async function createPharmacyAdminCommentByAdmin(
+  req: Request,
+  res: ValidatedResponse<CreatePharmacyAdminCommentInput, AdminPharmacyParams>
+): Promise<void> {
+  const adminUserId = req.user?.id;
+  if (!adminUserId) return;
+  const requestId = res.locals.requestId;
+
+  if (!requestId)
+    throw new Error('Request id is required for pharmacy comment audit.');
+
+  const comment = await createPharmacyAdminCommentService(
+    res.locals.validated.params.pharmacyId,
+    adminUserId,
+    res.locals.validated.body,
+    requestId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.CREATED,
+    message: 'Pharmacy admin comment was created successfully.',
+    data: { comment },
+  });
+}
+
+//===============================================================
+
+export async function deletePharmacyAdminCommentByAdmin(
+  req: Request,
+  res: ValidatedResponse<unknown, PharmacyAdminCommentParams>
+): Promise<void> {
+  const adminUserId = req.user?.id;
+  if (!adminUserId) return;
+  const requestId = res.locals.requestId;
+
+  if (!requestId)
+    throw new Error('Request id is required for pharmacy comment audit.');
+
+  const { pharmacyId, commentId } = res.locals.validated.params;
+
+  await deletePharmacyAdminCommentService(
+    pharmacyId,
+    commentId,
+    adminUserId,
+    requestId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.status(HTTP_STATUS.NO_CONTENT).end();
 }
 
 //===============================================================

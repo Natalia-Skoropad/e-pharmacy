@@ -4,3 +4,4 @@ export type * from './pharmacy-owner';
 export type * from './pharmacy-registry';
 export type * from './pharmacy-owner-comment';
 export type * from './pharmacy-detail';
+export type * from './pharmacy-documents-comments';

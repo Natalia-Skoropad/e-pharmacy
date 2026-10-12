@@ -20,6 +20,8 @@ import type {
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.status.changed': 'Pharmacy status changed',
+  'pharmacy.comment.created': 'Pharmacy admin comment created',
+  'pharmacy.comment.deleted': 'Pharmacy admin comment deleted',
   'pharmacy.corrections.requested': 'Pharmacy corrections requested',
   'pharmacy.registrationDocuments.attached': 'Registration documents attached',
   'pharmacyOwner.account.created': 'Pharmacy owner account created',
@@ -72,6 +74,7 @@ const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'adminEmployee.document.uploaded',
   'pharmacyOwner.document.uploaded',
   'pharmacyOwner.comment.created',
+  'pharmacy.comment.created',
   'productCategory.created',
   'position.created',
 ]);
@@ -81,6 +84,7 @@ const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'adminEmployee.document.deleted',
   'pharmacyOwner.document.deleted',
   'pharmacyOwner.comment.deleted',
+  'pharmacy.comment.deleted',
   'productCategory.deleted',
   'position.deleted',
 ]);
@@ -99,6 +103,7 @@ const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 
 const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   pharmacy: 'Pharmacy',
+  pharmacyAdminComment: 'Pharmacy admin comment',
   pharmacyOwner: 'Pharmacy owner',
   pharmacyOwnerDocument: 'Pharmacy owner document',
   pharmacyOwnerComment: 'Pharmacy owner comment',
@@ -167,6 +172,7 @@ export function getAdminAuditActorTypeLabel(
 ): string {
   if (actorType === 'employee') return 'employee';
   if (actorType === 'pharmacyOwner') return 'pharmacy owner';
+
   return 'pharmacy employee';
 }
 
@@ -206,6 +212,7 @@ export function getAdminAuditLocation(
   item: Pick<AdminAuditListItem, 'section'>
 ): AdminAuditLocation {
   const section = item.section === 'profile' ? 'employees' : item.section;
+
   return {
     section,
     label: SECTION_LABELS[section],
@@ -263,6 +270,7 @@ export function getAdminAuditPageLocation(
       return {
         section,
         entityId: ownerId,
+
         label:
           item.entityType === 'pharmacyOwner'
             ? item.entityLabelSnapshot
@@ -295,6 +303,7 @@ export function getAdminAuditPageLocation(
       return {
         section,
         entityId: employeeId,
+
         label:
           item.entityType === 'adminEmployee'
             ? item.entityLabelSnapshot
@@ -315,6 +324,7 @@ export function formatAdminAuditValue(
   if (value === null) return 'None';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (Array.isArray(value)) return value.length ? value.join(', ') : 'None';
+
   return String(value);
 }
 

@@ -4,6 +4,8 @@ import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
+  'pharmacy.comment.created',
+  'pharmacy.comment.deleted',
   'pharmacy.corrections.requested',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
@@ -37,6 +39,7 @@ export type AdminAuditAction = (typeof ADMIN_AUDIT_ACTIONS)[number];
 
 export const ADMIN_AUDIT_ENTITY_TYPES = [
   'pharmacy',
+  'pharmacyAdminComment',
   'pharmacyOwner',
   'pharmacyOwnerDocument',
   'pharmacyOwnerComment',
@@ -300,13 +303,16 @@ function parseListItem(value: unknown): AdminAuditListItem {
           scopeEntityId: value.scopeEntityId as string,
         }
       : {}),
+
     changedFields: parseStringArray(value.changedFields, 'changedFields'),
     ...(typeof value.statusBefore === 'string'
       ? { statusBefore: value.statusBefore }
       : {}),
+
     ...(typeof value.statusAfter === 'string'
       ? { statusAfter: value.statusAfter }
       : {}),
+
     ...(typeof value.reason === 'string' ? { reason: value.reason } : {}),
     requestId: value.requestId,
     createdAt: value.createdAt,
@@ -346,6 +352,7 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     ...(typeof value.pictureUrl === 'string'
       ? { pictureUrl: value.pictureUrl }
       : {}),
+
     role: value.role,
     actorType: value.actorType,
     status: value.status,

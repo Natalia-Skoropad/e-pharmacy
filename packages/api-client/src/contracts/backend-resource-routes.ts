@@ -28,6 +28,22 @@ export const backendRoutes = {
         `/admin/employees/me/comments/${segment(commentId)}`,
     },
 
+    pharmacyDocuments: {
+      list: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/documents`,
+
+      download: (pharmacyId: EntityId, documentId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/documents/${segment(documentId)}`,
+    },
+
+    pharmacyComments: {
+      list: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/comments`,
+
+      detail: (pharmacyId: EntityId, commentId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/comments/${segment(commentId)}`,
+    },
+
     pharmacyRegistry: {
       list: '/admin/pharmacies',
       summary: '/admin/pharmacies/summary',

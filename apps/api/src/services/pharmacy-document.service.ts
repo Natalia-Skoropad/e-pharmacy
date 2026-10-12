@@ -4,6 +4,8 @@ import mongoose, { Types, type ClientSession } from 'mongoose';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
 import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
+import { Pharmacy } from '../models/pharmacy.model';
+import type { AdminPharmacyDocumentDto } from '../types/admin-pharmacy-document';
 import { PharmacyRegistrationUploadSession } from '../models/pharmacyRegistrationUploadSession.model';
 
 import type {
@@ -125,6 +127,7 @@ export async function createRegistrationPharmacyDocumentUploadService(
   try {
     await mongoSession.withTransaction(async () => {
       const now = new Date();
+
       const maxBytesBeforeUpload =
         PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes - verified.size;
 
@@ -237,6 +240,7 @@ export async function claimRegistrationPharmacyDocuments(
     }
 
     totalSizeBytes += document.size;
+
     if (totalSizeBytes > PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes) {
       throw httpError(
         HTTP_STATUS.BAD_REQUEST,
@@ -298,6 +302,7 @@ export async function resolvePrivatePharmacyDocumentSelections(
   }
 
   const now = new Date();
+
   const selectableDocumentFilter = {
     _id: { $in: ids },
     pharmacyId,
@@ -398,6 +403,106 @@ export async function getPrivatePharmacyDocumentContentService(
 
 //===================================================================
 
+type PharmacyDocumentReferences = {
+  documents?: PharmacyVerificationDocumentMetadata[];
+  pendingModeration?: { documents?: PharmacyVerificationDocumentMetadata[] };
+};
+
+//===================================================================
+
+function referencedDocuments(pharmacy: PharmacyDocumentReferences) {
+  const result: AdminPharmacyDocumentDto[] = [];
+  const seen = new Set<string>();
+
+  for (const [source, entries] of [
+    ['published', pharmacy.documents ?? []],
+    ['pending', pharmacy.pendingModeration?.documents ?? []],
+  ] as const) {
+    for (const entry of entries) {
+      if (!/^[a-f0-9]{24}$/i.test(entry.id) || seen.has(entry.id)) continue;
+      seen.add(entry.id);
+
+      result.push({
+        id: entry.id,
+        name: entry.name,
+        size: entry.size,
+        type: entry.type,
+        uploadedAt: entry.uploadedAt,
+        source,
+      });
+    }
+  }
+  return result;
+}
+
+//===================================================================
+
+async function getPharmacyDocumentReferences(pharmacyId: string) {
+  if (!Types.ObjectId.isValid(pharmacyId)) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found.');
+  }
+
+  const pharmacy = await Pharmacy.findById(pharmacyId)
+    .select('documents pendingModeration.documents')
+    .lean<PharmacyDocumentReferences | null>();
+
+  if (!pharmacy)
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found.');
+
+  return referencedDocuments(pharmacy);
+}
+
+//===================================================================
+
+// Metadata is taken from the Pharmacy's published/pending references, but only
+// actually attached files owned by this exact pharmacy can be listed/downloaded.
+export async function listAdminPharmacyDocumentsService(
+  pharmacyId: string
+): Promise<AdminPharmacyDocumentDto[]> {
+  const entries = await getPharmacyDocumentReferences(pharmacyId);
+  if (entries.length === 0) return [];
+
+  const attached = await PharmacyDocumentFile.find({
+    pharmacyId,
+    attachedAt: { $exists: true },
+    _id: { $in: entries.map((entry) => new Types.ObjectId(entry.id)) },
+  })
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+
+  const ids = new Set(attached.map((row) => String(row._id)));
+
+  return entries.filter((entry) => ids.has(entry.id));
+}
+
+//===================================================================
+
+async function readAdminPharmacyDocument(
+  pharmacyId: string,
+  documentId: string
+) {
+  const referenced = await getPharmacyDocumentReferences(pharmacyId);
+
+  if (!referenced.some((entry) => entry.id === documentId)) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy document was not found.');
+  }
+
+  const file = await PharmacyDocumentFile.findOne({
+    _id: documentId,
+    pharmacyId, // never trust documentId alone or the owner of another pharmacy
+    attachedAt: { $exists: true },
+  }).select('+content');
+
+  if (!file?.content) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy document was not found.');
+  }
+
+  return file;
+}
+
+//===================================================================
+
+/** Legacy service result retained for existing internal consumers/tests. */
 export async function getAdminPharmacyDocumentContentService(
   pharmacyId: string,
   documentId: string
@@ -405,15 +510,25 @@ export async function getAdminPharmacyDocumentContentService(
   document: PharmacyVerificationDocumentMetadata;
   dataUrl: string;
 }> {
-  const document = await PharmacyDocumentFile.findOne({
-    _id: documentId,
-    pharmacyId,
-    attachedAt: { $exists: true },
-  }).select('+content');
-
-  if (!document?.content) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy document was not found.');
-  }
+  const document = await readAdminPharmacyDocument(pharmacyId, documentId);
 
   return serializeDocumentContent(document);
+}
+
+//===================================================================
+
+/** Streaming-ready binary download, never expose the base64 payload to Admin JSON. */
+export async function downloadAdminPharmacyDocumentService(
+  pharmacyId: string,
+  documentId: string
+): Promise<{
+  document: PharmacyVerificationDocumentMetadata;
+  content: Buffer;
+}> {
+  const document = await readAdminPharmacyDocument(pharmacyId, documentId);
+
+  return {
+    document: serializeDocument(document),
+    content: Buffer.from(document.content),
+  };
 }

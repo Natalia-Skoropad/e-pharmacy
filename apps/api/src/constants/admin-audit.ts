@@ -4,6 +4,8 @@ export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_REACTIVATION_REVIEWED: 'pharmacy.reactivation.reviewed',
   PHARMACY_PROFILE_UPDATED: 'pharmacy.profile.updated',
   PHARMACY_MODERATION_SUBMITTED: 'pharmacy.moderation.submitted',
+  PHARMACY_COMMENT_CREATED: 'pharmacy.comment.created',
+  PHARMACY_COMMENT_DELETED: 'pharmacy.comment.deleted',
 
   PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED:
     'pharmacy.registrationDocuments.attached',
@@ -55,8 +57,10 @@ const LEGACY_ADMIN_AUDIT_ACTION_ALIASES: Readonly<
 > = {
   'admin.employeeDocument.uploaded':
     ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_UPLOADED,
+
   'admin.employeeDocument.replaced':
     ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_REPLACED,
+
   'admin.employeeDocument.deleted':
     ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_DELETED,
 };
@@ -68,6 +72,7 @@ export function normalizeStoredAdminAuditAction(
 ): AdminAuditAction | null {
   if (isAdminAuditAction(value)) return value;
   if (typeof value !== 'string') return null;
+
   return LEGACY_ADMIN_AUDIT_ACTION_ALIASES[value] ?? null;
 }
 
@@ -87,6 +92,7 @@ export function getStoredAdminAuditActionValues(
 
 export const ADMIN_AUDIT_ENTITY_TYPES = {
   PHARMACY: 'pharmacy',
+  PHARMACY_COMMENT: 'pharmacyAdminComment',
   PHARMACY_OWNER: 'pharmacyOwner',
   PHARMACY_OWNER_DOCUMENT: 'pharmacyOwnerDocument',
   PHARMACY_OWNER_COMMENT: 'pharmacyOwnerComment',

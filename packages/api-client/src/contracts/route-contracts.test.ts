@@ -169,3 +169,30 @@ test('rejects unsafe or already encoded route segments', () => {
     assert.throws(() => encodeRouteSegment(value), InvalidRouteSegmentError);
   }
 });
+
+//===================================================================
+
+// Stage 14.6 private pharmacy domains (Admin only).
+test('admin pharmacy document and comment builders are pharmacy-scoped', () => {
+  const id = '64b64b64b64b64b64b64b64b';
+
+  assert.equal(
+    apiRoutes.admin.pharmacyDocuments.list(id),
+    `/admin/pharmacies/${id}/documents`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyDocuments.download(id, id),
+    `/admin/pharmacies/${id}/documents/${id}`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyComments.list(id),
+    `/admin/pharmacies/${id}/comments`
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyComments.detail(id, id),
+    `/admin/pharmacies/${id}/comments/${id}`
+  );
+});
