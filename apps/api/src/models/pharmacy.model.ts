@@ -137,6 +137,7 @@ const pharmacyGeoPointSchema = new Schema(
     coordinates: {
       type: [Number],
       required: true,
+
       validate: {
         validator: (value: number[]) =>
           Array.isArray(value) &&
@@ -147,6 +148,7 @@ const pharmacyGeoPointSchema = new Schema(
           value[0] <= 180 &&
           value[1] >= -90 &&
           value[1] <= 90,
+
         message:
           'Geo must be a valid GeoJSON Point with [longitude, latitude].',
       },
@@ -417,11 +419,14 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       validate: {
         validator: (value?: string) => {
           if (!value) return true;
+
           if (isPictureDataUrl(value)) {
             return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
           }
+
           if (isHttpUrl(value))
             return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
+
           return false;
         },
 
@@ -565,11 +570,31 @@ pharmacySchema.index(
   { name: 'pharmacy_location_settlement' }
 );
 
+//===============================================================
+
 pharmacySchema.index({ ownerId: 1 });
 pharmacySchema.index({ ownerId: 1, status: 1 });
 pharmacySchema.index({ ownerId: 1, createdAt: -1 });
 pharmacySchema.index({ status: 1 });
 pharmacySchema.index({ status: 1, rating: -1 });
+
+//===============================================================
+
+// Admin registry: deterministic createdAt + _id pagination, both directions.
+pharmacySchema.index(
+  { createdAt: -1, _id: -1 },
+  { name: 'admin_pharmacy_created_order' }
+);
+
+pharmacySchema.index(
+  { status: 1, createdAt: -1, _id: -1 },
+  { name: 'admin_pharmacy_status_order' }
+);
+
+pharmacySchema.index(
+  { ownerId: 1, createdAt: -1, _id: -1 },
+  { name: 'admin_pharmacy_owner_order' }
+);
 
 //===============================================================
 

@@ -1,4 +1,5 @@
 export type * from './employee-document';
 export type * from './employee-private-note';
 export type * from './pharmacy-owner';
+export type * from './pharmacy-registry';
 export type * from './pharmacy-owner-comment';

@@ -62,6 +62,14 @@ export {
 export type { HealthResponse, MessageResponse } from './shared-dto-parsers';
 
 export {
+  parseAdminPharmacyListItem,
+  parseAdminPharmacyListResponse,
+  parseAdminPharmacyStatistics,
+  parseAdminPharmacyOption,
+  parseAdminPharmacyOptionsResponse,
+} from './admin-pharmacy-registry-parsers';
+
+export {
   parsePharmacyOwnerDocument,
   parsePharmacyOwnerDocumentResponse,
   parsePharmacyOwnerDocumentsResponse,

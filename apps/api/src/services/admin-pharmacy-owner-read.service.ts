@@ -50,10 +50,10 @@ const NON_WORKING_PHARMACY_STATUSES = [
 //===============================================================
 
 const RATING_BOUNDS = {
-  '0-0.9': { min: 0, max: 0.9 },
-  '1-1.9': { min: 1, max: 1.9 },
-  '2-2.9': { min: 2, max: 2.9 },
-  '3-3.9': { min: 3, max: 3.9 },
+  '0-0.9': { min: 0, max: 1 },
+  '1-1.9': { min: 1, max: 2 },
+  '2-2.9': { min: 2, max: 3 },
+  '3-3.9': { min: 3, max: 4 },
   '4-5': { min: 4, max: 5 },
 } as const;
 
@@ -207,7 +207,15 @@ function buildPharmacyMatch(
 
   if (query.rating) {
     const bounds = RATING_BOUNDS[query.rating];
-    match.rating = { $gte: bounds.min, $lte: bounds.max };
+
+    match.$expr = {
+      $and: [
+        { $gte: [{ $ifNull: ['$rating', 0] }, bounds.min] },
+        bounds.max === 5
+          ? { $lte: [{ $ifNull: ['$rating', 0] }, bounds.max] }
+          : { $lt: [{ $ifNull: ['$rating', 0] }, bounds.max] },
+      ],
+    };
   }
 
   if (query.search) {
@@ -286,9 +294,11 @@ export async function listAdminPharmacyOwnersService(
         pictureUrl: { $ifNull: ['$pictureUrl', null] },
         status: 1,
         registeredAt: '$createdAt',
+
         operatingPharmaciesCount: {
           $ifNull: ['$pharmacyCounts.operatingPharmaciesCount', 0],
         },
+
         nonWorkingPharmaciesCount: {
           $ifNull: ['$pharmacyCounts.nonWorkingPharmaciesCount', 0],
         },
@@ -345,16 +355,19 @@ export async function getAdminPharmacyOwnerStatisticsService() {
       $group: {
         _id: null,
         all: { $sum: 1 },
+
         new: {
           $sum: {
             $cond: [{ $eq: ['$status', USER_STATUSES.NEW] }, 1, 0],
           },
         },
+
         active: {
           $sum: {
             $cond: [{ $eq: ['$status', USER_STATUSES.ACTIVE] }, 1, 0],
           },
         },
+
         blocked: {
           $sum: {
             $cond: [{ $eq: ['$status', USER_STATUSES.BLOCKED] }, 1, 0],
@@ -443,11 +456,13 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
             $group: {
               _id: null,
               all: { $sum: 1 },
+
               new: {
                 $sum: {
                   $cond: [{ $eq: ['$status', PHARMACY_STATUSES.NEW] }, 1, 0],
                 },
               },
+
               onVerification: {
                 $sum: {
                   $cond: [
@@ -457,6 +472,7 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
                   ],
                 },
               },
+
               onModeration: {
                 $sum: {
                   $cond: [
@@ -466,11 +482,13 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
                   ],
                 },
               },
+
               active: {
                 $sum: {
                   $cond: [{ $eq: ['$status', PHARMACY_STATUSES.ACTIVE] }, 1, 0],
                 },
               },
+
               blocked: {
                 $sum: {
                   $cond: [
@@ -575,9 +593,11 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
       $set: {
         tabCounts: {
           pharmacies: '$pharmacyStatistics.all',
+
           documents: {
             $ifNull: [{ $arrayElemAt: ['$documentCount.count', 0] }, 0],
           },
+
           comments: {
             $ifNull: [{ $arrayElemAt: ['$commentCount.count', 0] }, 0],
           },
@@ -619,10 +639,14 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
     name: owner.name,
     email: owner.email,
     phone: owner.phone,
+
     ...(owner.address ? { address: owner.address } : {}),
     ...(owner.pictureUrl ? { pictureUrl: owner.pictureUrl } : {}),
+
     status: owner.status,
+
     ...(owner.statusReason ? { statusReason: owner.statusReason } : {}),
+
     registeredAt: owner.registeredAt.toISOString(),
     lastPersonalDataUpdateAt: owner.lastPersonalDataUpdateAt.toISOString(),
     pharmacyStatistics: owner.pharmacyStatistics,
@@ -632,9 +656,10 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
 
 //===============================================================
 
-function buildPagedPharmacyItemsPipeline(
+export function buildPagedPharmacyItemsPipeline(
   skip: number,
-  perPage: number
+  perPage: number,
+  includeOwnerId = false
 ): PipelineStage.FacetPipelineStage[] {
   return [
     { $sort: { createdAt: -1, _id: -1 } },
@@ -662,6 +687,7 @@ function buildPagedPharmacyItemsPipeline(
                   },
                 },
               ],
+
               clients: [
                 { $group: { _id: '$userId' } },
                 {
@@ -737,6 +763,7 @@ function buildPagedPharmacyItemsPipeline(
       $lookup: {
         from: User.collection.name,
         let: { pharmacyId: '$_id' },
+
         pipeline: [
           {
             $match: {
@@ -803,6 +830,7 @@ function buildPagedPharmacyItemsPipeline(
         imageUrl: { $ifNull: ['$imageUrl', null] },
         createdAt: 1,
         status: 1,
+        ...(includeOwnerId ? { ownerId: 1 } : {}),
         activeClientsCount: 1,
 
         successfulOrdersCount: {
@@ -860,10 +888,13 @@ export async function listAdminPharmacyOwnerPharmaciesService(
     items: (result?.items ?? []).map((pharmacy) => ({
       id: pharmacy.id,
       name: pharmacy.name,
+
       ...(pharmacy.email ? { email: pharmacy.email } : {}),
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+
       ...(pharmacy.location ? { location: pharmacy.location } : {}),
       ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+
       createdAt: pharmacy.createdAt.toISOString(),
       status: pharmacy.status,
       activeClientsCount: pharmacy.activeClientsCount,

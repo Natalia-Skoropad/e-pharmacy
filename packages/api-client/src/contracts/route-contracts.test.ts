@@ -37,6 +37,18 @@ test('uses resource-oriented backend route builders', () => {
     `/admin/employees/me/comments/${id}`
   );
 
+  assert.equal(apiRoutes.admin.pharmacyRegistry.list, '/admin/pharmacies');
+
+  assert.equal(
+    apiRoutes.admin.pharmacyRegistry.summary,
+    '/admin/pharmacies/summary'
+  );
+
+  assert.equal(
+    apiRoutes.admin.pharmacyRegistry.options,
+    '/admin/pharmacies/options'
+  );
+
   assert.equal(apiRoutes.admin.pharmacyOwners.list, '/admin/pharmacy-owners');
 
   assert.equal(

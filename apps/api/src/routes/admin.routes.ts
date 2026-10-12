@@ -15,6 +15,9 @@ import {
   listPharmacyOwnerOptionsByAdmin,
   listPharmacyOwnerPharmaciesByAdmin,
   listPharmacyOwnersByAdmin,
+  listPharmaciesByAdmin,
+  getPharmacyRegistryStatisticsByAdmin,
+  listPharmacyRegistryOptionsByAdmin,
   updatePharmacyOwnerStatusByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
@@ -69,6 +72,11 @@ import {
   pharmacyModerationDecisionSchema,
   requestAdminPharmacyCorrectionsSchema,
 } from '../schemas/admin.schema';
+
+import {
+  adminPharmacyRegistryListQuerySchema,
+  adminPharmacyRegistryOptionsQuerySchema,
+} from '../schemas/admin-pharmacy-registry.schema';
 
 import {
   adminPharmacyOwnerActivityQuerySchema,
@@ -318,6 +326,33 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
   validate({ params: adminAuditLogParamsSchema }),
   ctrlWrapper(getAdminAuditLogDetails)
+);
+
+//=================================================================================
+
+// Stage 14.4: read-only registry routes must precede the dynamic pharmacyId paths.
+adminRoutes.get(
+  '/pharmacies',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ query: adminPharmacyRegistryListQuerySchema }),
+  ctrlWrapper(listPharmaciesByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacies/summary',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  ctrlWrapper(getPharmacyRegistryStatisticsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacies/options',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ query: adminPharmacyRegistryOptionsQuerySchema }),
+  ctrlWrapper(listPharmacyRegistryOptionsByAdmin)
 );
 
 //=================================================================================

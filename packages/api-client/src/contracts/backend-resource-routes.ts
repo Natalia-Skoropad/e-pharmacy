@@ -28,6 +28,12 @@ export const backendRoutes = {
         `/admin/employees/me/comments/${segment(commentId)}`,
     },
 
+    pharmacyRegistry: {
+      list: '/admin/pharmacies',
+      summary: '/admin/pharmacies/summary',
+      options: '/admin/pharmacies/options',
+    },
+
     pharmacyOwners: {
       list: '/admin/pharmacy-owners',
       summary: '/admin/pharmacy-owners/summary',

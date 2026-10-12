@@ -13,6 +13,11 @@ import type {
 } from '../schemas/admin.schema';
 
 import type {
+  AdminPharmacyRegistryListQuery,
+  AdminPharmacyRegistryOptionsQuery,
+} from '../schemas/admin-pharmacy-registry.schema';
+
+import type {
   AdminPharmacyOwnerActivityQuery,
   AdminPharmacyOwnerListQuery,
   AdminPharmacyOwnerOptionsQuery,
@@ -49,6 +54,12 @@ import {
   listAdminPharmacyOwnerPharmaciesService,
   listAdminPharmacyOwnersService,
 } from '../services/admin-pharmacy-owner-read.service';
+
+import {
+  listAdminPharmaciesService,
+  getAdminPharmacyStatisticsService,
+  listAdminPharmacyOptionsService,
+} from '../services/admin-pharmacy-registry-read.service';
 
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
 
@@ -108,6 +119,44 @@ export async function getAdminPharmacyDocument(
     documentId
   );
 
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmaciesByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, AdminPharmacyRegistryListQuery>
+): Promise<void> {
+  const data = await listAdminPharmaciesService(res.locals.validated.query);
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyRegistryStatisticsByAdmin(
+  _req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getAdminPharmacyStatisticsService();
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyRegistryOptionsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, AdminPharmacyRegistryOptionsQuery>
+): Promise<void> {
+  const data = await listAdminPharmacyOptionsService(
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -280,6 +329,7 @@ export async function createPharmacyOwnerAdminCommentByAdmin(
   if (!adminUserId) return;
 
   const requestId = res.locals.requestId;
+
   if (!requestId) {
     throw new Error('Request id is required for owner comment audit.');
   }
@@ -311,6 +361,7 @@ export async function deletePharmacyOwnerAdminCommentByAdmin(
   if (!adminUserId) return;
 
   const requestId = res.locals.requestId;
+
   if (!requestId) {
     throw new Error('Request id is required for owner comment audit.');
   }

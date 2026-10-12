@@ -146,18 +146,19 @@ test('active client aggregation keeps the pharmacy Clients domain definition inc
 
 //===================================================================
 
-test('rating filters use the exact stable Stage 13.3 bounds', () => {
+test('owner linked-pharmacy rating filters have gapless numeric bounds', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
   const schema = read('../schemas/admin-pharmacy-owner.schema.ts');
 
   for (const [filter, min, max] of [
-    ['0-0.9', '0', '0.9'],
-    ['1-1.9', '1', '1.9'],
-    ['2-2.9', '2', '2.9'],
-    ['3-3.9', '3', '3.9'],
+    ['0-0.9', '0', '1'],
+    ['1-1.9', '1', '2'],
+    ['2-2.9', '2', '3'],
+    ['3-3.9', '3', '4'],
     ['4-5', '4', '5'],
   ] as const) {
     assert.match(schema, new RegExp(`['\"]${filter}['\"]`));
+
     assert.match(
       service,
       new RegExp(
@@ -192,6 +193,7 @@ test('owner detail and linked-pharmacy reads support one owner with many pharmac
 
 test('linked pharmacy admin read model exposes canonical location instead of address/city aliases', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
+
   const contracts = read(
     '../../../../packages/types/src/admin/pharmacy-owner.ts'
   );
@@ -236,6 +238,7 @@ test('owner activity reuses canonical audit logs while preserving pharmacyOwners
 
 test('owner detail bootstrap returns tab counts without loading tab lists', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
+
   const contracts = read(
     '../../../../packages/types/src/admin/pharmacy-owner.ts'
   );
