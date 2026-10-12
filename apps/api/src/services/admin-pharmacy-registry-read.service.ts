@@ -24,6 +24,8 @@ const RATING_BOUNDS = {
   '4-5': { min: 4, max: 5, inclusiveMax: true },
 } as const;
 
+//===============================================================
+
 const STATUS_FIELDS = [
   ['new', PHARMACY_STATUSES.NEW],
   ['onVerification', PHARMACY_STATUSES.ON_VERIFICATION],

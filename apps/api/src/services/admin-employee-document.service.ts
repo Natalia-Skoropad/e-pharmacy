@@ -285,6 +285,7 @@ export async function replaceMyAdminEmployeeDocumentService(
       }
 
       const before = auditSnapshot(document);
+
       const existingDocuments = await getOwnerDocumentsForQuota(
         userId,
         session,

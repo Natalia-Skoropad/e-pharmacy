@@ -35,6 +35,8 @@ type PharmacyMetricsRow = {
   reviewsCount: number;
 };
 
+//===============================================================
+
 const BANK_FIELDS = [
   'recipientName',
   'taxId',
@@ -77,6 +79,7 @@ function serializeLocation(
     ...(value.countryCode !== undefined
       ? { countryCode: value.countryCode }
       : {}),
+
     ...(value.geo !== undefined
       ? {
           geo: {

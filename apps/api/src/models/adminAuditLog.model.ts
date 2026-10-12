@@ -77,6 +77,15 @@ const adminAuditLogSchema = new Schema<AdminAuditLogEntity>(
       default: undefined,
     },
 
+    // Canonical pharmacy identity: owner-scoped and comment-scoped events can
+    // refer to the same pharmacy without overwriting legacy scope fields.
+    pharmacyId: {
+      type: String,
+      trim: true,
+      maxlength: ADMIN_AUDIT_LIMITS.entityId,
+      default: undefined,
+    },
+
     before: {
       type: Schema.Types.Mixed,
       required: true,
@@ -141,6 +150,16 @@ adminAuditLogSchema.index(
 
 adminAuditLogSchema.index({ createdAt: -1, _id: -1 });
 adminAuditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
+
+//===============================================================
+
+adminAuditLogSchema.index(
+  { pharmacyId: 1, createdAt: -1, _id: -1 },
+  {
+    partialFilterExpression: { pharmacyId: { $type: 'string' } },
+    name: 'audit_pharmacy_activity',
+  }
+);
 
 //===============================================================
 

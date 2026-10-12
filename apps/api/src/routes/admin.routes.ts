@@ -10,6 +10,9 @@ import {
   getPharmacyOwnerDetailByAdmin,
   getPharmacyOwnerSummaryByAdmin,
   listPharmacyOwnerActivityByAdmin,
+  listPharmacyActivityByAdmin,
+  listPharmacyActivityActorsByAdmin,
+  getPharmacyActivityDetailsByAdmin,
   listPharmacyOwnerDocumentsByAdmin,
   listPharmacyOwnerAdminCommentsByAdmin,
   listPharmacyOwnerOptionsByAdmin,
@@ -129,6 +132,7 @@ import {
 import {
   adminAuditListQuerySchema,
   adminAuditLogParamsSchema,
+  adminPharmacyAuditLogParamsSchema,
 } from '../schemas/admin-audit.schema';
 
 import {
@@ -363,6 +367,36 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
   validate({ query: adminPharmacyRegistryOptionsQuerySchema }),
   ctrlWrapper(listPharmacyRegistryOptionsByAdmin)
+);
+
+//=================================================================================
+
+// Stage 14.7: pharmacy activity is always exact-scoped on the backend;
+// shared Audit handles the filters, pagination, action facets, and details.
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/activity',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+
+  validate({
+    params: pharmacyIdParamsSchema,
+    query: adminAuditListQuerySchema,
+  }),
+
+  ctrlWrapper(listPharmacyActivityByAdmin)
+);
+
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/activity/actors',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(listPharmacyActivityActorsByAdmin)
+);
+
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/activity/:auditLogId',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: adminPharmacyAuditLogParamsSchema }),
+  ctrlWrapper(getPharmacyActivityDetailsByAdmin)
 );
 
 //=================================================================================

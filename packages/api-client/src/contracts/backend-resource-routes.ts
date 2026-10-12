@@ -44,6 +44,17 @@ export const backendRoutes = {
         `/admin/pharmacies/${segment(pharmacyId)}/comments/${segment(commentId)}`,
     },
 
+    pharmacyActivity: {
+      list: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/activity`,
+
+      actors: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/activity/actors`,
+
+      details: (pharmacyId: EntityId, auditLogId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/activity/${segment(auditLogId)}`,
+    },
+
     pharmacyRegistry: {
       list: '/admin/pharmacies',
       summary: '/admin/pharmacies/summary',

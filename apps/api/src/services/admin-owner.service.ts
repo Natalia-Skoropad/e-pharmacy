@@ -99,6 +99,7 @@ export async function setPlatformOwnerStatusService(
           action: isPlatformOwner
             ? ADMIN_AUDIT_ACTIONS.PLATFORM_OWNER_GRANTED
             : ADMIN_AUDIT_ACTIONS.PLATFORM_OWNER_REVOKED,
+
           section: ADMIN_AUDIT_SECTIONS.EMPLOYEES,
           entityType: ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS,
           entityId: targetUserId,

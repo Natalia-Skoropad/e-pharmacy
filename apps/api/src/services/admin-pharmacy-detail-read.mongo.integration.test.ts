@@ -71,6 +71,7 @@ test(
 
       await User.deleteOne({ _id: ownerId });
       const legacy = await getAdminPharmacyDetailService(String(pharmacyId));
+
       assert.equal(legacy.owner, null);
     } finally {
       await Pharmacy.deleteOne({ _id: pharmacyId });

@@ -16,5 +16,6 @@ export function hasAdminPermission(
   if (!authorization || !isAdminPermission(permission)) return false;
   if (authorization.status !== ADMIN_ACCESS_STATUSES.ACTIVE) return false;
   if (authorization.isPlatformOwner) return true;
+
   return authorization.permissions.includes(permission);
 }

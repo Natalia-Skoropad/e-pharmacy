@@ -1,5 +1,7 @@
 import type { Request } from 'express';
 
+import type { AdminAuditListQuery } from '../schemas/admin-audit.schema';
+
 import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { serializeAdminAccess } from '../services/admin-access.service';
@@ -62,6 +64,12 @@ import {
 } from '../services/admin-pharmacy-registry-read.service';
 
 import { getAdminPharmacyDetailService } from '../services/admin-pharmacy-detail-read.service';
+
+import {
+  getAdminPharmacyActivityDetailsService,
+  listAdminPharmacyActivityActorsService,
+  listAdminPharmacyActivityService,
+} from '../services/admin-pharmacy-activity.service';
 
 import {
   downloadAdminPharmacyDocumentService,
@@ -356,6 +364,50 @@ export async function listPharmacyOwnerPharmaciesByAdmin(
 
   res.setHeader('Cache-Control', 'no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyActivityByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyParams, AdminAuditListQuery>
+): Promise<void> {
+  const data = await listAdminPharmacyActivityService(
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listPharmacyActivityActorsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyParams>
+): Promise<void> {
+  const data = await listAdminPharmacyActivityActorsService(
+    res.locals.validated.params.pharmacyId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyActivityDetailsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, { pharmacyId: string; auditLogId: string }>
+): Promise<void> {
+  const auditLog = await getAdminPharmacyActivityDetailsService(
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.params.auditLogId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data: { auditLog } });
 }
 
 //===============================================================

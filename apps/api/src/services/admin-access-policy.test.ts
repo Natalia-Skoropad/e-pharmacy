@@ -153,6 +153,7 @@ test('Platform Owner can assign regular permissions without subset inheritance',
     assertCanManageAdminPermissions({
       actor: owner,
       target: employee,
+
       nextPermissions: [
         ADMIN_PERMISSIONS.audit.view,
         ADMIN_PERMISSIONS.positions.delete,

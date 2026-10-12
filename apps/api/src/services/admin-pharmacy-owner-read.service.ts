@@ -173,6 +173,7 @@ function buildOwnerMatch(query: AdminPharmacyOwnerListQuery) {
       ...(query.registeredFrom
         ? { $gte: getStartOfDay(query.registeredFrom) }
         : {}),
+
       ...(query.registeredTo ? { $lte: getEndOfDay(query.registeredTo) } : {}),
     };
   }

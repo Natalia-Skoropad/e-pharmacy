@@ -20,6 +20,9 @@ import type {
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.status.changed': 'Pharmacy status changed',
+  'pharmacy.reactivation.reviewed': 'Pharmacy reactivation reviewed',
+  'pharmacy.profile.updated': 'Pharmacy profile updated',
+  'pharmacy.moderation.submitted': 'Pharmacy submitted for moderation',
   'pharmacy.comment.created': 'Pharmacy admin comment created',
   'pharmacy.comment.deleted': 'Pharmacy admin comment deleted',
   'pharmacy.corrections.requested': 'Pharmacy corrections requested',
@@ -91,6 +94,9 @@ const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 
 const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacy.corrections.requested',
+  'pharmacy.reactivation.reviewed',
+  'pharmacy.profile.updated',
+  'pharmacy.moderation.submitted',
   'adminEmployee.profile.updated',
   'pharmacyOwner.profile.updated',
   'pharmacyOwner.photo.updated',
@@ -238,6 +244,7 @@ export function getAdminAuditPageLocation(
     | 'entityType'
     | 'entityId'
     | 'entityLabelSnapshot'
+    | 'pharmacyId'
     | 'scopeEntityType'
     | 'scopeEntityId'
     | 'actorUserId'
@@ -255,6 +262,22 @@ export function getAdminAuditPageLocation(
       entityId: id,
       label: item.entityLabelSnapshot,
       href: `${ADMIN_ROUTES.PHARMACIES}/${encodeURIComponent(id)}`,
+    };
+  }
+
+  if (
+    section === 'pharmacies' &&
+    item.entityType === 'pharmacyAdminComment' &&
+    (item.pharmacyId ||
+      (item.scopeEntityType === 'pharmacy' ? item.scopeEntityId : null))
+  ) {
+    const pharmacyId = item.pharmacyId || item.scopeEntityId!;
+
+    return {
+      section,
+      entityId: pharmacyId,
+      label: 'Pharmacy',
+      href: `${ADMIN_ROUTES.PHARMACIES}/${encodeURIComponent(pharmacyId)}`,
     };
   }
 

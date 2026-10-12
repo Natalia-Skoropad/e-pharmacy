@@ -46,10 +46,12 @@ function clonePharmacyLocation(
     ...(location.settlement !== undefined
       ? { settlement: location.settlement }
       : {}),
+
     ...(location.region !== undefined ? { region: location.region } : {}),
     ...(location.countryCode !== undefined
       ? { countryCode: location.countryCode }
       : {}),
+
     ...(location.geo !== undefined
       ? {
           geo: {
@@ -76,18 +78,22 @@ function normalizePendingModeration(
     ...(current.location
       ? { location: clonePharmacyLocation(current.location) }
       : {}),
+
     ...(current.phone !== undefined ? { phone: current.phone } : {}),
     ...(current.email !== undefined ? { email: current.email } : {}),
     ...(current.workingHours !== undefined
       ? { workingHours: current.workingHours }
       : {}),
+
     ...(current.imageUrl !== undefined ? { imageUrl: current.imageUrl } : {}),
     ...(current.description !== undefined
       ? { description: current.description }
       : {}),
+
     ...(current.documents !== undefined
       ? { documents: [...current.documents] }
       : {}),
+
     ...(current.bankDetails !== undefined
       ? { bankDetails: { ...current.bankDetails } }
       : {}),
@@ -124,10 +130,12 @@ function serializePharmacyProfile(
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.bankDetails ? { bankDetails: pharmacy.bankDetails } : {}),
+
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
     documents: pharmacy.documents ?? [],
     status: pharmacy.status,
     rating: pharmacy.rating ?? 0,
+
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
@@ -135,9 +143,11 @@ function serializePharmacyProfile(
     ...(pharmacy.reviewFeedback
       ? { reviewFeedback: pharmacy.reviewFeedback }
       : {}),
+
     ...(pharmacy.reviewedAt
       ? { reviewedAt: pharmacy.reviewedAt.toISOString() }
       : {}),
+
     ...(pharmacy.reviewedBy ? { reviewedBy: String(pharmacy.reviewedBy) } : {}),
     ...(pharmacy.pendingModeration
       ? {
@@ -146,6 +156,7 @@ function serializePharmacyProfile(
           ),
         }
       : {}),
+
     reviewsCount: pharmacy.reviewsCount ?? 0,
     updatedAt: pharmacy.updatedAt.toISOString(),
   };
@@ -391,6 +402,7 @@ export async function decidePharmacyModerationByAdminService(
           }
 
           const approvedAt = new Date();
+
           Object.assign(nextUpdate, {
             approvedBy: adminUserId,
             approvedAt,
@@ -418,6 +430,7 @@ export async function decidePharmacyModerationByAdminService(
           }
 
           await assertPharmacyHasNoActiveOrders(pharmacy._id, session);
+
           nextStatus = PHARMACY_STATUSES.BLOCKED;
           nextUpdate.status = nextStatus;
           nextUpdate.statusReason = reason;
@@ -441,6 +454,7 @@ export async function decidePharmacyModerationByAdminService(
           nextStatus = pharmacy.activatedAt
             ? PHARMACY_STATUSES.ACTIVE
             : PHARMACY_STATUSES.ON_VERIFICATION;
+
           nextUpdate.status = nextStatus;
 
           if (nextStatus === PHARMACY_STATUSES.ON_VERIFICATION) {
@@ -452,6 +466,7 @@ export async function decidePharmacyModerationByAdminService(
           unsetFields.reviewFeedback = '';
           unsetFields.reviewedAt = '';
           unsetFields.reviewedBy = '';
+
           action = ADMIN_AUDIT_ACTIONS.PHARMACY_REACTIVATION_REVIEWED;
           break;
         }
@@ -606,6 +621,7 @@ export async function decidePharmacyModerationByAdminService(
       const repeated = await replay();
       if (repeated) return repeated;
     }
+
     throw error;
   } finally {
     await session.endSession();

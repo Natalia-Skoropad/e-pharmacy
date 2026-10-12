@@ -25,6 +25,9 @@ export type AdminAuditLogEntity = {
   entityLabelSnapshot: string;
   scopeEntityType?: AdminAuditEntityType;
   scopeEntityId?: string;
+
+  /** Immutable exact pharmacy reference; independent of the existing owner scope. */
+  pharmacyId?: string;
   before: Record<string, AdminAuditValue>;
   after: Record<string, AdminAuditValue>;
   changedFields: string[];
@@ -62,6 +65,7 @@ export type AdminAuditListItemDto = Readonly<{
   entityLabelSnapshot: string;
   scopeEntityType?: AdminAuditEntityType;
   scopeEntityId?: string;
+  pharmacyId?: string;
   changedFields: string[];
   statusBefore?: string;
   statusAfter?: string;

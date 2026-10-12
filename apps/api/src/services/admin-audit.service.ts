@@ -166,6 +166,7 @@ type AppendAdminAuditLogInput = Readonly<{
   entityLabel: string;
   scopeEntityType?: AdminAuditEntityType;
   scopeEntityId?: string;
+  pharmacyId?: string;
   before: AdminAuditSnapshot;
   after: AdminAuditSnapshot;
   changedFields: readonly string[];
@@ -186,6 +187,7 @@ export async function appendAdminAuditLog({
   entityLabel,
   scopeEntityType,
   scopeEntityId,
+  pharmacyId: explicitPharmacyId,
   before: rawBefore,
   after: rawAfter,
   changedFields: rawChangedFields,
@@ -215,6 +217,27 @@ export async function appendAdminAuditLog({
   if (scopeEntityType && !isAdminAuditEntityType(scopeEntityType)) {
     throw new TypeError('Audit scope entity type is invalid.');
   }
+
+  // Pharmacy events retain their owner scope. Comment events retain their
+  // pharmacy scope. Both store a canonical exact pharmacy identifier.
+  const derivedPharmacyId =
+    entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY
+      ? entityId
+      : scopeEntityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY
+        ? scopeEntityId
+        : undefined;
+
+  if (
+    (explicitPharmacyId && !Types.ObjectId.isValid(explicitPharmacyId)) ||
+    (derivedPharmacyId && !Types.ObjectId.isValid(derivedPharmacyId)) ||
+    (explicitPharmacyId &&
+      derivedPharmacyId &&
+      explicitPharmacyId.toLowerCase() !== derivedPharmacyId.toLowerCase())
+  ) {
+    throw new TypeError('Audit pharmacyId is invalid or inconsistent.');
+  }
+
+  const pharmacyId = (explicitPharmacyId ?? derivedPharmacyId)?.toLowerCase();
 
   const before = normalizeAdminAuditSnapshot(
     rawBefore,
@@ -271,6 +294,7 @@ export async function appendAdminAuditLog({
               ),
             }
           : {}),
+        ...(pharmacyId ? { pharmacyId } : {}),
         before,
         after,
         changedFields,
@@ -319,6 +343,7 @@ type LeanAuditLog = {
   entityLabelSnapshot: string;
   scopeEntityType?: AdminAuditEntityType;
   scopeEntityId?: string;
+  pharmacyId?: string;
   before: Record<string, AdminAuditValue>;
   after: Record<string, AdminAuditValue>;
   changedFields: string[];
@@ -397,6 +422,7 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
           scopeEntityId: log.scopeEntityId,
         }
       : {}),
+    ...(log.pharmacyId ? { pharmacyId: log.pharmacyId } : {}),
     changedFields: [...log.changedFields],
     ...(statusBefore ? { statusBefore } : {}),
     ...(statusAfter ? { statusAfter } : {}),
@@ -476,7 +502,9 @@ function applyAuditSectionFilter(
 
 //===============================================================
 
-export async function listAdminAuditActorsService(): Promise<AdminAuditActorsResponseDto> {
+export async function listAdminAuditActorsService(
+  exactScope?: Readonly<{ pharmacyId: string }>
+): Promise<AdminAuditActorsResponseDto> {
   const actors = await AdminAuditLog.aggregate<{
     _id: Types.ObjectId;
     actorType: AdminAuditActorType;
@@ -490,6 +518,9 @@ export async function listAdminAuditActorsService(): Promise<AdminAuditActorsRes
       status: 'new' | 'active' | 'blocked';
     };
   }>([
+    ...(exactScope
+      ? [{ $match: buildPharmacyAuditScopeFilter(exactScope.pharmacyId) }]
+      : []),
     {
       $group: {
         _id: '$actorUserId',
@@ -650,8 +681,37 @@ async function getAuditActorIdsByType(
 
 //===============================================================
 
+/** Exact server-side pharmacy scoping, including legacy rows that predate
+ * pharmacyId. Neither an owner's ID nor an untyped entityId can match here. */
+export function buildPharmacyAuditScopeFilter(
+  pharmacyId: string
+): Record<string, unknown> {
+  if (!Types.ObjectId.isValid(pharmacyId)) {
+    throw new TypeError('Pharmacy audit scope id is invalid.');
+  }
+
+  const id = pharmacyId.toLowerCase();
+
+  return {
+    $or: [
+      { pharmacyId: id },
+      { entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY, entityId: id },
+      {
+        scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+        scopeEntityId: id,
+        section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
+      },
+    ],
+  };
+}
+
+//===============================================================
+
+type AuditListScope = Readonly<{ pharmacyId: string }>;
+
 export async function listAdminAuditLogsService(
-  query: AdminAuditListQuery
+  query: AdminAuditListQuery,
+  exactScope?: AuditListScope
 ): Promise<AdminAuditListResponseDto> {
   const filter: Record<string, unknown> = {};
 
@@ -688,11 +748,22 @@ export async function listAdminAuditLogsService(
     };
   }
 
+  const exactPharmacyFilter = exactScope
+    ? buildPharmacyAuditScopeFilter(exactScope.pharmacyId)
+    : null;
+
+  if (exactPharmacyFilter) {
+    // AND rather than replacing section/action filters (which use $or).
+    filter.$and = [exactPharmacyFilter];
+  }
+
   const skip = (query.page - 1) * query.perPage;
 
   // Keep the calendar bounds and action facets scoped to the selected owner,
   // but independent of pagination and the currently selected filters.
-  const scopeFilter: Record<string, unknown> = {};
+  const scopeFilter: Record<string, unknown> = exactPharmacyFilter
+    ? { $and: [exactPharmacyFilter] }
+    : {};
 
   if (query.scopeEntityType)
     scopeFilter.scopeEntityType = query.scopeEntityType;
@@ -742,15 +813,17 @@ export async function listAdminAuditLogsService(
 //===============================================================
 
 export async function getAdminAuditLogService(
-  auditLogId: string
+  auditLogId: string,
+  exactScope?: AuditListScope
 ): Promise<AdminAuditDetailsDto> {
   if (!Types.ObjectId.isValid(auditLogId)) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Audit record was not found.');
   }
 
-  const auditLog = await AdminAuditLog.findById(
-    auditLogId
-  ).lean<LeanAuditLog | null>();
+  const auditLog = await AdminAuditLog.findOne({
+    _id: new Types.ObjectId(auditLogId),
+    ...(exactScope ? buildPharmacyAuditScopeFilter(exactScope.pharmacyId) : {}),
+  }).lean<LeanAuditLog | null>();
 
   if (!auditLog) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Audit record was not found.');

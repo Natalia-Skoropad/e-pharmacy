@@ -4,6 +4,9 @@ import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
 export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.status.changed',
+  'pharmacy.reactivation.reviewed',
+  'pharmacy.profile.updated',
+  'pharmacy.moderation.submitted',
   'pharmacy.comment.created',
   'pharmacy.comment.deleted',
   'pharmacy.corrections.requested',
@@ -130,6 +133,7 @@ export type AdminAuditListItem = Readonly<{
   entityLabelSnapshot: string;
   scopeEntityType?: AdminAuditEntityType;
   scopeEntityId?: string;
+  pharmacyId?: string;
   changedFields: readonly string[];
   statusBefore?: string;
   statusAfter?: string;
@@ -276,6 +280,9 @@ function parseListItem(value: unknown): AdminAuditListItem {
     (hasScope &&
       (!isAdminAuditEntityType(value.scopeEntityType) ||
         typeof value.scopeEntityId !== 'string')) ||
+    (value.pharmacyId !== undefined &&
+      (typeof value.pharmacyId !== 'string' ||
+        !/^[a-f0-9]{24}$/.test(value.pharmacyId))) ||
     typeof value.requestId !== 'string' ||
     typeof value.createdAt !== 'string' ||
     Number.isNaN(Date.parse(value.createdAt)) ||
@@ -302,6 +309,10 @@ function parseListItem(value: unknown): AdminAuditListItem {
           scopeEntityType: value.scopeEntityType as AdminAuditEntityType,
           scopeEntityId: value.scopeEntityId as string,
         }
+      : {}),
+
+    ...(typeof value.pharmacyId === 'string'
+      ? { pharmacyId: value.pharmacyId }
       : {}),
 
     changedFields: parseStringArray(value.changedFields, 'changedFields'),

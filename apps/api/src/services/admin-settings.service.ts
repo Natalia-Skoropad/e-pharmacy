@@ -105,6 +105,7 @@ async function getCategoryUsageMap(
       { $match: { categoryId: { $in: categoryIds } } },
       { $group: { _id: '$categoryId', count: { $sum: 1 } } },
     ]),
+
     ProductRequest.aggregate<UsageAggregationRow>([
       { $match: { categoryId: { $in: categoryIds } } },
       { $group: { _id: '$categoryId', count: { $sum: 1 } } },
@@ -114,6 +115,7 @@ async function getCategoryUsageMap(
   const productCounts = new Map(
     productRows.map((row) => [String(row._id), row.count])
   );
+
   const requestCounts = new Map(
     requestRows.map((row) => [String(row._id), row.count])
   );
@@ -248,11 +250,13 @@ export async function listAdminProductCategoriesService(
 
   const [total, categories, earliestCategory] = await Promise.all([
     ProductCategory.countDocuments(filter),
+
     ProductCategory.find(filter)
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(query.perPage)
       .lean<LeanProductCategory[]>(),
+
     ProductCategory.findOne({})
       .sort({ createdAt: 1, _id: 1 })
       .select('createdAt')
@@ -267,6 +271,7 @@ export async function listAdminProductCategoriesService(
     items: categories.map((category) =>
       serializeCategory(
         category,
+
         usage.get(String(category._id)) ?? {
           productsCount: 0,
           productRequestsCount: 0,
@@ -274,10 +279,12 @@ export async function listAdminProductCategoriesService(
         }
       )
     ),
+
     page: query.page,
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
     earliestCreatedAt: earliestCategory
       ? earliestCategory.createdAt.toISOString().slice(0, 10)
       : null,
@@ -300,11 +307,13 @@ export async function listAdminPositionsService(
 
   const [total, positions, earliestPosition] = await Promise.all([
     Position.countDocuments(filter),
+
     Position.find(filter)
       .sort({ createdAt: -1, _id: -1 })
       .skip(skip)
       .limit(query.perPage)
       .lean<LeanPosition[]>(),
+
     Position.findOne({})
       .sort({ createdAt: 1, _id: 1 })
       .select('createdAt')
@@ -317,6 +326,7 @@ export async function listAdminPositionsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
     earliestCreatedAt: earliestPosition
       ? earliestPosition.createdAt.toISOString().slice(0, 10)
       : null,
@@ -378,6 +388,7 @@ export async function createAdminProductCategoryService(
         entityLabel: category.name,
         before: { exists: false },
         after: { exists: true, ...buildCategoryAuditSnapshot(category) },
+
         changedFields: [
           'exists',
           'name',
@@ -387,6 +398,7 @@ export async function createAdminProductCategoryService(
           'sortOrder',
           'color',
         ],
+
         requestId: auditRequestId,
         session,
       });
@@ -437,6 +449,7 @@ export async function updateAdminProductCategoryService(
       const nextName = input.name.trim();
       const nextSlug = createProductCategorySlugFromName(input.name);
       const nextColor = normalizeProductCategoryColor(input.color);
+
       const isIdentityChange =
         category.name !== nextName || category.slug !== nextSlug;
 
@@ -452,6 +465,7 @@ export async function updateAdminProductCategoryService(
 
       if (category.name !== nextName) changedFields.push('name');
       if (category.slug !== nextSlug) changedFields.push('slug');
+
       if ((category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR) !== nextColor) {
         changedFields.push('color');
       }
@@ -468,6 +482,7 @@ export async function updateAdminProductCategoryService(
       category.slug = nextSlug;
       category.color = nextColor;
       category.updatedBy = new Types.ObjectId(adminUserId);
+
       await category.save({ session });
 
       await appendAdminAuditLog({
@@ -544,6 +559,7 @@ export async function deleteAdminProductCategoryService(
         entityLabel: category.name,
         before: { exists: true, ...before },
         after: { exists: false },
+
         changedFields: [
           'exists',
           'name',
@@ -553,6 +569,7 @@ export async function deleteAdminProductCategoryService(
           'sortOrder',
           'color',
         ],
+
         requestId: auditRequestId,
         session,
       });
@@ -653,6 +670,7 @@ export async function updateAdminPositionService(
       const previousName = position.name;
       position.name = input.name;
       position.updatedBy = new Types.ObjectId(adminUserId);
+
       await position.save({ session });
 
       await appendAdminAuditLog({
