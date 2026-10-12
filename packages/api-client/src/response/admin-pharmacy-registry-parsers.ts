@@ -4,6 +4,7 @@ import type {
   AdminPharmacyOption,
   AdminPharmacyOptionsResponse,
   AdminPharmacyStatistics,
+  AdminPharmacyRegistryOwnerOptionsResponse,
 } from '@e-pharmacy/types/admin';
 
 import type {
@@ -183,6 +184,34 @@ export function parseAdminPharmacyOptionsResponse(
     throw new TypeError('Invalid pharmacy options.');
 
   return { items: response.items.map(parseAdminPharmacyOption) };
+}
+
+//===================================================================
+
+export function parseAdminPharmacyRegistryOwnerOptionsResponse(
+  value: unknown
+): AdminPharmacyRegistryOwnerOptionsResponse {
+  const response = record(value, 'pharmacy registry owner options response');
+
+  if (!Array.isArray(response.items))
+    throw new TypeError('Invalid pharmacy registry owner options.');
+
+  return {
+    items: response.items.map((value: unknown) => {
+      const owner = record(value, 'pharmacy registry owner');
+
+      const pictureUrl =
+        owner.pictureUrl === null
+          ? undefined
+          : optional(owner.pictureUrl, 'owner picture');
+
+      return {
+        id: id(owner.id, 'owner ID'),
+        name: str(owner.name, 'owner name'),
+        ...(pictureUrl ? { pictureUrl } : {}),
+      };
+    }),
+  };
 }
 
 //===================================================================

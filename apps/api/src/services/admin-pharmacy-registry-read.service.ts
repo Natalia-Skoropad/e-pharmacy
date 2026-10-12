@@ -58,6 +58,12 @@ type RegistryAggregateResult = {
   total: Array<{ count: number }>;
 };
 
+type RegistryOwnerOption = {
+  id: string;
+  name: string;
+  pictureUrl: string | null;
+};
+
 type RegistryOption = {
   id: string;
   name: string;
@@ -353,6 +359,55 @@ export async function listAdminPharmacyOptionsService(
       ...(item.phone ? { phone: item.phone } : {}),
       ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
       ...(item.location ? { location: item.location } : {}),
+    })),
+  };
+}
+
+//===============================================================
+
+/** Only owners linked to at least one pharmacy, under pharmacies.view. */
+export async function listAdminPharmacyRegistryOwnerOptionsService(
+  query: AdminPharmacyRegistryOptionsQuery
+) {
+  const items = await User.aggregate<RegistryOwnerOption>([
+    {
+      $match: {
+        role: USER_ROLES.PHARMACY,
+        ...(query.search
+          ? { $or: identitySearch(query.search, ['name', 'email', 'phone']) }
+          : {}),
+      },
+    },
+    {
+      $lookup: {
+        from: Pharmacy.collection.name,
+        let: { ownerId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$ownerId', '$$ownerId'] } } },
+          { $limit: 1 },
+          { $project: { _id: 1 } },
+        ],
+        as: '_linkedPharmacies',
+      },
+    },
+    { $match: { '_linkedPharmacies.0': { $exists: true } } },
+    { $sort: { name: 1, _id: 1 } },
+    { $limit: query.limit },
+    {
+      $project: {
+        _id: 0,
+        id: { $toString: '$_id' },
+        name: 1,
+        pictureUrl: { $ifNull: ['$pictureUrl', null] },
+      },
+    },
+  ]);
+
+  return {
+    items: items.map((owner) => ({
+      id: owner.id,
+      name: owner.name,
+      ...(owner.pictureUrl ? { pictureUrl: owner.pictureUrl } : {}),
     })),
   };
 }

@@ -5,6 +5,7 @@ import {
   parseAdminPharmacyListItem,
   parseAdminPharmacyListResponse,
   parseAdminPharmacyOptionsResponse,
+  parseAdminPharmacyRegistryOwnerOptionsResponse,
   parseAdminPharmacyStatistics,
 } from './admin-pharmacy-registry-parsers';
 
@@ -141,4 +142,32 @@ test('registry options and global status counters validate shape', () => {
       }),
     /counts/i
   );
+});
+
+//===================================================================
+
+test('pharmacy-scoped owner options fail closed on invalid identity and strip contact fields', () => {
+  assert.deepEqual(
+    parseAdminPharmacyRegistryOwnerOptionsResponse({
+      items: [
+        {
+          id: '507f1f77bcf86cd799439012',
+          name: 'Owner',
+          pictureUrl: null,
+          email: 'should-not-leak@example.com',
+          phone: 'hidden',
+        },
+      ],
+    }),
+    { items: [{ id: '507f1f77bcf86cd799439012', name: 'Owner' }] }
+  );
+
+  for (const bad of [
+    { items: [{}] },
+    { items: [{ id: 'not-object-id', name: 'Owner' }] },
+    { items: [{ id: '507f1f77bcf86cd799439012', name: '' }] },
+    { items: null },
+  ]) {
+    assert.throws(() => parseAdminPharmacyRegistryOwnerOptionsResponse(bad));
+  }
 });

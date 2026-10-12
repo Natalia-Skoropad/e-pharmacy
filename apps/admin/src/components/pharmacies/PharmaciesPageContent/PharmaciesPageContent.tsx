@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   Ban,
@@ -23,16 +23,27 @@ import type {
 } from '@e-pharmacy/types/admin';
 
 import {
+  CountLabel,
   DataTable,
+  formatInitials,
+  RatingSummary,
   TableDateTime,
+  TableHeaderTitle,
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
+import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
-import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+
+import {
+  Button,
+  FiltersButton,
+  TextActionButton,
+} from '@e-pharmacy/ui/primitives';
 
 import {
   StatsCard,
@@ -41,18 +52,25 @@ import {
   StatusBadge,
 } from '@e-pharmacy/ui/statistics';
 
+import { formatMoney, formatPharmacyLocation } from '@e-pharmacy/utils';
+
 import {
   getAdminPharmacies,
   getAdminPharmacySummary,
+  getAdminPharmacyRegistryOwnerOptions,
 } from '@/lib/api/browser/admin-pharmacy-registry.api';
 
 import {
   buildAdminPharmaciesListApiParams,
   buildAdminPharmaciesListUrl,
+  buildAdminPharmacyDetailUrl,
   type AdminPharmacyListUrlState,
 } from '@/lib/pharmacies/admin-pharmacy-url';
 
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
+import { PharmacyOwnerSearch } from '@/components/pharmacy-owners/PharmacyOwnerSearch/PharmacyOwnerSearch';
+import { PharmacySearch } from '../PharmacySearch/PharmacySearch';
+import { PharmaciesFiltersDrawer } from '../PharmaciesFiltersDrawer/PharmaciesFiltersDrawer';
 
 // Reuse the Owners registry shell classes: no parallel container CSS.
 import shellCss from '@/components/pharmacy-owners/PharmacyOwnersPageContent/PharmacyOwnersPageContent.module.css';
@@ -105,10 +123,20 @@ export function PharmaciesPageContent({
   initialState,
 }: PharmaciesPageContentProps) {
   const router = useRouter();
+  const state = initialState;
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const navigate = useCallback(
+    (nextState: AdminPharmacyListUrlState) => {
+      router.replace(buildAdminPharmaciesListUrl(nextState), { scroll: false });
+    },
+    [router]
+  );
+
   const [listRetry, setListRetry] = useState(0);
   const [statsRetry, setStatsRetry] = useState(0);
 
-  const listKey = `${getListKey(initialState)}|${listRetry}`;
+  const listKey = `${getListKey(state)}|${listRetry}`;
 
   const [listResult, setListResult] = useState<
     Readonly<{
@@ -139,7 +167,6 @@ export function PharmaciesPageContent({
   useEffect(() => {
     const controller = new AbortController();
     const key = listKey;
-    const state = initialState;
 
     void getAdminPharmacies(buildAdminPharmaciesListApiParams(state), {
       signal: controller.signal,
@@ -148,13 +175,7 @@ export function PharmaciesPageContent({
         if (controller.signal.aborted) return;
 
         if (state.page > 1 && state.page > Math.max(1, response.totalPages)) {
-          router.replace(
-            buildAdminPharmaciesListUrl({
-              ...state,
-              page: Math.max(1, response.totalPages),
-            }),
-            { scroll: false }
-          );
+          navigate({ ...state, page: Math.max(1, response.totalPages) });
           return;
         }
 
@@ -167,7 +188,7 @@ export function PharmaciesPageContent({
       });
 
     return () => controller.abort();
-  }, [listKey, initialState, router]);
+  }, [listKey, navigate, state]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -190,6 +211,39 @@ export function PharmaciesPageContent({
 
     return () => controller.abort();
   }, [statsRetry]);
+
+  const hasActiveFilters = Boolean(
+    state.pharmacyId ||
+    state.ownerId ||
+    state.status !== 'all' ||
+    state.createdFrom ||
+    state.createdTo ||
+    state.rating !== 'all'
+  );
+
+  const activeFiltersCount = [
+    Boolean(state.pharmacyId),
+    Boolean(state.ownerId),
+    Boolean(state.createdFrom || state.createdTo),
+    state.status !== 'all',
+    state.rating !== 'all',
+  ].filter(Boolean).length;
+
+  const resetFilters = () =>
+    navigate({
+      pharmacyId: '',
+      ownerId: '',
+      status: 'all',
+      createdFrom: '',
+      createdTo: '',
+      rating: 'all',
+      sort: 'created_desc',
+      page: 1,
+      perPage: state.perPage,
+    });
+
+  const changeRowsPerPage = (perPage: RowsPerPageValue) =>
+    navigate({ ...state, perPage, page: 1 });
 
   const cards = useMemo(
     () => [
@@ -232,37 +286,114 @@ export function PharmaciesPageContent({
     [statistics]
   );
 
-  // Stage 14.9 offers real filtered registry rows. The full 13-column table,
-  // search and drawer controls are intentionally reserved for Stage 14.10.
+  // The same server aggregation used by Owner > Linked pharmacies supplies
+  // all row metrics; no per-row client requests or inferred counters.
   const columns = useMemo<Array<DataTableColumn<AdminPharmacyListItem>>>(
     () => [
       {
         key: 'createdAt',
-        title: 'Created date',
+        title: <TableHeaderTitle parts={['Created', 'date']} />,
         render: (pharmacy) => <TableDateTime value={pharmacy.createdAt} />,
       },
       {
+        key: 'photo',
+        title: <TableHeaderTitle parts={['Pharmacy', 'photo']} />,
+        render: (pharmacy) => (
+          <TableImagePreview
+            src={pharmacy.imageUrl}
+            alt={`${pharmacy.name || 'Pharmacy'} photo`}
+            fallback={formatInitials(pharmacy.name || 'Pharmacy', 'P')}
+          />
+        ),
+      },
+      {
+        key: 'id',
+        title: <TableHeaderTitle parts={['Pharmacy', 'ID']} />,
+        render: (pharmacy) => (
+          <TextActionButton
+            className={css.breakableLink}
+            href={buildAdminPharmacyDetailUrl(pharmacy.id)}
+          >
+            {pharmacy.id}
+          </TextActionButton>
+        ),
+      },
+      {
         key: 'name',
-        title: 'Pharmacy',
-        render: (pharmacy) => pharmacy.name || '—',
+        title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
+        render: (pharmacy) => (
+          <TextActionButton href={buildAdminPharmacyDetailUrl(pharmacy.id)}>
+            {pharmacy.name || 'Unnamed pharmacy'}
+          </TextActionButton>
+        ),
       },
       {
         key: 'owner',
-        title: 'Pharmacy owner',
+        title: <TableHeaderTitle parts={['Pharmacy', 'owner']} />,
         render: (pharmacy) =>
           pharmacy.owner ? (
             <TextActionButton
               href={buildAdminPharmacyOwnerDetailUrl(pharmacy.owner.id)}
             >
-              {pharmacy.owner.name}
+              {pharmacy.owner.name || pharmacy.owner.id}
             </TextActionButton>
           ) : (
             '—'
           ),
       },
       {
+        key: 'email',
+        title: 'Email',
+        render: (pharmacy) => (
+          <span className={css.breakableText}>{pharmacy.email || '—'}</span>
+        ),
+      },
+      {
+        key: 'phone',
+        title: 'Phone',
+        render: (pharmacy) => pharmacy.phone || '—',
+      },
+      {
+        key: 'address',
+        title: 'Address',
+        render: (pharmacy) => (
+          <span className={css.addressCell}>
+            {formatPharmacyLocation(pharmacy.location) || '—'}
+          </span>
+        ),
+      },
+      {
+        key: 'activeClientsCount',
+        title: <TableHeaderTitle parts={['Active', 'clients']} />,
+        render: (pharmacy) => pharmacy.activeClientsCount,
+      },
+      {
+        key: 'successfulOrdersCount',
+        title: <TableHeaderTitle parts={['Successful', 'orders']} />,
+        render: (pharmacy) => pharmacy.successfulOrdersCount,
+      },
+      {
+        key: 'successfulRevenue',
+        title: <TableHeaderTitle parts={['Successful', 'revenue']} />,
+        render: (pharmacy) => formatMoney(pharmacy.successfulRevenue) ?? '—',
+      },
+      {
+        key: 'rating',
+        title: <TableHeaderTitle parts={['Rating /', 'reviews']} />,
+        render: (pharmacy) =>
+          pharmacy.reviewsCount ? (
+            <RatingSummary
+              rating={pharmacy.rating}
+              reviewsCount={pharmacy.reviewsCount}
+              size="sm"
+            />
+          ) : (
+            'No reviews'
+          ),
+      },
+      {
         key: 'status',
-        title: 'Pharmacy status',
+        title: <TableHeaderTitle parts={['Pharmacy', 'status']} />,
         render: (pharmacy) => (
           <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
         ),
@@ -338,7 +469,7 @@ export function PharmaciesPageContent({
               ariaLabel="Pharmacy status statistics"
             >
               {cards.map((card) => {
-                const active = initialState.status === card.key;
+                const active = state.status === card.key;
                 const target = active ? 'all' : card.key;
 
                 return (
@@ -350,7 +481,7 @@ export function PharmaciesPageContent({
                     icon={card.icon}
                     className={active ? css.activeCard : undefined}
                     href={buildAdminPharmaciesListUrl({
-                      ...initialState,
+                      ...state,
                       status: target,
                       page: 1,
                     })}
@@ -386,15 +517,66 @@ export function PharmaciesPageContent({
         </div>
       </section>
 
+      <section
+        className={shellCss.card}
+        aria-label="Pharmacies search and filters"
+      >
+        <h2 className={shellCss.visuallyHidden}>
+          Pharmacies search and filters
+        </h2>
+        <div className={css.searchGrid}>
+          <PharmacySearch
+            value={state.pharmacyId}
+            onChange={(pharmacyId) =>
+              navigate({ ...state, pharmacyId, page: 1 })
+            }
+          />
+          <PharmacyOwnerSearch
+            loadOptions={getAdminPharmacyRegistryOwnerOptions}
+            value={state.ownerId}
+            onChange={(ownerId) => navigate({ ...state, ownerId, page: 1 })}
+          />
+          <div className={shellCss.searchAction}>
+            <FiltersButton
+              activeCount={activeFiltersCount}
+              controlsId="pharmacies-filters-panel"
+              isExpanded={isFiltersOpen}
+              className={shellCss.filterButton}
+              onClick={() => setIsFiltersOpen(true)}
+            />
+          </div>
+        </div>
+      </section>
+
       <section className={shellCss.card} aria-label="Pharmacies list">
         <div className={css.listHeading}>
           <h2>Pharmacy list</h2>
           <p className={css.filterDescription} role="status">
-            {initialState.status === 'all'
+            {state.status === 'all'
               ? 'All pharmacy statuses'
-              : `Status: ${PHARMACY_STATUS_PRESENTATION[initialState.status].label}`}
+              : `Status: ${PHARMACY_STATUS_PRESENTATION[state.status].label}`}
           </p>
         </div>
+
+        <div className={shellCss.toolbar}>
+          <div className={shellCss.rowsControl}>
+            <RowsPerPageSelect
+              id="pharmacies-rows-per-page"
+              value={state.perPage}
+              onChange={changeRowsPerPage}
+            />
+          </div>
+          {data && !listError ? (
+            <CountLabel
+              className={shellCss.countLabel}
+              shown={data.items.length}
+              total={data.total}
+              label="pharmacies"
+              fullWidthOnMobile
+            />
+          ) : null}
+        </div>
+
         {listError ? (
           <ProfileResourceState
             variant="error"
@@ -411,33 +593,42 @@ export function PharmaciesPageContent({
               items={data?.items ?? []}
               getItemKey={(pharmacy) => pharmacy.id}
               isLoading={isLoadingList}
-              minWidth={760}
+              minWidth={1800}
               ariaLabel="Pharmacies"
               labels={{
                 loading: 'Loading pharmacies...',
-                empty:
-                  initialState.status === 'all'
-                    ? 'No pharmacies have registered yet.'
-                    : 'No pharmacies match the selected status.',
+                empty: hasActiveFilters
+                  ? 'No pharmacies match the selected filters.'
+                  : 'No pharmacies have registered yet.',
               }}
             />
-            {data && data.totalPages > 1 ? (
+            {data ? (
               <PaginationView
                 currentPage={data.page}
                 totalPages={data.totalPages}
                 disabled={isLoadingList}
                 ariaLabel="Pharmacies pagination"
-                onPageChange={(page) =>
-                  router.replace(
-                    buildAdminPharmaciesListUrl({ ...initialState, page }),
-                    { scroll: false }
-                  )
-                }
+                onPageChange={(page) => navigate({ ...state, page })}
               />
             ) : null}
           </>
         )}
       </section>
+
+      {isFiltersOpen ? (
+        <PharmaciesFiltersDrawer
+          state={state}
+          hasActiveFilters={hasActiveFilters}
+          minDate={
+            data?.earliestCreatedAt ??
+            listResult.data?.earliestCreatedAt ??
+            undefined
+          }
+          onChange={navigate}
+          onReset={resetFilters}
+          onClose={() => setIsFiltersOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

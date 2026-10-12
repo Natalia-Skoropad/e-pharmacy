@@ -67,6 +67,7 @@ export {
   parseAdminPharmacyStatistics,
   parseAdminPharmacyOption,
   parseAdminPharmacyOptionsResponse,
+  parseAdminPharmacyRegistryOwnerOptionsResponse,
 } from './admin-pharmacy-registry-parsers';
 
 export {

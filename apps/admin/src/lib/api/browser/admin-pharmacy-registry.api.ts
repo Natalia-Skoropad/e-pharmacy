@@ -5,6 +5,7 @@ import {
   parseAdminPharmacyListResponse,
   parseAdminPharmacyStatistics,
   parseAdminPharmacyOptionsResponse,
+  parseAdminPharmacyRegistryOwnerOptionsResponse,
 } from '@e-pharmacy/api-client/response';
 
 import { appendQueryParams } from '@e-pharmacy/api-client/transport';
@@ -14,6 +15,7 @@ import type {
   AdminPharmacyListResponse,
   AdminPharmacyStatistics,
   AdminPharmacyOptionsResponse,
+  AdminPharmacyRegistryOwnerOptionsResponse,
 } from '@e-pharmacy/types/admin';
 
 import { adminApiRoutes } from '@/lib/api/routes/admin-api-routes';
@@ -85,6 +87,25 @@ export async function getAdminPharmacyOptions(
     await localApiRequest(path, { signal: options?.signal }),
 
     parseAdminPharmacyOptionsResponse,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getAdminPharmacyRegistryOwnerOptions(
+  params: AdminPharmacyRegistryOptionsQueryParams = {},
+  options?: Readonly<{ signal?: AbortSignal }>
+): Promise<AdminPharmacyRegistryOwnerOptionsResponse> {
+  const path = appendQueryParams(
+    adminApiRoutes.pharmacyRegistry.ownerOptions,
+    params
+  );
+
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+
+    parseAdminPharmacyRegistryOwnerOptionsResponse,
     { url: path, method: 'GET' }
   );
 }

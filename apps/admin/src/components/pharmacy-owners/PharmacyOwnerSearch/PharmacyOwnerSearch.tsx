@@ -19,10 +19,22 @@ import { getAdminPharmacyOwnerOptions } from '@/lib/api/browser/admin-pharmacy-o
 
 //===================================================================
 
+type OwnerSuggestion = Pick<
+  AdminPharmacyOwnerOption,
+  'id' | 'name' | 'pictureUrl'
+> &
+  Partial<Pick<AdminPharmacyOwnerOption, 'email' | 'phone'>>;
+
+type OwnerOptionsLoader = (
+  params: Readonly<{ search?: string; limit?: number }>,
+  options?: Readonly<{ signal?: AbortSignal }>
+) => Promise<Readonly<{ items: readonly OwnerSuggestion[] }>>;
+
 type PharmacyOwnerSearchProps = Readonly<{
   value: string;
   disabled?: boolean;
   onChange: (ownerId: string) => void;
+  loadOptions?: OwnerOptionsLoader;
 }>;
 
 //===================================================================
@@ -34,7 +46,7 @@ function sanitizeSearch(value: string): string {
 //===================================================================
 
 function toSearchableOption(
-  owner: AdminPharmacyOwnerOption
+  owner: OwnerSuggestion
 ): SearchableSelectOption<string> {
   return {
     value: owner.id,
@@ -57,18 +69,19 @@ export function PharmacyOwnerSearch({
   value,
   disabled = false,
   onChange,
+  loadOptions = getAdminPharmacyOwnerOptions,
 }: PharmacyOwnerSearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
 
   const [selectedOwnerResult, setSelectedOwnerResult] = useState<Readonly<{
     value: string;
-    owner: AdminPharmacyOwnerOption | null;
+    owner: OwnerSuggestion | null;
   }> | null>(null);
 
   const [suggestionsResult, setSuggestionsResult] = useState<Readonly<{
     query: string;
-    items: readonly AdminPharmacyOwnerOption[];
+    items: readonly OwnerSuggestion[];
     unavailable: boolean;
   }> | null>(null);
 
@@ -76,7 +89,7 @@ export function PharmacyOwnerSearch({
     const controller = new AbortController();
     const requestQuery = debouncedQuery;
 
-    void getAdminPharmacyOwnerOptions(
+    void loadOptions(
       {
         ...(requestQuery ? { search: requestQuery } : {}),
         limit: 20,
@@ -92,6 +105,7 @@ export function PharmacyOwnerSearch({
           unavailable: false,
         });
       })
+
       .catch(() => {
         if (controller.signal.aborted) return;
 
@@ -103,17 +117,14 @@ export function PharmacyOwnerSearch({
       });
 
     return () => controller.abort();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, loadOptions]);
 
   useEffect(() => {
     if (!value || selectedOwnerResult?.value === value) return;
 
     const controller = new AbortController();
 
-    void getAdminPharmacyOwnerOptions(
-      { search: value, limit: 8 },
-      { signal: controller.signal }
-    )
+    void loadOptions({ search: value, limit: 8 }, { signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
 
@@ -122,6 +133,7 @@ export function PharmacyOwnerSearch({
           owner: response.items.find((owner) => owner.id === value) ?? null,
         });
       })
+
       .catch(() => {
         if (!controller.signal.aborted) {
           setSelectedOwnerResult({ value, owner: null });
@@ -129,7 +141,7 @@ export function PharmacyOwnerSearch({
       });
 
     return () => controller.abort();
-  }, [selectedOwnerResult?.value, value]);
+  }, [selectedOwnerResult?.value, value, loadOptions]);
 
   const selectedOwner =
     selectedOwnerResult?.value === value ? selectedOwnerResult.owner : null;

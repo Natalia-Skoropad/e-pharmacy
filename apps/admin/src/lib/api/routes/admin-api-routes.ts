@@ -65,6 +65,7 @@ export const adminApiRoutes = {
     list: '/api/admin/pharmacies',
     summary: '/api/admin/pharmacies/summary',
     options: '/api/admin/pharmacies/options',
+    ownerOptions: '/api/admin/pharmacies/owner-options',
   },
 
   pharmacyOwners: {

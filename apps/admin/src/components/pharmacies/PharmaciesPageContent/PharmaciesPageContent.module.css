@@ -28,3 +28,30 @@
   color: var(--color-text-secondary);
   font-size: var(--fz-14);
 }
+
+.searchGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.breakableLink,
+.breakableText {
+  overflow-wrap: anywhere;
+}
+
+.addressCell {
+  display: block;
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+
+@media only screen and (min-width: 768px) {
+  .searchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(
+        140px,
+        max-content
+      );
+    align-items: end;
+  }
+}

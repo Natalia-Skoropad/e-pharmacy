@@ -73,6 +73,7 @@ export const backendRoutes = {
       list: '/admin/pharmacies',
       summary: '/admin/pharmacies/summary',
       options: '/admin/pharmacies/options',
+      ownerOptions: '/admin/pharmacies/owner-options',
     },
 
     pharmacyOwners: {

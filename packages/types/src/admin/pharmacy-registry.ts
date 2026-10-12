@@ -54,3 +54,14 @@ export type AdminPharmacyOption = Readonly<{
 export type AdminPharmacyOptionsResponse = Readonly<{
   items: readonly AdminPharmacyOption[];
 }>;
+
+// Pharmacy-scoped owner suggestions never reveal owners' contact details.
+export type AdminPharmacyRegistryOwnerOption = Readonly<{
+  id: EntityId;
+  name: string;
+  pictureUrl?: string;
+}>;
+
+export type AdminPharmacyRegistryOwnerOptionsResponse = Readonly<{
+  items: readonly AdminPharmacyRegistryOwnerOption[];
+}>;
