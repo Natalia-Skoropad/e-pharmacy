@@ -18,6 +18,7 @@ import {
   listPharmaciesByAdmin,
   getPharmacyRegistryStatisticsByAdmin,
   listPharmacyRegistryOptionsByAdmin,
+  getPharmacyDetailByAdmin,
   updatePharmacyOwnerStatusByAdmin,
   getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
@@ -353,6 +354,16 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
   validate({ query: adminPharmacyRegistryOptionsQuerySchema }),
   ctrlWrapper(listPharmacyRegistryOptionsByAdmin)
+);
+
+//=================================================================================
+
+// Stage 14.5: exact pharmacy detail, before documents and status mutations.
+adminRoutes.get(
+  '/pharmacies/:pharmacyId',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(getPharmacyDetailByAdmin)
 );
 
 //=================================================================================

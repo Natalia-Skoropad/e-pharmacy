@@ -87,7 +87,7 @@ test('registry ratings cover the complete [0, 5] domain without gaps', () => {
 
 //===============================================================
 
-test('admin BFF routes and browser parsers are present but no Stage 14.5 detail API', () => {
+test('admin BFF registry routes remain present when Stage 14.5 backend detail is added', () => {
   const root = '../../../../';
 
   for (const file of [
@@ -98,8 +98,9 @@ test('admin BFF routes and browser parsers are present but no Stage 14.5 detail 
     assert.match(read(root + file), /createPrivateProxyRoute/);
   }
 
-  assert.doesNotMatch(
-    read('../routes/admin.routes.ts'),
-    /['"]\/pharmacies\/:pharmacyId['"]/
-  );
+  const routes = read('../routes/admin.routes.ts');
+
+  assert.match(routes, /'\/pharmacies\/:pharmacyId'/);
+  assert.match(routes, /ctrlWrapper\(getPharmacyDetailByAdmin\)/);
+  assert.doesNotMatch(routes, /'\/pharmacies\/:pharmacyId\/comments'/);
 });

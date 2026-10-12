@@ -61,6 +61,7 @@ import {
   listAdminPharmacyOptionsService,
 } from '../services/admin-pharmacy-registry-read.service';
 
+import { getAdminPharmacyDetailService } from '../services/admin-pharmacy-detail-read.service';
 import { getAdminPharmacyDocumentContentService } from '../services/pharmacy-document.service';
 
 import {
@@ -154,6 +155,20 @@ export async function listPharmacyRegistryOptionsByAdmin(
 ): Promise<void> {
   const data = await listAdminPharmacyOptionsService(
     res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyDetailByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyParams>
+): Promise<void> {
+  const data = await getAdminPharmacyDetailService(
+    res.locals.validated.params.pharmacyId
   );
 
   res.setHeader('Cache-Control', 'no-store');

@@ -74,3 +74,5 @@ export {
   parsePharmacyOwnerDocumentResponse,
   parsePharmacyOwnerDocumentsResponse,
 } from './pharmacy-owner-document-parsers';
+
+export { parseAdminPharmacyDetail } from './admin-pharmacy-detail-parsers';
