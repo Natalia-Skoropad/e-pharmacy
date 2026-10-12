@@ -61,7 +61,7 @@ test('catch-all page serves only authorized pharmacy detail routes and preserves
 
 //===================================================================
 
-test('Stage 14.11 shell has the 4 real API metrics, status, owner permission and noninteractive status placeholder', async () => {
+test('Stage 14.11 shell retains the 4 real API metrics and owner permission after adding Stage 14.14 moderation', async () => {
   const content = await read(
     './PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
   );
@@ -106,8 +106,14 @@ test('Stage 14.11 shell has the 4 real API metrics, status, owner permission and
   );
 
   assert.match(content, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
-  assert.match(content, /Status management is not available yet/);
-  assert.doesNotMatch(content, /<Button[^>]*>\s*Manage pharmacy status/);
+  assert.match(content, /<PharmacyModerationActions/);
+
+  assert.match(
+    content,
+    /canAdmin\(access, ADMIN_PERMISSIONS\.pharmacies\.moderate\)/
+  );
+
+  assert.doesNotMatch(content, /Status management is not available yet/);
 });
 
 //===================================================================

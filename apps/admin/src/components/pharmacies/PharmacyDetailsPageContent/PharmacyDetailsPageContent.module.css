@@ -41,16 +41,6 @@
   overflow-wrap: anywhere;
 }
 
-.actionPlaceholder {
-  display: inline-block;
-  padding: 8px 12px;
-  color: var(--color-text-muted);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  font-size: var(--fz-12);
-}
-
 .detailMeta {
   display: flex;
   flex-wrap: wrap;

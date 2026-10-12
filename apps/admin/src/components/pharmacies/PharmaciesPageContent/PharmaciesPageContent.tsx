@@ -67,6 +67,7 @@ import {
   type AdminPharmacyListUrlState,
 } from '@/lib/pharmacies/admin-pharmacy-url';
 
+import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { PharmacyOwnerSearch } from '@/components/pharmacy-owners/PharmacyOwnerSearch/PharmacyOwnerSearch';
 import { PharmacySearch } from '../PharmacySearch/PharmacySearch';
@@ -89,16 +90,22 @@ type StatusKey = Exclude<AdminPharmacyListUrlState['status'], 'all'>;
 function getListErrorMessage(error: unknown): string {
   if (!isApiError(error))
     return 'Pharmacies could not be loaded. Please try again.';
+
   if (error.transportCode === 'NETWORK_ERROR')
     return 'Could not reach the server. Check your connection and try again.';
+
   if (error.transportCode === 'TIMEOUT')
     return 'The request took too long. Please try again.';
+
   if (error.transportCode === 'INVALID_RESPONSE')
     return 'The server returned an unexpected pharmacies response. Refresh the data and try again.';
+
   if (error.httpStatus === 403)
     return 'You do not have permission to view pharmacies.';
+
   if (error.httpStatus && error.httpStatus >= 500)
     return 'Pharmacies are temporarily unavailable. Please try again later.';
+
   return 'Pharmacies could not be loaded. Please try again.';
 }
 
@@ -135,6 +142,15 @@ export function PharmaciesPageContent({
 
   const [listRetry, setListRetry] = useState(0);
   const [statsRetry, setStatsRetry] = useState(0);
+
+  useEffect(
+    () =>
+      subscribeToPharmacyModerationRefresh(() => {
+        setListRetry((value) => value + 1);
+        setStatsRetry((value) => value + 1);
+      }),
+    []
+  );
 
   const listKey = `${getListKey(state)}|${listRetry}`;
 

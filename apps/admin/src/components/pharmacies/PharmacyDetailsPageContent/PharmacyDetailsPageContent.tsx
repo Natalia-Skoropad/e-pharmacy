@@ -60,6 +60,7 @@ import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
 import { PharmacyAboutPaymentTab } from './PharmacyAboutPaymentTab';
+import { PharmacyModerationActions } from './PharmacyModerationActions';
 
 import css from './PharmacyDetailsPageContent.module.css';
 
@@ -159,6 +160,7 @@ export function PharmacyDetailsPageContent({
   const router = useRouter();
   const { access } = useAdminAuthorization();
   const canViewOwner = canAdmin(access, ADMIN_PERMISSIONS.pharmacyOwners.view);
+  const canModerate = canAdmin(access, ADMIN_PERMISSIONS.pharmacies.moderate);
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<DetailResult | null>(null);
 
@@ -299,9 +301,15 @@ export function PharmacyDetailsPageContent({
             titleId="pharmacy-details-title"
             icon={<Building2 size={23} aria-hidden="true" />}
             actions={
-              <span className={css.actionPlaceholder}>
-                Status management is not available yet
-              </span>
+              detail && canModerate ? (
+                <PharmacyModerationActions
+                  detail={detail}
+                  onRefresh={() => setRetry((version) => version + 1)}
+                  onDetailRefreshed={(fresh) =>
+                    setResult({ pharmacyId, retry, detail: fresh, error: null })
+                  }
+                />
+              ) : undefined
             }
           />
 

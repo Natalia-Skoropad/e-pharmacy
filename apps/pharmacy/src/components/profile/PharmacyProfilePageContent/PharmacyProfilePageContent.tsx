@@ -286,20 +286,25 @@ function getEditablePharmacyProfile(
     ...(pending.location !== undefined
       ? { location: mergedLocation as unknown as PharmacyProfile['location'] }
       : {}),
+
     ...(pending.phone !== undefined ? { phone: pending.phone ?? '' } : {}),
     ...(pending.email !== undefined ? { email: pending.email ?? '' } : {}),
     ...(pending.workingHours !== undefined
       ? { workingHours: pending.workingHours ?? '' }
       : {}),
+
     ...(pending.description !== undefined
       ? { description: pending.description ?? '' }
       : {}),
+
     ...(pending.imageUrl !== undefined
       ? { imageUrl: pending.imageUrl ?? '' }
       : {}),
+
     ...(pending.documents !== undefined
       ? { documents: pending.documents }
       : {}),
+
     ...(pending.bankDetails !== undefined
       ? { bankDetails: mergedBankDetails }
       : {}),
@@ -580,6 +585,7 @@ function PharmacyProfilePageContent() {
 
   const identity =
     !isBootstrapping && user?.role === 'pharmacy' ? user.id : null;
+
   const pharmacySummaryId = pharmacySummary?.id ?? null;
 
   useEffect(() => {
@@ -600,6 +606,7 @@ function PharmacyProfilePageContent() {
         });
         syncSummary(response.pharmacy);
       })
+
       .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
 
@@ -758,6 +765,7 @@ function PharmacyProfilePage({
           setOwnerDocumentsCount(response.documents.length);
         }
       })
+
       .catch(() => undefined);
 
     return () => controller.abort();
@@ -774,6 +782,7 @@ function PharmacyProfilePage({
         setCommentsInitialData(response);
         setCommentsTotal(response.total);
       })
+
       .catch(() => {
         if (controller.signal.aborted) return;
         setCommentsInitialData(null);
@@ -897,6 +906,7 @@ function PharmacyProfilePage({
           'Could not load active sessions. Please try again.'
         )
       );
+
       setSessionsStatus('error');
     } finally {
       if (sessionsLoadControllerRef.current === controller) {
@@ -1253,6 +1263,7 @@ function PharmacyProfilePage({
 
       setOwnerPictureUrl(response.user.pictureUrl ?? null);
       applyCurrentUser(response.user);
+
       toast.success(
         nextPictureUrl
           ? 'Profile photo was updated.'
@@ -1277,6 +1288,7 @@ function PharmacyProfilePage({
         pharmacy.reviewState === 'changes_requested')
     ) {
       setPharmacyPictureUrl(nextPictureUrl);
+
       toast.success(
         nextPictureUrl
           ? 'Pharmacy photo is ready to send for moderation.'
@@ -1293,13 +1305,17 @@ function PharmacyProfilePage({
         imageUrl: nextPictureUrl,
         expectedRevision: pharmacy.updatedAt,
       });
+
       syncProfile(response.pharmacy);
+
       setPharmacyPictureUrl(
         getEditablePharmacyProfile(response.pharmacy).imageUrl ?? null
       );
+
       setInitialPharmacyPictureUrl(
         getEditablePharmacyProfile(response.pharmacy).imageUrl ?? null
       );
+
       toast.success(
         nextPictureUrl
           ? 'Pharmacy photo was updated.'
@@ -1493,6 +1509,7 @@ function PharmacyProfilePage({
       setPaymentValues(nextValues);
       setInitialPaymentValues(nextValues);
       setPaymentTouched({});
+
       toast.success(
         response.pharmacy.status === 'on_moderation'
           ? 'Corrections saved. Resubmit when ready.'
@@ -1625,17 +1642,21 @@ function PharmacyProfilePage({
     const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
     const nextAboutValues = createAboutInitialValues(nextPharmacy);
     const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
+
     const nextDocumentValues = createDocumentValues(
       getEditablePharmacyProfile(nextPharmacy).documents
     );
 
     syncProfile(nextPharmacy);
+
     setPharmacyPictureUrl(
       getEditablePharmacyProfile(nextPharmacy).imageUrl ?? null
     );
+
     setInitialPharmacyPictureUrl(
       getEditablePharmacyProfile(nextPharmacy).imageUrl ?? null
     );
+
     setPharmacyValues(nextPharmacyValues);
     setInitialPharmacyValues(nextPharmacyValues);
     setAboutValues(nextAboutValues);
@@ -1814,7 +1835,10 @@ function PharmacyProfilePage({
                       {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
                     />
                   </div>
-                  {pharmacy.status === 'new' && pharmacy.statusReason ? (
+
+                  {(pharmacy.status === 'new' ||
+                    (isProfileOwner && pharmacy.status === 'blocked')) &&
+                  pharmacy.statusReason ? (
                     <p className={css.statusReason}>{pharmacy.statusReason}</p>
                   ) : null}
                   {!isProfileOwner ? (

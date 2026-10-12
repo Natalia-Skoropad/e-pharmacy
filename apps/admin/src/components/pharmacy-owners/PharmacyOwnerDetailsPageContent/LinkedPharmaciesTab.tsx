@@ -26,6 +26,8 @@ import {
   type AdminPharmacyOwnerPharmaciesUrlState,
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 
+import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
+
 import { LinkedPharmaciesFiltersDrawer } from './LinkedPharmaciesFiltersDrawer';
 import { LinkedPharmaciesTable } from './LinkedPharmaciesTable';
 import { LinkedPharmacySearch } from './LinkedPharmacySearch';
@@ -118,6 +120,15 @@ export function LinkedPharmaciesTab({
 
   const debouncedSearch = useDebouncedValue(searchInput, 350);
   const [reloadVersion, setReloadVersion] = useState(0);
+
+  useEffect(
+    () =>
+      subscribeToPharmacyModerationRefresh(() => {
+        setReloadVersion((value) => value + 1);
+      }),
+    []
+  );
+
   const requestKey = `${getStateKey(state)}|${reloadVersion}`;
 
   const [result, setResult] = useState<

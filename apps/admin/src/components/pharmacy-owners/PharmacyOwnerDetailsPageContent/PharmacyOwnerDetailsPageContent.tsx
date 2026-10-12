@@ -68,6 +68,7 @@ import { dispatchAdminBreadcrumbLabel } from '@/lib/layout/breadcrumb-label-even
 import { canAdmin } from '@/lib/permissions/can-admin';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { ADMIN_ROUTES } from '@/lib/routes';
+import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
 import { requestPharmacyOwnerNavigationBadgeRefresh } from '@/lib/pharmacy-owners/pharmacy-owner-navigation-badge-refresh';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
@@ -183,6 +184,14 @@ function PharmacyOwnerDetailsPageContent({
   const [isLoading, setIsLoading] = useState(true);
   const [reloadVersion, setReloadVersion] = useState(0);
 
+  useEffect(
+    () =>
+      subscribeToPharmacyModerationRefresh(() => {
+        setReloadVersion((version) => version + 1);
+      }),
+    []
+  );
+
   const [activeTab, setActiveTab] = useState<AdminPharmacyOwnerDetailTab>(
     initialState.tab
   );
@@ -292,6 +301,7 @@ function PharmacyOwnerDetailsPageContent({
 
   const handleTabChange = (nextTab: AdminPharmacyOwnerDetailTab) => {
     setActiveTab(nextTab);
+
     router.replace(
       buildAdminPharmacyOwnerDetailUrl(ownerId, { tab: nextTab }),
       {
@@ -321,6 +331,7 @@ function PharmacyOwnerDetailsPageContent({
     if (reasonError) return;
 
     setIsMutating(true);
+
     setActionState((current) =>
       current ? { ...current, requestError: '' } : current
     );
@@ -481,24 +492,28 @@ function PharmacyOwnerDetailsPageContent({
                   tone="blue"
                   icon={<CirclePlus size={26} aria-hidden="true" />}
                 />
+
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.on_verification.label}
                   value={statistics.onVerification}
                   tone="purple"
                   icon={<BadgeCheck size={26} aria-hidden="true" />}
                 />
+
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.on_moderation.label}
                   value={statistics.onModeration}
                   tone="orange"
                   icon={<Clock3 size={26} aria-hidden="true" />}
                 />
+
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.active.label}
                   value={statistics.active}
                   tone="green"
                   icon={<ShieldCheck size={26} aria-hidden="true" />}
                 />
+
                 <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.blocked.label}
                   value={statistics.blocked}
@@ -567,6 +582,7 @@ function PharmacyOwnerDetailsPageContent({
                           <span className={css.imagePlaceholderIcon}>
                             <UserRound size={58} />
                           </span>
+
                           <span className={css.imagePlaceholderBadge}>
                             <ImageOff size={16} />
                           </span>
