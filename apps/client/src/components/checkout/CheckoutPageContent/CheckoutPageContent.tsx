@@ -8,6 +8,7 @@ import { DELIVERY_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 import { CopyButton, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
+import { WorkingHours } from '@e-pharmacy/ui/data-display';
 
 import {
   AddressInput,
@@ -45,8 +46,6 @@ import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/metadata-copy';
 import { ROUTES } from '@/lib/routes';
 import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
 
-import { WorkingHours } from '@/components/common';
-
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
 import { useCheckoutCart } from '../hooks/useCheckoutCart';
@@ -75,6 +74,7 @@ const CHECKOUT_BREADCRUMBS: BreadcrumbItem[] = [
 function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const { isBootstrapping, user, canUseClientFeatures } =
     useClientAuthCapabilities();
+
   const searchParams = useSearchParams();
   const queryPharmacyId = searchParams.get('pharmacyId');
   const selectedPharmacyIdFromRoute = checkoutPharmacyId ?? queryPharmacyId;
@@ -127,6 +127,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     markInvalidFieldsTouched,
   } = useCheckoutDeliveryForm({
     deliveryMethod,
+
     userDefaults: {
       recipientName: user?.name,
       recipientPhone: user?.phone,

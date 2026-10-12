@@ -4,12 +4,13 @@ import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CopyButton } from '@e-pharmacy/ui/primitives';
+import { WorkingHours } from '@e-pharmacy/ui/data-display';
+
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
 import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import { getTelephoneHref } from '@/lib/contact/telephone';
-import { WorkingHours } from '@/components/common';
 
 import css from './PharmacyContactPanel.module.css';
 

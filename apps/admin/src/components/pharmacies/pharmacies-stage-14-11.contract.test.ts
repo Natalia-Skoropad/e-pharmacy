@@ -50,7 +50,7 @@ test('catch-all page serves only authorized pharmacy detail routes and preserves
 
   assert.match(
     page,
-    /buildAdminPharmacyDetailUrl\(route\.pharmacyId, route\.tab\)/
+    /buildAdminPharmacyDetailUrl\(\s*route\.pharmacyId,\s*route\.tab\s*\)/
   );
 
   assert.match(page, /redirect\(canonicalUrl\)/);

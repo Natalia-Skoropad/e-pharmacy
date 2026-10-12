@@ -1,0 +1,466 @@
+import type { ReactNode } from 'react';
+
+import {
+  Building2,
+  CalendarClock,
+  Clock3,
+  ImageOff,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react';
+
+import {
+  PHARMACY_STATUS_PRESENTATION,
+  USER_STATUS_PRESENTATION,
+} from '@e-pharmacy/config/presentation';
+
+import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
+import { WorkingHours } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
+import { formatDateTime } from '@e-pharmacy/utils/date';
+
+import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
+
+import {
+  buildPharmacyComparisonRows,
+  type PharmacyComparisonRow,
+} from './pharmacy-information-comparison';
+
+import css from './PharmacyInformationTab.module.css';
+
+//===================================================================
+
+type Props = Readonly<{
+  detail: AdminPharmacyDetail;
+  canViewOwner: boolean;
+}>;
+
+//===================================================================
+
+const display = (value: string | null | undefined) => value?.trim() || '—';
+
+//===================================================================
+
+function DateValue({ value }: { value?: string }) {
+  if (!value) return <span>—</span>;
+
+  return <time dateTime={value}>{formatDateTime(value) ?? '—'}</time>;
+}
+
+//===================================================================
+
+function ContactValue({
+  value,
+  type,
+}: {
+  value?: string;
+  type: 'phone' | 'email';
+}) {
+  if (!value?.trim()) return <span>—</span>;
+
+  return (
+    <a href={`${type === 'email' ? 'mailto' : 'tel'}:${value}`}>
+      {type === 'email' ? (
+        <Mail size={16} aria-hidden="true" />
+      ) : (
+        <Phone size={16} aria-hidden="true" />
+      )}
+      {value}
+    </a>
+  );
+}
+
+//===================================================================
+
+function ScheduleValue({ value }: { value: string }) {
+  if (value === '—') return <span>—</span>;
+
+  if (!getWorkingHoursDisplayItems(value)?.length) {
+    return <span>Schedule unavailable</span>;
+  }
+
+  return <WorkingHours value={value} className={css.hoursList} />;
+}
+
+//===================================================================
+
+function Photo({
+  url,
+  name,
+  compact = false,
+}: {
+  url?: string | null;
+  name: string;
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? css.smallPhoto : css.photo}>
+      {url?.trim() ? (
+        <ShimmerImage
+          src={url}
+          alt={name}
+          className={css.coverImage}
+          sizes={compact ? '160px' : '(max-width: 767px) 90vw, 400px'}
+          unoptimized
+        />
+      ) : (
+        <div className={css.photoPlaceholder}>
+          <Building2 size={compact ? 27 : 62} aria-hidden="true" />
+          <ImageOff size={compact ? 15 : 22} aria-hidden="true" />
+          {!compact && <span>No pharmacy photo uploaded</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+//===================================================================
+
+function DetailField({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className={css.detailField}>
+      <dt>{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+}
+
+//===================================================================
+
+function ComparisonValue({
+  row,
+  value,
+  isSubmitted,
+}: {
+  row: PharmacyComparisonRow;
+  value: string;
+  isSubmitted: boolean;
+}) {
+  if (row.presentation === 'image') {
+    return (
+      <Photo
+        compact
+        url={value === '—' ? undefined : value}
+        name={
+          isSubmitted ? 'Submitted pharmacy photo' : 'Published pharmacy photo'
+        }
+      />
+    );
+  }
+
+  if (row.presentation === 'hours') return <ScheduleValue value={value} />;
+
+  return <span className={css.comparisonText}>{value}</span>;
+}
+
+//===================================================================
+
+function PharmacyStatusSummary({ detail }: { detail: AdminPharmacyDetail }) {
+  const reviewNeedsCorrections = detail.reviewState === 'changes_requested';
+
+  const messages: Record<AdminPharmacyDetail['status'], string> = {
+    new: 'The pharmacy has not been submitted for verification.',
+
+    on_verification:
+      'The pharmacy is awaiting the initial verification decision.',
+
+    on_moderation:
+      'Submitted changes are awaiting an administrator decision. Published values remain unchanged.',
+
+    active:
+      'This pharmacy is active. Only approved profile values are published.',
+
+    blocked: 'This pharmacy is blocked. Its approval history is preserved.',
+  };
+
+  return (
+    <section
+      className={css.statusSummary}
+      aria-labelledby="pharmacy-status-summary"
+    >
+      <div className={css.sectionHeading}>
+        <ShieldCheck size={20} aria-hidden="true" />
+        <h3 id="pharmacy-status-summary">Status & moderation</h3>
+      </div>
+
+      <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+
+      <strong>
+        {reviewNeedsCorrections ? 'Corrections requested' : 'Current status'}
+      </strong>
+
+      <p>
+        {reviewNeedsCorrections
+          ? 'The administrator requested corrections before approval.'
+          : messages[detail.status]}
+      </p>
+
+      {detail.statusReason?.trim() && (
+        <p className={css.feedback}>Status reason: {detail.statusReason}</p>
+      )}
+
+      {detail.reviewFeedback?.trim() && (
+        <p className={css.feedback}>Review feedback: {detail.reviewFeedback}</p>
+      )}
+
+      {!detail.statusReason?.trim() && !detail.reviewFeedback?.trim() && (
+        <p className={css.muted}>No outstanding moderation feedback.</p>
+      )}
+
+      {detail.reviewedAt && (
+        <p className={css.muted}>
+          Last reviewed: <DateValue value={detail.reviewedAt} />
+        </p>
+      )}
+    </section>
+  );
+}
+
+//===================================================================
+
+/** Uses the existing detail response; opening this tab must not fetch another resource. */
+export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
+  const { current, owner, dates } = detail;
+  const comparison = buildPharmacyComparisonRows(detail);
+
+  return (
+    <div className={css.tabContent}>
+      <div className={css.identityGrid}>
+        <section
+          className={css.photoCard}
+          aria-label="Published pharmacy photo"
+        >
+          <Photo url={current.imageUrl} name={current.name || 'Pharmacy'} />
+        </section>
+
+        <section
+          className={css.sectionCard}
+          aria-labelledby="pharmacy-identity-title"
+        >
+          <div className={css.sectionHeading}>
+            <Building2 size={20} aria-hidden="true" />
+            <h3 id="pharmacy-identity-title">Published pharmacy identity</h3>
+          </div>
+
+          <dl className={css.detailsList}>
+            <DetailField label="Pharmacy status">
+              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+            </DetailField>
+
+            <DetailField label="Pharmacy ID">{detail.id}</DetailField>
+            <DetailField label="Name">{display(current.name)}</DetailField>
+
+            <DetailField label="Email">
+              <ContactValue type="email" value={current.email} />
+            </DetailField>
+
+            <DetailField label="Phone">
+              <ContactValue type="phone" value={current.phone} />
+            </DetailField>
+          </dl>
+        </section>
+      </div>
+
+      <div className={css.secondaryGrid}>
+        <section
+          className={css.sectionCard}
+          aria-labelledby="pharmacy-location-title"
+        >
+          <div className={css.sectionHeading}>
+            <MapPin size={20} aria-hidden="true" />
+            <h3 id="pharmacy-location-title">Published location</h3>
+          </div>
+
+          <dl className={css.detailsList}>
+            <DetailField label="Settlement">
+              {display(current.location?.settlement)}
+            </DetailField>
+
+            <DetailField label="Region">
+              {display(current.location?.region)}
+            </DetailField>
+
+            <DetailField label="Pharmacy address">
+              {display(current.location?.address)}
+            </DetailField>
+
+            <DetailField label="Country code">
+              {display(current.location?.countryCode)}
+            </DetailField>
+          </dl>
+        </section>
+
+        <section
+          className={css.sectionCard}
+          aria-labelledby="pharmacy-hours-title"
+        >
+          <div className={css.sectionHeading}>
+            <Clock3 size={20} aria-hidden="true" />
+            <h3 id="pharmacy-hours-title">Published working hours</h3>
+          </div>
+
+          <ScheduleValue value={display(current.workingHours)} />
+        </section>
+      </div>
+
+      <div className={css.secondaryGrid}>
+        <section
+          className={css.sectionCard}
+          aria-labelledby="pharmacy-owner-title"
+        >
+          <div className={css.sectionHeading}>
+            <UserRound size={20} aria-hidden="true" />
+            <h3 id="pharmacy-owner-title">Pharmacy owner</h3>
+          </div>
+          {owner ? (
+            <div className={css.ownerRow}>
+              <div className={css.ownerPhoto}>
+                {owner.pictureUrl ? (
+                  <ShimmerImage
+                    src={owner.pictureUrl}
+                    alt={owner.name}
+                    className={css.coverImage}
+                    sizes="64px"
+                    unoptimized
+                  />
+                ) : (
+                  <UserRound size={30} aria-hidden="true" />
+                )}
+              </div>
+
+              <div className={css.ownerDetails}>
+                <strong>{owner.name}</strong>
+                <span className={css.muted}>ID: {owner.id}</span>
+
+                <StatusBadge {...USER_STATUS_PRESENTATION[owner.status]} />
+                {canViewOwner && (
+                  <LinkButton
+                    href={buildAdminPharmacyOwnerDetailUrl(owner.id)}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    View owner
+                  </LinkButton>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className={css.muted}>
+              No linked owner (legacy or incomplete pharmacy).
+            </p>
+          )}
+        </section>
+
+        <section
+          className={css.sectionCard}
+          aria-labelledby="pharmacy-dates-title"
+        >
+          <div className={css.sectionHeading}>
+            <CalendarClock size={20} aria-hidden="true" />
+            <h3 id="pharmacy-dates-title">Pharmacy dates</h3>
+          </div>
+
+          <dl className={css.detailsList}>
+            <DetailField label="Created at">
+              <DateValue value={dates.createdAt} />
+            </DetailField>
+
+            <DetailField label="Last edited">
+              <DateValue value={dates.updatedAt} />
+            </DetailField>
+
+            <DetailField label="Last approved">
+              <DateValue value={dates.approvedAt} />
+            </DetailField>
+
+            <DetailField label="First activated">
+              <DateValue value={dates.activatedAt} />
+            </DetailField>
+          </dl>
+        </section>
+      </div>
+
+      <PharmacyStatusSummary detail={detail} />
+
+      {detail.pendingChanges !== undefined && (
+        <section
+          className={css.sectionCard}
+          aria-labelledby="pharmacy-comparison-title"
+        >
+          <div className={css.sectionHeading}>
+            <ShieldCheck size={20} aria-hidden="true" />
+            <h3 id="pharmacy-comparison-title">
+              Published data / Submitted changes
+            </h3>
+          </div>
+
+          <p className={css.muted}>
+            Submitted changes are awaiting review. They are not approved and do
+            not replace the published pharmacy profile.
+          </p>
+
+          {comparison.length ? (
+            <dl className={css.comparisonList}>
+              {comparison.map((row) => (
+                <div
+                  key={row.key}
+                  className={
+                    row.changed
+                      ? css.comparisonChanged
+                      : css.comparisonUnchanged
+                  }
+                >
+                  <dt className={css.comparisonHeading}>
+                    {row.label}
+                    <span className={css.comparisonIndicator}>
+                      {row.verificationRequired
+                        ? 'Submitted · review documents'
+                        : row.changed
+                          ? 'Changed · not approved'
+                          : 'Submitted · unchanged'}
+                    </span>
+                  </dt>
+                  <dd className={css.comparisonColumns}>
+                    <div>
+                      <span className={css.columnLabel}>Published data</span>
+                      <ComparisonValue
+                        row={row}
+                        value={row.published}
+                        isSubmitted={false}
+                      />
+                    </div>
+
+                    <div>
+                      <span className={css.columnLabel}>Submitted changes</span>
+                      <ComparisonValue
+                        row={row}
+                        value={row.submitted}
+                        isSubmitted
+                      />
+                    </div>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className={css.muted}>
+              There are no submitted profile fields to compare.
+            </p>
+          )}
+        </section>
+      )}
+    </div>
+  );
+}

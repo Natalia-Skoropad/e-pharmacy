@@ -58,6 +58,8 @@ import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 
+import { PharmacyInformationTab } from './PharmacyInformationTab';
+
 import css from './PharmacyDetailsPageContent.module.css';
 
 //===================================================================
@@ -120,11 +122,10 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
 
 //===================================================================
 
-/** Stage 14.11 owns only the shell. Future panels mount one at a time and
- * must not request another tab's documents, comments, activity or resources. */
+/** Future panels mount one at a time and must not fetch inactive resources. */
 const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
   information:
-    'Published pharmacy identity, location, working hours and pending changes will appear here.',
+    'Review published pharmacy details separately from submitted changes awaiting moderation.',
   'about-payment':
     'The approved description and private payment details will appear here.',
 
@@ -342,18 +343,21 @@ export function PharmacyDetailsPageContent({
                 tone="blue"
                 icon={<UsersRound size={26} aria-hidden="true" />}
               />
+
               <StatsCard
                 title="Successful orders"
                 value={metrics.successfulOrdersCount}
                 tone="green"
                 icon={<ShoppingBag size={26} aria-hidden="true" />}
               />
+
               <StatsCard
                 title="Successful revenue"
                 value={formatMoney(metrics.successfulRevenue) ?? '—'}
                 tone="purple"
                 icon={<Wallet size={26} aria-hidden="true" />}
               />
+
               <StatsCard
                 title="Rating / reviews"
                 value={
@@ -413,6 +417,11 @@ export function PharmacyDetailsPageContent({
                 variant="loading"
                 title="Loading pharmacy details"
                 description="The pharmacy overview is being loaded."
+              />
+            ) : activeTab === 'information' && detail ? (
+              <PharmacyInformationTab
+                detail={detail}
+                canViewOwner={canViewOwner}
               />
             ) : (
               <ProfileResourceState
