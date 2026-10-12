@@ -59,6 +59,7 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
+import { PharmacyAboutPaymentTab } from './PharmacyAboutPaymentTab';
 
 import css from './PharmacyDetailsPageContent.module.css';
 
@@ -127,7 +128,7 @@ const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
   information:
     'Review published pharmacy details separately from submitted changes awaiting moderation.',
   'about-payment':
-    'The approved description and private payment details will appear here.',
+    'Review the approved description and private payment data separately from any submitted changes.',
 
   documents:
     'Pharmacy documents will be available for authorized read-only viewing here.',
@@ -423,6 +424,8 @@ export function PharmacyDetailsPageContent({
                 detail={detail}
                 canViewOwner={canViewOwner}
               />
+            ) : activeTab === 'about-payment' && detail ? (
+              <PharmacyAboutPaymentTab detail={detail} />
             ) : (
               <ProfileResourceState
                 variant="empty"
