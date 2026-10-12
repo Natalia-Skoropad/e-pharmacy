@@ -55,6 +55,20 @@ export const backendRoutes = {
         `/admin/pharmacies/${segment(pharmacyId)}/activity/${segment(auditLogId)}`,
     },
 
+    pharmacyDetail: {
+      details: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}`,
+
+      decision: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/moderation-decisions`,
+
+      status: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/status`,
+
+      corrections: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/review/corrections`,
+    },
+
     pharmacyRegistry: {
       list: '/admin/pharmacies',
       summary: '/admin/pharmacies/summary',

@@ -76,3 +76,11 @@ export {
 } from './pharmacy-owner-document-parsers';
 
 export { parseAdminPharmacyDetail } from './admin-pharmacy-detail-parsers';
+
+export {
+  parseAdminPharmacyDocument,
+  parseAdminPharmacyDocumentsResponse,
+  parseAdminPharmacyComment,
+  parseAdminPharmacyCommentsResponse,
+  parseAdminPharmacyCommentResponse,
+} from './admin-pharmacy-documents-comments-parsers';

@@ -42,6 +42,8 @@ export type AdminPharmacyPendingChanges = Readonly<
   }
 >;
 
+//===================================================================
+
 export type AdminPharmacyDetail = Readonly<{
   id: EntityId;
   status: PharmacyStatus;
@@ -70,4 +72,27 @@ export type AdminPharmacyDetail = Readonly<{
     rating: number;
     reviewsCount: number;
   }>;
+}>;
+
+//===================================================================
+
+/** Stage 14.8: clientRequestId is supplied by the caller for safe retries. */
+export type AdminPharmacyModerationDecisionPayload = Readonly<{
+  action: 'approve' | 'request_corrections' | 'block' | 'review_reactivation';
+  reason: string;
+  expectedRevision: string;
+  clientRequestId: string;
+}>;
+
+export type AdminPharmacyStatusPayload = Readonly<{
+  status: 'active' | 'blocked';
+  reason: string;
+  expectedRevision: string;
+  clientRequestId: string;
+}>;
+
+export type AdminPharmacyCorrectionsPayload = Readonly<{
+  feedback: string;
+  expectedRevision: string;
+  clientRequestId: string;
 }>;

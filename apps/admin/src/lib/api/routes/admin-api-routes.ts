@@ -36,6 +36,31 @@ export const adminApiRoutes = {
       `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/comments/${encodeURIComponent(commentId)}`,
   },
 
+  pharmacyDetail: {
+    details: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}`,
+
+    decision: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/moderation-decisions`,
+
+    status: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/status`,
+
+    corrections: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/review/corrections`,
+  },
+
+  pharmacyActivity: {
+    list: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/activity`,
+
+    actors: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/activity/actors`,
+
+    details: (pharmacyId: string, auditLogId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/activity/${encodeURIComponent(auditLogId)}`,
+  },
+
   pharmacyRegistry: {
     list: '/api/admin/pharmacies',
     summary: '/api/admin/pharmacies/summary',
