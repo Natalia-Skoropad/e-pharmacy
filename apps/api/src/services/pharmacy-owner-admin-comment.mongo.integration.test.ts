@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { randomInt, randomUUID } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
@@ -45,16 +45,21 @@ function uniqueIdentity(prefix: string) {
 
   return {
     email: `${prefix}-${suffix}@example.com`,
-    phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
+    phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
   };
 }
 
 //===============================================================
 
-async function createUser(role: 'admin' | 'pharmacy', prefix: string) {
+async function createUser(
+  role: 'admin' | 'pharmacy',
+  prefix: string,
+  userId: Types.ObjectId
+) {
   const identity = uniqueIdentity(prefix);
 
   return User.create({
+    _id: userId,
     name: `${prefix} user`,
     email: identity.email,
     phone: identity.phone,
@@ -95,18 +100,45 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
-    await PharmacyOwnerAdminComment.syncIndexes();
 
-    const [ownerA, ownerB, creator, deleter] = await Promise.all([
-      createUser('pharmacy', 'owner-comment-a'),
-      createUser('pharmacy', 'owner-comment-b'),
-      createUser('admin', 'owner-comment-creator'),
-      createUser('admin', 'owner-comment-deleter'),
-    ]);
+    // Allocate IDs first so cleanup also works if a fixture creation fails.
+    const userIds = {
+      ownerA: new Types.ObjectId(),
+      ownerB: new Types.ObjectId(),
+      creator: new Types.ObjectId(),
+      deleter: new Types.ObjectId(),
+    };
 
-    const trackedUsers = [ownerA._id, ownerB._id, creator._id, deleter._id];
+    const trackedUsers = Object.values(userIds);
 
     try {
+      await PharmacyOwnerAdminComment.syncIndexes();
+
+      // Sequential setup prevents unfinished fixture writes racing with cleanup.
+      const ownerA = await createUser(
+        'pharmacy',
+        'owner-comment-a',
+        userIds.ownerA
+      );
+
+      const ownerB = await createUser(
+        'pharmacy',
+        'owner-comment-b',
+        userIds.ownerB
+      );
+
+      const creator = await createUser(
+        'admin',
+        'owner-comment-creator',
+        userIds.creator
+      );
+
+      const deleter = await createUser(
+        'admin',
+        'owner-comment-deleter',
+        userIds.deleter
+      );
+
       const clientRequestId = randomUUID();
       const text = 'Internal verification note for this pharmacy owner.';
 
@@ -219,8 +251,11 @@ test(
 
       assert.deepEqual(deletedAudit.after, { exists: false });
     } finally {
-      await cleanup(trackedUsers);
-      await mongoose.disconnect();
+      try {
+        await cleanup(trackedUsers);
+      } finally {
+        await mongoose.disconnect();
+      }
     }
   }
 );

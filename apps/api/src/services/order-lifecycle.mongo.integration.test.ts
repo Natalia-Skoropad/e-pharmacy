@@ -4,7 +4,7 @@ import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
 import {
-  CHECKOUT_GROUP_MISSING_ERROR_CODE,
+  CHECKOUT_CART_CHANGED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
 } from '../constants/order';
 
@@ -168,6 +168,7 @@ async function createCheckoutFixture(options?: {
   const createdCart = await Cart.create({
     clientUserId,
     revision: 0,
+
     items: [
       {
         productOfferId: offerId,
@@ -180,6 +181,7 @@ async function createCheckoutFixture(options?: {
   const cart = await Cart.findById(createdCart._id).lean<{
     _id: Types.ObjectId;
     revision: number;
+
     items: Array<{
       _id: Types.ObjectId;
       productOfferId: Types.ObjectId;
@@ -194,6 +196,7 @@ async function createCheckoutFixture(options?: {
 
   const groupFingerprint = createCheckoutGroupFingerprint({
     pharmacyId: pharmacyId.toString(),
+
     items: [
       {
         id: cartItem._id,
@@ -285,6 +288,7 @@ test(
               region: 'Lviv region',
               countryCode: 'UA',
             },
+
             bankDetails: BANK_DETAILS_B,
           },
         }
@@ -399,6 +403,7 @@ test(
           response.order.id,
           { paymentMethod: 'bank_transfer' }
         ),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -426,12 +431,15 @@ test(
       // is lost before the browser can observe it.
       await checkoutFixture(fixture);
 
+      // The committed checkout advanced the cart revision, so the stale
+      // retry must be rejected without creating another order.
       await assert.rejects(
         checkoutFixture(fixture),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
-          error.code === CHECKOUT_GROUP_MISSING_ERROR_CODE
+          error.code === CHECKOUT_CART_CHANGED_ERROR_CODE
       );
 
       assert.equal(
@@ -479,6 +487,7 @@ test(
     const secondCart = await Cart.create({
       clientUserId: secondClientUserId,
       revision: 0,
+
       items: [
         {
           productOfferId: first.offerId,
@@ -502,6 +511,7 @@ test(
 
     const secondFingerprint = createCheckoutGroupFingerprint({
       pharmacyId: first.pharmacyId.toString(),
+
       items: secondCartSnapshot.items.map((item) => ({
         id: item._id,
         productOfferId: item.productOfferId,
@@ -513,6 +523,7 @@ test(
     try {
       const results = await Promise.allSettled([
         checkoutFixture(first),
+
         checkoutOrderService(secondClientUserId.toString(), {
           pharmacyId: first.pharmacyId.toString(),
           expectedCartRevision: secondCartSnapshot.revision,
@@ -587,7 +598,12 @@ test(
         checkout.order.id
       );
 
-      assert.equal(reloaded.order.client, fixture.clientName);
+      assert.deepEqual(reloaded.order.client, {
+        id: fixture.clientUserId.toString(),
+        name: fixture.clientName,
+      });
+
+      assert.equal(reloaded.order.clientName, fixture.clientName);
       assert.equal(reloaded.order.clientPhone, fixture.clientPhone);
       assert.equal(reloaded.order.clientAddress, fixture.clientAddress);
     } finally {
@@ -606,6 +622,7 @@ test(
     await mongoose.connect(getTestMongoUri());
 
     const fixture = await createCheckoutFixture();
+
     const actor = {
       id: fixture.pharmacyOwnerId.toString(),
       role: 'pharmacy' as const,
@@ -670,6 +687,7 @@ test(
             },
           }
         ),
+
         ProductOffer.updateOne(
           { _id: fixture.offerId },
           { $set: { price: CHECKOUT_OFFER_PRICE * 9 } }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomInt } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
@@ -45,7 +46,7 @@ function uniqueIdentity(prefix: string) {
 
   return {
     email: `${prefix}-${suffix}@example.com`,
-    phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
+    phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
   };
 }
 
@@ -62,6 +63,7 @@ async function cleanup(userIds: readonly Types.ObjectId[]): Promise<void> {
         { scopeEntityId: { $in: ownerIds } },
       ],
     }),
+
     Pharmacy.deleteMany({ ownerId: { $in: userIds } }),
   ]);
 
@@ -80,26 +82,32 @@ test(
     const nextOwnerIdentity = uniqueIdentity('audit-owner-scope-next');
     const adminIdentity = uniqueIdentity('audit-owner-scope-admin');
 
-    const [owner, admin] = await User.create([
-      {
+    // Preallocate fixture IDs so failed inserts cannot bypass cleanup.
+    const ownerId = new Types.ObjectId();
+    const adminId = new Types.ObjectId();
+
+    try {
+      // Sequential writes avoid racing an unfinished insert against cleanup.
+      const owner = await User.create({
+        _id: ownerId,
         name: 'Owner Before',
         email: ownerIdentity.email,
         phone: ownerIdentity.phone,
         password: await hashPassword(TEST_PASSWORD),
         role: 'pharmacy',
         status: 'active',
-      },
-      {
+      });
+
+      const admin = await User.create({
+        _id: adminId,
         name: 'Audit Admin',
         email: adminIdentity.email,
         phone: adminIdentity.phone,
         password: await hashPassword(TEST_PASSWORD),
         role: 'admin',
         status: 'active',
-      },
-    ]);
+      });
 
-    try {
       await Pharmacy.create({
         ownerId: owner._id,
         managerUserIds: [],
@@ -128,6 +136,7 @@ test(
 
       assert.deepEqual(
         new Set(globalActivity.items.map((item) => item.action)),
+
         new Set([
           ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PROFILE_UPDATED,
           ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_PHOTO_UPDATED,
@@ -142,6 +151,7 @@ test(
       });
 
       assert.equal(ownerActivity.total, 2);
+
       assert.equal(
         ownerActivity.items.every(
           (item) =>
@@ -192,9 +202,11 @@ test(
       assert.doesNotMatch(JSON.stringify(photoLog), /example\.com|pictureUrl/i);
 
       const actors = await listAdminAuditActorsService();
+
       const ownerActor = actors.items.find(
         (item) => item.id === String(owner._id)
       );
+
       const adminActor = actors.items.find(
         (item) => item.id === String(admin._id)
       );
@@ -203,8 +215,11 @@ test(
       assert.equal(ownerActor?.role, 'pharmacy');
       assert.equal(adminActor, undefined);
     } finally {
-      await cleanup([owner._id, admin._id]);
-      await mongoose.disconnect();
+      try {
+        await cleanup([ownerId, adminId]);
+      } finally {
+        await mongoose.disconnect();
+      }
     }
   }
 );

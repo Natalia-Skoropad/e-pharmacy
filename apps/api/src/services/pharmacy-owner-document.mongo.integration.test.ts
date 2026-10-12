@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
@@ -35,9 +35,10 @@ function getTestMongoUri(): string {
 
 function uniqueOwnerIdentity(prefix: string) {
   const suffix = new Types.ObjectId().toHexString();
+
   return {
     email: `${prefix}-${suffix}@example.com`,
-    phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
+    phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
   };
 }
 
@@ -76,10 +77,15 @@ test(
   async () => {
     await mongoose.connect(getTestMongoUri());
 
-    const ownerA = await createOwner('document-owner-a');
-    const ownerB = await createOwner('document-owner-b');
+    const createdOwnerIds: Types.ObjectId[] = [];
 
     try {
+      const ownerA = await createOwner('document-owner-a');
+      createdOwnerIds.push(ownerA._id);
+
+      const ownerB = await createOwner('document-owner-b');
+      createdOwnerIds.push(ownerB._id);
+
       await Promise.all([
         createLinkedPharmacy(ownerA._id, 'Owner A document pharmacy'),
         createLinkedPharmacy(ownerB._id, 'Owner B document pharmacy'),
@@ -106,6 +112,7 @@ test(
         ownerADocuments.map((item) => item.id),
         [String(document._id)]
       );
+
       assert.deepEqual(ownerBDocuments, []);
 
       const downloaded = await getPharmacyOwnerDocumentContentService(
@@ -136,16 +143,21 @@ test(
 
       assert.ok(await PharmacyOwnerDocument.exists({ _id: document._id }));
     } finally {
-      await PharmacyOwnerDocument.deleteMany({
-        ownerUserId: { $in: [ownerA._id, ownerB._id] },
-      });
+      try {
+        if (createdOwnerIds.length > 0) {
+          await PharmacyOwnerDocument.deleteMany({
+            ownerUserId: { $in: createdOwnerIds },
+          });
 
-      await Pharmacy.deleteMany({
-        ownerId: { $in: [ownerA._id, ownerB._id] },
-      });
+          await Pharmacy.deleteMany({
+            ownerId: { $in: createdOwnerIds },
+          });
 
-      await User.deleteMany({ _id: { $in: [ownerA._id, ownerB._id] } });
-      await mongoose.disconnect();
+          await User.deleteMany({ _id: { $in: createdOwnerIds } });
+        }
+      } finally {
+        await mongoose.disconnect();
+      }
     }
   }
 );

@@ -48,6 +48,8 @@ function getPhoneSuffix(seed: string): string {
   );
 }
 
+//===================================================================
+
 async function expectHttpStatus(
   action: () => Promise<unknown>,
   expectedStatus: number
@@ -224,11 +226,10 @@ test(
         403
       );
 
-      await updateOrderStatusService(ownerActor, created.order.id, {
-        status: 'in_progress',
-      });
+      assert.equal(created.order.status, 'in_progress');
 
       const commentRequestId = '047f6380-56b4-4b49-b9ce-6b687559dd0b';
+
       const firstComment = await createOrderManagerCommentService(
         managerActor,
         created.order.id,
@@ -241,6 +242,7 @@ test(
       const retriedComment = await createOrderManagerCommentService(
         managerActor,
         created.order.id,
+
         {
           text: 'Manager idempotent comment',
           clientRequestId: commentRequestId,
@@ -256,6 +258,7 @@ test(
       );
 
       assert.equal(persistedComments.total, 1);
+
       assert.equal(
         persistedComments.items[0]?.author.displayName,
         'Tenant Manager Original'
@@ -278,6 +281,7 @@ test(
       );
 
       await User.deleteOne({ _id: managerA });
+
       persistedComments = await getOrderManagerCommentsService(
         ownerActor,
         created.order.id,

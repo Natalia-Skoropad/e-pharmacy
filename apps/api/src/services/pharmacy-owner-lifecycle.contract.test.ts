@@ -38,7 +38,7 @@ test('first pharmacy activation runs owner auto-activation in the same transacti
 
   assert.match(
     adminService,
-    /session\.withTransaction[\s\S]*?input\.status === PHARMACY_STATUSES\.ACTIVE[\s\S]*?activateNewPharmacyOwnerForPharmacy\([\s\S]*?session\s*\)/
+    /session\.withTransaction[\s\S]*?if \(input\.action === 'approve'\)[\s\S]*?if \(!pharmacy\.activatedAt\)[\s\S]*?await ensureDefaultPharmacyClient\([\s\S]*?session\s*\)[\s\S]*?await activateNewPharmacyOwnerForPharmacy\([\s\S]*?session\s*\)/
   );
 
   assert.match(

@@ -170,9 +170,7 @@ test(
         comment: '',
       });
 
-      await updateOrderStatusService(ownerActor, createdOrder.order.id, {
-        status: 'in_progress',
-      });
+      assert.equal(createdOrder.order.status, 'in_progress');
 
       const existingComment = await createOrderManagerCommentService(
         managerActor,
@@ -307,6 +305,7 @@ test(
           updateProductRequestService(
             ownerA.toString(),
             updateRequest.request.id,
+
             {
               status: 'draft',
               name: 'Blocked update attempt',
@@ -323,6 +322,7 @@ test(
           updateProductRequestService(
             managerA.toString(),
             updateRequest.request.id,
+
             {
               status: 'new',
               name: 'Blocked submit attempt',
@@ -345,6 +345,7 @@ test(
 
       const blockedOffer = await ProductOffer.findById(offerId)
         .select('availableQuantity reservedQuantity totalQuantity')
+
         .lean<{
           availableQuantity: number;
           reservedQuantity: number;
@@ -358,6 +359,7 @@ test(
 
       const persistedOrder = await Order.findById(createdOrder.order.id)
         .select('status managerComments')
+
         .lean<{
           status: string;
           managerComments?: unknown[];
@@ -395,6 +397,7 @@ test(
       const moderationComment = await createOrderManagerCommentService(
         ownerActor,
         createdOrder.order.id,
+
         {
           text: 'Allowed moderation comment',
           clientRequestId: '6e01e28e-8d9b-4330-b9e2-f9c469047300',
@@ -410,6 +413,7 @@ test(
       const submittedRequest = await updateProductRequestService(
         ownerA.toString(),
         updateRequest.request.id,
+
         {
           status: 'new',
           name: 'Submitted while on moderation',
@@ -435,6 +439,7 @@ test(
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId: { $in: [pharmacyA, pharmacyB] } }),
+
         ProductRequest.deleteMany({
           pharmacyId: { $in: [pharmacyA, pharmacyB] },
         }),

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomInt } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
@@ -42,10 +43,11 @@ function getTestMongoUri(): string {
 
 function uniqueIdentity(prefix: string) {
   const suffix = new Types.ObjectId().toHexString();
+  const maxEmailPrefixLength = 64 - suffix.length - '-@example.com'.length;
 
   return {
-    email: `${prefix}-${suffix}@example.com`,
-    phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
+    email: `${prefix.slice(0, maxEmailPrefixLength)}-${suffix}@example.com`,
+    phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
   };
 }
 
@@ -137,6 +139,7 @@ function createActiveOrder(
           name: 'Owner lifecycle product',
           article: `OWNER-${productId.toHexString()}`,
         },
+
         quantity: 1,
         unitPrice: 100,
         totalPrice: 100,
@@ -164,20 +167,25 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
-
-    const { user: owner } = await createUser(
-      'pharmacy',
-      'new',
-      'owner-auto-activation'
-    );
-
-    const { user: admin } = await createUser(
-      'admin',
-      'active',
-      'owner-auto-activation-admin'
-    );
+    const createdUserIds: Types.ObjectId[] = [];
 
     try {
+      const { user: owner } = await createUser(
+        'pharmacy',
+        'new',
+        'owner-auto-activation'
+      );
+
+      createdUserIds.push(owner._id);
+
+      const { user: admin } = await createUser(
+        'admin',
+        'active',
+        'owner-auto-activation-admin'
+      );
+
+      createdUserIds.push(admin._id);
+
       const [firstPharmacy, secondPharmacy] = await Pharmacy.create([
         {
           ownerId: owner._id,
@@ -240,8 +248,11 @@ test(
         1
       );
     } finally {
-      await cleanupUsersAndOwnerData([owner._id, admin._id]);
-      await mongoose.disconnect();
+      try {
+        await cleanupUsersAndOwnerData(createdUserIds);
+      } finally {
+        await mongoose.disconnect();
+      }
     }
   }
 );
@@ -250,14 +261,17 @@ test(
 
 test('new pharmacy owner can authenticate', { skip: shouldSkip }, async () => {
   await mongoose.connect(getTestMongoUri());
-
-  const { user: owner, identity } = await createUser(
-    'pharmacy',
-    'new',
-    'new-owner-login'
-  );
+  const createdUserIds: Types.ObjectId[] = [];
 
   try {
+    const { user: owner, identity } = await createUser(
+      'pharmacy',
+      'new',
+      'new-owner-login'
+    );
+
+    createdUserIds.push(owner._id);
+
     const auth = await loginUserService({
       email: identity.email,
       password: TEST_PASSWORD,
@@ -267,8 +281,11 @@ test('new pharmacy owner can authenticate', { skip: shouldSkip }, async () => {
     assert.equal(auth.user.role, 'pharmacy');
     assert.equal(auth.user.status, 'new');
   } finally {
-    await cleanupUsersAndOwnerData([owner._id]);
-    await mongoose.disconnect();
+    try {
+      await cleanupUsersAndOwnerData(createdUserIds);
+    } finally {
+      await mongoose.disconnect();
+    }
   }
 });
 
@@ -279,26 +296,33 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
-
-    const { user: owner, identity: ownerIdentity } = await createUser(
-      'pharmacy',
-      'active',
-      'owner-manual-lifecycle'
-    );
-
-    const { user: admin } = await createUser(
-      'admin',
-      'active',
-      'owner-manual-lifecycle-admin'
-    );
-
-    const { user: client } = await createUser(
-      'client',
-      'active',
-      'owner-manual-lifecycle-client'
-    );
+    const createdUserIds: Types.ObjectId[] = [];
 
     try {
+      const { user: owner, identity: ownerIdentity } = await createUser(
+        'pharmacy',
+        'active',
+        'owner-manual-lifecycle'
+      );
+
+      createdUserIds.push(owner._id);
+
+      const { user: admin } = await createUser(
+        'admin',
+        'active',
+        'owner-manual-lifecycle-admin'
+      );
+
+      createdUserIds.push(admin._id);
+
+      const { user: client } = await createUser(
+        'client',
+        'active',
+        'owner-manual-lifecycle-client'
+      );
+
+      createdUserIds.push(client._id);
+
       const [firstPharmacy, secondPharmacy] = await Pharmacy.create([
         {
           ownerId: owner._id,
@@ -444,8 +468,11 @@ test(
       // verifies the new-owner/active-owner auth result remains a valid shape.
       assert.equal(auth.user.id, String(owner._id));
     } finally {
-      await cleanupUsersAndOwnerData([owner._id, admin._id, client._id]);
-      await mongoose.disconnect();
+      try {
+        await cleanupUsersAndOwnerData(createdUserIds);
+      } finally {
+        await mongoose.disconnect();
+      }
     }
   }
 );

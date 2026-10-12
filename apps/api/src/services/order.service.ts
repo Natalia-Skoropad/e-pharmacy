@@ -482,6 +482,7 @@ function serializeCreatedManagerComment(
       text: comment.text,
       createdAt: comment.createdAt.toISOString(),
       createdBy: actorId,
+
       author: {
         userId: actorId,
         displayName: comment.authorDisplayName?.trim() || 'Pharmacy member',
@@ -515,6 +516,7 @@ function serializeManagerComments(order: OrderDocument): ManagerCommentDto[] {
       text: order.managerComment.trim(),
       createdAt: order.updatedAt.toISOString(),
       createdBy: legacyAuthorId,
+
       author: {
         userId: legacyAuthorId,
         displayName: 'Pharmacy member',
@@ -630,6 +632,7 @@ function serializeOrder(
       previousUnitPrice: entry.previousUnitPrice,
       unitPrice: entry.unitPrice,
     })),
+
     ...(order.rejectionReason
       ? { rejectionReason: order.rejectionReason }
       : {}),
@@ -644,9 +647,11 @@ function serializeOrder(
     ...(hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
+
     items: order.items.map((item) => {
       const productFallback = productFallbacks?.get(item.productId.toString());
       const offerFallback = offerFallbacks?.get(item.productOfferId.toString());
+
       const category =
         getCategorySnapshot(item.productSnapshot) ?? productFallback?.category;
 
@@ -665,6 +670,7 @@ function serializeOrder(
         productId: item.productId.toString(),
         productOfferId: item.productOfferId.toString(),
         name: item.productSnapshot.name,
+
         ...(item.productSnapshot.slug
           ? { slug: item.productSnapshot.slug }
           : {}),
@@ -684,9 +690,11 @@ function serializeOrder(
           : {}),
         ...(typeof rating === 'number' ? { rating } : {}),
         ...(typeof reviewsCount === 'number' ? { reviewsCount } : {}),
+
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         totalPrice: item.totalPrice,
+
         ...(typeof offerFallback?.availableQuantity === 'number'
           ? { availableQuantity: offerFallback.availableQuantity }
           : {}),
@@ -857,17 +865,18 @@ export async function checkoutOrderService(
 
   try {
     const createdOrder = await session.withTransaction(async () => {
-      const [cart, client] = await Promise.all([
-        Cart.findOne({ clientUserId })
-          .session(session)
-          .lean<CartDocument | null>(),
-        User.findById(clientUserId)
-          .select(
-            'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
-          )
-          .session(session)
-          .lean<UserDocument | null>(),
-      ]);
+      // MongoDB transactions do not support concurrent operations on the same session.
+      const cart = await Cart.findOne({ clientUserId })
+        .session(session)
+        .lean<CartDocument | null>();
+
+      const client = await User.findById(clientUserId)
+        .select(
+          'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
+        )
+
+        .session(session)
+        .lean<UserDocument | null>();
 
       if (!cart) {
         throw httpError(HTTP_STATUS.BAD_REQUEST, 'Cart is empty');
@@ -1020,6 +1029,7 @@ export async function checkoutOrderService(
         }
 
         const unitPrice = offer.price;
+
         const category = getProductCategoryReferenceOrThrow(
           categoryMap,
           product.categoryId
@@ -1028,6 +1038,7 @@ export async function checkoutOrderService(
         return {
           productId: offer.productId,
           productOfferId: offer._id,
+
           productSnapshot: {
             name: product.name,
             ...(product.slug ? { slug: product.slug } : {}),
@@ -1050,6 +1061,7 @@ export async function checkoutOrderService(
               ? { reviewsCount: product.reviewsCount }
               : {}),
           },
+
           quantity: cartItem.quantity,
           unitPrice,
           totalPrice: cartItem.quantity * unitPrice,
@@ -1103,6 +1115,7 @@ export async function checkoutOrderService(
                     details: input.deliveryDetails,
                   },
             ...(input.comment ? { comment: input.comment } : {}),
+
             status: 'new',
             createdByType: 'client',
 
@@ -1113,6 +1126,7 @@ export async function checkoutOrderService(
                 changedBy: new Types.ObjectId(clientUserId),
               },
             ],
+
             activityHistory: orderItems.map((item) => ({
               type: 'product_added',
               occurredAt: createdAt,
@@ -1126,6 +1140,7 @@ export async function checkoutOrderService(
               previousUnitPrice: item.unitPrice,
               unitPrice: item.unitPrice,
             })),
+
             orderNumber,
           },
         ],
@@ -1404,6 +1419,7 @@ export async function createManagerOrderService(
                 comment: 'Order created by the pharmacy manager.',
               },
             ],
+
             activityHistory: orderItems.map((item) => ({
               type: 'product_added',
               occurredAt: createdAt,
@@ -1417,6 +1433,7 @@ export async function createManagerOrderService(
               previousUnitPrice: item.unitPrice,
               unitPrice: item.unitPrice,
             })),
+
             orderNumber,
           },
         ],
@@ -1559,6 +1576,7 @@ function createOrderItemFromProductOffer({
     ...(previousItem?._id ? { _id: previousItem._id } : {}),
     productId: offer.productId,
     productOfferId: offer._id,
+
     productSnapshot: {
       name: product.name,
       ...(product.slug ? { slug: product.slug } : {}),
@@ -1577,6 +1595,7 @@ function createOrderItemFromProductOffer({
         ? { reviewsCount: product.reviewsCount }
         : {}),
     },
+
     quantity,
 
     unitPrice:
@@ -1746,6 +1765,7 @@ export async function updateOrderDetailsService(
               oldItem.productOfferId,
               reservedQuantity,
               session,
+
               {
                 source: 'client_order',
                 orderId: order._id,
@@ -1792,10 +1812,12 @@ export async function updateOrderDetailsService(
             return createOrderItemFromProductOffer({
               offer,
               product,
+
               category: getProductCategoryReferenceOrThrow(
                 categoryMap,
                 product.categoryId
               ),
+
               quantity,
               previousItem: existingByOfferId.get(offerId),
             });
@@ -1805,6 +1827,7 @@ export async function updateOrderDetailsService(
         const nextByOfferId = new Map(
           nextItems.map((item) => [String(item.productOfferId), item])
         );
+
         const changedOfferIds = new Set([
           ...existingByOfferId.keys(),
           ...nextByOfferId.keys(),
@@ -1842,8 +1865,10 @@ export async function updateOrderDetailsService(
               previousQuantity,
               quantity,
               quantityDelta: quantity - previousQuantity,
+
               previousUnitPrice:
                 previousItem?.unitPrice ?? nextItem?.unitPrice ?? 0,
+
               unitPrice: nextItem?.unitPrice ?? previousItem?.unitPrice ?? 0,
             },
           ];
@@ -1887,6 +1912,7 @@ export async function updateOrderDetailsService(
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
+
       User.findById(updatedOrder.userId)
         .select(
           'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
@@ -2124,6 +2150,7 @@ export async function updateOrderStatusService(
             item.productOfferId,
             item.quantity,
             session,
+
             {
               source: 'client_order',
               orderId: order._id,
@@ -2143,6 +2170,7 @@ export async function updateOrderStatusService(
             item.quantity,
             session,
             true,
+
             {
               source: 'client_order',
               orderId: order._id,
@@ -2154,6 +2182,7 @@ export async function updateOrderStatusService(
           );
         }
       }
+
       const set: Record<string, unknown> = { status: input.status };
 
       if (input.status === 'successful') {
@@ -2168,6 +2197,7 @@ export async function updateOrderStatusService(
 
       return Order.findByIdAndUpdate(
         orderId,
+
         {
           $set: set,
           $push: {
@@ -2283,6 +2313,7 @@ type OrderSalesAggregationRow = {
     categoryName: string | null;
     categorySlug: string | null;
   };
+
   quantity: number;
   amount: number;
 };
@@ -2529,16 +2560,20 @@ export async function getOrderSalesStatisticsService(
               timezone: 'UTC',
             },
           },
+
           categoryId: {
             $ifNull: ['$items.productSnapshot.categoryId', null],
           },
+
           categoryName: {
             $ifNull: ['$items.productSnapshot.categoryNameSnapshot', null],
           },
+
           categorySlug: {
             $ifNull: ['$items.productSnapshot.categorySlugSnapshot', null],
           },
         },
+
         quantity: { $sum: '$items.quantity' },
         amount: { $sum: '$items.totalPrice' },
       },
@@ -2784,6 +2819,7 @@ export async function getOrdersService(
     pharmacyOptions: pharmacyOptions.map(({ _id, snapshot }) => ({
       id: String(_id),
       name: snapshot.name,
+
       ...(snapshot.phone ? { phone: snapshot.phone } : {}),
       ...(snapshot.email ? { email: snapshot.email } : {}),
       ...(snapshot.location?.address || snapshot.address

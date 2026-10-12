@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
@@ -66,9 +66,11 @@ function getTestMongoUri(): string {
 function uniqueIdentity(prefix: string) {
   const suffix = new Types.ObjectId().toHexString();
 
+  const maxEmailPrefixLength = 64 - suffix.length - '-@example.com'.length;
+
   return {
-    email: `${prefix}-${suffix}@example.com`,
-    phone: `+380${suffix.slice(-9).replace(/[a-f]/gi, '1')}`,
+    email: `${prefix.slice(0, maxEmailPrefixLength)}-${suffix}@example.com`,
+    phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
   };
 }
 
@@ -384,6 +386,7 @@ test(
 
     const token =
       new Types.ObjectId().toHexString() + new Types.ObjectId().toHexString();
+
     const tokenHash = createHash('sha256').update(token).digest('hex');
 
     try {
@@ -532,6 +535,7 @@ test(
       for (const attempt of attempts) {
         await assert.rejects(
           attempt,
+
           (error: unknown) =>
             error instanceof Error &&
             'status' in error &&
@@ -801,6 +805,7 @@ test(
         phone: identity.phone,
         password: 'SecurePassword123!',
         role: 'pharmacy',
+
         pharmacyDocuments: [
           {
             documentId: uploaded.document.id,
@@ -964,6 +969,7 @@ test(
     try {
       const countSession =
         await createRegistrationPharmacyDocumentUploadSessionService();
+
       uploadSessionIds.push(countSession.uploadSessionId);
 
       await assert.rejects(() =>
@@ -1007,6 +1013,7 @@ test(
         await createRegistrationPharmacyDocumentUploadSessionService();
 
       uploadSessionIds.push(bytesSession.uploadSessionId);
+
       await PharmacyRegistrationUploadSession.updateOne(
         { _id: bytesSession.uploadSessionId },
         {
@@ -1034,6 +1041,7 @@ test(
         await createRegistrationPharmacyDocumentUploadSessionService();
 
       uploadSessionIds.push(expiredSession.uploadSessionId);
+
       await PharmacyRegistrationUploadSession.updateOne(
         { _id: expiredSession.uploadSessionId },
         { $set: { expiresAt: new Date(Date.now() - 1_000) } }
@@ -1865,6 +1873,7 @@ test(
             name: 'Stale Tab A',
             expectedRevision: initialRevision,
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -2103,6 +2112,7 @@ test(
             description: 'Stale Tab A',
             expectedRevision: initialRevision,
           }),
+
         (error: unknown) =>
           error instanceof Error &&
           'code' in error &&
@@ -2277,6 +2287,7 @@ test(
             changes: {},
             expectedRevision: onModeration.updatedAt.toISOString(),
           }),
+
         (error: unknown) =>
           typeof error === 'object' &&
           error !== null &&

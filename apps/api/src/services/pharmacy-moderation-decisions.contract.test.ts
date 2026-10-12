@@ -24,7 +24,7 @@ test('one permissioned canonical endpoint with required reason, CAS and idempote
 
   assert.match(
     schema,
-    /action: z\.enum\(\['approve', 'request_corrections', 'block', 'review_reactivation'\]\)/
+    /action:\s*z\.enum\(\s*\[\s*'approve',\s*'request_corrections',\s*'block',\s*'review_reactivation',?\s*\]\s*\)/
   );
 
   assert.match(schema, /reason: pharmacyModerationReason/);
@@ -75,7 +75,7 @@ test('all legacy routes delegate to the canonical decision service', async () =>
 
   assert.match(
     service,
-    /pharmacy\.activatedAt \? PHARMACY_STATUSES\.ACTIVE : PHARMACY_STATUSES\.ON_VERIFICATION/
+    /nextStatus\s*=\s*pharmacy\.activatedAt\s*\?\s*PHARMACY_STATUSES\.ACTIVE\s*:\s*PHARMACY_STATUSES\.ON_VERIFICATION/
   );
 
   assert.doesNotMatch(

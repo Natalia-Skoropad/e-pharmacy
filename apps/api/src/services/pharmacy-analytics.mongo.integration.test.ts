@@ -196,6 +196,15 @@ test(
     const offerIds = Array.from({ length: 4 }, () => new Types.ObjectId());
 
     try {
+      // Managed product statistics count the shared catalog, not only test fixtures.
+      // Preserve any products already present in the dedicated test database.
+      const [baselineActive, baselineBlocked] = await Promise.all([
+        Product.countDocuments({ status: 'active' }),
+        Product.countDocuments({ status: 'blocked' }),
+      ]);
+
+      const baselineTotal = baselineActive + baselineBlocked;
+
       await Product.create([
         {
           _id: productIds[0],
@@ -284,17 +293,17 @@ test(
       });
 
       assert.deepEqual(statisticsA, {
-        active: 2,
-        blocked: 2,
+        active: baselineActive + 2,
+        blocked: baselineBlocked + 2,
         addedToPharmacy: 2,
-        notAddedToPharmacy: 2,
+        notAddedToPharmacy: baselineTotal + 2,
       });
 
       assert.deepEqual(statisticsB, {
-        active: 2,
-        blocked: 2,
+        active: baselineActive + 2,
+        blocked: baselineBlocked + 2,
         addedToPharmacy: 1,
-        notAddedToPharmacy: 3,
+        notAddedToPharmacy: baselineTotal + 3,
       });
 
       await assert.rejects(
