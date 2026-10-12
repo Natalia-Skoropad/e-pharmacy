@@ -9,7 +9,7 @@ const read = (relativePath: string) =>
 
 //===================================================================
 
-test('Stage 14.9 pharmacy routes gate registry access and reject detail routes', async () => {
+test('Stage 14.9 registry routes retain permission guards as Stage 14.11 adds detail routing', async () => {
   const index = await read('../../app/admin/pharmacies/page.tsx');
 
   const filtered = await read(
@@ -20,7 +20,9 @@ test('Stage 14.9 pharmacy routes gate registry access and reject detail routes',
   assert.match(index, /parseAdminPharmaciesListSearchParams/);
   assert.match(filtered, /ADMIN_PERMISSIONS\.pharmacies\.view/);
   assert.match(filtered, /resolveAdminPharmaciesRoute\(filters\)/);
-  assert.match(filtered, /route\.kind !== 'list'\) return notFound\(\)/);
+  assert.match(filtered, /route\.kind === 'invalid'\) return notFound\(\)/);
+  assert.match(filtered, /route\.kind === 'detail'/);
+  assert.match(filtered, /<PharmacyDetailsPageContent/);
   assert.match(filtered, /buildAdminPharmaciesListUrl/);
   assert.match(filtered, /redirect\(canonicalUrl\)/);
 });

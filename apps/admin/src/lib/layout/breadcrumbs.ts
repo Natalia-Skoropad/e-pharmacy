@@ -1,5 +1,6 @@
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 
+import { resolveAdminPharmaciesRoute } from '@/lib/pharmacies/admin-pharmacy-url';
 import { resolveAdminPharmacyOwnersRoute } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { ADMIN_ROUTES } from '@/lib/routes';
 
@@ -92,6 +93,23 @@ export function getAdminBreadcrumbsByPathname(
     }
 
     return [{ label: 'Pharmacy Owners' }];
+  }
+
+  if (isPathWithinRoute(pathname, ADMIN_ROUTES.PHARMACIES)) {
+    const suffix = pathname
+      .slice(ADMIN_ROUTES.PHARMACIES.length)
+      .replace(/^\/+|\/+$/g, '');
+
+    const route = resolveAdminPharmaciesRoute(suffix ? suffix.split('/') : []);
+
+    if (route.kind === 'detail') {
+      return [
+        { label: 'Pharmacies', href: ADMIN_ROUTES.PHARMACIES },
+        { label: currentDetailLabel ?? `Pharmacy #${route.pharmacyId}` },
+      ];
+    }
+
+    return [{ label: 'Pharmacies' }];
   }
 
   const route = BREADCRUMB_ROUTES.find((candidate) =>

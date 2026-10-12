@@ -1,0 +1,84 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 20px;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.headerStack,
+.tabsStack,
+.tabPanel {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.pageHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.titleWithHelp {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.actionPlaceholder {
+  display: inline-block;
+  padding: 8px 12px;
+  color: var(--color-text-muted);
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--fz-12);
+}
+
+.detailMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.pharmacyId,
+.muted {
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+  overflow-wrap: anywhere;
+}
+
+.tabPanel {
+  padding-top: 4px;
+}
+
+@media only screen and (min-width: 768px) {
+  .pageHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+@media only screen and (max-width: 767px) {
+  .card {
+    padding: 14px;
+  }
+}

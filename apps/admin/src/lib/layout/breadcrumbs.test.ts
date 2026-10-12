@@ -80,3 +80,37 @@ test('pharmacy owner filter routes keep the list breadcrumb only', () => {
 test('unknown admin routes do not invent breadcrumb labels', () => {
   assert.deepEqual(getAdminBreadcrumbsByPathname('/admin/unknown'), []);
 });
+
+//===================================================================
+
+test('pharmacy detail breadcrumbs link to the registry and use the loaded pharmacy name', () => {
+  const pharmacyId = '507f1f77bcf86cd799439011';
+
+  for (const suffix of ['', '/documents', '/activity']) {
+    const path = `${ADMIN_ROUTES.PHARMACIES}/${pharmacyId}${suffix}`;
+
+    assert.deepEqual(getAdminBreadcrumbsByPathname(path), [
+      { label: 'Pharmacies', href: ADMIN_ROUTES.PHARMACIES },
+      { label: `Pharmacy #${pharmacyId}` },
+    ]);
+
+    assert.deepEqual(getAdminBreadcrumbsByPathname(path, 'Health Point'), [
+      { label: 'Pharmacies', href: ADMIN_ROUTES.PHARMACIES },
+      { label: 'Health Point' },
+    ]);
+  }
+});
+
+//===================================================================
+
+test('pharmacy filtered registry routes do not get detail breadcrumbs', () => {
+  for (const path of [
+    ADMIN_ROUTES.PHARMACIES,
+    `${ADMIN_ROUTES.PHARMACIES}/status-active`,
+    `${ADMIN_ROUTES.PHARMACIES}/rating-4-5/page-2`,
+  ]) {
+    assert.deepEqual(getAdminBreadcrumbsByPathname(path), [
+      { label: 'Pharmacies' },
+    ]);
+  }
+});
