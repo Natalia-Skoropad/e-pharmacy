@@ -1,3 +1,5 @@
+'use client';
+
 import type { ReactNode } from 'react';
 
 import {
@@ -6,7 +8,6 @@ import {
   Clock3,
   ImageOff,
   Mail,
-  MapPin,
   Phone,
   ShieldCheck,
   UserRound,
@@ -20,7 +21,8 @@ import {
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { WorkingHours } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
-import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { CopyButton, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -31,6 +33,8 @@ import {
   buildPharmacyComparisonRows,
   type PharmacyComparisonRow,
 } from './pharmacy-information-comparison';
+
+import { PharmacySalesChart } from './PharmacySalesChart';
 
 import css from './PharmacyInformationTab.module.css';
 
@@ -58,21 +62,30 @@ function DateValue({ value }: { value?: string }) {
 function ContactValue({
   value,
   type,
+  onCopy,
 }: {
   value?: string;
   type: 'phone' | 'email';
+  onCopy: (value: string, label: string) => void;
 }) {
   if (!value?.trim()) return <span>—</span>;
 
   return (
-    <a href={`${type === 'email' ? 'mailto' : 'tel'}:${value}`}>
-      {type === 'email' ? (
-        <Mail size={16} aria-hidden="true" />
-      ) : (
-        <Phone size={16} aria-hidden="true" />
-      )}
-      {value}
-    </a>
+    <span className={css.contactValue}>
+      <a href={`${type === 'email' ? 'mailto' : 'tel'}:${value}`}>
+        {type === 'email' ? (
+          <Mail size={16} aria-hidden="true" />
+        ) : (
+          <Phone size={16} aria-hidden="true" />
+        )}
+        {value}
+      </a>
+
+      <CopyButton
+        label={`Copy pharmacy ${type}: ${value}`}
+        onClick={() => onCopy(value, type === 'email' ? 'Email' : 'Phone')}
+      />
+    </span>
   );
 }
 
@@ -195,12 +208,6 @@ function PharmacyStatusSummary({ detail }: { detail: AdminPharmacyDetail }) {
         <h3 id="pharmacy-status-summary">Status & moderation</h3>
       </div>
 
-      <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
-
-      <strong>
-        {reviewNeedsCorrections ? 'Corrections requested' : 'Current status'}
-      </strong>
-
       <p>
         {reviewNeedsCorrections
           ? 'The administrator requested corrections before approval.'
@@ -234,6 +241,16 @@ function PharmacyStatusSummary({ detail }: { detail: AdminPharmacyDetail }) {
 export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
   const { current, owner, dates } = detail;
   const comparison = buildPharmacyComparisonRows(detail);
+  const toast = useToast();
+
+  const copyValue = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error(`Could not copy ${label.toLowerCase()}.`);
+    }
+  };
 
   return (
     <div className={css.tabContent}>
@@ -245,74 +262,63 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
           <Photo url={current.imageUrl} name={current.name || 'Pharmacy'} />
         </section>
 
-        <section
-          className={css.sectionCard}
-          aria-labelledby="pharmacy-identity-title"
-        >
-          <div className={css.sectionHeading}>
-            <Building2 size={20} aria-hidden="true" />
-            <h3 id="pharmacy-identity-title">Published pharmacy identity</h3>
-          </div>
+        <div className={css.identityDetails}>
+          <section
+            className={css.sectionCard}
+            aria-label="Published pharmacy details"
+          >
+            <dl className={`${css.detailsList} ${css.detailsTable}`}>
+              <DetailField label="Pharmacy status">
+                <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+              </DetailField>
 
-          <dl className={css.detailsList}>
-            <DetailField label="Pharmacy status">
-              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
-            </DetailField>
+              <DetailField label="Pharmacy ID">{detail.id}</DetailField>
 
-            <DetailField label="Pharmacy ID">{detail.id}</DetailField>
-            <DetailField label="Name">{display(current.name)}</DetailField>
+              <DetailField label="Email">
+                <ContactValue
+                  type="email"
+                  value={current.email}
+                  onCopy={(value, label) => void copyValue(value, label)}
+                />
+              </DetailField>
 
-            <DetailField label="Email">
-              <ContactValue type="email" value={current.email} />
-            </DetailField>
+              <DetailField label="Phone">
+                <ContactValue
+                  type="phone"
+                  value={current.phone}
+                  onCopy={(value, label) => void copyValue(value, label)}
+                />
+              </DetailField>
 
-            <DetailField label="Phone">
-              <ContactValue type="phone" value={current.phone} />
-            </DetailField>
-          </dl>
-        </section>
-      </div>
+              <DetailField label="Settlement">
+                {display(current.location?.settlement)}
+              </DetailField>
 
-      <div className={css.secondaryGrid}>
-        <section
-          className={css.sectionCard}
-          aria-labelledby="pharmacy-location-title"
-        >
-          <div className={css.sectionHeading}>
-            <MapPin size={20} aria-hidden="true" />
-            <h3 id="pharmacy-location-title">Published location</h3>
-          </div>
+              <DetailField label="Region">
+                {display(current.location?.region)}
+              </DetailField>
 
-          <dl className={css.detailsList}>
-            <DetailField label="Settlement">
-              {display(current.location?.settlement)}
-            </DetailField>
+              <DetailField label="Pharmacy address">
+                {display(current.location?.address)}
+              </DetailField>
 
-            <DetailField label="Region">
-              {display(current.location?.region)}
-            </DetailField>
+              <DetailField label="Country code">
+                {display(current.location?.countryCode)}
+              </DetailField>
+            </dl>
+          </section>
 
-            <DetailField label="Pharmacy address">
-              {display(current.location?.address)}
-            </DetailField>
-
-            <DetailField label="Country code">
-              {display(current.location?.countryCode)}
-            </DetailField>
-          </dl>
-        </section>
-
-        <section
-          className={css.sectionCard}
-          aria-labelledby="pharmacy-hours-title"
-        >
-          <div className={css.sectionHeading}>
-            <Clock3 size={20} aria-hidden="true" />
-            <h3 id="pharmacy-hours-title">Published working hours</h3>
-          </div>
-
-          <ScheduleValue value={display(current.workingHours)} />
-        </section>
+          <section
+            className={css.sectionCard}
+            aria-labelledby="pharmacy-hours-title"
+          >
+            <div className={css.sectionHeading}>
+              <Clock3 size={20} aria-hidden="true" />
+              <h3 id="pharmacy-hours-title">Published working hours</h3>
+            </div>
+            <ScheduleValue value={display(current.workingHours)} />
+          </section>
+        </div>
       </div>
 
       <div className={css.secondaryGrid}>
@@ -341,19 +347,19 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
               </div>
 
               <div className={css.ownerDetails}>
-                <strong>{owner.name}</strong>
-                <span className={css.muted}>ID: {owner.id}</span>
-
-                <StatusBadge {...USER_STATUS_PRESENTATION[owner.status]} />
-                {canViewOwner && (
-                  <LinkButton
+                {canViewOwner ? (
+                  <TextActionButton
                     href={buildAdminPharmacyOwnerDetailUrl(owner.id)}
-                    size="sm"
-                    variant="secondary"
                   >
-                    View owner
-                  </LinkButton>
+                    {owner.name}
+                  </TextActionButton>
+                ) : (
+                  <strong>{owner.name}</strong>
                 )}
+                <span className={css.ownerIdRow}>
+                  <span className={css.muted}>ID: {owner.id}</span>
+                  <StatusBadge {...USER_STATUS_PRESENTATION[owner.status]} />
+                </span>
               </div>
             </div>
           ) : (
@@ -372,7 +378,7 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
             <h3 id="pharmacy-dates-title">Pharmacy dates</h3>
           </div>
 
-          <dl className={css.detailsList}>
+          <dl className={`${css.detailsList} ${css.detailsTable}`}>
             <DetailField label="Created at">
               <DateValue value={dates.createdAt} />
             </DetailField>
@@ -391,6 +397,8 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
           </dl>
         </section>
       </div>
+
+      <PharmacySalesChart pharmacyId={detail.id} />
 
       <PharmacyStatusSummary detail={detail} />
 

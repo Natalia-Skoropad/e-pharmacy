@@ -1,6 +1,6 @@
 import { access, readFile, readdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
-import { extname, join, relative, resolve } from 'node:path';
+import { extname, join, relative, resolve, sep } from 'node:path';
 
 //===================================================================
 
@@ -48,6 +48,7 @@ function formatPath(path) {
 //===================================================================
 
 const errors = [];
+
 const allSourceFiles = [
   ...(await collectFiles(resolve(ROOT, 'apps'))),
   ...(await collectFiles(resolve(ROOT, 'packages'))),
@@ -123,16 +124,27 @@ for (const legacyDirectory of [
 //===================================================================
 
 const uiSourceFiles = await collectFiles(resolve(ROOT, 'packages/ui/src'));
+
 const forbiddenFeatureNames =
-  /\b(?:EntityComments|OrderCancellationModal|SalesValueChart|ClientStatistics|OrderStatistics|AllProductStatistics|OwnProductStatistics|ProductRequestStatistics)\b/;
+  /\b(?:EntityComments|OrderCancellationModal|ClientStatistics|OrderStatistics|AllProductStatistics|OwnProductStatistics|ProductRequestStatistics)\b/;
 
 //===================================================================
 
 for (const file of uiSourceFiles) {
   if (file.includes(`${join('src', 'a11y')}`)) continue;
   const source = await readFile(file, 'utf8');
+
   if (forbiddenFeatureNames.test(source)) {
     errors.push(`${formatPath(file)} contains pharmacy domain feature logic`);
+  }
+
+  // SalesValueChart is a reusable, presentation-only chart shared by Admin and Pharmacy.
+  // It is permitted only in the canonical charts package, not elsewhere in shared UI.
+  if (
+    /\bSalesValueChart\b/.test(source) &&
+    !file.includes(`${join('src', 'charts')}${sep}`)
+  ) {
+    errors.push(`${formatPath(file)} duplicates the shared sales chart`);
   }
 }
 

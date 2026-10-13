@@ -1,8 +1,5 @@
-import { ApiError } from '@e-pharmacy/api-client/transport';
-import { isProductCategory } from '@e-pharmacy/validation/products';
-import { isRecord } from '@e-pharmacy/utils/guards';
-import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
-import { getTrimmedString } from '@e-pharmacy/utils/strings';
+import { ApiError } from '../transport/api-error';
+import { parseProductCategoryReferencesResponse } from './shared-dto-parsers';
 
 import type {
   OrderSalesStatistics,
@@ -15,7 +12,7 @@ import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data'
 
 //===================================================================
 
-export type PharmacyOrderSalesStatisticsQueryParams = Readonly<{
+export type OrderSalesStatisticsQueryParams = Readonly<{
   dateFrom?: string;
   dateTo?: string;
   groupBy?: OrderSalesStatisticsGroupBy;
@@ -32,6 +29,29 @@ function invalidSalesStatisticsContract(
     transportCode: 'INVALID_RESPONSE',
     payload,
   });
+}
+
+//===================================================================
+
+// Keep transport validation local to the API client. Reuse the canonical
+// category reference parser instead of importing runtime helpers from new
+// workspace dependencies that might not have been installed yet.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype: unknown = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+//===================================================================
+
+function getTrimmedString(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+
+  const trimmedValue = value.trim();
+  return trimmedValue || undefined;
 }
 
 //===================================================================
@@ -66,7 +86,8 @@ function requireNonNegativeNumber(
   label: string,
   payload: unknown
 ): number {
-  const number = getFiniteNumber(value);
+  const number =
+    typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 
   if (number === undefined || number < 0) {
     invalidSalesStatisticsContract(
@@ -94,6 +115,7 @@ function normalizeSalesValue(
       `${label}.quantity`,
       value
     ),
+
     amount: requireNonNegativeNumber(value.amount, `${label}.amount`, value),
   };
 }
@@ -102,7 +124,7 @@ function normalizeSalesValue(
 
 function normalizeSalesPoint(
   value: unknown,
-  categories: ProductCategoryReference[]
+  categories: readonly ProductCategoryReference[]
 ): OrderSalesStatisticsPoint {
   if (!isRecord(value)) {
     invalidSalesStatisticsContract(
@@ -162,16 +184,6 @@ export function normalizeOrderSalesStatistics(
     );
   }
 
-  if (
-    !Array.isArray(payload.categories) ||
-    !payload.categories.every(isProductCategory)
-  ) {
-    invalidSalesStatisticsContract(
-      'sales statistics categories are invalid.',
-      payload
-    );
-  }
-
   if (!Array.isArray(payload.points)) {
     invalidSalesStatisticsContract(
       'sales statistics points must be an array.',
@@ -179,7 +191,11 @@ export function normalizeOrderSalesStatistics(
     );
   }
 
-  const categories = [...payload.categories];
+  // The shared DTO parser already validates the category id, name and slug.
+  // It throws an INVALID_RESPONSE ApiError for malformed references.
+  const categories = [
+    ...parseProductCategoryReferencesResponse(payload.categories),
+  ];
 
   if (
     new Set(categories.map((category) => category.slug)).size !==
@@ -195,6 +211,7 @@ export function normalizeOrderSalesStatistics(
     currency: '₴',
     groupBy: payload.groupBy,
     categories,
+
     points: payload.points.map((point) =>
       normalizeSalesPoint(point, categories)
     ),

@@ -323,6 +323,7 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
       activeClientsCount: count(metrics.activeClientsCount, 'active clients'),
       successfulOrdersCount: count(metrics.successfulOrdersCount, 'orders'),
       successfulRevenue: number(metrics.successfulRevenue, 'revenue'),
+      addedProductsCount: count(metrics.addedProductsCount, 'added products'),
       rating,
       reviewsCount: count(metrics.reviewsCount, 'reviews'),
     },

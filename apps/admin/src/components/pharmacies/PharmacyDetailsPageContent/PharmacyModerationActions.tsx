@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Ban, ChevronDown, ClipboardCheck, RefreshCw } from 'lucide-react';
+
+import {
+  Ban,
+  ChevronDown,
+  ClipboardCheck,
+  RefreshCw,
+  ClipboardEdit,
+  CheckCircle2,
+} from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
@@ -9,6 +17,7 @@ import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { ReasonModal } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   decideAdminPharmacyModeration,
@@ -304,13 +313,21 @@ export function PharmacyModerationActions({
                   key={option.action}
                   type="button"
                   role="menuitem"
-                  className={option.danger ? css.dangerAction : css.menuAction}
+                  className={
+                    option.danger
+                      ? css.dangerAction
+                      : option.action === 'request_corrections'
+                        ? css.correctionsAction
+                        : css.approveAction
+                  }
                   onClick={() => selectAction(option)}
                 >
                   {option.danger ? (
                     <Ban size={17} aria-hidden="true" />
+                  ) : option.action === 'request_corrections' ? (
+                    <ClipboardEdit size={17} aria-hidden="true" />
                   ) : (
-                    <ClipboardCheck size={17} aria-hidden="true" />
+                    <CheckCircle2 size={17} aria-hidden="true" />
                   )}
                   {option.label}
                 </button>
@@ -329,9 +346,12 @@ export function PharmacyModerationActions({
               <span>
                 <strong>{detail.current.name}</strong> (ID: {detail.id})
               </span>
-              <span>
-                {PHARMACY_STATUS_PRESENTATION[detail.status].label} →{' '}
-                {PHARMACY_STATUS_PRESENTATION[action.option.targetStatus].label}
+              <span className={css.statusTransition}>
+                <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+                <span aria-hidden="true">→</span>
+                <StatusBadge
+                  {...PHARMACY_STATUS_PRESENTATION[action.option.targetStatus]}
+                />
                 {action.option.action === 'request_corrections'
                   ? ' (status unchanged; a new review decision is audited)'
                   : null}

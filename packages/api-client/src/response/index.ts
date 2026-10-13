@@ -85,3 +85,6 @@ export {
   parseAdminPharmacyCommentsResponse,
   parseAdminPharmacyCommentResponse,
 } from './admin-pharmacy-documents-comments-parsers';
+
+export { normalizeOrderSalesStatistics } from './order-sales-statistics-parsers';
+export type { OrderSalesStatisticsQueryParams } from './order-sales-statistics-parsers';

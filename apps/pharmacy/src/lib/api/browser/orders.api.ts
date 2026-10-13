@@ -6,6 +6,8 @@ import {
   parseApiResponseData,
   parseMessageResponse,
   type ApiResponseContext,
+  normalizeOrderSalesStatistics,
+  type OrderSalesStatisticsQueryParams,
 } from '@e-pharmacy/api-client/response';
 
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
@@ -31,11 +33,6 @@ import {
   type PharmacyOrdersQueryParams,
   type PharmacyOrdersResponse,
 } from '@/lib/orders/orders';
-
-import {
-  normalizeOrderSalesStatistics,
-  type PharmacyOrderSalesStatisticsQueryParams,
-} from '@/lib/orders/order-sales-statistics';
 
 import {
   sanitizeBrowserMutationRequestOptions,
@@ -157,11 +154,13 @@ export async function updatePharmacyOrder(
   payload: {
     items?: Array<{ productOfferId: string; quantity: number }>;
     deliveryMethod?: DeliveryMethod;
+
     deliveryDetails?: {
       recipientName: string;
       recipientPhone: string;
       address: string;
     };
+
     paymentMethod?: PaymentMethod;
   }
 ): Promise<PharmacyOrderDetails> {
@@ -254,7 +253,7 @@ export async function deletePharmacyOrderComment(
 //===================================================================
 
 export async function getPharmacyOrderSalesStatistics(
-  params: PharmacyOrderSalesStatisticsQueryParams = {},
+  params: OrderSalesStatisticsQueryParams = {},
   options?: BrowserReadRequestOptions
 ) {
   const path = appendQueryParams(

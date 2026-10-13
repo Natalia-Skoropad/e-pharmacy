@@ -24,6 +24,13 @@ import type {
 } from '@e-pharmacy/types/orders';
 
 import {
+  SalesPeriodFilters,
+  SalesValueChart,
+  getSalesPeriodDateRange,
+  type SalesPeriodMonth,
+} from '@e-pharmacy/ui/charts';
+
+import {
   type ClientStatisticsCounts,
   type ClientStatisticsKey,
 } from '@/lib/statistics/config';
@@ -74,13 +81,6 @@ import {
   OwnProductStatistics,
   ProductRequestStatistics,
 } from '@/components/statistics';
-
-import {
-  SalesPeriodFilters,
-  SalesValueChart,
-  getSalesPeriodDateRange,
-  type SalesPeriodMonth,
-} from '@/components/sales';
 
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -221,27 +221,33 @@ async function loadDashboardData(
   return {
     data: {
       pharmacyStatus,
+
       orders:
         ordersResult.status === 'fulfilled'
           ? ordersResult.value.statistics
           : DEFAULT_ORDER_STATISTICS,
+
       clients:
         clientsResult.status === 'fulfilled'
           ? clientsResult.value
           : DEFAULT_CLIENT_STATISTICS,
+
       products:
         productsResult.status === 'fulfilled'
           ? productsResult.value
           : DEFAULT_OWN_PRODUCT_STATISTICS,
+
       allProducts:
         allProductsResult.status === 'fulfilled'
           ? allProductsResult.value
           : DEFAULT_ALL_PRODUCT_STATISTICS,
+
       requests:
         requestsResult.status === 'fulfilled'
           ? requestsResult.value
           : DEFAULT_PRODUCT_REQUEST_STATISTICS,
     },
+
     errors: {
       orders: ordersResult.status === 'rejected',
       clients: clientsResult.status === 'rejected',
@@ -308,6 +314,7 @@ function PharmacyDashboardPageContent() {
 
   const pharmacyId = pharmacyProfile?.id ?? null;
   const pharmacyStatus = pharmacyProfile?.status ?? null;
+
   const dashboardRequestKey =
     pharmacyId && pharmacyStatus
       ? `${pharmacyId}:${pharmacyStatus}:${selectedYear}:${selectedMonth}`
@@ -368,6 +375,7 @@ function PharmacyDashboardPageContent() {
           setDashboardSnapshot({
             requestKey: currentRequestKey,
             data: DEFAULT_DATA,
+
             errors: {
               orders: true,
               clients: true,
@@ -375,6 +383,7 @@ function PharmacyDashboardPageContent() {
               allProducts: true,
               requests: true,
             },
+
             isLoading: false,
           });
         }
@@ -407,6 +416,7 @@ function PharmacyDashboardPageContent() {
           selectedSalesYear,
           selectedSalesMonth
         );
+
         const nextSalesData = await getPharmacyOrderSalesStatistics(period, {
           signal: controller.signal,
         });

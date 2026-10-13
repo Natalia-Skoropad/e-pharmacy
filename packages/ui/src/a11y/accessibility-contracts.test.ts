@@ -12,6 +12,7 @@ async function readSource(path: string) {
 
 test('modal foundation requires a real accessible name', async () => {
   const source = await readSource('../overlays/ModalBase/ModalBase.tsx');
+
   assert.match(source, /labelledBy: string/);
   assert.match(source, /ariaLabel: string/);
   assert.doesNotMatch(source, /fallbackTitleId/);
@@ -148,7 +149,7 @@ test('status pages have one image API and truthful image semantics', async () =>
 
 test('sales chart provides keyboard navigation, values, summary, and a data table', async () => {
   const source = await readSource(
-    '../../../../apps/pharmacy/src/components/sales/SalesValueChart/SalesValueChart.tsx'
+    '../charts/SalesValueChart/SalesValueChart.tsx'
   );
 
   assert.doesNotMatch(source, /role="img"/);

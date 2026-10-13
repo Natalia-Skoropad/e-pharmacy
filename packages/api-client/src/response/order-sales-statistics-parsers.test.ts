@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { ApiError } from '@e-pharmacy/api-client/transport';
 
-import { normalizeOrderSalesStatistics } from './order-sales-statistics';
+import { normalizeOrderSalesStatistics } from './order-sales-statistics-parsers';
 
 //===================================================================
 
@@ -19,6 +19,7 @@ function validStatistics() {
   return {
     currency: '₴',
     groupBy: 'month',
+
     categories: [
       {
         id: '507f1f77bcf86cd799439099',

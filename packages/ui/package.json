@@ -18,6 +18,7 @@
     "./feedback": "./src/feedback/index.ts",
     "./status-pages": "./src/status-pages/index.ts",
     "./statistics": "./src/statistics/index.ts",
+    "./charts": "./src/charts/index.ts",
     "./styles/*.css": "./src/styles/*.css",
     "./auth": "./src/auth/index.ts",
     "./profile": "./src/profile/index.ts"

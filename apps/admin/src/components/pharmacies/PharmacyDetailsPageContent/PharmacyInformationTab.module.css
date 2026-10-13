@@ -279,7 +279,7 @@
 
 @media only screen and (min-width: 1200px) {
   .identityGrid {
-    grid-template-columns: minmax(240px, 0.45fr) minmax(0, 0.55fr);
+    grid-template-columns: minmax(230px, 0.35fr) minmax(0, 0.65fr);
     align-items: stretch;
   }
 
@@ -287,4 +287,58 @@
   .photoCard {
     min-height: 340px;
   }
+}
+
+.identityDetails {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-width: 0;
+}
+
+.detailsTable {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+}
+
+.contactValue,
+.ownerIdRow {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+.contactValue a {
+  min-width: 0;
+}
+
+.ownerIdRow {
+  row-gap: 5px;
+}
+
+@media only screen and (max-width: 479px) {
+  .detailsTable {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.salesLoading,
+.salesError {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  min-height: 240px;
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.salesError p {
+  margin: 0;
+  color: var(--color-text-secondary);
 }

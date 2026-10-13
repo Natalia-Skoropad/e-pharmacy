@@ -23,6 +23,7 @@ import {
   listPharmacyRegistryOptionsByAdmin,
   listPharmacyRegistryOwnerOptionsByAdmin,
   getPharmacyDetailByAdmin,
+  getPharmacySalesStatisticsByAdmin,
   listPharmacyDocumentsByAdmin,
   listPharmacyAdminCommentsByAdmin,
   createPharmacyAdminCommentByAdmin,
@@ -141,6 +142,7 @@ import {
   productRequestParamsSchema,
 } from '../schemas/product-request.schema';
 
+import { orderSalesStatisticsQuerySchema } from '../schemas/order.schema';
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //=================================================================================
@@ -414,6 +416,20 @@ adminRoutes.get(
 //=================================================================================
 
 // Stage 14.5: exact pharmacy detail, before documents and status mutations.
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/sales-statistics',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+
+  validate({
+    params: pharmacyIdParamsSchema,
+    query: orderSalesStatisticsQuerySchema,
+  }),
+
+  ctrlWrapper(getPharmacySalesStatisticsByAdmin)
+);
+
+//=================================================================================
+
 adminRoutes.get(
   '/pharmacies/:pharmacyId',
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),

@@ -37,6 +37,7 @@ const base: AdminPharmacyDetail = {
     activeClientsCount: 0,
     successfulOrdersCount: 0,
     successfulRevenue: 0,
+    addedProductsCount: 0,
     rating: 0,
     reviewsCount: 0,
   },

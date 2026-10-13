@@ -64,7 +64,12 @@ import {
   listAdminPharmacyRegistryOwnerOptionsService,
 } from '../services/admin-pharmacy-registry-read.service';
 
-import { getAdminPharmacyDetailService } from '../services/admin-pharmacy-detail-read.service';
+import {
+  getAdminPharmacyDetailService,
+  getAdminPharmacySalesStatisticsService,
+} from '../services/admin-pharmacy-detail-read.service';
+
+import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
 
 import {
   getAdminPharmacyActivityDetailsService,
@@ -289,6 +294,25 @@ export async function listPharmacyRegistryOwnerOptionsByAdmin(
   res: ValidatedResponse<unknown, unknown, AdminPharmacyRegistryOptionsQuery>
 ): Promise<void> {
   const data = await listAdminPharmacyRegistryOwnerOptionsService(
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacySalesStatisticsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<
+    unknown,
+    AdminPharmacyParams,
+    OrderSalesStatisticsQuery
+  >
+): Promise<void> {
+  const data = await getAdminPharmacySalesStatisticsService(
+    res.locals.validated.params.pharmacyId,
     res.locals.validated.query
   );
 

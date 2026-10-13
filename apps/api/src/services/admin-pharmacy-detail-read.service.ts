@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
+import { Product } from '../models/product.model';
 import { User } from '../models/user.model';
 
 import type {
@@ -13,6 +14,8 @@ import type {
 
 import { httpError } from '../utils/httpError';
 import { buildPagedPharmacyItemsPipeline } from './admin-pharmacy-owner-read.service';
+import { getOrderSalesStatisticsForPharmacyService } from './order.service';
+import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
 
 //===============================================================
 
@@ -207,7 +210,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
   // No N+1: owner and metrics are independent bounded lookups, metrics reuse
   // EXACTLY the Stage 13 owner / Stage 14.4 registry KPI aggregation.
-  const [owner, metricRows] = await Promise.all([
+  const [owner, metricRows, addedProductsCount] = await Promise.all([
     User.findOne({ _id: pharmacy.ownerId, role: USER_ROLES.PHARMACY })
       .select('_id name email phone pictureUrl status')
       .lean<OwnerDocument | null>(),
@@ -216,6 +219,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       { $match: { _id } },
       ...buildPagedPharmacyItemsPipeline(0, 1),
     ]),
+    Product.countDocuments({ pharmacyId: _id }),
   ]);
 
   const metrics = metricRows[0];
@@ -276,8 +280,28 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       activeClientsCount: metrics.activeClientsCount,
       successfulOrdersCount: metrics.successfulOrdersCount,
       successfulRevenue: metrics.successfulRevenue,
+      addedProductsCount,
       rating: metrics.rating,
       reviewsCount: metrics.reviewsCount,
     },
   };
+}
+
+//===============================================================
+
+/** Admin read scope is guarded by pharmacies.view at the HTTP route. */
+export async function getAdminPharmacySalesStatisticsService(
+  pharmacyId: string,
+  query: OrderSalesStatisticsQuery
+) {
+  if (!/^[0-9a-f]{24}$/i.test(pharmacyId)) {
+    throw httpError(HTTP_STATUS.BAD_REQUEST, 'Invalid pharmacy ID.');
+  }
+
+  const exists = await Pharmacy.exists({ _id: new Types.ObjectId(pharmacyId) });
+  if (!exists) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found.');
+  }
+
+  return getOrderSalesStatisticsForPharmacyService(pharmacyId, query);
 }

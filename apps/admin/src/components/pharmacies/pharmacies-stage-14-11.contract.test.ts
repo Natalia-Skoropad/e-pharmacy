@@ -81,7 +81,10 @@ test('Stage 14.11 shell retains the 4 real API metrics and owner permission afte
   assert.match(content, /dispatchAdminBreadcrumbLabel/);
   assert.match(content, /<PageHeader/);
   assert.match(content, /<InfoTooltip/);
-  assert.match(content, /<StatusBadge/);
+  assert.match(
+    await read('./PharmacyDetailsPageContent/PharmacyInformationTab.tsx'),
+    /<StatusBadge/
+  );
   assert.match(content, /<StatsGrid\s+columns=\{4\}/);
   assert.match(content, /<StatsLoadingSkeleton[\s\S]*?count=\{4\}/);
 
@@ -92,7 +95,7 @@ test('Stage 14.11 shell retains the 4 real API metrics and owner permission afte
     [
       'Active clients',
       'Successful orders',
-      'Successful revenue',
+      'Added products',
       'Rating / reviews',
     ]
   );
@@ -105,7 +108,11 @@ test('Stage 14.11 shell retains the 4 real API metrics and owner permission afte
     /canAdmin\(access, ADMIN_PERMISSIONS\.pharmacyOwners\.view\)/
   );
 
-  assert.match(content, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
+  assert.match(
+    await read('./PharmacyDetailsPageContent/PharmacyInformationTab.tsx'),
+    /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/
+  );
+
   assert.match(content, /<PharmacyModerationActions/);
 
   assert.match(

@@ -59,6 +59,9 @@ export const backendRoutes = {
       details: (pharmacyId: EntityId) =>
         `/admin/pharmacies/${segment(pharmacyId)}`,
 
+      salesStatistics: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/sales-statistics`,
+
       decision: (pharmacyId: EntityId) =>
         `/admin/pharmacies/${segment(pharmacyId)}/moderation-decisions`,
 

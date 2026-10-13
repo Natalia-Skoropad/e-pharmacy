@@ -26,7 +26,8 @@
   box-shadow: var(--shadow-card);
 }
 
-.menuAction,
+.approveAction,
+.correctionsAction,
 .dangerAction {
   display: flex;
   align-items: center;
@@ -43,15 +44,35 @@
   cursor: pointer;
 }
 
-.menuAction:hover,
-.menuAction:focus-visible,
+.approveAction:hover,
+.approveAction:focus-visible,
+.correctionsAction:hover,
+.correctionsAction:focus-visible,
 .dangerAction:hover,
 .dangerAction:focus-visible {
-  background: var(--color-background);
+  filter: brightness(0.96);
+}
+
+.approveAction {
+  color: #167e46;
+  background: #e7f6eb;
+}
+
+.correctionsAction {
+  color: #8d6000;
+  background: #fff4d6;
 }
 
 .dangerAction {
   color: var(--color-error);
+  background: #fff0ef;
+}
+
+.statusTransition {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .modalDescription,

@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 
-import { SelectField } from '@e-pharmacy/ui/forms';
+import { SelectField } from '../../forms';
 
 import css from './SalesPeriodFilters.module.css';
 

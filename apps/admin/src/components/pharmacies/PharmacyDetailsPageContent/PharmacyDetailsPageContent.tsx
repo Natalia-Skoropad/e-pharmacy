@@ -7,7 +7,6 @@ import {
   Activity,
   Building2,
   CircleHelp,
-  ClipboardList,
   CreditCard,
   FileText,
   History,
@@ -17,12 +16,10 @@ import {
   ShoppingBag,
   Star,
   UsersRound,
-  UserRound,
-  Wallet,
+  ClipboardList,
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { formatMoney } from '@e-pharmacy/utils';
 import { PageHeader } from '@e-pharmacy/ui/layout';
@@ -38,7 +35,6 @@ import {
   StatsCard,
   StatsGrid,
   StatsLoadingSkeleton,
-  StatusBadge,
 } from '@e-pharmacy/ui/statistics';
 
 import { NotFoundPage, StatusPageLayout } from '@e-pharmacy/ui/status-pages';
@@ -51,7 +47,6 @@ import {
   type AdminPharmacyDetailTab,
 } from '@/lib/pharmacies/admin-pharmacy-url';
 
-import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { canAdmin } from '@/lib/permissions/can-admin';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
@@ -315,7 +310,6 @@ export function PharmacyDetailsPageContent({
   }
 
   const metrics = detail?.metrics;
-  const owner = detail?.owner;
 
   return (
     <main className={css.page} aria-labelledby="pharmacy-details-title">
@@ -335,13 +329,13 @@ export function PharmacyDetailsPageContent({
                     {
                       title: 'Current pharmacy status',
                       description:
-                        'This badge represents the pharmacy moderation status, not the owner account status.',
+                        'The moderation status is displayed in Pharmacy information.',
                       icon: <Building2 size={17} aria-hidden="true" />,
                     },
                     {
                       title: 'Pharmacy overview',
                       description:
-                        'The four cards summarize active clients, successful orders, successful revenue, and verified reviews for this pharmacy.',
+                        'The four cards summarize active clients, successful orders and revenue, products added, and verified reviews for this pharmacy.',
                       icon: <ClipboardList size={17} aria-hidden="true" />,
                     },
                     {
@@ -369,33 +363,6 @@ export function PharmacyDetailsPageContent({
             }
           />
 
-          <div className={css.detailMeta}>
-            {detail ? (
-              <>
-                <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
-                <span className={css.pharmacyId}>ID: {detail.id}</span>
-                {owner && canViewOwner ? (
-                  <LinkButton
-                    href={buildAdminPharmacyOwnerDetailUrl(owner.id)}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    <UserRound size={16} aria-hidden="true" />
-                    {owner.name}
-                  </LinkButton>
-                ) : (
-                  <span className={css.muted}>
-                    {owner?.name ?? 'No linked owner'}
-                  </span>
-                )}
-              </>
-            ) : (
-              <span className={css.muted} role="status">
-                Loading pharmacy status and owner…
-              </span>
-            )}
-          </div>
-
           {metrics ? (
             <StatsGrid
               columns={4}
@@ -412,24 +379,21 @@ export function PharmacyDetailsPageContent({
               <StatsCard
                 title="Successful orders"
                 value={metrics.successfulOrdersCount}
+                meta={formatMoney(metrics.successfulRevenue) ?? '—'}
                 tone="green"
                 icon={<ShoppingBag size={26} aria-hidden="true" />}
               />
 
               <StatsCard
-                title="Successful revenue"
-                value={formatMoney(metrics.successfulRevenue) ?? '—'}
+                title="Added products"
+                value={metrics.addedProductsCount}
                 tone="purple"
-                icon={<Wallet size={26} aria-hidden="true" />}
+                icon={<Package size={26} aria-hidden="true" />}
               />
 
               <StatsCard
                 title="Rating / reviews"
-                value={
-                  metrics.reviewsCount
-                    ? metrics.rating.toFixed(1)
-                    : 'No reviews'
-                }
+                value={metrics.reviewsCount ? metrics.rating.toFixed(1) : 0}
                 meta={`${metrics.reviewsCount} reviews`}
                 tone="orange"
                 icon={<Star size={26} aria-hidden="true" />}

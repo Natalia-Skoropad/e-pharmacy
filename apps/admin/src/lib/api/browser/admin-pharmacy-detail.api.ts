@@ -3,6 +3,8 @@ import 'client-only';
 import {
   parseApiResponseData,
   parseAdminPharmacyDetail,
+  normalizeOrderSalesStatistics,
+  type OrderSalesStatisticsQueryParams,
   parseAdminPharmacyDocumentsResponse,
   parseAdminPharmacyCommentsResponse,
   parseAdminPharmacyCommentResponse,
@@ -89,6 +91,25 @@ export async function getAdminPharmacyDetail(
     await localApiRequest(path, { signal: options?.signal }),
 
     parseAdminPharmacyDetail,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getAdminPharmacySalesStatistics(
+  rawPharmacyId: string,
+  params: OrderSalesStatisticsQueryParams,
+  options?: Options
+) {
+  const path = appendQueryParams(
+    ROUTES.pharmacyDetail.salesStatistics(pharmacyId(rawPharmacyId)),
+    params
+  );
+
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+    normalizeOrderSalesStatistics,
     { url: path, method: 'GET' }
   );
 }

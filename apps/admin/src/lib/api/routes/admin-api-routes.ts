@@ -40,6 +40,9 @@ export const adminApiRoutes = {
     details: (pharmacyId: string) =>
       `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}`,
 
+    salesStatistics: (pharmacyId: string) =>
+      `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/sales-statistics`,
+
     decision: (pharmacyId: string) =>
       `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}/moderation-decisions`,
 

@@ -206,6 +206,7 @@ function SalesValueChart({
         const colorIndex = data.categories.findIndex(
           (item) => item.slug === category.slug
         );
+
         const points = data.points.map((point, index) => ({
           x: getX(index, data.points.length),
           y: getY(getPointValue(point, category), maxValue),
@@ -230,6 +231,7 @@ function SalesValueChart({
 
   const activePoint =
     activePointIndex === null ? undefined : data.points[activePointIndex];
+
   const activeX =
     activePointIndex === null
       ? CHART_PADDING.left
@@ -255,6 +257,7 @@ function SalesValueChart({
       data.points.length - 1,
       Math.max(0, index)
     );
+
     setActivePointIndex(normalizedIndex);
     pointRefs.current[normalizedIndex]?.focus();
   };
@@ -290,10 +293,12 @@ function SalesValueChart({
           <h3 className={css.title} id={titleId}>
             {title}
           </h3>
+
           <p className={css.description}>{description}</p>
           <p className={css.visuallyHidden} id={summaryId}>
             {summary}
           </p>
+
           {headerContent ? (
             <div className={css.headerContent}>{headerContent}</div>
           ) : null}
@@ -309,6 +314,7 @@ function SalesValueChart({
           {data.categories.map((category) => {
             const isActive = !hiddenCategorySlugs.includes(category.slug);
             const categoryLabel = category.name;
+
             const colorIndex = data.categories.findIndex(
               (item) => item.slug === category.slug
             );

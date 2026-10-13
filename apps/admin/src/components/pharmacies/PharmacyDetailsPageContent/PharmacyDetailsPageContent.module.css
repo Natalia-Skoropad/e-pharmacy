@@ -47,21 +47,6 @@
   overflow-wrap: anywhere;
 }
 
-.detailMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  min-width: 0;
-}
-
-.pharmacyId,
-.muted {
-  color: var(--color-text-secondary);
-  font-size: var(--fz-14);
-  overflow-wrap: anywhere;
-}
-
 .tabPanel {
   padding-top: 4px;
 }

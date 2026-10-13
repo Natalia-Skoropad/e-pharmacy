@@ -231,6 +231,7 @@ function createOrderClientSnapshot(client: UserDocument): OrderClientSnapshot {
     ...(client.pictureUrl?.trim()
       ? { pictureUrl: client.pictureUrl.trim() }
       : {}),
+
     isDefaultPharmacyClient: false,
   };
 }
@@ -272,9 +273,11 @@ async function createOrderClientSearchCondition(
       { 'delivery.details.recipientName': searchRegExp },
       { 'delivery.details.recipientPhone': searchRegExp },
       { 'delivery.details.address': searchRegExp },
+
       ...(matchingUserIds.length > 0
         ? [{ userId: { $in: matchingUserIds } }]
         : []),
+
       ...(canMatchIdText
         ? [
             {
@@ -406,6 +409,7 @@ function createOrderPharmacySnapshot(
     ...(typeof pharmacy.reviewsCount === 'number'
       ? { reviewsCount: pharmacy.reviewsCount }
       : {}),
+
     ...(hasCompleteBankDetails(pharmacy.bankDetails)
       ? { bankDetails: pharmacy.bankDetails }
       : {}),
@@ -585,27 +589,34 @@ function serializeOrder(
           },
         }
       : {}),
+
     pharmacyId: order.pharmacyId.toString(),
     pharmacyName: order.pharmacySnapshot.name,
     ...(order.pharmacySnapshot.imageUrl
       ? { pharmacyImageUrl: order.pharmacySnapshot.imageUrl }
       : {}),
+
     ...(typeof order.pharmacySnapshot.rating === 'number'
       ? { pharmacyRating: order.pharmacySnapshot.rating }
       : {}),
+
     ...(typeof order.pharmacySnapshot.reviewsCount === 'number'
       ? { pharmacyReviewsCount: order.pharmacySnapshot.reviewsCount }
       : {}),
+
     ...(order.pharmacySnapshot.phone
       ? { pharmacyPhone: order.pharmacySnapshot.phone }
       : {}),
+
     ...(order.pharmacySnapshot.email
       ? { pharmacyEmail: order.pharmacySnapshot.email }
       : {}),
+
     ...(pharmacyLocation ? { pharmacyLocation } : {}),
     ...(order.pharmacySnapshot.workingHours
       ? { pharmacyWorkingHours: order.pharmacySnapshot.workingHours }
       : {}),
+
     totalItems: order.totalItems,
     totalPrice: order.totalPrice,
     currency: order.currency,
@@ -636,13 +647,18 @@ function serializeOrder(
     ...(order.rejectionReason
       ? { rejectionReason: order.rejectionReason }
       : {}),
+
     ...(order.rejectedAt ? { rejectedAt: order.rejectedAt.toISOString() } : {}),
     ...(order.rejectedBy ? { rejectedBy: order.rejectedBy.toString() } : {}),
+
     paymentMethod: order.paymentMethod,
     delivery: order.delivery,
+
     ...(order.comment ? { comment: order.comment } : {}),
     ...(order.managerComment ? { managerComment: order.managerComment } : {}),
+
     managerCommentsCount: managerComments.length,
+
     ...(managerComments.length ? { managerComments } : {}),
     ...(hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
@@ -674,20 +690,25 @@ function serializeOrder(
         ...(item.productSnapshot.slug
           ? { slug: item.productSnapshot.slug }
           : {}),
+
         article: item.productSnapshot.article,
         ...(category ? { category } : {}),
         ...(item.productSnapshot.imageUrl
           ? { imageUrl: item.productSnapshot.imageUrl }
           : {}),
+
         ...(item.productSnapshot.manufacturer
           ? { manufacturer: item.productSnapshot.manufacturer }
           : {}),
+
         ...(item.productSnapshot.dosage
           ? { dosage: item.productSnapshot.dosage }
           : {}),
+
         ...(item.productSnapshot.packageQuantity
           ? { packageQuantity: item.productSnapshot.packageQuantity }
           : {}),
+
         ...(typeof rating === 'number' ? { rating } : {}),
         ...(typeof reviewsCount === 'number' ? { reviewsCount } : {}),
 
@@ -698,6 +719,7 @@ function serializeOrder(
         ...(typeof offerFallback?.availableQuantity === 'number'
           ? { availableQuantity: offerFallback.availableQuantity }
           : {}),
+
         ...(typeof offerFallback?.price === 'number'
           ? { currentPrice: offerFallback.price }
           : {}),
@@ -1050,13 +1072,16 @@ export async function checkoutOrderService(
             ...(product.manufacturer
               ? { manufacturer: product.manufacturer }
               : {}),
+
             ...(product.dosage ? { dosage: product.dosage } : {}),
             ...(product.packageQuantity
               ? { packageQuantity: product.packageQuantity }
               : {}),
+
             ...(typeof product.rating === 'number'
               ? { rating: product.rating }
               : {}),
+
             ...(typeof product.reviewsCount === 'number'
               ? { reviewsCount: product.reviewsCount }
               : {}),
@@ -1292,6 +1317,7 @@ export async function createManagerOrderService(
       }
 
       const requested = new Map<string, number>();
+
       for (const item of input.items) {
         requested.set(
           item.productOfferId,
@@ -1350,10 +1376,12 @@ export async function createManagerOrderService(
         return createOrderItemFromProductOffer({
           offer,
           product,
+
           category: getProductCategoryReferenceOrThrow(
             categoryMap,
             product.categoryId
           ),
+
           quantity,
         });
       });
@@ -1590,6 +1618,7 @@ function createOrderItemFromProductOffer({
       ...(product.packageQuantity
         ? { packageQuantity: product.packageQuantity }
         : {}),
+
       ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
       ...(typeof product.reviewsCount === 'number'
         ? { reviewsCount: product.reviewsCount }
@@ -2223,6 +2252,7 @@ export async function updateOrderStatusService(
     const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
       getOrderProductFallbacks(updatedOrder),
       getOrderOfferFallbacks(updatedOrder),
+
       User.findById(updatedOrder.userId)
         .select(
           'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
@@ -2474,6 +2504,19 @@ export async function getOrderSalesStatisticsService(
   const pharmacyId =
     role === USER_ROLES.PHARMACY ? await getCurrentPharmacyId(userId) : null;
 
+  return getOrderSalesStatisticsForPharmacyService(
+    pharmacyId?.toString() ?? null,
+    query
+  );
+}
+
+//===============================================================
+
+/** Scoped by its caller: Pharmacy resolves its own ID; Admin requires pharmacies.view. */
+export async function getOrderSalesStatisticsForPharmacyService(
+  pharmacyId: string | null,
+  query: OrderSalesStatisticsQuery
+): Promise<OrderSalesStatisticsDto> {
   const { dateFrom, dateTo } = getDefaultSalesDateRange(query);
   const groupBy = query.groupBy;
 
@@ -2482,6 +2525,7 @@ export async function getOrderSalesStatisticsService(
       currency: '₴',
       groupBy,
       categories: [],
+
       points: createSalesPoints({
         rows: [],
         dateFrom,
@@ -2498,7 +2542,7 @@ export async function getOrderSalesStatisticsService(
   };
 
   const matchFilter: Record<string, unknown> = {
-    pharmacyId,
+    pharmacyId: new Types.ObjectId(pharmacyId),
     status: 'successful',
     $or: [{ successfulAt: successfulAtRange }, { successfulAt: null }],
   };
@@ -2825,6 +2869,7 @@ export async function getOrdersService(
       ...(snapshot.location?.address || snapshot.address
         ? { address: snapshot.location?.address || snapshot.address }
         : {}),
+
       ...(snapshot.imageUrl ? { imageUrl: snapshot.imageUrl } : {}),
     })),
 

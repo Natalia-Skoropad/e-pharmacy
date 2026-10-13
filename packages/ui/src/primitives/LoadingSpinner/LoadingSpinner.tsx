@@ -7,6 +7,7 @@ import css from './LoadingSpinner.module.css';
 type LoadingSpinnerProps = {
   label?: string;
   className?: string;
+  hideLabel?: boolean;
 };
 
 //===================================================================
@@ -14,11 +15,15 @@ type LoadingSpinnerProps = {
 function LoadingSpinner({
   label = 'Loading...',
   className,
+  hideLabel = false,
 }: LoadingSpinnerProps) {
   return (
     <div className={clsx(css.wrap, className)} role="status" aria-live="polite">
       <span className={css.spinner} aria-hidden="true" />
-      <span className={css.label}>{label}</span>
+
+      <span className={hideLabel ? css.visuallyHidden : css.label}>
+        {label}
+      </span>
     </div>
   );
 }

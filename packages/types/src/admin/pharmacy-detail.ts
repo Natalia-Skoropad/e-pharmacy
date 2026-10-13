@@ -69,6 +69,7 @@ export type AdminPharmacyDetail = Readonly<{
     activeClientsCount: number;
     successfulOrdersCount: number;
     successfulRevenue: number;
+    addedProductsCount: number;
     rating: number;
     reviewsCount: number;
   }>;

@@ -84,6 +84,13 @@ import type {
 } from '@e-pharmacy/types/orders';
 
 import {
+  SalesPeriodFilters,
+  SalesValueChart,
+  getSalesPeriodDateRange,
+  type SalesPeriodMonth,
+} from '@e-pharmacy/ui/charts';
+
+import {
   PHARMACY_ROUTES,
   getPharmacyClientPath,
   getPharmacyOrderPath,
@@ -112,14 +119,6 @@ import { getProductImageSrc } from '@/lib/products/product-images';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { OrderStatistics, OwnProductStatistics } from '@/components/statistics';
-
-import {
-  SalesPeriodFilters,
-  SalesValueChart,
-  getSalesPeriodDateRange,
-  type SalesPeriodMonth,
-} from '@/components/sales';
-
 import { EntityComments } from '@/components/comments/EntityComments';
 
 import css from './AllProductDetailsPageContent.module.css';
@@ -332,17 +331,22 @@ const PRODUCT_DETAILS_MODE_CONFIG = {
     backHref: PHARMACY_ROUTES.ALL_PRODUCTS,
     backLabel: 'Back to all products',
     bannerTitle: 'Adding this product is locked',
+
     bannerMessage:
       'You can review active Admin product details now. Add-to-my-pharmacy actions unlock after Admin verifies your pharmacy profile.',
+
     showAddAction: true,
     showRemoveAction: false,
   },
+
   own: {
     backHref: PHARMACY_ROUTES.PRODUCTS,
     backLabel: 'Back to own products',
     bannerTitle: 'Product management is locked for now',
+
     bannerMessage:
       'You can review product details now. Price and stock management unlock after Admin verifies your pharmacy profile.',
+
     showAddAction: false,
     showRemoveAction: true,
   },
@@ -379,14 +383,19 @@ function getProductDetailsError(error: unknown): ProductDetailsError {
 const PRODUCT_ACTION_ERROR_MESSAGES: Readonly<Record<string, string>> = {
   [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND]:
     'Pharmacy profile is unavailable for this account.',
+
   [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED]:
     'Product management is unavailable until Admin verifies the pharmacy.',
+
   [PRODUCT_MANAGEMENT_ERROR_CODES.PRODUCT_BLOCKED]:
     'Blocked products cannot be added to your pharmacy.',
+
   [PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED]:
     'This product is already added to your pharmacy.',
+
   [PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED]:
     'This product is no longer added to your pharmacy.',
+
   [PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS]:
     'This product cannot be removed because it has related orders.',
 };
@@ -497,10 +506,13 @@ function getProductCharacteristics(
     product.manufacturer
       ? { label: 'Manufacturer', value: product.manufacturer }
       : null,
+
     product.dosage ? { label: 'Dosage', value: product.dosage } : null,
+
     product.packageQuantity
       ? { label: 'Package', value: product.packageQuantity }
       : null,
+
     { label: 'Category', value: product.category.name },
   ].filter((item): item is CharacteristicItem => Boolean(item));
 }
@@ -514,8 +526,10 @@ function getSingleProductStatisticsCounts(
   if (!offer) return null;
 
   const stockQuantity = stockBalance?.stockQuantity ?? offer.totalQuantity;
+
   const reservedQuantity =
     stockBalance?.reservedQuantity ?? offer.reservedQuantity;
+
   const availableQuantity =
     stockBalance?.availableQuantity ?? offer.availableQuantity;
 
@@ -568,6 +582,7 @@ function getStockMovementRows(
   return movements
     .map((movement): StockMovementRow => {
       const quantityValue = getMovementQuantity(movement);
+
       return {
         id: movement.id,
         ...(movement.orderId ? { orderId: movement.orderId } : {}),
@@ -586,6 +601,7 @@ function getStockMovementRows(
         comment: movement.comment,
       };
     })
+
     .filter((row) => {
       if (
         filters.eventType !== 'all' &&
@@ -632,6 +648,7 @@ function getStockMovementRows(
 
       return true;
     })
+
     .sort(
       (first, second) =>
         new Date(second.dateValue).getTime() -
@@ -732,11 +749,14 @@ function AllProductDetailsPageContent({
   const [reviewsTotal, setReviewsTotal] = useState<number | null>(null);
   const [reviewsStatus, setReviewsStatus] = useState<ResourceStatus>('idle');
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
+
   const [commentsTotalStatus, setCommentsTotalStatus] =
     useState<ResourceStatus>('idle');
+
   const [relatedOrders, setRelatedOrders] = useState<PharmacyOrderRow[]>([]);
   const [relatedOrdersTotal, setRelatedOrdersTotal] = useState(0);
   const [relatedOrdersTotalPages, setRelatedOrdersTotalPages] = useState(1);
+
   const [relatedOrdersStatus, setRelatedOrdersStatus] =
     useState<ResourceStatus>('idle');
 
@@ -784,6 +804,7 @@ function AllProductDetailsPageContent({
   const [stockFilters, setStockFilters] = useState<StockMovementFilters>(
     DEFAULT_STOCK_MOVEMENT_FILTERS
   );
+
   const [isStockFiltersOpen, setIsStockFiltersOpen] = useState(false);
 
   const [relatedOrderNumberSearch, setRelatedOrderNumberSearch] = useState('');
@@ -889,6 +910,7 @@ function AllProductDetailsPageContent({
     relatedOrderNumberSearch,
     450
   );
+
   const debouncedRelatedClientSearch = useDebouncedValue(
     relatedClientSearch,
     450
@@ -898,6 +920,7 @@ function AllProductDetailsPageContent({
     if (activeTab !== 'reviews' || !product) return;
 
     const controller = new AbortController();
+
     queueMicrotask(() => {
       if (!controller.signal.aborted) setReviewsStatus('loading');
     });
@@ -934,6 +957,7 @@ function AllProductDetailsPageContent({
     }
 
     const controller = new AbortController();
+
     queueMicrotask(() => {
       if (!controller.signal.aborted) setStockStatus('loading');
     });
@@ -978,6 +1002,7 @@ function AllProductDetailsPageContent({
     }
 
     const controller = new AbortController();
+
     queueMicrotask(() => {
       if (!controller.signal.aborted) setRelatedOrdersStatus('loading');
     });
@@ -991,14 +1016,17 @@ function AllProductDetailsPageContent({
             productId,
             orderNumber: debouncedRelatedOrderNumberSearch.trim() || undefined,
             client: debouncedRelatedClientSearch.trim() || undefined,
+
             status:
               relatedFilters.orderStatus === 'all'
                 ? undefined
                 : relatedFilters.orderStatus,
+
             createdByType:
               relatedFilters.createdByType === 'all'
                 ? undefined
                 : relatedFilters.createdByType,
+
             dateFrom: relatedFilters.date.from || undefined,
             dateTo: relatedFilters.date.to || undefined,
           },
@@ -1049,6 +1077,7 @@ function AllProductDetailsPageContent({
     if (activeTab !== 'details' || !isAddedToPharmacy) return;
 
     const controller = new AbortController();
+
     queueMicrotask(() => {
       if (!controller.signal.aborted) setProductSalesStatus('loading');
     });
@@ -1059,6 +1088,7 @@ function AllProductDetailsPageContent({
           productSalesYear,
           productSalesMonth
         );
+
         const response = await getPharmacyOrderSalesStatistics(
           {
             ...period,
@@ -1135,9 +1165,11 @@ function AllProductDetailsPageContent({
     : [];
 
   const characteristics = product ? getProductCharacteristics(product) : [];
+
   const relatedOrderRows = product
     ? getRelatedOrderRows(product.id, relatedOrders)
     : [];
+
   const singleProductStatistics = getSingleProductStatisticsCounts(
     currentOffer,
     stockBalance
@@ -1161,6 +1193,7 @@ function AllProductDetailsPageContent({
       ...currentFilters,
       orderStatus: currentFilters.orderStatus === status ? 'all' : status,
     }));
+
     setRelatedCurrentPage(1);
   };
 
@@ -1430,6 +1463,7 @@ function AllProductDetailsPageContent({
       setCommentsTotal(0);
       setCommentsTotalStatus('success');
       setIsRemoveModalOpen(false);
+
       toast.success(
         response.message || 'Product was removed from your pharmacy.'
       );
