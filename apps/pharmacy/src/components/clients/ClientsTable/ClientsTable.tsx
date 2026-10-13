@@ -9,7 +9,7 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { OrderMetricsTooltip } from '@e-pharmacy/ui/overlays';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -105,30 +105,14 @@ function ClientsTable({
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
-            <InfoTooltip
-              label="How are order totals calculated?"
-              title="Successful orders only"
-              escapeOverflow
-              items={[
-                {
-                  title: 'Orders count',
-                  description:
-                    'The number of successful orders completed by this client.',
-                },
-                {
-                  title: 'Orders amount',
-                  description:
-                    'The total value of all successful orders for this client.',
-                },
-              ]}
-            />
+            <OrderMetricsTooltip scope="client" />
           </span>
         ),
         render: (client) => client.successfulOrdersCount,
       },
       {
         key: 'successfulOrdersAmount',
-        title: <TableHeaderTitle parts={['Orders', ' amount, ₴']} />,
+        title: <TableHeaderTitle parts={['Orders', 'amount, ₴']} />,
         render: (client) => formatAmount(client.successfulOrdersAmount) ?? '—',
       },
       {

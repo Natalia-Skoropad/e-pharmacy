@@ -7,7 +7,11 @@ import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
 import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
+
 import { useAdminPharmacyOwnerNavigationBadge } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
+import { useAdminPharmacyNavigationBadges } from '@/providers/AdminPharmacyNavigationBadgeProvider';
+
+import { PharmacyNavigationBadges } from '@/components/layout/PharmacyNavigationBadges/PharmacyNavigationBadges';
 
 import css from './AdminSidebar.module.css';
 
@@ -28,6 +32,7 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const { newOwnerCount } = useAdminPharmacyOwnerNavigationBadge();
+  const pharmacyCounts = useAdminPharmacyNavigationBadges();
 
   return (
     <CabinetSidebar
@@ -49,6 +54,7 @@ export function AdminSidebar({
       )}
       renderLink={({ item, href, className, children, ...props }) => {
         const isPharmacyOwnersLink = item.href === ADMIN_ROUTES.PHARMACY_OWNERS;
+        const isPharmaciesLink = item.href === ADMIN_ROUTES.PHARMACIES;
         const showNewOwnerBadge =
           isPharmacyOwnersLink && newOwnerCount !== null && newOwnerCount > 0;
 
@@ -58,11 +64,19 @@ export function AdminSidebar({
             className={
               isPharmacyOwnersLink
                 ? `${className} ${css.pharmacyOwnersLink}`
-                : className
+                : isPharmaciesLink
+                  ? `${className} ${css.pharmaciesLink}`
+                  : className
             }
             {...props}
           >
             {children}
+            {isPharmaciesLink ? (
+              <PharmacyNavigationBadges
+                counts={pharmacyCounts}
+                collapsed={isCollapsed}
+              />
+            ) : null}
 
             {showNewOwnerBadge ? (
               isCollapsed ? (

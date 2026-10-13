@@ -14,7 +14,11 @@ import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
 
 import type { AdminNavigationItem } from '@/lib/layout/navigation';
 import { ADMIN_ROUTES } from '@/lib/routes';
+
 import { useAdminPharmacyOwnerNavigationBadge } from '@/providers/AdminPharmacyOwnerNavigationBadgeProvider';
+import { useAdminPharmacyNavigationBadges } from '@/providers/AdminPharmacyNavigationBadgeProvider';
+
+import { PharmacyNavigationBadges } from '@/components/layout/PharmacyNavigationBadges/PharmacyNavigationBadges';
 
 import css from './AdminMobileMenu.module.css';
 
@@ -45,6 +49,7 @@ export function AdminMobileMenu({
   const previousPathnameRef = useRef(pathname);
   const { user } = useAuth();
   const { newOwnerCount } = useAdminPharmacyOwnerNavigationBadge();
+  const pharmacyCounts = useAdminPharmacyNavigationBadges();
 
   useEffect(() => {
     if (previousPathnameRef.current === pathname) return;
@@ -101,6 +106,9 @@ export function AdminMobileMenu({
         renderLink={({ item, href, className, children, ...props }) => {
           const isPharmacyOwnersLink =
             item.href === ADMIN_ROUTES.PHARMACY_OWNERS;
+
+          const isPharmaciesLink = item.href === ADMIN_ROUTES.PHARMACIES;
+
           const showNewOwnerBadge =
             isPharmacyOwnersLink && newOwnerCount !== null && newOwnerCount > 0;
 
@@ -110,11 +118,16 @@ export function AdminMobileMenu({
               className={
                 isPharmacyOwnersLink
                   ? `${className} ${css.pharmacyOwnersLink}`
-                  : className
+                  : isPharmaciesLink
+                    ? `${className} ${css.pharmaciesLink}`
+                    : className
               }
               {...props}
             >
               {children}
+              {isPharmaciesLink ? (
+                <PharmacyNavigationBadges counts={pharmacyCounts} />
+              ) : null}
 
               {showNewOwnerBadge ? (
                 <span

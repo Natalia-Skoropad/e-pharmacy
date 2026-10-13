@@ -36,7 +36,7 @@ import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { InfoTooltip, OrderMetricsTooltip } from '@e-pharmacy/ui/overlays';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -52,7 +52,7 @@ import {
   StatusBadge,
 } from '@e-pharmacy/ui/statistics';
 
-import { formatMoney, formatPharmacyLocation } from '@e-pharmacy/utils';
+import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {
   getAdminPharmacies,
@@ -358,40 +358,24 @@ export function PharmaciesPageContent({
           ),
       },
       {
-        key: 'email',
-        title: 'Email',
-        render: (pharmacy) => (
-          <span className={css.breakableText}>{pharmacy.email || '—'}</span>
-        ),
-      },
-      {
-        key: 'phone',
-        title: 'Phone',
-        render: (pharmacy) => pharmacy.phone || '—',
-      },
-      {
-        key: 'address',
-        title: 'Address',
-        render: (pharmacy) => (
-          <span className={css.addressCell}>
-            {formatPharmacyLocation(pharmacy.location) || '—'}
-          </span>
-        ),
-      },
-      {
         key: 'activeClientsCount',
         title: <TableHeaderTitle parts={['Active', 'clients']} />,
         render: (pharmacy) => pharmacy.activeClientsCount,
       },
       {
         key: 'successfulOrdersCount',
-        title: <TableHeaderTitle parts={['Successful', 'orders']} />,
+        title: (
+          <span className={css.headerWithHelp}>
+            <TableHeaderTitle parts={['Orders', 'count']} />
+            <OrderMetricsTooltip scope="pharmacy" />
+          </span>
+        ),
         render: (pharmacy) => pharmacy.successfulOrdersCount,
       },
       {
         key: 'successfulRevenue',
-        title: <TableHeaderTitle parts={['Successful', 'revenue']} />,
-        render: (pharmacy) => formatMoney(pharmacy.successfulRevenue) ?? '—',
+        title: <TableHeaderTitle parts={['Orders', 'amount, ₴']} />,
+        render: (pharmacy) => formatAmount(pharmacy.successfulRevenue) ?? '—',
       },
       {
         key: 'rating',
@@ -565,15 +549,6 @@ export function PharmaciesPageContent({
       </section>
 
       <section className={shellCss.card} aria-label="Pharmacies list">
-        <div className={css.listHeading}>
-          <h2>Pharmacy list</h2>
-          <p className={css.filterDescription} role="status">
-            {state.status === 'all'
-              ? 'All pharmacy statuses'
-              : `Status: ${PHARMACY_STATUS_PRESENTATION[state.status].label}`}
-          </p>
-        </div>
-
         <div className={shellCss.toolbar}>
           <div className={shellCss.rowsControl}>
             <RowsPerPageSelect
@@ -609,7 +584,7 @@ export function PharmaciesPageContent({
               items={data?.items ?? []}
               getItemKey={(pharmacy) => pharmacy.id}
               isLoading={isLoadingList}
-              minWidth={1800}
+              minWidth={1000}
               ariaLabel="Pharmacies"
               labels={{
                 loading: 'Loading pharmacies...',

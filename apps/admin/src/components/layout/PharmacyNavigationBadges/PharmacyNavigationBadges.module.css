@@ -1,0 +1,51 @@
+.badges {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.badge {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding-inline: 5px;
+  color: var(--color-white);
+  font-size: var(--fz-12);
+  font-weight: var(--fw-semi-bold);
+  line-height: 1;
+  border-radius: var(--radius-pill);
+}
+
+.new {
+  background-color: var(--color-info);
+}
+
+.verification {
+  background-color: var(--color-status-beauty);
+}
+
+.moderation {
+  background-color: var(--color-warning);
+}
+
+.collapsedBadges {
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}

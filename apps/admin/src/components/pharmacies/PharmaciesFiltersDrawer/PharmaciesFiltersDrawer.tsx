@@ -1,3 +1,5 @@
+import { Star } from 'lucide-react';
+
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { getBusinessCalendarDate } from '@e-pharmacy/utils/date';
 
@@ -8,6 +10,9 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import css from './PharmaciesFiltersDrawer.module.css';
 
 import {
   ADMIN_PHARMACY_RATINGS,
@@ -36,14 +41,26 @@ const STATUS_OPTIONS: Array<SelectOption<AdminPharmacyStatus | 'all'>> = [
   ...ADMIN_PHARMACY_STATUSES.map((status) => ({
     value: status,
     label: PHARMACY_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...PHARMACY_STATUS_PRESENTATION[status]} />,
   })),
 ];
+
+//===================================================================
 
 const RATING_OPTIONS: Array<SelectOption<AdminPharmacyRating | 'all'>> = [
   { value: 'all', label: 'All ratings' },
   ...ADMIN_PHARMACY_RATINGS.map((rating) => ({
     value: rating,
-    label: `${rating} stars`,
+    label: rating,
+
+    content: (
+      <span className={css.ratingOption}>
+        <span className={css.ratingIcon} aria-hidden="true">
+          <Star size={15} fill="currentColor" />
+        </span>
+        <span>{rating}</span>
+      </span>
+    ),
   })),
 ];
 
@@ -82,6 +99,7 @@ export function PharmaciesFiltersDrawer({
           onChange({ ...state, createdFrom: from, createdTo: to, page: 1 })
         }
       />
+
       <SelectField
         id="pharmacies-filter-status"
         label="Pharmacy status"
@@ -90,6 +108,7 @@ export function PharmaciesFiltersDrawer({
         isActive={state.status !== 'all'}
         onChange={(status) => onChange({ ...state, status, page: 1 })}
       />
+
       <SelectField
         id="pharmacies-filter-rating"
         label="Rating"

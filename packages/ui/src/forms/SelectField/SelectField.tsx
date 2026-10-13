@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactNode,
 } from 'react';
 
 import { createPortal } from 'react-dom';
@@ -25,6 +26,7 @@ import css from './SelectField.module.css';
 export type SelectOption<TValue extends string> = Readonly<{
   value: TValue;
   label: string;
+  content?: ReactNode;
   disabled?: boolean;
 }>;
 
@@ -99,6 +101,7 @@ function SelectField<TValue extends string>({
   const typeaheadRef = useRef('');
   const typeaheadTimerRef = useRef<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+
   const [floatingPosition, setFloatingPosition] =
     useState<FloatingOptionsPosition | null>(null);
 
@@ -122,6 +125,7 @@ function SelectField<TValue extends string>({
     Math.max(selectedIndex, 0),
     isOptionDisabled
   );
+
   const activeOption = activeIndex >= 0 ? options[activeIndex] : undefined;
 
   const activeOptionId =
@@ -334,7 +338,7 @@ function SelectField<TValue extends string>({
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => handleSelect(option)}
           >
-            <span>{option.label}</span>
+            <span>{option.content ?? option.label}</span>
             {isSelected ? (
               <Check className={css.checkIcon} size={16} aria-hidden="true" />
             ) : null}
@@ -405,7 +409,7 @@ function SelectField<TValue extends string>({
               !selectedOption && css.placeholder
             )}
           >
-            {selectedOption?.label ?? placeholder}
+            {selectedOption?.content ?? selectedOption?.label ?? placeholder}
           </span>
 
           {isLoading ? (

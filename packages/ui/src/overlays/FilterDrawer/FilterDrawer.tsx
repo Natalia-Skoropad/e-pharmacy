@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { RotateCcw } from 'lucide-react';
 
 import CloseIconButton from '../../primitives/CloseIconButton/CloseIconButton';
 import ResetFiltersButton from '../../primitives/ResetFiltersButton/ResetFiltersButton';
@@ -73,7 +74,10 @@ export function FilterDrawer({
             href={resetHref}
             label={resetLabel}
             onClick={onReset}
-          />
+          >
+            <RotateCcw size={17} aria-hidden="true" />
+            {resetLabel}
+          </ResetFiltersButton>
         ) : null}
       </ModalBase>
     </ModalRoot>
