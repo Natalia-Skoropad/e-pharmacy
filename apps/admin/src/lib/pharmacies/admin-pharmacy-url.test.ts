@@ -127,9 +127,20 @@ test('detail tabs do not conflict with list filters or collection options', () =
     `${ROOT}/${PHARMACY_ID}`
   );
 
+  // Since Stage 14.16, Activity deliberately supports nested URL filters.
+  assert.deepEqual(
+    resolveAdminPharmaciesRoute([PHARMACY_ID, 'activity', 'page-2']),
+    {
+      kind: 'detail',
+      pharmacyId: PHARMACY_ID,
+      tab: 'activity',
+      activitySegments: ['page-2'],
+    }
+  );
+
   for (const bad of [
     [PHARMACY_ID, 'status-active'],
-    [PHARMACY_ID, 'activity', 'page-2'],
+    [PHARMACY_ID, 'documents', 'page-2'],
     ['unrecognized-filter'],
     ['status-active', 'status-blocked'],
     ['options'],
@@ -137,6 +148,7 @@ test('detail tabs do not conflict with list filters or collection options', () =
   ]) {
     assert.deepEqual(resolveAdminPharmaciesRoute(bad), { kind: 'invalid' });
   }
+
   assert.throws(() => buildAdminPharmacyDetailUrl('bad-id'));
 
   assert.throws(() =>

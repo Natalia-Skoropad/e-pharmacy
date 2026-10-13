@@ -26,7 +26,10 @@ export function getPharmacyModerationOptions(
   pharmacy: AdminPharmacyDetail
 ): PharmacyModerationOption[] {
   const { status, reviewState, owner } = pharmacy;
-  const ownerCanOperate = Boolean(owner && owner.status === 'active');
+
+  // Newly registered owners stay `new` until their first pharmacy is approved.
+  // Only blocked/missing owners must be excluded (same rule as the API).
+  const ownerCanOperate = Boolean(owner && owner.status !== 'blocked');
 
   switch (status) {
     case 'new':

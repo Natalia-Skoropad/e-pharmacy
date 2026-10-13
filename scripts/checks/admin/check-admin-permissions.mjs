@@ -405,9 +405,23 @@ for (const file of uiFiles.filter((file) => /\.(?:ts|tsx)$/.test(file))) {
   );
 }
 
+// Stage 14 legitimately adds the pharmacy registry. Retain its permission
+// gate instead of treating this implemented module as a Stage 8 placeholder.
+const pharmacyRegistryPage = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'admin',
+  'pharmacies',
+  'page.tsx'
+);
+
+assert.match(pharmacyRegistryPage, /AdminPermissionGate/);
+assert.match(pharmacyRegistryPage, /ADMIN_PERMISSIONS\.pharmacies\.view/);
+
 for (const futurePage of [
   ['settings', 'employees', 'page.tsx'],
-  ['pharmacies', 'page.tsx'],
   ['products', 'page.tsx'],
   ['reviews', 'pharmacies', 'page.tsx'],
   ['reviews', 'products', 'page.tsx'],
@@ -432,6 +446,7 @@ assert.equal(
 
 for (const scriptName of ['check:admin', 'check:before-deploy']) {
   const steps = rootPackage.scripts[scriptName].split(/\s*&&\s*/);
+
   assert.equal(steps.filter((step) => step === check).length, 1);
   assert.ok(steps.indexOf(check) > steps.indexOf('pnpm check:admin-shell'));
 }

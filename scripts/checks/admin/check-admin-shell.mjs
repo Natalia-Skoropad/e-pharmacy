@@ -225,9 +225,22 @@ assert.match(
 
 //===================================================================
 
+// Stage 14 now owns a real pharmacy registry; it is not a Stage 7 placeholder.
+const registryPage = await read(
+  'apps',
+  'admin',
+  'src',
+  'app',
+  'admin',
+  'pharmacies',
+  'page.tsx'
+);
+
+assert.match(registryPage, /AdminPermissionGate/);
+assert.match(registryPage, /ADMIN_PERMISSIONS\.pharmacies\.view/);
+
 for (const futurePage of [
   ['dashboard', 'page.tsx'],
-  ['pharmacies', 'page.tsx'],
   ['products', 'page.tsx'],
   ['product-requests', 'page.tsx'],
   ['clients', 'page.tsx'],

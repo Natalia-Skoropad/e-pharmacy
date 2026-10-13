@@ -19,7 +19,7 @@ test('14.16: Activity is mounted only on the pharmacy tab with exact pharmacy-sc
 
   assert.match(shell, /activeTab === 'activity' && detail/);
   assert.match(shell, /<PharmacyActivityTab\s+key=\{pharmacyId\}/);
-  assert.match(panel, /<ActivityHistory scopePharmacyId=\{pharmacyId\}/);
+  assert.match(panel, /<ActivityHistory\s+scopePharmacyId=\{pharmacyId\}/);
 
   assert.match(
     activity,

@@ -20,7 +20,7 @@ const REV = '2026-10-12T09:10:00.000Z' as ISODateTimeString;
 
 function pharmacy(
   status: AdminPharmacyDetail['status'],
-  ownerStatus: 'active' | 'blocked' | null = 'active',
+  ownerStatus: 'new' | 'active' | 'blocked' | null = 'active',
   reviewState: AdminPharmacyDetail['reviewState'] = 'pending',
   wasActivated = true
 ): AdminPharmacyDetail {
@@ -68,7 +68,7 @@ const actions = (detail: AdminPharmacyDetail) =>
 
 test('14.14: canonical transition matrix excludes new, same-status changes and forbidden approvals', () => {
   for (const review of ['pending', 'changes_requested'] as const) {
-    for (const owner of ['active', 'blocked', null] as const) {
+    for (const owner of ['new', 'active', 'blocked', null] as const) {
       assert.deepEqual(actions(pharmacy('new', owner, review)), []);
       assert.deepEqual(actions(pharmacy('active', owner, review)), ['block']);
 
@@ -77,7 +77,7 @@ test('14.14: canonical transition matrix excludes new, same-status changes and f
 
         assert.deepEqual(
           visible,
-          review === 'pending' && owner === 'active'
+          review === 'pending' && (owner === 'active' || owner === 'new')
             ? ['approve', 'request_corrections', 'block']
             : ['request_corrections', 'block']
         );
@@ -85,7 +85,7 @@ test('14.14: canonical transition matrix excludes new, same-status changes and f
 
       assert.deepEqual(
         actions(pharmacy('blocked', owner, review)),
-        owner === 'active' ? ['review_reactivation'] : []
+        owner === 'active' || owner === 'new' ? ['review_reactivation'] : []
       );
     }
   }
