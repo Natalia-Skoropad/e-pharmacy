@@ -61,6 +61,8 @@ import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import { PharmacyInformationTab } from './PharmacyInformationTab';
 import { PharmacyAboutPaymentTab } from './PharmacyAboutPaymentTab';
 import { PharmacyModerationActions } from './PharmacyModerationActions';
+import { PharmacyDocumentsTab } from './PharmacyDocumentsTab';
+import { PharmacyCommentsTab } from './PharmacyCommentsTab';
 
 import css from './PharmacyDetailsPageContent.module.css';
 
@@ -132,9 +134,10 @@ const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
     'Review the approved description and private payment data separately from any submitted changes.',
 
   documents:
-    'Pharmacy documents will be available for authorized read-only viewing here.',
+    'Review published and pending pharmacy verification files. Documents cannot be changed from Admin.',
 
-  comments: 'Private administrator comments will be available here.',
+  comments:
+    'Private working notes for Admin employees only, invisible to pharmacy owners and staff.',
 
   reviews:
     'Pharmacy reviews will be available when the reviews module is ready.',
@@ -161,6 +164,7 @@ export function PharmacyDetailsPageContent({
   const { access } = useAdminAuthorization();
   const canViewOwner = canAdmin(access, ADMIN_PERMISSIONS.pharmacyOwners.view);
   const canModerate = canAdmin(access, ADMIN_PERMISSIONS.pharmacies.moderate);
+  const canEditPharmacy = canAdmin(access, ADMIN_PERMISSIONS.pharmacies.edit);
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<DetailResult | null>(null);
 
@@ -416,11 +420,13 @@ export function PharmacyDetailsPageContent({
             className={css.tabPanel}
             tabIndex={0}
           >
-            <ProfileSectionHeader
-              title={selectedTab.label}
-              description={TAB_DESCRIPTIONS[activeTab]}
-              icon={selectedTab.icon ?? <Building2 size={22} />}
-            />
+            {activeTab !== 'documents' && activeTab !== 'comments' ? (
+              <ProfileSectionHeader
+                title={selectedTab.label}
+                description={TAB_DESCRIPTIONS[activeTab]}
+                icon={selectedTab.icon ?? <Building2 size={22} />}
+              />
+            ) : null}
             {isLoading ? (
               <ProfileResourceState
                 variant="loading"
@@ -434,6 +440,14 @@ export function PharmacyDetailsPageContent({
               />
             ) : activeTab === 'about-payment' && detail ? (
               <PharmacyAboutPaymentTab detail={detail} />
+            ) : activeTab === 'documents' && detail ? (
+              <PharmacyDocumentsTab key={pharmacyId} pharmacyId={pharmacyId} />
+            ) : activeTab === 'comments' && detail ? (
+              <PharmacyCommentsTab
+                key={pharmacyId}
+                pharmacyId={pharmacyId}
+                canManage={canEditPharmacy}
+              />
             ) : (
               <ProfileResourceState
                 variant="empty"

@@ -1,0 +1,98 @@
+.resourceCard {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 18px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.permissionNote {
+  margin: 0;
+  padding: 12px 14px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-subtle, #f7faf8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.dangerConfirmButton {
+  background-color: var(--color-danger, #e14949) !important;
+  border-color: var(--color-danger, #e14949) !important;
+}
+
+.documentDetails {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.documentDetail {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--color-surface-subtle, #f7faf8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.documentText {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.documentText span {
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+}
+
+.previewDialog {
+  width: min(95vw, 960px);
+}
+
+.previewContent {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  overflow-wrap: anywhere;
+}
+
+.previewFrame,
+.previewImage {
+  display: block;
+  width: 100%;
+  max-height: min(70vh, 800px);
+  border: 0;
+}
+
+.previewFrame {
+  height: 68vh;
+}
+
+.previewImage {
+  object-fit: contain;
+}
+
+@media only screen and (max-width: 640px) {
+  .resourceCard {
+    padding: 14px;
+  }
+}
