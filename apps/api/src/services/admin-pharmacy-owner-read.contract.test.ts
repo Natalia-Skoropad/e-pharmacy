@@ -113,12 +113,17 @@ test('operating and non-working pharmacy definitions match the canonical Stage 1
 
 //===================================================================
 
-test('linked pharmacy statistics count only successful orders and sum canonical totalPrice', () => {
+test('linked pharmacy metrics use a single group and count only successful orders', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
 
   assert.match(
     service,
-    /successful:\s*\[[\s\S]*?\$match:\s*\{ status: ['"]successful['"] \}[\s\S]*?count:\s*\{ \$sum: 1 \}[\s\S]*?revenue:\s*\{ \$sum: ['"]\$totalPrice['"] \}/
+    /successfulOrdersCount:\s*\{\s*\$sum:\s*\{\s*\$cond:\s*\[\{ \$eq: \[['"]\$status['"], ['"]successful['"]\] \}, 1, 0\]/
+  );
+
+  assert.match(
+    service,
+    /successfulRevenue:\s*\{\s*\$sum:\s*\{\s*\$cond:\s*\[\{ \$eq: \[['"]\$status['"], ['"]successful['"]\] \}, ['"]\$totalPrice['"], 0\]/
   );
 
   assert.doesNotMatch(
@@ -129,16 +134,48 @@ test('linked pharmacy statistics count only successful orders and sum canonical 
 
 //===================================================================
 
+test('pharmacy list aggregation does not nest $facet inside the pagination $facet', () => {
+  const service = read('./admin-pharmacy-owner-read.service.ts');
+
+  const sharedPagePipeline = service.slice(
+    service.indexOf('export function buildPagedPharmacyItemsPipeline'),
+
+    service.indexOf(
+      'export async function listAdminPharmacyOwnerPharmaciesService'
+    )
+  );
+
+  // Both the global registry and owner-linked list call this shared pipeline
+  // from within their pagination $facet. MongoDB rejects a nested $facet even
+  // when it is hidden inside an order $lookup pipeline.
+  assert.doesNotMatch(sharedPagePipeline, /^\s*\$facet\s*:/m);
+
+  assert.match(
+    sharedPagePipeline,
+    /orderClientIds: \{ \$addToSet: ['"]\$userId['"] \}/
+  );
+
+  assert.match(sharedPagePipeline, /localField: ['"]orderClientIds['"]/);
+  assert.match(sharedPagePipeline, /foreignField: ['"]_id['"]/);
+  assert.match(sharedPagePipeline, /isDefaultPharmacyClient: true/);
+  assert.match(sharedPagePipeline, /\$ne: USER_STATUSES\.BLOCKED/);
+  assert.match(sharedPagePipeline, /defaultClientPharmacyId/);
+
+  assert.match(
+    sharedPagePipeline,
+    /\$ifNull: \[['"]\$orderStatistics\.activeOrderClientsCount['"], 0\]/
+  );
+});
+
+//===================================================================
+
 test('active client aggregation keeps the pharmacy Clients domain definition including the default walk-in client', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
 
-  assert.match(service, /\{ \$group: \{ _id: ['"]\$userId['"] \} \}/);
+  assert.match(service, /orderClientIds: \{ \$addToSet: ['"]\$userId['"] \}/);
   assert.match(service, /isDefaultPharmacyClient/);
 
-  assert.match(
-    service,
-    /\$ne: \[['"]\$user\.status['"], USER_STATUSES\.BLOCKED\]/
-  );
+  assert.match(service, /status: \{ \$ne: USER_STATUSES\.BLOCKED \}/);
 
   assert.match(service, /defaultClientPharmacyId/);
   assert.match(service, /orderClientIds/);

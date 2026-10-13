@@ -676,84 +676,56 @@ export function buildPagedPharmacyItemsPipeline(
               $expr: { $eq: ['$pharmacyId', '$$pharmacyId'] },
             },
           },
+          // The parent pharmacy list already uses $facet for items and total.
+          // MongoDB forbids a second $facet nested through this $lookup, so
+          // calculate order metrics and unique clients in one $group instead.
           {
-            $facet: {
-              successful: [
-                { $match: { status: 'successful' } },
-                {
-                  $group: {
-                    _id: null,
-                    count: { $sum: 1 },
-                    revenue: { $sum: '$totalPrice' },
-                  },
+            $group: {
+              _id: null,
+              successfulOrdersCount: {
+                $sum: {
+                  $cond: [{ $eq: ['$status', 'successful'] }, 1, 0],
                 },
-              ],
-
-              clients: [
-                { $group: { _id: '$userId' } },
+              },
+              successfulRevenue: {
+                $sum: {
+                  $cond: [{ $eq: ['$status', 'successful'] }, '$totalPrice', 0],
+                },
+              },
+              orderClientIds: { $addToSet: '$userId' },
+            },
+          },
+          {
+            $lookup: {
+              from: User.collection.name,
+              localField: 'orderClientIds',
+              foreignField: '_id',
+              pipeline: [
                 {
-                  $lookup: {
-                    from: User.collection.name,
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'user',
-                    pipeline: [
-                      {
-                        $project: {
-                          _id: 1,
-                          status: 1,
-                          isDefaultPharmacyClient: 1,
-                        },
-                      },
+                  $match: {
+                    $or: [
+                      { isDefaultPharmacyClient: true },
+                      { status: { $ne: USER_STATUSES.BLOCKED } },
                     ],
                   },
                 },
-                { $unwind: '$user' },
-                {
-                  $group: {
-                    _id: null,
-                    activeCount: {
-                      $sum: {
-                        $cond: [
-                          {
-                            $or: [
-                              {
-                                $eq: ['$user.isDefaultPharmacyClient', true],
-                              },
-                              {
-                                $ne: ['$user.status', USER_STATUSES.BLOCKED],
-                              },
-                            ],
-                          },
-                          1,
-                          0,
-                        ],
-                      },
-                    },
-                    ids: { $push: '$_id' },
-                  },
-                },
+                { $count: 'count' },
               ],
+              as: 'activeOrderClients',
             },
           },
           {
             $project: {
               _id: 0,
-              successfulOrdersCount: {
-                $ifNull: [{ $arrayElemAt: ['$successful.count', 0] }, 0],
-              },
-
-              successfulRevenue: {
-                $ifNull: [{ $arrayElemAt: ['$successful.revenue', 0] }, 0],
-              },
-
+              successfulOrdersCount: 1,
+              successfulRevenue: 1,
               activeOrderClientsCount: {
-                $ifNull: [{ $arrayElemAt: ['$clients.activeCount', 0] }, 0],
+                $ifNull: [
+                  { $arrayElemAt: ['$activeOrderClients.count', 0] },
+                  0,
+                ],
               },
-
-              orderClientIds: {
-                $ifNull: [{ $arrayElemAt: ['$clients.ids', 0] }, []],
-              },
+              orderClientIds: 1,
             },
           },
         ],

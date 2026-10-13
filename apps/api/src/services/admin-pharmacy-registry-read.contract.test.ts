@@ -60,7 +60,7 @@ test('registry joins owner identity before filtering, but metrics after paginati
   assert.match(service, /buildPagedPharmacyItemsPipeline\(/);
   assert.match(service, /pipeline\[0\] = \{ \$sort:/);
   assert.match(service, /\$lookup:[\s\S]*?User\.collection\.name/);
-  assert.match(owner, /\$match: \{ status: 'successful' \}/);
+  assert.match(owner, /\$eq: \[['"]\$status['"], ['"]successful['"]\]/);
   assert.match(owner, /defaultClientPharmacyId/);
   assert.match(service, /\$facet:[\s\S]*?total: \[\{ \$count: 'count' \}\]/);
   assert.match(service, /safePage !== page/);
@@ -102,5 +102,10 @@ test('admin BFF registry routes remain present when Stage 14.5 backend detail is
 
   assert.match(routes, /'\/pharmacies\/:pharmacyId'/);
   assert.match(routes, /ctrlWrapper\(getPharmacyDetailByAdmin\)/);
-  assert.doesNotMatch(routes, /'\/pharmacies\/:pharmacyId\/comments'/);
+
+  // Stage 14.14 legitimately introduced pharmacy comments after Stage 14.5.
+  assert.match(
+    routes,
+    /'\/pharmacies\/:pharmacyId\/comments',\s*requireAdminPermission\(ADMIN_PERMISSIONS\.pharmacies\.view\)/
+  );
 });
