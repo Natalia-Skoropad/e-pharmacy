@@ -135,7 +135,7 @@ test('only active tab mounts and future tabs do not fetch unrelated resources', 
 
   assert.match(content, /role="tabpanel"/);
   assert.match(content, /TAB_DESCRIPTIONS\[activeTab\]/);
-  assert.match(content, /Section coming soon/);
+  assert.match(content, /DEFERRED_TABS\[activeTab\]/);
 
   assert.doesNotMatch(
     content,

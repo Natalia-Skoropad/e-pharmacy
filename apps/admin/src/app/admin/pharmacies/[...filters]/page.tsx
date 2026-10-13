@@ -3,6 +3,13 @@ import { notFound, redirect } from 'next/navigation';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 
 import {
+  buildAdminActivityUrl,
+  parseAdminActivityUrl,
+} from '@/lib/audit/admin-activity-url';
+
+import { ADMIN_ROUTES } from '@/lib/routes';
+
+import {
   buildAdminPharmaciesListUrl,
   buildAdminPharmacyDetailUrl,
   parseAdminPharmaciesListSegments,
@@ -30,10 +37,19 @@ export default async function FilteredPharmaciesPage({
   if (route.kind === 'invalid') return notFound();
 
   if (route.kind === 'detail') {
-    const canonicalUrl = buildAdminPharmacyDetailUrl(
-      route.pharmacyId,
-      route.tab
-    );
+    const initialActivityState = {
+      ...parseAdminActivityUrl(route.activitySegments),
+      ownerUserId: '', // Pharmacy audit must not inherit an owner-wide filter.
+    };
+
+    const canonicalUrl =
+      buildAdminPharmacyDetailUrl(route.pharmacyId, route.tab) +
+      (route.tab === 'activity'
+        ? buildAdminActivityUrl(initialActivityState).slice(
+            ADMIN_ROUTES.SETTINGS_ACTIVITY.length
+          )
+        : '');
+
     const requestedPath = `/admin/pharmacies/${filters.join('/')}`;
     if (canonicalUrl !== requestedPath) redirect(canonicalUrl);
 
@@ -42,6 +58,7 @@ export default async function FilteredPharmaciesPage({
         <PharmacyDetailsPageContent
           pharmacyId={route.pharmacyId}
           activeTab={route.tab}
+          initialActivityState={initialActivityState}
         />
       </AdminPermissionGate>
     );

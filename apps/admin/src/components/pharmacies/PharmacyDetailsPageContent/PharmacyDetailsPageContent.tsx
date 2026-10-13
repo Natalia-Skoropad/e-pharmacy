@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -57,12 +57,14 @@ import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
+import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
 import { PharmacyAboutPaymentTab } from './PharmacyAboutPaymentTab';
 import { PharmacyModerationActions } from './PharmacyModerationActions';
 import { PharmacyDocumentsTab } from './PharmacyDocumentsTab';
 import { PharmacyCommentsTab } from './PharmacyCommentsTab';
+import { PharmacyActivityTab } from './PharmacyActivityTab';
 
 import css from './PharmacyDetailsPageContent.module.css';
 
@@ -80,6 +82,7 @@ type DetailResult = Readonly<{
 type PharmacyDetailsPageContentProps = Readonly<{
   pharmacyId: string;
   activeTab: AdminPharmacyDetailTab;
+  initialActivityState?: ActivityUrlState;
 }>;
 
 //===================================================================
@@ -151,7 +154,53 @@ const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
   'product-requests':
     'Product requests will be available when the product requests module is ready.',
 
-  activity: 'Pharmacy-specific activity history will appear here.',
+  activity:
+    'Review the exact audit trail of this pharmacy, including moderation and internal Admin comment events.',
+};
+
+//===================================================================
+
+/** These are deliberately informational: no records or counts are fabricated. */
+const DEFERRED_TABS: Partial<
+  Record<
+    AdminPharmacyDetailTab,
+    { title: string; description: string; icon: ReactNode }
+  >
+> = {
+  reviews: {
+    title: 'Pharmacy reviews are not connected yet',
+    description:
+      'Verified customer feedback and review moderation for this pharmacy will be available after the Reviews module is integrated. The rating summary above is already available; no review list has been requested.',
+    icon: <Star size={30} aria-hidden="true" />,
+  },
+
+  orders: {
+    title: 'Pharmacy orders are not connected yet',
+    description:
+      'The Orders module will show orders placed with this pharmacy, their statuses and history. The successful-order summary above does not require loading individual orders.',
+    icon: <ShoppingBag size={30} aria-hidden="true" />,
+  },
+
+  clients: {
+    title: 'Pharmacy clients are not connected yet',
+    description:
+      'The Clients module will provide the customer list and related pharmacy activity. The active-client summary above is available without requesting personal customer records.',
+    icon: <UsersRound size={30} aria-hidden="true" />,
+  },
+
+  products: {
+    title: 'Pharmacy products are not connected yet',
+    description:
+      'The Products module will show this pharmacy’s assortment and its listings when integrated. Product records are not loaded on this page yet.',
+    icon: <Package size={30} aria-hidden="true" />,
+  },
+
+  'product-requests': {
+    title: 'Product requests are not connected yet',
+    description:
+      'Requests to add or update products from this pharmacy will appear here after the Product requests module is connected. No requests have been queried.',
+    icon: <PackageSearch size={30} aria-hidden="true" />,
+  },
 };
 
 //===================================================================
@@ -159,6 +208,7 @@ const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
 export function PharmacyDetailsPageContent({
   pharmacyId,
   activeTab,
+  initialActivityState,
 }: PharmacyDetailsPageContentProps) {
   const router = useRouter();
   const { access } = useAdminAuthorization();
@@ -212,6 +262,8 @@ export function PharmacyDetailsPageContent({
 
   const selectedTab =
     TAB_ITEMS.find((tab) => tab.value === activeTab) ?? TAB_ITEMS[0];
+
+  const deferredTab = DEFERRED_TABS[activeTab];
 
   if (error === 'not-found') {
     return (
@@ -420,7 +472,9 @@ export function PharmacyDetailsPageContent({
             className={css.tabPanel}
             tabIndex={0}
           >
-            {activeTab !== 'documents' && activeTab !== 'comments' ? (
+            {activeTab !== 'documents' &&
+            activeTab !== 'comments' &&
+            activeTab !== 'activity' ? (
               <ProfileSectionHeader
                 title={selectedTab.label}
                 description={TAB_DESCRIPTIONS[activeTab]}
@@ -448,15 +502,20 @@ export function PharmacyDetailsPageContent({
                 pharmacyId={pharmacyId}
                 canManage={canEditPharmacy}
               />
-            ) : (
+            ) : activeTab === 'activity' && detail ? (
+              <PharmacyActivityTab
+                key={pharmacyId}
+                pharmacyId={pharmacyId}
+                initialState={initialActivityState}
+              />
+            ) : deferredTab ? (
               <ProfileResourceState
                 variant="empty"
-                title="Section coming soon"
-                description={
-                  'This section is not available in the current version. No additional records have been loaded.'
-                }
+                icon={deferredTab.icon}
+                title={deferredTab.title}
+                description={deferredTab.description}
               />
-            )}
+            ) : null}
           </section>
         </div>
       </section>

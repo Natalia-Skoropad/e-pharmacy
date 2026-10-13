@@ -59,6 +59,7 @@ export type AdminPharmacyRouteResolution =
       kind: 'detail';
       pharmacyId: string;
       tab: AdminPharmacyDetailTab;
+      activitySegments?: readonly string[];
     }>
   | Readonly<{ kind: 'invalid' }>;
 
@@ -232,10 +233,15 @@ export function resolveAdminPharmaciesRoute(
 ): AdminPharmacyRouteResolution {
   if (!segments?.length) return { kind: 'list', filters: [] };
 
-  if (segments.length <= 2 && isValidObjectId(segments[0])) {
+  if (isValidObjectId(segments[0])) {
     const tab = segments[1] ?? 'information';
 
     if (!ADMIN_PHARMACY_DETAIL_TABS.includes(tab as AdminPharmacyDetailTab)) {
+      return { kind: 'invalid' };
+    }
+
+    // Only Activity has nested URL-backed filters. Other tabs stay exact paths.
+    if (segments.length > 2 && tab !== 'activity') {
       return { kind: 'invalid' };
     }
 
@@ -243,6 +249,7 @@ export function resolveAdminPharmaciesRoute(
       kind: 'detail',
       pharmacyId: segments[0].toLowerCase(),
       tab: tab as AdminPharmacyDetailTab,
+      ...(segments.length > 2 ? { activitySegments: segments.slice(2) } : {}),
     };
   }
   try {

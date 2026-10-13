@@ -56,6 +56,7 @@ import {
   type AdminAuditActor,
   type AdminAuditDetails,
   type AdminAuditListResponse,
+  type AdminAuditQueryParams,
 } from '@/lib/audit/admin-audit';
 
 import {
@@ -71,6 +72,15 @@ import {
 } from './ActivityFiltersDrawer';
 
 import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
+
+import {
+  getAdminPharmacyActivity,
+  getAdminPharmacyActivityActors,
+  getAdminPharmacyActivityDetail,
+} from '@/lib/api/browser/admin-pharmacy-detail.api';
+
+import { buildAdminPharmacyDetailUrl } from '@/lib/pharmacies/admin-pharmacy-url';
+import { ADMIN_ROUTES } from '@/lib/routes';
 import { getAdminAuditPageLocation } from '@/lib/audit/admin-audit-presentation';
 import { getAdminAuditFieldLabel } from '@/lib/audit/admin-audit-fields';
 
@@ -138,9 +148,11 @@ function createEmployeeOptions(
     { value: '', label: 'All employees' },
     ...actors
       .filter((actor) => actor.actorType === 'employee')
+
       .map((actor) => ({
         value: actor.id,
         label: actor.name,
+
         leading: (
           <TableImagePreview
             src={actor.pictureUrl}
@@ -149,6 +161,7 @@ function createEmployeeOptions(
             size={30}
           />
         ),
+
         searchText: [actor.id, actor.email, actor.phone]
           .filter(Boolean)
           .join(' '),
@@ -165,9 +178,11 @@ function createOwnerOptions(
     { value: '', label: 'All pharmacy owners' },
     ...actors
       .filter((actor) => actor.actorType === 'pharmacyOwner')
+
       .map((actor) => ({
         value: actor.id,
         label: actor.name,
+
         leading: (
           <TableImagePreview
             src={actor.pictureUrl}
@@ -176,6 +191,7 @@ function createOwnerOptions(
             size={30}
           />
         ),
+
         searchText: [actor.id, actor.email, actor.phone]
           .filter(Boolean)
           .join(' '),
@@ -188,11 +204,23 @@ function createOwnerOptions(
 export function ActivityHistory({
   initialState = DEFAULT_ACTIVITY_URL_STATE,
   scopeOwnerId,
-}: Readonly<{ initialState?: ActivityUrlState; scopeOwnerId?: string }>) {
+  scopePharmacyId,
+}: Readonly<{
+  initialState?: ActivityUrlState;
+  scopeOwnerId?: string;
+  scopePharmacyId?: string;
+}>) {
   const router = useRouter();
-  const initialStateKey = JSON.stringify({ initialState, scopeOwnerId });
+
+  const initialStateKey = JSON.stringify({
+    initialState,
+    scopeOwnerId,
+    scopePharmacyId,
+  });
+
   const [syncedInitialStateKey, setSyncedInitialStateKey] =
     useState(initialStateKey);
+
   const [filters, setFilters] = useState<ActivityHistoryFilters>(initialState);
 
   const [page, setPage] = useState(initialState.page);
@@ -238,14 +266,22 @@ export function ActivityHistory({
   ) => {
     const globalUrl = buildAdminActivityUrl({
       ...nextFilters,
-      ownerUserId: scopeOwnerId ? '' : nextFilters.ownerUserId,
+
+      ownerUserId:
+        scopeOwnerId || scopePharmacyId ? '' : nextFilters.ownerUserId,
+
       page: nextPage,
       perPage: nextPerPage,
     });
+
+    const filterSuffix = globalUrl.slice(ADMIN_ROUTES.SETTINGS_ACTIVITY.length);
+
     router.replace(
-      scopeOwnerId
-        ? `/admin/pharmacy-owners/${scopeOwnerId}/activity${globalUrl.replace('/admin/settings/activity', '')}`
-        : globalUrl,
+      scopePharmacyId
+        ? `${buildAdminPharmacyDetailUrl(scopePharmacyId, 'activity')}${filterSuffix}`
+        : scopeOwnerId
+          ? `/admin/pharmacy-owners/${scopeOwnerId}/activity${filterSuffix}`
+          : globalUrl,
       { scroll: false }
     );
   };
@@ -253,43 +289,57 @@ export function ActivityHistory({
   useEffect(() => {
     const controller = new AbortController();
 
-    void getAdminAuditActors({ signal: controller.signal })
+    void (
+      scopePharmacyId
+        ? getAdminPharmacyActivityActors(scopePharmacyId, {
+            signal: controller.signal,
+          })
+        : getAdminAuditActors({ signal: controller.signal })
+    )
       .then((response) => {
         if (!controller.signal.aborted) setActors(response.items);
       })
+
       .catch(() => {
         if (!controller.signal.aborted) setActors([]);
       })
+
       .finally(() => {
         if (!controller.signal.aborted) setAreActorsLoading(false);
       });
 
     return () => controller.abort();
-  }, []);
+  }, [scopePharmacyId]);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void getAdminAuditLogs(
-      {
-        page,
-        perPage,
-        ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
-        ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
-        ...(filters.action ? { action: filters.action } : {}),
-        ...(filters.section ? { section: filters.section } : {}),
-        ...(filters.actorType ? { actorType: filters.actorType } : {}),
-        ...(filters.employeeUserId
-          ? { actorUserId: filters.employeeUserId }
-          : {}),
-        ...(scopeOwnerId || filters.ownerUserId
-          ? {
-              scopeEntityType: 'pharmacyOwner',
-              scopeEntityId: scopeOwnerId || filters.ownerUserId,
-            }
-          : {}),
-      },
-      { signal: controller.signal }
+    const listParams: AdminAuditQueryParams = {
+      page,
+      perPage,
+      ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
+      ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
+      ...(filters.action ? { action: filters.action } : {}),
+      ...(filters.section ? { section: filters.section } : {}),
+      ...(filters.actorType ? { actorType: filters.actorType } : {}),
+      ...(filters.employeeUserId
+        ? { actorUserId: filters.employeeUserId }
+        : {}),
+
+      ...(!scopePharmacyId && (scopeOwnerId || filters.ownerUserId)
+        ? {
+            scopeEntityType: 'pharmacyOwner',
+            scopeEntityId: scopeOwnerId || filters.ownerUserId,
+          }
+        : {}),
+    };
+
+    void (
+      scopePharmacyId
+        ? getAdminPharmacyActivity(scopePharmacyId, listParams, {
+            signal: controller.signal,
+          })
+        : getAdminAuditLogs(listParams, { signal: controller.signal })
     )
       .then((response) => {
         if (controller.signal.aborted) return;
@@ -307,16 +357,22 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [filters, page, perPage, reloadVersion, scopeOwnerId]);
+  }, [filters, page, perPage, reloadVersion, scopeOwnerId, scopePharmacyId]);
 
   useEffect(() => {
     if (!selectedAuditId) return;
 
     const controller = new AbortController();
 
-    void getAdminAuditLogDetails(selectedAuditId, {
-      signal: controller.signal,
-    })
+    void (
+      scopePharmacyId
+        ? getAdminPharmacyActivityDetail(scopePharmacyId, selectedAuditId, {
+            signal: controller.signal,
+          })
+        : getAdminAuditLogDetails(selectedAuditId, {
+            signal: controller.signal,
+          })
+    )
       .then((response) => {
         if (!controller.signal.aborted) setDetails(response.auditLog);
       })
@@ -330,11 +386,13 @@ export function ActivityHistory({
       });
 
     return () => controller.abort();
-  }, [detailsReloadVersion, selectedAuditId]);
+  }, [detailsReloadVersion, selectedAuditId, scopePharmacyId]);
 
   useEffect(() => {
     const page = details ? getAdminAuditPageLocation(details) : null;
-    if (!page || page.section !== 'pharmacyOwners') return;
+
+    // Pharmacy activity reads only its scoped audit endpoints, never owner profile.
+    if (scopePharmacyId || !page || page.section !== 'pharmacyOwners') return;
     const controller = new AbortController();
 
     void getAdminPharmacyOwnerDetail(page.entityId, {
@@ -353,7 +411,7 @@ export function ActivityHistory({
         // Old/deleted owners still have immutable audit snapshots and a usable link.
       });
     return () => controller.abort();
-  }, [details]);
+  }, [details, scopePharmacyId]);
 
   const actorById = useMemo(
     () => new Map(actors.map((actor) => [actor.id, actor] as const)),
@@ -380,7 +438,7 @@ export function ActivityHistory({
     filters.section,
     filters.actorType,
     filters.employeeUserId,
-    scopeOwnerId ? '' : filters.ownerUserId,
+    scopeOwnerId || scopePharmacyId ? '' : filters.ownerUserId,
   ].filter(Boolean).length;
 
   const hasFilters = activeFiltersCount > 0;
@@ -630,10 +688,11 @@ export function ActivityHistory({
   };
 
   const resetFilters = () => updateFilters(DEFAULT_ACTIVITY_HISTORY_FILTERS);
+  const Container = scopeOwnerId || scopePharmacyId ? 'section' : 'main';
 
   return (
-    <main className={css.page} aria-label="Activity history">
-      {!scopeOwnerId ? (
+    <Container className={css.page} aria-label="Activity history">
+      {!scopeOwnerId && !scopePharmacyId ? (
         <section
           className={css.card}
           aria-labelledby="activity-history-page-title"
@@ -681,7 +740,7 @@ export function ActivityHistory({
         </h2>
 
         <div
-          className={`${css.searchGrid} ${scopeOwnerId ? css.ownerSearchGrid : ''}`}
+          className={`${css.searchGrid} ${scopeOwnerId || scopePharmacyId ? css.ownerSearchGrid : ''}`}
         >
           <SearchableSelect
             id="activity-employee-search"
@@ -710,7 +769,7 @@ export function ActivityHistory({
             onChange={updateEmployee}
           />
 
-          {!scopeOwnerId ? (
+          {!scopeOwnerId && !scopePharmacyId ? (
             <SearchableSelect
               id="activity-owner-search"
               label="Search by pharmacy owner"
@@ -802,7 +861,11 @@ export function ActivityHistory({
               getItemKey={(item) => item.id}
               isLoading={isLoading}
               minWidth={950}
-              ariaLabel="Admin activity history"
+              ariaLabel={
+                scopePharmacyId
+                  ? 'Pharmacy activity history'
+                  : 'Admin activity history'
+              }
               labels={{
                 loading: data
                   ? 'Refreshing activity history...'
@@ -832,12 +895,12 @@ export function ActivityHistory({
           hasActiveFilters={hasFilters}
           minDate={data?.earliestCreatedAt ?? undefined}
           availableActions={
-            scopeOwnerId || filters.ownerUserId
+            scopeOwnerId || scopePharmacyId || filters.ownerUserId
               ? data?.availableActions
               : undefined
           }
           availableSections={
-            scopeOwnerId || filters.ownerUserId
+            scopeOwnerId || scopePharmacyId || filters.ownerUserId
               ? data?.availableSections
               : undefined
           }
@@ -868,6 +931,6 @@ export function ActivityHistory({
         onClose={closeDetails}
         onRetry={retryDetails}
       />
-    </main>
+    </Container>
   );
 }

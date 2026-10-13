@@ -1,3 +1,9 @@
+.activitySection {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
 .page {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
