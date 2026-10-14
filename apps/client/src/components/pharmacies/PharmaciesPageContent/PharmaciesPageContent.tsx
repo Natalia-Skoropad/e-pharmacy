@@ -136,6 +136,7 @@ function PharmaciesPageContent({
           unavailableMessage="Pharmacies are loading."
           recoveryLabel="pharmacies"
           skeletonVariant="pharmacy"
+          emptyVariant="resource"
         >
           <PharmaciesList pharmacies={pharmacies} />
         </CatalogResourceStateView>
@@ -157,9 +158,18 @@ function PharmaciesPageContent({
             titleId="pharmacies-seo-title"
           >
             <p>
-              {filters.pharmacyId ? (
-                seoContent.intro
-              ) : selectedLocationLabel ? (
+              {filters.pharmacyId && selectedPharmacyName ? (
+                <>
+                  Explore <strong>{selectedPharmacyName}</strong>
+                  {selectedLocationLabel ? (
+                    <>
+                      {' '}
+                      in <strong>{selectedLocationLabel}</strong>
+                    </>
+                  ) : null}{' '}
+                  on E-PHARMACY.
+                </>
+              ) : selectedLocationLabel && !filters.pharmacyId ? (
                 <>
                   Browse <strong>pharmacies in {selectedLocationLabel}</strong>{' '}
                   participating in E-PHARMACY.

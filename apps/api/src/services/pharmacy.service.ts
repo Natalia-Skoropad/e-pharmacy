@@ -55,7 +55,7 @@ import type {
 
 import { httpError } from '../utils/httpError';
 import { isDuplicatePharmacyReviewError } from '../utils/mongoError';
-import { createFlexibleSearchRegExp } from '../utils/regexp';
+import { createFlexibleSearchRegExp, escapeRegExp } from '../utils/regexp';
 import { requireISODateTime } from '../utils/date-contract';
 import { buildPublicEntitySlugId } from '../utils/public-slug-id';
 
@@ -236,7 +236,9 @@ function serializePharmacyCardSummary(
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
 
     rating: pharmacy.rating ?? 0,
+
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+
     availableProductsCount,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(pharmacyId),
@@ -287,10 +289,14 @@ function serializePublicPharmacy(
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
 
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+
     rating: pharmacy.rating ?? 0,
+
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
+
     availableProductsCount,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(String(pharmacy._id)),
@@ -473,10 +479,12 @@ function serializePharmacyProfile(
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
+
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
     ...(membershipRole !== 'manager' && pharmacy.bankDetails
       ? { bankDetails: pharmacy.bankDetails }
       : {}),
+
     documents:
       membershipRole === 'manager'
         ? []
@@ -734,8 +742,21 @@ export async function getPharmaciesService(
     ];
   }
 
-  if (query.settlement) filter['location.settlement'] = query.settlement;
-  if (query.region) filter['location.region'] = query.region;
+  // Match every pharmacy belonging to the same deduplicated location,
+  // including owner-entered case/outer-space variants (e.g. Dnipro/dnipro).
+  if (query.settlement) {
+    filter['location.settlement'] = new RegExp(
+      `^\\s*${escapeRegExp(query.settlement.trim())}\\s*$`,
+      'i'
+    );
+  }
+
+  if (query.region) {
+    filter['location.region'] = new RegExp(
+      `^\\s*${escapeRegExp(query.region.trim())}\\s*$`,
+      'i'
+    );
+  }
 
   const sort: Record<string, 1 | -1> =
     query.sort === 'name-asc'

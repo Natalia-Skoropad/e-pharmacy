@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react';
+import { SearchX } from 'lucide-react';
+
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state';
 
@@ -16,6 +19,7 @@ export type CatalogResourceStateProps = Readonly<{
   unavailableMessage: string;
   recoveryLabel?: string;
   skeletonVariant?: CatalogCardSkeletonVariant;
+  emptyVariant?: 'default' | 'resource';
   children: ReactNode;
 }>;
 
@@ -28,6 +32,7 @@ function CatalogResourceStateView({
   unavailableMessage,
   recoveryLabel = 'catalog results',
   skeletonVariant = 'product',
+  emptyVariant = 'default',
   children,
 }: CatalogResourceStateProps) {
   if (state.status === 'unavailable') {
@@ -40,6 +45,17 @@ function CatalogResourceStateView({
   }
 
   if (state.status === 'empty') {
+    if (emptyVariant === 'resource') {
+      return (
+        <ProfileResourceState
+          variant="empty"
+          title={emptyTitle}
+          description={emptyMessage}
+          icon={<SearchX size={22} />}
+        />
+      );
+    }
+
     return (
       <div className={css.empty}>
         <h2 className={css.emptyTitle}>{emptyTitle}</h2>

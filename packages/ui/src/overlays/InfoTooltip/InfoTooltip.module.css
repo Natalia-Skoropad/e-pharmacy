@@ -212,7 +212,8 @@
   --info-tooltip-arrow-left: 12px;
 
   position: fixed;
-  z-index: var(--z-tooltip);
+  /* A portalled tooltip must stack above FilterDrawer (z-drawer). */
+  z-index: calc(var(--z-drawer) + 1);
   visibility: visible;
   opacity: 1;
   transform: none;
@@ -221,4 +222,10 @@
 .floatingTooltip::before {
   left: var(--info-tooltip-arrow-left, 12px);
   transform: translateX(-50%) rotate(45deg);
+}
+
+.floatingTooltipAbove::before {
+  top: auto;
+  bottom: -6px;
+  transform: translateX(-50%) rotate(225deg);
 }

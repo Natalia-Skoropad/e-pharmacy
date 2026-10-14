@@ -77,9 +77,23 @@
   width: 100%;
 }
 
+.pharmacyLayout .catalogToolbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
 .pharmacyLayout .catalogToolbar > :first-child {
   width: 100%;
   text-align: center;
+}
+
+/* Pharmacy sort remains visible on mobile instead of living in the drawer. */
+.pharmacyLayout .desktopSort {
+  display: block;
+  order: -1;
+  width: 100%;
+  min-width: 0;
 }
 
 .pharmacyLayout .catalogToolbar .filterButton {
@@ -101,7 +115,23 @@
   }
 
   .pharmacyLayout .mobileFilterSlot {
-    display: none;
+    display: block;
+    grid-column: 2;
+    align-self: end;
+  }
+
+  .pharmacyLayout .mobileFilterSlot > * {
+    width: auto;
+  }
+
+  .pharmacyLayout .catalogToolbar {
+    flex-direction: row;
+    align-items: end;
+  }
+
+  .pharmacyLayout .desktopSort {
+    order: 0;
+    width: 292px;
   }
 
   .pharmacyLayout .catalogToolbar > :first-child {
@@ -110,15 +140,16 @@
   }
 
   .pharmacyLayout .catalogToolbar .filterButton {
-    display: block;
+    display: none;
   }
 
   .searchGridPharmacy {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
   }
 
   .searchGridPharmacy > :first-child {
-    grid-column: 1 / -1;
+    grid-column: 1;
   }
 }
 
@@ -176,6 +207,14 @@
   .desktopSort {
     display: block;
     width: 240px;
+  }
+
+  .pharmacyLayout .desktopSort {
+    width: 292px;
+  }
+
+  .pharmacyLayout .mobileFilterSlot {
+    display: none;
   }
 
   .pharmacyLayout .catalogToolbar .filterButton {

@@ -2,6 +2,7 @@
 
 import {
   useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -34,10 +35,12 @@ type InfoTooltipProps = Readonly<{
 }>;
 
 type FloatingTooltipPosition = Readonly<{
-  top: number;
+  top?: number;
+  bottom?: number;
   left: number;
   width: number;
   arrowLeft: number;
+  openAbove: boolean;
 }>;
 
 //===================================================================
@@ -54,6 +57,7 @@ function InfoTooltip({
   const tooltipId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+
   const [floatingPosition, setFloatingPosition] =
     useState<FloatingTooltipPosition | null>(null);
 
@@ -68,16 +72,24 @@ function InfoTooltip({
     const width = Math.min(320, Math.max(240, window.innerWidth - 32));
     const maxLeft = Math.max(viewportPadding, window.innerWidth - width - 16);
     const left = Math.min(Math.max(viewportPadding, rect.left), maxLeft);
+
     const arrowLeft = Math.min(
       Math.max(12, rect.left + rect.width / 2 - left),
       width - 12
     );
 
+    const availableBelow = window.innerHeight - rect.bottom - viewportPadding;
+    const availableAbove = rect.top - viewportPadding;
+    const openAbove = availableBelow < 230 && availableAbove > availableBelow;
+
     setFloatingPosition({
-      top: rect.bottom + 12,
+      ...(openAbove
+        ? { bottom: window.innerHeight - rect.top + 12 }
+        : { top: rect.bottom + 12 }),
       left,
       width,
       arrowLeft,
+      openAbove,
     });
   }, [escapeOverflow]);
 
@@ -92,15 +104,34 @@ function InfoTooltip({
     setIsFloatingOpen(false);
   }, [escapeOverflow]);
 
+  useEffect(() => {
+    if (!escapeOverflow || !isFloatingOpen) return;
+
+    window.addEventListener('resize', updateFloatingPosition);
+    window.addEventListener('scroll', updateFloatingPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updateFloatingPosition);
+      window.removeEventListener('scroll', updateFloatingPosition, true);
+    };
+  }, [escapeOverflow, isFloatingOpen, updateFloatingPosition]);
+
   const tooltipContent = (
     <span
-      className={clsx(css.tooltip, escapeOverflow && css.floatingTooltip)}
+      className={clsx(
+        css.tooltip,
+        escapeOverflow && css.floatingTooltip,
+        escapeOverflow &&
+          floatingPosition?.openAbove &&
+          css.floatingTooltipAbove
+      )}
       id={tooltipId}
       role="tooltip"
       style={
         escapeOverflow && floatingPosition
           ? ({
               top: floatingPosition.top,
+              bottom: floatingPosition.bottom,
               left: floatingPosition.left,
               width: floatingPosition.width,
               '--info-tooltip-arrow-left': `${floatingPosition.arrowLeft}px`,

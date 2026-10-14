@@ -33,6 +33,11 @@ import {
   type PharmacyFilters,
 } from '@/lib/catalog/pharmacies-catalog';
 
+import {
+  filterLocationOptionsByPharmacy,
+  filterPharmacyOptionsByLocation,
+} from '@/lib/catalog/pharmacies-filter-relationships';
+
 import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 
 import CatalogFiltersShell from '@/components/catalog/CatalogFiltersShell/CatalogFiltersShell';
@@ -97,12 +102,39 @@ function PharmaciesCatalogFiltersForm({
   const hasActiveFilters = activeFiltersCount > 0;
   const resetHref = createPharmaciesResetFiltersHref();
 
+  const selectedPharmacy = pharmacyOptions.find(
+    (pharmacy) => pharmacy.id === filters.pharmacyId
+  );
+
+  const availablePharmacyOptions = useMemo(
+    () =>
+      filterPharmacyOptionsByLocation(
+        pharmacyOptions,
+        filters.settlement,
+        filters.region,
+        filters.pharmacyId
+      ),
+    [filters.pharmacyId, filters.region, filters.settlement, pharmacyOptions]
+  );
+
+  const availableLocationOptions = useMemo(
+    () =>
+      filterLocationOptionsByPharmacy(
+        locationOptions,
+        selectedPharmacy,
+        filters.settlement,
+        filters.region
+      ),
+    [filters.region, filters.settlement, locationOptions, selectedPharmacy]
+  );
+
   const pharmacySelectOptions = useMemo(
     () => [
       { value: '', label: 'All pharmacies' },
-      ...pharmacyOptions.map((pharmacy) => ({
+      ...availablePharmacyOptions.map((pharmacy) => ({
         value: pharmacy.id,
         label: pharmacy.name,
+
         leading: (
           <TableImagePreview
             src={pharmacy.imageUrl}
@@ -123,18 +155,18 @@ function PharmaciesCatalogFiltersForm({
           .join(' '),
       })),
     ],
-    [pharmacyOptions]
+    [availablePharmacyOptions]
   );
 
   const locationSelectOptions = useMemo(
     () => [
       { value: 'all', label: 'All locations' },
-      ...locationOptions.map((location) => ({
+      ...availableLocationOptions.map((location) => ({
         value: getLocationOptionValue(location),
         label: location.label,
       })),
     ],
-    [locationOptions]
+    [availableLocationOptions]
   );
 
   const selectedLocationValue = useMemo(() => {
@@ -159,6 +191,7 @@ function PharmaciesCatalogFiltersForm({
         <InfoTooltip
           label="Location search help"
           title="Location"
+          escapeOverflow={idSuffix === 'mobile'}
           icon={<MapPin size={20} aria-hidden="true" />}
           items={[
             {
@@ -311,7 +344,7 @@ function PharmaciesCatalogFiltersForm({
         <FilterDrawer
           id="pharmacies-filters-panel"
           eyebrow="Pharmacies"
-          title="Filters and sorting"
+          title="Filters"
           isOpen={isFiltersOpen}
           hasActiveFilters={hasActiveFilters}
           resetHref={resetHref}
@@ -319,7 +352,6 @@ function PharmaciesCatalogFiltersForm({
           onReset={() => setIsFiltersOpen(false)}
         >
           {locationControl('mobile')}
-          {sortControl('pharmacies-sort-mobile')}
         </FilterDrawer>
       }
     />

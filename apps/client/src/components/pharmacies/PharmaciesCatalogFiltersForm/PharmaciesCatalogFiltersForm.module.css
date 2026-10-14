@@ -37,3 +37,9 @@
   align-items: center;
   align-self: stretch;
 }
+
+/* Prevent the longest label from wrapping in the selected trigger. */
+.sortField :global(button[role='combobox'] > span:first-child) {
+  min-width: 0;
+  white-space: nowrap;
+}
