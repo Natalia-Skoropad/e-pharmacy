@@ -23,6 +23,7 @@ import type { CatalogSegmentIssue } from './product-catalog-paths';
 //===================================================================
 
 const PHARMACY_CATALOG_SEGMENT_PREFIXES = [
+  'pharmacy-id-',
   'search-name-',
   'address-',
   'location-',
@@ -55,6 +56,7 @@ export function parsePharmacySegments(
   const filters: PharmacyFilters = {
     name: '',
     address: '',
+    pharmacyId: '',
     settlement: '',
     region: '',
     sort: 'newest',
@@ -96,6 +98,19 @@ export function parsePharmacySegments(
   };
 
   for (const [index, segment] of segments.entries()) {
+    if (segment.startsWith('pharmacy-id-')) {
+      apply('pharmacyId', segment, index, () => {
+        const value = segment.slice('pharmacy-id-'.length);
+
+        if (!/^[a-f\d]{24}$/i.test(value)) return false;
+        filters.pharmacyId = value.toLowerCase();
+
+        return true;
+      });
+
+      continue;
+    }
+
     if (segment.startsWith('search-name-')) {
       apply('name', segment, index, () => {
         const value = deslugifyNameSegment(
@@ -104,6 +119,7 @@ export function parsePharmacySegments(
 
         if (!value) return false;
         filters.name = value;
+
         return true;
       });
 
@@ -113,8 +129,10 @@ export function parsePharmacySegments(
     if (segment.startsWith('address-')) {
       apply('address', segment, index, () => {
         const value = deslugifyNameSegment(segment.slice('address-'.length));
+
         if (!value) return false;
         filters.address = value;
+
         return true;
       });
 
@@ -124,8 +142,10 @@ export function parsePharmacySegments(
     if (segment.startsWith('location-')) {
       apply('settlement', segment, index, () => {
         const value = deslugifyNameSegment(segment.slice('location-'.length));
+
         if (!value) return false;
         filters.settlement = value;
+
         return true;
       });
 
@@ -135,8 +155,10 @@ export function parsePharmacySegments(
     if (segment.startsWith('region-')) {
       apply('region', segment, index, () => {
         const value = deslugifyNameSegment(segment.slice('region-'.length));
+
         if (!value) return false;
         filters.region = value;
+
         return true;
       });
 
@@ -146,8 +168,10 @@ export function parsePharmacySegments(
     if (segment.startsWith('sort-')) {
       apply('sort', segment, index, () => {
         const value = segment.slice('sort-'.length);
+
         if (!isPharmacySortFilter(value) || value === 'newest') return false;
         filters.sort = value;
+
         return true;
       });
       continue;
@@ -156,8 +180,10 @@ export function parsePharmacySegments(
     if (segment.startsWith('page-')) {
       apply('page', segment, index, () => {
         const value = segment.slice('page-'.length);
+
         if (!isCanonicalPositivePageParam(value) || value === '1') return false;
         filters.page = parsePositivePageParam(value);
+
         return true;
       });
 
@@ -190,6 +216,10 @@ export function parsePharmacySegments(
 
 export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
   const segments: string[] = [];
+
+  if (filters.pharmacyId && /^[a-f\d]{24}$/i.test(filters.pharmacyId)) {
+    segments.push(`pharmacy-id-${filters.pharmacyId.toLowerCase()}`);
+  }
 
   if (filters.name) {
     const value = slugifySegment(filters.name);

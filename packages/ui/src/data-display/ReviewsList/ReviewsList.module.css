@@ -120,11 +120,7 @@
 
 .profileEmpty {
   text-align: left;
-  background: linear-gradient(
-    135deg,
-    var(--color-accent-selected),
-    transparent
-  );
+  background: var(--color-surface);
   border-style: solid;
   border-color: var(--color-border);
 }

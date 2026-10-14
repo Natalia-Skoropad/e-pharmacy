@@ -260,9 +260,10 @@ requirePattern(
 
 requirePattern(
   bankPanel,
-  />\s*Retry\s*</,
-  'Bank-details error state must render Retry.'
+  /retryLabel="Retry"/,
+  'Bank-details error state must expose Retry using shared resource state.'
 );
+
 requirePattern(
   contactPanel,
   /mailto:\$\{pharmacy\.email\}/,

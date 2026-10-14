@@ -13,6 +13,11 @@
   margin-bottom: 20px;
 }
 
+.header > :last-child {
+  width: 100%;
+  text-align: center;
+}
+
 .title {
   font-size: var(--fz-24);
   font-weight: var(--fw-bold);
@@ -25,10 +30,36 @@
     padding: 24px;
   }
 
+  .header > :last-child {
+    width: fit-content;
+    text-align: left;
+  }
+
   .header {
     flex-direction: row;
     align-items: flex-end;
     justify-content: space-between;
     gap: 16px;
   }
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.headerIcon {
+  display: inline-flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+}
+.subtitle {
+  margin-top: 4px;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
 }

@@ -9,7 +9,13 @@ import {
   resolveServerDataState,
 } from '@/lib/api/server';
 
-import { getPharmacyFilters, getPharmacies } from '@/lib/api/server';
+import {
+  getPharmacyFilters,
+  getPharmacies,
+  getPharmacyOptions,
+} from '@/lib/api/server';
+
+import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import { getCatalogRedirectPage } from './catalog-resource-state';
 
@@ -47,16 +53,24 @@ export async function resolvePharmaciesCatalogFilters(
 
 export async function loadPharmaciesCatalogPageData(
   parsedFilters: PharmacyFilters
-): Promise<PharmaciesCatalogPageData> {
-  const [filterResolution, initialPharmaciesState] = await Promise.all([
-    resolvePharmaciesCatalogFilters(parsedFilters),
-    resolveServerDataState(
-      getPharmacies(
-        buildPharmacyApiParams(parsedFilters),
-        PUBLIC_COMMERCE_CACHE_OPTIONS
-      )
-    ),
-  ]);
+): Promise<
+  PharmaciesCatalogPageData & { pharmacyOptions: readonly PharmacyOption[] }
+> {
+  const [filterResolution, initialPharmaciesState, pharmacyOptionsState] =
+    await Promise.all([
+      resolvePharmaciesCatalogFilters(parsedFilters),
+
+      resolveServerDataState(
+        getPharmacies(
+          buildPharmacyApiParams(parsedFilters),
+          PUBLIC_COMMERCE_CACHE_OPTIONS
+        )
+      ),
+
+      resolveServerDataState(
+        getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)
+      ),
+    ]);
 
   const { filters, filterState } = filterResolution;
 
@@ -93,5 +107,11 @@ export async function loadPharmaciesCatalogPageData(
     redirect(buildPharmacyPath({ ...filters, page: redirectPage }));
   }
 
-  return pageData;
+  return {
+    ...pageData,
+    pharmacyOptions:
+      pharmacyOptionsState.status === 'success'
+        ? pharmacyOptionsState.data.items
+        : [],
+  };
 }

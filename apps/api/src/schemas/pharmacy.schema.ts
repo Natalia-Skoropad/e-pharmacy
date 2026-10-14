@@ -53,6 +53,7 @@ export const pharmaciesQuerySchema = z.preprocess(
       keyword: sharedSearchSchema,
       nameKeyword: sharedSearchSchema,
       addressKeyword: sharedSearchSchema,
+      pharmacyId: mongoIdSchema.optional(),
       settlement: sharedSearchSchema,
       region: sharedSearchSchema,
 
@@ -128,6 +129,7 @@ const pharmacyProfileUpdateChangesSchema = z
         receiptEmail: clearableSchema(sharedEmailSchema),
         paymentPurpose: sharedClearablePaymentPurposeSchema,
       })
+
       .optional(),
   })
   .strict();

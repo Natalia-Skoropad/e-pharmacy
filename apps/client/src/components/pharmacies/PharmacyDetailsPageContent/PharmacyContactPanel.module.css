@@ -66,3 +66,16 @@
     margin-left: auto;
   }
 }
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.emailActions {
+  max-width: 65%;
+}
+.emailActions span {
+  overflow-wrap: anywhere;
+}

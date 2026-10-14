@@ -15,9 +15,7 @@
 }
 
 .headerIcon,
-.stateIcon,
-.loadingIcon,
-.errorIcon {
+.stateIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -53,18 +51,12 @@
   gap: 16px;
   align-items: start;
   padding: 22px;
-  background: linear-gradient(
-    135deg,
-    var(--color-accent-selected),
-    var(--color-surface)
-  );
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
 }
 
-.stateIcon,
-.loadingIcon,
-.errorIcon {
+.stateIcon {
   width: 52px;
   height: 52px;
 }
@@ -72,26 +64,6 @@
 .stateIcon {
   color: var(--color-accent);
   background-color: var(--color-accent-light);
-}
-
-.errorIcon {
-  color: var(--color-error);
-  background-color: var(--color-error-soft);
-}
-
-.loadingIcon {
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-}
-
-.loadingIcon svg {
-  animation: bank-details-spin 0.8s linear infinite;
-}
-
-@keyframes bank-details-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .stateCard h3 {
@@ -107,17 +79,6 @@
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
-}
-
-.stateCopy {
-  display: grid;
-  min-width: 0;
-}
-
-.retryButton {
-  grid-column: 1 / -1;
-  width: 100%;
-  margin-top: 2px;
 }
 
 .list {
@@ -179,17 +140,6 @@
     padding: 28px;
   }
 
-  .errorStateCard {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-  }
-
-  .retryButton {
-    grid-column: auto;
-    width: fit-content;
-    margin-top: 0;
-  }
-
   .list div {
     grid-template-columns: minmax(150px, 0.42fr) minmax(0, 1fr);
     gap: 24px;
@@ -200,11 +150,5 @@
   .list dd {
     justify-content: flex-end;
     text-align: right;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loadingIcon svg {
-    animation: none;
   }
 }

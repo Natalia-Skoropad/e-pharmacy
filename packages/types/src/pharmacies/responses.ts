@@ -1,6 +1,7 @@
 import type { ApiPaginationResponse } from '../api';
 import type { EntityId } from '../primitives';
 import type { PharmacyCardSummary } from './pharmacy-card-summary';
+import type { PharmacyLocationDraft } from './location';
 
 import type {
   CurrentPharmacySummary,
@@ -29,6 +30,7 @@ export type PharmaciesQueryParams = Readonly<{
   keyword?: string;
   nameKeyword?: string;
   addressKeyword?: string;
+  pharmacyId?: string;
   settlement?: string;
   region?: string;
   sort?: PharmaciesSortFilter;
@@ -37,7 +39,15 @@ export type PharmaciesQueryParams = Readonly<{
 //=============================================================================
 
 export type PharmaciesResponse = ApiPaginationResponse<PharmacyCardSummary>;
-export type PharmacyOption = Readonly<{ id: EntityId; name: string }>;
+
+export type PharmacyOption = Readonly<{
+  id: EntityId;
+  name: string;
+  imageUrl?: string;
+  email?: string;
+  phone?: string;
+  location?: PharmacyLocationDraft;
+}>;
 
 export type PharmacyOptionsResponse = Readonly<{
   items: readonly PharmacyOption[];

@@ -55,3 +55,24 @@
     padding: 24px;
   }
 }
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.headerIcon {
+  display: inline-flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border-radius: 50%;
+}
+.subtitle {
+  margin-top: 4px;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}

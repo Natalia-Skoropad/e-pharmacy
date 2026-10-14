@@ -1,5 +1,7 @@
 'use client';
 
+import { Send, Info } from 'lucide-react';
+
 import { Button } from '@e-pharmacy/ui/primitives';
 import { CommentInput } from '@e-pharmacy/ui/forms';
 import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
@@ -92,11 +94,13 @@ export function ReviewComposer({
             !canCreateReview
           }
         >
-          Send review
+          <Send size={17} aria-hidden="true" /> Send review
         </Button>
 
         {reviewAccessMessage ? (
-          <p className={css.authNote}>{reviewAccessMessage}</p>
+          <p className={css.authNote}>
+            <Info size={17} aria-hidden="true" /> {reviewAccessMessage}
+          </p>
         ) : null}
       </div>
     </form>

@@ -1,10 +1,18 @@
 'use client';
 
+import {
+  Mail,
+  Phone,
+  MapPin,
+  ShoppingBag,
+  Eye,
+  PackageSearch,
+} from 'lucide-react';
+
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
-import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
@@ -60,7 +68,8 @@ function PharmacyCard({
     [pharmacy]
   );
 
-  const locationLabel = formatPharmacyLocation(pharmacy.location);
+  const locationLabel = pharmacy.location?.settlement?.trim() ?? '';
+  const addressLabel = pharmacy.location?.address?.trim() ?? '';
 
   const pharmacyHref = buildPharmacyPath(
     pharmacy.name,
@@ -93,7 +102,10 @@ function PharmacyCard({
       }
       metaStart={
         locationLabel ? (
-          <span className={css.location}>{locationLabel}</span>
+          <span className={css.location}>
+            <MapPin size={14} aria-hidden="true" />
+            {locationLabel}
+          </span>
         ) : null
       }
       metaEnd={
@@ -107,7 +119,9 @@ function PharmacyCard({
       summaryItems={
         <>
           <div>
-            <dt>Email</dt>
+            <dt className={css.summaryLabel}>
+              <Mail size={15} aria-hidden="true" /> Email
+            </dt>
             <dd>
               {pharmacy.email ? (
                 <a
@@ -124,7 +138,9 @@ function PharmacyCard({
 
           {pharmacy.phone ? (
             <div>
-              <dt>Phone</dt>
+              <dt className={css.summaryLabel}>
+                <Phone size={15} aria-hidden="true" /> Phone
+              </dt>
               <dd>
                 <a className={css.contactLink} href={`tel:${pharmacy.phone}`}>
                   {pharmacy.phone}
@@ -133,8 +149,19 @@ function PharmacyCard({
             </div>
           ) : null}
 
+          {addressLabel ? (
+            <div>
+              <dt className={css.summaryLabel}>
+                <MapPin size={15} aria-hidden="true" /> Address
+              </dt>
+              <dd>{addressLabel}</dd>
+            </div>
+          ) : null}
+
           <div>
-            <dt>Products</dt>
+            <dt className={css.summaryLabel}>
+              <ShoppingBag size={15} aria-hidden="true" /> Products
+            </dt>
             <dd>
               {formatAvailableProductsCount(pharmacy.availableProductsCount) ??
                 '—'}
@@ -150,11 +177,11 @@ function PharmacyCard({
             size="sm"
             variant="secondary"
           >
-            View details
+            <Eye size={16} aria-hidden="true" /> View details
           </LinkButton>
 
           <LinkButton className={css.detailsLink} href={productsHref} size="sm">
-            Products
+            <PackageSearch size={16} aria-hidden="true" /> Products
           </LinkButton>
         </>
       }

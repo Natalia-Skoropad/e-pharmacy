@@ -1,13 +1,18 @@
 'use client';
 
-import { Clock, Mail, MapPin, Phone, ShoppingBag } from 'lucide-react';
+import {
+  Clock,
+  Mail,
+  MapPin,
+  Phone,
+  ShoppingBag,
+  PackageSearch,
+} from 'lucide-react';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { WorkingHours } from '@e-pharmacy/ui/data-display';
-
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
-import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
 import { getTelephoneHref } from '@/lib/contact/telephone';
@@ -31,7 +36,10 @@ export function PharmacyContactPanel({
 }: PharmacyContactPanelProps) {
   const workingHours = pharmacy.workingHours?.trim() ?? '';
   const phoneHref = getTelephoneHref(pharmacy.phone);
-  const location = formatPharmacyLocation(pharmacy.location);
+
+  const location = [pharmacy.location?.region, pharmacy.location?.address]
+    .filter(Boolean)
+    .join(', ');
 
   return (
     <>
@@ -43,7 +51,13 @@ export function PharmacyContactPanel({
               Address
             </dt>
 
-            <dd>{location}</dd>
+            <dd className={css.emailActions}>
+              <span>{location}</span>
+              <CopyButton
+                label={`Copy pharmacy address ${location}`}
+                onClick={() => void onCopy(location, 'Pharmacy address')}
+              />
+            </dd>
           </div>
         ) : null}
 
@@ -54,12 +68,16 @@ export function PharmacyContactPanel({
               Phone
             </dt>
 
-            <dd>
+            <dd className={css.emailActions}>
               {phoneHref ? (
                 <a href={phoneHref}>{pharmacy.phone}</a>
               ) : (
                 pharmacy.phone
               )}
+              <CopyButton
+                label={`Copy pharmacy phone ${pharmacy.phone}`}
+                onClick={() => void onCopy(pharmacy.phone!, 'Pharmacy phone')}
+              />
             </dd>
           </div>
         ) : null}
@@ -108,7 +126,8 @@ export function PharmacyContactPanel({
 
       <div className={css.linkRow}>
         <LinkButton className={css.link} href={productsHref} fullWidth>
-          View products from this pharmacy
+          <PackageSearch size={18} aria-hidden="true" /> View products from this
+          pharmacy
         </LinkButton>
       </div>
     </>

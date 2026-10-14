@@ -46,7 +46,7 @@ function CatalogPageShell({
 
           {filters}
           {notices ? <div className={css.notices}>{notices}</div> : null}
-          {results}
+          <div className={css.results}>{results}</div>
           {pagination}
           {seo}
         </Container>

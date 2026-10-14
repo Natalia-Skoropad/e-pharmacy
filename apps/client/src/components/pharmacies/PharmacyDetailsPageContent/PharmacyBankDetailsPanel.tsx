@@ -1,8 +1,9 @@
 'use client';
 
-import { CircleAlert, Landmark, LoaderCircle, WalletCards } from 'lucide-react';
+import { Landmark, WalletCards } from 'lucide-react';
 
-import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import { CopyButton } from '@e-pharmacy/ui/primitives';
 
 import type { PharmacyBankDetailsState } from './pharmacy-bank-details-state';
 
@@ -38,34 +39,22 @@ export function PharmacyBankDetailsPanel({
       </div>
 
       {state.status === 'idle' || state.status === 'loading' ? (
-        <div className={css.stateCard} role="status">
-          <span className={css.loadingIcon} aria-hidden="true">
-            <LoaderCircle size={28} />
-          </span>
-          <div>
-            <h3>Loading bank details</h3>
-            <p>Please wait while the pharmacy payment information is loaded.</p>
-          </div>
-        </div>
+        <ProfileResourceState
+          variant="loading"
+          title="Loading bank details"
+          description="Please wait while the pharmacy payment information is loaded."
+        />
       ) : null}
 
       {state.status === 'error' ? (
-        <div className={`${css.stateCard} ${css.errorStateCard}`} role="alert">
-          <span className={css.errorIcon} aria-hidden="true">
-            <CircleAlert size={28} />
-          </span>
-          <div className={css.stateCopy}>
-            <h3>Bank details could not be loaded</h3>
-            <p>
-              The payment information is temporarily unavailable. Try loading it
-              again in a moment.
-            </p>
-          </div>
-
-          <Button type="button" className={css.retryButton} onClick={onRetry}>
-            Retry
-          </Button>
-        </div>
+        <ProfileResourceState
+          variant="error"
+          title="Bank details could not be loaded"
+          description="The payment information is temporarily unavailable. Try again in a moment."
+          retryLabel="Retry"
+          onRetry={onRetry}
+          sideActionOnDesktop
+        />
       ) : null}
 
       {state.status === 'empty' ? (

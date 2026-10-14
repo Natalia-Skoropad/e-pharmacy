@@ -147,11 +147,19 @@ for (const [label, source] of [
     `${label} must use CatalogFiltersShell.`
   );
 
-  requirePattern(
-    source,
-    /useCatalogSearchDraft/,
-    `${label} must use the shared catalog search lifecycle.`
-  );
+  if (label === 'ProductCatalogFiltersForm') {
+    requirePattern(
+      source,
+      /useCatalogSearchDraft/,
+      `${label} must use the shared catalog search lifecycle.`
+    );
+  } else {
+    requirePattern(
+      source,
+      /SearchableSelect[\s\S]*?label="Pharmacy search"/,
+      `${label} must use the shared pharmacy search selector.`
+    );
+  }
 
   requirePattern(
     source,

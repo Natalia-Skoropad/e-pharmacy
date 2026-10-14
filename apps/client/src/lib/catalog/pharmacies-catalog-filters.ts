@@ -42,6 +42,7 @@ const PHARMACIES_PER_PAGE = 24;
 export type PharmacySearchParams = Record<string, CatalogSearchParamValue> & {
   name?: CatalogSearchParamValue;
   address?: CatalogSearchParamValue;
+  pharmacyId?: CatalogSearchParamValue;
   settlement?: CatalogSearchParamValue;
   region?: CatalogSearchParamValue;
   sort?: CatalogSearchParamValue;
@@ -55,6 +56,7 @@ export type PharmacyRouteParams = {
 export type PharmacyFilters = {
   name: string;
   address: string;
+  pharmacyId?: string;
   settlement: string;
   region: string;
   sort: PharmaciesSortFilter;
@@ -66,6 +68,7 @@ export type PharmacyApiParams = {
   perPage: number;
   nameKeyword?: string;
   addressKeyword?: string;
+  pharmacyId?: string;
   settlement?: string;
   region?: string;
   sort?: PharmaciesSortFilter;
@@ -193,6 +196,7 @@ export function parsePharmacySearchParams(
 ): PharmacyFilters {
   const name = getSingleSearchParam(params.name);
   const address = getSingleSearchParam(params.address);
+  const pharmacyId = getSingleSearchParam(params.pharmacyId);
 
   const settlement = getSingleSearchParam(params.settlement);
 
@@ -204,6 +208,11 @@ export function parsePharmacySearchParams(
   return {
     name: sanitizeTextParam(name),
     address: sanitizeTextParam(address),
+
+    pharmacyId: /^[a-f\d]{24}$/i.test(pharmacyId ?? '')
+      ? pharmacyId!.toLowerCase()
+      : '',
+
     settlement: sanitizedSettlement,
     region: sanitizedSettlement ? sanitizeTextParam(region) : '',
     sort: isPharmacySortFilter(sort) ? sort : 'newest',
@@ -222,6 +231,7 @@ export function mergePharmacyCatalogFilters(
   return {
     name: routeFilters.name || queryFilters.name,
     address: routeFilters.address || queryFilters.address,
+    pharmacyId: routeFilters.pharmacyId || queryFilters.pharmacyId,
     settlement,
     region: settlement ? routeFilters.region || queryFilters.region : '',
 
@@ -242,6 +252,7 @@ export function buildPharmacyApiParams(
     perPage: PHARMACIES_PER_PAGE,
     nameKeyword: filters.name || undefined,
     addressKeyword: filters.address || undefined,
+    pharmacyId: filters.pharmacyId || undefined,
     settlement: filters.settlement || undefined,
     region: filters.region || undefined,
     sort: filters.sort,
@@ -256,6 +267,7 @@ export function getPharmacyActiveFiltersCount(
   return countTrueConditions(
     Boolean(filters.name),
     Boolean(filters.address),
+    Boolean(filters.pharmacyId),
     Boolean(filters.settlement)
   );
 }
@@ -267,6 +279,7 @@ export function isPharmacyNoIndex(filters: PharmacyFilters): boolean {
     filters.page > 1 ||
     filters.sort !== 'newest' ||
     Boolean(filters.name) ||
-    Boolean(filters.address)
+    Boolean(filters.address) ||
+    Boolean(filters.pharmacyId)
   );
 }

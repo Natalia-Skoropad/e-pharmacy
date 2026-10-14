@@ -32,7 +32,6 @@ const sharedDebounceConsumers = [
 
 const catalogDebounceConsumers = [
   'apps/client/src/components/product-catalog/ProductCatalogFiltersForm/ProductCatalogFiltersForm.tsx',
-  'apps/client/src/components/pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm.tsx',
 ];
 
 const mutationContracts = [
@@ -438,14 +437,17 @@ for (const [area, entries] of sourcesByArea) {
     useEffect: countMatches(combined, /\buseEffect\s*\(/g),
     setTimeout: countMatches(combined, /\bsetTimeout\s*\(/g),
     clearTimeout: countMatches(combined, /\bclearTimeout\s*\(/g),
+
     requestAnimationFrame: countMatches(
       combined,
       /\brequestAnimationFrame\s*\(/g
     ),
+
     cancelAnimationFrame: countMatches(
       combined,
       /\bcancelAnimationFrame\s*\(/g
     ),
+
     addEventListener: countMatches(combined, /\.addEventListener\s*\(/g),
     removeEventListener: countMatches(combined, /\.removeEventListener\s*\(/g),
   };

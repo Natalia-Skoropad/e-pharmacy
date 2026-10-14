@@ -58,3 +58,8 @@
     font-size: var(--fz-40);
   }
 }
+
+/* While pharmacy selection is navigating, show our card skeletons instead of stale results. */
+.section:has([data-pharmacy-pending='true']) .results {
+  display: none;
+}

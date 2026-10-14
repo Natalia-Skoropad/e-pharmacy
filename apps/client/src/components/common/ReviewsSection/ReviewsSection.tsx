@@ -7,9 +7,9 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import type { ReviewTouchedFields } from '@e-pharmacy/validation/reviews';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { ReviewComposer } from './ReviewComposer';
-import css from './ReviewsSection.module.css';
 
 //===================================================================
 
@@ -28,6 +28,7 @@ export type ReviewsSectionProps = Readonly<{
   isUnavailable?: boolean;
   emptyTitle?: string;
   emptyText?: string;
+  emptyVariant?: 'default' | 'profile';
   textareaId: string;
   maxLength: number;
   onReviewTextChange: (value: string) => void;
@@ -55,6 +56,7 @@ function ReviewsSection({
   isAuthUnavailable = false,
   isUnavailable = false,
   emptyTitle = 'No reviews yet',
+  emptyVariant = 'default',
   emptyText = 'Reviews will appear here after clients share their feedback.',
   textareaId,
   maxLength,
@@ -87,15 +89,18 @@ function ReviewsSection({
       />
 
       {isUnavailable ? (
-        <div className={css.notice} role="status">
-          Reviews are temporarily unavailable. Please try again later.
-        </div>
+        <ProfileResourceState
+          variant="error"
+          title="Reviews could not be loaded"
+          description="Reviews are temporarily unavailable. Please try again later."
+        />
       ) : (
         <ReviewsList
           reviews={reviews}
           title={null}
           emptyTitle={emptyTitle}
           emptyText={emptyText}
+          emptyVariant={emptyVariant}
           initialVisibleCount={initialVisibleCount}
           visibleCount={visibleCount}
           step={step}

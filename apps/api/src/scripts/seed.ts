@@ -72,9 +72,11 @@ function getSeedCategoryOrThrow(
   key: Types.ObjectId | string
 ): SeedProductCategory {
   const category = categoryMap.get(String(key));
+
   if (!category) {
     throw new Error(`Seed ProductCategory "${String(key)}" was not found.`);
   }
+
   return category;
 }
 
@@ -85,6 +87,7 @@ function createSeedCategorySnapshot(
   categoryById: ReadonlyMap<string, SeedProductCategory>
 ) {
   const category = getSeedCategoryOrThrow(categoryById, categoryId);
+
   return {
     categoryId,
     categoryNameSnapshot: category.name,
@@ -472,6 +475,7 @@ type SeedPharmacyDocument = {
   phone?: string;
   rating?: number;
   imageUrl?: string;
+
   bankDetails?: {
     recipientName: string;
     taxId: string;
@@ -581,9 +585,11 @@ function createModeratedReview(index: number, preferredRating?: number) {
     rating: preferredRating ?? (index % 5) + 1,
     comment: REVIEW_COMMENTS[index % REVIEW_COMMENTS.length],
     status: 'approved' as const,
+
     moderatedAt: new Date(
       `2026-04-${String(1 + (index % 25)).padStart(2, '0')}T10:00:00.000Z`
     ),
+
     createdAt: new Date(
       `2026-04-${String(1 + (index % 25)).padStart(2, '0')}T09:00:00.000Z`
     ),
@@ -616,17 +622,21 @@ function createOffer(
           ...(pharmacy.location.address
             ? { address: pharmacy.location.address }
             : {}),
+
           ...(pharmacy.location.settlement
             ? { settlement: pharmacy.location.settlement }
             : {}),
+
           ...(pharmacy.location.region
             ? { region: pharmacy.location.region }
             : {}),
+
           ...(pharmacy.location.countryCode
             ? { countryCode: pharmacy.location.countryCode }
             : {}),
         }
       : undefined,
+
     pharmacyPhone: pharmacy.phone,
     pharmacyImageUrl: pharmacy.imageUrl,
     pharmacyRating: pharmacy.rating,
@@ -649,6 +659,7 @@ function createBankDetails(pharmacyName: string, pharmacyNumber: number) {
     taxId,
     iban: `UA${ibanTail}`,
     bankName: pharmacyNumber % 2 === 0 ? 'JSC PrivatBank' : 'JSC Oschadbank',
+    receiptEmail: `pharmacy.${pharmacyNumber}@e-pharmacy.example.com`,
     paymentPurpose: `Payment for E-PHARMACY order from ${pharmacyName}`,
   };
 }
@@ -905,6 +916,7 @@ async function getOfferPriceTimeline(
       occurredAt: movement.occurredAt,
       unitPrice: movement.unitPrice,
     });
+
     timelineByOfferId.set(offerId, timeline);
   });
 
@@ -919,6 +931,7 @@ function resolveOfferPriceAt(
   occurredAt: Date
 ): number {
   const timeline = timelineByOfferId.get(String(offerId)) ?? [];
+
   const pricePoint = [...timeline]
     .reverse()
     .find((item) => item.occurredAt.getTime() <= occurredAt.getTime());
@@ -960,6 +973,7 @@ async function seedOwnProductRestocks(): Promise<number> {
     const occurredAt = selloutProductIds.has(String(offer.productId))
       ? new Date('2026-05-15T12:00:00.000Z')
       : new Date('2026-07-15T12:00:00.000Z');
+
     const quantity = 40 + (index % 11);
     const priceIncrease = 50 + (index % 11);
     const nextPrice = offer.price + priceIncrease;
@@ -1128,14 +1142,18 @@ const DEMO_OWNER_LAST_NAMES = [
   'Polishchuk',
 ];
 
+//===============================================================
+
 function createDemoPharmacyOwnerName(index: number): string {
   const firstName =
     DEMO_OWNER_FIRST_NAMES[index % DEMO_OWNER_FIRST_NAMES.length];
+
   const lastName =
     DEMO_OWNER_LAST_NAMES[
       Math.floor(index / DEMO_OWNER_FIRST_NAMES.length) %
         DEMO_OWNER_LAST_NAMES.length
     ];
+
   return `${firstName} ${lastName}`;
 }
 
@@ -1216,6 +1234,7 @@ function createSeedPharmacies() {
         settlement,
         countryCode: 'UA',
       },
+
       phone: `+380${String(501000000 + pharmacyNumber).padStart(9, '0')}`,
       email: `pharmacy.${pharmacyNumber}@e-pharmacy.example.com`,
 
@@ -1314,6 +1333,7 @@ function createSeedProducts(
         : index % 4 === 0
           ? 10 + (index % 8)
           : index % 9;
+
     const rating = Number((4 + (index % 11) * 0.09).toFixed(1));
 
     return {
@@ -1371,6 +1391,7 @@ async function seedActivePharmacyProductOffers(
   const createdOffers = await ProductOffer.insertMany(
     activeProducts.map((product, index) => {
       const initialSelloutQuantities = [36, 42, 48, 54];
+
       const quantity =
         index < 4 ? initialSelloutQuantities[index] : 100 + index * 3;
 
@@ -1486,6 +1507,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
       },
     }
   );
+
   const clientUser = await User.findOneAndUpdate(
     { email: STOCK_MOVEMENT_DEMO_CLIENT_EMAIL },
     {
@@ -1622,6 +1644,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     ...(product.packageQuantity
       ? { packageQuantity: String(product.packageQuantity) }
       : {}),
+
     rating: product.rating ?? 0,
     reviewsCount: product.reviewsCount ?? 0,
   };
@@ -1633,9 +1656,11 @@ async function seedActivePharmacyOrder(): Promise<number> {
       ...(pharmacy.location.address
         ? { address: pharmacy.location.address }
         : {}),
+
       ...(pharmacy.location.settlement
         ? { settlement: pharmacy.location.settlement }
         : {}),
+
       ...(pharmacy.location.region ? { region: pharmacy.location.region } : {}),
       ...(pharmacy.location.countryCode
         ? { countryCode: pharmacy.location.countryCode }
@@ -1700,6 +1725,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
                   address: '27 Wellness Street, Lviv, Lviv',
                 },
               },
+
         comment: `Demo order for ${product.name}.`,
         status: config.status,
         statusHistory: createStatusHistory(config),
@@ -1719,9 +1745,11 @@ async function seedActivePharmacyOrder(): Promise<number> {
             unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
           },
         ],
+
         ...(config.status === 'successful'
           ? { successfulAt: config.statusChangedAt }
           : {}),
+
         ...(config.status === 'rejected'
           ? {
               rejectionReason:
@@ -1730,6 +1758,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
               rejectedBy: clientUser._id,
             }
           : {}),
+
         orderNumber,
         createdAt: config.createdAt,
         updatedAt: config.statusChangedAt,
@@ -1879,8 +1908,10 @@ async function seedActivePharmacyOrder(): Promise<number> {
       orderId: successfulOrder._id,
       orderNumber: successfulOrder.orderNumber,
       orderStatus: 'successful',
+
       comment:
         'Successful order wrote off its 7 reserved units from the warehouse.',
+
       occurredAt: successfulOrder.statusChangedAt,
     },
     {
@@ -1897,8 +1928,10 @@ async function seedActivePharmacyOrder(): Promise<number> {
       reservedAfter: 0,
       availableAfter: 170,
       unitPrice: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
+
       comment:
         'Stock arrival added 50 units at the new price of 2 010,00 ₴ per unit.',
+
       occurredAt: new Date('2026-07-14T09:00:00.000Z'),
     },
   ]);
@@ -1910,6 +1943,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
     availableQuantity: 150,
     updatedAt: new Date('2026-07-16T08:40:00.000Z'),
   });
+
   await offer.save();
 
   return seededOrders.length;
@@ -1919,6 +1953,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
 async function seedPharmacyClientPortfolio(): Promise<number> {
   type DemoClientStatus = 'new' | 'in_progress' | 'successful' | 'rejected';
+
   type DemoClientConfig = Readonly<{
     id: string;
     name: string;
@@ -2446,18 +2481,23 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       ...(pharmacy.location.address
         ? { address: pharmacy.location.address }
         : {}),
+
       ...(pharmacy.location.settlement
         ? { settlement: pharmacy.location.settlement }
         : {}),
+
       ...(pharmacy.location.region ? { region: pharmacy.location.region } : {}),
       ...(pharmacy.location.countryCode
         ? { countryCode: pharmacy.location.countryCode }
         : {}),
     },
+
     phone: pharmacy.phone,
     email: pharmacy.email,
+
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+
     rating: pharmacy.rating ?? 0,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     bankDetails: pharmacy.bankDetails,
@@ -2465,6 +2505,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   const orderDocuments: Array<Record<string, unknown>> = [];
   const movementPlans: MovementPlan[] = [];
+
   const portfolioOrderSlots = clientConfigs
     .flatMap((client, clientIndex) =>
       client.orderStatuses.map((_status, orderIndex) => ({
@@ -2472,11 +2513,13 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         orderIndex,
       }))
     )
+
     .sort(
       (first, second) =>
         first.orderIndex - second.orderIndex ||
         first.clientIndex - second.clientIndex
     );
+
   const portfolioOrderCount = portfolioOrderSlots.length;
 
   const portfolioStatusTargets = {
@@ -2537,6 +2580,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       } else {
         const dayOffset = successfulOrderIndex % 26;
         const timeOffset = (successfulOrderIndex % 8) * 43 * 60 * 1000;
+
         createdAt = new Date(
           new Date('2026-06-20T08:00:00.000Z').getTime() +
             dayOffset * 24 * 60 * 60 * 1000 +
@@ -2548,6 +2592,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       const finalChangedAt = new Date(
         createdAt.getTime() + (status === 'new' ? 0 : 90 * 60 * 1000)
       );
+
       const orderNumber = createSeedOrderNumber(orderId, createdAt);
       const itemCount = 5 + ((clientIndex + orderIndex) % 2);
 
@@ -2557,15 +2602,18 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
           const poolIndex =
             (clientIndex * 4 + orderIndex * 3 + itemIndex) %
             joinedOffers.length;
+
           const selected = joinedOffers[poolIndex];
           const quantity = 1 + ((clientIndex + orderIndex + itemIndex) % 3);
           const product = selected.product;
           const offer = selected.offer;
+
           const unitPrice = resolveOfferPriceAt(
             priceTimelineByOfferId,
             offer._id,
             createdAt
           );
+
           const productSnapshot = {
             name: product.name,
             ...(product.slug ? { slug: product.slug } : {}),
@@ -2575,10 +2623,12 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
             ...(product.manufacturer
               ? { manufacturer: product.manufacturer }
               : {}),
+
             ...(product.dosage ? { dosage: product.dosage } : {}),
             ...(product.packageQuantity
               ? { packageQuantity: String(product.packageQuantity) }
               : {}),
+
             rating: product.rating ?? 0,
             reviewsCount: product.reviewsCount ?? 0,
           };
@@ -2628,6 +2678,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
           status,
           changedAt: finalChangedAt,
           changedBy: clientUser._id,
+
           comment:
             status === 'successful'
               ? 'The pharmacy completed the demo client order.'
@@ -2645,6 +2696,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         totalPrice,
         currency: '₴',
         paymentMethod: orderIndex % 2 === 0 ? 'bank_transfer' : 'cash',
+
         delivery:
           orderIndex % 2 === 0
             ? {
@@ -2684,6 +2736,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
               rejectedBy: clientUser._id,
             }
           : {}),
+
         orderNumber,
         createdAt,
         updatedAt: finalChangedAt,
@@ -2872,6 +2925,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     .limit(4)
     .select('_id')
     .lean<Array<{ _id: Types.ObjectId }>>();
+
   const protectedProductIds = [
     STOCK_MOVEMENT_DEMO_PRODUCT_ID,
     ...selloutProducts.map((product) => product._id),
@@ -2971,6 +3025,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       availableDelta: movement.availableDelta,
       sequence: index,
     });
+
     shadowMovementsByOfferId.set(offerId, offerMovements);
   });
 
@@ -2983,6 +3038,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     const offerKey = String(offerId);
     const existing = shadowMovementsByOfferId.get(offerKey) ?? [];
     const candidateSequenceStart = existingMovements.length + orders.length * 2;
+
     const combined: ShadowMovement[] = [
       ...existing,
       {
@@ -3065,12 +3121,15 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
             ...(pharmacy.location.address
               ? { address: pharmacy.location.address }
               : {}),
+
             ...(pharmacy.location.settlement
               ? { settlement: pharmacy.location.settlement }
               : {}),
+
             ...(pharmacy.location.region
               ? { region: pharmacy.location.region }
               : {}),
+
             ...(pharmacy.location.countryCode
               ? { countryCode: pharmacy.location.countryCode }
               : {}),
@@ -3106,6 +3165,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     for (const candidateQuantity of [preferredQuantity, 1]) {
       for (let offset = 0; offset < usableOffers.length; offset += 1) {
         const candidate = usableOffers[(index + offset) % usableOffers.length];
+
         const hasHistoricalPrice = (
           priceTimeline.get(String(candidate._id)) ?? []
         ).some(
@@ -3156,6 +3216,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       ...(product.packageQuantity
         ? { packageQuantity: String(product.packageQuantity) }
         : {}),
+
       rating: product.rating ?? 0,
       reviewsCount: product.reviewsCount ?? 0,
     };
@@ -3202,6 +3263,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           comment: 'The counter sale was completed successfully.',
         },
       ],
+
       activityHistory: [
         {
           type: 'product_added',
@@ -3217,6 +3279,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           unitPrice,
         },
       ],
+
       orderNumber,
       createdAt,
       updatedAt: completedAt,
@@ -3409,6 +3472,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
         ...(product.packageQuantity
           ? { packageQuantity: String(product.packageQuantity) }
           : {}),
+
         rating: product.rating ?? 0,
         reviewsCount: product.reviewsCount ?? 0,
       };
@@ -3432,6 +3496,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
                 unitPrice,
                 totalPrice,
               },
+
               activityHistory: {
                 type: 'product_added',
                 occurredAt: order.createdAt,
@@ -3742,6 +3807,7 @@ async function assertDemoOrderStatusCounts(): Promise<void> {
   const countByStatus = new Map(
     statusCounts.map((item) => [item._id, item.count])
   );
+
   const expectedCounts = {
     new: 11,
     in_progress: 9,
@@ -3817,6 +3883,7 @@ async function seedOwnProductManagerNotes(): Promise<number> {
   );
 
   const latestNoteAt = new Date('2026-07-16T18:00:00.000Z');
+
   const notes = offers.flatMap((offer, offerIndex) => {
     const notesCount = 10 + (offerIndex % 3);
     const addedAt = new Date(offer.createdAt);
@@ -3836,6 +3903,7 @@ async function seedOwnProductManagerNotes(): Promise<number> {
         PRODUCT_MANAGER_NOTE_TEMPLATES[
           (offerIndex + noteIndex) % PRODUCT_MANAGER_NOTE_TEMPLATES.length
         ];
+
       const createdAt = new Date(firstNoteAt.getTime() + step * noteIndex);
 
       return {
@@ -4295,6 +4363,7 @@ async function seedProductRequestComments(): Promise<number> {
       const createdAt = new Date(
         request.createdAt.getTime() + (commentIndex + 1) * 20 * 60 * 1000
       );
+
       const template =
         PRODUCT_REQUEST_COMMENT_TEMPLATES[
           (requestIndex + commentIndex) %
@@ -4382,6 +4451,7 @@ function assertDemoPharmacyOwnerSeedsAreValid(
 function assertPharmacyAccountSeedsAreValid(): void {
   for (const seed of PHARMACY_ACCOUNT_SEEDS) {
     const ownerId = new Types.ObjectId();
+
     const validationError = new Pharmacy({
       name: seed.pharmacyName,
 

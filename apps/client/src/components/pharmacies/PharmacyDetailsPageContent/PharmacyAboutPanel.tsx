@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
+import { FileText } from 'lucide-react';
 
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
@@ -70,6 +71,7 @@ function parseDescription(description?: string): readonly DescriptionBlock[] {
     }
 
     const heading = line.match(/^\*\*(.+)\*\*$/);
+
     if (heading) {
       flushParagraph();
       flushList();
@@ -100,7 +102,15 @@ export function PharmacyAboutPanel({ pharmacy }: PharmacyAboutPanelProps) {
   return (
     <div className={css.panel}>
       <div className={css.header}>
-        <h2 className={css.title}>About {pharmacy.name}</h2>
+        <span className={css.headerIcon}>
+          <FileText size={22} aria-hidden="true" />
+        </span>
+        <div>
+          <h2 className={css.title}>About pharmacy</h2>
+          <p className={css.subtitle}>
+            Learn more about {pharmacy.name} and the services it offers.
+          </p>
+        </div>
       </div>
 
       <div className={css.description}>

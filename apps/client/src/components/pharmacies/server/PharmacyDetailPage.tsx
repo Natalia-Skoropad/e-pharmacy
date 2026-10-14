@@ -9,12 +9,14 @@ import {
 } from '@/lib/api/server';
 
 import PharmacyDetailsPageContent from '../PharmacyDetailsPageContent/PharmacyDetailsPageContent';
+import type { PharmacyTab } from '../PharmacyDetailsPageContent/PharmacyDetailsTabs';
 
 //===================================================================
 
 export async function PharmacyDetailPage({
   pharmacy,
-}: Readonly<{ pharmacy: PublicPharmacy }>) {
+  initialTab = 'details',
+}: Readonly<{ pharmacy: PublicPharmacy; initialTab?: PharmacyTab }>) {
   const reviewsState = await resolveServerDataState(
     getPharmacyReviews(pharmacy.id, PUBLIC_REVIEWS_CACHE_OPTIONS)
   );
@@ -34,6 +36,7 @@ export async function PharmacyDetailPage({
   return (
     <PharmacyDetailsPageContent
       pharmacy={pharmacy}
+      initialTab={initialTab}
       reviews={reviewsData?.items ?? []}
       reviewsTotal={reviewsData?.total ?? pharmacy.reviewsCount ?? 0}
       areReviewsUnavailable={reviewsState.status === 'unavailable'}

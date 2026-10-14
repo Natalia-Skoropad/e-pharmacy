@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs, TabPanel } from '@e-pharmacy/ui/navigation';
@@ -27,6 +28,7 @@ export type PharmacyDetailsPageContentProps = Readonly<{
   reviews: readonly Review[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
+  initialTab?: PharmacyTab;
 }>;
 
 //===================================================================
@@ -36,21 +38,52 @@ function PharmacyDetailsPageContent({
   reviews,
   reviewsTotal,
   areReviewsUnavailable = false,
+  initialTab = 'details',
 }: PharmacyDetailsPageContentProps) {
-  const { canUseClientFeatures, isActivePharmacyUser, isActiveAdminUser } =
-    useClientAuthCapabilities();
+  const {
+    canUseClientFeatures,
+    isActivePharmacyUser,
+    isActiveAdminUser,
+    isBootstrapping,
+  } = useClientAuthCapabilities();
 
   const canShowBankDetails =
     canUseClientFeatures || isActivePharmacyUser || isActiveAdminUser;
-  const [activeTab, setActiveTab] = useState<PharmacyTab>('details');
+
+  const router = useRouter();
   const generatedTabsId = useId();
   const tabsIdBase = `pharmacy-details-${generatedTabsId.replace(/:/g, '')}`;
   const clipboard = useClipboardAction();
 
-  const bankDetails = usePharmacyBankDetails(pharmacy.id);
+  const {
+    state: bankDetailsState,
+    load: loadBankDetails,
+    retry: retryBankDetails,
+    cancel: cancelBankDetails,
+  } = usePharmacyBankDetails(pharmacy.id);
+
+  useEffect(() => {
+    if (initialTab === 'payment' && !canShowBankDetails && !isBootstrapping) {
+      router.replace(`/${pharmacy.publicSlugId}`, { scroll: false });
+    }
+  }, [
+    initialTab,
+    canShowBankDetails,
+    isBootstrapping,
+    pharmacy.publicSlugId,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (initialTab === 'payment' && canShowBankDetails) {
+      void loadBankDetails();
+    } else {
+      cancelBankDetails();
+    }
+  }, [initialTab, canShowBankDetails, loadBankDetails, cancelBankDetails]);
 
   const currentTab: PharmacyTab =
-    activeTab === 'payment' && !canShowBankDetails ? 'details' : activeTab;
+    initialTab === 'payment' && !canShowBankDetails ? 'details' : initialTab;
 
   const productsHref = buildProductCatalogPath(
     { pharmacyId: pharmacy.id, availability: 'in-stock' },
@@ -58,20 +91,14 @@ function PharmacyDetailsPageContent({
   );
 
   const handleTabChange = (nextTab: PharmacyTab) => {
-    if (currentTab === 'payment' && nextTab !== 'payment') {
-      bankDetails.cancel();
-    }
+    if (nextTab === 'payment' && !canShowBankDetails) return;
+    const base = `/${pharmacy.publicSlugId}`;
 
-    if (nextTab === 'payment') {
-      if (!canShowBankDetails) {
-        setActiveTab('details');
-        return;
-      }
-
-      void bankDetails.load();
-    }
-
-    setActiveTab(nextTab);
+    const path =
+      nextTab === 'details'
+        ? base
+        : `${base}/${nextTab === 'payment' ? 'bank-details' : nextTab}`;
+    router.push(path, { scroll: false });
   };
 
   return (
@@ -123,8 +150,8 @@ function PharmacyDetailsPageContent({
             activeValue={currentTab}
           >
             <PharmacyBankDetailsPanel
-              state={bankDetails.state}
-              onRetry={() => void bankDetails.retry()}
+              state={bankDetailsState}
+              onRetry={() => void retryBankDetails()}
               onCopy={clipboard.copy}
             />
           </TabPanel>

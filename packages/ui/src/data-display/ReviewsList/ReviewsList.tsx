@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { Star } from 'lucide-react';
+import { Star, ChevronDown } from 'lucide-react';
 
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
@@ -134,6 +134,7 @@ function ReviewsList({
             visibleCount={visibleReviews.length}
             totalCount={reviews.length}
             label="Show more reviews"
+            iconRight={<ChevronDown size={17} aria-hidden="true" />}
             onLoadMore={handleLoadMore}
           />
         </>

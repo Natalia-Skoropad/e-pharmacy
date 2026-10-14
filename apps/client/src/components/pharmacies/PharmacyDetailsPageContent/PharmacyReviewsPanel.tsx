@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Star } from 'lucide-react';
 
 import {
   DEFAULT_VISIBLE_REVIEWS_COUNT,
@@ -71,11 +72,23 @@ export function PharmacyReviewsPanel({
   return (
     <div className={css.panel}>
       <div className={css.header}>
-        <h2 className={css.title}>Reviews</h2>
+        <div className={css.heading}>
+          <span className={css.headerIcon}>
+            <Star size={22} aria-hidden="true" />
+          </span>
+          <div>
+            <h2 className={css.title}>Reviews</h2>
+            <p className={css.subtitle}>
+              Read feedback from clients who have ordered from this pharmacy.
+            </p>
+          </div>
+        </div>
+
         <CountLabel
           shown={Math.min(visibleReviewsCount, reviews.length)}
           total={reviewsTotal}
           label="reviews"
+          fullWidthOnMobile
         />
       </div>
 
@@ -94,7 +107,9 @@ export function PharmacyReviewsPanel({
         reviewAccessMessage={reviewAccessMessage}
         isAuthUnavailable={isAuthUnavailable}
         isUnavailable={areReviewsUnavailable}
-        emptyText="Pharmacy reviews will appear here after clients share their feedback."
+        emptyVariant="profile"
+        emptyTitle="This pharmacy has no reviews yet."
+        emptyText="Reviews appear here after real client orders are completed and approved."
         textareaId="pharmacy-review"
         maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
         onReviewTextChange={handleReviewTextChange}

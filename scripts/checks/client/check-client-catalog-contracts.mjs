@@ -171,26 +171,26 @@ forbidPattern(
 
 requirePattern(
   pharmacyCard,
-  /formatPharmacyLocation\(pharmacy\.location\)/,
-  'PharmacyCard must render its full structured location once in metadata.'
+  /pharmacy\.location\?\.settlement/,
+  'PharmacyCard must show the settlement in its metadata.'
 );
 
 requirePattern(
   pharmacyCard,
-  /<dt>Email<\/dt>/,
-  'PharmacyCard must show email instead of a duplicated address row.'
+  /<Mail size=\{15\}/,
+  'PharmacyCard must render the email icon.'
 );
 
-forbidPattern(
+requirePattern(
   pharmacyCard,
-  /<dt>Address<\/dt>|pharmacy\.city/,
-  'PharmacyCard must not render the legacy city or duplicated address row.'
+  /pharmacy\.location\?\.address/,
+  'PharmacyCard must show the pharmacy street address separately.'
 );
 
 requirePattern(
   pharmacyContactPanel,
-  /formatPharmacyLocation\(pharmacy\.location\)/,
-  'Public pharmacy details must render canonical structured location.'
+  /pharmacy\.location\?\.region[\s\S]*pharmacy\.location\?\.address/,
+  'Public pharmacy details must render the optional region and street address.'
 );
 
 forbidPattern(

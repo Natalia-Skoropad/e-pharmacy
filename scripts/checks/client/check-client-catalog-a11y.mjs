@@ -170,7 +170,7 @@ requirePattern(
 
 requirePattern(
   bankPanel,
-  />\s*Retry\s*</,
+  /retryLabel="Retry"/,
   'Bank-details error state needs a Retry action.'
 );
 

@@ -107,3 +107,34 @@
     min-width: 220px;
   }
 }
+
+.reviewActions {
+  justify-items: stretch;
+}
+
+.reviewSubmitButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.authNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 10px 14px;
+  background-color: var(--color-error-soft);
+  border-radius: var(--radius-md);
+}
+
+.authNote svg {
+  flex-shrink: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .reviewSubmitButton {
+    justify-self: end;
+  }
+}

@@ -1,5 +1,7 @@
 'use client';
 
+import { Info, Landmark, FileText, Star } from 'lucide-react';
+
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 
 //===================================================================
@@ -26,12 +28,31 @@ export function PharmacyDetailsTabs({
   onChange,
 }: PharmacyDetailsTabsProps) {
   const items: TabItem<PharmacyTab>[] = [
-    { value: 'details', label: 'Details' },
+    {
+      value: 'details',
+      label: 'Details',
+      icon: <Info size={17} aria-hidden="true" />,
+    },
+
     ...(canShowBankDetails
-      ? [{ value: 'payment' as const, label: 'Bank details' }]
+      ? [
+          {
+            value: 'payment' as const,
+            label: 'Bank details',
+            icon: <Landmark size={17} aria-hidden="true" />,
+          },
+        ]
       : []),
-    { value: 'about', label: 'About pharmacy' },
-    { value: 'reviews', label: `Reviews (${reviewsTotal})` },
+    {
+      value: 'about',
+      label: 'About pharmacy',
+      icon: <FileText size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'reviews',
+      label: `Reviews (${reviewsTotal})`,
+      icon: <Star size={17} aria-hidden="true" />,
+    },
   ];
 
   return (

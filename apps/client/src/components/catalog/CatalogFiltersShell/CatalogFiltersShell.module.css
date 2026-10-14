@@ -64,6 +64,28 @@
   }
 }
 
+/* Pharmacy-only layout: keep the product catalog's responsive toolbar intact. */
+.mobileFilterSlot {
+  display: none;
+}
+
+.pharmacyLayout .mobileFilterSlot {
+  display: block;
+}
+
+.pharmacyLayout .mobileFilterSlot > * {
+  width: 100%;
+}
+
+.pharmacyLayout .catalogToolbar > :first-child {
+  width: 100%;
+  text-align: center;
+}
+
+.pharmacyLayout .catalogToolbar .filterButton {
+  display: none;
+}
+
 @media only screen and (min-width: 768px) {
   .searchCard {
     padding: 24px;
@@ -76,6 +98,27 @@
 
   .catalogToolbar {
     margin-bottom: 28px;
+  }
+
+  .pharmacyLayout .mobileFilterSlot {
+    display: none;
+  }
+
+  .pharmacyLayout .catalogToolbar > :first-child {
+    width: fit-content;
+    text-align: left;
+  }
+
+  .pharmacyLayout .catalogToolbar .filterButton {
+    display: block;
+  }
+
+  .searchGridPharmacy {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .searchGridPharmacy > :first-child {
+    grid-column: 1 / -1;
   }
 }
 
@@ -133,5 +176,18 @@
   .desktopSort {
     display: block;
     width: 240px;
+  }
+
+  .pharmacyLayout .catalogToolbar .filterButton {
+    display: none;
+  }
+
+  .searchGridPharmacy {
+    grid-template-columns: minmax(460px, 496px) minmax(220px, 240px) auto;
+    justify-content: start;
+  }
+
+  .searchGridPharmacy > :first-child {
+    grid-column: auto;
   }
 }

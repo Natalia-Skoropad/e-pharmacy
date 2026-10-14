@@ -1,6 +1,7 @@
 import type {
   PharmacyCardSummary,
   PharmacyLocationFilterOption,
+  PharmacyOption,
 } from '@e-pharmacy/types/pharmacies';
 
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
@@ -34,6 +35,7 @@ export type PharmaciesPageContentProps = Readonly<{
   totalPages: number;
   filters: PharmacyFilters;
   locationOptions: readonly PharmacyLocationFilterOption[];
+  pharmacyOptions: readonly PharmacyOption[];
   resourceState: CatalogResourceState;
   filtersState: ResourceState;
 }>;
@@ -52,6 +54,7 @@ function PharmaciesPageContent({
   totalPages,
   filters,
   locationOptions,
+  pharmacyOptions,
   resourceState,
 }: PharmaciesPageContentProps) {
   const pageTitle = getPharmacyTitle(filters);
@@ -89,6 +92,7 @@ function PharmaciesPageContent({
         <PharmaciesCatalogFiltersForm
           filters={filters}
           locationOptions={locationOptions}
+          pharmacyOptions={pharmacyOptions}
           visiblePharmaciesCount={pharmacies.length}
           pharmaciesCount={total}
         />

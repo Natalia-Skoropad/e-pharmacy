@@ -24,3 +24,27 @@
 .detailsLink {
   flex: 1 1 150px;
 }
+
+.location {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-accent);
+}
+
+.detailsLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.summaryLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.summaryLabel svg {
+  flex-shrink: 0;
+}
