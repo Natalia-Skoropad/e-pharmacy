@@ -20,7 +20,10 @@
 .description {
   display: grid;
   gap: 14px;
-  max-width: 860px;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
   font-size: var(--fz-16);
   line-height: 1.7;
   color: var(--color-text-secondary);
@@ -54,6 +57,10 @@
   .panel {
     padding: 24px;
   }
+
+  .description {
+    padding: 24px;
+  }
 }
 
 .header {
@@ -61,6 +68,7 @@
   align-items: center;
   gap: 14px;
 }
+
 .headerIcon {
   display: inline-flex;
   flex: 0 0 44px;
@@ -71,6 +79,7 @@
   background: var(--color-accent-light);
   border-radius: 50%;
 }
+
 .subtitle {
   margin-top: 4px;
   font-size: var(--fz-14);

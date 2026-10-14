@@ -26,9 +26,7 @@
 }
 
 .location {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  text-transform: uppercase;
   color: var(--color-accent);
 }
 

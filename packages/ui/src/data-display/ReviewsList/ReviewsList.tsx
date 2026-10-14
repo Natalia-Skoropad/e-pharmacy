@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import { Star, ChevronDown } from 'lucide-react';
+import { ProfileResourceState } from '../../profile/ProfileResourceState';
 
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
@@ -25,7 +26,7 @@ export type ReviewsListProps = Readonly<{
   title?: string | null;
   emptyTitle?: string;
   emptyText?: string;
-  emptyVariant?: 'default' | 'profile';
+  emptyVariant?: 'default' | 'profile' | 'resource';
   initialVisibleCount?: number;
   visibleCount?: number;
   step?: number;
@@ -95,14 +96,23 @@ function ReviewsList({
       ) : null}
 
       {reviews.length === 0 ? (
-        <div
-          className={`${css.empty} ${
-            emptyVariant === 'profile' ? css.profileEmpty : ''
-          }`}
-        >
-          <h3 className={css.emptyTitle}>{emptyTitle}</h3>
-          <p className={css.emptyText}>{emptyText}</p>
-        </div>
+        emptyVariant === 'resource' ? (
+          <ProfileResourceState
+            variant="empty"
+            title={emptyTitle}
+            description={emptyText}
+            icon={<Star size={22} />}
+          />
+        ) : (
+          <div
+            className={`${css.empty} ${
+              emptyVariant === 'profile' ? css.profileEmpty : ''
+            }`}
+          >
+            <h3 className={css.emptyTitle}>{emptyTitle}</h3>
+            <p className={css.emptyText}>{emptyText}</p>
+          </div>
+        )
       ) : (
         <>
           <ul className={css.list}>

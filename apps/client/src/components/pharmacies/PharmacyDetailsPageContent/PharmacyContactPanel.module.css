@@ -62,7 +62,7 @@
 
 @media only screen and (min-width: 768px) {
   .linkRow {
-    width: 305px;
+    width: 250px;
     margin-left: auto;
   }
 }
@@ -73,9 +73,11 @@
   justify-content: center;
   gap: 8px;
 }
+
 .emailActions {
   max-width: 65%;
 }
+
 .emailActions span {
   overflow-wrap: anywhere;
 }

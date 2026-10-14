@@ -57,9 +57,13 @@ function PharmaciesPageContent({
   pharmacyOptions,
   resourceState,
 }: PharmaciesPageContentProps) {
-  const pageTitle = getPharmacyTitle(filters);
+  const selectedPharmacyName = filters.pharmacyId
+    ? pharmacyOptions.find((option) => option.id === filters.pharmacyId)?.name
+    : undefined;
+
+  const pageTitle = getPharmacyTitle(filters, selectedPharmacyName);
   const showSeoText = total > 0 && shouldShowPharmaciesSeoText(filters);
-  const seoContent = getPharmaciesSeoContent(filters);
+  const seoContent = getPharmaciesSeoContent(filters, selectedPharmacyName);
 
   const emptyIsFiltered =
     resourceState.status === 'empty' && resourceState.reason === 'no-matches';
@@ -86,7 +90,24 @@ function PharmaciesPageContent({
       breadcrumbs={[
         { label: 'Home', href: ROUTES.HOME },
         { label: 'Pharmacies', href: ROUTES.PHARMACIES },
-        ...(selectedLocationLabel ? [{ label: selectedLocationLabel }] : []),
+        ...(selectedLocationLabel
+          ? [
+              {
+                label: selectedLocationLabel,
+                ...(filters.pharmacyId
+                  ? {
+                      href: buildPharmacyPath({
+                        settlement: filters.settlement,
+                        region: filters.region,
+                      }),
+                    }
+                  : {}),
+              },
+            ]
+          : []),
+        ...(filters.pharmacyId
+          ? [{ label: selectedPharmacyName || 'Selected pharmacy' }]
+          : []),
       ]}
       filters={
         <PharmaciesCatalogFiltersForm
@@ -136,7 +157,9 @@ function PharmaciesPageContent({
             titleId="pharmacies-seo-title"
           >
             <p>
-              {selectedLocationLabel ? (
+              {filters.pharmacyId ? (
+                seoContent.intro
+              ) : selectedLocationLabel ? (
                 <>
                   Browse <strong>pharmacies in {selectedLocationLabel}</strong>{' '}
                   participating in E-PHARMACY.

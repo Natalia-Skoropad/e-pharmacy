@@ -1,7 +1,6 @@
 .grid {
   display: grid;
   gap: 28px;
-  margin-top: 30px;
 }
 
 .imageCard {

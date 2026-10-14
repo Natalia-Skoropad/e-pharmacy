@@ -23,6 +23,7 @@ import {
 import {
   loadPharmaciesCatalogPageData,
   resolvePharmaciesCatalogFilters,
+  getSelectedPharmacySeoName,
 } from '@/lib/catalog/pharmacies-catalog-server';
 
 import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
@@ -101,13 +102,16 @@ export async function generateMetadata({
 
   const routeFilters = parsePharmacySegments(resolvedParams).filters;
   const queryFilters = parsePharmacySearchParams(await searchParams);
+
   const { filters } = await resolvePharmaciesCatalogFilters(
     mergePharmacyCatalogFilters(routeFilters, queryFilters)
   );
 
+  const pharmacyName = await getSelectedPharmacySeoName(filters.pharmacyId);
+
   return createPageMetadata({
-    title: getPharmacyTitle(filters),
-    description: getPharmacyDescription(filters),
+    title: getPharmacyTitle(filters, pharmacyName),
+    description: getPharmacyDescription(filters, pharmacyName),
     path: buildPharmacyCanonicalPath(filters),
     noIndex: isPharmacyNoIndex(filters),
   });
@@ -150,6 +154,7 @@ async function PharmaciesSegmentsPage({
 
   const pageData = await loadPharmaciesCatalogPageData(filters);
   const canonicalPath = buildPharmaciesCatalogPath(pageData.filters);
+
   const currentPath = resolvedParams?.segments?.length
     ? `${ROUTES.PHARMACIES}/${resolvedParams.segments.join('/')}`
     : ROUTES.PHARMACIES;

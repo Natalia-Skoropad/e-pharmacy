@@ -30,41 +30,47 @@ export function ReviewRatingInput({
 
   return (
     <fieldset className={css.ratingFieldset}>
-      <legend className={css.reviewLabel}>Rating</legend>
+      <legend className="visually-hidden">Rating</legend>
 
-      <div
-        className={css.ratingButtons}
-        id={id}
-        role="radiogroup"
-        aria-label="Review rating"
-        aria-required="true"
-        aria-invalid={showError || undefined}
-        aria-describedby={showError ? errorId : undefined}
-      >
-        {[1, 2, 3, 4, 5].map((rating) => {
-          const isSelected = value === rating;
-          const isFilled = value >= rating;
+      <div className={css.ratingControls}>
+        <span className={css.reviewLabel} aria-hidden="true">
+          Rating
+        </span>
 
-          return (
-            <label
-              className={isFilled ? css.starButtonActive : css.starButton}
-              key={rating}
-            >
-              <input
-                className="visually-hidden"
-                type="radio"
-                name={id}
-                value={rating}
-                checked={isSelected}
-                required
-                disabled={disabled}
-                aria-label={`${rating} star${rating === 1 ? '' : 's'}`}
-                onChange={() => onChange(rating)}
-              />
-              <Star size={20} aria-hidden="true" />
-            </label>
-          );
-        })}
+        <div
+          className={css.ratingButtons}
+          id={id}
+          role="radiogroup"
+          aria-label="Review rating"
+          aria-required="true"
+          aria-invalid={showError || undefined}
+          aria-describedby={showError ? errorId : undefined}
+        >
+          {[1, 2, 3, 4, 5].map((rating) => {
+            const isSelected = value === rating;
+            const isFilled = value >= rating;
+
+            return (
+              <label
+                className={isFilled ? css.starButtonActive : css.starButton}
+                key={rating}
+              >
+                <input
+                  className="visually-hidden"
+                  type="radio"
+                  name={id}
+                  value={rating}
+                  checked={isSelected}
+                  required
+                  disabled={disabled}
+                  aria-label={`${rating} star${rating === 1 ? '' : 's'}`}
+                  onChange={() => onChange(rating)}
+                />
+                <Star size={20} aria-hidden="true" />
+              </label>
+            );
+          })}
+        </div>
       </div>
 
       {showError ? (

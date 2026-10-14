@@ -13,6 +13,7 @@ import {
 import {
   loadPharmaciesCatalogPageData,
   resolvePharmaciesCatalogFilters,
+  getSelectedPharmacySeoName,
 } from '@/lib/catalog/pharmacies-catalog-server';
 
 import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
@@ -32,9 +33,11 @@ export async function generateMetadata({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
   const { filters } = await resolvePharmaciesCatalogFilters(parsedFilters);
 
+  const pharmacyName = await getSelectedPharmacySeoName(filters.pharmacyId);
+
   return createPageMetadata({
-    title: getPharmacyTitle(filters),
-    description: getPharmacyDescription(filters),
+    title: getPharmacyTitle(filters, pharmacyName),
+    description: getPharmacyDescription(filters, pharmacyName),
     path: buildPharmacyCanonicalPath(filters),
     noIndex: isPharmacyNoIndex(filters),
   });

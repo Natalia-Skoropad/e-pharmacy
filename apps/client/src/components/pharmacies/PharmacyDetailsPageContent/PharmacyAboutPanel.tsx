@@ -100,7 +100,7 @@ export function PharmacyAboutPanel({ pharmacy }: PharmacyAboutPanelProps) {
   const blocks = parseDescription(pharmacy.description);
 
   return (
-    <div className={css.panel}>
+    <>
       <div className={css.header}>
         <span className={css.headerIcon}>
           <FileText size={22} aria-hidden="true" />
@@ -140,6 +140,6 @@ export function PharmacyAboutPanel({ pharmacy }: PharmacyAboutPanelProps) {
           );
         })}
       </div>
-    </div>
+    </>
   );
 }

@@ -57,20 +57,24 @@ export function PharmacyReviewsPanel({
     handleReviewSubmit,
   } = useReviewForm({
     scopeKey: `pharmacy:${pharmacyId}`,
+
     createReview: (payload, options) =>
       createPharmacyReview(pharmacyId, payload, options),
+
     notifier: toast,
     successMessage: 'Review was accepted and will be visible after moderation.',
     errorMessage: 'Could not submit review.',
     authRequiredMessage: 'Please log in to submit a review.',
+
     authUnavailableMessage:
       'We could not verify your session. Please try again shortly.',
+
     clientAccountRequiredMessage:
       'Reviews are available only for active client accounts.',
   });
 
   return (
-    <div className={css.panel}>
+    <>
       <div className={css.header}>
         <div className={css.heading}>
           <span className={css.headerIcon}>
@@ -107,7 +111,7 @@ export function PharmacyReviewsPanel({
         reviewAccessMessage={reviewAccessMessage}
         isAuthUnavailable={isAuthUnavailable}
         isUnavailable={areReviewsUnavailable}
-        emptyVariant="profile"
+        emptyVariant="resource"
         emptyTitle="This pharmacy has no reviews yet."
         emptyText="Reviews appear here after real client orders are completed and approved."
         textareaId="pharmacy-review"
@@ -116,6 +120,6 @@ export function PharmacyReviewsPanel({
         onReviewRatingChange={handleReviewRatingChange}
         onReviewSubmit={() => void handleReviewSubmit()}
       />
-    </div>
+    </>
   );
 }

@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  Mail,
-  Phone,
-  MapPin,
-  ShoppingBag,
-  Eye,
-  PackageSearch,
-} from 'lucide-react';
+import { Phone, MapPin, ShoppingBag, Eye, PackageSearch } from 'lucide-react';
 
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
@@ -102,10 +95,7 @@ function PharmacyCard({
       }
       metaStart={
         locationLabel ? (
-          <span className={css.location}>
-            <MapPin size={14} aria-hidden="true" />
-            {locationLabel}
-          </span>
+          <span className={css.location}>{locationLabel}</span>
         ) : null
       }
       metaEnd={
@@ -118,24 +108,6 @@ function PharmacyCard({
       }
       summaryItems={
         <>
-          <div>
-            <dt className={css.summaryLabel}>
-              <Mail size={15} aria-hidden="true" /> Email
-            </dt>
-            <dd>
-              {pharmacy.email ? (
-                <a
-                  className={css.contactLink}
-                  href={`mailto:${pharmacy.email}`}
-                >
-                  {pharmacy.email}
-                </a>
-              ) : (
-                'Not specified'
-              )}
-            </dd>
-          </div>
-
           {pharmacy.phone ? (
             <div>
               <dt className={css.summaryLabel}>
@@ -177,7 +149,7 @@ function PharmacyCard({
             size="sm"
             variant="secondary"
           >
-            <Eye size={16} aria-hidden="true" /> View details
+            <Eye size={16} aria-hidden="true" /> Details
           </LinkButton>
 
           <LinkButton className={css.detailsLink} href={productsHref} size="sm">

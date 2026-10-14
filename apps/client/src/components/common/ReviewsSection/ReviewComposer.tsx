@@ -72,37 +72,39 @@ export function ReviewComposer({
         onChange={(event) => onReviewTextChange(event.target.value)}
       />
 
-      <ReviewRatingInput
-        id={ratingGroupId}
-        value={reviewRating}
-        error={ratingError}
-        isTouched={Boolean(reviewTouchedFields.rating)}
-        disabled={isReviewSubmitting || isAuthUnavailable || !canCreateReview}
-        onChange={onReviewRatingChange}
-      />
+      <div className={css.ratingActionRow}>
+        <ReviewRatingInput
+          id={ratingGroupId}
+          value={reviewRating}
+          error={ratingError}
+          isTouched={Boolean(reviewTouchedFields.rating)}
+          disabled={isReviewSubmitting || isAuthUnavailable || !canCreateReview}
+          onChange={onReviewRatingChange}
+        />
 
-      <div className={css.reviewActions}>
-        <Button
-          type="submit"
-          className={css.reviewSubmitButton}
-          isLoading={isReviewSubmitting}
-          loadingLabel="Sending..."
-          disabled={
-            !isReviewValid ||
-            isReviewSubmitting ||
-            isAuthUnavailable ||
-            !canCreateReview
-          }
-        >
-          <Send size={17} aria-hidden="true" /> Send review
-        </Button>
-
-        {reviewAccessMessage ? (
-          <p className={css.authNote}>
-            <Info size={17} aria-hidden="true" /> {reviewAccessMessage}
-          </p>
-        ) : null}
+        <div className={css.reviewActions}>
+          <Button
+            type="submit"
+            className={css.reviewSubmitButton}
+            isLoading={isReviewSubmitting}
+            loadingLabel="Sending..."
+            disabled={
+              !isReviewValid ||
+              isReviewSubmitting ||
+              isAuthUnavailable ||
+              !canCreateReview
+            }
+          >
+            <Send size={17} aria-hidden="true" /> Send review
+          </Button>
+        </div>
       </div>
+
+      {reviewAccessMessage ? (
+        <p className={css.authNote}>
+          <Info size={17} aria-hidden="true" /> {reviewAccessMessage}
+        </p>
+      ) : null}
     </form>
   );
 }

@@ -138,3 +138,34 @@
     justify-self: end;
   }
 }
+
+.ratingActionRow {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .ratingActionRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .ratingControls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .ratingControls .reviewLabel {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  .reviewActions {
+    min-width: 0;
+  }
+}

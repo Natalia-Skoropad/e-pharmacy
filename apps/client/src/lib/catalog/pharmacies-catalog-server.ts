@@ -115,3 +115,21 @@ export async function loadPharmaciesCatalogPageData(
         : [],
   };
 }
+
+//===================================================================
+
+// Use the public option snapshot for both page metadata and the visible heading.
+// A missing/stale option must not leak an internal ID into public SEO copy.
+export async function getSelectedPharmacySeoName(
+  pharmacyId?: string
+): Promise<string | undefined> {
+  if (!pharmacyId) return undefined;
+
+  const state = await resolveServerDataState(
+    getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)
+  );
+
+  return state.status === 'success'
+    ? state.data.items.find((pharmacy) => pharmacy.id === pharmacyId)?.name
+    : undefined;
+}

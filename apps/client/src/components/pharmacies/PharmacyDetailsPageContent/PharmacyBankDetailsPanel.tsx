@@ -25,7 +25,7 @@ export function PharmacyBankDetailsPanel({
   onCopy,
 }: PharmacyBankDetailsPanelProps) {
   return (
-    <div className={css.panel}>
+    <>
       <div className={css.header}>
         <span className={css.headerIcon} aria-hidden="true">
           <Landmark size={22} />
@@ -110,6 +110,6 @@ export function PharmacyBankDetailsPanel({
           </div>
         </dl>
       ) : null}
-    </div>
+    </>
   );
 }

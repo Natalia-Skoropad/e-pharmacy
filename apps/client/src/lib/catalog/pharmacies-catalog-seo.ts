@@ -22,16 +22,37 @@ function getSelectedLocationLabel(filters: PharmacyFilters): string {
 
 //===================================================================
 
-export function getPharmacyTitle(filters: PharmacyFilters): string {
+export function getPharmacyTitle(
+  filters: PharmacyFilters,
+  pharmacyName?: string
+): string {
   const locationLabel = getSelectedLocationLabel(filters);
+
+  if (filters.pharmacyId) {
+    const name = pharmacyName?.trim() || 'Selected pharmacy';
+    return locationLabel ? `${name} in ${locationLabel}` : name;
+  }
 
   return locationLabel ? `Choose a pharmacy in ${locationLabel}` : 'Pharmacies';
 }
 
 //===================================================================
 
-export function getPharmacyDescription(filters: PharmacyFilters): string {
+export function getPharmacyDescription(
+  filters: PharmacyFilters,
+  pharmacyName?: string
+): string {
   const locationLabel = getSelectedLocationLabel(filters);
+
+  if (filters.pharmacyId) {
+    const name = pharmacyName?.trim() || 'the selected pharmacy';
+    const location = locationLabel ? ` in ${locationLabel}` : '';
+
+    return (
+      `Find ${name}${location} on E-PHARMACY. Compare its rating, address, ` +
+      'contact details, and available products before preparing an order.'
+    );
+  }
 
   if (locationLabel) {
     return (
@@ -49,9 +70,28 @@ export function getPharmacyDescription(filters: PharmacyFilters): string {
 //===================================================================
 
 export function getPharmaciesSeoContent(
-  filters: PharmacyFilters
+  filters: PharmacyFilters,
+  pharmacyName?: string
 ): PharmaciesCatalogSeoContent {
   const locationLabel = getSelectedLocationLabel(filters);
+
+  const selectedName = filters.pharmacyId
+    ? pharmacyName?.trim() || 'the selected pharmacy'
+    : '';
+
+  if (filters.pharmacyId) {
+    return {
+      intro: `Explore ${selectedName}${locationLabel ? ` in ${locationLabel}` : ''} on E-PHARMACY.`,
+
+      comparison:
+        'Check this pharmacy’s rating, address, contact details, and available ' +
+        'products before opening its page.',
+
+      ordering:
+        'Open the pharmacy page to explore its catalog and prepare an order. ' +
+        'Availability, pickup, delivery, and final sale conditions are confirmed by the pharmacy.',
+    };
+  }
 
   const locationText = locationLabel
     ? `pharmacies in ${locationLabel}`
@@ -73,5 +113,5 @@ export function getPharmaciesSeoContent(
 //===================================================================
 
 export function shouldShowPharmaciesSeoText(filters: PharmacyFilters): boolean {
-  return !isPharmacyNoIndex(filters);
+  return Boolean(filters.pharmacyId) || !isPharmacyNoIndex(filters);
 }

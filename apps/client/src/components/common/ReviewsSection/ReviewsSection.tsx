@@ -28,7 +28,7 @@ export type ReviewsSectionProps = Readonly<{
   isUnavailable?: boolean;
   emptyTitle?: string;
   emptyText?: string;
-  emptyVariant?: 'default' | 'profile';
+  emptyVariant?: 'default' | 'profile' | 'resource';
   textareaId: string;
   maxLength: number;
   onReviewTextChange: (value: string) => void;

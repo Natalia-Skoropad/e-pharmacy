@@ -7,6 +7,7 @@ import {
   ArrowUpAZ,
   Building2,
   Clock3,
+  MapPin,
   RotateCcw,
   Search,
   Star,
@@ -36,6 +37,8 @@ import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 
 import CatalogFiltersShell from '@/components/catalog/CatalogFiltersShell/CatalogFiltersShell';
 import { useCatalogNavigation } from '@/components/catalog/hooks/useCatalogNavigation';
+
+import css from './PharmaciesCatalogFiltersForm.module.css';
 
 //===================================================================
 
@@ -152,6 +155,21 @@ function PharmaciesCatalogFiltersForm({
     <SearchableSelect
       id={`pharmacies-location-${idSuffix}`}
       label="Location"
+      labelAccessory={
+        <InfoTooltip
+          label="Location search help"
+          title="Location"
+          icon={<MapPin size={20} aria-hidden="true" />}
+          items={[
+            {
+              title: 'Search by settlement',
+              icon: <Search size={17} aria-hidden="true" />,
+              description:
+                'Find cities, towns, and other settlements where E-PHARMACY pharmacies are available. Choose a location to see pharmacies serving that area.',
+            },
+          ]}
+        />
+      }
       value={selectedLocationValue}
       options={locationSelectOptions}
       placeholder="All locations"
@@ -184,24 +202,31 @@ function PharmaciesCatalogFiltersForm({
     <SelectField
       id={id}
       label="Sort by"
+      className={css.sortField}
       value={filters.sort}
       options={PHARMACIES_SORT_OPTIONS.map((option) => ({
         ...option,
         content: (
-          <span
-            className="pharmacy-sort-option"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}
-          >
-            {option.value.startsWith('rating') ? (
-              <Star size={17} fill="#f5bd3f" color="#d99d18" />
-            ) : option.value === 'name-asc' ? (
-              <ArrowDownAZ size={17} />
-            ) : option.value === 'name-desc' ? (
-              <ArrowUpAZ size={17} />
-            ) : (
-              <Clock3 size={17} />
-            )}
-            {option.label}
+          <span className={css.sortOption}>
+            <span
+              className={
+                option.value.startsWith('rating')
+                  ? css.ratingIcon
+                  : css.sortIcon
+              }
+              aria-hidden="true"
+            >
+              {option.value.startsWith('rating') ? (
+                <Star size={15} fill="currentColor" />
+              ) : option.value === 'name-asc' ? (
+                <ArrowDownAZ size={15} />
+              ) : option.value === 'name-desc' ? (
+                <ArrowUpAZ size={15} />
+              ) : (
+                <Clock3 size={15} />
+              )}
+            </span>
+            <span>{option.label}</span>
           </span>
         ),
       }))}
@@ -233,7 +258,7 @@ function PharmaciesCatalogFiltersForm({
                   title: 'Search fields',
                   icon: <Search size={17} aria-hidden="true" />,
                   description:
-                    'Find a pharmacy by name, phone number, email, or address (settlement, optional region, and pharmacy address).',
+                    'Find a pharmacy by name, phone number, email, or address.',
                 },
               ]}
             />

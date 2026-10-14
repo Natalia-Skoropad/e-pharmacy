@@ -19,7 +19,7 @@ import { PharmacyDetailsTabs, type PharmacyTab } from './PharmacyDetailsTabs';
 import { PharmacyReviewsPanel } from './PharmacyReviewsPanel';
 import { usePharmacyBankDetails } from './usePharmacyBankDetails';
 
-import css from '@/components/catalog/detail-page.module.css';
+import css from './PharmacyDetailsPageContent.module.css';
 
 //===================================================================
 
@@ -107,8 +107,8 @@ function PharmacyDetailsPageContent({
         {clipboard.statusMessage}
       </p>
 
-      <section className={css.hero}>
-        <Container>
+      <Container>
+        <div className={css.breadcrumbs}>
           <Breadcrumbs
             items={[
               { label: 'Home', href: ROUTES.HOME },
@@ -117,7 +117,9 @@ function PharmacyDetailsPageContent({
             ]}
             includeStructuredData
           />
+        </div>
 
+        <div className={css.tabsCard}>
           <PharmacyDetailsTabs
             idBase={tabsIdBase}
             activeValue={currentTab}
@@ -127,6 +129,7 @@ function PharmacyDetailsPageContent({
           />
 
           <TabPanel
+            className={css.tabPanel}
             idBase={tabsIdBase}
             value="details"
             activeValue={currentTab}
@@ -138,47 +141,45 @@ function PharmacyDetailsPageContent({
               onCopy={clipboard.copy}
             />
           </TabPanel>
-        </Container>
-      </section>
 
-      <Container>
-        {canShowBankDetails ? (
+          {canShowBankDetails ? (
+            <TabPanel
+              className={css.tabPanel}
+              idBase={tabsIdBase}
+              value="payment"
+              activeValue={currentTab}
+            >
+              <PharmacyBankDetailsPanel
+                state={bankDetailsState}
+                onRetry={() => void retryBankDetails()}
+                onCopy={clipboard.copy}
+              />
+            </TabPanel>
+          ) : null}
+
           <TabPanel
-            className={css.tabSection}
+            className={css.tabPanel}
             idBase={tabsIdBase}
-            value="payment"
+            value="about"
             activeValue={currentTab}
           >
-            <PharmacyBankDetailsPanel
-              state={bankDetailsState}
-              onRetry={() => void retryBankDetails()}
-              onCopy={clipboard.copy}
+            <PharmacyAboutPanel pharmacy={pharmacy} />
+          </TabPanel>
+
+          <TabPanel
+            className={css.tabPanel}
+            idBase={tabsIdBase}
+            value="reviews"
+            activeValue={currentTab}
+          >
+            <PharmacyReviewsPanel
+              pharmacyId={pharmacy.id}
+              reviews={reviews}
+              reviewsTotal={reviewsTotal}
+              areReviewsUnavailable={areReviewsUnavailable}
             />
           </TabPanel>
-        ) : null}
-
-        <TabPanel
-          className={css.tabSection}
-          idBase={tabsIdBase}
-          value="about"
-          activeValue={currentTab}
-        >
-          <PharmacyAboutPanel pharmacy={pharmacy} />
-        </TabPanel>
-
-        <TabPanel
-          className={css.tabSection}
-          idBase={tabsIdBase}
-          value="reviews"
-          activeValue={currentTab}
-        >
-          <PharmacyReviewsPanel
-            pharmacyId={pharmacy.id}
-            reviews={reviews}
-            reviewsTotal={reviewsTotal}
-            areReviewsUnavailable={areReviewsUnavailable}
-          />
-        </TabPanel>
+        </div>
       </Container>
     </main>
   );
