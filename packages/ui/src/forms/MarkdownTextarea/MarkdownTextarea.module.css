@@ -117,10 +117,10 @@
 }
 
 .editableExpanded {
-  height: clamp(440px, 60vh, 680px);
-  min-height: 380px;
-  max-height: 80vh;
-  resize: vertical;
+  height: clamp(560px, 68vh, 760px);
+  min-height: 0;
+  max-height: none;
+  resize: none;
 }
 
 .editable:empty::before {
@@ -286,14 +286,16 @@
 
 .linkModalActions {
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
 .linkModalActions > button {
-  flex: 1 1 0;
+  width: 100%;
 }
 
 .linkCancelButton {
+  order: 2;
   color: var(--color-error);
   background-color: var(--color-error-soft);
   border-color: var(--color-error-border);
@@ -308,10 +310,15 @@
 
 @media (min-width: 768px) {
   .linkModalActions {
+    flex-direction: row;
     justify-content: flex-end;
   }
 
   .linkModalActions > button {
-    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .linkCancelButton {
+    order: 0;
   }
 }

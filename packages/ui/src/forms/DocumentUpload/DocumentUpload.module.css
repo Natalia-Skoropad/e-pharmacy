@@ -184,13 +184,7 @@
   background-color: var(--color-error-soft);
 }
 
-.metaRow {
-  display: grid;
-  gap: 6px;
-}
-
 .error {
-  min-height: 18px;
   margin: 0;
   font-size: var(--fz-12);
   line-height: 1.4;
@@ -202,12 +196,6 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .metaRow {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: baseline;
-    column-gap: 16px;
-  }
-
   .list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -218,9 +206,11 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  justify-self: start;
+  align-self: center;
   width: fit-content;
+  max-width: 100%;
   min-height: 36px;
+  margin-top: 4px;
   padding: 8px 12px;
   color: var(--color-accent);
   background-color: var(--color-accent-light);

@@ -107,16 +107,18 @@ function DocumentUpload({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const limitId = `${id}-limit`;
-  const metaId = `${id}-meta`;
   const hasError = Boolean(isTouched && error);
 
   const describedBy = useMemo(
     () =>
-      [hint ? hintId : null, metaId, hasError ? errorId : null]
+      [
+        hint ? hintId : null,
+        typeof maxFiles === 'number' ? limitId : null,
+        hasError ? errorId : null,
+      ]
         .filter(Boolean)
         .join(' '),
-
-    [errorId, hasError, hint, hintId, metaId]
+    [errorId, hasError, hint, hintId, limitId, maxFiles]
   );
 
   const hasReachedLimit =
@@ -241,17 +243,13 @@ function DocumentUpload({
         aria-disabled={readOnly || disabled || hasReachedLimit || undefined}
       >
         <UploadCloud className={css.icon} size={28} aria-hidden="true" />
-
         <span className={css.title}>{mergedLabels.dropzoneTitle}</span>
-
         <span className={css.text} id={hint ? hintId : undefined}>
           {hint || mergedLabels.dropzoneText}
         </span>
-      </label>
 
-      <div className={css.metaRow} id={metaId}>
         {typeof maxFiles === 'number' ? (
-          <div className={css.limit} id={limitId} role="status">
+          <span className={css.limit} id={limitId} role="status">
             <span className={css.limitLabel}>
               <Files size={16} aria-hidden="true" />
               <strong>
@@ -259,7 +257,6 @@ function DocumentUpload({
               </strong>{' '}
               files uploaded
             </span>
-
             <span className={css.limitTrack} aria-hidden="true">
               <span
                 className={css.limitProgress}
@@ -268,13 +265,15 @@ function DocumentUpload({
                 }}
               />
             </span>
-          </div>
+          </span>
         ) : null}
+      </label>
 
+      {hasError ? (
         <p className={css.error} id={errorId}>
-          {isTouched ? (error ?? '') : ''}
+          {error}
         </p>
-      </div>
+      ) : null}
 
       {value.length > 0 ? (
         <ul className={css.list} aria-label="Uploaded documents">

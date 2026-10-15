@@ -92,10 +92,13 @@ function SearchableSelect<TValue extends string = string>({
   const [query, setQuery] = useState('');
 
   const selectedOption = options.find((option) => option.value === value);
+  const isSelectionLoading = !isOpen && (isLoading || isOptionsLoading);
 
-  const inputValue = isOpen
-    ? query
-    : (selectedOption?.label ?? (value ? (selectedFallbackLabel ?? '') : ''));
+  const inputValue = isSelectionLoading
+    ? ''
+    : isOpen
+      ? query
+      : (selectedOption?.label ?? (value ? (selectedFallbackLabel ?? '') : ''));
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -234,7 +237,19 @@ function SearchableSelect<TValue extends string = string>({
             (disabled || isLoading) && css.comboboxDisabled
           )}
         >
-          {!isOpen && selectedOption?.leading ? (
+          {isLoading || isOptionsLoading ? (
+            <span
+              className={css.loadingIndicator}
+              role="status"
+              aria-label={loadingMessage}
+            >
+              <LoaderCircle
+                className={css.spinner}
+                size={18}
+                aria-hidden="true"
+              />
+            </span>
+          ) : !isOpen && selectedOption?.leading ? (
             <span className={css.selectedLeading}>
               {selectedOption.leading}
             </span>
@@ -249,7 +264,7 @@ function SearchableSelect<TValue extends string = string>({
             type="text"
             role="combobox"
             value={inputValue}
-            placeholder={placeholder}
+            placeholder={isSelectionLoading ? '' : placeholder}
             autoComplete="off"
             maxLength={maxLength}
             disabled={disabled || isLoading}
@@ -264,20 +279,6 @@ function SearchableSelect<TValue extends string = string>({
             onChange={(event) => handleInputChange(event.target.value)}
             onKeyDown={handleKeyDown}
           />
-
-          {isLoading || isOptionsLoading ? (
-            <span
-              className={css.loadingIndicator}
-              role="status"
-              aria-label={loadingMessage}
-            >
-              <LoaderCircle
-                className={css.spinner}
-                size={16}
-                aria-hidden="true"
-              />
-            </span>
-          ) : null}
 
           <button
             className={css.toggleButton}
