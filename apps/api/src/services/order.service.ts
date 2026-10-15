@@ -225,9 +225,11 @@ function createOrderClientSnapshot(client: UserDocument): OrderClientSnapshot {
 
   return {
     name: client.name?.trim() || client.email?.trim() || 'Client',
+
     ...(client.email?.trim() ? { email: client.email.trim() } : {}),
     ...(client.phone?.trim() ? { phone: client.phone.trim() } : {}),
     ...(client.address?.trim() ? { address: client.address.trim() } : {}),
+
     ...(client.pictureUrl?.trim()
       ? { pictureUrl: client.pictureUrl.trim() }
       : {}),
@@ -306,6 +308,7 @@ function assertManagerOrderReplayMatches(
     HTTP_STATUS.CONFLICT,
     'This order request was already used with different order data.',
     undefined,
+
     MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE
   );
 }
@@ -400,12 +403,14 @@ function createOrderPharmacySnapshot(
 
   return {
     name: pharmacy.name,
+
     ...(location ? { location } : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(typeof pharmacy.rating === 'number' ? { rating: pharmacy.rating } : {}),
+
     ...(typeof pharmacy.reviewsCount === 'number'
       ? { reviewsCount: pharmacy.reviewsCount }
       : {}),
@@ -576,10 +581,12 @@ function serializeOrder(
     createdAt: order.createdAt.toISOString(),
     userId: order.userId.toString(),
     clientId: order.userId.toString(),
+
     ...(clientName ? { clientName } : {}),
     ...(clientPhotoUrl ? { clientPhotoUrl } : {}),
     ...(clientPhone ? { clientPhone } : {}),
     ...(clientAddress ? { clientAddress } : {}),
+
     ...(hasClientIdentity
       ? {
           client: {
@@ -592,6 +599,7 @@ function serializeOrder(
 
     pharmacyId: order.pharmacyId.toString(),
     pharmacyName: order.pharmacySnapshot.name,
+
     ...(order.pharmacySnapshot.imageUrl
       ? { pharmacyImageUrl: order.pharmacySnapshot.imageUrl }
       : {}),
@@ -613,6 +621,7 @@ function serializeOrder(
       : {}),
 
     ...(pharmacyLocation ? { pharmacyLocation } : {}),
+
     ...(order.pharmacySnapshot.workingHours
       ? { pharmacyWorkingHours: order.pharmacySnapshot.workingHours }
       : {}),
@@ -660,6 +669,7 @@ function serializeOrder(
     managerCommentsCount: managerComments.length,
 
     ...(managerComments.length ? { managerComments } : {}),
+
     ...(hasCompleteBankDetails(order.pharmacySnapshot.bankDetails)
       ? { bankDetails: order.pharmacySnapshot.bankDetails }
       : {}),
@@ -692,7 +702,9 @@ function serializeOrder(
           : {}),
 
         article: item.productSnapshot.article,
+
         ...(category ? { category } : {}),
+
         ...(item.productSnapshot.imageUrl
           ? { imageUrl: item.productSnapshot.imageUrl }
           : {}),
@@ -940,12 +952,14 @@ export async function checkoutOrderService(
           HTTP_STATUS.CONFLICT,
           'Selected pharmacy order is empty or expired. Please return to the cart.',
           undefined,
+
           CHECKOUT_GROUP_MISSING_ERROR_CODE
         );
       }
 
       const currentGroupFingerprint = createCheckoutGroupFingerprint({
         pharmacyId: input.pharmacyId,
+
         items: orderCartItems.map((item) => {
           const offer = initialOfferMap.get(String(item.productOfferId));
 
@@ -972,6 +986,7 @@ export async function checkoutOrderService(
           HTTP_STATUS.CONFLICT,
           'Selected pharmacy order changed. Please review the updated order and confirm again.',
           undefined,
+
           CHECKOUT_CART_CHANGED_ERROR_CODE
         );
       }
@@ -985,6 +1000,7 @@ export async function checkoutOrderService(
           HTTP_STATUS.CONFLICT,
           'Pharmacy is unavailable for checkout.',
           undefined,
+
           PHARMACY_UNAVAILABLE_ERROR_CODE
         );
       }
@@ -997,6 +1013,7 @@ export async function checkoutOrderService(
           HTTP_STATUS.CONFLICT,
           'Bank transfer is unavailable until bank details are completed.',
           undefined,
+
           PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
         );
       }
@@ -1063,17 +1080,22 @@ export async function checkoutOrderService(
 
           productSnapshot: {
             name: product.name,
+
             ...(product.slug ? { slug: product.slug } : {}),
+
             article: product.article,
             categoryId: product.categoryId,
             categoryNameSnapshot: category.name,
             categorySlugSnapshot: category.slug,
+
             ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+
             ...(product.manufacturer
               ? { manufacturer: product.manufacturer }
               : {}),
 
             ...(product.dosage ? { dosage: product.dosage } : {}),
+
             ...(product.packageQuantity
               ? { packageQuantity: product.packageQuantity }
               : {}),
@@ -1139,6 +1161,7 @@ export async function checkoutOrderService(
                     method: 'postal_delivery',
                     details: input.deliveryDetails,
                   },
+
             ...(input.comment ? { comment: input.comment } : {}),
 
             status: 'new',
@@ -1196,6 +1219,7 @@ export async function checkoutOrderService(
           HTTP_STATUS.CONFLICT,
           'Cart changed during checkout. Please review the updated order and confirm again.',
           undefined,
+
           CHECKOUT_CART_CHANGED_ERROR_CODE
         );
       }
@@ -1602,24 +1626,30 @@ function createOrderItemFromProductOffer({
 }): OrderItemEntity {
   return {
     ...(previousItem?._id ? { _id: previousItem._id } : {}),
+
     productId: offer.productId,
     productOfferId: offer._id,
 
     productSnapshot: {
       name: product.name,
+
       ...(product.slug ? { slug: product.slug } : {}),
+
       article: product.article,
       categoryId: product.categoryId,
       categoryNameSnapshot: category.name,
       categorySlugSnapshot: category.slug,
+
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
       ...(product.dosage ? { dosage: product.dosage } : {}),
+
       ...(product.packageQuantity
         ? { packageQuantity: product.packageQuantity }
         : {}),
 
       ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
+
       ...(typeof product.reviewsCount === 'number'
         ? { reviewsCount: product.reviewsCount }
         : {}),
@@ -1679,6 +1709,7 @@ export async function updateOrderDetailsService(
             HTTP_STATUS.CONFLICT,
             'Bank transfer is unavailable for this order because confirmed bank details are missing.',
             undefined,
+
             PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
           );
         }
@@ -1919,6 +1950,7 @@ export async function updateOrderDetailsService(
       const update: Record<string, unknown> = {
         ...(Object.keys(set).length ? { $set: set } : {}),
         ...(Object.keys(unset).length ? { $unset: unset } : {}),
+
         ...(activityHistoryEntries.length
           ? { $push: { activityHistory: { $each: activityHistoryEntries } } }
           : {}),
@@ -2709,12 +2741,14 @@ export async function getOrdersService(
 
     filter.$and = [
       ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+
       clientSearchCondition,
     ];
   }
 
   if (query.pharmacy?.trim()) {
     const search = createSafeRegExp(query.pharmacy.trim());
+
     filter.$and = [
       ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
       {
@@ -2796,39 +2830,49 @@ export async function getOrdersService(
     filter.status = query.status;
   }
 
-  const [total, statistics, earliestOrder, pharmacyOptions] = await Promise.all(
-    [
-      Order.countDocuments(filter),
-      getOrderStatistics(statisticsFilter),
+  const [
+    total,
+    statistics,
+    earliestOrder,
+    pharmacyOptions,
+    orderNumberOptions,
+  ] = await Promise.all([
+    Order.countDocuments(filter),
+    getOrderStatistics(statisticsFilter),
 
-      Order.findOne(earliestDateFilter)
-        .sort({ createdAt: 1 })
-        .select('createdAt')
-        .lean<{ createdAt: Date } | null>(),
+    Order.findOne(earliestDateFilter)
+      .sort({ createdAt: 1 })
+      .select('createdAt')
+      .lean<{ createdAt: Date } | null>(),
 
-      role === USER_ROLES.PHARMACY
-        ? Promise.resolve(
-            [] as Array<{
-              _id: Types.ObjectId;
-              snapshot: OrderPharmacySnapshot;
-            }>
-          )
-        : Order.aggregate<{
+    role === USER_ROLES.PHARMACY
+      ? Promise.resolve(
+          [] as Array<{
             _id: Types.ObjectId;
             snapshot: OrderPharmacySnapshot;
-          }>([
-            { $match: { userId: new Types.ObjectId(userId) } },
-            { $sort: { createdAt: -1 } },
-            {
-              $group: {
-                _id: '$pharmacyId',
-                snapshot: { $first: '$pharmacySnapshot' },
-              },
+          }>
+        )
+      : Order.aggregate<{
+          _id: Types.ObjectId;
+          snapshot: OrderPharmacySnapshot;
+        }>([
+          { $match: { userId: new Types.ObjectId(userId) } },
+          { $sort: { createdAt: -1 } },
+          {
+            $group: {
+              _id: '$pharmacyId',
+              snapshot: { $first: '$pharmacySnapshot' },
             },
-            { $sort: { 'snapshot.name': 1 } },
-          ]),
-    ]
-  );
+          },
+          { $sort: { 'snapshot.name': 1 } },
+        ]),
+
+    role === USER_ROLES.PHARMACY
+      ? Promise.resolve([] as string[])
+      : Order.distinct('orderNumber', {
+          userId: new Types.ObjectId(userId),
+        }),
+  ]);
 
   const totalPages = Math.ceil(total / query.perPage);
   const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
@@ -2860,12 +2904,17 @@ export async function getOrdersService(
     totalPages,
     statistics,
 
+    orderNumberOptions: orderNumberOptions
+      .filter((number): number is string => typeof number === 'string')
+      .sort((first, second) => second.localeCompare(first, 'en')),
+
     pharmacyOptions: pharmacyOptions.map(({ _id, snapshot }) => ({
       id: String(_id),
       name: snapshot.name,
 
       ...(snapshot.phone ? { phone: snapshot.phone } : {}),
       ...(snapshot.email ? { email: snapshot.email } : {}),
+
       ...(snapshot.location?.address || snapshot.address
         ? { address: snapshot.location?.address || snapshot.address }
         : {}),

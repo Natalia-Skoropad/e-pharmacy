@@ -177,8 +177,8 @@ requirePattern(
 
 requirePattern(
   pharmacyCard,
-  /<Mail size=\{15\}/,
-  'PharmacyCard must render the email icon.'
+  /<Phone size=\{15\}/,
+  'PharmacyCard must render the phone icon.'
 );
 
 requirePattern(
@@ -189,8 +189,8 @@ requirePattern(
 
 requirePattern(
   pharmacyContactPanel,
-  /pharmacy\.location\?\.region[\s\S]*pharmacy\.location\?\.address/,
-  'Public pharmacy details must render the optional region and street address.'
+  /pharmacy\.location\?\.address\?\.trim\(\)/,
+  'Public pharmacy contact must show street address without repeating the region.'
 );
 
 forbidPattern(

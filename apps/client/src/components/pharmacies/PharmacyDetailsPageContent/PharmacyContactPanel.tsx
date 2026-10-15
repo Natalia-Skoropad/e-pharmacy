@@ -36,10 +36,7 @@ export function PharmacyContactPanel({
 }: PharmacyContactPanelProps) {
   const workingHours = pharmacy.workingHours?.trim() ?? '';
   const phoneHref = getTelephoneHref(pharmacy.phone);
-
-  const location = [pharmacy.location?.region, pharmacy.location?.address]
-    .filter(Boolean)
-    .join(', ');
+  const location = pharmacy.location?.address?.trim() ?? '';
 
   return (
     <>

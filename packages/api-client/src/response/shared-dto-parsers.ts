@@ -812,6 +812,7 @@ export function parseProductDetails(
 
   return checked<ProductDetails>({
     ...record,
+
     category: parseProductCategoryReference(record.category, context),
     offers: parseArray(record.offers, 'offers', parseProductOffer, context),
   });
@@ -829,6 +830,7 @@ export function parseProductsResponse(
     normalizePaginatedResponse(record, {
       normalizeItem: (item) => parseProductCardSummary(item, context),
     }),
+
     { label: 'products response', ...context }
   );
 
@@ -854,6 +856,7 @@ export function parseProductsWithOffersResponse(
     normalizePaginatedResponse(record, {
       normalizeItem: (item) => parseProductDetails(item, context),
     }),
+
     { label: 'products with offers response', ...context }
   );
 
@@ -3240,8 +3243,17 @@ export function parseClientOrdersResponse(
 
   return checked<ClientOrdersResponse>({
     ...pagination,
+
     statistics,
     earliestCreatedAt,
+
+    ...(Array.isArray(record.orderNumberOptions)
+      ? {
+          orderNumberOptions: record.orderNumberOptions.filter(
+            (value): value is string => typeof value === 'string'
+          ),
+        }
+      : {}),
 
     pharmacyOptions: Array.isArray(record.pharmacyOptions)
       ? record.pharmacyOptions.flatMap((raw) => {

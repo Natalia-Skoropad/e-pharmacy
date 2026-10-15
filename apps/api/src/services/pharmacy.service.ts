@@ -285,6 +285,7 @@ function serializePublicPharmacy(
           },
         }
       : {}),
+
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -488,6 +489,7 @@ function serializePharmacyProfile(
     id: String(pharmacy._id),
     membershipRole,
     name: pharmacy.name,
+
     ...(pharmacy.location
       ? { location: clonePharmacyLocation(pharmacy.location) }
       : {}),
@@ -588,32 +590,14 @@ export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptions
       : (left.region ?? '').localeCompare(right.region ?? '', 'uk-UA');
   });
 
-  const settlementCounts = new Map<string, number>();
-
-  for (const location of locations) {
-    const key = location.settlement
-      .normalize('NFKC')
-      .toLocaleLowerCase('uk-UA');
-
-    settlementCounts.set(key, (settlementCounts.get(key) ?? 0) + 1);
-  }
-
   return {
-    locations: locations.map((location) => {
-      const settlementKey = location.settlement
-        .normalize('NFKC')
-        .toLocaleLowerCase('uk-UA');
+    locations: locations.map((location) => ({
+      ...location,
 
-      const isDuplicateSettlement =
-        (settlementCounts.get(settlementKey) ?? 0) > 1;
-
-      return {
-        ...location,
-        label: isDuplicateSettlement
-          ? `${location.settlement} (${location.region ?? 'region not specified'})`
-          : location.settlement,
-      };
-    }),
+      label: location.region
+        ? `${location.settlement} (${location.region})`
+        : location.settlement,
+    })),
 
     sort: [
       { value: 'newest', label: 'Newest first' },
@@ -647,6 +631,7 @@ export async function getPharmacyOptionsService() {
     items: pharmacies.map((pharmacy) => ({
       id: String(pharmacy._id),
       name: pharmacy.name,
+
       ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
       ...(pharmacy.email ? { email: pharmacy.email } : {}),
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
@@ -1134,6 +1119,7 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
       {
         missingFields,
       },
+
       PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE
     );
   }
@@ -1304,6 +1290,7 @@ async function appendPharmacyOwnerMutationAudit(
   const changedFields = ['revision', 'editedSections'];
 
   if (before.status !== after.status) changedFields.push('status');
+
   if (beforeSnapshot.reviewState !== afterSnapshot.reviewState)
     changedFields.push('reviewState');
 
@@ -1400,6 +1387,7 @@ export async function updateMyPharmacyProfileService(
             _id: pharmacy._id,
             updatedAt: new Date(expectedRevision),
             status: pharmacy.status,
+
             ...(isCorrectionDraft ? { reviewState: 'changes_requested' } : {}),
           },
           {
@@ -1582,6 +1570,7 @@ export async function submitMyPharmacyModerationService(
 
       const resolvedChanges: ResolvedPharmacyProfileUpdate = {
         ...profileFields,
+
         ...(documentSelections !== undefined
           ? {
               documents: await resolvePrivatePharmacyDocumentSelections(
@@ -1620,11 +1609,13 @@ export async function submitMyPharmacyModerationService(
       const updatedPharmacy = await Pharmacy.findOneAndUpdate(
         {
           _id: pharmacy._id,
+
           status: isResubmission
             ? PHARMACY_STATUSES.ON_MODERATION
             : PHARMACY_STATUSES.ACTIVE,
 
           ...(isResubmission ? { reviewState: 'changes_requested' } : {}),
+
           updatedAt: new Date(input.expectedRevision),
         },
         {
@@ -1714,6 +1705,7 @@ export async function sendMyPharmacyForVerificationService(
           HTTP_STATUS.CONFLICT,
           'Pharmacy profile is already submitted or cannot be verified from its current status.',
           undefined,
+
           PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE
         );
       }

@@ -283,8 +283,8 @@ requirePattern(
 );
 
 requirePattern(
-  pharmacyHero,
-  /<h1 className=\{css\.title\}>\{pharmacy\.name\}<\/h1>/,
+  pharmacyDetails,
+  /<h1 className=\{css\.detailsHeaderTitle\}>\{pharmacy\.name\}<\/h1>/,
   'PharmacyDetails: visible pharmacy-name H1 is missing.'
 );
 
@@ -296,7 +296,7 @@ requirePattern(
 
 requirePattern(
   pharmacyBankDetails,
-  />\s*Retry\s*</,
+  /retryLabel="Retry"\s+onRetry=\{onRetry\}/,
   'PharmacyBankDetailsPanel: retry action is missing.'
 );
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CircleAlert, LoaderCircle } from 'lucide-react';
+import { CircleAlert, LoaderCircle, RotateCcw } from 'lucide-react';
 
 import { Button } from '../primitives/Button/Button';
 import css from './Profile.module.css';
@@ -44,7 +44,11 @@ export function ProfileResourceState({
   const resolvedAction =
     action ??
     (variant === 'error' && onRetry ? (
-      <Button type="button" onClick={() => void onRetry()}>
+      <Button
+        type="button"
+        iconLeft={<RotateCcw size={17} aria-hidden="true" />}
+        onClick={() => void onRetry()}
+      >
         {retryLabel}
       </Button>
     ) : null);

@@ -150,6 +150,7 @@ for (const [label, source, budget] of [
   ['PharmacyDetailsPageContent', pharmacyPage, 220],
 ]) {
   const lines = source.split(/\r?\n/).length;
+
   if (lines > budget)
     violations.push(`${label} exceeds ${budget} lines (${lines}).`);
 
@@ -215,8 +216,8 @@ forbidPattern(
 );
 
 requirePattern(
-  pharmacyHero,
-  /<h1[^>]*>\{pharmacy\.name\}<\/h1>/,
+  pharmacyPage,
+  /<h1 className=\{css\.detailsHeaderTitle\}>\{pharmacy\.name\}<\/h1>/,
   'Pharmacy Details must expose the visible pharmacy name as H1.'
 );
 

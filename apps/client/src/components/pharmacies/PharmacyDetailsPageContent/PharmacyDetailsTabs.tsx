@@ -3,10 +3,42 @@
 import { Building2, Landmark, FileText, Star } from 'lucide-react';
 
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
+import { ROUTES } from '@/lib/routes';
 
 //===================================================================
 
 export type PharmacyTab = 'details' | 'payment' | 'about' | 'reviews';
+
+//===================================================================
+
+export const PHARMACY_TAB_LABELS: Readonly<Record<PharmacyTab, string>> = {
+  details: 'Details',
+  payment: 'Bank details',
+  about: 'About pharmacy',
+  reviews: 'Reviews',
+};
+
+//===================================================================
+
+export function getPharmacyDetailsBreadcrumbs(
+  pharmacyName: string,
+  pharmacyHref: string,
+  activeTab: PharmacyTab
+) {
+  return [
+    { label: 'Home', href: ROUTES.HOME },
+    { label: 'Pharmacies', href: ROUTES.PHARMACIES },
+    {
+      label: pharmacyName,
+
+      ...(activeTab !== 'details' ? { href: pharmacyHref } : {}),
+    },
+
+    ...(activeTab !== 'details'
+      ? [{ label: PHARMACY_TAB_LABELS[activeTab] }]
+      : []),
+  ];
+}
 
 //===================================================================
 
@@ -30,7 +62,7 @@ export function PharmacyDetailsTabs({
   const items: TabItem<PharmacyTab>[] = [
     {
       value: 'details',
-      label: 'Details',
+      label: PHARMACY_TAB_LABELS.details,
       icon: <Building2 size={17} aria-hidden="true" />,
     },
 
@@ -38,19 +70,19 @@ export function PharmacyDetailsTabs({
       ? [
           {
             value: 'payment' as const,
-            label: 'Bank details',
+            label: PHARMACY_TAB_LABELS.payment,
             icon: <Landmark size={17} aria-hidden="true" />,
           },
         ]
       : []),
     {
       value: 'about',
-      label: 'About pharmacy',
+      label: PHARMACY_TAB_LABELS.about,
       icon: <FileText size={17} aria-hidden="true" />,
     },
     {
       value: 'reviews',
-      label: `Reviews (${reviewsTotal})`,
+      label: `${PHARMACY_TAB_LABELS.reviews} (${reviewsTotal})`,
       icon: <Star size={17} aria-hidden="true" />,
     },
   ];

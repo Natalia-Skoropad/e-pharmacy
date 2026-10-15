@@ -57,7 +57,10 @@ test('Stage 13.4.5 builds Location options only from active pharmacies and keeps
   assert.match(filterService, /location\.settlement/);
   assert.match(filterService, /location\.region/);
   assert.match(filterService, /uniqueLocations/);
-  assert.match(filterService, /settlementCounts/);
+
+  // Every known region is displayed, not just duplicate settlement names.
+  assert.doesNotMatch(filterService, /settlementCounts/);
+  assert.match(filterService, /label: location\.region/);
   assert.match(filterService, /locations:\s*locations\.map/);
 
   assert.match(
@@ -83,10 +86,8 @@ test('Stage 13.4.5 address search covers address, settlement and region and loca
   assert.match(catalogService, /'location\.settlement'/);
   assert.match(catalogService, /'location\.region'/);
 
-  assert.match(
-    catalogService,
-    /if \(query\.settlement\) filter\['location\.settlement'\] = query\.settlement/
-  );
+  assert.match(catalogService, /if \(query\.settlement\) \{/);
+  assert.match(catalogService, /filter\['location\.settlement'\] = new RegExp/);
 
   assert.doesNotMatch(catalogService, /query\.city/);
   assert.match(catalogService, /query\.region/);

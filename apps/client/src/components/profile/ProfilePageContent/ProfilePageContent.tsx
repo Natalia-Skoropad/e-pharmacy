@@ -3,9 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
 
 import {
+  Banknote,
+  Landmark,
+  MapPin,
+  Search,
+  Truck,
+  UserCog,
   Building2,
   ChevronDown,
   ClipboardList,
@@ -67,7 +72,6 @@ import {
   NameInput,
   PhoneInput,
   RowsPerPageSelect,
-  SearchInput,
   SearchableSelect,
   SelectField,
   type RowsPerPageValue,
@@ -226,6 +230,22 @@ const DEFAULT_CLIENT_ORDERS_FILTERS: ClientOrdersFilterState = {
   createdByType: 'all',
 };
 
+//===================================================================
+
+// Reuse one presentation for all icon-based order filter options.
+function orderFilterOption(label: string, icon: ReactNode) {
+  return (
+    <span className={css.orderFilterOption}>
+      <span className={css.orderFilterIcon} aria-hidden="true">
+        {icon}
+      </span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
+//===================================================================
+
 const DELIVERY_METHOD_OPTIONS: Array<
   SelectOption<ClientOrdersFilterState['deliveryMethod']>
 > = [
@@ -233,8 +253,15 @@ const DELIVERY_METHOD_OPTIONS: Array<
   ...DELIVERY_METHODS.map((deliveryMethod) => ({
     value: deliveryMethod,
     label: DELIVERY_METHOD_LABELS[deliveryMethod],
+
+    content: orderFilterOption(
+      DELIVERY_METHOD_LABELS[deliveryMethod],
+      deliveryMethod === 'pickup' ? <MapPin size={16} /> : <Truck size={16} />
+    ),
   })),
 ];
+
+//===================================================================
 
 const PAYMENT_METHOD_OPTIONS: Array<
   SelectOption<ClientOrdersFilterState['paymentMethod']>
@@ -243,8 +270,15 @@ const PAYMENT_METHOD_OPTIONS: Array<
   ...PAYMENT_METHODS.map((paymentMethod) => ({
     value: paymentMethod,
     label: PAYMENT_METHOD_LABELS[paymentMethod],
+
+    content: orderFilterOption(
+      PAYMENT_METHOD_LABELS[paymentMethod],
+      paymentMethod === 'cash' ? <Banknote size={16} /> : <Landmark size={16} />
+    ),
   })),
 ];
+
+//===================================================================
 
 const ORDER_STATUS_OPTIONS: Array<
   SelectOption<ClientOrdersFilterState['status']>
@@ -253,8 +287,11 @@ const ORDER_STATUS_OPTIONS: Array<
   ...ORDER_STATUSES.map((status) => ({
     value: status,
     label: ORDER_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...ORDER_STATUS_PRESENTATION[status]} />,
   })),
 ];
+
+//===================================================================
 
 const ORDER_CREATED_BY_OPTIONS: Array<
   SelectOption<ClientOrdersFilterState['createdByType']>
@@ -263,6 +300,16 @@ const ORDER_CREATED_BY_OPTIONS: Array<
   ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
     value: createdByType,
     label: ORDER_CREATED_BY_LABELS[createdByType],
+
+    content: orderFilterOption(
+      ORDER_CREATED_BY_LABELS[createdByType],
+
+      createdByType === 'client' ? (
+        <UserRound size={16} />
+      ) : (
+        <UserCog size={16} />
+      )
+    ),
   })),
 ];
 
@@ -295,12 +342,28 @@ function AuthenticatedProfilePageContent({
         : (routeTab as ProfileTab)
       : 'data';
 
+  const profileBreadcrumbs = [
+    { label: 'Home', href: ROUTES.HOME },
+
+    ...(activeTab === 'data'
+      ? [{ label: PROFILE_TITLE }]
+      : [
+          { label: PROFILE_TITLE, href: ROUTES.PROFILE },
+          {
+            label:
+              TABS.find((tab) => tab.value === activeTab)?.label ??
+              PROFILE_TITLE,
+          },
+        ]),
+  ];
+
   const serverProfileValues = useMemo<DataProfileFormValues>(
     () => ({
       name: user.name ?? '',
       phone: user.phone ?? '',
       address: user.address ?? '',
     }),
+
     [user.address, user.name, user.phone]
   );
 
@@ -322,6 +385,7 @@ function AuthenticatedProfilePageContent({
     pictureDraft === undefined ? (user.pictureUrl ?? null) : pictureDraft;
 
   const [orders, setOrders] = useState<ClientOrder[]>([]);
+  const [orderNumberOptions, setOrderNumberOptions] = useState<string[]>([]);
 
   const ordersPathState = parseClientOrdersUrl(
     pathname.startsWith('/profile/orders/')
@@ -468,24 +532,31 @@ function AuthenticatedProfilePageContent({
       perPage: ordersRowsPerPage,
       dateFrom: ordersFilters.date.from || undefined,
       dateTo: ordersFilters.date.to || undefined,
+
       ...(/^[0-9a-f]{24}$/i.test(ordersFilters.pharmacy)
         ? { pharmacyId: ordersFilters.pharmacy }
         : { pharmacy: ordersFilters.pharmacy.trim() || undefined }),
+
       orderNumber: ordersFilters.orderNumber.trim() || undefined,
+
       deliveryMethod:
         ordersFilters.deliveryMethod === 'all'
           ? undefined
           : ordersFilters.deliveryMethod,
+
       paymentMethod:
         ordersFilters.paymentMethod === 'all'
           ? undefined
           : ordersFilters.paymentMethod,
+
       status: ordersFilters.status === 'all' ? undefined : ordersFilters.status,
+
       createdByType:
         ordersFilters.createdByType === 'all'
           ? undefined
           : ordersFilters.createdByType,
     }),
+
     [ordersCurrentPage, ordersFilters, ordersRowsPerPage]
   );
 
@@ -511,6 +582,7 @@ function AuthenticatedProfilePageContent({
       {
         key: 'orderNumber',
         title: <TableHeaderTitle parts={['Order', 'number']} />,
+
         render: (order) => (
           <TextActionButton
             className={css.orderLink}
@@ -523,6 +595,7 @@ function AuthenticatedProfilePageContent({
       {
         key: 'pharmacyPhoto',
         title: <TableHeaderTitle parts={['Pharmacy', 'photo']} />,
+
         render: (order) => (
           <TableImagePreview
             src={order.pharmacyImageUrl}
@@ -534,6 +607,7 @@ function AuthenticatedProfilePageContent({
       {
         key: 'pharmacy',
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
+
         render: (order) => (
           <TextActionButton
             className={css.pharmacyLink}
@@ -571,6 +645,7 @@ function AuthenticatedProfilePageContent({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Order', 'status']} />,
+
         render: (order) => (
           <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
         ),
@@ -629,6 +704,7 @@ function AuthenticatedProfilePageContent({
       setFavoriteProducts((current) =>
         page === 1 ? [...response.items] : [...current, ...response.items]
       );
+
       setFavoriteProductsCount(response.total);
       setFavoriteProductsPage(response.page);
       setFavoriteProductsTotalPages(response.totalPages);
@@ -636,6 +712,7 @@ function AuthenticatedProfilePageContent({
       if (!isCurrentRequest()) return;
 
       setFavoriteProductsError('Could not load favorite products.');
+
       if (page === 1) setFavoriteProductsCount(0);
     } finally {
       if (favoriteProductsRequestVersionRef.current === requestVersion) {
@@ -684,6 +761,7 @@ function AuthenticatedProfilePageContent({
       setFavoritePharmacies((current) =>
         page === 1 ? [...response.items] : [...current, ...response.items]
       );
+
       setFavoritePharmaciesCount(response.total);
       setFavoritePharmaciesPage(response.page);
       setFavoritePharmaciesTotalPages(response.totalPages);
@@ -691,6 +769,7 @@ function AuthenticatedProfilePageContent({
       if (!isCurrentRequest()) return;
 
       setFavoritePharmaciesError('Could not load favorite pharmacies.');
+
       if (page === 1) setFavoritePharmaciesCount(0);
     } finally {
       if (favoritePharmaciesRequestVersionRef.current === requestVersion) {
@@ -800,6 +879,7 @@ function AuthenticatedProfilePageContent({
 
         if (!controller.signal.aborted) {
           setOrders([...response.items]);
+          setOrderNumberOptions([...(response.orderNumberOptions ?? [])]);
           setOrdersTotal(response.total);
           setOrdersTotalPages(response.totalPages);
           setOrdersEarliestCreatedAt(response.earliestCreatedAt);
@@ -869,6 +949,7 @@ function AuthenticatedProfilePageContent({
       if (activeTab === 'favorite-products' && favoriteProductsPage === 0) {
         void loadFavoriteProducts();
       }
+
       if (activeTab === 'favorite-pharmacies' && favoritePharmaciesPage === 0) {
         void loadFavoritePharmacies();
       }
@@ -888,8 +969,10 @@ function AuthenticatedProfilePageContent({
 
   const handleTabChange = (nextTab: ProfileTab) => {
     if (nextTab === activeTab) return;
+
     const url =
       nextTab === 'data' ? ROUTES.PROFILE : `${ROUTES.PROFILE}/${nextTab}`;
+
     window.history.pushState(null, '', url);
   };
 
@@ -944,9 +1027,11 @@ function AuthenticatedProfilePageContent({
     try {
       setSessionsError('');
       await revokeActiveSession(sessionId);
+
       setSessions((current) =>
         current.filter((session) => session.id !== sessionId)
       );
+
       toast.success('Session was revoked.');
     } catch {
       setSessionsError('Could not revoke the session.');
@@ -981,6 +1066,7 @@ function AuthenticatedProfilePageContent({
 
     setProfileDraft((current) => {
       const baseline = current?.baseline ?? serverProfileValues;
+
       const nextValues = {
         ...(current?.values ?? serverProfileValues),
         [field]: value,
@@ -1010,8 +1096,10 @@ function AuthenticatedProfilePageContent({
         pictureUrl,
         expectedRevision: user.revision,
       });
+
       applyCurrentUser(response.user);
       setPictureDraft(undefined);
+
       toast.success(
         pictureUrl ? 'Profile photo was updated.' : 'Profile photo was removed.'
       );
@@ -1021,6 +1109,7 @@ function AuthenticatedProfilePageContent({
           fallback: 'Could not update profile photo.',
         })
       );
+
       setPictureDraft(previousPictureDraft);
     } finally {
       profileMutationInFlightRef.current = false;
@@ -1052,17 +1141,21 @@ function AuthenticatedProfilePageContent({
         ...nextProfileValues,
         expectedRevision: user.revision,
       });
+
       applyCurrentUser(response.user);
       setProfileDraft(null);
       setProfileTouchedFields({});
+
       toast.success('Profile data was updated.');
     } catch (error) {
       toast.error(
         getUserFacingErrorMessage(error, {
           fallback: 'Could not update profile data.',
+
           backendCodeMessages: {
             AUTH_PHONE_CONFLICT:
               'This phone number is already used by another account.',
+
             AUTH_PROFILE_CONFLICT:
               'Your profile changed in another tab. Reload the latest data and try again.',
           },
@@ -1083,7 +1176,9 @@ function AuthenticatedProfilePageContent({
 
     try {
       setIsPasswordSaving(true);
+
       await updateCurrentUserPassword(values);
+
       invalidateSession('password_changed');
       toast.success('Password changed. Sign in again.');
       window.location.assign(ROUTES.LOGIN);
@@ -1103,15 +1198,11 @@ function AuthenticatedProfilePageContent({
     <main className={css.page}>
       <section className={css.section} aria-labelledby="profile-title">
         <Container>
-          <Breadcrumbs items={createBreadcrumbs(PROFILE_TITLE)} />
+          <Breadcrumbs items={profileBreadcrumbs} />
 
-          <h1 className={css.title} id="profile-title">
+          <h1 className="visually-hidden" id="profile-title">
             {PROFILE_TITLE}
           </h1>
-
-          <p className={css.text}>
-            View your account details, orders, favorites and profile photo.
-          </p>
 
           <div className={css.profileShell}>
             <aside className={css.sidebar} aria-label="Profile summary">
@@ -1273,11 +1364,27 @@ function AuthenticatedProfilePageContent({
                     aria-label="Order search and filters"
                   >
                     <div className={css.ordersSearchGrid}>
-                      <SearchInput
+                      <SearchableSelect
                         id="profile-orders-number-search"
                         label="Order number search"
                         value={ordersFilters.orderNumber}
-                        placeholder="Order number"
+                        placeholder="Find order number"
+                        options={[
+                          { value: '', label: 'All orders' },
+                          ...orderNumberOptions.map((number) => ({
+                            value: number,
+                            label: number,
+                            leading: (
+                              <span
+                                className={css.orderNumberIcon}
+                                aria-hidden="true"
+                              >
+                                <ClipboardList size={17} />
+                              </span>
+                            ),
+                          })),
+                        ]}
+                        emptyMessage="No orders found"
                         isActive={Boolean(ordersFilters.orderNumber)}
                         onChange={(orderNumber) =>
                           handleOrdersFiltersChange({
@@ -1576,6 +1683,7 @@ function AuthenticatedProfilePageContent({
                   ) : (
                     <ProfileResourceState
                       variant="empty"
+                      icon={<Heart size={24} aria-hidden="true" />}
                       title="No favorite products yet"
                       description="Tap the heart on a product card, and it will wait here nicely – no shelf drama included."
                       sideActionOnDesktop
@@ -1677,6 +1785,7 @@ function AuthenticatedProfilePageContent({
                   ) : (
                     <ProfileResourceState
                       variant="empty"
+                      icon={<Building2 size={24} aria-hidden="true" />}
                       title="No favorite pharmacies yet"
                       description="Mark a pharmacy with a heart, and it will stay here for quick access – loyal as a tiny green assistant."
                       sideActionOnDesktop

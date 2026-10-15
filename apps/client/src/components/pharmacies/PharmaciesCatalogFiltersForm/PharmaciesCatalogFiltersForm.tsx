@@ -28,6 +28,7 @@ import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 
 import {
   buildPharmacyPath,
+  formatPharmacyLocationLabel,
   getPharmacyActiveFiltersCount,
   PHARMACIES_SORT_OPTIONS,
   type PharmacyFilters,
@@ -162,11 +163,16 @@ function PharmaciesCatalogFiltersForm({
   const locationSelectOptions = useMemo(
     () => [
       { value: 'all', label: 'All locations' },
+
       ...availableLocationOptions.map((location) => ({
         value: getLocationOptionValue(location),
-        label: location.label,
+        label: formatPharmacyLocationLabel(
+          location.settlement,
+          location.region
+        ),
       })),
     ],
+
     [availableLocationOptions]
   );
 

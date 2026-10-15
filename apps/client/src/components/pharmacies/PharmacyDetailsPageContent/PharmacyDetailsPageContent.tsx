@@ -11,12 +11,18 @@ import type { Review } from '@e-pharmacy/types/reviews';
 
 import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
-import { ROUTES } from '@/lib/routes';
+import { formatPharmacyLocationLabel } from '@/lib/catalog/pharmacies-catalog';
 
 import { PharmacyAboutPanel } from './PharmacyAboutPanel';
 import { PharmacyBankDetailsPanel } from './PharmacyBankDetailsPanel';
 import { PharmacyDetailsHero } from './PharmacyDetailsHero';
-import { PharmacyDetailsTabs, type PharmacyTab } from './PharmacyDetailsTabs';
+
+import {
+  PharmacyDetailsTabs,
+  getPharmacyDetailsBreadcrumbs,
+  type PharmacyTab,
+} from './PharmacyDetailsTabs';
+
 import { PharmacyReviewsPanel } from './PharmacyReviewsPanel';
 import { usePharmacyBankDetails } from './usePharmacyBankDetails';
 
@@ -112,11 +118,11 @@ function PharmacyDetailsPageContent({
       <Container>
         <div className={css.breadcrumbs}>
           <Breadcrumbs
-            items={[
-              { label: 'Home', href: ROUTES.HOME },
-              { label: 'Pharmacies', href: ROUTES.PHARMACIES },
-              { label: pharmacy.name },
-            ]}
+            items={getPharmacyDetailsBreadcrumbs(
+              pharmacy.name,
+              `/${pharmacy.publicSlugId}`,
+              currentTab
+            )}
             includeStructuredData
           />
         </div>
@@ -146,7 +152,10 @@ function PharmacyDetailsPageContent({
                   <h1 className={css.detailsHeaderTitle}>{pharmacy.name}</h1>
                   {pharmacy.location?.settlement ? (
                     <span className={css.detailsHeaderSettlement}>
-                      {pharmacy.location.settlement}
+                      {formatPharmacyLocationLabel(
+                        pharmacy.location.settlement,
+                        pharmacy.location.region
+                      )}
                     </span>
                   ) : null}
                 </div>

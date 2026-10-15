@@ -79,8 +79,10 @@ function PharmaciesPageContent({
     : undefined;
 
   const selectedLocationLabel = filters.settlement
-    ? (selectedLocation?.label ??
-      formatPharmacyLocationLabel(filters.settlement, filters.region))
+    ? formatPharmacyLocationLabel(
+        selectedLocation?.settlement ?? filters.settlement,
+        selectedLocation?.region ?? filters.region
+      )
     : '';
 
   return (
@@ -105,6 +107,7 @@ function PharmaciesPageContent({
               },
             ]
           : []),
+
         ...(filters.pharmacyId
           ? [{ label: selectedPharmacyName || 'Selected pharmacy' }]
           : []),

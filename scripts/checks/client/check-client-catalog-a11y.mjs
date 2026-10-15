@@ -133,8 +133,8 @@ requirePattern(
 );
 
 requirePattern(
-  pharmacyHero,
-  /<h1[^>]*>\{pharmacy\.name\}<\/h1>/,
+  pharmacyDetails,
+  /<h1 className=\{css\.detailsHeaderTitle\}>\{pharmacy\.name\}<\/h1>/,
   'Pharmacy details need a visible pharmacy-name H1.'
 );
 

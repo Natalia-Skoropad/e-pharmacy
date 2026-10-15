@@ -139,10 +139,6 @@
     text-align: left;
   }
 
-  .pharmacyLayout .catalogToolbar .filterButton {
-    display: none;
-  }
-
   .searchGridPharmacy {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
@@ -209,21 +205,17 @@
     width: 240px;
   }
 
-  .pharmacyLayout .desktopSort {
-    width: 292px;
-  }
-
   .pharmacyLayout .mobileFilterSlot {
     display: none;
   }
 
-  .pharmacyLayout .catalogToolbar .filterButton {
-    display: none;
+  .searchGridPharmacy {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr) auto;
+    justify-content: stretch;
   }
 
-  .searchGridPharmacy {
-    grid-template-columns: minmax(460px, 496px) minmax(220px, 240px) auto;
-    justify-content: start;
+  .searchGridPharmacy .desktopResetSlot {
+    justify-content: flex-end;
   }
 
   .searchGridPharmacy > :first-child {
