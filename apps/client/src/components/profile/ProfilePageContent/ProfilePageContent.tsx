@@ -462,6 +462,7 @@ function AuthenticatedProfilePageContent({
     useState(false);
 
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
+  const [hasLoadedOrderOptions, setHasLoadedOrderOptions] = useState(false);
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
   const [isPictureSaving, setIsPictureSaving] = useState(false);
@@ -676,6 +677,7 @@ function AuthenticatedProfilePageContent({
 
     const controller = new AbortController();
     const requestVersion = favoriteProductsRequestVersionRef.current + 1;
+
     favoriteProductsAbortRef.current = controller;
     favoriteProductsRequestVersionRef.current = requestVersion;
 
@@ -733,6 +735,7 @@ function AuthenticatedProfilePageContent({
 
     const controller = new AbortController();
     const requestVersion = favoritePharmaciesRequestVersionRef.current + 1;
+
     favoritePharmaciesAbortRef.current = controller;
     favoritePharmaciesRequestVersionRef.current = requestVersion;
 
@@ -884,6 +887,7 @@ function AuthenticatedProfilePageContent({
           setOrdersTotalPages(response.totalPages);
           setOrdersEarliestCreatedAt(response.earliestCreatedAt);
           setPharmacyOptions(response.pharmacyOptions ?? []);
+          setHasLoadedOrderOptions(true);
         }
       } catch {
         if (!controller.signal.aborted) {
@@ -891,6 +895,7 @@ function AuthenticatedProfilePageContent({
           setOrdersTotal(0);
           setOrdersTotalPages(0);
           setOrdersEarliestCreatedAt(null);
+          setHasLoadedOrderOptions(true);
         }
       } finally {
         if (!controller.signal.aborted) setIsOrdersLoading(false);
@@ -913,6 +918,7 @@ function AuthenticatedProfilePageContent({
       try {
         setIsSessionsLoading(true);
         setSessionsError('');
+
         const response = await getActiveSessions({
           signal: controller.signal,
         });
@@ -930,6 +936,7 @@ function AuthenticatedProfilePageContent({
     }
 
     void loadSessions();
+
     return () => {
       controller.abort();
     };
@@ -1368,6 +1375,10 @@ function AuthenticatedProfilePageContent({
                         id="profile-orders-number-search"
                         label="Order number search"
                         value={ordersFilters.orderNumber}
+                        selectedFallbackLabel={ordersFilters.orderNumber}
+                        isOptionsLoading={
+                          isOrdersLoading || !hasLoadedOrderOptions
+                        }
                         placeholder="Find order number"
                         options={[
                           { value: '', label: 'All orders' },
@@ -1413,6 +1424,14 @@ function AuthenticatedProfilePageContent({
                           />
                         }
                         value={ordersFilters.pharmacy}
+                        selectedFallbackLabel={
+                          isOrdersLoading || !hasLoadedOrderOptions
+                            ? 'Loading selected pharmacy...'
+                            : 'Selected pharmacy unavailable'
+                        }
+                        isOptionsLoading={
+                          isOrdersLoading || !hasLoadedOrderOptions
+                        }
                         placeholder="Pharmacy name, phone, email, or address"
                         options={[
                           { value: '', label: 'All pharmacies' },

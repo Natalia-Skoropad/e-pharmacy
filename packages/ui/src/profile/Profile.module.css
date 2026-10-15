@@ -344,11 +344,7 @@
 }
 
 .resourceStateEmpty {
-  background: linear-gradient(
-    135deg,
-    var(--color-accent-selected),
-    transparent
-  );
+  background-color: var(--color-background-soft);
   border-radius: var(--radius-xl);
 }
 

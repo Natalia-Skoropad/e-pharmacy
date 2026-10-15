@@ -46,6 +46,32 @@ test('base and new routes derive breadcrumbs from canonical route families', () 
 
 //===================================================================
 
+test('pharmacy profile tabs update the breadcrumb trail', () => {
+  const tabs = {
+    'pharmacy-data': 'Pharmacy data',
+    about: 'About pharmacy',
+    payment: 'Payment details',
+    documents: 'Documents',
+    reviews: 'Reviews',
+    comments: 'Comments',
+    sessions: 'Active sessions',
+  } as const;
+
+  for (const [segment, label] of Object.entries(tabs)) {
+    assert.deepEqual(
+      getPharmacyBreadcrumbsByPathname(`/pharmacy/profile/${segment}`),
+      [{ label: 'Pharmacy profile', href: '/pharmacy/profile' }, { label }]
+    );
+  }
+
+  assert.deepEqual(
+    getPharmacyBreadcrumbsByPathname('/pharmacy/profile/unrecognized'),
+    [{ label: 'Pharmacy profile' }]
+  );
+});
+
+//===================================================================
+
 test('canonical filter segments are never classified as entity detail ids', () => {
   for (const [pathname, expectedLabel] of FILTER_CASES) {
     assert.deepEqual(getPharmacyBreadcrumbsByPathname(pathname), [

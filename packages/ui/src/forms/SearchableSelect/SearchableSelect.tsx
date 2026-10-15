@@ -38,6 +38,7 @@ export type SearchableSelectProps<TValue extends string = string> = Readonly<{
   placeholder?: string;
   emptyMessage?: string;
   loadingMessage?: string;
+  selectedFallbackLabel?: string;
   isActive?: boolean;
   isLoading?: boolean;
   isOptionsLoading?: boolean;
@@ -62,6 +63,7 @@ function SearchableSelect<TValue extends string = string>({
   placeholder = 'Search option',
   emptyMessage = 'No options found',
   loadingMessage = 'Loading options...',
+  selectedFallbackLabel,
   isActive = false,
   isLoading = false,
   isOptionsLoading = false,
@@ -90,7 +92,10 @@ function SearchableSelect<TValue extends string = string>({
   const [query, setQuery] = useState('');
 
   const selectedOption = options.find((option) => option.value === value);
-  const inputValue = isOpen ? query : (selectedOption?.label ?? '');
+
+  const inputValue = isOpen
+    ? query
+    : (selectedOption?.label ?? (value ? (selectedFallbackLabel ?? '') : ''));
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -133,6 +138,7 @@ function SearchableSelect<TValue extends string = string>({
   useOutsidePointerDown({
     refs: [rootRef],
     enabled: isOpen,
+
     onOutside: () => {
       setIsOpen(false);
       setQuery('');
@@ -148,6 +154,7 @@ function SearchableSelect<TValue extends string = string>({
 
   const openSelect = () => {
     if (disabled || isLoading) return;
+
     setIsOpen(true);
     setQuery('');
     onQueryChange?.('');
@@ -155,7 +162,9 @@ function SearchableSelect<TValue extends string = string>({
   };
 
   const handleSelect = (option: SearchableSelectOption<TValue> | undefined) => {
-    if (!option || option.disabled || disabled || isLoading) return;
+    if (!option || option.disabled || disabled || isLoading || isOptionsLoading)
+      return;
+
     onChange(option.value);
     closeSelect();
     inputRef.current?.focus();
@@ -165,8 +174,8 @@ function SearchableSelect<TValue extends string = string>({
     if (disabled || isLoading) return;
 
     const sanitizedQuery = sanitizeQuery ? sanitizeQuery(nextQuery) : nextQuery;
-
     const normalizedQuery = sanitizedQuery.slice(0, maxLength);
+
     setQuery(normalizedQuery);
     onQueryChange?.(normalizedQuery);
     resetActiveIndex(0);
@@ -180,6 +189,7 @@ function SearchableSelect<TValue extends string = string>({
       event.preventDefault();
       if (!isOpen) openSelect();
       else moveActiveIndex(event.key === 'ArrowDown' ? 1 : -1);
+
       return;
     }
 
@@ -188,12 +198,14 @@ function SearchableSelect<TValue extends string = string>({
       event.preventDefault();
       if (event.key === 'Home') moveToStart();
       else moveToEnd();
+
       return;
     }
 
     if (event.key === 'Enter' && isOpen) {
       event.preventDefault();
       handleSelect(activeOption);
+
       return;
     }
 
@@ -253,6 +265,20 @@ function SearchableSelect<TValue extends string = string>({
             onKeyDown={handleKeyDown}
           />
 
+          {isLoading || isOptionsLoading ? (
+            <span
+              className={css.loadingIndicator}
+              role="status"
+              aria-label={loadingMessage}
+            >
+              <LoaderCircle
+                className={css.spinner}
+                size={16}
+                aria-hidden="true"
+              />
+            </span>
+          ) : null}
+
           <button
             className={css.toggleButton}
             type="button"
@@ -266,19 +292,11 @@ function SearchableSelect<TValue extends string = string>({
               inputRef.current?.focus();
             }}
           >
-            {isLoading || isOptionsLoading ? (
-              <LoaderCircle
-                className={css.spinner}
-                size={18}
-                aria-hidden="true"
-              />
-            ) : (
-              <ChevronDown
-                className={clsx(css.chevron, isOpen && css.chevronOpen)}
-                size={18}
-                aria-hidden="true"
-              />
-            )}
+            <ChevronDown
+              className={clsx(css.chevron, isOpen && css.chevronOpen)}
+              size={18}
+              aria-hidden="true"
+            />
           </button>
         </div>
 
@@ -295,7 +313,7 @@ function SearchableSelect<TValue extends string = string>({
             role="listbox"
             aria-label={label}
           >
-            {isOptionsLoading && filteredOptions.length === 0 ? (
+            {isOptionsLoading ? (
               <li className={css.empty} role="status">
                 {loadingMessage}
               </li>

@@ -42,8 +42,25 @@ export function getDashboardBreadcrumbs(): BreadcrumbItem[] {
 
 //===================================================================
 
-export function getProfileBreadcrumbs(): BreadcrumbItem[] {
-  return getPharmacyBreadcrumbs({ label: 'Pharmacy profile' });
+const PHARMACY_PROFILE_TAB_LABELS: Record<string, string> = {
+  'pharmacy-data': 'Pharmacy data',
+  about: 'About pharmacy',
+  payment: 'Payment details',
+  documents: 'Documents',
+  reviews: 'Reviews',
+  comments: 'Comments',
+  sessions: 'Active sessions',
+};
+
+export function getProfileBreadcrumbs(tab?: string): BreadcrumbItem[] {
+  const tabLabel = tab ? PHARMACY_PROFILE_TAB_LABELS[tab] : undefined;
+
+  return tabLabel
+    ? getPharmacyBreadcrumbs(
+        { label: tabLabel },
+        { label: 'Pharmacy profile', href: PHARMACY_ROUTES.PROFILE }
+      )
+    : getPharmacyBreadcrumbs({ label: 'Pharmacy profile' });
 }
 
 //===================================================================
@@ -186,7 +203,7 @@ export function getPharmacyBreadcrumbsByPathname(
   }
 
   if (route.family === 'profile') {
-    return getProfileBreadcrumbs();
+    return getProfileBreadcrumbs(route.segments[0]);
   }
 
   if (route.family === 'orders') {
@@ -204,6 +221,7 @@ export function getPharmacyBreadcrumbsByPathname(
     }
 
     const orderId = getSingleEntityId(route.segments);
+
     return orderId
       ? getOrderDetailsBreadcrumbs(orderId, currentDetailLabel)
       : getOrdersBreadcrumbs();
@@ -215,6 +233,7 @@ export function getPharmacyBreadcrumbsByPathname(
     }
 
     const clientId = getSingleEntityId(route.segments);
+
     return clientId
       ? getClientDetailsBreadcrumbs(clientId, currentDetailLabel)
       : getClientsBreadcrumbs();
@@ -226,6 +245,7 @@ export function getPharmacyBreadcrumbsByPathname(
     }
 
     const productId = getSingleEntityId(route.segments);
+
     return productId
       ? getProductDetailsBreadcrumbs(productId, currentDetailLabel)
       : getProductsBreadcrumbs();
@@ -237,6 +257,7 @@ export function getPharmacyBreadcrumbsByPathname(
     }
 
     const productId = getSingleEntityId(route.segments);
+
     return productId
       ? getAllProductDetailsBreadcrumbs(productId, currentDetailLabel)
       : getAllProductsBreadcrumbs();
@@ -255,6 +276,7 @@ export function getPharmacyBreadcrumbsByPathname(
     }
 
     const requestId = getSingleEntityId(route.segments);
+
     return requestId
       ? getProductRequestDetailsBreadcrumbs(requestId, currentDetailLabel)
       : getProductRequestsBreadcrumbs();

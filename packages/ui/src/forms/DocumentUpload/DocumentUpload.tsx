@@ -1,7 +1,16 @@
 'use client';
 
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { Download, FileText, Trash2, UploadCloud, X } from 'lucide-react';
+
+import {
+  Download,
+  Files,
+  FileText,
+  Trash2,
+  UploadCloud,
+  X,
+} from 'lucide-react';
+
 import clsx from 'clsx';
 
 import type { BrowserUploadFile } from '../types';
@@ -106,6 +115,7 @@ function DocumentUpload({
       [hint ? hintId : null, metaId, hasError ? errorId : null]
         .filter(Boolean)
         .join(' '),
+
     [errorId, hasError, hint, hintId, metaId]
   );
 
@@ -231,21 +241,34 @@ function DocumentUpload({
         aria-disabled={readOnly || disabled || hasReachedLimit || undefined}
       >
         <UploadCloud className={css.icon} size={28} aria-hidden="true" />
-        <span className={css.title}>{mergedLabels.dropzoneTitle}</span>
-        <span className={css.text}>{mergedLabels.dropzoneText}</span>
-      </label>
 
-      {hint ? (
-        <p className={css.hint} id={hintId}>
-          {hint}
-        </p>
-      ) : null}
+        <span className={css.title}>{mergedLabels.dropzoneTitle}</span>
+
+        <span className={css.text} id={hint ? hintId : undefined}>
+          {hint || mergedLabels.dropzoneText}
+        </span>
+      </label>
 
       <div className={css.metaRow} id={metaId}>
         {typeof maxFiles === 'number' ? (
-          <p className={css.limit} id={limitId}>
-            {value.length}/{maxFiles} files uploaded
-          </p>
+          <div className={css.limit} id={limitId} role="status">
+            <span className={css.limitLabel}>
+              <Files size={16} aria-hidden="true" />
+              <strong>
+                {value.length} / {maxFiles}
+              </strong>{' '}
+              files uploaded
+            </span>
+
+            <span className={css.limitTrack} aria-hidden="true">
+              <span
+                className={css.limitProgress}
+                style={{
+                  width: `${Math.min(100, (value.length / Math.max(1, maxFiles)) * 100)}%`,
+                }}
+              />
+            </span>
+          </div>
         ) : null}
 
         <p className={css.error} id={errorId}>

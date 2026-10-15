@@ -100,6 +100,7 @@ function EntityCommentsContent({
 
   const handleCreate = async () => {
     const result = await comments.submitDraft();
+
     if (result.status === 'success') {
       toast.success('Comment added successfully.');
     } else if (result.status === 'error') {
@@ -114,6 +115,7 @@ function EntityCommentsContent({
 
   const handleDelete = async () => {
     const result = await comments.confirmDelete();
+
     if (result.status === 'success') {
       toast.success('Comment deleted successfully.');
     } else if (result.status === 'error') {
@@ -195,7 +197,7 @@ function EntityCommentsContent({
             commentTitle={commentTitle}
             emptyTitle={emptyTitle}
             emptyText={emptyText}
-            emptyVariant="profile"
+            emptyVariant="resource"
             deletingId={comments.deletingId}
             deleteDisabled={
               !isEditable || Boolean(comments.deletingId) || comments.isSaving

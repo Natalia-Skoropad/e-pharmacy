@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Bold, Italic, Link2, List, ListOrdered } from 'lucide-react';
+import { Bold, Italic, Link2, List, ListOrdered, Plus, X } from 'lucide-react';
 
 import {
   useEffect,
@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import Button from '../../primitives/Button/Button';
+import { CloseIconButton } from '../../primitives/CloseIconButton/CloseIconButton';
 import ModalBase from '../../overlays/ModalBase/ModalBase';
 import ModalRoot from '../../overlays/ModalRoot/ModalRoot';
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
@@ -32,6 +33,7 @@ export type MarkdownTextareaProps = Readonly<{
   disabled?: boolean;
   className?: string;
   maxLength?: number;
+  expanded?: boolean;
   hint?: string;
   onValueChange: (value: string) => void;
 }>;
@@ -73,6 +75,7 @@ function renderInlineMarkdown(value: string): string {
     /\[([^\]]+)]\(((?:https?:\/\/|mailto:)[^)\s]+)\)/gi,
     '<a href="$2">$1</a>'
   );
+
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<em>$1</em>');
 
@@ -96,44 +99,58 @@ function markdownToHtml(markdown: string): string {
     }
 
     const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+
     if (heading) {
       const level = heading[1]?.length ?? 1;
+
       blocks.push(
         `<h${level}>${renderInlineMarkdown(heading[2] ?? '')}</h${level}>`
       );
+
       index += 1;
+
       continue;
     }
 
     if (/^[-*]\s+/.test(line)) {
       const items: string[] = [];
+
       while (index < lines.length && /^[-*]\s+/.test(lines[index] ?? '')) {
         items.push(
           `<li>${renderInlineMarkdown((lines[index] ?? '').replace(/^[-*]\s+/, ''))}</li>`
         );
+
         index += 1;
       }
+
       blocks.push(`<ul>${items.join('')}</ul>`);
+
       continue;
     }
 
     if (/^\d+\.\s+/.test(line)) {
       const items: string[] = [];
+
       while (index < lines.length && /^\d+\.\s+/.test(lines[index] ?? '')) {
         items.push(
           `<li>${renderInlineMarkdown((lines[index] ?? '').replace(/^\d+\.\s+/, ''))}</li>`
         );
+
         index += 1;
       }
+
       blocks.push(`<ol>${items.join('')}</ol>`);
+
       continue;
     }
 
     const paragraphLines: string[] = [line];
+
     index += 1;
 
     while (index < lines.length) {
       const nextLine = lines[index] ?? '';
+
       if (
         !nextLine.trim() ||
         /^(#{1,3})\s+/.test(nextLine) ||
@@ -162,6 +179,7 @@ function serializeInlineNode(node: Node): string {
   if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
   const element = node as HTMLElement;
+
   const children = Array.from(element.childNodes)
     .map(serializeInlineNode)
     .join('');
@@ -189,6 +207,7 @@ function serializeInlineNode(node: Node): string {
 function serializeList(element: HTMLElement, ordered: boolean): string {
   return Array.from(element.children)
     .filter((child) => child.tagName === 'LI')
+
     .map((child, index) => {
       const content = Array.from(child.childNodes)
         .map(serializeInlineNode)
@@ -198,6 +217,7 @@ function serializeList(element: HTMLElement, ordered: boolean): string {
 
       return `${ordered ? `${index + 1}.` : '-'} ${content}`;
     })
+
     .join('\n');
 }
 
@@ -220,6 +240,7 @@ function serializeBlockNode(node: Node): string {
   if (element.tagName === 'H1') return `# ${content}\n\n`;
   if (element.tagName === 'H2') return `## ${content}\n\n`;
   if (element.tagName === 'H3') return `### ${content}\n\n`;
+
   if (element.tagName === 'P' || element.tagName === 'DIV') {
     return `${content}\n\n`;
   }
@@ -250,6 +271,7 @@ function normalizeLinkUrl(value: string): string | null {
 
   try {
     const url = new URL(candidate);
+
     return ['http:', 'https:', 'mailto:'].includes(url.protocol)
       ? candidate
       : null;
@@ -272,6 +294,7 @@ function MarkdownTextarea({
   disabled = false,
   className,
   maxLength,
+  expanded = false,
   hint,
   onValueChange,
 }: MarkdownTextareaProps) {
@@ -314,6 +337,7 @@ function MarkdownTextarea({
     if (!editor || !selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
+
     if (editor.contains(range.commonAncestorContainer)) {
       savedRangeRef.current = range.cloneRange();
     }
@@ -385,6 +409,7 @@ function MarkdownTextarea({
     restoreSelection();
 
     const selection = window.getSelection();
+
     const isCollapsed =
       !selection || selection.rangeCount === 0 || selection.isCollapsed;
 
@@ -409,6 +434,7 @@ function MarkdownTextarea({
     event.preventDefault();
     const plainText = event.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, plainText);
+
     window.requestAnimationFrame(() => {
       saveSelection();
       emitValue();
@@ -515,7 +541,7 @@ function MarkdownTextarea({
         <div className={css.inputWrap}>
           <div
             ref={editorRef}
-            className={css.editable}
+            className={`${css.editable} ${expanded ? css.editableExpanded : ''}`}
             id={id}
             role="textbox"
             aria-label={label}
@@ -548,7 +574,7 @@ function MarkdownTextarea({
         <ModalRoot>
           <ModalBase
             isOpen
-            ariaLabel="Add link"
+            labelledBy={`${id}-link-title`}
             dialogClassName={css.linkModal}
             initialFocusRef={linkInputRef}
             fallbackFocusRef={editorRef}
@@ -556,11 +582,20 @@ function MarkdownTextarea({
           >
             <div className={css.linkModalContent}>
               <div className={css.linkModalHeader}>
-                <h3 className={css.linkModalTitle}>Add link</h3>
-                <p className={css.linkModalHint}>
-                  Enter a web or email address for the selected text.
-                </p>
+                <div className={css.linkModalHeaderCopy}>
+                  <p className={css.linkModalKicker}>TEXT FORMATTING</p>
+                  <h3 className={css.linkModalTitle} id={`${id}-link-title`}>
+                    Add link
+                  </h3>
+                </div>
+                <CloseIconButton
+                  label="Close add link"
+                  onClick={closeLinkModal}
+                />
               </div>
+              <p className={css.linkModalHint}>
+                Enter a web or email address for the selected text.
+              </p>
 
               <FormFieldLayout
                 id={`${id}-link-url`}
@@ -599,11 +634,18 @@ function MarkdownTextarea({
                   type="button"
                   variant="ghost"
                   size="sm"
+                  className={css.linkCancelButton}
+                  iconLeft={<X size={17} aria-hidden="true" />}
                   onClick={closeLinkModal}
                 >
                   Cancel
                 </Button>
-                <Button type="button" size="sm" onClick={applyLink}>
+                <Button
+                  type="button"
+                  size="sm"
+                  iconLeft={<Plus size={17} aria-hidden="true" />}
+                  onClick={applyLink}
+                >
                   Add link
                 </Button>
               </div>

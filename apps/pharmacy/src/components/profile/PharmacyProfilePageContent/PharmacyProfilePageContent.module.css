@@ -314,6 +314,20 @@
   overflow-wrap: anywhere;
 }
 
+.formGroups {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.formGroup {
+  min-width: 0;
+  padding: 18px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 .formGrid {
   display: grid;
   gap: 14px;

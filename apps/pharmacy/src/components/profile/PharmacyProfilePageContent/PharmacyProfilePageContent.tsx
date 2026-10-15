@@ -1742,6 +1742,7 @@ function PharmacyProfilePage({
 
     try {
       const response = await sendMyPharmacyForVerification();
+
       syncProfile(response.pharmacy);
       toast.success(response.message);
     } catch (error) {
@@ -2152,132 +2153,150 @@ function PharmacyProfilePage({
                         />
                       ) : null}
 
-                      <div className={css.formGrid}>
-                        <NameInput
-                          className={css.fieldWide}
-                          id="pharmacy-name"
-                          name="pharmacyName"
-                          hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
-                          label="Pharmacy name"
-                          placeholder="Enter pharmacy name"
-                          value={pharmacyValues.name}
-                          error={pharmacyErrors.name}
-                          isTouched={Boolean(pharmacyTouched.name)}
-                          disabled={isProfileReadonly}
-                          maxLength={PHARMACY_NAME_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange('name', event.target.value)
-                          }
-                        />
+                      <div className={css.formGroups}>
+                        <div className={css.formGroup}>
+                          <div className={css.formGrid}>
+                            <NameInput
+                              className={css.fieldWide}
+                              id="pharmacy-name"
+                              name="pharmacyName"
+                              hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
+                              label="Pharmacy name"
+                              placeholder="Enter pharmacy name"
+                              value={pharmacyValues.name}
+                              error={pharmacyErrors.name}
+                              isTouched={Boolean(pharmacyTouched.name)}
+                              disabled={isProfileReadonly}
+                              maxLength={PHARMACY_NAME_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange('name', event.target.value)
+                              }
+                            />
 
-                        <NameInput
-                          id="pharmacy-short-description"
-                          name="shortDescription"
-                          required
-                          className={css.fieldWide}
-                          label="Short pharmacy description"
-                          placeholder="Your pharmacy slogan or a short introduction"
-                          hint="A short message shown below the pharmacy name on the public page."
-                          value={pharmacyValues.shortDescription}
-                          error={pharmacyErrors.shortDescription}
-                          isTouched={Boolean(pharmacyTouched.shortDescription)}
-                          disabled={isProfileReadonly}
-                          maxLength={PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange(
-                              'shortDescription',
-                              event.target.value
-                            )
-                          }
-                        />
+                            <NameInput
+                              id="pharmacy-short-description"
+                              name="shortDescription"
+                              required
+                              className={css.fieldWide}
+                              label="Short pharmacy description"
+                              placeholder="Your pharmacy slogan or a short introduction"
+                              hint="A short message shown below the pharmacy name on the public page."
+                              value={pharmacyValues.shortDescription}
+                              error={pharmacyErrors.shortDescription}
+                              isTouched={Boolean(
+                                pharmacyTouched.shortDescription
+                              )}
+                              disabled={isProfileReadonly}
+                              maxLength={PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange(
+                                  'shortDescription',
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className={css.formGroup}>
+                          <div className={css.formGrid}>
+                            <EmailInput
+                              id="pharmacy-email"
+                              name="email"
+                              value={pharmacyValues.email}
+                              hint="Clients will see this email in the pharmacy profile on the website."
+                              error={pharmacyErrors.email}
+                              isTouched={Boolean(pharmacyTouched.email)}
+                              disabled={isProfileReadonly}
+                              maxLength={USER_EMAIL_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange(
+                                  'email',
+                                  normalizeEmail(event.target.value)
+                                )
+                              }
+                            />
 
-                        <EmailInput
-                          id="pharmacy-email"
-                          name="email"
-                          value={pharmacyValues.email}
-                          hint="Clients will see this email in the pharmacy profile on the website."
-                          error={pharmacyErrors.email}
-                          isTouched={Boolean(pharmacyTouched.email)}
-                          disabled={isProfileReadonly}
-                          maxLength={USER_EMAIL_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange(
-                              'email',
-                              normalizeEmail(event.target.value)
-                            )
-                          }
-                        />
+                            <PhoneInput
+                              id="pharmacy-phone"
+                              name="phone"
+                              value={pharmacyValues.phone}
+                              hint="Clients will see this phone number in the pharmacy profile on the website."
+                              error={pharmacyErrors.phone}
+                              isTouched={Boolean(pharmacyTouched.phone)}
+                              disabled={isProfileReadonly}
+                              maxLength={USER_PHONE_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange(
+                                  'phone',
+                                  normalizePhoneInput(event.target.value)
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className={css.formGroup}>
+                          <div className={css.formGrid}>
+                            <NameInput
+                              id="pharmacy-settlement"
+                              name="settlement"
+                              label="Settlement"
+                              placeholder="Example: Bolhrad"
+                              hint="Enter the city, town, village, or other settlement where the pharmacy is located."
+                              autoComplete="address-level2"
+                              value={pharmacyValues.settlement}
+                              error={pharmacyErrors.settlement}
+                              isTouched={Boolean(pharmacyTouched.settlement)}
+                              disabled={isProfileReadonly}
+                              maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange(
+                                  'settlement',
+                                  event.target.value
+                                )
+                              }
+                            />
 
-                        <PhoneInput
-                          id="pharmacy-phone"
-                          name="phone"
-                          value={pharmacyValues.phone}
-                          hint="Clients will see this phone number in the pharmacy profile on the website."
-                          error={pharmacyErrors.phone}
-                          isTouched={Boolean(pharmacyTouched.phone)}
-                          disabled={isProfileReadonly}
-                          maxLength={USER_PHONE_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange(
-                              'phone',
-                              normalizePhoneInput(event.target.value)
-                            )
-                          }
-                        />
+                            <NameInput
+                              id="pharmacy-region"
+                              name="region"
+                              label="Region (optional)"
+                              placeholder="Example: Odesa region"
+                              hint="Add the region when it helps distinguish the settlement."
+                              autoComplete="address-level1"
+                              value={pharmacyValues.region}
+                              error={pharmacyErrors.region}
+                              isTouched={Boolean(pharmacyTouched.region)}
+                              disabled={isProfileReadonly}
+                              maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange(
+                                  'region',
+                                  event.target.value
+                                )
+                              }
+                            />
 
-                        <NameInput
-                          id="pharmacy-settlement"
-                          name="settlement"
-                          label="Settlement"
-                          placeholder="Example: Bolhrad"
-                          hint="Enter the city, town, village, or other settlement where the pharmacy is located."
-                          autoComplete="address-level2"
-                          value={pharmacyValues.settlement}
-                          error={pharmacyErrors.settlement}
-                          isTouched={Boolean(pharmacyTouched.settlement)}
-                          disabled={isProfileReadonly}
-                          maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange(
-                              'settlement',
-                              event.target.value
-                            )
-                          }
-                        />
-
-                        <NameInput
-                          id="pharmacy-region"
-                          name="region"
-                          label="Region (optional)"
-                          placeholder="Example: Odesa region"
-                          hint="Add the region when it helps distinguish the settlement."
-                          autoComplete="address-level1"
-                          value={pharmacyValues.region}
-                          error={pharmacyErrors.region}
-                          isTouched={Boolean(pharmacyTouched.region)}
-                          disabled={isProfileReadonly}
-                          maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange('region', event.target.value)
-                          }
-                        />
-
-                        <AddressInput
-                          id="pharmacy-address"
-                          name="address"
-                          className={css.fieldWide}
-                          label="Pharmacy address"
-                          placeholder="Example: 36 Bolharskykh Opolchentsiv Street"
-                          hint="Enter the street address only; settlement and region are stored separately."
-                          value={pharmacyValues.address}
-                          error={pharmacyErrors.address}
-                          isTouched={Boolean(pharmacyTouched.address)}
-                          disabled={isProfileReadonly}
-                          maxLength={USER_ADDRESS_MAX_LENGTH}
-                          onChange={(event) =>
-                            handlePharmacyChange('address', event.target.value)
-                          }
-                        />
+                            <AddressInput
+                              id="pharmacy-address"
+                              name="address"
+                              className={css.fieldWide}
+                              label="Pharmacy address"
+                              placeholder="Example: 36 Bolharskykh Opolchentsiv Street"
+                              hint="Enter the street address only; settlement and region are stored separately."
+                              value={pharmacyValues.address}
+                              error={pharmacyErrors.address}
+                              isTouched={Boolean(pharmacyTouched.address)}
+                              disabled={isProfileReadonly}
+                              maxLength={USER_ADDRESS_MAX_LENGTH}
+                              onChange={(event) =>
+                                handlePharmacyChange(
+                                  'address',
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
                       </div>
                     </section>
 
@@ -2378,6 +2397,7 @@ function PharmacyProfilePage({
 
                     <MarkdownTextarea
                       id="pharmacy-description"
+                      expanded
                       name="pharmacyDescription"
                       label="Description"
                       value={aboutValues.description}
@@ -2479,107 +2499,120 @@ function PharmacyProfilePage({
                       />
                     ) : null}
 
-                    <div className={css.formGrid}>
-                      <NameInput
-                        id="recipient-name"
-                        name="recipientName"
-                        label="Recipient name"
-                        hint="Enter the legal payment recipient name."
-                        value={paymentValues.recipientName}
-                        error={paymentErrors.recipientName}
-                        isTouched={Boolean(paymentTouched.recipientName)}
-                        disabled={isProfileReadonly}
-                        maxLength={BANK_RECIPIENT_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'recipientName',
-                            event.target.value
-                          )
-                        }
-                      />
+                    <div className={css.formGroups}>
+                      <div className={css.formGroup}>
+                        <div className={css.formGrid}>
+                          <NameInput
+                            id="recipient-name"
+                            name="recipientName"
+                            label="Recipient name"
+                            hint="Enter the legal payment recipient name."
+                            value={paymentValues.recipientName}
+                            error={paymentErrors.recipientName}
+                            isTouched={Boolean(paymentTouched.recipientName)}
+                            disabled={isProfileReadonly}
+                            maxLength={BANK_RECIPIENT_NAME_MAX_LENGTH}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                'recipientName',
+                                event.target.value
+                              )
+                            }
+                          />
 
-                      <TaxIdInput
-                        id="tax-id"
-                        name="taxId"
-                        value={paymentValues.taxId}
-                        error={paymentErrors.taxId}
-                        isTouched={Boolean(paymentTouched.taxId)}
-                        disabled={isProfileReadonly}
-                        maxLength={TAX_ID_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'taxId',
-                            sanitizeTaxId(event.target.value)
-                          )
-                        }
-                      />
+                          <TaxIdInput
+                            id="tax-id"
+                            name="taxId"
+                            value={paymentValues.taxId}
+                            error={paymentErrors.taxId}
+                            isTouched={Boolean(paymentTouched.taxId)}
+                            disabled={isProfileReadonly}
+                            maxLength={TAX_ID_MAX_LENGTH}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                'taxId',
+                                sanitizeTaxId(event.target.value)
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className={css.formGroup}>
+                        <div className={css.formGrid}>
+                          <IbanInput
+                            id="iban"
+                            name="iban"
+                            className={css.fieldWide}
+                            value={paymentValues.iban}
+                            error={paymentErrors.iban}
+                            isTouched={Boolean(paymentTouched.iban)}
+                            disabled={isProfileReadonly}
+                            maxLength={IBAN_MAX_LENGTH}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                'iban',
+                                normalizeIban(event.target.value)
+                              )
+                            }
+                          />
 
-                      <IbanInput
-                        id="iban"
-                        name="iban"
-                        className={css.fieldWide}
-                        value={paymentValues.iban}
-                        error={paymentErrors.iban}
-                        isTouched={Boolean(paymentTouched.iban)}
-                        disabled={isProfileReadonly}
-                        maxLength={IBAN_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'iban',
-                            normalizeIban(event.target.value)
-                          )
-                        }
-                      />
+                          <NameInput
+                            id="bank-name"
+                            name="bankName"
+                            label="Bank name"
+                            value={paymentValues.bankName}
+                            error={paymentErrors.bankName}
+                            isTouched={Boolean(paymentTouched.bankName)}
+                            disabled={isProfileReadonly}
+                            maxLength={BANK_NAME_MAX_LENGTH}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                'bankName',
+                                event.target.value
+                              )
+                            }
+                          />
 
-                      <NameInput
-                        id="bank-name"
-                        name="bankName"
-                        label="Bank name"
-                        value={paymentValues.bankName}
-                        error={paymentErrors.bankName}
-                        isTouched={Boolean(paymentTouched.bankName)}
-                        disabled={isProfileReadonly}
-                        maxLength={BANK_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange('bankName', event.target.value)
-                        }
-                      />
-
-                      <EmailInput
-                        id="receipt-email"
-                        name="receiptEmail"
-                        label="Receipt email"
-                        value={paymentValues.receiptEmail}
-                        error={paymentErrors.receiptEmail}
-                        isTouched={Boolean(paymentTouched.receiptEmail)}
-                        disabled={isProfileReadonly}
-                        maxLength={USER_EMAIL_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'receiptEmail',
-                            normalizeEmail(event.target.value)
-                          )
-                        }
-                      />
-
-                      <CommentInput
-                        id="payment-purpose"
-                        name="paymentPurpose"
-                        label="Payment purpose"
-                        className={css.fieldWide}
-                        value={paymentValues.paymentPurpose}
-                        error={paymentErrors.paymentPurpose}
-                        isTouched={Boolean(paymentTouched.paymentPurpose)}
-                        required
-                        disabled={isProfileReadonly}
-                        maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
-                        onChange={(event) =>
-                          handlePaymentChange(
-                            'paymentPurpose',
-                            event.target.value
-                          )
-                        }
-                      />
+                          <EmailInput
+                            id="receipt-email"
+                            name="receiptEmail"
+                            label="Receipt email"
+                            value={paymentValues.receiptEmail}
+                            error={paymentErrors.receiptEmail}
+                            isTouched={Boolean(paymentTouched.receiptEmail)}
+                            disabled={isProfileReadonly}
+                            maxLength={USER_EMAIL_MAX_LENGTH}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                'receiptEmail',
+                                normalizeEmail(event.target.value)
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className={css.formGroup}>
+                        <div className={css.formGrid}>
+                          <CommentInput
+                            id="payment-purpose"
+                            name="paymentPurpose"
+                            label="Payment purpose"
+                            className={css.fieldWide}
+                            value={paymentValues.paymentPurpose}
+                            error={paymentErrors.paymentPurpose}
+                            isTouched={Boolean(paymentTouched.paymentPurpose)}
+                            required
+                            disabled={isProfileReadonly}
+                            maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
+                            onChange={(event) =>
+                              handlePaymentChange(
+                                'paymentPurpose',
+                                event.target.value
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     {pharmacy.status === 'new' ? (
@@ -2692,7 +2725,7 @@ function PharmacyProfilePage({
                     countFullWidthOnMobile
                     emptyTitle="This pharmacy has no reviews yet."
                     emptyText="Reviews appear only after real client orders are completed and approved."
-                    emptyVariant="profile"
+                    emptyVariant="resource"
                   />
                 </>
               ) : null}

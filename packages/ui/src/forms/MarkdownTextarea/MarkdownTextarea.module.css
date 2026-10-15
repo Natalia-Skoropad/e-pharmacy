@@ -116,6 +116,13 @@
   outline: none;
 }
 
+.editableExpanded {
+  height: clamp(440px, 60vh, 680px);
+  min-height: 380px;
+  max-height: 80vh;
+  resize: vertical;
+}
+
 .editable:empty::before {
   color: var(--color-text-muted);
   pointer-events: none;
@@ -198,8 +205,8 @@
 }
 
 .linkModal {
-  --modal-width: 520px;
-  --modal-dialog-padding: 20px;
+  width: min(560px, calc(100vw - 32px));
+  --modal-dialog-padding: 24px;
 }
 
 .linkModalContent {
@@ -208,15 +215,30 @@
 }
 
 .linkModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.linkModalHeaderCopy {
   display: grid;
-  gap: 4px;
+  gap: 5px;
+}
+
+.linkModalKicker {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: var(--fz-12);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-wide);
 }
 
 .linkModalTitle {
   margin: 0;
   font-size: var(--fz-20);
   line-height: var(--lh-heading);
-  color: var(--color-accent);
+  color: var(--color-text-primary);
 }
 
 .linkModalHint {
@@ -269,6 +291,19 @@
 
 .linkModalActions > button {
   flex: 1 1 0;
+}
+
+.linkCancelButton {
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error-border);
+}
+
+.linkCancelButton:hover:not(:disabled),
+.linkCancelButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 @media (min-width: 768px) {

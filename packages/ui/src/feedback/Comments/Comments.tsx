@@ -1,6 +1,7 @@
 'use client';
 
-import { MessageSquarePlus, Trash2 } from 'lucide-react';
+import { MessageSquarePlus, MessageSquareText, Trash2 } from 'lucide-react';
+import { ProfileResourceState } from '../../profile/ProfileResourceState';
 
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -153,7 +154,7 @@ export type CommentsListProps<
   commentTitle?: string;
   emptyTitle?: string;
   emptyText?: string;
-  emptyVariant?: 'default' | 'profile';
+  emptyVariant?: 'default' | 'profile' | 'resource';
   error?: string;
   isLoading?: boolean;
   deletingId?: string | null;
@@ -186,7 +187,14 @@ export function CommentsList<
       {isLoading ? <LoadingSpinner label="Loading comments..." /> : null}
 
       {!isLoading && !error && items.length === 0 ? (
-        emptyVariant === 'profile' ? (
+        emptyVariant === 'resource' ? (
+          <ProfileResourceState
+            variant="empty"
+            title={emptyTitle ?? 'No comments yet.'}
+            description={emptyText}
+            icon={<MessageSquareText size={22} />}
+          />
+        ) : emptyVariant === 'profile' ? (
           <div className={`${css.empty} ${css.profileEmpty}`}>
             {emptyTitle ? (
               <h3 className={css.profileEmptyTitle}>{emptyTitle}</h3>

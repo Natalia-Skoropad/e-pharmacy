@@ -217,6 +217,7 @@ function createOrderClientSnapshot(client: UserDocument): OrderClientSnapshot {
     return {
       name: 'Walk-in client',
       isDefaultPharmacyClient: true,
+
       ...(client.defaultClientPharmacyId
         ? { defaultClientPharmacyId: client.defaultClientPharmacyId }
         : {}),
@@ -248,6 +249,7 @@ async function createOrderClientSearchCondition(
 
   const matchingUsers = await User.find({
     isDefaultPharmacyClient: { $ne: true },
+
     $or: [
       { name: searchRegExp },
       { email: searchRegExp },
@@ -753,6 +755,7 @@ async function getOrderProductFallbacks(
         typeof item.productSnapshot.rating !== 'number' ||
         typeof item.productSnapshot.reviewsCount !== 'number'
     )
+
     .map((item) => item.productId);
 
   if (!missingProductDetailsIds.length) return new Map();
@@ -775,6 +778,7 @@ async function getOrderProductFallbacks(
           categoryMap,
           product.categoryId
         ),
+
         rating: product.rating,
         reviewsCount: product.reviewsCount,
       },
@@ -968,6 +972,7 @@ export async function checkoutOrderService(
               HTTP_STATUS.CONFLICT,
               'Selected pharmacy order changed. Please review the cart and confirm again.',
               undefined,
+
               CHECKOUT_CART_CHANGED_ERROR_CODE
             );
           }
@@ -1336,6 +1341,7 @@ export async function createManagerOrderService(
           HTTP_STATUS.CONFLICT,
           'Bank transfer is unavailable until bank details are completed.',
           undefined,
+
           PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE
         );
       }
@@ -1456,6 +1462,7 @@ export async function createManagerOrderService(
                     method: 'postal_delivery',
                     details: input.deliveryDetails,
                   },
+
             ...(input.comment ? { comment: input.comment } : {}),
 
             status: 'in_progress',
@@ -2690,6 +2697,24 @@ export async function getOrderSalesStatisticsForPharmacyService(
 
 //===============================================================
 
+// Shared between the actual order filter and the dependent order-number options.
+function createOrderPharmacySearchCondition(searchValue: string) {
+  const search = createSafeRegExp(searchValue);
+
+  return {
+    $or: [
+      { 'pharmacySnapshot.name': search },
+      { 'pharmacySnapshot.phone': search },
+      { 'pharmacySnapshot.email': search },
+      { 'pharmacySnapshot.address': search },
+      { 'pharmacySnapshot.location.address': search },
+      { 'pharmacySnapshot.location.settlement': search },
+    ],
+  };
+}
+
+//===============================================================
+
 export async function getOrdersService(
   userId: string,
   query: OrdersQuery,
@@ -2747,20 +2772,9 @@ export async function getOrdersService(
   }
 
   if (query.pharmacy?.trim()) {
-    const search = createSafeRegExp(query.pharmacy.trim());
-
     filter.$and = [
       ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
-      {
-        $or: [
-          { 'pharmacySnapshot.name': search },
-          { 'pharmacySnapshot.phone': search },
-          { 'pharmacySnapshot.email': search },
-          { 'pharmacySnapshot.address': search },
-          { 'pharmacySnapshot.location.address': search },
-          { 'pharmacySnapshot.location.settlement': search },
-        ],
-      },
+      createOrderPharmacySearchCondition(query.pharmacy.trim()),
     ];
   }
 
@@ -2856,7 +2870,15 @@ export async function getOrdersService(
           _id: Types.ObjectId;
           snapshot: OrderPharmacySnapshot;
         }>([
-          { $match: { userId: new Types.ObjectId(userId) } },
+          {
+            $match: {
+              userId: new Types.ObjectId(userId),
+              // Pharmacy choices depend on the selected order, not on themselves.
+              ...(query.orderNumber?.trim()
+                ? { orderNumber: createSafeRegExp(query.orderNumber.trim()) }
+                : {}),
+            },
+          },
           { $sort: { createdAt: -1 } },
           {
             $group: {
@@ -2871,6 +2893,13 @@ export async function getOrdersService(
       ? Promise.resolve([] as string[])
       : Order.distinct('orderNumber', {
           userId: new Types.ObjectId(userId),
+
+          // Order choices depend on the selected pharmacy, not on themselves.
+          ...(query.pharmacyId
+            ? { pharmacyId: new Types.ObjectId(query.pharmacyId) }
+            : query.pharmacy?.trim()
+              ? createOrderPharmacySearchCondition(query.pharmacy.trim())
+              : {}),
         }),
   ]);
 
