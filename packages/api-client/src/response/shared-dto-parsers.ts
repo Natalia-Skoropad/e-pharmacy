@@ -281,10 +281,9 @@ function requireSafeNonNegativeInteger(
 //===================================================================
 
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 
 //===================================================================
-
-const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 
 const CART_ISSUE_REASONS = new Set([
   'expired',
@@ -629,6 +628,7 @@ function parseProductOffer(
   }
 
   const expectedInStock = availableQuantity > 0;
+
   if (record.inStock !== expectedInStock) {
     throw invalidDto(
       'product offer.inStock must equal availableQuantity > 0.',
@@ -1165,6 +1165,7 @@ function parsePublicPharmacy(
       workingHours: 'string',
       imageUrl: 'string',
       description: 'string',
+      shortDescription: 'string',
     },
     context
   );
@@ -1243,6 +1244,7 @@ function parsePharmacyOption(
   return checked<PharmacyOption>({
     id: record.id,
     name: record.name,
+
     ...(typeof record.imageUrl === 'string'
       ? { imageUrl: record.imageUrl }
       : {}),
@@ -1816,6 +1818,18 @@ function validateOptionalPharmacyProfileSemantics(
     );
   }
 
+  if (
+    typeof record.shortDescription === 'string' &&
+    (record.shortDescription.trim().length === 0 ||
+      record.shortDescription.length > 200)
+  ) {
+    throw invalidDto(
+      'pharmacy profile.shortDescription is invalid.',
+      record,
+      context
+    );
+  }
+
   if (typeof record.email === 'string') {
     validateProfileStringPattern(
       record.email,
@@ -1877,7 +1891,9 @@ function parseEditablePharmacyBankDetails(
     'paymentPurpose',
   ] as const) {
     const fieldValue = record[key];
+
     if (fieldValue === undefined) continue;
+
     if (typeof fieldValue !== 'string') {
       throw invalidDto(
         `pharmacy bank details.${key} must be a string when present.`,
@@ -1890,6 +1906,7 @@ function parseEditablePharmacyBankDetails(
 
   for (const key of ['recipientName', 'bankName'] as const) {
     const value = result[key];
+
     if (value !== undefined && !PROFILE_BANK_TEXT_PATTERN.test(value)) {
       throw invalidDto(
         `pharmacy bank details.${key} is invalid.`,
@@ -1969,6 +1986,7 @@ function parsePendingPharmacyBankDetails(
         context
       );
     }
+
     result[key] = fieldValue;
   }
 
@@ -2012,6 +2030,7 @@ function parsePharmacyPendingModeration(
     'email',
     'workingHours',
     'description',
+    'shortDescription',
   ] as const) {
     const fieldValue = record[key];
     if (fieldValue === undefined) continue;
@@ -2033,6 +2052,18 @@ function parsePharmacyPendingModeration(
   ) {
     throw invalidDto(
       'pharmacy pending moderation.name is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (
+    typeof record.shortDescription === 'string' &&
+    (record.shortDescription.trim().length === 0 ||
+      record.shortDescription.length > 200)
+  ) {
+    throw invalidDto(
+      'pharmacy pending moderation.shortDescription is invalid.',
       record,
       context
     );
@@ -2170,6 +2201,7 @@ function parsePharmacyProfile(
       workingHours: 'string',
       imageUrl: 'string',
       description: 'string',
+      shortDescription: 'string',
       statusReason: 'string',
       reviewState: 'string',
       reviewFeedback: 'string',
@@ -2281,6 +2313,7 @@ function parsePharmacyProfile(
       : {}),
     ...(record.phone !== undefined ? { phone: record.phone as string } : {}),
     ...(record.email !== undefined ? { email: record.email as string } : {}),
+
     ...(record.workingHours !== undefined
       ? { workingHours: record.workingHours as string }
       : {}),
@@ -2304,12 +2337,17 @@ function parsePharmacyProfile(
 
     status: checked<PharmacyProfile['status']>(record.status),
     rating,
+
     ...(record.imageUrl !== undefined
       ? { imageUrl: record.imageUrl as string }
       : {}),
 
     ...(record.description !== undefined
       ? { description: record.description as string }
+      : {}),
+
+    ...(record.shortDescription !== undefined
+      ? { shortDescription: record.shortDescription as string }
       : {}),
 
     ...(record.statusReason !== undefined
@@ -2553,6 +2591,7 @@ export function parseCurrentPharmacySummaryResponse(
       id,
       name: pharmacy.name as string,
       status: checked<CurrentPharmacySummary['status']>(pharmacy.status),
+
       ...(pharmacy.imageUrl !== undefined
         ? { imageUrl: pharmacy.imageUrl as string }
         : {}),
@@ -3219,6 +3258,7 @@ export function parseClientOrdersResponse(
             {
               id: pharmacy.id,
               name: pharmacy.name,
+
               ...(typeof pharmacy.phone === 'string'
                 ? { phone: pharmacy.phone }
                 : {}),
@@ -3277,6 +3317,7 @@ export function parseOrderManagerCommentsResponse(
         normalizeItem: (item) => {
           const record = isRecord(item) ? item : null;
           if (!record) return null;
+
           if (
             typeof record.id !== 'string' ||
             typeof record.text !== 'string' ||
@@ -3376,6 +3417,7 @@ function parseActiveSession(
       : {}),
 
     ...(record.ip !== undefined ? { ip: record.ip as string } : {}),
+
     ...(createdAt !== undefined
       ? {
           createdAt:
@@ -3415,5 +3457,6 @@ export function parseHealthResponse(
 ): HealthResponse {
   const record = requireRecord(value, 'health response', context);
   requireFields(record, 'health response', { status: 'string' }, context);
+
   return checked<HealthResponse>({ status: record.status });
 }

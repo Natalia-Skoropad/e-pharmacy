@@ -92,6 +92,7 @@ export type PharmacyPendingModeration = {
   workingHours?: string | null;
   imageUrl?: string | null;
   description?: string | null;
+  shortDescription?: string | null;
   documents?: PharmacyVerificationDocumentMetadata[];
   bankDetails?: EditablePharmacyBankDetailsPatch;
 };
@@ -118,6 +119,7 @@ export type PharmacyEntity = {
   rating: number;
   imageUrl?: string;
   description?: string;
+  shortDescription?: string;
   statusReason?: string;
   reviewState?: PharmacyModerationReviewState;
   reviewFeedback?: string;
@@ -190,6 +192,7 @@ export type PublicPharmacyResponseDto = {
   rating: number;
   imageUrl?: string;
   description?: string;
+  shortDescription?: string;
   availableProductsCount: number;
   reviewsCount: number;
   isFavorite: boolean;
@@ -228,6 +231,7 @@ export type PharmacyProfileResponseDto = {
   rating: number;
   imageUrl?: string;
   description?: string;
+  shortDescription?: string;
   statusReason?: string;
   reviewState?: PharmacyModerationReviewState;
   reviewFeedback?: string;

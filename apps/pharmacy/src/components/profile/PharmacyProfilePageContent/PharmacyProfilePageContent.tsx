@@ -91,6 +91,7 @@ import {
   PAYMENT_PURPOSE_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
   BANK_RECIPIENT_NAME_MAX_LENGTH,
   BANK_NAME_MAX_LENGTH,
   TEXT_EDITOR_MAX_LENGTH,
@@ -283,18 +284,24 @@ function getEditablePharmacyProfile(
   return {
     ...pharmacy,
     ...(pending.name !== undefined ? { name: pending.name } : {}),
+
     ...(pending.location !== undefined
       ? { location: mergedLocation as unknown as PharmacyProfile['location'] }
       : {}),
 
     ...(pending.phone !== undefined ? { phone: pending.phone ?? '' } : {}),
     ...(pending.email !== undefined ? { email: pending.email ?? '' } : {}),
+
     ...(pending.workingHours !== undefined
       ? { workingHours: pending.workingHours ?? '' }
       : {}),
 
     ...(pending.description !== undefined
       ? { description: pending.description ?? '' }
+      : {}),
+
+    ...(pending.shortDescription !== undefined
+      ? { shortDescription: pending.shortDescription ?? '' }
       : {}),
 
     ...(pending.imageUrl !== undefined
@@ -321,6 +328,7 @@ function createPharmacyInitialValues(
 
   return {
     name: createPharmacyNameInitialValue(user, edit),
+    shortDescription: edit.shortDescription ?? '',
     settlement: edit.location?.settlement ?? '',
     region: edit.location?.region ?? '',
     address: edit.location?.address ?? '',
@@ -569,6 +577,7 @@ async function buildDocumentsPayload(
 
 function PharmacyProfilePageContent() {
   const { user, isBootstrapping } = useAuth();
+
   const {
     profile: pharmacySummary,
     isLoading: isSummaryLoading,
@@ -604,6 +613,7 @@ function PharmacyProfilePageContent() {
           isLoading: false,
           error: null,
         });
+
         syncSummary(response.pharmacy);
       })
 
@@ -631,6 +641,7 @@ function PharmacyProfilePageContent() {
         isLoading: false,
         error: null,
       });
+
       syncSummary(profile);
     },
     [identity, syncSummary]
@@ -740,6 +751,7 @@ function PharmacyProfilePage({
     TABS.some(({ value }) => value === routeTab)
       ? (routeTab as ProfileTab)
       : 'data';
+
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
 
   const [sessionsStatus, setSessionsStatus] =
@@ -926,6 +938,7 @@ function PharmacyProfilePage({
         setSessions([...response.sessions]);
         setSessionsStatus('success');
       })
+
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
 
@@ -935,8 +948,10 @@ function PharmacyProfilePage({
             'Could not load active sessions. Please try again.'
           )
         );
+
         setSessionsStatus('error');
       })
+
       .finally(() => {
         if (sessionsLoadControllerRef.current === controller) {
           sessionsLoadControllerRef.current = null;
@@ -958,6 +973,7 @@ function PharmacyProfilePage({
   );
 
   const pharmacyStatus = pharmacy.status;
+
   const pharmacyValidationMode: PharmacyValidationMode =
     pharmacyStatus === 'new' ? 'draft' : 'verification';
 
@@ -1025,6 +1041,7 @@ function PharmacyProfilePage({
     profileUserDefaults,
     pharmacy
   );
+
   const canonicalAboutValues = createAboutInitialValues(pharmacy);
 
   const canonicalPaymentValues = createPaymentInitialValues(
@@ -1035,6 +1052,7 @@ function PharmacyProfilePage({
   const canonicalDocumentValues = createDocumentValues(
     getEditablePharmacyProfile(pharmacy).documents
   );
+
   const canonicalPharmacyPictureUrl =
     getEditablePharmacyProfile(pharmacy).imageUrl ?? null;
 
@@ -1127,6 +1145,7 @@ function PharmacyProfilePage({
   }
 
   const isProfileOwner = pharmacy.membershipRole === 'owner';
+
   const isProfileReadonly =
     !isProfileOwner || isReadonlyStatus(pharmacyStatus, pharmacy.reviewState);
 
@@ -1252,6 +1271,7 @@ function PharmacyProfilePage({
 
   const handleOwnerPictureChange = async (nextPictureUrl: string | null) => {
     if (ownerMutationInFlightRef.current) return;
+
     ownerMutationInFlightRef.current = true;
     setIsOwnerPictureSaving(true);
 
@@ -1460,6 +1480,7 @@ function PharmacyProfilePage({
       });
 
       const nextValues = createAboutInitialValues(response.pharmacy);
+
       syncProfile(response.pharmacy);
       setAboutValues(nextValues);
       setInitialAboutValues(nextValues);
@@ -1505,6 +1526,7 @@ function PharmacyProfilePage({
       });
 
       const nextValues = createPaymentInitialValues(user, response.pharmacy);
+
       syncProfile(response.pharmacy);
       setPaymentValues(nextValues);
       setInitialPaymentValues(nextValues);
@@ -1529,6 +1551,7 @@ function PharmacyProfilePage({
     setDocumentsTouched(true);
 
     const error = validatePharmacyDocuments(files);
+
     if (error) {
       setDocumentsError(error);
       return;
@@ -1736,11 +1759,13 @@ function PharmacyProfilePage({
 
   const handleRevokeSession = async (sessionId: string) => {
     if (sessionMutationInFlightRef.current) return;
+
     sessionMutationInFlightRef.current = true;
     setRevokingSessionId(sessionId);
 
     try {
       await revokeActiveSession(sessionId);
+
       setSessions((current) =>
         current.filter((session) => session.id !== sessionId)
       );
@@ -1841,6 +1866,7 @@ function PharmacyProfilePage({
                   pharmacy.statusReason ? (
                     <p className={css.statusReason}>{pharmacy.statusReason}</p>
                   ) : null}
+
                   {!isProfileOwner ? (
                     <p>
                       Manager access is read-only for verification profile data.
@@ -1848,6 +1874,7 @@ function PharmacyProfilePage({
                       moderation submission are owner-only.
                     </p>
                   ) : null}
+
                   {isProfileOwner &&
                   pharmacy.status === 'new' &&
                   !pharmacy.statusReason ? (
@@ -1857,6 +1884,7 @@ function PharmacyProfilePage({
                       product requests unlock after verification.
                     </p>
                   ) : null}
+
                   {pharmacy.status === 'on_verification' ? (
                     <p>
                       {pharmacy.reviewState === 'changes_requested'
@@ -1864,6 +1892,7 @@ function PharmacyProfilePage({
                         : 'The profile is waiting for Admin verification. Submitted fields are read-only until the decision is made.'}
                     </p>
                   ) : null}
+
                   {pharmacy.status === 'on_moderation' ? (
                     <p>
                       {pharmacy.reviewState === 'changes_requested'
@@ -1871,6 +1900,7 @@ function PharmacyProfilePage({
                         : 'Profile changes are on moderation. Approved public data remains visible until Admin reviews the changes.'}
                     </p>
                   ) : null}
+
                   {isProfileOwner &&
                   pharmacy.reviewState === 'changes_requested' &&
                   pharmacy.reviewFeedback ? (
@@ -2098,6 +2128,11 @@ function PharmacyProfilePage({
                               value: pharmacy.pendingModeration?.name,
                             },
                             {
+                              label: 'Short description',
+                              value:
+                                pharmacy.pendingModeration?.shortDescription,
+                            },
+                            {
                               label: 'Email',
                               value: pharmacy.pendingModeration?.email,
                             },
@@ -2119,6 +2154,7 @@ function PharmacyProfilePage({
 
                       <div className={css.formGrid}>
                         <NameInput
+                          className={css.fieldWide}
                           id="pharmacy-name"
                           name="pharmacyName"
                           hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
@@ -2131,6 +2167,27 @@ function PharmacyProfilePage({
                           maxLength={PHARMACY_NAME_MAX_LENGTH}
                           onChange={(event) =>
                             handlePharmacyChange('name', event.target.value)
+                          }
+                        />
+
+                        <NameInput
+                          id="pharmacy-short-description"
+                          name="shortDescription"
+                          required
+                          className={css.fieldWide}
+                          label="Short pharmacy description"
+                          placeholder="Your pharmacy slogan or a short introduction"
+                          hint="A short message shown below the pharmacy name on the public page."
+                          value={pharmacyValues.shortDescription}
+                          error={pharmacyErrors.shortDescription}
+                          isTouched={Boolean(pharmacyTouched.shortDescription)}
+                          disabled={isProfileReadonly}
+                          maxLength={PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH}
+                          onChange={(event) =>
+                            handlePharmacyChange(
+                              'shortDescription',
+                              event.target.value
+                            )
                           }
                         />
 
@@ -2191,7 +2248,6 @@ function PharmacyProfilePage({
                         <NameInput
                           id="pharmacy-region"
                           name="region"
-                          className={css.fieldWide}
                           label="Region (optional)"
                           placeholder="Example: Odesa region"
                           hint="Add the region when it helps distinguish the settlement."

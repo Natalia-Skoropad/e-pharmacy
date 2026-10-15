@@ -123,6 +123,7 @@ test('picture transport distinguishes data URLs, HTTP URLs and blob previews', (
 test('pharmacy draft and verification validation modes are explicit', () => {
   const emptyContact = {
     name: '',
+    shortDescription: '',
     settlement: '',
     region: '',
     address: '',

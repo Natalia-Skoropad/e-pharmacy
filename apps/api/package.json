@@ -17,6 +17,7 @@
     "migrate:pharmacy-owner-registration-audit": "tsx src/scripts/migrate-pharmacy-owner-registration-audit.ts",
     "migrate:pharmacy-location": "tsx src/scripts/migrate-pharmacy-location.ts",
     "migrate:demo-pharmacy-bank-details": "tsx src/scripts/migrate-demo-pharmacy-bank-details.ts",
+    "migrate:demo-pharmacy-introductions": "tsx src/scripts/migrate-demo-pharmacy-introductions.ts",
     "test": "node ../../scripts/test-runners/run-api-tests.mjs src --match=.test.ts --exclude=.integration.test.ts",
     "test:integration": "node ../../scripts/test-runners/run-api-tests.mjs src --match=.integration.test.ts",
     "cart:cleanup-expired": "tsx src/scripts/cleanup-expired-cart-items.ts"

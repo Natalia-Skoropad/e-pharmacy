@@ -25,6 +25,7 @@ export type PharmacyPendingModeration = Readonly<{
   workingHours?: string | null;
   imageUrl?: string | null;
   description?: string | null;
+  shortDescription?: string | null;
   documents?: readonly PharmacyProfileVerificationDocument[];
   bankDetails?: ClearableEditablePharmacyBankDetails;
 }>;
@@ -56,6 +57,7 @@ export type PharmacyProfile = PharmacyModerationReview &
     rating: number;
     imageUrl?: string;
     description?: string;
+    shortDescription?: string;
     statusReason?: string;
     pendingModeration?: PharmacyPendingModeration;
     reviewsCount: number;
@@ -85,6 +87,7 @@ export type PharmacyProfileUpdateChanges = {
   workingHours?: string | null;
   imageUrl?: string | null;
   description?: string | null;
+  shortDescription?: string | null;
   documents?: Array<Readonly<{ documentId: EntityId }>>;
   bankDetails?: ClearableEditablePharmacyBankDetails;
 };

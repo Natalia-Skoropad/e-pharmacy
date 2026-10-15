@@ -11,6 +11,7 @@ import {
   IBAN_MAX_LENGTH,
   PAYMENT_PURPOSE_MAX_LENGTH,
   PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
   TAX_ID_MAX_LENGTH,
   TEXT_EDITOR_MAX_LENGTH,
   USER_ADDRESS_MAX_LENGTH,
@@ -41,6 +42,7 @@ export type PharmacyValidationMode = 'draft' | 'verification';
 
 export type PharmacyContactFormValues = {
   name: string;
+  shortDescription: string;
   settlement: string;
   region: string;
   address: string;
@@ -64,6 +66,7 @@ export type PharmacyPaymentFormValues = {
 
 export type PharmacyContactPatch = {
   name?: string;
+  shortDescription?: string | null;
 
   location?: Partial<{
     address: string | null;
@@ -108,6 +111,7 @@ export type PharmacyPaymentTouchedFields =
 
 export const PHARMACY_CONTACT_INITIAL_VALUES: PharmacyContactFormValues = {
   name: '',
+  shortDescription: '',
   settlement: '',
   region: '',
   address: '',
@@ -135,6 +139,7 @@ export const PHARMACY_CONTACT_FORM_FIELDS: Array<
   keyof PharmacyContactFormValues
 > = [
   'name',
+  'shortDescription',
   'settlement',
   'region',
   'address',
@@ -199,6 +204,13 @@ export function validatePharmacyContactForm(
   const errors: PharmacyContactFormErrors = {};
   const required = mode === 'verification';
   const nameError = buildPharmacyNameError(values.name, { required });
+  const shortDescription = values.shortDescription.trim();
+
+  if (!shortDescription && required) {
+    errors.shortDescription = 'Short pharmacy description is required';
+  } else if (shortDescription.length > PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH) {
+    errors.shortDescription = `Short pharmacy description must be at most ${PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH} characters`;
+  }
 
   const locationErrors = validatePharmacyLocation(
     {
@@ -249,6 +261,7 @@ export function normalizePharmacyContactForm(
 ): PharmacyContactPatch {
   const normalized = {
     name: normalizeOptionalText(values.name),
+    shortDescription: normalizeOptionalText(values.shortDescription),
     address: normalizeOptionalText(values.address),
     settlement: normalizeOptionalText(values.settlement),
     region: normalizeOptionalText(values.region),
@@ -266,6 +279,7 @@ export function normalizePharmacyContactForm(
 
   const baselineNormalized = baseline
     ? {
+        shortDescription: normalizeOptionalText(baseline.shortDescription),
         address: normalizeOptionalText(baseline.address),
         settlement: normalizeOptionalText(baseline.settlement),
         region: normalizeOptionalText(baseline.region),
@@ -306,6 +320,7 @@ export function normalizePharmacyContactForm(
   if (mode === 'verification' && !baselineNormalized) {
     return {
       name: normalized.name ?? '',
+      shortDescription: normalized.shortDescription ?? '',
       location,
       phone: normalized.phone ?? '',
       email: normalized.email ?? '',
@@ -315,6 +330,17 @@ export function normalizePharmacyContactForm(
 
   const result: PharmacyContactPatch = {};
   if (normalized.name !== undefined) result.name = normalized.name;
+
+  const shortDescription = clearableDraftValue(
+    normalized.shortDescription,
+    baselineNormalized?.shortDescription
+  );
+
+  if (
+    shortDescription !== undefined &&
+    normalized.shortDescription !== baselineNormalized?.shortDescription
+  )
+    result.shortDescription = shortDescription;
   if (Object.keys(location).length > 0) result.location = location;
 
   const phone = clearableDraftValue(
@@ -455,6 +481,7 @@ export function normalizePharmacyPaymentForm(
           : undefined,
 
         bankName: normalizeOptionalText(baseline.bankName),
+
         receiptEmail: normalizeOptionalText(baseline.receiptEmail)
           ? normalizeEmail(baseline.receiptEmail)
           : undefined,
@@ -502,6 +529,7 @@ export function normalizePharmacyPaymentForm(
 
 export {
   PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
   BANK_RECIPIENT_NAME_MAX_LENGTH,
   BANK_NAME_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,

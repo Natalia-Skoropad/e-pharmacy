@@ -65,6 +65,15 @@ export function buildPharmacyComparisonRows(
     add('name', 'Pharmacy name', detail.current.name, pending.name);
   }
 
+  if (pending.shortDescription !== undefined) {
+    add(
+      'shortDescription',
+      'Short pharmacy description',
+      detail.current.shortDescription,
+      pending.shortDescription
+    );
+  }
+
   if (pending.location !== undefined) {
     const locationFields = [
       ['settlement', 'Settlement'],

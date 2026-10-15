@@ -199,6 +199,7 @@ function currentData(value: unknown): AdminPharmacyCurrentData {
         'workingHours',
         'imageUrl',
         'description',
+        'shortDescription',
         'license',
       ].map((field) => optionalText(row, field))
     ),
@@ -226,6 +227,7 @@ function pendingChanges(value: unknown): AdminPharmacyPendingChanges {
     'workingHours',
     'imageUrl',
     'description',
+    'shortDescription',
   ]) {
     if (row[key] === undefined) continue;
     result[key] = row[key] === null ? null : text(row[key], `pending ${key}`);
@@ -280,11 +282,13 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
         }
       : null,
     current: currentData(row.current),
+
     ...(row.pendingChanges === undefined
       ? {}
       : { pendingChanges: pendingChanges(row.pendingChanges) }),
 
     ...optionalText(row, 'statusReason'),
+
     ...(row.reviewState === undefined
       ? {}
       : {
@@ -296,6 +300,7 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
         }),
 
     ...optionalText(row, 'reviewFeedback'),
+
     ...(row.reviewedAt === undefined
       ? {}
       : { reviewedAt: timestamp(row.reviewedAt, 'reviewedAt') }),

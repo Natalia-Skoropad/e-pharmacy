@@ -1,6 +1,6 @@
 'use client';
 
-import { Info, Landmark, FileText, Star } from 'lucide-react';
+import { Building2, Landmark, FileText, Star } from 'lucide-react';
 
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 
@@ -31,7 +31,7 @@ export function PharmacyDetailsTabs({
     {
       value: 'details',
       label: 'Details',
-      icon: <Info size={17} aria-hidden="true" />,
+      icon: <Building2 size={17} aria-hidden="true" />,
     },
 
     ...(canShowBankDetails

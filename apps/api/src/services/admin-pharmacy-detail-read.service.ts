@@ -79,6 +79,7 @@ function serializeLocation(
     ...(value.address !== undefined ? { address: value.address } : {}),
     ...(value.settlement !== undefined ? { settlement: value.settlement } : {}),
     ...(value.region !== undefined ? { region: value.region } : {}),
+
     ...(value.countryCode !== undefined
       ? { countryCode: value.countryCode }
       : {}),
@@ -129,17 +130,24 @@ function publishedData(pharmacy: DetailDocument) {
 
     ...(pharmacy.email !== undefined ? { email: pharmacy.email } : {}),
     ...(pharmacy.phone !== undefined ? { phone: pharmacy.phone } : {}),
+
     ...(pharmacy.workingHours !== undefined
       ? { workingHours: pharmacy.workingHours }
       : {}),
 
     ...(pharmacy.imageUrl !== undefined ? { imageUrl: pharmacy.imageUrl } : {}),
+
     ...(pharmacy.description !== undefined
       ? { description: pharmacy.description }
       : {}),
 
+    ...(pharmacy.shortDescription !== undefined
+      ? { shortDescription: pharmacy.shortDescription }
+      : {}),
+
     ...(pharmacy.license !== undefined ? { license: pharmacy.license } : {}),
     ...(bankDetails ? { bankDetails } : {}),
+
     bankTransferAvailable: bankTransferAvailable(bankDetails),
   };
 }
@@ -162,19 +170,26 @@ function submittedChanges(pending?: PharmacyEntity['pendingModeration']) {
 
   return {
     ...(pending.name !== undefined ? { name: pending.name } : {}),
+
     ...(pending.location !== undefined
       ? { location: serializeLocation(pending.location) }
       : {}),
 
     ...(pending.phone !== undefined ? { phone: pending.phone } : {}),
     ...(pending.email !== undefined ? { email: pending.email } : {}),
+
     ...(pending.workingHours !== undefined
       ? { workingHours: pending.workingHours }
       : {}),
 
     ...(pending.imageUrl !== undefined ? { imageUrl: pending.imageUrl } : {}),
+
     ...(pending.description !== undefined
       ? { description: pending.description }
+      : {}),
+
+    ...(pending.shortDescription !== undefined
+      ? { shortDescription: pending.shortDescription }
       : {}),
 
     ...(pendingBankDetails !== undefined
@@ -200,7 +215,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
   const pharmacy = await Pharmacy.findById(_id)
     .select(
-      'name location phone email workingHours bankDetails imageUrl description license status statusReason reviewState reviewFeedback reviewedAt reviewedBy pendingModeration documents ownerId createdAt updatedAt approvedAt activatedAt'
+      'name location phone email workingHours bankDetails imageUrl description shortDescription license status statusReason reviewState reviewFeedback reviewedAt reviewedBy pendingModeration documents ownerId createdAt updatedAt approvedAt activatedAt'
     )
     .lean<DetailDocument | null>();
 
@@ -219,6 +234,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       { $match: { _id } },
       ...buildPagedPharmacyItemsPipeline(0, 1),
     ]),
+
     Product.countDocuments({ pharmacyId: _id }),
   ]);
 
@@ -245,12 +261,14 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       : null,
 
     current: publishedData(pharmacy),
+
     ...(pharmacy.pendingModeration
       ? { pendingChanges: submittedChanges(pharmacy.pendingModeration) }
       : {}),
 
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
+
     ...(pharmacy.reviewFeedback
       ? { reviewFeedback: pharmacy.reviewFeedback }
       : {}),
@@ -266,6 +284,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
     dates: {
       createdAt: timestamp(pharmacy.createdAt, 'createdAt'),
       updatedAt: timestamp(pharmacy.updatedAt, 'updatedAt'),
+
       ...(pharmacy.approvedAt
         ? { approvedAt: timestamp(pharmacy.approvedAt, 'approvedAt') }
         : {}),
@@ -274,6 +293,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
         ? { activatedAt: timestamp(pharmacy.activatedAt, 'activatedAt') }
         : {}),
     },
+
     documentCount: pharmacy.documents?.length ?? 0,
 
     metrics: {

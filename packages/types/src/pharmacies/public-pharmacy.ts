@@ -15,6 +15,7 @@ export type PublicPharmacy = Readonly<{
   rating: number;
   imageUrl?: string;
   description?: string;
+  shortDescription?: string;
   availableProductsCount: number;
   reviewsCount: number;
   isFavorite: boolean;

@@ -436,6 +436,18 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       default: undefined,
     },
 
+    shortDescription: {
+      type: String,
+      trim: true,
+
+      maxlength: [
+        200,
+        'Short pharmacy description must be at most 200 characters',
+      ],
+
+      default: undefined,
+    },
+
     description: {
       type: String,
       trim: true,

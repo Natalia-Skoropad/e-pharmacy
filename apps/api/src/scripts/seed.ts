@@ -29,6 +29,12 @@ import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
 import { ensureInitialProductCategories } from '../services/product-category-bootstrap.service';
 import type { PharmacyEntity } from '../types/pharmacy';
+
+import {
+  DEMO_REGIONS,
+  createDemoPharmacyShortDescription,
+} from '../constants/demo-pharmacy-profiles';
+
 import type { ProductEntity } from '../types/product';
 
 //===============================================================
@@ -527,6 +533,7 @@ function createSeedAssetUrl(value: string): string {
   const pharmacyImageMatch = value.match(
     /^\/images\/seed\/pharmacies\/pharmacy-\d{3}\.png$/
   );
+
   const resolvedPath =
     pharmacyImageMatch &&
     !existsSync(path.resolve(__dirname, '..', '..', 'public', value.slice(1)))
@@ -682,6 +689,7 @@ type PharmacyAccountSeed = {
   address: string;
   settlement: string;
   pharmacyName: string;
+  region?: string;
 
   status:
     | typeof PHARMACY_STATUSES.NEW
@@ -898,6 +906,7 @@ async function getOfferPriceTimeline(
   })
     .sort({ occurredAt: 1, _id: 1 })
     .select('productOfferId unitPrice occurredAt')
+
     .lean<
       Array<{
         productOfferId: Types.ObjectId;
@@ -977,9 +986,11 @@ async function seedOwnProductRestocks(): Promise<number> {
     const quantity = 40 + (index % 11);
     const priceIncrease = 50 + (index % 11);
     const nextPrice = offer.price + priceIncrease;
+
     offer.totalQuantity += quantity;
     offer.availableQuantity += quantity;
     offer.price = nextPrice;
+
     await offer.save();
 
     await StockMovement.create({
@@ -1043,6 +1054,12 @@ async function seedPharmacyAccounts(): Promise<number> {
           location: {
             address: seed.address,
             settlement: seed.settlement,
+
+            region:
+              seed.region ??
+              DEMO_REGIONS[seed.settlement] ??
+              `${seed.settlement} region`,
+
             countryCode: 'UA',
           },
 
@@ -1064,11 +1081,17 @@ async function seedPharmacyAccounts(): Promise<number> {
             seed.description ??
             createPharmacyAccountDescription(seed.pharmacyName),
 
+          shortDescription: createDemoPharmacyShortDescription(
+            seed.pharmacyName
+          ),
+
           reviewsCount: 0,
           managerUserIds: [],
           documents: createVerificationDocuments(seed.email),
           status: seed.status,
+
           ...(seed.statusReason ? { statusReason: seed.statusReason } : {}),
+
           ...(seed.status === PHARMACY_STATUSES.ACTIVE
             ? {
                 approvedBy: user._id,
@@ -1076,12 +1099,14 @@ async function seedPharmacyAccounts(): Promise<number> {
                 activatedAt: ACTIVE_PHARMACY_FIRST_ACTIVATED_AT,
               }
             : {}),
+
           updatedBy: user._id,
         },
 
         $unset: {
           pendingModeration: '',
           ...(seed.statusReason ? {} : { statusReason: '' }),
+
           ...(seed.status === PHARMACY_STATUSES.ACTIVE
             ? {}
             : { approvedBy: '', approvedAt: '', activatedAt: '' }),
@@ -1189,6 +1214,7 @@ async function seedDemoPharmacyOwners(
           phone: seed.phone,
           address: seed.location?.address,
         },
+
         $unset: { statusReason: '' },
         $setOnInsert: { _id: seed.ownerId },
       },
@@ -1232,6 +1258,7 @@ function createSeedPharmacies() {
       location: {
         address: `${12 + index} ${street}`,
         settlement,
+        region: DEMO_REGIONS[settlement],
         countryCode: 'UA',
       },
 
@@ -1245,6 +1272,7 @@ function createSeedPharmacies() {
       rating: Number((4 + (index % 10) * 0.1).toFixed(1)),
       imageUrl: createPharmacyImageUrl(index),
       description: `${brand} in ${settlement} offers everyday medicines, vitamins, medical devices, hygiene products, and quick online reservation for local clients.`,
+      shortDescription: createDemoPharmacyShortDescription(pharmacyName),
       ownerId: new mongoose.Types.ObjectId(),
       managerUserIds: [],
       status: PHARMACY_STATUSES.ACTIVE,
@@ -1304,6 +1332,7 @@ function createSeedProducts(
 
     const mergedPharmacies = [
       ...richStockPharmacies,
+
       ...selectedPharmacies.filter(
         (pharmacy) =>
           !richStockPharmacies.some(
@@ -1312,6 +1341,7 @@ function createSeedProducts(
           )
       ),
     ];
+
     const shouldForceRichStock = index < 115;
 
     const offers =
@@ -1340,6 +1370,7 @@ function createSeedProducts(
       ...(baseName === 'Carvedilol' && variantIndex === 0
         ? { _id: STOCK_MOVEMENT_DEMO_PRODUCT_ID }
         : {}),
+
       name,
       slug: createSlug(name),
       article: `EPH-${String(productNumber).padStart(4, '0')}`,
@@ -1604,10 +1635,12 @@ async function seedActivePharmacyOrder(): Promise<number> {
     if (config.status !== 'new') {
       history.push({
         status: 'in_progress',
+
         changedAt:
           config.status === 'in_progress'
             ? config.statusChangedAt
             : new Date(config.createdAt.getTime() + 60 * 60 * 1000),
+
         changedBy: clientUser._id,
       });
     }
@@ -1636,11 +1669,14 @@ async function seedActivePharmacyOrder(): Promise<number> {
   const productSnapshot = {
     name: product.name,
     ...(product.slug ? { slug: product.slug } : {}),
+
     article: product.article,
+
     ...createSeedCategorySnapshot(product.categoryId, categoryById),
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
     ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
     ...(product.dosage ? { dosage: product.dosage } : {}),
+
     ...(product.packageQuantity
       ? { packageQuantity: String(product.packageQuantity) }
       : {}),
@@ -1662,6 +1698,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
         : {}),
 
       ...(pharmacy.location.region ? { region: pharmacy.location.region } : {}),
+
       ...(pharmacy.location.countryCode
         ? { countryCode: pharmacy.location.countryCode }
         : {}),
@@ -1669,8 +1706,10 @@ async function seedActivePharmacyOrder(): Promise<number> {
 
     phone: pharmacy.phone,
     email: pharmacy.email,
+
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+
     rating: pharmacy.rating ?? 0,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     bankDetails: pharmacy.bankDetails,
@@ -2042,12 +2081,14 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
   const offers = await ProductOffer.find({
     pharmacyId: pharmacy._id,
+
     productId: {
       $nin: [
         STOCK_MOVEMENT_DEMO_PRODUCT_ID,
         ...selloutProducts.map((product) => product._id),
       ],
     },
+
     availableQuantity: { $gte: 20 },
   })
     .sort({ productId: 1 })
@@ -2361,8 +2402,10 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       address: '24 Portfolio Street, Lviv',
       pictureUrl: '/images/seed/clients/client-023.png',
       status: 'blocked',
+
       statusReason:
         'The client is temporarily blocked after repeated uncollected orders.',
+
       orderStatuses: ['successful', 'in_progress', 'new', 'rejected'],
     },
     {
@@ -2428,17 +2471,21 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
             email: client.email,
             password,
             role: USER_ROLES.CLIENT,
+
             status:
               client.status === 'blocked'
                 ? USER_STATUSES.BLOCKED
                 : USER_STATUSES.ACTIVE,
+
             phone: client.phone,
             address: client.address,
             pictureUrl: createSeedAssetUrl(client.pictureUrl),
+
             ...(client.statusReason
               ? { statusReason: client.statusReason }
               : {}),
           },
+
           ...(client.statusReason ? {} : { $unset: { statusReason: '' } }),
         },
         {
@@ -2487,6 +2534,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         : {}),
 
       ...(pharmacy.location.region ? { region: pharmacy.location.region } : {}),
+
       ...(pharmacy.location.countryCode
         ? { countryCode: pharmacy.location.countryCode }
         : {}),
@@ -2586,6 +2634,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
             dayOffset * 24 * 60 * 60 * 1000 +
             timeOffset
         );
+
         successfulOrderIndex += 1;
       }
 
@@ -2616,15 +2665,20 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
 
           const productSnapshot = {
             name: product.name,
+
             ...(product.slug ? { slug: product.slug } : {}),
+
             article: product.article,
+
             ...createSeedCategorySnapshot(product.categoryId, categoryById),
             ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+
             ...(product.manufacturer
               ? { manufacturer: product.manufacturer }
               : {}),
 
             ...(product.dosage ? { dosage: product.dosage } : {}),
+
             ...(product.packageQuantity
               ? { packageQuantity: String(product.packageQuantity) }
               : {}),
@@ -2665,10 +2719,12 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       if (status !== 'new') {
         statusHistory.push({
           status: 'in_progress',
+
           changedAt:
             status === 'in_progress'
               ? finalChangedAt
               : new Date(createdAt.getTime() + 45 * 60 * 1000),
+
           changedBy: clientUser._id,
         });
       }
@@ -2728,6 +2784,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
         })),
 
         ...(status === 'successful' ? { successfulAt: finalChangedAt } : {}),
+
         ...(status === 'rejected'
           ? {
               rejectionReason:
@@ -2805,6 +2862,7 @@ async function seedPharmacyClientPortfolio(): Promise<number> {
       },
     ])
   );
+
   const stockMovements: Array<Record<string, unknown>> = [];
 
   movementPlans
@@ -2937,6 +2995,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
   })
     .sort({ productId: 1 })
     .select('_id productId price')
+
     .lean<
       Array<{
         _id: Types.ObjectId;
@@ -3110,6 +3169,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
         sequence: sequenceStart + 1,
       }
     );
+
     shadowMovementsByOfferId.set(offerKey, offerMovements);
   }
 
@@ -3138,8 +3198,10 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       : {}),
     phone: pharmacy.phone,
     email: pharmacy.email,
+
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+
     rating: pharmacy.rating ?? 0,
     reviewsCount: pharmacy.reviewsCount ?? 0,
     bankDetails: pharmacy.bankDetails,
@@ -3154,8 +3216,10 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
   for (let index = 0; index < orderCount; index += 1) {
     const dayOffset = Math.floor((index * rangeDays) / orderCount);
     const createdAt = new Date(firstOrderAt);
+
     createdAt.setUTCDate(createdAt.getUTCDate() + dayOffset);
     createdAt.setUTCHours(8 + (index % 10), 10 + ((index * 7) % 45), 0, 0);
+
     const completedAt = new Date(createdAt.getTime() + 45 * 60 * 1000);
     const preferredQuantity = 1 + (index % 2);
 
@@ -3200,19 +3264,25 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     if (!product) continue;
 
     const unitPrice = resolveOfferPriceAt(priceTimeline, offer._id, createdAt);
+
     addSaleToShadowLedger(offer._id, createdAt, completedAt, quantity);
+
     const orderId = new Types.ObjectId();
     const orderNumber = createSeedOrderNumber(orderId, createdAt);
     const totalPrice = quantity * unitPrice;
 
     const productSnapshot = {
       name: product.name,
+
       ...(product.slug ? { slug: product.slug } : {}),
+
       article: product.article,
+
       ...createSeedCategorySnapshot(product.categoryId, categoryById),
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
       ...(product.dosage ? { dosage: product.dosage } : {}),
+
       ...(product.packageQuantity
         ? { packageQuantity: String(product.packageQuantity) }
         : {}),
@@ -3447,12 +3517,14 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
 
     const baseQuantity = Math.floor(offer.totalQuantity / 10);
     const remainder = offer.totalQuantity % 10;
+
     let total = offer.totalQuantity;
     let reserved = 0;
     let available = offer.availableQuantity;
 
     productOrders.forEach((order, orderIndex) => {
       const quantity = baseQuantity + (orderIndex < remainder ? 1 : 0);
+
       const unitPrice = resolveOfferPriceAt(
         selloutPriceTimelineByOfferId,
         offer._id,
@@ -3463,12 +3535,16 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
 
       const productSnapshot = {
         name: product.name,
+
         ...(product.slug ? { slug: product.slug } : {}),
+
         article: product.article,
+
         ...createSeedCategorySnapshot(product.categoryId, categoryById),
         ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
         ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
         ...(product.dosage ? { dosage: product.dosage } : {}),
+
         ...(product.packageQuantity
           ? { packageQuantity: String(product.packageQuantity) }
           : {}),
@@ -3575,6 +3651,7 @@ async function seedSoldOutAndLowStockProducts(): Promise<{
       orderUpdates as Parameters<typeof Order.bulkWrite>[0]
     );
   }
+
   if (historicalMovements.length > 0) {
     await StockMovement.insertMany(historicalMovements);
   }
@@ -3986,6 +4063,7 @@ async function seedClientManagerNotes(): Promise<number> {
 
   const clients = await User.find({ _id: { $in: clientIds } })
     .select('_id name isDefaultPharmacyClient')
+
     .lean<
       Array<{
         _id: Types.ObjectId;
@@ -4140,8 +4218,10 @@ function createProductRequestSeedHistory(
     entries.push({
       status: 'approved',
       title: 'Request approved',
+
       description:
         'Admin approved the request and created or linked the product.',
+
       createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
     });
   }
@@ -4150,9 +4230,11 @@ function createProductRequestSeedHistory(
     entries.push({
       status: 'rejected',
       title: 'Request rejected',
+
       description:
         rejectionReason ??
         'Admin rejected the request because the submitted information needs correction.',
+
       createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
     });
   }
@@ -4458,11 +4540,18 @@ function assertPharmacyAccountSeedsAreValid(): void {
       location: {
         address: seed.address,
         settlement: seed.settlement,
+
+        region:
+          seed.region ??
+          DEMO_REGIONS[seed.settlement] ??
+          `${seed.settlement} region`,
+
         countryCode: 'UA',
       },
 
       phone: seed.phone,
       email: seed.publicEmail ?? seed.email,
+
       workingHours:
         seed.workingHours ??
         'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: 10:00-17:00; Sun: Closed',
@@ -4477,12 +4566,16 @@ function assertPharmacyAccountSeedsAreValid(): void {
       description:
         seed.description ?? createPharmacyAccountDescription(seed.pharmacyName),
 
+      shortDescription: createDemoPharmacyShortDescription(seed.pharmacyName),
+
       reviewsCount: 0,
       ownerId,
       managerUserIds: [],
       documents: createVerificationDocuments(seed.email),
       status: seed.status,
+
       ...(seed.statusReason ? { statusReason: seed.statusReason } : {}),
+
       ...(seed.status === PHARMACY_STATUSES.ACTIVE
         ? {
             approvedBy: ownerId,
@@ -4490,6 +4583,7 @@ function assertPharmacyAccountSeedsAreValid(): void {
             activatedAt: ACTIVE_PHARMACY_FIRST_ACTIVATED_AT,
           }
         : {}),
+
       createdBy: ownerId,
       updatedBy: ownerId,
     }).validateSync();
@@ -4546,6 +4640,7 @@ async function seedDatabase(): Promise<void> {
   await connectDB();
 
   const categoryBootstrap = await ensureInitialProductCategories();
+
   console.log(
     `Seed completed: ${categoryBootstrap.createdCount} initial product categories created`
   );

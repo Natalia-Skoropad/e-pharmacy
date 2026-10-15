@@ -287,15 +287,17 @@ function serializePublicPharmacy(
       : {}),
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
-
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
 
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
-
     rating: pharmacy.rating ?? 0,
 
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
+
+    ...(pharmacy.shortDescription
+      ? { shortDescription: pharmacy.shortDescription }
+      : {}),
 
     availableProductsCount,
     reviewsCount: pharmacy.reviewsCount ?? 0,
@@ -314,7 +316,9 @@ function serializeCurrentPharmacySummary(
     id: String(pharmacy._id),
     name: pharmacy.name,
     status: pharmacy.status,
+
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+
     membershipRole,
   };
 }
@@ -342,11 +346,13 @@ function clonePharmacyLocation(
 
   return {
     ...(location.address !== undefined ? { address: location.address } : {}),
+
     ...(location.settlement !== undefined
       ? { settlement: location.settlement }
       : {}),
 
     ...(location.region !== undefined ? { region: location.region } : {}),
+
     ...(location.countryCode !== undefined
       ? { countryCode: location.countryCode }
       : {}),
@@ -399,19 +405,26 @@ function normalizePendingModerationPayload(
 
   return {
     ...(current.name !== undefined ? { name: current.name } : {}),
+
     ...(current.location !== undefined
       ? { location: clonePharmacyLocation(current.location) }
       : {}),
 
     ...(current.phone !== undefined ? { phone: current.phone } : {}),
     ...(current.email !== undefined ? { email: current.email } : {}),
+
     ...(current.workingHours !== undefined
       ? { workingHours: current.workingHours }
       : {}),
 
     ...(current.imageUrl !== undefined ? { imageUrl: current.imageUrl } : {}),
+
     ...(current.description !== undefined
       ? { description: current.description }
+      : {}),
+
+    ...(current.shortDescription !== undefined
+      ? { shortDescription: current.shortDescription }
       : {}),
 
     ...(current.documents !== undefined
@@ -449,6 +462,9 @@ function serializePendingModerationForProfile(
   if (normalized.description !== undefined)
     result.description = normalized.description;
 
+  if (normalized.shortDescription !== undefined)
+    result.shortDescription = normalized.shortDescription;
+
   if (normalized.documents !== undefined) {
     result.documents = normalized.documents.map(
       serializeProfileVerificationDocument
@@ -481,6 +497,7 @@ function serializePharmacyProfile(
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
 
     bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+
     ...(membershipRole !== 'manager' && pharmacy.bankDetails
       ? { bankDetails: pharmacy.bankDetails }
       : {}),
@@ -489,11 +506,17 @@ function serializePharmacyProfile(
       membershipRole === 'manager'
         ? []
         : (pharmacy.documents ?? []).map(serializeProfileVerificationDocument),
+
     status: pharmacy.status,
     rating: pharmacy.rating ?? 0,
 
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
+
+    ...(pharmacy.shortDescription
+      ? { shortDescription: pharmacy.shortDescription }
+      : {}),
+
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
 
@@ -506,6 +529,7 @@ function serializePharmacyProfile(
       : {}),
 
     ...(pharmacy.reviewedBy ? { reviewedBy: String(pharmacy.reviewedBy) } : {}),
+
     ...(membershipRole !== 'manager' && pharmacy.pendingModeration
       ? {
           pendingModeration: serializePendingModerationForProfile(
@@ -570,6 +594,7 @@ export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptions
     const key = location.settlement
       .normalize('NFKC')
       .toLocaleLowerCase('uk-UA');
+
     settlementCounts.set(key, (settlementCounts.get(key) ?? 0) + 1);
   }
 
@@ -625,6 +650,7 @@ export async function getPharmacyOptionsService() {
       ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
       ...(pharmacy.email ? { email: pharmacy.email } : {}),
       ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
+
       ...(pharmacy.location
         ? { location: clonePharmacyLocation(pharmacy.location) }
         : {}),
@@ -851,6 +877,7 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
     pharmacy: {
       id: String(pharmacy._id),
       name: pharmacy.name,
+
       ...(pharmacy.location
         ? { location: clonePharmacyLocation(pharmacy.location) }
         : {}),
@@ -860,6 +887,7 @@ export async function getPharmacyCheckoutDetailsService(pharmacyId: string) {
       ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
 
       bankTransferAvailable: hasCompleteBankDetails(pharmacy.bankDetails),
+
       ...(hasCompleteBankDetails(pharmacy.bankDetails)
         ? { bankDetails: pharmacy.bankDetails }
         : {}),
@@ -1063,6 +1091,7 @@ export async function setFavoritePharmacyService(
 
   return {
     isFavorite,
+
     message: isFavorite
       ? 'Pharmacy was added to favorites.'
       : 'Pharmacy was removed from favorites.',
@@ -1084,6 +1113,7 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
     workingHours: pharmacy.workingHours,
     imageUrl: pharmacy.imageUrl,
     description: pharmacy.description,
+    shortDescription: pharmacy.shortDescription,
     recipientName: bankDetails?.recipientName,
     taxId: bankDetails?.taxId,
     iban: bankDetails?.iban,
@@ -1156,6 +1186,7 @@ function hasModeratedProfileChanges(
     input.workingHours !== undefined ||
     input.imageUrl !== undefined ||
     input.description !== undefined ||
+    input.shortDescription !== undefined ||
     input.documents !== undefined ||
     input.bankDetails
   );
@@ -1187,6 +1218,10 @@ function buildPendingModerationPayload(
 
   if (input.imageUrl !== undefined) pending.imageUrl = input.imageUrl;
   if (input.description !== undefined) pending.description = input.description;
+
+  if (input.shortDescription !== undefined)
+    pending.shortDescription = input.shortDescription;
+
   if (input.documents !== undefined) pending.documents = input.documents;
 
   if (input.bankDetails) {
@@ -1334,6 +1369,7 @@ export async function updateMyPharmacyProfileService(
 
       const resolvedInput: ResolvedPharmacyProfileUpdate = {
         ...profileFields,
+
         ...(documentSelections !== undefined
           ? {
               documents: await resolvePrivatePharmacyDocumentSelections(
@@ -1433,6 +1469,7 @@ export async function updateMyPharmacyProfileService(
       applyClearableField('workingHours', resolvedInput.workingHours);
       applyClearableField('imageUrl', resolvedInput.imageUrl);
       applyClearableField('description', resolvedInput.description);
+      applyClearableField('shortDescription', resolvedInput.shortDescription);
 
       if (resolvedInput.documents !== undefined)
         update.documents = resolvedInput.documents;
@@ -1586,6 +1623,7 @@ export async function submitMyPharmacyModerationService(
           status: isResubmission
             ? PHARMACY_STATUSES.ON_MODERATION
             : PHARMACY_STATUSES.ACTIVE,
+
           ...(isResubmission ? { reviewState: 'changes_requested' } : {}),
           updatedAt: new Date(input.expectedRevision),
         },

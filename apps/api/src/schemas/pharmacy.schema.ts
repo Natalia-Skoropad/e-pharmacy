@@ -118,6 +118,7 @@ const pharmacyProfileUpdateChangesSchema = z
     workingHours: sharedClearableWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
     description: sharedClearableTextEditorSchema,
+    shortDescription: clearableSchema(z.string().trim().min(1).max(200)),
     documents: pharmacyProfileDocumentSelectionsSchema.optional(),
 
     bankDetails: z

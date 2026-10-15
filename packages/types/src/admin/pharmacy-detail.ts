@@ -30,6 +30,7 @@ export type AdminPharmacyCurrentData = Readonly<{
   workingHours?: string;
   imageUrl?: string;
   description?: string;
+  shortDescription?: string;
   license?: string;
   bankDetails?: EditablePharmacyBankDetails;
   bankTransferAvailable: boolean;

@@ -274,6 +274,10 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
 
               <DetailField label="Pharmacy ID">{detail.id}</DetailField>
 
+              <DetailField label="Short pharmacy description">
+                {display(current.shortDescription)}
+              </DetailField>
+
               <DetailField label="Email">
                 <ContactValue
                   type="email"

@@ -6,6 +6,7 @@ import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatAvailableProductsCount } from '@e-pharmacy/utils/numbers';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 
 import { buildProductCatalogPath } from '@/lib/catalog/product-catalog';
@@ -61,7 +62,11 @@ function PharmacyCard({
     [pharmacy]
   );
 
-  const locationLabel = pharmacy.location?.settlement?.trim() ?? '';
+  const locationLabel = formatPharmacyLocation({
+    settlement: pharmacy.location?.settlement,
+    region: pharmacy.location?.region,
+  });
+
   const addressLabel = pharmacy.location?.address?.trim() ?? '';
 
   const pharmacyHref = buildPharmacyPath(

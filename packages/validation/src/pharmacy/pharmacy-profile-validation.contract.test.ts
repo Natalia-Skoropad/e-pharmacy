@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   normalizePharmacyAboutForm,
   normalizePharmacyContactForm,
+  validatePharmacyContactForm,
   normalizePharmacyPaymentForm,
 } from './pharmacy-profile-validation';
 
@@ -22,6 +23,7 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
     normalizePharmacyContactForm(
       {
         name: 'Example Pharmacy',
+        shortDescription: 'Clear service, friendly care',
         settlement: 'Kyiv',
         region: '',
         address: '',
@@ -32,6 +34,7 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
       'draft',
       {
         name: 'Example Pharmacy',
+        shortDescription: 'Clear service, friendly care',
         settlement: 'Kyiv',
         region: 'Kyiv region',
         address: 'Main Street 1',
@@ -101,6 +104,7 @@ test('draft pharmacy normalization keeps location changes nested', () => {
     normalizePharmacyContactForm(
       {
         name: 'Example Pharmacy',
+        shortDescription: 'Clear service, friendly care',
         settlement: 'Bolhrad',
         region: 'Odesa region',
         address: '36 Bolharskykh Opolchentsiv Street',
@@ -111,6 +115,7 @@ test('draft pharmacy normalization keeps location changes nested', () => {
       'draft',
       {
         name: 'Example Pharmacy',
+        shortDescription: 'Clear service, friendly care',
         settlement: 'Odesa',
         region: 'Odesa region',
         address: '36 Bolharskykh Opolchentsiv Street',
@@ -126,5 +131,56 @@ test('draft pharmacy normalization keeps location changes nested', () => {
       email: 'pharmacy@example.com',
       workingHours: 'Mon: 09:00-18:00',
     }
+  );
+});
+
+//===================================================================
+
+test('short pharmacy description is required for verification and capped at 200 characters', () => {
+  const base = {
+    name: 'Care Pharmacy',
+    shortDescription: '',
+    settlement: 'Lviv',
+    region: 'Lviv region',
+    address: '12 Health Street',
+    phone: '+380661234777',
+    email: 'care@example.com',
+
+    workingHours:
+      'Mon: 09:00-18:00; Tue: 09:00-18:00; Wed: 09:00-18:00; Thu: 09:00-18:00; Fri: 09:00-18:00; Sat: Closed; Sun: Closed',
+  };
+
+  assert.equal(
+    validatePharmacyContactForm(base, 'verification').shortDescription,
+    'Short pharmacy description is required'
+  );
+
+  assert.equal(
+    validatePharmacyContactForm(base, 'draft').shortDescription,
+    undefined
+  );
+
+  assert.equal(
+    validatePharmacyContactForm(
+      { ...base, shortDescription: 'A'.repeat(200) },
+      'verification'
+    ).shortDescription,
+    undefined
+  );
+
+  assert.match(
+    validatePharmacyContactForm(
+      { ...base, shortDescription: 'A'.repeat(201) },
+      'draft'
+    ).shortDescription ?? '',
+    /200/
+  );
+
+  assert.equal(
+    normalizePharmacyContactForm({ ...base, shortDescription: '' }, 'draft', {
+      ...base,
+      shortDescription: 'Old slogan',
+    }).shortDescription,
+    null
   );
 });

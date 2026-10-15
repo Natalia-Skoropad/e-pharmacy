@@ -6,7 +6,7 @@ import {
   ArrowDownAZ,
   ArrowUpAZ,
   Building2,
-  Clock3,
+  CalendarDays,
   MapPin,
   RotateCcw,
   Search,
@@ -131,6 +131,7 @@ function PharmaciesCatalogFiltersForm({
   const pharmacySelectOptions = useMemo(
     () => [
       { value: '', label: 'All pharmacies' },
+
       ...availablePharmacyOptions.map((pharmacy) => ({
         value: pharmacy.id,
         label: pharmacy.name,
@@ -220,6 +221,7 @@ function PharmaciesCatalogFiltersForm({
         const location = locationOptions.find(
           (option) => getLocationOptionValue(option) === value
         );
+
         if (!location) return;
 
         updateCatalog({
@@ -256,7 +258,7 @@ function PharmaciesCatalogFiltersForm({
               ) : option.value === 'name-desc' ? (
                 <ArrowUpAZ size={15} />
               ) : (
-                <Clock3 size={15} />
+                <CalendarDays size={15} />
               )}
             </span>
             <span>{option.label}</span>

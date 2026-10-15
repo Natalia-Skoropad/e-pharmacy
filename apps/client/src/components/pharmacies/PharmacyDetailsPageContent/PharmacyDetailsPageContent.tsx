@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId } from 'react';
+import { Building2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Container } from '@e-pharmacy/ui/layout';
@@ -98,6 +99,7 @@ function PharmacyDetailsPageContent({
       nextTab === 'details'
         ? base
         : `${base}/${nextTab === 'payment' ? 'bank-details' : nextTab}`;
+
     router.push(path, { scroll: false });
   };
 
@@ -134,6 +136,29 @@ function PharmacyDetailsPageContent({
             value="details"
             activeValue={currentTab}
           >
+            <header className={css.detailsHeader}>
+              <span className={css.detailsHeaderIcon} aria-hidden="true">
+                <Building2 size={22} />
+              </span>
+
+              <div className={css.detailsHeaderContent}>
+                <div className={css.detailsHeaderTitleRow}>
+                  <h1 className={css.detailsHeaderTitle}>{pharmacy.name}</h1>
+                  {pharmacy.location?.settlement ? (
+                    <span className={css.detailsHeaderSettlement}>
+                      {pharmacy.location.settlement}
+                    </span>
+                  ) : null}
+                </div>
+
+                {pharmacy.shortDescription ? (
+                  <p className={css.detailsHeaderDescription}>
+                    {pharmacy.shortDescription}
+                  </p>
+                ) : null}
+              </div>
+            </header>
+
             <PharmacyDetailsHero
               pharmacy={pharmacy}
               reviewsTotal={reviewsTotal}

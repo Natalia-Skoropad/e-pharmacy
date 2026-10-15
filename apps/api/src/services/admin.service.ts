@@ -43,11 +43,13 @@ function clonePharmacyLocation(
 
   return {
     ...(location.address !== undefined ? { address: location.address } : {}),
+
     ...(location.settlement !== undefined
       ? { settlement: location.settlement }
       : {}),
 
     ...(location.region !== undefined ? { region: location.region } : {}),
+
     ...(location.countryCode !== undefined
       ? { countryCode: location.countryCode }
       : {}),
@@ -75,19 +77,26 @@ function normalizePendingModeration(
 
   return {
     ...(current.name !== undefined ? { name: current.name } : {}),
+
     ...(current.location
       ? { location: clonePharmacyLocation(current.location) }
       : {}),
 
     ...(current.phone !== undefined ? { phone: current.phone } : {}),
     ...(current.email !== undefined ? { email: current.email } : {}),
+
     ...(current.workingHours !== undefined
       ? { workingHours: current.workingHours }
       : {}),
 
     ...(current.imageUrl !== undefined ? { imageUrl: current.imageUrl } : {}),
+
     ...(current.description !== undefined
       ? { description: current.description }
+      : {}),
+
+    ...(current.shortDescription !== undefined
+      ? { shortDescription: current.shortDescription }
       : {}),
 
     ...(current.documents !== undefined
@@ -123,9 +132,11 @@ function serializePharmacyProfile(
   return {
     id: String(pharmacy._id),
     name: pharmacy.name,
+
     ...(pharmacy.location
       ? { location: clonePharmacyLocation(pharmacy.location) }
       : {}),
+
     ...(pharmacy.phone ? { phone: pharmacy.phone } : {}),
     ...(pharmacy.email ? { email: pharmacy.email } : {}),
     ...(pharmacy.workingHours ? { workingHours: pharmacy.workingHours } : {}),
@@ -138,8 +149,14 @@ function serializePharmacyProfile(
 
     ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
     ...(pharmacy.description ? { description: pharmacy.description } : {}),
+
+    ...(pharmacy.shortDescription
+      ? { shortDescription: pharmacy.shortDescription }
+      : {}),
+
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
+
     ...(pharmacy.reviewFeedback
       ? { reviewFeedback: pharmacy.reviewFeedback }
       : {}),
@@ -149,6 +166,7 @@ function serializePharmacyProfile(
       : {}),
 
     ...(pharmacy.reviewedBy ? { reviewedBy: String(pharmacy.reviewedBy) } : {}),
+
     ...(pharmacy.pendingModeration
       ? {
           pendingModeration: normalizePendingModeration(
@@ -289,6 +307,7 @@ export async function decidePharmacyModerationByAdminService(
     if (!mutationQuery) return null;
     const audit = await AdminAuditLog.findOne(mutationQuery).lean();
     if (!audit) return null;
+
     // Same key with different action/payload is not a retry.
     if (
       audit.actorUserId.toString() !== adminUserId ||
@@ -303,12 +322,14 @@ export async function decidePharmacyModerationByAdminService(
     }
 
     const current = await Pharmacy.findById(pharmacyId);
+
     if (!current || current.updatedAt.toISOString() !== audit.after.revision) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
         'Decision was applied, but the pharmacy has changed since then. Refresh.'
       );
     }
+
     return serializePharmacyProfile(current);
   };
 
@@ -320,8 +341,10 @@ export async function decidePharmacyModerationByAdminService(
   try {
     const updated = await session.withTransaction(async () => {
       const pharmacy = await Pharmacy.findById(pharmacyId).session(session);
+
       if (!pharmacy)
         throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+
       if (pharmacy.updatedAt.toISOString() !== input.expectedRevision) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
@@ -354,6 +377,7 @@ export async function decidePharmacyModerationByAdminService(
               'Pharmacy is not awaiting review.'
             );
           }
+
           // Repeated corrections are permitted with a fresh revision and produce an audit event.
           action = ADMIN_AUDIT_ACTIONS.PHARMACY_CORRECTIONS_REQUESTED;
           nextReviewState = 'changes_requested';
@@ -501,6 +525,7 @@ export async function decidePharmacyModerationByAdminService(
           saved.pendingModeration?.documents,
           session
         );
+
         // Only initial activation needs a default client and owner lifecycle event.
         if (!pharmacy.activatedAt) {
           const defaultClient = await ensureDefaultPharmacyClient(
@@ -517,9 +542,11 @@ export async function decidePharmacyModerationByAdminService(
           await activateNewPharmacyOwnerForPharmacy(
             saved,
             adminUserId,
+
             auditRequestId ??
               input.clientRequestId ??
               new mongoose.Types.ObjectId().toHexString(),
+
             session
           );
         }
@@ -599,15 +626,18 @@ export async function decidePharmacyModerationByAdminService(
 
         changedFields,
         reason,
+
         requestId:
           auditRequestId ??
           input.clientRequestId ??
           new mongoose.Types.ObjectId().toHexString(),
+
         ...(input.clientRequestId
           ? { mutationKey: input.clientRequestId }
           : {}),
         session,
       });
+
       return saved;
     });
 

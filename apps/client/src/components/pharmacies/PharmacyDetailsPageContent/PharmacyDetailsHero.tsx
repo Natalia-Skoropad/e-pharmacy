@@ -69,9 +69,11 @@ export function PharmacyDetailsHero({
 
       <div className={css.content}>
         <div className={css.topLine}>
-          <p className={css.kicker}>
-            {pharmacy.location?.settlement ?? 'Pharmacy profile'}
-          </p>
+          <RatingSummary
+            className={css.ratingRow}
+            rating={pharmacy.rating}
+            reviewsCount={reviewsTotal}
+          />
 
           {shouldRenderFavoriteControl({
             isAuthenticated,
@@ -88,14 +90,6 @@ export function PharmacyDetailsHero({
             />
           ) : null}
         </div>
-
-        <h1 className={css.title}>{pharmacy.name}</h1>
-
-        <RatingSummary
-          className={css.ratingRow}
-          rating={pharmacy.rating}
-          reviewsCount={reviewsTotal}
-        />
 
         <PharmacyContactPanel
           pharmacy={pharmacy}
