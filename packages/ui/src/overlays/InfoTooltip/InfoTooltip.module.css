@@ -229,3 +229,14 @@
   bottom: -6px;
   transform: translateX(-50%) rotate(225deg);
 }
+
+/* Native popover is in the browser top layer, above scroll containers and cards. */
+.floatingTooltipTopLayer {
+  inset: auto;
+  margin: 0;
+}
+
+/* Keep the popover hidden until showPopover() is called after the portal mounts. */
+.floatingTooltipTopLayer[popover]:not(:popover-open) {
+  display: none;
+}

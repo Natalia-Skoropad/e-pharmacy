@@ -464,16 +464,41 @@
   }
 }
 
+/* Keep the contact icon and copy action fixed; only the address may wrap. */
 .contactValue {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.contactValue > svg {
+  margin-top: 2px;
+}
+
+.detailsList a.contactText {
+  display: block;
+  min-width: 0;
   max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.contactValue > button {
+  justify-self: end;
+  flex-shrink: 0;
 }
 
 .tableHeaderWithHelp {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.tableHeaderWithHelp button {
+  width: 24px;
+  height: 24px;
 }

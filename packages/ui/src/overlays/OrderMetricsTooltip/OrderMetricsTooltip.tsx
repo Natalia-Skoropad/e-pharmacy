@@ -8,12 +8,16 @@ import { InfoTooltip } from '../InfoTooltip';
 
 type OrderMetricsTooltipProps = Readonly<{
   scope: 'pharmacy' | 'client';
+  preferTopLayer?: boolean;
 }>;
 
 //===================================================================
 
 /** Both tables report only orders with the final `successful` status. */
-export function OrderMetricsTooltip({ scope }: OrderMetricsTooltipProps) {
+export function OrderMetricsTooltip({
+  scope,
+  preferTopLayer = false,
+}: OrderMetricsTooltipProps) {
   const subject = scope === 'pharmacy' ? 'this pharmacy' : 'this client';
 
   return (
@@ -22,6 +26,7 @@ export function OrderMetricsTooltip({ scope }: OrderMetricsTooltipProps) {
       title="Successful orders"
       icon={<ShoppingBag size={20} aria-hidden="true" />}
       escapeOverflow
+      preferTopLayer={preferTopLayer}
       items={[
         {
           title: 'Orders count',

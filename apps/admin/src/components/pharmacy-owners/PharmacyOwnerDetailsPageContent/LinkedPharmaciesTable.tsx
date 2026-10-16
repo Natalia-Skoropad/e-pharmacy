@@ -100,7 +100,7 @@ export function LinkedPharmaciesTable({
         title: (
           <span className={css.tableHeaderWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
-            <OrderMetricsTooltip scope="pharmacy" />
+            <OrderMetricsTooltip scope="pharmacy" preferTopLayer />
           </span>
         ),
 
@@ -141,7 +141,7 @@ export function LinkedPharmaciesTable({
       items={pharmacies}
       getItemKey={(pharmacy) => pharmacy.id}
       isLoading={isLoading}
-      minWidth={0}
+      minWidth={950}
       ariaLabel="Linked pharmacies"
       labels={{
         loading: 'Loading linked pharmacies...',

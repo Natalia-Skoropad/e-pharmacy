@@ -32,6 +32,8 @@ type InfoTooltipProps = Readonly<{
   className?: string;
   icon?: ReactNode;
   escapeOverflow?: boolean;
+  /** Use the browser top layer for tooltips inside clipped or stacked layouts. */
+  preferTopLayer?: boolean;
 }>;
 
 type FloatingTooltipPosition = Readonly<{
@@ -53,9 +55,11 @@ function InfoTooltip({
   className,
   icon,
   escapeOverflow = false,
+  preferTopLayer = false,
 }: InfoTooltipProps) {
   const tooltipId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const floatingTooltipRef = useRef<HTMLSpanElement | null>(null);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
 
   const [floatingPosition, setFloatingPosition] =
@@ -116,10 +120,31 @@ function InfoTooltip({
     };
   }, [escapeOverflow, isFloatingOpen, updateFloatingPosition]);
 
+  // Portals escape clipping, but not every competing stacking context.
+  // The native popover top layer reliably clears both for opted-in tooltips.
+  useEffect(() => {
+    if (!escapeOverflow || !preferTopLayer || !isFloatingOpen) return;
+
+    const tooltip = floatingTooltipRef.current;
+
+    if (
+      !tooltip ||
+      typeof tooltip.showPopover !== 'function' ||
+      tooltip.matches(':popover-open')
+    ) {
+      return;
+    }
+
+    tooltip.showPopover();
+  }, [escapeOverflow, preferTopLayer, isFloatingOpen]);
+
   const tooltipContent = (
     <span
+      ref={floatingTooltipRef}
+      popover={escapeOverflow && preferTopLayer ? 'manual' : undefined}
       className={clsx(
         css.tooltip,
+        escapeOverflow && preferTopLayer && css.floatingTooltipTopLayer,
         escapeOverflow && css.floatingTooltip,
         escapeOverflow &&
           floatingPosition?.openAbove &&
@@ -188,7 +213,13 @@ function InfoTooltip({
         className={css.trigger}
         type="button"
         aria-label={label}
-        aria-describedby={tooltipId}
+        aria-describedby={
+          !escapeOverflow || isFloatingOpen ? tooltipId : undefined
+        }
+        onPointerEnter={showFloatingTooltip}
+        onMouseEnter={showFloatingTooltip}
+        onFocus={showFloatingTooltip}
+        onClick={showFloatingTooltip}
       >
         <MessageCircleQuestion size={20} strokeWidth={2.2} aria-hidden="true" />
       </button>

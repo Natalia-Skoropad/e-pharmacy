@@ -127,7 +127,6 @@ function classifyLoadError(error: unknown): DetailLoadError {
   if (!isApiError(error)) return 'error';
   if (error.httpStatus === 404) return 'not-found';
   if (error.httpStatus === 403) return 'forbidden';
-
   return 'error';
 }
 
@@ -227,7 +226,6 @@ function PharmacyOwnerDetailsPageContent({
 
   useEffect(() => {
     const controller = new AbortController();
-
     setIsLoading(true);
     setLoadError(null);
 
@@ -351,7 +349,6 @@ function PharmacyOwnerDetailsPageContent({
       });
 
       const refreshed = await loadDetail();
-
       setDetail(refreshed);
       requestPharmacyOwnerNavigationBadgeRefresh();
       setLoadError(null);
@@ -425,7 +422,6 @@ function PharmacyOwnerDetailsPageContent({
   const statistics = detail?.pharmacyStatistics;
   const isDeactivateAction = detail ? detail.status !== 'blocked' : true;
   const actionTarget = actionState?.targetStatus;
-
   const actionReasonError = actionState
     ? buildReasonError(actionState.reason)
     : '';
@@ -633,8 +629,11 @@ function PharmacyOwnerDetailsPageContent({
                         <dt>Email</dt>
                         <dd>
                           <span className={css.contactValue}>
-                            <a href={`mailto:${detail.email}`}>
-                              <Mail size={17} aria-hidden="true" />
+                            <Mail size={17} aria-hidden="true" />
+                            <a
+                              className={css.contactText}
+                              href={`mailto:${detail.email}`}
+                            >
                               {detail.email}
                             </a>
                             <CopyButton
@@ -650,8 +649,11 @@ function PharmacyOwnerDetailsPageContent({
                         <dt>Phone</dt>
                         <dd>
                           <span className={css.contactValue}>
-                            <a href={`tel:${detail.phone}`}>
-                              <Phone size={17} aria-hidden="true" />
+                            <Phone size={17} aria-hidden="true" />
+                            <a
+                              className={css.contactText}
+                              href={`tel:${detail.phone}`}
+                            >
                               {detail.phone}
                             </a>
                             <CopyButton

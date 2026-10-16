@@ -68,6 +68,7 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
       icon: <UserRound size={18} aria-hidden="true" />,
     },
     { type: 'separator' },
+
     websiteHref
       ? {
           type: 'link',
@@ -116,7 +117,8 @@ export function AdminHeader({ breadcrumbs, navigation }: AdminHeaderProps) {
           items={breadcrumbs}
           leadingIcon={
             navigationItem?.icon ??
-            (pathname === ADMIN_ROUTES.PROFILE ? (
+            (pathname === ADMIN_ROUTES.PROFILE ||
+            pathname.startsWith(`${ADMIN_ROUTES.PROFILE}/`) ? (
               <UserRound size={20} aria-hidden="true" />
             ) : null)
           }
