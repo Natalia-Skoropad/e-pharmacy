@@ -74,7 +74,7 @@ test('Stage 13.12 keeps owner lifecycle modal, tab counters and resource tabs co
   assert.match(detailSource, /<OwnerActivityTab/);
   assert.match(detailSource, /requestPharmacyOwnerNavigationBadgeRefresh\(\)/);
 
-  assert.match(linkedSource, /<LinkedPharmacySearch/);
+  assert.match(linkedSource, /<PharmacySearch/);
   assert.match(linkedSource, /<LinkedPharmaciesFiltersDrawer/);
   assert.match(linkedSource, /<PaginationView/);
   assert.match(linkedSource, /const controller = new AbortController\(\)/);

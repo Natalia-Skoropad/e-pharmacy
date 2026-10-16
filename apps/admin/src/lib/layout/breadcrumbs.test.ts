@@ -114,3 +114,42 @@ test('pharmacy filtered registry routes do not get detail breadcrumbs', () => {
     ]);
   }
 });
+
+//===================================================================
+
+test('admin profile tabs include their active section in breadcrumbs', () => {
+  for (const [tab, label] of [
+    ['documents', 'Documents'],
+    ['comments', 'Comments'],
+    ['sessions', 'Active sessions'],
+  ]) {
+    assert.deepEqual(
+      getAdminBreadcrumbsByPathname(`${ADMIN_ROUTES.PROFILE}/${tab}`),
+      [{ label: 'Profile', href: ADMIN_ROUTES.PROFILE }, { label }]
+    );
+  }
+});
+
+//===================================================================
+
+test('owner subpages show selected tab with owner name and link to personal details', () => {
+  const id = '507f1f77bcf86cd799439011';
+  for (const [tab, label] of [
+    ['pharmacies', 'Linked pharmacies'],
+    ['comments', 'Comments'],
+    ['documents', 'Documents'],
+    ['activity', 'Activity history'],
+  ]) {
+    assert.deepEqual(
+      getAdminBreadcrumbsByPathname(
+        `${ADMIN_ROUTES.PHARMACY_OWNERS}/${id}/${tab}`,
+        'Test Owner'
+      ),
+      [
+        { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+        { label: 'Test Owner', href: `${ADMIN_ROUTES.PHARMACY_OWNERS}/${id}` },
+        { label },
+      ]
+    );
+  }
+});

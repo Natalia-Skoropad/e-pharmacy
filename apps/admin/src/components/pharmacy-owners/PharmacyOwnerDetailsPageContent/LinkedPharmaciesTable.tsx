@@ -16,8 +16,9 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
+import { OrderMetricsTooltip } from '@e-pharmacy/ui/overlays';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { formatMoney, formatPharmacyLocation } from '@e-pharmacy/utils';
+import { formatMoney } from '@e-pharmacy/utils';
 
 import { ADMIN_ROUTES } from '@/lib/routes';
 
@@ -56,6 +57,7 @@ export function LinkedPharmaciesTable({
       {
         key: 'photo',
         title: <TableHeaderTitle parts={['Pharmacy', 'photo']} />,
+
         render: (pharmacy) => (
           <TableImagePreview
             src={pharmacy.imageUrl}
@@ -67,6 +69,7 @@ export function LinkedPharmaciesTable({
       {
         key: 'id',
         title: <TableHeaderTitle parts={['Pharmacy', 'ID']} />,
+
         render: (pharmacy) => (
           <TextActionButton
             className={css.breakableLink}
@@ -79,31 +82,11 @@ export function LinkedPharmaciesTable({
       {
         key: 'name',
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
+
         render: (pharmacy) => (
           <TextActionButton href={buildPharmacyDetailsHref(pharmacy.id)}>
             {pharmacy.name}
           </TextActionButton>
-        ),
-      },
-      {
-        key: 'email',
-        title: 'Email',
-        render: (pharmacy) => (
-          <span className={css.breakableText}>{pharmacy.email || '—'}</span>
-        ),
-      },
-      {
-        key: 'phone',
-        title: 'Phone',
-        render: (pharmacy) => pharmacy.phone || '—',
-      },
-      {
-        key: 'address',
-        title: 'Address',
-        render: (pharmacy) => (
-          <span className={css.addressCell}>
-            {formatPharmacyLocation(pharmacy.location) || '—'}
-          </span>
         ),
       },
       {
@@ -113,17 +96,25 @@ export function LinkedPharmaciesTable({
       },
       {
         key: 'successfulOrdersCount',
-        title: <TableHeaderTitle parts={['Successful', 'orders']} />,
+
+        title: (
+          <span className={css.tableHeaderWithHelp}>
+            <TableHeaderTitle parts={['Orders', 'count']} />
+            <OrderMetricsTooltip scope="pharmacy" />
+          </span>
+        ),
+
         render: (pharmacy) => pharmacy.successfulOrdersCount,
       },
       {
         key: 'successfulRevenue',
-        title: <TableHeaderTitle parts={['Successful', 'revenue']} />,
+        title: <TableHeaderTitle parts={['Orders', 'amount, ₴']} />,
         render: (pharmacy) => formatMoney(pharmacy.successfulRevenue) ?? '—',
       },
       {
         key: 'rating',
         title: <TableHeaderTitle parts={['Rating /', 'reviews']} />,
+
         render: (pharmacy) => (
           <RatingSummary
             rating={pharmacy.rating}
@@ -135,6 +126,7 @@ export function LinkedPharmaciesTable({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Pharmacy', 'status']} />,
+
         render: (pharmacy) => (
           <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
         ),

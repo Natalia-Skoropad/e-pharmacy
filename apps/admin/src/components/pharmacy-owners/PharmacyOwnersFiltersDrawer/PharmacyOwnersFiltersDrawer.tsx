@@ -7,6 +7,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   ADMIN_PHARMACY_OWNER_STATUSES,
@@ -35,6 +36,7 @@ const OWNER_STATUS_OPTIONS: Array<
   ...ADMIN_PHARMACY_OWNER_STATUSES.map((status) => ({
     value: status,
     label: USER_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...USER_STATUS_PRESENTATION[status]} />,
   })),
 ];
 

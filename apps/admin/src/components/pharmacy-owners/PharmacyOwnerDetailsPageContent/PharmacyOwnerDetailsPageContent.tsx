@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   BadgeCheck,
@@ -39,7 +39,7 @@ import {
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
 
-import { Button } from '@e-pharmacy/ui/primitives';
+import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
 
 import {
   StatsCard,
@@ -127,6 +127,7 @@ function classifyLoadError(error: unknown): DetailLoadError {
   if (!isApiError(error)) return 'error';
   if (error.httpStatus === 404) return 'not-found';
   if (error.httpStatus === 403) return 'forbidden';
+
   return 'error';
 }
 
@@ -175,9 +176,19 @@ function PharmacyOwnerDetailsPageContent({
   initialActivityState,
 }: PharmacyOwnerDetailsPageContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   const { access } = useAdminAuthorization();
   const canEditOwner = canAdmin(access, ADMIN_PERMISSIONS.pharmacyOwners.edit);
+
+  const copyContact = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied.`);
+    } catch {
+      toast.error(`Could not copy ${label.toLowerCase()}.`);
+    }
+  };
 
   const [detail, setDetail] = useState<AdminPharmacyOwnerDetail | null>(null);
   const [loadError, setLoadError] = useState<DetailLoadError>(null);
@@ -204,12 +215,8 @@ function PharmacyOwnerDetailsPageContent({
   }, [initialState.tab]);
 
   useEffect(() => {
-    dispatchAdminBreadcrumbLabel(`Owner #${ownerId}`);
-  }, [ownerId]);
-
-  useEffect(() => {
-    if (detail?.name) dispatchAdminBreadcrumbLabel(detail.name);
-  }, [detail?.name]);
+    dispatchAdminBreadcrumbLabel(detail?.name || `Owner #${ownerId}`);
+  }, [pathname, detail?.name, ownerId]);
 
   const loadDetail = useCallback(
     async (signal?: AbortSignal): Promise<AdminPharmacyOwnerDetail> => {
@@ -220,6 +227,7 @@ function PharmacyOwnerDetailsPageContent({
 
   useEffect(() => {
     const controller = new AbortController();
+
     setIsLoading(true);
     setLoadError(null);
 
@@ -343,6 +351,7 @@ function PharmacyOwnerDetailsPageContent({
       });
 
       const refreshed = await loadDetail();
+
       setDetail(refreshed);
       requestPharmacyOwnerNavigationBadgeRefresh();
       setLoadError(null);
@@ -416,6 +425,7 @@ function PharmacyOwnerDetailsPageContent({
   const statistics = detail?.pharmacyStatistics;
   const isDeactivateAction = detail ? detail.status !== 'blocked' : true;
   const actionTarget = actionState?.targetStatus;
+
   const actionReasonError = actionState
     ? buildReasonError(actionState.reason)
     : '';
@@ -622,19 +632,35 @@ function PharmacyOwnerDetailsPageContent({
                       <div>
                         <dt>Email</dt>
                         <dd>
-                          <a href={`mailto:${detail.email}`}>
-                            <Mail size={17} aria-hidden="true" />
-                            {detail.email}
-                          </a>
+                          <span className={css.contactValue}>
+                            <a href={`mailto:${detail.email}`}>
+                              <Mail size={17} aria-hidden="true" />
+                              {detail.email}
+                            </a>
+                            <CopyButton
+                              label={`Copy owner email: ${detail.email}`}
+                              onClick={() =>
+                                void copyContact(detail.email, 'Email')
+                              }
+                            />
+                          </span>
                         </dd>
                       </div>
                       <div>
                         <dt>Phone</dt>
                         <dd>
-                          <a href={`tel:${detail.phone}`}>
-                            <Phone size={17} aria-hidden="true" />
-                            {detail.phone}
-                          </a>
+                          <span className={css.contactValue}>
+                            <a href={`tel:${detail.phone}`}>
+                              <Phone size={17} aria-hidden="true" />
+                              {detail.phone}
+                            </a>
+                            <CopyButton
+                              label={`Copy owner phone: ${detail.phone}`}
+                              onClick={() =>
+                                void copyContact(detail.phone, 'Phone')
+                              }
+                            />
+                          </span>
                         </dd>
                       </div>
                       <div>

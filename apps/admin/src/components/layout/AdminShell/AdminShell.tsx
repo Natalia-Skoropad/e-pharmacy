@@ -52,6 +52,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
   const hasBreadcrumbs =
     pathname === ADMIN_ROUTES.PROFILE ||
+    pathname.startsWith(`${ADMIN_ROUTES.PROFILE}/`) ||
     Boolean(getAdminNavigationItemByPathname(pathname, navigation));
 
   const currentDetailLabel =

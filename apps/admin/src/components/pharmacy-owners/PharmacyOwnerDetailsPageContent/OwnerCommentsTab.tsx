@@ -59,9 +59,11 @@ export function OwnerCommentsTab({
   onCountChange,
 }: OwnerCommentsTabProps) {
   const toast = useToast();
+
   const [comments, setComments] = useState<
     readonly AdminPharmacyOwnerComment[]
   >([]);
+
   const [loadedOwnerId, setLoadedOwnerId] = useState<string | null>(null);
   const [status, setStatus] = useState<ResourceStatus>('loading');
   const [loadError, setLoadError] = useState('');
@@ -121,6 +123,7 @@ export function OwnerCommentsTab({
 
       .catch(() => {
         if (controller.signal.aborted) return;
+
         setLoadedOwnerId(ownerId);
         setLoadError('Could not load manager comments. Please try again.');
         setStatus('error');
@@ -149,6 +152,7 @@ export function OwnerCommentsTab({
     if (!canManage || !text || isSaving || deletingId) return;
 
     const existing = createRequestRef.current;
+
     const request =
       existing?.text === text
         ? existing
@@ -158,6 +162,7 @@ export function OwnerCommentsTab({
     createControllerRef.current?.abort();
 
     const controller = new AbortController();
+
     createControllerRef.current = controller;
     setIsSaving(true);
 
@@ -178,6 +183,7 @@ export function OwnerCommentsTab({
       }
     } finally {
       if (!controller.signal.aborted) setIsSaving(false);
+
       if (createControllerRef.current === controller) {
         createControllerRef.current = null;
       }
@@ -276,9 +282,9 @@ export function OwnerCommentsTab({
           items={comments}
           title={null}
           commentTitle="Manager comment"
-          emptyTitle="No manager comments yet"
-          emptyText="Internal comments created by Admin employees will appear here."
-          emptyVariant="profile"
+          emptyTitle="No manager comments yet."
+          emptyText="No manager comments yet. The comment drawer is waiting patiently."
+          emptyVariant="resource"
           deletingId={deletingId}
           deleteDisabled={isSaving}
           onDelete={canManage ? setCommentToDelete : undefined}

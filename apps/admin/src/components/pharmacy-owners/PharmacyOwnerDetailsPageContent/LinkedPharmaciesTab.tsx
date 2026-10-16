@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Building2 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { AdminPharmacyOwnerPharmaciesResponse } from '@e-pharmacy/types/admin';
 
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -30,7 +29,7 @@ import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-
 
 import { LinkedPharmaciesFiltersDrawer } from './LinkedPharmaciesFiltersDrawer';
 import { LinkedPharmaciesTable } from './LinkedPharmaciesTable';
-import { LinkedPharmacySearch } from './LinkedPharmacySearch';
+import { PharmacySearch } from '../../pharmacies/PharmacySearch/PharmacySearch';
 
 import css from './PharmacyOwnerDetailsPageContent.module.css';
 
@@ -98,6 +97,18 @@ export function LinkedPharmaciesTab({
   const router = useRouter();
   const initialStateKey = getStateKey(initialState);
 
+  const loadOwnerPharmacyOptions = useCallback(
+    async (query: string, signal: AbortSignal) => {
+      const result = await getAdminPharmacyOwnerPharmacies(
+        ownerId,
+        { ...(query ? { search: query } : {}), page: 1, perPage: 20 },
+        { signal }
+      );
+      return result.items;
+    },
+    [ownerId]
+  );
+
   const [optimisticNavigation, setOptimisticNavigation] = useState<Readonly<{
     fromKey: string;
     state: AdminPharmacyOwnerPharmaciesUrlState;
@@ -110,15 +121,6 @@ export function LinkedPharmaciesTab({
       ? optimisticNavigation.state
       : initialState;
 
-  const [searchDraft, setSearchDraft] = useState<Readonly<{
-    baseSearch: string;
-    value: string;
-  }> | null>(null);
-
-  const searchInput =
-    searchDraft?.baseSearch === state.search ? searchDraft.value : state.search;
-
-  const debouncedSearch = useDebouncedValue(searchInput, 350);
   const [reloadVersion, setReloadVersion] = useState(0);
 
   useEffect(
@@ -157,20 +159,6 @@ export function LinkedPharmaciesTab({
     },
     [initialStateKey, ownerId, router]
   );
-
-  useEffect(() => {
-    const normalizedSearch = debouncedSearch.trim();
-    if (normalizedSearch === state.search) return;
-
-    router.replace(
-      buildAdminPharmacyOwnerPharmaciesUrl(ownerId, {
-        ...state,
-        search: normalizedSearch,
-        page: 1,
-      }),
-      { scroll: false }
-    );
-  }, [debouncedSearch, ownerId, router, state]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -230,7 +218,6 @@ export function LinkedPharmaciesTab({
   ].filter(Boolean).length;
 
   const resetFilters = () => {
-    setSearchDraft(null);
     navigate({
       search: '',
       status: 'all',
@@ -256,17 +243,14 @@ export function LinkedPharmaciesTab({
       />
       <section className={css.tabSectionCard}>
         <div className={css.linkedPharmaciesSearchGrid}>
-          <LinkedPharmacySearch
-            ownerId={ownerId}
-            value={searchInput}
+          <PharmacySearch
+            id="owner-linked-pharmacy-search"
+            value={state.search}
             disabled={isLoading && !data}
-            onChange={(value) =>
-              setSearchDraft({ baseSearch: state.search, value })
+            loadOptions={loadOwnerPharmacyOptions}
+            onChange={(pharmacyId) =>
+              navigate({ ...state, search: pharmacyId, page: 1 })
             }
-            onSelect={(pharmacy) => {
-              setSearchDraft(null);
-              navigate({ ...state, search: pharmacy.id, page: 1 });
-            }}
           />
 
           <div className={css.linkedPharmaciesSearchAction}>

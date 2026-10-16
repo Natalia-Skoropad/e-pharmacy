@@ -149,24 +149,6 @@ function isDetailTab(value?: string): value is AdminPharmacyOwnerDetailTab {
 
 //===================================================================
 
-function buildQuery(
-  entries: Readonly<Record<string, string | number | undefined>>
-): string {
-  const params = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(entries)) {
-    if (value === undefined || value === '' || value === 1 || value === 20) {
-      continue;
-    }
-    params.set(key, String(value));
-  }
-
-  const query = params.toString();
-  return query ? `?${query}` : '';
-}
-
-//===================================================================
-
 export function isAdminPharmacyOwnersFilterSegment(segment: string): boolean {
   return (
     segment.startsWith('owner-id-') ||
@@ -323,6 +305,7 @@ export function buildAdminPharmacyOwnerDetailUrl(
   state: AdminPharmacyOwnerDetailUrlState = { tab: 'personal' }
 ): string {
   assertAdminPharmacyOwnerEntityId(ownerId, 'owner id');
+
   const tab = isDetailTab(state.tab) ? state.tab : 'personal';
   const suffix = tab === 'personal' ? '' : `/${tab}`;
   return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}${suffix}`;
@@ -352,28 +335,94 @@ export function parseAdminPharmacyOwnerPharmaciesSearchParams(
 
 //===================================================================
 
+/** URL segments are canonical and contain IDs/enum values only, never free text. */
 export function buildAdminPharmacyOwnerPharmaciesUrl(
   ownerId: string,
   state: AdminPharmacyOwnerPharmaciesUrlState
 ): string {
   assertAdminPharmacyOwnerEntityId(ownerId, 'owner id');
+
   const range = normalizeDateRange(
     parseDate(state.createdFrom),
     parseDate(state.createdTo)
   );
 
-  return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}/pharmacies${buildQuery(
-    {
-      pharmacySearch: normalizeSearch(state.search) || undefined,
-      pharmacyStatus: isPharmacyStatus(state.status) ? state.status : undefined,
-      pharmacyCreatedFrom: range.from || undefined,
-      pharmacyCreatedTo: range.to || undefined,
-      pharmacyRating: isRating(state.rating) ? state.rating : undefined,
-      pharmacyPage: state.page > 1 ? parsePage(String(state.page)) : undefined,
-      pharmacyPerPage:
-        state.perPage === 20 ? undefined : parsePerPage(String(state.perPage)),
+  const segments: string[] = [];
+
+  if (isValidObjectId(state.search))
+    segments.push(`pharmacy-id-${state.search}`);
+
+  if (isPharmacyStatus(state.status))
+    segments.push(`status-${slugifyStatus(state.status)}`);
+  if (range.from) segments.push(`created-from-${range.from}`);
+
+  if (range.to) segments.push(`created-to-${range.to}`);
+  if (isRating(state.rating)) segments.push(`rating-${state.rating}`);
+
+  const page = parsePage(String(state.page));
+  if (page > 1) segments.push(`page-${page}`);
+
+  const perPage = parsePerPage(String(state.perPage));
+  if (perPage !== 20) segments.push(`per-page-${perPage}`);
+
+  const base = `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}/pharmacies`;
+
+  return segments.length ? `${base}/${segments.join('/')}` : base;
+}
+
+//===================================================================
+
+export function isAdminOwnerPharmaciesFilterSegment(segment: string): boolean {
+  return /^(pharmacy-id|status|created-from|created-to|rating|page|per-page)-/.test(
+    segment
+  );
+}
+
+//===================================================================
+
+export function parseAdminPharmacyOwnerPharmaciesSegments(
+  segments: readonly string[]
+): AdminPharmacyOwnerPharmaciesUrlState {
+  let search = '';
+  let status: AdminOwnerPharmacyStatus | 'all' = 'all';
+  let createdFrom = '';
+  let createdTo = '';
+  let rating: AdminOwnerRatingFilter | 'all' = 'all';
+  let page = 1;
+  let perPage: 20 | 50 | 100 = 20;
+
+  for (const segment of segments) {
+    if (segment.startsWith('pharmacy-id-')) {
+      const id = segment.slice('pharmacy-id-'.length);
+      search = isValidObjectId(id) ? id : '';
+    } else if (segment.startsWith('status-')) {
+      const value = segment.slice('status-'.length).replace(/-/g, '_');
+      status = isPharmacyStatus(value) ? value : 'all';
+    } else if (segment.startsWith('created-from-')) {
+      createdFrom = parseDate(segment.slice('created-from-'.length));
+    } else if (segment.startsWith('created-to-')) {
+      createdTo = parseDate(segment.slice('created-to-'.length));
+    } else if (segment.startsWith('rating-')) {
+      const value = segment.slice('rating-'.length);
+      rating = isRating(value) ? value : 'all';
+    } else if (segment.startsWith('page-')) {
+      page = parsePage(segment.slice('page-'.length));
+    } else if (segment.startsWith('per-page-')) {
+      perPage = parsePerPage(segment.slice('per-page-'.length));
     }
-  )}`;
+  }
+
+  const range = normalizeDateRange(createdFrom, createdTo);
+
+  return {
+    search,
+    status,
+    createdFrom: range.from,
+    createdTo: range.to,
+    rating,
+    page,
+    perPage,
+  };
 }
 
 //===================================================================

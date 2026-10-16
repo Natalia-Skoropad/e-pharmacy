@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import { parseAdminActivityUrl } from '@/lib/audit/admin-activity-url';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
@@ -6,6 +6,9 @@ import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import {
   parseAdminPharmacyOwnersListSegments,
   parseAdminPharmacyOwnerPharmaciesSearchParams,
+  parseAdminPharmacyOwnerPharmaciesSegments,
+  isAdminOwnerPharmaciesFilterSegment,
+  buildAdminPharmacyOwnerPharmaciesUrl,
   ADMIN_PHARMACY_OWNER_DETAIL_TABS,
   resolveAdminPharmacyOwnersRoute,
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
@@ -31,6 +34,34 @@ export default async function AdminPharmacyOwnersFilteredPage({
     params,
     searchParams,
   ]);
+
+  if (/^[a-f0-9]{24}$/i.test(ownerId) && filters[0] === 'pharmacies') {
+    const segments = filters.slice(1);
+
+    if (
+      segments.some((segment) => !isAdminOwnerPharmaciesFilterSegment(segment))
+    )
+      notFound();
+
+    const parsed = segments.length
+      ? parseAdminPharmacyOwnerPharmaciesSegments(segments)
+      : parseAdminPharmacyOwnerPharmaciesSearchParams(query);
+
+    const canonical = buildAdminPharmacyOwnerPharmaciesUrl(ownerId, parsed);
+    const incoming = `/admin/pharmacy-owners/${ownerId}/${filters.join('/')}`;
+
+    if (segments.length && canonical !== incoming) redirect(canonical);
+
+    return (
+      <AdminPermissionGate permission={ADMIN_PERMISSIONS.pharmacyOwners.view}>
+        <PharmacyOwnerDetailsPageContent
+          ownerId={ownerId}
+          initialState={{ tab: 'pharmacies' }}
+          initialPharmaciesState={parsed}
+        />
+      </AdminPermissionGate>
+    );
+  }
 
   if (/^[a-f0-9]{24}$/i.test(ownerId) && filters[0] === 'activity') {
     return (
@@ -66,6 +97,7 @@ export default async function AdminPharmacyOwnersFilteredPage({
       </AdminPermissionGate>
     );
   }
+
   const route = resolveAdminPharmacyOwnersRoute([ownerId, ...filters]);
 
   if (route.kind !== 'filters') {

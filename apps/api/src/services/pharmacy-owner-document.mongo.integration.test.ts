@@ -161,3 +161,24 @@ test(
     }
   }
 );
+
+//===============================================================
+
+test(
+  'a pharmacy owner without linked pharmacies has an empty document list, not 404',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+    const owner = await createOwner('document-new-owner');
+
+    try {
+      assert.deepEqual(
+        await listPharmacyOwnerDocumentsService(String(owner._id)),
+        []
+      );
+    } finally {
+      await User.deleteOne({ _id: owner._id });
+      await mongoose.disconnect();
+    }
+  }
+);

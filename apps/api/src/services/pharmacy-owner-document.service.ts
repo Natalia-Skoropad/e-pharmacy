@@ -12,7 +12,8 @@ import {
 } from '../constants/pharmacy-owner-document-validation';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
+import { USER_ROLES } from '../constants/auth';
 import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
 import type { PharmacyOwnerDocumentUploadInput } from '../schemas/pharmacy-owner-document.schema';
 import type { PharmacyOwnerDocumentMetadataDto } from '../types/pharmacy-owner-document';
@@ -71,7 +72,7 @@ async function assertOwnerAccount(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy owner was not found.');
   }
 
-  const query = Pharmacy.exists({ ownerId: ownerUserId });
+  const query = User.exists({ _id: ownerUserId, role: USER_ROLES.PHARMACY });
   if (session) query.session(session);
 
   if (!(await query)) {

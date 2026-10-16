@@ -109,12 +109,14 @@ export function AdminPrivateComments({
         if (controller.signal.aborted) return;
         applyResponse(response);
       })
+
       .catch(() => {
         if (controller.signal.aborted) return;
 
         setLoadError('Could not load private comments. Please try again.');
         setStatus('error');
       })
+
       .finally(() => {
         if (activeLoadControllerRef.current === controller) {
           activeLoadControllerRef.current = null;
@@ -138,6 +140,7 @@ export function AdminPrivateComments({
       activeLoadControllerRef.current?.abort();
 
       const controller = new AbortController();
+
       activeLoadControllerRef.current = controller;
       setStatus('loading');
       setLoadError('');
@@ -156,6 +159,7 @@ export function AdminPrivateComments({
 
         setLoadError('Could not load private comments. Please try again.');
         setStatus('error');
+
         return false;
       } finally {
         if (activeLoadControllerRef.current === controller) {
@@ -177,6 +181,7 @@ export function AdminPrivateComments({
     if (!text || isSaving || deletingId) return;
 
     const existingRequest = createRequestRef.current;
+
     const request =
       existingRequest?.text === text
         ? existingRequest
@@ -186,6 +191,7 @@ export function AdminPrivateComments({
     activeCreateControllerRef.current?.abort();
 
     const controller = new AbortController();
+
     activeCreateControllerRef.current = controller;
     setIsSaving(true);
 
@@ -199,6 +205,7 @@ export function AdminPrivateComments({
       createRequestRef.current = null;
       setDraftState('');
       await loadPage(1);
+
       toast.success('Private comment was added.');
     } catch {
       if (!controller.signal.aborted) {
@@ -304,7 +311,7 @@ export function AdminPrivateComments({
           commentTitle="Private comment"
           emptyTitle="No manager comments yet."
           emptyText="The comment drawer is waiting patiently."
-          emptyVariant="profile"
+          emptyVariant="resource"
           deletingId={deletingId}
           deleteDisabled={isSaving}
           onDelete={setCommentToDelete}

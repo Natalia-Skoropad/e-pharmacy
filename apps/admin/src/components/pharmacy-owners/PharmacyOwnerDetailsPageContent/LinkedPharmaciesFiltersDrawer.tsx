@@ -1,4 +1,7 @@
+import { Star } from 'lucide-react';
+
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   DateFilter,
@@ -15,6 +18,8 @@ import {
 } from '@/lib/pharmacy-owners/admin-pharmacy-owner';
 
 import type { AdminPharmacyOwnerPharmaciesUrlState } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
+
+import css from '../../pharmacies/PharmaciesFiltersDrawer/PharmaciesFiltersDrawer.module.css';
 
 //===================================================================
 
@@ -35,18 +40,81 @@ const PHARMACY_STATUS_OPTIONS: Array<
   ...ADMIN_OWNER_PHARMACY_STATUSES.map((status) => ({
     value: status,
     label: PHARMACY_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...PHARMACY_STATUS_PRESENTATION[status]} />,
   })),
 ];
+
+//===================================================================
 
 const PHARMACY_RATING_OPTIONS: Array<
   SelectOption<AdminOwnerRatingFilter | 'all'>
 > = [
   { value: 'all', label: 'All ratings' },
-  { value: '0-0.9', label: '0 to 0.9' },
-  { value: '1-1.9', label: '1 to 1.9' },
-  { value: '2-2.9', label: '2 to 2.9' },
-  { value: '3-3.9', label: '3 to 3.9' },
-  { value: '4-5', label: '4 to 5' },
+  {
+    value: '0-0.9',
+    label: '0-0.9',
+
+    content: (
+      <span className={css.ratingOption}>
+        <span className={css.ratingIcon} aria-hidden="true">
+          <Star size={15} fill="currentColor" />
+        </span>
+        <span>0-0.9</span>
+      </span>
+    ),
+  },
+  {
+    value: '1-1.9',
+    label: '1-1.9',
+
+    content: (
+      <span className={css.ratingOption}>
+        <span className={css.ratingIcon} aria-hidden="true">
+          <Star size={15} fill="currentColor" />
+        </span>
+        <span>1-1.9</span>
+      </span>
+    ),
+  },
+  {
+    value: '2-2.9',
+    label: '2-2.9',
+
+    content: (
+      <span className={css.ratingOption}>
+        <span className={css.ratingIcon} aria-hidden="true">
+          <Star size={15} fill="currentColor" />
+        </span>
+        <span>2-2.9</span>
+      </span>
+    ),
+  },
+  {
+    value: '3-3.9',
+    label: '3-3.9',
+
+    content: (
+      <span className={css.ratingOption}>
+        <span className={css.ratingIcon} aria-hidden="true">
+          <Star size={15} fill="currentColor" />
+        </span>
+        <span>3-3.9</span>
+      </span>
+    ),
+  },
+  {
+    value: '4-5',
+    label: '4-5',
+
+    content: (
+      <span className={css.ratingOption}>
+        <span className={css.ratingIcon} aria-hidden="true">
+          <Star size={15} fill="currentColor" />
+        </span>
+        <span>4-5</span>
+      </span>
+    ),
+  },
 ];
 
 //===================================================================

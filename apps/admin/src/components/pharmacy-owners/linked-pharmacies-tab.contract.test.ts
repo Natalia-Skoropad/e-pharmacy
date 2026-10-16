@@ -35,7 +35,7 @@ test('linked pharmacies tab is URL-driven and includes search, modal filters, ro
   assert.match(tab, /getAdminPharmacyOwnerPharmacies/);
   assert.match(tab, /buildAdminPharmacyOwnerPharmaciesApiParams/);
   assert.match(tab, /buildAdminPharmacyOwnerPharmaciesUrl/);
-  assert.match(tab, /LinkedPharmacySearch/);
+  assert.match(tab, /PharmacySearch/);
   assert.match(tab, /ProfileSectionHeader/);
   assert.match(tab, /Linked pharmacies/);
   assert.match(tab, /ProfileResourceState/);
@@ -68,22 +68,26 @@ test('linked pharmacy filter drawer exposes created date, all canonical statuses
 
 //===================================================================
 
-test('linked pharmacy search suggests pharmacy photo and name while supporting detail fields', () => {
-  const search = read(
-    './PharmacyOwnerDetailsPageContent/LinkedPharmacySearch.tsx'
+test('linked pharmacy search reuses the registry SearchableSelect and limits suggestions to the owner', () => {
+  const search = read('../pharmacies/PharmacySearch/PharmacySearch.tsx');
+
+  const linked = read(
+    './PharmacyOwnerDetailsPageContent/LinkedPharmaciesTab.tsx'
   );
 
+  assert.match(search, /SearchableSelect/);
   assert.match(search, /TableImagePreview/);
   assert.match(search, /pharmacy\.name/);
   assert.match(search, /pharmacy\.email/);
   assert.match(search, /pharmacy\.phone/);
-  assert.match(search, /ID, name, phone, email, or address/);
-  assert.match(search, /getAdminPharmacyOwnerPharmacies/);
+  assert.match(search, /Search fields/);
+  assert.match(linked, /loadOptions=\{loadOwnerPharmacyOptions\}/);
+  assert.match(linked, /getAdminPharmacyOwnerPharmacies/);
 });
 
 //===================================================================
 
-test('linked pharmacies table exposes every Stage 13.10 column and keeps pharmacy status read-only', () => {
+test('linked pharmacies table exposes canonical owner metrics and keeps status read-only', () => {
   const table = read(
     './PharmacyOwnerDetailsPageContent/LinkedPharmaciesTable.tsx'
   );
@@ -93,9 +97,6 @@ test('linked pharmacies table exposes every Stage 13.10 column and keeps pharmac
     'photo',
     'id',
     'name',
-    'email',
-    'phone',
-    'address',
     'activeClientsCount',
     'successfulOrdersCount',
     'successfulRevenue',
@@ -107,6 +108,7 @@ test('linked pharmacies table exposes every Stage 13.10 column and keeps pharmac
 
   assert.match(table, /formatMoney\(pharmacy\.successfulRevenue\)/);
   assert.match(table, /RatingSummary/);
+  assert.match(table, /OrderMetricsTooltip/);
   assert.match(table, /reviewsCount=\{pharmacy\.reviewsCount\}/);
   assert.match(table, /StatusBadge/);
   assert.match(table, /PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]/);

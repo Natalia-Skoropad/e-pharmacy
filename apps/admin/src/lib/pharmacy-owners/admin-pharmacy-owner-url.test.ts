@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   buildAdminPharmacyOwnerDetailUrl,
   buildAdminPharmacyOwnerPharmaciesUrl,
+  parseAdminPharmacyOwnerPharmaciesSegments,
   buildAdminPharmacyOwnersListUrl,
   parseAdminPharmacyOwnerDetailSearchParams,
   parseAdminPharmacyOwnerPharmaciesSearchParams,
@@ -145,8 +146,25 @@ test('parses and builds namespaced pharmacy-tab filters', () => {
 
   assert.equal(state.rating, '4-5');
 
+  const url = buildAdminPharmacyOwnerPharmaciesUrl(OWNER_ID, state);
+
   assert.equal(
-    buildAdminPharmacyOwnerPharmaciesUrl(OWNER_ID, state),
-    `/admin/pharmacy-owners/${OWNER_ID}/pharmacies?pharmacySearch=Bolhrad+Medical+Lane&pharmacyStatus=active&pharmacyCreatedFrom=2026-09-01&pharmacyCreatedTo=2026-10-02&pharmacyRating=4-5&pharmacyPage=2&pharmacyPerPage=100`
+    url,
+    `/admin/pharmacy-owners/${OWNER_ID}/pharmacies/status-active/created-from-2026-09-01/created-to-2026-10-02/rating-4-5/page-2/per-page-100`
+  );
+
+  assert.ok(!url.includes('Bolhrad'));
+
+  const exactState = { ...state, search: '507f1f77bcf86cd799439011' };
+  const exactUrl = buildAdminPharmacyOwnerPharmaciesUrl(OWNER_ID, exactState);
+
+  assert.equal(
+    exactUrl,
+    `/admin/pharmacy-owners/${OWNER_ID}/pharmacies/pharmacy-id-507f1f77bcf86cd799439011/status-active/created-from-2026-09-01/created-to-2026-10-02/rating-4-5/page-2/per-page-100`
+  );
+
+  assert.deepEqual(
+    parseAdminPharmacyOwnerPharmaciesSegments(exactUrl.split('/').slice(5)),
+    exactState
   );
 });

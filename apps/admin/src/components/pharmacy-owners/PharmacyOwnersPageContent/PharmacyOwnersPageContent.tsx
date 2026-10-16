@@ -203,8 +203,10 @@ export function PharmacyOwnersPageContent({
 
         setListResult({ requestKey, data: response, error: null });
       })
+
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
+
         setListResult({
           requestKey,
           data: null,
@@ -225,6 +227,7 @@ export function PharmacyOwnersPageContent({
           setStatisticsResult({ version, data: response, error: null });
         }
       })
+
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
           setStatisticsResult({
@@ -362,12 +365,20 @@ export function PharmacyOwnersPageContent({
                     value={item.value ?? 0}
                     tone={item.tone}
                     icon={item.icon}
+                    className={
+                      state.status === item.status ? css.activeCard : undefined
+                    }
                     href={buildAdminPharmacyOwnersListUrl({
                       ...state,
-                      status: item.status,
+                      status:
+                        state.status === item.status ? 'all' : item.status,
                       page: 1,
                     })}
-                    ariaLabel={`Filter pharmacy owners by ${item.title.toLowerCase()}`}
+                    ariaLabel={
+                      state.status === item.status
+                        ? `Clear ${item.title.toLowerCase()} pharmacy owner filter`
+                        : `Filter pharmacy owners by ${item.title.toLowerCase()}`
+                    }
                   />
                 ))}
               </StatsGrid>

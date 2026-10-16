@@ -1,4 +1,5 @@
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import { resolveAdminPharmaciesRoute } from '@/lib/pharmacies/admin-pharmacy-url';
 import { resolveAdminPharmacyOwnersRoute } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
@@ -74,21 +75,63 @@ export function getAdminBreadcrumbsByPathname(
   pathname: string,
   currentDetailLabel?: string
 ): readonly BreadcrumbItem[] {
+  if (isPathWithinRoute(pathname, ADMIN_ROUTES.PROFILE)) {
+    const tab = pathname.slice(`${ADMIN_ROUTES.PROFILE}/`.length);
+
+    const labels: Readonly<Record<string, string>> = {
+      documents: 'Documents',
+      comments: 'Comments',
+      sessions: 'Active sessions',
+    };
+
+    return labels[tab]
+      ? [
+          { label: 'Profile', href: ADMIN_ROUTES.PROFILE },
+          { label: labels[tab] },
+        ]
+      : [{ label: 'Profile' }];
+  }
+
   if (isPathWithinRoute(pathname, ADMIN_ROUTES.PHARMACY_OWNERS)) {
     const suffix = pathname
       .slice(ADMIN_ROUTES.PHARMACY_OWNERS.length)
       .replace(/^\/+|\/+$/g, '');
 
-    const route = resolveAdminPharmacyOwnersRoute(
-      suffix ? suffix.split('/') : []
-    );
+    const parts = suffix ? suffix.split('/') : [];
+    const ownerId = parts[0];
+
+    const ownerTabs: Readonly<Record<string, string>> = {
+      pharmacies: 'Linked pharmacies',
+      documents: 'Documents',
+      comments: 'Comments',
+      activity: 'Activity history',
+    };
+
+    if (
+      ownerId &&
+      isValidObjectId(ownerId) &&
+      (parts.length === 1 || Boolean(ownerTabs[parts[1]]))
+    ) {
+      const ownerUrl = `${ADMIN_ROUTES.PHARMACY_OWNERS}/${ownerId}`;
+
+      const base: BreadcrumbItem[] = [
+        { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
+        {
+          label: currentDetailLabel ?? `Owner #${ownerId}`,
+          ...(parts.length > 1 ? { href: ownerUrl } : {}),
+        },
+      ];
+
+      if (parts.length > 1) base.push({ label: ownerTabs[parts[1]] });
+      return base;
+    }
+
+    const route = resolveAdminPharmacyOwnersRoute(parts);
 
     if (route.kind === 'detail') {
       return [
         { label: 'Pharmacy Owners', href: ADMIN_ROUTES.PHARMACY_OWNERS },
-        {
-          label: currentDetailLabel ?? `Owner #${route.ownerId}`,
-        },
+        { label: currentDetailLabel ?? `Owner #${route.ownerId}` },
       ];
     }
 

@@ -24,6 +24,13 @@ type PharmacySearchProps = Readonly<{
   value: string;
   disabled?: boolean;
   onChange: (pharmacyId: string) => void;
+
+  loadOptions?: (
+    query: string,
+    signal: AbortSignal
+  ) => Promise<readonly AdminPharmacyOption[]>;
+
+  id?: string;
 }>;
 
 //===================================================================
@@ -68,6 +75,8 @@ export function PharmacySearch({
   value,
   disabled = false,
   onChange,
+  loadOptions,
+  id = 'pharmacy-registry-search',
 }: PharmacySearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
@@ -87,9 +96,15 @@ export function PharmacySearch({
     const controller = new AbortController();
     const requestQuery = debouncedQuery;
 
-    void getAdminPharmacyOptions(
-      { ...(requestQuery ? { search: requestQuery } : {}), limit: 20 },
-      { signal: controller.signal }
+    void (
+      loadOptions
+        ? loadOptions(requestQuery, controller.signal).then((items) => ({
+            items,
+          }))
+        : getAdminPharmacyOptions(
+            { ...(requestQuery ? { search: requestQuery } : {}), limit: 20 },
+            { signal: controller.signal }
+          )
     )
       .then((result) => {
         if (!controller.signal.aborted)
@@ -106,16 +121,20 @@ export function PharmacySearch({
       });
 
     return () => controller.abort();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, loadOptions]);
 
   // A deep link can select a pharmacy outside the first 20 suggestions.
   useEffect(() => {
     if (!value || selected?.value === value) return;
     const controller = new AbortController();
 
-    void getAdminPharmacyOptions(
-      { search: value, limit: 20 },
-      { signal: controller.signal }
+    void (
+      loadOptions
+        ? loadOptions(value, controller.signal).then((items) => ({ items }))
+        : getAdminPharmacyOptions(
+            { search: value, limit: 20 },
+            { signal: controller.signal }
+          )
     )
       .then((result) => {
         if (!controller.signal.aborted)
@@ -130,9 +149,10 @@ export function PharmacySearch({
       });
 
     return () => controller.abort();
-  }, [selected?.value, value]);
+  }, [loadOptions, selected?.value, value]);
 
   const currentSuggestions = suggestions?.query === debouncedQuery;
+
   const items = useMemo(
     () => (currentSuggestions ? (suggestions?.items ?? []) : []),
     [currentSuggestions, suggestions]
@@ -159,7 +179,7 @@ export function PharmacySearch({
 
   return (
     <SearchableSelect
-      id="pharmacy-registry-search"
+      id={id}
       label="Pharmacy search"
       labelAccessory={
         <InfoTooltip
