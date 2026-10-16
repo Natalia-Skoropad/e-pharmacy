@@ -468,6 +468,11 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Keep paired inputs aligned even if their hint wraps differently. */
+  .pairedHintField > [id$='-hint'] {
+    min-height: 34px;
+  }
+
   .fieldWide {
     grid-column: 1 / -1;
   }

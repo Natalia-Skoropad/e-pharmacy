@@ -55,6 +55,7 @@
 }
 
 .textarea {
+  display: block;
   min-height: 150px;
   padding-right: 18px;
   padding-bottom: 34px;
@@ -164,8 +165,10 @@
   pointer-events: none;
 }
 
-.addressError {
-  bottom: 10px;
+/* Textarea error stays centered on the textarea border, regardless of hints
+   or extra spacing applied to the outer field. */
+.textareaError {
+  bottom: -10px;
 }
 
 .error:empty {

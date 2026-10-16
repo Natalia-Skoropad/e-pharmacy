@@ -27,7 +27,7 @@ export const pharmacySettlementSchema = z
 const pharmacyRegionValueSchema = z
   .string()
   .trim()
-  .min(1, 'Region must not be empty')
+  .min(1, 'Region is required')
 
   .max(
     USER_SEARCH_MAX_LENGTH,
@@ -36,7 +36,9 @@ const pharmacyRegionValueSchema = z
 
   .regex(SEARCH_TEXT_PATTERN, 'Region contains unsupported characters');
 
-export const pharmacyRegionSchema = optionalSchema(pharmacyRegionValueSchema);
+//===============================================================
+
+export const pharmacyRegionSchema = pharmacyRegionValueSchema;
 
 //===============================================================
 
@@ -73,8 +75,16 @@ export const pharmacyLocationSchema = z
   })
   .strict();
 
+//===============================================================
+
 /** Incomplete location accepted while the pharmacy remains a new draft. */
-export const pharmacyLocationDraftSchema = pharmacyLocationSchema.partial();
+export const pharmacyLocationDraftSchema = pharmacyLocationSchema
+  .partial()
+
+  .extend({
+    // Preserve legacy incomplete/blank region values in draft and migration flows.
+    region: optionalSchema(pharmacyRegionValueSchema),
+  });
 
 //===============================================================
 

@@ -15,11 +15,16 @@ test('new pharmacy location draft may be incomplete', () => {
     pharmacyLocationDraftSchema.safeParse({ settlement: 'Bolhrad' }).success,
     true
   );
+
+  assert.equal(
+    pharmacyLocationDraftSchema.safeParse({ region: '' }).success,
+    true
+  );
 });
 
 //===============================================================
 
-test('verification-ready location requires address, settlement and countryCode', () => {
+test('verification-ready location requires address, settlement, region and countryCode', () => {
   const result = pharmacyLocationSchema.safeParse({});
 
   assert.equal(result.success, false);
@@ -30,24 +35,29 @@ test('verification-ready location requires address, settlement and countryCode',
   assert.equal(fields.has('address'), true);
   assert.equal(fields.has('settlement'), true);
   assert.equal(fields.has('countryCode'), true);
-  assert.equal(fields.has('region'), false);
+  assert.equal(fields.has('region'), true);
   assert.equal(fields.has('geo'), false);
 });
 
 //===============================================================
 
-test('region and geo are optional for verification-ready location', () => {
+test('region is mandatory for verification; geo remains optional', () => {
+  const location = {
+    address: '36 Bolharskykh Opolchentsiv Street',
+    settlement: 'Bolhrad',
+    countryCode: 'UA',
+  };
+
+  assert.equal(pharmacyLocationSchema.safeParse(location).success, false);
+
+  assert.equal(
+    pharmacyLocationSchema.safeParse({ ...location, region: '  ' }).success,
+    false
+  );
+
   assert.deepEqual(
-    pharmacyLocationSchema.parse({
-      address: '36 Bolharskykh Opolchentsiv Street',
-      settlement: 'Bolhrad',
-      countryCode: 'UA',
-    }),
-    {
-      address: '36 Bolharskykh Opolchentsiv Street',
-      settlement: 'Bolhrad',
-      countryCode: 'UA',
-    }
+    pharmacyLocationSchema.parse({ ...location, region: 'Odesa region' }),
+    { ...location, region: 'Odesa region' }
   );
 });
 
@@ -59,6 +69,7 @@ test('GeoJSON Point accepts a longitude-latitude tuple and rejects out-of-range 
       address: '36 Bolharskykh Opolchentsiv Street',
       settlement: 'Bolhrad',
       countryCode: 'UA',
+      region: 'Odesa region',
       geo: { type: 'Point', coordinates: [28.611, 45.682] },
     }).success,
     true
@@ -69,6 +80,7 @@ test('GeoJSON Point accepts a longitude-latitude tuple and rejects out-of-range 
       address: '36 Bolharskykh Opolchentsiv Street',
       settlement: 'Bolhrad',
       countryCode: 'UA',
+      region: 'Odesa region',
       geo: { type: 'Point', coordinates: [181, 45.682] },
     }).success,
     false

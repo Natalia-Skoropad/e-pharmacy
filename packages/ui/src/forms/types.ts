@@ -81,6 +81,7 @@ export type FormFieldLayoutProps = {
   children: ReactNode;
   className?: string;
   errorClassName?: string;
+  renderError?: boolean;
   error?: string;
   isTouched?: boolean;
   hint?: string;

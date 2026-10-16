@@ -494,6 +494,11 @@
   border-radius: var(--radius-pill);
 }
 
+.profile-address {
+  position: absolute;
+  bottom: 0;
+}
+
 @media only screen and (min-width: 768px) {
   .section {
     padding-block: 20px 96px;

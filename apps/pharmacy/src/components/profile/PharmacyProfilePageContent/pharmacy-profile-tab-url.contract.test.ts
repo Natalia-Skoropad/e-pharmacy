@@ -60,3 +60,17 @@ test('documents tab badge preloads owner document count independently of tab con
     /documentValues\.length\s*\+\s*\(pharmacy\.membershipRole === 'owner' \? ownerDocumentsCount : 0\)/
   );
 });
+
+//===================================================================
+
+test('region is labelled required and displays its own inline validation error', () => {
+  const region = component.match(
+    /<NameInput\s+id="pharmacy-region"[\s\S]*?\s*\/>/
+  )?.[0];
+
+  assert.ok(region);
+  assert.match(region, /label="Region"/);
+  assert.doesNotMatch(region, /optional|required=\{false\}/);
+  assert.match(region, /error=\{pharmacyErrors\.region\}/);
+  assert.match(region, /isTouched=\{Boolean\(pharmacyTouched\.region\)\}/);
+});

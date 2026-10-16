@@ -623,6 +623,7 @@ function DeliveryTab({
 }>) {
   const workingHours =
     getWorkingHoursDisplayItems(order.pharmacyWorkingHours ?? '') ?? [];
+
   const pharmacyLocation = formatPharmacyLocation(order.pharmacyLocation);
 
   return (
@@ -761,7 +762,6 @@ function DeliveryTab({
                     value={deliveryAddress}
                     error={deliveryErrors.deliveryAddress ?? ''}
                     isTouched={Boolean(deliveryTouchedFields.deliveryAddress)}
-                    errorClassName={css.deliveryAddressError}
                     maxLength={USER_ADDRESS_MAX_LENGTH}
                     disabled={!isEditable || isUpdating}
                     onChange={(event) =>
@@ -816,6 +816,7 @@ function PaymentTab({
   onSave: () => void;
 }>) {
   const bankDetails = order.bankDetails;
+
   const bankRows = bankDetails
     ? ([
         ['Recipient name', bankDetails.recipientName],
@@ -991,6 +992,7 @@ function HistoryTab({
   const [visibleCount, setVisibleCount] = useState(
     HISTORY_INITIAL_VISIBLE_COUNT
   );
+
   const visibleEntries = historyEntries.slice(0, visibleCount);
 
   return (
@@ -1142,10 +1144,12 @@ function recalculateDraftItems(
 
   return {
     items: normalizedItems,
+
     totalQuantity: normalizedItems.reduce(
       (total, item) => total + item.quantity,
       0
     ),
+
     totalAmount: normalizedItems.reduce(
       (total, item) => total + item.totalPrice,
       0
@@ -1208,31 +1212,40 @@ function OrderDetailsPageContent({
   const router = useRouter();
   const toast = useToast();
   const isCreateMode = mode === 'create';
+
   const { profile: pharmacyProfile, isLoading: isProfileLoading } =
     usePharmacyProfile();
 
   const pharmacyLockedStatus = getLockedFeatureBannerStatus(
     pharmacyProfile?.status
   );
+
   const createLockedStatus = isCreateMode ? pharmacyLockedStatus : null;
 
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [selectedClientId, setSelectedClientId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
   const [loadError, setLoadError] = useState<OrderDetailsLoadError | null>(
     null
   );
+
   const [activeTab, setActiveTab] = useState<OrderTab>('products');
+
   const [pendingStatus, setPendingStatus] =
     useState<PendingStatusChange | null>(null);
+
   const [rejectionReason, setRejectionReason] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+
   const [isCreateConfirmationOpen, setIsCreateConfirmationOpen] =
     useState(false);
+
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
   const [productToRemove, setProductToRemove] =
     useState<PharmacyOrderItem | null>(null);
 
@@ -1241,11 +1254,14 @@ function OrderDetailsPageContent({
 
   const [deliveryMethod, setDeliveryMethod] =
     useState<DeliveryMethod>('pickup');
+
   const [recipientName, setRecipientName] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+
   const [deliveryTouchedFields, setDeliveryTouchedFields] =
     useState<OrderDeliveryTouchedFields>({});
+
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const createOrderRequestRef = useRef<CreateOrderRequestState | null>(null);
   const resourceGenerationRef = useRef(0);
@@ -1271,6 +1287,7 @@ function OrderDetailsPageContent({
               { page: 1, perPage: 200, status: 'active' },
               requestOptions
             ),
+
             getPharmacyCheckoutDetails(pharmacyProfile.id, requestOptions),
           ]);
 
@@ -1284,6 +1301,7 @@ function OrderDetailsPageContent({
           const activeClients = clientsResponse.items.filter(
             (client) => client.status === 'active'
           );
+
           const defaultClient =
             activeClients.find((client) => client.isDefault) ??
             activeClients[0];
@@ -1308,8 +1326,10 @@ function OrderDetailsPageContent({
             client: defaultClient.name,
             clientId: defaultClient.id,
             clientPhotoUrl: defaultClient.photoUrl,
+
             ...(clientPhone ? { clientPhone } : {}),
             ...(clientAddress ? { clientAddress } : {}),
+
             deliveryMethod: 'pickup',
             paymentMethod: 'cash',
             clientComment: '',
@@ -1322,14 +1342,19 @@ function OrderDetailsPageContent({
             statusHistory: [],
             activityHistory: [],
             managerCommentsCount: 0,
+
             ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
+
             ...(pharmacy.location
               ? { pharmacyLocation: pharmacy.location }
               : {}),
+
             ...(pharmacy.workingHours
               ? { pharmacyWorkingHours: pharmacy.workingHours }
               : {}),
+
             ...(pharmacy.email ? { pharmacyEmail: pharmacy.email } : {}),
+
             ...(pharmacy.bankDetails
               ? { bankDetails: pharmacy.bankDetails }
               : {}),
@@ -1431,12 +1456,15 @@ function OrderDetailsPageContent({
     () =>
       clients.map((client) => ({
         value: client.id,
+
         label: client.isDefault
           ? `${client.name} – default client`
           : client.name,
+
         searchText: [client.id, client.email, client.phone, client.address]
           .filter(Boolean)
           .join(' '),
+
         leading: (
           <TableImagePreview
             src={getProductImageSrc(client.photoUrl ?? undefined)}
@@ -1451,7 +1479,9 @@ function OrderDetailsPageContent({
 
   const isEditable =
     (isCreateMode || order?.status === 'in_progress') && !pharmacyLockedStatus;
+
   const isOrderBusy = isUpdatingOrder || isCreatingOrder;
+
   const statusModalText = pendingStatus
     ? getStatusModalText(pendingStatus.status)
     : null;
@@ -1463,6 +1493,7 @@ function OrderDetailsPageContent({
       deliveryAddress,
       comment: '',
     }),
+
     [deliveryAddress, recipientName, recipientPhone]
   );
 
@@ -1546,6 +1577,7 @@ function OrderDetailsPageContent({
     if (isCreateMode) {
       const physicalQuantity =
         item.quantity + Math.max(0, item.availableQuantity ?? 0);
+
       const nextItems = order.items
         .map((orderItem) =>
           orderItem.productOfferId === item.productOfferId
@@ -1569,6 +1601,7 @@ function OrderDetailsPageContent({
           ? { ...orderItem, quantity }
           : orderItem
       )
+
       .filter((orderItem) => orderItem.quantity > 0);
 
     void updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
@@ -1678,6 +1711,7 @@ function OrderDetailsPageContent({
     setRecipientPhone(clientPhone ?? '');
     setDeliveryAddress(clientAddress ?? '');
     setDeliveryTouchedFields({});
+
     setOrder((currentOrder) =>
       currentOrder
         ? {
@@ -1685,7 +1719,9 @@ function OrderDetailsPageContent({
             client: client.name,
             clientId: client.id,
             clientPhotoUrl: client.photoUrl,
+
             ...(clientPhone ? { clientPhone } : { clientPhone: undefined }),
+
             ...(clientAddress
               ? { clientAddress }
               : { clientAddress: undefined }),
@@ -1715,6 +1751,7 @@ function OrderDetailsPageContent({
 
   const handleRecipientNameChange = (value: string) => {
     setRecipientName(value);
+
     setDeliveryTouchedFields((current) => ({
       ...current,
       recipientName: true,
@@ -1723,6 +1760,7 @@ function OrderDetailsPageContent({
 
   const handleRecipientPhoneChange = (value: string) => {
     setRecipientPhone(normalizePhoneInput(value));
+
     setDeliveryTouchedFields((current) => ({
       ...current,
       recipientPhone: true,
@@ -1731,6 +1769,7 @@ function OrderDetailsPageContent({
 
   const handleDeliveryAddressChange = (value: string) => {
     setDeliveryAddress(value);
+
     setDeliveryTouchedFields((current) => ({
       ...current,
       deliveryAddress: true,
@@ -1747,6 +1786,7 @@ function OrderDetailsPageContent({
 
     setDeliveryTouchedFields((current) => ({
       ...current,
+
       ...Object.keys(nextErrors).reduce<OrderDeliveryTouchedFields>(
         (fields, field) => ({
           ...fields,
@@ -1755,6 +1795,7 @@ function OrderDetailsPageContent({
         {}
       ),
     }));
+
     toast.error('Please check the postal delivery fields.');
     return false;
   };
@@ -1768,6 +1809,7 @@ function OrderDetailsPageContent({
           ? {
               ...currentOrder,
               deliveryMethod,
+
               ...(deliveryMethod === 'postal_delivery'
                 ? {
                     recipientName: recipientName.trim(),
@@ -1782,6 +1824,7 @@ function OrderDetailsPageContent({
             }
           : currentOrder
       );
+
       toast.success('Delivery method saved in the order draft.');
       return;
     }
@@ -1932,6 +1975,7 @@ function OrderDetailsPageContent({
         clientId: selectedClientId,
         items: getOrderItemsPayload(order.items),
         deliveryMethod,
+
         ...(deliveryMethod === 'postal_delivery'
           ? {
               deliveryDetails: {
@@ -1941,6 +1985,7 @@ function OrderDetailsPageContent({
               },
             }
           : {}),
+
         paymentMethod,
         comment: '',
       };
@@ -1953,6 +1998,7 @@ function OrderDetailsPageContent({
           clientRequestId: createClientRequestId(),
           payloadKey,
         };
+
         createOrderRequestRef.current = requestState;
       }
 
@@ -1966,6 +2012,7 @@ function OrderDetailsPageContent({
       createOrderRequestRef.current = null;
       setIsCreateConfirmationOpen(false);
       dispatchOrderCounterRefresh();
+
       toast.success('Order created and moved to In progress.');
       router.replace(getPharmacyOrderPath(createdOrder.id));
     } catch (createError) {
@@ -1994,6 +2041,7 @@ function OrderDetailsPageContent({
               titleId="order-details-page-title"
               icon={<ShoppingBag size={23} aria-hidden="true" />}
             />
+
             <StatusBanner
               {...PHARMACY_STATUS_PRESENTATION[createLockedStatus]}
               title="Order creation is unavailable"
@@ -2042,6 +2090,7 @@ function OrderDetailsPageContent({
               titleId="order-details-page-title"
               icon={<ShoppingBag size={23} aria-hidden="true" />}
             />
+
             <StatusBanner
               tone="danger"
               label="Error"

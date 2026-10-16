@@ -1,6 +1,7 @@
 import type { ChangeEventHandler, HTMLInputAutoCompleteAttribute } from 'react';
+import clsx from 'clsx';
 
-import FormFieldLayout from './FormFieldLayout';
+import FormFieldLayout, { FormFieldError } from './FormFieldLayout';
 import type { BaseFieldProps } from '../types';
 
 import css from './FormField.module.css';
@@ -69,6 +70,7 @@ export function TextInputControl({
   onChange,
 }: TextInputControlProps) {
   const hasError = Boolean(isTouched && error);
+
   const describedBy = getDescribedBy({
     id,
     hint,
@@ -144,6 +146,7 @@ export function TextareaControl({
   onChange,
 }: TextareaControlProps) {
   const hasError = Boolean(isTouched && error);
+
   const describedBy = getDescribedBy({
     id,
     hint,
@@ -157,7 +160,7 @@ export function TextareaControl({
       label={label}
       required={required}
       className={className}
-      errorClassName={errorClassName}
+      renderError={false}
       error={error}
       isTouched={isTouched}
       hint={hint}
@@ -183,6 +186,13 @@ export function TextareaControl({
             {value.length}/{maxLength}
           </span>
         ) : null}
+
+        <FormFieldError
+          id={id}
+          error={error}
+          isTouched={isTouched}
+          className={clsx(css.textareaError, errorClassName)}
+        />
       </div>
     </FormFieldLayout>
   );

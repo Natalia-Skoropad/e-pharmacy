@@ -791,12 +791,14 @@ function PharmacyProfilePage({
     })
       .then((response) => {
         if (controller.signal.aborted) return;
+
         setCommentsInitialData(response);
         setCommentsTotal(response.total);
       })
 
       .catch(() => {
         if (controller.signal.aborted) return;
+
         setCommentsInitialData(null);
         setCommentsTotal(0);
       });
@@ -1396,6 +1398,7 @@ function PharmacyProfilePage({
 
     try {
       await updateCurrentUserPassword(values);
+
       invalidateSession('password_changed');
       toast.success('Password changed. Sign in again.');
       window.location.assign(getSharedLoginUrl());
@@ -1435,6 +1438,7 @@ function PharmacyProfilePage({
       });
 
       const nextValues = createPharmacyInitialValues(user, response.pharmacy);
+
       syncProfile(response.pharmacy);
       setPharmacyValues(nextValues);
       setInitialPharmacyValues(nextValues);
@@ -2201,9 +2205,10 @@ function PharmacyProfilePage({
                           <div className={css.formGrid}>
                             <EmailInput
                               id="pharmacy-email"
+                              className={css.pairedHintField}
                               name="email"
                               value={pharmacyValues.email}
-                              hint="Clients will see this email in the pharmacy profile on the website."
+                              hint="Clients will see this contact email address in the pharmacy profile on the website."
                               error={pharmacyErrors.email}
                               isTouched={Boolean(pharmacyTouched.email)}
                               disabled={isProfileReadonly}
@@ -2218,6 +2223,7 @@ function PharmacyProfilePage({
 
                             <PhoneInput
                               id="pharmacy-phone"
+                              className={css.pairedHintField}
                               name="phone"
                               value={pharmacyValues.phone}
                               hint="Clients will see this phone number in the pharmacy profile on the website."
@@ -2238,6 +2244,7 @@ function PharmacyProfilePage({
                           <div className={css.formGrid}>
                             <NameInput
                               id="pharmacy-settlement"
+                              className={css.pairedHintField}
                               name="settlement"
                               label="Settlement"
                               placeholder="Example: Bolhrad"
@@ -2258,10 +2265,11 @@ function PharmacyProfilePage({
 
                             <NameInput
                               id="pharmacy-region"
+                              className={css.pairedHintField}
                               name="region"
-                              label="Region (optional)"
+                              label="Region"
                               placeholder="Example: Odesa region"
-                              hint="Add the region when it helps distinguish the settlement."
+                              hint="Enter the region where this settlement is located, to distinguish it from other places with similar names."
                               autoComplete="address-level1"
                               value={pharmacyValues.region}
                               error={pharmacyErrors.region}

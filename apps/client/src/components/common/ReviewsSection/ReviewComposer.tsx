@@ -65,7 +65,6 @@ export function ReviewComposer({
         value={reviewText}
         required
         error={commentError}
-        errorClassName={css.reviewCommentError}
         isTouched={Boolean(reviewTouchedFields.comment)}
         maxLength={maxLength}
         placeholder="Write 10–500 characters using latin letters."

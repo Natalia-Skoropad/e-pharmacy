@@ -45,10 +45,12 @@ test('draft pharmacy normalization distinguishes unchanged empty values from exp
     ),
     {
       name: 'Example Pharmacy',
+
       location: {
         region: null,
         address: null,
       },
+
       phone: null,
       email: null,
       workingHours: null,
@@ -131,6 +133,37 @@ test('draft pharmacy normalization keeps location changes nested', () => {
       email: 'pharmacy@example.com',
       workingHours: 'Mon: 09:00-18:00',
     }
+  );
+});
+
+//===================================================================
+
+test('pharmacy contact form requires region when verifying but not while drafting', () => {
+  const values = {
+    name: 'Care Pharmacy',
+    shortDescription: 'Friendly pharmacy',
+    settlement: 'Lviv',
+    region: '',
+    address: '12 Health Street',
+    phone: '+380661234777',
+    email: 'care@example.com',
+    workingHours: 'Mon: 09:00-18:00',
+  };
+
+  assert.equal(
+    validatePharmacyContactForm(values, 'verification').region,
+    'Region is required'
+  );
+
+  assert.equal(validatePharmacyContactForm(values, 'draft').region, undefined);
+
+  assert.equal(
+    validatePharmacyContactForm(
+      { ...values, region: 'Lviv region' },
+      'verification'
+    ).region,
+
+    undefined
   );
 });
 

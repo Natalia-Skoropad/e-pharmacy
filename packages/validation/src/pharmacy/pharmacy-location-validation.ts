@@ -26,6 +26,7 @@ export const PHARMACY_LOCATION_TEXT_MAX_LENGTH = USER_SEARCH_MAX_LENGTH;
 export const PHARMACY_LOCATION_VALIDATION_MESSAGES = {
   required: {
     settlement: 'Settlement is required',
+    region: 'Region is required',
     countryCode: 'Country code is required',
   },
 
@@ -52,8 +53,9 @@ function buildLocationTextError(
   const normalized = value?.trim() ?? '';
 
   if (!normalized) {
-    if (!options.required || field === 'region') return '';
-    return PHARMACY_LOCATION_VALIDATION_MESSAGES.required.settlement;
+    return options.required
+      ? PHARMACY_LOCATION_VALIDATION_MESSAGES.required[field]
+      : '';
   }
 
   if (normalized.length > USER_SEARCH_MAX_LENGTH) {
@@ -107,7 +109,7 @@ function isValidGeoPoint(geo: PharmacyGeoPoint): boolean {
 /**
  * Validates the Stage 13.4.2 location contract without changing persistence.
  * Draft mode permits missing fields; verification requires address,
- * settlement and countryCode. Region and geo remain optional in both modes.
+ * settlement, region and countryCode. Geo remains optional in both modes.
  */
 export function validatePharmacyLocation(
   location: PharmacyLocationDraft,
@@ -124,7 +126,9 @@ export function validatePharmacyLocation(
     { required }
   );
 
-  const regionError = buildLocationTextError(location.region, 'region');
+  const regionError = buildLocationTextError(location.region, 'region', {
+    required,
+  });
 
   const countryCodeError = buildCountryCodeError(location.countryCode, {
     required,

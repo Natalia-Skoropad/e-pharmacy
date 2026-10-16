@@ -82,6 +82,7 @@ test('profile and document services enforce the membership capability matrix', a
       resolve(process.cwd(), 'src/services/pharmacy.service.ts'),
       'utf8'
     ),
+
     readFile(
       resolve(process.cwd(), 'src/services/pharmacy-document.service.ts'),
       'utf8'
@@ -121,6 +122,20 @@ test('profile and document services enforce the membership capability matrix', a
   assert.match(
     documentService,
     /findPharmacyForProfileAccess\(\s*userId,\s*'manage_documents'\s*\)/
+  );
+});
+
+//===================================================================
+
+test('verification readiness requires the pharmacy region on the backend', async () => {
+  const profileService = await readFile(
+    resolve(process.cwd(), 'src/services/pharmacy.service.ts'),
+    'utf8'
+  );
+
+  assert.match(
+    profileService,
+    /function assertReadyForVerification[\s\S]*?region:\s*pharmacy\.location\?\.region/
   );
 });
 

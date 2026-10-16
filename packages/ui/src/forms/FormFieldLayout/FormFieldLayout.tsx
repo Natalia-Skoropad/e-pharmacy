@@ -6,6 +6,24 @@ import css from './FormField.module.css';
 
 //===================================================================
 
+// Keep one error renderer for text inputs and textarea controls.
+export function FormFieldError({
+  id,
+  error,
+  isTouched,
+  className,
+}: Pick<FormFieldLayoutProps, 'id' | 'error' | 'isTouched'> & {
+  className?: string;
+}) {
+  return (
+    <p className={clsx(css.error, className)} id={`${id}-error`}>
+      {isTouched ? (error ?? '') : ''}
+    </p>
+  );
+}
+
+//===================================================================
+
 function FormFieldLayout({
   id,
   label,
@@ -14,11 +32,11 @@ function FormFieldLayout({
   children,
   className,
   errorClassName,
+  renderError = true,
   error,
   isTouched,
   hint,
 }: FormFieldLayoutProps) {
-  const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
 
   return (
@@ -44,9 +62,14 @@ function FormFieldLayout({
 
       {children}
 
-      <p className={clsx(css.error, errorClassName)} id={errorId}>
-        {isTouched ? (error ?? '') : ''}
-      </p>
+      {renderError ? (
+        <FormFieldError
+          id={id}
+          error={error}
+          isTouched={isTouched}
+          className={errorClassName}
+        />
+      ) : null}
     </div>
   );
 }

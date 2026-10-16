@@ -779,6 +779,7 @@ export async function getPharmaciesService(
           : query.sort === 'rating-desc'
             ? { rating: -1 }
             : { createdAt: -1 };
+
   const skip = (query.page - 1) * query.perPage;
 
   const [pharmacies, total, favoriteIds] = await Promise.all([
@@ -935,6 +936,7 @@ export async function createPharmacyReviewService(
         HTTP_STATUS.CONFLICT,
         'You already have a pending or approved review for this pharmacy.',
         undefined,
+
         REVIEW_ERROR_CODES.ALREADY_SUBMITTED
       );
     }
@@ -997,6 +999,7 @@ export async function getPendingPharmacyReviewsService(
 export async function moderatePharmacyReviewService(
   pharmacyId: string,
   reviewId: string,
+
   input: {
     status: 'approved' | 'rejected';
     reason?: string;
@@ -1092,6 +1095,7 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
     name: pharmacy.name,
     address: pharmacy.location?.address,
     settlement: pharmacy.location?.settlement,
+    region: pharmacy.location?.region,
     countryCode: pharmacy.location?.countryCode,
     phone: pharmacy.phone,
     email: pharmacy.email,
@@ -1227,6 +1231,7 @@ function throwPharmacyProfileConflict(): never {
     HTTP_STATUS.CONFLICT,
     'Pharmacy profile changed in another session. Reload the latest data and try again.',
     undefined,
+
     PHARMACY_PROFILE_CONFLICT_ERROR_CODE
   );
 }
@@ -1551,6 +1556,7 @@ export async function submitMyPharmacyModerationService(
           HTTP_STATUS.CONFLICT,
           'Pharmacy profile is already submitted for review.',
           undefined,
+
           PHARMACY_PROFILE_ALREADY_SUBMITTED_ERROR_CODE
         );
       }
@@ -1560,6 +1566,7 @@ export async function submitMyPharmacyModerationService(
           HTTP_STATUS.BAD_REQUEST,
           'Pharmacy changes can be submitted for moderation only from active status.',
           undefined,
+
           PHARMACY_PROFILE_LOCKED_ERROR_CODE
         );
       }
@@ -1594,6 +1601,7 @@ export async function submitMyPharmacyModerationService(
           HTTP_STATUS.BAD_REQUEST,
           'There are no pharmacy changes to send for moderation.',
           undefined,
+
           PHARMACY_NO_PENDING_CHANGES_ERROR_CODE
         );
       }
@@ -1664,6 +1672,7 @@ export async function submitMyPharmacyModerationService(
           updatedPharmacy as PharmacyDocument,
           membershipRole
         ),
+
         message: 'Pharmacy changes were sent for moderation.',
       };
     });

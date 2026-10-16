@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
+//===================================================================
+
 const DETAILS_SOURCE = path.join(
   CURRENT_DIR,
   'OrderDetailsPageContent',
@@ -113,5 +115,11 @@ test('order draft product and checkout presentation matches requested contracts'
 
   assert.match(pickerSource, /className=\{css\.productModalActions\}/);
   assert.match(styles, /\.productModalActions\s*\{/);
-  assert.match(styles, /\.deliveryAddressError\s*\{/);
+
+  assert.doesNotMatch(
+    detailsSource,
+    /errorClassName=\{css\.deliveryAddressError\}/
+  );
+
+  assert.doesNotMatch(styles, /\.deliveryAddressError\s*\{/);
 });

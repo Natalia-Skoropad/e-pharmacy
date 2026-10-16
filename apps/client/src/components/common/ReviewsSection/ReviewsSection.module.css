@@ -17,10 +17,6 @@
   color: var(--color-accent);
 }
 
-.reviewCommentError {
-  bottom: 10px;
-}
-
 .ratingFieldset {
   padding: 0;
   margin: 0;
