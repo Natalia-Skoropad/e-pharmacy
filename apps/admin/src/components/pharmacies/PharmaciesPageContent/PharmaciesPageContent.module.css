@@ -1,7 +1,4 @@
-/* Keep the Owners registry layout, but expose status filters on mobile too. */
-.statsVisible.statsVisible {
-  display: grid;
-}
+/* Match Owners registry: the status statistics are hidden on mobile. */
 
 .headerWithHelp {
   display: inline-flex;

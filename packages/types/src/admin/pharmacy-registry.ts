@@ -30,6 +30,7 @@ export type AdminPharmacyListItem = Readonly<{
   createdAt: ISODateTimeString;
   owner: AdminPharmacyOwnerLink | null;
   activeClientsCount: number;
+  addedProductsCount: number;
   successfulOrdersCount: number;
   successfulRevenue: number;
   rating: number;

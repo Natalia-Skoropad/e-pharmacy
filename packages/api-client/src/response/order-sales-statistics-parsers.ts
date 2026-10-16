@@ -193,9 +193,28 @@ export function normalizeOrderSalesStatistics(
 
   // The shared DTO parser already validates the category id, name and slug.
   // It throws an INVALID_RESPONSE ApiError for malformed references.
-  const categories = [
+  const references = [
     ...parseProductCategoryReferencesResponse(payload.categories),
   ];
+
+  const rawCategories = payload.categories as unknown[];
+
+  const categories = references.map((category, index) => {
+    const raw = rawCategories[index];
+    const color = isRecord(raw) ? raw.color : undefined;
+
+    if (
+      color !== undefined &&
+      (typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color))
+    ) {
+      invalidSalesStatisticsContract('Invalid sales category color.', raw);
+    }
+
+    return {
+      ...category,
+      ...(typeof color === 'string' ? { color } : {}),
+    };
+  });
 
   if (
     new Set(categories.map((category) => category.slug)).size !==

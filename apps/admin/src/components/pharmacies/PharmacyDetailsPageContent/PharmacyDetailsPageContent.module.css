@@ -63,3 +63,10 @@
     padding: 14px;
   }
 }
+
+/* Same responsive metrics visibility as the Owners registry. */
+@media only screen and (max-width: 767px) {
+  .statistics {
+    display: none;
+  }
+}

@@ -90,6 +90,11 @@ export function LinkedPharmaciesTable({
         ),
       },
       {
+        key: 'addedProductsCount',
+        title: <TableHeaderTitle parts={['Added', 'products']} />,
+        render: (pharmacy) => pharmacy.addedProductsCount,
+      },
+      {
         key: 'activeClientsCount',
         title: <TableHeaderTitle parts={['Active', 'clients']} />,
         render: (pharmacy) => pharmacy.activeClientsCount,

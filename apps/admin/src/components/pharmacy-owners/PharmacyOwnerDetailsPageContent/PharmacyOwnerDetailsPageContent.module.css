@@ -468,14 +468,14 @@
 .contactValue {
   display: grid;
   grid-template-columns: 17px minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   column-gap: 8px;
   width: 100%;
   min-width: 0;
 }
 
 .contactValue > svg {
-  margin-top: 2px;
+  align-self: center;
 }
 
 .detailsList a.contactText {

@@ -88,6 +88,7 @@ export type AdminPharmacyOwnerPharmacySummary = Readonly<{
   createdAt: ISODateTimeString;
   status: PharmacyStatus;
   activeClientsCount: number;
+  addedProductsCount: number;
   successfulOrdersCount: number;
   successfulRevenue: number;
   rating: number;

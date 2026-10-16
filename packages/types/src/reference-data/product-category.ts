@@ -42,7 +42,7 @@ export type ProductCategoryEntity = Readonly<{
 
 /** Lightweight relation returned with products and product requests. */
 export type ProductCategoryReference = Readonly<
-  Pick<ProductCategoryEntity, 'id' | 'name' | 'slug'>
+  Pick<ProductCategoryEntity, 'id' | 'name' | 'slug'> & { color?: string }
 >;
 
 /** Historical order snapshots may predate the persisted category id. */

@@ -365,6 +365,7 @@ export function PharmacyDetailsPageContent({
 
           {metrics ? (
             <StatsGrid
+              className={css.statistics}
               columns={4}
               tabletColumns={2}
               ariaLabel="Pharmacy performance summary"
@@ -400,12 +401,14 @@ export function PharmacyDetailsPageContent({
               />
             </StatsGrid>
           ) : (
-            <StatsLoadingSkeleton
-              count={4}
-              columns={4}
-              tabletColumns={2}
-              label="Loading pharmacy performance summary"
-            />
+            <div className={css.statistics}>
+              <StatsLoadingSkeleton
+                count={4}
+                columns={4}
+                tabletColumns={2}
+                label="Loading pharmacy performance summary"
+              />
+            </div>
           )}
         </div>
       </section>

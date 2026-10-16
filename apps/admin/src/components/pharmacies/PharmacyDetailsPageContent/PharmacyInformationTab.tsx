@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 
 import {
   Building2,
-  CalendarClock,
   Clock3,
   ImageOff,
   Mail,
@@ -72,12 +71,15 @@ function ContactValue({
 
   return (
     <span className={css.contactValue}>
-      <a href={`${type === 'email' ? 'mailto' : 'tel'}:${value}`}>
-        {type === 'email' ? (
-          <Mail size={16} aria-hidden="true" />
-        ) : (
-          <Phone size={16} aria-hidden="true" />
-        )}
+      {type === 'email' ? (
+        <Mail size={16} aria-hidden="true" />
+      ) : (
+        <Phone size={16} aria-hidden="true" />
+      )}
+      <a
+        className={css.contactText}
+        href={`${type === 'email' ? 'mailto' : 'tel'}:${value}`}
+      >
         {value}
       </a>
 
@@ -180,63 +182,6 @@ function ComparisonValue({
 
 //===================================================================
 
-function PharmacyStatusSummary({ detail }: { detail: AdminPharmacyDetail }) {
-  const reviewNeedsCorrections = detail.reviewState === 'changes_requested';
-
-  const messages: Record<AdminPharmacyDetail['status'], string> = {
-    new: 'The pharmacy has not been submitted for verification.',
-
-    on_verification:
-      'The pharmacy is awaiting the initial verification decision.',
-
-    on_moderation:
-      'Submitted changes are awaiting an administrator decision. Published values remain unchanged.',
-
-    active:
-      'This pharmacy is active. Only approved profile values are published.',
-
-    blocked: 'This pharmacy is blocked. Its approval history is preserved.',
-  };
-
-  return (
-    <section
-      className={css.statusSummary}
-      aria-labelledby="pharmacy-status-summary"
-    >
-      <div className={css.sectionHeading}>
-        <ShieldCheck size={20} aria-hidden="true" />
-        <h3 id="pharmacy-status-summary">Status & moderation</h3>
-      </div>
-
-      <p>
-        {reviewNeedsCorrections
-          ? 'The administrator requested corrections before approval.'
-          : messages[detail.status]}
-      </p>
-
-      {detail.statusReason?.trim() && (
-        <p className={css.feedback}>Status reason: {detail.statusReason}</p>
-      )}
-
-      {detail.reviewFeedback?.trim() && (
-        <p className={css.feedback}>Review feedback: {detail.reviewFeedback}</p>
-      )}
-
-      {!detail.statusReason?.trim() && !detail.reviewFeedback?.trim() && (
-        <p className={css.muted}>No outstanding moderation feedback.</p>
-      )}
-
-      {detail.reviewedAt && (
-        <p className={css.muted}>
-          Last reviewed: <DateValue value={detail.reviewedAt} />
-        </p>
-      )}
-    </section>
-  );
-}
-
-//===================================================================
-
 /** Uses the existing detail response; opening this tab must not fetch another resource. */
 export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
   const { current, owner, dates } = detail;
@@ -262,67 +207,59 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
           <Photo url={current.imageUrl} name={current.name || 'Pharmacy'} />
         </section>
 
-        <div className={css.identityDetails}>
-          <section
-            className={css.sectionCard}
-            aria-label="Published pharmacy details"
-          >
-            <dl className={`${css.detailsList} ${css.detailsTable}`}>
-              <DetailField label="Pharmacy status">
-                <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
-              </DetailField>
+        <section
+          className={css.sectionCard}
+          aria-label="Published pharmacy details"
+        >
+          <dl className={`${css.detailsList} ${css.detailsTable}`}>
+            <DetailField label="Pharmacy status">
+              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+            </DetailField>
+            <DetailField label="Pharmacy ID">{detail.id}</DetailField>
 
-              <DetailField label="Pharmacy ID">{detail.id}</DetailField>
+            <DetailField label="Phone">
+              <ContactValue
+                type="phone"
+                value={current.phone}
+                onCopy={(value, label) => void copyValue(value, label)}
+              />
+            </DetailField>
+            <DetailField label="Email">
+              <ContactValue
+                type="email"
+                value={current.email}
+                onCopy={(value, label) => void copyValue(value, label)}
+              />
+            </DetailField>
 
+            <DetailField label="Country code">
+              {display(current.location?.countryCode)}
+            </DetailField>
+            <DetailField label="Region">
+              {display(current.location?.region)}
+            </DetailField>
+
+            <DetailField label="Settlement">
+              {display(current.location?.settlement)}
+            </DetailField>
+            <DetailField label="Pharmacy address">
+              {display(current.location?.address)}
+            </DetailField>
+
+            <DetailField label="Created at">
+              <DateValue value={dates.createdAt} />
+            </DetailField>
+            <DetailField label="Last edited">
+              <DateValue value={dates.updatedAt} />
+            </DetailField>
+
+            <div className={css.fullWidthField}>
               <DetailField label="Short pharmacy description">
                 {display(current.shortDescription)}
               </DetailField>
-
-              <DetailField label="Email">
-                <ContactValue
-                  type="email"
-                  value={current.email}
-                  onCopy={(value, label) => void copyValue(value, label)}
-                />
-              </DetailField>
-
-              <DetailField label="Phone">
-                <ContactValue
-                  type="phone"
-                  value={current.phone}
-                  onCopy={(value, label) => void copyValue(value, label)}
-                />
-              </DetailField>
-
-              <DetailField label="Settlement">
-                {display(current.location?.settlement)}
-              </DetailField>
-
-              <DetailField label="Region">
-                {display(current.location?.region)}
-              </DetailField>
-
-              <DetailField label="Pharmacy address">
-                {display(current.location?.address)}
-              </DetailField>
-
-              <DetailField label="Country code">
-                {display(current.location?.countryCode)}
-              </DetailField>
-            </dl>
-          </section>
-
-          <section
-            className={css.sectionCard}
-            aria-labelledby="pharmacy-hours-title"
-          >
-            <div className={css.sectionHeading}>
-              <Clock3 size={20} aria-hidden="true" />
-              <h3 id="pharmacy-hours-title">Published working hours</h3>
             </div>
-            <ScheduleValue value={display(current.workingHours)} />
-          </section>
-        </div>
+          </dl>
+        </section>
       </div>
 
       <div className={css.secondaryGrid}>
@@ -349,7 +286,6 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
                   <UserRound size={30} aria-hidden="true" />
                 )}
               </div>
-
               <div className={css.ownerDetails}>
                 {canViewOwner ? (
                   <TextActionButton
@@ -372,39 +308,19 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
             </p>
           )}
         </section>
-
         <section
           className={css.sectionCard}
-          aria-labelledby="pharmacy-dates-title"
+          aria-labelledby="pharmacy-hours-title"
         >
           <div className={css.sectionHeading}>
-            <CalendarClock size={20} aria-hidden="true" />
-            <h3 id="pharmacy-dates-title">Pharmacy dates</h3>
+            <Clock3 size={20} aria-hidden="true" />
+            <h3 id="pharmacy-hours-title">Published working hours</h3>
           </div>
-
-          <dl className={`${css.detailsList} ${css.detailsTable}`}>
-            <DetailField label="Created at">
-              <DateValue value={dates.createdAt} />
-            </DetailField>
-
-            <DetailField label="Last edited">
-              <DateValue value={dates.updatedAt} />
-            </DetailField>
-
-            <DetailField label="Last approved">
-              <DateValue value={dates.approvedAt} />
-            </DetailField>
-
-            <DetailField label="First activated">
-              <DateValue value={dates.activatedAt} />
-            </DetailField>
-          </dl>
+          <ScheduleValue value={display(current.workingHours)} />
         </section>
       </div>
 
       <PharmacySalesChart pharmacyId={detail.id} />
-
-      <PharmacyStatusSummary detail={detail} />
 
       {detail.pendingChanges !== undefined && (
         <section

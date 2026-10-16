@@ -116,6 +116,7 @@ function SalesPeriodFilters({
         id={`${idPrefix}-year`}
         label="Year"
         value={year}
+        isActive={year !== String(CURRENT_YEAR)}
         options={yearOptions}
         escapeOverflow
         onChange={onYearChange}
@@ -125,6 +126,7 @@ function SalesPeriodFilters({
         id={`${idPrefix}-month`}
         label="Month"
         value={month}
+        isActive={month !== 'all'}
         options={MONTH_OPTIONS}
         escapeOverflow
         onChange={onMonthChange}

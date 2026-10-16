@@ -17,6 +17,7 @@ import {
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
 import { Product } from '../models/product.model';
+import { ProductCategory } from '../models/productCategory.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
@@ -165,6 +166,7 @@ function getCategorySnapshot(
 
   return {
     ...(snapshot.categoryId ? { id: String(snapshot.categoryId) } : {}),
+
     name: snapshot.categoryNameSnapshot,
     slug: snapshot.categorySlugSnapshot,
   };
@@ -638,6 +640,7 @@ function serializeOrder(
       status: entry.status,
       changedAt: entry.changedAt.toISOString(),
       changedBy: entry.changedBy.toString(),
+
       ...(entry.comment ? { comment: entry.comment } : {}),
     })),
 
@@ -851,6 +854,7 @@ function validateCheckoutCartItemsOrThrow({
         HTTP_STATUS.CONFLICT,
         'Selected pharmacy order changed or expired. Please review the updated cart and confirm again.',
         undefined,
+
         CHECKOUT_CART_CHANGED_ERROR_CODE
       );
     }
@@ -860,6 +864,7 @@ function validateCheckoutCartItemsOrThrow({
         HTTP_STATUS.CONFLICT,
         'Available quantity has changed. Please review the order and try again.',
         undefined,
+
         STOCK_CHANGED_ERROR_CODE
       );
     }
@@ -869,6 +874,7 @@ function validateCheckoutCartItemsOrThrow({
         HTTP_STATUS.CONFLICT,
         'Available quantity has changed. Please review the order and try again.',
         undefined,
+
         STOCK_CHANGED_ERROR_CODE
       );
     }
@@ -929,6 +935,7 @@ export async function checkoutOrderService(
           HTTP_STATUS.CONFLICT,
           'Cart changed after checkout review. Please review the updated order and confirm again.',
           undefined,
+
           CHECKOUT_CART_CHANGED_ERROR_CODE
         );
       }
@@ -1501,6 +1508,7 @@ export async function createManagerOrderService(
 
       return {
         kind: 'created' as const,
+
         created: {
           order: order.toObject() as OrderDocument,
           client,
@@ -2273,6 +2281,7 @@ export async function updateOrderStatusService(
               status: input.status,
               changedAt,
               changedBy: new Types.ObjectId(actor.id),
+
               ...(input.comment ? { comment: input.comment } : {}),
             },
           },
@@ -2687,10 +2696,30 @@ export async function getOrderSalesStatisticsForPharmacyService(
     left.name.localeCompare(right.name, 'en', { sensitivity: 'base' })
   );
 
+  // Historical order snapshots preserve their category names; current color
+  // is loaded from the reference dictionary so Admin Settings changes apply.
+  const currentColors = await ProductCategory.find({
+    _id: { $in: categories.map((category) => new Types.ObjectId(category.id)) },
+  })
+    .select('_id color')
+    .lean<Array<{ _id: Types.ObjectId; color?: string }>>();
+
+  const colorsById = new Map(
+    currentColors.map((item) => [String(item._id), item.color] as const)
+  );
+
+  const coloredCategories = categories.map((category) => ({
+    ...category,
+
+    ...(colorsById.get(category.id)
+      ? { color: colorsById.get(category.id) }
+      : {}),
+  }));
+
   return {
     currency: '₴',
     groupBy,
-    categories,
+    categories: coloredCategories,
     points: createSalesPoints({ rows, dateFrom, dateTo, groupBy, categories }),
   };
 }

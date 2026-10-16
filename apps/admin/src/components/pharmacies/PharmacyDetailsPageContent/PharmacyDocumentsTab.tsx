@@ -12,6 +12,11 @@ import { Button } from '@e-pharmacy/ui/primitives';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import {
+  PHARMACY_DOCUMENT_ACCEPT,
+  PHARMACY_DOCUMENT_RULES,
+} from '@e-pharmacy/validation/files';
+
+import {
   downloadAdminPharmacyDocument,
   getAdminPharmacyDocuments,
 } from '@/lib/api/browser/admin-pharmacy-detail.api';
@@ -70,6 +75,7 @@ export function PharmacyDocumentsTab({
 
   useEffect(() => {
     const controller = new AbortController();
+
     void getAdminPharmacyDocuments(pharmacyId, { signal: controller.signal })
       .then((result) => {
         if (controller.signal.aborted) return;
@@ -94,6 +100,7 @@ export function PharmacyDocumentsTab({
     return () => {
       for (const controller of requests) controller.abort();
       for (const url of urls) URL.revokeObjectURL(url);
+
       requests.clear();
       urls.clear();
     };
@@ -110,6 +117,7 @@ export function PharmacyDocumentsTab({
       const blob = await downloadAdminPharmacyDocument(pharmacyId, documentId, {
         signal: controller.signal,
       });
+
       return controller.signal.aborted ? null : blob;
     } catch {
       if (!controller.signal.aborted) {
@@ -125,6 +133,7 @@ export function PharmacyDocumentsTab({
   const registerUrl = (blob: Blob): string => {
     const url = URL.createObjectURL(blob);
     urlsRef.current.add(url);
+
     return url;
   };
 
@@ -191,11 +200,13 @@ export function PharmacyDocumentsTab({
         editable={false}
         readOnlyUploadView={effectiveStatus === 'success'}
         disabled={effectiveStatus !== 'success'}
+        maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
+        accept={PHARMACY_DOCUMENT_ACCEPT}
         labels={{
           dropzoneTitle: 'Pharmacy documents',
           dropzoneText: 'Documents are managed by the pharmacy, not Admin.',
         }}
-        hint="Review and download files privately. No document changes can be made from Admin."
+        hint={`PDF, DOC, DOCX, JPG, PNG or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files; Admin access is read-only.`}
         emptyTitle="No pharmacy documents"
         emptyText="There are no attached published or pending documents for this pharmacy."
         resourceState={

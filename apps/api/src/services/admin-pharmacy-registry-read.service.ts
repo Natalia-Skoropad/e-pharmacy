@@ -47,6 +47,7 @@ type RegistryAggregateRow = {
   createdAt: Date;
   owner: Array<{ id: string; name: string; pictureUrl: string | null }>;
   activeClientsCount: number;
+  addedProductsCount: number;
   successfulOrdersCount: number;
   successfulRevenue: number;
   rating: number;
@@ -265,6 +266,7 @@ export async function listAdminPharmaciesService(
           : null,
 
         activeClientsCount: item.activeClientsCount,
+        addedProductsCount: item.addedProductsCount,
         successfulOrdersCount: item.successfulOrdersCount,
         successfulRevenue: item.successfulRevenue,
         rating: item.rating,
@@ -320,7 +322,7 @@ export async function getAdminPharmacyStatisticsService() {
 export async function listAdminPharmacyOptionsService(
   query: AdminPharmacyRegistryOptionsQuery
 ) {
-  const match = query.search
+  const match: Record<string, unknown> = query.search
     ? {
         $or: identitySearch(query.search, [
           'name',
@@ -332,6 +334,9 @@ export async function listAdminPharmacyOptionsService(
         ]),
       }
     : {};
+
+  if (query.ownerId) match.ownerId = new Types.ObjectId(query.ownerId);
+  if (query.pharmacyId) match._id = new Types.ObjectId(query.pharmacyId);
 
   const items = await Pharmacy.aggregate<RegistryOption>([
     { $match: match },
@@ -373,6 +378,7 @@ export async function listAdminPharmacyRegistryOwnerOptionsService(
     {
       $match: {
         role: USER_ROLES.PHARMACY,
+        ...(query.ownerId ? { _id: new Types.ObjectId(query.ownerId) } : {}),
         ...(query.search
           ? { $or: identitySearch(query.search, ['name', 'email', 'phone']) }
           : {}),
@@ -383,7 +389,14 @@ export async function listAdminPharmacyRegistryOwnerOptionsService(
         from: Pharmacy.collection.name,
         let: { ownerId: '$_id' },
         pipeline: [
-          { $match: { $expr: { $eq: ['$ownerId', '$$ownerId'] } } },
+          {
+            $match: {
+              $expr: { $eq: ['$ownerId', '$$ownerId'] },
+              ...(query.pharmacyId
+                ? { _id: new Types.ObjectId(query.pharmacyId) }
+                : {}),
+            },
+          },
           { $limit: 1 },
           { $project: { _id: 1 } },
         ],

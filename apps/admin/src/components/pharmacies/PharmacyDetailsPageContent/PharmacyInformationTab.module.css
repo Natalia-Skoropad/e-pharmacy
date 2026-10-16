@@ -297,11 +297,26 @@
 }
 
 .detailsTable {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-content: start;
 }
 
-.contactValue,
+.contactValue {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.contactValue .contactText {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .ownerIdRow {
   display: inline-flex;
   align-items: center;
@@ -310,7 +325,8 @@
   min-width: 0;
 }
 
-.contactValue a {
+.fullWidthField {
+  grid-column: 1 / -1;
   min-width: 0;
 }
 
@@ -318,9 +334,9 @@
   row-gap: 5px;
 }
 
-@media only screen and (max-width: 479px) {
+@media only screen and (min-width: 768px) {
   .detailsTable {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

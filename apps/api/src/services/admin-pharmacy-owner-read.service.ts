@@ -15,6 +15,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { AdminAuditLog } from '../models/adminAuditLog.model';
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { ProductOffer } from '../models/productOffer.model';
 import { PharmacyOwnerAdminComment } from '../models/pharmacyOwnerAdminComment.model';
 import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
 import { User } from '../models/user.model';
@@ -129,6 +130,7 @@ type OwnerPharmacyAggregateRow = Readonly<{
   createdAt: Date;
   status: 'new' | 'on_verification' | 'on_moderation' | 'active' | 'blocked';
   activeClientsCount: number;
+  addedProductsCount: number;
   successfulOrdersCount: number;
   successfulRevenue: number;
   rating: number;
@@ -330,7 +332,9 @@ export async function listAdminPharmacyOwnersService(
       name: owner.name,
       email: owner.email,
       phone: owner.phone,
+
       ...(owner.pictureUrl ? { pictureUrl: owner.pictureUrl } : {}),
+
       status: owner.status,
       registeredAt: owner.registeredAt.toISOString(),
       operatingPharmaciesCount: owner.operatingPharmaciesCount,
@@ -668,6 +672,17 @@ export function buildPagedPharmacyItemsPipeline(
     { $limit: perPage },
     {
       $lookup: {
+        from: ProductOffer.collection.name,
+        let: { pharmacyId: '$_id' },
+        pipeline: [
+          { $match: { $expr: { $eq: ['$pharmacyId', '$$pharmacyId'] } } },
+          { $count: 'count' },
+        ],
+        as: '_productCount',
+      },
+    },
+    {
+      $lookup: {
         from: Order.collection.name,
         let: { pharmacyId: '$_id' },
         pipeline: [
@@ -806,6 +821,10 @@ export function buildPagedPharmacyItemsPipeline(
         ...(includeOwnerId ? { ownerId: 1 } : {}),
         activeClientsCount: 1,
 
+        addedProductsCount: {
+          $ifNull: [{ $arrayElemAt: ['$_productCount.count', 0] }, 0],
+        },
+
         successfulOrdersCount: {
           $ifNull: ['$orderStatistics.successfulOrdersCount', 0],
         },
@@ -871,6 +890,7 @@ export async function listAdminPharmacyOwnerPharmaciesService(
       createdAt: pharmacy.createdAt.toISOString(),
       status: pharmacy.status,
       activeClientsCount: pharmacy.activeClientsCount,
+      addedProductsCount: pharmacy.addedProductsCount,
       successfulOrdersCount: pharmacy.successfulOrdersCount,
       successfulRevenue: pharmacy.successfulRevenue,
       rating: pharmacy.rating,

@@ -112,7 +112,7 @@
 
 .details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   min-width: 0;
   margin: 0;
@@ -188,5 +188,11 @@
   }
   .comparison {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media only screen and (max-width: 479px) {
+  .details {
+    grid-template-columns: 1fr;
   }
 }

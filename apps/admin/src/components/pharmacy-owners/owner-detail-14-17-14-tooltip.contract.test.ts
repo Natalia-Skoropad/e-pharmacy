@@ -54,6 +54,6 @@ test('native popover is mounted in body and opened when the hover state changes'
 
   assert.match(
     css,
-    /\.floatingTooltipTopLayer\[popover\]:not\(:popover-open\)\s*\{[^}]*display: none;/s
+    /\.floatingTooltipTopLayer\[popover\]:not\(:popover-open\)\s*\{[^}]*display: none;/
   );
 });

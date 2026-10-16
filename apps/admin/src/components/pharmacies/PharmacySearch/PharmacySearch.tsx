@@ -22,6 +22,7 @@ import { getAdminPharmacyOptions } from '@/lib/api/browser/admin-pharmacy-regist
 
 type PharmacySearchProps = Readonly<{
   value: string;
+  ownerId?: string;
   disabled?: boolean;
   onChange: (pharmacyId: string) => void;
 
@@ -49,6 +50,7 @@ function toOption(
   return {
     value: pharmacy.id,
     label: name,
+
     leading: (
       <TableImagePreview
         src={pharmacy.imageUrl}
@@ -73,6 +75,7 @@ function toOption(
 
 export function PharmacySearch({
   value,
+  ownerId,
   disabled = false,
   onChange,
   loadOptions,
@@ -102,7 +105,11 @@ export function PharmacySearch({
             items,
           }))
         : getAdminPharmacyOptions(
-            { ...(requestQuery ? { search: requestQuery } : {}), limit: 20 },
+            {
+              ...(requestQuery ? { search: requestQuery } : {}),
+              ...(ownerId ? { ownerId } : {}),
+              limit: 20,
+            },
             { signal: controller.signal }
           )
     )
@@ -121,7 +128,7 @@ export function PharmacySearch({
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, loadOptions]);
+  }, [debouncedQuery, loadOptions, ownerId]);
 
   // A deep link can select a pharmacy outside the first 20 suggestions.
   useEffect(() => {

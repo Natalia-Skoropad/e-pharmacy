@@ -243,6 +243,7 @@ export function parseAdminPharmacyListItem(
       : null,
 
     activeClientsCount: count(item.activeClientsCount, 'active clients'),
+    addedProductsCount: count(item.addedProductsCount, 'added products'),
 
     successfulOrdersCount: count(
       item.successfulOrdersCount,

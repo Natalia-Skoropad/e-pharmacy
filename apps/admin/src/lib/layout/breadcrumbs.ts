@@ -10,6 +10,7 @@ import { ADMIN_ROUTES } from '@/lib/routes';
 type BreadcrumbRoute = Readonly<{
   href: string;
   label: string;
+
   parent?: Readonly<{
     label: string;
   }>;
@@ -146,9 +147,29 @@ export function getAdminBreadcrumbsByPathname(
     const route = resolveAdminPharmaciesRoute(suffix ? suffix.split('/') : []);
 
     if (route.kind === 'detail') {
+      const detailUrl = `${ADMIN_ROUTES.PHARMACIES}/${route.pharmacyId}`;
+
+      const tabLabels: Readonly<Record<string, string>> = {
+        'about-payment': 'About & payment',
+        documents: 'Documents',
+        comments: 'Comments',
+        reviews: 'Reviews',
+        orders: 'Orders',
+        clients: 'Clients',
+        products: 'Products',
+        'product-requests': 'Product requests',
+        activity: 'Activity history',
+      };
+
+      const subTabLabel = tabLabels[route.tab];
+
       return [
         { label: 'Pharmacies', href: ADMIN_ROUTES.PHARMACIES },
-        { label: currentDetailLabel ?? `Pharmacy #${route.pharmacyId}` },
+        {
+          label: currentDetailLabel ?? `Pharmacy #${route.pharmacyId}`,
+          ...(subTabLabel ? { href: detailUrl } : {}),
+        },
+        ...(subTabLabel ? [{ label: subTabLabel }] : []),
       ];
     }
 

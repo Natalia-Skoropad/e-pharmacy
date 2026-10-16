@@ -56,6 +56,8 @@ export type PharmacyOwnerRegistrationAuditMigrationResult = Readonly<{
   legacyOwners: number;
   accountEventsCreated: number;
   accountEventsSkipped: number;
+  pharmacyEventsCreated: number;
+  pharmacyEventsSkipped: number;
   documentEventsCreated: number;
   documentEventsSkipped: number;
 }>;
@@ -127,12 +129,14 @@ async function ensureOwnerAccountCreatedEvent(
         scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
         scopeEntityId: entityId,
         before: {},
+
         after: {
           status: owner.status,
           name: owner.name,
           email: owner.email,
           phone: owner.phone,
         },
+
         changedFields: ['email', 'name', 'phone', 'status'],
         reason: getOwnerBackfillReason(owner),
         requestId,
@@ -142,6 +146,59 @@ async function ensureOwnerAccountCreatedEvent(
     { upsert: true, timestamps: false }
   );
 
+  return result.upsertedCount === 1;
+}
+
+//===============================================================
+
+/** Backfill the missing pharmacy-created event without fabricating profile revisions. */
+async function ensurePharmacyCreatedEvent(
+  owner: OwnerRow,
+  pharmacy: PharmacyRow
+): Promise<boolean> {
+  const entityId = String(pharmacy._id);
+  const ownerId = String(owner._id);
+
+  const existing = await AdminAuditLog.exists({
+    action: ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED,
+    entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+    entityId,
+  });
+
+  if (existing) return false;
+
+  const requestId = `backfill-pharmacy-created:${entityId}`;
+
+  const result = await AdminAuditLog.updateOne(
+    { requestId, action: ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED },
+    {
+      $setOnInsert: {
+        actorUserId: owner._id,
+        actorNameSnapshot: owner.name,
+        action: ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED,
+        section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
+        entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+        entityId,
+
+        entityLabelSnapshot:
+          pharmacy.name?.trim() || pharmacy.email?.trim() || owner.email,
+
+        pharmacyId: entityId,
+        scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+        scopeEntityId: ownerId,
+        before: {},
+        after: { ownerId },
+        changedFields: ['ownerId'],
+
+        reason:
+          'Backfilled from existing pharmacy registration. Exact initial draft values are unavailable.',
+
+        requestId,
+        createdAt: getHistoricalCreatedAt(pharmacy.createdAt, pharmacy._id),
+      },
+    },
+    { upsert: true, timestamps: false }
+  );
   return result.upsertedCount === 1;
 }
 
@@ -168,6 +225,7 @@ async function ensureRegistrationDocumentsEvent(
   if (existing) return false;
 
   const requestId = `backfill-pharmacy-registration-documents:${entityId}`;
+
   const entityLabel =
     pharmacy.name?.trim() || pharmacy.email?.trim() || owner.email;
 
@@ -184,6 +242,7 @@ async function ensureRegistrationDocumentsEvent(
         entityLabelSnapshot: entityLabel,
         scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
         scopeEntityId: ownerId,
+
         before: {
           registrationDocuments: [],
           documentCount: 0,
@@ -191,18 +250,22 @@ async function ensureRegistrationDocumentsEvent(
           documentSizesBytes: [],
           totalDocumentSizeBytes: 0,
         },
+
         after: {
           registrationDocuments: documents.map((document) => document.name),
           documentCount: documents.length,
           documentMimeTypes: documents.map((document) => document.type),
+
           documentSizesBytes: documents.map((document) =>
             String(document.size)
           ),
+
           totalDocumentSizeBytes: documents.reduce(
             (total, document) => total + document.size,
             0
           ),
         },
+
         changedFields: [
           'documentCount',
           'documentMimeTypes',
@@ -210,10 +273,13 @@ async function ensureRegistrationDocumentsEvent(
           'registrationDocuments',
           'totalDocumentSizeBytes',
         ],
+
         reason: isDemoOwner(owner)
           ? DEMO_DOCUMENTS_BACKFILL_REASON
           : LEGACY_DOCUMENTS_BACKFILL_REASON,
+
         requestId,
+
         createdAt: getDocumentsAuditCreatedAt(
           getHistoricalCreatedAt(owner.createdAt, owner._id),
           getHistoricalCreatedAt(pharmacy.createdAt, pharmacy._id)
@@ -252,6 +318,8 @@ export async function migratePharmacyOwnerRegistrationAudit(): Promise<PharmacyO
 
   let accountEventsCreated = 0;
   let accountEventsSkipped = 0;
+  let pharmacyEventsCreated = 0;
+  let pharmacyEventsSkipped = 0;
   let documentEventsCreated = 0;
   let documentEventsSkipped = 0;
 
@@ -266,6 +334,12 @@ export async function migratePharmacyOwnerRegistrationAudit(): Promise<PharmacyO
   for (const pharmacy of pharmacies) {
     const owner = ownerById.get(String(pharmacy.ownerId));
     if (!owner) continue;
+
+    if (await ensurePharmacyCreatedEvent(owner, pharmacy)) {
+      pharmacyEventsCreated += 1;
+    } else {
+      pharmacyEventsSkipped += 1;
+    }
 
     const created = await ensureRegistrationDocumentsEvent(owner, pharmacy);
     if (created === null) continue;
@@ -283,6 +357,8 @@ export async function migratePharmacyOwnerRegistrationAudit(): Promise<PharmacyO
     legacyOwners: owners.filter((owner) => !isDemoOwner(owner)).length,
     accountEventsCreated,
     accountEventsSkipped,
+    pharmacyEventsCreated,
+    pharmacyEventsSkipped,
     documentEventsCreated,
     documentEventsSkipped,
   };

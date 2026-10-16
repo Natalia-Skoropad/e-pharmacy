@@ -14,7 +14,6 @@ import type {
 } from '@e-pharmacy/types/admin';
 
 import { PHARMACY_OWNER_ACCOUNT_STATUSES } from '@e-pharmacy/config/users';
-
 import type { PharmacyOwnerAccountStatus } from '@e-pharmacy/types/auth';
 import type { PharmacyLocationDraft } from '@e-pharmacy/types/pharmacies';
 import type { ISODateTimeString } from '@e-pharmacy/types/primitives';
@@ -63,6 +62,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {
   if (!isRecord(value)) throw new TypeError(`Invalid ${label}.`);
+
   return value;
 }
 
@@ -83,6 +83,7 @@ function optionalNonEmptyString(
   label: string
 ): string | undefined {
   if (value === undefined) return undefined;
+
   return requireNonEmptyString(value, label);
 }
 
@@ -91,6 +92,7 @@ function optionalNonEmptyString(
 function requireObjectId(value: unknown, label: string): string {
   const id = requireNonEmptyString(value, label);
   if (!isValidObjectId(id)) throw new TypeError(`Invalid ${label}.`);
+
   return id;
 }
 
@@ -98,6 +100,7 @@ function requireObjectId(value: unknown, label: string): string {
 
 function requireIsoDateTime(value: unknown, label: string): ISODateTimeString {
   if (!isISODateTimeString(value)) throw new TypeError(`Invalid ${label}.`);
+
   return value;
 }
 
@@ -177,6 +180,7 @@ export function assertAdminPharmacyOwnerEntityId(
   label = 'entity id'
 ): string {
   if (!isValidObjectId(value)) throw new TypeError(`Invalid ${label}.`);
+
   return value;
 }
 
@@ -194,9 +198,11 @@ function parseOwnerListItem(value: unknown): AdminPharmacyOwnerListItem {
     name: requireNonEmptyString(record.name, 'pharmacy owner name'),
     email: requireNonEmptyString(record.email, 'pharmacy owner email'),
     phone: requireNonEmptyString(record.phone, 'pharmacy owner phone'),
+
     ...(optionalNonEmptyString(record.pictureUrl, 'pharmacy owner pictureUrl')
       ? { pictureUrl: record.pictureUrl as string }
       : {}),
+
     status: record.status,
 
     registeredAt: requireIsoDateTime(
@@ -230,6 +236,7 @@ export function parseAdminPharmacyOwnerListResponse(
   return {
     items: record.items.map(parseOwnerListItem),
     ...parsePagination(record),
+
     earliestCreatedAt:
       typeof record.earliestCreatedAt === 'string'
         ? record.earliestCreatedAt
@@ -273,6 +280,7 @@ function parseOwnerOption(value: unknown): AdminPharmacyOwnerOption {
     name: requireNonEmptyString(record.name, 'pharmacy owner option name'),
     email: requireNonEmptyString(record.email, 'pharmacy owner option email'),
     phone: requireNonEmptyString(record.phone, 'pharmacy owner option phone'),
+
     ...(pictureUrl ? { pictureUrl } : {}),
   };
 }
@@ -283,6 +291,7 @@ export function parseAdminPharmacyOwnerOptionsResponse(
   value: unknown
 ): AdminPharmacyOwnerOptionsResponse {
   const record = requireRecord(value, 'pharmacy owner options response');
+
   if (!Array.isArray(record.items)) {
     throw new TypeError('Invalid pharmacy owner options items.');
   }
@@ -294,6 +303,7 @@ export function parseAdminPharmacyOwnerOptionsResponse(
 
 function parsePharmacyStatistics(value: unknown) {
   const record = requireRecord(value, 'pharmacy owner pharmacy statistics');
+
   const result = {
     all: requireNonNegativeInteger(record.all, 'all pharmacies count'),
     new: requireNonNegativeInteger(record.new, 'new pharmacies count'),
@@ -355,6 +365,7 @@ export function parseAdminPharmacyOwnerDetail(
   value: unknown
 ): AdminPharmacyOwnerDetail {
   const record = requireRecord(value, 'pharmacy owner detail');
+
   if (!isOwnerStatus(record.status)) {
     throw new TypeError('Invalid pharmacy owner status.');
   }
@@ -386,9 +397,12 @@ export function parseAdminPharmacyOwnerDetail(
     name: requireNonEmptyString(record.name, 'pharmacy owner name'),
     email: requireNonEmptyString(record.email, 'pharmacy owner email'),
     phone: requireNonEmptyString(record.phone, 'pharmacy owner phone'),
+
     ...(address ? { address } : {}),
     ...(pictureUrl ? { pictureUrl } : {}),
+
     status: record.status,
+
     ...(statusReason ? { statusReason } : {}),
 
     registeredAt: requireIsoDateTime(
@@ -461,6 +475,7 @@ function parseLocation(value: unknown): PharmacyLocationDraft {
   }
 
   if (record.geo !== undefined) result.geo = parseGeoPoint(record.geo);
+
   return result;
 }
 
@@ -494,16 +509,23 @@ function parseOwnerPharmacy(value: unknown): AdminPharmacyOwnerPharmacySummary {
   return {
     id: requireObjectId(record.id, 'owner pharmacy id'),
     name: requireNonEmptyString(record.name, 'owner pharmacy name'),
+
     ...(email ? { email } : {}),
     ...(phone ? { phone } : {}),
     ...(location ? { location } : {}),
     ...(imageUrl ? { imageUrl } : {}),
+
     createdAt: requireIsoDateTime(record.createdAt, 'owner pharmacy createdAt'),
     status: record.status,
 
     activeClientsCount: requireNonNegativeInteger(
       record.activeClientsCount,
       'activeClientsCount'
+    ),
+
+    addedProductsCount: requireNonNegativeInteger(
+      record.addedProductsCount,
+      'addedProductsCount'
     ),
 
     successfulOrdersCount: requireNonNegativeInteger(
@@ -556,10 +578,12 @@ function parseOwnerComment(value: unknown): AdminPharmacyOwnerComment {
 
     author: {
       userId: requireObjectId(author.userId, 'owner comment author id'),
+
       displayName: requireNonEmptyString(
         author.displayName,
         'owner comment author displayName'
       ),
+
       ...(typeof author.pictureUrl === 'string' && author.pictureUrl.trim()
         ? { pictureUrl: author.pictureUrl.trim() }
         : {}),
@@ -587,6 +611,7 @@ export function parseAdminPharmacyOwnerCommentResponse(
   value: unknown
 ): AdminPharmacyOwnerCommentResponse {
   const record = requireRecord(value, 'owner comment response');
+
   return { comment: parseOwnerComment(record.comment) };
 }
 
@@ -606,6 +631,7 @@ export function parseAdminPharmacyOwnerStatusMutationResponse(
     owner: {
       ownerId: requireObjectId(owner.ownerId, 'owner status mutation ownerId'),
       status: owner.status,
+
       blockedPharmacies: requireNonNegativeInteger(
         owner.blockedPharmacies,
         'blockedPharmacies'

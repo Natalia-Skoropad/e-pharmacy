@@ -228,6 +228,21 @@ export function PharmaciesPageContent({
     return () => controller.abort();
   }, [statsRetry]);
 
+  const loadScopedOwnerOptions = useCallback(
+    (
+      params: Readonly<{ search?: string; limit?: number }>,
+      options?: Readonly<{ signal?: AbortSignal }>
+    ) =>
+      getAdminPharmacyRegistryOwnerOptions(
+        {
+          ...params,
+          ...(state.pharmacyId ? { pharmacyId: state.pharmacyId } : {}),
+        },
+        options
+      ),
+    [state.pharmacyId]
+  );
+
   const hasActiveFilters = Boolean(
     state.pharmacyId ||
     state.ownerId ||
@@ -274,7 +289,7 @@ export function PharmaciesPageContent({
         key: 'on_verification' as StatusKey,
         title: 'On verification',
         value: statistics?.onVerification ?? 0,
-        tone: 'orange' as const,
+        tone: 'purple' as const,
         icon: <ClipboardCheck size={26} aria-hidden="true" />,
       },
       {
@@ -288,7 +303,7 @@ export function PharmaciesPageContent({
         key: 'on_moderation' as StatusKey,
         title: 'On moderation',
         value: statistics?.onModeration ?? 0,
-        tone: 'purple' as const,
+        tone: 'orange' as const,
         icon: <Clock3 size={26} aria-hidden="true" />,
       },
       {
@@ -314,6 +329,7 @@ export function PharmaciesPageContent({
       {
         key: 'photo',
         title: <TableHeaderTitle parts={['Pharmacy', 'photo']} />,
+
         render: (pharmacy) => (
           <TableImagePreview
             src={pharmacy.imageUrl}
@@ -325,6 +341,7 @@ export function PharmaciesPageContent({
       {
         key: 'id',
         title: <TableHeaderTitle parts={['Pharmacy', 'ID']} />,
+
         render: (pharmacy) => (
           <TextActionButton
             className={css.breakableLink}
@@ -337,6 +354,7 @@ export function PharmaciesPageContent({
       {
         key: 'name',
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
+
         render: (pharmacy) => (
           <TextActionButton href={buildAdminPharmacyDetailUrl(pharmacy.id)}>
             {pharmacy.name || 'Unnamed pharmacy'}
@@ -346,6 +364,7 @@ export function PharmaciesPageContent({
       {
         key: 'owner',
         title: <TableHeaderTitle parts={['Pharmacy', 'owner']} />,
+
         render: (pharmacy) =>
           pharmacy.owner ? (
             <TextActionButton
@@ -358,18 +377,25 @@ export function PharmaciesPageContent({
           ),
       },
       {
+        key: 'addedProductsCount',
+        title: <TableHeaderTitle parts={['Added', 'products']} />,
+        render: (pharmacy) => pharmacy.addedProductsCount,
+      },
+      {
         key: 'activeClientsCount',
         title: <TableHeaderTitle parts={['Active', 'clients']} />,
         render: (pharmacy) => pharmacy.activeClientsCount,
       },
       {
         key: 'successfulOrdersCount',
+
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
             <OrderMetricsTooltip scope="pharmacy" />
           </span>
         ),
+
         render: (pharmacy) => pharmacy.successfulOrdersCount,
       },
       {
@@ -380,6 +406,7 @@ export function PharmaciesPageContent({
       {
         key: 'rating',
         title: <TableHeaderTitle parts={['Rating /', 'reviews']} />,
+
         render: (pharmacy) =>
           pharmacy.reviewsCount ? (
             <RatingSummary
@@ -394,6 +421,7 @@ export function PharmaciesPageContent({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Pharmacy', 'status']} />,
+
         render: (pharmacy) => (
           <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
         ),
@@ -460,7 +488,7 @@ export function PharmaciesPageContent({
           icon={<Building2 size={23} aria-hidden="true" />}
         />
 
-        <div className={`${shellCss.statisticsBlock} ${css.statsVisible}`}>
+        <div className={shellCss.statisticsBlock}>
           {statistics ? (
             <StatsGrid
               className={shellCss.statistics}
@@ -526,13 +554,14 @@ export function PharmaciesPageContent({
         </h2>
         <div className={css.searchGrid}>
           <PharmacySearch
+            ownerId={state.ownerId}
             value={state.pharmacyId}
             onChange={(pharmacyId) =>
               navigate({ ...state, pharmacyId, page: 1 })
             }
           />
           <PharmacyOwnerSearch
-            loadOptions={getAdminPharmacyRegistryOwnerOptions}
+            loadOptions={loadScopedOwnerOptions}
             value={state.ownerId}
             onChange={(ownerId) => navigate({ ...state, ownerId, page: 1 })}
           />

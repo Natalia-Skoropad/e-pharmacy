@@ -3,6 +3,7 @@ export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_CORRECTIONS_REQUESTED: 'pharmacy.corrections.requested',
   PHARMACY_REACTIVATION_REVIEWED: 'pharmacy.reactivation.reviewed',
   PHARMACY_PROFILE_UPDATED: 'pharmacy.profile.updated',
+  PHARMACY_CREATED: 'pharmacy.created',
   PHARMACY_MODERATION_SUBMITTED: 'pharmacy.moderation.submitted',
   PHARMACY_COMMENT_CREATED: 'pharmacy.comment.created',
   PHARMACY_COMMENT_DELETED: 'pharmacy.comment.deleted',

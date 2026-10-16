@@ -11,11 +11,9 @@ import {
   type SalesPeriodMonth,
 } from '@e-pharmacy/ui/charts';
 
-import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { getAdminPharmacySalesStatistics } from '@/lib/api/browser/admin-pharmacy-detail.api';
-
-import css from './PharmacyInformationTab.module.css';
 
 //===================================================================
 
@@ -62,31 +60,23 @@ export function PharmacySalesChart({ pharmacyId }: { pharmacyId: string }) {
 
   if (!current) {
     return (
-      <section
-        className={css.salesLoading}
-        aria-label="Sales value by product category"
-      >
-        <LoadingSpinner label="Loading sales chart" hideLabel />
-      </section>
+      <ProfileResourceState
+        variant="loading"
+        title="Loading pharmacy sales statistics"
+        description="The pharmacy sales chart is being loaded."
+      />
     );
   }
 
   if (current.error || !current.data) {
     return (
-      <section
-        className={css.salesError}
-        aria-label="Sales value by product category"
-      >
-        <p>Sales statistics could not be loaded.</p>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          onClick={() => setRetry((v) => v + 1)}
-        >
-          Retry sales statistics
-        </Button>
-      </section>
+      <ProfileResourceState
+        variant="error"
+        title="Sales statistics could not be loaded"
+        description="The chart is temporarily unavailable. Please try again."
+        retryLabel="Retry sales statistics"
+        onRetry={() => setRetry((v) => v + 1)}
+      />
     );
   }
 
@@ -101,7 +91,6 @@ export function PharmacySalesChart({ pharmacyId }: { pharmacyId: string }) {
           month={month}
           onYearChange={setYear}
           onMonthChange={setMonth}
-          showAppliedPeriod
         />
       }
     />

@@ -9,7 +9,7 @@ import {
   buildAdminPaymentRows,
   getMissingPublishedPaymentFields,
   getPublishedPaymentStatus,
-  maskedPaymentValue,
+  displayPaymentValue,
 } from './PharmacyDetailsPageContent/pharmacy-about-payment';
 
 //===================================================================
@@ -57,10 +57,10 @@ const detail: AdminPharmacyDetail = {
 
 //===================================================================
 
-test('14.13 private account numbers are masked and bank rows contain no unmasked identifiers', () => {
-  assert.equal(maskedPaymentValue('taxId', '12345678'), '•••• 5678');
-  assert.equal(maskedPaymentValue('iban', IBAN), 'UA •••• •••• •••• 1111');
-  assert.equal(maskedPaymentValue('iban', ' '), 'Not provided');
+test('14.13 authorized administrators can view full banking identifiers while pending changes remain separate', () => {
+  assert.equal(displayPaymentValue('taxId', '12345678'), '12345678');
+  assert.equal(displayPaymentValue('iban', IBAN), IBAN);
+  assert.equal(displayPaymentValue('iban', ' '), 'Not provided');
 
   const rows = buildAdminPaymentRows(completeBank, {
     iban: ANOTHER_IBAN,
@@ -84,8 +84,9 @@ test('14.13 private account numbers are masked and bank rows contain no unmasked
 
   const safeText = JSON.stringify(rows);
 
-  assert.doesNotMatch(safeText, /12345678|UA1{27}|UA2{27}/);
-  assert.match(safeText, /1111/);
+  assert.match(safeText, /12345678/);
+  assert.match(safeText, /UA1{27}/);
+  assert.match(safeText, /UA2{27}/);
 });
 
 //===================================================================
@@ -148,7 +149,14 @@ test('14.13 description is safe React text, payment tab is read-only and loads o
   assert.match(tab, /current\.description/);
   assert.match(tab, /pending\?\.description !== undefined/);
   assert.match(tab, /<Description value=\{pending\.description\}/);
-  assert.match(tab, /<p className=\{css\.description\}>\{value\}<\/p>/);
+  assert.match(tab, /<MarkdownContent value=\{value\}/);
+
+  const renderer = await read(
+    '../../../../../packages/ui/src/data-display/MarkdownContent/markdown-to-html.ts'
+  );
+
+  assert.match(renderer, /escapeHtml/);
+  assert.match(renderer, /https\?/);
 
   assert.doesNotMatch(
     tab,

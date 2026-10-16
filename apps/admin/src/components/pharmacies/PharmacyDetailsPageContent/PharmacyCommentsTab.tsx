@@ -299,7 +299,7 @@ export function PharmacyCommentsTab({
           commentTitle="Admin comment"
           emptyTitle="No internal comments yet"
           emptyText="Admin employee comments about this pharmacy will appear here."
-          emptyVariant="profile"
+          emptyVariant="resource"
           deletingId={deletingId}
           deleteDisabled={isSaving}
           onDelete={canManage ? setCommentToDelete : undefined}

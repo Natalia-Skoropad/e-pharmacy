@@ -20,6 +20,8 @@ import type {
 
 import { formatMoney } from '@e-pharmacy/utils/money';
 
+import { ProfileResourceState } from '../../profile/ProfileResourceState';
+
 import css from './SalesValueChart.module.css';
 
 //===================================================================
@@ -64,14 +66,18 @@ type ChartSeries = Readonly<{
 
 //===================================================================
 
-function getCategoryColorVar(index: number): string {
-  return `var(--color-chart-series-${(index % SERIES_DASH_PATTERNS.length) + 1})`;
+function getCategoryColorVar(index: number, color?: string): string {
+  return color && /^#[0-9a-fA-F]{6}$/.test(color)
+    ? color
+    : `var(--color-chart-series-${(index % SERIES_DASH_PATTERNS.length) + 1})`;
 }
 
 //===================================================================
 
-function getCategoryFillVar(index: number): string {
-  return `var(--color-chart-series-${(index % SERIES_DASH_PATTERNS.length) + 1}-soft)`;
+function getCategoryFillVar(index: number, color?: string): string {
+  return color && /^#[0-9a-fA-F]{6}$/.test(color)
+    ? `${color}26`
+    : `var(--color-chart-series-${(index % SERIES_DASH_PATTERNS.length) + 1}-soft)`;
 }
 
 //===================================================================
@@ -332,7 +338,12 @@ function SalesValueChart({
               >
                 <span
                   className={css.legendDot}
-                  style={{ backgroundColor: getCategoryColorVar(colorIndex) }}
+                  style={{
+                    backgroundColor: getCategoryColorVar(
+                      colorIndex,
+                      category.color
+                    ),
+                  }}
                   aria-hidden="true"
                 />
                 {categoryLabel}
@@ -381,7 +392,10 @@ function SalesValueChart({
                   <path
                     key={`${item.category.id}-area`}
                     d={item.areaPath}
-                    fill={getCategoryFillVar(item.colorIndex)}
+                    fill={getCategoryFillVar(
+                      item.colorIndex,
+                      item.category.color
+                    )}
                   />
                 ))}
               </g>
@@ -391,7 +405,10 @@ function SalesValueChart({
                   <path
                     key={`${item.category.id}-line`}
                     d={item.linePath}
-                    stroke={getCategoryColorVar(item.colorIndex)}
+                    stroke={getCategoryColorVar(
+                      item.colorIndex,
+                      item.category.color
+                    )}
                     strokeDasharray={
                       SERIES_DASH_PATTERNS[
                         item.colorIndex % SERIES_DASH_PATTERNS.length
@@ -409,7 +426,10 @@ function SalesValueChart({
                       cx={point.x}
                       cy={point.y}
                       r={index === activePointIndex ? 5 : 3.5}
-                      fill={getCategoryColorVar(item.colorIndex)}
+                      fill={getCategoryColorVar(
+                        item.colorIndex,
+                        item.category.color
+                      )}
                     />
                   ))
                 )}
@@ -482,7 +502,10 @@ function SalesValueChart({
                         <span
                           className={css.tooltipDot}
                           style={{
-                            backgroundColor: getCategoryColorVar(colorIndex),
+                            backgroundColor: getCategoryColorVar(
+                              colorIndex,
+                              category.color
+                            ),
                           }}
                           aria-hidden="true"
                         />
@@ -530,14 +553,11 @@ function SalesValueChart({
           </details>
         </>
       ) : (
-        <div className={css.emptyState}>
-          <p className={css.emptyTitle}>
-            No successful sales for this period yet.
-          </p>
-          <p className={css.emptyText}>
-            The chart will appear after orders are marked as successful.
-          </p>
-        </div>
+        <ProfileResourceState
+          variant="empty"
+          title="No successful sales for this period yet"
+          description="The chart will appear after orders are marked as successful."
+        />
       )}
     </section>
   );

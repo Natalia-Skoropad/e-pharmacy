@@ -97,6 +97,7 @@ test('linked pharmacies table exposes canonical owner metrics and keeps status r
     'photo',
     'id',
     'name',
+    'addedProductsCount',
     'activeClientsCount',
     'successfulOrdersCount',
     'successfulRevenue',

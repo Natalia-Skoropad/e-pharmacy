@@ -86,6 +86,8 @@ export const adminPharmacyRegistryListQuerySchema = z.preprocess(
 export const adminPharmacyRegistryOptionsQuerySchema = z
   .object({
     search: searchSchema,
+    ownerId: optionalSchema(mongoIdSchema),
+    pharmacyId: optionalSchema(mongoIdSchema),
     limit: z.coerce.number().int().min(1).max(20).default(10),
   })
 

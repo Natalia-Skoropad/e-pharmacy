@@ -9,3 +9,5 @@ export * from './format-initials';
 
 export { WorkingHours } from './WorkingHours/WorkingHours';
 export type { WorkingHoursProps } from './WorkingHours/WorkingHours';
+
+export { MarkdownContent } from './MarkdownContent/MarkdownContent';

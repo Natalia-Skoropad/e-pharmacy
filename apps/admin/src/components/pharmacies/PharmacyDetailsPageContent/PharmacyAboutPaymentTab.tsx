@@ -1,6 +1,7 @@
 import { FileText, Landmark, LockKeyhole, ShieldCheck } from 'lucide-react';
 
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
+import { MarkdownContent } from '@e-pharmacy/ui/data-display';
 
 import {
   buildAdminPaymentRows,
@@ -18,7 +19,7 @@ type Props = Readonly<{ detail: AdminPharmacyDetail }>;
 
 function Description({ value }: { value: string | null | undefined }) {
   return value?.trim() ? (
-    <p className={css.description}>{value}</p>
+    <MarkdownContent value={value} />
   ) : (
     <p className={css.empty}>No pharmacy description provided.</p>
   );

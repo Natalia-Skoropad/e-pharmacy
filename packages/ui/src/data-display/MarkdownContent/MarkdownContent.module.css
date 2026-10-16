@@ -1,0 +1,61 @@
+.content {
+  min-width: 0;
+  color: var(--color-text-primary);
+  font-size: var(--fz-16);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.content :is(h1, h2, h3, p, ul, ol) {
+  margin: 0 0 12px;
+}
+
+.content :is(h1, h2, h3) {
+  color: var(--color-accent);
+  line-height: var(--lh-heading);
+}
+
+.content h1 {
+  font-size: var(--fz-28);
+}
+
+.content h2 {
+  font-size: var(--fz-24);
+}
+
+.content h3 {
+  font-size: var(--fz-20);
+}
+
+.content :is(ul, ol) {
+  display: grid;
+  gap: 6px;
+  padding-left: 28px;
+}
+
+.content ul {
+  list-style: disc;
+}
+
+.content ol {
+  list-style: decimal;
+}
+
+.content li::marker {
+  color: var(--color-accent);
+  font-weight: var(--fw-bold);
+}
+
+.content a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.content a:hover {
+  color: var(--color-accent-hover);
+}
+
+.content > :last-child {
+  margin-bottom: 0;
+}

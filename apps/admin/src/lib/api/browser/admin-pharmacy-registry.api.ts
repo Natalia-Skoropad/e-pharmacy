@@ -38,6 +38,8 @@ export type AdminPharmacyRegistryQueryParams = Readonly<{
 
 export type AdminPharmacyRegistryOptionsQueryParams = Readonly<{
   search?: string;
+  ownerId?: string;
+  pharmacyId?: string;
   limit?: number;
 }>;
 

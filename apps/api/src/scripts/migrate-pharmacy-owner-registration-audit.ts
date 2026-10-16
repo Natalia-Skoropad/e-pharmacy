@@ -35,6 +35,10 @@ async function migrate(): Promise<void> {
   );
 
   console.log(
+    `Pharmacy-created events: ${result.pharmacyEventsCreated} created, ${result.pharmacyEventsSkipped} already present.`
+  );
+
+  console.log(
     `Registration-document events: ${result.documentEventsCreated} created, ${result.documentEventsSkipped} already present.`
   );
 }

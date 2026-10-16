@@ -45,12 +45,12 @@ test('owner email and phone reserve an independent column for the copy action', 
 
   assert.equal((detail.match(/<CopyButton/g) ?? []).length, 2);
 
-  assert.match(styles, /\.contactValue\s*\{[^}]*display: grid;/s);
+  assert.match(styles, /\.contactValue\s*\{[^}]*display: grid;/);
   assert.match(styles, /grid-template-columns:\s*17px minmax\(0, 1fr\) auto;/);
 
   assert.match(
     styles,
-    /\.detailsList a\.contactText\s*\{[^}]*overflow-wrap: anywhere;/s
+    /\.detailsList a\.contactText\s*\{[^}]*overflow-wrap: anywhere;/
   );
 });
 
@@ -75,7 +75,7 @@ test('linked pharmacy order metrics uses a floating tooltip with hover and focus
 
   assert.match(table, /<OrderMetricsTooltip scope="pharmacy"/);
   assert.match(metrics, /escapeOverflow/);
-  assert.match(styles, /\.tableHeaderWithHelp button\s*\{[^}]*width: 24px;/s);
+  assert.match(styles, /\.tableHeaderWithHelp button\s*\{[^}]*width: 24px;/);
   assert.match(tooltip, /onPointerEnter=\{showFloatingTooltip\}/);
   assert.match(tooltip, /onMouseEnter=\{showFloatingTooltip\}/);
   assert.match(tooltip, /onFocus=\{showFloatingTooltip\}/);

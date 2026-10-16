@@ -3,7 +3,6 @@ import { Types } from 'mongoose';
 import { USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
-import { Product } from '../models/product.model';
 import { User } from '../models/user.model';
 
 import type {
@@ -32,6 +31,7 @@ type OwnerDocument = {
 
 type PharmacyMetricsRow = {
   activeClientsCount: number;
+  addedProductsCount: number;
   successfulOrdersCount: number;
   successfulRevenue: number;
   rating: number;
@@ -225,7 +225,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
   // No N+1: owner and metrics are independent bounded lookups, metrics reuse
   // EXACTLY the Stage 13 owner / Stage 14.4 registry KPI aggregation.
-  const [owner, metricRows, addedProductsCount] = await Promise.all([
+  const [owner, metricRows] = await Promise.all([
     User.findOne({ _id: pharmacy.ownerId, role: USER_ROLES.PHARMACY })
       .select('_id name email phone pictureUrl status')
       .lean<OwnerDocument | null>(),
@@ -234,8 +234,6 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       { $match: { _id } },
       ...buildPagedPharmacyItemsPipeline(0, 1),
     ]),
-
-    Product.countDocuments({ pharmacyId: _id }),
   ]);
 
   const metrics = metricRows[0];
@@ -300,7 +298,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       activeClientsCount: metrics.activeClientsCount,
       successfulOrdersCount: metrics.successfulOrdersCount,
       successfulRevenue: metrics.successfulRevenue,
-      addedProductsCount,
+      addedProductsCount: metrics.addedProductsCount,
       rating: metrics.rating,
       reviewsCount: metrics.reviewsCount,
     },
@@ -319,6 +317,7 @@ export async function getAdminPharmacySalesStatisticsService(
   }
 
   const exists = await Pharmacy.exists({ _id: new Types.ObjectId(pharmacyId) });
+
   if (!exists) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found.');
   }

@@ -52,22 +52,14 @@ function canonicalSensitive(value: string): string {
 
 //===================================================================
 
-/** Account identifiers must never be included in rendered text or attributes. */
-export function maskedPaymentValue(
-  field: PaymentField,
+/** Admin-only read view: do not mask authorized published/submitted identifiers. */
+export function displayPaymentValue(
+  _field: PaymentField,
   value: string | null | undefined
 ): string {
   const clean = normalized(value);
 
-  if (!clean) return 'Not provided';
-  if (field !== 'iban' && field !== 'taxId') return clean;
-
-  const canonical = canonicalSensitive(clean);
-  const lastFour = canonical.length >= 4 ? canonical.slice(-4) : '';
-
-  return field === 'iban'
-    ? `UA •••• •••• •••• ${lastFour || '••••'}`
-    : `•••• ${lastFour || '••••'}`;
+  return clean || 'Not provided';
 }
 
 //===================================================================
@@ -91,7 +83,7 @@ function formatIssue(field: PaymentField, value: string | null | undefined) {
 
 //===================================================================
 
-/** Build only display-safe rows; never place raw account numbers in UI props. */
+/** Values are restricted to the Admin-only detail API; never write them into audit logs. */
 export function buildAdminPaymentRows(
   current: EditablePharmacyBankDetails | undefined,
   pending?: PendingBankDetails
@@ -106,7 +98,7 @@ export function buildAdminPaymentRows(
     return {
       key,
       label,
-      published: maskedPaymentValue(key, published),
+      published: displayPaymentValue(key, published),
       ...(formatIssue(key, published)
         ? { publishedFormatIssue: formatIssue(key, published) }
         : {}),
@@ -114,8 +106,9 @@ export function buildAdminPaymentRows(
       ...(wasSubmitted
         ? {
             submitted: normalized(proposed)
-              ? maskedPaymentValue(key, proposed)
+              ? displayPaymentValue(key, proposed)
               : 'Will be cleared',
+
             changed:
               (key === 'iban' || key === 'taxId'
                 ? canonicalSensitive(normalized(published))
@@ -123,6 +116,7 @@ export function buildAdminPaymentRows(
               (key === 'iban' || key === 'taxId'
                 ? canonicalSensitive(normalized(proposed))
                 : normalized(proposed)),
+
             ...(formatIssue(key, proposed)
               ? { submittedFormatIssue: formatIssue(key, proposed) }
               : {}),

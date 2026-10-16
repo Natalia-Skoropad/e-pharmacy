@@ -100,9 +100,11 @@ const SESSION_ABSOLUTE_TTL_MS = parseDurationMs(
 
 function signRefreshTokenValue(sessionId: string, secret: string): string {
   const payload = `${REFRESH_TOKEN_VERSION}.${sessionId}.${secret}`;
+
   const signature = createHmac('sha256', env.JWT_SECRET)
     .update(payload)
     .digest('hex');
+
   return `${payload}.${signature}`;
 }
 
@@ -149,6 +151,7 @@ function getSignedRefreshTokenSessionId(token: string): string | null {
   const expected = createHmac('sha256', env.JWT_SECRET)
     .update(`${version}.${sessionId}.${secret}`)
     .digest();
+
   const received = Buffer.from(signature, 'hex');
 
   if (
@@ -197,7 +200,9 @@ function sanitizeSessionContext(context?: SessionContext): SessionContext {
     ...(context?.userAgent
       ? { userAgent: context.userAgent.slice(0, 500) }
       : {}),
+
     ...(context?.ip ? { ip: context.ip.slice(0, 80) } : {}),
+
     ...(context?.deviceName
       ? { deviceName: context.deviceName.slice(0, 120) }
       : {}),
@@ -232,6 +237,7 @@ async function ensurePhoneIsAvailable(
       HTTP_STATUS.CONFLICT,
       API_MESSAGES.PHONE_IN_USE,
       undefined,
+
       AUTH_ERROR_CODES.PHONE_CONFLICT
     );
   }
@@ -303,6 +309,7 @@ export async function registerUserService(
       HTTP_STATUS.CONFLICT,
       API_MESSAGES.EMAIL_IN_USE,
       undefined,
+
       AUTH_ERROR_CODES.EMAIL_CONFLICT
     );
   }
@@ -378,13 +385,39 @@ export async function registerUserService(
             scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
             scopeEntityId: String(createdUser._id),
             before: {},
+
             after: {
               status: createdUser.status,
               name: createdUser.name,
               email: createdUser.email,
               phone: createdUser.phone,
             },
+
             changedFields: ['status', 'name', 'email', 'phone'],
+            requestId: registrationAuditRequestId,
+            session: mongoSession,
+          });
+
+          // The owner account event is not a pharmacy creation event. Record
+          // both independently so the pharmacy detail Activity tab is populated
+          // even when no registration documents were uploaded.
+          await appendAdminAuditLog({
+            actorUserId: String(createdUser._id),
+            action: ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED,
+            section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
+            entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
+            entityId: String(createdPharmacy._id),
+            entityLabel: createdPharmacy.name?.trim() || createdUser.email,
+            scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+            scopeEntityId: String(createdUser._id),
+            before: {},
+
+            after: {
+              status: createdPharmacy.status,
+              ownerId: String(createdUser._id),
+            },
+
+            changedFields: ['status', 'ownerId'],
             requestId: registrationAuditRequestId,
             session: mongoSession,
           });
@@ -392,14 +425,17 @@ export async function registerUserService(
           if (documents.length > 0) {
             await appendAdminAuditLog({
               actorUserId: String(createdUser._id),
+
               action:
                 ADMIN_AUDIT_ACTIONS.PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED,
+
               section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
               entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
               entityId: String(createdPharmacy._id),
               entityLabel: createdUser.email,
               scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
               scopeEntityId: String(createdUser._id),
+
               before: {
                 registrationDocuments: [],
                 documentCount: 0,
@@ -407,20 +443,25 @@ export async function registerUserService(
                 documentSizesBytes: [],
                 totalDocumentSizeBytes: 0,
               },
+
               after: {
                 registrationDocuments: documents.map(
                   (document) => document.name
                 ),
+
                 documentCount: documents.length,
                 documentMimeTypes: documents.map((document) => document.type),
+
                 documentSizesBytes: documents.map((document) =>
                   String(document.size)
                 ),
+
                 totalDocumentSizeBytes: documents.reduce(
                   (total, document) => total + document.size,
                   0
                 ),
               },
+
               changedFields: [
                 'registrationDocuments',
                 'documentCount',
@@ -428,6 +469,7 @@ export async function registerUserService(
                 'documentSizesBytes',
                 'totalDocumentSizeBytes',
               ],
+
               requestId: registrationAuditRequestId,
               session: mongoSession,
             });
@@ -442,6 +484,7 @@ export async function registerUserService(
         HTTP_STATUS.CONFLICT,
         API_MESSAGES.EMAIL_IN_USE,
         undefined,
+
         AUTH_ERROR_CODES.EMAIL_CONFLICT
       );
     }
@@ -451,6 +494,7 @@ export async function registerUserService(
         HTTP_STATUS.CONFLICT,
         API_MESSAGES.PHONE_IN_USE,
         undefined,
+
         AUTH_ERROR_CODES.PHONE_CONFLICT
       );
     }
@@ -479,6 +523,7 @@ export async function registerUserService(
       HTTP_STATUS.INTERNAL_SERVER_ERROR,
       API_MESSAGES.REGISTRATION_SESSION_FAILED,
       undefined,
+
       AUTH_ERROR_CODES.REGISTRATION_SESSION_FAILED
     );
   }
@@ -491,8 +536,10 @@ export async function loginUserService(
   context?: SessionContext
 ): Promise<AuthSessionResult> {
   const user = await User.findOne({ email: input.email }).select('+password');
+
   const passwordHash =
     user && !user.isDefaultPharmacyClient ? user.password : DUMMY_PASSWORD_HASH;
+
   const isPasswordValid = await comparePassword(input.password, passwordHash);
 
   // Do not expose whether an email exists or which application owns it.
@@ -508,6 +555,7 @@ export async function loginUserService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_CREDENTIALS,
       undefined,
+
       AUTH_ERROR_CODES.INVALID_CREDENTIALS
     );
   }
@@ -519,6 +567,7 @@ export async function loginUserService(
       HTTP_STATUS.FORBIDDEN,
       API_MESSAGES.USER_BLOCKED,
       undefined,
+
       AUTH_ERROR_CODES.USER_BLOCKED
     );
   }
@@ -562,6 +611,7 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -571,6 +621,7 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_REVOKED
     );
   }
@@ -582,6 +633,7 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -610,6 +662,7 @@ export async function refreshAuthSessionService(
         HTTP_STATUS.UNAUTHORIZED,
         API_MESSAGES.INVALID_TOKEN,
         undefined,
+
         AUTH_ERROR_CODES.SESSION_INVALID
       );
     }
@@ -629,6 +682,7 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_REVOKED
     );
   }
@@ -644,6 +698,7 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -660,6 +715,7 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.USER_NOT_FOUND,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -680,13 +736,16 @@ export async function refreshAuthSessionService(
       HTTP_STATUS.FORBIDDEN,
       API_MESSAGES.USER_BLOCKED,
       undefined,
+
       AUTH_ERROR_CODES.USER_BLOCKED
     );
   }
 
   const safeContext = sanitizeSessionContext(context);
+
   const sessionContextUpdate = {
     lastUsedAt: now,
+
     ...(safeContext.userAgent ? { userAgent: safeContext.userAgent } : {}),
     ...(safeContext.ip ? { ip: safeContext.ip } : {}),
     ...(safeContext.deviceName ? { deviceName: safeContext.deviceName } : {}),
@@ -696,6 +755,7 @@ export async function refreshAuthSessionService(
     refreshToken,
     String(session._id)
   );
+
   let effectiveSession = session;
 
   if (matchesCurrentToken) {
@@ -703,6 +763,7 @@ export async function refreshAuthSessionService(
       absoluteExpiresAt,
       now.getTime()
     );
+
     const previousRefreshTokenValidUntil = new Date(
       Math.min(
         now.getTime() + REFRESH_TOKEN_ROTATION_GRACE_MS,
@@ -752,6 +813,7 @@ export async function refreshAuthSessionService(
           HTTP_STATUS.UNAUTHORIZED,
           API_MESSAGES.INVALID_TOKEN,
           undefined,
+
           AUTH_ERROR_CODES.SESSION_INVALID
         );
       }
@@ -781,6 +843,7 @@ export async function refreshAuthSessionService(
         HTTP_STATUS.UNAUTHORIZED,
         API_MESSAGES.INVALID_TOKEN,
         undefined,
+
         AUTH_ERROR_CODES.SESSION_REVOKED
       );
     }
@@ -803,6 +866,7 @@ export async function refreshAuthSessionService(
       accessToken,
       refreshToken: rotatedRefreshToken,
       accessTokenExpiresIn: ACCESS_TOKEN_TTL_SECONDS,
+
       refreshTokenExpiresIn: getRefreshTokenExpiresInSeconds(
         effectiveSession.expiresAt
       ),
@@ -850,14 +914,17 @@ export async function revokeAllUserSessionsByRefreshTokensService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
 
   const now = new Date();
+
   const activeSession = await Session.findOne({
     revokedAt: undefined,
     expiresAt: { $gt: now },
+
     $and: [
       {
         $or: [
@@ -879,6 +946,7 @@ export async function revokeAllUserSessionsByRefreshTokensService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -933,6 +1001,7 @@ export async function assertActiveSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -942,6 +1011,7 @@ export async function assertActiveSessionService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.INVALID_TOKEN,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_REVOKED
     );
   }
@@ -1073,6 +1143,7 @@ export async function resetPasswordService(
           HTTP_STATUS.BAD_REQUEST,
           API_MESSAGES.PASSWORD_RESET_TOKEN_INVALID,
           undefined,
+
           AUTH_ERROR_CODES.RESET_TOKEN_INVALID
         );
       }
@@ -1100,6 +1171,7 @@ export async function getUserByIdService(
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.USER_NOT_FOUND,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -1109,6 +1181,7 @@ export async function getUserByIdService(
       HTTP_STATUS.FORBIDDEN,
       API_MESSAGES.USER_BLOCKED,
       undefined,
+
       AUTH_ERROR_CODES.USER_BLOCKED
     );
   }
@@ -1151,6 +1224,7 @@ async function updatePharmacyOwnerUserProfileWithAudit(
           HTTP_STATUS.UNAUTHORIZED,
           API_MESSAGES.USER_NOT_FOUND,
           undefined,
+
           AUTH_ERROR_CODES.SESSION_INVALID
         );
       }
@@ -1160,6 +1234,7 @@ async function updatePharmacyOwnerUserProfileWithAudit(
           HTTP_STATUS.CONFLICT,
           'Profile changed in another session. Reload the latest data and try again.',
           undefined,
+
           AUTH_ERROR_CODES.PROFILE_CONFLICT
         );
       }
@@ -1341,6 +1416,7 @@ export async function updateUserProfileService(
           HTTP_STATUS.CONFLICT,
           'Profile changed in another session. Reload the latest data and try again.',
           undefined,
+
           AUTH_ERROR_CODES.PROFILE_CONFLICT
         );
       }
@@ -1349,6 +1425,7 @@ export async function updateUserProfileService(
         HTTP_STATUS.UNAUTHORIZED,
         API_MESSAGES.USER_NOT_FOUND,
         undefined,
+
         AUTH_ERROR_CODES.SESSION_INVALID
       );
     }
@@ -1360,6 +1437,7 @@ export async function updateUserProfileService(
         HTTP_STATUS.CONFLICT,
         API_MESSAGES.PHONE_IN_USE,
         undefined,
+
         AUTH_ERROR_CODES.PHONE_CONFLICT
       );
     }
@@ -1388,6 +1466,7 @@ export async function updateUserPasswordService(
           HTTP_STATUS.UNAUTHORIZED,
           API_MESSAGES.USER_NOT_FOUND,
           undefined,
+
           AUTH_ERROR_CODES.SESSION_INVALID
         );
       }
@@ -1402,11 +1481,13 @@ export async function updateUserPasswordService(
           HTTP_STATUS.UNAUTHORIZED,
           'Current password is incorrect',
           undefined,
+
           AUTH_ERROR_CODES.INVALID_CREDENTIALS
         );
       }
 
       user.password = hashedPassword;
+
       await user.save({ session });
       await revokeAllUserSessionsService(userId, 'password_changed', session);
     });
@@ -1426,6 +1507,7 @@ export async function getActiveSessionsService(
     userId,
     revokedAt: undefined,
     expiresAt: { $gt: now },
+
     $or: [
       { absoluteExpiresAt: { $gt: now } },
       { absoluteExpiresAt: { $exists: false } },
@@ -1437,13 +1519,17 @@ export async function getActiveSessionsService(
   return {
     sessions: sessions.map((session) => ({
       id: String(session._id),
+
       ...(session.deviceName ? { deviceName: session.deviceName } : {}),
       ...(session.userAgent ? { userAgent: session.userAgent } : {}),
       ...(session.ip ? { ip: session.ip } : {}),
+
       roleAtLogin: session.roleAtLogin,
+
       ...(session.createdAt
         ? { createdAt: session.createdAt.toISOString() }
         : {}),
+
       lastUsedAt: session.lastUsedAt.toISOString(),
       expiresAt: session.expiresAt.toISOString(),
       isCurrent: String(session._id) === currentSessionId,
@@ -1473,6 +1559,7 @@ export async function revokeUserSessionService(
       HTTP_STATUS.NOT_FOUND,
       'Active session was not found.',
       undefined,
+
       AUTH_ERROR_CODES.RESOURCE_NOT_FOUND
     );
   }

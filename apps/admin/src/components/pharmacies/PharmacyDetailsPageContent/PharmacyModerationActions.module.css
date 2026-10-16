@@ -1,5 +1,6 @@
 .menuWrapper {
   position: relative;
+  display: inline-grid;
   min-width: 0;
 }
 
@@ -16,9 +17,9 @@
   right: 0;
   display: grid;
   gap: 4px;
-  width: max-content;
-  min-width: 210px;
-  max-width: min(340px, 90vw);
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
   padding: 6px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
