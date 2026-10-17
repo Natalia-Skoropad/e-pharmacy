@@ -31,6 +31,39 @@ const item = {
 
 //===================================================================
 
+test('backfilled pharmacy-created audit entries remain parseable in all Activity history views', () => {
+  const created = {
+    ...item,
+    action: 'pharmacy.created',
+    section: 'pharmacies',
+    entityType: 'pharmacy',
+    changedFields: ['name', 'status'],
+  };
+
+  const parsed = parseAdminAuditListResponse({
+    items: [created],
+    page: 1,
+    perPage: 20,
+    total: 1,
+    totalPages: 1,
+    earliestCreatedAt: '2026-09-24',
+    availableActions: ['pharmacy.created'],
+    availableSections: ['pharmacies'],
+  });
+
+  assert.equal(parsed.items[0]?.action, 'pharmacy.created');
+  assert.deepEqual(parsed.availableActions, ['pharmacy.created']);
+
+  assert.equal(
+    getAdminAuditActionLabel(parsed.items[0]!.action),
+    'Pharmacy created'
+  );
+
+  assert.equal(getAdminAuditChangeTone(parsed.items[0]!), 'success');
+});
+
+//===================================================================
+
 test('audit list parser accepts the canonical paginated contract', () => {
   assert.equal(
     parseAdminAuditListResponse({
@@ -57,6 +90,7 @@ test('audit list parser keeps status transition metadata and reason text', () =>
         reason: 'Verification documents expired.',
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 1,
@@ -81,6 +115,7 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
         entityType: 'adminEmployee',
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 1,
@@ -102,6 +137,7 @@ test('audit list parser accepts canonical Stage 10 profile and document actions'
         entityType: 'adminEmployeeDocument',
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 1,
@@ -136,6 +172,7 @@ test('audit parser accepts pharmacy owner lifecycle events', () => {
         changedFields: ['status'],
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 1,
@@ -185,6 +222,7 @@ test('audit parser accepts owner account creation and registration document even
         changedFields: ['documentCount', 'registrationDocuments'],
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 2,
@@ -239,6 +277,7 @@ test('audit parser accepts reserved owner document and comment actions', () => {
         changedFields: ['text'],
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 2,
@@ -262,6 +301,7 @@ test('audit parser rejects a partial owner scope', () => {
             scopeEntityType: 'pharmacyOwner',
           },
         ],
+
         page: 1,
         perPage: 20,
         total: 1,
@@ -466,6 +506,7 @@ test('audit list parser renders product-category and position dictionary events'
         changedFields: ['exists', 'name'],
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 2,

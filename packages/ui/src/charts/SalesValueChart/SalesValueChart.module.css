@@ -349,3 +349,8 @@
   color: var(--color-text-primary);
   background-color: var(--color-background);
 }
+
+.contentState {
+  display: grid;
+  min-height: 220px;
+}

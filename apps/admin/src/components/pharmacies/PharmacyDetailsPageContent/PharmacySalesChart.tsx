@@ -58,32 +58,33 @@ export function PharmacySalesChart({ pharmacyId }: { pharmacyId: string }) {
     return () => controller.abort();
   }, [pharmacyId, year, month, retry, key]);
 
-  if (!current) {
-    return (
-      <ProfileResourceState
-        variant="loading"
-        title="Loading pharmacy sales statistics"
-        description="The pharmacy sales chart is being loaded."
-      />
-    );
-  }
-
-  if (current.error || !current.data) {
-    return (
-      <ProfileResourceState
-        variant="error"
-        title="Sales statistics could not be loaded"
-        description="The chart is temporarily unavailable. Please try again."
-        retryLabel="Retry sales statistics"
-        onRetry={() => setRetry((v) => v + 1)}
-      />
-    );
-  }
+  const contentState = !current ? (
+    <ProfileResourceState
+      variant="loading"
+      title="Loading pharmacy sales statistics"
+      description="The pharmacy sales chart is being loaded."
+    />
+  ) : current.error || !current.data ? (
+    <ProfileResourceState
+      variant="error"
+      title="Sales statistics could not be loaded"
+      description="The chart is temporarily unavailable. Please try again."
+      retryLabel="Retry sales statistics"
+      onRetry={() => setRetry((v) => v + 1)}
+    />
+  ) : null;
 
   return (
     <SalesValueChart
-      key={`${pharmacyId}:${year}:${month}`}
-      data={current.data}
+      data={
+        current?.data ?? {
+          currency: '₴',
+          groupBy: 'month',
+          categories: [],
+          points: [],
+        }
+      }
+      contentState={contentState}
       headerContent={
         <SalesPeriodFilters
           idPrefix="admin-pharmacy-sales"

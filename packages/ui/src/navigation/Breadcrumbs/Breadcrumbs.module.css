@@ -43,6 +43,25 @@
   white-space: nowrap;
 }
 
+/* Client breadcrumbs keep the animated underline only on the text. */
+.linkText::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -3px;
+  left: 0;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-base);
+}
+
+.link:hover .linkText::after,
+.link:focus-visible .linkText::after {
+  transform: scaleX(1);
+}
+
 .link:hover .linkText,
 .link:focus-visible .linkText {
   color: var(--color-accent);
@@ -56,6 +75,12 @@
   display: inline-flex;
   flex-shrink: 0;
   color: var(--color-text-primary);
+  transition: color var(--transition-base);
+}
+
+.link:hover .icon,
+.link:focus-visible .icon {
+  color: var(--color-accent);
 }
 
 .current {

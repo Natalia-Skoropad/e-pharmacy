@@ -17,7 +17,7 @@ test('14.16: Activity is mounted only on the pharmacy tab with exact pharmacy-sc
     read('../../../../api/src/services/admin-pharmacy-activity.service.ts'),
   ]);
 
-  assert.match(shell, /activeTab === 'activity' && detail/);
+  assert.match(shell, /activeTab === 'activity' \?/);
   assert.match(shell, /<PharmacyActivityTab\s+key=\{pharmacyId\}/);
   assert.match(panel, /<ActivityHistory\s+scopePharmacyId=\{pharmacyId\}/);
 

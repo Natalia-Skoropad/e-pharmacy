@@ -19,6 +19,7 @@ import type {
 //===================================================================
 
 const ACTION_LABELS: Record<AdminAuditAction, string> = {
+  'pharmacy.created': 'Pharmacy created',
   'pharmacy.status.changed': 'Pharmacy status changed',
   'pharmacy.reactivation.reviewed': 'Pharmacy reactivation reviewed',
   'pharmacy.profile.updated': 'Pharmacy profile updated',
@@ -71,6 +72,7 @@ type KnownAuditStatus = keyof typeof STATUS_PRESENTATION_BY_VALUE;
 //===================================================================
 
 const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
+  'pharmacy.created',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
   'admin.platformOwner.granted',
@@ -331,6 +333,7 @@ export function getAdminAuditPageLocation(
           item.entityType === 'adminEmployee'
             ? item.entityLabelSnapshot
             : 'Employee profile',
+
         href: `${ADMIN_ROUTES.SETTINGS_EMPLOYEES}/${encodeURIComponent(employeeId)}`,
       };
   }

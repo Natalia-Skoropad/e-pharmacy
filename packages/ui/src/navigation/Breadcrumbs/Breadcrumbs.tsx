@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, House } from 'lucide-react';
 
 import type { BreadcrumbItem } from '../types';
 
@@ -61,7 +61,10 @@ function Breadcrumbs({
       <BreadcrumbTrail
         items={items}
         ariaLabel={ariaLabel}
-        leadingIcon={homeIcon}
+        leadingIcon={
+          homeIcon ??
+          (items[0]?.label === 'Home' ? <House size={15} /> : undefined)
+        }
         separatorIcon={separatorIcon ?? <ChevronRight size={14} />}
         renderLink={renderLink}
         classNames={{

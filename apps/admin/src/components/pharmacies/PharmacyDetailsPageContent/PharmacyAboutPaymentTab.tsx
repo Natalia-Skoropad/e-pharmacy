@@ -52,8 +52,7 @@ export function PharmacyAboutPaymentTab({ detail }: Props) {
           </div>
         </div>
 
-        <div className={css.copySection}>
-          <h4>Published description</h4>
+        <div className={css.descriptionPanel}>
           <Description value={current.description} />
         </div>
 
@@ -117,7 +116,10 @@ export function PharmacyAboutPaymentTab({ detail }: Props) {
         </div>
 
         <div className={css.copySection}>
-          <h4>Published payment details</h4>
+          <div className={css.subheading}>
+            <h4>Approved bank details</h4>
+            <span>Published data</span>
+          </div>
           <dl className={css.details}>
             {rows.map((row) => (
               <div key={row.key} className={css.field}>

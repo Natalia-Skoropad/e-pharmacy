@@ -21,14 +21,14 @@ test('14.15: only the selected tab mounts its own lazy private resource', async 
     './PharmacyDetailsPageContent/PharmacyCommentsTab.tsx'
   );
 
-  assert.match(page, /activeTab === 'documents' && detail/);
+  assert.match(page, /activeTab === 'documents' \?/);
 
   assert.match(
     page,
     /<PharmacyDocumentsTab key=\{pharmacyId\} pharmacyId=\{pharmacyId\}/
   );
 
-  assert.match(page, /activeTab === 'comments' && detail/);
+  assert.match(page, /activeTab === 'comments' \?/);
 
   assert.match(
     page,
@@ -116,6 +116,7 @@ test('14.15: pharmacy comments reuse shared UI and are scoped, audited, idempote
   ]) {
     assert.match(notes, new RegExp(`<${component}\\b`));
   }
+
   assert.match(notes, /COMMENT_MAX_LENGTH = 1000/);
   assert.match(notes, /existing\?\.text === text/);
   assert.match(notes, /clientRequestId: createRequestId\(\)/);

@@ -138,9 +138,9 @@ test('14.17: only the active resource tab loads; future tabs remain informationa
     read('../../lib/api/browser/admin-pharmacy-detail.api.ts'),
   ]);
 
-  assert.match(detailUi, /activeTab === 'documents' && detail/);
-  assert.match(detailUi, /activeTab === 'comments' && detail/);
-  assert.match(detailUi, /activeTab === 'activity' && detail/);
+  assert.match(detailUi, /activeTab === 'documents' \?/);
+  assert.match(detailUi, /activeTab === 'comments' \?/);
+  assert.match(detailUi, /activeTab === 'activity' \?/);
   assert.match(detailUi, /DEFERRED_TABS\[activeTab\]/);
 
   assert.doesNotMatch(

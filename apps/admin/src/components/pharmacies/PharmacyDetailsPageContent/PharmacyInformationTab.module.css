@@ -12,6 +12,15 @@
   align-items: start;
 }
 
+.secondaryGrid {
+  align-items: stretch;
+}
+
+.secondaryGrid > .sectionCard {
+  height: 100%;
+  align-content: start;
+}
+
 .sectionCard,
 .photoCard,
 .statusSummary {
@@ -129,11 +138,14 @@
   gap: 6px;
   max-width: 100%;
   overflow-wrap: anywhere;
-  color: var(--color-accent);
+  color: var(--color-text-primary);
+  text-decoration: none;
 }
 
-.detailField dd a:hover {
-  text-decoration: underline;
+.detailField dd a:hover,
+.detailField dd a:focus-visible {
+  color: var(--color-text-primary);
+  text-decoration: none;
 }
 
 .hoursList {
@@ -277,7 +289,7 @@
   }
 }
 
-@media only screen and (min-width: 1200px) {
+@media only screen and (min-width: 1440px) {
   .identityGrid {
     grid-template-columns: minmax(230px, 0.35fr) minmax(0, 0.65fr);
     align-items: stretch;
@@ -310,7 +322,14 @@
   min-width: 0;
 }
 
+.contactValue > svg {
+  color: var(--color-accent);
+  flex: 0 0 auto;
+}
+
 .contactValue .contactText {
+  color: var(--color-text-primary);
+  text-decoration: none;
   display: block;
   min-width: 0;
   overflow-wrap: anywhere;

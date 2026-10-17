@@ -448,7 +448,21 @@ export function PharmacyDetailsPageContent({
                 icon={selectedTab.icon ?? <Building2 size={22} />}
               />
             ) : null}
-            {isLoading ? (
+            {activeTab === 'documents' ? (
+              <PharmacyDocumentsTab key={pharmacyId} pharmacyId={pharmacyId} />
+            ) : activeTab === 'comments' ? (
+              <PharmacyCommentsTab
+                key={pharmacyId}
+                pharmacyId={pharmacyId}
+                canManage={canEditPharmacy}
+              />
+            ) : activeTab === 'activity' ? (
+              <PharmacyActivityTab
+                key={pharmacyId}
+                pharmacyId={pharmacyId}
+                initialState={initialActivityState}
+              />
+            ) : isLoading ? (
               <ProfileResourceState
                 variant="loading"
                 title="Loading pharmacy details"
@@ -461,20 +475,6 @@ export function PharmacyDetailsPageContent({
               />
             ) : activeTab === 'about-payment' && detail ? (
               <PharmacyAboutPaymentTab detail={detail} />
-            ) : activeTab === 'documents' && detail ? (
-              <PharmacyDocumentsTab key={pharmacyId} pharmacyId={pharmacyId} />
-            ) : activeTab === 'comments' && detail ? (
-              <PharmacyCommentsTab
-                key={pharmacyId}
-                pharmacyId={pharmacyId}
-                canManage={canEditPharmacy}
-              />
-            ) : activeTab === 'activity' && detail ? (
-              <PharmacyActivityTab
-                key={pharmacyId}
-                pharmacyId={pharmacyId}
-                initialState={initialActivityState}
-              />
             ) : deferredTab ? (
               <ProfileResourceState
                 variant="empty"

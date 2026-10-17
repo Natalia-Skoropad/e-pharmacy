@@ -74,15 +74,22 @@
   transition: opacity var(--transition-base);
 }
 
+/* Cabinet links must not inherit TextActionButton's animated underline. */
+.pathNav .link::after,
+.pathNav .link:hover::after,
+.pathNav .link:focus-visible::after {
+  content: none;
+}
+
 .link:hover,
 .link:focus-visible {
+  color: var(--color-accent-light);
   opacity: 1;
 }
 
 .link:focus-visible {
   outline: none;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  text-decoration: none;
 }
 
 .current {

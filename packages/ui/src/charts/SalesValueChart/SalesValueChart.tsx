@@ -10,6 +10,7 @@ import {
 } from 'react';
 
 import clsx from 'clsx';
+import { ChartNoAxesCombined } from 'lucide-react';
 
 import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
@@ -19,7 +20,6 @@ import type {
 } from '@e-pharmacy/types/orders';
 
 import { formatMoney } from '@e-pharmacy/utils/money';
-
 import { ProfileResourceState } from '../../profile/ProfileResourceState';
 
 import css from './SalesValueChart.module.css';
@@ -54,6 +54,8 @@ export type SalesValueChartProps = Readonly<{
   description?: string;
   categoryControlsLabel?: string;
   headerContent?: ReactNode;
+  /** Replaces only the graph body while data is loading or unavailable. */
+  contentState?: ReactNode;
 }>;
 
 type ChartSeries = Readonly<{
@@ -150,6 +152,7 @@ function getVisibleTickIndexes(pointsLength: number): Set<number> {
   }
 
   tickIndexes.add(pointsLength - 1);
+
   return tickIndexes;
 }
 
@@ -180,6 +183,7 @@ function SalesValueChart({
   description = 'Lines show successful sales grouped by sold product categories for the selected period.',
   categoryControlsLabel = 'Product categories shown on the chart',
   headerContent,
+  contentState,
 }: SalesValueChartProps) {
   const titleId = useId();
   const summaryId = useId();
@@ -311,7 +315,7 @@ function SalesValueChart({
         </div>
       </div>
 
-      {data.categories.length > 0 ? (
+      {!contentState && data.categories.length > 0 ? (
         <div
           className={css.categoryControls}
           role="group"
@@ -353,7 +357,9 @@ function SalesValueChart({
         </div>
       ) : null}
 
-      {hasData ? (
+      {contentState ? (
+        <div className={css.contentState}>{contentState}</div>
+      ) : hasData ? (
         <>
           <div
             className={css.chartWrap}
@@ -555,6 +561,7 @@ function SalesValueChart({
       ) : (
         <ProfileResourceState
           variant="empty"
+          icon={<ChartNoAxesCombined size={23} aria-hidden="true" />}
           title="No successful sales for this period yet"
           description="The chart will appear after orders are marked as successful."
         />
