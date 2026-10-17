@@ -138,18 +138,22 @@ test('14.13 validates the IBAN/Tax ID presentation but does not publish submitte
 
 //===================================================================
 
-test('14.13 description is safe React text, payment tab is read-only and loads only when selected', async () => {
-  const [shell, tab] = await Promise.all([
+test('14.13 pharmacy description and bank details render in independent read-only tabs', async () => {
+  const [shell, about, payment] = await Promise.all([
     read('./PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'),
-    read('./PharmacyDetailsPageContent/PharmacyAboutPaymentTab.tsx'),
+    read('./PharmacyDetailsPageContent/PharmacyAboutTab.tsx'),
+    read('./PharmacyDetailsPageContent/PharmacyPaymentTab.tsx'),
   ]);
 
-  assert.match(shell, /activeTab === 'about-payment' && detail/);
-  assert.match(shell, /<PharmacyAboutPaymentTab detail=\{detail\}/);
-  assert.match(tab, /current\.description/);
-  assert.match(tab, /pending\?\.description !== undefined/);
-  assert.match(tab, /<Description value=\{pending\.description\}/);
-  assert.match(tab, /<MarkdownContent value=\{value\}/);
+  assert.match(shell, /activeTab === 'about' && detail/);
+  assert.match(shell, /activeTab === 'payment' && detail/);
+  assert.match(shell, /<PharmacyAboutTab detail=\{detail\}/);
+  assert.match(shell, /<PharmacyPaymentTab detail=\{detail\}/);
+  assert.doesNotMatch(shell, /about-payment/);
+  assert.match(about, /current\.description/);
+  assert.match(about, /pending\?\.description !== undefined/);
+  assert.match(about, /<Description value=\{pending\.description\}/);
+  assert.match(about, /<MarkdownContent value=\{value\}/);
 
   const renderer = await read(
     '../../../../../packages/ui/src/data-display/MarkdownContent/markdown-to-html.ts'
@@ -158,12 +162,14 @@ test('14.13 description is safe React text, payment tab is read-only and loads o
   assert.match(renderer, /escapeHtml/);
   assert.match(renderer, /https\?/);
 
-  assert.doesNotMatch(
-    tab,
-    /dangerouslySetInnerHTML|innerHTML|<input|<textarea|<form|fetch\(|updateAdminPharmacy/
-  );
+  for (const tab of [about, payment]) {
+    assert.doesNotMatch(
+      tab,
+      /dangerouslySetInnerHTML|innerHTML|<input|<textarea|<form|fetch\(|updateAdminPharmacy/
+    );
+  }
 
-  assert.match(tab, /getPublishedPaymentStatus\(detail\)/);
+  assert.match(payment, /getPublishedPaymentStatus\(detail\)/);
 });
 
 //===================================================================

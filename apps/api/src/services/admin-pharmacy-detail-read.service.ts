@@ -3,6 +3,11 @@ import { Types } from 'mongoose';
 import { USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
+import { Order } from '../models/order.model';
+import { ProductRequest } from '../models/productRequest.model';
+import { PharmacyAdminComment } from '../models/pharmacyAdminComment.model';
+import { AdminAuditLog } from '../models/adminAuditLog.model';
+import { buildPharmacyAuditScopeFilter } from './admin-audit.service';
 import { User } from '../models/user.model';
 
 import type {
@@ -124,6 +129,7 @@ function publishedData(pharmacy: DetailDocument) {
 
   return {
     name: pharmacy.name, // An onboarding pharmacy may have an empty name.
+
     ...(pharmacy.location
       ? { location: serializeLocation(pharmacy.location) }
       : {}),
@@ -225,7 +231,14 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
   // No N+1: owner and metrics are independent bounded lookups, metrics reuse
   // EXACTLY the Stage 13 owner / Stage 14.4 registry KPI aggregation.
-  const [owner, metricRows] = await Promise.all([
+  const [
+    owner,
+    metricRows,
+    commentsCount,
+    ordersCount,
+    productRequestsCount,
+    activityCount,
+  ] = await Promise.all([
     User.findOne({ _id: pharmacy.ownerId, role: USER_ROLES.PHARMACY })
       .select('_id name email phone pictureUrl status')
       .lean<OwnerDocument | null>(),
@@ -234,6 +247,11 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       { $match: { _id } },
       ...buildPagedPharmacyItemsPipeline(0, 1),
     ]),
+
+    PharmacyAdminComment.countDocuments({ pharmacyId: _id }),
+    Order.countDocuments({ pharmacyId: _id }),
+    ProductRequest.countDocuments({ pharmacyId: _id }),
+    AdminAuditLog.countDocuments(buildPharmacyAuditScopeFilter(pharmacyId)),
   ]);
 
   const metrics = metricRows[0];
@@ -293,6 +311,13 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
     },
 
     documentCount: pharmacy.documents?.length ?? 0,
+
+    tabCounts: {
+      comments: commentsCount,
+      orders: ordersCount,
+      productRequests: productRequestsCount,
+      activity: activityCount,
+    },
 
     metrics: {
       activeClientsCount: metrics.activeClientsCount,

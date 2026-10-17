@@ -162,13 +162,26 @@ function PharmaciesCatalogFiltersForm({
 
   const locationSelectOptions = useMemo(
     () => [
-      { value: 'all', label: 'All locations' },
+      {
+        value: 'all',
+        label: 'All locations',
+        leading: (
+          <span className={css.locationIcon}>
+            <MapPin size={16} />
+          </span>
+        ),
+      },
 
       ...availableLocationOptions.map((location) => ({
         value: getLocationOptionValue(location),
         label: formatPharmacyLocationLabel(
           location.settlement,
           location.region
+        ),
+        leading: (
+          <span className={css.locationIcon}>
+            <MapPin size={16} />
+          </span>
         ),
       })),
     ],

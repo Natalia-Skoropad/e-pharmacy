@@ -69,12 +69,15 @@ import {
 
 import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
-import { PharmacyOwnerSearch } from '@/components/pharmacy-owners/PharmacyOwnerSearch/PharmacyOwnerSearch';
-import { PharmacySearch } from '../PharmacySearch/PharmacySearch';
-import { PharmaciesFiltersDrawer } from '../PharmaciesFiltersDrawer/PharmaciesFiltersDrawer';
+import { getPharmacyLocationFilterOptions } from '@/lib/pharmacies/pharmacy-location-filter-options';
 
 // Reuse the Owners registry shell classes: no parallel container CSS.
 import shellCss from '@/components/pharmacy-owners/PharmacyOwnersPageContent/PharmacyOwnersPageContent.module.css';
+import { PharmacyOwnerSearch } from '@/components/pharmacy-owners/PharmacyOwnerSearch/PharmacyOwnerSearch';
+
+import { PharmacySearch } from '../PharmacySearch/PharmacySearch';
+import { PharmaciesFiltersDrawer } from '../PharmaciesFiltersDrawer/PharmaciesFiltersDrawer';
+
 import css from './PharmaciesPageContent.module.css';
 
 //===================================================================
@@ -246,6 +249,8 @@ export function PharmaciesPageContent({
   const hasActiveFilters = Boolean(
     state.pharmacyId ||
     state.ownerId ||
+    state.settlement ||
+    state.region ||
     state.status !== 'all' ||
     state.createdFrom ||
     state.createdTo ||
@@ -255,6 +260,8 @@ export function PharmaciesPageContent({
   const activeFiltersCount = [
     Boolean(state.pharmacyId),
     Boolean(state.ownerId),
+    Boolean(state.settlement),
+    Boolean(state.region),
     Boolean(state.createdFrom || state.createdTo),
     state.status !== 'all',
     state.rating !== 'all',
@@ -264,6 +271,8 @@ export function PharmaciesPageContent({
     navigate({
       pharmacyId: '',
       ownerId: '',
+      settlement: '',
+      region: '',
       status: 'all',
       createdFrom: '',
       createdTo: '',
@@ -638,6 +647,11 @@ export function PharmaciesPageContent({
       {isFiltersOpen ? (
         <PharmaciesFiltersDrawer
           state={state}
+          locationOptions={getPharmacyLocationFilterOptions(
+            data?.items ?? [],
+            state.settlement,
+            state.region
+          )}
           hasActiveFilters={hasActiveFilters}
           minDate={
             data?.earliestCreatedAt ??

@@ -131,11 +131,11 @@ export function AdminProfilePageContent() {
       },
       {
         value: SESSIONS_TAB,
-        label: 'Active sessions',
+        label: `Active sessions (${sessions.length})`,
         icon: <MonitorSmartphone size={17} aria-hidden="true" />,
       },
     ],
-    [commentsCount, documentsCount]
+    [commentsCount, documentsCount, sessions.length]
   );
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export function AdminProfilePageContent() {
   }, [user]);
 
   useEffect(() => {
-    if (activeTab !== SESSIONS_TAB || !user) return;
+    if (!user) return;
     const controller = new AbortController();
 
     void getActiveSessions({ signal: controller.signal })
@@ -176,7 +176,7 @@ export function AdminProfilePageContent() {
       });
 
     return () => controller.abort();
-  }, [activeTab, sessionsReloadKey, user]);
+  }, [sessionsReloadKey, user]);
 
   if (!user) {
     return (

@@ -72,6 +72,7 @@ import {
 } from './ActivityFiltersDrawer';
 
 import { getAdminPharmacyOwnerDetail } from '@/lib/api/browser/admin-pharmacy-owners.api';
+import { getAdminPharmacyDetail } from '@/lib/api/browser/admin-pharmacy-detail.api';
 
 import {
   getAdminPharmacyActivity,
@@ -250,6 +251,12 @@ export function ActivityHistory({
     pictureUrl?: string;
   } | null>(null);
 
+  const [pharmacyPagePreview, setPharmacyPagePreview] = useState<{
+    id: string;
+    name: string;
+    pictureUrl?: string;
+  } | null>(null);
+
   // Update URL-derived state during render when browser navigation changes it.
   // This preserves the open filters drawer without a cascading effect update.
   if (syncedInitialStateKey !== initialStateKey) {
@@ -317,11 +324,13 @@ export function ActivityHistory({
     const listParams: AdminAuditQueryParams = {
       page,
       perPage,
+
       ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
       ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
       ...(filters.action ? { action: filters.action } : {}),
       ...(filters.section ? { section: filters.section } : {}),
       ...(filters.actorType ? { actorType: filters.actorType } : {}),
+
       ...(filters.employeeUserId
         ? { actorUserId: filters.employeeUserId }
         : {}),
@@ -413,6 +422,28 @@ export function ActivityHistory({
     return () => controller.abort();
   }, [details, scopePharmacyId]);
 
+  useEffect(() => {
+    const page = details ? getAdminAuditPageLocation(details) : null;
+    if (!page || page.section !== 'pharmacies') return;
+    const controller = new AbortController();
+
+    void getAdminPharmacyDetail(page.entityId, { signal: controller.signal })
+      .then((pharmacy) => {
+        if (!controller.signal.aborted) {
+          setPharmacyPagePreview({
+            id: pharmacy.id,
+            name: pharmacy.current.name,
+            pictureUrl: pharmacy.current.imageUrl,
+          });
+        }
+      })
+
+      .catch(() => {
+        // Removed pharmacies still keep their immutable audit trail.
+      });
+    return () => controller.abort();
+  }, [details]);
+
   const actorById = useMemo(
     () => new Map(actors.map((actor) => [actor.id, actor] as const)),
     [actors]
@@ -432,6 +463,12 @@ export function ActivityHistory({
       ? ownerPagePreview
       : null;
 
+  const matchingPharmacyPreview =
+    pageLocation?.section === 'pharmacies' &&
+    pharmacyPagePreview?.id === pageLocation.entityId
+      ? pharmacyPagePreview
+      : null;
+
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
     filters.action,
@@ -446,6 +483,7 @@ export function ActivityHistory({
   const openDetails = useCallback((auditLogId: string) => {
     setDetails(null);
     setOwnerPagePreview(null);
+    setPharmacyPagePreview(null);
     setDetailsError(null);
     setIsDetailsLoading(true);
     setSelectedAuditId(auditLogId);
@@ -916,11 +954,15 @@ export function ActivityHistory({
         actor={details ? (actorById.get(details.actorUserId) ?? null) : null}
         pagePhotoUrl={
           pageLocation
-            ? (matchingOwnerPreview?.pictureUrl ??
-              actorById.get(pageLocation.entityId)?.pictureUrl)
+            ? (matchingPharmacyPreview?.pictureUrl ??
+              matchingOwnerPreview?.pictureUrl ??
+              (pageLocation.section === 'employees'
+                ? actorById.get(pageLocation.entityId)?.pictureUrl
+                : undefined))
             : undefined
         }
         pageName={
+          matchingPharmacyPreview?.name ??
           matchingOwnerPreview?.name ??
           (pageLocation?.section === 'employees'
             ? actorById.get(pageLocation.entityId)?.name

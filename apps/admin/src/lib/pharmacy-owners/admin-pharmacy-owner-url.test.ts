@@ -168,3 +168,21 @@ test('parses and builds namespaced pharmacy-tab filters', () => {
     exactState
   );
 });
+
+//===================================================================
+
+test('linked-pharmacy location filters round-trip in the owner URL', () => {
+  const original = parseAdminPharmacyOwnerPharmaciesSearchParams({
+    settlement: 'Dnipro',
+    region: 'Dnipropetrovsk Oblast',
+  });
+
+  const url = buildAdminPharmacyOwnerPharmaciesUrl(OWNER_ID, original);
+
+  const restored = parseAdminPharmacyOwnerPharmaciesSegments(
+    url.split('/').slice(5)
+  );
+
+  assert.equal(restored.settlement, original.settlement);
+  assert.equal(restored.region, original.region);
+});

@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Star, MapPin, Map } from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -26,6 +26,7 @@ import css from '../../pharmacies/PharmaciesFiltersDrawer/PharmaciesFiltersDrawe
 type LinkedPharmaciesFiltersDrawerProps = Readonly<{
   state: AdminPharmacyOwnerPharmaciesUrlState;
   hasActiveFilters: boolean;
+  locationOptions: Readonly<{ settlements: readonly string[]; regions: readonly string[] }>;
   onChange: (state: AdminPharmacyOwnerPharmaciesUrlState) => void;
   onReset: () => void;
   onClose: () => void;
@@ -121,6 +122,7 @@ const PHARMACY_RATING_OPTIONS: Array<
 
 export function LinkedPharmaciesFiltersDrawer({
   state,
+  locationOptions,
   hasActiveFilters,
   onChange,
   onReset,
@@ -161,6 +163,28 @@ export function LinkedPharmaciesFiltersDrawer({
         options={PHARMACY_STATUS_OPTIONS}
         isActive={state.status !== 'all'}
         onChange={(status) => onChange({ ...state, status, page: 1 })}
+      />
+
+      <SelectField
+        id="owner-linked-pharmacies-settlement-filter"
+        label="Settlement"
+        value={state.settlement}
+        options={[{ value: '', label: 'All settlements' }, ...locationOptions.settlements.map((value) => ({
+          value, label: value, content: <span className={css.locationOption}><MapPin size={16} />{value}</span>,
+        }))]}
+        isActive={Boolean(state.settlement)}
+        onChange={(settlement) => onChange({ ...state, settlement, page: 1 })}
+      />
+
+      <SelectField
+        id="owner-linked-pharmacies-region-filter"
+        label="Region"
+        value={state.region}
+        options={[{ value: '', label: 'All regions' }, ...locationOptions.regions.map((value) => ({
+          value, label: value, content: <span className={css.locationOption}><Map size={16} />{value}</span>,
+        }))]}
+        isActive={Boolean(state.region)}
+        onChange={(region) => onChange({ ...state, region, page: 1 })}
       />
 
       <SelectField

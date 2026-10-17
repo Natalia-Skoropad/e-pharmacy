@@ -511,6 +511,10 @@ function AuthenticatedProfilePageContent({
           };
         }
 
+        if (tab.value === 'sessions') {
+          return { ...tab, label: `${tab.label} (${sessions.length})` };
+        }
+
         if (tab.value === 'orders') {
           return {
             ...tab,
@@ -524,6 +528,7 @@ function AuthenticatedProfilePageContent({
       effectiveFavoritePharmaciesCount,
       effectiveFavoriteProductsCount,
       effectiveOrdersCount,
+      sessions.length,
     ]
   );
 
@@ -910,7 +915,7 @@ function AuthenticatedProfilePageContent({
   }, [canUseAuthFeatures, ordersQueryParams]);
 
   useEffect(() => {
-    if (!canUseAuthFeatures || activeTab !== 'sessions') return;
+    if (!canUseAuthFeatures) return;
 
     const controller = new AbortController();
 
@@ -940,7 +945,7 @@ function AuthenticatedProfilePageContent({
     return () => {
       controller.abort();
     };
-  }, [activeTab, canUseAuthFeatures, sessionsReloadKey]);
+  }, [canUseAuthFeatures, sessionsReloadKey]);
 
   useEffect(() => {
     if (!canUseAuthFeatures) return;

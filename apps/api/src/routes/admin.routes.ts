@@ -24,6 +24,8 @@ import {
   listPharmacyRegistryOwnerOptionsByAdmin,
   getPharmacyDetailByAdmin,
   getPharmacySalesStatisticsByAdmin,
+  getPharmacyOwnerSalesStatisticsByAdmin,
+  getPharmacyOwnerSessionsByAdmin,
   listPharmacyDocumentsByAdmin,
   listPharmacyAdminCommentsByAdmin,
   createPharmacyAdminCommentByAdmin,
@@ -470,6 +472,29 @@ adminRoutes.get(
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
   validate({ params: adminPharmacyOwnerParamsSchema }),
   ctrlWrapper(getPharmacyOwnerDetailByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/sessions',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+  validate({ params: adminPharmacyOwnerParamsSchema }),
+  ctrlWrapper(getPharmacyOwnerSessionsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/pharmacy-owners/:ownerId/sales-statistics',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacyOwners.view),
+
+  validate({
+    params: adminPharmacyOwnerParamsSchema,
+    query: orderSalesStatisticsQuerySchema,
+  }),
+
+  ctrlWrapper(getPharmacyOwnerSalesStatisticsByAdmin)
 );
 
 //=================================================================================

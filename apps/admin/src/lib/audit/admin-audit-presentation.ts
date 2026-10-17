@@ -267,9 +267,10 @@ export function getAdminAuditPageLocation(
     };
   }
 
+  // A pharmacy-scoped audit event may target a comment or another subordinate
+  // document, whose entity ID is NOT the page ID. Resolve the parent explicitly.
   if (
     section === 'pharmacies' &&
-    item.entityType === 'pharmacyAdminComment' &&
     (item.pharmacyId ||
       (item.scopeEntityType === 'pharmacy' ? item.scopeEntityId : null))
   ) {

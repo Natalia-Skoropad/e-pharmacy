@@ -47,6 +47,7 @@ const adminOwnerSearchSchema = optionalTrimmedTextSchema({
 const adminOwnerPerPageSchema = z.coerce
   .number()
   .int()
+
   .refine(
     (value): value is (typeof ADMIN_OWNER_ALLOWED_PER_PAGE)[number] =>
       ADMIN_OWNER_ALLOWED_PER_PAGE.includes(
@@ -54,6 +55,7 @@ const adminOwnerPerPageSchema = z.coerce
       ),
     { message: 'perPage must be 20, 50, or 100.' }
   )
+
   .default(20);
 
 //===============================================================
@@ -130,6 +132,8 @@ export const adminPharmacyOwnerPharmaciesQuerySchema = z.preprocess(
       createdFrom: dateQuerySchema,
       createdTo: dateQuerySchema,
       rating: adminPharmacyRatingQuerySchema,
+      settlement: adminOwnerSearchSchema,
+      region: adminOwnerSearchSchema,
       page: positivePageSchema,
       perPage: adminOwnerPerPageSchema,
     })

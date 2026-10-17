@@ -65,6 +65,13 @@ export type AdminPharmacyDetail = Readonly<{
   }>;
 
   documentCount: number;
+  /** Global tab badges; optional for backward-compatible response fixtures. */
+  tabCounts?: Readonly<{
+    comments: number;
+    orders: number;
+    productRequests: number;
+    activity: number;
+  }>;
 
   metrics: Readonly<{
     activeClientsCount: number;

@@ -44,6 +44,7 @@ export const ADMIN_PHARMACY_OWNER_DETAIL_TABS = [
   'documents',
   'comments',
   'activity',
+  'sessions',
 ] as const;
 
 //===================================================================
@@ -57,6 +58,8 @@ export type AdminPharmacyOwnerDetailUrlState = Readonly<{
 
 export type AdminPharmacyOwnerPharmaciesUrlState = Readonly<{
   search: string;
+  settlement: string;
+  region: string;
   status: AdminOwnerPharmacyStatus | 'all';
   createdFrom: string;
   createdTo: string;
@@ -324,6 +327,8 @@ export function parseAdminPharmacyOwnerPharmaciesSearchParams(
 
   return {
     search: normalizeSearch(getSingle(params.pharmacySearch)),
+    settlement: normalizeSearch(getSingle(params.settlement)),
+    region: normalizeSearch(getSingle(params.region)),
     status: isPharmacyStatus(status) ? status : 'all',
     createdFrom: range.from,
     createdTo: range.to,
@@ -352,6 +357,16 @@ export function buildAdminPharmacyOwnerPharmaciesUrl(
   if (isValidObjectId(state.search))
     segments.push(`pharmacy-id-${state.search}`);
 
+  if (state.settlement)
+    segments.push(
+      `settlement-${encodeURIComponent(normalizeSearch(state.settlement))}`
+    );
+
+  if (state.region)
+    segments.push(
+      `region-${encodeURIComponent(normalizeSearch(state.region))}`
+    );
+
   if (isPharmacyStatus(state.status))
     segments.push(`status-${slugifyStatus(state.status)}`);
   if (range.from) segments.push(`created-from-${range.from}`);
@@ -373,7 +388,7 @@ export function buildAdminPharmacyOwnerPharmaciesUrl(
 //===================================================================
 
 export function isAdminOwnerPharmaciesFilterSegment(segment: string): boolean {
-  return /^(pharmacy-id|status|created-from|created-to|rating|page|per-page)-/.test(
+  return /^(pharmacy-id|settlement|region|status|created-from|created-to|rating|page|per-page)-/.test(
     segment
   );
 }
@@ -384,6 +399,8 @@ export function parseAdminPharmacyOwnerPharmaciesSegments(
   segments: readonly string[]
 ): AdminPharmacyOwnerPharmaciesUrlState {
   let search = '';
+  let settlement = '';
+  let region = '';
   let status: AdminOwnerPharmacyStatus | 'all' = 'all';
   let createdFrom = '';
   let createdTo = '';
@@ -395,6 +412,22 @@ export function parseAdminPharmacyOwnerPharmaciesSegments(
     if (segment.startsWith('pharmacy-id-')) {
       const id = segment.slice('pharmacy-id-'.length);
       search = isValidObjectId(id) ? id : '';
+    } else if (
+      segment.startsWith('settlement-') ||
+      segment.startsWith('region-')
+    ) {
+      const field = segment.startsWith('settlement-') ? 'settlement' : 'region';
+
+      try {
+        const value = normalizeSearch(
+          decodeURIComponent(segment.slice(field.length + 1))
+        );
+
+        if (field === 'settlement') settlement = value;
+        else region = value;
+      } catch {
+        /* Ignore malformed URL encoding. */
+      }
     } else if (segment.startsWith('status-')) {
       const value = segment.slice('status-'.length).replace(/-/g, '_');
       status = isPharmacyStatus(value) ? value : 'all';
@@ -416,6 +449,8 @@ export function parseAdminPharmacyOwnerPharmaciesSegments(
 
   return {
     search,
+    settlement,
+    region,
     status,
     createdFrom: range.from,
     createdTo: range.to,
@@ -447,6 +482,8 @@ export function buildAdminPharmacyOwnerPharmaciesApiParams(
 ) {
   return {
     search: state.search || undefined,
+    settlement: state.settlement || undefined,
+    region: state.region || undefined,
     status: state.status === 'all' ? undefined : state.status,
     createdFrom: state.createdFrom || undefined,
     createdTo: state.createdTo || undefined,

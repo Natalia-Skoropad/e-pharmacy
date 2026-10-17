@@ -323,6 +323,22 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
     },
 
     documentCount: count(row.documentCount, 'document count'),
+    ...(row.tabCounts === undefined
+      ? {}
+      : {
+          tabCounts: (() => {
+            const counts = record(row.tabCounts, 'pharmacy tab counts');
+            return {
+              comments: count(counts.comments, 'comments count'),
+              orders: count(counts.orders, 'all orders count'),
+              productRequests: count(
+                counts.productRequests,
+                'product requests count'
+              ),
+              activity: count(counts.activity, 'activity count'),
+            };
+          })(),
+        }),
 
     metrics: {
       activeClientsCount: count(metrics.activeClientsCount, 'active clients'),

@@ -50,6 +50,7 @@ function createRequestId(): string {
 type PharmacyCommentsTabProps = Readonly<{
   pharmacyId: string;
   canManage: boolean;
+  onCountChange?: (count: number) => void;
 }>;
 
 //===================================================================
@@ -58,6 +59,7 @@ type PharmacyCommentsTabProps = Readonly<{
 export function PharmacyCommentsTab({
   pharmacyId,
   canManage,
+  onCountChange,
 }: PharmacyCommentsTabProps) {
   const toast = useToast();
   const [comments, setComments] = useState<readonly AdminPharmacyComment[]>([]);
@@ -80,6 +82,10 @@ export function PharmacyCommentsTab({
   );
 
   const effectiveStatus = loadedId === pharmacyId ? status : 'loading';
+
+  useEffect(() => {
+    if (effectiveStatus === 'success') onCountChange?.(comments.length);
+  }, [comments.length, effectiveStatus, onCountChange]);
 
   const applyComments = useCallback(
     (next: readonly AdminPharmacyComment[]) => {

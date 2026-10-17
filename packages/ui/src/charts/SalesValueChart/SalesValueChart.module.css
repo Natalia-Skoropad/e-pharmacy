@@ -352,5 +352,10 @@
 
 .contentState {
   display: grid;
-  min-height: 220px;
+  min-height: 120px;
+  align-items: start;
+}
+
+.contentState > * {
+  min-height: 0;
 }

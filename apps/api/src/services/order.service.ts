@@ -596,6 +596,7 @@ function serializeOrder(
           client: {
             id: order.userId.toString(),
             name: clientName ?? 'Client',
+
             ...(clientPhotoUrl ? { photoUrl: clientPhotoUrl } : {}),
           },
         }
@@ -2565,10 +2566,21 @@ export async function getOrderSalesStatisticsForPharmacyService(
   pharmacyId: string | null,
   query: OrderSalesStatisticsQuery
 ): Promise<OrderSalesStatisticsDto> {
+  return getOrderSalesStatisticsForPharmaciesService(
+    pharmacyId ? [pharmacyId] : [],
+    query
+  );
+}
+
+/** Aggregate across multiple linked pharmacies without double-counting order items. */
+export async function getOrderSalesStatisticsForPharmaciesService(
+  pharmacyIds: readonly string[],
+  query: OrderSalesStatisticsQuery
+): Promise<OrderSalesStatisticsDto> {
   const { dateFrom, dateTo } = getDefaultSalesDateRange(query);
   const groupBy = query.groupBy;
 
-  if (!pharmacyId) {
+  if (!pharmacyIds.length) {
     return {
       currency: '₴',
       groupBy,
@@ -2590,7 +2602,7 @@ export async function getOrderSalesStatisticsForPharmacyService(
   };
 
   const matchFilter: Record<string, unknown> = {
-    pharmacyId: new Types.ObjectId(pharmacyId),
+    pharmacyId: { $in: pharmacyIds.map((id) => new Types.ObjectId(id)) },
     status: 'successful',
     $or: [{ successfulAt: successfulAtRange }, { successfulAt: null }],
   };

@@ -94,6 +94,18 @@ function pharmacyMatch(query: AdminPharmacyRegistryListQuery) {
   if (query.ownerId) match.ownerId = new Types.ObjectId(query.ownerId);
   if (query.status) match.status = query.status;
 
+  if (query.settlement)
+    match['location.settlement'] = new RegExp(
+      `^${createSafeRegExp(query.settlement).source}$`,
+      'i'
+    );
+
+  if (query.region)
+    match['location.region'] = new RegExp(
+      `^${createSafeRegExp(query.region).source}$`,
+      'i'
+    );
+
   if (query.pharmacySearch)
     match.$or = identitySearch(query.pharmacySearch, [
       'name',

@@ -50,6 +50,8 @@ import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-ow
 
 import {
   getAdminPharmacyOwnerDetailService,
+  getAdminPharmacyOwnerSalesStatisticsService,
+  listAdminPharmacyOwnerSessionsService,
   getAdminPharmacyOwnerStatisticsService,
   listAdminPharmacyOwnerActivityService,
   listAdminPharmacyOwnerOptionsService,
@@ -294,6 +296,39 @@ export async function listPharmacyRegistryOwnerOptionsByAdmin(
   res: ValidatedResponse<unknown, unknown, AdminPharmacyRegistryOptionsQuery>
 ): Promise<void> {
   const data = await listAdminPharmacyRegistryOwnerOptionsService(
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyOwnerSessionsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyOwnerParams>
+): Promise<void> {
+  const data = await listAdminPharmacyOwnerSessionsService(
+    res.locals.validated.params.ownerId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyOwnerSalesStatisticsByAdmin(
+  _req: Request,
+  res: ValidatedResponse<
+    unknown,
+    AdminPharmacyOwnerParams,
+    OrderSalesStatisticsQuery
+  >
+): Promise<void> {
+  const data = await getAdminPharmacyOwnerSalesStatisticsService(
+    res.locals.validated.params.ownerId,
     res.locals.validated.query
   );
 

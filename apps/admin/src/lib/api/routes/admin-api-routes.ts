@@ -85,6 +85,12 @@ export const adminApiRoutes = {
     pharmacies: (ownerId: string) =>
       `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/pharmacies`,
 
+    salesStatistics: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/sales-statistics`,
+
+    sessions: (ownerId: string) =>
+      `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/sessions`,
+
     documents: (ownerId: string) =>
       `/api/admin/pharmacy-owners/${encodeURIComponent(ownerId)}/documents`,
 

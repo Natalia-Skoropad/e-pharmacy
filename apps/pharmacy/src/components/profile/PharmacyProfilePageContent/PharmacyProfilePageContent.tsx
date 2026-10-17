@@ -1230,6 +1230,10 @@ function PharmacyProfilePage({
       return { ...tab, label: `Documents (${documentsCount})` };
     }
 
+    if (tab.value === 'sessions') {
+      return { ...tab, label: `Active sessions (${sessions.length})` };
+    }
+
     if (tab.value === 'comments') {
       return {
         ...tab,

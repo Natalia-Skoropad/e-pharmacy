@@ -14,6 +14,7 @@ import {
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { getAdminPharmacySalesStatistics } from '@/lib/api/browser/admin-pharmacy-detail.api';
+import { getAdminPharmacyOwnerSalesStatistics } from '@/lib/api/browser/admin-pharmacy-owners.api';
 
 //===================================================================
 
@@ -26,22 +27,33 @@ type SalesSnapshot = Readonly<{
 //===================================================================
 
 /** Only the active Pharmacy information tab mounts this chart. */
-export function PharmacySalesChart({ pharmacyId }: { pharmacyId: string }) {
+export function PharmacySalesChart({
+  pharmacyId,
+  ownerId,
+}: Readonly<{ pharmacyId?: string; ownerId?: string }>) {
   const [year, setYear] = useState(() => String(new Date().getFullYear()));
   const [month, setMonth] = useState<SalesPeriodMonth>('all');
   const [retry, setRetry] = useState(0);
   const [snapshot, setSnapshot] = useState<SalesSnapshot | null>(null);
 
-  const key = `${pharmacyId}:${year}:${month}:${retry}`;
+  const key = `${ownerId ? `owner:${ownerId}` : `pharmacy:${pharmacyId}`}:${year}:${month}:${retry}`;
   const current = snapshot?.key === key ? snapshot : null;
 
   useEffect(() => {
     const controller = new AbortController();
 
-    void getAdminPharmacySalesStatistics(
-      pharmacyId,
-      getSalesPeriodDateRange(year, month),
-      { signal: controller.signal }
+    void (
+      ownerId
+        ? getAdminPharmacyOwnerSalesStatistics(
+            ownerId,
+            getSalesPeriodDateRange(year, month),
+            { signal: controller.signal }
+          )
+        : getAdminPharmacySalesStatistics(
+            pharmacyId!,
+            getSalesPeriodDateRange(year, month),
+            { signal: controller.signal }
+          )
     )
       .then((data) => {
         if (!controller.signal.aborted) {
@@ -56,7 +68,7 @@ export function PharmacySalesChart({ pharmacyId }: { pharmacyId: string }) {
       });
 
     return () => controller.abort();
-  }, [pharmacyId, year, month, retry, key]);
+  }, [pharmacyId, ownerId, year, month, retry, key]);
 
   const contentState = !current ? (
     <ProfileResourceState
@@ -87,7 +99,7 @@ export function PharmacySalesChart({ pharmacyId }: { pharmacyId: string }) {
       contentState={contentState}
       headerContent={
         <SalesPeriodFilters
-          idPrefix="admin-pharmacy-sales"
+          idPrefix={ownerId ? 'admin-owner-sales' : 'admin-pharmacy-sales'}
           year={year}
           month={month}
           onYearChange={setYear}

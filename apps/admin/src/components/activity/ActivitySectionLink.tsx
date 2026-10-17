@@ -111,7 +111,8 @@ export function ActivityPageLink({
   if (!location) return <span className={css.pageLinkEmpty}>—</span>;
   return (
     <span className={css.sectionLink}>
-      {location.section === 'pharmacyOwners' ||
+      {location.section === 'pharmacies' ||
+      location.section === 'pharmacyOwners' ||
       location.section === 'employees' ? (
         <TableImagePreview
           src={photoUrl}

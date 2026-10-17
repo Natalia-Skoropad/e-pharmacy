@@ -2,10 +2,13 @@ import 'client-only';
 
 import {
   parseApiResponseData,
+  normalizeOrderSalesStatistics,
+  parseActiveSessionsResponse,
   parsePharmacyOwnerDocumentsResponse,
 } from '@e-pharmacy/api-client/response';
 
 import { appendQueryParams } from '@e-pharmacy/api-client/transport';
+import type { OrderSalesStatisticsQueryParams } from '@e-pharmacy/api-client/response';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
@@ -298,6 +301,42 @@ export async function getAdminPharmacyOwnerActivity(
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
     parseAdminAuditListResponse,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getAdminPharmacyOwnerSalesStatistics(
+  rawOwnerId: string,
+  params: OrderSalesStatisticsQueryParams,
+  options?: Readonly<{ signal?: AbortSignal }>
+) {
+  const path = appendQueryParams(
+    ADMIN_API_ROUTES.pharmacyOwners.salesStatistics(ownerId(rawOwnerId)),
+    params
+  );
+
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+
+    normalizeOrderSalesStatistics,
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+export async function getAdminPharmacyOwnerSessions(
+  rawOwnerId: string,
+  options?: Readonly<{ signal?: AbortSignal }>
+) {
+  const path = ADMIN_API_ROUTES.pharmacyOwners.sessions(ownerId(rawOwnerId));
+
+  return parseApiResponseData(
+    await localApiRequest(path, { signal: options?.signal }),
+
+    parseActiveSessionsResponse,
     { url: path, method: 'GET' }
   );
 }

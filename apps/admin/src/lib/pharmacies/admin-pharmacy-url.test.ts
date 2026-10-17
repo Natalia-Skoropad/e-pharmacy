@@ -36,6 +36,8 @@ test('canonical URL round trip preserves combined pharmacy registry filters', ()
   const selected = {
     pharmacyId: PHARMACY_ID,
     ownerId: OWNER_ID,
+    settlement: '',
+    region: '',
     status: 'on_verification' as const,
     createdFrom: '2026-09-01',
     createdTo: '2026-10-12',
@@ -189,4 +191,26 @@ test('no free-text search or private owner data gets serialized in list URL', ()
 
   assert.equal(url, `${ROOT}/owner-id-${OWNER_ID}`);
   assert.ok(!url.includes('example.com'));
+});
+
+//===================================================================
+
+test('settlement and region survive canonical URL and server query round trips', () => {
+  const url = buildAdminPharmaciesListUrl({
+    ...ADMIN_PHARMACIES_LIST_URL_DEFAULTS,
+    settlement: 'Dnipro',
+    region: 'Dnipropetrovsk Oblast',
+  });
+
+  const parsed = parseUrl(url);
+
+  assert.equal(parsed.settlement, 'Dnipro');
+  assert.equal(parsed.region, 'Dnipropetrovsk Oblast');
+  assert.equal(buildAdminPharmaciesListUrl(parsed), url);
+  assert.equal(buildAdminPharmaciesListApiParams(parsed).settlement, 'Dnipro');
+
+  assert.equal(
+    buildAdminPharmaciesListApiParams(parsed).region,
+    'Dnipropetrovsk Oblast'
+  );
 });

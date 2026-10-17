@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Star, MapPin, Map } from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { getBusinessCalendarDate } from '@e-pharmacy/utils/date';
@@ -12,8 +12,6 @@ import {
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import css from './PharmaciesFiltersDrawer.module.css';
-
 import {
   ADMIN_PHARMACY_RATINGS,
   ADMIN_PHARMACY_STATUSES,
@@ -23,11 +21,19 @@ import {
 
 import type { AdminPharmacyListUrlState } from '@/lib/pharmacies/admin-pharmacy-url';
 
+import css from './PharmaciesFiltersDrawer.module.css';
+
 //===================================================================
 
 type PharmaciesFiltersDrawerProps = Readonly<{
   state: AdminPharmacyListUrlState;
   minDate?: string;
+
+  locationOptions: Readonly<{
+    settlements: readonly string[];
+    regions: readonly string[];
+  }>;
+
   hasActiveFilters: boolean;
   onChange: (nextState: AdminPharmacyListUrlState) => void;
   onReset: () => void;
@@ -69,6 +75,7 @@ const RATING_OPTIONS: Array<SelectOption<AdminPharmacyRating | 'all'>> = [
 export function PharmaciesFiltersDrawer({
   state,
   minDate,
+  locationOptions,
   hasActiveFilters,
   onChange,
   onReset,
@@ -107,6 +114,48 @@ export function PharmaciesFiltersDrawer({
         options={STATUS_OPTIONS}
         isActive={state.status !== 'all'}
         onChange={(status) => onChange({ ...state, status, page: 1 })}
+      />
+
+      <SelectField
+        id="pharmacies-filter-settlement"
+        label="Settlement"
+        value={state.settlement}
+        options={[
+          { value: '', label: 'All settlements' },
+          ...locationOptions.settlements.map((value) => ({
+            value,
+            label: value,
+            content: (
+              <span className={css.locationOption}>
+                <MapPin size={16} />
+                {value}
+              </span>
+            ),
+          })),
+        ]}
+        isActive={Boolean(state.settlement)}
+        onChange={(settlement) => onChange({ ...state, settlement, page: 1 })}
+      />
+
+      <SelectField
+        id="pharmacies-filter-region"
+        label="Region"
+        value={state.region}
+        options={[
+          { value: '', label: 'All regions' },
+          ...locationOptions.regions.map((value) => ({
+            value,
+            label: value,
+            content: (
+              <span className={css.locationOption}>
+                <Map size={16} />
+                {value}
+              </span>
+            ),
+          })),
+        ]}
+        isActive={Boolean(state.region)}
+        onChange={(region) => onChange({ ...state, region, page: 1 })}
       />
 
       <SelectField

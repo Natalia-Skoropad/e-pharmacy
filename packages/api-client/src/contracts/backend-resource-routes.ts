@@ -93,6 +93,12 @@ export const backendRoutes = {
       pharmacies: (ownerId: EntityId) =>
         `/admin/pharmacy-owners/${segment(ownerId)}/pharmacies`,
 
+      salesStatistics: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/sales-statistics`,
+
+      sessions: (ownerId: EntityId) =>
+        `/admin/pharmacy-owners/${segment(ownerId)}/sessions`,
+
       documents: (ownerId: EntityId) =>
         `/admin/pharmacy-owners/${segment(ownerId)}/documents`,
 

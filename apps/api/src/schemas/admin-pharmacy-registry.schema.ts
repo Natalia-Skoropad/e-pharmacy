@@ -53,6 +53,8 @@ export const adminPharmacyRegistryListQuerySchema = z.preprocess(
       ownerSearch: searchSchema,
       pharmacyId: optionalSchema(mongoIdSchema),
       ownerId: optionalSchema(mongoIdSchema),
+      settlement: searchSchema,
+      region: searchSchema,
 
       status: optionalSchema(
         z.enum([

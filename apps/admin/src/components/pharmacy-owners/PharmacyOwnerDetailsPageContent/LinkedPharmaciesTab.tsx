@@ -28,6 +28,7 @@ import {
 import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
 
 import { LinkedPharmaciesFiltersDrawer } from './LinkedPharmaciesFiltersDrawer';
+import { getPharmacyLocationFilterOptions } from '@/lib/pharmacies/pharmacy-location-filter-options';
 import { LinkedPharmaciesTable } from './LinkedPharmaciesTable';
 import { PharmacySearch } from '../../pharmacies/PharmacySearch/PharmacySearch';
 
@@ -79,6 +80,8 @@ function getPharmaciesErrorMessage(error: unknown): string {
 function getStateKey(state: AdminPharmacyOwnerPharmaciesUrlState): string {
   return [
     state.search,
+    state.settlement,
+    state.region,
     state.status,
     state.createdFrom,
     state.createdTo,
@@ -205,6 +208,8 @@ export function LinkedPharmaciesTab({
 
   const hasActiveFilters = Boolean(
     state.search ||
+    state.settlement ||
+    state.region ||
     state.status !== 'all' ||
     state.rating !== 'all' ||
     hasDateFilters
@@ -212,6 +217,8 @@ export function LinkedPharmaciesTab({
 
   const activeFiltersCount = [
     Boolean(state.search),
+    Boolean(state.settlement),
+    Boolean(state.region),
     state.status !== 'all',
     state.rating !== 'all',
     hasDateFilters,
@@ -220,6 +227,8 @@ export function LinkedPharmaciesTab({
   const resetFilters = () => {
     navigate({
       search: '',
+      settlement: '',
+      region: '',
       status: 'all',
       createdFrom: '',
       createdTo: '',
@@ -326,6 +335,7 @@ export function LinkedPharmaciesTab({
       {isFiltersOpen ? (
         <LinkedPharmaciesFiltersDrawer
           state={state}
+          locationOptions={getPharmacyLocationFilterOptions(data?.items ?? [], state.settlement, state.region)}
           hasActiveFilters={hasActiveFilters}
           onChange={navigate}
           onReset={resetFilters}

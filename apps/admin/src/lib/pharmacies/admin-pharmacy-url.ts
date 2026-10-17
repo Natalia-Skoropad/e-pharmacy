@@ -16,6 +16,8 @@ import {
 export type AdminPharmacyListUrlState = Readonly<{
   pharmacyId: string;
   ownerId: string;
+  settlement: string;
+  region: string;
   status: AdminPharmacyStatus | 'all';
   createdFrom: string;
   createdTo: string;
@@ -37,7 +39,8 @@ export type AdminPharmacySearchParams = Readonly<
 
 export const ADMIN_PHARMACY_DETAIL_TABS = [
   'information',
-  'about-payment',
+  'about',
+  'payment',
   'documents',
   'comments',
   'reviews',
@@ -68,6 +71,8 @@ export type AdminPharmacyRouteResolution =
 const DEFAULTS: AdminPharmacyListUrlState = {
   pharmacyId: '',
   ownerId: '',
+  settlement: '',
+  region: '',
   status: 'all',
   createdFrom: '',
   createdTo: '',
@@ -130,6 +135,28 @@ function status(value?: string): AdminPharmacyStatus | 'all' {
 
 //===================================================================
 
+function locationText(value: unknown): string {
+  return typeof value === 'string' ? value.trim().slice(0, 120) : '';
+}
+
+//===================================================================
+
+function locationSegment(value: string): string {
+  return encodeURIComponent(value);
+}
+
+//===================================================================
+
+function readLocationSegment(value: string): string {
+  try {
+    return locationText(decodeURIComponent(value));
+  } catch {
+    return '';
+  }
+}
+
+//===================================================================
+
 function normalize(
   state: Partial<Record<keyof AdminPharmacyListUrlState, unknown>>
 ): AdminPharmacyListUrlState {
@@ -152,6 +179,8 @@ function normalize(
     ),
 
     ownerId: id(typeof state.ownerId === 'string' ? state.ownerId : undefined),
+    settlement: locationText(state.settlement),
+    region: locationText(state.region),
     status: status(typeof state.status === 'string' ? state.status : undefined),
     createdFrom,
     createdTo,
@@ -181,6 +210,8 @@ export function parseAdminPharmaciesListSearchParams(
   return normalize({
     pharmacyId: single(params.pharmacyId),
     ownerId: single(params.ownerId),
+    settlement: single(params.settlement),
+    region: single(params.region),
     status: single(params.status),
     createdFrom: single(params.createdFrom),
     createdTo: single(params.createdTo),
@@ -196,6 +227,8 @@ export function parseAdminPharmaciesListSearchParams(
 const FILTERS = [
   ['pharmacy-id-', 'pharmacyId'],
   ['owner-id-', 'ownerId'],
+  ['settlement-', 'settlement'],
+  ['region-', 'region'],
   ['status-', 'status'],
   ['created-from-', 'createdFrom'],
   ['created-to-', 'createdTo'],
@@ -219,7 +252,10 @@ function parseListFilters(
     const [prefix, key] = found;
     if (key in raw) throw new TypeError('Duplicate pharmacy filter.');
 
-    raw[key] = segment.slice(prefix.length);
+    raw[key] =
+      key === 'settlement' || key === 'region'
+        ? readLocationSegment(segment.slice(prefix.length))
+        : segment.slice(prefix.length);
   }
 
   return normalize(raw);
@@ -280,6 +316,11 @@ export function buildAdminPharmaciesListUrl(
   if (value.pharmacyId) result.push(`pharmacy-id-${value.pharmacyId}`);
   if (value.ownerId) result.push(`owner-id-${value.ownerId}`);
 
+  if (value.settlement)
+    result.push(`settlement-${locationSegment(value.settlement)}`);
+
+  if (value.region) result.push(`region-${locationSegment(value.region)}`);
+
   if (value.status !== 'all')
     result.push(`status-${value.status.replaceAll('_', '-')}`);
 
@@ -317,6 +358,8 @@ export function buildAdminPharmaciesListApiParams(
   return {
     pharmacyId: value.pharmacyId || undefined,
     ownerId: value.ownerId || undefined,
+    settlement: value.settlement || undefined,
+    region: value.region || undefined,
     status: value.status === 'all' ? undefined : value.status,
     createdFrom: value.createdFrom || undefined,
     createdTo: value.createdTo || undefined,

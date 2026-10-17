@@ -15,6 +15,7 @@ import {
   ImageOff,
   Mail,
   MessageSquareText,
+  MonitorSmartphone,
   Phone,
   ShieldCheck,
   UserCog,
@@ -30,6 +31,8 @@ import {
 
 import type { AdminPharmacyOwnerDetail } from '@e-pharmacy/types/admin';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
+import type { ActiveSession } from '@e-pharmacy/types/auth';
+import { ActiveSessionsPanel } from '@e-pharmacy/ui/profile';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { LinkButton, Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip, ReasonModal } from '@e-pharmacy/ui/overlays';
@@ -54,6 +57,8 @@ import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import {
   getAdminPharmacyOwnerDetail,
+  getAdminPharmacyOwnerSessions,
+  getAdminPharmacyOwnerActivity,
   updateAdminPharmacyOwnerStatus,
 } from '@/lib/api/browser/admin-pharmacy-owners.api';
 
@@ -74,6 +79,7 @@ import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
+import { PharmacySalesChart } from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacySalesChart';
 import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
 import { OwnerActivityTab } from './OwnerActivityTab';
 import { OwnerCommentsTab } from './OwnerCommentsTab';
@@ -246,6 +252,55 @@ function PharmacyOwnerDetailsPageContent({
     return () => controller.abort();
   }, [loadDetail, reloadVersion]);
 
+  const [ownerSessions, setOwnerSessions] = useState<readonly ActiveSession[]>(
+    []
+  );
+
+  const [sessionsStatus, setSessionsStatus] = useState<
+    'loading' | 'success' | 'error'
+  >('loading');
+
+  const [sessionsReloadKey, setSessionsReloadKey] = useState(0);
+  const [activityCount, setActivityCount] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setSessionsStatus('loading');
+
+    void getAdminPharmacyOwnerSessions(ownerId, { signal: controller.signal })
+      .then((response) => {
+        if (!controller.signal.aborted) {
+          setOwnerSessions(response.sessions);
+          setSessionsStatus('success');
+        }
+      })
+
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setOwnerSessions([]);
+          setSessionsStatus('error');
+        }
+      });
+
+    return () => controller.abort();
+  }, [ownerId, sessionsReloadKey]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getAdminPharmacyOwnerActivity(
+      ownerId,
+      { page: 1, perPage: 20 },
+      { signal: controller.signal }
+    )
+      .then((response) => {
+        if (!controller.signal.aborted) setActivityCount(response.total);
+      })
+      .catch(() => undefined);
+
+    return () => controller.abort();
+  }, [ownerId, reloadVersion]);
+
   const tabCounts = detail?.tabCounts ?? ZERO_TAB_COUNTS;
 
   const updateTabCount = useCallback(
@@ -299,11 +354,22 @@ function PharmacyOwnerDetailsPageContent({
       },
       {
         value: 'activity',
-        label: 'Activity history',
+        label: `Activity history (${activityCount})`,
         icon: <History size={17} aria-hidden="true" />,
       },
+      {
+        value: 'sessions',
+        label: `Active sessions and devices (${ownerSessions.length})`,
+        icon: <MonitorSmartphone size={17} aria-hidden="true" />,
+      },
     ];
-  }, [tabCounts.comments, tabCounts.documents, tabCounts.pharmacies]);
+  }, [
+    tabCounts.comments,
+    tabCounts.documents,
+    tabCounts.pharmacies,
+    activityCount,
+    ownerSessions.length,
+  ]);
 
   const handleTabChange = (nextTab: AdminPharmacyOwnerDetailTab) => {
     setActiveTab(nextTab);
@@ -724,6 +790,7 @@ function PharmacyOwnerDetailsPageContent({
                   </section>
                 </div>
               )}
+              {detail ? <PharmacySalesChart ownerId={ownerId} /> : null}
             </div>
           ) : activeTab === 'pharmacies' ? (
             <LinkedPharmaciesTab
@@ -740,6 +807,16 @@ function PharmacyOwnerDetailsPageContent({
               ownerId={ownerId}
               canManage={canEditOwner}
               onCountChange={updateCommentsCount}
+            />
+          ) : activeTab === 'sessions' ? (
+            <ActiveSessionsPanel
+              sessions={ownerSessions}
+              status={sessionsStatus}
+              idPrefix="owner-active-sessions"
+              title="Active sessions and devices"
+              showIp
+              description="Read-only login sessions for this pharmacy owner. Administrators cannot revoke sessions here."
+              onRetry={() => setSessionsReloadKey((value) => value + 1)}
             />
           ) : (
             <OwnerActivityTab

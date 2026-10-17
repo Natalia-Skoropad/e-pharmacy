@@ -140,7 +140,8 @@
 
 .editable h1,
 .editable h2,
-.editable h3 {
+.editable h3,
+.editable p > strong:only-child {
   color: var(--color-accent);
 }
 

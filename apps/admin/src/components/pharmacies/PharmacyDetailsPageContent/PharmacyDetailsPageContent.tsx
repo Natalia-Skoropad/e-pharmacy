@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -55,7 +55,8 @@ import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
-import { PharmacyAboutPaymentTab } from './PharmacyAboutPaymentTab';
+import { PharmacyAboutTab } from './PharmacyAboutTab';
+import { PharmacyPaymentTab } from './PharmacyPaymentTab';
 import { PharmacyModerationActions } from './PharmacyModerationActions';
 import { PharmacyDocumentsTab } from './PharmacyDocumentsTab';
 import { PharmacyCommentsTab } from './PharmacyCommentsTab';
@@ -100,8 +101,13 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
     icon: <Building2 size={17} />,
   },
   {
-    value: 'about-payment',
-    label: 'About & payment',
+    value: 'about',
+    label: 'About pharmacy',
+    icon: <FileText size={17} />,
+  },
+  {
+    value: 'payment',
+    label: 'Payment details',
     icon: <CreditCard size={17} />,
   },
   { value: 'documents', label: 'Documents', icon: <FileText size={17} /> },
@@ -128,8 +134,11 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
 const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
   information:
     'Review published pharmacy details separately from submitted changes awaiting moderation.',
-  'about-payment':
-    'Review the approved description and private payment data separately from any submitted changes.',
+
+  about: 'Review the approved pharmacy description and any proposed changes.',
+
+  payment:
+    'Review approved private payment data separately from submitted changes.',
 
   documents:
     'Review published and pending pharmacy verification files. Documents cannot be changed from Admin.',
@@ -255,9 +264,58 @@ export function PharmacyDetailsPageContent({
     return () => controller.abort();
   }, [pharmacyId, retry]);
 
-  const selectedTab =
-    TAB_ITEMS.find((tab) => tab.value === activeTab) ?? TAB_ITEMS[0];
+  // Render zero immediately; fill badges from the pharmacy detail response.
+  const tabCounts: Partial<Record<AdminPharmacyDetailTab, number>> = {
+    documents: detail?.documentCount ?? 0,
+    comments: detail?.tabCounts?.comments ?? 0,
+    reviews: detail?.metrics.reviewsCount ?? 0,
+    orders: detail?.tabCounts?.orders ?? 0,
+    clients: detail?.metrics.activeClientsCount ?? 0,
+    products: detail?.metrics.addedProductsCount ?? 0,
+    'product-requests': detail?.tabCounts?.productRequests ?? 0,
+    activity: detail?.tabCounts?.activity ?? 0,
+  };
 
+  const items = TAB_ITEMS.map((tab) => ({
+    ...tab,
+
+    label: Object.prototype.hasOwnProperty.call(tabCounts, tab.value)
+      ? `${tab.label} (${tabCounts[tab.value] ?? 0})`
+      : tab.label,
+  }));
+
+  const handleCommentsCountChange = useCallback(
+    (count: number) => {
+      setResult((previous) => {
+        if (
+          !previous?.detail ||
+          previous.pharmacyId !== pharmacyId ||
+          previous.detail.tabCounts?.comments === count
+        ) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+
+          detail: {
+            ...previous.detail,
+
+            tabCounts: {
+              orders: 0,
+              productRequests: 0,
+              activity: 0,
+              ...previous.detail.tabCounts,
+              comments: count,
+            },
+          },
+        };
+      });
+    },
+    [pharmacyId]
+  );
+
+  const selectedTab = items.find((tab) => tab.value === activeTab) ?? items[0];
   const deferredTab = DEFERRED_TABS[activeTab];
 
   if (error === 'not-found') {
@@ -417,7 +475,7 @@ export function PharmacyDetailsPageContent({
         <div className={css.tabsStack}>
           <Tabs
             idBase="pharmacy-details"
-            items={TAB_ITEMS}
+            items={items}
             ariaLabel="Pharmacy details tabs"
             activeValue={activeTab}
             mobileVisibleCount={1}
@@ -443,20 +501,24 @@ export function PharmacyDetailsPageContent({
             activeTab !== 'comments' &&
             activeTab !== 'activity' ? (
               <ProfileSectionHeader
-                title={selectedTab.label}
+                title={
+                  TAB_ITEMS.find((tab) => tab.value === activeTab)?.label ??
+                  selectedTab.label
+                }
                 description={TAB_DESCRIPTIONS[activeTab]}
                 icon={selectedTab.icon ?? <Building2 size={22} />}
               />
             ) : null}
-            {activeTab === 'documents' ? (
+            {activeTab === 'documents' && detail ? (
               <PharmacyDocumentsTab key={pharmacyId} pharmacyId={pharmacyId} />
-            ) : activeTab === 'comments' ? (
+            ) : activeTab === 'comments' && detail ? (
               <PharmacyCommentsTab
                 key={pharmacyId}
                 pharmacyId={pharmacyId}
                 canManage={canEditPharmacy}
+                onCountChange={handleCommentsCountChange}
               />
-            ) : activeTab === 'activity' ? (
+            ) : activeTab === 'activity' && detail ? (
               <PharmacyActivityTab
                 key={pharmacyId}
                 pharmacyId={pharmacyId}
@@ -473,8 +535,10 @@ export function PharmacyDetailsPageContent({
                 detail={detail}
                 canViewOwner={canViewOwner}
               />
-            ) : activeTab === 'about-payment' && detail ? (
-              <PharmacyAboutPaymentTab detail={detail} />
+            ) : activeTab === 'about' && detail ? (
+              <PharmacyAboutTab detail={detail} />
+            ) : activeTab === 'payment' && detail ? (
+              <PharmacyPaymentTab detail={detail} />
             ) : deferredTab ? (
               <ProfileResourceState
                 variant="empty"

@@ -150,7 +150,8 @@ export function getAdminBreadcrumbsByPathname(
       const detailUrl = `${ADMIN_ROUTES.PHARMACIES}/${route.pharmacyId}`;
 
       const tabLabels: Readonly<Record<string, string>> = {
-        'about-payment': 'About & payment',
+        about: 'About pharmacy',
+        payment: 'Payment details',
         documents: 'Documents',
         comments: 'Comments',
         reviews: 'Reviews',

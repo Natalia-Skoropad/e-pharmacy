@@ -19,6 +19,7 @@ import { ProductOffer } from '../models/productOffer.model';
 import { PharmacyOwnerAdminComment } from '../models/pharmacyOwnerAdminComment.model';
 import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
 import { User } from '../models/user.model';
+import { Session } from '../models/session.model';
 
 import type {
   AdminPharmacyOwnerActivityQuery,
@@ -34,6 +35,8 @@ import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
 
 import { listAdminAuditLogsService } from './admin-audit.service';
+import { getOrderSalesStatisticsForPharmaciesService } from './order.service';
+import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
 
 //===============================================================
 
@@ -152,6 +155,7 @@ function buildIdAwareSearchConditions(
 
   return [
     ...fields.map((field) => ({ [field]: regex })),
+
     {
       $expr: {
         $regexMatch: {
@@ -200,6 +204,18 @@ function buildPharmacyMatch(
   const match: Record<string, unknown> = { ownerId };
 
   if (query.status) match.status = query.status;
+
+  if (query.settlement)
+    match['location.settlement'] = new RegExp(
+      `^${createSafeRegExp(query.settlement).source}$`,
+      'i'
+    );
+
+  if (query.region)
+    match['location.region'] = new RegExp(
+      `^${createSafeRegExp(query.region).source}$`,
+      'i'
+    );
 
   if (query.createdFrom || query.createdTo) {
     match.createdAt = {
@@ -935,4 +951,79 @@ export async function listAdminPharmacyOwnerActivityService(
     scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
     scopeEntityId: ownerId,
   });
+}
+
+//===============================================================
+
+/** One query covering ALL of the owner's pharmacies, not just the current list page. */
+export async function getAdminPharmacyOwnerSalesStatisticsService(
+  ownerId: string,
+  query: OrderSalesStatisticsQuery
+) {
+  const ownerObjectId = new Types.ObjectId(ownerId);
+
+  const exists = await User.exists({
+    _id: ownerObjectId,
+    role: USER_ROLES.PHARMACY,
+  });
+
+  if (!exists)
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy owner was not found.');
+
+  const pharmacies = await Pharmacy.find({ ownerId: ownerObjectId })
+    .select('_id')
+    .lean<Array<{ _id: Types.ObjectId }>>();
+
+  return getOrderSalesStatisticsForPharmaciesService(
+    pharmacies.map((item) => String(item._id)),
+    query
+  );
+}
+
+//===============================================================
+
+/** Admin read-only session listing. Never include token hashes. */
+export async function listAdminPharmacyOwnerSessionsService(ownerId: string) {
+  const userId = new Types.ObjectId(ownerId);
+  const exists = await User.exists({ _id: userId, role: USER_ROLES.PHARMACY });
+
+  if (!exists)
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy owner was not found.');
+
+  const now = new Date();
+
+  const sessions = await Session.find({
+    userId,
+    roleAtLogin: USER_ROLES.PHARMACY,
+    revokedAt: undefined,
+    expiresAt: { $gt: now },
+
+    $or: [
+      { absoluteExpiresAt: { $gt: now } },
+      { absoluteExpiresAt: { $exists: false } },
+    ],
+  })
+    .sort({ lastUsedAt: -1 })
+    .limit(100)
+    .lean();
+
+  return {
+    sessions: sessions.map((session) => ({
+      id: String(session._id),
+
+      ...(session.deviceName ? { deviceName: session.deviceName } : {}),
+      ...(session.userAgent ? { userAgent: session.userAgent } : {}),
+      ...(session.ip ? { ip: session.ip } : {}),
+
+      roleAtLogin: session.roleAtLogin,
+
+      ...(session.createdAt
+        ? { createdAt: session.createdAt.toISOString() }
+        : {}),
+
+      lastUsedAt: session.lastUsedAt.toISOString(),
+      expiresAt: session.expiresAt.toISOString(),
+      isCurrent: false,
+    })),
+  };
 }
