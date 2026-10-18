@@ -95,6 +95,7 @@ for (const [routePath, permission] of [
   ['positions/:positionId', 'positions.delete'],
 ]) {
   const [resource, action] = permission.split('.');
+
   assert.match(
     routes,
     new RegExp(
@@ -125,9 +126,13 @@ assert.match(
   /response\.totalPages === 0 \|\| page > response\.totalPages/
 );
 
-assert.match(page, /setPage\(Math\.max\(1, response\.totalPages\)\)/);
+assert.match(
+  page,
+  /navigate\(\{ page: Math\.max\(1, response\.totalPages\) \}\)/
+);
+
 assert.match(page, /page > 1 && \(data\?\.items\.length \?\? 0\) === 1/);
-assert.match(page, /setPage\(\(current\) => Math\.max\(1, current - 1\)\)/);
+assert.match(page, /navigate\(\{ page: Math\.max\(1, page - 1\) \}\)/);
 
 assert.match(
   page,

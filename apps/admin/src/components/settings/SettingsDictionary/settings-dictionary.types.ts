@@ -38,6 +38,7 @@ export type SettingsDictionaryListResponse<
 export type SettingsDictionaryFormValues = Readonly<{
   name: string;
   color?: string;
+  icon?: string;
 }>;
 
 //===================================================================

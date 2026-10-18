@@ -27,3 +27,5 @@ export type {
   PasswordFieldProps,
   BrowserUploadFile,
 } from './types';
+
+export * from './CategoryIconPicker';

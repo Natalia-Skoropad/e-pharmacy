@@ -1,12 +1,7 @@
-import { Landmark, LockKeyhole, ShieldCheck } from 'lucide-react';
-
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
+import { PharmacyPaymentFields } from '@e-pharmacy/ui/profile';
 
-import {
-  buildAdminPaymentRows,
-  getMissingPublishedPaymentFields,
-  getPublishedPaymentStatus,
-} from './pharmacy-about-payment';
+import { buildAdminPaymentRows } from './pharmacy-about-payment';
 
 import css from './PharmacyDetailSections.module.css';
 
@@ -16,130 +11,52 @@ export function PharmacyPaymentTab({
   detail,
 }: Readonly<{ detail: AdminPharmacyDetail }>) {
   const { current, pendingChanges: pending } = detail;
-  const pendingBank = pending?.bankDetails;
-  const rows = buildAdminPaymentRows(current.bankDetails, pendingBank);
-  const paymentStatus = getPublishedPaymentStatus(detail);
-  const missingFields = getMissingPublishedPaymentFields(current.bankDetails);
-  const submittedRows = rows.filter((row) => row.submitted !== undefined);
+  const bank = current.bankDetails;
+
+  const rows = buildAdminPaymentRows(bank, pending?.bankDetails).filter(
+    (row) => row.submitted !== undefined
+  );
 
   return (
     <div className={css.stack}>
-      <section className={css.card} aria-labelledby="pharmacy-payment-title">
-        <div className={css.heading}>
-          <Landmark size={21} aria-hidden="true" />
-          <div>
-            <h3 id="pharmacy-payment-title">Payment details</h3>
+      <PharmacyPaymentFields
+        disabled
+        values={{
+          recipientName: bank?.recipientName ?? '',
+          taxId: bank?.taxId ?? '',
+          iban: bank?.iban ?? '',
+          bankName: bank?.bankName ?? '',
+          receiptEmail: bank?.receiptEmail ?? '',
+          paymentPurpose: bank?.paymentPurpose ?? '',
+        }}
+      />
+      {pending?.bankDetails !== undefined ? (
+        <section className={css.pendingSection}>
+          <h4>Submitted payment changes · Pending review</h4>
+          <p className={css.muted}>
+            These fields are pending approval and do not replace published
+            payment details.
+          </p>
 
-            <p>
-              Private pharmacy banking information, available to authorized
-              administrators only.
-            </p>
-          </div>
-        </div>
-
-        <div className={css.status} role="status">
-          <ShieldCheck size={20} aria-hidden="true" />
-          <div>
-            <strong>
-              {paymentStatus === 'available'
-                ? 'Bank transfer available'
-                : 'Bank transfer unavailable · Incomplete details'}
-            </strong>
-
-            <p>
-              {paymentStatus === 'available'
-                ? 'All required published payment fields are filled in.'
-                : missingFields.length
-                  ? `Missing published fields: ${missingFields.join(', ')}.`
-                  : 'The published payment configuration is not enabled.'}
-            </p>
-            <p>Only approved payment data determines transfer availability.</p>
-          </div>
-        </div>
-
-        <div className={css.copySection}>
-          <div className={css.subheading}>
-            <h4>Approved bank details</h4>
-            <span>Published data</span>
-          </div>
           <dl className={css.details}>
             {rows.map((row) => (
-              <div key={row.key} className={css.field}>
+              <div className={css.field} key={row.key}>
                 <dt>{row.label}</dt>
-                <dd>
-                  <span
-                    className={
-                      row.published === 'Not provided' ? css.empty : css.value
-                    }
-                  >
+                <dd className={css.comparison}>
+                  <span>
+                    <small>Published</small>
                     {row.published}
                   </span>
-                  {row.publishedFormatIssue && (
-                    <span className={css.warning}>
-                      {row.publishedFormatIssue}
-                    </span>
-                  )}
+                  <span>
+                    <small>Submitted</small>
+                    {row.submitted}
+                  </span>
                 </dd>
               </div>
             ))}
           </dl>
-        </div>
-
-        {pendingBank !== undefined && (
-          <div className={css.pendingSection}>
-            <div className={css.pendingHeading}>
-              <h4>Submitted payment changes · Pending review</h4>
-              <LockKeyhole size={18} aria-label="Private data" />
-            </div>
-
-            <p className={css.muted}>
-              Only explicitly submitted fields are compared. Other payment
-              fields remain unchanged; submitted values are not active.
-            </p>
-
-            {submittedRows.length ? (
-              <dl className={css.details}>
-                {submittedRows.map((row) => (
-                  <div
-                    key={row.key}
-                    className={`${css.field} ${row.changed ? css.changed : ''}`}
-                  >
-                    <dt>
-                      {row.label} · {row.changed ? 'Changed' : 'Unchanged'}
-                    </dt>
-
-                    <dd className={css.comparison}>
-                      <span>
-                        <small>Published</small>
-                        {row.published}
-                      </span>
-
-                      <span>
-                        <small>Submitted</small>
-                        {row.submitted}
-                      </span>
-
-                      {row.submittedFormatIssue && (
-                        <span className={css.warning}>
-                          {row.submittedFormatIssue}
-                        </span>
-                      )}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p className={css.empty}>No payment field changes submitted.</p>
-            )}
-          </div>
-        )}
-
-        <p className={css.footer}>
-          <LockKeyhole size={16} aria-hidden="true" />
-          Read only. Administrators cannot change owner banking or profile data
-          directly; changes require the existing moderation and audit workflow.
-        </p>
-      </section>
+        </section>
+      ) : null}
     </div>
   );
 }

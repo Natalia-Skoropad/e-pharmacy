@@ -198,7 +198,7 @@ const page = await read(
 
 for (const token of [
   'PageHeader',
-  'SearchInput',
+  'SearchableSelect',
   'FiltersButton',
   'RowsPerPageSelect',
   'CountLabel',

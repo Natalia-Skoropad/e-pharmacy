@@ -98,6 +98,7 @@ export function AdminProfilePageContent() {
   const [documentsCount, setDocumentsCount] = useState(0);
   const [commentsCount, setCommentsCount] = useState(0);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
+  const [sessionsSnapshotAt, setSessionsSnapshotAt] = useState(0);
 
   const [sessionsStatus, setSessionsStatus] =
     useState<ActiveSessionsPanelStatus>('loading');
@@ -131,11 +132,11 @@ export function AdminProfilePageContent() {
       },
       {
         value: SESSIONS_TAB,
-        label: `Active sessions (${sessions.length})`,
+        label: `Active sessions (${sessions.filter((session) => !session.revokedAt && Date.parse(session.expiresAt) > sessionsSnapshotAt).length})`,
         icon: <MonitorSmartphone size={17} aria-hidden="true" />,
       },
     ],
-    [commentsCount, documentsCount, sessions.length]
+    [commentsCount, documentsCount, sessions, sessionsSnapshotAt]
   );
 
   useEffect(() => {
@@ -166,6 +167,7 @@ export function AdminProfilePageContent() {
       .then((response) => {
         if (controller.signal.aborted) return;
         setSessions([...response.sessions]);
+        setSessionsSnapshotAt(Date.now());
         setSessionsStatus('success');
       })
 
@@ -191,9 +193,11 @@ export function AdminProfilePageContent() {
 
   const handlePictureChange = async (nextPictureUrl: string | null) => {
     if (profileMutationInFlightRef.current) return;
+
     profileMutationInFlightRef.current = true;
     setPictureDraft(nextPictureUrl);
     setIsSavingPicture(true);
+
     try {
       const response = await updateMyAdminEmployeeProfile({
         pictureUrl: nextPictureUrl,
@@ -202,6 +206,7 @@ export function AdminProfilePageContent() {
 
       applyCurrentUser(response.user);
       setPictureDraft(undefined);
+
       toast.success(
         nextPictureUrl
           ? 'Profile photo was updated.'
@@ -220,11 +225,13 @@ export function AdminProfilePageContent() {
     values: Readonly<ChangePasswordFormValues>
   ) => {
     if (passwordMutationInFlightRef.current) return;
+
     passwordMutationInFlightRef.current = true;
     setIsPasswordSaving(true);
 
     try {
       await updateCurrentUserPassword(values);
+
       invalidateSession('password_changed');
       toast.success('Password changed. Log in with your new password.');
       window.location.replace(ADMIN_ROUTES.LOGIN);
@@ -238,14 +245,17 @@ export function AdminProfilePageContent() {
 
   const handleRevokeSession = async (sessionId: string) => {
     if (sessionMutationInFlightRef.current) return;
+
     sessionMutationInFlightRef.current = true;
     setRevokingSessionId(sessionId);
 
     try {
       await revokeActiveSession(sessionId);
+
       setSessions((current) =>
         current.filter((session) => session.id !== sessionId)
       );
+
       setSessionsReloadKey((current) => current + 1);
       toast.success('Session was revoked.');
     } catch {
@@ -258,6 +268,7 @@ export function AdminProfilePageContent() {
 
   const handleLogoutAllSessions = async () => {
     if (!logoutAll || sessionMutationInFlightRef.current) return;
+
     sessionMutationInFlightRef.current = true;
     setIsSigningOutAll(true);
 
@@ -313,10 +324,12 @@ export function AdminProfilePageContent() {
             setSessionsStatus('loading');
             setSessionsError('');
           }
+
           const url =
             nextTab === PERSONAL_TAB
               ? ADMIN_ROUTES.PROFILE
               : `${ADMIN_ROUTES.PROFILE}/${nextTab}`;
+
           window.history.pushState(null, '', url);
         }}
       >

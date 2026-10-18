@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { BriefcaseBusiness, Pencil, Plus, Trash2, X } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
@@ -14,7 +15,9 @@ import {
 
 import {
   RowsPerPageSelect,
-  SearchInput,
+  SearchableSelect,
+  type SearchableSelectOption,
+  CategoryIcon,
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/forms';
 
@@ -34,6 +37,12 @@ import {
 } from './SettingsDictionaryFilters';
 
 import { SettingsDictionaryFormModal } from './SettingsDictionaryFormModal';
+
+import {
+  buildSettingsDictionaryUrl,
+  parseSettingsDictionarySegments,
+  slugForDictionaryItem,
+} from './settings-dictionary-url';
 
 import type {
   SettingsDictionaryConfig,
@@ -93,16 +102,30 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   config,
 }: Readonly<{ config: SettingsDictionaryConfig<TItem> }>) {
   const { access } = useAdminAuthorization();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const basePath = config.color
+    ? '/admin/settings/categories'
+    : '/admin/settings/positions';
+
+  const selectionPrefix = config.color ? 'category' : 'position';
+
+  const url = useMemo(() => {
+    const segments = pathname.startsWith(`${basePath}/`)
+      ? pathname.slice(basePath.length + 1).split('/')
+      : [];
+
+    return parseSettingsDictionarySegments(segments, selectionPrefix);
+  }, [pathname, basePath, selectionPrefix]);
+
+  const { filters, selectedSlug, page, perPage } = url;
+  const keyword = selectedSlug.replaceAll('-', ' ');
   const toast = useToast();
 
-  const [filters, setFilters] = useState<SettingsDictionaryFiltersValue>(
-    EMPTY_SETTINGS_DICTIONARY_FILTERS
-  );
+  const [suggestionQuery, setSuggestionQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<readonly TItem[]>([]);
 
-  const [searchValue, setSearchValue] = useState('');
-  const [keyword, setKeyword] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState<RowsPerPageValue>(20);
   const [data, setData] =
     useState<SettingsDictionaryListResponse<TItem> | null>(null);
 
@@ -124,18 +147,82 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   const activeFiltersCount = hasDateFilters ? 1 : 0;
   const isFiltered = Boolean(keyword || hasDateFilters);
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const nextKeyword = searchValue.trim();
-      if (nextKeyword === keyword) return;
+  const navigate = useCallback(
+    (next: {
+      selectedSlug?: string;
+      filters?: SettingsDictionaryFiltersValue;
+      page?: number;
+      perPage?: RowsPerPageValue;
+    }) => {
+      const changed = {
+        selectedSlug: next.selectedSlug ?? selectedSlug,
+        filters: next.filters ?? filters,
+        page: next.page ?? page,
+        perPage: next.perPage ?? perPage,
+      };
+
+      const nextPath = buildSettingsDictionaryUrl(basePath, changed);
+      if (nextPath === pathname) return;
 
       setIsLoading(true);
-      setKeyword(nextKeyword);
-      setPage(1);
-    }, 300);
+      router.push(nextPath);
+    },
+    [router, basePath, pathname, selectedSlug, filters, page, perPage]
+  );
 
-    return () => window.clearTimeout(timeoutId);
-  }, [keyword, searchValue]);
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const timeout = window.setTimeout(() => {
+      void config.api
+        .list(
+          {
+            page: 1,
+            perPage: 100,
+            ...(suggestionQuery ? { keyword: suggestionQuery } : {}),
+          },
+          { signal: controller.signal }
+        )
+
+        .then((response) => {
+          if (!controller.signal.aborted) setSuggestions(response.items);
+        })
+
+        .catch(() => {
+          if (!controller.signal.aborted) setSuggestions([]);
+        });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [config.api, suggestionQuery, reloadVersion]);
+
+  const searchOptions = useMemo<Array<SearchableSelectOption<string>>>(
+    () => [
+      { value: '', label: `All ${config.pluralLabel}` },
+
+      ...suggestions.map((item) => ({
+        value: slugForDictionaryItem(item, Boolean(config.color)),
+        label: item.name,
+
+        leading: (
+          <span className={css.searchItemIcon}>
+            {config.color ? (
+              <CategoryIcon
+                name={(item as TItem & { icon?: string }).icon}
+                size={16}
+              />
+            ) : (
+              <BriefcaseBusiness size={16} />
+            )}
+          </span>
+        ),
+      })),
+    ],
+    [suggestions, config.color, config.pluralLabel]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -146,12 +233,14 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         {
           page,
           perPage,
+
           ...(keyword ? { keyword } : {}),
           ...(filters.createdFrom ? { createdFrom: filters.createdFrom } : {}),
           ...(filters.createdTo ? { createdTo: filters.createdTo } : {}),
         },
         { signal: controller.signal }
       )
+
       .then((response) => {
         if (controller.signal.aborted) return;
 
@@ -160,7 +249,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           (response.totalPages === 0 || page > response.totalPages)
         ) {
           keepLoadingForPageCorrection = true;
-          setPage(Math.max(1, response.totalPages));
+          navigate({ page: Math.max(1, response.totalPages) });
           return;
         }
 
@@ -182,6 +271,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
+
         setListError(
           getRequestErrorMessage(
             error,
@@ -189,6 +279,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           )
         );
       })
+
       .finally(() => {
         if (!controller.signal.aborted && !keepLoadingForPageCorrection) {
           setIsLoading(false);
@@ -204,6 +295,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
     page,
     perPage,
     reloadVersion,
+    navigate,
   ]);
 
   const reload = useCallback(() => {
@@ -226,12 +318,14 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
     try {
       if (formState.mode === 'create') {
         await config.api.create(values);
+
         toast.success(config.messages.created);
         setFormState(null);
-        setPage(1);
+        navigate({ page: 1, selectedSlug: '' });
         reload();
       } else {
         await config.api.update(formState.item.id, values);
+
         toast.success(config.messages.updated);
         setFormState(null);
         reload();
@@ -279,7 +373,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
 
       if (shouldMoveToPreviousPage) {
         setIsLoading(true);
-        setPage((current) => Math.max(1, current - 1));
+        navigate({ page: Math.max(1, page - 1) });
       } else {
         reload();
       }
@@ -290,6 +384,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           `${config.singularLabel} could not be deleted. Please try again.`
         )
       );
+
       setDeleteItem(null);
       reload();
     } finally {
@@ -327,9 +422,25 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
 
     if (config.color) {
       baseColumns.push({
+        key: 'icon',
+        title: 'Icon',
+        width: '7%',
+
+        render: (item) => (
+          <span className={css.searchItemIcon}>
+            <CategoryIcon
+              name={(item as TItem & { icon?: string }).icon}
+              size={18}
+            />
+          </span>
+        ),
+      });
+
+      baseColumns.push({
         key: 'color',
         title: 'Color',
         width: colorWidth,
+
         render: (item) => {
           const color = config.color?.getColor(item) ?? '';
 
@@ -351,6 +462,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         key: 'hex',
         title: 'HEX',
         width: hexWidth,
+
         render: (item) => (
           <code className={css.hexValue}>
             {config.color?.getColor(item).toUpperCase()}
@@ -379,7 +491,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         width: actionsWidth,
         render: (item) => {
           const isInUse = item.usage.total > 0;
-          const editDisabled = !canEdit || isInUse;
+          const editDisabled = !canEdit || (isInUse && !config.color);
           const deleteDisabled = !canDelete || isInUse;
 
           let editDisabledReason: string | undefined;
@@ -436,6 +548,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   }, [canDelete, canEdit, config, openEdit]);
 
   const items = data?.items ?? [];
+
   const selectedEditItem =
     formState?.mode === 'edit' ? formState.item : undefined;
 
@@ -462,14 +575,18 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
 
       <section className={css.card} aria-label={`${config.title} filters`}>
         <div className={css.searchGrid}>
-          <SearchInput
+          <SearchableSelect
             id="settings-dictionary-search"
             label="Search by name"
-            value={searchValue}
+            value={selectedSlug}
+            options={searchOptions}
+            selectedFallbackLabel={selectedSlug.replaceAll('-', ' ')}
             placeholder={config.searchPlaceholder}
-            isActive={Boolean(searchValue)}
-            disabled={isLoading && !data}
-            onChange={setSearchValue}
+            isActive={Boolean(selectedSlug)}
+            maxLength={100}
+            filterOptions={false}
+            onQueryChange={setSuggestionQuery}
+            onChange={(slug) => navigate({ selectedSlug: slug, page: 1 })}
           />
 
           <div className={css.searchAction}>
@@ -492,9 +609,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
               options={config.rowsPerPageOptions ?? [20, 50, 100]}
               disabled={isLoading && !data}
               onChange={(value) => {
-                setIsLoading(true);
-                setPerPage(value);
-                setPage(1);
+                navigate({ perPage: value, page: 1 });
               }}
             />
           </div>
@@ -552,8 +667,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           disabled={isLoading}
           ariaLabel={`${config.title} pagination`}
           onPageChange={(nextPage) => {
-            setIsLoading(true);
-            setPage(nextPage);
+            navigate({ page: nextPage });
           }}
         />
       </section>
@@ -565,14 +679,10 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           earliestCreatedAt={data?.earliestCreatedAt ?? undefined}
           hasActiveFilters={hasDateFilters}
           onChange={(nextFilters) => {
-            setIsLoading(true);
-            setFilters(nextFilters);
-            setPage(1);
+            navigate({ filters: nextFilters, page: 1 });
           }}
           onReset={() => {
-            setIsLoading(true);
-            setFilters(EMPTY_SETTINGS_DICTIONARY_FILTERS);
-            setPage(1);
+            navigate({ filters: EMPTY_SETTINGS_DICTIONARY_FILTERS, page: 1 });
           }}
           onClose={() => setIsFiltersOpen(false)}
         />
@@ -587,6 +697,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           item={selectedEditItem}
           contextLabel={config.title}
           singularLabel={config.singularLabel}
+          nameDisabled={Boolean(selectedEditItem?.usage.total)}
           defaultColor={config.color?.defaultColor}
           currentColor={
             selectedEditItem && config.color
@@ -605,8 +716,12 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           isOpen
           title={`Delete “${deleteItem.name}”?`}
           description="This action cannot be undone."
-          confirmLabel="Delete"
-          confirmButtonVariant="primary"
+          eyebrow={config.title}
+          confirmLabel={`Delete ${config.singularLabel}`}
+          cancelLabel={`Keep ${config.singularLabel}`}
+          confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+          cancelIconLeft={<X size={17} aria-hidden="true" />}
+          destructive
           isLoading={isMutating}
           closeOnBackdrop={!isMutating}
           closeOnEscape={!isMutating}

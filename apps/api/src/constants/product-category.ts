@@ -29,6 +29,7 @@ export type ProductCategoryKind = (typeof PRODUCT_CATEGORY_KINDS)[number];
 export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   {
     name: 'Medicine',
+    icon: 'pill',
     color: '#3B82F6',
     slug: 'medicine',
     status: 'active',
@@ -37,6 +38,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Vitamins',
+    icon: 'apple',
     color: '#22C55E',
     slug: 'vitamins',
     status: 'active',
@@ -45,6 +47,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Beauty',
+    icon: 'sparkles',
     color: '#EC4899',
     slug: 'beauty',
     status: 'active',
@@ -53,6 +56,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Hygiene',
+    icon: 'droplets',
     color: '#14B8A6',
     slug: 'hygiene',
     status: 'active',
@@ -61,6 +65,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   },
   {
     name: 'Medical devices',
+    icon: 'stethoscope',
     color: '#8B5CF6',
     slug: 'medical_devices',
     status: 'active',
@@ -74,6 +79,7 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   kind: ProductCategoryKind;
   sortOrder: number;
   color: string;
+  icon: string;
 }[];
 
 //===============================================================

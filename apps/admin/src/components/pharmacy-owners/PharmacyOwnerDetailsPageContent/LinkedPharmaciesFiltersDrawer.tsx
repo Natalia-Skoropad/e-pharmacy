@@ -1,4 +1,4 @@
-import { Star, MapPin, Map } from 'lucide-react';
+import { Star, MapPin, Map, MapPinned, Search } from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -9,7 +9,7 @@ import {
   type SelectOption,
 } from '@e-pharmacy/ui/forms';
 
-import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { FilterDrawer, InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import {
   ADMIN_OWNER_PHARMACY_STATUSES,
@@ -26,7 +26,12 @@ import css from '../../pharmacies/PharmaciesFiltersDrawer/PharmaciesFiltersDrawe
 type LinkedPharmaciesFiltersDrawerProps = Readonly<{
   state: AdminPharmacyOwnerPharmaciesUrlState;
   hasActiveFilters: boolean;
-  locationOptions: Readonly<{ settlements: readonly string[]; regions: readonly string[] }>;
+
+  locationOptions: Readonly<{
+    settlements: readonly string[];
+    regions: readonly string[];
+  }>;
+
   onChange: (state: AdminPharmacyOwnerPharmaciesUrlState) => void;
   onReset: () => void;
   onClose: () => void;
@@ -38,6 +43,7 @@ const PHARMACY_STATUS_OPTIONS: Array<
   SelectOption<AdminOwnerPharmacyStatus | 'all'>
 > = [
   { value: 'all', label: 'All statuses' },
+
   ...ADMIN_OWNER_PHARMACY_STATUSES.map((status) => ({
     value: status,
     label: PHARMACY_STATUS_PRESENTATION[status].label,
@@ -165,26 +171,78 @@ export function LinkedPharmaciesFiltersDrawer({
         onChange={(status) => onChange({ ...state, status, page: 1 })}
       />
 
+      <div className={css.regionFilter}>
+        <span className={css.regionHelp}>
+          <InfoTooltip
+            label="How location filters work"
+            title="Choose a region first"
+            icon={<MapPinned size={19} />}
+            escapeOverflow
+            items={[
+              {
+                title: 'Select a region',
+                description:
+                  'Choose a region to enable the Settlement filter. Only settlements in that region will be available.',
+                icon: <Map size={17} />,
+              },
+              {
+                title: 'Narrow the results',
+                description:
+                  'Then select a settlement, or leave All settlements to view the entire region.',
+                icon: <Search size={17} />,
+              },
+            ]}
+          />
+        </span>
+
+        <SelectField
+          id="owner-linked-pharmacies-region-filter"
+          label="Region"
+          value={state.region}
+          options={[
+            { value: '', label: 'All regions' },
+            ...locationOptions.regions.map((value) => ({
+              value,
+              label: value,
+              content: (
+                <span className={css.locationOption}>
+                  <span className={css.locationIcon}>
+                    <Map size={16} />
+                  </span>
+                  {value}
+                </span>
+              ),
+            })),
+          ]}
+          isActive={Boolean(state.region)}
+          onChange={(region) =>
+            onChange({ ...state, region, settlement: '', page: 1 })
+          }
+        />
+      </div>
+
       <SelectField
         id="owner-linked-pharmacies-settlement-filter"
         label="Settlement"
-        value={state.settlement}
-        options={[{ value: '', label: 'All settlements' }, ...locationOptions.settlements.map((value) => ({
-          value, label: value, content: <span className={css.locationOption}><MapPin size={16} />{value}</span>,
-        }))]}
+        value={state.region ? state.settlement : ''}
+        disabled={!state.region}
+        options={[
+          { value: '', label: 'All settlements' },
+          ...locationOptions.settlements.map((value) => ({
+            value,
+            label: value,
+            content: (
+              <span className={css.locationOption}>
+                <span className={css.locationIcon}>
+                  <MapPin size={16} />
+                </span>
+                {value}
+              </span>
+            ),
+          })),
+        ]}
         isActive={Boolean(state.settlement)}
         onChange={(settlement) => onChange({ ...state, settlement, page: 1 })}
-      />
-
-      <SelectField
-        id="owner-linked-pharmacies-region-filter"
-        label="Region"
-        value={state.region}
-        options={[{ value: '', label: 'All regions' }, ...locationOptions.regions.map((value) => ({
-          value, label: value, content: <span className={css.locationOption}><Map size={16} />{value}</span>,
-        }))]}
-        isActive={Boolean(state.region)}
-        onChange={(region) => onChange({ ...state, region, page: 1 })}
       />
 
       <SelectField

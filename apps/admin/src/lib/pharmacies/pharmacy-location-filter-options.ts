@@ -40,15 +40,7 @@ export function getPharmacyLocationFilterOptions(
   );
 
   const regions = choices(
-    rows
-      .filter(
-        (row) =>
-          !settlement ||
-          normalize(row.location?.settlement).toLocaleLowerCase() ===
-            settlement.toLocaleLowerCase()
-      )
-      .map((row) => normalize(row.location?.region))
-      .concat(region)
+    rows.map((row) => normalize(row.location?.region)).concat(region)
   );
 
   return { settlements, regions };

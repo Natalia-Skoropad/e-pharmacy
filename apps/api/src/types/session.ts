@@ -43,6 +43,8 @@ export type SessionResponseDto = {
   lastUsedAt: string;
   expiresAt: string;
   isCurrent: boolean;
+  revokedAt?: string;
+  revokedReason?: SessionRevokedReason;
 };
 
 //===============================================================

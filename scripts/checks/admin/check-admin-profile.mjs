@@ -191,7 +191,7 @@ assert.match(profileContent, /expectedRevision:\s*user\.revision/);
 assert.match(profileContent, /applyCurrentUser\(response\.user\)/);
 assert.match(profileContent, /activeTab === DOCUMENTS_TAB \? /);
 assert.match(profileContent, /activeTab === COMMENTS_TAB \? /);
-assert.match(profileContent, /activeTab !== SESSIONS_TAB/);
+assert.match(profileContent, /activeTab === SESSIONS_TAB/);
 
 assert.match(profileBrowserApi, /ADMIN_API_ROUTES\.adminEmployees\.myProfile/);
 assert.match(profileBrowserApi, /localApiRequest/);

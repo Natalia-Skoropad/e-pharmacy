@@ -142,7 +142,17 @@ function locationText(value: unknown): string {
 //===================================================================
 
 function locationSegment(value: string): string {
-  return encodeURIComponent(value);
+  return encodeURIComponent(value.trim().replace(/\s+/g, '-'));
+}
+
+//===================================================================
+
+function readRegionSegment(value: string): string {
+  const decoded = readLocationSegment(value);
+
+  return decoded.includes(' ')
+    ? decoded
+    : decoded.replace(/-region$/i, ' region');
 }
 
 //===================================================================
@@ -253,9 +263,11 @@ function parseListFilters(
     if (key in raw) throw new TypeError('Duplicate pharmacy filter.');
 
     raw[key] =
-      key === 'settlement' || key === 'region'
+      key === 'settlement'
         ? readLocationSegment(segment.slice(prefix.length))
-        : segment.slice(prefix.length);
+        : key === 'region'
+          ? readRegionSegment(segment.slice(prefix.length))
+          : segment.slice(prefix.length);
   }
 
   return normalize(raw);

@@ -25,6 +25,7 @@ export function buildProductCategorySeedOperations() {
           slug: definition.slug,
           normalizedName,
         },
+
         update: {
           $setOnInsert: {
             ...definition,
@@ -33,6 +34,7 @@ export function buildProductCategorySeedOperations() {
             updatedBy: null,
           },
         },
+
         upsert: true,
       },
     };
@@ -61,13 +63,33 @@ export async function ensureInitialProductCategories(): Promise<ProductCategoryB
           slug: definition.slug,
           $or: [{ color: { $exists: false } }, { color: null }],
         },
+
         update: { $set: { color: definition.color } },
       },
     })),
+
     {
       updateMany: {
         filter: { $or: [{ color: { $exists: false } }, { color: null }] },
         update: { $set: { color: PRODUCT_CATEGORY_DEFAULT_COLOR } },
+      },
+    },
+
+    ...PRODUCT_CATEGORY_SEED_DEFINITIONS.map((definition) => ({
+      updateOne: {
+        filter: {
+          slug: definition.slug,
+          $or: [{ icon: { $exists: false } }, { icon: null }],
+        },
+
+        update: { $set: { icon: definition.icon } },
+      },
+    })),
+
+    {
+      updateMany: {
+        filter: { $or: [{ icon: { $exists: false } }, { icon: null }] },
+        update: { $set: { icon: 'pill' } },
       },
     },
   ]);

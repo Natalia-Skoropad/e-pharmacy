@@ -106,6 +106,7 @@ export function getAdminBreadcrumbsByPathname(
       documents: 'Documents',
       comments: 'Comments',
       activity: 'Activity history',
+      sessions: 'Active sessions',
     };
 
     if (

@@ -90,6 +90,7 @@ function normalizeSearch(value?: string): string {
 function parsePage(value?: string): number {
   if (!value || !/^\d+$/.test(value)) return 1;
   const page = Number(value);
+
   return Number.isSafeInteger(page) && page >= 1 ? page : 1;
 }
 
@@ -112,6 +113,7 @@ function normalizeDateRange(
   to: string
 ): Readonly<{ from: string; to: string }> {
   if (from && to && from > to) return { from: '', to: '' };
+
   return { from, to };
 }
 
@@ -311,6 +313,7 @@ export function buildAdminPharmacyOwnerDetailUrl(
 
   const tab = isDetailTab(state.tab) ? state.tab : 'personal';
   const suffix = tab === 'personal' ? '' : `/${tab}`;
+
   return `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}${suffix}`;
 }
 
@@ -364,7 +367,7 @@ export function buildAdminPharmacyOwnerPharmaciesUrl(
 
   if (state.region)
     segments.push(
-      `region-${encodeURIComponent(normalizeSearch(state.region))}`
+      `region-${encodeURIComponent(normalizeSearch(state.region).replace(/\s+/g, '-'))}`
     );
 
   if (isPharmacyStatus(state.status))
@@ -424,7 +427,10 @@ export function parseAdminPharmacyOwnerPharmaciesSegments(
         );
 
         if (field === 'settlement') settlement = value;
-        else region = value;
+        else
+          region = value.includes(' ')
+            ? value
+            : value.replace(/-region$/i, ' region');
       } catch {
         /* Ignore malformed URL encoding. */
       }

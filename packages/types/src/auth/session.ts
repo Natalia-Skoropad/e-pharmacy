@@ -13,6 +13,15 @@ export type ActiveSession = Readonly<{
   lastUsedAt: ISODateTimeString;
   expiresAt: ISODateTimeString;
   isCurrent: boolean;
+  revokedAt?: ISODateTimeString;
+
+  revokedReason?:
+    | 'logout'
+    | 'logout_all'
+    | 'password_changed'
+    | 'user_blocked'
+    | 'token_reuse'
+    | 'admin_revoked';
 }>;
 
 //===================================================================

@@ -509,16 +509,16 @@ export function PharmacyDetailsPageContent({
                 icon={selectedTab.icon ?? <Building2 size={22} />}
               />
             ) : null}
-            {activeTab === 'documents' && detail ? (
+            {activeTab === 'documents' ? (
               <PharmacyDocumentsTab key={pharmacyId} pharmacyId={pharmacyId} />
-            ) : activeTab === 'comments' && detail ? (
+            ) : activeTab === 'comments' ? (
               <PharmacyCommentsTab
                 key={pharmacyId}
                 pharmacyId={pharmacyId}
                 canManage={canEditPharmacy}
                 onCountChange={handleCommentsCountChange}
               />
-            ) : activeTab === 'activity' && detail ? (
+            ) : activeTab === 'activity' ? (
               <PharmacyActivityTab
                 key={pharmacyId}
                 pharmacyId={pharmacyId}

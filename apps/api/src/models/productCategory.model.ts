@@ -12,6 +12,8 @@ import {
   normalizeProductCategoryNameKey,
 } from '../constants/product-category';
 
+import { PRODUCT_CATEGORY_ICONS } from '../constants/product-category-icon';
+
 import type { ProductCategoryPersistenceEntity } from '../types/product-category';
 
 //===============================================================
@@ -22,10 +24,12 @@ const productCategorySchema = new Schema<ProductCategoryPersistenceEntity>(
       type: String,
       required: [true, 'Product category name is required'],
       trim: true,
+
       maxlength: [
         PRODUCT_CATEGORY_NAME_MAX_LENGTH,
         `Product category name must be at most ${PRODUCT_CATEGORY_NAME_MAX_LENGTH} characters`,
       ],
+
       match: [
         PRODUCT_CATEGORY_NAME_PATTERN,
         'Use Latin letters and spaces, starting with an uppercase letter',
@@ -43,6 +47,7 @@ const productCategorySchema = new Schema<ProductCategoryPersistenceEntity>(
       required: [true, 'Product category slug is required'],
       trim: true,
       lowercase: true,
+
       match: [
         PRODUCT_CATEGORY_SLUG_PATTERN,
         'Product category slug must use lowercase snake_case',
@@ -67,6 +72,7 @@ const productCategorySchema = new Schema<ProductCategoryPersistenceEntity>(
       type: Number,
       required: true,
       min: [0, 'Product category sort order must be non-negative'],
+
       validate: {
         validator: Number.isInteger,
         message: 'Product category sort order must be an integer',
@@ -79,10 +85,18 @@ const productCategorySchema = new Schema<ProductCategoryPersistenceEntity>(
       trim: true,
       uppercase: true,
       default: PRODUCT_CATEGORY_DEFAULT_COLOR,
+
       match: [
         PRODUCT_CATEGORY_COLOR_PATTERN,
         'Product category color must use #RRGGBB format',
       ],
+    },
+
+    icon: {
+      type: String,
+      enum: PRODUCT_CATEGORY_ICONS,
+      trim: true,
+      default: 'pill',
     },
 
     createdBy: {

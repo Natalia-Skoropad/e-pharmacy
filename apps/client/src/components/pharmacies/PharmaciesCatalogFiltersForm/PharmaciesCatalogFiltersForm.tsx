@@ -7,7 +7,7 @@ import {
   ArrowUpAZ,
   Building2,
   CalendarDays,
-  MapPin,
+  Map,
   RotateCcw,
   Search,
   Star,
@@ -165,22 +165,19 @@ function PharmaciesCatalogFiltersForm({
       {
         value: 'all',
         label: 'All locations',
-        leading: (
-          <span className={css.locationIcon}>
-            <MapPin size={16} />
-          </span>
-        ),
       },
 
       ...availableLocationOptions.map((location) => ({
         value: getLocationOptionValue(location),
+
         label: formatPharmacyLocationLabel(
           location.settlement,
           location.region
         ),
+
         leading: (
           <span className={css.locationIcon}>
-            <MapPin size={16} />
+            <Map size={16} />
           </span>
         ),
       })),
@@ -212,7 +209,7 @@ function PharmaciesCatalogFiltersForm({
           label="Location search help"
           title="Location"
           escapeOverflow={idSuffix === 'mobile'}
-          icon={<MapPin size={20} aria-hidden="true" />}
+          icon={<Map size={20} aria-hidden="true" />}
           items={[
             {
               title: 'Search by settlement',

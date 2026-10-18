@@ -638,3 +638,21 @@
     animation: none;
   }
 }
+
+.sessionsHistory {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.sessionsHistory h3 {
+  margin: 0;
+  font-size: var(--fz-18);
+}
+
+.sessionsHistory > p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}

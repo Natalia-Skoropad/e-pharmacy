@@ -20,6 +20,7 @@ import {
 
 import { sharedSearchSchema } from './shared-validation.schema';
 import { PRODUCT_CATEGORY_COLOR_PATTERN } from '../constants/product-category';
+import { PRODUCT_CATEGORY_ICONS } from '../constants/product-category-icon';
 
 //===============================================================
 
@@ -57,7 +58,9 @@ export const adminSettingsDictionaryListQuerySchema = z.preprocess(
       createdFrom: dateQuerySchema,
       createdTo: dateQuerySchema,
     })
+
     .strict()
+
     .refine(
       ({ createdFrom, createdTo }) =>
         isDateRangeOrdered(createdFrom, createdTo),
@@ -84,6 +87,7 @@ export const createAdminProductCategorySchema = z
   .object({
     name: settingsDictionaryNameSchema,
     color: productCategoryColorSchema,
+    icon: z.enum(PRODUCT_CATEGORY_ICONS).optional(),
   })
 
   .strict();

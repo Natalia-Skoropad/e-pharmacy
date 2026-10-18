@@ -20,7 +20,8 @@
     "migrate:demo-pharmacy-introductions": "tsx src/scripts/migrate-demo-pharmacy-introductions.ts",
     "test": "node ../../scripts/test-runners/run-api-tests.mjs src --match=.test.ts --exclude=.integration.test.ts",
     "test:integration": "node ../../scripts/test-runners/run-api-tests.mjs src --match=.integration.test.ts",
-    "cart:cleanup-expired": "tsx src/scripts/cleanup-expired-cart-items.ts"
+    "cart:cleanup-expired": "tsx src/scripts/cleanup-expired-cart-items.ts",
+    "migrate:session-history-retention": "tsx src/scripts/migrate-session-history-retention.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

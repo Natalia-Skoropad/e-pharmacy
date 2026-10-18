@@ -585,6 +585,7 @@ export async function refreshAuthSessionService(
   const refreshTokenHash = hashRefreshToken(refreshToken);
   const signedSessionId = getSignedRefreshTokenSessionId(refreshToken);
   const now = new Date();
+
   const sessionSelect =
     '+refreshTokenHash +previousRefreshTokenHash revokedAt revokedReason expiresAt absoluteExpiresAt previousRefreshTokenValidUntil userId';
 
@@ -639,6 +640,7 @@ export async function refreshAuthSessionService(
   }
 
   const matchesCurrentToken = session.refreshTokenHash === refreshTokenHash;
+
   const matchesPreviousToken =
     session.previousRefreshTokenHash === refreshTokenHash;
 
@@ -991,6 +993,7 @@ export async function assertActiveSessionService(
     .lean();
 
   const now = new Date();
+
   if (
     !session ||
     session.expiresAt <= now ||
@@ -1503,17 +1506,10 @@ export async function getActiveSessionsService(
   currentSessionId?: string
 ): Promise<{ sessions: SessionResponseDto[] }> {
   const now = new Date();
-  const sessions = await Session.find({
-    userId,
-    revokedAt: undefined,
-    expiresAt: { $gt: now },
 
-    $or: [
-      { absoluteExpiresAt: { $gt: now } },
-      { absoluteExpiresAt: { $exists: false } },
-    ],
-  })
-    .sort({ lastUsedAt: -1 })
+  const sessions = await Session.find({ userId })
+    .sort({ createdAt: -1 })
+    .limit(200)
     .lean();
 
   return {
@@ -1532,7 +1528,20 @@ export async function getActiveSessionsService(
 
       lastUsedAt: session.lastUsedAt.toISOString(),
       expiresAt: session.expiresAt.toISOString(),
-      isCurrent: String(session._id) === currentSessionId,
+
+      ...(session.revokedAt
+        ? { revokedAt: session.revokedAt.toISOString() }
+        : {}),
+
+      ...(session.revokedReason
+        ? { revokedReason: session.revokedReason }
+        : {}),
+
+      isCurrent:
+        !session.revokedAt &&
+        session.expiresAt > now &&
+        (!session.absoluteExpiresAt || session.absoluteExpiresAt > now) &&
+        String(session._id) === currentSessionId,
     })),
   };
 }

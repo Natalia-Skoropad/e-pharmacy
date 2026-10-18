@@ -125,7 +125,8 @@
     "check:pharmacy-location": "node scripts/checks/pharmacy/check-pharmacy-location.mjs",
     "check:admin-settings-dictionaries": "node scripts/checks/admin/check-admin-settings-dictionaries.mjs",
     "check:admin-pharmacy-owners": "node scripts/checks/admin/check-admin-pharmacy-owners.mjs",
-    "check:admin-pharmacies-stage-14-17": "node scripts/checks/admin/check-admin-pharmacies-stage-14-17.mjs"
+    "check:admin-pharmacies-stage-14-17": "node scripts/checks/admin/check-admin-pharmacies-stage-14-17.mjs",
+    "migrate:session-history-retention": "pnpm --filter @e-pharmacy/api migrate:session-history-retention"
   },
   "devDependencies": {
     "turbo": "latest",

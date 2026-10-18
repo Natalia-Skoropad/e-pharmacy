@@ -30,6 +30,7 @@ export type ActiveSessionsPanelProps = Readonly<{
   loadingLabel?: string;
   emptyTitle?: string;
   emptyText?: string;
+  emptyIcon?: ReactNode;
   initialVisibleCount?: number;
   showIp?: boolean;
   lastUsedLabel?: string;
@@ -58,7 +59,8 @@ export function ActiveSessionsPanel({
   description = 'Review devices currently signed in to your account.',
   loadingLabel = 'Loading active sessions...',
   emptyTitle = 'No active sessions found',
-  emptyText = 'Session data will appear here when the backend returns active login devices.',
+  emptyText = 'Session data will appear here when you sign in.',
+  emptyIcon = <MonitorSmartphone size={24} />,
   initialVisibleCount = 10,
   showIp = false,
   lastUsedLabel = 'Last used',
@@ -96,15 +98,27 @@ export function ActiveSessionsPanel({
     );
   }, [normalizedInitialVisibleCount, sessions.length]);
 
-  const visibleSessions = useMemo(
-    () => sessions.slice(0, visibleCount),
-    [sessions, visibleCount]
-  );
+  const { activeSessions, pastSessions } = useMemo(() => {
+    const now = Date.now();
+
+    const activeSessions = sessions.filter(
+      (session) => !session.revokedAt && Date.parse(session.expiresAt) > now
+    );
+
+    return {
+      activeSessions,
+      pastSessions: sessions.filter(
+        (session) => !activeSessions.includes(session)
+      ),
+    };
+  }, [sessions]);
+  const visibleSessions = activeSessions.slice(0, visibleCount);
 
   const pendingRevokeSession = useMemo(
     () =>
-      sessions.find((session) => session.id === pendingRevokeSessionId) ?? null,
-    [pendingRevokeSessionId, sessions]
+      activeSessions.find((session) => session.id === pendingRevokeSessionId) ??
+      null,
+    [pendingRevokeSessionId, activeSessions]
   );
 
   const isPendingRevokeLoading = Boolean(
@@ -152,7 +166,7 @@ export function ActiveSessionsPanel({
         />
       </div>
 
-      {sessions.length > 0 && onSignOutAll ? (
+      {activeSessions.length > 0 && onSignOutAll ? (
         <Button
           className={css.panelAction}
           type="button"
@@ -186,7 +200,7 @@ export function ActiveSessionsPanel({
           />
         ) : null}
 
-        {sessions.length > 0 ? (
+        {activeSessions.length > 0 ? (
           <>
             <ul className={css.sessionsList}>
               {visibleSessions.map((session) => (
@@ -232,7 +246,7 @@ export function ActiveSessionsPanel({
 
             <LazyLoadButton
               visibleCount={visibleSessions.length}
-              totalCount={sessions.length}
+              totalCount={activeSessions.length}
               label="Show more sessions"
               iconRight={<ChevronDown size={18} aria-hidden="true" />}
               onLoadMore={() =>
@@ -247,7 +261,42 @@ export function ActiveSessionsPanel({
             variant="empty"
             title={emptyTitle}
             description={emptyText}
+            icon={emptyIcon}
           />
+        ) : null}
+        {status === 'success' && pastSessions.length > 0 ? (
+          <section className={css.sessionsHistory} aria-label="Session history">
+            <h3>Session history ({pastSessions.length})</h3>
+            <p>
+              Previous sign-ins and signed-out devices (retained for up to 90
+              days after expiration).
+            </p>
+
+            <ul className={css.sessionsList}>
+              {pastSessions.map((session) => (
+                <li className={css.sessionCard} key={session.id}>
+                  <MonitorSmartphone size={22} aria-hidden="true" />
+                  <div className={css.sessionInfo}>
+                    <strong>
+                      {session.deviceName ??
+                        session.userAgent ??
+                        'Unknown device'}
+                    </strong>
+                    {showIp ? (
+                      <span>{session.ip || 'IP unavailable'}</span>
+                    ) : null}
+                    <span>
+                      {session.revokedAt ? 'Signed out' : 'Expired'}:{' '}
+                      {formatLastUsedAt(session.revokedAt ?? session.expiresAt)}
+                    </span>
+                    <span>
+                      {lastUsedLabel}: {formatLastUsedAt(session.lastUsedAt)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
       </div>
 

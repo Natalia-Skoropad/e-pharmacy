@@ -1723,6 +1723,7 @@ function parsePharmacyLocationDraft(
 
   for (const field of ['settlement', 'region'] as const) {
     const fieldValue = record[field];
+
     if (
       typeof fieldValue === 'string' &&
       !PROFILE_SEARCH_TEXT_PATTERN.test(fieldValue)
@@ -1755,6 +1756,7 @@ function parsePharmacyLocationDraft(
     }
 
     const coordinates = geoRecord.coordinates as unknown[];
+
     if (
       coordinates.length !== 2 ||
       typeof coordinates[0] !== 'number' ||
@@ -1789,6 +1791,7 @@ function parsePharmacyLocationDraft(
       : {}),
 
     ...(record.region !== undefined ? { region: record.region as string } : {}),
+
     ...(record.countryCode !== undefined
       ? { countryCode: record.countryCode as string }
       : {}),
@@ -2314,6 +2317,7 @@ function parsePharmacyProfile(
           ),
         }
       : {}),
+
     ...(record.phone !== undefined ? { phone: record.phone as string } : {}),
     ...(record.email !== undefined ? { email: record.email as string } : {}),
 
@@ -3266,6 +3270,7 @@ export function parseClientOrdersResponse(
             typeof pharmacy.name !== 'string'
           )
             return [];
+
           return [
             {
               id: pharmacy.id,
@@ -3300,6 +3305,7 @@ export function parseClientOrderDetailsResponse(
   context?: ApiResponseContext
 ): ClientOrderDetailsResponse {
   const record = requireRecord(value, 'client order details response', context);
+
   return { order: parseClientOrder(record.order, context) };
 }
 
@@ -3374,6 +3380,8 @@ function parseActiveSession(
       userAgent: 'string',
       ip: 'string',
       createdAt: 'string',
+      revokedAt: 'string',
+      revokedReason: 'string',
     },
     context
   );
@@ -3413,8 +3421,54 @@ function parseActiveSession(
           context
         );
 
+  const revokedAt =
+    record.revokedAt === undefined
+      ? undefined
+      : requireCanonicalIsoDateTime(
+          record,
+          'revokedAt',
+          'active session',
+          context
+        );
+
+  const allowedRevocationReasons = [
+    'logout',
+    'logout_all',
+    'password_changed',
+    'user_blocked',
+    'token_reuse',
+    'admin_revoked',
+  ];
+
+  if (
+    record.revokedReason !== undefined &&
+    !allowedRevocationReasons.includes(record.revokedReason as string)
+  ) {
+    throw invalidDto(
+      'active session.revokedReason is invalid.',
+      record,
+      context
+    );
+  }
+
   return {
     id,
+
+    ...(revokedAt !== undefined
+      ? {
+          revokedAt:
+            checked<NonNullable<ActiveSession['revokedAt']>>(revokedAt),
+        }
+      : {}),
+
+    ...(record.revokedReason !== undefined
+      ? {
+          revokedReason: checked<NonNullable<ActiveSession['revokedReason']>>(
+            record.revokedReason
+          ),
+        }
+      : {}),
+
     roleAtLogin: checked<ActiveSession['roleAtLogin']>(roleAtLogin),
     lastUsedAt: checked<ActiveSession['lastUsedAt']>(lastUsedAt),
     expiresAt: checked<ActiveSession['expiresAt']>(expiresAt),

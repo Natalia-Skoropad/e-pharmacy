@@ -446,6 +446,7 @@ export async function listAdminPharmacyOwnerOptionsService(
       name: owner.name,
       email: owner.email,
       phone: owner.phone,
+
       ...(owner.pictureUrl ? { pictureUrl: owner.pictureUrl } : {}),
     })),
   };
@@ -718,11 +719,13 @@ export function buildPagedPharmacyItemsPipeline(
                   $cond: [{ $eq: ['$status', 'successful'] }, 1, 0],
                 },
               },
+
               successfulRevenue: {
                 $sum: {
                   $cond: [{ $eq: ['$status', 'successful'] }, '$totalPrice', 0],
                 },
               },
+
               orderClientIds: { $addToSet: '$userId' },
             },
           },
@@ -731,6 +734,7 @@ export function buildPagedPharmacyItemsPipeline(
               from: User.collection.name,
               localField: 'orderClientIds',
               foreignField: '_id',
+
               pipeline: [
                 {
                   $match: {
@@ -742,6 +746,7 @@ export function buildPagedPharmacyItemsPipeline(
                 },
                 { $count: 'count' },
               ],
+
               as: 'activeOrderClients',
             },
           },
@@ -750,12 +755,14 @@ export function buildPagedPharmacyItemsPipeline(
               _id: 0,
               successfulOrdersCount: 1,
               successfulRevenue: 1,
+
               activeOrderClientsCount: {
                 $ifNull: [
                   { $arrayElemAt: ['$activeOrderClients.count', 0] },
                   0,
                 ],
               },
+
               orderClientIds: 1,
             },
           },
@@ -780,6 +787,7 @@ export function buildPagedPharmacyItemsPipeline(
           { $project: { _id: 1 } },
           { $limit: 1 },
         ],
+
         as: 'defaultClients',
       },
     },
@@ -834,7 +842,9 @@ export function buildPagedPharmacyItemsPipeline(
         imageUrl: { $ifNull: ['$imageUrl', null] },
         createdAt: 1,
         status: 1,
+
         ...(includeOwnerId ? { ownerId: 1 } : {}),
+
         activeClientsCount: 1,
 
         addedProductsCount: {
@@ -990,21 +1000,12 @@ export async function listAdminPharmacyOwnerSessionsService(ownerId: string) {
   if (!exists)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy owner was not found.');
 
-  const now = new Date();
-
   const sessions = await Session.find({
     userId,
     roleAtLogin: USER_ROLES.PHARMACY,
-    revokedAt: undefined,
-    expiresAt: { $gt: now },
-
-    $or: [
-      { absoluteExpiresAt: { $gt: now } },
-      { absoluteExpiresAt: { $exists: false } },
-    ],
   })
-    .sort({ lastUsedAt: -1 })
-    .limit(100)
+    .sort({ createdAt: -1 })
+    .limit(200)
     .lean();
 
   return {
@@ -1023,6 +1024,15 @@ export async function listAdminPharmacyOwnerSessionsService(ownerId: string) {
 
       lastUsedAt: session.lastUsedAt.toISOString(),
       expiresAt: session.expiresAt.toISOString(),
+
+      ...(session.revokedAt
+        ? { revokedAt: session.revokedAt.toISOString() }
+        : {}),
+
+      ...(session.revokedReason
+        ? { revokedReason: session.revokedReason }
+        : {}),
+
       isCurrent: false,
     })),
   };

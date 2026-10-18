@@ -26,6 +26,7 @@ export type AdminProductCategoryDto = Readonly<{
   kind: ProductCategoryKind;
   sortOrder: number;
   color: string;
+  icon?: string;
   usage: ProductCategoryUsageDto;
   createdAt: string;
   updatedAt: string;

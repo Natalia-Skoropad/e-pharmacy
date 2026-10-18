@@ -66,6 +66,7 @@ function parsePositiveInteger(value: unknown, label: string): number {
 
 function parseEarliestCreatedAt(value: unknown): CalendarDateString | null {
   if (value === null) return null;
+
   if (!isCalendarDateString(value)) {
     throw new TypeError('Invalid earliestCreatedAt.');
   }
@@ -145,6 +146,7 @@ export function parseProductCategoryListItem(
     kind: value.kind,
     sortOrder: value.sortOrder as number,
     color: value.color.toUpperCase(),
+    icon: typeof value.icon === 'string' ? value.icon : 'pill',
     usage: parseProductCategoryUsage(value.usage),
     createdAt: value.createdAt,
   };

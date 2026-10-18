@@ -8,6 +8,7 @@ import {
 
 import {
   PRODUCT_CATEGORY_DEFAULT_COLOR,
+  PRODUCT_CATEGORY_SEED_DEFINITIONS,
   createProductCategorySlugFromName,
   normalizeProductCategoryColor,
   normalizeProductCategoryNameKey,
@@ -170,6 +171,14 @@ function serializeCategory(
     kind: category.kind,
     sortOrder: category.sortOrder,
     color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
+
+    icon:
+      category.icon ??
+      PRODUCT_CATEGORY_SEED_DEFINITIONS.find(
+        (item) => item.slug === category.slug
+      )?.icon ??
+      'pill',
+
     usage,
     createdAt: category.createdAt.toISOString(),
     updatedAt: category.updatedAt.toISOString(),
@@ -197,6 +206,7 @@ function buildCategoryAuditSnapshot(category: {
   kind: ProductCategoryKind;
   sortOrder: number;
   color: string;
+  icon?: string;
 }) {
   return {
     name: category.name,
@@ -205,6 +215,13 @@ function buildCategoryAuditSnapshot(category: {
     kind: category.kind,
     sortOrder: category.sortOrder,
     color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
+
+    icon:
+      category.icon ??
+      PRODUCT_CATEGORY_SEED_DEFINITIONS.find(
+        (item) => item.slug === category.slug
+      )?.icon ??
+      'pill',
   };
 }
 
@@ -372,6 +389,7 @@ export async function createAdminProductCategoryService(
             kind: 'standard',
             sortOrder,
             color: normalizeProductCategoryColor(input.color),
+            icon: input.icon ?? 'pill',
             createdBy: adminUserId,
             updatedBy: adminUserId,
           },
@@ -397,6 +415,7 @@ export async function createAdminProductCategoryService(
           'kind',
           'sortOrder',
           'color',
+          'icon',
         ],
 
         requestId: auditRequestId,
@@ -449,6 +468,7 @@ export async function updateAdminProductCategoryService(
       const nextName = input.name.trim();
       const nextSlug = createProductCategorySlugFromName(input.name);
       const nextColor = normalizeProductCategoryColor(input.color);
+      const nextIcon = input.icon ?? category.icon ?? 'pill';
 
       const isIdentityChange =
         category.name !== nextName || category.slug !== nextSlug;
@@ -470,6 +490,8 @@ export async function updateAdminProductCategoryService(
         changedFields.push('color');
       }
 
+      if ((category.icon ?? 'pill') !== nextIcon) changedFields.push('icon');
+
       if (changedFields.length === 0) {
         result = serializeCategory(
           category.toObject() as LeanProductCategory,
@@ -481,6 +503,7 @@ export async function updateAdminProductCategoryService(
       category.name = input.name;
       category.slug = nextSlug;
       category.color = nextColor;
+      category.icon = nextIcon;
       category.updatedBy = new Types.ObjectId(adminUserId);
 
       await category.save({ session });

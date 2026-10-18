@@ -23,12 +23,13 @@ import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { canPharmacyProfilePerformAction } from '@e-pharmacy/config/pharmacies';
 import { Button } from '@e-pharmacy/ui/primitives';
-import { MarkdownTextarea } from '@e-pharmacy/ui/forms';
 import { PictureCard, readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   ActiveSessionsPanel,
+  PharmacyAboutFields,
+  PharmacyPaymentFields,
   ChangePasswordForm,
   DocumentsPanel,
   ProfileIdentityCard,
@@ -45,12 +46,9 @@ import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 
 import {
   AddressInput,
-  CommentInput,
   EmailInput,
-  IbanInput,
   NameInput,
   PhoneInput,
-  TaxIdInput,
 } from '@e-pharmacy/ui/forms';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -88,15 +86,9 @@ import {
   PHARMACY_PAYMENT_FORM_FIELDS,
   PHARMACY_CONTACT_FORM_FIELDS,
   PHARMACY_LOCATION_TEXT_MAX_LENGTH,
-  PAYMENT_PURPOSE_MAX_LENGTH,
   USER_EMAIL_MAX_LENGTH,
   PHARMACY_NAME_MAX_LENGTH,
   PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
-  BANK_RECIPIENT_NAME_MAX_LENGTH,
-  BANK_NAME_MAX_LENGTH,
-  TEXT_EDITOR_MAX_LENGTH,
-  TAX_ID_MAX_LENGTH,
-  IBAN_MAX_LENGTH,
   isPharmacyAboutFormDirty,
   isPharmacyContactFormDirty,
   isPharmacyPaymentFormDirty,
@@ -104,8 +96,6 @@ import {
   normalizePharmacyContactForm,
   normalizePharmacyPaymentForm,
   normalizeEmail,
-  normalizeIban,
-  sanitizeTaxId,
   validatePharmacyAboutForm,
   validatePharmacyContactForm,
   validatePharmacyPaymentForm,
@@ -1231,7 +1221,10 @@ function PharmacyProfilePage({
     }
 
     if (tab.value === 'sessions') {
-      return { ...tab, label: `Active sessions (${sessions.length})` };
+      return {
+        ...tab,
+        label: `Active sessions (${sessions.filter((session) => !session.revokedAt && Date.parse(session.expiresAt) > Date.now()).length})`,
+      };
     }
 
     if (tab.value === 'comments') {
@@ -2407,19 +2400,12 @@ function PharmacyProfilePage({
                       />
                     ) : null}
 
-                    <MarkdownTextarea
-                      id="pharmacy-description"
-                      expanded
-                      name="pharmacyDescription"
-                      label="Description"
+                    <PharmacyAboutFields
                       value={aboutValues.description}
-                      placeholder="Describe pharmacy services, pickup details, and useful information for clients."
-                      hint="You can use simple formatting buttons or type plain text."
                       error={aboutErrors.description}
                       isTouched={Boolean(aboutTouched.description)}
-                      maxLength={TEXT_EDITOR_MAX_LENGTH}
                       disabled={isProfileReadonly}
-                      onValueChange={handleAboutChange}
+                      onChange={handleAboutChange}
                     />
 
                     {pharmacy.status === 'new' ? (
@@ -2511,121 +2497,13 @@ function PharmacyProfilePage({
                       />
                     ) : null}
 
-                    <div className={css.formGroups}>
-                      <div className={css.formGroup}>
-                        <div className={css.formGrid}>
-                          <NameInput
-                            id="recipient-name"
-                            name="recipientName"
-                            label="Recipient name"
-                            hint="Enter the legal payment recipient name."
-                            value={paymentValues.recipientName}
-                            error={paymentErrors.recipientName}
-                            isTouched={Boolean(paymentTouched.recipientName)}
-                            disabled={isProfileReadonly}
-                            maxLength={BANK_RECIPIENT_NAME_MAX_LENGTH}
-                            onChange={(event) =>
-                              handlePaymentChange(
-                                'recipientName',
-                                event.target.value
-                              )
-                            }
-                          />
-
-                          <TaxIdInput
-                            id="tax-id"
-                            name="taxId"
-                            value={paymentValues.taxId}
-                            error={paymentErrors.taxId}
-                            isTouched={Boolean(paymentTouched.taxId)}
-                            disabled={isProfileReadonly}
-                            maxLength={TAX_ID_MAX_LENGTH}
-                            onChange={(event) =>
-                              handlePaymentChange(
-                                'taxId',
-                                sanitizeTaxId(event.target.value)
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className={css.formGroup}>
-                        <div className={css.formGrid}>
-                          <IbanInput
-                            id="iban"
-                            name="iban"
-                            className={css.fieldWide}
-                            value={paymentValues.iban}
-                            error={paymentErrors.iban}
-                            isTouched={Boolean(paymentTouched.iban)}
-                            disabled={isProfileReadonly}
-                            maxLength={IBAN_MAX_LENGTH}
-                            onChange={(event) =>
-                              handlePaymentChange(
-                                'iban',
-                                normalizeIban(event.target.value)
-                              )
-                            }
-                          />
-
-                          <NameInput
-                            id="bank-name"
-                            name="bankName"
-                            label="Bank name"
-                            value={paymentValues.bankName}
-                            error={paymentErrors.bankName}
-                            isTouched={Boolean(paymentTouched.bankName)}
-                            disabled={isProfileReadonly}
-                            maxLength={BANK_NAME_MAX_LENGTH}
-                            onChange={(event) =>
-                              handlePaymentChange(
-                                'bankName',
-                                event.target.value
-                              )
-                            }
-                          />
-
-                          <EmailInput
-                            id="receipt-email"
-                            name="receiptEmail"
-                            label="Receipt email"
-                            value={paymentValues.receiptEmail}
-                            error={paymentErrors.receiptEmail}
-                            isTouched={Boolean(paymentTouched.receiptEmail)}
-                            disabled={isProfileReadonly}
-                            maxLength={USER_EMAIL_MAX_LENGTH}
-                            onChange={(event) =>
-                              handlePaymentChange(
-                                'receiptEmail',
-                                normalizeEmail(event.target.value)
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                      <div className={css.formGroup}>
-                        <div className={css.formGrid}>
-                          <CommentInput
-                            id="payment-purpose"
-                            name="paymentPurpose"
-                            label="Payment purpose"
-                            className={css.fieldWide}
-                            value={paymentValues.paymentPurpose}
-                            error={paymentErrors.paymentPurpose}
-                            isTouched={Boolean(paymentTouched.paymentPurpose)}
-                            required
-                            disabled={isProfileReadonly}
-                            maxLength={PAYMENT_PURPOSE_MAX_LENGTH}
-                            onChange={(event) =>
-                              handlePaymentChange(
-                                'paymentPurpose',
-                                event.target.value
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <PharmacyPaymentFields
+                      values={paymentValues}
+                      errors={paymentErrors}
+                      touched={paymentTouched}
+                      disabled={isProfileReadonly}
+                      onChange={handlePaymentChange}
+                    />
 
                     {pharmacy.status === 'new' ? (
                       <Button

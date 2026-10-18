@@ -80,6 +80,7 @@ import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 import { PharmacySalesChart } from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacySalesChart';
+
 import { LinkedPharmaciesTab } from './LinkedPharmaciesTab';
 import { OwnerActivityTab } from './OwnerActivityTab';
 import { OwnerCommentsTab } from './OwnerCommentsTab';
@@ -133,6 +134,7 @@ function classifyLoadError(error: unknown): DetailLoadError {
   if (!isApiError(error)) return 'error';
   if (error.httpStatus === 404) return 'not-found';
   if (error.httpStatus === 403) return 'forbidden';
+
   return 'error';
 }
 
@@ -232,6 +234,7 @@ function PharmacyOwnerDetailsPageContent({
 
   useEffect(() => {
     const controller = new AbortController();
+
     setIsLoading(true);
     setLoadError(null);
 
@@ -256,6 +259,8 @@ function PharmacyOwnerDetailsPageContent({
     []
   );
 
+  const [sessionsSnapshotAt, setSessionsSnapshotAt] = useState(0);
+
   const [sessionsStatus, setSessionsStatus] = useState<
     'loading' | 'success' | 'error'
   >('loading');
@@ -271,6 +276,7 @@ function PharmacyOwnerDetailsPageContent({
       .then((response) => {
         if (!controller.signal.aborted) {
           setOwnerSessions(response.sessions);
+          setSessionsSnapshotAt(Date.now());
           setSessionsStatus('success');
         }
       })
@@ -334,7 +340,7 @@ function PharmacyOwnerDetailsPageContent({
     return [
       {
         value: 'personal',
-        label: 'Personal information',
+        label: 'Personal info',
         icon: <UserRound size={17} aria-hidden="true" />,
       },
       {
@@ -359,7 +365,7 @@ function PharmacyOwnerDetailsPageContent({
       },
       {
         value: 'sessions',
-        label: `Active sessions and devices (${ownerSessions.length})`,
+        label: `Active sessions (${ownerSessions.filter((session) => !session.revokedAt && Date.parse(session.expiresAt) > sessionsSnapshotAt).length})`,
         icon: <MonitorSmartphone size={17} aria-hidden="true" />,
       },
     ];
@@ -368,7 +374,8 @@ function PharmacyOwnerDetailsPageContent({
     tabCounts.documents,
     tabCounts.pharmacies,
     activityCount,
-    ownerSessions.length,
+    ownerSessions,
+    sessionsSnapshotAt,
   ]);
 
   const handleTabChange = (nextTab: AdminPharmacyOwnerDetailTab) => {
@@ -415,6 +422,7 @@ function PharmacyOwnerDetailsPageContent({
       });
 
       const refreshed = await loadDetail();
+
       setDetail(refreshed);
       requestPharmacyOwnerNavigationBadgeRefresh();
       setLoadError(null);
@@ -488,6 +496,7 @@ function PharmacyOwnerDetailsPageContent({
   const statistics = detail?.pharmacyStatistics;
   const isDeactivateAction = detail ? detail.status !== 'blocked' : true;
   const actionTarget = actionState?.targetStatus;
+
   const actionReasonError = actionState
     ? buildReasonError(actionState.reason)
     : '';
@@ -815,6 +824,7 @@ function PharmacyOwnerDetailsPageContent({
               idPrefix="owner-active-sessions"
               title="Active sessions and devices"
               showIp
+              emptyIcon={<MonitorSmartphone size={24} />}
               description="Read-only login sessions for this pharmacy owner. Administrators cannot revoke sessions here."
               onRetry={() => setSessionsReloadKey((value) => value + 1)}
             />

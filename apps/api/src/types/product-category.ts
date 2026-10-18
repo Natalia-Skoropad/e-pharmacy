@@ -15,6 +15,7 @@ export type ProductCategoryPersistenceEntity = {
   kind: ProductCategoryKind;
   sortOrder: number;
   color: string;
+  icon?: string;
   createdBy: Types.ObjectId | null;
   updatedBy: Types.ObjectId | null;
   createdAt: Date;

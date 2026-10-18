@@ -3,7 +3,12 @@
 import { Plus, Save, X } from 'lucide-react';
 import { useId, useRef, useState, type FormEvent } from 'react';
 
-import { ColorPicker, NameInput } from '@e-pharmacy/ui/forms';
+import {
+  ColorPicker,
+  NameInput,
+  CategoryIconPicker,
+} from '@e-pharmacy/ui/forms';
+
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 
@@ -71,19 +76,28 @@ export function SettingsDictionaryFormModal<
 
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
+
+  const [icon, setIcon] = useState(
+    (item as (TItem & { icon?: string }) | undefined)?.icon ?? 'pill'
+  );
+
   const [nameTouched, setNameTouched] = useState(false);
   const [colorTouched, setColorTouched] = useState(false);
+
   const [lastSubmittedName, setLastSubmittedName] = useState<string | null>(
     null
   );
 
   const clientNameError = buildReferenceDataNameError(name);
+
   const duplicateNameError =
     isDuplicateNameError(submitError) && lastSubmittedName === name.trim()
       ? (submitError ?? null)
       : null;
+
   const nameError = clientNameError || duplicateNameError || '';
   const isNameTouched = nameTouched || Boolean(duplicateNameError);
+
   const colorError = defaultColor
     ? isProductCategoryColor(color)
       ? ''
@@ -91,6 +105,7 @@ export function SettingsDictionaryFormModal<
     : '';
 
   const title = `${mode === 'create' ? 'Create' : 'Edit'} ${singularLabel}`;
+
   const nonFieldSubmitError =
     submitError && !isDuplicateNameError(submitError) ? submitError : null;
 
@@ -106,7 +121,10 @@ export function SettingsDictionaryFormModal<
 
     await onSubmit({
       name: normalizedName,
-      ...(defaultColor ? { color: normalizeProductCategoryColor(color) } : {}),
+
+      ...(defaultColor
+        ? { color: normalizeProductCategoryColor(color), icon }
+        : {}),
     });
   };
 
@@ -164,6 +182,14 @@ export function SettingsDictionaryFormModal<
               isTouched={colorTouched}
               disabled={isSubmitting}
               onChange={setColor}
+            />
+          ) : null}
+
+          {defaultColor ? (
+            <CategoryIconPicker
+              value={icon}
+              onChange={setIcon}
+              disabled={isSubmitting}
             />
           ) : null}
 

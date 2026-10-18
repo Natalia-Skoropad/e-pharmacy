@@ -57,8 +57,8 @@ assert.match(registry, /safePage !== page/);
 
 for (const tab of ['documents', 'comments', 'activity']) {
   assert.ok(
-    shell.includes(`activeTab === '${tab}' && detail`),
-    `Lazy ${tab} tab required`
+    shell.includes(`activeTab === '${tab}' ? (`),
+    `Lazy ${tab} tab must own its own loading state`
   );
 }
 

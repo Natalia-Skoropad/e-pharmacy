@@ -26,6 +26,8 @@ function formatCount(count: number, singular: string, plural: string): string {
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
+//===================================================================
+
 function renderCategoryUsage(item: ProductCategoryListItem): string {
   const { productsCount, productRequestsCount } = item.usage;
 
@@ -59,6 +61,7 @@ const PRODUCT_CATEGORIES_CONFIG: SettingsDictionaryConfig<ProductCategoryListIte
     addLabel: 'Add category',
     infoTitle: 'Product categories',
     infoIcon: <Tags size={20} aria-hidden="true" />,
+
     infoItems: [
       {
         title: 'Where categories are used',
@@ -75,7 +78,7 @@ const PRODUCT_CATEGORIES_CONFIG: SettingsDictionaryConfig<ProductCategoryListIte
       {
         title: 'Editing rules',
         description:
-          'When a category is already used by products or product requests, editing is disabled so its name, slug, and color remain stable.',
+          'When a category is in use, its name stays locked. Its visual color and icon can still be updated.',
         icon: <LockKeyhole size={17} aria-hidden="true" />,
       },
       {
@@ -112,20 +115,23 @@ const PRODUCT_CATEGORIES_CONFIG: SettingsDictionaryConfig<ProductCategoryListIte
 
     api: {
       list: getAdminProductCategories,
-      create: async ({ name, color }) => {
+
+      create: async ({ name, color, icon }) => {
         if (!color) {
           throw new TypeError('Product category color is required.');
         }
 
-        return createAdminProductCategory({ name, color });
+        return createAdminProductCategory({ name, color, icon });
       },
-      update: async (categoryId, { name, color }) => {
+
+      update: async (categoryId, { name, color, icon }) => {
         if (!color) {
           throw new TypeError('Product category color is required.');
         }
 
-        return updateAdminProductCategory(categoryId, { name, color });
+        return updateAdminProductCategory(categoryId, { name, color, icon });
       },
+
       delete: deleteAdminProductCategory,
     },
 
