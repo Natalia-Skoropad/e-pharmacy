@@ -7,7 +7,7 @@ import {
   type PointerEvent,
 } from 'react';
 
-import { Check, Palette, X } from 'lucide-react';
+import { Check, Palette } from 'lucide-react';
 import clsx from 'clsx';
 
 import {
@@ -168,7 +168,7 @@ export function ColorPicker({
   name,
   value,
   label = 'Color',
-  hint = 'Choose a color from the palette or open More colors for a custom shade.',
+  hint = 'Choose a preset color, or select Show more colors to customize a shade.',
   error,
   isTouched,
   required = true,
@@ -239,18 +239,24 @@ export function ColorPicker({
   };
 
   const handlePlanePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (disabled) return;
+
     event.currentTarget.setPointerCapture(event.pointerId);
     updatePlaneFromPointer(event);
   };
 
   const handlePlanePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    if (disabled || !event.currentTarget.hasPointerCapture(event.pointerId))
+      return;
+
     updatePlaneFromPointer(event);
   };
 
   const handlePlaneKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const step = event.shiftKey ? 10 : 2;
     let nextHsv: HsvColor | null = null;
+
+    if (disabled) return;
 
     if (event.key === 'ArrowLeft') {
       nextHsv = { ...draftHsv, s: draftHsv.s - step };
@@ -345,31 +351,20 @@ export function ColorPicker({
             onClick={isCustomOpen ? closeCustomPalette : openCustomPalette}
           >
             <Palette size={17} aria-hidden="true" />
-            <span>More colors</span>
+            <span>
+              {isCustomOpen ? 'Show fewer colors' : 'Show more colors'}
+            </span>
           </button>
         </div>
 
         {isCustomOpen ? (
-          <div
+          <section
             className={css.customPalette}
             id={`${id}-custom-palette`}
-            role="dialog"
-            aria-label="Choose a custom color"
+            role="region"
+            aria-label="Custom color controls"
             style={customPaletteStyle}
           >
-            <div className={css.customPaletteHeader}>
-              <span className={css.customPaletteTitle}>Custom color</span>
-
-              <button
-                className={css.customPaletteClose}
-                type="button"
-                aria-label="Close custom color picker"
-                onClick={closeCustomPalette}
-              >
-                <X size={17} aria-hidden="true" />
-              </button>
-            </div>
-
             <div
               className={css.colorField}
               role="group"
@@ -401,6 +396,7 @@ export function ColorPicker({
               min="0"
               max="360"
               value={draftHsv.h}
+              disabled={disabled}
               onChange={(event) =>
                 updateDraftFromHsv({
                   ...draftHsv,
@@ -419,6 +415,7 @@ export function ColorPicker({
                   min="0"
                   max="100"
                   value={draftHsv.s}
+                  disabled={disabled}
                   onChange={(event) =>
                     updateDraftFromHsv({
                       ...draftHsv,
@@ -438,6 +435,7 @@ export function ColorPicker({
                   min="0"
                   max="100"
                   value={draftHsv.v}
+                  disabled={disabled}
                   onChange={(event) =>
                     updateDraftFromHsv({
                       ...draftHsv,
@@ -466,6 +464,7 @@ export function ColorPicker({
                   spellCheck={false}
                   autoComplete="off"
                   aria-invalid={!HEX_COLOR_PATTERN.test(draftHex) || undefined}
+                  disabled={disabled}
                   onChange={(event) => {
                     const nextValue = event.target.value.toUpperCase();
                     setDraftHex(nextValue);
@@ -474,29 +473,24 @@ export function ColorPicker({
                       setDraftHsv(hexToHsv(nextValue));
                     }
                   }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    if (!disabled) applyCustomColor();
+                  }}
                 />
               </label>
-            </div>
-
-            <div className={css.customPaletteActions}>
-              <button
-                className={css.customCancelButton}
-                type="button"
-                onClick={closeCustomPalette}
-              >
-                <X size={17} aria-hidden="true" /> Cancel
-              </button>
 
               <button
                 className={css.customApplyButton}
                 type="button"
-                disabled={!HEX_COLOR_PATTERN.test(draftHex)}
+                disabled={disabled || !HEX_COLOR_PATTERN.test(draftHex)}
                 onClick={applyCustomColor}
               >
-                <Check size={17} aria-hidden="true" /> Apply color
+                <Check size={17} aria-hidden="true" /> Apply
               </button>
             </div>
-          </div>
+          </section>
         ) : null}
       </div>
     </FormFieldLayout>

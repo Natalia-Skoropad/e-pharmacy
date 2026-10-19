@@ -248,7 +248,14 @@ assert.match(colorPicker, /type="range"/);
 assert.match(colorPicker, /normalizeProductCategoryColor/);
 assert.match(colorPicker, /aria-invalid/);
 assert.match(colorPicker, /COLOR_PRESETS/);
-assert.match(colorPicker, /More colors/);
+assert.match(colorPicker, /Show more colors/);
+assert.match(colorPicker, /Show fewer colors/);
+assert.match(colorPicker, /<Check size=\{17\} aria-hidden="true" \/> Apply/);
+
+assert.doesNotMatch(
+  colorPicker,
+  /Apply color|customPaletteHeader|customPaletteActions|customCancelButton/
+);
 
 const categoryModel = await read(
   'apps',

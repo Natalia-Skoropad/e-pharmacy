@@ -136,6 +136,70 @@ test('active sessions panel supports client-compatible IP and date copy', () => 
 
 //===================================================================
 
+test('session history remains visible with an empty active-session state', () => {
+  const sessions: ActiveSession[] = [
+    {
+      id: 'expired-session',
+      deviceName: 'Previous device',
+      roleAtLogin: 'pharmacy',
+      lastUsedAt: '2026-09-18T10:00:00.000Z' as ISODateTimeString,
+      expiresAt: '2000-10-18T10:00:00.000Z' as ISODateTimeString,
+      isCurrent: false,
+    },
+  ];
+
+  const markup = renderToStaticMarkup(
+    <ActiveSessionsPanel sessions={sessions} status="success" />
+  );
+
+  assert.match(markup, /No active sessions found/);
+  assert.match(markup, /Session history/);
+  assert.match(markup, /Previous device/);
+  assert.match(markup, /Showing 1 of 1 sessions/);
+});
+
+//===================================================================
+
+test('sessions use one combined ten-record batch and only a load-more button', () => {
+  const activeSessions: ActiveSession[] = Array.from(
+    { length: 2 },
+    (_, index) => ({
+      id: `active-${index}`,
+      deviceName: `Active device ${index}`,
+      roleAtLogin: 'client' as const,
+      lastUsedAt: '2026-10-18T10:00:00.000Z' as ISODateTimeString,
+      expiresAt: '2099-10-18T10:00:00.000Z' as ISODateTimeString,
+      isCurrent: index === 0,
+    })
+  );
+
+  const history: ActiveSession[] = Array.from({ length: 12 }, (_, index) => ({
+    id: `expired-${index}`,
+    deviceName: `Previous device ${index}`,
+    roleAtLogin: 'client' as const,
+    lastUsedAt: '2026-09-18T10:00:00.000Z' as ISODateTimeString,
+    expiresAt: '2000-10-18T10:00:00.000Z' as ISODateTimeString,
+    isCurrent: false,
+  }));
+
+  const markup = renderToStaticMarkup(
+    <ActiveSessionsPanel
+      sessions={[...activeSessions, ...history]}
+      status="success"
+    />
+  );
+
+  assert.match(markup, /Active device 0/);
+  assert.match(markup, /Active device 1/);
+  assert.match(markup, /Previous device 7/);
+  assert.doesNotMatch(markup, /Previous device 8/);
+  assert.match(markup, /Showing 8 of 12 sessions/);
+  assert.match(markup, /Show more sessions \(4\)/);
+  assert.doesNotMatch(markup, /Sessions pagination/);
+});
+
+//===================================================================
+
 test('shared password form includes explicit password confirmation', () => {
   const markup = renderToStaticMarkup(
     <ChangePasswordForm onSubmit={() => undefined} />

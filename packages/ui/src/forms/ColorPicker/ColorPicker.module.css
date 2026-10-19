@@ -133,8 +133,6 @@
 }
 
 .moreColorsButton:focus-visible,
-.customPaletteClose:focus-visible,
-.customCancelButton:focus-visible,
 .customApplyButton:focus-visible,
 .colorField:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -150,44 +148,7 @@
 
   display: grid;
   gap: 14px;
-  padding: 16px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-accent-border-soft);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-}
-
-.customPaletteHeader {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.customPaletteTitle {
-  color: var(--color-text-primary);
-  font-size: var(--fz-16);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-}
-
-.customPaletteClose {
-  display: inline-grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-}
-
-.customPaletteClose:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-accent-border-soft);
+  min-width: 0;
 }
 
 .colorField {
@@ -289,8 +250,8 @@
 
 .hexRow {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 10px;
   align-items: end;
 }
 
@@ -334,47 +295,24 @@
   border-color: var(--color-error);
 }
 
-.customPaletteActions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  padding-top: 2px;
-}
-
-.customCancelButton,
 .customApplyButton {
   display: inline-flex;
+  gap: 7px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 8px 14px;
+  min-height: 44px;
+  padding: 9px 14px;
+  color: var(--color-white);
   font: inherit;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   cursor: pointer;
-  border-radius: var(--radius-pill);
-  transition:
-    color var(--transition-base),
-    background-color var(--transition-base),
-    border-color var(--transition-base);
-}
-
-.customCancelButton {
-  color: var(--color-text-secondary);
-  background-color: var(--color-background);
-  border: 1px solid var(--color-border);
-}
-
-.customCancelButton:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-text-muted);
-}
-
-.customApplyButton {
-  color: var(--color-white);
   background-color: var(--color-accent);
   border: 1px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
 }
 
 .customApplyButton:hover:not(:disabled) {
@@ -391,15 +329,5 @@
   .customRow {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-  }
-
-  .customPalette {
-    padding: 18px;
-  }
-}
-
-@media only screen and (min-width: 768px) {
-  .customPaletteActions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

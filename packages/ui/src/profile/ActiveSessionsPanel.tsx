@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 import {
   ChevronDown,
@@ -16,7 +16,6 @@ import { formatDateTime } from '@e-pharmacy/utils/date';
 import { Button } from '../primitives/Button/Button';
 import { LazyLoadButton } from '../primitives/LazyLoadButton/LazyLoadButton';
 import { CountLabel } from '../data-display/CountLabel/CountLabel';
-import { PaginationView } from '../navigation/PaginationView/PaginationView';
 import { ConfirmationModal } from '../overlays/ConfirmationModal/ConfirmationModal';
 import { ProfileResourceState } from './ProfileResourceState';
 import { ProfileSectionHeader } from './ProfileSectionHeader';
@@ -81,7 +80,7 @@ export function ActiveSessionsPanel({
   onSignOutAll,
 }: ActiveSessionsPanelProps) {
   const normalizedInitialVisibleCount = Math.max(1, initialVisibleCount);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [visibleBatchCount, setVisibleBatchCount] = useState(1);
 
   const [pendingRevokeSessionId, setPendingRevokeSessionId] = useState<
     string | null
@@ -107,30 +106,22 @@ export function ActiveSessionsPanel({
       ),
     };
   }, [sessions]);
-  // One page holds at most ten rows across both active and expired sessions.
-  // Active sessions are always first; history fills any remaining slots.
+
+  // Show sessions progressively, keeping active sessions before history.
+  // The first batch contains at most ten records across both sections.
   const totalSessions = activeSessions.length + pastSessions.length;
-  const totalPages = Math.ceil(totalSessions / normalizedInitialVisibleCount);
-  const safePage = Math.min(Math.max(1, currentPage), Math.max(1, totalPages));
-  const offset = (safePage - 1) * normalizedInitialVisibleCount;
 
-  const visibleSessions = activeSessions.slice(
-    offset,
-    offset + normalizedInitialVisibleCount
+  const visibleCount = Math.min(
+    totalSessions,
+    visibleBatchCount * normalizedInitialVisibleCount
   );
 
-  const historyStart = Math.max(0, offset - activeSessions.length);
+  const visibleSessions = activeSessions.slice(0, visibleCount);
 
-  const historyEnd = Math.max(
+  const visibleHistory = pastSessions.slice(
     0,
-    offset + normalizedInitialVisibleCount - activeSessions.length
+    Math.max(0, visibleCount - activeSessions.length)
   );
-
-  const visibleHistory = pastSessions.slice(historyStart, historyEnd);
-
-  useEffect(() => {
-    setCurrentPage((page) => Math.min(page, Math.max(1, totalPages)));
-  }, [totalPages]);
 
   const pendingRevokeSession = useMemo(
     () =>
@@ -219,52 +210,49 @@ export function ActiveSessionsPanel({
         ) : null}
 
         {visibleSessions.length > 0 ? (
-          <>
-            <ul className={css.sessionsList}>
-              {visibleSessions.map((session) => (
-                <li className={css.sessionCard} key={session.id}>
-                  <MonitorSmartphone size={22} aria-hidden="true" />
+          <ul className={css.sessionsList}>
+            {visibleSessions.map((session) => (
+              <li className={css.sessionCard} key={session.id}>
+                <MonitorSmartphone size={22} aria-hidden="true" />
 
-                  <div className={css.sessionInfo}>
-                    <strong>
-                      {session.deviceName ??
-                        session.userAgent ??
-                        'Unknown device'}
-                    </strong>
-                    {showIp ? (
-                      <span>{session.ip || 'IP unavailable'}</span>
-                    ) : null}
-                    <span>
-                      {lastUsedLabel}: {formatLastUsedAt(session.lastUsedAt)}
-                    </span>
-                  </div>
-
-                  {session.isCurrent ? (
-                    <span className={css.currentSession}>Current session</span>
-                  ) : onRevoke ? (
-                    <Button
-                      className={css.sessionAction}
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      iconLeft={<LogOut size={18} aria-hidden="true" />}
-                      isLoading={revokingSessionId === session.id}
-                      loadingLabel="Revoking..."
-                      disabled={Boolean(
-                        revokingSessionId && revokingSessionId !== session.id
-                      )}
-                      onClick={() => setPendingRevokeSessionId(session.id)}
-                    >
-                      Revoke
-                    </Button>
+                <div className={css.sessionInfo}>
+                  <strong>
+                    {session.deviceName ??
+                      session.userAgent ??
+                      'Unknown device'}
+                  </strong>
+                  {showIp ? (
+                    <span>{session.ip || 'IP unavailable'}</span>
                   ) : null}
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : status === 'success' &&
-          activeSessions.length === 0 &&
-          pastSessions.length === 0 ? (
+                  <span>
+                    {lastUsedLabel}: {formatLastUsedAt(session.lastUsedAt)}
+                  </span>
+                </div>
+
+                {session.isCurrent ? (
+                  <span className={css.currentSession}>Current session</span>
+                ) : onRevoke ? (
+                  <Button
+                    className={css.sessionAction}
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    iconLeft={<LogOut size={18} aria-hidden="true" />}
+                    isLoading={revokingSessionId === session.id}
+                    loadingLabel="Revoking..."
+                    disabled={Boolean(
+                      revokingSessionId && revokingSessionId !== session.id
+                    )}
+                    onClick={() => setPendingRevokeSessionId(session.id)}
+                  >
+                    Revoke
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {status === 'success' && activeSessions.length === 0 ? (
           <ProfileResourceState
             variant="empty"
             title={emptyTitle}
@@ -272,7 +260,7 @@ export function ActiveSessionsPanel({
             icon={emptyIcon}
           />
         ) : null}
-        {status === 'success' && pastSessions.length > 0 ? (
+        {status === 'success' && visibleHistory.length > 0 ? (
           <section className={css.sessionsHistory} aria-label="Session history">
             <div className={css.sessionHistoryHeading}>
               <ProfileSectionHeader
@@ -280,7 +268,6 @@ export function ActiveSessionsPanel({
                 description="Previous sign-ins and signed-out devices (retained for up to 90 days after expiration)."
                 icon={<History size={22} />}
               />
-
               <CountLabel
                 shown={visibleHistory.length}
                 total={pastSessions.length}
@@ -316,26 +303,14 @@ export function ActiveSessionsPanel({
             </ul>
           </section>
         ) : null}
-        {status === 'success' && totalPages > 1 ? (
-          <div className={css.sessionsPagination}>
+        {status === 'success' && visibleCount < totalSessions ? (
+          <div className={css.sessionsLoadMore}>
             <LazyLoadButton
-              visibleCount={Math.min(
-                totalSessions,
-                safePage * normalizedInitialVisibleCount
-              )}
+              visibleCount={visibleCount}
               totalCount={totalSessions}
               label="Show more sessions"
               iconRight={<ChevronDown size={18} aria-hidden="true" />}
-              onLoadMore={() =>
-                setCurrentPage((page) => Math.min(page + 1, totalPages))
-              }
-            />
-
-            <PaginationView
-              currentPage={safePage}
-              totalPages={totalPages}
-              ariaLabel="Sessions pagination"
-              onPageChange={setCurrentPage}
+              onLoadMore={() => setVisibleBatchCount((count) => count + 1)}
             />
           </div>
         ) : null}
