@@ -204,13 +204,13 @@ test('settlement and region survive canonical URL and server query round trips',
 
   const parsed = parseUrl(url);
 
-  assert.equal(parsed.settlement, 'Dnipro');
-  assert.equal(parsed.region, 'Dnipropetrovsk Oblast');
+  assert.equal(parsed.settlement, 'dnipro');
+  assert.equal(parsed.region, 'dnipropetrovsk oblast');
   assert.equal(buildAdminPharmaciesListUrl(parsed), url);
-  assert.equal(buildAdminPharmaciesListApiParams(parsed).settlement, 'Dnipro');
+  assert.equal(buildAdminPharmaciesListApiParams(parsed).settlement, 'dnipro');
 
   assert.equal(
     buildAdminPharmaciesListApiParams(parsed).region,
-    'Dnipropetrovsk Oblast'
+    'dnipropetrovsk oblast'
   );
 });

@@ -145,11 +145,11 @@ export function PharmaciesFiltersDrawer({
         <SelectField
           id="pharmacies-filter-region"
           label="Region"
-          value={state.region}
+          value={state.region.toLocaleLowerCase()}
           options={[
             { value: '', label: 'All regions' },
             ...locationOptions.regions.map((value) => ({
-              value,
+              value: value.toLocaleLowerCase(),
               label: value,
               content: (
                 <span className={css.locationOption}>
@@ -171,12 +171,12 @@ export function PharmaciesFiltersDrawer({
       <SelectField
         id="pharmacies-filter-settlement"
         label="Settlement"
-        value={state.region ? state.settlement : ''}
+        value={state.region ? state.settlement.toLocaleLowerCase() : ''}
         disabled={!state.region}
         options={[
           { value: '', label: 'All settlements' },
           ...locationOptions.settlements.map((value) => ({
-            value,
+            value: value.toLocaleLowerCase(),
             label: value,
             content: (
               <span className={css.locationOption}>

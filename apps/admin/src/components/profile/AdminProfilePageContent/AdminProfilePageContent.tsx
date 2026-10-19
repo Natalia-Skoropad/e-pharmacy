@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import {
@@ -38,8 +38,6 @@ import {
 
 import type { ChangePasswordFormValues } from '@e-pharmacy/validation/profile';
 
-import { getMyAdminDocuments } from '@/lib/api/browser/admin-documents.api';
-import { getMyAdminPrivateComments } from '@/lib/api/browser/admin-private-comments.api';
 import { updateMyAdminEmployeeProfile } from '@/lib/api/browser/admin-profile.api';
 
 import {
@@ -95,10 +93,7 @@ export function AdminProfilePageContent() {
   const profileMutationInFlightRef = useRef(false);
   const passwordMutationInFlightRef = useRef(false);
   const [isPasswordSaving, setIsPasswordSaving] = useState(false);
-  const [documentsCount, setDocumentsCount] = useState(0);
-  const [commentsCount, setCommentsCount] = useState(0);
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
-  const [sessionsSnapshotAt, setSessionsSnapshotAt] = useState(0);
 
   const [sessionsStatus, setSessionsStatus] =
     useState<ActiveSessionsPanelStatus>('loading');
@@ -113,61 +108,37 @@ export function AdminProfilePageContent() {
   const [isSigningOutAll, setIsSigningOutAll] = useState(false);
   const sessionMutationInFlightRef = useRef(false);
 
-  const tabs = useMemo(
-    () => [
-      {
-        value: PERSONAL_TAB,
-        label: 'My data',
-        icon: <UserRound size={17} aria-hidden="true" />,
-      },
-      {
-        value: DOCUMENTS_TAB,
-        label: `Documents (${documentsCount})`,
-        icon: <FileBadge2 size={17} aria-hidden="true" />,
-      },
-      {
-        value: COMMENTS_TAB,
-        label: `Comments (${commentsCount})`,
-        icon: <MessageSquareLock size={17} aria-hidden="true" />,
-      },
-      {
-        value: SESSIONS_TAB,
-        label: `Active sessions (${sessions.filter((session) => !session.revokedAt && Date.parse(session.expiresAt) > sessionsSnapshotAt).length})`,
-        icon: <MonitorSmartphone size={17} aria-hidden="true" />,
-      },
-    ],
-    [commentsCount, documentsCount, sessions, sessionsSnapshotAt]
-  );
+  const tabs = [
+    {
+      value: PERSONAL_TAB,
+      label: 'My data',
+      icon: <UserRound size={17} aria-hidden="true" />,
+    },
+    {
+      value: DOCUMENTS_TAB,
+      label: 'Documents',
+      icon: <FileBadge2 size={17} aria-hidden="true" />,
+    },
+    {
+      value: COMMENTS_TAB,
+      label: 'Comments',
+      icon: <MessageSquareLock size={17} aria-hidden="true" />,
+    },
+    {
+      value: SESSIONS_TAB,
+      label: 'Active sessions',
+      icon: <MonitorSmartphone size={17} aria-hidden="true" />,
+    },
+  ];
 
   useEffect(() => {
-    if (!user) return;
-    const controller = new AbortController();
-
-    void getMyAdminDocuments({ signal: controller.signal })
-      .then((response) => {
-        if (!controller.signal.aborted)
-          setDocumentsCount(response.documents.length);
-      })
-      .catch(() => undefined);
-
-    void getMyAdminPrivateComments(1, { signal: controller.signal })
-      .then((response) => {
-        if (!controller.signal.aborted) setCommentsCount(response.total);
-      })
-      .catch(() => undefined);
-
-    return () => controller.abort();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
+    if (activeTab !== SESSIONS_TAB || !user) return;
     const controller = new AbortController();
 
     void getActiveSessions({ signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
         setSessions([...response.sessions]);
-        setSessionsSnapshotAt(Date.now());
         setSessionsStatus('success');
       })
 
@@ -178,7 +149,7 @@ export function AdminProfilePageContent() {
       });
 
     return () => controller.abort();
-  }, [sessionsReloadKey, user]);
+  }, [activeTab, sessionsReloadKey, user]);
 
   if (!user) {
     return (
@@ -393,9 +364,7 @@ export function AdminProfilePageContent() {
           value={COMMENTS_TAB}
           activeValue={activeTab}
         >
-          {activeTab === COMMENTS_TAB ? (
-            <AdminPrivateComments onTotalChange={setCommentsCount} />
-          ) : null}
+          {activeTab === COMMENTS_TAB ? <AdminPrivateComments /> : null}
         </ProfileTabPanel>
 
         <ProfileTabPanel

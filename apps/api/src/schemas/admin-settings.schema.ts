@@ -87,7 +87,7 @@ export const createAdminProductCategorySchema = z
   .object({
     name: settingsDictionaryNameSchema,
     color: productCategoryColorSchema,
-    icon: z.enum(PRODUCT_CATEGORY_ICONS).optional(),
+    icon: z.enum(PRODUCT_CATEGORY_ICONS),
   })
 
   .strict();

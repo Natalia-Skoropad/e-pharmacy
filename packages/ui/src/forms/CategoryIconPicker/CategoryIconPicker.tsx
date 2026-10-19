@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   Activity,
@@ -45,6 +46,44 @@ import {
   Thermometer,
   Watch,
   Waves,
+  Accessibility,
+  AlarmClock,
+  Atom,
+  BadgeCheck,
+  BadgePlus,
+  Bandage,
+  BatteryFull,
+  Beaker,
+  Bike,
+  BookOpen,
+  CalendarDays,
+  Candy,
+  ClipboardCheck,
+  CloudSun,
+  Coffee,
+  CookingPot,
+  Dumbbell,
+  Feather,
+  Fingerprint,
+  Fish,
+  Flame,
+  Gift,
+  Globe,
+  HeartHandshake,
+  Lightbulb,
+  Wind,
+  Magnet,
+  Medal,
+  Music,
+  Palette,
+  PawPrint,
+  Recycle,
+  Ribbon,
+  ScanHeart,
+  TestTube,
+  Footprints,
+  BellRing,
+  ShieldAlert,
 } from 'lucide-react';
 
 import {
@@ -100,6 +139,44 @@ const ICONS = {
   waves: Waves,
   sprout: Sprout,
   shirt: Shirt,
+  accessibility: Accessibility,
+  'alarm-clock': AlarmClock,
+  atom: Atom,
+  'badge-check': BadgeCheck,
+  'badge-plus': BadgePlus,
+  bandage: Bandage,
+  'battery-full': BatteryFull,
+  beaker: Beaker,
+  bike: Bike,
+  'book-open': BookOpen,
+  'calendar-days': CalendarDays,
+  candy: Candy,
+  'clipboard-check': ClipboardCheck,
+  'cloud-sun': CloudSun,
+  coffee: Coffee,
+  'cooking-pot': CookingPot,
+  dumbbell: Dumbbell,
+  feather: Feather,
+  fingerprint: Fingerprint,
+  fish: Fish,
+  flame: Flame,
+  gift: Gift,
+  globe: Globe,
+  'heart-handshake': HeartHandshake,
+  lightbulb: Lightbulb,
+  wind: Wind,
+  magnet: Magnet,
+  medal: Medal,
+  music: Music,
+  palette: Palette,
+  'paw-print': PawPrint,
+  recycle: Recycle,
+  ribbon: Ribbon,
+  'scan-heart': ScanHeart,
+  'test-tube': TestTube,
+  footprints: Footprints,
+  'bell-ring': BellRing,
+  'shield-alert': ShieldAlert,
 } as const;
 
 //===================================================================
@@ -127,42 +204,73 @@ export function CategoryIconPicker({
   onChange: (value: ProductCategoryIcon) => void;
   disabled?: boolean;
 }) {
-  const [query, setQuery] = useState('');
+  const [tooltip, setTooltip] = useState<{
+    label: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const showTooltip = (name: string, element: HTMLButtonElement) => {
+    const rect = element.getBoundingClientRect();
+
+    setTooltip({
+      label: name.replaceAll('-', ' '),
+
+      x: Math.max(
+        75,
+        Math.min(window.innerWidth - 75, rect.left + rect.width / 2)
+      ),
+
+      y: rect.top - 8,
+    });
+  };
+
   return (
     <div className={css.root}>
-      <label htmlFor="category-icon-search">Category icon</label>
+      <div className={css.fieldIntro}>
+        <span className={css.fieldLabel}>
+          Category icon <span aria-hidden="true">*</span>
+        </span>
 
-      <input
-        id="category-icon-search"
-        className={css.search}
-        placeholder="Search icons"
-        value={query}
-        disabled={disabled}
-        onChange={(event) => setQuery(event.target.value)}
-      />
+        <p>Choose an icon that represents this product category.</p>
+      </div>
 
       <div
         className={css.grid}
         role="group"
         aria-label="Choose a Lucide category icon"
+        onScroll={() => setTooltip(null)}
       >
-        {PRODUCT_CATEGORY_ICONS.filter((name) =>
-          name.replaceAll('-', ' ').includes(query.trim().toLowerCase())
-        ).map((name) => (
+        {PRODUCT_CATEGORY_ICONS.map((name) => (
           <button
             type="button"
             className={css.option}
             key={name}
-            title={name.replaceAll('-', ' ')}
             aria-label={name.replaceAll('-', ' ')}
             aria-pressed={value === name}
             disabled={disabled}
             onClick={() => onChange(name)}
+            onMouseEnter={(event) => showTooltip(name, event.currentTarget)}
+            onMouseLeave={() => setTooltip(null)}
+            onFocus={(event) => showTooltip(name, event.currentTarget)}
+            onBlur={() => setTooltip(null)}
           >
             <CategoryIcon name={name} size={21} />
           </button>
         ))}
       </div>
+      {tooltip && typeof document !== 'undefined'
+        ? createPortal(
+            <span
+              className={css.tooltip}
+              role="tooltip"
+              style={{ left: tooltip.x, top: tooltip.y }}
+            >
+              {tooltip.label}
+            </span>,
+            document.body
+          )
+        : null}
     </div>
   );
 }

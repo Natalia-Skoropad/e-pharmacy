@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { PRODUCT_CATEGORY_ICONS } from '../constants/product-category-icon';
+
 import {
   adminSettingsDictionaryListQuerySchema,
   createAdminProductCategorySchema,
@@ -15,8 +17,9 @@ test('admin category mutations require and normalize a six-digit hex color', () 
     createAdminProductCategorySchema.parse({
       name: 'Baby care',
       color: '#abcdef',
+      icon: 'pill',
     }),
-    { name: 'Baby care', color: '#ABCDEF' }
+    { name: 'Baby care', color: '#ABCDEF', icon: 'pill' }
   );
 
   assert.throws(
@@ -24,8 +27,40 @@ test('admin category mutations require and normalize a six-digit hex color', () 
       updateAdminProductCategorySchema.parse({
         name: 'Baby care',
         color: '#fff',
+        icon: 'pill',
       }),
     /#RRGGBB/i
+  );
+});
+
+//===============================================================
+
+test('category icon is required and must be one of the 81 supported icons', () => {
+  assert.equal(PRODUCT_CATEGORY_ICONS.length, 81);
+  assert.equal(new Set(PRODUCT_CATEGORY_ICONS).size, 81);
+
+  assert.throws(() =>
+    createAdminProductCategorySchema.parse({
+      name: 'Baby care',
+      color: '#ABCDEF',
+    })
+  );
+
+  assert.throws(() =>
+    createAdminProductCategorySchema.parse({
+      name: 'Baby care',
+      color: '#ABCDEF',
+      icon: 'unknown',
+    })
+  );
+
+  assert.equal(
+    createAdminProductCategorySchema.parse({
+      name: 'Baby care',
+      color: '#ABCDEF',
+      icon: 'footprints',
+    }).icon,
+    'footprints'
   );
 });
 

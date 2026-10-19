@@ -300,6 +300,7 @@ export function parseAdminPharmacyOwnerDetailSearchParams(
   params: AdminSearchParams = {}
 ): AdminPharmacyOwnerDetailUrlState {
   const tab = getSingle(params.tab);
+
   return { tab: isDetailTab(tab) ? tab : 'personal' };
 }
 
@@ -362,12 +363,12 @@ export function buildAdminPharmacyOwnerPharmaciesUrl(
 
   if (state.settlement)
     segments.push(
-      `settlement-${encodeURIComponent(normalizeSearch(state.settlement))}`
+      `settlement-${encodeURIComponent(normalizeSearch(state.settlement).toLowerCase())}`
     );
 
   if (state.region)
     segments.push(
-      `region-${encodeURIComponent(normalizeSearch(state.region).replace(/\s+/g, '-'))}`
+      `region-${encodeURIComponent(normalizeSearch(state.region).toLowerCase().replace(/\s+/g, '-'))}`
     );
 
   if (isPharmacyStatus(state.status))
@@ -430,7 +431,7 @@ export function parseAdminPharmacyOwnerPharmaciesSegments(
         else
           region = value.includes(' ')
             ? value
-            : value.replace(/-region$/i, ' region');
+            : value.replace(/-(region|oblast)$/i, ' $1');
       } catch {
         /* Ignore malformed URL encoding. */
       }

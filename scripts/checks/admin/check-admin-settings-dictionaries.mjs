@@ -73,7 +73,7 @@ assert.equal(
 
 assert.match(
   service,
-  /updateAdminProductCategoryService[\s\S]*?getCategoryUsageInSession[\s\S]*?usage\.total > 0 && isIdentityChange[\s\S]*?category\.save\(\{ session \}\)/
+  /updateAdminProductCategoryService[\s\S]*?getCategoryUsageInSession[\s\S]*?usage\.total > 0[\s\S]*?category\.save\(\{ session \}\)/
 );
 
 assert.match(

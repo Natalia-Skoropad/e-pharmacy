@@ -443,6 +443,10 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .sessionHistoryHeading {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .tabsLayout {
     padding: 14px;
   }
@@ -641,18 +645,29 @@
 
 .sessionsHistory {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid var(--color-border);
 }
 
-.sessionsHistory h3 {
-  margin: 0;
-  font-size: var(--fz-18);
+.sessionHistoryHeading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
 }
 
-.sessionsHistory > p {
-  margin: 0;
-  color: var(--color-text-secondary);
+.sessionHistoryHeading > :first-child {
+  min-width: 0;
+}
+
+.sessionHistoryCount {
+  min-width: 0;
+}
+
+.sessionsPagination {
+  display: grid;
+  gap: 18px;
+  justify-items: stretch;
 }

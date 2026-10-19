@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import {
@@ -58,7 +58,6 @@ import { formatDateTime } from '@e-pharmacy/utils/date';
 import {
   getAdminPharmacyOwnerDetail,
   getAdminPharmacyOwnerSessions,
-  getAdminPharmacyOwnerActivity,
   updateAdminPharmacyOwnerStatus,
 } from '@/lib/api/browser/admin-pharmacy-owners.api';
 
@@ -91,12 +90,6 @@ import css from './PharmacyOwnerDetailsPageContent.module.css';
 //===================================================================
 
 const OWNER_STATUS_REASON_MAX_LENGTH = 500;
-
-const ZERO_TAB_COUNTS = {
-  pharmacies: 0,
-  documents: 0,
-  comments: 0,
-} as const;
 
 //===================================================================
 
@@ -241,12 +234,14 @@ function PharmacyOwnerDetailsPageContent({
     void loadDetail(controller.signal)
       .then((response) => {
         if (controller.signal.aborted) return;
+
         setDetail(response);
         setIsLoading(false);
       })
 
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
+
         setDetail(null);
         setLoadError(classifyLoadError(error));
         setIsLoading(false);
@@ -259,16 +254,14 @@ function PharmacyOwnerDetailsPageContent({
     []
   );
 
-  const [sessionsSnapshotAt, setSessionsSnapshotAt] = useState(0);
-
   const [sessionsStatus, setSessionsStatus] = useState<
     'loading' | 'success' | 'error'
   >('loading');
 
   const [sessionsReloadKey, setSessionsReloadKey] = useState(0);
-  const [activityCount, setActivityCount] = useState(0);
 
   useEffect(() => {
+    if (activeTab !== 'sessions') return;
     const controller = new AbortController();
     setSessionsStatus('loading');
 
@@ -276,7 +269,6 @@ function PharmacyOwnerDetailsPageContent({
       .then((response) => {
         if (!controller.signal.aborted) {
           setOwnerSessions(response.sessions);
-          setSessionsSnapshotAt(Date.now());
           setSessionsStatus('success');
         }
       })
@@ -289,25 +281,7 @@ function PharmacyOwnerDetailsPageContent({
       });
 
     return () => controller.abort();
-  }, [ownerId, sessionsReloadKey]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    void getAdminPharmacyOwnerActivity(
-      ownerId,
-      { page: 1, perPage: 20 },
-      { signal: controller.signal }
-    )
-      .then((response) => {
-        if (!controller.signal.aborted) setActivityCount(response.total);
-      })
-      .catch(() => undefined);
-
-    return () => controller.abort();
-  }, [ownerId, reloadVersion]);
-
-  const tabCounts = detail?.tabCounts ?? ZERO_TAB_COUNTS;
+  }, [activeTab, ownerId, sessionsReloadKey]);
 
   const updateTabCount = useCallback(
     (key: 'documents' | 'comments', count: number) => {
@@ -336,47 +310,38 @@ function PharmacyOwnerDetailsPageContent({
     [updateTabCount]
   );
 
-  const tabs = useMemo<Array<TabItem<AdminPharmacyOwnerDetailTab>>>(() => {
-    return [
-      {
-        value: 'personal',
-        label: 'Personal info',
-        icon: <UserRound size={17} aria-hidden="true" />,
-      },
-      {
-        value: 'pharmacies',
-        label: `Pharmacies (${tabCounts.pharmacies})`,
-        icon: <Building2 size={17} aria-hidden="true" />,
-      },
-      {
-        value: 'documents',
-        label: `Documents (${tabCounts.documents})`,
-        icon: <Files size={17} aria-hidden="true" />,
-      },
-      {
-        value: 'comments',
-        label: `Comments (${tabCounts.comments})`,
-        icon: <MessageSquareText size={17} aria-hidden="true" />,
-      },
-      {
-        value: 'activity',
-        label: `Activity history (${activityCount})`,
-        icon: <History size={17} aria-hidden="true" />,
-      },
-      {
-        value: 'sessions',
-        label: `Active sessions (${ownerSessions.filter((session) => !session.revokedAt && Date.parse(session.expiresAt) > sessionsSnapshotAt).length})`,
-        icon: <MonitorSmartphone size={17} aria-hidden="true" />,
-      },
-    ];
-  }, [
-    tabCounts.comments,
-    tabCounts.documents,
-    tabCounts.pharmacies,
-    activityCount,
-    ownerSessions,
-    sessionsSnapshotAt,
-  ]);
+  const tabs: Array<TabItem<AdminPharmacyOwnerDetailTab>> = [
+    {
+      value: 'personal',
+      label: 'Personal info',
+      icon: <UserRound size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'pharmacies',
+      label: 'Pharmacies',
+      icon: <Building2 size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'documents',
+      label: 'Documents',
+      icon: <Files size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'comments',
+      label: 'Comments',
+      icon: <MessageSquareText size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'activity',
+      label: 'Activity history',
+      icon: <History size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'sessions',
+      label: 'Active sessions',
+      icon: <MonitorSmartphone size={17} aria-hidden="true" />,
+    },
+  ];
 
   const handleTabChange = (nextTab: AdminPharmacyOwnerDetailTab) => {
     setActiveTab(nextTab);

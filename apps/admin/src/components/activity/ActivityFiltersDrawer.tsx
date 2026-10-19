@@ -12,6 +12,9 @@ import {
   Search,
   History,
   Star,
+  UserRound,
+  Store,
+  UserRoundCog,
 } from 'lucide-react';
 
 import {
@@ -21,7 +24,6 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer, InfoTooltip } from '@e-pharmacy/ui/overlays';
-import css from './ActivityFiltersDrawer.module.css';
 
 import {
   ADMIN_AUDIT_ACTIONS,
@@ -36,6 +38,8 @@ import {
   getAdminAuditActionLabel,
   getAdminAuditSectionLabel,
 } from '@/lib/audit/admin-audit-presentation';
+
+import css from './ActivityFiltersDrawer.module.css';
 
 //===================================================================
 
@@ -78,6 +82,7 @@ function getActionSection(action: AdminAuditAction): AdminAuditSection {
 
 function sectionIcon(section: AdminAuditSection) {
   const size = 16;
+
   switch (section) {
     case 'pharmacyOwners':
       return <UsersRound size={size} />;
@@ -164,6 +169,20 @@ const ACTOR_TYPE_OPTIONS: Array<
   ...ADMIN_AUDIT_ACTOR_TYPES.map((actorType) => ({
     value: actorType,
     label: ACTOR_TYPE_LABELS[actorType],
+    content: (
+      <span className={css.option}>
+        <span className={css.optionIcon}>
+          {actorType === 'employee' ? (
+            <UserRound size={16} />
+          ) : actorType === 'pharmacyOwner' ? (
+            <Store size={16} />
+          ) : (
+            <UserRoundCog size={16} />
+          )}
+        </span>
+        {ACTOR_TYPE_LABELS[actorType]}
+      </span>
+    ),
   })),
 ];
 
@@ -205,7 +224,7 @@ export function ActivityFiltersDrawer({
     >
       <DateFilter
         id="admin-audit-date-filter"
-        label="Date"
+        label="Date /time"
         value={{ from: filters.dateFrom, to: filters.dateTo }}
         isActive={Boolean(filters.dateFrom || filters.dateTo)}
         minDate={minDate}

@@ -55,7 +55,6 @@ export type PharmacyDetailsTabsProps = Readonly<{
 export function PharmacyDetailsTabs({
   idBase,
   activeValue,
-  reviewsTotal,
   canShowBankDetails,
   onChange,
 }: PharmacyDetailsTabsProps) {
@@ -82,7 +81,7 @@ export function PharmacyDetailsTabs({
     },
     {
       value: 'reviews',
-      label: `${PHARMACY_TAB_LABELS.reviews} (${reviewsTotal})`,
+      label: PHARMACY_TAB_LABELS.reviews,
       icon: <Star size={17} aria-hidden="true" />,
     },
   ];

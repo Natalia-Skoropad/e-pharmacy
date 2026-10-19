@@ -15,7 +15,14 @@ const normalize = (value?: string) => value?.trim() ?? '';
 //===================================================================
 
 function choices(values: string[]): string[] {
-  return [...new Set(values.filter(Boolean))].sort((a, b) =>
+  const byKey = new Map<string, string>();
+
+  values.filter(Boolean).forEach((value) => {
+    const key = value.toLocaleLowerCase();
+    if (!byKey.has(key)) byKey.set(key, value);
+  });
+
+  return [...byKey.values()].sort((a, b) =>
     a.localeCompare(b, 'uk', { sensitivity: 'base' })
   );
 }

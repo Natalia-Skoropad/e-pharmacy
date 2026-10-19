@@ -265,24 +265,7 @@ export function PharmacyDetailsPageContent({
   }, [pharmacyId, retry]);
 
   // Render zero immediately; fill badges from the pharmacy detail response.
-  const tabCounts: Partial<Record<AdminPharmacyDetailTab, number>> = {
-    documents: detail?.documentCount ?? 0,
-    comments: detail?.tabCounts?.comments ?? 0,
-    reviews: detail?.metrics.reviewsCount ?? 0,
-    orders: detail?.tabCounts?.orders ?? 0,
-    clients: detail?.metrics.activeClientsCount ?? 0,
-    products: detail?.metrics.addedProductsCount ?? 0,
-    'product-requests': detail?.tabCounts?.productRequests ?? 0,
-    activity: detail?.tabCounts?.activity ?? 0,
-  };
-
-  const items = TAB_ITEMS.map((tab) => ({
-    ...tab,
-
-    label: Object.prototype.hasOwnProperty.call(tabCounts, tab.value)
-      ? `${tab.label} (${tabCounts[tab.value] ?? 0})`
-      : tab.label,
-  }));
+  const items = TAB_ITEMS;
 
   const handleCommentsCountChange = useCallback(
     (count: number) => {

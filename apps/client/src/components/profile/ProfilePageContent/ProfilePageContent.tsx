@@ -494,43 +494,8 @@ function AuthenticatedProfilePageContent({
 
   const effectiveOrdersCount = canUseAuthFeatures ? ordersTotal : 0;
 
-  const tabs = useMemo(
-    () =>
-      TABS.map((tab) => {
-        if (tab.value === 'favorite-products') {
-          return {
-            ...tab,
-            label: `${tab.label} (${effectiveFavoriteProductsCount})`,
-          };
-        }
-
-        if (tab.value === 'favorite-pharmacies') {
-          return {
-            ...tab,
-            label: `${tab.label} (${effectiveFavoritePharmaciesCount})`,
-          };
-        }
-
-        if (tab.value === 'sessions') {
-          return { ...tab, label: `${tab.label} (${sessions.length})` };
-        }
-
-        if (tab.value === 'orders') {
-          return {
-            ...tab,
-            label: `${tab.label} (${effectiveOrdersCount})`,
-          };
-        }
-
-        return tab;
-      }),
-    [
-      effectiveFavoritePharmaciesCount,
-      effectiveFavoriteProductsCount,
-      effectiveOrdersCount,
-      sessions.length,
-    ]
-  );
+  // Keep tab labels independent of data counts; each panel owns its pagination.
+  const tabs = TABS;
 
   const ordersQueryParams = useMemo(
     () => ({
@@ -881,6 +846,7 @@ function AuthenticatedProfilePageContent({
     async function loadOrders() {
       try {
         setIsOrdersLoading(true);
+
         const response = await getOrders(ordersQueryParams, {
           signal: controller.signal,
         });

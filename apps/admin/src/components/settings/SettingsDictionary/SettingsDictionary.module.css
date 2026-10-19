@@ -262,3 +262,13 @@
   border: 1px solid var(--color-accent-border-soft);
   border-radius: 50%;
 }
+
+.formTabPanel {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.formTabPanel[hidden] {
+  display: none;
+}

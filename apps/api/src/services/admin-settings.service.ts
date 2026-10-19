@@ -470,13 +470,10 @@ export async function updateAdminProductCategoryService(
       const nextColor = normalizeProductCategoryColor(input.color);
       const nextIcon = input.icon ?? category.icon ?? 'pill';
 
-      const isIdentityChange =
-        category.name !== nextName || category.slug !== nextSlug;
-
-      if (usage.total > 0 && isIdentityChange) {
+      if (usage.total > 0) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'This category is already in use and its name cannot be edited.'
+          'This category is already in use and cannot be edited.'
         );
       }
 

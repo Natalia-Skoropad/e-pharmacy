@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Save, X } from 'lucide-react';
+import { Palette, Plus, Save, Shapes, X } from 'lucide-react';
 import { useId, useRef, useState, type FormEvent } from 'react';
 
 import {
@@ -10,6 +10,7 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
+import { Tabs } from '@e-pharmacy/ui/navigation';
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 
 import {
@@ -75,14 +76,17 @@ export function SettingsDictionaryFormModal<
   const initialColor = currentColor ?? defaultColor ?? '';
 
   const [name, setName] = useState(initialName);
+  const [activeTab, setActiveTab] = useState<'details' | 'color'>('details');
   const [color, setColor] = useState(initialColor);
 
   const [icon, setIcon] = useState(
-    (item as (TItem & { icon?: string }) | undefined)?.icon ?? 'pill'
+    (item as (TItem & { icon?: string }) | undefined)?.icon ??
+      (mode === 'edit' ? 'pill' : '')
   );
 
   const [nameTouched, setNameTouched] = useState(false);
   const [colorTouched, setColorTouched] = useState(false);
+  const [iconTouched, setIconTouched] = useState(false);
 
   const [lastSubmittedName, setLastSubmittedName] = useState<string | null>(
     null
@@ -113,8 +117,14 @@ export function SettingsDictionaryFormModal<
     event.preventDefault();
     setNameTouched(true);
     setColorTouched(true);
+    setIconTouched(true);
 
-    if (nameError || colorError || isSubmitting) return;
+    if (nameError || colorError || (defaultColor && !icon) || isSubmitting) {
+      if (nameError || (defaultColor && !icon)) setActiveTab('details');
+      else if (colorError) setActiveTab('color');
+
+      return;
+    }
 
     const normalizedName = name.trim();
     setLastSubmittedName(normalizedName);
@@ -155,42 +165,72 @@ export function SettingsDictionaryFormModal<
         </div>
 
         <form className={css.form} onSubmit={handleSubmit} noValidate>
-          <NameInput
-            id="settings-dictionary-name"
-            name="name"
-            label="Name"
-            value={name}
-            maxLength={100}
-            autoComplete="off"
-            disabled={nameDisabled || isSubmitting}
-            hint={
-              nameDisabled
-                ? 'The name is locked while this item is in use.'
-                : 'Use Latin letters and spaces, starting with an uppercase letter.'
-            }
-            error={nameError}
-            isTouched={isNameTouched}
-            onChange={(event) => setName(event.target.value)}
-          />
-
           {defaultColor ? (
-            <ColorPicker
-              id="settings-dictionary-color"
-              name="color"
-              value={color}
-              error={colorError}
-              isTouched={colorTouched}
-              disabled={isSubmitting}
-              onChange={setColor}
+            <Tabs
+              idBase="settings-category"
+              ariaLabel="Product category settings"
+              activeValue={activeTab}
+              mobileVisibleCount={2}
+              items={[
+                {
+                  value: 'details',
+                  label: 'Name & icon',
+                  icon: <Shapes size={17} />,
+                },
+                { value: 'color', label: 'Color', icon: <Palette size={17} /> },
+              ]}
+              onChange={setActiveTab}
             />
           ) : null}
 
-          {defaultColor ? (
-            <CategoryIconPicker
-              value={icon}
-              onChange={setIcon}
-              disabled={isSubmitting}
+          <div
+            className={css.formTabPanel}
+            hidden={Boolean(defaultColor) && activeTab !== 'details'}
+          >
+            <NameInput
+              id="settings-dictionary-name"
+              name="name"
+              label="Name"
+              value={name}
+              maxLength={100}
+              autoComplete="off"
+              disabled={nameDisabled || isSubmitting}
+              hint={
+                nameDisabled
+                  ? 'The name is locked while this item is in use.'
+                  : 'Use Latin letters and spaces, starting with an uppercase letter.'
+              }
+              error={nameError}
+              isTouched={isNameTouched}
+              onChange={(event) => setName(event.target.value)}
             />
+
+            {defaultColor ? (
+              <CategoryIconPicker
+                value={icon}
+                onChange={setIcon}
+                disabled={isSubmitting}
+              />
+            ) : null}
+            {defaultColor && iconTouched && !icon ? (
+              <p className={css.formError} role="alert">
+                Choose a category icon.
+              </p>
+            ) : null}
+          </div>
+
+          {defaultColor ? (
+            <div className={css.formTabPanel} hidden={activeTab !== 'color'}>
+              <ColorPicker
+                id="settings-dictionary-color"
+                name="color"
+                value={color}
+                error={colorError}
+                isTouched={colorTouched}
+                disabled={isSubmitting}
+                onChange={setColor}
+              />
+            </div>
           ) : null}
 
           {nonFieldSubmitError ? (

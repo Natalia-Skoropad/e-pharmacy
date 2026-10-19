@@ -142,6 +142,7 @@ import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+
 import { OwnerDocumentsPanel } from '../OwnerDocumentsPanel';
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
@@ -1205,37 +1206,7 @@ function PharmacyProfilePage({
     !isDocumentsSaving &&
     !isSendingVerification;
 
-  const reviewsCount = pharmacy.reviewsCount ?? 0;
-
-  const documentsCount =
-    documentValues.length +
-    (pharmacy.membershipRole === 'owner' ? ownerDocumentsCount : 0);
-
-  const tabs = TABS.map((tab) => {
-    if (tab.value === 'reviews') {
-      return { ...tab, label: `Reviews (${reviewsCount})` };
-    }
-
-    if (tab.value === 'documents') {
-      return { ...tab, label: `Documents (${documentsCount})` };
-    }
-
-    if (tab.value === 'sessions') {
-      return {
-        ...tab,
-        label: `Active sessions (${sessions.filter((session) => !session.revokedAt && Date.parse(session.expiresAt) > Date.now()).length})`,
-      };
-    }
-
-    if (tab.value === 'comments') {
-      return {
-        ...tab,
-        label: `Comments (${commentsTotal})`,
-      };
-    }
-
-    return tab;
-  });
+  const tabs = TABS;
 
   const handleOwnerChange = (
     field: keyof DataProfileFormValues,
@@ -1371,6 +1342,7 @@ function PharmacyProfilePage({
       });
 
       const nextValues = createOwnerInitialValues(response.user);
+
       setOwnerPictureUrl(response.user.pictureUrl ?? null);
       setOwnerValues(nextValues);
       setInitialOwnerValues(nextValues);
@@ -1523,6 +1495,7 @@ function PharmacyProfilePage({
           pharmacyValidationMode,
           initialPaymentValues
         ),
+
         expectedRevision: pharmacy.updatedAt,
       });
 

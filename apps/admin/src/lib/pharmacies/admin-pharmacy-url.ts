@@ -142,7 +142,7 @@ function locationText(value: unknown): string {
 //===================================================================
 
 function locationSegment(value: string): string {
-  return encodeURIComponent(value.trim().replace(/\s+/g, '-'));
+  return encodeURIComponent(value.trim().toLowerCase().replace(/\s+/g, '-'));
 }
 
 //===================================================================
@@ -152,7 +152,7 @@ function readRegionSegment(value: string): string {
 
   return decoded.includes(' ')
     ? decoded
-    : decoded.replace(/-region$/i, ' region');
+    : decoded.replace(/-(region|oblast)$/i, ' $1');
 }
 
 //===================================================================
@@ -297,6 +297,7 @@ export function resolveAdminPharmaciesRoute(
       kind: 'detail',
       pharmacyId: segments[0].toLowerCase(),
       tab: tab as AdminPharmacyDetailTab,
+
       ...(segments.length > 2 ? { activitySegments: segments.slice(2) } : {}),
     };
   }

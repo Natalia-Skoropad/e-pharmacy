@@ -183,6 +183,6 @@ test('linked-pharmacy location filters round-trip in the owner URL', () => {
     url.split('/').slice(5)
   );
 
-  assert.equal(restored.settlement, original.settlement);
-  assert.equal(restored.region, original.region);
+  assert.equal(restored.settlement, original.settlement.toLowerCase());
+  assert.equal(restored.region, original.region.toLowerCase());
 });

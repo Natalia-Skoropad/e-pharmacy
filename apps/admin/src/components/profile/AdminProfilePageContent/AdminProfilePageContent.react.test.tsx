@@ -37,13 +37,11 @@ test('profile picture mutation keeps optimistic revision and refreshes current u
 
 //===================================================================
 
-test('document and comment counts preload while tab bodies remain conditional', () => {
-  assert.match(source, /getMyAdminDocuments/);
-  assert.match(source, /setDocumentsCount\(response\.documents\.length\)/);
-  assert.match(source, /getMyAdminPrivateComments\(1/);
-  assert.match(source, /setCommentsCount\(response\.total\)/);
-  assert.match(source, /label: `Documents \(\$\{documentsCount\}\)`/);
-  assert.match(source, /label: `Comments \(\$\{commentsCount\}\)`/);
+test('document and comment tab bodies load only when selected', () => {
+  assert.doesNotMatch(source, /getMyAdminDocuments/);
+  assert.doesNotMatch(source, /getMyAdminPrivateComments/);
+  assert.match(source, /label: 'Documents'/);
+  assert.match(source, /label: 'Comments'/);
 
   assert.match(
     source,
@@ -52,7 +50,7 @@ test('document and comment counts preload while tab bodies remain conditional', 
 
   assert.match(
     source,
-    /activeTab === COMMENTS_TAB\s*\?\s*\(?\s*<AdminPrivateComments\s+onTotalChange=\{setCommentsCount\}\s*\/>\s*\)?\s*:\s*null/
+    /activeTab === COMMENTS_TAB\s*\?\s*\(?\s*<AdminPrivateComments\s*\/>\s*\)?\s*:\s*null/
   );
 });
 

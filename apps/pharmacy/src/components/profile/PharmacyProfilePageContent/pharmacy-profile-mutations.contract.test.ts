@@ -92,7 +92,7 @@ test('profile comments count preloads and the tab reuses the first comments page
   );
 
   assert.match(source, /initialData=\{commentsInitialData \?\? undefined\}/);
-  assert.match(source, /label: `Comments \(\$\{commentsTotal\}\)`/);
+  assert.match(source, /label: 'Comments'/);
   assert.match(source, /initialTotal=\{commentsTotal\}/);
   assert.match(source, /onTotalChange=\{setCommentsTotal\}/);
 });

@@ -124,7 +124,13 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   const toast = useToast();
 
   const [suggestionQuery, setSuggestionQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<readonly TItem[]>([]);
+
+  const [suggestionResult, setSuggestionResult] = useState<{
+    api: SettingsDictionaryConfig<TItem>['api'];
+    query: string;
+    reloadVersion: number;
+    items: readonly TItem[];
+  } | null>(null);
 
   const [data, setData] =
     useState<SettingsDictionaryListResponse<TItem> | null>(null);
@@ -139,12 +145,25 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
   const [isMutating, setIsMutating] = useState(false);
   const [mutationError, setMutationError] = useState<string | null>(null);
 
+  const currentSuggestionResult =
+    suggestionResult?.api === config.api &&
+    suggestionResult.query === suggestionQuery &&
+    suggestionResult.reloadVersion === reloadVersion
+      ? suggestionResult
+      : null;
+
+  const suggestions = currentSuggestionResult?.items;
+  const isSuggestionsLoading = currentSuggestionResult === null;
+
   const canCreate = canAdmin(access, config.permissions.create);
   const canEdit = canAdmin(access, config.permissions.edit);
   const canDelete = canAdmin(access, config.permissions.delete);
 
   const hasDateFilters = Boolean(filters.createdFrom || filters.createdTo);
-  const activeFiltersCount = hasDateFilters ? 1 : 0;
+
+  const activeFiltersCount =
+    Number(hasDateFilters) + Number(Boolean(selectedSlug));
+
   const isFiltered = Boolean(keyword || hasDateFilters);
 
   const navigate = useCallback(
@@ -185,11 +204,25 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         )
 
         .then((response) => {
-          if (!controller.signal.aborted) setSuggestions(response.items);
+          if (!controller.signal.aborted) {
+            setSuggestionResult({
+              api: config.api,
+              query: suggestionQuery,
+              reloadVersion,
+              items: response.items,
+            });
+          }
         })
 
         .catch(() => {
-          if (!controller.signal.aborted) setSuggestions([]);
+          if (!controller.signal.aborted) {
+            setSuggestionResult({
+              api: config.api,
+              query: suggestionQuery,
+              reloadVersion,
+              items: [],
+            });
+          }
         });
     }, 250);
 
@@ -201,9 +234,11 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
 
   const searchOptions = useMemo<Array<SearchableSelectOption<string>>>(
     () => [
-      { value: '', label: `All ${config.pluralLabel}` },
+      ...(suggestionQuery
+        ? []
+        : [{ value: '', label: `All ${config.pluralLabel}` }]),
 
-      ...suggestions.map((item) => ({
+      ...(suggestions ?? []).map((item) => ({
         value: slugForDictionaryItem(item, Boolean(config.color)),
         label: item.name,
 
@@ -221,7 +256,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         ),
       })),
     ],
-    [suggestions, config.color, config.pluralLabel]
+    [suggestions, suggestionQuery, config.color, config.pluralLabel]
   );
 
   useEffect(() => {
@@ -305,6 +340,7 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
 
   const closeForm = () => {
     if (isMutating) return;
+
     setFormState(null);
     setMutationError(null);
   };
@@ -489,9 +525,10 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
         key: 'actions',
         title: 'Actions',
         width: actionsWidth,
+
         render: (item) => {
           const isInUse = item.usage.total > 0;
-          const editDisabled = !canEdit || (isInUse && !config.color);
+          const editDisabled = !canEdit || isInUse;
           const deleteDisabled = !canDelete || isInUse;
 
           let editDisabledReason: string | undefined;
@@ -583,6 +620,9 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
             selectedFallbackLabel={selectedSlug.replaceAll('-', ' ')}
             placeholder={config.searchPlaceholder}
             isActive={Boolean(selectedSlug)}
+            isOptionsLoading={isSuggestionsLoading}
+            emptyMessage={`No ${config.pluralLabel} found`}
+            loadingMessage={`Loading ${config.pluralLabel}...`}
             maxLength={100}
             filterOptions={false}
             onQueryChange={setSuggestionQuery}
@@ -677,12 +717,16 @@ export function SettingsDictionaryPage<TItem extends SettingsDictionaryItem>({
           title={config.title}
           filters={filters}
           earliestCreatedAt={data?.earliestCreatedAt ?? undefined}
-          hasActiveFilters={hasDateFilters}
+          hasActiveFilters={Boolean(activeFiltersCount)}
           onChange={(nextFilters) => {
             navigate({ filters: nextFilters, page: 1 });
           }}
           onReset={() => {
-            navigate({ filters: EMPTY_SETTINGS_DICTIONARY_FILTERS, page: 1 });
+            navigate({
+              filters: EMPTY_SETTINGS_DICTIONARY_FILTERS,
+              selectedSlug: '',
+              page: 1,
+            });
           }}
           onClose={() => setIsFiltersOpen(false)}
         />
