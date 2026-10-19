@@ -216,6 +216,7 @@ test(
       );
 
       const user = await User.findOne({ email: identity.email });
+
       assert.ok(user);
       assert.ok(await Client.exists({ userId: user._id }));
     } finally {
@@ -674,6 +675,7 @@ test(
       );
 
       let stored = await PharmacyDocumentFile.findById(uploaded.document.id);
+
       assert.ok(stored?.expiresAt);
       assert.equal(stored.attachedAt, undefined);
 
@@ -861,43 +863,72 @@ test(
         .sort({ createdAt: 1, _id: 1 })
         .lean();
 
-      assert.equal(auditLogs.length, 2);
-      assert.equal(auditLogs[0]?.action, 'pharmacyOwner.account.created');
-      assert.deepEqual(auditLogs[0]?.before, {});
+      assert.equal(auditLogs.length, 3);
 
-      assert.deepEqual(auditLogs[0]?.after, {
+      assert.deepEqual(
+        auditLogs.map((entry) => entry.action).sort(),
+        [
+          ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_ACCOUNT_CREATED,
+          ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED,
+          ADMIN_AUDIT_ACTIONS.PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED,
+        ].sort()
+      );
+
+      const accountAudit = auditLogs.find(
+        (entry) =>
+          entry.action === ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_ACCOUNT_CREATED
+      );
+
+      const pharmacyAudit = auditLogs.find(
+        (entry) => entry.action === ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED
+      );
+
+      const documentsAudit = auditLogs.find(
+        (entry) =>
+          entry.action ===
+          ADMIN_AUDIT_ACTIONS.PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED
+      );
+
+      assert.ok(accountAudit);
+      assert.ok(pharmacyAudit);
+      assert.ok(documentsAudit);
+      assert.deepEqual(accountAudit.before, {});
+
+      assert.deepEqual(accountAudit.after, {
         status: 'new',
         name: 'Document Storage',
         email: identity.email,
         phone: identity.phone,
       });
 
-      assert.equal(
-        auditLogs[1]?.action,
-        'pharmacy.registrationDocuments.attached'
-      );
+      assert.deepEqual(pharmacyAudit.before, {});
 
-      assert.deepEqual(auditLogs[1]?.after.registrationDocuments, [
+      assert.deepEqual(pharmacyAudit.after, {
+        status: 'new',
+        ownerId: registration.user.id,
+      });
+
+      assert.deepEqual(documentsAudit.after.registrationDocuments, [
         'license.pdf',
       ]);
 
-      assert.equal(auditLogs[1]?.after.documentCount, 1);
+      assert.equal(documentsAudit.after.documentCount, 1);
 
-      assert.deepEqual(auditLogs[1]?.after.documentMimeTypes, [
+      assert.deepEqual(documentsAudit.after.documentMimeTypes, [
         'application/pdf',
       ]);
 
-      assert.deepEqual(auditLogs[1]?.after.documentSizesBytes, [
+      assert.deepEqual(documentsAudit.after.documentSizesBytes, [
         String(content.byteLength),
       ]);
 
       assert.equal(
-        auditLogs[1]?.after.totalDocumentSizeBytes,
+        documentsAudit.after.totalDocumentSizeBytes,
         content.byteLength
       );
 
       assert.doesNotMatch(
-        JSON.stringify(auditLogs[1]),
+        JSON.stringify(documentsAudit),
         /sha256|base64|dataUrl|content|binary/i
       );
     } finally {
@@ -2279,6 +2310,7 @@ test(
         },
         { new: true }
       );
+
       assert.ok(onModeration);
 
       await assert.rejects(

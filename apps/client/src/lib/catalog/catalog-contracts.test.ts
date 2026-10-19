@@ -182,6 +182,7 @@ test('parses canonical pharmacy location plus region paths', () => {
   assert.deepEqual(canonicalResult.filters, {
     name: '',
     address: '',
+    pharmacyId: '',
     settlement: 'nova ivanivka',
     region: 'odesa region',
     sort: 'newest',

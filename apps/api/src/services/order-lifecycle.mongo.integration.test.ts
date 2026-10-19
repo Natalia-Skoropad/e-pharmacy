@@ -11,6 +11,7 @@ import {
 import { Cart } from '../models/cart.model';
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { ProductCategory } from '../models/productCategory.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { User } from '../models/user.model';
@@ -392,6 +393,7 @@ test(
 
     try {
       const response = await checkoutFixture(fixture);
+
       await Order.updateOne(
         { _id: response.order.id },
         { $set: { status: 'in_progress' } }
@@ -656,6 +658,7 @@ test(
       assert.equal(successfulHistoryEntries.length, 1);
 
       const successfulHistoryEntry = successfulHistoryEntries[0];
+
       assert.ok(successfulHistoryEntry);
       assert.equal(
         successfulAt.getTime(),
@@ -743,13 +746,20 @@ test(
 
       assert.equal(statistics.points.length, 1);
 
-      assert.deepEqual(statistics.categories, [
-        {
-          id: fixture.categoryId.toString(),
-          name: 'Medicine',
-          slug: 'medicine',
-        },
-      ]);
+      const currentCategory = await ProductCategory.findById(fixture.categoryId)
+        .select('color')
+        .lean<{ color: string } | null>();
+
+      assert.ok(currentCategory);
+
+      const expectedCategory = {
+        id: fixture.categoryId.toString(),
+        name: 'Medicine',
+        slug: 'medicine',
+        color: currentCategory.color,
+      };
+
+      assert.deepEqual(statistics.categories, [expectedCategory]);
 
       assert.equal(statistics.points[0]?.values.medicine?.quantity, 1);
 
@@ -772,13 +782,7 @@ test(
 
       assert.equal(dailyStatistics.points.length, 1);
 
-      assert.deepEqual(dailyStatistics.categories, [
-        {
-          id: fixture.categoryId.toString(),
-          name: 'Medicine',
-          slug: 'medicine',
-        },
-      ]);
+      assert.deepEqual(dailyStatistics.categories, [expectedCategory]);
 
       assert.equal(
         dailyStatistics.points[0]?.values.medicine?.amount,

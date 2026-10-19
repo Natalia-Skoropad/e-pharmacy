@@ -62,12 +62,22 @@ test('Stage 13.12 keeps Owners analytics, URL filters, search and pagination wir
 
 //===================================================================
 
-test('Stage 13.12 keeps owner lifecycle modal, tab counters and resource tabs connected', () => {
+test('Stage 13.12 keeps owner lifecycle modal and resource tabs connected without label counts', () => {
   assert.match(detailSource, /<ReasonModal/);
   assert.match(detailSource, /updateAdminPharmacyOwnerStatus/);
-  assert.match(detailSource, /Pharmacies \(\$\{tabCounts\.pharmacies\}\)/);
-  assert.match(detailSource, /Documents \(\$\{tabCounts\.documents\}\)/);
-  assert.match(detailSource, /Comments \(\$\{tabCounts\.comments\}\)/);
+
+  // Stage 14.17 uses count-free tab labels; resource counts remain internal metadata.
+  assert.match(detailSource, /value: 'pharmacies',\s*label: 'Pharmacies'/);
+  assert.match(detailSource, /value: 'documents',\s*label: 'Documents'/);
+  assert.match(detailSource, /value: 'comments',\s*label: 'Comments'/);
+
+  assert.doesNotMatch(
+    detailSource,
+    /label: `(?:Pharmacies|Documents|Comments) \(/
+  );
+
+  assert.match(detailSource, /onCountChange=\{updateDocumentsCount\}/);
+  assert.match(detailSource, /onCountChange=\{updateCommentsCount\}/);
   assert.match(detailSource, /<LinkedPharmaciesTab/);
   assert.match(detailSource, /<OwnerDocumentsTab/);
   assert.match(detailSource, /<OwnerCommentsTab/);

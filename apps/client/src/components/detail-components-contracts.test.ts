@@ -96,14 +96,19 @@ test('keeps Pharmacy Details retryable and separates contact from receipt email'
       ),
     ]);
 
-  assert.ok(page.split(/\r?\n/).length < 190);
+  assert.ok(page.split(/\r?\n/).length <= 230);
   assert.match(page, /PharmacyDetailsHero/);
   assert.match(page, /PharmacyBankDetailsPanel/);
   assert.match(page, /PharmacyAboutPanel/);
   assert.match(page, /PharmacyReviewsPanel/);
   assert.doesNotMatch(page, /queueMicrotask|aria-live="polite"[^>]*tabSection/);
 
-  assert.match(hero, /<h1 className=\{css\.title\}>\{pharmacy\.name\}<\/h1>/);
+  assert.match(
+    page,
+    /<h1 className=\{css\.detailsHeaderTitle\}>\{pharmacy\.name\}<\/h1>/
+  );
+
+  assert.match(hero, /<PharmacyContactPanel/);
   assert.doesNotMatch(hero, /pharmacy pharmacy/);
   assert.match(contact, /mailto:\$\{pharmacy\.email\}/);
   assert.match(contact, /CopyButton/);

@@ -56,9 +56,26 @@ test(
           _id: adminId,
           role: 'admin',
           name: 'Pharmacy reviewer',
+          email: `reviewer-${adminId.toHexString()}@example.com`,
+
+          phone: `+38067${String(
+            Number.parseInt(adminId.toHexString().slice(-6), 16) % 10_000_000
+          ).padStart(7, '0')}`,
+
           status: 'active',
         },
-        { _id: ownerId, role: 'pharmacy', name: 'Owner', status: 'active' },
+        {
+          _id: ownerId,
+          role: 'pharmacy',
+          name: 'Owner',
+          email: `owner-${ownerId.toHexString()}@example.com`,
+
+          phone: `+38050${String(
+            Number.parseInt(ownerId.toHexString().slice(-6), 16) % 10_000_000
+          ).padStart(7, '0')}`,
+
+          status: 'active',
+        },
       ]);
 
       await Pharmacy.collection.insertMany([

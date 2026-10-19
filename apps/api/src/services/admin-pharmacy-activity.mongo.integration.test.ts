@@ -69,8 +69,30 @@ test(
 
     try {
       await User.collection.insertMany([
-        { _id: ownerId, role: 'pharmacy', name: 'Owner', status: 'active' },
-        { _id: reviewerId, role: 'admin', name: 'Reviewer', status: 'active' },
+        {
+          _id: ownerId,
+          role: 'pharmacy',
+          name: 'Owner',
+          email: `owner-${ownerId.toHexString()}@example.com`,
+
+          phone: `+38050${String(
+            Number.parseInt(ownerId.toHexString().slice(-6), 16) % 10_000_000
+          ).padStart(7, '0')}`,
+
+          status: 'active',
+        },
+        {
+          _id: reviewerId,
+          role: 'admin',
+          name: 'Reviewer',
+          email: `reviewer-${reviewerId.toHexString()}@example.com`,
+
+          phone: `+38067${String(
+            Number.parseInt(reviewerId.toHexString().slice(-6), 16) % 10_000_000
+          ).padStart(7, '0')}`,
+
+          status: 'active',
+        },
       ]);
 
       await Pharmacy.collection.insertMany([
@@ -223,6 +245,7 @@ test(
         (error: unknown) =>
           error instanceof Error && 'status' in error && error.status === 404
       );
+
       await assert.rejects(
         getAdminPharmacyActivityDetailsService(
           String(pharmacyA),
