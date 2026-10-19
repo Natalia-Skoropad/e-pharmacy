@@ -38,10 +38,8 @@ test('pharmacy profile keeps pharmacy documents and adds owner documents only fo
 
   assert.match(source, /title="Pharmacy documents"/);
 
-  assert.match(
-    source,
-    /<OwnerDocumentsPanel\s+onCountChange=\{setOwnerDocumentsCount\}\s*\/>/
-  );
+  assert.match(source, /<OwnerDocumentsPanel\s*\/>/);
+  assert.doesNotMatch(source, /onCountChange|ownerDocumentsCount/);
 
   assert.match(source, /pharmacy\.membershipRole === 'owner'/);
 });

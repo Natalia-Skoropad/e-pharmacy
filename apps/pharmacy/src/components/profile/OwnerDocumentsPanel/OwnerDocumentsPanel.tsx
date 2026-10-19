@@ -45,11 +45,7 @@ function toBrowserUploadFile(
 
 //===================================================================
 
-export function OwnerDocumentsPanel({
-  onCountChange,
-}: {
-  onCountChange?: (count: number) => void;
-}) {
+export function OwnerDocumentsPanel() {
   const toast = useToast();
   const [documents, setDocuments] = useState<PharmacyOwnerDocument[]>([]);
   const [status, setStatus] = useState<ResourceStatus>('loading');
@@ -66,6 +62,7 @@ export function OwnerDocumentsPanel({
     loadControllerRef.current?.abort();
 
     const controller = new AbortController();
+
     loadControllerRef.current = controller;
     setStatus('loading');
     setError('');
@@ -76,6 +73,7 @@ export function OwnerDocumentsPanel({
       });
 
       if (controller.signal.aborted) return;
+
       setDocuments([...response.documents]);
       setStatus('success');
     } catch (cause) {
@@ -111,6 +109,7 @@ export function OwnerDocumentsPanel({
         setError(
           getProfileErrorMessage(cause, 'Could not load owner documents.')
         );
+
         setStatus('error');
       })
 
@@ -130,10 +129,6 @@ export function OwnerDocumentsPanel({
   }, []);
 
   const values = useMemo(() => documents.map(toBrowserUploadFile), [documents]);
-
-  useEffect(() => {
-    if (status === 'success') onCountChange?.(documents.length);
-  }, [documents.length, onCountChange, status]);
 
   const handleUpload = async (files: readonly File[]) => {
     if (isUploading || pendingDocumentId) return;

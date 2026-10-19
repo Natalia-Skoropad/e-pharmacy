@@ -55,7 +55,12 @@ test('owner API mutates only the authenticated owner document collection', () =>
     /findOneAndDelete\([\s\S]*_id: documentId,[\s\S]*ownerUserId,[\s\S]*\{ session \}/
   );
 
-  assert.match(serviceSource, /Pharmacy\.exists\(\{ ownerId: ownerUserId \}\)/);
+  assert.match(
+    serviceSource,
+    /User\.exists\(\{ _id: ownerUserId, role: USER_ROLES\.PHARMACY \}\)/
+  );
+
+  assert.doesNotMatch(serviceSource, /Pharmacy\.exists\(/);
 });
 
 //===============================================================

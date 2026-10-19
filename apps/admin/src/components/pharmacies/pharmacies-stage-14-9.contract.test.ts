@@ -91,6 +91,8 @@ test('Stage 14.9 registry fetch and global statistics are independent', async ()
     './PharmaciesPageContent/PharmaciesPageContent.module.css'
   );
 
-  assert.match(css, /\.statsVisible\.statsVisible/);
+  assert.match(css, /\.activeCard/);
+  assert.match(content, /shellCss\.statisticsBlock/);
+  assert.match(content, /shellCss\.statisticsError/);
   assert.doesNotMatch(css, /\.card\s*\{/);
 });

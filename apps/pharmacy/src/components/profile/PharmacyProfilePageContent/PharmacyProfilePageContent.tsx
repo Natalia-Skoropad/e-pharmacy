@@ -124,7 +124,6 @@ import {
   getActiveSessions,
   getMyPharmacyDocument,
   getMyPharmacyProfile,
-  getMyPharmacyOwnerDocuments,
   getPharmacyNotes,
   revokeActiveSession,
   sendMyPharmacyForVerification,
@@ -750,29 +749,9 @@ function PharmacyProfilePage({
 
   const [sessionsError, setSessionsError] = useState('');
   const [commentsTotal, setCommentsTotal] = useState(0);
-  const [ownerDocumentsCount, setOwnerDocumentsCount] = useState(0);
 
   const [commentsInitialData, setCommentsInitialData] =
     useState<PharmacyNotesResponse | null>(null);
-
-  // The Documents tab is lazy, but its badge must include owner documents
-  // even before the user opens that tab.
-  useEffect(() => {
-    if (pharmacy.membershipRole !== 'owner') return;
-
-    const controller = new AbortController();
-
-    void getMyPharmacyOwnerDocuments({ signal: controller.signal })
-      .then((response) => {
-        if (!controller.signal.aborted) {
-          setOwnerDocumentsCount(response.documents.length);
-        }
-      })
-
-      .catch(() => undefined);
-
-    return () => controller.abort();
-  }, [pharmacy.membershipRole]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -2552,9 +2531,7 @@ function PharmacyProfilePage({
                   />
 
                   {pharmacy.membershipRole === 'owner' ? (
-                    <OwnerDocumentsPanel
-                      onCountChange={setOwnerDocumentsCount}
-                    />
+                    <OwnerDocumentsPanel />
                   ) : null}
                 </>
               ) : null}

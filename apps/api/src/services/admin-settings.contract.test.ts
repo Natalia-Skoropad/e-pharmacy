@@ -48,11 +48,26 @@ test('Settings duplicate failures are translated from Mongo unique indexes', () 
 
 //===============================================================
 
-test('Category color is audited and can change without renaming an in-use category', () => {
-  assert.match(source, /normalizeProductCategoryColor/);
-  assert.match(source, /changedFields\.push\('color'\)/);
-  assert.match(source, /usage\.total > 0 && isIdentityChange/);
-  assert.match(source, /its name cannot be edited/);
+test('Category color changes are audited, but in-use categories cannot be edited', () => {
+  const updateSource = source
+    .split('export async function updateAdminProductCategoryService(')[1]
+    ?.split('export async function deleteAdminProductCategoryService(')[0];
+
+  assert.ok(updateSource, 'Category update service must exist');
+  assert.match(updateSource, /normalizeProductCategoryColor/);
+  assert.match(updateSource, /changedFields\.push\('color'\)/);
+  assert.match(updateSource, /if \(usage\.total > 0\)/);
+
+  assert.match(
+    updateSource,
+    /This category is already in use and cannot be edited\./
+  );
+
+  assert.ok(
+    updateSource.indexOf('if (usage.total > 0)') <
+      updateSource.indexOf('category.color = nextColor'),
+    'In-use guard must run before modifying the category color'
+  );
 });
 
 //===============================================================
@@ -61,8 +76,18 @@ test('Settings mutations distinguish stale resources from in-use conflicts', () 
   assert.ok((source.match(/HTTP_STATUS\.NOT_FOUND/g) ?? []).length >= 4);
   assert.match(source, /Product category was not found/);
   assert.match(source, /Position was not found/);
-  assert.match(source, /usage\.total > 0 && isIdentityChange/);
-  assert.match(source, /usage\.total > 0/);
+  assert.match(source, /if \(usage\.total > 0\)/);
+
+  assert.match(
+    source,
+    /This category is already in use and cannot be edited\./
+  );
+
+  assert.match(
+    source,
+    /This category is already in use and cannot be deleted\./
+  );
+
   assert.match(source, /HTTP_STATUS\.CONFLICT/);
 });
 

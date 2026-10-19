@@ -24,7 +24,7 @@ test('owner detail route restores linked-pharmacy URL state and renders the phar
   assert.match(detail, /<LinkedPharmaciesTab/);
   assert.match(detail, /initialState=\{initialPharmaciesState\}/);
 
-  assert.match(detail, /Pharmacies \(\$\{tabCounts\.pharmacies\}\)/);
+  assert.match(detail, /value: 'pharmacies',[\s\S]*?label: 'Pharmacies'/);
 });
 
 //===================================================================

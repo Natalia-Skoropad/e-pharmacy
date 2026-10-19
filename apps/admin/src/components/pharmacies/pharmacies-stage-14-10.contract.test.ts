@@ -8,7 +8,7 @@ const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
 
 //===================================================================
 
-test('Stage 14.10 table has exactly 13 required columns in the requested order', async () => {
+test('Pharmacy registry table has the current operational columns in the requested order', async () => {
   const content = await read(
     './PharmaciesPageContent/PharmaciesPageContent.tsx'
   );
@@ -29,9 +29,7 @@ test('Stage 14.10 table has exactly 13 required columns in the requested order',
     'id',
     'name',
     'owner',
-    'email',
-    'phone',
-    'address',
+    'addedProductsCount',
     'activeClientsCount',
     'successfulOrdersCount',
     'successfulRevenue',
@@ -43,8 +41,9 @@ test('Stage 14.10 table has exactly 13 required columns in the requested order',
   assert.match(columns, /formatInitials/);
   assert.match(columns, /buildAdminPharmacyDetailUrl/);
   assert.match(columns, /buildAdminPharmacyOwnerDetailUrl/);
-  assert.match(columns, /formatPharmacyLocation/);
-  assert.match(columns, /formatMoney\(pharmacy\.successfulRevenue\)/);
+  assert.doesNotMatch(columns, /pharmacy\.(email|phone|address)/);
+  assert.match(columns, /OrderMetricsTooltip/);
+  assert.match(columns, /formatAmount\(pharmacy\.successfulRevenue\)/);
   assert.match(columns, /RatingSummary/);
   assert.match(columns, /'No reviews'/);
   assert.match(columns, /PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]/);
@@ -67,7 +66,14 @@ test('both independent ID selectors search server options, debounce and restore 
   assert.match(content, /<PharmacySearch/);
   assert.match(content, /value=\{state\.pharmacyId\}/);
   assert.match(content, /<PharmacyOwnerSearch/);
-  assert.match(content, /loadOptions=\{getAdminPharmacyRegistryOwnerOptions\}/);
+  assert.match(content, /loadOptions=\{loadScopedOwnerOptions\}/);
+  assert.match(content, /getAdminPharmacyRegistryOwnerOptions\(/);
+
+  assert.match(
+    content,
+    /state\.pharmacyId \? \{ pharmacyId: state\.pharmacyId \}/
+  );
+
   assert.match(content, /value=\{state\.ownerId\}/);
   assert.match(pharmacy, /useDebouncedValue\(query\.trim\(\), 250\)/);
   assert.match(owner, /useDebouncedValue\(query\.trim\(\), 250\)/);
@@ -109,7 +115,7 @@ test('creation date, status and no-gap ratings use existing URL-backed registry 
   assert.match(content, /<RowsPerPageSelect/);
   assert.match(content, /<CountLabel/);
   assert.match(content, /<PaginationView/);
-  assert.match(content, /minWidth=\{1800\}/);
+  assert.match(content, /minWidth=\{1000\}/);
   assert.match(content, /setListRetry\(\(retry\) => retry \+ 1\)/);
   assert.match(content, /setStatsRetry\(\(retry\) => retry \+ 1\)/);
 });
@@ -136,6 +142,7 @@ test('owner autocomplete uses pharmacies.view and exposes only minimal linked ow
   );
 
   const route = backend.indexOf("'/pharmacies/owner-options'");
+
   assert.ok(route > -1);
 
   assert.match(

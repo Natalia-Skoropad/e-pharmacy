@@ -8,7 +8,6 @@ const root = process.cwd();
 
 const featureRoots = [
   'apps/pharmacy/src/components/dashboard',
-  'apps/pharmacy/src/components/sales',
   'apps/pharmacy/src/components/statistics',
 ].map((relativePath) => path.join(root, relativePath));
 
@@ -48,13 +47,12 @@ function isTestFile(file) {
 }
 
 function isPresentationFeature(relativePath) {
-  return /apps\/pharmacy\/src\/components\/(?:sales|statistics)\//.test(
-    relativePath
-  );
+  return /apps\/pharmacy\/src\/components\/statistics\//.test(relativePath);
 }
 
 function getFunctionSource(source, functionName) {
   const functionStart = source.indexOf(`function ${functionName}`);
+
   assert.notEqual(
     functionStart,
     -1,
@@ -62,6 +60,7 @@ function getFunctionSource(source, functionName) {
   );
 
   const bodyStart = source.indexOf('{', functionStart);
+
   assert.notEqual(
     bodyStart,
     -1,
@@ -140,7 +139,7 @@ for (const file of files) {
     /from\s+['"]@\/lib\/api\/browser(?:\/[^'"]*)?['"]/.test(source)
   ) {
     violations.push(
-      `${relative}: sales/statistics presentation components must not import browser API adapters`
+      `${relative}: statistics presentation components must not import browser API adapters`
     );
   }
 }
@@ -214,10 +213,12 @@ assert.doesNotMatch(
 const [orderRoutesSource, productRequestRoutesSource, productRoutesSource] =
   await Promise.all([
     readFile(path.join(root, 'apps/api/src/routes/order.routes.ts'), 'utf8'),
+
     readFile(
       path.join(root, 'apps/api/src/routes/product-request.routes.ts'),
       'utf8'
     ),
+
     readFile(path.join(root, 'apps/api/src/routes/product.routes.ts'), 'utf8'),
   ]);
 

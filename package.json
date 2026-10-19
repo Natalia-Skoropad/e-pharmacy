@@ -126,7 +126,19 @@
     "check:admin-settings-dictionaries": "node scripts/checks/admin/check-admin-settings-dictionaries.mjs",
     "check:admin-pharmacy-owners": "node scripts/checks/admin/check-admin-pharmacy-owners.mjs",
     "check:admin-pharmacies-stage-14-17": "node scripts/checks/admin/check-admin-pharmacies-stage-14-17.mjs",
-    "migrate:session-history-retention": "pnpm --filter @e-pharmacy/api migrate:session-history-retention"
+    "migrate:session-history-retention": "pnpm --filter @e-pharmacy/api migrate:session-history-retention",
+    "check:source:client": "pnpm check:client-catalog-components && pnpm check:client-catalog-contracts && pnpm check:client-catalog-performance && pnpm check:client-catalog-a11y && pnpm check:client-catalog-styles && pnpm check:client-detail-components && pnpm check:client-components-boundaries && pnpm check:client-components-public-api && pnpm check:client-components-a11y && pnpm check:client-components-styles && pnpm check:client-admin-header && pnpm check:client-content-contracts && pnpm check:client-lib-boundaries && pnpm check:client-lib-public-api && pnpm check:client-lib-unused-exports && pnpm check:client-lib-routes && pnpm check:client-lib-contracts && pnpm check:client-hooks && pnpm check:client-providers && pnpm check:client-routes && pnpm check:client-user-state && pnpm check:client-cart && pnpm check:client-checkout && pnpm check:client-noop-wrappers",
+    "check:source:pharmacy": "pnpm check:pharmacy-lib && pnpm check:pharmacy-providers && pnpm check:pharmacy-account-components && pnpm check:pharmacy-layout && pnpm check:pharmacy-owner-lifecycle && pnpm check:owner-multi-pharmacy-foundation && pnpm check:pharmacy-product-components && pnpm check:pharmacy-client-components && pnpm check:pharmacy-order-components && pnpm check:pharmacy-analytics-components",
+    "check:source:shared": "pnpm check:auth-boundaries && pnpm check:auth-public-api && pnpm check:auth-lifecycle && pnpm check:auth-contracts && pnpm check:profile-contracts && pnpm check:api-client-boundaries && pnpm check:api-client-public-api && pnpm check:api-client-unused-exports && pnpm check:api-client-contracts && pnpm check:api-client-routes && pnpm check:hooks-boundaries && pnpm check:hooks-public-api && pnpm check:hooks-lifecycle && pnpm check:next-api-boundaries && pnpm check:next-api-routes && pnpm check:next-api-contracts && pnpm check:config-boundaries && pnpm check:config-public-api && pnpm check:config-unused-exports && pnpm check:config-contracts && pnpm check:validation-contracts && pnpm check:type-contracts && pnpm check:ui-boundaries && pnpm check:ui-styles && pnpm check:shared-cabinet-ui",
+    "check:source:api": "pnpm check:api-boundaries && pnpm check:dynamic-product-categories && pnpm check:pharmacy-location",
+    "check:source:admin": "pnpm check:admin-app-shell && pnpm check:admin-providers && pnpm check:admin-status-pages && pnpm check:admin-auth-foundation && pnpm check:admin-protected-route && pnpm check:admin-auth-ui && pnpm check:admin-shell && pnpm check:admin-permissions && pnpm check:admin-profile && pnpm check:admin-audit && pnpm check:admin-settings-backend && pnpm check:admin-settings-ui && pnpm check:admin-settings-dictionaries && pnpm check:admin-pharmacy-owners && pnpm check:admin-pharmacies-stage-14-17",
+    "check:lint:serial": "pnpm exec turbo lint --concurrency=1",
+    "check:type-check:serial": "pnpm exec turbo type-check --concurrency=1",
+    "check:test:serial": "pnpm exec turbo test --concurrency=1",
+    "check:react:serial": "pnpm test:react",
+    "check:integration:serial": "pnpm test:integration",
+    "check:build:serial": "pnpm exec turbo build --concurrency=1",
+    "check:before-deploy:staged": "pnpm check:source:api && pnpm check:source:shared && pnpm check:source:client && pnpm check:source:pharmacy && pnpm check:source:admin && pnpm check:lint:serial && pnpm check:type-check:serial && pnpm check:test:serial && pnpm check:react:serial && pnpm check:integration:serial && pnpm check:build:serial && pnpm check:deploy-artifact"
   },
   "devDependencies": {
     "turbo": "latest",

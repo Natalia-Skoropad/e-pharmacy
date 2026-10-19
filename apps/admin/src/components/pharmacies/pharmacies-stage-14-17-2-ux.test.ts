@@ -90,7 +90,7 @@ test('14.17.2: pharmacy navigation has permission-gated fresh status totals on d
 
 //===================================================================
 
-test('14.17.2: both order metrics have one canonical icon-rich tooltip and the currency is only in the header', () => {
+test('14.17.2: order columns share their canonical info tooltip and put currency in the header', () => {
   const registry = read('./PharmaciesPageContent/PharmaciesPageContent.tsx');
 
   const clients = read(
@@ -103,12 +103,12 @@ test('14.17.2: both order metrics have one canonical icon-rich tooltip and the c
 
   assert.equal(
     (registry.match(/<OrderMetricsTooltip scope="pharmacy"/g) ?? []).length,
-    2
+    1
   );
 
   assert.equal(
     (clients.match(/<OrderMetricsTooltip scope="client"/g) ?? []).length,
-    2
+    1
   );
 
   assert.match(registry, /formatAmount\(pharmacy\.successfulRevenue\)/);

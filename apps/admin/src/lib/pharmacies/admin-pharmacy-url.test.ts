@@ -60,6 +60,8 @@ test('canonical URL round trip preserves combined pharmacy registry filters', ()
   assert.deepEqual(buildAdminPharmaciesListApiParams(parseUrl(url)), {
     pharmacyId: PHARMACY_ID,
     ownerId: OWNER_ID,
+    settlement: undefined,
+    region: undefined,
     status: 'on_verification',
     createdFrom: '2026-09-01',
     createdTo: '2026-10-12',

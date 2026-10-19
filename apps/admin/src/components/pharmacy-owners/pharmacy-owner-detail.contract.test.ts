@@ -73,15 +73,17 @@ test('owner detail presents pharmacy moderation statistics without duplicating o
 
 //===================================================================
 
-test('owner detail bootstraps tab counters from the detail response instead of loading future tab lists', () => {
+test('owner detail keeps tab content lazy without fetching future tab lists', () => {
   const detail = read(
     './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'
   );
 
-  assert.match(detail, /Pharmacies \(\$\{tabCounts\.pharmacies\}\)/);
-  assert.match(detail, /Documents \(\$\{tabCounts\.documents\}\)/);
-  assert.match(detail, /Comments \(\$\{tabCounts\.comments\}\)/);
-  assert.match(detail, /ZERO_TAB_COUNTS/);
+  assert.match(detail, /value: 'pharmacies',[\s\S]*?label: 'Pharmacies'/);
+  assert.match(detail, /value: 'documents',[\s\S]*?label: 'Documents'/);
+  assert.match(detail, /value: 'comments',[\s\S]*?label: 'Comments'/);
+  assert.match(detail, /activeTab === ['"]pharmacies['"]/);
+  assert.match(detail, /activeTab === ['"]documents['"]/);
+  assert.match(detail, /activeTab === ['"]comments['"]/);
   assert.doesNotMatch(detail, /getAdminPharmacyOwnerPharmacies/);
   assert.doesNotMatch(detail, /getAdminPharmacyOwnerDocuments/);
   assert.doesNotMatch(detail, /getAdminPharmacyOwnerComments/);

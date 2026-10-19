@@ -151,7 +151,8 @@ test('Stage 14.12 shares hours presentation and only mounts information for the 
   assert.match(content, /detail\.pendingChanges !== undefined/);
   assert.match(content, /Published data \/ Submitted changes/);
   assert.match(content, /Submitted changes are awaiting review/);
-  assert.match(content, /canViewOwner &&/);
+  assert.match(content, /canViewOwner \?/);
+  assert.match(content, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
   assert.match(content, /<DateValue value=\{dates\.updatedAt\}/);
   assert.match(content, /<WorkingHours value=\{value\}/);
   assert.match(helper, /getWorkingHoursDisplayItems/);

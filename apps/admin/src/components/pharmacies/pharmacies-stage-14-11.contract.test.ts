@@ -15,7 +15,7 @@ const PHARMACY_ID = '507f1f77bcf86cd799439011';
 
 //===================================================================
 
-test('all ten detail tabs have canonical reloadable URLs without ambiguous list matches', () => {
+test('all current detail tabs have canonical reloadable URLs without ambiguous list matches', () => {
   for (const tab of ADMIN_PHARMACY_DETAIL_TABS) {
     const url = buildAdminPharmacyDetailUrl(PHARMACY_ID, tab);
     const segments = url.slice('/admin/pharmacies/'.length).split('/');
@@ -81,11 +81,13 @@ test('Stage 14.11 shell retains the 4 real API metrics and owner permission afte
   assert.match(content, /dispatchAdminBreadcrumbLabel/);
   assert.match(content, /<PageHeader/);
   assert.match(content, /<InfoTooltip/);
+
   assert.match(
     await read('./PharmacyDetailsPageContent/PharmacyInformationTab.tsx'),
     /<StatusBadge/
   );
-  assert.match(content, /<StatsGrid\s+columns=\{4\}/);
+
+  assert.match(content, /<StatsGrid\b[^>]*columns=\{4\}/);
   assert.match(content, /<StatsLoadingSkeleton[\s\S]*?count=\{4\}/);
 
   assert.deepEqual(

@@ -152,8 +152,14 @@ test('14.13 pharmacy description and bank details render in independent read-onl
   assert.doesNotMatch(shell, /about-payment/);
   assert.match(about, /current\.description/);
   assert.match(about, /pending\?\.description !== undefined/);
-  assert.match(about, /<Description value=\{pending\.description\}/);
-  assert.match(about, /<MarkdownContent value=\{value\}/);
+
+  assert.match(
+    about,
+    /<PharmacyAboutFields value=\{current\.description \?\? ''\} disabled/
+  );
+
+  assert.match(about, /<MarkdownContent value=\{pending\.description\}/);
+  assert.match(about, /<MarkdownContent value=\{pending\.description\}/);
 
   const renderer = await read(
     '../../../../../packages/ui/src/data-display/MarkdownContent/markdown-to-html.ts'
@@ -169,7 +175,15 @@ test('14.13 pharmacy description and bank details render in independent read-onl
     );
   }
 
-  assert.match(payment, /getPublishedPaymentStatus\(detail\)/);
+  assert.match(payment, /<PharmacyPaymentFields/);
+  assert.match(payment, /disabled/);
+
+  assert.match(
+    payment,
+    /buildAdminPaymentRows\(bank, pending\?\.bankDetails\)/
+  );
+
+  assert.match(payment, /pending\?\.bankDetails !== undefined/);
 });
 
 //===================================================================

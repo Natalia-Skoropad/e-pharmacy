@@ -44,21 +44,12 @@ test('pharmacy profile tabs are direct-linkable and preserve client draft state 
 
 //===================================================================
 
-test('documents tab badge preloads owner document count independently of tab content', () => {
-  assert.match(
-    component,
-    /getMyPharmacyOwnerDocuments\(\{ signal: controller\.signal \}\)/
-  );
-
-  assert.match(
-    component,
-    /setOwnerDocumentsCount\(response\.documents\.length\)/
-  );
-
-  assert.match(
-    component,
-    /documentValues\.length\s*\+\s*\(pharmacy\.membershipRole === 'owner' \? ownerDocumentsCount : 0\)/
-  );
+test('documents tab stays without a count badge and loads owner documents lazily', () => {
+  assert.match(component, /label: 'Documents'/);
+  assert.match(component, /<OwnerDocumentsPanel\s*\/>/);
+  assert.doesNotMatch(component, /ownerDocumentsCount|setOwnerDocumentsCount/);
+  assert.doesNotMatch(component, /getMyPharmacyOwnerDocuments/);
+  assert.doesNotMatch(component, /Documents \(/);
 });
 
 //===================================================================

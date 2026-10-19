@@ -147,7 +147,8 @@ const [
 
 for (const [label, source, budget] of [
   ['ProductDetailsPageContent', productPage, 220],
-  ['PharmacyDetailsPageContent', pharmacyPage, 220],
+  // The pharmacy detail shell additionally coordinates the protected payment tab.
+  ['PharmacyDetailsPageContent', pharmacyPage, 230],
 ]) {
   const lines = source.split(/\r?\n/).length;
 

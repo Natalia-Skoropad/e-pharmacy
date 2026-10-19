@@ -86,17 +86,27 @@ test('unknown admin routes do not invent breadcrumb labels', () => {
 test('pharmacy detail breadcrumbs link to the registry and use the loaded pharmacy name', () => {
   const pharmacyId = '507f1f77bcf86cd799439011';
 
-  for (const suffix of ['', '/documents', '/activity']) {
-    const path = `${ADMIN_ROUTES.PHARMACIES}/${pharmacyId}${suffix}`;
+  for (const [suffix, tabLabel] of [
+    ['', null],
+    ['/documents', 'Documents'],
+    ['/activity', 'Activity history'],
+    ['/payment', 'Payment details'],
+  ] as const) {
+    const detailPath = `${ADMIN_ROUTES.PHARMACIES}/${pharmacyId}`;
+    const path = `${detailPath}${suffix}`;
+    const tab = tabLabel ? [{ label: tabLabel }] : [];
+    const href = tabLabel ? { href: detailPath } : {};
 
     assert.deepEqual(getAdminBreadcrumbsByPathname(path), [
       { label: 'Pharmacies', href: ADMIN_ROUTES.PHARMACIES },
-      { label: `Pharmacy #${pharmacyId}` },
+      { label: `Pharmacy #${pharmacyId}`, ...href },
+      ...tab,
     ]);
 
     assert.deepEqual(getAdminBreadcrumbsByPathname(path, 'Health Point'), [
       { label: 'Pharmacies', href: ADMIN_ROUTES.PHARMACIES },
-      { label: 'Health Point' },
+      { label: 'Health Point', ...href },
+      ...tab,
     ]);
   }
 });

@@ -53,10 +53,7 @@ test('Stage 13.12 keeps Owner profile and Owner document mutations available onl
 
   assert.ok(ownerDocumentsRender, 'Owner documents must remain owner-only.');
 
-  assert.match(
-    ownerDocumentsRender[1],
-    /\bonCountChange=\{setOwnerDocumentsCount\}/
-  );
+  assert.doesNotMatch(ownerDocumentsRender[1], /onCountChange/);
 
   assert.match(ownerDocumentsSource, /getMyPharmacyOwnerDocuments/);
   assert.match(ownerDocumentsSource, /uploadMyPharmacyOwnerDocument/);

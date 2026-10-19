@@ -86,14 +86,15 @@ test('14.17.4: published identity, copy controls, owner link, dates and chart ar
 
   assert.match(
     info,
-    /<TextActionButton href=\{buildAdminPharmacyOwnerDetailUrl\(owner\.id\)\}/
+    /<TextActionButton\s+href=\{buildAdminPharmacyOwnerDetailUrl\(owner\.id\)\}/
   );
 
   assert.match(info, /className=\{css\.ownerIdRow\}/);
   assert.match(info, /<PharmacySalesChart pharmacyId=\{detail\.id\}/);
 
   assert.ok(
-    info.indexOf('<PharmacySalesChart') < info.indexOf('<PharmacyStatusSummary')
+    info.indexOf('<PharmacySalesChart') <
+      info.indexOf('Published data / Submitted changes')
   );
 });
 
@@ -130,7 +131,9 @@ test('14.17.4: chart is pharmacy-scoped, permission-checked, lazy, cancellable a
     /getOrderSalesStatisticsForPharmacyService\(pharmacyId, query\)/
   );
 
-  assert.match(orderService, /pharmacyId,\s*status: 'successful'/);
+  assert.match(orderService, /pharmacyId: \{ \$in: pharmacyIds\.map/);
+  assert.match(orderService, /status: 'successful'/);
+  assert.match(orderService, /Order\.aggregate<OrderSalesAggregationRow>/);
   assert.match(graph, /getAdminPharmacySalesStatistics\(/);
   assert.match(graph, /controller\.abort\(\)/);
   assert.match(graph, /<SalesValueChart/);
