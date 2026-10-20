@@ -70,7 +70,13 @@ export const pharmacyApiRoutes = {
   },
 
   pharmacyOwners: {
+    myComments: '/api/pharmacy-owners/me/comments',
+
+    myComment: (commentId: string) =>
+      `/api/pharmacy-owners/me/comments/${segment(commentId)}`,
+
     myDocuments: '/api/pharmacy-owners/me/documents',
+
     myDocument: (documentId: string) =>
       `/api/pharmacy-owners/me/documents/${segment(documentId)}`,
   },

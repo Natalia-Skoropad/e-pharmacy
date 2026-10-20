@@ -102,6 +102,16 @@ test('uses resource-oriented backend route builders', () => {
   );
 
   assert.equal(
+    apiRoutes.pharmacyOwners.myComments,
+    '/pharmacy-owners/me/comments'
+  );
+
+  assert.equal(
+    apiRoutes.pharmacyOwners.myComment(id),
+    `/pharmacy-owners/me/comments/${id}`
+  );
+
+  assert.equal(
     apiRoutes.pharmacyOwners.myDocuments,
     '/pharmacy-owners/me/documents'
   );

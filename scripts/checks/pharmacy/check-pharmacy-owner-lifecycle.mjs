@@ -191,10 +191,18 @@ assert.doesNotMatch(
 );
 
 //===================================================================
-// Owner routes have no access to Admin comments. Admin document endpoints are
-// read-only while owner document mutations stay scoped to /me.
+// Owner routes expose only self-owned private notes, not Admin comments.
+// Admin document endpoints are read-only while owner document mutations stay scoped to /me.
 
-assert.doesNotMatch(ownerRoutes, /comment/i);
+assert.match(ownerRoutes, /get\(\s*'\/me\/comments'/);
+assert.match(ownerRoutes, /post\(\s*'\/me\/comments'/);
+assert.match(ownerRoutes, /delete\(\s*'\/me\/comments\/:commentId'/);
+
+assert.doesNotMatch(
+  ownerRoutes,
+  /\/admin\/|\/pharmacy-owners\/:ownerId\/comments/
+);
+
 assert.match(ownerRoutes, /post\(\s*'\/me\/documents'/);
 assert.match(ownerRoutes, /delete\(\s*'\/me\/documents\/:documentId'/);
 assert.match(adminRoutes, /get\(\s*'\/pharmacy-owners\/:ownerId\/comments'/);

@@ -123,19 +123,27 @@ export const backendRoutes = {
 
     productCategories: {
       list: '/admin/product-categories',
+
       details: (categoryId: EntityId) =>
         `/admin/product-categories/${segment(categoryId)}`,
     },
 
     positions: {
       list: '/admin/positions',
+
       details: (positionId: EntityId) =>
         `/admin/positions/${segment(positionId)}`,
     },
   },
 
   pharmacyOwners: {
+    myComments: '/pharmacy-owners/me/comments',
+
+    myComment: (commentId: EntityId) =>
+      `/pharmacy-owners/me/comments/${segment(commentId)}`,
+
     myDocuments: '/pharmacy-owners/me/documents',
+
     myDocument: (documentId: EntityId) =>
       `/pharmacy-owners/me/documents/${segment(documentId)}`,
   },

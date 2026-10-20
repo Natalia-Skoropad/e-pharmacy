@@ -493,6 +493,23 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacy-owners/me/comments",
+    "backend": "/pharmacy-owners/me/comments",
+    "methods": {
+      "GET": "private",
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacy-owners/me/comments/[commentId]",
+    "backend": "/pharmacy-owners/me/comments/:commentId",
+    "methods": {
+      "DELETE": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacy-owners/me/documents",
     "backend": "/pharmacy-owners/me/documents",
     "methods": {
@@ -506,7 +523,8 @@
     "backend": "/pharmacy-owners/me/documents/:documentId",
     "methods": {
       "GET": "private",
-      "DELETE": "private"
+      "DELETE": "private",
+      "PUT": "private"
     }
   },
   {

@@ -10,6 +10,12 @@ import {
   replaceMyPharmacyOwnerDocument,
 } from '../controllers/pharmacy-owner-document.controller';
 
+import {
+  createMyPharmacyUserPrivateNote,
+  deleteMyPharmacyUserPrivateNote,
+  listMyPharmacyUserPrivateNotes,
+} from '../controllers/pharmacy-user-private-note.controller';
+
 import { authenticate } from '../middlewares/auth.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
@@ -18,6 +24,12 @@ import {
   pharmacyOwnerDocumentParamsSchema,
   pharmacyOwnerDocumentUploadSchema,
 } from '../schemas/pharmacy-owner-document.schema';
+
+import {
+  createPharmacyUserPrivateNoteSchema,
+  pharmacyUserPrivateNoteParamsSchema,
+  pharmacyUserPrivateNotesQuerySchema,
+} from '../schemas/pharmacy-user-private-note.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
@@ -71,4 +83,29 @@ pharmacyOwnerRoutes.put(
   }),
 
   ctrlWrapper(replaceMyPharmacyOwnerDocument)
+);
+
+//===============================================================
+
+// Personal notes are scoped only to req.user.id, including future employees.
+pharmacyOwnerRoutes.get(
+  '/me/comments',
+  validate({ query: pharmacyUserPrivateNotesQuerySchema }),
+  ctrlWrapper(listMyPharmacyUserPrivateNotes)
+);
+
+//===============================================================
+
+pharmacyOwnerRoutes.post(
+  '/me/comments',
+  validate({ body: createPharmacyUserPrivateNoteSchema }),
+  ctrlWrapper(createMyPharmacyUserPrivateNote)
+);
+
+//===============================================================
+
+pharmacyOwnerRoutes.delete(
+  '/me/comments/:commentId',
+  validate({ params: pharmacyUserPrivateNoteParamsSchema }),
+  ctrlWrapper(deleteMyPharmacyUserPrivateNote)
 );
