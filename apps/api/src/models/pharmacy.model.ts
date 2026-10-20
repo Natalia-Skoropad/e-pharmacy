@@ -507,6 +507,19 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       required: true,
     },
 
+    // A unique owner + request UUID guarantees concurrency-safe draft creation.
+    creationRequestId: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
+    creationFingerprint: {
+      type: String,
+      match: /^[a-f0-9]{64}$/,
+      default: undefined,
+    },
+
     managerUserIds: {
       type: [Schema.Types.ObjectId],
       ref: 'User',
@@ -577,9 +590,22 @@ pharmacySchema.index(
   { name: 'pharmacy_location_text' }
 );
 
+//===============================================================
+
 pharmacySchema.index(
   { 'location.settlement': 1 },
   { name: 'pharmacy_location_settlement' }
+);
+
+//===============================================================
+
+pharmacySchema.index(
+  { ownerId: 1, creationRequestId: 1 },
+  {
+    name: 'pharmacy_owner_create_idempotency',
+    unique: true,
+    partialFilterExpression: { creationRequestId: { $type: 'string' } },
+  }
 );
 
 //===============================================================

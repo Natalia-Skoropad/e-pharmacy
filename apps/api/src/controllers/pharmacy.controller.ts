@@ -4,6 +4,7 @@ import { USER_ROLES } from '../constants/auth';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
 import type {
+  CreatePharmacyDraftInput,
   CreatePharmacyReviewInput,
   ModeratePharmacyReviewInput,
   PendingPharmacyReviewsQuery,
@@ -43,6 +44,8 @@ import {
   getPrivatePharmacyDocumentContentService,
 } from '../services/pharmacy-document.service';
 
+import { createPharmacyDraftService } from '../services/pharmacy-create.service';
+
 import type { ValidatedResponse } from '../types/validated-request';
 
 import { listUserPharmacyMemberships } from '../services/pharmacy-membership.service';
@@ -55,6 +58,27 @@ function encodeContentDispositionFilename(value: string): string {
     /[!'()*]/g,
     (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
   );
+}
+
+//===============================================================
+
+export async function createPharmacyDraft(
+  req: Request,
+  res: ValidatedResponse<CreatePharmacyDraftInput>
+): Promise<void> {
+  const result = await createPharmacyDraftService(
+    req.user?.id ?? '',
+    res.locals.validated.body,
+    res.locals.requestId
+  );
+
+  res.setHeader('Cache-Control', 'no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: result.replayed ? HTTP_STATUS.OK : HTTP_STATUS.CREATED,
+    data: { pharmacy: result.pharmacy },
+  });
 }
 
 //===============================================================

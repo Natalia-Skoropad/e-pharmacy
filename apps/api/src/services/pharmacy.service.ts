@@ -399,6 +399,7 @@ function applyEditableLocationPatch(
   }
 
   if (!nextLocation.countryCode) nextLocation.countryCode = 'UA';
+
   return nextLocation;
 }
 
@@ -486,7 +487,7 @@ function serializePendingModerationForProfile(
 
 //===============================================================
 
-function serializePharmacyProfile(
+export function serializePharmacyProfile(
   pharmacy: PharmacyDocument,
   membershipRole: PharmacyMembershipRole
 ): MyPharmacyProfileResponseDto {
@@ -1108,16 +1109,19 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
     countryCode: pharmacy.location?.countryCode,
     phone: pharmacy.phone,
     email: pharmacy.email,
+
     workingHours: pharmacy.workingHours,
     imageUrl: pharmacy.imageUrl,
     description: pharmacy.description,
     shortDescription: pharmacy.shortDescription,
+
     recipientName: bankDetails?.recipientName,
     taxId: bankDetails?.taxId,
     iban: bankDetails?.iban,
     bankName: bankDetails?.bankName,
     receiptEmail: bankDetails?.receiptEmail,
     paymentPurpose: bankDetails?.paymentPurpose,
+
     documents: pharmacy.documents?.length,
   };
 
@@ -1351,6 +1355,7 @@ export async function updateMyPharmacyProfileService(
   auditRequestId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
   const mongoSession = await mongoose.startSession();
+
   let result: { pharmacy: MyPharmacyProfileResponseDto } | null = null;
 
   try {

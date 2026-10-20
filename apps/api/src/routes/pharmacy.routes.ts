@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import {
+  createPharmacyDraft,
   createPharmacyReview,
   getFavoritePharmacyIds,
   getFavoritePharmacies,
@@ -35,6 +36,7 @@ import { authorizeRoles } from '../middlewares/role.middleware';
 import { validate } from '../middlewares/validate.middleware';
 
 import {
+  createPharmacyDraftSchema,
   createPharmacyReviewSchema,
   moderatePharmacyReviewSchema,
   pendingPharmacyReviewsQuerySchema,
@@ -54,6 +56,16 @@ import { ctrlWrapper } from '../utils/ctrlWrapper';
 //===============================================================
 
 export const pharmacyRoutes = Router();
+
+//===============================================================
+
+pharmacyRoutes.post(
+  '/',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ body: createPharmacyDraftSchema }),
+  ctrlWrapper(createPharmacyDraft)
+);
 
 //===============================================================
 

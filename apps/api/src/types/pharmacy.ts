@@ -128,6 +128,9 @@ export type PharmacyEntity = {
   pendingModeration?: PharmacyPendingModeration;
   reviewsCount?: number;
   ownerId: Types.ObjectId;
+  /** Private owner-scoped idempotency key; never supplied as an ownerId. */
+  creationRequestId?: string;
+  creationFingerprint?: string;
   managerUserIds: Types.ObjectId[];
   createdBy?: Types.ObjectId;
   updatedBy?: Types.ObjectId;

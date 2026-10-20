@@ -31,9 +31,21 @@ import {
   sharedClearableIbanSchema,
   sharedClearablePaymentPurposeSchema,
   sharedExpectedRevisionSchema,
+  sharedRequiredAddressSchema,
+  sharedWorkingHoursSchema,
+  sharedTextEditorSchema,
+  sharedTaxIdSchema,
+  sharedIbanSchema,
+  sharedPaymentPurposeSchema,
 } from './shared-validation.schema';
 
-import { pharmacyEditableLocationPatchSchema } from './shared/pharmacy-location.schema';
+import {
+  pharmacyEditableLocationPatchSchema,
+  pharmacyRegionSchema,
+  pharmacySettlementSchema,
+} from './shared/pharmacy-location.schema';
+
+import { optionalSchema } from './shared/optional-text.schema';
 
 //===============================================================
 
@@ -61,6 +73,7 @@ export const pharmaciesQuerySchema = z.preprocess(
         .enum(['newest', 'rating-desc', 'rating-asc', 'name-asc', 'name-desc'])
         .default('newest'),
     })
+
     .strict()
 );
 
@@ -87,6 +100,7 @@ export const pharmacyDocumentParamsSchema = z.object({
 
 export const pendingPharmacyReviewsQuerySchema = z.preprocess(
   normalizePaginationQuery,
+
   z.object({
     page: positivePageSchema,
     perPage: pharmaciesPerPageSchema,
@@ -115,6 +129,7 @@ const pharmacyProfileUpdateChangesSchema = z
     location: pharmacyEditableLocationPatchSchema.optional(),
     phone: clearableSchema(sharedRequiredPhoneSchema),
     email: clearableSchema(sharedEmailSchema),
+
     workingHours: sharedClearableWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
     description: sharedClearableTextEditorSchema,
@@ -137,6 +152,48 @@ const pharmacyProfileUpdateChangesSchema = z
 
 //===============================================================
 
+// Initial creation is a partial, validated draft. The UI must reuse the same
+// UUID when retrying a request; null and admin-controlled fields are rejected.
+export const createPharmacyDraftSchema = z
+  .object({
+    clientRequestId: z.string().trim().uuid(),
+    name: sharedPharmacyNameSchema,
+
+    location: z
+      .object({
+        address: optionalSchema(sharedRequiredAddressSchema),
+        settlement: optionalSchema(pharmacySettlementSchema),
+        region: optionalSchema(pharmacyRegionSchema),
+      })
+
+      .strict()
+      .optional(),
+
+    phone: optionalSchema(sharedRequiredPhoneSchema),
+    email: optionalSchema(sharedEmailSchema),
+    workingHours: optionalSchema(sharedWorkingHoursSchema),
+    imageUrl: optionalSchema(sharedPictureUrlSchema),
+    description: optionalSchema(sharedTextEditorSchema),
+    shortDescription: optionalSchema(z.string().trim().min(1).max(200)),
+
+    bankDetails: z
+      .object({
+        recipientName: optionalSchema(sharedBankRecipientNameSchema),
+        taxId: optionalSchema(sharedTaxIdSchema),
+        iban: optionalSchema(sharedIbanSchema),
+        bankName: optionalSchema(sharedBankNameSchema),
+        receiptEmail: optionalSchema(sharedEmailSchema),
+        paymentPurpose: optionalSchema(sharedPaymentPurposeSchema),
+      })
+
+      .strict()
+      .optional(),
+  })
+
+  .strict();
+
+//===============================================================
+
 export const updateMyPharmacyProfileSchema = pharmacyProfileUpdateChangesSchema
   .extend({ expectedRevision: sharedExpectedRevisionSchema })
 
@@ -146,6 +203,7 @@ export const updateMyPharmacyProfileSchema = pharmacyProfileUpdateChangesSchema
         ([key, value]) =>
           key !== 'expectedRevision' && hasMeaningfulValue(value)
       ),
+
     { message: 'At least one field is required' }
   );
 
@@ -172,12 +230,18 @@ export type PharmaciesQuery = z.infer<typeof pharmaciesQuerySchema>;
 export type PharmacyIdParams = z.infer<typeof pharmacyIdParamsSchema>;
 export type PharmacyReviewParams = z.infer<typeof pharmacyReviewParamsSchema>;
 
+//===============================================================
+
 export type PharmacyDocumentParams = z.infer<
   typeof pharmacyDocumentParamsSchema
 >;
 
 export type PendingPharmacyReviewsQuery = z.infer<
   typeof pendingPharmacyReviewsQuerySchema
+>;
+
+export type CreatePharmacyDraftInput = z.infer<
+  typeof createPharmacyDraftSchema
 >;
 
 export type UpdateMyPharmacyProfileInput = z.infer<
