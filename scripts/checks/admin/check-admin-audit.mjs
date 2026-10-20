@@ -371,6 +371,7 @@ for (const [key, action] of [
     auditConstants,
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
+
   assert.match(adminAuditParser, new RegExp(action.replaceAll('.', '\\.')));
 }
 
@@ -438,6 +439,7 @@ for (const [key, action] of [
     auditConstants,
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
+
   assert.match(adminAuditParser, new RegExp(action.replaceAll('.', '\\.')));
 }
 
@@ -448,6 +450,10 @@ assert.match(adminAuditParser, /'position'/);
 
 for (const [key, action] of [
   ['PHARMACY_OWNER_ACCOUNT_CREATED', 'pharmacyOwner.account.created'],
+  [
+    'PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED',
+    'pharmacyOwner.registrationDocuments.attached',
+  ],
   [
     'PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED',
     'pharmacy.registrationDocuments.attached',
@@ -571,7 +577,13 @@ const registrationAudit = authService.match(
 
 assert.ok(registrationAudit);
 assert.match(registrationAudit, /PHARMACY_OWNER_ACCOUNT_CREATED/);
-assert.match(registrationAudit, /PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED/);
+
+assert.match(
+  registrationAudit,
+  /PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED/
+);
+
+assert.doesNotMatch(registrationAudit, /PHARMACY_CREATED/);
 assert.doesNotMatch(registrationAudit, /PHARMACY_OWNER_DOCUMENT_UPLOADED/);
 
 assert.match(
@@ -611,6 +623,7 @@ assert.match(
   activityHistory,
   /<TableHeaderTitle parts=\{\['Changed', 'by'\]\} \/>/
 );
+
 assert.match(activityHistory, /<ActivityActorIdentity/);
 
 // Keep the shared audit table and its links aligned across the global history
@@ -672,6 +685,7 @@ for (const component of [sectionLinkComponent, pageLinkComponent]) {
     component,
     /<TextActionButton\s+className=\{css\.actorIdentityNameLink\}\s+href=\{location\.href\}/
   );
+
   assert.match(component, /<span className=\{css\.sectionLink\}>/);
 }
 

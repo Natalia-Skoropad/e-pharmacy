@@ -143,6 +143,7 @@ import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { EntityComments } from '@/components/comments/EntityComments';
 
 import { OwnerDocumentsPanel } from '../OwnerDocumentsPanel';
+import { OwnerWithoutPharmacyProfile } from './OwnerWithoutPharmacyProfile';
 import { WorkingHoursInput } from '../WorkingHoursInput';
 import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
 
@@ -657,6 +658,12 @@ function PharmacyProfilePageContent() {
         <ProfilePageLoader label="Loading pharmacy profile..." />
       </main>
     );
+  }
+
+  // A zero-pharmacy owner has a valid identity and Owner documents but no
+  // pharmacy-scoped profile. Do not show a misleading fetch error.
+  if (!pharmacySummary && !summaryError && !isSummaryLoading) {
+    return <OwnerWithoutPharmacyProfile />;
   }
 
   if (!pharmacySummary || !profile) {

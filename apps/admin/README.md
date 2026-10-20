@@ -114,3 +114,7 @@ Stage 14.1 does **not** change business mutations, API routes, database schemas,
 - [Legacy compatibility and document migration](./docs/stage-14-18-1-migration-plan.md) — no-guess redirects, owner registration docs provenance, idempotent migration plan, audit and QA matrix.
 
 This milestone changes documentation only. The Stage 14.18 roadmap (`README-14-18.md`) is maintained separately; it was not part of the uploaded source ZIP and is intentionally not overwritten by this patch. No new API endpoints, pages, database migration or business-logic changes are included.
+
+## Stage 14.18.2 — Owner registration & account separation
+
+- [README-14-18-2.md](./README-14-18-2.md) — transactional owner-only signup, private registration documents, zero-pharmacy bootstrap, shared profile UI, Admin audit compatibility, staged follow-ups and verification checklist.

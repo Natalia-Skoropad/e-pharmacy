@@ -1,7 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
+import { Container } from '@e-pharmacy/ui/layout';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import type { CurrentPharmacySummary } from '@e-pharmacy/types/pharmacies';
 import { ErrorPage, PageLoader } from '@e-pharmacy/ui/status-pages';
 
@@ -26,6 +30,7 @@ type PharmacyCabinetBoundaryRuntimeProps = Readonly<{
   error: unknown;
   onRetry: () => void;
   children: ReactNode;
+  pathname?: string;
 }>;
 
 //===================================================================
@@ -36,6 +41,7 @@ export function PharmacyCabinetBoundaryRuntime({
   error,
   onRetry,
   children,
+  pathname,
 }: PharmacyCabinetBoundaryRuntimeProps) {
   if (!profile && isLoading) {
     return <PageLoader label="Loading pharmacy cabinet..." />;
@@ -58,6 +64,30 @@ export function PharmacyCabinetBoundaryRuntime({
     );
   }
 
+  // A valid owner without a pharmacy must be able to open personal tabs.
+  // Operational pages require a pharmacy and should not load invalid data.
+  if (
+    !profile &&
+    pathname &&
+    pathname !== PHARMACY_ROUTES.PROFILE &&
+    !pathname.startsWith(`${PHARMACY_ROUTES.PROFILE}/`)
+  ) {
+    return (
+      <main>
+        <Container>
+          <StatusBanner
+            tone="info"
+            title="No pharmacies yet"
+            message="Your owner account is ready. Open your personal profile to manage personal details and uploaded files. Pharmacy creation will be available in the next stages."
+            meta={
+              <Link href={PHARMACY_ROUTES.PROFILE}>Open owner profile</Link>
+            }
+          />
+        </Container>
+      </main>
+    );
+  }
+
   return children;
 }
 
@@ -65,6 +95,7 @@ export function PharmacyCabinetBoundaryRuntime({
 
 export function PharmacyCabinetBoundary({ children }: { children: ReactNode }) {
   const { profile, isLoading, error, refresh } = usePharmacyProfile();
+  const pathname = usePathname();
 
   return (
     <PharmacyCabinetBoundaryRuntime
@@ -72,6 +103,7 @@ export function PharmacyCabinetBoundary({ children }: { children: ReactNode }) {
       isLoading={isLoading}
       error={error}
       onRetry={() => void refresh()}
+      pathname={pathname}
     >
       {children}
     </PharmacyCabinetBoundaryRuntime>

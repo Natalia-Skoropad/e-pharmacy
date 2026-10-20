@@ -63,6 +63,7 @@ export type PharmacyLocationFilterOption = Readonly<{
 
 export type PharmacyFilterOptionsResponse = Readonly<{
   locations: readonly PharmacyLocationFilterOption[];
+
   sort: readonly Readonly<{
     value: PharmaciesSortFilter;
     label: string;
@@ -87,7 +88,7 @@ export type PendingPharmacyReviewTarget = Readonly<{
 }>;
 
 export type CurrentPharmacySummaryResponse = Readonly<{
-  pharmacy: CurrentPharmacySummary;
+  pharmacy: CurrentPharmacySummary | null;
 }>;
 
 export type PharmacyProfileResponse = Readonly<{

@@ -29,6 +29,10 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.corrections.requested': 'Pharmacy corrections requested',
   'pharmacy.registrationDocuments.attached': 'Registration documents attached',
   'pharmacyOwner.account.created': 'Pharmacy owner account created',
+
+  'pharmacyOwner.registrationDocuments.attached':
+    'Owner registration documents attached',
+
   'pharmacyOwner.profile.updated': 'Pharmacy owner profile updated',
   'pharmacyOwner.photo.updated': 'Pharmacy owner photo updated',
   'pharmacyOwner.status.changed': 'Pharmacy owner status changed',
@@ -75,6 +79,7 @@ const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacy.created',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
+  'pharmacyOwner.registrationDocuments.attached',
   'admin.platformOwner.granted',
   'adminEmployee.document.uploaded',
   'pharmacyOwner.document.uploaded',

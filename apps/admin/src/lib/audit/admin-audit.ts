@@ -13,6 +13,7 @@ export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.corrections.requested',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
+  'pharmacyOwner.registrationDocuments.attached',
   'pharmacyOwner.profile.updated',
   'pharmacyOwner.photo.updated',
   'pharmacyOwner.status.changed',

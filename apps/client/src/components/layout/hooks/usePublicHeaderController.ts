@@ -38,6 +38,7 @@ export function usePublicHeaderController() {
   const adminDashboardUrl = isAdminMode ? getAdminDashboardUrl() : null;
 
   const pharmacyUserId = isPharmacyMode ? authState.user.id : null;
+
   const pharmacySummary =
     pharmacyUserId && pharmacySummaryState?.userId === pharmacyUserId
       ? pharmacySummaryState.pharmacy
@@ -51,9 +52,13 @@ export function usePublicHeaderController() {
     void getCurrentPharmacySummary({ signal: controller.signal })
       .then(({ pharmacy }) => {
         if (!controller.signal.aborted) {
-          setPharmacySummaryState({ userId: pharmacyUserId, pharmacy });
+          // A newly registered owner may not have a pharmacy summary yet.
+          setPharmacySummaryState(
+            pharmacy ? { userId: pharmacyUserId, pharmacy } : null
+          );
         }
       })
+
       .catch(() => undefined);
 
     return () => controller.abort();
@@ -68,6 +73,7 @@ export function usePublicHeaderController() {
       setPending: setIsLogoutPending,
       onSettled,
       navigateHome: () => router.replace(ROUTES.HOME),
+
       reportRemoteFailure: () =>
         toast.info(
           'You are signed out. Refresh other open tabs if they still show your account.'

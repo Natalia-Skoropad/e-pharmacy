@@ -50,6 +50,7 @@ import {
   getClientAuthErrorMessage,
   isPharmacyAppConfigurationError,
   resolveLoginDestination,
+  requirePharmacyAppConfiguration,
 } from '@/lib/auth';
 
 import { ROUTES } from '@/lib/routes';
@@ -95,7 +96,7 @@ const REGISTER_COPY: Record<
 
   pharmacy: {
     title: 'Pharmacy owner account',
-    text: 'Create a pharmacy owner account and upload documents that confirm your right to manage the pharmacy cabinet.',
+    text: 'Create your owner account and upload the required documents. You can create your pharmacy separately after registration.',
     button: 'Create pharmacy account',
     loading: 'Creating pharmacy account...',
   },
@@ -115,7 +116,7 @@ async function uploadRegistrationDocuments(
       uploadSession.maxTotalSizeBytes
   ) {
     throw new Error(
-      'Selected pharmacy documents exceed the upload session quota.'
+      'Selected owner documents exceed the upload session quota.'
     );
   }
 
@@ -124,9 +125,7 @@ async function uploadRegistrationDocuments(
   // bound to the same short-lived server-side registration upload session.
   for (const file of files) {
     if (!file.file) {
-      throw new Error(
-        'Select the pharmacy document again before registration.'
-      );
+      throw new Error('Select the owner document again before registration.');
     }
 
     const metadata = normalizePharmacyDocument(file);
@@ -170,6 +169,7 @@ function RegisterForm() {
   >([]);
 
   const [errors, setErrors] = useState<PharmacyRegisterErrors>({});
+
   const [touchedFields, setTouchedFields] =
     useState<PharmacyRegisterTouchedFields>({});
 
@@ -178,6 +178,7 @@ function RegisterForm() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const selectedCopy = REGISTER_COPY[accountType];
+
   const pharmacyDocumentsError =
     accountType === 'pharmacy'
       ? validatePharmacyDocuments(pharmacyDocuments, { required: true })
@@ -191,6 +192,7 @@ function RegisterForm() {
     (field: keyof RegisterFormValues) =>
     (event: ChangeEvent<HTMLInputElement>) => {
       const rawValue = event.target.value;
+
       const nextValue =
         field === 'email'
           ? normalizeEmail(rawValue)
@@ -207,6 +209,7 @@ function RegisterForm() {
 
       setValues(nextValues);
       setTouchedFields((prev) => ({ ...prev, [field]: true }));
+
       setErrors((prev: PharmacyRegisterErrors) => ({
         ...prev,
         [field]: nextErrors[field],
@@ -221,6 +224,7 @@ function RegisterForm() {
         ...prev,
         pharmacyDocuments: undefined,
       }));
+
       setTouchedFields((prev) => ({
         ...prev,
         pharmacyDocuments: false,
@@ -232,6 +236,7 @@ function RegisterForm() {
     const documentsError = validatePharmacyDocuments(files, { required: true });
 
     setTouchedFields((prev) => ({ ...prev, pharmacyDocuments: true }));
+
     setErrors((prev) => ({
       ...prev,
       pharmacyDocuments: documentsError || undefined,
@@ -266,6 +271,7 @@ function RegisterForm() {
         ...markAllFieldsTouched(REGISTER_FORM_FIELDS),
         pharmacyDocuments: accountType === 'pharmacy',
       });
+
       setErrors(nextErrors);
       return;
     }
@@ -290,12 +296,15 @@ function RegisterForm() {
         pharmacyDocuments: pharmacyDocumentClaims,
       });
 
-      const destination = user
-        ? resolveLoginDestination({
-            user,
-            requestedRedirect: searchParams.get('redirect'),
-          })
-        : ROUTES.PROFILE;
+      const destination =
+        user?.role === 'pharmacy'
+          ? `${requirePharmacyAppConfiguration().origin}/pharmacy/profile`
+          : user
+            ? resolveLoginDestination({
+                user,
+                requestedRedirect: searchParams.get('redirect'),
+              })
+            : ROUTES.PROFILE;
 
       if (destination.startsWith('http')) {
         window.location.assign(destination);
@@ -400,6 +409,8 @@ function RegisterForm() {
             className={css.fieldFull}
             id="register-pharmacy-documents"
             name="pharmacyDocuments"
+            label="Owner documents"
+            labels={{ dropzoneTitle: 'Upload owner documents' }}
             value={pharmacyDocuments}
             error={errors.pharmacyDocuments ?? pharmacyDocumentsError}
             isTouched={touchedFields.pharmacyDocuments}

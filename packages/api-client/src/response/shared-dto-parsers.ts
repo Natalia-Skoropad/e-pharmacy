@@ -1528,6 +1528,7 @@ function parsePharmacyProfileVerificationDocument(
     name: record.name,
     size,
     type: record.type,
+
     uploadedAt:
       checked<PharmacyProfileVerificationDocument['uploadedAt']>(uploadedAt),
   };
@@ -1907,6 +1908,7 @@ function parseEditablePharmacyBankDetails(
         context
       );
     }
+
     result[key] = fieldValue;
   }
 
@@ -2145,6 +2147,7 @@ function parsePharmacyPendingModeration(
         context
       );
     }
+
     result.imageUrl = record.imageUrl;
   }
 
@@ -2303,11 +2306,13 @@ function parsePharmacyProfile(
 
   return {
     id,
+
     membershipRole: checked<MyPharmacyProfile['membershipRole']>(
       record.membershipRole
     ),
 
     name: record.name as string,
+
     ...(record.location !== undefined
       ? {
           location: parsePharmacyLocationDraft(
@@ -2525,6 +2530,11 @@ export function parseCurrentPharmacySummaryResponse(
     'current pharmacy summary response',
     context
   );
+
+  // A freshly registered owner is not required to have a Pharmacy yet.
+  if (record.pharmacy === null) {
+    return { pharmacy: null };
+  }
 
   const pharmacy = requireRecord(
     record.pharmacy,
@@ -3008,6 +3018,7 @@ function assertCartPharmacyMetadataConsistency(
   for (const item of items) {
     const metadata = {
       pharmacyName: item.pharmacyName,
+
       ...(item.pharmacyImageUrl !== undefined
         ? { pharmacyImageUrl: item.pharmacyImageUrl }
         : {}),

@@ -59,7 +59,7 @@ export const registerSchema = z
       ctx.addIssue({
         code: 'custom',
         path: ['pharmacyDocuments'],
-        message: 'Pharmacy documents are required',
+        message: 'Owner documents are required',
       });
     }
   });
@@ -118,6 +118,7 @@ export const updateProfileSchema = z
         ([key, value]) =>
           key !== 'expectedRevision' && hasMeaningfulValue(value)
       ),
+
     { message: VALIDATION_MESSAGES.object.atLeastOneField }
   );
 

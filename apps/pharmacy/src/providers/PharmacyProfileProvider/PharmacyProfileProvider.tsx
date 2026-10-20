@@ -103,7 +103,9 @@ export function PharmacyProfileProviderRuntime({
   }, [identity]);
 
   const requestProfile = useCallback(
-    async (requestIdentity: string): Promise<CurrentPharmacySummary | null> => {
+    async (
+      requestIdentity: string
+    ): Promise<CurrentPharmacySummary | null | undefined> => {
       activeControllerRef.current?.abort();
       const controller = new AbortController();
       activeControllerRef.current = controller;
@@ -124,7 +126,7 @@ export function PharmacyProfileProviderRuntime({
             aborted: controller.signal.aborted,
           })
         ) {
-          return null;
+          return undefined;
         }
 
         return response.pharmacy;
@@ -138,7 +140,7 @@ export function PharmacyProfileProviderRuntime({
             aborted: controller.signal.aborted,
           })
         ) {
-          return null;
+          return undefined;
         }
 
         throw cause;
@@ -159,6 +161,7 @@ export function PharmacyProfileProviderRuntime({
       currentVersion: requestVersionRef.current,
       controller: activeControllerRef.current,
     });
+
     activeControllerRef.current = null;
   }, []);
 
@@ -167,8 +170,10 @@ export function PharmacyProfileProviderRuntime({
       if (!identity || identityRef.current !== identity) return;
 
       invalidatePendingRequest();
+
       setSnapshot({
         identity,
+
         profile: {
           id: profile.id,
           name: profile.name,
@@ -176,6 +181,7 @@ export function PharmacyProfileProviderRuntime({
           ...(profile.imageUrl ? { imageUrl: profile.imageUrl } : {}),
           membershipRole: profile.membershipRole,
         },
+
         isLoading: false,
         error: null,
       });
@@ -195,7 +201,7 @@ export function PharmacyProfileProviderRuntime({
     try {
       const profile = await requestProfile(identity);
 
-      if (profile === null || identityRef.current !== identity) {
+      if (profile === undefined || identityRef.current !== identity) {
         return null;
       }
 
@@ -236,7 +242,7 @@ export function PharmacyProfileProviderRuntime({
 
     void requestProfile(requestIdentity)
       .then((profile) => {
-        if (profile === null || identityRef.current !== requestIdentity) {
+        if (profile === undefined || identityRef.current !== requestIdentity) {
           return;
         }
 
@@ -269,9 +275,11 @@ export function PharmacyProfileProviderRuntime({
   const value = useMemo(
     () => ({
       profile: hasCurrentSnapshot ? snapshot.profile : null,
+
       isLoading:
         isBootstrapping ||
         (identity !== null && (!hasCurrentSnapshot || snapshot.isLoading)),
+
       error: hasCurrentSnapshot ? snapshot.error : null,
       refresh,
       syncProfile,

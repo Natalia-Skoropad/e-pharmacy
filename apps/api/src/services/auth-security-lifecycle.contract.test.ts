@@ -42,9 +42,10 @@ test('registration commits User and role profile before creating a browser sessi
   );
 
   assert.match(registration, /Client\.create\([\s\S]*session: mongoSession/);
-  assert.match(registration, /Pharmacy\.create\([\s\S]*session: mongoSession/);
+  assert.doesNotMatch(registration, /Pharmacy\.create\(/);
+  assert.match(registration, /claimRegistrationOwnerDocuments\(/);
   assert.match(registration, /PHARMACY_OWNER_ACCOUNT_CREATED/);
-  assert.match(registration, /PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED/);
+  assert.match(registration, /PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED/);
 
   assert.match(
     registration,
@@ -58,7 +59,7 @@ test('registration commits User and role profile before creating a browser sessi
   const accountAudit = registration.indexOf('PHARMACY_OWNER_ACCOUNT_CREATED');
 
   const documentsAudit = registration.indexOf(
-    'PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED'
+    'PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED'
   );
 
   const authSessionBuild = registration.indexOf('buildAuthSessionResult');

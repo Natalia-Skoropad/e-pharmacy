@@ -12,6 +12,10 @@ export const ADMIN_AUDIT_ACTIONS = {
     'pharmacy.registrationDocuments.attached',
 
   PHARMACY_OWNER_ACCOUNT_CREATED: 'pharmacyOwner.account.created',
+
+  PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED:
+    'pharmacyOwner.registrationDocuments.attached',
+
   PHARMACY_OWNER_PROFILE_UPDATED: 'pharmacyOwner.profile.updated',
   PHARMACY_OWNER_PHOTO_UPDATED: 'pharmacyOwner.photo.updated',
   PHARMACY_OWNER_STATUS_CHANGED: 'pharmacyOwner.status.changed',

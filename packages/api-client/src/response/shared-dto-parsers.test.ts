@@ -197,6 +197,7 @@ test('accepts dynamic category filter options and still rejects malformed slugs'
       { value: 'all', label: 'All categories' },
       { value: 'veterinary_care', label: 'Veterinary care' },
     ],
+
     availability: [{ value: 'all', label: 'All products' }],
     sort: [{ value: 'newest', label: 'Newest first' }],
   } as const;
@@ -209,6 +210,7 @@ test('accepts dynamic category filter options and still rejects malformed slugs'
         ...response,
         categories: [{ value: 'veterinary-care', label: 'Veterinary care' }],
       }),
+
     ApiError
   );
 });
@@ -230,6 +232,7 @@ test('parses structured pharmacy location filter options', () => {
         label: 'Nova Ivanivka (Kharkiv region)',
       },
     ],
+
     sort: [{ value: 'newest', label: 'Newest first' }],
   } as const;
 
@@ -241,6 +244,7 @@ test('parses structured pharmacy location filter options', () => {
         ...response,
         locations: [{ value: 'Cherkasy', label: 'Cherkasy' }],
       }),
+
     ApiError
   );
 });
@@ -322,12 +326,14 @@ test('requires backend-provided typed public slug IDs', () => {
           ...product,
           offers: [{ ...validOffer, ...legacyLocationField }],
         }),
+
       ApiError
     );
   }
 
   const publicOffer = {
     ...validOffer,
+
     totalQuantity: undefined,
     reservedQuantity: undefined,
     hasRelatedOrders: undefined,
@@ -348,6 +354,7 @@ test('requires backend-provided typed public slug IDs', () => {
         ...product,
         offers: [{ ...publicOffer, totalQuantity: 10 }],
       }),
+
     (error: unknown) =>
       error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
   );
@@ -364,6 +371,7 @@ test('requires backend-provided typed public slug IDs', () => {
           ...product,
           offers: [{ ...validOffer, availableQuantity: invalidQuantity }],
         }),
+
       (error: unknown) =>
         error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
     );
@@ -383,6 +391,7 @@ test('requires backend-provided typed public slug IDs', () => {
   ]) {
     assert.throws(
       () => parseProductDetails({ ...product, offers: [invalidOffer] }),
+
       (error: unknown) =>
         error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
     );
@@ -429,6 +438,7 @@ test('requires backend-provided typed public slug IDs', () => {
             offers: Array.from({ length: 25 }, () => validOffer),
           },
         ],
+
         page: 1,
         perPage: 10,
         total: 1,
@@ -444,12 +454,14 @@ test('requires backend-provided typed public slug IDs', () => {
     id: '6a5f5244a3defb1d037f06e7',
     name: 'Pharmacy Care Pharmacy Lviv',
     publicSlugId: 'pharmacy-care-pharmacy-lviv-ph6a5f5244a3defb1d037f06e7',
+
     location: {
       address: '108 Medical Lane',
       settlement: 'Cherkasy',
       region: 'Cherkasy region',
       countryCode: 'UA',
     },
+
     rating: 5,
     availableProductsCount: 10,
     reviewsCount: 2,
@@ -462,11 +474,13 @@ test('requires backend-provided typed public slug IDs', () => {
     id: pharmacy.id,
     name: pharmacy.name,
     publicSlugId: pharmacy.publicSlugId,
+
     location: {
       address: '108 Medical Lane',
       settlement: 'Cherkasy',
       countryCode: 'UA',
     },
+
     email: 'care@example.com',
     phone: '+380441234567',
     rating: pharmacy.rating,
@@ -483,6 +497,7 @@ test('requires backend-provided typed public slug IDs', () => {
       total: 1,
       totalPages: 1,
     }).items[0]?.name,
+
     pharmacy.name
   );
 
@@ -495,6 +510,7 @@ test('requires backend-provided typed public slug IDs', () => {
         total: 1,
         totalPages: 1,
       }),
+
     ApiError
   );
 
@@ -511,6 +527,7 @@ test('requires backend-provided typed public slug IDs', () => {
           total: 1,
           totalPages: 1,
         }),
+
       ApiError
     );
   }
@@ -530,6 +547,7 @@ test('requires backend-provided typed public slug IDs', () => {
         parsePharmacyDetailsResponse({
           pharmacy: { ...pharmacy, ...legacyLocationField },
         }),
+
       ApiError
     );
   }
@@ -539,6 +557,7 @@ test('requires backend-provided typed public slug IDs', () => {
       parsePharmacyDetailsResponse({
         pharmacy: {
           ...pharmacy,
+
           bankDetails: {
             recipientName: 'E Pharmacy',
             taxId: '12345678',
@@ -549,6 +568,7 @@ test('requires backend-provided typed public slug IDs', () => {
           },
         },
       }),
+
     ApiError
   );
 
@@ -597,6 +617,7 @@ test('requires backend-provided typed public slug IDs', () => {
             ...legacyLocationField,
           },
         }),
+
       ApiError
     );
   }
@@ -610,6 +631,7 @@ test('requires backend-provided typed public slug IDs', () => {
           bankTransferAvailable: true,
         },
       }),
+
     ApiError
   );
 });
@@ -654,6 +676,7 @@ test('client order parser keeps canonical pharmacy location and rejects the reti
       parseClientOrderDetailsResponse({
         order: { ...order, pharmacyAddress: '10 Historic Street' },
       }),
+
     ApiError
   );
 });
@@ -663,6 +686,7 @@ test('client order parser keeps canonical pharmacy location and rejects the reti
 function createValidCartResponse() {
   return {
     revision: 7,
+
     items: [
       {
         id: '507f1f77bcf86cd799439011',
@@ -736,11 +760,14 @@ test('strictly validates transactional cart responses', async () => {
     },
     {
       ...valid,
+
       items: [
         {
           ...valid.items[0],
+
           product: {
             ...valid.items[0].product,
+
             category: {
               id: '507f1f77bcf86cd799439099',
               name: 'Invalid',
@@ -761,6 +788,7 @@ test('strictly validates transactional cart responses', async () => {
   for (const cart of invalidCarts) {
     assert.throws(
       () => parseCartResponse({ cart }),
+
       (error: unknown) =>
         error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
     );
@@ -776,14 +804,17 @@ test('rejects inconsistent pharmacy metadata across one cart group', async () =>
 
   const secondItem = {
     ...firstItem,
+
     id: '507f1f77bcf86cd799439021',
     productOfferId: '507f1f77bcf86cd799439022',
     productId: '507f1f77bcf86cd799439023',
+
     product: {
       ...firstItem.product,
       id: '507f1f77bcf86cd799439023',
       pharmacyName: 'Changed Pharmacy Name',
     },
+
     pharmacyName: 'Changed Pharmacy Name',
   };
 
@@ -797,6 +828,7 @@ test('rejects inconsistent pharmacy metadata across one cart group', async () =>
           totalPrice: firstItem.totalPrice + secondItem.totalPrice,
         },
       }),
+
     (error: unknown) =>
       error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
   );
@@ -811,9 +843,11 @@ test('validates cart cleanup issues instead of silently dropping them', async ()
   const parsed = parseCartResponse({
     cart: {
       ...valid,
+
       items: [],
       totalItems: 0,
       totalPrice: 0,
+
       issues: [
         {
           cartItemId: '507f1f77bcf86cd799439011',
@@ -833,6 +867,7 @@ test('validates cart cleanup issues instead of silently dropping them', async ()
           items: [],
           totalItems: 0,
           totalPrice: 0,
+
           issues: [
             {
               cartItemId: '507f1f77bcf86cd799439011',
@@ -841,6 +876,7 @@ test('validates cart cleanup issues instead of silently dropping them', async ()
           ],
         },
       }),
+
     ApiError
   );
 });
@@ -897,6 +933,7 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
   assert.equal(
     parsePharmacyProfileResponse({ pharmacy: profile }).pharmacy.documents[0]
       ?.id,
+
     document.id
   );
 
@@ -904,6 +941,7 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
     'sha256' in
       (parsePharmacyProfileResponse({ pharmacy: profile }).pharmacy
         .documents[0] ?? {}),
+
     false
   );
 
@@ -920,6 +958,7 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
   const managerProfile = parsePharmacyProfileResponse({
     pharmacy: {
       ...profile,
+
       membershipRole: 'manager',
       documents: [],
       bankDetails: undefined,
@@ -959,6 +998,7 @@ test('strictly validates pharmacy profile documents, status, dates and nested da
   ]) {
     assert.throws(
       () => parsePharmacyProfileResponse({ pharmacy: invalidProfile }),
+
       (error: unknown) =>
         error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
     );
@@ -1010,6 +1050,7 @@ test('validates controlled pharmacy registration upload responses', () => {
       document,
       claimToken: 'c'.repeat(64),
     }).document.id,
+
     document.id
   );
 
@@ -1019,8 +1060,17 @@ test('validates controlled pharmacy registration upload responses', () => {
         document,
         claimToken: 'short',
       }),
+
     ApiError
   );
+});
+
+//===================================================================
+
+test('owner account with no pharmacies receives a valid empty summary', () => {
+  assert.deepEqual(parseCurrentPharmacySummaryResponse({ pharmacy: null }), {
+    pharmacy: null,
+  });
 });
 
 //===================================================================

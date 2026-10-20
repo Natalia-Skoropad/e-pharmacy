@@ -51,7 +51,7 @@ test('pharmacy domain remains five-status and on_moderation operational', async 
 
 //===============================================================
 
-test('registration yields new owner/new pharmacy, not an accidental public pharmacy', async () => {
+test('registration yields a new owner without creating an accidental public pharmacy', async () => {
   const [registration, accountStatus] = await Promise.all([
     source('services/auth.service.ts'),
     source('utils/account-status.ts'),
@@ -62,8 +62,8 @@ test('registration yields new owner/new pharmacy, not an accidental public pharm
     /role === USER_ROLES\.PHARMACY[\s\S]*?USER_STATUSES\.NEW/
   );
 
-  assert.match(registration, /Pharmacy\.create\([\s\S]*?status:\s*'new'/);
-  assert.match(registration, /claimRegistrationPharmacyDocuments/);
+  assert.doesNotMatch(registration, /Pharmacy\.create\(/);
+  assert.match(registration, /claimRegistrationOwnerDocuments/);
 });
 
 //===============================================================

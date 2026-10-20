@@ -262,6 +262,7 @@ export async function appendAdminAuditLog({
     [
       {
         actorUserId: actor._id,
+
         actorNameSnapshot: normalizeAuditString(
           actor.name,
           'Audit actor name',
@@ -294,7 +295,9 @@ export async function appendAdminAuditLog({
               ),
             }
           : {}),
+
         ...(pharmacyId ? { pharmacyId } : {}),
+
         before,
         after,
         changedFields,
@@ -416,17 +419,22 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
     entityType: log.entityType,
     entityId: log.entityId,
     entityLabelSnapshot: log.entityLabelSnapshot,
+
     ...(log.scopeEntityType && log.scopeEntityId
       ? {
           scopeEntityType: log.scopeEntityType,
           scopeEntityId: log.scopeEntityId,
         }
       : {}),
+
     ...(log.pharmacyId ? { pharmacyId: log.pharmacyId } : {}),
+
     changedFields: [...log.changedFields],
+
     ...(statusBefore ? { statusBefore } : {}),
     ...(statusAfter ? { statusAfter } : {}),
     ...(log.reason ? { reason: log.reason } : {}),
+
     requestId: log.requestId,
     createdAt: log.createdAt.toISOString(),
   };
@@ -437,6 +445,7 @@ function serializeAuditListItem(log: LeanAuditLog): AdminAuditListItemDto {
 function serializeAuditDetails(log: LeanAuditLog): AdminAuditDetailsDto {
   return {
     ...serializeAuditListItem(log),
+
     before: { ...log.before },
     after: { ...log.after },
   };
@@ -463,21 +472,26 @@ const LEGACY_AUDIT_SECTION_ENTITY_TYPES: Readonly<
     ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE,
     ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
   ],
+
   [ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS]: [],
   [ADMIN_AUDIT_SECTIONS.PHARMACIES]: [ADMIN_AUDIT_ENTITY_TYPES.PHARMACY],
   [ADMIN_AUDIT_SECTIONS.PRODUCTS]: [],
+
   [ADMIN_AUDIT_SECTIONS.PRODUCT_REQUESTS]: [
     ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
   ],
+
   [ADMIN_AUDIT_SECTIONS.CLIENTS]: [],
   [ADMIN_AUDIT_SECTIONS.ORDERS]: [],
   [ADMIN_AUDIT_SECTIONS.PRODUCT_REVIEWS]: [],
   [ADMIN_AUDIT_SECTIONS.PHARMACY_REVIEWS]: [],
+
   [ADMIN_AUDIT_SECTIONS.EMPLOYEES]: [
     ADMIN_AUDIT_ENTITY_TYPES.ADMIN_ACCESS,
     ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE,
     ADMIN_AUDIT_ENTITY_TYPES.ADMIN_EMPLOYEE_DOCUMENT,
   ],
+
   [ADMIN_AUDIT_SECTIONS.POSITIONS]: [],
   [ADMIN_AUDIT_SECTIONS.SITE_PAGES]: [],
   [ADMIN_AUDIT_SECTIONS.CATEGORIES]: [],
@@ -508,6 +522,7 @@ export async function listAdminAuditActorsService(
   const actors = await AdminAuditLog.aggregate<{
     _id: Types.ObjectId;
     actorType: AdminAuditActorType;
+
     user: {
       _id: Types.ObjectId;
       name: string;
@@ -563,6 +578,7 @@ export async function listAdminAuditActorsService(
     {
       $project: {
         _id: 1,
+
         user: {
           _id: '$users._id',
           name: '$users.name',
@@ -576,7 +592,9 @@ export async function listAdminAuditActorsService(
         actorType: {
           $cond: [
             { $eq: ['$users.role', USER_ROLES.ADMIN] },
+
             ADMIN_AUDIT_ACTOR_TYPES.EMPLOYEE,
+
             {
               $cond: [
                 {
@@ -600,8 +618,15 @@ export async function listAdminAuditActorsService(
                         '$auditedActions',
                       ],
                     },
+                    {
+                      $in: [
+                        'pharmacyOwner.registrationDocuments.attached',
+                        '$auditedActions',
+                      ],
+                    },
                   ],
                 },
+
                 ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_OWNER,
                 ADMIN_AUDIT_ACTOR_TYPES.PHARMACY_EMPLOYEE,
               ],
@@ -618,7 +643,9 @@ export async function listAdminAuditActorsService(
     name: user.name,
     email: user.email,
     phone: user.phone,
+
     ...(user.pictureUrl ? { pictureUrl: user.pictureUrl } : {}),
+
     role: user.role,
     actorType,
     status: user.status,
@@ -651,7 +678,14 @@ async function getAuditActorIdsByType(
             ],
           },
         },
-        { action: 'pharmacy.registrationDocuments.attached' },
+        {
+          action: {
+            $in: [
+              'pharmacy.registrationDocuments.attached',
+              'pharmacyOwner.registrationDocuments.attached',
+            ],
+          },
+        },
       ],
     }),
   ]);
@@ -731,6 +765,7 @@ export async function listAdminAuditLogsService(
     if (query.actorUserId) {
       const actorUserId = new Types.ObjectId(query.actorUserId);
       const matchesActorType = actorIds.some((id) => id.equals(actorUserId));
+
       filter.actorUserId = matchesActorType ? actorUserId : { $in: [] };
     } else {
       filter.actorUserId = { $in: actorIds };
@@ -767,6 +802,7 @@ export async function listAdminAuditLogsService(
 
   if (query.scopeEntityType)
     scopeFilter.scopeEntityType = query.scopeEntityType;
+
   if (query.scopeEntityId) scopeFilter.scopeEntityId = query.scopeEntityId;
 
   const [total, items, earliestLog, storedActions, storedSections] =

@@ -38,6 +38,7 @@ test('initial summary loading blocks cabinet children', () => {
   });
 
   const element = requireElement(rendered);
+
   assert.equal(element.type, PageLoader);
   assert.equal(element.props.label, 'Loading pharmacy cabinet...');
 });
@@ -57,6 +58,7 @@ test('initial summary failure renders the branded cabinet error instead of child
   });
 
   const element = requireElement(rendered);
+
   assert.equal(element.type, ErrorPage);
   assert.equal(element.props.title, 'We could not load your pharmacy cabinet');
   assert.equal(element.props.onRetry, onRetry);
@@ -85,4 +87,30 @@ test('blocked and last-known-good summaries keep cabinet children renderable', (
   });
 
   assert.equal(backgroundFailureContent, 'last-known-good-content');
+});
+
+//===================================================================
+
+test('owner with no pharmacies can open personal profile but not unloaded operations', () => {
+  const profile = PharmacyCabinetBoundaryRuntime({
+    profile: null,
+    isLoading: false,
+    error: null,
+    pathname: '/pharmacy/profile/documents',
+    onRetry: () => undefined,
+    children: 'personal-profile',
+  });
+
+  assert.equal(profile, 'personal-profile');
+
+  const operations = PharmacyCabinetBoundaryRuntime({
+    profile: null,
+    isLoading: false,
+    error: null,
+    pathname: '/pharmacy/orders',
+    onRetry: () => undefined,
+    children: 'orders-without-pharmacy',
+  });
+
+  assert.notEqual(operations, 'orders-without-pharmacy');
 });

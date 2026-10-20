@@ -34,6 +34,7 @@ function getTestMongoUri(): string {
 test(
   'blocked pharmacy members can read the minimal current summary while full profile access remains blocked',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -55,20 +56,31 @@ test(
         ownerId.toString()
       );
 
-      assert.equal(ownerSummary.pharmacy.id, pharmacyId.toString());
-      assert.equal(ownerSummary.pharmacy.status, 'blocked');
-      assert.equal(ownerSummary.pharmacy.membershipRole, 'owner');
+      const ownerPharmacy = ownerSummary.pharmacy;
+
+      assert.ok(ownerPharmacy, 'Owner must have a pharmacy in this fixture');
+      assert.equal(ownerPharmacy.id, pharmacyId.toString());
+      assert.equal(ownerPharmacy.status, 'blocked');
+      assert.equal(ownerPharmacy.membershipRole, 'owner');
 
       const managerSummary = await getCurrentPharmacySummaryService(
         managerId.toString()
       );
 
-      assert.equal(managerSummary.pharmacy.id, pharmacyId.toString());
-      assert.equal(managerSummary.pharmacy.status, 'blocked');
-      assert.equal(managerSummary.pharmacy.membershipRole, 'manager');
+      const managerPharmacy = managerSummary.pharmacy;
+
+      assert.ok(
+        managerPharmacy,
+        'Manager must have a pharmacy in this fixture'
+      );
+
+      assert.equal(managerPharmacy.id, pharmacyId.toString());
+      assert.equal(managerPharmacy.status, 'blocked');
+      assert.equal(managerPharmacy.membershipRole, 'manager');
 
       await assert.rejects(
         () => getMyPharmacyProfileService(ownerId.toString()),
+
         (error: unknown) => {
           const httpError = error as HttpError;
           return (

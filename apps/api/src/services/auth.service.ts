@@ -21,7 +21,6 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 
 import { Session } from '../models/session.model';
 import { Client } from '../models/client.model';
-import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';
 
 import type {
@@ -61,7 +60,7 @@ import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { getInitialAccountStatusForRole } from '../utils/account-status';
 import { toAuthUserResponse } from '../utils/userResponse';
 import { appendAdminAuditLog } from './admin-audit.service';
-import { claimRegistrationPharmacyDocuments } from './pharmacy-document.service';
+import { claimRegistrationOwnerDocuments } from './pharmacy-document.service';
 
 import {
   enforcePasswordResetResponseTiming,
@@ -229,6 +228,7 @@ async function ensurePhoneIsAvailable(
 
   const existingPhoneOwner = await User.exists({
     ...(excludeUserId ? { _id: { $ne: excludeUserId } } : {}),
+
     phone: normalizedPhone,
   });
 
@@ -345,31 +345,14 @@ export async function registerUserService(
             session: mongoSession,
           });
         } else if (createdUser.role === USER_ROLES.PHARMACY) {
-          const [createdPharmacy] = await Pharmacy.create(
-            [
-              {
-                ownerId: createdUser._id,
-                managerUserIds: [],
-                name: '',
-                location: { countryCode: 'UA' },
-                phone: createdUser.phone,
-                email: createdUser.email,
-                documents: [],
-                status: 'new',
-              },
-            ],
-            { session: mongoSession }
-          );
-
-          const documents = await claimRegistrationPharmacyDocuments(
+          // Owner identity must exist without any Pharmacy. The temporary
+          // registration upload claims are consumed into Owner documents here,
+          // atomically with User creation and audit events.
+          const documents = await claimRegistrationOwnerDocuments(
             input.pharmacyDocuments ?? [],
-            createdPharmacy._id,
             createdUser._id,
             mongoSession
           );
-
-          createdPharmacy.documents = documents;
-          await createdPharmacy.save({ session: mongoSession });
 
           const registrationAuditRequestId =
             auditRequestId?.trim() ||
@@ -398,82 +381,46 @@ export async function registerUserService(
             session: mongoSession,
           });
 
-          // The owner account event is not a pharmacy creation event. Record
-          // both independently so the pharmacy detail Activity tab is populated
-          // even when no registration documents were uploaded.
           await appendAdminAuditLog({
             actorUserId: String(createdUser._id),
-            action: ADMIN_AUDIT_ACTIONS.PHARMACY_CREATED,
-            section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
-            entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
-            entityId: String(createdPharmacy._id),
-            entityLabel: createdPharmacy.name?.trim() || createdUser.email,
+
+            action:
+              ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED,
+
+            section: ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS,
+            entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+            entityId: String(createdUser._id),
+            entityLabel: createdUser.name,
             scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
             scopeEntityId: String(createdUser._id),
-            before: {},
+            before: { documentCount: 0 },
 
             after: {
-              status: createdPharmacy.status,
-              ownerId: String(createdUser._id),
+              registrationDocuments: documents.map((document) => document.name),
+              documentCount: documents.length,
+              documentMimeTypes: documents.map((document) => document.type),
+
+              documentSizesBytes: documents.map((document) =>
+                String(document.size)
+              ),
+
+              totalDocumentSizeBytes: documents.reduce(
+                (total, document) => total + document.size,
+                0
+              ),
             },
 
-            changedFields: ['status', 'ownerId'],
+            changedFields: [
+              'registrationDocuments',
+              'documentCount',
+              'documentMimeTypes',
+              'documentSizesBytes',
+              'totalDocumentSizeBytes',
+            ],
+
             requestId: registrationAuditRequestId,
             session: mongoSession,
           });
-
-          if (documents.length > 0) {
-            await appendAdminAuditLog({
-              actorUserId: String(createdUser._id),
-
-              action:
-                ADMIN_AUDIT_ACTIONS.PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED,
-
-              section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
-              entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
-              entityId: String(createdPharmacy._id),
-              entityLabel: createdUser.email,
-              scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
-              scopeEntityId: String(createdUser._id),
-
-              before: {
-                registrationDocuments: [],
-                documentCount: 0,
-                documentMimeTypes: [],
-                documentSizesBytes: [],
-                totalDocumentSizeBytes: 0,
-              },
-
-              after: {
-                registrationDocuments: documents.map(
-                  (document) => document.name
-                ),
-
-                documentCount: documents.length,
-                documentMimeTypes: documents.map((document) => document.type),
-
-                documentSizesBytes: documents.map((document) =>
-                  String(document.size)
-                ),
-
-                totalDocumentSizeBytes: documents.reduce(
-                  (total, document) => total + document.size,
-                  0
-                ),
-              },
-
-              changedFields: [
-                'registrationDocuments',
-                'documentCount',
-                'documentMimeTypes',
-                'documentSizesBytes',
-                'totalDocumentSizeBytes',
-              ],
-
-              requestId: registrationAuditRequestId,
-              session: mongoSession,
-            });
-          }
         }
 
         return createdUser;
@@ -511,7 +458,7 @@ export async function registerUserService(
   try {
     // Session creation intentionally happens after the identity transaction.
     // A transient session write failure must not roll back a successfully
-    // registered User + Client/Pharmacy pair; the user can sign in normally.
+    // registered User + Client profile/Owner documents; the user can sign in normally.
     return await buildAuthSessionResult(user, context);
   } catch (error) {
     logger.error('[auth] Registration succeeded but session creation failed', {
@@ -780,6 +727,7 @@ export async function refreshAuthSessionService(
         refreshTokenHash,
         revokedAt: undefined,
         expiresAt: { $gt: now },
+
         $or: [
           { absoluteExpiresAt: { $gt: now } },
           { absoluteExpiresAt: { $exists: false } },
@@ -890,6 +838,7 @@ export async function revokeSessionByRefreshTokenService(
         { refreshTokenHash },
         { previousRefreshTokenHash: refreshTokenHash },
       ],
+
       revokedAt: undefined,
     },
     {
@@ -1129,6 +1078,7 @@ export async function resetPasswordService(
         },
         {
           $set: { password: hashedPassword },
+
           $unset: {
             resetPasswordTokenHash: '',
             resetPasswordExpiresAt: '',
@@ -1242,14 +1192,6 @@ async function updatePharmacyOwnerUserProfileWithAudit(
         );
       }
 
-      const ownerLink = await Pharmacy.exists({ ownerId: user._id }).session(
-        session
-      );
-
-      if (!ownerLink) {
-        throw new Error('Pharmacy owner link could not be resolved.');
-      }
-
       const beforeProfile: Record<string, string | null> = {};
       const afterProfile: Record<string, string | null> = {};
       const changedProfileFields: string[] = [];
@@ -1344,6 +1286,7 @@ async function updatePharmacyOwnerUserProfileWithAudit(
         HTTP_STATUS.CONFLICT,
         API_MESSAGES.PHONE_IN_USE,
         undefined,
+
         AUTH_ERROR_CODES.PHONE_CONFLICT
       );
     }
@@ -1361,7 +1304,13 @@ export async function updateUserProfileService(
   input: UpdateProfileInput,
   auditRequestId?: string
 ): Promise<AuthUserResponse> {
-  const isPharmacyOwner = await Pharmacy.exists({ ownerId: userId });
+  // An owner account exists independently of any Pharmacy (Stage 14.18.2).
+  // Identify owner profiles by User.role, so a zero-pharmacy owner still
+  // receives the same audit and optimistic-concurrency guarantees.
+  const isPharmacyOwner = await User.exists({
+    _id: userId,
+    role: USER_ROLES.PHARMACY,
+  });
 
   if (isPharmacyOwner) {
     return updatePharmacyOwnerUserProfileWithAudit(

@@ -733,6 +733,7 @@ export async function getPharmaciesService(
   if (query.addressKeyword) {
     filter.$and = [
       ...(Array.isArray(filter.$and) ? filter.$and : []),
+
       {
         $or: [
           {
@@ -1044,8 +1045,8 @@ export async function moderatePharmacyReviewService(
       input.status === 'approved'
         ? 'Pharmacy review was approved.'
         : 'Pharmacy review was rejected.',
-    rating,
 
+    rating,
     reviewsCount: approved.length,
     moderatedAt: review.moderatedAt?.toISOString(),
   };
@@ -1068,6 +1069,7 @@ export async function setFavoritePharmacyService(
 
   const result = await Client.updateOne(
     { userId },
+
     isFavorite
       ? { $addToSet: { favoritePharmacyIds: pharmacyId } }
       : { $pull: { favoritePharmacyIds: pharmacyId } }
@@ -1133,16 +1135,31 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
 
 export async function getCurrentPharmacySummaryService(
   userId: string
-): Promise<{ pharmacy: CurrentPharmacySummaryResponseDto }> {
-  const { pharmacy, membershipRole } =
-    await findPharmacyForSummaryAccess(userId);
+): Promise<{ pharmacy: CurrentPharmacySummaryResponseDto | null }> {
+  // A newly registered owner legitimately has no Pharmacy yet. Keep this
+  // distinction local to summary bootstrap; pharmacy-scoped APIs must still
+  // reject missing/ambiguous membership.
+  try {
+    const { pharmacy, membershipRole } =
+      await findPharmacyForSummaryAccess(userId);
 
-  return {
-    pharmacy: serializeCurrentPharmacySummary(
-      pharmacy as PharmacyDocument,
-      membershipRole
-    ),
-  };
+    return {
+      pharmacy: serializeCurrentPharmacySummary(
+        pharmacy as PharmacyDocument,
+        membershipRole
+      ),
+    };
+  } catch (cause) {
+    if (
+      cause &&
+      typeof cause === 'object' &&
+      'code' in cause &&
+      cause.code === 'PHARMACY_PROFILE_MISSING'
+    ) {
+      return { pharmacy: null };
+    }
+    throw cause;
+  }
 }
 
 //===============================================================
@@ -1347,6 +1364,7 @@ export async function updateMyPharmacyProfileService(
           HTTP_STATUS.BAD_REQUEST,
           'Profile fields are locked until Admin reviews the submitted pharmacy data.',
           undefined,
+
           PHARMACY_PROFILE_LOCKED_ERROR_CODE
         );
       }
@@ -1400,6 +1418,7 @@ export async function updateMyPharmacyProfileService(
               pendingModeration,
               updatedBy: userId,
             },
+
             $unset: { statusReason: '' },
           },
           { new: true, runValidators: true, session: mongoSession }
@@ -1726,6 +1745,7 @@ export async function sendMyPharmacyForVerificationService(
           _id: pharmacy._id,
           status: pharmacy.status,
           updatedAt: pharmacy.updatedAt,
+
           ...(isResubmission ? { reviewState: 'changes_requested' } : {}),
         },
         {

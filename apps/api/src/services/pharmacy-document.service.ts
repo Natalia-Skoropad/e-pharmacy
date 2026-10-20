@@ -3,7 +3,9 @@ import mongoose, { Types, type ClientSession } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
+import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/pharmacy-owner-document-validation';
 import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import type { AdminPharmacyDocumentDto } from '../types/admin-pharmacy-document';
 import { PharmacyRegistrationUploadSession } from '../models/pharmacyRegistrationUploadSession.model';
@@ -211,6 +213,7 @@ export async function claimRegistrationPharmacyDocuments(
           uploadedByUserId: userId,
           attachedAt: new Date(),
         },
+
         $unset: {
           claimTokenHash: '',
           expiresAt: '',
@@ -259,6 +262,140 @@ export async function claimRegistrationPharmacyDocuments(
   }
 
   return documents;
+}
+
+//===================================================================
+
+// Registration uploads are temporary PharmacyDocumentFile records for legacy API
+// compatibility. Transfer the bytes into the canonical Owner collection when
+// creating the user; do not attach any Pharmacy or create a pharmacy record.
+// This function must run inside the same transaction as User creation.
+export async function claimRegistrationOwnerDocuments(
+  claims: readonly PharmacyRegistrationDocumentClaimInput[],
+  ownerUserId: Types.ObjectId,
+  session: ClientSession
+): Promise<Array<{ name: string; size: number; type: string }>> {
+  if (
+    claims.length < 1 ||
+    claims.length > PHARMACY_OWNER_DOCUMENT_RULES.maxFiles
+  ) {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Owner documents are required (up to six files).'
+    );
+  }
+
+  const attached: Array<{ name: string; size: number; type: string }> = [];
+  const seenIds = new Set<string>();
+
+  let uploadSessionId: string | null = null;
+  let totalSizeBytes = 0;
+
+  for (const claim of claims) {
+    if (seenIds.has(claim.documentId)) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Duplicate owner document claim.'
+      );
+    }
+
+    seenIds.add(claim.documentId);
+
+    // A claim is single-use and can only consume a temporary, unowned,
+    // unexpired upload from the authenticated registration session.
+    const document = await PharmacyDocumentFile.findOneAndDelete(
+      {
+        _id: claim.documentId,
+        claimTokenHash: hashClaimToken(claim.claimToken),
+        registrationUploadSessionId: { $exists: true },
+        pharmacyId: { $exists: false },
+        uploadedByUserId: { $exists: false },
+        expiresAt: { $gt: new Date() },
+      },
+      { session }
+    ).select('+content');
+
+    if (!document?.content || !document.registrationUploadSessionId) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'An owner registration document is invalid or has expired.'
+      );
+    }
+
+    const currentSessionId = String(document.registrationUploadSessionId);
+
+    if (uploadSessionId !== null && uploadSessionId !== currentSessionId) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Owner documents must belong to one upload session.'
+      );
+    }
+
+    uploadSessionId = currentSessionId;
+
+    totalSizeBytes += document.size;
+
+    if (
+      document.size > PHARMACY_OWNER_DOCUMENT_RULES.maxSizeBytes ||
+      totalSizeBytes > PHARMACY_OWNER_DOCUMENT_RULES.maxTotalSizeBytes ||
+      !PHARMACY_OWNER_DOCUMENT_RULES.mimeTypes.some(
+        (mime) => mime === document.type
+      ) ||
+      !PHARMACY_OWNER_DOCUMENT_RULES.fileNamePattern.test(document.name) ||
+      document.content.length !== document.size ||
+      createHash('sha256').update(document.content).digest('hex') !==
+        document.sha256
+    ) {
+      throw httpError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Owner registration document failed integrity validation.'
+      );
+    }
+
+    await PharmacyOwnerDocument.create(
+      [
+        {
+          _id: document._id,
+          ownerUserId,
+          uploadedByUserId: ownerUserId,
+          name: document.name,
+          size: document.size,
+          type: document.type,
+          sha256: document.sha256,
+          content: Buffer.from(document.content),
+        },
+      ],
+      { session }
+    );
+
+    attached.push({
+      name: document.name,
+      size: document.size,
+      type: document.type,
+    });
+  }
+
+  if (!uploadSessionId) {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Owner registration upload session is missing.'
+    );
+  }
+
+  // Session deletion and all claims roll back on any subsequent error.
+  const result = await PharmacyRegistrationUploadSession.deleteOne(
+    { _id: uploadSessionId, expiresAt: { $gt: new Date() } },
+    { session }
+  );
+
+  if (result.deletedCount !== 1) {
+    throw httpError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Owner registration upload session has expired.'
+    );
+  }
+
+  return attached;
 }
 
 //===================================================================
@@ -358,6 +495,7 @@ export async function reconcileAttachedPharmacyDocumentStorage(
   const orphanedAttachedDocumentsFilter = {
     pharmacyId,
     attachedAt: { $exists: true },
+
     ...(uniqueReferencedDocumentIds.length > 0
       ? { _id: { $nin: uniqueReferencedDocumentIds } }
       : {}),
@@ -385,6 +523,7 @@ export async function getPrivatePharmacyDocumentContentService(
   const document = await PharmacyDocumentFile.findOne({
     _id: documentId,
     pharmacyId: pharmacy._id,
+
     $or: [
       { attachedAt: { $exists: true } },
       { expiresAt: { $gt: new Date() } },
