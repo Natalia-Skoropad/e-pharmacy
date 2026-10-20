@@ -21,6 +21,7 @@ import {
   getMyPharmacyOwnerDocument,
   getMyPharmacyOwnerDocuments,
   uploadMyPharmacyOwnerDocument,
+  replaceMyPharmacyOwnerDocument,
 } from '@/lib/api/browser';
 
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
@@ -166,6 +167,41 @@ export function OwnerDocumentsPanel() {
     }
   };
 
+  const handleReplace = async (current: BrowserUploadFile, file: File) => {
+    if (!current.documentId || isUploading || pendingDocumentId) return;
+    setPendingDocumentId(current.documentId);
+
+    try {
+      const metadata = normalizePharmacyOwnerDocument(file);
+      const rawDataUrl = await readFileAsDataUrl(file);
+
+      const payload = {
+        ...metadata,
+        dataUrl: `data:${metadata.type};base64,${rawDataUrl.slice(rawDataUrl.indexOf(',') + 1)}`,
+      };
+
+      const response = await replaceMyPharmacyOwnerDocument(
+        current.documentId,
+        payload
+      );
+
+      setDocuments((items) =>
+        items.map((item) =>
+          item.id === current.documentId ? response.document : item
+        )
+      );
+
+      toast.success('Owner document replaced successfully.');
+    } catch (cause) {
+      toast.error(
+        getProfileErrorMessage(cause, 'Could not replace owner document.')
+      );
+      await loadDocuments();
+    } finally {
+      setPendingDocumentId(null);
+    }
+  };
+
   const handleDownload = async (file: BrowserUploadFile): Promise<string> => {
     if (!file.documentId) return '';
 
@@ -202,28 +238,6 @@ export function OwnerDocumentsPanel() {
     }
   };
 
-  const handleValuesChange = (nextFiles: BrowserUploadFile[]) => {
-    if (isUploading || pendingDocumentId || status !== 'success') return;
-
-    const currentIds = new Set(values.map((file) => file.id));
-    const nextIds = new Set(nextFiles.map((file) => file.id));
-    const removedFile = values.find((file) => !nextIds.has(file.id));
-
-    if (removedFile) {
-      void handleDelete(removedFile);
-      return;
-    }
-
-    const addedFiles = nextFiles
-      .filter((file) => !currentIds.has(file.id))
-      .map((file) => file.file)
-      .filter((file): file is File => Boolean(file));
-
-    if (addedFiles.length > 0) {
-      void handleUpload(addedFiles);
-    }
-  };
-
   const resourceState =
     status === 'loading' ? (
       <ProfileResourceState
@@ -245,6 +259,7 @@ export function OwnerDocumentsPanel() {
       id="pharmacy-owner-documents"
       name="ownerDocuments"
       title="Owner documents"
+      required
       description="Private documents that belong to your owner account and stay available across the pharmacies you own."
       headerIcon={<Files size={22} />}
       value={values}
@@ -263,10 +278,17 @@ export function OwnerDocumentsPanel() {
         dropzoneTitle: 'Upload owner documents',
         dropzoneText: 'PDF, DOC, JPG or PNG files are supported.',
       }}
-      onChange={handleValuesChange}
+      canUpload
+      canReplace
+      canDelete={documents.length > 1}
+      onUploadFiles={handleUpload}
+      onDeleteFile={handleDelete}
+      onReplaceFile={handleReplace}
+      pendingDocumentId={pendingDocumentId}
+      isUploading={isUploading}
       resourceState={resourceState}
       emptyTitle="No owner documents yet"
-      emptyText="Upload documents that belong to your owner account rather than to a specific pharmacy."
+      emptyText="At least one owner document is required for pharmacy verification. Upload a new file before replacing or removing the last one."
     />
   );
 }

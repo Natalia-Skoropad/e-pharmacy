@@ -7,6 +7,7 @@ import {
   downloadMyPharmacyOwnerDocument,
   listMyPharmacyOwnerDocuments,
   uploadMyPharmacyOwnerDocument,
+  replaceMyPharmacyOwnerDocument,
 } from '../controllers/pharmacy-owner-document.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
@@ -57,4 +58,17 @@ pharmacyOwnerRoutes.delete(
   '/me/documents/:documentId',
   validate({ params: pharmacyOwnerDocumentParamsSchema }),
   ctrlWrapper(deleteMyPharmacyOwnerDocument)
+);
+
+//===============================================================
+
+pharmacyOwnerRoutes.put(
+  '/me/documents/:documentId',
+
+  validate({
+    params: pharmacyOwnerDocumentParamsSchema,
+    body: pharmacyOwnerDocumentUploadSchema,
+  }),
+
+  ctrlWrapper(replaceMyPharmacyOwnerDocument)
 );

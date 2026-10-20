@@ -22,9 +22,11 @@ test('owner documents reuse the shared DocumentsPanel without duplicating docume
 
   assert.match(source, /<DocumentsPanel/);
   assert.match(source, /confirmRemove/);
-  assert.match(source, /onChange=\{handleValuesChange\}/);
+  assert.match(source, /onReplaceFile=\{handleReplace\}/);
+  assert.match(source, /onUploadFiles=\{handleUpload\}/);
+  assert.match(source, /onDeleteFile=\{handleDelete\}/);
   assert.match(source, /dropzoneTitle: 'Upload owner documents'/);
-  assert.doesNotMatch(source, /canUpload|canDelete|onUploadFiles|onDeleteFile/);
+  assert.match(source, /canReplace/);
   assert.doesNotMatch(source, /<ul[^>]*aria-label="Documents"/);
   assert.doesNotMatch(source, /documentActions|documentItem|documentsList/);
 });
@@ -60,5 +62,6 @@ test('owner document BFF routes remain private and do not expose API origin to t
   assert.match(itemRoute, /createPrivateDownloadProxyRoute/);
   assert.match(itemRoute, /createPrivateProxyRoute/);
   assert.match(itemRoute, /method:\s*'DELETE'/);
+  assert.match(itemRoute, /method:\s*'PUT'/);
   assert.doesNotMatch(collectionRoute + itemRoute, /NEXT_PUBLIC_API_URL/);
 });

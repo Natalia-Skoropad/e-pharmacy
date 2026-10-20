@@ -101,12 +101,14 @@ test('owner document quota and MIME validation happen before persistence', () =>
 test('owner document upload/delete and audit commit atomically without file secrets', () => {
   assert.equal(
     (serviceSource.match(/session\.withTransaction/g) ?? []).length,
-    2
+    3
   );
 
-  assert.equal((serviceSource.match(/appendAdminAuditLog\(/g) ?? []).length, 2);
+  assert.equal((serviceSource.match(/appendAdminAuditLog\(/g) ?? []).length, 3);
   assert.match(serviceSource, /PHARMACY_OWNER_DOCUMENT_UPLOADED/);
   assert.match(serviceSource, /PHARMACY_OWNER_DOCUMENT_DELETED/);
+  assert.match(serviceSource, /PHARMACY_OWNER_DOCUMENT_REPLACED/);
+  assert.match(serviceSource, /documents.length <= 1/);
 
   assert.match(
     serviceSource,

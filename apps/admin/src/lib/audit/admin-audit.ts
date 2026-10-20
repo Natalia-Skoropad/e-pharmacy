@@ -18,6 +18,7 @@ export const ADMIN_AUDIT_ACTIONS = [
   'pharmacyOwner.photo.updated',
   'pharmacyOwner.status.changed',
   'pharmacyOwner.document.uploaded',
+  'pharmacyOwner.document.replaced',
   'pharmacyOwner.document.deleted',
   'pharmacyOwner.comment.created',
   'pharmacyOwner.comment.deleted',

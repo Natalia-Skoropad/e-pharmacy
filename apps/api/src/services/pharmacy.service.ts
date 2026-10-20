@@ -28,6 +28,7 @@ import {
 
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
+import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
 import { PharmacyReview } from '../models/pharmacyReview.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
@@ -175,6 +176,7 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
         availableQuantity: { $gt: 0 },
       },
     },
+
     {
       $lookup: {
         from: Product.collection.name,
@@ -183,6 +185,7 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
         as: 'product',
       },
     },
+
     { $unwind: '$product' },
     { $match: { 'product.status': 'active' } },
     { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
@@ -362,6 +365,7 @@ function clonePharmacyLocation(
       ? {
           geo: {
             type: 'Point',
+
             coordinates: [
               location.geo.coordinates[0],
               location.geo.coordinates[1],
@@ -388,6 +392,7 @@ function applyEditableLocationPatch(
 
   for (const field of ['address', 'settlement', 'region'] as const) {
     const value = patch[field];
+
     if (value === undefined) continue;
     if (value === null) delete nextLocation[field];
     else nextLocation[field] = value;
@@ -1009,6 +1014,7 @@ export async function moderatePharmacyReviewService(
 ) {
   const review = await PharmacyReview.findOneAndUpdate(
     { _id: reviewId, pharmacyId },
+
     {
       $set: {
         status: input.status,
@@ -1017,6 +1023,7 @@ export async function moderatePharmacyReviewService(
         moderatedAt: new Date(),
       },
     },
+
     { returnDocument: 'after' }
   );
 
@@ -1322,6 +1329,7 @@ async function appendPharmacyOwnerMutationAudit(
     section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
     entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
     entityId: String(after._id),
+
     // A new pharmacy may still have an empty name while its profile is being completed.
     // Keep the audit label non-empty without exposing private profile fields.
     entityLabel: after.name.trim() || `Pharmacy ${String(after._id)}`,
@@ -1374,6 +1382,7 @@ export async function updateMyPharmacyProfileService(
       const {
         documents: documentSelections,
         expectedRevision,
+
         ...profileFields
       } = input;
 
@@ -1413,6 +1422,7 @@ export async function updateMyPharmacyProfileService(
 
             ...(isCorrectionDraft ? { reviewState: 'changes_requested' } : {}),
           },
+
           {
             $set: {
               pendingModeration,
@@ -1421,6 +1431,7 @@ export async function updateMyPharmacyProfileService(
 
             $unset: { statusReason: '' },
           },
+
           { new: true, runValidators: true, session: mongoSession }
         );
 
@@ -1449,6 +1460,7 @@ export async function updateMyPharmacyProfileService(
             membershipRole
           ),
         };
+
         return;
       }
 
@@ -1489,6 +1501,7 @@ export async function updateMyPharmacyProfileService(
       if (resolvedInput.bankDetails) {
         for (const [key, value] of Object.entries(resolvedInput.bankDetails)) {
           const path = `bankDetails.${key}`;
+
           if (value === null) unset[path] = '';
           else if (value !== undefined) update[path] = value;
         }
@@ -1500,7 +1513,9 @@ export async function updateMyPharmacyProfileService(
 
       const updatedPharmacy = await Pharmacy.findOneAndUpdate(
         { _id: pharmacy._id, updatedAt: new Date(expectedRevision) },
+
         updateQuery,
+
         { new: true, runValidators: true, session: mongoSession }
       );
 
@@ -1645,6 +1660,7 @@ export async function submitMyPharmacyModerationService(
 
           updatedAt: new Date(input.expectedRevision),
         },
+
         {
           $set: {
             pendingModeration,
@@ -1660,6 +1676,7 @@ export async function submitMyPharmacyModerationService(
             reviewedBy: '',
           },
         },
+
         { new: true, runValidators: true, session: mongoSession }
       );
 
@@ -1740,6 +1757,22 @@ export async function sendMyPharmacyForVerificationService(
 
       assertReadyForVerification(pharmacy);
 
+      // Owner identity documents are separate from Pharmacy verification files.
+      // Check the canonical owner account, not the submitting manager's identity.
+      const ownerDocumentExists = await PharmacyOwnerDocument.exists({
+        ownerUserId: pharmacy.ownerId,
+      }).session(session);
+
+      if (!ownerDocumentExists) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Upload at least one Owner document before sending the pharmacy for verification.',
+          { missingFields: ['ownerDocuments'] },
+
+          PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE
+        );
+      }
+
       const saved = await Pharmacy.findOneAndUpdate(
         {
           _id: pharmacy._id,
@@ -1748,6 +1781,7 @@ export async function sendMyPharmacyForVerificationService(
 
           ...(isResubmission ? { reviewState: 'changes_requested' } : {}),
         },
+
         {
           $set: {
             status: PHARMACY_STATUSES.ON_VERIFICATION,
@@ -1762,6 +1796,7 @@ export async function sendMyPharmacyForVerificationService(
             reviewedBy: '',
           },
         },
+
         { new: true, runValidators: true, session }
       );
 

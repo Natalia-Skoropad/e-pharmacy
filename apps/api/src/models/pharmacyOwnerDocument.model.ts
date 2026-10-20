@@ -6,6 +6,7 @@ import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/pharmacy-owner-docum
 
 export type PharmacyOwnerDocumentEntity = {
   ownerUserId: Types.ObjectId;
+  registrationSourcePharmacyId?: Types.ObjectId;
   uploadedByUserId: Types.ObjectId;
   name: string;
   size: number;
@@ -26,6 +27,13 @@ const pharmacyOwnerDocumentSchema = new Schema<PharmacyOwnerDocumentEntity>(
       required: true,
       immutable: true,
       index: true,
+    },
+
+    registrationSourcePharmacyId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Pharmacy',
+      immutable: true,
+      default: undefined,
     },
 
     uploadedByUserId: {

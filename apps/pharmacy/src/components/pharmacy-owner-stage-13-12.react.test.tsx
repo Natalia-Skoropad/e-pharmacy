@@ -59,5 +59,6 @@ test('Stage 13.12 keeps Owner profile and Owner document mutations available onl
   assert.match(ownerDocumentsSource, /uploadMyPharmacyOwnerDocument/);
   assert.match(ownerDocumentsSource, /deleteMyPharmacyOwnerDocument/);
   assert.match(ownerDocumentsSource, /confirmRemove/);
-  assert.match(ownerDocumentsSource, /onChange=\{handleValuesChange\}/);
+  assert.match(ownerDocumentsSource, /onReplaceFile=\{handleReplace\}/);
+  assert.match(ownerDocumentsSource, /onUploadFiles=\{handleUpload\}/);
 });

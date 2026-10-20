@@ -58,6 +58,7 @@ export async function getMyPharmacyOwnerDocuments(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parsePharmacyOwnerDocumentsResponse,
     { url: path, method: 'GET' }
   );
@@ -72,6 +73,7 @@ export async function uploadMyPharmacyOwnerDocument(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'POST', body: payload }),
+
     parsePharmacyOwnerDocumentResponse,
     { url: path, method: 'POST' }
   );
@@ -104,4 +106,20 @@ export async function deleteMyPharmacyOwnerDocument(
     url: path,
     method: 'DELETE',
   });
+}
+
+//===================================================================
+
+export async function replaceMyPharmacyOwnerDocument(
+  documentId: EntityId,
+  payload: PharmacyOwnerDocumentUploadPayload
+): Promise<PharmacyOwnerDocumentResponse> {
+  const path = PHARMACY_API_ROUTES.pharmacyOwners.myDocument(documentId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'PUT', body: payload }),
+
+    parsePharmacyOwnerDocumentResponse,
+    { url: path, method: 'PUT' }
+  );
 }

@@ -20,6 +20,7 @@ export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_OWNER_PHOTO_UPDATED: 'pharmacyOwner.photo.updated',
   PHARMACY_OWNER_STATUS_CHANGED: 'pharmacyOwner.status.changed',
   PHARMACY_OWNER_DOCUMENT_UPLOADED: 'pharmacyOwner.document.uploaded',
+  PHARMACY_OWNER_DOCUMENT_REPLACED: 'pharmacyOwner.document.replaced',
   PHARMACY_OWNER_DOCUMENT_DELETED: 'pharmacyOwner.document.deleted',
   PHARMACY_OWNER_COMMENT_CREATED: 'pharmacyOwner.comment.created',
   PHARMACY_OWNER_COMMENT_DELETED: 'pharmacyOwner.comment.deleted',

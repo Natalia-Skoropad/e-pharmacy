@@ -14,6 +14,8 @@
     "migrate:domain": "tsx src/scripts/migrate-domain-entities.ts",
     "migrate:product-categories": "tsx src/scripts/migrate-product-categories.ts",
     "migrate:pharmacy-owner-foundation": "tsx src/scripts/migrate-pharmacy-owner-foundation.ts",
+    "diagnose:pharmacy-owner-registration-documents": "tsx src/scripts/diagnose-pharmacy-owner-registration-documents.ts",
+    "migrate:pharmacy-owner-registration-documents": "tsx src/scripts/migrate-pharmacy-owner-registration-documents.ts",
     "migrate:pharmacy-owner-registration-audit": "tsx src/scripts/migrate-pharmacy-owner-registration-audit.ts",
     "migrate:pharmacy-location": "tsx src/scripts/migrate-pharmacy-location.ts",
     "migrate:demo-pharmacy-bank-details": "tsx src/scripts/migrate-demo-pharmacy-bank-details.ts",

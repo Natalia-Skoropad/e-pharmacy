@@ -11,6 +11,8 @@
     "seed:admin-owner": "pnpm --filter @e-pharmacy/api seed:admin-owner",
     "migrate:product-categories": "pnpm --filter @e-pharmacy/api migrate:product-categories",
     "migrate:pharmacy-owner-foundation": "pnpm --filter @e-pharmacy/api migrate:pharmacy-owner-foundation",
+    "diagnose:pharmacy-owner-registration-documents": "pnpm --filter @e-pharmacy/api diagnose:pharmacy-owner-registration-documents",
+    "migrate:pharmacy-owner-registration-documents": "pnpm --filter @e-pharmacy/api migrate:pharmacy-owner-registration-documents",
     "migrate:pharmacy-owner-registration-audit": "pnpm --filter @e-pharmacy/api migrate:pharmacy-owner-registration-audit",
     "migrate:pharmacy-location": "pnpm --filter @e-pharmacy/api migrate:pharmacy-location",
     "migrate:demo-pharmacy-bank-details": "pnpm --filter @e-pharmacy/api migrate:demo-pharmacy-bank-details",

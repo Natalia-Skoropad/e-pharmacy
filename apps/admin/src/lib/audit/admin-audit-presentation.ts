@@ -37,6 +37,7 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacyOwner.photo.updated': 'Pharmacy owner photo updated',
   'pharmacyOwner.status.changed': 'Pharmacy owner status changed',
   'pharmacyOwner.document.uploaded': 'Pharmacy owner document uploaded',
+  'pharmacyOwner.document.replaced': 'Pharmacy owner document replaced',
   'pharmacyOwner.document.deleted': 'Pharmacy owner document deleted',
   'pharmacyOwner.comment.created': 'Pharmacy owner comment created',
   'pharmacyOwner.comment.deleted': 'Pharmacy owner comment deleted',
@@ -106,6 +107,7 @@ const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacy.moderation.submitted',
   'adminEmployee.profile.updated',
   'pharmacyOwner.profile.updated',
+  'pharmacyOwner.document.replaced',
   'pharmacyOwner.photo.updated',
   'adminEmployee.document.replaced',
   'productCategory.updated',
@@ -306,6 +308,7 @@ export function getAdminAuditPageLocation(
           item.entityType === 'pharmacyOwner'
             ? item.entityLabelSnapshot
             : 'Pharmacy owner',
+
         href: `${ADMIN_ROUTES.PHARMACY_OWNERS}/${encodeURIComponent(ownerId)}`,
       };
   }

@@ -12,6 +12,7 @@ import {
   deletePharmacyOwnerDocumentService,
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
+  replacePharmacyOwnerDocumentService,
 } from '../services/pharmacy-owner-document.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
@@ -108,5 +109,31 @@ export async function deleteMyPharmacyOwnerDocument(
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Owner document was deleted successfully.',
+  });
+}
+
+//===============================================================
+
+export async function replaceMyPharmacyOwnerDocument(
+  req: Request,
+  res: ValidatedResponse<
+    PharmacyOwnerDocumentUploadInput,
+    PharmacyOwnerDocumentParams
+  >
+): Promise<void> {
+  const document = await replacePharmacyOwnerDocumentService(
+    req.user?.id ?? '',
+    res.locals.validated.params.documentId,
+    res.locals.validated.body,
+    res.locals.requestId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    message: 'Owner document was replaced successfully.',
+    data: { document },
   });
 }

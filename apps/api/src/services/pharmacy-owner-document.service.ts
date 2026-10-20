@@ -86,6 +86,13 @@ async function getOwnerDocumentsForQuota(
   ownerUserId: string,
   session: ClientSession
 ): Promise<Array<{ _id: Types.ObjectId; size: number }>> {
+  // A write to the common owner row serializes concurrent quota/deletion changes.
+  await User.updateOne(
+    { _id: ownerUserId, role: USER_ROLES.PHARMACY },
+    { $currentDate: { updatedAt: true } },
+    { session, timestamps: false }
+  );
+
   return PharmacyOwnerDocument.find({ ownerUserId })
     .select('_id size')
     .session(session)
@@ -193,6 +200,7 @@ export async function createPharmacyOwnerDocumentService(
             ...verified,
           },
         ],
+
         { session }
       );
 
@@ -238,11 +246,32 @@ export async function deletePharmacyOwnerDocumentService(
     await session.withTransaction(async () => {
       await assertOwnerAccount(ownerUserId, session);
 
+      // Unauthorized IDs must remain indistinguishable from missing files,
+      // even when the caller has zero/one documents of their own.
+      const ownedDocument = await PharmacyOwnerDocument.exists({
+        _id: documentId,
+        ownerUserId,
+      }).session(session);
+
+      if (!ownedDocument) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Owner document was not found.');
+      }
+
+      const documents = await getOwnerDocumentsForQuota(ownerUserId, session);
+
+      if (documents.length <= 1) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'At least one owner document is required. Upload a replacement before deleting the last document.'
+        );
+      }
+
       const document = await PharmacyOwnerDocument.findOneAndDelete(
         {
           _id: documentId,
           ownerUserId,
         },
+
         { session }
       );
 
@@ -269,4 +298,90 @@ export async function deletePharmacyOwnerDocumentService(
   } finally {
     await session.endSession();
   }
+}
+
+//===============================================================
+
+/** Replace in-place, atomically. The existing document remains until commit. */
+export async function replacePharmacyOwnerDocumentService(
+  ownerUserId: string,
+  documentId: string,
+  input: PharmacyOwnerDocumentUploadInput,
+  auditRequestId: string
+): Promise<PharmacyOwnerDocumentMetadataDto> {
+  const verified = decodeAndVerifyDocumentUpload(
+    input,
+    PHARMACY_OWNER_DOCUMENT_RULES
+  );
+
+  const session = await mongoose.startSession();
+  let result: PharmacyOwnerDocumentMetadataDto | null = null;
+
+  try {
+    await session.withTransaction(async () => {
+      await assertOwnerAccount(ownerUserId, session);
+
+      const documents = await getOwnerDocumentsForQuota(ownerUserId, session);
+
+      const previous = await PharmacyOwnerDocument.findOne({
+        _id: documentId,
+        ownerUserId,
+      }).session(session);
+
+      if (!previous) {
+        throw httpError(HTTP_STATUS.NOT_FOUND, 'Owner document was not found.');
+      }
+
+      const totalBytes =
+        documents.reduce((sum, item) => sum + item.size, 0) -
+        previous.size +
+        verified.size;
+
+      if (totalBytes > PHARMACY_OWNER_DOCUMENT_RULES.maxTotalSizeBytes) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          PHARMACY_OWNER_DOCUMENT_VALIDATION_MESSAGES.totalSize
+        );
+      }
+
+      const replacement = await PharmacyOwnerDocument.findOneAndUpdate(
+        { _id: documentId, ownerUserId, updatedAt: previous.updatedAt },
+        { $set: { name: input.name, ...verified } },
+        { new: true, runValidators: true, session }
+      );
+
+      if (!replacement) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Owner document was modified. Retry the replacement.'
+        );
+      }
+
+      result = serializeDocument(replacement);
+
+      await appendAdminAuditLog({
+        actorUserId: ownerUserId,
+        action: ADMIN_AUDIT_ACTIONS.PHARMACY_OWNER_DOCUMENT_REPLACED,
+        section: ADMIN_AUDIT_SECTIONS.PHARMACY_OWNERS,
+        entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER_DOCUMENT,
+        entityId: documentId,
+        entityLabel: replacement.name,
+        scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
+        scopeEntityId: ownerUserId,
+        before: auditSnapshot(previous),
+        after: auditSnapshot(replacement),
+        changedFields: ['name', 'size', 'type'],
+        requestId: auditRequestId,
+        session,
+      });
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  if (!result) {
+    throw new Error('Owner document replacement transaction did not commit.');
+  }
+
+  return result;
 }

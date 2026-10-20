@@ -23,5 +23,16 @@ export const GET = createPrivateDownloadProxyRoute<Params>({
 export const DELETE = createPrivateProxyRoute<Params>({
   backendPath: ({ documentId }) =>
     API_ROUTES.pharmacyOwners.myDocument(documentId),
+
   method: 'DELETE',
+});
+
+//===============================================================
+
+export const PUT = createPrivateProxyRoute<Params>({
+  backendPath: ({ documentId }) =>
+    API_ROUTES.pharmacyOwners.myDocument(documentId),
+
+  method: 'PUT',
+  bodyPreset: 'documentUpload',
 });
