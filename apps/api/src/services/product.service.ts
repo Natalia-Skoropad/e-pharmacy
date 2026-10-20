@@ -6,6 +6,11 @@ import { REVIEW_ERROR_CODES } from '../constants/reviews';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../constants/product-management';
 import { API_MESSAGES } from '../constants/messages';
 
+import {
+  requirePharmacyCapability,
+  isPharmacyMembershipMissing,
+} from './pharmacy-membership.service';
+
 import { Client } from '../models/client.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
@@ -196,32 +201,39 @@ async function getOffersByProductIds(
       id: String(offer._id),
       pharmacyId: String(pharmacy._id),
       pharmacyName: pharmacy.name,
+
       ...(pharmacy.location
         ? {
             pharmacyLocation: {
               ...(pharmacy.location.address
                 ? { address: pharmacy.location.address }
                 : {}),
+
               ...(pharmacy.location.settlement
                 ? { settlement: pharmacy.location.settlement }
                 : {}),
+
               ...(pharmacy.location.region
                 ? { region: pharmacy.location.region }
                 : {}),
+
               ...(pharmacy.location.countryCode
                 ? { countryCode: pharmacy.location.countryCode }
                 : {}),
             },
           }
         : {}),
+
       ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
       ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),
+
       pharmacyRating: pharmacy.rating ?? 0,
       pharmacyReviewsCount: pharmacy.reviewsCount ?? 0,
       pharmacyIsFavorite: favoritePharmacyIds.has(String(pharmacy._id)),
       price: offer.price,
       availableQuantity: offer.availableQuantity,
       inStock: offer.availableQuantity > 0,
+
       ...(canSeeOperationalFields
         ? {
             totalQuantity: offer.totalQuantity,
@@ -229,11 +241,13 @@ async function getOffersByProductIds(
             hasRelatedOrders: relatedOfferIds.has(String(offer._id)),
           }
         : {}),
+
       createdAt: requireISODateTime(offer.createdAt, 'productOffer.createdAt'),
       updatedAt: requireISODateTime(offer.updatedAt, 'productOffer.updatedAt'),
     };
 
     const key = String(offer.productId);
+
     result.set(key, [...(result.get(key) ?? []), item]);
   }
 
@@ -270,6 +284,7 @@ async function getOfferSummaryByProductIds(
     pharmaciesCount: number;
   }>([
     { $match: match },
+
     {
       $lookup: {
         from: Pharmacy.collection.name,
@@ -278,12 +293,15 @@ async function getOfferSummaryByProductIds(
         as: 'pharmacy',
       },
     },
+
     { $unwind: '$pharmacy' },
+
     {
       $match: {
         'pharmacy.status': { $in: ['active', 'on_moderation'] },
       },
     },
+
     {
       $group: {
         _id: { productId: '$productId', pharmacyId: '$pharmacyId' },
@@ -291,6 +309,7 @@ async function getOfferSummaryByProductIds(
         maxPrice: { $max: '$price' },
       },
     },
+
     {
       $group: {
         _id: '$_id.productId',
@@ -304,6 +323,7 @@ async function getOfferSummaryByProductIds(
   return new Map(
     rows.map((row) => [
       String(row._id),
+
       {
         minPrice: row.minPrice,
         maxPrice: row.maxPrice,
@@ -329,25 +349,32 @@ function serializeProductCardSummary(
   return {
     id: productId,
     name: product.name,
+
     publicSlugId: buildPublicEntitySlugId(
       'product',
       product.slug ?? product.name,
       productId
     ),
+
     article: product.article ?? '',
     category,
     status: product.status,
     price: minPrice ?? product.price ?? 0,
     minPrice,
     maxPrice,
+
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
     ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
+
     foundInPharmaciesCount: pharmaciesCount,
     availableInPharmaciesCount: pharmaciesCount,
+
     inStock: pharmaciesCount > 0,
     rating: product.rating ?? 0,
+
     reviewsCount: product.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(productId),
+
     createdAt: requireISODateTime(product.createdAt, 'product.createdAt'),
     updatedAt: requireISODateTime(product.updatedAt, 'product.updatedAt'),
   };
@@ -373,33 +400,45 @@ function serializeProductDetails(
   return {
     id: productId,
     name: product.name,
+
     publicSlugId: buildPublicEntitySlugId(
       'product',
       product.slug ?? product.name,
       productId
     ),
+
     ...(product.slug ? { slug: product.slug } : {}),
+
     article: product.article ?? '',
+
     ...(product.description ? { description: product.description } : {}),
+
     category,
     status: product.status,
     price: minPrice,
+
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
     ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
     ...(product.dosage ? { dosage: product.dosage } : {}),
+
     ...(product.packageQuantity
       ? { packageQuantity: product.packageQuantity }
       : {}),
+
     ...(first
       ? { pharmacyId: first.pharmacyId, pharmacyName: first.pharmacyName }
       : {}),
+
     foundInPharmaciesCount: availableOffers.length,
     availableInPharmaciesCount: availableOffers.length,
     offers,
+
     inStock: availableOffers.length > 0,
     rating: product.rating ?? 0,
+
     reviewsCount: product.reviewsCount ?? 0,
     isFavorite: favoriteIds.has(productId),
+
     createdAt: requireISODateTime(product.createdAt, 'product.createdAt'),
     updatedAt: requireISODateTime(product.updatedAt, 'product.updatedAt'),
   };
@@ -462,6 +501,7 @@ export async function getProductFiltersService(
   return {
     categories: [
       { value: 'all', label: 'All categories' },
+
       ...categories.map((category) => ({
         value: category.slug,
         label: category.name,
@@ -505,13 +545,16 @@ function applyProductIdIncludeFilter(
   productIds: unknown[]
 ): void {
   const ids = toObjectIdStrings(productIds);
+
   const current = filter._id as
     | { $in?: unknown[]; $nin?: unknown[] }
     | undefined;
+
   const currentIn = current?.$in ? toObjectIdStrings(current.$in) : undefined;
 
   filter._id = {
     ...(current ?? {}),
+
     $in: currentIn ? intersectStringLists(currentIn, ids) : ids,
   };
 }
@@ -523,13 +566,16 @@ function applyProductIdExcludeFilter(
   productIds: unknown[]
 ): void {
   const ids = toObjectIdStrings(productIds);
+
   const current = filter._id as
     | { $in?: unknown[]; $nin?: unknown[] }
     | undefined;
+
   const currentNin = current?.$nin ? toObjectIdStrings(current.$nin) : [];
 
   filter._id = {
     ...(current ?? {}),
+
     $nin: [...new Set([...currentNin, ...ids])],
   };
 }
@@ -558,6 +604,7 @@ async function getOwnProductStatistics(pharmacyId: string) {
     outOfStockProducts: number;
   }>([
     { $match: { pharmacyId: new Types.ObjectId(pharmacyId) } },
+
     {
       $lookup: {
         from: 'products',
@@ -566,21 +613,27 @@ async function getOwnProductStatistics(pharmacyId: string) {
         as: 'product',
       },
     },
+
     { $unwind: '$product' },
     { $match: { 'product.status': { $in: ['active', 'blocked'] } } },
+
     {
       $group: {
         _id: null,
         stockQuantity: { $sum: '$totalQuantity' },
         stockValue: { $sum: { $multiply: ['$totalQuantity', '$price'] } },
         reservedQuantity: { $sum: '$reservedQuantity' },
+
         reservedValue: {
           $sum: { $multiply: ['$reservedQuantity', '$price'] },
         },
+
         availableQuantity: { $sum: '$availableQuantity' },
+
         availableValue: {
           $sum: { $multiply: ['$availableQuantity', '$price'] },
         },
+
         outOfStockProducts: {
           $sum: { $cond: [{ $eq: ['$totalQuantity', 0] }, 1, 0] },
         },
@@ -593,10 +646,12 @@ async function getOwnProductStatistics(pharmacyId: string) {
   return {
     inStock: { quantity: row.stockQuantity, amount: row.stockValue },
     reserved: { quantity: row.reservedQuantity, amount: row.reservedValue },
+
     available: {
       quantity: row.availableQuantity,
       amount: row.availableValue,
     },
+
     outOfStock: { quantity: row.outOfStockProducts },
   };
 }
@@ -607,12 +662,14 @@ async function getProductsByScope(
   query: ProductsQuery,
   scope: 'public' | 'management',
   userId?: string,
+
   options: Readonly<{
     includeOffers?: boolean;
     offerVisibility?: ProductOfferVisibility;
   }> = {}
 ) {
   const filter: Record<string, unknown> = {};
+
   const tableStatusFilter =
     scope === 'public'
       ? 'active'
@@ -622,9 +679,11 @@ async function getProductsByScope(
 
   filter.status =
     scope === 'public' ? 'active' : (query.status ?? tableStatusFilter);
+
   const productTableScopeFilter: Record<string, unknown> = {
     status: tableStatusFilter,
   };
+
   const keyword = query.keyword?.trim();
 
   if (keyword) {
@@ -638,13 +697,16 @@ async function getProductsByScope(
   if (query.nameKeyword) {
     filter.name = createFlexibleSearchRegExp(query.nameKeyword);
   }
+
   if (query.articleKeyword) {
     filter.article = createSafeRegExp(query.articleKeyword);
   }
+
   if (query.category) {
     const category = await findProductCategoryBySlug(query.category, {
       activeOnly: scope === 'public',
     });
+
     filter.categoryId = category?._id ?? null;
   }
 
@@ -656,6 +718,7 @@ async function getProductsByScope(
   }
 
   let allowedProductIds: Types.ObjectId[] | undefined;
+
   const offerFilter: Record<string, unknown> = {};
 
   if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
@@ -759,13 +822,16 @@ async function getProductsByScope(
     Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
     Product.countDocuments(filter),
     getClientFavorites(userId),
+
     query.pharmacyId
       ? getOwnProductStatistics(query.pharmacyId)
       : Promise.resolve(undefined),
+
     earliestCreatedAtQuery,
   ]);
 
   const productIds = products.map((product) => product._id);
+
   const categoryMap = await getProductCategoryReferenceMap(
     products.map((product) => product.categoryId)
   );
@@ -812,9 +878,11 @@ async function getProductsByScope(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
     earliestCreatedAt: earliestCreatedRecord
       ? earliestCreatedRecord.createdAt.toISOString().slice(0, 10)
       : null,
+
     ...(ownProductStatistics ? { ownProductStatistics } : {}),
   };
 }
@@ -831,22 +899,26 @@ export async function getProductsService(
 //===============================================================
 
 async function getCurrentUserPharmacyForManagedProductRead(userId: string) {
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
-
-  if (!pharmacy) {
-    throw httpError(
-      HTTP_STATUS.NOT_FOUND,
-      'Pharmacy profile was not found.',
-      undefined,
-      PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND
+  try {
+    const { pharmacy } = await requirePharmacyCapability(
+      userId,
+      'read_products'
     );
-  }
 
-  return pharmacy;
+    return pharmacy;
+  } catch (error) {
+    if (isPharmacyMembershipMissing(error)) {
+      throw httpError(
+        HTTP_STATUS.NOT_FOUND,
+        'Pharmacy profile was not found.',
+        undefined,
+
+        PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND
+      );
+    }
+
+    throw error;
+  }
 }
 
 //===============================================================
@@ -915,6 +987,7 @@ async function resolveManagedProductsAccess(
         ? { addedToPharmacyId: currentPharmacyId }
         : {}),
     },
+
     offerVisibility,
   };
 }
@@ -931,6 +1004,7 @@ export async function getManagedProductStatisticsService(
   const pharmacy = await getCurrentUserPharmacyForManagedProductRead(
     actor.userId
   );
+
   const pharmacyId = pharmacy._id;
 
   const [statistics] = await Product.aggregate<{
@@ -940,6 +1014,7 @@ export async function getManagedProductStatisticsService(
     notAddedToPharmacy: number;
   }>([
     { $match: { status: { $in: ['active', 'blocked'] } } },
+
     {
       $lookup: {
         from: ProductOffer.collection.name,
@@ -960,18 +1035,22 @@ export async function getManagedProductStatisticsService(
         as: 'currentPharmacyOffers',
       },
     },
+
     {
       $group: {
         _id: null,
         active: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+
         blocked: {
           $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] },
         },
+
         addedToPharmacy: {
           $sum: {
             $cond: [{ $gt: [{ $size: '$currentPharmacyOffers' }, 0] }, 1, 0],
           },
         },
+
         notAddedToPharmacy: {
           $sum: {
             $cond: [{ $eq: [{ $size: '$currentPharmacyOffers' }, 0] }, 1, 0],
@@ -979,6 +1058,7 @@ export async function getManagedProductStatisticsService(
         },
       },
     },
+
     { $project: { _id: 0 } },
   ]);
 
@@ -1027,12 +1107,14 @@ export async function getFavoriteProductsService(
 ) {
   const client = await Client.findOne({ userId })
     .select('favoriteProductIds favoritePharmacyIds')
+
     .lean<{
       favoriteProductIds?: Types.ObjectId[];
       favoritePharmacyIds?: Types.ObjectId[];
     } | null>();
 
   const favoriteProductIds = client?.favoriteProductIds ?? [];
+
   const filter = {
     _id: { $in: favoriteProductIds },
     status: 'active',
@@ -1051,6 +1133,7 @@ export async function getFavoriteProductsService(
   const summaryMap = await getOfferSummaryByProductIds(
     products.map((product) => product._id)
   );
+
   const categoryMap = await getProductCategoryReferenceMap(
     products.map((product) => product.categoryId)
   );
@@ -1066,6 +1149,7 @@ export async function getFavoriteProductsService(
         favoriteIds
       )
     ),
+
     page: total === 0 ? 1 : query.page,
     perPage: query.perPage,
     total,
@@ -1098,6 +1182,7 @@ async function getProductDetailsByScope(
     favorites.pharmacies,
     offerVisibility
   );
+
   const categoryMap = await getProductCategoryReferenceMap([
     product.categoryId,
   ]);
@@ -1149,17 +1234,22 @@ export async function getManagedProductDetailsService(
 //===============================================================
 
 async function getCurrentUserPharmacyForProductManagement(userId: string) {
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  });
+  let pharmacy;
 
-  if (!pharmacy) {
-    throw httpError(
-      HTTP_STATUS.NOT_FOUND,
-      'Pharmacy profile was not found.',
-      undefined,
-      PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND
-    );
+  try {
+    ({ pharmacy } = await requirePharmacyCapability(userId, 'manage_products'));
+  } catch (error) {
+    if (isPharmacyMembershipMissing(error)) {
+      throw httpError(
+        HTTP_STATUS.NOT_FOUND,
+        'Pharmacy profile was not found.',
+        undefined,
+
+        PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND
+      );
+    }
+
+    throw error;
   }
 
   const canManageProducts = PHARMACY_PRODUCT_MANAGEMENT_STATUSES.some(
@@ -1171,6 +1261,7 @@ async function getCurrentUserPharmacyForProductManagement(userId: string) {
       HTTP_STATUS.FORBIDDEN,
       'Products can be added only after Admin verifies the pharmacy profile.',
       undefined,
+
       PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED
     );
   }
@@ -1198,6 +1289,7 @@ export async function addProductToMyPharmacyService(
       HTTP_STATUS.BAD_REQUEST,
       'Blocked products cannot be added to a pharmacy.',
       undefined,
+
       PRODUCT_MANAGEMENT_ERROR_CODES.PRODUCT_BLOCKED
     );
   }
@@ -1217,6 +1309,7 @@ export async function addProductToMyPharmacyService(
           HTTP_STATUS.CONFLICT,
           'This product is already added to your pharmacy.',
           undefined,
+
           PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED
         );
       }
@@ -1255,6 +1348,7 @@ export async function addProductToMyPharmacyService(
         HTTP_STATUS.CONFLICT,
         'This product is already added to your pharmacy.',
         undefined,
+
         PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED
       );
     }
@@ -1304,6 +1398,7 @@ export async function removeProductFromMyPharmacyService(
           HTTP_STATUS.NOT_FOUND,
           'This product is not added to your pharmacy.',
           undefined,
+
           PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED
         );
       }
@@ -1318,6 +1413,7 @@ export async function removeProductFromMyPharmacyService(
           HTTP_STATUS.CONFLICT,
           'Product cannot be removed because it already has related orders.',
           undefined,
+
           PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS
         );
       }
@@ -1379,6 +1475,7 @@ export async function getManagedProductReviewsService(
   actor: ProductManagementActor
 ) {
   await getManagedProductDetailsService(productId, actor);
+
   return getApprovedProductReviews(productId);
 }
 
@@ -1409,6 +1506,7 @@ export async function createProductReviewService(
         HTTP_STATUS.CONFLICT,
         'You already have a pending or approved review for this product.',
         undefined,
+
         REVIEW_ERROR_CODES.ALREADY_SUBMITTED
       );
     }
@@ -1434,6 +1532,7 @@ export async function setFavoriteProductService(
 
   const result = await Client.updateOne(
     { userId },
+
     isFavorite
       ? { $addToSet: { favoriteProductIds: productId } }
       : { $pull: { favoriteProductIds: productId } }
@@ -1445,6 +1544,7 @@ export async function setFavoriteProductService(
 
   return {
     isFavorite,
+
     message: isFavorite
       ? 'Product was added to favorites.'
       : 'Product was removed from favorites.',
@@ -1464,6 +1564,7 @@ export async function getPendingProductReviewsService(
       .skip(skip)
       .limit(query.perPage)
       .lean(),
+
     ProductReview.countDocuments({ status: 'on_moderation' }),
   ]);
 
@@ -1502,6 +1603,7 @@ export async function getPendingProductReviewsService(
 export async function moderateProductReviewService(
   productId: string,
   reviewId: string,
+
   input: {
     status: 'approved' | 'rejected';
     reason?: string;
@@ -1510,6 +1612,7 @@ export async function moderateProductReviewService(
 ) {
   const review = await ProductReview.findOneAndUpdate(
     { _id: reviewId, productId },
+
     {
       $set: {
         status: input.status,
@@ -1518,6 +1621,7 @@ export async function moderateProductReviewService(
         moderatedAt: new Date(),
       },
     },
+
     { returnDocument: 'after' }
   );
 
@@ -1547,6 +1651,7 @@ export async function moderateProductReviewService(
       input.status === 'approved'
         ? 'Product review was approved.'
         : 'Product review was rejected.',
+
     rating,
     reviewsCount: approved.length,
     moderatedAt: review.moderatedAt?.toISOString(),

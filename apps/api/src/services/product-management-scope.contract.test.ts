@@ -27,17 +27,19 @@ test('managed product reads bind pharmacy scope to the authenticated actor', asy
 
   assert.match(
     service,
-    /getCurrentUserPharmacyForManagedProductRead[\s\S]*?ownerId: userId[\s\S]*?managerUserIds: userId/
+    /getCurrentUserPharmacyForManagedProductRead[\s\S]*?requirePharmacyCapability\(userId, 'read_products'\)/
   );
 
   assert.match(
     service,
     /assertCurrentPharmacyScope\(query\.pharmacyId, currentPharmacyId\)/
   );
+
   assert.match(
     service,
     /assertCurrentPharmacyScope\(query\.addedToPharmacyId, currentPharmacyId\)/
   );
+
   assert.match(
     service,
     /actor\.role === USER_ROLES\.ADMIN[\s\S]*?mode: 'admin-management'/

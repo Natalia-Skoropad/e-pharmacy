@@ -7,6 +7,11 @@ import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
 import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
 
 import {
+  requirePharmacyCapability,
+  isPharmacyMembershipMissing,
+} from './pharmacy-membership.service';
+
+import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
   CHECKOUT_GROUP_MISSING_ERROR_CODE,
   MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE,
@@ -151,6 +156,8 @@ type ProductFallbackMap = Map<
     reviewsCount?: number;
   }>
 >;
+
+//===============================================================
 
 type OfferFallbackMap = Map<string, ProductOfferDocument>;
 type ClientUserMap = Map<string, UserDocument>;
@@ -334,6 +341,7 @@ async function findManagerOrderReplay(
   if (session) orderQuery = orderQuery.session(session);
 
   const order = await orderQuery.lean<OrderDocument | null>();
+
   if (!order) return null;
 
   assertManagerOrderReplayMatches(order, requestFingerprint);
@@ -1216,6 +1224,7 @@ export async function checkoutOrderService(
 
       const cartUpdateResult = await Cart.updateOne(
         { _id: cart._id, revision: input.expectedCartRevision },
+
         {
           $set: {
             items: cart.items.filter(
@@ -1224,6 +1233,7 @@ export async function checkoutOrderService(
           },
           $inc: { revision: 1 },
         },
+
         { session, runValidators: true }
       );
 
@@ -1276,18 +1286,11 @@ export async function createManagerOrderService(
 
   try {
     const transactionResult = await session.withTransaction(async () => {
-      const pharmacy = await Pharmacy.findOne({
-        $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
-      })
-        .session(session)
-        .lean<PharmacyDocument | null>();
-
-      if (!pharmacy) {
-        throw httpError(
-          HTTP_STATUS.CONFLICT,
-          'An active pharmacy is required to create orders.'
-        );
-      }
+      const { pharmacy } = await requirePharmacyCapability(
+        actor.id,
+        'manage_orders',
+        { session }
+      );
 
       const replay = await findManagerOrderReplay(
         pharmacy._id,
@@ -1568,7 +1571,8 @@ export async function createManagerOrderService(
 async function getAuthorizedPharmacyOrderStatus(
   actor: { id: string; role: UserRole },
   order: OrderDocument,
-  session: mongoose.ClientSession
+  session: mongoose.ClientSession,
+  capability: 'read_orders' | 'manage_orders' = 'read_orders'
 ): Promise<PharmacyEntity['status'] | null> {
   if (actor.role === USER_ROLES.ADMIN) return null;
 
@@ -1579,17 +1583,10 @@ async function getAuthorizedPharmacyOrderStatus(
     );
   }
 
-  const pharmacy = await Pharmacy.findOne({
-    _id: order.pharmacyId,
-    $or: [{ ownerId: actor.id }, { managerUserIds: actor.id }],
-  })
-    .select('status')
-    .session(session)
-    .lean<Pick<PharmacyDocument, 'status'> | null>();
-
-  if (!pharmacy) {
-    throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access denied.');
-  }
+  const { pharmacy } = await requirePharmacyCapability(actor.id, capability, {
+    pharmacyId: String(order.pharmacyId),
+    session,
+  });
 
   return pharmacy.status;
 }
@@ -1614,7 +1611,8 @@ async function assertCanEditPharmacyOrder(
   const pharmacyStatus = await getAuthorizedPharmacyOrderStatus(
     actor,
     order,
-    session
+    session,
+    'manage_orders'
   );
 
   if (pharmacyStatus !== null && !isPharmacyOperationalStatus(pharmacyStatus)) {
@@ -1819,6 +1817,7 @@ export async function updateOrderDetailsService(
               releasedQuantity,
               session,
               true,
+
               {
                 source: 'client_order',
                 orderId: order._id,
@@ -1994,6 +1993,7 @@ export async function updateOrderDetailsService(
         .select(
           'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
         )
+
         .lean<UserDocument | null>(),
     ]);
 
@@ -2059,6 +2059,7 @@ export async function createOrderManagerCommentService(
 ) {
   const session = await mongoose.startSession();
   const normalizedText = input.text.trim();
+
   let resultComment: OrderManagerCommentEntity | null = null;
 
   try {
@@ -2165,6 +2166,7 @@ export async function deleteOrderManagerCommentService(
           { $unset: { managerComment: '' } },
           { session }
         );
+
         return;
       }
 
@@ -2287,6 +2289,7 @@ export async function updateOrderStatusService(
             },
           },
         },
+
         { returnDocument: 'after', runValidators: true, session }
       ).lean<OrderDocument | null>();
     });
@@ -2306,6 +2309,7 @@ export async function updateOrderStatusService(
         .select(
           'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'
         )
+
         .lean<UserDocument | null>(),
     ]);
 
@@ -2329,15 +2333,15 @@ export async function updateOrderStatusService(
 //===============================================================
 
 async function getCurrentPharmacyId(userId: string) {
-  if (!Types.ObjectId.isValid(userId)) return null;
+  try {
+    const { pharmacy } = await requirePharmacyCapability(userId, 'read_orders');
 
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  })
-    .select('_id')
-    .lean<{ _id: Types.ObjectId } | null>();
+    return pharmacy._id;
+  } catch (error) {
+    if (isPharmacyMembershipMissing(error)) return null;
 
-  return pharmacy?._id ?? null;
+    throw error;
+  }
 }
 
 //===============================================================
@@ -2360,6 +2364,7 @@ async function getOrderStatistics(filter: Record<string, unknown>) {
     amount: number;
   }>([
     { $match: filter },
+
     {
       $group: {
         _id: '$status',
@@ -2422,6 +2427,7 @@ function addSalesPeriod(
   }
 
   nextDate.setUTCMonth(nextDate.getUTCMonth() + 1, 1);
+
   return nextDate;
 }
 
@@ -2479,6 +2485,7 @@ function createEmptySalesValues(
     Partial<Record<string, { quantity: number; amount: number }>>
   >((acc, category) => {
     acc[category.slug] = { quantity: 0, amount: 0 };
+
     return acc;
   }, {});
 }
@@ -2502,13 +2509,16 @@ function createSalesPoints({
 
   for (const row of rows) {
     const categorySlug = row._id.categorySlug;
+
     if (!categorySlug) continue;
 
     rowMap.set(`${row._id.period}:${categorySlug}`, row);
   }
 
   const points: OrderSalesStatisticsDto['points'] = [];
+
   let cursor = getStartOfDay(dateFrom);
+
   const endDate = getEndOfDay(dateTo);
 
   if (groupBy === 'month') {
@@ -2864,11 +2874,13 @@ export async function getOrdersService(
   if (query.clientCommentPresence === 'with') {
     filter.$and = [
       ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+
       { comment: { $exists: true, $nin: ['', null] } },
     ];
   } else if (query.clientCommentPresence === 'without') {
     filter.$and = [
       ...((filter.$and as Record<string, unknown>[] | undefined) ?? []),
+
       {
         $or: [
           { comment: { $exists: false } },
@@ -2921,12 +2933,14 @@ export async function getOrdersService(
             },
           },
           { $sort: { createdAt: -1 } },
+
           {
             $group: {
               _id: '$pharmacyId',
               snapshot: { $first: '$pharmacySnapshot' },
             },
           },
+
           { $sort: { 'snapshot.name': 1 } },
         ]),
 
@@ -3030,6 +3044,7 @@ export async function getOrderByIdService(
   const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
     getOrderProductFallbacks(order),
     getOrderOfferFallbacks(order),
+
     User.findById(order.userId)
       .select(
         'name email pictureUrl phone address isDefaultPharmacyClient defaultClientPharmacyId'

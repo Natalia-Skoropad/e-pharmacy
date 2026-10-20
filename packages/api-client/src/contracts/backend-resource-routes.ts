@@ -170,7 +170,10 @@ export const backendRoutes = {
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
     filters: '/pharmacies/filters',
+
     details: (pharmacyId: EntityId) => `/pharmacies/${segment(pharmacyId)}`,
+
+    myMemberships: '/pharmacies/me/memberships',
 
     checkoutDetails: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/checkout-details`,

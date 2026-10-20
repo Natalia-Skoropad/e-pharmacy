@@ -2,8 +2,12 @@ import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Order } from '../models/order.model';
-import { Pharmacy } from '../models/pharmacy.model';
 import { ProductOffer } from '../models/productOffer.model';
+
+import {
+  requirePharmacyCapability,
+  isPharmacyMembershipMissing,
+} from './pharmacy-membership.service';
 
 import {
   StockMovement,
@@ -250,11 +254,14 @@ export async function recordStockMovement({
     reservedAfter: offer.reservedQuantity,
     availableAfter: offer.availableQuantity,
     unitPrice: offer.price,
+
     ...(context.orderId
       ? { orderId: new Types.ObjectId(String(context.orderId)) }
       : {}),
+
     ...(context.orderNumber ? { orderNumber: context.orderNumber } : {}),
     ...(context.orderStatus ? { orderStatus: context.orderStatus } : {}),
+
     comment: context.comment,
     occurredAt: context.occurredAt ?? new Date(),
   };
@@ -280,11 +287,13 @@ export async function recordInitialStockArrival(
     stockDelta: offer.totalQuantity,
     reservedDelta: 0,
     availableDelta: offer.availableQuantity,
+
     context: {
       source: 'pharmacy_stock',
       occurredAt: new Date(),
       comment,
     },
+
     session,
   });
 }
@@ -309,8 +318,10 @@ function buildLegacyBalanceSnapshot(
     reservedAfter: offer.reservedQuantity,
     availableAfter: offer.availableQuantity,
     unitPrice: offer.price,
+
     comment:
       'Legacy movement history could not be reconstructed safely. The current stock balance was preserved and recorded as a migration snapshot.',
+
     occurredAt,
   };
 }
@@ -346,6 +357,7 @@ async function backfillLegacyStockHistory(
   let availableQuantity = stockQuantity;
 
   const firstOrderDate = orders[0]?.createdAt;
+
   const arrivalDate = firstOrderDate
     ? new Date(firstOrderDate.getTime() - 1)
     : new Date();
@@ -367,8 +379,10 @@ async function backfillLegacyStockHistory(
       reservedAfter: 0,
       availableAfter: availableQuantity,
       unitPrice: offer.price,
+
       comment:
         'Initial stock quantity added to the pharmacy warehouse. Legacy history was reconstructed from existing orders.',
+
       occurredAt: arrivalDate,
     },
   ];
@@ -428,14 +442,17 @@ async function backfillLegacyStockHistory(
       source: 'client_order',
       quantity: event.quantity,
       stockDelta: event.eventType === 'write_off' ? -event.quantity : 0,
+
       reservedDelta:
         event.eventType === 'reserve' ? event.quantity : -event.quantity,
+
       availableDelta:
         event.eventType === 'reserve'
           ? -event.quantity
           : event.eventType === 'release'
             ? event.quantity
             : 0,
+
       stockAfter: stockQuantity,
       reservedAfter: reservedQuantity,
       availableAfter: availableQuantity,
@@ -453,6 +470,7 @@ async function backfillLegacyStockHistory(
       [buildLegacyBalanceSnapshot(offer, new Date())],
       { session }
     );
+
     return offer;
   }
 
@@ -467,6 +485,7 @@ async function backfillLegacyStockHistory(
         availableQuantity,
       },
     },
+
     { returnDocument: 'after', runValidators: true, session }
   ).lean<StockOfferSnapshot | null>();
 
@@ -483,18 +502,23 @@ type CurrentOrderSnapshot = {
   _id: Types.ObjectId;
   status: OrderStatus;
   orderNumber: string;
+
   items: Array<{
     productOfferId: Types.ObjectId;
     quantity: number;
     unitPrice: number;
   }>;
+
   statusHistory?: Array<{
     status: OrderStatus;
     changedAt: Date;
   }>;
+
   createdAt: Date;
   updatedAt: Date;
 };
+
+//===============================================================
 
 type StockMovementDocument = StockMovementEntity & { _id: Types.ObjectId };
 
@@ -555,6 +579,7 @@ async function reconcileOfferReservationBalance(
         availableQuantity,
       },
     },
+
     { returnDocument: 'after', runValidators: true, session }
   ).lean<StockOfferSnapshot | null>();
 
@@ -641,8 +666,10 @@ function aggregateOrderMovements(
 
   let eventMovement = latestMovement;
   let eventType: StockMovementEventType = latestMovement.eventType;
+
   let quantity =
     latestMovement.quantity ?? getMovementValueQuantity(latestMovement);
+
   let unitPrice = latestMovement.unitPrice;
 
   if (orderStatus === 'successful') {
@@ -651,9 +678,12 @@ function aggregateOrderMovements(
         movements,
         (movement) => movement.eventType === 'write_off'
       ) ?? latestMovement;
+
     eventType = 'write_off';
+
     quantity =
       eventMovement.quantity ?? getMovementValueQuantity(eventMovement);
+
     unitPrice = eventMovement.unitPrice;
   } else if (orderStatus === 'rejected') {
     eventMovement =
@@ -668,9 +698,12 @@ function aggregateOrderMovements(
         (movement) => movement.eventType === 'release'
       ) ??
       latestMovement;
+
     eventType = 'release';
+
     quantity =
       eventMovement.quantity ?? getMovementValueQuantity(eventMovement);
+
     unitPrice = eventMovement.unitPrice;
   } else {
     if (!currentItem || currentItem.quantity < 1) return null;
@@ -681,6 +714,7 @@ function aggregateOrderMovements(
   }
 
   const orderChangedAt = order ? getLatestOrderStockChangeDate(order) : null;
+
   const occurredAt =
     orderChangedAt &&
     orderChangedAt.getTime() > latestMovement.occurredAt.getTime()
@@ -689,12 +723,14 @@ function aggregateOrderMovements(
 
   const stockDelta =
     eventType === 'write_off' ? -quantity : eventMovement.stockDelta;
+
   const reservedDelta =
     eventType === 'reserve'
       ? quantity
       : eventType === 'release' || eventType === 'write_off'
         ? -quantity
         : eventMovement.reservedDelta;
+
   const availableDelta =
     eventType === 'reserve'
       ? -quantity
@@ -713,19 +749,23 @@ function aggregateOrderMovements(
     stockDelta,
     reservedDelta,
     availableDelta,
+
     balanceAfter: {
       stockQuantity: latestMovement.stockAfter,
       reservedQuantity: latestMovement.reservedAfter,
       availableQuantity: latestMovement.availableAfter,
     },
+
     unitPrice,
     movementValue: quantity * unitPrice,
     orderId,
     orderNumber,
     orderStatus,
+
     ...(eventMovement.orderStatus
       ? { orderStatusAtEvent: eventMovement.orderStatus }
       : {}),
+
     comment: getAggregatedOrderComment(orderStatus, orderNumber, quantity),
   };
 }
@@ -737,22 +777,26 @@ export async function getProductStockMovementsService(
   userId: string
 ) {
   const session = await mongoose.startSession();
+
   let currentOffer: StockOfferSnapshot | undefined;
 
   try {
     currentOffer = await session.withTransaction(async () => {
-      const pharmacy = await Pharmacy.findOne({
-        $or: [{ ownerId: userId }, { managerUserIds: userId }],
-      })
-        .select('_id')
-        .session(session)
-        .lean<{ _id: Types.ObjectId } | null>();
+      let pharmacy;
 
-      if (!pharmacy) {
-        throw httpError(
-          HTTP_STATUS.NOT_FOUND,
-          'Pharmacy profile was not found.'
-        );
+      try {
+        ({ pharmacy } = await requirePharmacyCapability(userId, 'read_stock', {
+          session,
+        }));
+      } catch (error) {
+        if (isPharmacyMembershipMissing(error)) {
+          throw httpError(
+            HTTP_STATUS.NOT_FOUND,
+            'Pharmacy profile was not found.'
+          );
+        }
+
+        throw error;
       }
 
       const offer = await ProductOffer.findOne({
@@ -801,6 +845,7 @@ export async function getProductStockMovementsService(
       .select(
         '_id status orderNumber items.productOfferId items.quantity items.unitPrice statusHistory createdAt updatedAt'
       )
+
       .lean<CurrentOrderSnapshot[]>();
 
     for (const order of orders) {
@@ -809,6 +854,7 @@ export async function getProductStockMovementsService(
   }
 
   const orderMovementGroups = new Map<string, StockMovementDocument[]>();
+
   const rows: Array<{
     id: string;
     occurredAt: Date;
@@ -818,11 +864,13 @@ export async function getProductStockMovementsService(
     stockDelta: number;
     reservedDelta: number;
     availableDelta: number;
+
     balanceAfter: {
       stockQuantity: number;
       reservedQuantity: number;
       availableQuantity: number;
     };
+
     unitPrice: number;
     movementValue: number;
     orderId?: string;
@@ -836,8 +884,10 @@ export async function getProductStockMovementsService(
     if (movement.source === 'client_order' && movement.orderId) {
       const orderId = String(movement.orderId);
       const group = orderMovementGroups.get(orderId) ?? [];
+
       group.push(movement);
       orderMovementGroups.set(orderId, group);
+
       continue;
     }
 
@@ -845,6 +895,7 @@ export async function getProductStockMovementsService(
       movement.eventType === 'adjustment' && movement.stockDelta > 0
         ? 'arrival'
         : movement.eventType;
+
     const quantity = movement.quantity ?? getMovementValueQuantity(movement);
 
     rows.push({
@@ -856,11 +907,13 @@ export async function getProductStockMovementsService(
       stockDelta: movement.stockDelta,
       reservedDelta: movement.reservedDelta,
       availableDelta: movement.availableDelta,
+
       balanceAfter: {
         stockQuantity: movement.stockAfter,
         reservedQuantity: movement.reservedAfter,
         availableQuantity: movement.availableAfter,
       },
+
       unitPrice: movement.unitPrice,
       movementValue: quantity * movement.unitPrice,
       comment: movement.comment,
@@ -896,6 +949,7 @@ export async function getProductStockMovementsService(
   return {
     items: rows.map((row, index) => ({
       ...row,
+
       sequence: rows.length - index,
       occurredAt: row.occurredAt.toISOString(),
     })),
@@ -904,6 +958,7 @@ export async function getProductStockMovementsService(
     perPage: Math.max(rows.length, 1),
     total: rows.length,
     totalPages: rows.length > 0 ? 1 : 0,
+
     stock: {
       stockQuantity: currentOffer.totalQuantity,
       reservedQuantity: currentOffer.reservedQuantity,
@@ -914,5 +969,7 @@ export async function getProductStockMovementsService(
       rows[rows.length - 1]?.occurredAt.toISOString().slice(0, 10) ?? null,
   };
 }
+
+//===============================================================
 
 export type { StockMovementContext };

@@ -10,7 +10,6 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../constants/product-request';
 import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
 
-import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
 import { Product } from '../models/product.model';
@@ -34,6 +33,11 @@ import type {
 
 import { httpError } from '../utils/httpError';
 import { appendAdminAuditLog } from './admin-audit.service';
+
+import {
+  requirePharmacyCapability,
+  isPharmacyMembershipMissing,
+} from './pharmacy-membership.service';
 
 import {
   getProductCategoryReferenceMap,
@@ -85,6 +89,7 @@ async function getArticleConflict(
   excludeRequestId?: string
 ): Promise<string | null> {
   const normalizedArticle = article.trim().toUpperCase();
+
   if (!normalizedArticle) return null;
 
   const requestFilter: Record<string, unknown> = {
@@ -125,6 +130,7 @@ async function assertArticleAvailable(
       HTTP_STATUS.CONFLICT,
       conflict,
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT
     );
   }
@@ -153,6 +159,7 @@ export async function getProductRequestArticleAvailabilityService(
         HTTP_STATUS.NOT_FOUND,
         'Product request was not found.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
       );
     }
@@ -172,21 +179,28 @@ export async function getProductRequestArticleAvailabilityService(
 //===============================================================
 
 async function getCurrentPharmacy(
-  userId: string
-): Promise<CurrentPharmacy | null> {
-  if (!Types.ObjectId.isValid(userId)) return null;
+  userId: string,
 
-  return Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  })
-    .select('_id status')
-    .lean<CurrentPharmacy | null>();
+  capability:
+    | 'read_product_requests'
+    | 'manage_product_requests' = 'read_product_requests'
+): Promise<CurrentPharmacy | null> {
+  try {
+    const { pharmacy } = await requirePharmacyCapability(userId, capability);
+
+    return { _id: pharmacy._id, status: pharmacy.status };
+  } catch (error) {
+    if (isPharmacyMembershipMissing(error)) return null;
+
+    throw error;
+  }
 }
 
 //===============================================================
 
 async function getCurrentPharmacyId(userId: string) {
   const pharmacy = await getCurrentPharmacy(userId);
+
   return pharmacy?._id ?? null;
 }
 
@@ -243,6 +257,7 @@ function getStatusHistoryCopy(
     case 'approved':
       return {
         title: 'Request approved',
+
         description:
           'Admin approved the request and created or linked the product.',
       };
@@ -250,6 +265,7 @@ function getStatusHistoryCopy(
     case 'rejected':
       return {
         title: 'Request rejected',
+
         description:
           rejectionReason ||
           'Admin rejected the request because the submitted information needs correction.',
@@ -265,6 +281,7 @@ function getFallbackHistory(
   const statusSequence: ProductRequestStatus[] = ['draft'];
 
   if (request.status !== 'draft') statusSequence.push('new');
+
   if (
     request.status === 'in_progress' ||
     request.status === 'approved' ||
@@ -278,6 +295,7 @@ function getFallbackHistory(
 
   const start = request.createdAt.getTime();
   const end = request.updatedAt.getTime();
+
   const step =
     statusSequence.length > 1
       ? Math.max(1, (end - start) / (statusSequence.length - 1))
@@ -302,6 +320,7 @@ function serializeProductRequest(
   category?: ProductCategoryReferenceDto
 ): ProductRequestResponseDto {
   const hasPersistedHistory = Boolean(request.history?.length);
+
   const history = hasPersistedHistory
     ? (request.history ?? [])
     : getFallbackHistory(request);
@@ -312,22 +331,29 @@ function serializeProductRequest(
     updatedAt: request.updatedAt.toISOString(),
     requestNumber: String(request._id),
     productId: getProductRequestProductId(request.productId),
+
     productImageUrl: isProductRequestProductDocument(request.productId)
       ? request.productId.imageUrl || request.productImage?.dataUrl
       : request.productImage?.dataUrl,
+
     productArticle: isProductRequestProductDocument(request.productId)
       ? request.productId.article || request.article
       : request.article,
+
     productName: isProductRequestProductDocument(request.productId)
       ? request.productId.name || request.name
       : request.name,
+
     article: request.article,
     name: request.name,
     categoryMode: request.categoryMode,
+
     ...(category ? { category } : {}),
+
     ...(request.customCategory
       ? { customCategory: request.customCategory }
       : {}),
+
     status: request.status,
     productImage: request.productImage,
     manufacturer: request.manufacturer,
@@ -335,12 +361,14 @@ function serializeProductRequest(
     dosage: request.dosage,
     packageSize: request.packageSize,
     form: request.form,
+
     activeSubstance: request.activeSubstance,
     prescriptionType: request.prescriptionType,
     fullDescription: request.fullDescription,
     pharmacyComment: request.pharmacyComment,
     additionalFiles: request.additionalFiles,
     rejectionReason: request.rejectionReason,
+
     history: history.map((entry, index) => ({
       id: entry._id ? String(entry._id) : `${request._id}-${index}`,
       status: entry.status,
@@ -349,6 +377,7 @@ function serializeProductRequest(
       createdAt: entry.createdAt.toISOString(),
       isInferred: !hasPersistedHistory,
     })),
+
     commentsTotal,
   };
 }
@@ -370,15 +399,18 @@ async function getRequestFormUpdate(input: ProductRequestFormInput) {
     article: input.article,
     categoryMode: input.categoryMode,
     categoryId,
+
     customCategory:
       input.categoryMode === 'custom' ? input.customCategory : undefined,
 
     productImage: input.productImage,
     manufacturer: input.manufacturer,
     countryOfOrigin: input.countryOfOrigin,
+
     dosage: input.dosage,
     packageSize: input.packageSize,
     form: input.form,
+
     activeSubstance: input.activeSubstance,
     prescriptionType: input.prescriptionType,
     fullDescription: input.fullDescription,
@@ -396,7 +428,7 @@ export async function createProductRequestService(
   userId: string,
   input: ProductRequestFormInput
 ) {
-  const pharmacy = await getCurrentPharmacy(userId);
+  const pharmacy = await getCurrentPharmacy(userId, 'manage_product_requests');
 
   if (!pharmacy) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
@@ -419,7 +451,9 @@ export async function createProductRequestService(
     const request = await ProductRequest.create({
       pharmacyId: pharmacy._id,
       status: input.status,
+
       ...formUpdate,
+
       history: [
         {
           status: input.status,
@@ -437,6 +471,7 @@ export async function createProductRequestService(
       request: serializeProductRequest(
         request.toObject() as unknown as ProductRequestDocument,
         0,
+
         request.categoryId
           ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
           : undefined
@@ -448,6 +483,7 @@ export async function createProductRequestService(
         HTTP_STATUS.CONFLICT,
         'Another active product request already uses this article.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT
       );
     }
@@ -463,13 +499,14 @@ export async function updateProductRequestService(
   requestId: string,
   input: ProductRequestFormInput
 ) {
-  const pharmacy = await getCurrentPharmacy(userId);
+  const pharmacy = await getCurrentPharmacy(userId, 'manage_product_requests');
 
   if (!pharmacy || !Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
@@ -493,6 +530,7 @@ export async function updateProductRequestService(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
@@ -502,6 +540,7 @@ export async function updateProductRequestService(
       HTTP_STATUS.CONFLICT,
       'Only draft product requests can be edited.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_EDITABLE
     );
   }
@@ -525,6 +564,7 @@ export async function updateProductRequestService(
 
   request.history = [
     ...(request.history ?? []),
+
     {
       status: input.status,
       ...historyCopy,
@@ -540,6 +580,7 @@ export async function updateProductRequestService(
         HTTP_STATUS.CONFLICT,
         'Another active product request already uses this article.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT
       );
     }
@@ -561,6 +602,7 @@ export async function updateProductRequestService(
     request: serializeProductRequest(
       request.toObject() as unknown as ProductRequestDocument,
       commentsTotal,
+
       request.categoryId
         ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
         : undefined
@@ -574,13 +616,14 @@ export async function deleteProductRequestService(
   userId: string,
   requestId: string
 ) {
-  const pharmacy = await getCurrentPharmacy(userId);
+  const pharmacy = await getCurrentPharmacy(userId, 'manage_product_requests');
 
   if (!pharmacy || !Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
@@ -610,6 +653,7 @@ export async function deleteProductRequestService(
           HTTP_STATUS.NOT_FOUND,
           'Product request was not found.',
           undefined,
+
           PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
         );
       }
@@ -619,6 +663,7 @@ export async function deleteProductRequestService(
           HTTP_STATUS.CONFLICT,
           'Only draft product requests can be deleted.',
           undefined,
+
           PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
         );
       }
@@ -634,6 +679,7 @@ export async function deleteProductRequestService(
           HTTP_STATUS.CONFLICT,
           'The product request changed before it could be deleted.',
           undefined,
+
           PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
         );
       }
@@ -673,6 +719,8 @@ type ApprovedProductResolution = Readonly<{
   categoryId: Types.ObjectId;
 }>;
 
+//===============================================================
+
 async function assertApprovalCategoryMatchesRequest(
   request: ProductRequestDocument,
   categoryId: Types.ObjectId,
@@ -688,6 +736,7 @@ async function assertApprovalCategoryMatchesRequest(
         HTTP_STATUS.CONFLICT,
         'The selected catalog product uses a different product category.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
       );
     }
@@ -697,6 +746,7 @@ async function assertApprovalCategoryMatchesRequest(
         HTTP_STATUS.CONFLICT,
         'Catalog product category cannot be changed while approving this request.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
       );
     }
@@ -709,6 +759,7 @@ async function assertApprovalCategoryMatchesRequest(
       HTTP_STATUS.CONFLICT,
       'The selected catalog product does not match the assigned product category.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
     );
   }
@@ -739,6 +790,7 @@ async function resolveApprovedProduct(
         HTTP_STATUS.CONFLICT,
         'The selected catalog product does not match the request article.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
       );
     }
@@ -783,6 +835,7 @@ async function resolveApprovedProduct(
       HTTP_STATUS.BAD_REQUEST,
       'A catalog category is required when approving a custom category request.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
     );
   }
@@ -809,6 +862,7 @@ async function resolveApprovedProduct(
         updatedBy: new Types.ObjectId(adminUserId),
       },
     ],
+
     { session }
   );
 
@@ -834,6 +888,7 @@ export async function moderateProductRequestByAdminService(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
@@ -850,14 +905,17 @@ export async function moderateProductRequestByAdminService(
           HTTP_STATUS.NOT_FOUND,
           'Product request was not found.',
           undefined,
+
           PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
         );
       }
 
       const previousStatus = request.status;
+
       const previousProductId = request.productId
         ? String(request.productId)
         : null;
+
       const previousCategoryId = request.categoryId
         ? String(request.categoryId)
         : null;
@@ -867,6 +925,7 @@ export async function moderateProductRequestByAdminService(
           HTTP_STATUS.CONFLICT,
           `Product request cannot transition from ${request.status} to ${input.status}.`,
           undefined,
+
           PRODUCT_REQUEST_ERROR_CODES.INVALID_TRANSITION
         );
       }
@@ -876,6 +935,7 @@ export async function moderateProductRequestByAdminService(
           HTTP_STATUS.BAD_REQUEST,
           'Rejection reason is required.',
           undefined,
+
           PRODUCT_REQUEST_ERROR_CODES.REJECTION_REASON_REQUIRED
         );
       }
@@ -895,9 +955,11 @@ export async function moderateProductRequestByAdminService(
 
       if (approvedProduct) {
         request.productId = approvedProduct.productId;
+
         if (request.categoryMode === 'custom') {
           request.categoryId = approvedProduct.categoryId;
         }
+
         request.rejectionReason = undefined;
       } else if (input.status === 'rejected') {
         request.rejectionReason = input.reason?.trim();
@@ -910,6 +972,7 @@ export async function moderateProductRequestByAdminService(
 
       request.history = [
         ...(request.history ?? []),
+
         {
           status: input.status,
           ...historyCopy,
@@ -923,9 +986,11 @@ export async function moderateProductRequestByAdminService(
         const nextProductId = request.productId
           ? String(request.productId)
           : null;
+
         const nextCategoryId = request.categoryId
           ? String(request.categoryId)
           : null;
+
         const productChanged = previousProductId !== nextProductId;
         const categoryChanged = previousCategoryId !== nextCategoryId;
 
@@ -936,22 +1001,30 @@ export async function moderateProductRequestByAdminService(
           entityType: ADMIN_AUDIT_ENTITY_TYPES.PRODUCT_REQUEST,
           entityId: String(request._id),
           entityLabel: request.name,
+
           before: {
             status: previousStatus,
+
             ...(productChanged ? { productId: previousProductId } : {}),
             ...(categoryChanged ? { categoryId: previousCategoryId } : {}),
           },
+
           after: {
             status: request.status,
+
             ...(productChanged ? { productId: nextProductId } : {}),
             ...(categoryChanged ? { categoryId: nextCategoryId } : {}),
           },
+
           changedFields: [
             'status',
+
             ...(productChanged ? ['productId'] : []),
             ...(categoryChanged ? ['categoryId'] : []),
           ],
+
           ...(input.reason?.trim() ? { reason: input.reason.trim() } : {}),
+
           requestId: auditRequestId,
           session,
         });
@@ -974,6 +1047,7 @@ export async function moderateProductRequestByAdminService(
       request: serializeProductRequest(
         moderatedRequest,
         0,
+
         moderatedRequest.categoryId
           ? getProductCategoryReferenceOrThrow(
               categoryMap,
@@ -988,6 +1062,7 @@ export async function moderateProductRequestByAdminService(
         HTTP_STATUS.CONFLICT,
         'A catalog product with this article was created concurrently. Retry approval to link it.',
         undefined,
+
         PRODUCT_REQUEST_ERROR_CODES.APPROVAL_PRODUCT_CONFLICT
       );
     }
@@ -1076,11 +1151,13 @@ export async function getProductRequestsService(
 
   if (query.category) {
     const category = await findProductCategoryBySlug(query.category);
+
     filter.categoryMode = 'catalog';
     filter.categoryId = category?._id ?? null;
   } else if (query.categoryMode) {
     filter.categoryMode = query.categoryMode;
   }
+
   if (query.status) filter.status = query.status;
 
   const skip = (query.page - 1) * query.perPage;
@@ -1092,7 +1169,9 @@ export async function getProductRequestsService(
       .limit(query.perPage)
       .populate('productId', 'imageUrl article name')
       .lean<ProductRequestDocument[]>(),
+
     ProductRequest.countDocuments(filter),
+
     ProductRequest.findOne({ pharmacyId })
       .sort({ createdAt: 1 })
       .select('createdAt')
@@ -1110,6 +1189,7 @@ export async function getProductRequestsService(
       serializeProductRequest(
         request,
         0,
+
         request.categoryId
           ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
           : undefined
@@ -1120,6 +1200,7 @@ export async function getProductRequestsService(
     perPage: query.perPage,
     total,
     totalPages: Math.ceil(total / query.perPage),
+
     earliestCreatedAt: earliestRequest
       ? earliestRequest.createdAt.toISOString().slice(0, 10)
       : null,
@@ -1139,6 +1220,7 @@ export async function getProductRequestByIdService(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
@@ -1155,6 +1237,7 @@ export async function getProductRequestByIdService(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
       undefined,
+
       PRODUCT_REQUEST_ERROR_CODES.NOT_FOUND
     );
   }
@@ -1173,6 +1256,7 @@ export async function getProductRequestByIdService(
     request: serializeProductRequest(
       request,
       commentsTotal,
+
       request.categoryId
         ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
         : undefined

@@ -44,6 +44,8 @@ import {
 } from '../services/pharmacy-document.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
+
+import { listUserPharmacyMemberships } from '../services/pharmacy-membership.service';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================
@@ -103,6 +105,7 @@ export async function getCurrentPharmacySummary(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getCurrentPharmacySummaryService(req.user?.id ?? '');
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -113,6 +116,7 @@ export async function getMyPharmacyProfile(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getMyPharmacyProfileService(req.user?.id ?? '');
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -187,6 +191,7 @@ export async function getPharmacyFilters(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getPharmacyFiltersService();
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -197,6 +202,7 @@ export async function getPharmacyOptions(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getPharmacyOptionsService();
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -207,6 +213,7 @@ export async function getFavoritePharmacyIds(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getFavoritePharmacyIdsService(req.user?.id ?? '');
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -303,6 +310,7 @@ export async function moderatePharmacyReview(
   const data = await moderatePharmacyReviewService(
     params.pharmacyId,
     params.reviewId,
+
     {
       status: body.status,
       reason: body.reason,
@@ -326,6 +334,16 @@ export async function setFavoritePharmacy(
     req.user?.id ?? '',
     req.method === 'PUT'
   );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+export async function listMyPharmacyMemberships(
+  req: Request,
+  res: ValidatedResponse
+) {
+  const data = await listUserPharmacyMemberships(req.user?.id ?? '');
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { ProductOffer } from '../models/productOffer.model';
-import { Pharmacy } from '../models/pharmacy.model';
+import { requirePharmacyCapability } from '../services/pharmacy-membership.service';
 import { httpError } from './httpError';
 
 //===============================================================
@@ -12,17 +12,12 @@ export async function assertPharmacyOwner(pharmacyId: string, userId: string) {
     throw httpError(HTTP_STATUS.BAD_REQUEST, 'Invalid id');
   }
 
-  const pharmacy = await Pharmacy.findOne({
-    _id: pharmacyId,
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  });
+  const { pharmacy } = await requirePharmacyCapability(
+    userId,
+    'manage_products',
 
-  if (!pharmacy) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'You do not have access to this pharmacy'
-    );
-  }
+    { pharmacyId }
+  );
 
   return pharmacy;
 }

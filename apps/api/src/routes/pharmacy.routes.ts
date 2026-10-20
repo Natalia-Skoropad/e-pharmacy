@@ -6,6 +6,7 @@ import {
   getFavoritePharmacies,
   getMyPharmacyDocument,
   getCurrentPharmacySummary,
+  listMyPharmacyMemberships,
   getMyPharmacyProfile,
   getPendingPharmacyReviews,
   getPharmacyCheckoutDetails,
@@ -72,6 +73,15 @@ pharmacyRoutes.get(
   authorizeRoles(USER_ROLES.PHARMACY),
   validate({ params: pharmacyDocumentParamsSchema }),
   ctrlWrapper(getMyPharmacyDocument)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/memberships',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  ctrlWrapper(listMyPharmacyMemberships)
 );
 
 //=================================================================================

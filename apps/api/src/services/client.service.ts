@@ -4,6 +4,12 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import { Order } from '../models/order.model';
 import { Product } from '../models/product.model';
 import { Pharmacy } from '../models/pharmacy.model';
+
+import {
+  requirePharmacyCapability,
+  isPharmacyMembershipMissing,
+} from './pharmacy-membership.service';
+
 import { User } from '../models/user.model';
 import { httpError } from '../utils/httpError';
 import { getEndOfDay, getStartOfDay } from '../utils/date-range';
@@ -54,6 +60,7 @@ type AggregatedClientRow = Omit<ClientRow, 'firstOrderAt'> & {
 type ClientAggregationResult = Readonly<{
   items: AggregatedClientRow[];
   total: Array<{ count: number }>;
+
   statistics: Array<
     ClientStatistics & {
       earliestOrderAt: Date | null;
@@ -95,15 +102,18 @@ type ClientPurchasedProductsAggregationResult = Readonly<{
 //===============================================================
 
 async function getCurrentPharmacyId(userId: string) {
-  if (!Types.ObjectId.isValid(userId)) return null;
+  try {
+    const { pharmacy } = await requirePharmacyCapability(
+      userId,
+      'read_clients'
+    );
 
-  const pharmacy = await Pharmacy.findOne({
-    $or: [{ ownerId: userId }, { managerUserIds: userId }],
-  })
-    .select('_id')
-    .lean<Pick<PharmacyDocument, '_id'> | null>();
+    return pharmacy._id;
+  } catch (error) {
+    if (isPharmacyMembershipMissing(error)) return null;
 
-  return pharmacy?._id ?? null;
+    throw error;
+  }
 }
 
 //===============================================================
@@ -118,6 +128,7 @@ function buildClientFilterStages(
       ...(query.firstOrderFrom
         ? { $gte: getStartOfDay(query.firstOrderFrom) }
         : {}),
+
       ...(query.firstOrderTo ? { $lte: getEndOfDay(query.firstOrderTo) } : {}),
     };
   }
@@ -175,6 +186,7 @@ async function getClientRowsForPharmacy(
 }> {
   const pharmacy = await Pharmacy.findById(pharmacyId)
     .select('imageUrl activatedAt approvedAt createdAt')
+
     .lean<Pick<
       PharmacyDocument,
       '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
@@ -191,11 +203,13 @@ async function getClientRowsForPharmacy(
 
   const fallbackDate =
     pharmacy.activatedAt ?? pharmacy.approvedAt ?? pharmacy.createdAt;
+
   const filterStages = buildClientFilterStages(query);
   const skip = (query.page - 1) * query.perPage;
 
   const itemsFacet: PipelineStage.FacetPipelineStage[] = [
     ...filterStages,
+
     { $sort: { isDefault: -1, firstOrderAt: -1 } },
     { $skip: skip },
     { $limit: query.perPage },
@@ -203,6 +217,7 @@ async function getClientRowsForPharmacy(
 
   const totalFacet: PipelineStage.FacetPipelineStage[] = [
     ...filterStages,
+
     { $count: 'count' },
   ];
 
@@ -211,17 +226,21 @@ async function getClientRowsForPharmacy(
       $group: {
         _id: null,
         total: { $sum: 1 },
+
         repeat: {
           $sum: {
             $cond: [{ $gte: ['$successfulOrdersCount', 2] }, 1, 0],
           },
         },
+
         active: {
           $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] },
         },
+
         blocked: {
           $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] },
         },
+
         earliestOrderCandidates: { $push: '$earliestOrderAt' },
       },
     },
@@ -232,6 +251,7 @@ async function getClientRowsForPharmacy(
         repeat: 1,
         active: 1,
         blocked: 1,
+
         earliestOrderAt: {
           $min: {
             $filter: {
@@ -247,6 +267,7 @@ async function getClientRowsForPharmacy(
 
   const pipeline: PipelineStage[] = [
     { $match: { pharmacyId } },
+
     {
       $set: {
         latestDeliveryAddressCandidate: {
@@ -270,6 +291,7 @@ async function getClientRowsForPharmacy(
             null,
           ],
         },
+
         hasDeliveryAddressCandidate: {
           $cond: [
             {
@@ -293,6 +315,7 @@ async function getClientRowsForPharmacy(
         },
       },
     },
+
     {
       $sort: {
         userId: 1,
@@ -300,22 +323,27 @@ async function getClientRowsForPharmacy(
         createdAt: -1,
       },
     },
+
     {
       $group: {
         _id: '$userId',
         firstOrderAt: { $min: '$createdAt' },
         earliestOrderAt: { $min: '$createdAt' },
+
         successfulOrdersCount: {
           $sum: { $cond: [{ $eq: ['$status', 'successful'] }, 1, 0] },
         },
+
         successfulOrdersAmount: {
           $sum: {
             $cond: [{ $eq: ['$status', 'successful'] }, '$totalPrice', 0],
           },
         },
+
         latestDeliveryAddress: { $first: '$latestDeliveryAddressCandidate' },
       },
     },
+
     {
       $lookup: {
         from: User.collection.name,
@@ -324,8 +352,10 @@ async function getClientRowsForPharmacy(
         as: 'user',
       },
     },
+
     { $unwind: '$user' },
     { $set: { sourcePriority: 1 } },
+
     {
       $unionWith: {
         coll: User.collection.name,
@@ -336,6 +366,7 @@ async function getClientRowsForPharmacy(
               defaultClientPharmacyId: pharmacyId,
             },
           },
+
           {
             $project: {
               _id: 1,
@@ -345,6 +376,7 @@ async function getClientRowsForPharmacy(
               successfulOrdersAmount: { $literal: 0 },
               latestDeliveryAddress: { $literal: null },
               sourcePriority: { $literal: 0 },
+
               user: {
                 _id: '$_id',
                 name: '$name',
@@ -361,23 +393,29 @@ async function getClientRowsForPharmacy(
         ],
       },
     },
+
     { $sort: { _id: 1, sourcePriority: -1 } },
+
     {
       $group: {
         _id: '$_id',
         row: { $first: '$$ROOT' },
       },
     },
+
     { $replaceRoot: { newRoot: '$row' } },
+
     {
       $set: {
         isDefault: { $eq: ['$user.isDefaultPharmacyClient', true] },
       },
     },
+
     {
       $project: {
         _id: 0,
         id: { $toString: '$_id' },
+
         photoUrl: {
           $cond: [
             '$isDefault',
@@ -385,13 +423,16 @@ async function getClientRowsForPharmacy(
             { $ifNull: ['$user.pictureUrl', null] },
           ],
         },
+
         firstOrderAt: {
           $cond: ['$isDefault', fallbackDate, '$firstOrderAt'],
         },
+
         earliestOrderAt: 1,
         name: { $cond: ['$isDefault', 'Walk-in client', '$user.name'] },
         email: { $cond: ['$isDefault', '', '$user.email'] },
         phone: { $cond: ['$isDefault', '', '$user.phone'] },
+
         address: {
           $cond: [
             '$isDefault',
@@ -405,8 +446,10 @@ async function getClientRowsForPharmacy(
             },
           ],
         },
+
         successfulOrdersCount: 1,
         successfulOrdersAmount: 1,
+
         status: {
           $cond: [
             '$isDefault',
@@ -420,6 +463,7 @@ async function getClientRowsForPharmacy(
             },
           ],
         },
+
         statusReason: {
           $cond: [
             '$isDefault',
@@ -427,9 +471,11 @@ async function getClientRowsForPharmacy(
             { $ifNull: ['$user.statusReason', null] },
           ],
         },
+
         isDefault: 1,
       },
     },
+
     {
       $facet: {
         items: itemsFacet,
@@ -441,6 +487,7 @@ async function getClientRowsForPharmacy(
 
   const [result] = await Order.aggregate<ClientAggregationResult>(pipeline);
   const total = result?.total[0]?.count ?? 0;
+
   const statistics = result?.statistics[0] ?? {
     total: 0,
     repeat: 0,
@@ -454,23 +501,30 @@ async function getClientRowsForPharmacy(
       id: client.id,
       photoUrl: client.photoUrl,
       firstOrderAt: client.firstOrderAt.toISOString(),
+
       name: client.name,
       email: client.email,
       phone: client.phone,
       address: client.address,
+
       successfulOrdersCount: client.successfulOrdersCount,
       successfulOrdersAmount: client.successfulOrdersAmount,
       status: client.status,
+
       ...(client.statusReason ? { statusReason: client.statusReason } : {}),
+
       isDefault: client.isDefault,
     })),
+
     total,
+
     statistics: {
       total: statistics.total,
       repeat: statistics.repeat,
       active: statistics.active,
       blocked: statistics.blocked,
     },
+
     earliestCreatedAt: statistics.earliestOrderAt
       ? statistics.earliestOrderAt.toISOString().slice(0, 10)
       : null,
@@ -584,6 +638,7 @@ function buildClientProductsAggregationPipeline(
 
   const itemsFacet: PipelineStage.FacetPipelineStage[] = [
     ...filterStages,
+
     { $sort: { firstOrderDate: -1, productId: 1 } },
     { $skip: skip },
     { $limit: query.perPage },
@@ -630,11 +685,14 @@ function buildClientProductsAggregationPipeline(
       $group: {
         _id: '$items.productId',
         firstOrderDate: { $min: '$createdAt' },
+
         photoUrl: {
           $first: { $ifNull: ['$items.productSnapshot.imageUrl', null] },
         },
+
         article: { $first: '$items.productSnapshot.article' },
         name: { $first: '$items.productSnapshot.name' },
+
         categoryId: {
           $first: {
             $cond: [
@@ -644,16 +702,19 @@ function buildClientProductsAggregationPipeline(
             ],
           },
         },
+
         categoryName: {
           $first: {
             $ifNull: ['$items.productSnapshot.categoryNameSnapshot', null],
           },
         },
+
         categorySlug: {
           $first: {
             $ifNull: ['$items.productSnapshot.categorySlugSnapshot', null],
           },
         },
+
         quantity: { $sum: '$items.quantity' },
         totalAmount: { $sum: '$items.totalPrice' },
         orderIds: { $addToSet: '$_id' },
@@ -688,9 +749,11 @@ function buildClientProductsAggregationPipeline(
         quantity: 1,
         totalAmount: 1,
         ordersCount: { $size: '$orderIds' },
+
         currentProductExists: {
           $ne: [{ $ifNull: ['$currentProduct._id', null] }, null],
         },
+
         currentStatus: { $ifNull: ['$currentProduct.status', null] },
       },
     },
@@ -753,6 +816,7 @@ export async function getClientPurchasedProductsService(
         pharmacyId,
         userId: clientObjectId,
       }),
+
       User.exists({
         _id: clientObjectId,
         isDefaultPharmacyClient: true,
@@ -769,22 +833,27 @@ export async function getClientPurchasedProductsService(
     items: (result?.items ?? []).map(
       ({ categoryId, categoryName, categorySlug, ...row }) => ({
         ...row,
+
         ...(categoryName && categorySlug
           ? {
               category: {
                 ...(categoryId ? { id: categoryId } : {}),
+
                 name: categoryName,
                 slug: categorySlug,
               },
             }
           : {}),
+
         firstOrderDate: row.firstOrderDate.toISOString(),
       })
     ),
+
     page,
     perPage: query.perPage,
     total,
     totalPages,
+
     earliestCreatedAt: earliestCreatedAt
       ? earliestCreatedAt.toISOString().slice(0, 10)
       : null,

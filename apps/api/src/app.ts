@@ -9,6 +9,7 @@ import { errorMiddleware } from './middlewares/error.middleware';
 import { notFoundMiddleware } from './middlewares/notFound.middleware';
 import { validateMutationOrigin } from './middlewares/origin.middleware';
 import { attachRequestContext } from './middlewares/request-context.middleware';
+import { attachPharmacySelection } from './middlewares/pharmacy-selection.middleware';
 import { routes } from './routes';
 
 //===============================================================
@@ -45,6 +46,7 @@ app.use(
 
       callback(new Error(`CORS blocked origin: ${origin}`));
     },
+
     credentials: true,
   })
 );
@@ -52,12 +54,14 @@ app.use(
 //===============================================================
 
 app.use(attachRequestContext);
+app.use(attachPharmacySelection);
 app.use(validateMutationOrigin);
 
 //===============================================================
 
 app.use(
   '/images',
+
   express.static(publicImagesPath, {
     immutable: true,
     maxAge: '30d',

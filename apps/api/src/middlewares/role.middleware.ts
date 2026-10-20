@@ -5,7 +5,7 @@ import { PHARMACY_OPERATIONAL_STATUSES } from '../constants/pharmacy-status';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
-import { Pharmacy } from '../models/pharmacy.model';
+import { requirePharmacyCapability } from '../services/pharmacy-membership.service';
 import type { UserRole } from '../types/user';
 import { httpError } from '../utils/httpError';
 
@@ -45,22 +45,23 @@ export async function requireActivePharmacy(
       return;
     }
 
-    const pharmacy = await Pharmacy.findOne({
-      $or: [{ ownerId: req.user.id }, { managerUserIds: req.user.id }],
-      status: {
-        $in: [...PHARMACY_OPERATIONAL_STATUSES],
-      },
-    })
-      .select('_id')
-      .lean<{ _id: unknown } | null>();
+    const { pharmacy } = await requirePharmacyCapability(
+      req.user.id,
+      'read_orders'
+    );
 
-    if (!pharmacy) {
+    if (
+      !PHARMACY_OPERATIONAL_STATUSES.includes(
+        pharmacy.status as (typeof PHARMACY_OPERATIONAL_STATUSES)[number]
+      )
+    ) {
       next(
         httpError(
           HTTP_STATUS.FORBIDDEN,
           'Pharmacy is not allowed to sell products.'
         )
       );
+
       return;
     }
 

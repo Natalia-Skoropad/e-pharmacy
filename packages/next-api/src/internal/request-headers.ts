@@ -28,9 +28,13 @@ type ProxyHeadersOptions = Readonly<{
 
 //===================================================================
 
+const PHARMACY_ID_PATTERN = /^[a-fA-F0-9]{24}$/;
+const PHARMACY_ID_HEADER_NAME = 'X-Pharmacy-ID';
 const SAFE_HEADER_VALUE_PATTERN = /^[ -~]+$/;
+
 const TRACEPARENT_PATTERN =
   /^(?!ff)[\da-f]{2}-(?!0{32})[\da-f]{32}-(?!0{16})[\da-f]{16}-[\da-f]{2}$/i;
+
 const TRACESTATE_PATTERN = /^[a-z0-9_\-*/@=,.; ]+$/i;
 
 //===================================================================
@@ -59,8 +63,10 @@ function getSafeHttpUrlHeader(
 
   try {
     const url = new URL(normalized);
+
     if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined;
     if (url.username || url.password) return undefined;
+
     return originOnly ? url.origin : url.toString();
   } catch {
     return undefined;
@@ -80,6 +86,7 @@ function getTrustedClientIp(request: NextRequest): string | undefined {
         : null;
 
   const first = candidate?.split(',')[0]?.trim();
+
   return first && isIP(first) ? first : undefined;
 }
 
@@ -87,6 +94,7 @@ function getTrustedClientIp(request: NextRequest): string | undefined {
 
 function getTraceparent(value: string | null): string | undefined {
   const normalized = getSafeHeaderValue(value, 55);
+
   return normalized && TRACEPARENT_PATTERN.test(normalized)
     ? normalized.toLowerCase()
     : undefined;
@@ -96,6 +104,7 @@ function getTraceparent(value: string | null): string | undefined {
 
 function getTracestate(value: string | null): string | undefined {
   const normalized = getSafeHeaderValue(value, 512);
+
   return normalized && TRACESTATE_PATTERN.test(normalized)
     ? normalized
     : undefined;
@@ -126,6 +135,7 @@ export function createProxyRequestHeaders(
   );
 
   const clientIp = getTrustedClientIp(request);
+
   const cookie = createAllowedAuthCookieHeader(
     request.headers.get('cookie'),
     authCookieMode
@@ -141,12 +151,21 @@ export function createProxyRequestHeaders(
   if (referer) headers.set('Referer', referer);
   if (userAgent) headers.set('User-Agent', userAgent);
   if (deviceName) headers.set(DEVICE_NAME_HEADER_NAME, deviceName);
+
+  // A selected tenant id is untrusted input; the API always checks membership.
+  const pharmacyId = request.headers.get(PHARMACY_ID_HEADER_NAME);
+
+  if (pharmacyId && PHARMACY_ID_PATTERN.test(pharmacyId)) {
+    headers.set(PHARMACY_ID_HEADER_NAME, pharmacyId);
+  }
+
   if (clientIp) headers.set('X-Forwarded-For', clientIp);
 
   headers.set(REQUEST_ID_HEADER_NAME, requestId);
 
   const traceparent = getTraceparent(request.headers.get('traceparent'));
   const tracestate = getTracestate(request.headers.get('tracestate'));
+
   if (traceparent) headers.set('traceparent', traceparent);
   if (tracestate) headers.set('tracestate', tracestate);
 
@@ -154,6 +173,7 @@ export function createProxyRequestHeaders(
     headers.set(BFF_AUTH_PROXY_HEADER_NAME, BFF_AUTH_PROXY_MARKER_VALUE);
 
     const { bffProxySecret } = getNextApiServerEnvironment();
+
     if (bffProxySecret) {
       headers.set(BFF_PROXY_SECRET_HEADER_NAME, bffProxySecret);
     }

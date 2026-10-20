@@ -13,10 +13,13 @@ import {
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { User } from '../models/user.model';
+import { Pharmacy } from '../models/pharmacy.model';
 import { USER_ROLES } from '../constants/auth';
 import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
+
 import type { PharmacyOwnerDocumentUploadInput } from '../schemas/pharmacy-owner-document.schema';
 import type { PharmacyOwnerDocumentMetadataDto } from '../types/pharmacy-owner-document';
+
 import { decodeAndVerifyDocumentUpload } from '../utils/documentUpload';
 import { httpError } from '../utils/httpError';
 import { appendAdminAuditLog } from './admin-audit.service';
@@ -73,10 +76,25 @@ async function assertOwnerAccount(
   }
 
   const query = User.exists({ _id: ownerUserId, role: USER_ROLES.PHARMACY });
+
   if (session) query.session(session);
 
   if (!(await query)) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy owner was not found.');
+  }
+
+  // managerUserIds denotes an employee membership, not owner identity.
+  // Registration-only owners have no pharmacy yet and remain eligible.
+  const [ownsPharmacy, managesPharmacy] = await Promise.all([
+    Pharmacy.exists({ ownerId: ownerUserId }).session(session ?? null),
+    Pharmacy.exists({ managerUserIds: ownerUserId }).session(session ?? null),
+  ]);
+
+  if (managesPharmacy && !ownsPharmacy) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Owner documents are not available to pharmacy employees.'
+    );
   }
 }
 
@@ -178,6 +196,7 @@ export async function createPharmacyOwnerDocumentService(
   );
 
   const session = await mongoose.startSession();
+
   let result: PharmacyOwnerDocumentMetadataDto | null = null;
 
   try {
@@ -315,6 +334,7 @@ export async function replacePharmacyOwnerDocumentService(
   );
 
   const session = await mongoose.startSession();
+
   let result: PharmacyOwnerDocumentMetadataDto | null = null;
 
   try {

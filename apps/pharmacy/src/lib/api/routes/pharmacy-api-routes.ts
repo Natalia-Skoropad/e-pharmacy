@@ -85,6 +85,7 @@ export const pharmacyApiRoutes = {
     checkoutDetails: (pharmacyId: string) =>
       `/api/pharmacies/${segment(pharmacyId)}/checkout-details`,
 
+    myMemberships: '/api/pharmacies/me/memberships',
     mySummary: '/api/pharmacies/me/summary',
     myProfile: '/api/pharmacies/me/profile',
     myDocumentUpload: '/api/pharmacies/me/documents',

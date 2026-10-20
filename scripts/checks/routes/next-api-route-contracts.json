@@ -529,6 +529,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/memberships",
+    "backend": "/pharmacies/me/memberships",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/summary",
     "backend": "/pharmacies/me/summary",
     "methods": {
