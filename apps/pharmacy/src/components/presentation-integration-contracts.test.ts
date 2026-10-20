@@ -36,7 +36,8 @@ test('keeps pharmacy status badges on typed domain maps', async () => {
     /PRODUCT_REQUEST_STATUS_PRESENTATION\[request\.status\]/
   );
 
-  assert.match(profile, /PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]/);
+  assert.match(profile, /USER_STATUS_PRESENTATION\[user\.status\]/);
+  assert.doesNotMatch(profile, /PHARMACY_STATUS_PRESENTATION/);
 
   assert.doesNotMatch(
     [orders, clients, products, requests, profile].join('\n'),

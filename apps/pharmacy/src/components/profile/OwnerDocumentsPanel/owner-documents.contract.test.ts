@@ -33,17 +33,17 @@ test('owner documents reuse the shared DocumentsPanel without duplicating docume
 
 //===================================================================
 
-test('pharmacy profile keeps pharmacy documents and adds owner documents only for the owner membership', () => {
+test('personal profile exposes only owner documents, never pharmacy documents', () => {
   const source = read(
     'src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
   );
 
-  assert.match(source, /title="Pharmacy documents"/);
+  assert.match(source, /<OwnerDocumentsPanel \/>/);
 
-  assert.match(source, /<OwnerDocumentsPanel\s*\/>/);
-  assert.doesNotMatch(source, /onCountChange|ownerDocumentsCount/);
-
-  assert.match(source, /pharmacy\.membershipRole === 'owner'/);
+  assert.doesNotMatch(
+    source,
+    /Pharmacy documents|pharmacy\.membershipRole|pharmacyDocuments/
+  );
 });
 
 //===================================================================

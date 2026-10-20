@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
 
-import { PharmacyProfilePageContent } from '@/components/profile';
+import { PharmacyProfilePageContent } from '@/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent';
 
 //===================================================================
 
 export const metadata: Metadata = {
-  title: 'Pharmacy profile',
-  description: 'Manage pharmacy profile data, verification details, payment data, reviews, and sessions.',
+  title: 'Owner profile',
+
+  description:
+    'Manage your owner account, private comments, documents, and active sessions.',
+
   robots: {
     index: false,
     follow: false,

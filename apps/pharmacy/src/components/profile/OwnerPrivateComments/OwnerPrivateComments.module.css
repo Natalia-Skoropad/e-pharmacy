@@ -1,0 +1,11 @@
+.card {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+}
+
+.dangerConfirmButton {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}

@@ -1,224 +1,96 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 
 import {
-  Building2,
-  Camera,
-  Clock3,
   FileCheck2,
-  FileText,
-  Landmark,
-  MessageSquareText,
+  MessageSquareLock,
   MonitorSmartphone,
+  Plus,
   Save,
-  Send,
-  Star,
   UserRound,
 } from 'lucide-react';
 
+import { useAuth } from '@e-pharmacy/auth/react';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { canPharmacyProfilePerformAction } from '@e-pharmacy/config/pharmacies';
-import { Button } from '@e-pharmacy/ui/primitives';
-import { PictureCard, readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import type { ActiveSession } from '@e-pharmacy/types/auth';
+import { useToast } from '@e-pharmacy/ui/feedback';
+import { NameInput, PhoneInput, EmailInput } from '@e-pharmacy/ui/forms';
+import { Container } from '@e-pharmacy/ui/layout';
+import { Button } from '@e-pharmacy/ui/primitives';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import {
   ActiveSessionsPanel,
-  PharmacyAboutFields,
-  PharmacyPaymentFields,
   ChangePasswordForm,
-  DocumentsPanel,
   ProfileIdentityCard,
   ProfilePageLoader,
   ProfilePictureEditor,
   ProfileSectionHeader,
   ProfileTabPanel,
   ProfileTabsLayout,
+  type ActiveSessionsPanelStatus,
 } from '@e-pharmacy/ui/profile';
-
-import { CountLabel, ReviewsList } from '@e-pharmacy/ui/data-display';
-import { Container } from '@e-pharmacy/ui/layout';
-import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
-
-import {
-  AddressInput,
-  EmailInput,
-  NameInput,
-  PhoneInput,
-} from '@e-pharmacy/ui/forms';
-
-import { useToast } from '@e-pharmacy/ui/feedback';
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
-import { useAuth } from '@e-pharmacy/auth/react';
-import type { ActiveSession } from '@e-pharmacy/types/auth';
-import type { PharmacyNotesResponse } from '@e-pharmacy/types/notes';
-import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
-
-import type {
-  MyPharmacyProfile,
-  PharmacyProfile,
-  PharmacyStatus,
-  PharmacyProfileUpdateChanges,
-} from '@e-pharmacy/types/pharmacies';
-
-import {
-  DATA_PROFILE_FORM_FIELDS,
-  USER_ADDRESS_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  USER_PHONE_MAX_LENGTH,
-  hasValidationErrors,
-  isDataProfileFormDirty,
-  isDataProfileFormValid,
-  markAllFieldsTouched,
-  normalizePhoneInput,
-  validateDataProfileForm,
-  type ChangePasswordFormValues,
-  type DataProfileFormValues,
-  type DataProfileTouchedFields,
-} from '@e-pharmacy/validation/profile';
-
-import {
-  PHARMACY_ABOUT_FORM_FIELDS,
-  PHARMACY_PAYMENT_FORM_FIELDS,
-  PHARMACY_CONTACT_FORM_FIELDS,
-  PHARMACY_LOCATION_TEXT_MAX_LENGTH,
-  USER_EMAIL_MAX_LENGTH,
-  PHARMACY_NAME_MAX_LENGTH,
-  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
-  isPharmacyAboutFormDirty,
-  isPharmacyContactFormDirty,
-  isPharmacyPaymentFormDirty,
-  normalizePharmacyAboutForm,
-  normalizePharmacyContactForm,
-  normalizePharmacyPaymentForm,
-  normalizeEmail,
-  validatePharmacyAboutForm,
-  validatePharmacyContactForm,
-  validatePharmacyPaymentForm,
-  type PharmacyAboutFormValues,
-  type PharmacyAboutTouchedFields,
-  type PharmacyContactFormValues,
-  type PharmacyContactTouchedFields,
-  type PharmacyPaymentFormValues,
-  type PharmacyPaymentTouchedFields,
-  type PharmacyValidationMode,
-} from '@e-pharmacy/validation/pharmacy';
 
 import {
   PICTURE_ACCEPT,
-  PHARMACY_DOCUMENT_ACCEPT,
-  PHARMACY_DOCUMENT_RULES,
   buildPictureFileError,
   buildPictureUrlError,
-  normalizePharmacyDocument,
-  validatePharmacyDocuments,
 } from '@e-pharmacy/validation/files';
 
 import {
-  createPharmacyNote,
-  deletePharmacyNote,
+  isDataProfileFormValid,
+  normalizePhoneInput,
+  USER_NAME_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  type ChangePasswordFormValues,
+} from '@e-pharmacy/validation/profile';
+
+import {
   getActiveSessions,
-  getMyPharmacyDocument,
-  getMyPharmacyProfile,
-  getPharmacyNotes,
   revokeActiveSession,
-  sendMyPharmacyForVerification,
-  submitMyPharmacyModeration,
   updateCurrentUser,
   updateCurrentUserPassword,
-  updateMyPharmacyProfile,
-  uploadMyPharmacyDocument,
 } from '@/lib/api/browser';
 
-import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
-import { PHARMACY_ROUTES } from '@/lib/routes/pharmacy-routes';
 import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-error-messages';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
-
-import { EntityComments } from '@/components/comments/EntityComments';
+import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
+import { PHARMACY_ROUTES } from '@/lib/routes/pharmacy-routes';
 
 import { OwnerDocumentsPanel } from '../OwnerDocumentsPanel';
-import { OwnerWithoutPharmacyProfile } from './OwnerWithoutPharmacyProfile';
-import { WorkingHoursInput } from '../WorkingHoursInput';
-import { resolveCanonicalDraftSync } from './pharmacy-profile-draft-sync';
+import { OwnerPrivateComments } from '../OwnerPrivateComments';
 
 import css from './PharmacyProfilePageContent.module.css';
 
 //===================================================================
 
 type AuthUser = NonNullable<ReturnType<typeof useAuth>['user']>;
+type ProfileTab = 'data' | 'documents' | 'comments' | 'sessions';
 
 //===================================================================
 
-type ProfileUserDefaults = Pick<AuthUser, 'email' | 'name' | 'phone'>;
-
-//===================================================================
-
-type ProfileTab =
-  | 'data'
-  | 'pharmacy-data'
-  | 'about'
-  | 'payment'
-  | 'documents'
-  | 'reviews'
-  | 'comments'
-  | 'sessions';
-
-type PendingModerationItem = {
-  label: string;
-  value?: string | null;
-};
-
-type SessionsStatus = 'loading' | 'success' | 'error';
-
-//===================================================================
-
-const INITIAL_VISIBLE_REVIEWS_COUNT = 10;
-const INITIAL_VISIBLE_SESSIONS_COUNT = 10;
-const PROFILE_TABS_ID_BASE = 'pharmacy-profile-tabs';
+const PROFILE_TABS_ID_BASE = 'owner-profile-tabs';
 
 //===================================================================
 
 const TABS = [
   {
     value: 'data',
-    label: 'My data',
+    label: 'Personal information',
     icon: <UserRound size={17} aria-hidden="true" />,
   },
   {
-    value: 'pharmacy-data',
-    label: 'Pharmacy data',
-    icon: <Building2 size={17} aria-hidden="true" />,
-  },
-  {
-    value: 'about',
-    label: 'About pharmacy',
-    icon: <FileText size={17} aria-hidden="true" />,
-  },
-  {
-    value: 'payment',
-    label: 'Payment details',
-    icon: <Landmark size={17} aria-hidden="true" />,
-  },
-  {
     value: 'documents',
-    label: 'Documents',
+    label: 'Owner documents',
     icon: <FileCheck2 size={17} aria-hidden="true" />,
   },
   {
-    value: 'reviews',
-    label: 'Reviews',
-    icon: <Star size={17} aria-hidden="true" />,
-  },
-  {
     value: 'comments',
-    label: 'Comments',
-    icon: <MessageSquareText size={17} aria-hidden="true" />,
+    label: 'Private comments',
+    icon: <MessageSquareLock size={17} aria-hidden="true" />,
   },
   {
     value: 'sessions',
@@ -229,686 +101,26 @@ const TABS = [
 
 //===================================================================
 
-function createOwnerInitialValues(user: AuthUser): DataProfileFormValues {
-  return {
-    name: user.name ?? '',
-    phone: user.phone ?? '',
-    address: user.address ?? '',
-  };
-}
-
-//===================================================================
-
-function getEditablePharmacyProfile(
-  pharmacy: PharmacyProfile
-): PharmacyProfile {
-  if (
-    pharmacy.status !== 'on_moderation' ||
-    pharmacy.reviewState !== 'changes_requested' ||
-    !pharmacy.pendingModeration
-  )
-    return pharmacy;
-
-  const pending = pharmacy.pendingModeration;
-  const mergedBankDetails = { ...(pharmacy.bankDetails ?? {}) };
-
-  if (pending.bankDetails) {
-    for (const [field, value] of Object.entries(pending.bankDetails)) {
-      if (value === null)
-        delete (mergedBankDetails as Record<string, string>)[field];
-      else if (value !== undefined)
-        (mergedBankDetails as Record<string, string>)[field] = value;
-    }
-  }
-
-  const mergedLocation: Record<string, unknown> = {
-    ...(pharmacy.location ?? {}),
-  };
-
-  if (pending.location) {
-    for (const [field, value] of Object.entries(pending.location)) {
-      if (value === null) delete mergedLocation[field];
-      else if (value !== undefined) mergedLocation[field] = value;
-    }
-  }
-
-  return {
-    ...pharmacy,
-    ...(pending.name !== undefined ? { name: pending.name } : {}),
-
-    ...(pending.location !== undefined
-      ? { location: mergedLocation as unknown as PharmacyProfile['location'] }
-      : {}),
-
-    ...(pending.phone !== undefined ? { phone: pending.phone ?? '' } : {}),
-    ...(pending.email !== undefined ? { email: pending.email ?? '' } : {}),
-
-    ...(pending.workingHours !== undefined
-      ? { workingHours: pending.workingHours ?? '' }
-      : {}),
-
-    ...(pending.description !== undefined
-      ? { description: pending.description ?? '' }
-      : {}),
-
-    ...(pending.shortDescription !== undefined
-      ? { shortDescription: pending.shortDescription ?? '' }
-      : {}),
-
-    ...(pending.imageUrl !== undefined
-      ? { imageUrl: pending.imageUrl ?? '' }
-      : {}),
-
-    ...(pending.documents !== undefined
-      ? { documents: pending.documents }
-      : {}),
-
-    ...(pending.bankDetails !== undefined
-      ? { bankDetails: mergedBankDetails }
-      : {}),
-  };
-}
-
-//===================================================================
-
-function createPharmacyInitialValues(
-  user: ProfileUserDefaults,
-  pharmacy: PharmacyProfile
-): PharmacyContactFormValues {
-  const edit = getEditablePharmacyProfile(pharmacy);
-
-  return {
-    name: createPharmacyNameInitialValue(user, edit),
-    shortDescription: edit.shortDescription ?? '',
-    settlement: edit.location?.settlement ?? '',
-    region: edit.location?.region ?? '',
-    address: edit.location?.address ?? '',
-    phone: edit.phone ?? user.phone ?? '',
-    email: edit.email ?? user.email ?? '',
-    workingHours: edit.workingHours ?? '',
-  };
-}
-
-//===================================================================
-
-function createAboutInitialValues(
-  pharmacy: PharmacyProfile
-): PharmacyAboutFormValues {
-  return {
-    description: getEditablePharmacyProfile(pharmacy).description ?? '',
-  };
-}
-
-//===================================================================
-
-function createPaymentInitialValues(
-  user: ProfileUserDefaults,
-  pharmacy: PharmacyProfile
-): PharmacyPaymentFormValues {
-  const edit = getEditablePharmacyProfile(pharmacy);
-  const recipientName = edit.bankDetails?.recipientName?.trim() ?? '';
-  const ownerName = user.name?.trim() ?? '';
-
-  const shouldClearOwnerNameFallback =
-    pharmacy.status === 'new' && recipientName === ownerName;
-
-  return {
-    recipientName: shouldClearOwnerNameFallback ? '' : recipientName,
-    taxId: edit.bankDetails?.taxId ?? '',
-    iban: edit.bankDetails?.iban ?? '',
-    bankName: edit.bankDetails?.bankName ?? '',
-
-    receiptEmail:
-      edit.bankDetails?.receiptEmail ?? edit.email ?? user.email ?? '',
-
-    paymentPurpose: edit.bankDetails?.paymentPurpose ?? '',
-  };
-}
-
-//===================================================================
-
-function createPharmacyNameInitialValue(
-  user: ProfileUserDefaults,
-  pharmacy: PharmacyProfile
-): string {
-  const pharmacyName = pharmacy.name?.trim() ?? '';
-  const ownerName = user.name?.trim() ?? '';
-
-  const looksLikeRegistrationFallback =
-    pharmacy.status === 'new' && pharmacyName === ownerName;
-
-  return looksLikeRegistrationFallback ? '' : pharmacyName;
-}
-
-//===================================================================
-
-function createDocumentId(
-  document: PharmacyProfile['documents'][number],
-  index: number
-): string {
-  return `${document.name}-${document.size}-${document.type ?? ''}-${index}`;
-}
-
-//===================================================================
-
-function createDocumentValues(
-  documents: PharmacyProfile['documents']
-): BrowserUploadFile[] {
-  return documents.map((document, index) => ({
-    id: createDocumentId(document, index),
-    documentId: document.id,
-    name: document.name,
-    size: document.size,
-    type: document.type ?? '',
-  }));
-}
-
-//===================================================================
-
-function normalizeDocumentValues(files: BrowserUploadFile[]) {
-  return files.map((file) => ({
-    ...(file.documentId ? { documentId: file.documentId } : {}),
-    ...normalizePharmacyDocument(file),
-  }));
-}
-
-//===================================================================
-
-function areDocumentValuesEqual(
-  first: BrowserUploadFile[],
-  second: BrowserUploadFile[]
-): boolean {
-  return (
-    JSON.stringify(normalizeDocumentValues(first)) ===
-    JSON.stringify(normalizeDocumentValues(second))
-  );
-}
-
-//===================================================================
-
-function createTouchedUpdater<TValues extends object>(
-  setTouched: Dispatch<SetStateAction<Partial<Record<keyof TValues, boolean>>>>,
-  field: keyof TValues
-) {
-  setTouched((current) => ({ ...current, [field]: true }));
-}
-
-//===================================================================
-
-function isReadonlyStatus(
-  status: PharmacyStatus,
-  reviewState?: PharmacyProfile['reviewState']
-): boolean {
-  return !canPharmacyProfilePerformAction(status, 'edit', reviewState);
-}
-
-//===================================================================
-
-function getStatusNoteClassName(status: PharmacyStatus): string {
-  if (status === 'on_verification') {
-    return `${css.statusNote} ${css.statusNoteBeauty}`;
-  }
-
-  if (status === 'active') {
-    return `${css.statusNote} ${css.statusNoteActive}`;
-  }
-
-  if (status === 'on_moderation') {
-    return `${css.statusNote} ${css.statusNoteWarning}`;
-  }
-
-  return css.statusNote;
-}
-
-//===================================================================
-
-function formatPendingModerationValue(value?: string | null): string {
-  const text = typeof value === 'string' ? value.trim() : '';
-  return text || 'Not provided';
-}
-
-//===================================================================
-
-function PendingModerationBox({
-  title,
-  items,
-}: Readonly<{
-  title: string;
-  items: PendingModerationItem[];
-}>) {
-  const visibleItems = items.filter((item) => item.value !== undefined);
-
-  if (visibleItems.length === 0) return null;
-
-  return (
-    <section className={css.pendingBox} aria-label={title}>
-      <div className={css.pendingHeader}>
-        <h3>{title}</h3>
-        <StatusBadge {...PHARMACY_STATUS_PRESENTATION.on_moderation} />
-      </div>
-
-      <dl className={css.pendingList}>
-        {visibleItems.map((item) => (
-          <div key={item.label}>
-            <dt>{item.label}</dt>
-            <dd>{formatPendingModerationValue(item.value)}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
-}
-
-//===================================================================
-
-function buildProfilePayload(
-  values: PharmacyContactFormValues,
-  mode: PharmacyValidationMode,
-  baseline?: PharmacyContactFormValues
-): PharmacyProfileUpdateChanges {
-  return normalizePharmacyContactForm(values, mode, baseline);
-}
-
-//===================================================================
-
-function buildAboutPayload(
-  values: PharmacyAboutFormValues,
-  mode: PharmacyValidationMode,
-  baseline?: PharmacyAboutFormValues
-): PharmacyProfileUpdateChanges {
-  return normalizePharmacyAboutForm(values, mode, baseline);
-}
-
-//===================================================================
-
-function buildPaymentPayload(
-  values: PharmacyPaymentFormValues,
-  mode: PharmacyValidationMode,
-  baseline?: PharmacyPaymentFormValues
-): PharmacyProfileUpdateChanges {
-  const bankDetails = normalizePharmacyPaymentForm(values, mode, baseline);
-
-  return Object.keys(bankDetails).length > 0 ? { bankDetails } : {};
-}
-
-//===================================================================
-
-async function buildDocumentsPayload(
-  files: BrowserUploadFile[]
-): Promise<PharmacyProfileUpdateChanges> {
-  const documents: NonNullable<PharmacyProfileUpdateChanges['documents']> = [];
-
-  for (const file of files) {
-    if (file.documentId) {
-      documents.push({ documentId: file.documentId });
-      continue;
-    }
-
-    if (!file.file) {
-      throw new Error('Select the pharmacy document again before saving.');
-    }
-
-    const metadata = normalizePharmacyDocument(file);
-    const rawDataUrl = await readFileAsDataUrl(file.file);
-    const base64Payload = rawDataUrl.slice(rawDataUrl.indexOf(',') + 1);
-    const dataUrl = `data:${metadata.type};base64,${base64Payload}`;
-
-    const uploaded = await uploadMyPharmacyDocument({
-      ...metadata,
-      dataUrl,
-    });
-
-    documents.push({ documentId: uploaded.document.id });
-  }
-
-  return { documents };
-}
-
-//===================================================================
-
-function PharmacyProfilePageContent() {
-  const { user, isBootstrapping } = useAuth();
-
-  const {
-    profile: pharmacySummary,
-    isLoading: isSummaryLoading,
-    error: summaryError,
-    syncProfile: syncSummary,
-  } = usePharmacyProfile();
-
-  const [profileSnapshot, setProfileSnapshot] = useState<Readonly<{
-    identity: string;
-    profile: MyPharmacyProfile | null;
-    isLoading: boolean;
-    error: unknown;
-  }> | null>(null);
-
-  const identity =
-    !isBootstrapping && user?.role === 'pharmacy' ? user.id : null;
-
-  const pharmacySummaryId = pharmacySummary?.id ?? null;
-
-  useEffect(() => {
-    if (!identity || !pharmacySummaryId) return;
-
-    const controller = new AbortController();
-    const requestIdentity = identity;
-
-    void getMyPharmacyProfile({ signal: controller.signal })
-      .then((response) => {
-        if (controller.signal.aborted) return;
-
-        setProfileSnapshot({
-          identity: requestIdentity,
-          profile: response.pharmacy,
-          isLoading: false,
-          error: null,
-        });
-
-        syncSummary(response.pharmacy);
-      })
-
-      .catch((cause: unknown) => {
-        if (controller.signal.aborted) return;
-
-        setProfileSnapshot({
-          identity: requestIdentity,
-          profile: null,
-          isLoading: false,
-          error: cause,
-        });
-      });
-
-    return () => controller.abort();
-  }, [identity, pharmacySummaryId, syncSummary]);
-
-  const syncProfile = useCallback(
-    (profile: MyPharmacyProfile) => {
-      if (!identity) return;
-
-      setProfileSnapshot({
-        identity,
-        profile,
-        isLoading: false,
-        error: null,
-      });
-
-      syncSummary(profile);
-    },
-    [identity, syncSummary]
-  );
-
-  const hasCurrentProfile =
-    identity !== null && profileSnapshot?.identity === identity;
-
-  const profile = hasCurrentProfile ? profileSnapshot.profile : null;
-
-  const isProfileLoading =
-    isBootstrapping ||
-    isSummaryLoading ||
-    (identity !== null &&
-      pharmacySummary !== null &&
-      (!hasCurrentProfile || profileSnapshot.isLoading));
-
-  const profileError = hasCurrentProfile ? profileSnapshot.error : summaryError;
-
-  if (isBootstrapping || !user || isProfileLoading) {
-    return (
-      <main className={css.page} aria-label="Loading pharmacy profile">
-        <ProfilePageLoader label="Loading pharmacy profile..." />
-      </main>
-    );
-  }
-
-  // A zero-pharmacy owner has a valid identity and Owner documents but no
-  // pharmacy-scoped profile. Do not show a misleading fetch error.
-  if (!pharmacySummary && !summaryError && !isSummaryLoading) {
-    return <OwnerWithoutPharmacyProfile />;
-  }
-
-  if (!pharmacySummary || !profile) {
-    return (
-      <main className={css.page}>
-        <section
-          className={css.section}
-          aria-labelledby="pharmacy-profile-title"
-        >
-          <Container className={css.profileContainer}>
-            <StatusBanner
-              tone="danger"
-              label="Error"
-              title="Pharmacy profile could not be loaded"
-              message={
-                profileError
-                  ? getProfileErrorMessage(
-                      profileError,
-                      'Could not load pharmacy profile.'
-                    )
-                  : 'Please refresh the page and try again.'
-              }
-            />
-          </Container>
-        </section>
-      </main>
-    );
-  }
-
-  return (
-    <PharmacyProfilePage
-      key={user.id}
-      user={user}
-      pharmacy={profile}
-      refreshError={
-        summaryError
-          ? getProfileErrorMessage(
-              summaryError,
-              'Could not refresh pharmacy summary.'
-            )
-          : null
-      }
-      syncProfile={syncProfile}
-    />
-  );
-}
-
-//===================================================================
-
-type PharmacyProfilePageProps = Readonly<{
-  user: AuthUser;
-  pharmacy: MyPharmacyProfile;
-  refreshError: string | null;
-  syncProfile: (profile: MyPharmacyProfile) => void;
-}>;
-
-//===================================================================
-
-function PharmacyProfilePage({
-  user,
-  pharmacy,
-  refreshError,
-  syncProfile,
-}: PharmacyProfilePageProps) {
+function OwnerActiveSessionsSection() {
+  const { logoutAll } = useAuth();
   const toast = useToast();
-  const { applyCurrentUser, invalidateSession, logoutAll } = useAuth();
-
-  const profileUserDefaults = useMemo<ProfileUserDefaults>(
-    () => ({
-      email: user.email,
-      name: user.name,
-      phone: user.phone,
-    }),
-    [user.email, user.name, user.phone]
-  );
-
-  const pathname = usePathname();
-  const routeTab = pathname.slice(`${PHARMACY_ROUTES.PROFILE}/`.length);
-
-  const activeTab: ProfileTab =
-    pathname.startsWith(`${PHARMACY_ROUTES.PROFILE}/`) &&
-    TABS.some(({ value }) => value === routeTab)
-      ? (routeTab as ProfileTab)
-      : 'data';
-
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
 
   const [sessionsStatus, setSessionsStatus] =
-    useState<SessionsStatus>('loading');
+    useState<ActiveSessionsPanelStatus>('loading');
 
   const [sessionsError, setSessionsError] = useState('');
-  const [commentsTotal, setCommentsTotal] = useState(0);
-
-  const [commentsInitialData, setCommentsInitialData] =
-    useState<PharmacyNotesResponse | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    void getPharmacyNotes('pharmacy', pharmacy.id, 1, {
-      signal: controller.signal,
-    })
-      .then((response) => {
-        if (controller.signal.aborted) return;
-
-        setCommentsInitialData(response);
-        setCommentsTotal(response.total);
-      })
-
-      .catch(() => {
-        if (controller.signal.aborted) return;
-
-        setCommentsInitialData(null);
-        setCommentsTotal(0);
-      });
-
-    return () => controller.abort();
-  }, [pharmacy.id]);
-
-  const [ownerValues, setOwnerValues] = useState<DataProfileFormValues>(() =>
-    createOwnerInitialValues(user)
-  );
-
-  const [initialOwnerValues, setInitialOwnerValues] =
-    useState<DataProfileFormValues>(() => createOwnerInitialValues(user));
-
-  const [ownerTouched, setOwnerTouched] = useState<DataProfileTouchedFields>(
-    {}
-  );
-
-  const [ownerPictureUrl, setOwnerPictureUrl] = useState<string | null>(
-    user.pictureUrl ?? null
-  );
-
-  const [pharmacyPictureUrl, setPharmacyPictureUrl] = useState<string | null>(
-    getEditablePharmacyProfile(pharmacy).imageUrl ?? null
-  );
-
-  const [initialPharmacyPictureUrl, setInitialPharmacyPictureUrl] = useState<
-    string | null
-  >(getEditablePharmacyProfile(pharmacy).imageUrl ?? null);
-
-  const [pharmacyValues, setPharmacyValues] =
-    useState<PharmacyContactFormValues>(() =>
-      createPharmacyInitialValues(profileUserDefaults, pharmacy)
-    );
-
-  const [initialPharmacyValues, setInitialPharmacyValues] =
-    useState<PharmacyContactFormValues>(() =>
-      createPharmacyInitialValues(profileUserDefaults, pharmacy)
-    );
-
-  const [pharmacyTouched, setPharmacyTouched] =
-    useState<PharmacyContactTouchedFields>({});
-
-  const [aboutValues, setAboutValues] = useState<PharmacyAboutFormValues>(() =>
-    createAboutInitialValues(pharmacy)
-  );
-
-  const [initialAboutValues, setInitialAboutValues] =
-    useState<PharmacyAboutFormValues>(() => createAboutInitialValues(pharmacy));
-
-  const [aboutTouched, setAboutTouched] = useState<PharmacyAboutTouchedFields>(
-    {}
-  );
-
-  const [paymentValues, setPaymentValues] = useState<PharmacyPaymentFormValues>(
-    () => createPaymentInitialValues(profileUserDefaults, pharmacy)
-  );
-
-  const [initialPaymentValues, setInitialPaymentValues] =
-    useState<PharmacyPaymentFormValues>(() =>
-      createPaymentInitialValues(profileUserDefaults, pharmacy)
-    );
-
-  const [paymentTouched, setPaymentTouched] =
-    useState<PharmacyPaymentTouchedFields>({});
-
-  const [documentValues, setDocumentValues] = useState<BrowserUploadFile[]>(
-    () => createDocumentValues(getEditablePharmacyProfile(pharmacy).documents)
-  );
-
-  const [initialDocumentValues, setInitialDocumentValues] = useState<
-    BrowserUploadFile[]
-  >(() => createDocumentValues(getEditablePharmacyProfile(pharmacy).documents));
-
-  const [documentsTouched, setDocumentsTouched] = useState(false);
-  const [documentsError, setDocumentsError] = useState('');
-
-  const [isOwnerSaving, setIsOwnerSaving] = useState(false);
-  const [isOwnerPictureSaving, setIsOwnerPictureSaving] = useState(false);
-  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
-  const [isPharmacyPictureSaving, setIsPharmacyPictureSaving] = useState(false);
-  const [isPharmacySaving, setIsPharmacySaving] = useState(false);
-  const [isDocumentsSaving, setIsDocumentsSaving] = useState(false);
-  const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [sessionsVersion, setSessionsVersion] = useState(0);
 
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(
     null
   );
 
-  const ownerMutationInFlightRef = useRef(false);
-  const passwordMutationInFlightRef = useRef(false);
-  const pharmacyMutationInFlightRef = useRef(false);
-  const sessionMutationInFlightRef = useRef(false);
-  const sessionsLoadControllerRef = useRef<AbortController | null>(null);
-
-  const loadSessions = useCallback(async (): Promise<void> => {
-    setSessionsStatus('loading');
-    setSessionsError('');
-    sessionsLoadControllerRef.current?.abort();
-
-    const controller = new AbortController();
-    sessionsLoadControllerRef.current = controller;
-
-    try {
-      const response = await getActiveSessions({
-        signal: controller.signal,
-      });
-
-      if (controller.signal.aborted) return;
-
-      setSessions([...response.sessions]);
-      setSessionsStatus('success');
-    } catch (error) {
-      if (controller.signal.aborted) return;
-
-      setSessionsError(
-        getProfileErrorMessage(
-          error,
-          'Could not load active sessions. Please try again.'
-        )
-      );
-
-      setSessionsStatus('error');
-    } finally {
-      if (sessionsLoadControllerRef.current === controller) {
-        sessionsLoadControllerRef.current = null;
-      }
-    }
-  }, []);
+  const [signingOutAll, setSigningOutAll] = useState(false);
+  const sessionsMutationRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
-    sessionsLoadControllerRef.current = controller;
 
     void getActiveSessions({ signal: controller.signal })
       .then((response) => {
@@ -918,1732 +130,371 @@ function PharmacyProfilePage({
         setSessionsStatus('success');
       })
 
-      .catch((error: unknown) => {
+      .catch((cause: unknown) => {
         if (controller.signal.aborted) return;
 
         setSessionsError(
-          getProfileErrorMessage(
-            error,
-            'Could not load active sessions. Please try again.'
-          )
+          getProfileErrorMessage(cause, 'Could not load active sessions.')
         );
 
         setSessionsStatus('error');
-      })
+      });
 
-      .finally(() => {
-        if (sessionsLoadControllerRef.current === controller) {
-          sessionsLoadControllerRef.current = null;
+    return () => controller.abort();
+  }, [sessionsVersion]);
+
+  const reloadSessions = () => {
+    setSessionsStatus('loading');
+    setSessionsError('');
+    setSessionsVersion((version) => version + 1);
+  };
+
+  return (
+    <ActiveSessionsPanel
+      sessions={sessions}
+      status={sessionsStatus}
+      error={sessionsError}
+      description="Review and revoke sessions for your owner account."
+      revokingSessionId={revokingSessionId}
+      isSigningOutAll={signingOutAll}
+      onRetry={reloadSessions}
+      onRevoke={async (sessionId) => {
+        if (sessionsMutationRef.current) return;
+
+        sessionsMutationRef.current = true;
+        setRevokingSessionId(sessionId);
+
+        try {
+          await revokeActiveSession(sessionId);
+
+          setSessions((current) =>
+            current.filter((session) => session.id !== sessionId)
+          );
+
+          reloadSessions();
+          toast.success('Session was revoked.');
+        } catch (cause) {
+          toast.error(
+            getProfileErrorMessage(cause, 'Could not revoke session.')
+          );
+        } finally {
+          setRevokingSessionId(null);
+          sessionsMutationRef.current = false;
         }
-      });
+      }}
+      {...(logoutAll
+        ? {
+            onSignOutAll: async () => {
+              if (sessionsMutationRef.current) return;
 
-    return () => {
-      controller.abort();
+              sessionsMutationRef.current = true;
+              setSigningOutAll(true);
 
-      if (sessionsLoadControllerRef.current === controller) {
-        sessionsLoadControllerRef.current = null;
-      }
-    };
-  }, []);
-
-  const ownerErrors = useMemo(
-    () => validateDataProfileForm(ownerValues),
-    [ownerValues]
+              try {
+                await logoutAll();
+              } catch {
+                toast.error('Could not sign out all devices.');
+              } finally {
+                setSigningOutAll(false);
+                sessionsMutationRef.current = false;
+                window.location.replace(getSharedLoginUrl());
+              }
+            },
+          }
+        : {})}
+    />
   );
+}
 
-  const pharmacyStatus = pharmacy.status;
+//===================================================================
 
-  const pharmacyValidationMode: PharmacyValidationMode =
-    pharmacyStatus === 'new' ? 'draft' : 'verification';
+// Every owner, including one with no pharmacies, uses the same personal
+// account UI. Pharmacy-scoped profile and moderation data are never fetched.
+function OwnerProfile({ user }: Readonly<{ user: AuthUser }>) {
+  const { applyCurrentUser, invalidateSession } = useAuth();
+  const toast = useToast();
+  const pathname = usePathname();
+  const routeTab = pathname.slice(`${PHARMACY_ROUTES.PROFILE}/`.length);
 
-  const pharmacyErrors = useMemo(
-    () => validatePharmacyContactForm(pharmacyValues, pharmacyValidationMode),
-    [pharmacyValidationMode, pharmacyValues]
-  );
+  const activeTab: ProfileTab =
+    pathname.startsWith(`${PHARMACY_ROUTES.PROFILE}/`) &&
+    TABS.some(({ value }) => value === routeTab)
+      ? (routeTab as ProfileTab)
+      : 'data';
 
-  const pharmacyVerificationErrors = useMemo(
-    () => validatePharmacyContactForm(pharmacyValues, 'verification'),
-    [pharmacyValues]
-  );
+  const [name, setName] = useState(user.name ?? '');
+  const [phone, setPhone] = useState(user.phone ?? '');
+  const [saving, setSaving] = useState(false);
+  const [savingPicture, setSavingPicture] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const mutationRef = useRef(false);
+  const passwordRef = useRef(false);
 
-  const aboutErrors = useMemo(
-    () => validatePharmacyAboutForm(aboutValues, pharmacyValidationMode),
-    [aboutValues, pharmacyValidationMode]
-  );
+  const values = { name, phone, address: user.address ?? '' };
 
-  const aboutVerificationErrors = useMemo(
-    () => validatePharmacyAboutForm(aboutValues, 'verification'),
-    [aboutValues]
-  );
+  const canSave =
+    isDataProfileFormValid(values) &&
+    (name.trim() !== user.name || phone.trim() !== (user.phone ?? '')) &&
+    !saving;
 
-  const paymentErrors = useMemo(
-    () => validatePharmacyPaymentForm(paymentValues, pharmacyValidationMode),
-    [paymentValues, pharmacyValidationMode]
-  );
+  const handleSave = async () => {
+    if (!canSave || mutationRef.current) return;
 
-  const paymentVerificationErrors = useMemo(
-    () => validatePharmacyPaymentForm(paymentValues, 'verification'),
-    [paymentValues]
-  );
-
-  const ownerFormIsDirty = isDataProfileFormDirty(
-    ownerValues,
-    initialOwnerValues
-  );
-
-  const ownerFormIsValid = isDataProfileFormValid(ownerValues);
-
-  const pharmacyFormIsDirty = isPharmacyContactFormDirty(
-    pharmacyValues,
-    initialPharmacyValues
-  );
-
-  const aboutFormIsDirty = isPharmacyAboutFormDirty(
-    aboutValues,
-    initialAboutValues
-  );
-
-  const paymentFormIsDirty = isPharmacyPaymentFormDirty(
-    paymentValues,
-    initialPaymentValues
-  );
-
-  const documentsFormIsDirty = !areDocumentValuesEqual(
-    documentValues,
-    initialDocumentValues
-  );
-
-  const pharmacyPictureIsDirty =
-    (pharmacyPictureUrl ?? '') !== (initialPharmacyPictureUrl ?? '');
-
-  const canonicalPharmacyValues = createPharmacyInitialValues(
-    profileUserDefaults,
-    pharmacy
-  );
-
-  const canonicalAboutValues = createAboutInitialValues(pharmacy);
-
-  const canonicalPaymentValues = createPaymentInitialValues(
-    profileUserDefaults,
-    pharmacy
-  );
-
-  const canonicalDocumentValues = createDocumentValues(
-    getEditablePharmacyProfile(pharmacy).documents
-  );
-
-  const canonicalPharmacyPictureUrl =
-    getEditablePharmacyProfile(pharmacy).imageUrl ?? null;
-
-  const pharmacyCanonicalChanged = isPharmacyContactFormDirty(
-    canonicalPharmacyValues,
-    initialPharmacyValues
-  );
-
-  const aboutCanonicalChanged = isPharmacyAboutFormDirty(
-    canonicalAboutValues,
-    initialAboutValues
-  );
-
-  const paymentCanonicalChanged = isPharmacyPaymentFormDirty(
-    canonicalPaymentValues,
-    initialPaymentValues
-  );
-
-  const documentsCanonicalChanged = !areDocumentValuesEqual(
-    canonicalDocumentValues,
-    initialDocumentValues
-  );
-
-  const pharmacyPictureCanonicalChanged =
-    canonicalPharmacyPictureUrl !== initialPharmacyPictureUrl;
-
-  if (pharmacyCanonicalChanged && !pharmacyFormIsDirty) {
-    const pharmacyDraft = resolveCanonicalDraftSync({
-      canonicalValue: canonicalPharmacyValues,
-      isDirty: false,
-    });
-
-    if (pharmacyDraft) {
-      setPharmacyValues(pharmacyDraft.value);
-      setInitialPharmacyValues(pharmacyDraft.baseline);
-      setPharmacyTouched({});
-    }
-  }
-
-  if (aboutCanonicalChanged && !aboutFormIsDirty) {
-    const aboutDraft = resolveCanonicalDraftSync({
-      canonicalValue: canonicalAboutValues,
-      isDirty: false,
-    });
-
-    if (aboutDraft) {
-      setAboutValues(aboutDraft.value);
-      setInitialAboutValues(aboutDraft.baseline);
-      setAboutTouched({});
-    }
-  }
-
-  if (paymentCanonicalChanged && !paymentFormIsDirty) {
-    const paymentDraft = resolveCanonicalDraftSync({
-      canonicalValue: canonicalPaymentValues,
-      isDirty: false,
-    });
-
-    if (paymentDraft) {
-      setPaymentValues(paymentDraft.value);
-      setInitialPaymentValues(paymentDraft.baseline);
-      setPaymentTouched({});
-    }
-  }
-
-  if (documentsCanonicalChanged && !documentsFormIsDirty) {
-    const documentsDraft = resolveCanonicalDraftSync({
-      canonicalValue: canonicalDocumentValues,
-      isDirty: false,
-    });
-
-    if (documentsDraft) {
-      setDocumentValues(documentsDraft.value);
-      setInitialDocumentValues(documentsDraft.baseline);
-      setDocumentsTouched(false);
-      setDocumentsError('');
-    }
-  }
-
-  if (pharmacyPictureCanonicalChanged && !pharmacyPictureIsDirty) {
-    const pictureDraft = resolveCanonicalDraftSync({
-      canonicalValue: canonicalPharmacyPictureUrl,
-      isDirty: false,
-    });
-
-    if (pictureDraft) {
-      setPharmacyPictureUrl(pictureDraft.value);
-      setInitialPharmacyPictureUrl(pictureDraft.baseline);
-    }
-  }
-
-  const isProfileOwner = pharmacy.membershipRole === 'owner';
-
-  const isProfileReadonly =
-    !isProfileOwner || isReadonlyStatus(pharmacyStatus, pharmacy.reviewState);
-
-  const pharmacyDocumentsError = validatePharmacyDocuments(documentValues, {
-    required: true,
-  });
-
-  const pharmacyDocumentsAreReady =
-    !pharmacyDocumentsError && !documentsFormIsDirty;
-
-  const pharmacyPictureIsReady = Boolean(pharmacyPictureUrl);
-
-  const canSendForVerification =
-    isProfileOwner &&
-    canPharmacyProfilePerformAction(
-      pharmacyStatus,
-      'submit_for_verification',
-      pharmacy.reviewState
-    ) &&
-    pharmacyDocumentsAreReady &&
-    pharmacyPictureIsReady &&
-    !hasValidationErrors(pharmacyVerificationErrors) &&
-    !hasValidationErrors(aboutVerificationErrors) &&
-    !hasValidationErrors(paymentVerificationErrors) &&
-    !pharmacyFormIsDirty &&
-    !aboutFormIsDirty &&
-    !paymentFormIsDirty &&
-    !documentsFormIsDirty &&
-    !isPharmacySaving &&
-    !isPharmacyPictureSaving &&
-    !isDocumentsSaving &&
-    !isSendingVerification;
-
-  const hasExistingPendingModeration = Boolean(
-    pharmacy.pendingModeration &&
-    Object.keys(pharmacy.pendingModeration).length > 0
-  );
-
-  const moderationFormHasChanges =
-    pharmacyFormIsDirty ||
-    aboutFormIsDirty ||
-    paymentFormIsDirty ||
-    documentsFormIsDirty ||
-    pharmacyPictureIsDirty ||
-    hasExistingPendingModeration;
-
-  const moderationFormIsValid =
-    pharmacyPictureIsReady &&
-    !hasValidationErrors(pharmacyVerificationErrors) &&
-    !hasValidationErrors(aboutVerificationErrors) &&
-    !hasValidationErrors(paymentVerificationErrors) &&
-    !pharmacyDocumentsError;
-
-  const canSendForModeration =
-    isProfileOwner &&
-    canPharmacyProfilePerformAction(
-      pharmacyStatus,
-      'submit_for_moderation',
-      pharmacy.reviewState
-    ) &&
-    moderationFormHasChanges &&
-    moderationFormIsValid &&
-    !isPharmacySaving &&
-    !isPharmacyPictureSaving &&
-    !isDocumentsSaving &&
-    !isSendingVerification;
-
-  const tabs = TABS;
-
-  const handleOwnerChange = (
-    field: keyof DataProfileFormValues,
-    value: string
-  ) => {
-    createTouchedUpdater(setOwnerTouched, field);
-    setOwnerValues((current) => ({ ...current, [field]: value }));
-  };
-
-  const handlePharmacyChange = (
-    field: keyof PharmacyContactFormValues,
-    value: string
-  ) => {
-    createTouchedUpdater(setPharmacyTouched, field);
-    setPharmacyValues((current) => ({ ...current, [field]: value }));
-  };
-
-  const handleAboutChange = (value: string) => {
-    setAboutTouched((current) => ({ ...current, description: true }));
-    setAboutValues({ description: value });
-  };
-
-  const handlePaymentChange = (
-    field: keyof PharmacyPaymentFormValues,
-    value: string
-  ) => {
-    createTouchedUpdater(setPaymentTouched, field);
-    setPaymentValues((current) => ({ ...current, [field]: value }));
-  };
-
-  const handlePictureError = (message: string) => toast.error(message);
-
-  const handleOwnerPictureChange = async (nextPictureUrl: string | null) => {
-    if (ownerMutationInFlightRef.current) return;
-
-    ownerMutationInFlightRef.current = true;
-    setIsOwnerPictureSaving(true);
+    mutationRef.current = true;
+    setSaving(true);
 
     try {
       const response = await updateCurrentUser({
-        pictureUrl: nextPictureUrl,
+        name: name.trim(),
+        phone: phone.trim(),
         expectedRevision: user.revision,
       });
 
-      setOwnerPictureUrl(response.user.pictureUrl ?? null);
       applyCurrentUser(response.user);
+      setName(response.user.name);
+      setPhone(response.user.phone ?? '');
 
-      toast.success(
-        nextPictureUrl
-          ? 'Profile photo was updated.'
-          : 'Profile photo was removed.'
-      );
-    } catch (error) {
+      toast.success('Personal information saved.');
+    } catch (cause) {
       toast.error(
-        getProfileErrorMessage(error, 'Could not update profile photo.')
+        getProfileErrorMessage(cause, 'Could not save personal information.')
       );
     } finally {
-      ownerMutationInFlightRef.current = false;
-      setIsOwnerPictureSaving(false);
+      setSaving(false);
+      mutationRef.current = false;
     }
   };
 
-  const handlePharmacyPictureChange = async (nextPictureUrl: string | null) => {
-    if (isProfileReadonly || pharmacyMutationInFlightRef.current) return;
+  const handlePictureChange = async (pictureUrl: string | null) => {
+    if (mutationRef.current) return;
 
-    if (
-      pharmacy.status === 'active' ||
-      (pharmacy.status === 'on_moderation' &&
-        pharmacy.reviewState === 'changes_requested')
-    ) {
-      setPharmacyPictureUrl(nextPictureUrl);
-
-      toast.success(
-        nextPictureUrl
-          ? 'Pharmacy photo is ready to send for moderation.'
-          : 'Pharmacy photo removal is ready to send for moderation.'
-      );
-      return;
-    }
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsPharmacyPictureSaving(true);
-
-    try {
-      const response = await updateMyPharmacyProfile({
-        imageUrl: nextPictureUrl,
-        expectedRevision: pharmacy.updatedAt,
-      });
-
-      syncProfile(response.pharmacy);
-
-      setPharmacyPictureUrl(
-        getEditablePharmacyProfile(response.pharmacy).imageUrl ?? null
-      );
-
-      setInitialPharmacyPictureUrl(
-        getEditablePharmacyProfile(response.pharmacy).imageUrl ?? null
-      );
-
-      toast.success(
-        nextPictureUrl
-          ? 'Pharmacy photo was updated.'
-          : 'Pharmacy photo was removed.'
-      );
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not update pharmacy photo.')
-      );
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsPharmacyPictureSaving(false);
-    }
-  };
-
-  const handleOwnerSubmit = async () => {
-    setOwnerTouched(markAllFieldsTouched(DATA_PROFILE_FORM_FIELDS));
-
-    if (
-      !ownerFormIsValid ||
-      !ownerFormIsDirty ||
-      ownerMutationInFlightRef.current
-    )
-      return;
-
-    ownerMutationInFlightRef.current = true;
-    setIsOwnerSaving(true);
+    mutationRef.current = true;
+    setSavingPicture(true);
 
     try {
       const response = await updateCurrentUser({
-        name: ownerValues.name.trim(),
-        phone: ownerValues.phone.trim(),
+        pictureUrl,
         expectedRevision: user.revision,
       });
 
-      const nextValues = createOwnerInitialValues(response.user);
-
-      setOwnerPictureUrl(response.user.pictureUrl ?? null);
-      setOwnerValues(nextValues);
-      setInitialOwnerValues(nextValues);
-      setOwnerTouched({});
       applyCurrentUser(response.user);
-      toast.success('My data saved successfully.');
-    } catch (error) {
-      toast.error(getProfileErrorMessage(error, 'Could not save my data.'));
+      toast.success('Profile photo updated.');
+    } catch (cause) {
+      toast.error(
+        getProfileErrorMessage(cause, 'Could not update profile photo.')
+      );
     } finally {
-      ownerMutationInFlightRef.current = false;
-      setIsOwnerSaving(false);
+      setSavingPicture(false);
+      mutationRef.current = false;
     }
   };
 
-  const handlePasswordSubmit = async (
-    values: Readonly<ChangePasswordFormValues>
-  ) => {
-    if (passwordMutationInFlightRef.current) return;
+  const handlePassword = async (values: Readonly<ChangePasswordFormValues>) => {
+    if (passwordRef.current) return;
 
-    passwordMutationInFlightRef.current = true;
-    setIsPasswordSaving(true);
+    passwordRef.current = true;
+    setSavingPassword(true);
 
     try {
       await updateCurrentUserPassword(values);
 
       invalidateSession('password_changed');
       toast.success('Password changed. Sign in again.');
-      window.location.assign(getSharedLoginUrl());
-    } catch (error) {
+      window.location.replace(getSharedLoginUrl());
+    } catch (cause) {
       toast.error(
-        getPharmacyPasswordChangeErrorMessage(getAuthErrorCode(error))
+        getPharmacyPasswordChangeErrorMessage(getAuthErrorCode(cause))
       );
     } finally {
-      passwordMutationInFlightRef.current = false;
-      setIsPasswordSaving(false);
+      setSavingPassword(false);
+      passwordRef.current = false;
     }
   };
 
-  const handlePharmacySubmit = async () => {
-    setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
-
-    if (
-      hasValidationErrors(pharmacyErrors) ||
-      !pharmacyFormIsDirty ||
-      isProfileReadonly ||
-      pharmacyMutationInFlightRef.current
-    ) {
-      return;
-    }
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsPharmacySaving(true);
-
-    try {
-      const response = await updateMyPharmacyProfile({
-        ...buildProfilePayload(
-          pharmacyValues,
-          pharmacyValidationMode,
-          initialPharmacyValues
-        ),
-        expectedRevision: pharmacy.updatedAt,
-      });
-
-      const nextValues = createPharmacyInitialValues(user, response.pharmacy);
-
-      syncProfile(response.pharmacy);
-      setPharmacyValues(nextValues);
-      setInitialPharmacyValues(nextValues);
-      setPharmacyTouched({});
-
-      toast.success(
-        response.pharmacy.status === 'on_moderation'
-          ? 'Corrections saved. Resubmit when ready.'
-          : 'Pharmacy data saved successfully.'
-      );
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not save pharmacy data.')
-      );
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsPharmacySaving(false);
-    }
-  };
-
-  const handleAboutSubmit = async () => {
-    setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
-
-    if (
-      hasValidationErrors(aboutErrors) ||
-      !aboutFormIsDirty ||
-      isProfileReadonly ||
-      pharmacyMutationInFlightRef.current
-    )
-      return;
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsPharmacySaving(true);
-
-    try {
-      const response = await updateMyPharmacyProfile({
-        ...buildAboutPayload(
-          aboutValues,
-          pharmacyValidationMode,
-          initialAboutValues
-        ),
-        expectedRevision: pharmacy.updatedAt,
-      });
-
-      const nextValues = createAboutInitialValues(response.pharmacy);
-
-      syncProfile(response.pharmacy);
-      setAboutValues(nextValues);
-      setInitialAboutValues(nextValues);
-      setAboutTouched({});
-
-      toast.success(
-        response.pharmacy.status === 'on_moderation'
-          ? 'Corrections saved. Resubmit when ready.'
-          : 'About pharmacy saved successfully.'
-      );
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not save about pharmacy.')
-      );
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsPharmacySaving(false);
-    }
-  };
-
-  const handlePaymentSubmit = async () => {
-    setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
-
-    if (
-      hasValidationErrors(paymentErrors) ||
-      !paymentFormIsDirty ||
-      isProfileReadonly ||
-      pharmacyMutationInFlightRef.current
-    )
-      return;
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsPharmacySaving(true);
-
-    try {
-      const response = await updateMyPharmacyProfile({
-        ...buildPaymentPayload(
-          paymentValues,
-          pharmacyValidationMode,
-          initialPaymentValues
-        ),
-
-        expectedRevision: pharmacy.updatedAt,
-      });
-
-      const nextValues = createPaymentInitialValues(user, response.pharmacy);
-
-      syncProfile(response.pharmacy);
-      setPaymentValues(nextValues);
-      setInitialPaymentValues(nextValues);
-      setPaymentTouched({});
-
-      toast.success(
-        response.pharmacy.status === 'on_moderation'
-          ? 'Corrections saved. Resubmit when ready.'
-          : 'Payment details saved successfully.'
-      );
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Could not save payment details.')
-      );
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsPharmacySaving(false);
-    }
-  };
-
-  const handleDocumentsChange = (files: BrowserUploadFile[]) => {
-    setDocumentsTouched(true);
-
-    const error = validatePharmacyDocuments(files);
-
-    if (error) {
-      setDocumentsError(error);
-      return;
-    }
-
-    setDocumentValues(files);
-    setDocumentsError('');
-  };
-
-  const handleDocumentDownload = async (
-    file: BrowserUploadFile
-  ): Promise<string> => {
-    if (file.dataUrl) return file.dataUrl;
-    if (!file.documentId) return '';
-
-    try {
-      return await getMyPharmacyDocument(file.documentId);
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(error, 'Failed to download the document.')
-      );
-      return '';
-    }
-  };
-
-  //===================================================================
-
-  const handleDocumentsSubmit = async () => {
-    setDocumentsTouched(true);
-
-    const validationError = validatePharmacyDocuments(documentValues);
-    setDocumentsError(validationError);
-
-    if (
-      validationError ||
-      !documentsFormIsDirty ||
-      isProfileReadonly ||
-      pharmacyMutationInFlightRef.current
-    )
-      return;
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsDocumentsSaving(true);
-
-    try {
-      const response = await updateMyPharmacyProfile({
-        ...(await buildDocumentsPayload(documentValues)),
-        expectedRevision: pharmacy.updatedAt,
-      });
-
-      const nextDocumentValues = createDocumentValues(
-        getEditablePharmacyProfile(response.pharmacy).documents
-      );
-
-      syncProfile(response.pharmacy);
-      setDocumentValues(nextDocumentValues);
-      setInitialDocumentValues(nextDocumentValues);
-      setDocumentsTouched(false);
-      setDocumentsError('');
-
-      toast.success(
-        response.pharmacy.status === 'on_moderation'
-          ? 'Corrections saved. Resubmit when ready.'
-          : 'Documents saved successfully.'
-      );
-    } catch (error) {
-      toast.error(getProfileErrorMessage(error, 'Could not save documents.'));
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsDocumentsSaving(false);
-    }
-  };
-
-  const buildModerationPayload =
-    async (): Promise<PharmacyProfileUpdateChanges> => {
-      const payload: PharmacyProfileUpdateChanges = {};
-
-      if (pharmacyFormIsDirty) {
-        Object.assign(
-          payload,
-          buildProfilePayload(pharmacyValues, 'draft', initialPharmacyValues)
-        );
-      }
-
-      if (pharmacyPictureIsDirty) {
-        payload.imageUrl = pharmacyPictureUrl;
-      }
-
-      if (aboutFormIsDirty) {
-        Object.assign(
-          payload,
-          buildAboutPayload(aboutValues, 'draft', initialAboutValues)
-        );
-      }
-
-      if (paymentFormIsDirty) {
-        Object.assign(
-          payload,
-          buildPaymentPayload(paymentValues, 'draft', initialPaymentValues)
-        );
-      }
-
-      if (documentsFormIsDirty) {
-        Object.assign(payload, await buildDocumentsPayload(documentValues));
-      }
-
-      return payload;
-    };
-
-  const applyPharmacyFormState = (nextPharmacy: MyPharmacyProfile) => {
-    const nextPharmacyValues = createPharmacyInitialValues(user, nextPharmacy);
-    const nextAboutValues = createAboutInitialValues(nextPharmacy);
-    const nextPaymentValues = createPaymentInitialValues(user, nextPharmacy);
-
-    const nextDocumentValues = createDocumentValues(
-      getEditablePharmacyProfile(nextPharmacy).documents
-    );
-
-    syncProfile(nextPharmacy);
-
-    setPharmacyPictureUrl(
-      getEditablePharmacyProfile(nextPharmacy).imageUrl ?? null
-    );
-
-    setInitialPharmacyPictureUrl(
-      getEditablePharmacyProfile(nextPharmacy).imageUrl ?? null
-    );
-
-    setPharmacyValues(nextPharmacyValues);
-    setInitialPharmacyValues(nextPharmacyValues);
-    setAboutValues(nextAboutValues);
-    setInitialAboutValues(nextAboutValues);
-    setPaymentValues(nextPaymentValues);
-    setInitialPaymentValues(nextPaymentValues);
-    setDocumentValues(nextDocumentValues);
-    setInitialDocumentValues(nextDocumentValues);
-    setPharmacyTouched({});
-    setAboutTouched({});
-    setPaymentTouched({});
-    setDocumentsTouched(false);
-    setDocumentsError('');
-  };
-
-  const handleSendForModeration = async () => {
-    setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
-    setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
-    setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
-    setDocumentsTouched(true);
-
-    if (!canSendForModeration || pharmacyMutationInFlightRef.current) return;
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsSendingVerification(true);
-
-    try {
-      const payload = await buildModerationPayload();
-
-      const response = await submitMyPharmacyModeration({
-        changes: payload,
-        expectedRevision: pharmacy.updatedAt,
-      });
-
-      applyPharmacyFormState(response.pharmacy);
-      toast.success(response.message);
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(
-          error,
-          'Could not send pharmacy changes for moderation.'
-        )
-      );
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsSendingVerification(false);
-    }
-  };
-
-  const handleSendForVerification = async () => {
-    setPharmacyTouched(markAllFieldsTouched(PHARMACY_CONTACT_FORM_FIELDS));
-    setAboutTouched(markAllFieldsTouched(PHARMACY_ABOUT_FORM_FIELDS));
-    setPaymentTouched(markAllFieldsTouched(PHARMACY_PAYMENT_FORM_FIELDS));
-    setDocumentsTouched(true);
-
-    if (!canSendForVerification || pharmacyMutationInFlightRef.current) return;
-
-    pharmacyMutationInFlightRef.current = true;
-    setIsSendingVerification(true);
-
-    try {
-      const response = await sendMyPharmacyForVerification();
-
-      syncProfile(response.pharmacy);
-      toast.success(response.message);
-    } catch (error) {
-      toast.error(
-        getProfileErrorMessage(
-          error,
-          'Could not send pharmacy for verification.'
-        )
-      );
-    } finally {
-      pharmacyMutationInFlightRef.current = false;
-      setIsSendingVerification(false);
-    }
-  };
-
-  const handleRevokeSession = async (sessionId: string) => {
-    if (sessionMutationInFlightRef.current) return;
-
-    sessionMutationInFlightRef.current = true;
-    setRevokingSessionId(sessionId);
-
-    try {
-      await revokeActiveSession(sessionId);
-
-      setSessions((current) =>
-        current.filter((session) => session.id !== sessionId)
-      );
-
-      toast.success('Session was revoked.');
-    } catch (error) {
-      toast.error(getProfileErrorMessage(error, 'Could not revoke session.'));
-    } finally {
-      sessionMutationInFlightRef.current = false;
-      setRevokingSessionId(null);
-    }
-  };
-
-  const handleLogoutAllSessions = async () => {
-    if (!logoutAll || sessionMutationInFlightRef.current) return;
-    sessionMutationInFlightRef.current = true;
-
-    try {
-      await logoutAll();
-    } catch {
-      toast.error(
-        'This browser was signed out, but other device sessions could not be revoked.'
-      );
-    } finally {
-      sessionMutationInFlightRef.current = false;
-    }
-  };
-
-  const summaryOwnerName = ownerValues.name || user.name || 'Pharmacy account';
-
-  const summaryPharmacyName =
-    pharmacyValues.name || pharmacy.name || 'Pharmacy profile';
+  // Stage 14.18.7 introduces pharmacy creation. Until the route and its
+  // permission-aware API exist, do not navigate to a broken/unauthorized URL.
+  const canCreatePharmacy = user.role === 'pharmacy';
 
   return (
-    <main className={css.page}>
-      <section className={css.section} aria-labelledby="pharmacy-profile-title">
-        <Container className={css.profileContainer}>
-          {refreshError ? (
-            <StatusBanner
-              tone="warning"
-              label="Refresh issue"
-              title="Showing the last loaded pharmacy profile"
-              message={refreshError}
-            />
-          ) : null}
+    <main className={css.page} aria-label="Owner profile">
+      <Container className={css.profileContainer}>
+        <ProfileTabsLayout
+          idBase={PROFILE_TABS_ID_BASE}
+          items={TABS}
+          activeValue={activeTab}
+          ariaLabel="Owner profile sections"
+          onChange={(next) => {
+            const url =
+              next === 'data'
+                ? PHARMACY_ROUTES.PROFILE
+                : `${PHARMACY_ROUTES.PROFILE}/${next}`;
 
-          <ProfileTabsLayout
+            window.history.pushState(null, '', url);
+          }}
+          sidebar={
+            <ProfileIdentityCard
+              name={user.name}
+              email={user.email}
+              roleLabel="Pharmacy owner"
+              statusContent={
+                <StatusBadge {...USER_STATUS_PRESENTATION[user.status]} />
+              }
+              pictureEditor={
+                <ProfilePictureEditor
+                  name={user.name}
+                  pictureUrl={user.pictureUrl ?? null}
+                  disabled={savingPicture}
+                  isSaving={savingPicture}
+                  accept={PICTURE_ACCEPT}
+                  validateFile={(file) => buildPictureFileError(file) || null}
+                  validatePictureUrl={(url) =>
+                    buildPictureUrlError(url) || null
+                  }
+                  onChange={handlePictureChange}
+                  onError={toast.error}
+                />
+              }
+            >
+              {canCreatePharmacy ? (
+                <div className={css.createPharmacy}>
+                  <Button
+                    type="button"
+                    fullWidth
+                    disabled
+                    aria-describedby="owner-create-pharmacy-unavailable"
+                    iconLeft={<Plus size={18} aria-hidden="true" />}
+                  >
+                    Create pharmacy
+                  </Button>
+                  <p
+                    id="owner-create-pharmacy-unavailable"
+                    className={css.note}
+                  >
+                    Pharmacy creation will become available in a later stage.
+                  </p>
+                </div>
+              ) : null}
+            </ProfileIdentityCard>
+          }
+        >
+          <ProfileTabPanel
             idBase={PROFILE_TABS_ID_BASE}
-            items={tabs}
+            value="data"
             activeValue={activeTab}
-            ariaLabel="Pharmacy profile sections"
-            sidebarAriaLabel="Pharmacy profile summary"
-            mobileVisibleCount={1}
-            tabletVisibleCount={3}
-            onChange={(nextTab) => {
-              if (nextTab === activeTab) return;
-              const url =
-                nextTab === 'data'
-                  ? PHARMACY_ROUTES.PROFILE
-                  : `${PHARMACY_ROUTES.PROFILE}/${nextTab}`;
-              window.history.pushState(null, '', url);
-            }}
-            sidebar={
-              <ProfileIdentityCard
-                name={summaryOwnerName}
-                email={user.email}
-                roleLabel={
-                  isProfileOwner ? 'Pharmacy owner' : 'Pharmacy manager'
-                }
-                statusContent={
-                  <StatusBadge {...USER_STATUS_PRESENTATION[user.status]} />
-                }
-                pictureEditor={
-                  <ProfilePictureEditor
-                    name={summaryOwnerName}
-                    pictureUrl={ownerPictureUrl}
-                    isSaving={isOwnerPictureSaving}
-                    accept={PICTURE_ACCEPT}
-                    validateFile={(file) => buildPictureFileError(file) || null}
-                    validatePictureUrl={(nextPictureUrl) =>
-                      buildPictureUrlError(nextPictureUrl) || null
-                    }
-                    onChange={handleOwnerPictureChange}
-                    onError={handlePictureError}
+          >
+            {activeTab === 'data' ? (
+              <>
+                <form
+                  className={css.personalForm}
+                  noValidate
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void handleSave();
+                  }}
+                >
+                  <ProfileSectionHeader
+                    title="Personal information"
+                    titleId="owner-personal-information-title"
+                    description="Manage your personal account details. Email changes are not available yet."
+                    icon={<UserRound size={22} />}
                   />
-                }
-              >
-                <div className={getStatusNoteClassName(pharmacy.status)}>
-                  <div className={css.statusNoteHeader}>
-                    <h3>Pharmacy status</h3>
-                    <StatusBadge
-                      {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
+
+                  <div className={css.formGrid}>
+                    <NameInput
+                      id="owner-profile-name"
+                      name="name"
+                      value={name}
+                      maxLength={USER_NAME_MAX_LENGTH}
+                      onChange={(event) => setName(event.target.value)}
+                    />
+
+                    <PhoneInput
+                      id="owner-profile-phone"
+                      name="phone"
+                      value={phone}
+                      maxLength={USER_PHONE_MAX_LENGTH}
+                      onChange={(event) =>
+                        setPhone(normalizePhoneInput(event.target.value))
+                      }
+                    />
+
+                    <EmailInput
+                      id="owner-profile-email"
+                      name="email"
+                      value={user.email}
+                      disabled
+                      onChange={() => undefined}
                     />
                   </div>
 
-                  {(pharmacy.status === 'new' ||
-                    (isProfileOwner && pharmacy.status === 'blocked')) &&
-                  pharmacy.statusReason ? (
-                    <p className={css.statusReason}>{pharmacy.statusReason}</p>
-                  ) : null}
-
-                  {!isProfileOwner ? (
-                    <p>
-                      Manager access is read-only for verification profile data.
-                      Bank details, verification documents, profile edits, and
-                      moderation submission are owner-only.
-                    </p>
-                  ) : null}
-
-                  {isProfileOwner &&
-                  pharmacy.status === 'new' &&
-                  !pharmacy.statusReason ? (
-                    <p>
-                      New pharmacies can edit registration data and complete
-                      required fields. Sales, orders, own products, clients, and
-                      product requests unlock after verification.
-                    </p>
-                  ) : null}
-
-                  {pharmacy.status === 'on_verification' ? (
-                    <p>
-                      {pharmacy.reviewState === 'changes_requested'
-                        ? 'Admin requested corrections. Edit the fields, save your updates, then resubmit for verification.'
-                        : 'The profile is waiting for Admin verification. Submitted fields are read-only until the decision is made.'}
-                    </p>
-                  ) : null}
-
-                  {pharmacy.status === 'on_moderation' ? (
-                    <p>
-                      {pharmacy.reviewState === 'changes_requested'
-                        ? 'Admin requested corrections to the pending draft. Public approved data stays unchanged until approval.'
-                        : 'Profile changes are on moderation. Approved public data remains visible until Admin reviews the changes.'}
-                    </p>
-                  ) : null}
-
-                  {isProfileOwner &&
-                  pharmacy.reviewState === 'changes_requested' &&
-                  pharmacy.reviewFeedback ? (
-                    <div aria-live="polite">
-                      <strong>Corrections requested</strong>
-                      <p className={css.statusReason}>
-                        {pharmacy.reviewFeedback}
-                      </p>
-                      {pharmacy.reviewedAt ? (
-                        <p>
-                          Reviewed:{' '}
-                          {new Date(pharmacy.reviewedAt).toLocaleString(
-                            'en-GB'
-                          )}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-
-                {isProfileOwner &&
-                (pharmacy.status === 'new' ||
-                  (pharmacy.status === 'on_verification' &&
-                    pharmacy.reviewState === 'changes_requested')) ? (
                   <Button
-                    type="button"
-                    fullWidth
-                    iconLeft={<Send size={18} aria-hidden="true" />}
-                    disabled={!canSendForVerification}
-                    isLoading={isSendingVerification}
-                    loadingLabel="Sending..."
-                    onClick={handleSendForVerification}
+                    type="submit"
+                    iconLeft={<Save size={18} aria-hidden="true" />}
+                    disabled={!canSave}
+                    isLoading={saving}
+                    loadingLabel="Saving..."
                   >
-                    {pharmacy.status === 'new'
-                      ? 'Send for verification'
-                      : 'Resubmit for verification'}
+                    Save my data
                   </Button>
-                ) : null}
+                </form>
 
-                {isProfileOwner &&
-                (pharmacy.status === 'active' ||
-                  (pharmacy.status === 'on_moderation' &&
-                    pharmacy.reviewState === 'changes_requested')) ? (
-                  <Button
-                    type="button"
-                    fullWidth
-                    iconLeft={<Send size={18} aria-hidden="true" />}
-                    disabled={!canSendForModeration}
-                    isLoading={isSendingVerification}
-                    loadingLabel="Sending..."
-                    onClick={handleSendForModeration}
-                  >
-                    {pharmacy.status === 'active'
-                      ? 'Send for moderation'
-                      : 'Resubmit corrections'}
-                  </Button>
-                ) : null}
-              </ProfileIdentityCard>
-            }
+                <ChangePasswordForm
+                  idPrefix="owner-profile-password"
+                  description="Change your password and sign in again on this device."
+                  isSubmitting={savingPassword}
+                  onSubmit={handlePassword}
+                />
+              </>
+            ) : null}
+          </ProfileTabPanel>
+
+          <ProfileTabPanel
+            idBase={PROFILE_TABS_ID_BASE}
+            value="documents"
+            activeValue={activeTab}
           >
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="data"
-              activeValue={activeTab}
-            >
-              {activeTab === 'data' ? (
-                <>
-                  <form
-                    className={css.panelSection}
-                    aria-labelledby="account-data-title"
-                    noValidate
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void handleOwnerSubmit();
-                    }}
-                  >
-                    <div className={css.panelHeader}>
-                      <ProfileSectionHeader
-                        title="My data"
-                        titleId="account-data-title"
-                        description="These are the details for your current pharmacy account."
-                        icon={<UserRound size={22} />}
-                      />
-                    </div>
-                    <div className={css.formGrid}>
-                      <NameInput
-                        id="owner-name"
-                        name="name"
-                        value={ownerValues.name}
-                        error={ownerErrors.name}
-                        isTouched={Boolean(ownerTouched.name)}
-                        maxLength={USER_NAME_MAX_LENGTH}
-                        onChange={(event) =>
-                          handleOwnerChange('name', event.target.value)
-                        }
-                      />
+            {activeTab === 'documents' && canCreatePharmacy ? (
+              <OwnerDocumentsPanel />
+            ) : null}
+          </ProfileTabPanel>
 
-                      <PhoneInput
-                        id="owner-phone"
-                        name="phone"
-                        value={ownerValues.phone}
-                        error={ownerErrors.phone}
-                        isTouched={Boolean(ownerTouched.phone)}
-                        maxLength={USER_PHONE_MAX_LENGTH}
-                        onChange={(event) =>
-                          handleOwnerChange(
-                            'phone',
-                            normalizePhoneInput(event.target.value)
-                          )
-                        }
-                      />
-                    </div>
+          <ProfileTabPanel
+            idBase={PROFILE_TABS_ID_BASE}
+            value="comments"
+            activeValue={activeTab}
+          >
+            {activeTab === 'comments' ? <OwnerPrivateComments /> : null}
+          </ProfileTabPanel>
 
-                    <Button
-                      className={css.panelAction}
-                      type="submit"
-                      iconLeft={<Save size={18} aria-hidden="true" />}
-                      disabled={
-                        !ownerFormIsValid || !ownerFormIsDirty || isOwnerSaving
-                      }
-                      isLoading={isOwnerSaving}
-                      loadingLabel="Saving..."
-                    >
-                      Save my data
-                    </Button>
-                  </form>
-
-                  <ChangePasswordForm
-                    idPrefix="pharmacy-profile-password"
-                    isSubmitting={isPasswordSaving}
-                    onSubmit={handlePasswordSubmit}
-                  />
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="pharmacy-data"
-              activeValue={activeTab}
-            >
-              {activeTab === 'pharmacy-data' ? (
-                <>
-                  <form
-                    className={css.pharmacyDataForm}
-                    noValidate
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (pharmacy.status !== 'new') return;
-                      void handlePharmacySubmit();
-                    }}
-                  >
-                    <section
-                      className={css.pharmacyDataBlock}
-                      aria-labelledby="pharmacy-photo-title"
-                    >
-                      <ProfileSectionHeader
-                        title="Pharmacy photo"
-                        titleId="pharmacy-photo-title"
-                        description="Upload the public photo clients will see in the pharmacy profile."
-                        icon={<Camera size={22} />}
-                      />
-
-                      {pharmacy.status === 'on_moderation' &&
-                      pharmacy.pendingModeration?.imageUrl !== undefined ? (
-                        <PendingModerationBox
-                          title="Pending pharmacy photo"
-                          items={[
-                            {
-                              label: 'Photo',
-                              value:
-                                pharmacy.pendingModeration.imageUrl === null
-                                  ? 'Photo will be removed'
-                                  : 'New photo uploaded',
-                            },
-                          ]}
-                        />
-                      ) : null}
-
-                      <PictureCard
-                        name={summaryPharmacyName}
-                        pictureUrl={pharmacyPictureUrl}
-                        isSaving={isPharmacyPictureSaving}
-                        disabled={isProfileReadonly}
-                        compactLayout
-                        accept={PICTURE_ACCEPT}
-                        labels={{
-                          uploadAriaLabel: 'Upload photo',
-                          hint: 'Upload the photo clients will see in the pharmacy profile. Upload a lightweight JPG, PNG, or WEBP img up to 450 KB.',
-                          uploadButton: 'Upload photo',
-                          removeButton: 'Remove photo',
-                          removeTitle: 'Remove pharmacy photo?',
-                          removeEyebrow: 'Pharmacy photo',
-                          removeText:
-                            'This public pharmacy photo will be removed from the profile.',
-                        }}
-                        validateFile={(file) =>
-                          buildPictureFileError(file) || null
-                        }
-                        validatePictureUrl={(nextPictureUrl) =>
-                          buildPictureUrlError(nextPictureUrl) || null
-                        }
-                        onChange={handlePharmacyPictureChange}
-                        onError={handlePictureError}
-                      />
-                    </section>
-
-                    <section
-                      className={css.pharmacyDataBlock}
-                      aria-labelledby="pharmacy-information-title"
-                    >
-                      <ProfileSectionHeader
-                        title="Pharmacy information"
-                        titleId="pharmacy-information-title"
-                        description="Fill in the public pharmacy data required for verification."
-                        icon={<Building2 size={22} />}
-                      />
-
-                      {pharmacy.status === 'on_moderation' ? (
-                        <PendingModerationBox
-                          title="Pending pharmacy information"
-                          items={[
-                            {
-                              label: 'Pharmacy name',
-                              value: pharmacy.pendingModeration?.name,
-                            },
-                            {
-                              label: 'Short description',
-                              value:
-                                pharmacy.pendingModeration?.shortDescription,
-                            },
-                            {
-                              label: 'Email',
-                              value: pharmacy.pendingModeration?.email,
-                            },
-                            {
-                              label: 'Phone',
-                              value: pharmacy.pendingModeration?.phone,
-                            },
-                            {
-                              label: 'Location',
-                              value: pharmacy.pendingModeration?.location
-                                ? formatPharmacyLocation(
-                                    pharmacy.pendingModeration.location
-                                  )
-                                : undefined,
-                            },
-                          ]}
-                        />
-                      ) : null}
-
-                      <div className={css.formGroups}>
-                        <div className={css.formGroup}>
-                          <div className={css.formGrid}>
-                            <NameInput
-                              className={css.fieldWide}
-                              id="pharmacy-name"
-                              name="pharmacyName"
-                              hint="Clients will see this Pharmacy name in the pharmacy profile on the website."
-                              label="Pharmacy name"
-                              placeholder="Enter pharmacy name"
-                              value={pharmacyValues.name}
-                              error={pharmacyErrors.name}
-                              isTouched={Boolean(pharmacyTouched.name)}
-                              disabled={isProfileReadonly}
-                              maxLength={PHARMACY_NAME_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange('name', event.target.value)
-                              }
-                            />
-
-                            <NameInput
-                              id="pharmacy-short-description"
-                              name="shortDescription"
-                              required
-                              className={css.fieldWide}
-                              label="Short pharmacy description"
-                              placeholder="Your pharmacy slogan or a short introduction"
-                              hint="A short message shown below the pharmacy name on the public page."
-                              value={pharmacyValues.shortDescription}
-                              error={pharmacyErrors.shortDescription}
-                              isTouched={Boolean(
-                                pharmacyTouched.shortDescription
-                              )}
-                              disabled={isProfileReadonly}
-                              maxLength={PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange(
-                                  'shortDescription',
-                                  event.target.value
-                                )
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className={css.formGroup}>
-                          <div className={css.formGrid}>
-                            <EmailInput
-                              id="pharmacy-email"
-                              className={css.pairedHintField}
-                              name="email"
-                              value={pharmacyValues.email}
-                              hint="Clients will see this contact email address in the pharmacy profile on the website."
-                              error={pharmacyErrors.email}
-                              isTouched={Boolean(pharmacyTouched.email)}
-                              disabled={isProfileReadonly}
-                              maxLength={USER_EMAIL_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange(
-                                  'email',
-                                  normalizeEmail(event.target.value)
-                                )
-                              }
-                            />
-
-                            <PhoneInput
-                              id="pharmacy-phone"
-                              className={css.pairedHintField}
-                              name="phone"
-                              value={pharmacyValues.phone}
-                              hint="Clients will see this phone number in the pharmacy profile on the website."
-                              error={pharmacyErrors.phone}
-                              isTouched={Boolean(pharmacyTouched.phone)}
-                              disabled={isProfileReadonly}
-                              maxLength={USER_PHONE_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange(
-                                  'phone',
-                                  normalizePhoneInput(event.target.value)
-                                )
-                              }
-                            />
-                          </div>
-                        </div>
-                        <div className={css.formGroup}>
-                          <div className={css.formGrid}>
-                            <NameInput
-                              id="pharmacy-settlement"
-                              className={css.pairedHintField}
-                              name="settlement"
-                              label="Settlement"
-                              placeholder="Example: Bolhrad"
-                              hint="Enter the city, town, village, or other settlement where the pharmacy is located."
-                              autoComplete="address-level2"
-                              value={pharmacyValues.settlement}
-                              error={pharmacyErrors.settlement}
-                              isTouched={Boolean(pharmacyTouched.settlement)}
-                              disabled={isProfileReadonly}
-                              maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange(
-                                  'settlement',
-                                  event.target.value
-                                )
-                              }
-                            />
-
-                            <NameInput
-                              id="pharmacy-region"
-                              className={css.pairedHintField}
-                              name="region"
-                              label="Region"
-                              placeholder="Example: Odesa region"
-                              hint="Enter the region where this settlement is located, to distinguish it from other places with similar names."
-                              autoComplete="address-level1"
-                              value={pharmacyValues.region}
-                              error={pharmacyErrors.region}
-                              isTouched={Boolean(pharmacyTouched.region)}
-                              disabled={isProfileReadonly}
-                              maxLength={PHARMACY_LOCATION_TEXT_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange(
-                                  'region',
-                                  event.target.value
-                                )
-                              }
-                            />
-
-                            <AddressInput
-                              id="pharmacy-address"
-                              name="address"
-                              className={css.fieldWide}
-                              label="Pharmacy address"
-                              placeholder="Example: 36 Bolharskykh Opolchentsiv Street"
-                              hint="Enter the street address only; settlement and region are stored separately."
-                              value={pharmacyValues.address}
-                              error={pharmacyErrors.address}
-                              isTouched={Boolean(pharmacyTouched.address)}
-                              disabled={isProfileReadonly}
-                              maxLength={USER_ADDRESS_MAX_LENGTH}
-                              onChange={(event) =>
-                                handlePharmacyChange(
-                                  'address',
-                                  event.target.value
-                                )
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section
-                      className={css.pharmacyDataBlock}
-                      aria-labelledby="pharmacy-working-hours-title"
-                    >
-                      <ProfileSectionHeader
-                        title="Working hours"
-                        titleId="pharmacy-working-hours-title"
-                        description="Set the schedule clients should use when planning a visit or pickup."
-                        icon={<Clock3 size={22} />}
-                      />
-
-                      {pharmacy.status === 'on_moderation' ? (
-                        <PendingModerationBox
-                          title="Pending working hours"
-                          items={[
-                            {
-                              label: 'Working hours',
-                              value: pharmacy.pendingModeration?.workingHours,
-                            },
-                          ]}
-                        />
-                      ) : null}
-
-                      <WorkingHoursInput
-                        id="pharmacy-working-hours"
-                        value={pharmacyValues.workingHours}
-                        error={pharmacyErrors.workingHours}
-                        isTouched={Boolean(pharmacyTouched.workingHours)}
-                        disabled={isProfileReadonly}
-                        onValueChange={(nextValue) =>
-                          handlePharmacyChange('workingHours', nextValue)
-                        }
-                      />
-                    </section>
-
-                    {pharmacy.status === 'new' ? (
-                      <Button
-                        className={css.pharmacyDataAction}
-                        type="submit"
-                        iconLeft={<Save size={18} aria-hidden="true" />}
-                        disabled={
-                          hasValidationErrors(pharmacyErrors) ||
-                          !pharmacyFormIsDirty ||
-                          isPharmacySaving ||
-                          isProfileReadonly
-                        }
-                        isLoading={isPharmacySaving}
-                        loadingLabel="Saving..."
-                      >
-                        Save pharmacy data
-                      </Button>
-                    ) : null}
-                  </form>
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="about"
-              activeValue={activeTab}
-            >
-              {activeTab === 'about' ? (
-                <>
-                  <form
-                    className={css.panelSection}
-                    aria-labelledby="about-title"
-                    noValidate
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (pharmacy.status !== 'new') return;
-                      void handleAboutSubmit();
-                    }}
-                  >
-                    <div className={css.panelHeader}>
-                      <ProfileSectionHeader
-                        title="About pharmacy"
-                        titleId="about-title"
-                        description="Add the public pharmacy description clients will read on the website."
-                        icon={<FileText size={22} />}
-                      />
-                    </div>
-
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending about pharmacy"
-                        items={[
-                          {
-                            label: 'Description',
-                            value: pharmacy.pendingModeration?.description,
-                          },
-                        ]}
-                      />
-                    ) : null}
-
-                    <PharmacyAboutFields
-                      value={aboutValues.description}
-                      error={aboutErrors.description}
-                      isTouched={Boolean(aboutTouched.description)}
-                      disabled={isProfileReadonly}
-                      onChange={handleAboutChange}
-                    />
-
-                    {pharmacy.status === 'new' ? (
-                      <Button
-                        className={css.panelAction}
-                        type="submit"
-                        iconLeft={<Save size={18} aria-hidden="true" />}
-                        disabled={
-                          hasValidationErrors(aboutErrors) ||
-                          !aboutFormIsDirty ||
-                          isPharmacySaving ||
-                          isProfileReadonly
-                        }
-                        isLoading={isPharmacySaving}
-                        loadingLabel="Saving..."
-                      >
-                        Save about pharmacy
-                      </Button>
-                    ) : null}
-                  </form>
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="payment"
-              activeValue={activeTab}
-            >
-              {activeTab === 'payment' ? (
-                <>
-                  <form
-                    className={css.panelSection}
-                    aria-labelledby="payment-title"
-                    noValidate
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (pharmacy.status !== 'new') return;
-                      void handlePaymentSubmit();
-                    }}
-                  >
-                    <div className={css.panelHeader}>
-                      <ProfileSectionHeader
-                        title="Payment details"
-                        titleId="payment-title"
-                        description="These payment details are required before verification."
-                        icon={<Landmark size={22} />}
-                      />
-                    </div>
-
-                    {pharmacy.status === 'on_moderation' ? (
-                      <PendingModerationBox
-                        title="Pending payment details"
-                        items={[
-                          {
-                            label: 'Recipient name',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails
-                                ?.recipientName,
-                          },
-                          {
-                            label: 'Tax ID',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails?.taxId,
-                          },
-                          {
-                            label: 'IBAN',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails?.iban,
-                          },
-                          {
-                            label: 'Bank name',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails?.bankName,
-                          },
-                          {
-                            label: 'Receipt email',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails
-                                ?.receiptEmail,
-                          },
-                          {
-                            label: 'Payment purpose',
-                            value:
-                              pharmacy.pendingModeration?.bankDetails
-                                ?.paymentPurpose,
-                          },
-                        ]}
-                      />
-                    ) : null}
-
-                    <PharmacyPaymentFields
-                      values={paymentValues}
-                      errors={paymentErrors}
-                      touched={paymentTouched}
-                      disabled={isProfileReadonly}
-                      onChange={handlePaymentChange}
-                    />
-
-                    {pharmacy.status === 'new' ? (
-                      <Button
-                        className={css.panelAction}
-                        type="submit"
-                        iconLeft={<Save size={18} aria-hidden="true" />}
-                        disabled={
-                          hasValidationErrors(paymentErrors) ||
-                          !paymentFormIsDirty ||
-                          isPharmacySaving ||
-                          isProfileReadonly
-                        }
-                        isLoading={isPharmacySaving}
-                        loadingLabel="Saving..."
-                      >
-                        Save payment details
-                      </Button>
-                    ) : null}
-                  </form>
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="documents"
-              activeValue={activeTab}
-            >
-              {activeTab === 'documents' ? (
-                <>
-                  <DocumentsPanel
-                    id="pharmacy-profile-documents"
-                    name="documents"
-                    title="Pharmacy documents"
-                    description="Upload and manage documents that belong to this specific pharmacy and are used for its verification."
-                    headerIcon={<FileCheck2 size={22} />}
-                    value={documentValues}
-                    required
-                    disabled={isProfileReadonly || isDocumentsSaving}
-                    isSaving={isDocumentsSaving}
-                    error={documentsError || pharmacyDocumentsError}
-                    isTouched={documentsTouched}
-                    maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
-                    accept={PHARMACY_DOCUMENT_ACCEPT}
-                    hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
-                    validateSelection={(files) =>
-                      validatePharmacyDocuments(files)
-                    }
-                    onSelectionError={setDocumentsError}
-                    onDownloadFile={handleDocumentDownload}
-                    onChange={handleDocumentsChange}
-                    submitDisabled={
-                      !documentsFormIsDirty ||
-                      Boolean(documentsError) ||
-                      isProfileReadonly
-                    }
-                    beforeDocuments={
-                      pharmacy.status === 'on_moderation' ? (
-                        <PendingModerationBox
-                          title="Pending pharmacy documents"
-                          items={(
-                            pharmacy.pendingModeration?.documents ?? []
-                          ).map((document, index) => ({
-                            label: `Document ${index + 1}`,
-                            value: document.name,
-                          }))}
-                        />
-                      ) : null
-                    }
-                    {...(pharmacy.status === 'new'
-                      ? { onSubmit: handleDocumentsSubmit }
-                      : {})}
-                  />
-
-                  {pharmacy.membershipRole === 'owner' ? (
-                    <OwnerDocumentsPanel />
-                  ) : null}
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="reviews"
-              activeValue={activeTab}
-            >
-              {activeTab === 'reviews' ? (
-                <>
-                  <ProfileSectionHeader
-                    title="Reviews"
-                    description="Read feedback clients leave after completed orders."
-                    icon={<Star size={22} />}
-                    action={
-                      <CountLabel
-                        shown={0}
-                        total={0}
-                        label="reviews"
-                        fullWidthOnMobile
-                      />
-                    }
-                  />
-
-                  <ReviewsList
-                    reviews={[]}
-                    title={null}
-                    initialVisibleCount={INITIAL_VISIBLE_REVIEWS_COUNT}
-                    countFullWidthOnMobile
-                    emptyTitle="This pharmacy has no reviews yet."
-                    emptyText="Reviews appear only after real client orders are completed and approved."
-                    emptyVariant="resource"
-                  />
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="comments"
-              activeValue={activeTab}
-            >
-              {activeTab === 'comments' ? (
-                <>
-                  <EntityComments
-                    entityKey={`pharmacy:${pharmacy.id}`}
-                    presentation="profile"
-                    description="Notes for your pharmacy team are collected here."
-                    emptyTitle="No manager comments yet."
-                    emptyText="The comment drawer is waiting patiently."
-                    initialTotal={commentsTotal}
-                    initialData={commentsInitialData ?? undefined}
-                    load={(page, options) =>
-                      getPharmacyNotes('pharmacy', pharmacy.id, page, options)
-                    }
-                    create={(text, options) =>
-                      createPharmacyNote(
-                        'pharmacy',
-                        pharmacy.id,
-                        text,
-                        options.clientRequestId,
-                        options
-                      )
-                    }
-                    remove={(id, options) =>
-                      deletePharmacyNote('pharmacy', pharmacy.id, id, options)
-                    }
-                    onTotalChange={setCommentsTotal}
-                  />
-                </>
-              ) : null}
-            </ProfileTabPanel>
-
-            <ProfileTabPanel
-              idBase={PROFILE_TABS_ID_BASE}
-              value="sessions"
-              activeValue={activeTab}
-            >
-              {activeTab === 'sessions' ? (
-                <>
-                  <ActiveSessionsPanel
-                    sessions={sessions}
-                    status={sessionsStatus}
-                    error={sessionsError}
-                    title="Active sessions and devices"
-                    description="Review real devices signed in to your pharmacy account."
-                    initialVisibleCount={INITIAL_VISIBLE_SESSIONS_COUNT}
-                    revokingSessionId={revokingSessionId}
-                    onRetry={loadSessions}
-                    onRevoke={handleRevokeSession}
-                    {...(logoutAll
-                      ? { onSignOutAll: handleLogoutAllSessions }
-                      : {})}
-                  />
-                </>
-              ) : null}
-            </ProfileTabPanel>
-          </ProfileTabsLayout>
-        </Container>
-      </section>
+          <ProfileTabPanel
+            idBase={PROFILE_TABS_ID_BASE}
+            value="sessions"
+            activeValue={activeTab}
+          >
+            {activeTab === 'sessions' ? (
+              <OwnerActiveSessionsSection key={user.id} />
+            ) : null}
+          </ProfileTabPanel>
+        </ProfileTabsLayout>
+      </Container>
     </main>
   );
 }
 
+//===================================================================
+
+export function PharmacyProfilePageContent() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return (
+      <main className={css.page} aria-label="Loading owner profile">
+        <ProfilePageLoader label="Loading owner profile..." />
+      </main>
+    );
+  }
+  // Remount the personal form if the logged-in identity changes.
+  return <OwnerProfile key={user.id} user={user} />;
+}
+
 export default PharmacyProfilePageContent;
-export { PharmacyProfilePageContent };

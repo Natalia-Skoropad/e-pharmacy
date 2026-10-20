@@ -110,6 +110,7 @@ for (const requiredField of [
 ]) {
   assert.match(
     fileModelSource,
+
     new RegExp(`\\b${requiredField}\\b`),
     `Stored pharmacy document model must contain ${requiredField}.`
   );
@@ -266,12 +267,13 @@ assert.match(
   /findPharmacyForProfileAccess\([\s\S]*?['"]manage_documents['"]/
 );
 
-assert.match(
-  pharmacyProfileSource,
-  /const isProfileOwner =\s*pharmacy\.membershipRole === ['"]owner['"]/
-);
+assert.match(pharmacyProfileSource, /<OwnerDocumentsPanel/);
+assert.match(pharmacyProfileSource, /<OwnerPrivateComments/);
 
-assert.match(pharmacyProfileSource, /canPharmacyProfilePerformAction\(/);
+assert.doesNotMatch(
+  pharmacyProfileSource,
+  /pharmacy\.membershipRole|canPharmacyProfilePerformAction\(/
+);
 
 assert.match(
   pharmacyServiceSource,
@@ -285,10 +287,10 @@ assert.match(
   'Pharmacy profile writes must compare the expected server revision.'
 );
 
-assert.match(
+assert.doesNotMatch(
   pharmacyProfileSource,
-  /submitMyPharmacyModeration\(\{[\s\S]*?changes:\s*payload,[\s\S]*?expectedRevision:\s*pharmacy\.updatedAt/,
-  'Pharmacy UI must use the atomic moderation-submission command.'
+  /submitMyPharmacyModeration|sendMyPharmacyForVerification|updateMyPharmacyProfile/,
+  'Personal owner profile must not submit or mutate pharmacy data.'
 );
 
 assert.doesNotMatch(

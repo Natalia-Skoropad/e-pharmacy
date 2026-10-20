@@ -107,6 +107,7 @@ for (const [area, root] of Object.entries(sourceRoots)) {
 
   for (const file of files) {
     const source = await readFile(file, 'utf8');
+
     entries.push({ file, source });
     allSourceFiles.push({ area, file, source });
   }
@@ -373,7 +374,6 @@ const fullProfileConsumers = pharmacySources
 
 const allowedFullProfileConsumers = new Set([
   'apps/pharmacy/src/lib/api/browser/pharmacy.api.ts',
-  'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx',
 ]);
 
 for (const consumer of fullProfileConsumers) {
@@ -385,12 +385,13 @@ for (const consumer of fullProfileConsumers) {
 }
 
 if (
-  !fullProfileConsumers.includes(
-    'apps/pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
+  fullProfileConsumers.some(
+    (consumer) =>
+      consumer !== 'apps/pharmacy/src/lib/api/browser/pharmacy.api.ts'
   )
 ) {
   failures.push(
-    'The pharmacy profile feature must own the full profile request.'
+    'A personal owner page must not load pharmacy-scoped full profile data.'
   );
 }
 

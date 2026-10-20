@@ -68,7 +68,12 @@ assert.doesNotMatch(
   /bankDetails|documents|pendingModeration/
 );
 
-assert.match(pharmacyProfilePage, /getMyPharmacyProfile/);
+assert.doesNotMatch(
+  pharmacyProfilePage,
+  /getMyPharmacyProfile|usePharmacyProfile/
+);
+
+assert.match(pharmacyProfilePage, /<ProfileTabsLayout/);
 assert.match(orderDetailsPage, /getPharmacyCheckoutDetails/);
 assert.doesNotMatch(orderDetailsPage, /pharmacyProfile\.bankDetails/);
 

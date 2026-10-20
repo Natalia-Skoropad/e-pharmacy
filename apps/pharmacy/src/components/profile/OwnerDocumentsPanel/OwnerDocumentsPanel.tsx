@@ -94,6 +94,7 @@ export function OwnerDocumentsPanel() {
 
   useEffect(() => {
     const controller = new AbortController();
+
     loadControllerRef.current = controller;
 
     void getMyPharmacyOwnerDocuments({ signal: controller.signal })
@@ -169,6 +170,7 @@ export function OwnerDocumentsPanel() {
 
   const handleReplace = async (current: BrowserUploadFile, file: File) => {
     if (!current.documentId || isUploading || pendingDocumentId) return;
+
     setPendingDocumentId(current.documentId);
 
     try {

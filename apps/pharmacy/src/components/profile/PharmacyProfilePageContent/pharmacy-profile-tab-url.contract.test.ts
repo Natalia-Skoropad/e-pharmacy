@@ -4,7 +4,7 @@ import test from 'node:test';
 
 //===================================================================
 
-const component = readFileSync(
+const profile = readFileSync(
   new URL('./PharmacyProfilePageContent.tsx', import.meta.url),
   'utf8'
 );
@@ -14,54 +14,52 @@ const route = readFileSync(
   'utf8'
 );
 
-const matcher = readFileSync(
-  new URL('../../../lib/routes/pharmacy-routes.ts', import.meta.url),
+const documentPanel = readFileSync(
+  new URL('../OwnerDocumentsPanel/OwnerDocumentsPanel.tsx', import.meta.url),
   'utf8'
 );
 
 //===================================================================
 
-test('pharmacy profile tabs are direct-linkable and preserve client draft state on switching', () => {
-  assert.match(component, /usePathname/);
-  assert.match(component, /window\.history\.pushState/);
-  assert.match(component, /PHARMACY_ROUTES\.PROFILE/);
-
-  for (const tab of [
-    'pharmacy-data',
-    'about',
-    'payment',
-    'documents',
-    'reviews',
-    'comments',
-    'sessions',
-  ]) {
-    assert.match(route, new RegExp(`'${tab}'`));
+test('exactly four owner account tabs can be direct-linked', () => {
+  for (const tab of ['data', 'documents', 'comments', 'sessions']) {
+    assert.match(profile, new RegExp(`value: '${tab}'`));
   }
 
+  for (const tab of ['documents', 'comments', 'sessions'])
+    assert.match(route, new RegExp(`'${tab}'`));
+
+  for (const old of ['pharmacy-data', 'about', 'payment', 'reviews'])
+    assert.doesNotMatch(route, new RegExp(`'${old}'`));
+
   assert.match(route, /notFound\(\)/);
-  assert.match(matcher, /startsWith\(`\$\{PHARMACY_ROUTES\.PROFILE\}\/`\)/);
+  assert.match(profile, /window\.history\.pushState/);
+  assert.match(profile, /<ProfileTabsLayout/);
+  assert.match(profile, /<ProfileTabPanel/);
 });
 
 //===================================================================
 
-test('documents tab stays without a count badge and loads owner documents lazily', () => {
-  assert.match(component, /label: 'Documents'/);
-  assert.match(component, /<OwnerDocumentsPanel\s*\/>/);
-  assert.doesNotMatch(component, /ownerDocumentsCount|setOwnerDocumentsCount/);
-  assert.doesNotMatch(component, /getMyPharmacyOwnerDocuments/);
-  assert.doesNotMatch(component, /Documents \(/);
-});
+test('owner resources mount only in the active tab and personal route has no pharmacy forms', () => {
+  assert.match(
+    profile,
+    /activeTab === 'documents'[\s\S]*?<OwnerDocumentsPanel \/>/
+  );
 
-//===================================================================
+  assert.match(
+    profile,
+    /activeTab === 'comments'[\s\S]*?<OwnerPrivateComments \/>/
+  );
 
-test('region is labelled required and displays its own inline validation error', () => {
-  const region = component.match(
-    /<NameInput\s+id="pharmacy-region"[\s\S]*?\s*\/>/
-  )?.[0];
+  assert.match(
+    profile,
+    /activeTab === 'sessions'[\s\S]*?<OwnerActiveSessionsSection/
+  );
 
-  assert.ok(region);
-  assert.match(region, /label="Region"/);
-  assert.doesNotMatch(region, /optional|required=\{false\}/);
-  assert.match(region, /error=\{pharmacyErrors\.region\}/);
-  assert.match(region, /isTouched=\{Boolean\(pharmacyTouched\.region\)\}/);
+  assert.match(documentPanel, /<DocumentsPanel/);
+
+  assert.doesNotMatch(
+    profile,
+    /Pharmacy documents|Pharmacy status|sendMyPharmacyForVerification|membershipRole|usePharmacyProfile|pharmacy\.id/
+  );
 });
