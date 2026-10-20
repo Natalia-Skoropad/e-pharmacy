@@ -105,3 +105,12 @@ do not add application declarations to that generated file.
 - `apps/api/src/services/pharmacy-moderation-policy.audit.contract.test.ts` — read-only contract checks for existing guarantees.
 
 Stage 14.1 does **not** change business mutations, API routes, database schemas, or UI. Stage 12 remains deferred. Integrate the Stage 14.1 files on top of `e-pharmacy-14.zip`, retaining the existing READMEs 0–11 and 13.
+
+## Stage 14.18.1 — Architecture audit & migration contracts
+
+- [README-14-18-1.md](./README-14-18-1.md) — architecture-only milestone, boundaries, key decisions and links to the audit/contract/migration documents.
+- [Architecture audit](./docs/stage-14-18-1-architecture-audit.md) — current single-pharmacy assumptions in API, BFF, provider, operational resources and Admin integrations.
+- [Data, access and route contracts](./docs/stage-14-18-1-contracts.md) — target `User → 0..N Pharmacy`, scoped roles/permissions, owner/employee cases and canonical UI/API URLs.
+- [Legacy compatibility and document migration](./docs/stage-14-18-1-migration-plan.md) — no-guess redirects, owner registration docs provenance, idempotent migration plan, audit and QA matrix.
+
+This milestone changes documentation only. The Stage 14.18 roadmap (`README-14-18.md`) is maintained separately; it was not part of the uploaded source ZIP and is intentionally not overwritten by this patch. No new API endpoints, pages, database migration or business-logic changes are included.
