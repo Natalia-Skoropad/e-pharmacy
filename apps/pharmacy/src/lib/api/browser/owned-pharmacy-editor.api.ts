@@ -101,3 +101,17 @@ export async function sendOwnedPharmacyForVerification(
     { url, method: 'POST' }
   );
 }
+
+//===================================================================
+
+/** Private, pharmacy-scoped download; never select a default pharmacy. */
+export async function downloadOwnedPharmacyDocument(
+  pharmacyId: string,
+  documentId: string
+): Promise<Blob> {
+  return localApiRequest(
+    pharmacyApiRoutes.pharmacies.ownedDocument(pharmacyId, documentId),
+
+    { responseType: 'blob' }
+  );
+}

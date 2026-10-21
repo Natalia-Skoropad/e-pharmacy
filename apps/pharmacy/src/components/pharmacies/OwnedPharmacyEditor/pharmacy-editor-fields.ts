@@ -61,6 +61,13 @@ export const EMPTY_FIELDS: Record<PharmacyEditorField, string> = {
 
 export type PharmacyEditorValues = Record<PharmacyEditorField, string>;
 
+//===================================================================
+
+// A newly created pharmacy must have a meaningful name before its first save.
+export const NEW_PHARMACY_NAME_MIN_LENGTH = 10;
+
+//===================================================================
+
 export type PharmacyEditorTab = 'data' | 'about' | 'payment' | 'documents';
 
 //===================================================================
@@ -81,6 +88,7 @@ export const REQUIRED_FIELDS: Record<
 > = {
   data: [
     'name',
+    'shortDescription',
     'address',
     'settlement',
     'region',
@@ -90,7 +98,7 @@ export const REQUIRED_FIELDS: Record<
     'imageUrl',
   ],
 
-  about: ['description', 'shortDescription'],
+  about: ['description'],
 
   payment: [
     'recipientName',
@@ -204,7 +212,8 @@ export function buildPharmacyEditorPayload(
 export function validatePharmacyEditor(
   values: PharmacyEditorValues,
   documentCount: number,
-  mode: PharmacyValidationMode = 'verification'
+  mode: PharmacyValidationMode = 'verification',
+  isNewPharmacy = false
 ): Partial<
   Record<PharmacyEditorField | 'documents' | 'ownerDocuments', string>
 > {
@@ -221,6 +230,16 @@ export function validatePharmacyEditor(
     ...about,
     ...payment,
   };
+
+  // Names are mandatory for all drafts; the stricter minimum applies only
+  // when creating a new pharmacy, not when editing older draft records.
+  const name = values.name.trim();
+
+  if (!name) {
+    errors.name = 'Pharmacy name is required';
+  } else if (isNewPharmacy && name.length < NEW_PHARMACY_NAME_MIN_LENGTH) {
+    errors.name = `Pharmacy name must be at least ${NEW_PHARMACY_NAME_MIN_LENGTH} characters`;
+  }
 
   const imageError = buildPictureUrlError(values.imageUrl, {
     required: mode === 'verification',

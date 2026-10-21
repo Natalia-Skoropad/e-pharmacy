@@ -9,24 +9,54 @@ import {
 } from 'react';
 
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { ArrowLeft, Building2, CheckCircle2, Save } from 'lucide-react';
+
+import {
+  Building2,
+  CheckCircle2,
+  CreditCard,
+  FileText,
+  Files,
+  Clock3,
+  Camera,
+  CircleHelp,
+  Save,
+} from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { NameInput, PhoneInput, EmailInput } from '@e-pharmacy/ui/forms';
+
+import {
+  NameInput,
+  PhoneInput,
+  EmailInput,
+  CommentInput,
+  type BrowserUploadFile,
+} from '@e-pharmacy/ui/forms';
+
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
-import { ProfileResourceState } from '@e-pharmacy/ui/profile';
-import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
+import { PictureCard, readFileAsDataUrl } from '@e-pharmacy/ui/media';
+
+import {
+  DocumentsPanel,
+  PharmacyAboutFields,
+  PharmacyPaymentFields,
+  ProfileSectionHeader,
+  ProfileResourceState,
+} from '@e-pharmacy/ui/profile';
+
+import { Button } from '@e-pharmacy/ui/primitives';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import {
   PHARMACY_DOCUMENT_ACCEPT,
+  PHARMACY_DOCUMENT_RULES,
   normalizePharmacyDocument,
   validatePharmacyDocuments,
   PICTURE_ACCEPT,
   buildPictureFileError,
+  buildPictureUrlError,
 } from '@e-pharmacy/validation/files';
 
 import {
@@ -36,19 +66,30 @@ import {
 
 import {
   createOwnedPharmacyDraft,
+  downloadOwnedPharmacyDocument,
   getOwnedPharmacyProfile,
   sendOwnedPharmacyForVerification,
   updateOwnedPharmacyDraft,
   uploadOwnedPharmacyDocument,
 } from '@/lib/api/browser/owned-pharmacy-editor.api';
 
-import { PHARMACY_ROUTES, getOwnedPharmacyPath } from '@/lib/routes';
+import { getOwnedPharmacyPath } from '@/lib/routes';
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 
 import { WorkingHoursInput } from '@/components/profile/WorkingHoursInput';
 
 import {
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  PHARMACY_LOCATION_TEXT_MAX_LENGTH,
+} from '@e-pharmacy/validation/pharmacy';
+
+import {
   EMPTY_FIELDS,
+  NEW_PHARMACY_NAME_MIN_LENGTH,
   EDITOR_TABS,
   REQUIRED_FIELDS,
   buildPharmacyEditorPayload,
@@ -96,6 +137,51 @@ const FIELD_LABELS: Record<PharmacyEditorField, string> = {
   receiptEmail: 'Receipt email',
   paymentPurpose: 'Payment purpose',
 };
+
+//===================================================================
+
+const FIELD_HINTS: Partial<Record<PharmacyEditorField, string>> = {
+  name: 'This name appears on your pharmacy page, in search results and in the pharmacy list.',
+
+  shortDescription:
+    'Clients see this short introduction near your pharmacy name.',
+
+  phone: 'Clients can use this phone number to contact the pharmacy.',
+  email: 'Clients can use this email address to contact the pharmacy.',
+  region: 'Helps clients find your pharmacy by region.',
+  settlement: 'The city or town shown in the pharmacy address.',
+  address: 'The street address clients use to find the pharmacy.',
+};
+
+//===================================================================
+
+// Same tab component used by Admin pharmacy details and existing profile pages.
+const TAB_ITEMS: TabItem<PharmacyEditorTab>[] = [
+  { value: 'data', label: 'Pharmacy data', icon: <Building2 size={17} /> },
+  { value: 'about', label: 'About pharmacy', icon: <FileText size={17} /> },
+  {
+    value: 'payment',
+    label: 'Payment details',
+    icon: <CreditCard size={17} />,
+  },
+  {
+    value: 'documents',
+    label: 'Pharmacy documents',
+    icon: <Files size={17} />,
+  },
+];
+
+//===================================================================
+
+function asBrowserFile(document: Document): BrowserUploadFile {
+  return {
+    id: document.id,
+    documentId: document.id,
+    name: document.name,
+    size: document.size,
+    type: document.type,
+  };
+}
 
 //===================================================================
 
@@ -242,7 +328,7 @@ export function OwnedPharmacyEditor({
     };
   }, [pharmacyId, hydrate]);
 
-  // A route change would unmount all four tabs. Internal tab switches only
+  // A route change would unmount the editor tabs. Internal tab switches only
   // update local state, preserving entered values without prompting.
   useEffect(() => {
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -321,7 +407,8 @@ export function OwnedPharmacyEditor({
     const draftErrors = validatePharmacyEditor(
       values,
       documents.length,
-      'draft'
+      'draft',
+      !pharmacyId
     );
 
     if (Object.keys(draftErrors).length) {
@@ -463,10 +550,10 @@ export function OwnedPharmacyEditor({
     }
   }
 
-  async function upload(files: FileList | null) {
-    if (!files?.length || !pharmacyId || mutationLock.current) return;
+  async function upload(files: readonly File[]) {
+    if (!files.length || !pharmacyId || mutationLock.current) return;
 
-    const incoming = Array.from(files).map(normalizePharmacyDocument);
+    const incoming = files.map(normalizePharmacyDocument);
     const validation = validatePharmacyDocuments([...documents, ...incoming]);
 
     if (validation) {
@@ -480,7 +567,7 @@ export function OwnedPharmacyEditor({
     try {
       const uploaded: Document[] = [];
 
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const metadata = normalizePharmacyDocument(file);
         const dataUrl = await readFileAsDataUrl(file);
 
@@ -494,7 +581,10 @@ export function OwnedPharmacyEditor({
 
       setDocuments((old) => [...old, ...uploaded]);
       setErrors((old) => ({ ...old, documents: undefined }));
-      toast.success('Documents uploaded. Save the draft to attach them.');
+
+      toast.success(
+        'Documents uploaded. Use Save draft at the top to attach them.'
+      );
     } catch (cause) {
       toast.error(getProfileErrorMessage(cause, 'Could not upload document.'));
     } finally {
@@ -513,15 +603,18 @@ export function OwnedPharmacyEditor({
       value: values[name],
       label: FIELD_LABELS[name],
 
+      ...(name === 'name' ? { placeholder: 'Enter pharmacy name' } : {}),
+
       required:
         REQUIRED_FIELDS.data.includes(name) ||
         REQUIRED_FIELDS.about.includes(name) ||
         REQUIRED_FIELDS.payment.includes(name),
 
-      isTouched: Boolean(errors[name]),
-      error: errors[name],
+      isTouched: Boolean(fieldError(name)),
+      error: fieldError(name),
       disabled: busy !== null,
       maxLength: extra?.maxLength,
+      hint: FIELD_HINTS[name],
 
       onChange: (event: ChangeEvent<HTMLInputElement>) =>
         change(name, event.target.value),
@@ -553,298 +646,368 @@ export function OwnedPharmacyEditor({
       />
     );
 
+  const hasSavedDraft = Boolean(pharmacyId);
+
+  const visibleTabs = hasSavedDraft
+    ? TAB_ITEMS
+    : TAB_ITEMS.filter((item) => item.value !== 'documents');
+
+  const draftFieldErrors = validatePharmacyEditor(
+    values,
+    documents.length,
+    'draft',
+    !hasSavedDraft
+  );
+
+  const fieldError = (name: PharmacyEditorField) =>
+    errors[name] ?? (values[name].trim() ? draftFieldErrors[name] : undefined);
+
+  const documentError = errors.documents;
+
+  const canSaveDraft =
+    !draftFieldErrors.name &&
+    (hasSavedDraft ||
+      values.name.trim().length >= NEW_PHARMACY_NAME_MIN_LENGTH);
+
   return (
     <main className={css.page} aria-labelledby="create-pharmacy-title">
-      <section className={css.surface}>
-        <TextActionButton href={PHARMACY_ROUTES.PHARMACIES}>
-          <ArrowLeft size={16} aria-hidden="true" /> Back to pharmacies
-        </TextActionButton>
-
+      <section className={css.card}>
         <PageHeader
-          title={pharmacyId ? 'Edit pharmacy draft' : 'Create pharmacy'}
+          className={css.editorHeader}
+          title={
+            <span className={css.titleWithHelp}>
+              {pharmacyId ? 'Edit pharmacy draft' : 'Create pharmacy'}
+              <InfoTooltip
+                label="How pharmacy registration works"
+                title="Creating your pharmacy"
+                icon={<CircleHelp size={20} aria-hidden="true" />}
+                escapeOverflow
+                items={[
+                  {
+                    title: 'Save draft',
+                    description:
+                      'Enter a pharmacy name of at least 10 characters to save your draft. You can add the other details later. Any details you enter must be valid.',
+                    icon: <Save size={17} aria-hidden="true" />,
+                  },
+                  {
+                    title: 'Add documents',
+                    description:
+                      'Once your draft is saved, open Pharmacy documents to upload the pharmacy files needed for review. Your personal owner documents belong in your profile.',
+                    icon: <Files size={17} aria-hidden="true" />,
+                  },
+                  {
+                    title: 'Send for verification',
+                    description:
+                      'Complete all pharmacy details, add a photo and working hours, provide payment information, and upload pharmacy and owner documents. Save your changes before sending the pharmacy for review.',
+                    icon: <CheckCircle2 size={17} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            </span>
+          }
           titleId="create-pharmacy-title"
           icon={<Building2 size={23} aria-hidden="true" />}
+          actions={
+            <div className={css.headerActions}>
+              <Button
+                variant="secondary"
+                iconLeft={<Save size={17} />}
+                disabled={
+                  busy !== null || !canSaveDraft || (hasSavedDraft && !isDirty)
+                }
+                isLoading={busy === 'save'}
+                onClick={() => void saveDraft()}
+              >
+                Save draft
+              </Button>
+              <Button
+                iconLeft={<CheckCircle2 size={17} />}
+                disabled={busy !== null || !hasSavedDraft || isDirty}
+                isLoading={busy === 'verify'}
+                onClick={() => void verify()}
+              >
+                Send for verification
+              </Button>
+            </div>
+          }
         />
+      </section>
 
-        <p className={css.hint}>
-          Fill in each section at your own pace. Save draft to continue later;
-          sending for verification is a separate action.
-        </p>
-
-        <nav className={css.tabs} aria-label="Create pharmacy sections">
-          {EDITOR_TABS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`${css.tab} ${tab === item.id ? css.active : ''}`}
-              aria-current={tab === item.id ? 'step' : undefined}
-              onClick={() => setTab(item.id)}
-            >
-              {item.label}
-              {tabHasErrors(item.id, errors) ? (
-                <span className={css.missing} aria-label="Incomplete section">
-                  !
-                </span>
-              ) : null}
-            </button>
-          ))}
-        </nav>
-
-        <div
-          className={css.panel}
-          role="region"
-          aria-label={EDITOR_TABS.find((item) => item.id === tab)?.label}
-        >
-          {tab === 'data' ? (
-            <>
-              <h2>Pharmacy data</h2>
-              <p className={css.hint}>
-                Name, location, contact details, image and working hours.
-              </p>
-
-              <div className={css.grid}>
-                {input('name', { maxLength: 120 })}
-                {input('address')}
-                {input('settlement')}
-                {input('region')}
-                {input('phone')}
-                {input('email')}
-                {input('imageUrl')}
-                <div className={css.field}>
-                  <label htmlFor="pharmacy-image-file">
-                    Or upload a pharmacy image
-                  </label>
-
-                  <input
-                    id="pharmacy-image-file"
-                    type="file"
-                    accept={PICTURE_ACCEPT}
-                    disabled={busy !== null}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-
-                      if (!file) return;
-
-                      const error = buildPictureFileError(file);
-
-                      if (error) {
+      <section className={css.card} aria-label="Pharmacy draft details">
+        <div className={css.tabStack}>
+          <Tabs
+            idBase="owned-pharmacy-editor"
+            items={visibleTabs}
+            ariaLabel="Create pharmacy sections"
+            activeValue={tab}
+            mobileVisibleCount={1}
+            tabletVisibleCount={visibleTabs.length}
+            onChange={setTab}
+          />
+          {tabHasErrors(tab, errors) ? (
+            <p className={css.error} role="alert">
+              Correct the highlighted fields in this section.
+            </p>
+          ) : null}
+          <section
+            id={`owned-pharmacy-editor-panel-${tab}`}
+            role="tabpanel"
+            aria-labelledby={`owned-pharmacy-editor-tab-${tab}`}
+            className={css.tabPanel}
+            tabIndex={0}
+          >
+            {tab === 'data' ? (
+              <div className={css.tabContent}>
+                <section
+                  className={css.profileBlock}
+                  aria-label="Pharmacy photo"
+                >
+                  <ProfileSectionHeader
+                    title={
+                      <>
+                        Pharmacy photo <span className={css.required}>*</span>
+                      </>
+                    }
+                    description="Clients see this photo on your pharmacy page and next to your pharmacy in search results and listings."
+                    icon={<Camera size={22} aria-hidden="true" />}
+                  />
+                  <div className={css.pictureColumn}>
+                    <PictureCard
+                      compactLayout
+                      name={values.name || 'Pharmacy'}
+                      pictureUrl={values.imageUrl || null}
+                      accept={PICTURE_ACCEPT}
+                      disabled={busy !== null}
+                      validateFile={(file) =>
+                        buildPictureFileError(file) || null
+                      }
+                      validatePictureUrl={(url) =>
+                        buildPictureUrlError(url) || null
+                      }
+                      onChange={(url) => change('imageUrl', url ?? '')}
+                      onError={(message) =>
                         setErrors((current) => ({
                           ...current,
-                          imageUrl: error,
-                        }));
-
-                        return;
+                          imageUrl: message,
+                        }))
                       }
+                      labels={{
+                        hint: 'Upload a lightweight JPG, PNG, or WEBP photo up to 450 KB. Clients will see it in the pharmacy profile and search results. It will be saved with your draft.',
+                      }}
+                    />
+                    {errors.imageUrl ? (
+                      <p className={css.error} role="alert">
+                        {errors.imageUrl}
+                      </p>
+                    ) : null}
+                  </div>
+                </section>
 
-                      void readFileAsDataUrl(file)
-                        .then((dataUrl) => change('imageUrl', dataUrl))
-
-                        .catch(() =>
-                          setErrors((current) => ({
-                            ...current,
-                            imageUrl: 'Could not read pharmacy image.',
-                          }))
-                        );
-
-                      event.target.value = '';
-                    }}
+                <section
+                  className={css.profileBlock}
+                  aria-label="Pharmacy information"
+                >
+                  <ProfileSectionHeader
+                    title="Pharmacy information"
+                    description="Tell clients what your pharmacy is called, how to contact it and where to find it."
+                    icon={<Building2 size={22} aria-hidden="true" />}
                   />
-                </div>
-              </div>
-              {values.imageUrl ? (
-                <div className={css.imagePreview}>
-                  <Image
-                    src={values.imageUrl}
-                    alt="Pharmacy preview"
-                    width={140}
-                    height={110}
-                    unoptimized
-                    onError={(event) => {
-                      event.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
-              ) : null}
-              <WorkingHoursInput
-                id="new-pharmacy-working-hours"
-                value={values.workingHours}
-                onValueChange={(value) => change('workingHours', value)}
-                error={errors.workingHours}
-                isTouched={Boolean(errors.workingHours)}
-                disabled={busy !== null}
-                required
-              />
-            </>
-          ) : null}
-          {tab === 'about' ? (
-            <>
-              <h2>About pharmacy</h2>
-              <div className={css.grid}>
-                <div className={css.field}>
-                  <label htmlFor="pharmacy-short-description">
-                    Short description *
-                  </label>
-
-                  <textarea
-                    id="pharmacy-short-description"
-                    value={values.shortDescription}
-                    maxLength={200}
-                    disabled={busy !== null}
-                    onChange={(event) =>
-                      change('shortDescription', event.target.value)
-                    }
-                  />
-                  {errors.shortDescription ? (
-                    <p role="alert" className={css.error}>
-                      {errors.shortDescription}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className={css.field}>
-                  <label htmlFor="pharmacy-description">Description *</label>
-
-                  <textarea
-                    id="pharmacy-description"
-                    value={values.description}
-                    rows={6}
-                    disabled={busy !== null}
-                    onChange={(event) =>
-                      change('description', event.target.value)
-                    }
-                  />
-                  {errors.description ? (
-                    <p role="alert" className={css.error}>
-                      {errors.description}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </>
-          ) : null}
-          {tab === 'payment' ? (
-            <>
-              <h2>Payment details</h2>
-              <div className={css.grid}>
-                {input('recipientName')}
-                {input('taxId')}
-                {input('iban')}
-                {input('bankName')}
-                {input('receiptEmail')}
-                {input('paymentPurpose')}
-              </div>
-            </>
-          ) : null}
-          {tab === 'documents' ? (
-            <>
-              <h2>Pharmacy documents</h2>
-              <p className={css.hint}>
-                Pharmacy verification files are separate from the Owner
-                documents in your personal profile.
-              </p>
-
-              {pharmacyId ? (
-                <>
-                  <label
-                    className={css.uploadLabel}
-                    htmlFor="pharmacy-verification-files"
-                  >
-                    Upload pharmacy documents (PDF, Office or images)
-                  </label>
-
-                  <input
-                    id="pharmacy-verification-files"
-                    type="file"
-                    multiple
-                    accept={PHARMACY_DOCUMENT_ACCEPT}
-                    disabled={busy !== null}
-                    onChange={(event) => {
-                      void upload(event.target.files);
-                      event.target.value = '';
-                    }}
-                  />
-
-                  <ul className={css.documents}>
-                    {documents.map((doc) => (
-                      <li key={doc.id}>
-                        {doc.name}
-                        <button
-                          type="button"
+                  <div className={css.fieldGroups}>
+                    <div className={css.fieldGroup}>
+                      <div className={css.nameFields}>
+                        {input('name', { maxLength: PHARMACY_NAME_MAX_LENGTH })}
+                        <CommentInput
+                          id="pharmacy-short-description"
+                          name="shortDescription"
+                          label="Short description"
+                          placeholder="Briefly describe your pharmacy"
+                          hint={FIELD_HINTS.shortDescription}
+                          value={values.shortDescription}
+                          maxLength={PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH}
+                          required
                           disabled={busy !== null}
-                          onClick={() =>
-                            setDocuments((list) =>
-                              list.filter((item) => item.id !== doc.id)
-                            )
+                          error={fieldError('shortDescription')}
+                          isTouched={Boolean(fieldError('shortDescription'))}
+                          onChange={(event) =>
+                            change('shortDescription', event.target.value)
                           }
-                        >
-                          Remove
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : (
-                <p className={css.hint}>
-                  Save your draft first to get a pharmacy ID before uploading
-                  documents.
-                </p>
-              )}
-              {errors.documents ? (
-                <p role="alert" className={css.error}>
-                  {errors.documents}
-                </p>
-              ) : null}
-              <p className={css.hint}>
-                Owner documents:{' '}
-                <a href={`${PHARMACY_ROUTES.PROFILE}/documents`}>
-                  Manage in Owner profile
-                </a>
-                .
-              </p>
-              {errors.ownerDocuments ? (
-                <p role="alert" className={css.error}>
-                  {errors.ownerDocuments}
-                </p>
-              ) : null}
-            </>
-          ) : null}
-        </div>
+                        />
+                      </div>
+                    </div>
+                    <div className={css.fieldGroup}>
+                      <div className={css.fieldsGrid}>
+                        {input('phone', { maxLength: USER_PHONE_MAX_LENGTH })}
+                        {input('email', { maxLength: USER_EMAIL_MAX_LENGTH })}
+                      </div>
+                    </div>
+                    <div className={css.fieldGroup}>
+                      <div className={css.fieldsGrid}>
+                        {input('region', {
+                          maxLength: PHARMACY_LOCATION_TEXT_MAX_LENGTH,
+                        })}
+                        {input('settlement', {
+                          maxLength: PHARMACY_LOCATION_TEXT_MAX_LENGTH,
+                        })}
+                        <div className={css.fullWidth}>
+                          {input('address', {
+                            maxLength: USER_ADDRESS_MAX_LENGTH,
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
 
-        <div className={css.footer}>
-          {isDirty ? (
-            <p className={css.unsaved} role="status">
-              Unsaved changes
-            </p>
-          ) : (
-            <p className={css.hint} role="status">
-              All changes saved
-            </p>
-          )}
+                <section
+                  className={css.profileBlock}
+                  aria-label="Working hours"
+                >
+                  <ProfileSectionHeader
+                    title="Working hours"
+                    description="Let clients know when your pharmacy is open and when they can visit or collect an order."
+                    icon={<Clock3 size={22} aria-hidden="true" />}
+                  />
+                  <WorkingHoursInput
+                    id="new-pharmacy-working-hours"
+                    value={values.workingHours}
+                    onValueChange={(value) => change('workingHours', value)}
+                    error={fieldError('workingHours')}
+                    isTouched={Boolean(fieldError('workingHours'))}
+                    disabled={busy !== null}
+                    required
+                  />
+                </section>
+              </div>
+            ) : null}
+            {tab === 'about' ? (
+              <div className={css.tabContent}>
+                <ProfileSectionHeader
+                  title="About pharmacy"
+                  description="Tell clients about the pharmacy, services and pickup information."
+                  icon={<FileText size={22} aria-hidden="true" />}
+                />
+                <PharmacyAboutFields
+                  value={values.description}
+                  disabled={busy !== null}
+                  error={errors.description}
+                  isTouched={Boolean(errors.description)}
+                  onChange={(value) => change('description', value)}
+                />
+              </div>
+            ) : null}
+            {tab === 'payment' ? (
+              <div className={css.tabContent}>
+                <ProfileSectionHeader
+                  title="Payment details"
+                  description="Payment information used for pharmacy orders."
+                  icon={<CreditCard size={22} aria-hidden="true" />}
+                />
+                <PharmacyPaymentFields
+                  values={{
+                    recipientName: values.recipientName,
+                    taxId: values.taxId,
+                    iban: values.iban,
+                    bankName: values.bankName,
+                    receiptEmail: values.receiptEmail,
+                    paymentPurpose: values.paymentPurpose,
+                  }}
+                  errors={errors}
+                  touched={{
+                    recipientName: Boolean(errors.recipientName),
+                    taxId: Boolean(errors.taxId),
+                    iban: Boolean(errors.iban),
+                    bankName: Boolean(errors.bankName),
+                    receiptEmail: Boolean(errors.receiptEmail),
+                    paymentPurpose: Boolean(errors.paymentPurpose),
+                  }}
+                  disabled={busy !== null}
+                  onChange={(name, value) => change(name, value)}
+                />
+              </div>
+            ) : null}
+            {tab === 'documents' ? (
+              <div className={css.tabContent}>
+                <DocumentsPanel
+                  id="owned-pharmacy-documents"
+                  name="pharmacyDocuments"
+                  title="Pharmacy documents"
+                  description="Upload the pharmacy documents needed for verification."
+                  headerIcon={<Files size={22} aria-hidden="true" />}
+                  required
+                  value={documents.map(asBrowserFile)}
+                  maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
+                  accept={PHARMACY_DOCUMENT_ACCEPT}
+                  hint={`PDF, DOC, DOCX, JPG, PNG or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
+                  editable
+                  onChange={(selection) => {
+                    const incoming = selection.flatMap((file) =>
+                      file.file ? [file.file] : []
+                    );
 
-          <div className={css.actions}>
-            <Button
-              variant="secondary"
-              iconLeft={<Save size={17} />}
-              disabled={busy !== null || (Boolean(pharmacyId) && !isDirty)}
-              isLoading={busy === 'save'}
-              onClick={() => {
-                void saveDraft();
-              }}
-            >
-              Save draft
-            </Button>
+                    if (incoming.length) {
+                      void upload(incoming);
+                      return;
+                    }
 
-            <Button
-              iconLeft={<CheckCircle2 size={17} />}
-              disabled={busy !== null}
-              isLoading={busy === 'verify'}
-              onClick={() => {
-                void verify();
-              }}
-            >
-              Send for verification
-            </Button>
-          </div>
+                    const attached = new Set(
+                      selection.map((file) => file.documentId)
+                    );
+
+                    setDocuments((current) =>
+                      current.filter((file) => attached.has(file.id))
+                    );
+
+                    setErrors((current) => ({
+                      ...current,
+                      documents: undefined,
+                    }));
+                  }}
+                  validateSelection={(files) =>
+                    validatePharmacyDocuments(files)
+                  }
+                  onSelectionError={(message) =>
+                    setErrors((current) => ({ ...current, documents: message }))
+                  }
+                  onDownloadFile={async (file) => {
+                    if (!pharmacyId || !file.documentId) return '';
+                    try {
+                      const blob = await downloadOwnedPharmacyDocument(
+                        pharmacyId,
+                        file.documentId
+                      );
+
+                      const url = URL.createObjectURL(blob);
+
+                      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+
+                      return url;
+                    } catch (cause) {
+                      toast.error(
+                        getProfileErrorMessage(
+                          cause,
+                          'Could not download pharmacy document.'
+                        )
+                      );
+                      return '';
+                    }
+                  }}
+                  error={documentError}
+                  isTouched={Boolean(documentError)}
+                  disabled={busy !== null}
+                  isSaving={busy === 'upload'}
+                  labels={{
+                    dropzoneTitle: 'Pharmacy documents',
+                    dropzoneText: 'Documents required before verification.',
+                  }}
+                />
+                {errors.ownerDocuments ? (
+                  <p className={css.error} role="alert">
+                    {errors.ownerDocuments}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
         </div>
       </section>
     </main>

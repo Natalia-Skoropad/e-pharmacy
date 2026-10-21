@@ -84,6 +84,11 @@ export const ownedPharmacyRegistryParamsSchema = z
   .object({ pharmacyId: mongoIdSchema })
   .strict();
 
+export const ownedPharmacyDocumentParamsSchema =
+  ownedPharmacyRegistryParamsSchema
+    .extend({ documentId: mongoIdSchema })
+    .strict();
+
 //===============================================================
 
 export type OwnedPharmacyRegistryListQuery = z.infer<
@@ -96,4 +101,8 @@ export type OwnedPharmacyRegistryOptionsQuery = z.infer<
 
 export type OwnedPharmacyRegistryParams = z.infer<
   typeof ownedPharmacyRegistryParamsSchema
+>;
+
+export type OwnedPharmacyDocumentParams = z.infer<
+  typeof ownedPharmacyDocumentParamsSchema
 >;

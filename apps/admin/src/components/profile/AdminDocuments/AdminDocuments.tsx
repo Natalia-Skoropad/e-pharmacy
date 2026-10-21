@@ -51,6 +51,7 @@ export function AdminDocuments() {
     void getMyAdminDocuments({ signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
+
         setDocuments([...response.documents]);
         setLoadError('');
         setStatus('success');
@@ -58,6 +59,7 @@ export function AdminDocuments() {
 
       .catch(() => {
         if (controller.signal.aborted) return;
+
         setLoadError('Could not load documents. Please try again.');
         setStatus('error');
       });
@@ -85,6 +87,7 @@ export function AdminDocuments() {
       headerIcon={<FileBadge2 size={22} />}
       value={status === 'success' ? documents.map(toBrowserUploadFile) : []}
       editable={false}
+      required
       readOnlyUploadView={status === 'success'}
       disabled={status !== 'success'}
       maxFiles={ADMIN_EMPLOYEE_DOCUMENT_RULES.maxFiles}

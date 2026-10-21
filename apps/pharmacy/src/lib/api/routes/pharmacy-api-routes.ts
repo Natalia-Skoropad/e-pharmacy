@@ -101,6 +101,9 @@ export const pharmacyApiRoutes = {
     ownedDocuments: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents`,
 
+    ownedDocument: (pharmacyId: string, documentId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents/${segment(documentId)}`,
+
     ownedRegistryDetail: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}`,
 

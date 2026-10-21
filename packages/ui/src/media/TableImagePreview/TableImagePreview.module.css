@@ -2,6 +2,8 @@
   position: relative;
   display: inline-grid;
   place-items: center;
+  flex: 0 0 var(--table-image-preview-size);
+  min-width: var(--table-image-preview-size);
   width: var(--table-image-preview-size);
   height: var(--table-image-preview-size);
   overflow: hidden;

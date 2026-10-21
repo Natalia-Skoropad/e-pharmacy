@@ -11,7 +11,7 @@ const profile = readFileSync(
 
 //===================================================================
 
-test('owner PATCH and picture mutation both apply canonical auth user and use revision concurrency', () => {
+test('profile photo mutation applies canonical user and revision concurrency', () => {
   assert.match(
     profile,
     /updateCurrentUser\(\{[\s\S]*?expectedRevision: user\.revision/
@@ -46,17 +46,21 @@ test('owner password and sessions stay account-scoped', () => {
 
 //===================================================================
 
-test('the personal form exposes editable name/phone and read-only email', () => {
-  assert.match(profile, /<NameInput/);
-  assert.match(profile, /<PhoneInput/);
-
+test('owner personal information is read-only and managed from Employees', () => {
   assert.match(
     profile,
-    /<EmailInput[\s\S]*?value=\{user\.email\}[\s\S]*?disabled/
+    /<NameInput[\s\S]*?value=\{user\.name\}[\s\S]*?disabled/
   );
 
   assert.match(
     profile,
-    /onSubmit=\{\(event\) => \{ event\.preventDefault\(\); void handleSave\(\); \}\}/
+    /<PhoneInput[\s\S]*?value=\{user\.phone \?\? ''\}[\s\S]*?disabled/
+  );
+
+  assert.doesNotMatch(profile, /<EmailInput|handleSave|Save my data/);
+
+  assert.match(
+    profile,
+    /Employee identity is managed from the Employees section/
   );
 });

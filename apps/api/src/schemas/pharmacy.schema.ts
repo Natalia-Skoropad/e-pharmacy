@@ -157,7 +157,11 @@ const pharmacyProfileUpdateChangesSchema = z
 export const createPharmacyDraftSchema = z
   .object({
     clientRequestId: z.string().trim().uuid(),
-    name: sharedPharmacyNameSchema.optional(),
+
+    name: sharedPharmacyNameSchema.min(
+      10,
+      'Pharmacy name must be at least 10 characters'
+    ),
 
     location: z
       .object({

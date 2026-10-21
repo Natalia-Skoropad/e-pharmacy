@@ -6,6 +6,7 @@ import {
   updateOwnedPharmacyDraft,
   submitOwnedPharmacyForVerification,
   uploadOwnedPharmacyDocument,
+  downloadOwnedPharmacyDocument,
   getOwnedPharmacyDetail,
   getOwnedPharmacyStatistics,
   listOwnedPharmacies,
@@ -64,6 +65,7 @@ import {
   ownedPharmacyRegistryListQuerySchema,
   ownedPharmacyRegistryOptionsQuerySchema,
   ownedPharmacyRegistryParamsSchema,
+  ownedPharmacyDocumentParamsSchema,
 } from '../schemas/owned-pharmacy-registry.schema';
 
 import { ctrlWrapper } from '../utils/ctrlWrapper';
@@ -139,31 +141,73 @@ pharmacyRoutes.get(
 // Stage 14.18.10 scoped draft lifecycle. Keep all mutations owner-only.
 pharmacyRoutes.get(
   '/me/pharmacies/:pharmacyId/profile',
-  authenticate, authorizeRoles(USER_ROLES.PHARMACY),
-  validate({ params: ownedPharmacyRegistryParamsSchema, query: emptyQuerySchema }),
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    query: emptyQuerySchema,
+  }),
+
   ctrlWrapper(getOwnedPharmacyProfile)
 );
 
+//=================================================================================
+
 pharmacyRoutes.patch(
   '/me/pharmacies/:pharmacyId/profile',
-  authenticate, authorizeRoles(USER_ROLES.PHARMACY),
-  validate({ params: ownedPharmacyRegistryParamsSchema, body: updateMyPharmacyProfileSchema }),
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: updateMyPharmacyProfileSchema,
+  }),
+
   ctrlWrapper(updateOwnedPharmacyDraft)
 );
 
+//=================================================================================
+
 pharmacyRoutes.post(
   '/me/pharmacies/:pharmacyId/send-for-verification',
-  authenticate, authorizeRoles(USER_ROLES.PHARMACY),
-  validate({ params: ownedPharmacyRegistryParamsSchema, body: sendMyPharmacyForVerificationSchema }),
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: sendMyPharmacyForVerificationSchema,
+  }),
+
   ctrlWrapper(submitOwnedPharmacyForVerification)
 );
 
+//=================================================================================
+
 pharmacyRoutes.post(
   '/me/pharmacies/:pharmacyId/documents',
-  authenticate, authorizeRoles(USER_ROLES.PHARMACY),
-  validate({ params: ownedPharmacyRegistryParamsSchema, body: uploadMyPharmacyDocumentSchema }),
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: uploadMyPharmacyDocumentSchema,
+  }),
+
   ctrlWrapper(uploadOwnedPharmacyDocument)
 );
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/:pharmacyId/documents/:documentId',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ params: ownedPharmacyDocumentParamsSchema }),
+  ctrlWrapper(downloadOwnedPharmacyDocument)
+);
+
+//=================================================================================
 
 pharmacyRoutes.get(
   '/me/pharmacies/:pharmacyId',

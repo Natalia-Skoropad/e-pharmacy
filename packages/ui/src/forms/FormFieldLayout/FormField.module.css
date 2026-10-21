@@ -99,6 +99,24 @@
   box-shadow: none;
 }
 
+.validationTooltip {
+  position: absolute;
+  z-index: var(--z-tooltip);
+  left: 14px;
+  bottom: calc(100% + 7px);
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 7px 12px;
+  color: var(--color-white);
+  background-color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  pointer-events: none;
+}
+
 .inputCounter,
 .passwordCounter,
 .textareaCounter {

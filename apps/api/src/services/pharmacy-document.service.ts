@@ -124,6 +124,7 @@ export async function createRegistrationPharmacyDocumentUploadService(
 
   const claimToken = randomBytes(CLAIM_TOKEN_BYTES).toString('hex');
   const mongoSession = await mongoose.startSession();
+
   let document: PharmacyVerificationDocumentMetadata | null = null;
 
   try {
@@ -162,7 +163,9 @@ export async function createRegistrationPharmacyDocumentUploadService(
         [
           {
             name: input.name,
+
             ...verified,
+
             claimTokenHash: hashClaimToken(claimToken),
             registrationUploadSessionId: uploadSession._id,
             expiresAt: new Date(Date.now() + REGISTRATION_UPLOAD_TTL_MS),
@@ -196,6 +199,7 @@ export async function claimRegistrationPharmacyDocuments(
   session: ClientSession
 ): Promise<PharmacyVerificationDocumentMetadata[]> {
   const documents: PharmacyVerificationDocumentMetadata[] = [];
+
   let uploadSessionId: string | null | undefined;
   let totalSizeBytes = 0;
 
@@ -419,7 +423,9 @@ export async function createPrivatePharmacyDocumentUploadService(
 
   const document = await PharmacyDocumentFile.create({
     name: input.name,
+
     ...verified,
+
     pharmacyId: pharmacy._id,
     uploadedByUserId: userId,
     expiresAt: new Date(Date.now() + PRIVATE_UPLOAD_TTL_MS),
@@ -452,6 +458,7 @@ export async function resolvePrivatePharmacyDocumentSelections(
   const query = PharmacyDocumentFile.find(selectableDocumentFilter);
 
   if (session) query.session(session);
+
   const documents = await query;
 
   const byId = new Map(
@@ -513,14 +520,17 @@ export async function reconcileAttachedPharmacyDocumentStorage(
 
 export async function getPrivatePharmacyDocumentContentService(
   userId: string,
-  documentId: string
+  documentId: string,
+  pharmacyId?: string
 ): Promise<{
   document: PharmacyVerificationDocumentMetadata;
   content: Buffer;
 }> {
   const { pharmacy } = await findPharmacyForProfileAccess(
     userId,
-    'manage_documents'
+    'manage_documents',
+    undefined,
+    pharmacyId
   );
 
   const document = await PharmacyDocumentFile.findOne({
@@ -562,6 +572,7 @@ function referencedDocuments(pharmacy: PharmacyDocumentReferences) {
   ] as const) {
     for (const entry of entries) {
       if (!/^[a-f0-9]{24}$/i.test(entry.id) || seen.has(entry.id)) continue;
+
       seen.add(entry.id);
 
       result.push({
@@ -574,6 +585,7 @@ function referencedDocuments(pharmacy: PharmacyDocumentReferences) {
       });
     }
   }
+
   return result;
 }
 
@@ -602,6 +614,7 @@ export async function listAdminPharmacyDocumentsService(
   pharmacyId: string
 ): Promise<AdminPharmacyDocumentDto[]> {
   const entries = await getPharmacyDocumentReferences(pharmacyId);
+
   if (entries.length === 0) return [];
 
   const attached = await PharmacyDocumentFile.find({

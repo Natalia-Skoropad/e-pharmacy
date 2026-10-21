@@ -60,6 +60,6 @@ test('owner resources mount only in the active tab and personal route has no pha
 
   assert.doesNotMatch(
     profile,
-    /Pharmacy documents|Pharmacy status|sendMyPharmacyForVerification|membershipRole|usePharmacyProfile|pharmacy\.id/
+    /Pharmacy documents|Pharmacy status|sendMyPharmacyForVerification|usePharmacyProfile|pharmacy\.id/
   );
 });

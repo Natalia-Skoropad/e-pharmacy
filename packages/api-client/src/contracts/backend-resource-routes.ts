@@ -189,6 +189,9 @@ export const backendRoutes = {
     ownedDocuments: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents`,
 
+    ownedDocument: (pharmacyId: EntityId, documentId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents/${segment(documentId)}`,
+
     ownedRegistryDetail: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}`,
 

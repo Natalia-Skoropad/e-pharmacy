@@ -21,12 +21,12 @@ test('owner documents reuse the shared DocumentsPanel without duplicating docume
   );
 
   assert.match(source, /<DocumentsPanel/);
-  assert.match(source, /confirmRemove/);
-  assert.match(source, /onReplaceFile=\{handleReplace\}/);
-  assert.match(source, /onUploadFiles=\{handleUpload\}/);
-  assert.match(source, /onDeleteFile=\{handleDelete\}/);
-  assert.match(source, /dropzoneTitle: 'Upload owner documents'/);
-  assert.match(source, /canReplace/);
+  assert.match(source, /editable=\{false\}/);
+  assert.match(source, /readOnlyUploadView=\{status === 'success'\}/);
+  assert.match(source, /required/);
+  assert.match(source, /onDownloadFile=\{handleDownload\}/);
+  assert.match(source, /ProfileResourceState/);
+  assert.doesNotMatch(source, /onUploadFiles|onReplaceFile|onDeleteFile/);
   assert.doesNotMatch(source, /<ul[^>]*aria-label="Documents"/);
   assert.doesNotMatch(source, /documentActions|documentItem|documentsList/);
 });
