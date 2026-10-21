@@ -8,6 +8,7 @@ import {
   ClipboardList,
   FilePlus2,
   LayoutDashboard,
+  Building2,
   PackageSearch,
   ShoppingBag,
   Users,
@@ -70,6 +71,11 @@ export const PHARMACY_NAVIGATION: readonly PharmacyNavigationItem[] = [
     label: 'Product requests',
     href: PHARMACY_ROUTES.PRODUCT_REQUESTS,
     icon: createNavigationIcon(FilePlus2),
+  },
+  {
+    label: 'Pharmacies',
+    href: PHARMACY_ROUTES.PHARMACIES,
+    icon: createNavigationIcon(Building2),
   },
 ];
 

@@ -12,6 +12,7 @@ const {
   getPharmacyOrderPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
+  getOwnedPharmacyPath,
   matchPharmacyRoute,
 } = pharmacyRoutes;
 
@@ -38,6 +39,7 @@ test('exposes app-local pharmacy routes', () => {
     ALL_PRODUCTS: '/pharmacy/all-products',
     PRODUCT_REQUESTS: '/pharmacy/product-requests',
     PRODUCT_REQUEST_NEW: '/pharmacy/product-requests/new',
+    PHARMACIES: '/pharmacy/pharmacies',
     PROFILE: '/pharmacy/profile',
   });
 });
@@ -97,6 +99,11 @@ test('builds dynamic routes only from validated entity IDs', () => {
   );
 
   assert.equal(
+    getOwnedPharmacyPath(ENTITY_IDS.request),
+    `/pharmacy/pharmacies/${ENTITY_IDS.request}`
+  );
+
+  assert.equal(
     getPharmacyRequestPath(ENTITY_IDS.request),
     `/pharmacy/product-requests/${ENTITY_IDS.request}`
   );
@@ -111,6 +118,7 @@ test('rejects empty and malformed dynamic route IDs', () => {
     getPharmacyProductPath,
     getPharmacyAllProductPath,
     getPharmacyRequestPath,
+    getOwnedPharmacyPath,
   ]) {
     for (const invalidId of [
       '',

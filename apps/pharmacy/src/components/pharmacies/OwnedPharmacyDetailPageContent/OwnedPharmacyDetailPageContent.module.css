@@ -1,0 +1,54 @@
+.page {
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 20px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.details {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.details > div {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 2fr;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.details dt {
+  color: var(--color-text-secondary);
+}
+
+.details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+
+  .details > div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

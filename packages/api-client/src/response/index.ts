@@ -88,3 +88,10 @@ export {
 
 export { normalizeOrderSalesStatistics } from './order-sales-statistics-parsers';
 export type { OrderSalesStatisticsQueryParams } from './order-sales-statistics-parsers';
+
+export {
+  parseOwnedPharmacyListResponse,
+  parseOwnedPharmacyStatistics,
+  parseOwnedPharmacyOptionsResponse,
+  parseOwnedPharmacyDetailResponse,
+} from './owned-pharmacy-registry-parsers';

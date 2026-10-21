@@ -5,4 +5,5 @@ export type * from './pharmacy-profile';
 export type * from './public-pharmacy';
 export type * from './responses';
 export type * from './status';
+export type * from './owned-pharmacy-registry';
 export type * from './verification-document';

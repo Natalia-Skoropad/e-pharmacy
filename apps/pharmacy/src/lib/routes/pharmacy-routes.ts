@@ -17,6 +17,7 @@ export const PHARMACY_ROUTES = {
   ALL_PRODUCTS: `${PHARMACY_ROOT}/all-products`,
   PRODUCT_REQUESTS: `${PHARMACY_ROOT}/product-requests`,
   PRODUCT_REQUEST_NEW: `${PHARMACY_ROOT}/product-requests/new`,
+  PHARMACIES: `${PHARMACY_ROOT}/pharmacies`,
   PROFILE: `${PHARMACY_ROOT}/profile`,
 } as const;
 
@@ -30,6 +31,7 @@ export type PharmacyRouteFamily =
   | 'products'
   | 'all-products'
   | 'product-requests'
+  | 'pharmacies'
   | 'unknown';
 
 //===================================================================
@@ -43,6 +45,7 @@ export type PharmacyRouteMatch = Readonly<{
 //===================================================================
 
 const PHARMACY_ROUTE_FAMILIES = [
+  { family: 'pharmacies', basePath: PHARMACY_ROUTES.PHARMACIES },
   { family: 'orders', basePath: PHARMACY_ROUTES.ORDERS },
   { family: 'clients', basePath: PHARMACY_ROUTES.CLIENTS },
   { family: 'products', basePath: PHARMACY_ROUTES.PRODUCTS },
@@ -168,4 +171,10 @@ export function getPharmacyAllProductPath(productId: EntityId): string {
 
 export function getPharmacyRequestPath(requestId: EntityId): string {
   return appendRouteParam(PHARMACY_ROUTES.PRODUCT_REQUESTS, requestId);
+}
+
+//===================================================================
+
+export function getOwnedPharmacyPath(pharmacyId: EntityId): string {
+  return appendRouteParam(PHARMACY_ROUTES.PHARMACIES, pharmacyId);
 }

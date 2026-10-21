@@ -174,6 +174,12 @@ export const backendRoutes = {
     details: (pharmacyId: EntityId) => `/pharmacies/${segment(pharmacyId)}`,
 
     myMemberships: '/pharmacies/me/memberships',
+    ownedRegistry: '/pharmacies/me/pharmacies',
+    ownedRegistrySummary: '/pharmacies/me/pharmacies/summary',
+    ownedRegistryOptions: '/pharmacies/me/pharmacies/options',
+
+    ownedRegistryDetail: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}`,
 
     checkoutDetails: (pharmacyId: EntityId) =>
       `/pharmacies/${segment(pharmacyId)}/checkout-details`,

@@ -26,6 +26,7 @@ test('keeps pharmacy navigation unique and tied to existing route constants', ()
     PHARMACY_ROUTES.PRODUCTS,
     PHARMACY_ROUTES.ALL_PRODUCTS,
     PHARMACY_ROUTES.PRODUCT_REQUESTS,
+    PHARMACY_ROUTES.PHARMACIES,
   ]);
 
   assert.equal(

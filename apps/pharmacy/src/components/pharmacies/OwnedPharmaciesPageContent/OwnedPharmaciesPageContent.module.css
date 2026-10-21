@@ -1,0 +1,166 @@
+/* Admin registry presentation, scoped to the Pharmacy cabinet. */
+.page {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.titleWithHelp {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statisticsBlock {
+  display: none;
+  min-width: 0;
+}
+
+.statistics {
+  display: grid;
+}
+
+.statisticsError {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-background);
+}
+
+.statisticsError p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.activeCard {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.searchGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.searchAction {
+  display: flex;
+  min-width: 0;
+  align-items: flex-end;
+}
+
+.filterButton {
+  min-height: 48px;
+  width: 100%;
+}
+
+.toolbar {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.rowsControl {
+  width: 100%;
+  min-width: 0;
+}
+
+.countLabel {
+  justify-self: start;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+
+.headerWithHelp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerWithHelp button {
+  width: 24px;
+  height: 24px;
+}
+
+.breakableLink {
+  overflow-wrap: anywhere;
+}
+
+.createArea {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.createArea p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  white-space: nowrap;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+@media (min-width: 768px) {
+  .statisticsBlock {
+    display: grid;
+  }
+
+  .searchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, max-content);
+    align-items: end;
+  }
+
+  .toolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+
+  .countLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: unset;
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 16px;
+  }
+}

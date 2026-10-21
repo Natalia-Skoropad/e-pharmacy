@@ -52,6 +52,8 @@ const PHARMACY_PROFILE_TAB_LABELS: Record<string, string> = {
   sessions: 'Active sessions',
 };
 
+//===================================================================
+
 export function getProfileBreadcrumbs(tab?: string): BreadcrumbItem[] {
   const tabLabel = tab ? PHARMACY_PROFILE_TAB_LABELS[tab] : undefined;
 
@@ -187,6 +189,7 @@ function getSingleEntityId(segments: readonly string[]): string | null {
   if (segments.length !== 1) return null;
 
   const [id] = segments;
+
   return id && isValidObjectId(id) ? id : null;
 }
 
@@ -204,6 +207,17 @@ export function getPharmacyBreadcrumbsByPathname(
 
   if (route.family === 'profile') {
     return getProfileBreadcrumbs(route.segments[0]);
+  }
+
+  if (route.family === 'pharmacies') {
+    const id = getSingleEntityId(route.segments);
+
+    return id
+      ? getPharmacyBreadcrumbs(
+          { label: currentDetailLabel ?? `Pharmacy ${id}` },
+          { label: 'Pharmacies', href: PHARMACY_ROUTES.PHARMACIES }
+        )
+      : getPharmacyBreadcrumbs({ label: 'Pharmacies' });
   }
 
   if (route.family === 'orders') {
