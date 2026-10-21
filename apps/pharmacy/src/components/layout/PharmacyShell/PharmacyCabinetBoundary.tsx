@@ -43,6 +43,19 @@ export function PharmacyCabinetBoundaryRuntime({
   children,
   pathname,
 }: PharmacyCabinetBoundaryRuntimeProps) {
+  // Owner profile and the owned-pharmacies registry/editor are account-scoped.
+  // They must remain accessible when an owner has zero or multiple pharmacies:
+  // /me/summary may legitimately be null or fail with SELECTION_REQUIRED.
+  // They load and authorize their own resources independently.
+  if (
+    pathname === PHARMACY_ROUTES.PROFILE ||
+    pathname?.startsWith(`${PHARMACY_ROUTES.PROFILE}/`) ||
+    pathname === PHARMACY_ROUTES.PHARMACIES ||
+    pathname?.startsWith(`${PHARMACY_ROUTES.PHARMACIES}/`)
+  ) {
+    return children;
+  }
+
   if (!profile && isLoading) {
     return <PageLoader label="Loading pharmacy cabinet..." />;
   }
@@ -78,9 +91,9 @@ export function PharmacyCabinetBoundaryRuntime({
           <StatusBanner
             tone="info"
             title="No pharmacies yet"
-            message="Your owner account is ready. Open your personal profile to manage personal details and uploaded files. Pharmacy creation will be available in the next stages."
+            message="Your owner account is ready. Create a pharmacy draft or open your personal profile to manage your account."
             meta={
-              <Link href={PHARMACY_ROUTES.PROFILE}>Open owner profile</Link>
+              <Link href={PHARMACY_ROUTES.PHARMACIES}>Open pharmacies</Link>
             }
           />
         </Container>

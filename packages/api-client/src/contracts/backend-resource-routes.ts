@@ -178,6 +178,17 @@ export const backendRoutes = {
     ownedRegistrySummary: '/pharmacies/me/pharmacies/summary',
     ownedRegistryOptions: '/pharmacies/me/pharmacies/options',
 
+    createDraft: '/pharmacies',
+
+    ownedProfile: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/profile`,
+
+    ownedVerification: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/send-for-verification`,
+
+    ownedDocuments: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents`,
+
     ownedRegistryDetail: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}`,
 

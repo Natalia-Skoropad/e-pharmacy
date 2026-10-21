@@ -1176,11 +1176,14 @@ export async function getCurrentPharmacySummaryService(
 //===============================================================
 
 export async function getMyPharmacyProfileService(
-  userId: string
+  userId: string,
+  pharmacyId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
   const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
     userId,
-    'read_profile'
+    'read_profile',
+    undefined,
+    pharmacyId
   );
 
   return {
@@ -1352,7 +1355,8 @@ async function appendPharmacyOwnerMutationAudit(
 export async function updateMyPharmacyProfileService(
   userId: string,
   input: UpdateMyPharmacyProfileInput,
-  auditRequestId?: string
+  auditRequestId?: string,
+  pharmacyId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
   const mongoSession = await mongoose.startSession();
 
@@ -1363,7 +1367,8 @@ export async function updateMyPharmacyProfileService(
       const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
         userId,
         'edit_profile',
-        mongoSession
+        mongoSession,
+        pharmacyId
       );
 
       if (
@@ -1734,7 +1739,8 @@ export async function submitMyPharmacyModerationService(
 
 export async function sendMyPharmacyForVerificationService(
   userId: string,
-  auditRequestId?: string
+  auditRequestId?: string,
+  pharmacyId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
   const session = await mongoose.startSession();
 
@@ -1743,7 +1749,8 @@ export async function sendMyPharmacyForVerificationService(
       const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
         userId,
         'submit_profile',
-        session
+        session,
+        pharmacyId
       );
 
       const isResubmission =

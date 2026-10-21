@@ -90,6 +90,17 @@ export const pharmacyApiRoutes = {
     ownedRegistrySummary: '/api/pharmacies/me/pharmacies/summary',
     ownedRegistryOptions: '/api/pharmacies/me/pharmacies/options',
 
+    createDraft: '/api/pharmacies',
+
+    ownedProfile: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/profile`,
+
+    ownedVerification: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/send-for-verification`,
+
+    ownedDocuments: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents`,
+
     ownedRegistryDetail: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}`,
 

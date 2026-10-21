@@ -96,6 +96,54 @@ export async function createPharmacyDraft(
 
 //===============================================================
 
+// Stage 14.18.10: explicit pharmacy ID on every draft mutation. Never select
+// the first pharmacy implicitly when an owner has multiple memberships.
+export async function getOwnedPharmacyProfile(
+  req: Request,
+  res: ValidatedResponse<unknown, OwnedPharmacyRegistryParams>
+): Promise<void> {
+  const data = await getMyPharmacyProfileService(
+    req.user?.id ?? '', res.locals.validated.params.pharmacyId
+  );
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+export async function updateOwnedPharmacyDraft(
+  req: Request,
+  res: ValidatedResponse<UpdateMyPharmacyProfileInput, OwnedPharmacyRegistryParams>
+): Promise<void> {
+  const data = await updateMyPharmacyProfileService(
+    req.user?.id ?? '', res.locals.validated.body,
+    res.locals.requestId, res.locals.validated.params.pharmacyId
+  );
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+export async function submitOwnedPharmacyForVerification(
+  req: Request,
+  res: ValidatedResponse<SendMyPharmacyForVerificationInput, OwnedPharmacyRegistryParams>
+): Promise<void> {
+  const data = await sendMyPharmacyForVerificationService(
+    req.user?.id ?? '', res.locals.requestId,
+    res.locals.validated.params.pharmacyId
+  );
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+export async function uploadOwnedPharmacyDocument(
+  req: Request,
+  res: ValidatedResponse<PharmacyDocumentUploadInput, OwnedPharmacyRegistryParams>
+): Promise<void> {
+  const data = await createPrivatePharmacyDocumentUploadService(
+    req.user?.id ?? '', res.locals.validated.body,
+    res.locals.validated.params.pharmacyId
+  );
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
+}
+
+//===============================================================
+
 export async function listOwnedPharmacies(
   req: Request,
   res: ValidatedResponse<unknown, unknown, OwnedPharmacyRegistryListQuery>

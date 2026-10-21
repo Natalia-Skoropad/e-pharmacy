@@ -210,6 +210,13 @@ export function getPharmacyBreadcrumbsByPathname(
   }
 
   if (route.family === 'pharmacies') {
+    if (pathname === `${PHARMACY_ROUTES.PHARMACIES}/new`) {
+      return getPharmacyBreadcrumbs(
+        { label: 'Create pharmacy' },
+        { label: 'Pharmacies', href: PHARMACY_ROUTES.PHARMACIES }
+      );
+    }
+
     const id = getSingleEntityId(route.segments);
 
     return id

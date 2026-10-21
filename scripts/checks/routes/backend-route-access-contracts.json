@@ -1,5 +1,54 @@
 [
   {
+    "backend": "/pharmacies",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/documents",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/profile",
+    "methods": {
+      "GET": "private",
+      "PATCH": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/send-for-verification",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/options",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/summary",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
     "backend": "/products/filters",
     "methods": {
       "GET": "public"

@@ -14,6 +14,7 @@ function requireElement(
   value: ReactNode
 ): ReactElement<Record<string, unknown>> {
   assert.equal(isValidElement(value), true);
+
   return value as ReactElement<Record<string, unknown>>;
 }
 
@@ -113,4 +114,26 @@ test('owner with no pharmacies can open personal profile but not unloaded operat
   });
 
   assert.notEqual(operations, 'orders-without-pharmacy');
+});
+
+//===================================================================
+
+test('owner account pages and pharmacy creation bypass ambiguous summary bootstrap', () => {
+  for (const pathname of [
+    '/pharmacy/profile',
+    '/pharmacy/pharmacies',
+    '/pharmacy/pharmacies/new',
+    '/pharmacy/pharmacies/507f1f77bcf86cd799439011',
+  ]) {
+    const content = PharmacyCabinetBoundaryRuntime({
+      profile: null,
+      isLoading: false,
+      error: new Error('PHARMACY_SELECTION_REQUIRED'),
+      pathname,
+      onRetry: () => undefined,
+      children: 'account-scoped-content',
+    });
+
+    assert.equal(content, 'account-scoped-content');
+  }
 });

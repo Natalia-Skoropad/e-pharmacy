@@ -54,7 +54,7 @@ function normalizeDraft(input: CreatePharmacyDraftInput) {
     Object.entries(input).filter(([key]) => key !== 'clientRequestId')
   );
 
-  const normalized = removeEmptyFields(editable) as Record<string, unknown>;
+  const normalized = (removeEmptyFields(editable) ?? {}) as Record<string, unknown>;
 
   // Country code is managed by the backend, just as in pharmacy profile PATCH.
   if (normalized.location) {

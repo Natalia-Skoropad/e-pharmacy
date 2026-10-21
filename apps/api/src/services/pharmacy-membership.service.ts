@@ -348,9 +348,10 @@ export async function findPharmacyForSummaryAccess(
 export async function findPharmacyForProfileAccess(
   userId: string,
   capability: PharmacyProfileCapability,
-  session?: ClientSession
+  session?: ClientSession,
+  pharmacyId?: string
 ): Promise<PharmacyMembership> {
-  return requirePharmacyCapability(userId, capability, { session });
+  return requirePharmacyCapability(userId, capability, { session, pharmacyId });
 }
 
 //===============================================================

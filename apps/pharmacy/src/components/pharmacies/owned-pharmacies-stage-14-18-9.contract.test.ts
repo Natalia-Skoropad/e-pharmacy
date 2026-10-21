@@ -28,7 +28,7 @@ test('pharmacy registry uses only member-scoped BFF paths, never admin endpoints
 
 //===================================================================
 
-test('no empty table for zero pharmacies; creation is not linked before form exists', async () => {
+test('empty list offers an owner-only create action with a working route', async () => {
   const page = await source(
     './OwnedPharmaciesPageContent/OwnedPharmaciesPageContent.tsx'
   );
@@ -42,5 +42,9 @@ test('no empty table for zero pharmacies; creation is not linked before form exi
   );
 
   assert.match(page, /Create pharmacy/);
-  assert.match(page, /disabled/);
+
+  assert.match(
+    page,
+    /router\.push\(`\$\{PHARMACY_ROUTES\.PHARMACIES\}\/new`\)/
+  );
 });

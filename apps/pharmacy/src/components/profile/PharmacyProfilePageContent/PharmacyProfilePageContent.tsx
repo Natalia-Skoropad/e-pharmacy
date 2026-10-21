@@ -58,6 +58,7 @@ import {
 import { getSharedLoginUrl } from '@/lib/auth/shared-auth';
 import { getPharmacyPasswordChangeErrorMessage } from '@/lib/auth/pharmacy-auth-error-messages';
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
+import { getOwnedPharmacyMemberships } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { PHARMACY_ROUTES } from '@/lib/routes/pharmacy-routes';
 
 import { OwnerDocumentsPanel } from '../OwnerDocumentsPanel';
@@ -314,6 +315,29 @@ function OwnerProfile({ user }: Readonly<{ user: AuthUser }>) {
   // Stage 14.18.7 introduces pharmacy creation. Until the route and its
   // permission-aware API exist, do not navigate to a broken/unauthorized URL.
   const canCreatePharmacy = user.role === 'pharmacy';
+  const [canOpenCreate, setCanOpenCreate] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getOwnedPharmacyMemberships({ signal: controller.signal })
+      .then((memberships) => {
+        if (!controller.signal.aborted) {
+          setCanOpenCreate(
+            memberships.length === 0 ||
+              memberships.some(
+                (membership) => membership.membershipRole === 'owner'
+              )
+          );
+        }
+      })
+
+      .catch(() => {
+        if (!controller.signal.aborted) setCanOpenCreate(false);
+      });
+
+    return () => controller.abort();
+  }, []);
 
   return (
     <main className={css.page} aria-label="Owner profile">
@@ -360,18 +384,21 @@ function OwnerProfile({ user }: Readonly<{ user: AuthUser }>) {
                   <Button
                     type="button"
                     fullWidth
-                    disabled
-                    aria-describedby="owner-create-pharmacy-unavailable"
+                    disabled={!canOpenCreate}
+                    onClick={() => {
+                      window.location.assign(
+                        `${PHARMACY_ROUTES.PHARMACIES}/new`
+                      );
+                    }}
                     iconLeft={<Plus size={18} aria-hidden="true" />}
                   >
                     Create pharmacy
                   </Button>
-                  <p
-                    id="owner-create-pharmacy-unavailable"
-                    className={css.note}
-                  >
-                    Pharmacy creation will become available in a later stage.
-                  </p>
+                  {!canOpenCreate ? (
+                    <p className={css.note}>
+                      Only pharmacy owners can create a pharmacy.
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </ProfileIdentityCard>

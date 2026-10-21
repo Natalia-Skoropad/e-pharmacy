@@ -402,11 +402,14 @@ export async function claimRegistrationOwnerDocuments(
 
 export async function createPrivatePharmacyDocumentUploadService(
   userId: string,
-  input: PharmacyDocumentUploadInput
+  input: PharmacyDocumentUploadInput,
+  pharmacyId?: string
 ): Promise<{ document: PharmacyVerificationDocumentMetadata }> {
   const { pharmacy } = await findPharmacyForProfileAccess(
     userId,
-    'manage_documents'
+    'manage_documents',
+    undefined,
+    pharmacyId
   );
 
   const verified = decodeAndVerifyDocumentUpload(

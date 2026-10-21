@@ -69,6 +69,7 @@ import {
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import { getOwnedPharmacyLocationFilterOptions } from '@/lib/pharmacies/owned-pharmacy-location-options';
+import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { OwnedPharmacySearch } from '../OwnedPharmacySearch/OwnedPharmacySearch';
 import { OwnedPharmaciesFiltersDrawer } from '../OwnedPharmaciesFiltersDrawer/OwnedPharmaciesFiltersDrawer';
@@ -488,15 +489,11 @@ export function OwnedPharmaciesPageContent({
           <div className={css.createArea}>
             <Button
               type="button"
-              disabled
+              onClick={() => router.push(`${PHARMACY_ROUTES.PHARMACIES}/new`)}
               iconLeft={<Store size={18} aria-hidden="true" />}
-              aria-describedby="owned-pharmacy-create-unavailable"
             >
               Create pharmacy
             </Button>
-            <p id="owned-pharmacy-create-unavailable">
-              The creation form will be available in Stage 14.18.10.
-            </p>
           </div>
         ) : null}
 
@@ -616,14 +613,15 @@ export function OwnedPharmaciesPageContent({
               <ProfileResourceState
                 variant="empty"
                 title="Your pharmacies will appear here"
-                description="Manage all your pharmacies here. The Create pharmacy form will be available in Stage 14.18.10."
+                description="Your pharmacy drafts and verified pharmacies will appear here. Create your first pharmacy to get started."
                 icon={<Building2 size={32} aria-hidden="true" />}
                 action={
                   membershipReady && canCreate ? (
                     <Button
                       type="button"
-                      disabled
-                      title="The pharmacy creation form is coming in Stage 14.18.10"
+                      onClick={() =>
+                        router.push(`${PHARMACY_ROUTES.PHARMACIES}/new`)
+                      }
                     >
                       Create your first pharmacy
                     </Button>

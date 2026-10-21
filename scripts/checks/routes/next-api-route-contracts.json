@@ -321,30 +321,6 @@
   },
   {
     "app": "pharmacy",
-    "route": "/product-requests/statistics",
-    "backend": "/product-requests/statistics",
-    "methods": {
-      "GET": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/product-categories",
-    "backend": "/product-categories",
-    "methods": {
-      "GET": "public"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/products/filters",
-    "backend": "/products/filters",
-    "methods": {
-      "GET": "public"
-    }
-  },
-  {
-    "app": "pharmacy",
     "route": "/auth/logout",
     "backend": "/auth/logout",
     "methods": {
@@ -469,6 +445,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies",
+    "backend": "/pharmacies",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/[pharmacyId]/checkout-details",
     "backend": "/pharmacies/:pharmacyId/checkout-details",
     "methods": {
@@ -489,6 +473,121 @@
     "backend": "/pharmacies/me/documents/:documentId",
     "methods": {
       "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/memberships",
+    "backend": "/pharmacies/me/memberships",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies",
+    "backend": "/pharmacies/me/pharmacies",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/documents",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/documents",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/profile",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/profile",
+    "methods": {
+      "GET": "private",
+      "PATCH": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/send-for-verification",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/send-for-verification",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/options",
+    "backend": "/pharmacies/me/pharmacies/options",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/summary",
+    "backend": "/pharmacies/me/pharmacies/summary",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/profile",
+    "backend": "/pharmacies/me/profile",
+    "methods": {
+      "GET": "private",
+      "PATCH": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/profile/moderation-submission",
+    "backend": "/pharmacies/me/profile/moderation-submission",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/profile/send-for-verification",
+    "backend": "/pharmacies/me/profile/send-for-verification",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/summary",
+    "backend": "/pharmacies/me/summary",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacy-notes/[entityType]/[entityId]",
+    "backend": "/pharmacy-notes/:entityType/:entityId",
+    "methods": {
+      "GET": "private",
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacy-notes/[entityType]/[entityId]/[noteId]",
+    "backend": "/pharmacy-notes/:entityType/:entityId/:noteId",
+    "methods": {
+      "DELETE": "private"
     }
   },
   {
@@ -529,60 +628,10 @@
   },
   {
     "app": "pharmacy",
-    "route": "/pharmacies/me/memberships",
-    "backend": "/pharmacies/me/memberships",
+    "route": "/product-categories",
+    "backend": "/product-categories",
     "methods": {
-      "GET": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/pharmacies/me/summary",
-    "backend": "/pharmacies/me/summary",
-    "methods": {
-      "GET": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/pharmacies/me/profile",
-    "backend": "/pharmacies/me/profile",
-    "methods": {
-      "GET": "private",
-      "PATCH": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/pharmacies/me/profile/moderation-submission",
-    "backend": "/pharmacies/me/profile/moderation-submission",
-    "methods": {
-      "POST": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/pharmacies/me/profile/send-for-verification",
-    "backend": "/pharmacies/me/profile/send-for-verification",
-    "methods": {
-      "POST": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/pharmacy-notes/[entityType]/[entityId]",
-    "backend": "/pharmacy-notes/:entityType/:entityId",
-    "methods": {
-      "GET": "private",
-      "POST": "private"
-    }
-  },
-  {
-    "app": "pharmacy",
-    "route": "/pharmacy-notes/[entityType]/[entityId]/[noteId]",
-    "backend": "/pharmacy-notes/:entityType/:entityId/:noteId",
-    "methods": {
-      "DELETE": "private"
+      "GET": "public"
     }
   },
   {
@@ -608,6 +657,14 @@
     "app": "pharmacy",
     "route": "/product-requests/article-availability",
     "backend": "/product-requests/article-availability",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/product-requests/statistics",
+    "backend": "/product-requests/statistics",
     "methods": {
       "GET": "private"
     }
@@ -651,6 +708,14 @@
     "backend": "/products/:productId/stock-movements",
     "methods": {
       "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/products/filters",
+    "backend": "/products/filters",
+    "methods": {
+      "GET": "public"
     }
   },
   {

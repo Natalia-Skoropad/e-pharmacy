@@ -5,7 +5,9 @@ import { Building2, ArrowLeft } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+
 import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
+
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
@@ -15,6 +17,8 @@ import { formatPharmacyLocation } from '@e-pharmacy/utils';
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
+
+import { OwnedPharmacyEditor } from '../OwnedPharmacyEditor/OwnedPharmacyEditor';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -63,6 +67,15 @@ export function OwnedPharmacyDetailPageContent({
 
     return () => controller.abort();
   }, [pharmacyId, retry]);
+
+  if (
+    !loading &&
+    !error &&
+    result?.pharmacy.status === 'new' &&
+    result.pharmacy.membershipRole === 'owner'
+  ) {
+    return <OwnedPharmacyEditor pharmacyId={pharmacyId} />;
+  }
 
   return (
     <main className={css.page} aria-labelledby="owned-pharmacy-title">

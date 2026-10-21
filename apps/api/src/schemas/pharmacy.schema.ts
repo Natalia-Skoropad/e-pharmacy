@@ -157,7 +157,7 @@ const pharmacyProfileUpdateChangesSchema = z
 export const createPharmacyDraftSchema = z
   .object({
     clientRequestId: z.string().trim().uuid(),
-    name: sharedPharmacyNameSchema,
+    name: sharedPharmacyNameSchema.optional(),
 
     location: z
       .object({
