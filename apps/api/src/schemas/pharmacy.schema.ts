@@ -133,7 +133,7 @@ const pharmacyProfileUpdateChangesSchema = z
     workingHours: sharedClearableWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
     description: sharedClearableTextEditorSchema,
-    shortDescription: clearableSchema(z.string().trim().min(1).max(200)),
+    shortDescription: clearableSchema(z.string().trim().min(10).max(200)),
     documents: pharmacyProfileDocumentSelectionsSchema.optional(),
 
     bankDetails: z
@@ -178,7 +178,7 @@ export const createPharmacyDraftSchema = z
     workingHours: optionalSchema(sharedWorkingHoursSchema),
     imageUrl: optionalSchema(sharedPictureUrlSchema),
     description: optionalSchema(sharedTextEditorSchema),
-    shortDescription: optionalSchema(z.string().trim().min(1).max(200)),
+    shortDescription: optionalSchema(z.string().trim().min(10).max(200)),
 
     bankDetails: z
       .object({

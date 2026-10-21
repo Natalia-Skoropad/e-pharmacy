@@ -18,7 +18,8 @@ import {
   Files,
   Clock3,
   Camera,
-  CircleHelp,
+  LogOut,
+  X,
   Save,
 } from 'lucide-react';
 
@@ -47,7 +48,8 @@ import {
 } from '@e-pharmacy/ui/profile';
 
 import { Button } from '@e-pharmacy/ui/primitives';
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { InfoTooltip, ConfirmationModal } from '@e-pharmacy/ui/overlays';
+import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 import {
   PHARMACY_DOCUMENT_ACCEPT,
@@ -58,6 +60,15 @@ import {
   buildPictureFileError,
   buildPictureUrlError,
 } from '@e-pharmacy/validation/files';
+
+import {
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  PHARMACY_LOCATION_TEXT_MAX_LENGTH,
+} from '@e-pharmacy/validation/pharmacy';
 
 import {
   getMyPharmacyOwnerDocuments,
@@ -77,15 +88,6 @@ import { getOwnedPharmacyPath } from '@/lib/routes';
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 
 import { WorkingHoursInput } from '@/components/profile/WorkingHoursInput';
-
-import {
-  PHARMACY_NAME_MAX_LENGTH,
-  PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH,
-  USER_ADDRESS_MAX_LENGTH,
-  USER_EMAIL_MAX_LENGTH,
-  USER_PHONE_MAX_LENGTH,
-  PHARMACY_LOCATION_TEXT_MAX_LENGTH,
-} from '@e-pharmacy/validation/pharmacy';
 
 import {
   EMPTY_FIELDS,
@@ -144,13 +146,13 @@ const FIELD_HINTS: Partial<Record<PharmacyEditorField, string>> = {
   name: 'This name appears on your pharmacy page, in search results and in the pharmacy list.',
 
   shortDescription:
-    'Clients see this short introduction near your pharmacy name.',
+    'Clients see this introduction near your pharmacy name (at least 10 characters).',
 
   phone: 'Clients can use this phone number to contact the pharmacy.',
   email: 'Clients can use this email address to contact the pharmacy.',
-  region: 'Helps clients find your pharmacy by region.',
-  settlement: 'The city or town shown in the pharmacy address.',
-  address: 'The street address clients use to find the pharmacy.',
+  region: 'Enter at least 2 characters for the region.',
+  settlement: 'Enter at least 2 characters for the city or town.',
+  address: 'Use at least 10 Latin characters, e.g. 15 Shevchenka Street.',
 };
 
 //===================================================================
@@ -226,7 +228,8 @@ function serverErrors(cause: unknown): EditorErrors {
 
 export function OwnedPharmacyEditor({
   pharmacyId,
-}: Readonly<{ pharmacyId?: string }>) {
+  onSaved,
+}: Readonly<{ pharmacyId?: string; onSaved?: () => void }>) {
   const router = useRouter();
   const toast = useToast();
   const [tab, setTab] = useState<PharmacyEditorTab>('data');
@@ -249,6 +252,8 @@ export function OwnedPharmacyEditor({
   const mutationLock = useRef(false);
   const requestId = useRef<string | null>(null);
   const allowNavigateRef = useRef(false);
+  const pendingNavigationRef = useRef<null | (() => void)>(null);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
 
   const isDirty =
     !pharmacyId ||
@@ -328,16 +333,10 @@ export function OwnedPharmacyEditor({
     };
   }, [pharmacyId, hydrate]);
 
-  // A route change would unmount the editor tabs. Internal tab switches only
-  // update local state, preserving entered values without prompting.
+  // Unsaved changes are confirmed with our shared modal for in-app navigation.
+  // Browsers do not permit a custom dialog for tab close/reload, so we do
+  // not register beforeunload and never show a native browser dialog.
   useEffect(() => {
-    const beforeUnload = (event: BeforeUnloadEvent) => {
-      if (!isDirty || allowNavigateRef.current) return;
-
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
     const interceptLink = (event: MouseEvent) => {
       if (
         !isDirty ||
@@ -350,50 +349,65 @@ export function OwnedPharmacyEditor({
         event.altKey
       )
         return;
-
       const target = event.target;
+
       const link = target instanceof Element ? target.closest('a[href]') : null;
 
-      if (!link || link.getAttribute('target') === '_blank') return;
-
-      const href = link.getAttribute('href') ?? '';
-
-      if (!href || href.startsWith('#') || href === window.location.pathname)
-        return;
       if (
-        !window.confirm(
-          'You have unsaved pharmacy changes. Leave this page without saving?'
-        )
-      ) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
+        !(link instanceof HTMLAnchorElement) ||
+        link.target === '_blank' ||
+        link.hasAttribute('download')
+      )
+        return;
+
+      const href = link.href;
+
+      if (
+        !href ||
+        new URL(href).origin !== location.origin ||
+        href === location.href ||
+        (new URL(href).hash && new URL(href).pathname === location.pathname)
+      )
+        return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      pendingNavigationRef.current = () => {
+        allowNavigateRef.current = true;
+        router.push(href);
+      };
+
+      setLeaveDialogOpen(true);
     };
 
-    const editorPath = window.location.pathname;
+    const editorPath = window.location.pathname + window.location.search;
 
     const onPopState = () => {
-      if (
-        isDirty &&
-        !allowNavigateRef.current &&
-        !window.confirm(
-          'You have unsaved pharmacy changes. Leave this page without saving?'
-        )
-      ) {
-        window.history.pushState(null, '', editorPath);
-      }
+      if (!isDirty || allowNavigateRef.current) return;
+
+      const destination = window.location.pathname + window.location.search;
+
+      // Restore the editor URL before Next processes the navigation.
+      window.history.pushState(null, '', editorPath);
+
+      pendingNavigationRef.current = () => {
+        allowNavigateRef.current = true;
+        router.push(destination);
+      };
+
+      setLeaveDialogOpen(true);
     };
 
-    window.addEventListener('popstate', onPopState);
-    window.addEventListener('beforeunload', beforeUnload);
     document.addEventListener('click', interceptLink, true);
+    window.addEventListener('popstate', onPopState, true);
 
     return () => {
-      window.removeEventListener('popstate', onPopState);
-      window.removeEventListener('beforeunload', beforeUnload);
       document.removeEventListener('click', interceptLink, true);
+      window.removeEventListener('popstate', onPopState, true);
     };
-  }, [isDirty]);
+  }, [isDirty, router]);
 
   const change = (name: PharmacyEditorField, value: string) => {
     setValues((old) => ({ ...old, [name]: value }));
@@ -459,6 +473,8 @@ export function OwnedPharmacyEditor({
 
       hydrate(response.pharmacy);
       toast.success('Pharmacy draft saved.');
+
+      if (pharmacyId) onSaved?.();
 
       if (!pharmacyId) {
         allowNavigateRef.current = true;
@@ -628,14 +644,7 @@ export function OwnedPharmacyEditor({
     return <NameInput {...common} autoComplete="off" />;
   }
 
-  if (loading)
-    return (
-      <ProfileResourceState
-        variant="loading"
-        title="Loading draft"
-        description="Loading your saved pharmacy fields."
-      />
-    );
+  if (loading) return <PageLoader label="Loading pharmacy draft..." />;
 
   if (loadError)
     return (
@@ -680,7 +689,7 @@ export function OwnedPharmacyEditor({
               <InfoTooltip
                 label="How pharmacy registration works"
                 title="Creating your pharmacy"
-                icon={<CircleHelp size={20} aria-hidden="true" />}
+                icon={<Building2 size={20} aria-hidden="true" />}
                 escapeOverflow
                 items={[
                   {
@@ -726,7 +735,12 @@ export function OwnedPharmacyEditor({
                 isLoading={busy === 'verify'}
                 onClick={() => void verify()}
               >
-                Send for verification
+                <span className={css.fullVerificationLabel}>
+                  Send for verification
+                </span>
+                <span className={css.tabletVerificationLabel}>
+                  To verification
+                </span>
               </Button>
             </div>
           }
@@ -784,7 +798,15 @@ export function OwnedPharmacyEditor({
                       validatePictureUrl={(url) =>
                         buildPictureUrlError(url) || null
                       }
-                      onChange={(url) => change('imageUrl', url ?? '')}
+                      onChange={(url) => {
+                        change('imageUrl', url ?? '');
+
+                        toast.success(
+                          url
+                            ? 'Pharmacy photo updated.'
+                            : 'Pharmacy photo removed.'
+                        );
+                      }}
                       onError={(message) =>
                         setErrors((current) => ({
                           ...current,
@@ -902,6 +924,7 @@ export function OwnedPharmacyEditor({
                   description="Payment information used for pharmacy orders."
                   icon={<CreditCard size={22} aria-hidden="true" />}
                 />
+
                 <PharmacyPaymentFields
                   values={{
                     recipientName: values.recipientName,
@@ -911,14 +934,21 @@ export function OwnedPharmacyEditor({
                     receiptEmail: values.receiptEmail,
                     paymentPurpose: values.paymentPurpose,
                   }}
-                  errors={errors}
+                  errors={{
+                    recipientName: fieldError('recipientName'),
+                    taxId: fieldError('taxId'),
+                    iban: fieldError('iban'),
+                    bankName: fieldError('bankName'),
+                    receiptEmail: fieldError('receiptEmail'),
+                    paymentPurpose: fieldError('paymentPurpose'),
+                  }}
                   touched={{
-                    recipientName: Boolean(errors.recipientName),
-                    taxId: Boolean(errors.taxId),
-                    iban: Boolean(errors.iban),
-                    bankName: Boolean(errors.bankName),
-                    receiptEmail: Boolean(errors.receiptEmail),
-                    paymentPurpose: Boolean(errors.paymentPurpose),
+                    recipientName: Boolean(fieldError('recipientName')),
+                    taxId: Boolean(fieldError('taxId')),
+                    iban: Boolean(fieldError('iban')),
+                    bankName: Boolean(fieldError('bankName')),
+                    receiptEmail: Boolean(fieldError('receiptEmail')),
+                    paymentPurpose: Boolean(fieldError('paymentPurpose')),
                   }}
                   disabled={busy !== null}
                   onChange={(name, value) => change(name, value)}
@@ -1010,6 +1040,30 @@ export function OwnedPharmacyEditor({
           </section>
         </div>
       </section>
+
+      <ConfirmationModal
+        isOpen={leaveDialogOpen}
+        eyebrow="UNSAVED CHANGES"
+        title="Leave pharmacy editor?"
+        description="Your unsaved pharmacy changes will be lost."
+        confirmLabel="Leave page"
+        cancelLabel="Keep editing"
+        confirmIconLeft={<LogOut size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        destructive
+        onCancel={() => {
+          pendingNavigationRef.current = null;
+          setLeaveDialogOpen(false);
+        }}
+        onConfirm={() => {
+          setLeaveDialogOpen(false);
+
+          const navigate = pendingNavigationRef.current;
+
+          pendingNavigationRef.current = null;
+          navigate?.();
+        }}
+      />
     </main>
   );
 }

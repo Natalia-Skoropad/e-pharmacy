@@ -205,6 +205,9 @@ export function parseOwnedPharmacyOptionsResponse(
         id: base.id,
         name: base.name,
 
+        ...(base.imageUrl ? { imageUrl: base.imageUrl } : {}),
+        ...(base.email ? { email: base.email } : {}),
+        ...(base.phone ? { phone: base.phone } : {}),
         ...(base.location ? { location: base.location } : {}),
 
         status: status(row.status),
@@ -216,19 +219,51 @@ export function parseOwnedPharmacyOptionsResponse(
 
 //=============================================================================
 
+function isoDate(value: unknown): ISODateTimeString {
+  if (
+    typeof value !== 'string' ||
+    !Number.isFinite(Date.parse(value)) ||
+    new Date(value).toISOString() !== value
+  ) {
+    throw new TypeError('Invalid pharmacy detail date.');
+  }
+
+  return value as ISODateTimeString;
+}
+
+//=============================================================================
+
 export function parseOwnedPharmacyDetailResponse(
   value: unknown
 ): OwnedPharmacyDetailResponse {
   const row = record(value);
   const profile = parsePharmacyProfileResponse({ pharmacy: row.pharmacy });
   const metricsValue = row.metrics;
+  const dates = record(row.dates);
+
+  const parsedDates: OwnedPharmacyDetailResponse['dates'] = {
+    createdAt: isoDate(dates.createdAt),
+    updatedAt: isoDate(dates.updatedAt),
+
+    ...(dates.submittedAt !== undefined
+      ? { submittedAt: isoDate(dates.submittedAt) }
+      : {}),
+
+    ...(dates.approvedAt !== undefined
+      ? { approvedAt: isoDate(dates.approvedAt) }
+      : {}),
+
+    ...(dates.activatedAt !== undefined
+      ? { activatedAt: isoDate(dates.activatedAt) }
+      : {}),
+  };
 
   if (metricsValue !== null && profile.pharmacy.membershipRole !== 'owner') {
     throw new TypeError('Unexpected restricted pharmacy detail metrics.');
   }
 
   if (metricsValue === null)
-    return { pharmacy: profile.pharmacy, metrics: null };
+    return { pharmacy: profile.pharmacy, dates: parsedDates, metrics: null };
 
   const m = record(metricsValue);
   const rating = nonnegative(m.rating);
@@ -237,6 +272,7 @@ export function parseOwnedPharmacyDetailResponse(
 
   return {
     pharmacy: profile.pharmacy,
+    dates: parsedDates,
     metrics: { ...metrics(m), rating, reviewsCount: whole(m.reviewsCount) },
   };
 }

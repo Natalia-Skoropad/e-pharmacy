@@ -323,3 +323,45 @@
     order: 0;
   }
 }
+
+/* Shared pharmacy/editor typography: all rich-text emphasis and links. */
+.editable em,
+.editable i {
+  color: var(--color-accent);
+  font-style: italic;
+}
+
+.editable a {
+  text-decoration: none;
+  font-weight: var(--fw-semi-bold);
+  transition: color var(--transition-base);
+}
+
+.editable a:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Shared TextActionButton interaction pattern for rendered Markdown anchors. */
+.editable a {
+  position: relative;
+  display: inline;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: var(--fw-medium);
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition:
+    color var(--transition-base),
+    background-size var(--transition-base);
+}
+
+.editable a:hover,
+.editable a:focus-visible {
+  color: var(--color-accent-hover);
+  text-decoration: none;
+  background-size: 100% 1px;
+}

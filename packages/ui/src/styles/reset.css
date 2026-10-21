@@ -73,3 +73,6 @@ figure,
 blockquote {
   margin: 0;
 }
+
+/* Constraint validation popovers cannot be disabled with CSS. Shared input
+   controls use aria-required and project-owned inline validation instead. */

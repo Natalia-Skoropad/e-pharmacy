@@ -107,11 +107,12 @@ export async function sendOwnedPharmacyForVerification(
 /** Private, pharmacy-scoped download; never select a default pharmacy. */
 export async function downloadOwnedPharmacyDocument(
   pharmacyId: string,
-  documentId: string
+  documentId: string,
+  options?: Readonly<{ signal?: AbortSignal }>
 ): Promise<Blob> {
   return localApiRequest(
     pharmacyApiRoutes.pharmacies.ownedDocument(pharmacyId, documentId),
 
-    { responseType: 'blob' }
+    { responseType: 'blob', signal: options?.signal }
   );
 }

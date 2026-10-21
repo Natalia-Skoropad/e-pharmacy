@@ -52,14 +52,19 @@ function toOption(
 
     leading: (
       <TableImagePreview
-        src={undefined}
+        src={pharmacy.imageUrl}
         alt={`${name} photo`}
         fallback={formatInitials(name, 'P')}
         size={30}
       />
     ),
 
-    searchText: [pharmacy.id, formatPharmacyLocation(pharmacy.location)]
+    searchText: [
+      pharmacy.id,
+      pharmacy.email,
+      pharmacy.phone,
+      formatPharmacyLocation(pharmacy.location),
+    ]
       .filter(Boolean)
       .join(' '),
   };
@@ -196,7 +201,7 @@ export function OwnedPharmacySearch({
       }
       value={value}
       options={options}
-      placeholder="Name, ID, or location"
+      placeholder="Name, ID, email, phone, or address"
       emptyMessage={
         currentSuggestions && suggestions?.unavailable
           ? 'Suggestions are temporarily unavailable.'

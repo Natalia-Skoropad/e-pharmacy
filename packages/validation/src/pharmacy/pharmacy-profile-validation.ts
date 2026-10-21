@@ -208,6 +208,9 @@ export function validatePharmacyContactForm(
 
   if (!shortDescription && required) {
     errors.shortDescription = 'Short pharmacy description is required';
+  } else if (shortDescription && shortDescription.length < 10) {
+    errors.shortDescription =
+      'Short pharmacy description must be at least 10 characters';
   } else if (shortDescription.length > PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH) {
     errors.shortDescription = `Short pharmacy description must be at most ${PHARMACY_SHORT_DESCRIPTION_MAX_LENGTH} characters`;
   }
@@ -219,6 +222,7 @@ export function validatePharmacyContactForm(
       region: values.region,
       countryCode: 'UA',
     },
+
     mode
   );
 
@@ -249,6 +253,7 @@ function clearableDraftValue(
   baselineValue: string | undefined
 ): string | null | undefined {
   if (normalizedValue !== undefined) return normalizedValue;
+
   return baselineValue !== undefined ? null : undefined;
 }
 
@@ -378,6 +383,7 @@ export function validatePharmacyAboutForm(
   });
 
   if (descriptionError) errors.description = descriptionError;
+
   return errors;
 }
 

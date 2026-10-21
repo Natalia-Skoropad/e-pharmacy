@@ -75,6 +75,7 @@
   min-width: 0;
   display: grid;
   gap: 16px;
+  align-items: end;
 }
 
 .rowsControl {
@@ -107,8 +108,8 @@
 .createArea {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 16px;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .createArea p {
@@ -141,7 +142,7 @@
   }
 
   .toolbar {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: end;
   }
 
@@ -156,6 +157,17 @@
     grid-row: 1;
     justify-self: end;
     width: unset;
+  }
+  .createArea {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .createArea,
+  .createArea > button {
+    width: 100%;
   }
 }
 

@@ -21,12 +21,17 @@ export default async function OwnedPharmaciesRoute({
   if (route.kind === 'invalid') notFound();
 
   if (route.kind === 'detail') {
-    const canonical = buildOwnedPharmacyDetailUrl(route.pharmacyId);
+    const canonical = buildOwnedPharmacyDetailUrl(route.pharmacyId, route.tab);
 
     if (`/pharmacy/pharmacies/${filters.join('/')}` !== canonical)
       redirect(canonical);
 
-    return <OwnedPharmacyDetailPageContent pharmacyId={route.pharmacyId} />;
+    return (
+      <OwnedPharmacyDetailPageContent
+        pharmacyId={route.pharmacyId}
+        activeTab={route.tab}
+      />
+    );
   }
 
   const state = parseOwnedPharmaciesListSegments(route.filters);

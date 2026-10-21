@@ -58,6 +58,10 @@ function buildLocationTextError(
       : '';
   }
 
+  if (normalized.length < 2) {
+    return `${field === 'region' ? 'Region' : 'Settlement'} must be at least 2 characters`;
+  }
+
   if (normalized.length > USER_SEARCH_MAX_LENGTH) {
     return PHARMACY_LOCATION_VALIDATION_MESSAGES.limits[field];
   }

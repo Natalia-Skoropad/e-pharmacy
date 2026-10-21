@@ -9,6 +9,7 @@ import {
   Clock3,
   ShieldCheck,
   Store,
+  Plus,
 } from 'lucide-react';
 
 import { useRouter } from 'next/navigation';
@@ -282,13 +283,6 @@ export function OwnedPharmaciesPageContent({
   const cards = useMemo(
     () => [
       {
-        key: 'all' as const,
-        title: 'All pharmacies',
-        value: statistics?.all ?? 0,
-        tone: 'neutral' as const,
-        icon: <Building2 size={26} aria-hidden="true" />,
-      },
-      {
         key: 'new' as StatusKey,
         title: 'New',
         value: statistics?.new ?? 0,
@@ -387,7 +381,7 @@ export function OwnedPharmaciesPageContent({
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
-            <OrderMetricsTooltip scope="pharmacy" />
+            <OrderMetricsTooltip scope="pharmacy" preferTopLayer />
           </span>
         ),
 
@@ -483,26 +477,12 @@ export function OwnedPharmaciesPageContent({
           icon={<Building2 size={23} aria-hidden="true" />}
         />
 
-        {membershipReady &&
-        canCreate &&
-        (user?.status === 'new' || user?.status === 'active') ? (
-          <div className={css.createArea}>
-            <Button
-              type="button"
-              onClick={() => router.push(`${PHARMACY_ROUTES.PHARMACIES}/new`)}
-              iconLeft={<Store size={18} aria-hidden="true" />}
-            >
-              Create pharmacy
-            </Button>
-          </div>
-        ) : null}
-
         <div className={css.statisticsBlock}>
           {statistics ? (
             <StatsGrid
               className={css.statistics}
-              columns={3}
-              tabletColumns={2}
+              columns={5}
+              tabletColumns={3}
               ariaLabel="Pharmacy status statistics"
             >
               {cards.map((card) => {
@@ -523,11 +503,9 @@ export function OwnedPharmaciesPageContent({
                       page: 1,
                     })}
                     ariaLabel={
-                      card.key === 'all'
-                        ? 'Show all pharmacies'
-                        : active
-                          ? `Clear ${card.title.toLowerCase()} pharmacy status filter`
-                          : `Filter pharmacies by ${card.title.toLowerCase()}`
+                      active
+                        ? `Clear ${card.title.toLowerCase()} pharmacy status filter`
+                        : `Filter pharmacies by ${card.title.toLowerCase()}`
                     }
                   />
                 );
@@ -547,9 +525,9 @@ export function OwnedPharmaciesPageContent({
             </div>
           ) : (
             <StatsLoadingSkeleton
-              count={6}
-              columns={3}
-              tabletColumns={2}
+              count={5}
+              columns={5}
+              tabletColumns={3}
               label="Loading pharmacy status statistics"
             />
           )}
@@ -595,6 +573,19 @@ export function OwnedPharmaciesPageContent({
               label="pharmacies"
               fullWidthOnMobile
             />
+          ) : null}
+          {membershipReady &&
+          canCreate &&
+          (user?.status === 'new' || user?.status === 'active') ? (
+            <div className={css.createArea}>
+              <Button
+                type="button"
+                onClick={() => router.push(`${PHARMACY_ROUTES.PHARMACIES}/new`)}
+                iconLeft={<Plus size={18} aria-hidden="true" />}
+              >
+                Create pharmacy
+              </Button>
+            </div>
           ) : null}
         </div>
 

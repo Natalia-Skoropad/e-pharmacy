@@ -59,15 +59,6 @@ const BLOCK_TAGS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'UL', 'OL']);
 
 //===================================================================
 
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
 //===================================================================
 
 function serializeInlineNode(node: Node): string {
@@ -211,6 +202,7 @@ function MarkdownTextarea({
 
   useEffect(() => {
     const editor = editorRef.current;
+
     if (!editor || value === lastEmittedValueRef.current) return;
 
     editor.innerHTML = markdownToHtml(value);
@@ -247,9 +239,11 @@ function MarkdownTextarea({
     if (!editor) return;
 
     editor.focus();
+
     if (!range) return;
 
     const selection = window.getSelection();
+
     if (!selection) return;
 
     selection.removeAllRanges();
@@ -258,6 +252,7 @@ function MarkdownTextarea({
 
   const emitValue = () => {
     const editor = editorRef.current;
+
     if (!editor) return;
 
     const nextValue = editorToMarkdown(editor);
@@ -284,6 +279,7 @@ function MarkdownTextarea({
   const openLinkModal = () => {
     if (disabled) return;
 
+    saveSelection();
     setLinkUrl('');
     setLinkError('');
     setIsLinkModalOpen(true);
@@ -304,22 +300,40 @@ function MarkdownTextarea({
       return;
     }
 
-    restoreSelection();
+    // Modals live in a portal; restoring a stale selection after focusing its
+    // input is unreliable. Insert an explicit anchor at the saved editor range.
+    const editor = editorRef.current;
+    const range = savedRangeRef.current;
+
+    if (!editor) return;
 
     const selection = window.getSelection();
 
-    const isCollapsed =
-      !selection || selection.rangeCount === 0 || selection.isCollapsed;
+    const safeRange =
+      range && editor.contains(range.commonAncestorContainer)
+        ? range.cloneRange()
+        : null;
 
-    if (isCollapsed) {
-      document.execCommand(
-        'insertHTML',
-        false,
-        `<a href="${escapeHtml(url)}">${escapeHtml(url)}</a>`
-      );
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.textContent = safeRange?.toString().trim() || url;
+
+    if (safeRange) {
+      safeRange.deleteContents();
+      safeRange.insertNode(link);
     } else {
-      document.execCommand('createLink', false, url);
+      editor.appendChild(link);
     }
+
+    const end = document.createRange();
+
+    end.setStartAfter(link);
+    end.collapse(true);
+    selection?.removeAllRanges();
+    selection?.addRange(end);
+    editor.focus();
+    savedRangeRef.current = end.cloneRange();
 
     setIsLinkModalOpen(false);
     setLinkUrl('');
@@ -330,7 +344,9 @@ function MarkdownTextarea({
 
   const handlePaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
     event.preventDefault();
+
     const plainText = event.clipboardData.getData('text/plain');
+
     document.execCommand('insertText', false, plainText);
 
     window.requestAnimationFrame(() => {

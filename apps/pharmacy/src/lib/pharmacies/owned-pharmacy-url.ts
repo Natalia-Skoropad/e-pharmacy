@@ -51,7 +51,19 @@ export type OwnedPharmacySearchParams = Readonly<
 
 //===================================================================
 
-export const OWNED_PHARMACY_DETAIL_TABS = ['information'] as const;
+export const OWNED_PHARMACY_DETAIL_TABS = [
+  'information',
+  'about',
+  'payment',
+  'documents',
+  'comments',
+  'reviews',
+  'orders',
+  'clients',
+  'products',
+  'product-requests',
+  'activity',
+] as const;
 
 //===================================================================
 
@@ -287,7 +299,7 @@ export function resolveOwnedPharmaciesRoute(
       return { kind: 'invalid' };
     }
 
-    if (segments.length > 1) {
+    if (segments.length > 2) {
       return { kind: 'invalid' };
     }
 
@@ -297,6 +309,7 @@ export function resolveOwnedPharmaciesRoute(
       tab: tab as OwnedPharmacyDetailTab,
     };
   }
+
   try {
     parseListFilters(segments);
 
@@ -362,7 +375,9 @@ export function buildOwnedPharmacyDetailUrl(
   if (!OWNED_PHARMACY_DETAIL_TABS.includes(tab))
     throw new TypeError('Invalid pharmacy detail tab.');
 
-  return `${PHARMACY_ROUTES.PHARMACIES}/${pharmacyId}`;
+  const base = `${PHARMACY_ROUTES.PHARMACIES}/${pharmacyId}`;
+
+  return tab === 'information' ? base : `${base}/${tab}`;
 }
 
 //===================================================================

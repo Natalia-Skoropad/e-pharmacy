@@ -34,7 +34,7 @@ test('empty list offers an owner-only create action with a working route', async
   );
 
   assert.match(page, /data\?\.total === 0 && !hasActiveFilters/);
-  assert.match(page, /<ProfileResourceState variant="empty"/);
+  assert.match(page, /<ProfileResourceState\s+variant="empty"/);
 
   assert.match(
     page,

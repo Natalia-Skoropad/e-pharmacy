@@ -64,6 +64,7 @@ export function buildPharmacyNameError(
 ): string {
   return buildDomainNameError(
     value,
+
     {
       minLength: PHARMACY_NAME_MIN_LENGTH,
       maxLength: PHARMACY_NAME_MAX_LENGTH,
@@ -73,6 +74,7 @@ export function buildPharmacyNameError(
       maxMessage: VALIDATION_MESSAGES.limits.pharmacyNameMax,
       formatMessage: VALIDATION_MESSAGES.format.pharmacyName,
     },
+
     options
   );
 }
@@ -85,6 +87,7 @@ export function buildBankRecipientNameError(
 ): string {
   return buildDomainNameError(
     value,
+
     {
       minLength: BANK_RECIPIENT_NAME_MIN_LENGTH,
       maxLength: BANK_RECIPIENT_NAME_MAX_LENGTH,
@@ -94,6 +97,7 @@ export function buildBankRecipientNameError(
       maxMessage: VALIDATION_MESSAGES.limits.bankRecipientNameMax,
       formatMessage: VALIDATION_MESSAGES.format.bankRecipientName,
     },
+
     options
   );
 }
@@ -106,6 +110,7 @@ export function buildBankNameError(
 ): string {
   return buildDomainNameError(
     value,
+
     {
       minLength: BANK_NAME_MIN_LENGTH,
       maxLength: BANK_NAME_MAX_LENGTH,
@@ -115,6 +120,7 @@ export function buildBankNameError(
       maxMessage: VALIDATION_MESSAGES.limits.bankNameMax,
       formatMessage: VALIDATION_MESSAGES.format.bankName,
     },
+
     options
   );
 }
@@ -173,6 +179,7 @@ export function buildTaxIdError(
   const taxId = value.trim();
 
   if (!taxId) return options.required ? VALIDATION_MESSAGES.required.taxId : '';
+
   return TAX_ID_PATTERN.test(taxId) ? '' : VALIDATION_MESSAGES.format.taxId;
 }
 
@@ -185,6 +192,7 @@ export function buildIbanError(
   const iban = value.trim().toUpperCase();
 
   if (!iban) return options.required ? VALIDATION_MESSAGES.required.iban : '';
+
   return IBAN_PATTERN.test(iban) ? '' : VALIDATION_MESSAGES.format.iban;
 }
 
@@ -198,6 +206,10 @@ export function buildPaymentPurposeError(
 
   if (!paymentPurpose) {
     return options.required ? VALIDATION_MESSAGES.required.paymentPurpose : '';
+  }
+
+  if (paymentPurpose.length < 10) {
+    return 'Payment purpose must be at least 10 characters';
   }
 
   if (paymentPurpose.length > PAYMENT_PURPOSE_MAX_LENGTH) {

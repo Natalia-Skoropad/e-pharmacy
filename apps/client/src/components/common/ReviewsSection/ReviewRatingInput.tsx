@@ -61,7 +61,6 @@ export function ReviewRatingInput({
                   name={id}
                   value={rating}
                   checked={isSelected}
-                  required
                   disabled={disabled}
                   aria-label={`${rating} star${rating === 1 ? '' : 's'}`}
                   onChange={() => onChange(rating)}

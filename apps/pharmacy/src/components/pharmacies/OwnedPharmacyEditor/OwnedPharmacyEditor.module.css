@@ -33,10 +33,15 @@
 
 .titleWithHelp {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 7px;
   align-items: center;
   min-width: 0;
+  white-space: nowrap;
+}
+
+.tabletVerificationLabel {
+  display: none;
 }
 
 .headerActions {
@@ -155,5 +160,43 @@
 
   .headerActions > button {
     width: 100%;
+  }
+}
+
+/* On tablet, preserve the headline and its help icon as one unit. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .editorHeader {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editorHeader > :last-child {
+    justify-self: start;
+  }
+
+  .titleWithHelp {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .headerActions {
+    justify-content: flex-start;
+  }
+
+  .fullVerificationLabel {
+    display: none;
+  }
+
+  .tabletVerificationLabel {
+    display: inline;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+  .editorHeader {
+    gap: 12px;
+  }
+
+  .headerActions {
+    flex-wrap: nowrap;
   }
 }

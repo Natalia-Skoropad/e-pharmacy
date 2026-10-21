@@ -81,8 +81,9 @@ export function PharmacyPaymentFields({
           <NameInput
             id="recipient-name"
             name="recipientName"
+            required
             label="Recipient name"
-            hint="Enter the legal payment recipient name."
+            hint="Use at least 2 English letters or numbers for the legal recipient name."
             value={values.recipientName}
             error={errors.recipientName}
             isTouched={Boolean(touched.recipientName)}
@@ -94,6 +95,7 @@ export function PharmacyPaymentFields({
           <TaxIdInput
             id="tax-id"
             name="taxId"
+            required
             value={values.taxId}
             error={errors.taxId}
             isTouched={Boolean(touched.taxId)}
@@ -111,6 +113,7 @@ export function PharmacyPaymentFields({
           <IbanInput
             id="iban"
             name="iban"
+            required
             className={css.wide}
             value={values.iban}
             error={errors.iban}
@@ -125,7 +128,9 @@ export function PharmacyPaymentFields({
           <NameInput
             id="bank-name"
             name="bankName"
+            required
             label="Bank name"
+            hint="Use at least 2 English letters or numbers."
             value={values.bankName}
             error={errors.bankName}
             isTouched={Boolean(touched.bankName)}
@@ -137,7 +142,9 @@ export function PharmacyPaymentFields({
           <EmailInput
             id="receipt-email"
             name="receiptEmail"
+            required
             label="Receipt email"
+            hint="Use a valid email address, e.g. payments@example.com."
             value={values.receiptEmail}
             error={errors.receiptEmail}
             isTouched={Boolean(touched.receiptEmail)}
@@ -156,6 +163,7 @@ export function PharmacyPaymentFields({
             id="payment-purpose"
             name="paymentPurpose"
             label="Payment purpose"
+            hint="Enter at least 10 characters using English letters, numbers and punctuation."
             className={css.wide}
             value={values.paymentPurpose}
             error={errors.paymentPurpose}

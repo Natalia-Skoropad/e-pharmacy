@@ -1,7 +1,6 @@
 'use client';
 
 import { Eye, EyeOff } from 'lucide-react';
-import { useFieldValidationTooltip } from '../FormFieldLayout/FieldControls';
 
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import type { PasswordFieldProps } from '../types';
@@ -23,7 +22,6 @@ function PasswordInput({
   disabled = false,
   className,
   maxLength,
-  pattern,
   hint,
   ariaDescribedBy,
   isVisible,
@@ -34,14 +32,12 @@ function PasswordInput({
   onToggleVisibility,
 }: PasswordFieldProps) {
   const hasError = Boolean(isTouched && error);
-  const constraint = useFieldValidationTooltip();
 
   const describedBy =
     [
       hint ? `${id}-hint` : null,
       hasError ? `${id}-error` : null,
       ariaDescribedBy,
-      constraint.message ? `${id}-validation-tooltip` : null,
     ]
       .filter(Boolean)
       .join(' ') || undefined;
@@ -67,33 +63,18 @@ function PasswordInput({
           placeholder={placeholder}
           autoComplete={autoComplete}
           maxLength={maxLength}
-          pattern={pattern}
-          required={required}
+          aria-required={required}
           disabled={disabled}
           aria-invalid={hasError}
           aria-describedby={describedBy}
-          onChange={(event) => {
-            constraint.hide();
-            onChange(event);
-          }}
-          onInvalid={constraint.onInvalid}
-          onBlur={constraint.hide}
+          onChange={onChange}
         />
-        {constraint.message ? (
-          <span
-            className={css.validationTooltip}
-            id={`${id}-validation-tooltip`}
-            role="tooltip"
-          >
-            {constraint.message}
-          </span>
-        ) : null}
-
         {typeof maxLength === 'number' ? (
           <span className={css.passwordCounter} aria-hidden="true">
             {value.length}/{maxLength}
           </span>
         ) : null}
+
         <button
           className={css.eyeButton}
           type="button"

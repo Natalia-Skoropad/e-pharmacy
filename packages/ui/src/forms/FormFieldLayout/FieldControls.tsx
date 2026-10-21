@@ -1,8 +1,6 @@
 'use client';
 
 import {
-  useState,
-  type FormEvent,
   type ChangeEventHandler,
   type HTMLInputAutoCompleteAttribute,
 } from 'react';
@@ -13,36 +11,6 @@ import FormFieldLayout, { FormFieldError } from './FormFieldLayout';
 import type { BaseFieldProps } from '../types';
 
 import css from './FormField.module.css';
-
-//===================================================================
-
-// Replaces browser-localized constraint bubbles with the existing site's
-// dark, compact tooltip style. Domain/submit errors still use FormFieldError.
-export function useFieldValidationTooltip() {
-  const [message, setMessage] = useState('');
-
-  const onInvalid = (
-    event: FormEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    event.preventDefault();
-
-    const field = event.currentTarget;
-    const { validity } = field;
-
-    if (validity.valueMissing) setMessage('Please fill out this field.');
-    else if (validity.typeMismatch)
-      setMessage('Please enter a valid email address.');
-    else if (validity.patternMismatch)
-      setMessage('Please use the requested format.');
-    else if (validity.tooShort)
-      setMessage(`Enter at least ${field.minLength} characters.`);
-    else if (validity.tooLong)
-      setMessage(`Use no more than ${field.maxLength} characters.`);
-    else setMessage('Please check this field.');
-  };
-
-  return { message, onInvalid, hide: () => setMessage('') };
-}
 
 //===================================================================
 
@@ -100,7 +68,6 @@ export function TextInputControl({
   placeholder,
   autoComplete,
   maxLength,
-  pattern,
   hint,
   ariaDescribedBy,
   type = 'text',
@@ -108,19 +75,12 @@ export function TextInputControl({
   onChange,
 }: TextInputControlProps) {
   const hasError = Boolean(isTouched && error);
-  const constraint = useFieldValidationTooltip();
 
   const describedBy = getDescribedBy({
     id,
     hint,
     hasError,
-
-    ariaDescribedBy: [
-      ariaDescribedBy,
-      constraint.message ? `${id}-validation-tooltip` : undefined,
-    ]
-      .filter(Boolean)
-      .join(' '),
+    ariaDescribedBy,
   });
 
   return (
@@ -138,34 +98,18 @@ export function TextInputControl({
           className={css.input}
           id={id}
           name={name}
-          type={type}
+          type={type === 'email' ? 'text' : type}
           value={value}
           placeholder={placeholder}
           autoComplete={autoComplete}
-          inputMode={inputMode}
+          inputMode={type === 'email' ? 'email' : inputMode}
           maxLength={maxLength}
-          pattern={pattern}
-          required={required}
+          aria-required={required}
           disabled={disabled}
           aria-invalid={hasError || undefined}
           aria-describedby={describedBy}
-          onChange={(event) => {
-            constraint.hide();
-            onChange(event);
-          }}
-          onInvalid={constraint.onInvalid}
-          onBlur={constraint.hide}
+          onChange={onChange}
         />
-        {constraint.message ? (
-          <span
-            className={css.validationTooltip}
-            id={`${id}-validation-tooltip`}
-            role="tooltip"
-          >
-            {constraint.message}
-          </span>
-        ) : null}
-
         {typeof maxLength === 'number' ? (
           <span className={css.inputCounter} aria-hidden="true">
             {value.length}/{maxLength}
@@ -205,19 +149,12 @@ export function TextareaControl({
   onChange,
 }: TextareaControlProps) {
   const hasError = Boolean(isTouched && error);
-  const constraint = useFieldValidationTooltip();
 
   const describedBy = getDescribedBy({
     id,
     hint,
     hasError,
-
-    ariaDescribedBy: [
-      ariaDescribedBy,
-      constraint.message ? `${id}-validation-tooltip` : undefined,
-    ]
-      .filter(Boolean)
-      .join(' '),
+    ariaDescribedBy,
   });
 
   return (
@@ -240,27 +177,12 @@ export function TextareaControl({
           placeholder={placeholder}
           autoComplete={autoComplete}
           maxLength={maxLength}
-          required={required}
+          aria-required={required}
           disabled={disabled}
           aria-invalid={hasError || undefined}
           aria-describedby={describedBy}
-          onChange={(event) => {
-            constraint.hide();
-            onChange(event);
-          }}
-          onInvalid={constraint.onInvalid}
-          onBlur={constraint.hide}
+          onChange={onChange}
         />
-        {constraint.message ? (
-          <span
-            className={css.validationTooltip}
-            id={`${id}-validation-tooltip`}
-            role="tooltip"
-          >
-            {constraint.message}
-          </span>
-        ) : null}
-
         {typeof maxLength === 'number' ? (
           <span className={css.textareaCounter} aria-hidden="true">
             {value.length}/{maxLength}

@@ -43,6 +43,9 @@ export type OwnedPharmacyStatistics = Readonly<{
 export type OwnedPharmacyOption = Readonly<{
   id: EntityId;
   name: string;
+  imageUrl?: string;
+  email?: string;
+  phone?: string;
   location?: PharmacyLocationDraft;
   status: PharmacyStatus;
   membershipRole: 'owner' | 'manager';
@@ -54,6 +57,14 @@ export type OwnedPharmacyOptionsResponse = Readonly<{
 
 export type OwnedPharmacyDetailResponse = Readonly<{
   pharmacy: MyPharmacyProfile;
+
+  dates: Readonly<{
+    createdAt: ISODateTimeString;
+    updatedAt: ISODateTimeString;
+    submittedAt?: ISODateTimeString;
+    approvedAt?: ISODateTimeString;
+    activatedAt?: ISODateTimeString;
+  }>;
 
   metrics: Readonly<{
     activeClientsCount: number;

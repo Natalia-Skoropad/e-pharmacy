@@ -157,6 +157,7 @@ export const sharedOptionalAddressSchema = z.preprocess((value) => {
   if (typeof value !== 'string') return value;
 
   const normalizedValue = value.trim();
+
   return normalizedValue === '' ? undefined : normalizedValue;
 }, sharedRequiredAddressSchema.optional());
 
@@ -221,6 +222,7 @@ export const sharedPictureUrlSchema = z
           message: VALIDATION_MESSAGES.limits.pictureDataUrlMax,
         });
       }
+
       return;
     }
 
@@ -231,6 +233,7 @@ export const sharedPictureUrlSchema = z
           message: VALIDATION_MESSAGES.limits.pictureHttpUrlMax,
         });
       }
+
       return;
     }
 
@@ -263,6 +266,7 @@ export const sharedWorkingHoursSchema = z
 
   .superRefine((value, context) => {
     const issue = getWorkingHoursValidationIssue(value);
+
     if (!issue) return;
 
     const message =
@@ -311,7 +315,7 @@ export const sharedIbanSchema = z
 export const sharedPaymentPurposeSchema = z
   .string()
   .trim()
-  .min(1, VALIDATION_MESSAGES.required.paymentPurpose)
+  .min(10, 'Payment purpose must be at least 10 characters')
   .max(PAYMENT_PURPOSE_MAX_LENGTH, VALIDATION_MESSAGES.limits.paymentPurposeMax)
   .regex(PAYMENT_PURPOSE_PATTERN, VALIDATION_MESSAGES.format.paymentPurpose);
 

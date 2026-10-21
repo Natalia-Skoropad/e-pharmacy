@@ -28,7 +28,7 @@ function AuthFormLayout({
   const hasHeader = Boolean(title || description);
 
   return (
-    <form className={clsx(css.form, className)} {...formProps}>
+    <form className={clsx(css.form, className)} noValidate {...formProps}>
       {hasHeader ? (
         <div className={css.head}>
           {title ? <h1 className={css.title}>{title}</h1> : null}

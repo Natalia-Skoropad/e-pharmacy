@@ -62,6 +62,17 @@ test('Pharmacy registry disambiguates ObjectId detail routes from filters', () =
   });
 
   assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'orders']), {
+    kind: 'detail',
+    pharmacyId: ID,
+    tab: 'orders',
+  });
+
+  assert.equal(
+    buildOwnedPharmacyDetailUrl(ID, 'payment'),
+    `/pharmacy/pharmacies/${ID}/payment`
+  );
+
+  assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'unsupported-tab']), {
     kind: 'invalid',
   });
 

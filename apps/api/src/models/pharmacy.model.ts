@@ -185,6 +185,8 @@ const pharmacyLocationSchema = new Schema(
       required: false,
       trim: true,
 
+      minlength: [2, 'Settlement must be at least 2 characters'],
+
       maxlength: [
         USER_SEARCH_MAX_LENGTH,
         `Settlement must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
@@ -202,6 +204,8 @@ const pharmacyLocationSchema = new Schema(
       type: String,
       required: false,
       trim: true,
+
+      minlength: [2, 'Region must be at least 2 characters'],
 
       maxlength: [
         USER_SEARCH_MAX_LENGTH,
@@ -382,6 +386,8 @@ const pharmacySchema = new Schema<PharmacyEntity>(
           VALIDATION_MESSAGES.limits.paymentPurposeMax,
         ],
 
+        minlength: [10, 'Payment purpose must be at least 10 characters'],
+
         match: [
           PAYMENT_PURPOSE_PATTERN,
           VALIDATION_MESSAGES.format.paymentPurpose,
@@ -439,6 +445,11 @@ const pharmacySchema = new Schema<PharmacyEntity>(
     shortDescription: {
       type: String,
       trim: true,
+
+      minlength: [
+        10,
+        'Short pharmacy description must be at least 10 characters',
+      ],
 
       maxlength: [
         200,

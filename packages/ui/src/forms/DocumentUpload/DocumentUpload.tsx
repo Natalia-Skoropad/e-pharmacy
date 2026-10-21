@@ -176,6 +176,7 @@ function DocumentUpload({
 
   const handleConfirmRemove = () => {
     if (pendingRemoveFileId) removeFile(pendingRemoveFileId);
+
     setPendingRemoveFileId(null);
   };
 
@@ -195,6 +196,7 @@ function DocumentUpload({
     if (!downloadUrl) return;
 
     const anchor = document.createElement('a');
+
     anchor.href = downloadUrl;
     anchor.download = file.name;
     anchor.rel = 'noopener';
@@ -226,7 +228,7 @@ function DocumentUpload({
         accept={accept}
         multiple={multiple}
         disabled={disabled || readOnly || hasReachedLimit}
-        required={required}
+        aria-required={required}
         aria-invalid={hasError || undefined}
         aria-describedby={describedBy || undefined}
         aria-errormessage={hasError ? errorId : undefined}

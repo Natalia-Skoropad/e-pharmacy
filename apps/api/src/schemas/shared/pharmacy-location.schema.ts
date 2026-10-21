@@ -13,7 +13,7 @@ import { sharedRequiredAddressSchema } from '../shared-validation.schema';
 export const pharmacySettlementSchema = z
   .string()
   .trim()
-  .min(1, 'Settlement is required')
+  .min(2, 'Settlement must be at least 2 characters')
 
   .max(
     USER_SEARCH_MAX_LENGTH,
@@ -27,7 +27,7 @@ export const pharmacySettlementSchema = z
 const pharmacyRegionValueSchema = z
   .string()
   .trim()
-  .min(1, 'Region is required')
+  .min(2, 'Region must be at least 2 characters')
 
   .max(
     USER_SEARCH_MAX_LENGTH,
@@ -73,6 +73,7 @@ export const pharmacyLocationSchema = z
     countryCode: requiredCountryCodeSchema,
     geo: pharmacyGeoPointSchema.optional(),
   })
+
   .strict();
 
 //===============================================================

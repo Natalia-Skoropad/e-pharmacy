@@ -8,6 +8,8 @@ import {
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { Pharmacy } from '../models/pharmacy.model';
+import { AdminAuditLog } from '../models/adminAuditLog.model';
+import { ADMIN_AUDIT_ACTIONS } from '../constants/admin-audit';
 import { User } from '../models/user.model';
 
 import type {
@@ -83,6 +85,9 @@ type RegistryMetrics = Pick<
 type RegistryOption = {
   id: string;
   name: string;
+  imageUrl: string | null;
+  email: string | null;
+  phone: string | null;
   status: string;
   membershipRole: PharmacyMembershipRole;
   location: Record<string, unknown> | null;
@@ -393,6 +398,9 @@ export async function listOwnedPharmacyOptionsService(
         _id: 0,
         id: { $toString: '$_id' },
         name: 1,
+        imageUrl: { $ifNull: ['$imageUrl', null] },
+        email: { $ifNull: ['$email', null] },
+        phone: { $ifNull: ['$phone', null] },
         status: 1,
         location: { $ifNull: ['$location', null] },
         membershipRole: {
@@ -409,6 +417,9 @@ export async function listOwnedPharmacyOptionsService(
       status: item.status,
       membershipRole: item.membershipRole,
 
+      ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+      ...(item.email ? { email: item.email } : {}),
+      ...(item.phone ? { phone: item.phone } : {}),
       ...(item.location ? { location: item.location } : {}),
     })),
   };
@@ -455,8 +466,35 @@ export async function getOwnedPharmacyDetailService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy was not found.');
   }
 
+  // The audit entry reflects the actual submission time. It must not be
+  // inferred from updatedAt, which also changes on unrelated profile edits.
+  const submission = await AdminAuditLog.findOne({
+    pharmacyId: String(pharmacy._id),
+    action: ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
+  })
+    .sort({ createdAt: -1 })
+    .select('createdAt')
+    .lean<{ createdAt: Date } | null>();
+
   return {
     pharmacy: serializePharmacyProfile(pharmacy, membershipRole),
+
+    dates: {
+      createdAt: pharmacy.createdAt.toISOString(),
+      updatedAt: pharmacy.updatedAt.toISOString(),
+
+      ...(submission?.createdAt
+        ? { submittedAt: submission.createdAt.toISOString() }
+        : {}),
+
+      ...(pharmacy.approvedAt
+        ? { approvedAt: pharmacy.approvedAt.toISOString() }
+        : {}),
+
+      ...(pharmacy.activatedAt
+        ? { activatedAt: pharmacy.activatedAt.toISOString() }
+        : {}),
+    },
     // A read_profile-only manager may inspect pharmacy details, but cannot
     // learn order/client/product revenue metrics without future permissions.
     metrics:

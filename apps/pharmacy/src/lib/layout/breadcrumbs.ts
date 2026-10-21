@@ -217,14 +217,40 @@ export function getPharmacyBreadcrumbsByPathname(
       );
     }
 
-    const id = getSingleEntityId(route.segments);
+    const [pharmacyId, tab] = route.segments;
 
-    return id
-      ? getPharmacyBreadcrumbs(
-          { label: currentDetailLabel ?? `Pharmacy ${id}` },
-          { label: 'Pharmacies', href: PHARMACY_ROUTES.PHARMACIES }
-        )
-      : getPharmacyBreadcrumbs({ label: 'Pharmacies' });
+    const tabNames: Record<string, string> = {
+      about: 'About pharmacy',
+      payment: 'Payment details',
+      documents: 'Documents',
+      comments: 'Comments',
+      reviews: 'Reviews',
+      orders: 'Orders',
+      clients: 'Clients',
+      products: 'Products',
+      'product-requests': 'Product requests',
+      activity: 'Activity history',
+    };
+
+    if (pharmacyId && isValidObjectId(pharmacyId)) {
+      const detail = {
+        label: currentDetailLabel ?? `Pharmacy #${pharmacyId}`,
+        href: `${PHARMACY_ROUTES.PHARMACIES}/${pharmacyId}`,
+      };
+
+      return tab && tabNames[tab]
+        ? [
+            { label: 'Pharmacies', href: PHARMACY_ROUTES.PHARMACIES },
+            detail,
+            { label: tabNames[tab] },
+          ]
+        : getPharmacyBreadcrumbs(
+            { label: detail.label },
+            { label: 'Pharmacies', href: PHARMACY_ROUTES.PHARMACIES }
+          );
+    }
+
+    return getPharmacyBreadcrumbs({ label: 'Pharmacies' });
   }
 
   if (route.family === 'orders') {

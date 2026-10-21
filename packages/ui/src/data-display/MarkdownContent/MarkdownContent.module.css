@@ -59,3 +59,44 @@
 .content > :last-child {
   margin-bottom: 0;
 }
+
+.content :is(em, i) {
+  color: var(--color-accent);
+  font-style: italic;
+}
+
+/* Align read-only links with the shared TextActionButton visual language. */
+.content a {
+  text-decoration: none;
+  font-weight: var(--fw-semi-bold);
+  transition: color var(--transition-base);
+}
+
+.content a:hover,
+.content a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Shared TextActionButton interaction pattern for rendered Markdown anchors. */
+.content a {
+  position: relative;
+  display: inline;
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: var(--fw-medium);
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition:
+    color var(--transition-base),
+    background-size var(--transition-base);
+}
+
+.content a:hover,
+.content a:focus-visible {
+  color: var(--color-accent-hover);
+  text-decoration: none;
+  background-size: 100% 1px;
+}
