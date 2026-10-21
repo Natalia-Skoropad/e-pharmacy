@@ -613,6 +613,7 @@ pharmacySchema.index(
 pharmacySchema.index({ ownerId: 1 });
 pharmacySchema.index({ ownerId: 1, status: 1 });
 pharmacySchema.index({ ownerId: 1, createdAt: -1 });
+pharmacySchema.index({ managerUserIds: 1, createdAt: -1, _id: -1 });
 pharmacySchema.index({ status: 1 });
 pharmacySchema.index({ status: 1, rating: -1 });
 

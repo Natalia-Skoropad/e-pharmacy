@@ -19,6 +19,12 @@ import type {
 
 import type { PharmacyDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
 
+import type {
+  OwnedPharmacyRegistryListQuery,
+  OwnedPharmacyRegistryOptionsQuery,
+  OwnedPharmacyRegistryParams,
+} from '../schemas/owned-pharmacy-registry.schema';
+
 import {
   createPharmacyReviewService,
   getFavoritePharmacyIdsService,
@@ -45,6 +51,13 @@ import {
 } from '../services/pharmacy-document.service';
 
 import { createPharmacyDraftService } from '../services/pharmacy-create.service';
+
+import {
+  getOwnedPharmacyDetailService,
+  getOwnedPharmacyStatisticsService,
+  listOwnedPharmaciesService,
+  listOwnedPharmacyOptionsService,
+} from '../services/owned-pharmacy-registry-read.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 
@@ -79,6 +92,63 @@ export async function createPharmacyDraft(
     statusCode: result.replayed ? HTTP_STATUS.OK : HTTP_STATUS.CREATED,
     data: { pharmacy: result.pharmacy },
   });
+}
+
+//===============================================================
+
+export async function listOwnedPharmacies(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, OwnedPharmacyRegistryListQuery>
+): Promise<void> {
+  const data = await listOwnedPharmaciesService(
+    req.user?.id ?? '',
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getOwnedPharmacyStatistics(
+  req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await getOwnedPharmacyStatisticsService(req.user?.id ?? '');
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listOwnedPharmacyOptions(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, OwnedPharmacyRegistryOptionsQuery>
+): Promise<void> {
+  const data = await listOwnedPharmacyOptionsService(
+    req.user?.id ?? '',
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getOwnedPharmacyDetail(
+  req: Request,
+  res: ValidatedResponse<unknown, OwnedPharmacyRegistryParams>
+): Promise<void> {
+  const data = await getOwnedPharmacyDetailService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
 //===============================================================

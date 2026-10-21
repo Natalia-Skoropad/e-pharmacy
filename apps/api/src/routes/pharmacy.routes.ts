@@ -2,6 +2,10 @@ import { Router } from 'express';
 
 import {
   createPharmacyDraft,
+  getOwnedPharmacyDetail,
+  getOwnedPharmacyStatistics,
+  listOwnedPharmacies,
+  listOwnedPharmacyOptions,
   createPharmacyReview,
   getFavoritePharmacyIds,
   getFavoritePharmacies,
@@ -51,6 +55,13 @@ import {
 } from '../schemas/pharmacy.schema';
 
 import { emptyQuerySchema } from '../schemas/shared';
+
+import {
+  ownedPharmacyRegistryListQuerySchema,
+  ownedPharmacyRegistryOptionsQuerySchema,
+  ownedPharmacyRegistryParamsSchema,
+} from '../schemas/owned-pharmacy-registry.schema';
+
 import { ctrlWrapper } from '../utils/ctrlWrapper';
 
 //===============================================================
@@ -85,6 +96,53 @@ pharmacyRoutes.get(
   authorizeRoles(USER_ROLES.PHARMACY),
   validate({ params: pharmacyDocumentParamsSchema }),
   ctrlWrapper(getMyPharmacyDocument)
+);
+
+//=================================================================================
+
+// Stage 14.18.8: authenticated, user-scoped pharmacy registry. Static routes
+// precede the dynamic detail route; public /:pharmacyId remains unchanged.
+pharmacyRoutes.get(
+  '/me/pharmacies',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ query: ownedPharmacyRegistryListQuerySchema }),
+  ctrlWrapper(listOwnedPharmacies)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/summary',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ query: emptyQuerySchema }),
+  ctrlWrapper(getOwnedPharmacyStatistics)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/options',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ query: ownedPharmacyRegistryOptionsQuerySchema }),
+  ctrlWrapper(listOwnedPharmacyOptions)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/:pharmacyId',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    query: emptyQuerySchema,
+  }),
+
+  ctrlWrapper(getOwnedPharmacyDetail)
 );
 
 //=================================================================================
