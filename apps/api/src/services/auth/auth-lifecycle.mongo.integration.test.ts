@@ -35,10 +35,13 @@ import {
 
 import {
   getMyPharmacyProfileService,
+  updateMyPharmacyProfileService,
+} from '../pharmacies/pharmacy-owner-profile.service';
+
+import {
   sendMyPharmacyForVerificationService,
   submitMyPharmacyModerationService,
-  updateMyPharmacyProfileService,
-} from '../pharmacies/pharmacy.service';
+} from '../pharmacies/pharmacy-moderation.service';
 
 import {
   loginUserService,

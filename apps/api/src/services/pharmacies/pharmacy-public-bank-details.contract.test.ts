@@ -8,7 +8,10 @@ import test from 'node:test';
 test('generic public pharmacy details expose availability but never payment credentials', async () => {
   const [serviceSource, typeSource] = await Promise.all([
     readFile(
-      resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
+      resolve(
+        process.cwd(),
+        'src/services/pharmacies/pharmacy-public-catalog.service.ts'
+      ),
       'utf8'
     ),
 
@@ -17,7 +20,7 @@ test('generic public pharmacy details expose availability but never payment cred
 
   const publicSerializer = serviceSource.slice(
     serviceSource.indexOf('function serializePublicPharmacy'),
-    serviceSource.indexOf('function serializeCurrentPharmacySummary')
+    serviceSource.indexOf('export async function getPharmacyFiltersService')
   );
 
   const publicDto = typeSource.slice(
@@ -36,7 +39,10 @@ test('generic public pharmacy details expose availability but never payment cred
 test('complete bank details remain owned by the authenticated checkout endpoint', async () => {
   const [serviceSource, routeSource] = await Promise.all([
     readFile(
-      resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
+      resolve(
+        process.cwd(),
+        'src/services/pharmacies/pharmacy-public-catalog.service.ts'
+      ),
       'utf8'
     ),
 
@@ -48,7 +54,7 @@ test('complete bank details remain owned by the authenticated checkout endpoint'
       'export async function getPharmacyCheckoutDetailsService'
     ),
 
-    serviceSource.indexOf('export async function getPharmacyReviewsService')
+    serviceSource.indexOf('export async function setFavoritePharmacyService')
   );
 
   assert.match(checkoutService, /bankDetails/);

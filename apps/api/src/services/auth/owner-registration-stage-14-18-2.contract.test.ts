@@ -16,7 +16,10 @@ const registration = auth.slice(
 );
 
 const claims = read('src/services/pharmacies/pharmacy-document.service.ts');
-const summary = read('src/services/pharmacies/pharmacy.service.ts');
+
+const summary = read(
+  'src/services/pharmacies/pharmacy-owner-profile.service.ts'
+);
 
 //===================================================================
 

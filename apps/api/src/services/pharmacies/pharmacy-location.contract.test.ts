@@ -12,7 +12,7 @@ const read = (path: string) =>
 
 test('Admin and Owner share field-safe location/pending copies without merging response policies', () => {
   const admin = read('admin/pharmacies/admin.service.ts');
-  const pharmacy = read('pharmacies/pharmacy.service.ts');
+  const pharmacy = read('pharmacies/pharmacy-profile.shared.ts');
   const helper = read('pharmacies/pharmacy-location.ts');
   const detail = read('admin/pharmacies/admin-pharmacy-detail-read.service.ts');
 

@@ -12,6 +12,8 @@ const read = (path) => readFile(resolve(root, path), 'utf8');
 const [
   parserSource,
   pharmacyServiceSource,
+  ownerProfileServiceSource,
+  moderationServiceSource,
   authTypesSource,
   fileModelSource,
   frontendErrorCodesSource,
@@ -28,7 +30,9 @@ const [
   backendDocumentValidationSource,
 ] = await Promise.all([
   read('packages/api-client/src/response/shared-dto-parsers.ts'),
-  read('apps/api/src/services/pharmacies/pharmacy.service.ts'),
+  read('apps/api/src/services/pharmacies/pharmacy-profile.shared.ts'),
+  read('apps/api/src/services/pharmacies/pharmacy-owner-profile.service.ts'),
+  read('apps/api/src/services/pharmacies/pharmacy-moderation.service.ts'),
   read('packages/types/src/auth/payloads.ts'),
   read('apps/api/src/models/pharmacyDocumentFile.model.ts'),
   read('packages/config/src/pharmacies/error-codes.ts'),
@@ -209,6 +213,8 @@ assert.match(
   /PharmacyMembershipRole\s*=\s*['"]owner['"]\s*\|\s*['"]manager['"]/
 );
 
+//===================================================================
+
 // Stage 14.18: capabilities are canonical arrays, not inline owner/manager
 // object properties. Assert both required grants and forbidden manager grants.
 function extractCapabilities(source, constantName) {
@@ -222,6 +228,8 @@ function extractCapabilities(source, constantName) {
 
   return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((entry) => entry[1]);
 }
+
+//===================================================================
 
 const ownerCapabilities = extractCapabilities(
   membershipServiceSource,
@@ -257,17 +265,17 @@ assert.match(
 );
 
 assert.match(
-  pharmacyServiceSource,
+  ownerProfileServiceSource,
   /findPharmacyForProfileAccess\([\s\S]*?['"]read_profile['"]/
 );
 
 assert.match(
-  pharmacyServiceSource,
+  ownerProfileServiceSource,
   /findPharmacyForProfileAccess\([\s\S]*?['"]edit_profile['"]/
 );
 
 assert.match(
-  pharmacyServiceSource,
+  moderationServiceSource,
   /findPharmacyForProfileAccess\([\s\S]*?['"]submit_profile['"]/
 );
 
@@ -316,13 +324,13 @@ assert.doesNotMatch(
 );
 
 assert.match(
-  pharmacyServiceSource,
+  moderationServiceSource,
   /submitMyPharmacyModerationService[\s\S]*?withTransaction[\s\S]*?status:\s*PHARMACY_STATUSES\.ON_MODERATION/,
   'Active pharmacy moderation must merge changes and transition status atomically.'
 );
 
 assert.match(
-  pharmacyServiceSource,
+  moderationServiceSource,
   /updatedAt:\s*new Date\(input\.expectedRevision\)/,
   'Pharmacy profile writes must compare the expected server revision.'
 );
@@ -338,6 +346,8 @@ assert.doesNotMatch(
   /handleSendForModeration[\s\S]*?await updateMyPharmacyProfile\([\s\S]*?await sendMyPharmacyForVerification\(/,
   'Active moderation must not be split into save-then-submit browser mutations.'
 );
+
+//===================================================================
 
 console.log(
   'Profile contract check passed (strict parsing, revision conflicts, atomic moderation, explicit membership capabilities, missing-profile semantics, and server-backed verification documents).'

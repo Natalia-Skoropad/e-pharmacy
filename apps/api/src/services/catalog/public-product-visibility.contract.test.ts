@@ -6,19 +6,31 @@ import test from 'node:test';
 //===================================================================
 
 test('public product endpoints are active-only while blocked lifecycle access is management-only', async () => {
-  const [routes, service, pharmacyService] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
+  const [routes, service, pharmacyService, publicCatalogService] =
+    await Promise.all([
+      readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
 
-    readFile(
-      resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
-      'utf8'
-    ),
+      readFile(
+        resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
+        'utf8'
+      ),
 
-    readFile(
-      resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
-      'utf8'
-    ),
-  ]);
+      readFile(
+        resolve(
+          process.cwd(),
+          'src/services/pharmacies/pharmacy-public-status.ts'
+        ),
+        'utf8'
+      ),
+
+      readFile(
+        resolve(
+          process.cwd(),
+          'src/services/pharmacies/pharmacy-public-catalog.service.ts'
+        ),
+        'utf8'
+      ),
+    ]);
 
   assert.match(
     routes,
@@ -82,7 +94,7 @@ test('public product endpoints are active-only while blocked lifecycle access is
   );
 
   assert.match(
-    pharmacyService,
+    publicCatalogService,
     /\$lookup:[\s\S]*?from:\s*Product\.collection\.name[\s\S]*?\$match:\s*\{ 'product\.status': 'active' \}/
   );
 });

@@ -69,6 +69,7 @@ test('14.17.4: moderation dropdown is color-coded and transitions display canoni
 
 test('14.17.4: published identity, copy controls, owner link, dates and chart are arranged without duplicates', () => {
   const info = read('./PharmacyDetailsPageContent/PharmacyInformationTab.tsx');
+
   const styles = read(
     './PharmacyDetailsPageContent/PharmacyInformationTab.module.css'
   );
@@ -107,7 +108,10 @@ test('14.17.4: chart is pharmacy-scoped, permission-checked, lazy, cancellable a
     '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'
   );
 
-  const orderService = read('../../../../api/src/services/orders/order.service.ts');
+  const salesStatisticsService = read(
+    '../../../../api/src/services/orders/order-sales-statistics.service.ts'
+  );
+
   const graph = read('./PharmacyDetailsPageContent/PharmacySalesChart.tsx');
 
   const bff = read(
@@ -131,9 +135,14 @@ test('14.17.4: chart is pharmacy-scoped, permission-checked, lazy, cancellable a
     /getOrderSalesStatisticsForPharmacyService\(pharmacyId, query\)/
   );
 
-  assert.match(orderService, /pharmacyId: \{ \$in: pharmacyIds\.map/);
-  assert.match(orderService, /status: 'successful'/);
-  assert.match(orderService, /Order\.aggregate<OrderSalesAggregationRow>/);
+  assert.match(salesStatisticsService, /pharmacyId: \{ \$in: pharmacyIds\.map/);
+  assert.match(salesStatisticsService, /status: 'successful'/);
+
+  assert.match(
+    salesStatisticsService,
+    /Order\.aggregate<OrderSalesAggregationRow>/
+  );
+
   assert.match(graph, /getAdminPharmacySalesStatistics\(/);
   assert.match(graph, /controller\.abort\(\)/);
   assert.match(graph, /<SalesValueChart/);

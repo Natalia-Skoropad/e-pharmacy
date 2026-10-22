@@ -87,23 +87,30 @@ test('all legacy routes delegate to the canonical decision service', async () =>
 //===============================================================
 
 test('owner saves and submissions record only safe metadata in the same transaction', async () => {
-  const [owner, audit, model] = await Promise.all([
-    read('services/pharmacies/pharmacy.service.ts'),
-    read('services/admin/audit/admin-audit.service.ts'),
-    read('models/adminAuditLog.model.ts'),
-  ]);
+  const [ownerProfile, moderation, profileShared, audit, model] =
+    await Promise.all([
+      read('services/pharmacies/pharmacy-owner-profile.service.ts'),
+      read('services/pharmacies/pharmacy-moderation.service.ts'),
+      read('services/pharmacies/pharmacy-profile.shared.ts'),
+      read('services/admin/audit/admin-audit.service.ts'),
+      read('models/adminAuditLog.model.ts'),
+    ]);
 
-  assert.match(owner, /PHARMACY_PROFILE_UPDATED/);
-  assert.match(owner, /PHARMACY_MODERATION_SUBMITTED/);
+  assert.match(ownerProfile, /PHARMACY_PROFILE_UPDATED/);
+  assert.match(moderation, /PHARMACY_MODERATION_SUBMITTED/);
 
   assert.equal(
-    (owner.match(/await appendPharmacyOwnerMutationAudit\(/g) ?? []).length,
+    (
+      [ownerProfile, moderation]
+        .join('\n')
+        .match(/await appendPharmacyOwnerMutationAudit\(/g) ?? []
+    ).length,
     4
   );
 
-  assert.match(owner, /session: ClientSession/);
-  assert.match(owner, /bankDetails: 'paymentSettings'/);
-  assert.match(owner, /documents: 'verificationDocuments'/);
+  assert.match(profileShared, /session: ClientSession/);
+  assert.match(profileShared, /bankDetails: 'paymentSettings'/);
+  assert.match(profileShared, /documents: 'verificationDocuments'/);
   assert.match(audit, /mutationKey: normalizeAuditString/);
   assert.match(model, /audit_entity_mutation_key_unique/);
 });

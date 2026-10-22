@@ -78,7 +78,10 @@ test('all member-facing business modules use the centralized capability gate', a
     'src/services/pharmacies/pharmacy-note.service.ts':
       'findPharmacyForInternalNotesAccess',
 
-    'src/services/pharmacies/pharmacy.service.ts':
+    'src/services/pharmacies/pharmacy-owner-profile.service.ts':
+      'findPharmacyForProfileAccess',
+
+    'src/services/pharmacies/pharmacy-moderation.service.ts':
       'findPharmacyForProfileAccess',
 
     'src/services/pharmacies/pharmacy-document.service.ts':

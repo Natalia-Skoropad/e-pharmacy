@@ -81,7 +81,10 @@ test('owner and manager pharmacy-profile capabilities follow least privilege', (
 test('profile and document services enforce the membership capability matrix', async () => {
   const [profileService, documentService] = await Promise.all([
     readFile(
-      resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
+      resolve(
+        process.cwd(),
+        'src/services/pharmacies/pharmacy-owner-profile.service.ts'
+      ),
       'utf8'
     ),
 
@@ -93,6 +96,14 @@ test('profile and document services enforce the membership capability matrix', a
       'utf8'
     ),
   ]);
+
+  const moderationService = await readFile(
+    resolve(
+      process.cwd(),
+      'src/services/pharmacies/pharmacy-moderation.service.ts'
+    ),
+    'utf8'
+  );
 
   assert.match(
     profileService,
@@ -110,17 +121,17 @@ test('profile and document services enforce the membership capability matrix', a
   );
 
   assert.match(
-    profileService,
+    moderationService,
     /findPharmacyForProfileAccess\(\s*userId,\s*'submit_profile',\s*mongoSession\s*\)/
   );
 
   assert.match(
-    profileService,
+    moderationService,
     /submitMyPharmacyModerationService[\s\S]*?withTransaction[\s\S]*?status:\s*PHARMACY_STATUSES\.ON_MODERATION/
   );
 
   assert.match(
-    profileService,
+    moderationService,
     /updatedAt:\s*new Date\(input\.expectedRevision\)/
   );
 
@@ -134,7 +145,10 @@ test('profile and document services enforce the membership capability matrix', a
 
 test('verification readiness requires the pharmacy region on the backend', async () => {
   const profileService = await readFile(
-    resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/pharmacies/pharmacy-moderation.service.ts'
+    ),
     'utf8'
   );
 

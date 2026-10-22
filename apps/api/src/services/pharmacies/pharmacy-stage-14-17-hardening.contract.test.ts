@@ -44,10 +44,7 @@ test('14.17: first activation accepts new (not blocked) owners and provisions a 
 //===================================================================
 
 test('14.17: correction cycles are same-status, separately audited and CAS-protected', async () => {
-  const [decisions, owner] = await Promise.all([
-    read('services/admin/pharmacies/admin.service.ts'),
-    read('services/pharmacies/pharmacy.service.ts'),
-  ]);
+  const decisions = await read('services/admin/pharmacies/admin.service.ts');
 
   const corrections =
     decisions
@@ -66,7 +63,12 @@ test('14.17: correction cycles are same-status, separately audited and CAS-prote
 
   assert.match(decisions, /updatedAt: expectedDate/);
   assert.match(decisions, /await appendAdminAuditLog\(/);
-  assert.match(owner, /isResubmission[\s\S]*?reviewState: 'pending'/);
+
+  const moderation = await read(
+    'services/pharmacies/pharmacy-moderation.service.ts'
+  );
+
+  assert.match(moderation, /isResubmission[\s\S]*?reviewState: 'pending'/);
 });
 
 //===================================================================

@@ -30,7 +30,7 @@ import {
   getPharmacyMembership,
 } from './pharmacy-membership.service';
 
-import { serializePharmacyProfile } from './pharmacy.service';
+import { serializePharmacyProfile } from './pharmacy-profile.shared';
 
 //===============================================================
 

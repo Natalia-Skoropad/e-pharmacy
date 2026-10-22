@@ -7,16 +7,32 @@ import { resolve } from 'node:path';
 const read = (relative) => readFileSync(resolve(relative), 'utf8');
 const routes = read('apps/api/src/routes/pharmacy.routes.ts');
 const controller = read('apps/api/src/controllers/pharmacy.controller.ts');
-const member = read('apps/api/src/services/pharmacies/pharmacy-membership.service.ts');
+
+const member = read(
+  'apps/api/src/services/pharmacies/pharmacy-membership.service.ts'
+);
 
 const boundary = read(
   'apps/pharmacy/src/components/layout/PharmacyShell/PharmacyCabinetBoundary.tsx'
 );
 
-const profile = read('apps/api/src/services/pharmacies/pharmacy.service.ts');
-const upload = read('apps/api/src/services/pharmacies/pharmacy-document.service.ts');
+const profile = read(
+  'apps/api/src/services/pharmacies/pharmacy-moderation.service.ts'
+);
+
+const ownerProfile = read(
+  'apps/api/src/services/pharmacies/pharmacy-owner-profile.service.ts'
+);
+
+const upload = read(
+  'apps/api/src/services/pharmacies/pharmacy-document.service.ts'
+);
+
 const draftSchema = read('apps/api/src/schemas/pharmacy.schema.ts');
-const createService = read('apps/api/src/services/pharmacies/pharmacy-create.service.ts');
+
+const createService = read(
+  'apps/api/src/services/pharmacies/pharmacy-create.service.ts'
+);
 
 const editor = read(
   'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/OwnedPharmacyEditor.tsx'
@@ -83,7 +99,7 @@ assert.match(
 );
 
 assert.match(profile, /'submit_profile',\s*session,\s*pharmacyId/);
-assert.match(profile, /'edit_profile',\s*mongoSession,\s*pharmacyId/);
+assert.match(ownerProfile, /'edit_profile',\s*mongoSession,\s*pharmacyId/);
 assert.match(profile, /assertReadyForVerification\(pharmacy\)/);
 assert.match(profile, /PharmacyOwnerDocument\.exists/);
 assert.match(upload, /'manage_documents',\s*undefined,\s*pharmacyId/);
@@ -137,5 +153,7 @@ assert.match(fields, /validatePharmacyPaymentForm\(values, mode\)/);
 assert.match(fields, /buildPictureUrlError/);
 assert.match(list, /router\.push\(`\$\{PHARMACY_ROUTES\.PHARMACIES\}\/new`\)/);
 assert.match(detail, /<OwnedPharmacyEditor\s+pharmacyId=\{pharmacyId\}/);
+
+//===================================================================
 
 console.log('Stage 14.18.10 scoped draft UI contracts passed.');

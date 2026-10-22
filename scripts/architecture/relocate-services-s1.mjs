@@ -111,6 +111,18 @@ for (const entry of moves) {
 // Stage S10 replaces the already-relocated Order service with canonical domain modules.
 // Preserve the historical S1 relocation ledger without retaining a proxy file.
 const S10_REPLACEMENTS = new Map([
+  // S10.2: Pharmacy responsibilities are now canonical modules, not a proxy.
+  [
+    'apps/api/src/services/pharmacies/pharmacy.service.ts',
+    [
+      'apps/api/src/services/pharmacies/pharmacy-public-catalog.service.ts',
+      'apps/api/src/services/pharmacies/pharmacy-reviews.service.ts',
+      'apps/api/src/services/pharmacies/pharmacy-owner-profile.service.ts',
+      'apps/api/src/services/pharmacies/pharmacy-moderation.service.ts',
+      'apps/api/src/services/pharmacies/pharmacy-profile.shared.ts',
+      'apps/api/src/services/pharmacies/pharmacy-public-status.ts',
+    ],
+  ],
   [
     'apps/api/src/services/orders/order.service.ts',
     [

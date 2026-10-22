@@ -184,7 +184,15 @@ const [
 ] = await Promise.all([
   read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
   read('apps', 'api', 'src', 'schemas', 'pharmacy.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'pharmacies/pharmacy.service.ts'),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'pharmacies/pharmacy-public-catalog.service.ts'
+  ),
+
   read('apps', 'api', 'src', 'services', 'admin/pharmacies/admin.service.ts'),
   read('packages', 'types', 'src', 'pharmacies', 'responses.ts'),
 
@@ -211,6 +219,8 @@ const [
   read('apps', 'api', 'src', 'services', 'orders/order-shared.ts'),
 ]);
 
+//===================================================================
+
 assert.doesNotMatch(pharmacyModel, /^\s*city\s*:/m);
 assert.doesNotMatch(pharmacyModel, /['"]city['"]\s*:/);
 assert.match(pharmacyModel, /['"]location\.settlement['"]:\s*1/);
@@ -219,6 +229,18 @@ assert.match(pharmacyModel, /['"]location\.address['"]:\s*['"]text['"]/);
 assert.doesNotMatch(pharmacySchema, /^\s*city\s*:/m);
 assert.doesNotMatch(pharmacyService, /query\.city/);
 assert.doesNotMatch(pharmacyService, /LegacyPharmacyPendingModeration/);
+
+assert.doesNotMatch(
+  await read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'pharmacies/pharmacy-profile.shared.ts'
+  ),
+  /LegacyPharmacyPendingModeration/
+);
+
 assert.doesNotMatch(adminService, /LegacyPharmacyPendingModeration/);
 assert.doesNotMatch(sharedPharmacyResponses, /^\s*city\??\s*:/m);
 assert.doesNotMatch(clientPharmacyFilters, /^\s*city\??\s*:/m);

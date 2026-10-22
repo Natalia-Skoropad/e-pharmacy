@@ -49,7 +49,7 @@ test('feedback endpoint is permissioned and cannot silently modify public status
 
 test('on_moderation revisions only write pendingModeration; owner resubmits atomically', async () => {
   const [profile, api] = await Promise.all([
-    read('services/pharmacies/pharmacy.service.ts'),
+    read('services/pharmacies/pharmacy-owner-profile.service.ts'),
     read('services/pharmacies/pharmacy-membership.service.ts'),
   ]);
 
@@ -62,7 +62,11 @@ test('on_moderation revisions only write pendingModeration; owner resubmits atom
     /isCorrectionDraft[\s\S]*?pendingModeration,[\s\S]*?reviewState: 'changes_requested'/
   );
 
-  const submit = profile
+  const moderation = await read(
+    'services/pharmacies/pharmacy-moderation.service.ts'
+  );
+
+  const submit = moderation
     .split('export async function submitMyPharmacyModerationService')[1]
     .split('export async function sendMyPharmacyForVerificationService')[0];
 
@@ -77,7 +81,7 @@ test('approval retains first activation, blocking retains historic approval and 
   const [admin, owner, pharmacy] = await Promise.all([
     read('services/admin/pharmacies/admin.service.ts'),
     read('services/owners/pharmacy-owner-lifecycle.service.ts'),
-    read('services/pharmacies/pharmacy.service.ts'),
+    read('services/pharmacies/pharmacy-public-status.ts'),
   ]);
 
   assert.match(admin, /activatedAt: pharmacy\.activatedAt \?\? approvedAt/);

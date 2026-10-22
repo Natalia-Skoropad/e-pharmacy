@@ -7,7 +7,10 @@ import test from 'node:test';
 
 async function readServiceSource(): Promise<string> {
   return readFile(
-    resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/pharmacies/pharmacy-profile.shared.ts'
+    ),
     'utf8'
   );
 }

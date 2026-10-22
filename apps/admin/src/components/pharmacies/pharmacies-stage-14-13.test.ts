@@ -198,7 +198,10 @@ test('14.13 private Admin API is guarded and generic public pharmacy API exclude
         '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'
       ),
 
-      read('../../../../api/src/services/pharmacies/pharmacy.service.ts'),
+      read(
+        '../../../../api/src/services/pharmacies/pharmacy-public-catalog.service.ts'
+      ),
+
       read('../../../../../packages/next-api/src/proxy/backend-proxy.ts'),
     ]);
 
@@ -208,13 +211,19 @@ test('14.13 private Admin API is guarded and generic public pharmacy API exclude
   );
 
   assert.match(backendRoutes, /getAdminPharmacyDetailService/);
-  assert.match(readService, /bankTransferAvailable\(bankDetails\)/);
+  assert.match(readService, /hasCompleteBankDetails\(bankDetails\)/);
+
+  assert.match(
+    readService,
+    /import\s*\{\s*hasCompleteBankDetails\s*\}\s*from\s*['"]\.\.\/\.\.\/pharmacies\/bank-details['"]/
+  );
+
   assert.match(readService, /const bankDetails = pending\.bankDetails/);
   assert.match(readService, /BANK_FIELDS\.filter/);
 
   const publicSerializer = publicService.slice(
     publicService.indexOf('function serializePublicPharmacy('),
-    publicService.indexOf('function serializeCurrentPharmacySummary')
+    publicService.indexOf('export async function getPharmacyFiltersService')
   );
 
   assert.doesNotMatch(publicSerializer, /bankDetails:/);

@@ -16,7 +16,8 @@ test('all payment surfaces use one complete-bank-details predicate', () => {
   const consumers = [
     'admin/pharmacies/admin.service.ts',
     'admin/pharmacies/admin-pharmacy-detail-read.service.ts',
-    'pharmacies/pharmacy.service.ts',
+    'pharmacies/pharmacy-public-catalog.service.ts',
+    'pharmacies/pharmacy-profile.shared.ts',
     'orders/order-checkout.service.ts',
   ];
 
@@ -29,9 +30,9 @@ test('all payment surfaces use one complete-bank-details predicate', () => {
     assert.doesNotMatch(source, /function hasCompleteBankDetails\(/);
   }
 
-  const publicSerializer = read('pharmacies/pharmacy.service.ts').split(
-    'function serializeCurrentPharmacySummary'
-  )[0];
+  const publicSerializer = read(
+    'pharmacies/pharmacy-public-catalog.service.ts'
+  ).split('export async function getPharmacyFiltersService')[0];
 
   assert.doesNotMatch(publicSerializer, /bankDetails:\s*pharmacy\.bankDetails/);
 

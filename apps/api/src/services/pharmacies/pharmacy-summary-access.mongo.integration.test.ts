@@ -8,12 +8,13 @@ import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-in
 import { PHARMACY_PROFILE_BLOCKED_ERROR_CODE } from '../../constants/pharmacy-profile';
 import { Pharmacy } from '../../models/pharmacy.model';
 import { User } from '../../models/user.model';
+
 import type { HttpError } from '../../types/errors';
 
 import {
   getCurrentPharmacySummaryService,
   getMyPharmacyProfileService,
-} from './pharmacy.service';
+} from './pharmacy-owner-profile.service';
 
 //===================================================================
 

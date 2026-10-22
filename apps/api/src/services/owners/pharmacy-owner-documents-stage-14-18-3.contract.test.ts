@@ -41,7 +41,7 @@ test('14.18.3 migration requires registration provenance and preserves original 
 //===============================================================
 
 test('14.18.3 verification requires independent owner documents', () => {
-  const source = read('src/services/pharmacies/pharmacy.service.ts');
+  const source = read('src/services/pharmacies/pharmacy-moderation.service.ts');
 
   assert.match(
     source,

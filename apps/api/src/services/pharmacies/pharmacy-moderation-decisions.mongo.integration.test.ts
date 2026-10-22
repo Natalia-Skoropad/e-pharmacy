@@ -10,10 +10,8 @@ import { User } from '../../models/user.model';
 import { hashPassword } from '../../utils/password';
 import { decidePharmacyModerationByAdminService } from '../admin/pharmacies/admin.service';
 
-import {
-  updateMyPharmacyProfileService,
-  submitMyPharmacyModerationService,
-} from './pharmacy.service';
+import { updateMyPharmacyProfileService } from './pharmacy-owner-profile.service';
+import { submitMyPharmacyModerationService } from './pharmacy-moderation.service';
 
 //===============================================================
 

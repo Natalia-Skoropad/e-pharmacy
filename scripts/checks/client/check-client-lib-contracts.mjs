@@ -30,7 +30,7 @@ const backendProductService = await read(
 );
 
 const backendPharmacyService = await read(
-  'apps/api/src/services/pharmacies/pharmacy.service.ts'
+  'apps/api/src/services/pharmacies/pharmacy-public-catalog.service.ts'
 );
 
 const sharedDtoParsers = await read(
@@ -88,6 +88,7 @@ for (const preset of ['commerce', 'reviews', 'dictionary']) {
 assert.doesNotMatch(cache, /cache:\s*['"]no-store/);
 
 const dataState = await read('apps/client/src/lib/api/server/data-state.ts');
+
 assert.match(dataState, /isAbortError\(error\).*throw error/s);
 assert.match(dataState, /rate_limit|service_unavailable|invalid_response/);
 
@@ -115,6 +116,7 @@ await assert.rejects(
 );
 
 const cartApi = await read('apps/client/src/lib/api/browser/cart.api.ts');
+
 assert.match(cartApi, /export function removeCartPharmacy/);
 
 const sitemapData = await read(
@@ -128,6 +130,7 @@ assert.doesNotMatch(sitemapData, /pharmacy\.isActive\s*!==\s*false/);
 assert.doesNotMatch(sitemapData, /lastModified:\s*now/);
 
 const clientLib = await read('apps/client/src/lib/seo/server/sitemap.ts');
+
 assert.match(clientLib, /ISO_CALENDAR_OR_DATETIME_PATTERN/);
 assert.match(clientLib, /choosePreferredEntry/);
 
@@ -151,6 +154,8 @@ for (const requiredTest of [
 ]) {
   await access(path.join(root, requiredTest));
 }
+
+//===================================================================
 
 console.log(
   'Client-lib contract check passed (request semantics, environment, cache, server data, atomic cart-group removal, cart ownership and sitemap policy).'

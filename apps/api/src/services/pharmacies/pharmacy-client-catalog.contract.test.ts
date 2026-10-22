@@ -12,7 +12,7 @@ const read = (relativePath: string) =>
 
 test('Stage 13.4.5 exposes canonical location and email in pharmacy cards', async () => {
   const [serviceSource, typeSource] = await Promise.all([
-    read('src/services/pharmacies/pharmacy.service.ts'),
+    read('src/services/pharmacies/pharmacy-public-catalog.service.ts'),
     read('src/types/pharmacy.ts'),
   ]);
 
@@ -46,7 +46,7 @@ test('Stage 13.4.5 exposes canonical location and email in pharmacy cards', asyn
 
 test('Stage 13.4.5 builds Location options only from active pharmacies and keeps settlement plus region distinct', async () => {
   const serviceSource = await read(
-    'src/services/pharmacies/pharmacy.service.ts'
+    'src/services/pharmacies/pharmacy-public-catalog.service.ts'
   );
 
   const filterService = serviceSource.slice(
@@ -75,7 +75,7 @@ test('Stage 13.4.5 builds Location options only from active pharmacies and keeps
 
 test('Stage 13.4.5 address search covers address, settlement and region and location filters are structured', async () => {
   const [serviceSource, schemaSource] = await Promise.all([
-    read('src/services/pharmacies/pharmacy.service.ts'),
+    read('src/services/pharmacies/pharmacy-public-catalog.service.ts'),
     read('src/schemas/pharmacy.schema.ts'),
   ]);
 
@@ -103,13 +103,13 @@ test('Stage 13.4.5 address search covers address, settlement and region and loca
 
 test('Stage 13.4.5 public pharmacy details expose canonical structured location', async () => {
   const [serviceSource, typeSource] = await Promise.all([
-    read('src/services/pharmacies/pharmacy.service.ts'),
+    read('src/services/pharmacies/pharmacy-public-catalog.service.ts'),
     read('src/types/pharmacy.ts'),
   ]);
 
   const serializer = serviceSource.slice(
     serviceSource.indexOf('function serializePublicPharmacy'),
-    serviceSource.indexOf('function serializeCurrentPharmacySummary')
+    serviceSource.indexOf('export async function getPharmacyFiltersService')
   );
 
   const publicDto = typeSource.slice(

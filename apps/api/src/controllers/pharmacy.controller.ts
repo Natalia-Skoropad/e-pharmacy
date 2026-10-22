@@ -27,24 +27,33 @@ import type {
 } from '../schemas/owned-pharmacy-registry.schema';
 
 import {
-  createPharmacyReviewService,
   getFavoritePharmacyIdsService,
   getFavoritePharmaciesService,
-  getCurrentPharmacySummaryService,
-  getMyPharmacyProfileService,
-  getPendingPharmacyReviewsService,
   getPharmaciesService,
   getPharmacyCheckoutDetailsService,
   getPharmacyDetailsService,
   getPharmacyFiltersService,
   getPharmacyOptionsService,
+  setFavoritePharmacyService,
+} from '../services/pharmacies/pharmacy-public-catalog.service';
+
+import {
+  createPharmacyReviewService,
+  getPendingPharmacyReviewsService,
   getPharmacyReviewsService,
   moderatePharmacyReviewService,
+} from '../services/pharmacies/pharmacy-reviews.service';
+
+import {
+  getCurrentPharmacySummaryService,
+  getMyPharmacyProfileService,
+  updateMyPharmacyProfileService,
+} from '../services/pharmacies/pharmacy-owner-profile.service';
+
+import {
   sendMyPharmacyForVerificationService,
   submitMyPharmacyModerationService,
-  setFavoritePharmacyService,
-  updateMyPharmacyProfileService,
-} from '../services/pharmacies/pharmacy.service';
+} from '../services/pharmacies/pharmacy-moderation.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,

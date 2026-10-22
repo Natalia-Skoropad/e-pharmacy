@@ -69,18 +69,22 @@ test('registration yields a new owner without creating an accidental public phar
 //===============================================================
 
 test('client public pharmacy list/detail and checkout keep pending fields unpublished', async () => {
-  const service = await source('services/pharmacies/pharmacy.service.ts');
+  const service = await source(
+    'services/pharmacies/pharmacy-public-catalog.service.ts'
+  );
+
+  const status = await source('services/pharmacies/pharmacy-public-status.ts');
 
   const listToProfile = service.slice(
     service.indexOf('function serializePharmacyCardSummary'),
-    service.indexOf('function serializeCurrentPharmacySummary')
+    service.indexOf('export async function getPharmacyFiltersService')
   );
 
   assert.doesNotMatch(listToProfile, /pendingModeration/);
 
   assert.match(
-    service,
-    /const PUBLIC_PHARMACY_STATUSES\s*=\s*\[\s*PHARMACY_STATUSES\.ACTIVE,\s*PHARMACY_STATUSES\.ON_MODERATION/
+    status,
+    /export const PUBLIC_PHARMACY_STATUSES\s*=\s*\[\s*PHARMACY_STATUSES\.ACTIVE,\s*PHARMACY_STATUSES\.ON_MODERATION/
   );
 
   assert.match(
@@ -153,7 +157,13 @@ test('admin pharmacy status endpoint uses pharmacies.moderate backend permission
 //===============================================================
 
 test('owner profile revisions isolate pending changes and on_moderation submit remains atomic', async () => {
-  const profile = await source('services/pharmacies/pharmacy.service.ts');
+  const profile = await source(
+    'services/pharmacies/pharmacy-owner-profile.service.ts'
+  );
+
+  const moderation = await source(
+    'services/pharmacies/pharmacy-moderation.service.ts'
+  );
 
   assert.match(
     profile,
@@ -166,12 +176,12 @@ test('owner profile revisions isolate pending changes and on_moderation submit r
   );
 
   assert.match(
-    profile,
+    moderation,
     /submitMyPharmacyModerationService[\s\S]*?status:\s*PHARMACY_STATUSES\.ON_MODERATION/
   );
 
   assert.match(
-    profile,
+    moderation,
     /sendMyPharmacyForVerificationService[\s\S]*?assertReadyForVerification\(pharmacy\)/
   );
 });
