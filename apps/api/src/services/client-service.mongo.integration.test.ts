@@ -10,7 +10,7 @@ import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
 import { User } from '../models/user.model';
 
-import { getTestProductCategoryId } from './product-category-test.helper';
+import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
 
 import {
   getClientPurchasedProductsService,

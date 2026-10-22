@@ -36,7 +36,7 @@ const [
   read('packages/types/src/pharmacies/responses.ts'),
   read('packages/types/src/products/product-card-summary.ts'),
   read('packages/types/src/pharmacies/pharmacy-card-summary.ts'),
-  read('apps/api/src/services/product.service.ts'),
+  read('apps/api/src/services/catalog/product.service.ts'),
   read('apps/api/src/controllers/product.controller.ts'),
 
   read(

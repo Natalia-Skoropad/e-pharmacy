@@ -2,9 +2,9 @@ import {
   PRODUCT_CATEGORY_DEFAULT_COLOR,
   PRODUCT_CATEGORY_SEED_DEFINITIONS,
   normalizeProductCategoryNameKey,
-} from '../constants/product-category';
+} from '../../constants/product-category';
 
-import { ProductCategory } from '../models/productCategory.model';
+import { ProductCategory } from '../../models/productCategory.model';
 
 //===============================================================
 

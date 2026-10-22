@@ -154,7 +154,7 @@ const productRequestService = await read(
   'api',
   'src',
   'services',
-  'product-request.service.ts'
+  'catalog/product-request.service.ts'
 );
 
 const ownerService = await read(

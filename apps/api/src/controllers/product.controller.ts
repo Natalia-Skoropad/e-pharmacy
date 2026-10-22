@@ -31,9 +31,9 @@ import {
   moderateProductReviewService,
   removeProductFromMyPharmacyService,
   setFavoriteProductService,
-} from '../services/product.service';
+} from '../services/catalog/product.service';
 
-import { getProductStockMovementsService } from '../services/stockMovement.service';
+import { getProductStockMovementsService } from '../services/inventory/stockMovement.service';
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 

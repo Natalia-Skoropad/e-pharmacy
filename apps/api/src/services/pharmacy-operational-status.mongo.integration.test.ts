@@ -13,7 +13,7 @@ import { ProductRequest } from '../models/productRequest.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
-import { getTestProductCategoryId } from './product-category-test.helper';
+import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
 
 import {
   createManagerOrderService,
@@ -28,7 +28,7 @@ import {
   createProductRequestService,
   deleteProductRequestService,
   updateProductRequestService,
-} from './product-request.service';
+} from './catalog/product-request.service';
 
 //===================================================================
 

@@ -5,7 +5,7 @@ import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../../constants/product-categ
 import { Product } from '../../models/product.model';
 import { ProductCategory } from '../../models/productCategory.model';
 import { ProductRequest } from '../../models/productRequest.model';
-import { ensureInitialProductCategories } from '../product-category-bootstrap.service';
+import { ensureInitialProductCategories } from '../catalog/product-category-bootstrap.service';
 
 //===============================================================
 

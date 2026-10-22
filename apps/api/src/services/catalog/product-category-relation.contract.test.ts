@@ -64,10 +64,10 @@ test('query validation accepts dynamic category slugs without a static enum', as
 test('custom Product Request behavior is metadata-based and public categories have a canonical read route', async () => {
   const [requestService, categoryConstants, routes, categoryService] =
     await Promise.all([
-      read('src/services/product-request.service.ts'),
+      read('src/services/catalog/product-request.service.ts'),
       read('src/constants/product-category.ts'),
       read('src/routes/index.ts'),
-      read('src/services/product-category.service.ts'),
+      read('src/services/catalog/product-category.service.ts'),
     ]);
 
   assert.match(requestService, /categoryMode === 'custom'/);

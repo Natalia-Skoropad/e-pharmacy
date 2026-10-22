@@ -3,18 +3,18 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { Order } from '../models/order.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { Product } from '../models/product.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { StockMovement } from '../models/stockMovement.model';
-import { User } from '../models/user.model';
-import type { HttpError } from '../types/errors';
+import { Order } from '../../models/order.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { Product } from '../../models/product.model';
+import { ProductOffer } from '../../models/productOffer.model';
+import { StockMovement } from '../../models/stockMovement.model';
+import { User } from '../../models/user.model';
+import type { HttpError } from '../../types/errors';
 
-import { getTestProductCategoryId } from './product-category-test.helper';
-import { createManagerOrderService } from './order.service';
+import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
+import { createManagerOrderService } from '../order.service';
 
 import {
   addProductToMyPharmacyService,

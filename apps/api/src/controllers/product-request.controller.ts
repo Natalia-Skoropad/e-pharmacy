@@ -17,7 +17,7 @@ import {
   getProductRequestStatisticsService,
   getProductRequestsService,
   updateProductRequestService,
-} from '../services/product-request.service';
+} from '../services/catalog/product-request.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

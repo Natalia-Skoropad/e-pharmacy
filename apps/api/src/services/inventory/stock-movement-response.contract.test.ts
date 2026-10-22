@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('stock movement response keeps the canonical pagination envelope expected by the pharmacy client', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/stockMovement.service.ts'),
+    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
     'utf8'
   );
 

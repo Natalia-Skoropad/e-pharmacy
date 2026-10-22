@@ -12,7 +12,7 @@ import { ProductOffer } from '../models/productOffer.model';
 import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
-import { getTestProductCategoryId } from './product-category-test.helper';
+import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
 
 import {
   createManagerOrderService,

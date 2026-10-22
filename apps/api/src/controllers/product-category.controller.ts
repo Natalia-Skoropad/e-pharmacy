@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { getPublicProductCategoriesService } from '../services/product-category.service';
+import { getPublicProductCategoriesService } from '../services/catalog/product-category.service';
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 

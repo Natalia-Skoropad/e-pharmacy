@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('product offer add/remove mutations keep relation checks and writes in transactions', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/product.service.ts'),
+    resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
     'utf8'
   );
 

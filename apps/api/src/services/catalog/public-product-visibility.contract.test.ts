@@ -8,7 +8,7 @@ import test from 'node:test';
 test('public product endpoints are active-only while blocked lifecycle access is management-only', async () => {
   const [routes, service, pharmacyService] = await Promise.all([
     readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
-    readFile(resolve(process.cwd(), 'src/services/product.service.ts'), 'utf8'),
+    readFile(resolve(process.cwd(), 'src/services/catalog/product.service.ts'), 'utf8'),
 
     readFile(
       resolve(process.cwd(), 'src/services/pharmacy.service.ts'),

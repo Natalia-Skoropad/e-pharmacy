@@ -1,15 +1,15 @@
 import mongoose, { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
-import { ProductOffer } from '../models/productOffer.model';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
+import { ProductOffer } from '../../models/productOffer.model';
 
 import {
   recordStockMovement,
   type StockMovementContext,
 } from './stockMovement.service';
 
-import { httpError } from '../utils/httpError';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 

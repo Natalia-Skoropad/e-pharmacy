@@ -1,29 +1,29 @@
 import mongoose, { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES, USER_ROLES } from '../constants/auth';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { REVIEW_ERROR_CODES } from '../constants/reviews';
-import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../constants/product-management';
-import { API_MESSAGES } from '../constants/messages';
+import { PHARMACY_STATUSES, USER_ROLES } from '../../constants/auth';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { REVIEW_ERROR_CODES } from '../../constants/reviews';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/product-management';
+import { API_MESSAGES } from '../../constants/messages';
 
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from './pharmacy-membership.service';
+} from '../pharmacy-membership.service';
 
-import { Client } from '../models/client.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { Product } from '../models/product.model';
-import { ProductCategory } from '../models/productCategory.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { ProductReview } from '../models/productReview.model';
-import { Order } from '../models/order.model';
+import { Client } from '../../models/client.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { Product } from '../../models/product.model';
+import { ProductCategory } from '../../models/productCategory.model';
+import { ProductOffer } from '../../models/productOffer.model';
+import { ProductReview } from '../../models/productReview.model';
+import { Order } from '../../models/order.model';
 
 import type {
   ManagedProductsQuery,
   ProductFiltersQuery,
   PublicProductsQuery,
-} from '../schemas/product.schema';
+} from '../../schemas/product.schema';
 
 import type {
   ProductCardSummaryResponseDto,
@@ -33,12 +33,12 @@ import type {
   ProductResponseDto,
   ProductReviewResponseDto,
   ReviewModerationStatus,
-} from '../types/product';
+} from '../../types/product';
 
-import type { ProductCategoryReferenceDto } from '../types/product-category';
-import type { UserRole } from '../types/user';
+import type { ProductCategoryReferenceDto } from '../../types/product-category';
+import type { UserRole } from '../../types/user';
 
-import { recordInitialStockArrival } from './stockMovement.service';
+import { recordInitialStockArrival } from '../inventory/stockMovement.service';
 
 import {
   findProductCategoryBySlug,
@@ -47,18 +47,18 @@ import {
   serializeProductCategoryReference,
 } from './product-category.service';
 
-import { httpError } from '../utils/httpError';
+import { httpError } from '../../utils/httpError';
 
 import {
   isDuplicateProductOfferError,
   isDuplicateProductReviewError,
-} from '../utils/mongoError';
+} from '../../utils/mongoError';
 
-import { getEndOfDay, getStartOfDay } from '../utils/date-range';
-import { createFlexibleSearchRegExp, createSafeRegExp } from '../utils/regexp';
+import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
+import { createFlexibleSearchRegExp, createSafeRegExp } from '../../utils/regexp';
 
-import { requireISODateTime } from '../utils/date-contract';
-import { buildPublicEntitySlugId } from '../utils/public-slug-id';
+import { requireISODateTime } from '../../utils/date-contract';
+import { buildPublicEntitySlugId } from '../../utils/public-slug-id';
 
 //===============================================================
 

@@ -27,7 +27,7 @@ import { ProductRequest } from '../models/productRequest.model';
 import { ProductCategory } from '../models/productCategory.model';
 import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
-import { ensureInitialProductCategories } from '../services/product-category-bootstrap.service';
+import { ensureInitialProductCategories } from '../services/catalog/product-category-bootstrap.service';
 import type { PharmacyEntity } from '../types/pharmacy';
 
 import {

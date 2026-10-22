@@ -106,7 +106,7 @@ import {
   listPharmacyOwnerAdminCommentsService,
 } from '../services/pharmacy-owner-admin-comment.service';
 
-import { moderateProductRequestByAdminService } from '../services/product-request.service';
+import { moderateProductRequestByAdminService } from '../services/catalog/product-request.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

@@ -23,7 +23,7 @@ import { getCartItemUnavailableReason } from './cart-item-availability';
 import {
   getProductCategoryReferenceMap,
   getProductCategoryReferenceOrThrow,
-} from './product-category.service';
+} from './catalog/product-category.service';
 
 import type {
   CartIssueResponseDto,

@@ -18,7 +18,7 @@ import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { User } from '../models/user.model';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
-import { getTestProductCategoryId } from './product-category-test.helper';
+import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
 
 import {
   checkoutOrderService,
@@ -32,7 +32,7 @@ import {
   commitReservedStock,
   releaseOfferStock,
   reserveOfferStock,
-} from './stock.service';
+} from './inventory/stock.service';
 
 //===============================================================
 

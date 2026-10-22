@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
-import { ProductCategory } from '../models/productCategory.model';
-import { ensureInitialProductCategories } from './product-category-bootstrap.service';
+import { ProductCategory } from '../../../models/productCategory.model';
+import { ensureInitialProductCategories } from '../product-category-bootstrap.service';
 
 //===============================================================
 

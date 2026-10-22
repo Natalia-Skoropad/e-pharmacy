@@ -10,9 +10,9 @@ import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductRequest } from '../models/productRequest.model';
 
-import { getTestProductCategoryId } from './product-category-test.helper';
-import { getManagedProductStatisticsService } from './product.service';
-import { getProductRequestStatisticsService } from './product-request.service';
+import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
+import { getManagedProductStatisticsService } from './catalog/product.service';
+import { getProductRequestStatisticsService } from './catalog/product-request.service';
 
 //===================================================================
 

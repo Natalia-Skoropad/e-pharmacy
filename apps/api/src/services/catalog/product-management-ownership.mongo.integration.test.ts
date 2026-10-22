@@ -3,13 +3,13 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
-import { Product } from '../models/product.model';
-import { ProductOffer } from '../models/productOffer.model';
-import type { HttpError } from '../types/errors';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { User } from '../../models/user.model';
+import { Product } from '../../models/product.model';
+import { ProductOffer } from '../../models/productOffer.model';
+import type { HttpError } from '../../types/errors';
 
 import {
   getManagedProductDetailsService,
@@ -17,7 +17,7 @@ import {
   getProductDetailsService,
 } from './product.service';
 
-import { getTestProductCategoryId } from './product-category-test.helper';
+import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 
 //===================================================================
 

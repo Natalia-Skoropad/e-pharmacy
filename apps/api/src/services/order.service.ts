@@ -36,7 +36,7 @@ import {
   commitReservedStock,
   releaseOfferStock,
   reserveOfferStock,
-} from './stock.service';
+} from './inventory/stock.service';
 
 import { getCartService } from './cart.service';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
@@ -45,7 +45,7 @@ import { createManagerOrderRequestFingerprint } from './manager-order-request-fi
 import {
   getProductCategoryReferenceMap,
   getProductCategoryReferenceOrThrow,
-} from './product-category.service';
+} from './catalog/product-category.service';
 
 import type {
   CheckoutOrderInput,

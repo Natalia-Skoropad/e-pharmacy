@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('legacy stock backfill preserves the current balance when old orders cannot be replayed safely', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/stockMovement.service.ts'),
+    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
     'utf8'
   );
 
@@ -42,7 +42,7 @@ test('legacy stock backfill preserves the current balance when old orders cannot
 
 test('reservation reconciliation does not turn legacy over-reservation into a failed stock-movement response', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/stockMovement.service.ts'),
+    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
     'utf8'
   );
 
@@ -67,7 +67,7 @@ test('reservation reconciliation does not turn legacy over-reservation into a fa
 
 test('legacy stock replay tolerates incomplete historical order metadata', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/stockMovement.service.ts'),
+    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
     'utf8'
   );
 

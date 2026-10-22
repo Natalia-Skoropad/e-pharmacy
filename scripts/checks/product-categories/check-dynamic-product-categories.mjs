@@ -146,7 +146,7 @@ const [
   read('apps', 'api', 'src', 'schemas', 'product.schema.ts'),
   read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   read('apps', 'api', 'src', 'schemas', 'product-request.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'product-category.service.ts'),
+  read('apps', 'api', 'src', 'services', 'catalog/product-category.service.ts'),
   read('apps', 'api', 'src', 'constants', 'product-category.ts'),
 
   read(
