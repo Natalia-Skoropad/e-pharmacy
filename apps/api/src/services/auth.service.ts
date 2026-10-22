@@ -60,7 +60,7 @@ import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { getInitialAccountStatusForRole } from '../utils/account-status';
 import { toAuthUserResponse } from '../utils/userResponse';
 import { appendAdminAuditLog } from './admin-audit.service';
-import { claimRegistrationOwnerDocuments } from './pharmacy-document.service';
+import { claimRegistrationOwnerDocuments } from './pharmacies/pharmacy-document.service';
 
 import {
   enforcePasswordResetResponseTiming,

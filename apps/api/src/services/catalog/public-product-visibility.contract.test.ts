@@ -15,7 +15,7 @@ test('public product endpoints are active-only while blocked lifecycle access is
     ),
 
     readFile(
-      resolve(process.cwd(), 'src/services/pharmacy.service.ts'),
+      resolve(process.cwd(), 'src/services/pharmacies/pharmacy.service.ts'),
       'utf8'
     ),
   ]);

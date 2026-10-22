@@ -37,7 +37,7 @@ import { appendAdminAuditLog } from '../admin-audit.service';
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from '../pharmacy-membership.service';
+} from '../pharmacies/pharmacy-membership.service';
 
 import {
   getProductCategoryReferenceMap,

@@ -44,25 +44,25 @@ import {
   submitMyPharmacyModerationService,
   setFavoritePharmacyService,
   updateMyPharmacyProfileService,
-} from '../services/pharmacy.service';
+} from '../services/pharmacies/pharmacy.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,
   getPrivatePharmacyDocumentContentService,
-} from '../services/pharmacy-document.service';
+} from '../services/pharmacies/pharmacy-document.service';
 
-import { createPharmacyDraftService } from '../services/pharmacy-create.service';
+import { createPharmacyDraftService } from '../services/pharmacies/pharmacy-create.service';
 
 import {
   getOwnedPharmacyDetailService,
   getOwnedPharmacyStatisticsService,
   listOwnedPharmaciesService,
   listOwnedPharmacyOptionsService,
-} from '../services/owned-pharmacy-registry-read.service';
+} from '../services/pharmacies/owned-pharmacy-registry-read.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 
-import { listUserPharmacyMemberships } from '../services/pharmacy-membership.service';
+import { listUserPharmacyMemberships } from '../services/pharmacies/pharmacy-membership.service';
 import { sendSuccessResponse } from '../utils/apiResponse';
 
 //===============================================================

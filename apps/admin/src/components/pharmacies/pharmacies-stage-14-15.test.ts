@@ -64,7 +64,7 @@ test('14.15: admin documents are read-only; preview is MIME-restricted and priva
   );
 
   const backend = await read(
-    '../../../../api/src/services/pharmacy-document.service.ts'
+    '../../../../api/src/services/pharmacies/pharmacy-document.service.ts'
   );
 
   assert.match(docs, /<DocumentsPanel/);

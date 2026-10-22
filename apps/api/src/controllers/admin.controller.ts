@@ -46,7 +46,7 @@ import {
   decidePharmacyModerationByAdminService,
 } from '../services/admin.service';
 
-import { updatePharmacyOwnerStatusByAdminService } from '../services/pharmacy-owner-lifecycle.service';
+import { updatePharmacyOwnerStatusByAdminService } from '../services/owners/pharmacy-owner-lifecycle.service';
 
 import {
   getAdminPharmacyOwnerDetailService,
@@ -82,7 +82,7 @@ import {
 import {
   downloadAdminPharmacyDocumentService,
   listAdminPharmacyDocumentsService,
-} from '../services/pharmacy-document.service';
+} from '../services/pharmacies/pharmacy-document.service';
 
 import {
   createPharmacyAdminCommentService,
@@ -98,7 +98,7 @@ import type {
 import {
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
-} from '../services/pharmacy-owner-document.service';
+} from '../services/owners/pharmacy-owner-document.service';
 
 import {
   createPharmacyOwnerAdminCommentService,

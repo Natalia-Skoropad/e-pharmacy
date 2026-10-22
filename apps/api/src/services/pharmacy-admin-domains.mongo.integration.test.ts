@@ -18,7 +18,7 @@ import {
 import {
   downloadAdminPharmacyDocumentService,
   listAdminPharmacyDocumentsService,
-} from './pharmacy-document.service';
+} from './pharmacies/pharmacy-document.service';
 
 //===================================================================
 

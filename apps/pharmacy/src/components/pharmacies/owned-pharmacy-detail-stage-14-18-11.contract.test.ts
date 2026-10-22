@@ -15,7 +15,7 @@ const editor = source('./OwnedPharmacyEditor/OwnedPharmacyEditor.tsx');
 const backend = source('../../lib/api/browser/owned-pharmacy-registry.api.ts');
 
 const service = source(
-  '../../../../api/src/services/owned-pharmacy-registry-read.service.ts'
+  '../../../../api/src/services/pharmacies/owned-pharmacy-registry-read.service.ts'
 );
 
 const parser = source(

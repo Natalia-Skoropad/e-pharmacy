@@ -8,7 +8,7 @@ import { Pharmacy } from '../../models/pharmacy.model';
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from '../pharmacy-membership.service';
+} from '../pharmacies/pharmacy-membership.service';
 
 import { User } from '../../models/user.model';
 import { httpError } from '../../utils/httpError';

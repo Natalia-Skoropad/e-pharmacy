@@ -50,19 +50,19 @@ const [
   ),
 
   read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'pharmacy-owner-lifecycle.service.ts'),
+  read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-lifecycle.service.ts'),
   read('apps', 'api', 'src', 'constants', 'pharmacy-owner-lifecycle.ts'),
   read('apps', 'api', 'src', 'services', 'auth.service.ts'),
   read('apps', 'api', 'src', 'routes', 'pharmacy-owner.routes.ts'),
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
-  read('apps', 'api', 'src', 'services', 'pharmacy-owner-document.service.ts'),
+  read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-document.service.ts'),
 
   read(
     'apps',
     'api',
     'src',
     'services',
-    'pharmacy-owner-lifecycle.mongo.integration.test.ts'
+    'owners/pharmacy-owner-lifecycle.mongo.integration.test.ts'
   ),
 
   read(
@@ -70,7 +70,7 @@ const [
     'api',
     'src',
     'services',
-    'pharmacy-owner-document.mongo.integration.test.ts'
+    'owners/pharmacy-owner-document.mongo.integration.test.ts'
   ),
 
   read(

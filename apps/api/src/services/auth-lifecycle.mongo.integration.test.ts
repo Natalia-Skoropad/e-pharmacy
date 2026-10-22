@@ -19,7 +19,7 @@ import { User } from '../models/user.model';
 import {
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
-} from './pharmacy-owner-document.service';
+} from './owners/pharmacy-owner-document.service';
 
 import { comparePassword, hashPassword } from '../utils/password';
 import { updatePharmacyStatusByAdminService } from './admin.service';
@@ -29,14 +29,14 @@ import {
   createRegistrationPharmacyDocumentUploadService,
   createRegistrationPharmacyDocumentUploadSessionService,
   getPrivatePharmacyDocumentContentService,
-} from './pharmacy-document.service';
+} from './pharmacies/pharmacy-document.service';
 
 import {
   getMyPharmacyProfileService,
   sendMyPharmacyForVerificationService,
   submitMyPharmacyModerationService,
   updateMyPharmacyProfileService,
-} from './pharmacy.service';
+} from './pharmacies/pharmacy.service';
 
 import {
   loginUserService,

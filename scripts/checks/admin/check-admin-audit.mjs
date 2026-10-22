@@ -170,7 +170,7 @@ const ownerLifecycleService = await read(
   'api',
   'src',
   'services',
-  'pharmacy-owner-lifecycle.service.ts'
+  'owners/pharmacy-owner-lifecycle.service.ts'
 );
 
 const authService = await read(

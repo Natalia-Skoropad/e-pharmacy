@@ -31,8 +31,8 @@ import { httpError } from '../utils/httpError';
 import { appendAdminAuditLog } from './admin-audit.service';
 import { ensureDefaultPharmacyClient } from './clients/default-pharmacy-client.service';
 
-import { reconcileAttachedPharmacyDocumentStorage } from './pharmacy-document.service';
-import { activateNewPharmacyOwnerForPharmacy } from './pharmacy-owner-lifecycle.service';
+import { reconcileAttachedPharmacyDocumentStorage } from './pharmacies/pharmacy-document.service';
+import { activateNewPharmacyOwnerForPharmacy } from './owners/pharmacy-owner-lifecycle.service';
 
 //===============================================================
 

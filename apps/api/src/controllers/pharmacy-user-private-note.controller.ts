@@ -12,7 +12,7 @@ import {
   createMyPharmacyUserPrivateNoteService,
   deleteMyPharmacyUserPrivateNoteService,
   listMyPharmacyUserPrivateNotesService,
-} from '../services/pharmacy-user-private-note.service';
+} from '../services/owners/pharmacy-user-private-note.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

@@ -28,7 +28,7 @@ import {
   createPharmacyNoteService,
   deletePharmacyNoteService,
   getPharmacyNotesService,
-} from '../pharmacy-note.service';
+} from '../pharmacies/pharmacy-note.service';
 
 //===================================================================
 
@@ -319,6 +319,7 @@ test(
           actor,
           'client',
           clientA.toString(),
+
           {
             text: `Own note ${actorId.toString()}`,
             clientRequestId: randomUUID(),

@@ -9,7 +9,7 @@ import { API_MESSAGES } from '../../constants/messages';
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from '../pharmacy-membership.service';
+} from '../pharmacies/pharmacy-membership.service';
 
 import { Client } from '../../models/client.model';
 import { Pharmacy } from '../../models/pharmacy.model';

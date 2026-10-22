@@ -28,7 +28,7 @@ const [
   backendDocumentValidationSource,
 ] = await Promise.all([
   read('packages/api-client/src/response/shared-dto-parsers.ts'),
-  read('apps/api/src/services/pharmacy.service.ts'),
+  read('apps/api/src/services/pharmacies/pharmacy.service.ts'),
   read('packages/types/src/auth/payloads.ts'),
   read('apps/api/src/models/pharmacyDocumentFile.model.ts'),
   read('packages/config/src/pharmacies/error-codes.ts'),
@@ -45,9 +45,9 @@ const [
   read('packages/config/src/pharmacies/profile-transitions.ts'),
   read('apps/api/src/constants/pharmacy-profile.ts'),
   read('scripts/contracts/pharmacy-profile-transition-matrix.json'),
-  read('apps/api/src/services/pharmacy-membership.service.ts'),
+  read('apps/api/src/services/pharmacies/pharmacy-membership.service.ts'),
   read('packages/types/src/pharmacies/pharmacy-profile.ts'),
-  read('apps/api/src/services/pharmacy-document.service.ts'),
+  read('apps/api/src/services/pharmacies/pharmacy-document.service.ts'),
   read('packages/validation/src/files/pharmacy-document-validation.ts'),
   read('apps/api/src/constants/pharmacy-document-validation.ts'),
 ]);

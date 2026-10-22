@@ -14,7 +14,7 @@ const clientApi = read(
 );
 
 const server = read(
-  '../../../../../api/src/services/pharmacy-user-private-note.service.ts'
+  '../../../../../api/src/services/owners/pharmacy-user-private-note.service.ts'
 );
 
 //===================================================================

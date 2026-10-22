@@ -30,7 +30,7 @@ const backendProductService = await read(
 );
 
 const backendPharmacyService = await read(
-  'apps/api/src/services/pharmacy.service.ts'
+  'apps/api/src/services/pharmacies/pharmacy.service.ts'
 );
 
 const sharedDtoParsers = await read(

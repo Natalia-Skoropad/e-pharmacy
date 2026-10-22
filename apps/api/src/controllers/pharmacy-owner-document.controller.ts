@@ -13,7 +13,7 @@ import {
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
   replacePharmacyOwnerDocumentService,
-} from '../services/pharmacy-owner-document.service';
+} from '../services/owners/pharmacy-owner-document.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

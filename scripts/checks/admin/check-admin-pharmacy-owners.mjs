@@ -44,7 +44,7 @@ const [
     'admin-pharmacy-owner-read.service.ts'
   ),
 
-  read('apps', 'api', 'src', 'services', 'pharmacy-owner-document.service.ts'),
+  read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-document.service.ts'),
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
 
   read(

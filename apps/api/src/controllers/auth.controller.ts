@@ -23,7 +23,7 @@ import {
 import {
   createRegistrationPharmacyDocumentUploadService,
   createRegistrationPharmacyDocumentUploadSessionService,
-} from '../services/pharmacy-document.service';
+} from '../services/pharmacies/pharmacy-document.service';
 
 import type {
   ForgotPasswordInput,

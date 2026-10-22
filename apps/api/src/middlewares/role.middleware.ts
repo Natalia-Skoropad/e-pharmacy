@@ -5,7 +5,7 @@ import { PHARMACY_OPERATIONAL_STATUSES } from '../constants/pharmacy-status';
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { API_MESSAGES } from '../constants/messages';
 
-import { requirePharmacyCapability } from '../services/pharmacy-membership.service';
+import { requirePharmacyCapability } from '../services/pharmacies/pharmacy-membership.service';
 import type { UserRole } from '../types/user';
 import { httpError } from '../utils/httpError';
 

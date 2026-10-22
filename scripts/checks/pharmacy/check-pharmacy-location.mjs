@@ -180,7 +180,7 @@ const [
 ] = await Promise.all([
   read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
   read('apps', 'api', 'src', 'schemas', 'pharmacy.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'pharmacy.service.ts'),
+  read('apps', 'api', 'src', 'services', 'pharmacies/pharmacy.service.ts'),
   read('apps', 'api', 'src', 'services', 'admin.service.ts'),
   read('packages', 'types', 'src', 'pharmacies', 'responses.ts'),
 

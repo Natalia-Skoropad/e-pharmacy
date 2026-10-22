@@ -7,7 +7,7 @@ import { ProductOffer } from '../../models/productOffer.model';
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from '../pharmacy-membership.service';
+} from '../pharmacies/pharmacy-membership.service';
 
 import {
   StockMovement,
@@ -838,6 +838,7 @@ export async function getProductStockMovementsService(
       )
     ),
   ];
+
   const ordersById = new Map<string, CurrentOrderSnapshot>();
 
   if (orderIds.length > 0) {

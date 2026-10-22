@@ -41,7 +41,7 @@ const [pharmacyModel, migration, ownerReadService, lifecycleIntegration] =
       'api',
       'src',
       'services',
-      'pharmacy-owner-lifecycle.mongo.integration.test.ts'
+      'owners/pharmacy-owner-lifecycle.mongo.integration.test.ts'
     ),
   ]);
 

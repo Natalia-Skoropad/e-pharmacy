@@ -9,7 +9,7 @@ import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from './pharmacy-membership.service';
+} from './pharmacies/pharmacy-membership.service';
 
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,

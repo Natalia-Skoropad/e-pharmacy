@@ -15,8 +15,8 @@ const registration = auth.slice(
   auth.indexOf('export async function loginUserService')
 );
 
-const claims = read('src/services/pharmacy-document.service.ts');
-const summary = read('src/services/pharmacy.service.ts');
+const claims = read('src/services/pharmacies/pharmacy-document.service.ts');
+const summary = read('src/services/pharmacies/pharmacy.service.ts');
 
 //===================================================================
 

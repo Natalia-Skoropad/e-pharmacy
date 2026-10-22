@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
 import { ProductOffer } from '../models/productOffer.model';
-import { requirePharmacyCapability } from '../services/pharmacy-membership.service';
+import { requirePharmacyCapability } from '../services/pharmacies/pharmacy-membership.service';
 import { httpError } from './httpError';
 
 //===============================================================

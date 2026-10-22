@@ -7,16 +7,16 @@ import { resolve } from 'node:path';
 const read = (relative) => readFileSync(resolve(relative), 'utf8');
 const routes = read('apps/api/src/routes/pharmacy.routes.ts');
 const controller = read('apps/api/src/controllers/pharmacy.controller.ts');
-const member = read('apps/api/src/services/pharmacy-membership.service.ts');
+const member = read('apps/api/src/services/pharmacies/pharmacy-membership.service.ts');
 
 const boundary = read(
   'apps/pharmacy/src/components/layout/PharmacyShell/PharmacyCabinetBoundary.tsx'
 );
 
-const profile = read('apps/api/src/services/pharmacy.service.ts');
-const upload = read('apps/api/src/services/pharmacy-document.service.ts');
+const profile = read('apps/api/src/services/pharmacies/pharmacy.service.ts');
+const upload = read('apps/api/src/services/pharmacies/pharmacy-document.service.ts');
 const draftSchema = read('apps/api/src/schemas/pharmacy.schema.ts');
-const createService = read('apps/api/src/services/pharmacy-create.service.ts');
+const createService = read('apps/api/src/services/pharmacies/pharmacy-create.service.ts');
 
 const editor = read(
   'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/OwnedPharmacyEditor.tsx'
