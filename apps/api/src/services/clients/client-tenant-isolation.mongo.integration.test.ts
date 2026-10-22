@@ -4,17 +4,17 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { USER_ROLES } from '../constants/auth';
-import { Order } from '../models/order.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { PharmacyNote } from '../models/pharmacyNote.model';
-import { Product } from '../models/product.model';
-import { User } from '../models/user.model';
-import type { HttpError } from '../types/errors';
+import { USER_ROLES } from '../../constants/auth';
+import { Order } from '../../models/order.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { PharmacyNote } from '../../models/pharmacyNote.model';
+import { Product } from '../../models/product.model';
+import { User } from '../../models/user.model';
+import type { HttpError } from '../../types/errors';
 
-import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
+import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
 import {
   getClientByIdService,
@@ -22,13 +22,13 @@ import {
   getClientsService,
 } from './client.service';
 
-import { getOrdersService } from './order.service';
+import { getOrdersService } from '../order.service';
 
 import {
   createPharmacyNoteService,
   deletePharmacyNoteService,
   getPharmacyNotesService,
-} from './pharmacy-note.service';
+} from '../pharmacy-note.service';
 
 //===================================================================
 
@@ -272,6 +272,7 @@ test(
           clientB.toString(),
           { page: 1, perPage: 20 }
         ),
+
         isNotFound
       );
 
@@ -351,6 +352,7 @@ test(
             text: 'Foreign note',
             clientRequestId: randomUUID(),
           }),
+
           isNotFound
         );
       }
@@ -370,6 +372,7 @@ test(
             clientB.toString(),
             foreignNote.note.id
           ),
+
           isNotFound
         );
       }

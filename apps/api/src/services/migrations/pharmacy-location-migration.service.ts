@@ -64,6 +64,7 @@ function normalizeOptionalString(value: unknown): {
   if (typeof value !== 'string') return { invalid: true };
 
   const normalized = value.trim();
+
   return normalized
     ? { value: normalized, invalid: false }
     : { invalid: false };
@@ -76,6 +77,7 @@ function parseGeo(value: unknown): {
   invalid: boolean;
 } {
   if (value === undefined || value === null) return { invalid: false };
+
   if (typeof value !== 'object' || Array.isArray(value))
     return { invalid: true };
 
@@ -103,6 +105,7 @@ function parseGeo(value: unknown): {
       type: 'Point',
       coordinates: [coordinates[0], coordinates[1]],
     },
+
     invalid: false,
   };
 }
@@ -152,6 +155,7 @@ function parseExistingLocation(value: unknown): {
       ...(countryCode.value ? { countryCode: countryCode.value } : {}),
       ...(geo.value ? { geo: geo.value } : {}),
     },
+
     invalid: false,
     exists: true,
   };
@@ -215,16 +219,19 @@ export function buildLegacyPharmacyLocationMigrationPlan(
 
   const location: PharmacyLocationDraft = {
     ...existing.location,
+
     ...(existing.location.address
       ? {}
       : legacyAddress.value
         ? { address: legacyAddress.value }
         : {}),
+
     ...(existing.location.settlement
       ? {}
       : legacySettlement.value
         ? { settlement: legacySettlement.value }
         : {}),
+
     countryCode: existing.location.countryCode ?? DEFAULT_PHARMACY_COUNTRY_CODE,
   };
 
@@ -323,9 +330,11 @@ export function buildLegacyPendingModerationMigrationPlan(
         delete nextLocation.address;
       } else {
         const address = normalizeOptionalString(pending.address);
+
         if (address.invalid || !address.value) {
           return { shouldUpdate: false, invalid: true };
         }
+
         nextLocation.address = address.value;
       }
     }
@@ -335,6 +344,7 @@ export function buildLegacyPendingModerationMigrationPlan(
         delete nextLocation.settlement;
       } else {
         const settlement = normalizeOptionalString(pending.city);
+
         if (settlement.invalid || !settlement.value) {
           return { shouldUpdate: false, invalid: true };
         }
@@ -356,8 +366,10 @@ export function buildLegacyPendingModerationMigrationPlan(
   }
 
   const nextPending = { ...pending };
+
   delete nextPending.address;
   delete nextPending.city;
+
   nextPending.location = location;
 
   return {
@@ -436,6 +448,7 @@ function hasExactIndexKeys(
     actual.length === wanted.length &&
     wanted.every(([key, direction], position) => {
       const current = actual[position];
+
       return current?.[0] === key && current[1] === direction;
     })
   );
@@ -484,6 +497,7 @@ async function migratePharmacyLocationIndexes(): Promise<void> {
       'location.address': 'text',
       'location.settlement': 'text',
     },
+
     LOCATION_TEXT_INDEX_NAME
   );
 
@@ -562,6 +576,7 @@ export async function migratePharmacyLocations(): Promise<PharmacyLocationMigrat
         { _id: row._id },
         {
           ...(Object.keys(setFields).length > 0 ? { $set: setFields } : {}),
+
           ...(Object.keys(unsetFields).length > 0
             ? { $unset: unsetFields }
             : {}),

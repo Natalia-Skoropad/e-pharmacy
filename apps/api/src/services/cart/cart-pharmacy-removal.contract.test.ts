@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('pharmacy-group removal is one backend cart mutation and is idempotent', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/cart.service.ts'),
+    resolve(process.cwd(), 'src/services/cart/cart.service.ts'),
     'utf8'
   );
 

@@ -23,6 +23,7 @@ test('product offer add/remove mutations keep relation checks and writes in tran
 
   const removeSource = source.slice(
     removeStart,
+
     source.indexOf(
       '//===============================================================',
       removeStart + 100

@@ -11,7 +11,11 @@ import {
 //===============================================================
 
 const source = readFileSync(
-  resolve(process.cwd(), 'src/services/migrations/pharmacy-location-migration.service.ts'),
+  resolve(
+    process.cwd(),
+    'src/services/migrations/pharmacy-location-migration.service.ts'
+  ),
+
   'utf8'
 );
 
@@ -29,6 +33,7 @@ test('Stage 13.4.3 copies explicit legacy city/address without parsing the addre
         settlement: 'Cherkasy',
         countryCode: 'UA',
       },
+
       invalid: false,
       missingAddress: false,
       missingSettlement: false,
@@ -41,6 +46,7 @@ test('Stage 13.4.3 copies explicit legacy city/address without parsing the addre
       address: '108 Medical Lane, Kyiv',
       city: 'Cherkasy',
     }).location,
+
     {
       address: '108 Medical Lane, Kyiv',
       settlement: 'Cherkasy',
@@ -157,6 +163,7 @@ test('Stage 13.4.7 migrates legacy pending moderation address/city into one cano
       region: 'Odesa region',
       countryCode: 'UA',
     },
+
     phone: '+380501234567',
   });
 });
@@ -180,6 +187,7 @@ test('Stage 13.4.7 removes persisted pending legacy fields without overwriting a
         settlement: 'Reni',
         countryCode: 'UA',
       },
+
       description: 'Pending description',
     },
   });
@@ -193,6 +201,7 @@ test('Stage 13.4.7 removes persisted pending legacy fields without overwriting a
       settlement: 'Reni',
       countryCode: 'UA',
     },
+
     description: 'Pending description',
   });
 });

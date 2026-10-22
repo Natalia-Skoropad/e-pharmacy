@@ -1,10 +1,10 @@
 import { Types, type ClientSession } from 'mongoose';
 
-import { USER_ROLES, USER_STATUSES } from '../constants/auth';
-import { Client } from '../models/client.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
-import { hashPassword } from '../utils/password';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
+import { Client } from '../../models/client.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { User } from '../../models/user.model';
+import { hashPassword } from '../../utils/password';
 
 //===============================================================
 
@@ -19,6 +19,7 @@ function getDefaultClientPhone(pharmacyId: Types.ObjectId): string {
   const digits = (BigInt(`0x${pharmacyId.toHexString()}`) % 1_000_000_000n)
     .toString()
     .padStart(9, '0');
+
   return `+380${digits}`;
 }
 
@@ -95,11 +96,13 @@ export async function ensureDefaultPharmacyClient(
       runValidators: true,
       setDefaultsOnInsert: true,
       timestamps: false, // Replaying must not touch updatedAt on an existing User.
+
       ...(session ? { session } : {}),
     }
   );
 
   if (!user) return null;
+
   const now = new Date();
 
   await Client.findOneAndUpdate(
@@ -118,6 +121,7 @@ export async function ensureDefaultPharmacyClient(
       runValidators: true,
       setDefaultsOnInsert: true,
       timestamps: false, // Client favorites and revision remain stable on replay.
+
       ...(session ? { session } : {}),
     }
   );

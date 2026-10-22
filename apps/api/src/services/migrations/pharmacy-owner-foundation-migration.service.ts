@@ -11,6 +11,8 @@ import {
 type Database = NonNullable<Connection['db']>;
 type IndexKey = Readonly<Record<string, 1 | -1>>;
 
+//===============================================================
+
 type IndexInfo = Readonly<{
   name?: string;
   key: Record<string, unknown>;
@@ -116,6 +118,7 @@ function isNamespaceNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
 
   const candidate = error as { code?: unknown; codeName?: unknown };
+
   return candidate.code === 26 || candidate.codeName === 'NamespaceNotFound';
 }
 
@@ -128,6 +131,7 @@ async function readIndexes(
     return (await collection.indexes()) as IndexInfo[];
   } catch (error) {
     if (isNamespaceNotFoundError(error)) return [];
+
     throw error;
   }
 }
@@ -139,6 +143,7 @@ async function ensureNonUniqueIndex(
   definition: (typeof OWNER_INDEXES)[number]
 ): Promise<{ name: string; droppedUnique: boolean }> {
   const indexes = await readIndexes(collection);
+
   const existing = indexes.find((index) =>
     hasExactIndexKey(index.key, definition.key)
   );
@@ -151,6 +156,7 @@ async function ensureNonUniqueIndex(
     }
 
     await collection.dropIndex(existing.name);
+
     const name = await collection.createIndex(definition.key, {
       name: definition.name,
     });
@@ -181,9 +187,11 @@ function getLegacyDemoPharmacyNumber(pharmacy: LegacyPharmacy): number | null {
   if (typeof pharmacy.email !== 'string') return null;
 
   const match = pharmacy.email.trim().match(LEGACY_DEMO_PHARMACY_EMAIL_PATTERN);
+
   if (!match) return null;
 
   const value = Number(match[1]);
+
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
@@ -204,6 +212,7 @@ function getDemoOwnerPhone(pharmacy: LegacyPharmacy): string {
   }
 
   const pharmacyNumber = getLegacyDemoPharmacyNumber(pharmacy);
+
   if (pharmacyNumber === null) {
     throw new Error(
       'Cannot derive a demo owner phone for a non-demo pharmacy.'
@@ -220,9 +229,11 @@ function createDemoOwnerName(pharmacyName: unknown): string {
 
   const words = pharmacyName.match(/[A-Za-z]+(?:-[A-Za-z]+)?/g) ?? [];
   const meaningfulWords = words.slice(0, 3);
+
   if (!meaningfulWords.length) return DEMO_OWNER_NAME_FALLBACK;
 
   const candidate = `${meaningfulWords.join(' ')} Owner`;
+
   return candidate.length <= USER_NAME_MAX_LENGTH
     ? candidate
     : DEMO_OWNER_NAME_FALLBACK;
@@ -290,6 +301,7 @@ async function createMissingDemoOwnerUsers(
         },
       }
     )
+
     .sort({ createdAt: 1, _id: 1 })
     .toArray()) as LegacyPharmacy[];
 
@@ -298,6 +310,7 @@ async function createMissingDemoOwnerUsers(
   for (const pharmacy of unresolvedPharmacies) {
     const ownerId = String(pharmacy.ownerId);
     const current = byOwnerId.get(ownerId) ?? [];
+
     current.push(pharmacy);
     byOwnerId.set(ownerId, current);
   }
@@ -319,6 +332,7 @@ async function createMissingDemoOwnerUsers(
 
     const primary = linkedPharmacies[0];
     const createdAt = toCreatedAt(primary.createdAt);
+
     const hasActivePharmacy = linkedPharmacies.some(
       (pharmacy) => pharmacy.status === PHARMACY_STATUSES.ACTIVE
     );
@@ -331,9 +345,11 @@ async function createMissingDemoOwnerUsers(
       role: USER_ROLES.PHARMACY,
       status: hasActivePharmacy ? USER_STATUSES.ACTIVE : USER_STATUSES.NEW,
       phone: getDemoOwnerPhone(primary),
+
       ...(typeof primary.address === 'string' && primary.address.trim()
         ? { address: primary.address.trim() }
         : {}),
+
       createdAt,
       updatedAt: createdAt,
     });
@@ -353,6 +369,7 @@ async function createMissingDemoOwnerUsers(
       },
       { projection: { _id: 1, email: 1, phone: 1, role: 1 } }
     )
+
     .toArray()) as OwnerUser[];
 
   if (existingCredentialUsers.length > 0) {
@@ -362,6 +379,7 @@ async function createMissingDemoOwnerUsers(
   }
 
   const insertResult = await users.insertMany(candidates, { ordered: true });
+
   return insertResult.insertedCount;
 }
 
@@ -391,6 +409,7 @@ export async function migratePharmacyOwnerFoundation(
   const initialFoundOwnerIdSet = objectIdSet(
     ownerUsers.map((owner) => owner._id)
   );
+
   const initialUnresolvedOwnerIds = ownerIds.filter(
     (ownerId) => !initialFoundOwnerIdSet.has(String(ownerId))
   );
@@ -421,6 +440,7 @@ export async function migratePharmacyOwnerFoundation(
   }
 
   const foundOwnerIdSet = objectIdSet(ownerUsers.map((owner) => owner._id));
+
   const unresolvedOwnerIds = ownerIds.filter(
     (ownerId) => !foundOwnerIdSet.has(String(ownerId))
   );
@@ -436,11 +456,14 @@ export async function migratePharmacyOwnerFoundation(
   }
 
   const ownerIndexNames: string[] = [];
+
   let droppedUniqueOwnerIndexes = 0;
 
   for (const definition of OWNER_INDEXES) {
     const result = await ensureNonUniqueIndex(pharmacies, definition);
+
     ownerIndexNames.push(result.name);
+
     if (result.droppedUnique) droppedUniqueOwnerIndexes += 1;
   }
 
@@ -466,6 +489,7 @@ export async function migratePharmacyOwnerFoundation(
   });
 
   const activeOwnerIdSet = objectIdSet(activeOwnerIds);
+
   const newOwnerIds = validOwnerIds.filter(
     (ownerId) => !activeOwnerIdSet.has(String(ownerId))
   );
@@ -499,6 +523,7 @@ export async function migratePharmacyOwnerFoundation(
           { $set: { status: USER_STATUSES.ACTIVE } }
         )
       : Promise.resolve({ modifiedCount: 0 }),
+
     newOwners.length > 0
       ? users.updateMany(
           {

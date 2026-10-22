@@ -29,7 +29,7 @@ import type {
 import { httpError } from '../utils/httpError';
 
 import { appendAdminAuditLog } from './admin-audit.service';
-import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
+import { ensureDefaultPharmacyClient } from './clients/default-pharmacy-client.service';
 
 import { reconcileAttachedPharmacyDocumentStorage } from './pharmacy-document.service';
 import { activateNewPharmacyOwnerForPharmacy } from './pharmacy-owner-lifecycle.service';

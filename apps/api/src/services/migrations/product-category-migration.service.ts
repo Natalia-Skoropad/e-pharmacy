@@ -12,10 +12,14 @@ import { ensureInitialProductCategories } from '../catalog/product-category-boot
 const LEGACY_CUSTOM_PRODUCT_REQUEST_CATEGORY = 'other';
 const LEGACY_CATEGORY_ALIASES = new Map<string, string>();
 
+//===============================================================
+
 for (const definition of PRODUCT_CATEGORY_SEED_DEFINITIONS) {
   LEGACY_CATEGORY_ALIASES.set(definition.slug, definition.slug);
   LEGACY_CATEGORY_ALIASES.set(definition.name.toLowerCase(), definition.slug);
 }
+
+//===============================================================
 
 // Historical pre-snake_case value handled by the older domain migration.
 LEGACY_CATEGORY_ALIASES.set('medical-devices', 'medical_devices');
@@ -35,6 +39,8 @@ export type ProductCategoryRelationMigrationResult = Readonly<{
   legacyCustomProductRequests: number;
   categorySlugs: readonly string[];
 }>;
+
+//===============================================================
 
 type PersistedCategoryRow = Readonly<{
   _id: Types.ObjectId;
@@ -63,6 +69,7 @@ export function resolveLegacyProductCategory(
   }
 
   const slug = LEGACY_CATEGORY_ALIASES.get(normalized);
+
   if (slug) return { kind: 'category', slug };
 
   return { kind: 'unsupported', value };
@@ -142,6 +149,7 @@ async function buildRelationMigrationPlan(
   const categoryById = new Map(
     categoryRows.map((category) => [String(category._id), category])
   );
+
   const categoryBySlug = new Map(
     categoryRows.map((category) => [category.slug, category])
   );
@@ -151,6 +159,7 @@ async function buildRelationMigrationPlan(
   const orderWrites: Array<Record<string, unknown>> = [];
   const productCategoryByProductId = new Map<string, PersistedCategoryRow>();
   const usedCategorySlugs = new Set<string>();
+
   let migratedOrderSnapshots = 0;
   let legacyCustomProductRequests = 0;
 
@@ -162,12 +171,14 @@ async function buildRelationMigrationPlan(
   for (const product of products) {
     const sourceLabel = `Product ${String(product._id)}`;
     const hasLegacyCategory = typeof product.category === 'string';
+
     let category: PersistedCategoryRow;
 
     if (hasLegacyCategory) {
       const resolution = requireLegacyCategory(
         product.category,
         sourceLabel,
+
         false
       );
 
@@ -204,6 +215,7 @@ async function buildRelationMigrationPlan(
       productWrites.push({
         updateOne: {
           filter: { _id: product._id },
+
           update: {
             $set: { categoryId: category._id },
             $unset: { category: '' },
@@ -215,6 +227,7 @@ async function buildRelationMigrationPlan(
 
   const productRequests = await db
     .collection('productrequests')
+
     .find(
       {},
       {
@@ -228,11 +241,13 @@ async function buildRelationMigrationPlan(
         },
       }
     )
+
     .toArray();
 
   for (const request of productRequests) {
     const sourceLabel = `ProductRequest ${String(request._id)}`;
     const hasLegacyCategory = typeof request.category === 'string';
+
     let categoryMode = request.categoryMode as string | undefined;
     let categoryId = request.categoryId as Types.ObjectId | undefined;
     let relationChanged = hasLegacyCategory || !request.categoryMode;
@@ -241,6 +256,7 @@ async function buildRelationMigrationPlan(
       const resolution = requireLegacyCategory(
         request.category,
         sourceLabel,
+
         true
       );
 
@@ -353,13 +369,16 @@ async function buildRelationMigrationPlan(
       productRequestWrites.push({
         updateOne: {
           filter: { _id: request._id },
+
           update: {
             $set: {
               categoryMode,
               ...(categoryId ? { categoryId } : {}),
             },
+
             $unset: {
               category: '',
+
               ...(categoryMode === 'custom' && !categoryId
                 ? { categoryId: '' }
                 : {}),
@@ -377,6 +396,7 @@ async function buildRelationMigrationPlan(
 
   for (const order of orders) {
     const items = Array.isArray(order.items) ? order.items : [];
+
     let orderChanged = false;
 
     const nextItems = items.map((item: Record<string, unknown>, itemIndex) => {
@@ -389,6 +409,7 @@ async function buildRelationMigrationPlan(
 
       const sourceLabel = `Order ${String(order._id)} item ${itemIndex + 1}`;
       const hasLegacyCategory = typeof snapshot.category === 'string';
+
       const hasAnyRelationSnapshot = Boolean(
         snapshot.categoryId ||
         snapshot.categoryNameSnapshot ||
@@ -398,10 +419,12 @@ async function buildRelationMigrationPlan(
       if (!hasLegacyCategory && !hasAnyRelationSnapshot) return item;
 
       let categoryId = snapshot.categoryId as Types.ObjectId | undefined;
+
       let categoryName =
         typeof snapshot.categoryNameSnapshot === 'string'
           ? snapshot.categoryNameSnapshot
           : undefined;
+
       let categorySlug =
         typeof snapshot.categorySlugSnapshot === 'string'
           ? snapshot.categorySlugSnapshot
@@ -411,6 +434,7 @@ async function buildRelationMigrationPlan(
         const resolution = requireLegacyCategory(
           snapshot.category,
           sourceLabel,
+
           false
         );
 
@@ -439,6 +463,7 @@ async function buildRelationMigrationPlan(
           categoryId,
           sourceLabel
         );
+
         categoryName ??= persisted.name;
         categorySlug ??= persisted.slug;
       } else if (categorySlug) {
@@ -447,6 +472,7 @@ async function buildRelationMigrationPlan(
           categorySlug,
           sourceLabel
         );
+
         categoryId = persisted._id;
         categoryName ??= persisted.name;
       }
@@ -458,6 +484,7 @@ async function buildRelationMigrationPlan(
       usedCategorySlugs.add(categorySlug);
 
       const { category: _legacyCategory, ...snapshotWithoutLegacy } = snapshot;
+
       void _legacyCategory;
 
       const nextSnapshot = {
@@ -521,6 +548,7 @@ export async function migrateProductCategoryRelations(
 
   if (plan.productWrites.length) {
     const products = db.collection('products');
+
     await products.bulkWrite(
       plan.productWrites as unknown as Parameters<typeof products.bulkWrite>[0]
     );
@@ -528,6 +556,7 @@ export async function migrateProductCategoryRelations(
 
   if (plan.productRequestWrites.length) {
     const productRequests = db.collection('productrequests');
+
     await productRequests.bulkWrite(
       plan.productRequestWrites as unknown as Parameters<
         typeof productRequests.bulkWrite
@@ -537,6 +566,7 @@ export async function migrateProductCategoryRelations(
 
   if (plan.orderWrites.length) {
     const orders = db.collection('orders');
+
     await orders.bulkWrite(
       plan.orderWrites as unknown as Parameters<typeof orders.bulkWrite>[0]
     );

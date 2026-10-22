@@ -6,32 +6,32 @@ import {
   CART_ITEM_TTL_DAYS,
   CART_PHARMACY_LIMIT_ERROR_CODE,
   MAX_PHARMACY_GROUPS_PER_CART,
-} from '../constants/cart';
+} from '../../constants/cart';
 
-import { API_MESSAGES } from '../constants/messages';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
+import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
 
-import { Cart } from '../models/cart.model';
-import { Product } from '../models/product.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { Pharmacy } from '../models/pharmacy.model';
+import { Cart } from '../../models/cart.model';
+import { Product } from '../../models/product.model';
+import { ProductOffer } from '../../models/productOffer.model';
+import { Pharmacy } from '../../models/pharmacy.model';
 
-import { httpError } from '../utils/httpError';
+import { httpError } from '../../utils/httpError';
 import { getCartItemUnavailableReason } from './cart-item-availability';
 
 import {
   getProductCategoryReferenceMap,
   getProductCategoryReferenceOrThrow,
-} from './catalog/product-category.service';
+} from '../catalog/product-category.service';
 
 import type {
   CartIssueResponseDto,
   CartProductResponseDto,
   CartResponseDto,
-} from '../types/cart';
+} from '../../types/cart';
 
-import type { ProductEntity } from '../types/product';
+import type { ProductEntity } from '../../types/product';
 
 //===============================================================
 
@@ -56,7 +56,9 @@ type ProductDocument = ProductEntity & { _id: Types.ObjectId };
 
 function getCartItemExpiresAt(): Date {
   const expiresAt = new Date();
+
   expiresAt.setDate(expiresAt.getDate() + CART_ITEM_TTL_DAYS);
+
   return expiresAt;
 }
 
@@ -85,6 +87,7 @@ async function replaceCartItemsOrThrow(
       HTTP_STATUS.CONFLICT,
       'Cart was changed by another request. Please refresh and try again.',
       undefined,
+
       CART_CHANGED_ERROR_CODE
     );
   }
@@ -210,6 +213,7 @@ async function serializeCartWithCleanup(
   const productMap = new Map(
     products.map((product) => [String(product._id), product])
   );
+
   const categoryMap = await getProductCategoryReferenceMap(
     products.map((product) => product.categoryId),
     session
@@ -222,9 +226,11 @@ async function serializeCartWithCleanup(
   const validItems = cart.items.filter((item) => {
     const offer = offerMap.get(String(item.productOfferId));
     const product = offer ? productMap.get(String(offer.productId)) : undefined;
+
     const pharmacy = offer
       ? pharmacyMap.get(String(offer.pharmacyId))
       : undefined;
+
     const reason = getCartItemUnavailableReason({
       isExpired: item.expiresAt.getTime() <= now,
       offerExists: Boolean(offer),
@@ -235,16 +241,19 @@ async function serializeCartWithCleanup(
     if (!reason) return true;
 
     issues.push({ cartItemId: item._id.toString(), reason });
+
     return false;
   });
 
   let revision = cart.revision;
+
   if (validItems.length !== cart.items.length) {
     revision = await replaceCartItemsOrThrow(cart, validItems, session);
   }
 
   const items = validItems.map((item) => {
     const offer = offerMap.get(String(item.productOfferId));
+
     if (!offer) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
@@ -264,19 +273,26 @@ async function serializeCartWithCleanup(
 
     // Cart prices remain live. The confirmed Order stores the immutable price snapshot.
     const unitPrice = offer.price;
+
     const productDto: CartProductResponseDto = {
       id: String(product._id),
       name: product.name,
       article: product.article,
+
       category: getProductCategoryReferenceOrThrow(
         categoryMap,
         product.categoryId
       ),
+
       price: unitPrice,
+
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
+
       pharmacyName: pharmacy.name,
       inStock: offer.availableQuantity > 0,
+
       ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
+
       ...(typeof product.reviewsCount === 'number'
         ? { reviewsCount: product.reviewsCount }
         : {}),
@@ -289,13 +305,17 @@ async function serializeCartWithCleanup(
       pharmacyId: String(offer.pharmacyId),
       product: productDto,
       pharmacyName: pharmacy.name,
+
       ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),
+
       ...(typeof pharmacy.rating === 'number'
         ? { pharmacyRating: pharmacy.rating }
         : {}),
+
       ...(typeof pharmacy.reviewsCount === 'number'
         ? { pharmacyReviewsCount: pharmacy.reviewsCount }
         : {}),
+
       stockQuantity: offer.availableQuantity,
       quantity: item.quantity,
       unitPrice,
@@ -319,26 +339,33 @@ export async function cleanupExpiredCartItemsService(): Promise<number> {
   const carts = await Cart.find({
     'items.expiresAt': { $lte: new Date() },
   }).lean<CartDocument[]>();
+
   let removedItems = 0;
 
   for (const candidate of carts) {
     const session = await mongoose.startSession();
+
     try {
       await session.withTransaction(async () => {
         const found = await Cart.findById(candidate._id)
           .session(session)
           .lean<CartDocument | null>();
+
         if (!found) return;
 
         const current = await ensureCartRevision(found, session);
         const now = Date.now();
+
         const nextItems = current.items.filter(
           (item) => item.expiresAt.getTime() > now
         );
+
         const removedCount = current.items.length - nextItems.length;
+
         if (removedCount === 0) return;
 
         await replaceCartItemsOrThrow(current, nextItems, session);
+
         removedItems += removedCount;
       });
     } finally {
@@ -353,9 +380,11 @@ export async function cleanupExpiredCartItemsService(): Promise<number> {
 
 export async function getCartService(clientUserId: string) {
   const session = await mongoose.startSession();
+
   try {
     const cartResponse = await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       return serializeCartWithCleanup(cart, session);
     });
 
@@ -382,16 +411,20 @@ export async function addCartItemService(
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       const { offer } = await findOfferOrThrow(
         input.productId,
         input.pharmacyId,
         session
       );
+
       const itemIndex = cart.items.findIndex(
         (item) => item.productOfferId.toString() === String(offer._id)
       );
+
       const currentQuantity =
         itemIndex >= 0 ? cart.items[itemIndex].quantity : 0;
+
       const quantityToAdd = input.quantity;
       const nextQuantity = currentQuantity + quantityToAdd;
 
@@ -407,6 +440,7 @@ export async function addCartItemService(
           HTTP_STATUS.CONFLICT,
           'Available quantity has changed. Refresh the cart and try again.',
           undefined,
+
           STOCK_CHANGED_ERROR_CODE
         );
       }
@@ -417,9 +451,11 @@ export async function addCartItemService(
         })
           .session(session)
           .lean();
+
         const pharmacyGroups = new Set(
           existingOffers.map((item) => String(item.pharmacyId))
         );
+
         if (
           !pharmacyGroups.has(input.pharmacyId) &&
           pharmacyGroups.size >= MAX_PHARMACY_GROUPS_PER_CART
@@ -428,6 +464,7 @@ export async function addCartItemService(
             HTTP_STATUS.BAD_REQUEST,
             `The cart can contain products from no more than ${MAX_PHARMACY_GROUPS_PER_CART} pharmacies. Confirm existing orders before adding products from another pharmacy.`,
             undefined,
+
             CART_PHARMACY_LIMIT_ERROR_CODE
           );
         }
@@ -435,6 +472,7 @@ export async function addCartItemService(
 
       if (itemIndex >= 0) {
         const currentItem = cart.items[itemIndex];
+
         cart.items[itemIndex] = {
           ...currentItem,
           quantity: currentItem.quantity + quantityToAdd,
@@ -451,6 +489,7 @@ export async function addCartItemService(
 
       await replaceCartItemsOrThrow(cart, cart.items, session);
     });
+
     return getCartService(clientUserId);
   } finally {
     await session.endSession();
@@ -468,15 +507,20 @@ export async function updateCartItemService(
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       const itemIndex = cart.items.findIndex(
         (item) => item._id.toString() === cartItemId
       );
+
       if (itemIndex < 0)
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
+
       const currentItem = cart.items[itemIndex];
+
       const offer = await ProductOffer.findById(currentItem.productOfferId)
         .session(session)
         .lean();
+
       if (!offer)
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
@@ -501,6 +545,7 @@ export async function updateCartItemService(
           HTTP_STATUS.CONFLICT,
           'Available quantity has changed. Refresh the cart and try again.',
           undefined,
+
           STOCK_CHANGED_ERROR_CODE
         );
       }
@@ -510,8 +555,10 @@ export async function updateCartItemService(
         quantity: nextQuantity,
         expiresAt: getCartItemExpiresAt(),
       };
+
       await replaceCartItemsOrThrow(cart, cart.items, session);
     });
+
     return getCartService(clientUserId);
   } finally {
     await session.endSession();
@@ -525,12 +572,15 @@ export async function removeCartItemService(
   cartItemId: string
 ) {
   const session = await mongoose.startSession();
+
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       const exists = cart.items.some(
         (item) => item._id.toString() === cartItemId
       );
+
       if (!exists)
         throw httpError(HTTP_STATUS.NOT_FOUND, 'Cart item not found');
 
@@ -554,9 +604,11 @@ export async function removeCartPharmacyService(
   pharmacyId: string
 ) {
   const session = await mongoose.startSession();
+
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       if (cart.items.length === 0) return;
 
       const offers = await ProductOffer.find({
@@ -568,6 +620,7 @@ export async function removeCartPharmacyService(
         .lean();
 
       const offerIds = new Set(offers.map((offer) => String(offer._id)));
+
       if (offerIds.size === 0) return;
 
       const nextItems = cart.items.filter(
@@ -575,6 +628,7 @@ export async function removeCartPharmacyService(
       );
 
       if (nextItems.length === cart.items.length) return;
+
       await replaceCartItemsOrThrow(cart, nextItems, session);
     });
 
@@ -592,17 +646,21 @@ export async function removeCartProductOfferService(
   pharmacyId: string
 ) {
   const offer = await ProductOffer.findOne({ productId, pharmacyId }).lean();
+
   if (!offer) return getCartService(clientUserId);
 
   const session = await mongoose.startSession();
+
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       const nextItems = cart.items.filter(
         (item) => item.productOfferId.toString() !== String(offer._id)
       );
 
       if (nextItems.length === cart.items.length) return;
+
       await replaceCartItemsOrThrow(cart, nextItems, session);
     });
 
@@ -616,10 +674,13 @@ export async function removeCartProductOfferService(
 
 export async function clearCartService(clientUserId: string) {
   const session = await mongoose.startSession();
+
   try {
     await session.withTransaction(async () => {
       const cart = await getCartDocument(clientUserId, session);
+
       if (cart.items.length === 0) return;
+
       await replaceCartItemsOrThrow(cart, [], session);
     });
 

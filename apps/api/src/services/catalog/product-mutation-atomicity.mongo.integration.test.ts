@@ -52,6 +52,7 @@ function getPhoneSuffix(seed: string): string {
 test(
   'product offer mutations remain consistent under concurrent add and order/remove races',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 

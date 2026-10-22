@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('cart serialization cleans stale items transactionally and reports issues', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/cart.service.ts'),
+    resolve(process.cwd(), 'src/services/cart/cart.service.ts'),
     'utf8'
   );
 

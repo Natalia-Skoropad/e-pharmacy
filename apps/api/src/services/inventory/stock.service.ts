@@ -42,12 +42,14 @@ function assertPositiveQuantity(quantity: number): void {
 
 async function recordMovementIfNeeded(
   offer: StockOfferSnapshot,
+
   input: {
     eventType: 'arrival' | 'reserve' | 'release' | 'write_off' | 'adjustment';
     stockDelta: number;
     reservedDelta: number;
     availableDelta: number;
   },
+
   context?: StockMovementContext,
   session?: mongoose.ClientSession
 ): Promise<void> {
@@ -82,18 +84,21 @@ export async function reserveOfferStock(
       HTTP_STATUS.CONFLICT,
       'Available quantity has changed. Please refresh and try again.',
       undefined,
+
       STOCK_CHANGED_ERROR_CODE
     );
   }
 
   await recordMovementIfNeeded(
     offer,
+
     {
       eventType: 'reserve',
       stockDelta: 0,
       reservedDelta: quantity,
       availableDelta: -quantity,
     },
+
     context,
     session
   );
@@ -123,18 +128,21 @@ export async function releaseOfferStock(
       HTTP_STATUS.CONFLICT,
       'Product reservation could not be released. Please refresh and try again.',
       undefined,
+
       STOCK_CHANGED_ERROR_CODE
     );
   }
 
   await recordMovementIfNeeded(
     offer,
+
     {
       eventType: 'release',
       stockDelta: 0,
       reservedDelta: -quantity,
       availableDelta: quantity,
     },
+
     context,
     session
   );
@@ -165,18 +173,21 @@ export async function commitReservedStock(
       HTTP_STATUS.CONFLICT,
       'Product reservation is no longer available. Please refresh and try again.',
       undefined,
+
       STOCK_CHANGED_ERROR_CODE
     );
   }
 
   await recordMovementIfNeeded(
     offer,
+
     {
       eventType: 'write_off',
       stockDelta: -quantity,
       reservedDelta: -quantity,
       availableDelta: 0,
     },
+
     context,
     session
   );
@@ -204,12 +215,14 @@ export async function restoreCommittedStock(
 
   await recordMovementIfNeeded(
     offer,
+
     {
       eventType: 'adjustment',
       stockDelta: quantity,
       reservedDelta: 0,
       availableDelta: quantity,
     },
+
     context,
     session
   );
@@ -243,6 +256,7 @@ export async function setPharmacyOfferStock(
       HTTP_STATUS.CONFLICT,
       'Stock cannot be lower than the quantity already reserved in client orders.',
       undefined,
+
       STOCK_CHANGED_ERROR_CODE
     );
   }
@@ -268,12 +282,14 @@ export async function setPharmacyOfferStock(
 
   await recordMovementIfNeeded(
     offer,
+
     {
       eventType: stockDelta > 0 ? 'arrival' : 'adjustment',
       stockDelta,
       reservedDelta: 0,
       availableDelta: stockDelta,
     },
+
     context,
     session
   );

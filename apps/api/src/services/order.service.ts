@@ -38,7 +38,7 @@ import {
   reserveOfferStock,
 } from './inventory/stock.service';
 
-import { getCartService } from './cart.service';
+import { getCartService } from './cart/cart.service';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import { createManagerOrderRequestFingerprint } from './manager-order-request-fingerprint';
 

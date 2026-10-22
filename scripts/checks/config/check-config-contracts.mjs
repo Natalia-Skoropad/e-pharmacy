@@ -379,7 +379,7 @@ const [
   ),
 
   readFile(
-    fromRoot('apps', 'api', 'src', 'services', 'cart.service.ts'),
+    fromRoot('apps', 'api', 'src', 'services', 'cart/cart.service.ts'),
     'utf8'
   ),
 

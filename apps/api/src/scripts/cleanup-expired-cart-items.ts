@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 import { connectDB } from '../db/connectDB';
-import { runCartCleanupOnce } from '../services/cart-cleanup.service';
+import { runCartCleanupOnce } from '../services/cart/cart-cleanup.service';
 import { logger } from '../utils/logger';
 
 //===============================================================

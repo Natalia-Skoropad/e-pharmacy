@@ -8,9 +8,10 @@ import test from 'node:test';
 test('cart add never silently clamps requested quantity and enforces the shared max', async () => {
   const [service, model] = await Promise.all([
     readFile(
-      path.resolve(process.cwd(), 'src/services/cart.service.ts'),
+      path.resolve(process.cwd(), 'src/services/cart/cart.service.ts'),
       'utf8'
     ),
+
     readFile(path.resolve(process.cwd(), 'src/models/cart.model.ts'), 'utf8'),
   ]);
 

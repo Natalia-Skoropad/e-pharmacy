@@ -2,9 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
-import { Client } from '../models/client.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
+import { Client } from '../../models/client.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { User } from '../../models/user.model';
 import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
 
 //===================================================================
@@ -17,8 +17,10 @@ const mongoUri = process.env.E_PHARMACY_TEST_MONGODB_URI;
 test(
   'Stage 14.17: default client upsert and reactivation preserve favorites and first activation timestamp',
   { skip: !mongoUri },
+
   async () => {
     await mongoose.connect(mongoUri!);
+
     const id = new Types.ObjectId();
     const marker = id.toHexString();
 

@@ -33,6 +33,7 @@ function getTestMongoUri(): string {
 test(
   'distributed auth rate-limit callers share one Mongo counter without storing the raw key',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 

@@ -34,6 +34,7 @@ export function createRateLimitWindow(
 ): RateLimitWindow {
   const windowStartMs =
     Math.floor(nowMs / RATE_LIMIT_WINDOW_MS) * RATE_LIMIT_WINDOW_MS;
+
   const resetAtMs = windowStartMs + RATE_LIMIT_WINDOW_MS;
 
   return {
@@ -69,6 +70,7 @@ async function incrementWindow(window: RateLimitWindow): Promise<number> {
       { _id: window.id },
       {
         $inc: { hits: 1 },
+
         $setOnInsert: {
           resetAt: window.resetAt,
           expiresAt: getBucketExpiresAt(window),
@@ -95,6 +97,7 @@ async function incrementWindow(window: RateLimitWindow): Promise<number> {
     ).lean<{ hits: number } | null>();
 
     if (!bucket) throw error;
+
     return bucket.hits;
   }
 }
@@ -122,6 +125,7 @@ export async function getRateLimitCounter(
   nowMs = Date.now()
 ): Promise<RateLimitCounter> {
   const window = createRateLimitWindow(policy, key, nowMs);
+
   const bucket = await RateLimitBucket.findById(window.id)
     .select('hits')
     .lean<{ hits: number } | null>();

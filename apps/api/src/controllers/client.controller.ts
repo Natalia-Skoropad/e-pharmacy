@@ -12,7 +12,7 @@ import {
   getClientByIdService,
   getClientPurchasedProductsService,
   getClientsService,
-} from '../services/client.service';
+} from '../services/clients/client.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

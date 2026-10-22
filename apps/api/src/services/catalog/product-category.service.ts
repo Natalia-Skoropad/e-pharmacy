@@ -41,6 +41,7 @@ export async function findProductCategoryById(
   }).lean<ProductCategoryDocument | null>();
 
   if (options.session) query.session(options.session);
+
   return query;
 }
 
@@ -56,6 +57,7 @@ export async function findProductCategoryBySlug(
   }).lean<ProductCategoryDocument | null>();
 
   if (options.session) query.session(options.session);
+
   return query;
 }
 
@@ -96,6 +98,7 @@ export async function getProductCategoryReferenceMap(
     .lean<ProductCategoryDocument[]>();
 
   if (session) query.session(session);
+
   const categories = await query;
 
   return new Map(

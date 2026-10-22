@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('cart mutations do not reserve, release or commit stock', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/cart.service.ts'),
+    resolve(process.cwd(), 'src/services/cart/cart.service.ts'),
     'utf8'
   );
 

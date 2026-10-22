@@ -15,7 +15,7 @@ test('14.17: first activation accepts new (not blocked) owners and provisions a 
   const [decisions, lifecycle, defaultClient] = await Promise.all([
     read('services/admin.service.ts'),
     read('services/pharmacy-owner-lifecycle.service.ts'),
-    read('services/default-pharmacy-client.service.ts'),
+    read('services/clients/default-pharmacy-client.service.ts'),
   ]);
 
   assert.match(decisions, /owner\.status === USER_STATUSES\.BLOCKED/);

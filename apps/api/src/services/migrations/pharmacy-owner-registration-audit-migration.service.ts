@@ -209,6 +209,7 @@ async function ensureRegistrationDocumentsEvent(
   pharmacy: PharmacyRow
 ): Promise<boolean | null> {
   const documents = pharmacy.documents ?? [];
+
   if (documents.length === 0) return null;
 
   const entityId = String(pharmacy._id);
@@ -342,6 +343,7 @@ export async function migratePharmacyOwnerRegistrationAudit(): Promise<PharmacyO
     }
 
     const created = await ensureRegistrationDocumentsEvent(owner, pharmacy);
+
     if (created === null) continue;
 
     if (created) {

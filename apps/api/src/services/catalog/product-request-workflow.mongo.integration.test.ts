@@ -50,6 +50,7 @@ function getRejectedHttpError(
 test(
   'product request uniqueness and moderation remain backend-authoritative under concurrency',
   { skip: shouldSkip },
+
   async (context) => {
     await mongoose.connect(getTestMongoUri());
     await Promise.all([Product.init(), ProductRequest.init()]);
@@ -432,6 +433,7 @@ test(
 
           const persistedRequest = await ProductRequest.findById(request._id)
             .select('categoryMode categoryId customCategory productId')
+
             .lean<{
               categoryMode: string;
               categoryId?: Types.ObjectId;

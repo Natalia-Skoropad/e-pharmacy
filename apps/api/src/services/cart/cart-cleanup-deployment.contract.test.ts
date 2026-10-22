@@ -8,7 +8,7 @@ import test from 'node:test';
 test('cart reads clean their own stale items while global cleanup is deployment-owned', async () => {
   const [cartSource, serverSource, cleanupScript] = await Promise.all([
     readFile(
-      path.resolve(process.cwd(), 'src/services/cart.service.ts'),
+      path.resolve(process.cwd(), 'src/services/cart/cart.service.ts'),
       'utf8'
     ),
 

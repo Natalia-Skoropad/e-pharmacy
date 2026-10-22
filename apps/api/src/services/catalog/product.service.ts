@@ -55,7 +55,11 @@ import {
 } from '../../utils/mongoError';
 
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
-import { createFlexibleSearchRegExp, createSafeRegExp } from '../../utils/regexp';
+
+import {
+  createFlexibleSearchRegExp,
+  createSafeRegExp,
+} from '../../utils/regexp';
 
 import { requireISODateTime } from '../../utils/date-contract';
 import { buildPublicEntitySlugId } from '../../utils/public-slug-id';
@@ -1019,6 +1023,7 @@ export async function getManagedProductStatisticsService(
       $lookup: {
         from: ProductOffer.collection.name,
         let: { productId: '$_id' },
+
         pipeline: [
           {
             $match: {
@@ -1032,6 +1037,7 @@ export async function getManagedProductStatisticsService(
           },
           { $limit: 1 },
         ],
+
         as: 'currentPharmacyOffers',
       },
     },

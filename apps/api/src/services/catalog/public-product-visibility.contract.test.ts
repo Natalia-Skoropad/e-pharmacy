@@ -8,7 +8,11 @@ import test from 'node:test';
 test('public product endpoints are active-only while blocked lifecycle access is management-only', async () => {
   const [routes, service, pharmacyService] = await Promise.all([
     readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
-    readFile(resolve(process.cwd(), 'src/services/catalog/product.service.ts'), 'utf8'),
+
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
+      'utf8'
+    ),
 
     readFile(
       resolve(process.cwd(), 'src/services/pharmacy.service.ts'),
@@ -23,9 +27,11 @@ test('public product endpoints are active-only while blocked lifecycle access is
 
   const filtersStart = routes.indexOf("productRoutes.get(\n  '/filters'");
   const managementStart = routes.indexOf("productRoutes.get(\n  '/management'");
+
   assert.ok(filtersStart >= 0 && managementStart > filtersStart);
 
   const filtersRoute = routes.slice(filtersStart, managementStart);
+
   assert.match(filtersRoute, /productFiltersQuerySchema/);
 
   assert.doesNotMatch(

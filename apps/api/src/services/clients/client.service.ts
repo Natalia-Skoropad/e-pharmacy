@@ -1,28 +1,28 @@
 import { Types, type PipelineStage } from 'mongoose';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { Order } from '../models/order.model';
-import { Product } from '../models/product.model';
-import { Pharmacy } from '../models/pharmacy.model';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { Order } from '../../models/order.model';
+import { Product } from '../../models/product.model';
+import { Pharmacy } from '../../models/pharmacy.model';
 
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from './pharmacy-membership.service';
+} from '../pharmacy-membership.service';
 
-import { User } from '../models/user.model';
-import { httpError } from '../utils/httpError';
-import { getEndOfDay, getStartOfDay } from '../utils/date-range';
-import { createSafeRegExp } from '../utils/regexp';
+import { User } from '../../models/user.model';
+import { httpError } from '../../utils/httpError';
+import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
+import { createSafeRegExp } from '../../utils/regexp';
 
 import type {
   ClientProductsQuery,
   ClientsQuery,
-} from '../schemas/client.schema';
+} from '../../schemas/client.schema';
 
-import type { ProductStatus } from '../types/product';
-import type { ProductCategorySnapshotDto } from '../types/product-category';
-import type { PharmacyEntity } from '../types/pharmacy';
+import type { ProductStatus } from '../../types/product';
+import type { ProductCategorySnapshotDto } from '../../types/product-category';
+import type { PharmacyEntity } from '../../types/pharmacy';
 
 //===============================================================
 
@@ -143,6 +143,7 @@ function buildClientFilterStages(
 
   if (query.contact?.trim()) {
     const contact = createSafeRegExp(query.contact.trim());
+
     match.$or = [{ email: contact }, { phone: contact }, { address: contact }];
   }
 

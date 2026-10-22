@@ -12,7 +12,10 @@ test('managed product reads bind pharmacy scope to the authenticated actor', asy
       'utf8'
     ),
 
-    readFile(resolve(process.cwd(), 'src/services/catalog/product.service.ts'), 'utf8'),
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
+      'utf8'
+    ),
 
     readFile(
       resolve(process.cwd(), '../pharmacy/src/app/api/products/route.ts'),

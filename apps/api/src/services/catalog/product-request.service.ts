@@ -52,7 +52,11 @@ import {
 } from '../../utils/mongoError';
 
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
-import { createFlexibleSearchRegExp, createSafeRegExp } from '../../utils/regexp';
+
+import {
+  createFlexibleSearchRegExp,
+  createSafeRegExp,
+} from '../../utils/regexp';
 
 //===============================================================
 

@@ -1,4 +1,4 @@
-import type { CartIssueReason } from '../types/cart';
+import type { CartIssueReason } from '../../types/cart';
 
 //===============================================================
 

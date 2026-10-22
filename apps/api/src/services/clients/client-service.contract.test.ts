@@ -7,7 +7,7 @@ import test from 'node:test';
 
 async function readClientService(): Promise<string> {
   return readFile(
-    resolve(process.cwd(), 'src/services/client.service.ts'),
+    resolve(process.cwd(), 'src/services/clients/client.service.ts'),
     'utf8'
   );
 }

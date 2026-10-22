@@ -68,16 +68,21 @@ function createFakeDatabase({
 
     async dropIndex(name: string) {
       const index = pharmacyIndexes.findIndex((item) => item.name === name);
+
       if (index < 0) throw new Error(`Unknown index ${name}`);
+
       pharmacyIndexes.splice(index, 1);
+
       return { ok: 1 };
     },
 
     async createIndex(key: Record<string, 1 | -1>, options: { name: string }) {
       const existing = pharmacyIndexes.find((index) => sameKey(index.key, key));
+
       if (existing) return existing.name;
 
       pharmacyIndexes.push({ name: options.name, key: { ...key } });
+
       return options.name;
     },
 
@@ -86,6 +91,7 @@ function createFakeDatabase({
 
       const rows = pharmacies.filter((pharmacy) => {
         if ('status' in filter) return pharmacy.status === filter.status;
+
         return Boolean(pharmacy.ownerId);
       });
 
@@ -94,6 +100,7 @@ function createFakeDatabase({
 
     find(filter: { ownerId?: { $in?: string[] } }) {
       const ownerIds = new Set((filter.ownerId?.$in ?? []).map(String));
+
       let rows = pharmacies.filter((pharmacy) =>
         ownerIds.has(String(pharmacy.ownerId))
       );
@@ -105,8 +112,10 @@ function createFakeDatabase({
               left.createdAt.getTime() - right.createdAt.getTime() ||
               String(left._id).localeCompare(String(right._id))
           );
+
           return cursor;
         },
+
         async toArray() {
           return rows.map((pharmacy) => ({ ...pharmacy }));
         },
@@ -130,6 +139,7 @@ function createFakeDatabase({
         async toArray() {
           if ('_id' in filter) {
             const ids = new Set(filter._id.$in.map(String));
+
             return users
               .filter((user) => ids.has(String(user._id)))
               .map((user) => ({ ...user }));
@@ -142,6 +152,7 @@ function createFakeDatabase({
             if ('email' in clause) {
               clause.email.$in.forEach((email) => emails.add(email));
             }
+
             if ('phone' in clause) {
               clause.phone.$in.forEach((phone) => phones.add(phone));
             }
@@ -153,6 +164,7 @@ function createFakeDatabase({
                 (Boolean(user.email) && emails.has(String(user.email))) ||
                 (Boolean(user.phone) && phones.has(String(user.phone)))
             )
+
             .map((user) => ({ ...user }));
         },
       };
@@ -160,6 +172,7 @@ function createFakeDatabase({
 
     async insertMany(documents: FakeUser[]) {
       users.push(...documents.map((document) => ({ ...document })));
+
       return { insertedCount: documents.length };
     },
 
@@ -169,9 +182,11 @@ function createFakeDatabase({
         role: string;
         status: { $ne: string };
       },
+
       update: { $set: { status: string } }
     ) {
       const ids = new Set(filter._id.$in.map(String));
+
       let modifiedCount = 0;
 
       for (const user of users) {
@@ -196,6 +211,7 @@ function createFakeDatabase({
     collection(name: string) {
       if (name === 'pharmacies') return pharmacyCollection;
       if (name === 'users') return userCollection;
+
       throw new Error(`Unexpected collection ${name}`);
     },
   } as unknown as Parameters<typeof migratePharmacyOwnerFoundation>[0];
@@ -215,6 +231,7 @@ test('owner foundation migration is repeatable and keeps role-aware owner status
         key: { ownerId: 1, status: 1 },
       },
     ],
+
     users: [
       { _id: 'owner-a', role: 'pharmacy', status: 'active' },
       { _id: 'owner-b', role: 'pharmacy', status: 'active' },
@@ -222,6 +239,7 @@ test('owner foundation migration is repeatable and keeps role-aware owner status
       { _id: 'client-a', role: 'client', status: 'active' },
       { _id: 'admin-a', role: 'admin', status: 'active' },
     ],
+
     pharmacies: [
       {
         _id: 'pharmacy-a1',
@@ -295,6 +313,7 @@ test('owner foundation migration is repeatable and keeps role-aware owner status
   );
 
   assert.equal(ownerIndexes.length, 3);
+
   assert.equal(
     ownerIndexes.some((index) => index.unique === true),
     false
@@ -327,7 +346,9 @@ test('owner foundation migration creates missing Users for controlled demo pharm
       { name: '_id_', key: { _id: 1 }, unique: true },
       { name: 'ownerId_1', key: { ownerId: 1 }, unique: true },
     ],
+
     users: [{ _id: 'owner-a', role: 'pharmacy', status: 'active' }],
+
     pharmacies: [
       {
         _id: 'pharmacy-a1',
@@ -384,6 +405,7 @@ test('owner foundation migration creates missing Users for controlled demo pharm
 
   assert.equal(second.createdDemoOwnerAccounts, 0);
   assert.equal(second.unresolvedOwnerIds, 0);
+
   assert.equal(
     fixture.users.filter((user) => user._id === 'missing-demo-owner').length,
     1
@@ -401,11 +423,13 @@ test('owner foundation migration repairs all 98 original client demo pharmacies 
       ownerId: `demo-owner-${number}`,
       name: `Demo Pharmacy Kyiv ${number}`,
       email: `pharmacy.${number}@e-pharmacy.example.com`,
+
       ...(number === 1
         ? {}
         : {
             phone: `+380${String(501000000 + number).padStart(9, '0')}`,
           }),
+
       address: `${12 + index} Central Street`,
       status: 'active',
       createdAt: new Date(2026, 0, number),
@@ -429,15 +453,19 @@ test('owner foundation migration repairs all 98 original client demo pharmacies 
   assert.equal(first.newOwners, 0);
   assert.equal(first.unresolvedOwnerIds, 0);
   assert.equal(fixture.users.length, 98);
+
   assert.equal(
     fixture.users.find((user) => user._id === 'demo-owner-1')?.phone,
     '+380501000001'
   );
+
   assert.equal(fixture.pharmacies.length, 98);
+
   assert.equal(
     fixture.pharmacies.every((pharmacy) =>
       fixture.users.some((user) => user._id === pharmacy.ownerId)
     ),
+
     true
   );
 
@@ -458,6 +486,7 @@ test('owner foundation migration keeps unknown non-demo orphan references unreso
   const fixture = createFakeDatabase({
     indexes: [],
     users: [],
+
     pharmacies: [
       {
         _id: 'pharmacy-unknown',
@@ -489,6 +518,7 @@ test('owner foundation migration fails closed when Pharmacy.ownerId points to a 
   const fixture = createFakeDatabase({
     indexes: [],
     users: [{ _id: 'client-owner', role: 'client', status: 'active' }],
+
     pharmacies: [
       {
         _id: 'pharmacy-invalid',

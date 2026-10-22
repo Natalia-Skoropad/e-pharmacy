@@ -11,7 +11,7 @@ test('cart persistence stores intent only while response prices stay live', asyn
     readFile(path.resolve(process.cwd(), 'src/types/cart.ts'), 'utf8'),
 
     readFile(
-      path.resolve(process.cwd(), 'src/services/cart.service.ts'),
+      path.resolve(process.cwd(), 'src/services/cart/cart.service.ts'),
       'utf8'
     ),
 
@@ -26,6 +26,7 @@ test('cart persistence stores intent only while response prices stay live', asyn
   const entityStart = types.indexOf('export type CartItemEntity');
   const entityEnd = types.indexOf('export type CartEntity');
   const entitySource = types.slice(entityStart, entityEnd);
+
   assert.doesNotMatch(entitySource, /unitPrice/);
 
   const serializeStart = service.indexOf(

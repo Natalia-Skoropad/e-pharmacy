@@ -16,7 +16,7 @@ import {
   removeCartItemService,
   removeCartPharmacyService,
   updateCartItemService,
-} from '../services/cart.service';
+} from '../services/cart/cart.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

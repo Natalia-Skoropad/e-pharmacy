@@ -26,7 +26,7 @@ import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
 import { ProductCategory } from '../models/productCategory.model';
 import { hashPassword } from '../utils/password';
-import { ensureDefaultPharmacyClient } from '../services/default-pharmacy-client.service';
+import { ensureDefaultPharmacyClient } from '../services/clients/default-pharmacy-client.service';
 import { ensureInitialProductCategories } from '../services/catalog/product-category-bootstrap.service';
 import type { PharmacyEntity } from '../types/pharmacy';
 

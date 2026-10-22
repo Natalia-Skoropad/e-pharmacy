@@ -41,6 +41,7 @@ function getTestMongoUri(): string {
 test(
   'managed products derive pharmacy scope from the authenticated pharmacy actor',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -111,6 +112,7 @@ test(
           { userId: ownerId.toString(), role: 'pharmacy' },
           { includeOffers: true }
         ),
+
         (error: unknown) => (error as HttpError).status === 403
       );
 
@@ -168,6 +170,7 @@ test(
           { userId: ownerId.toString(), role: 'pharmacy' },
           { includeOffers: true }
         ),
+
         (error: unknown) => (error as HttpError).status === 403
       );
 
