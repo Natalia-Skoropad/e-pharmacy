@@ -25,7 +25,7 @@ const [pharmacyModel, migration, ownerReadService, lifecycleIntegration] =
       'api',
       'src',
       'services',
-      'pharmacy-owner-foundation-migration.service.ts'
+      'migrations/pharmacy-owner-foundation-migration.service.ts'
     ),
 
     read(

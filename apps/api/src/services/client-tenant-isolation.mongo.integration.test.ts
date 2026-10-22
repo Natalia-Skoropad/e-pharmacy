@@ -4,7 +4,7 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
 
 import { USER_ROLES } from '../constants/auth';
 import { Order } from '../models/order.model';

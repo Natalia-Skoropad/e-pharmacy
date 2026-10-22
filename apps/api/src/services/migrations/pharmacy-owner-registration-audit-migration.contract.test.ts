@@ -8,7 +8,7 @@ import test from 'node:test';
 const source = readFileSync(
   resolve(
     process.cwd(),
-    'src/services/pharmacy-owner-registration-audit-migration.service.ts'
+    'src/services/migrations/pharmacy-owner-registration-audit-migration.service.ts'
   ),
   'utf8'
 );

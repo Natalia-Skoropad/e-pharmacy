@@ -103,7 +103,7 @@ test('custom Product Request behavior is metadata-based and public categories ha
 
 test('legacy relation migration covers products, product requests and order snapshots without making legacy values authoritative', async () => {
   const migration = await read(
-    'src/services/product-category-migration.service.ts'
+    'src/services/migrations/product-category-migration.service.ts'
   );
 
   assert.match(migration, /collection\('products'\)/);

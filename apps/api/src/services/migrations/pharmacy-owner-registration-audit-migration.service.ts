@@ -4,14 +4,14 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../constants/admin-audit';
+} from '../../constants/admin-audit';
 
-import { USER_ROLES } from '../constants/auth';
-import { AdminAuditLog } from '../models/adminAuditLog.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
+import { USER_ROLES } from '../../constants/auth';
+import { AdminAuditLog } from '../../models/adminAuditLog.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { User } from '../../models/user.model';
 
-import type { PharmacyVerificationDocumentMetadata } from '../types/pharmacy';
+import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacy';
 
 //===============================================================
 

@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { migratePharmacyOwnerFoundation } from '../services/pharmacy-owner-foundation-migration.service';
+import { migratePharmacyOwnerFoundation } from '../services/migrations/pharmacy-owner-foundation-migration.service';
 import { hashPassword } from '../utils/password';
 
 //===============================================================

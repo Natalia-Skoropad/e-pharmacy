@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 import { env } from '../config/env';
-import { migrateProductCategoryRelations } from '../services/product-category-migration.service';
+import { migrateProductCategoryRelations } from '../services/migrations/product-category-migration.service';
 
 //===============================================================
 

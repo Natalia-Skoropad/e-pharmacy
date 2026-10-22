@@ -52,7 +52,7 @@ test('distributed auth rate limiting uses Mongo instead of process-local buckets
   );
 
   const store = readFileSync(
-    resolve(__dirname, '../services/rate-limit-store.service.ts'),
+    resolve(__dirname, '../services/infrastructure/rate-limit-store.service.ts'),
     'utf8'
   );
 

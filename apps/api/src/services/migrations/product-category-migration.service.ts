@@ -1,11 +1,11 @@
 import { Types, type Connection } from 'mongoose';
 
-import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../constants/product-category';
+import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../../constants/product-category';
 
-import { Product } from '../models/product.model';
-import { ProductCategory } from '../models/productCategory.model';
-import { ProductRequest } from '../models/productRequest.model';
-import { ensureInitialProductCategories } from './product-category-bootstrap.service';
+import { Product } from '../../models/product.model';
+import { ProductCategory } from '../../models/productCategory.model';
+import { ProductRequest } from '../../models/productRequest.model';
+import { ensureInitialProductCategories } from '../product-category-bootstrap.service';
 
 //===============================================================
 

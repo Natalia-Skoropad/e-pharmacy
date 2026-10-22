@@ -50,7 +50,7 @@ function isPharmacyDomainFile(relative) {
 
 const LEGACY_LOCATION_ALLOWLIST = new Set([
   // One-time idempotent migration from pre-location Pharmacy persistence.
-  'apps/api/src/services/pharmacy-location-migration.service.ts',
+  'apps/api/src/services/migrations/pharmacy-location-migration.service.ts',
 
   // Historical order snapshots are immutable facts. New snapshots use location.
   'apps/api/src/models/order.model.ts',

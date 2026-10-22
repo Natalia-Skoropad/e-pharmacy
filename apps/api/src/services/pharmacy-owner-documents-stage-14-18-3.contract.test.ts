@@ -12,7 +12,7 @@ const read = (relative: string) =>
 
 test('14.18.3 migration requires registration provenance and preserves original source', () => {
   const source = read(
-    'src/services/pharmacy-owner-documents-migration.service.ts'
+    'src/services/migrations/pharmacy-owner-documents-migration.service.ts'
   );
 
   assert.match(source, /registrationUploadSessionId/);

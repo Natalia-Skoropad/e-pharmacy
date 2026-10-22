@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
 
-import { USER_ROLES } from '../constants/auth';
-import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/pharmacy-owner-document-validation';
-import { Pharmacy } from '../models/pharmacy.model';
-import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
-import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
-import { User } from '../models/user.model';
-import { decodeAndVerifyDocumentUpload } from '../utils/documentUpload';
+import { USER_ROLES } from '../../constants/auth';
+import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/pharmacy-owner-document-validation';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { PharmacyDocumentFile } from '../../models/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
+import { User } from '../../models/user.model';
+import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
 
 //===============================================================
 

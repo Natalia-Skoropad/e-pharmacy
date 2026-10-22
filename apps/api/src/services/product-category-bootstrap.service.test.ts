@@ -7,7 +7,7 @@ import {
 } from '../constants/product-category';
 
 import { buildProductCategorySeedOperations } from './product-category-bootstrap.service';
-import { resolveLegacyProductCategory } from './product-category-migration.service';
+import { resolveLegacyProductCategory } from './migrations/product-category-migration.service';
 
 //===============================================================
 

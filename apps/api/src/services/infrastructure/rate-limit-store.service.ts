@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { RateLimitBucket } from '../models/rateLimitBucket.model';
+import { RateLimitBucket } from '../../models/rateLimitBucket.model';
 
 //===============================================================
 

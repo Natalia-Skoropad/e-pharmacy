@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
 
 import { Pharmacy } from '../models/pharmacy.model';
 import { User } from '../models/user.model';

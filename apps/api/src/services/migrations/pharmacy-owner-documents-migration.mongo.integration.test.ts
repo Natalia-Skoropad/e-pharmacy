@@ -3,10 +3,10 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
-import { Pharmacy } from '../models/pharmacy.model';
-import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
-import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
-import { User } from '../models/user.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { PharmacyDocumentFile } from '../../models/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
+import { User } from '../../models/user.model';
 import { migratePharmacyOwnerRegistrationDocuments } from './pharmacy-owner-documents-migration.service';
 
 //===============================================================

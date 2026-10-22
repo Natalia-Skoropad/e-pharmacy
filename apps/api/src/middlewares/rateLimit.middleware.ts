@@ -9,7 +9,7 @@ import {
   incrementRateLimitCounter,
   incrementRateLimitCounterInWindow,
   resetRateLimitCounter,
-} from '../services/rate-limit-store.service';
+} from '../services/infrastructure/rate-limit-store.service';
 
 import { logger } from '../utils/logger';
 

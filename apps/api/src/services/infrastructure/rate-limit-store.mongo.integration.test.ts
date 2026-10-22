@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import mongoose from 'mongoose';
 
-import { RateLimitBucket } from '../models/rateLimitBucket.model';
+import { RateLimitBucket } from '../../models/rateLimitBucket.model';
 
 import {
   createRateLimitWindow,

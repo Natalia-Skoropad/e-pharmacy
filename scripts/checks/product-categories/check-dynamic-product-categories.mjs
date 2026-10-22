@@ -154,7 +154,7 @@ const [
     'api',
     'src',
     'services',
-    'product-category-migration.service.ts'
+    'migrations/product-category-migration.service.ts'
   ),
 
   read('packages', 'types', 'src', 'reference-data', 'product-category.ts'),

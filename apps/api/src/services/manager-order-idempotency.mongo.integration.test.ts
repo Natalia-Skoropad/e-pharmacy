@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
 
 import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../constants/order';
 import { Order } from '../models/order.model';

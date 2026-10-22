@@ -11,7 +11,7 @@ import {
 //===============================================================
 
 const source = readFileSync(
-  resolve(process.cwd(), 'src/services/pharmacy-location-migration.service.ts'),
+  resolve(process.cwd(), 'src/services/migrations/pharmacy-location-migration.service.ts'),
   'utf8'
 );
 

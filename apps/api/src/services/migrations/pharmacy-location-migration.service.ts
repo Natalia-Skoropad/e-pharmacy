@@ -1,12 +1,12 @@
 import type { Types } from 'mongoose';
 
-import { Pharmacy } from '../models/pharmacy.model';
-import { pharmacyLocationDraftSchema } from '../schemas/shared/pharmacy-location.schema';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { pharmacyLocationDraftSchema } from '../../schemas/shared/pharmacy-location.schema';
 
 import type {
   PharmacyGeoPoint,
   PharmacyLocationDraft,
-} from '../types/pharmacy';
+} from '../../types/pharmacy';
 
 //===============================================================
 

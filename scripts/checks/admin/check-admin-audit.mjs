@@ -36,7 +36,7 @@ const requiredFiles = [
     'api',
     'src',
     'services',
-    'pharmacy-owner-registration-audit-migration.service.ts',
+    'migrations/pharmacy-owner-registration-audit-migration.service.ts',
   ],
   ['apps', 'api', 'src', 'controllers', 'admin-audit.controller.ts'],
   ['apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'],
@@ -138,7 +138,7 @@ const ownerRegistrationAuditMigration = await read(
   'api',
   'src',
   'services',
-  'pharmacy-owner-registration-audit-migration.service.ts'
+  'migrations/pharmacy-owner-registration-audit-migration.service.ts'
 );
 
 const pharmacyService = await read(
