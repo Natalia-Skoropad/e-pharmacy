@@ -59,7 +59,7 @@ const authService = await read(
   'api',
   'src',
   'services',
-  'auth.service.ts'
+  'auth/auth.service.ts'
 );
 
 assert.match(authService, /resolvePasswordResetAppUrl/);

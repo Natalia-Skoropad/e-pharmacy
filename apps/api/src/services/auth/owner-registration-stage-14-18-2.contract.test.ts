@@ -8,7 +8,7 @@ import test from 'node:test';
 const read = (file: string) =>
   readFileSync(resolve(process.cwd(), file), 'utf8');
 
-const auth = read('src/services/auth.service.ts');
+const auth = read('src/services/auth/auth.service.ts');
 
 const registration = auth.slice(
   auth.indexOf('export async function registerUserService'),

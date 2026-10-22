@@ -19,7 +19,7 @@ import {
   listAdminAuditLogsService,
 } from './admin-audit.service';
 
-import { updateUserProfileService } from '../../auth.service';
+import { updateUserProfileService } from '../../auth/auth.service';
 
 //===============================================================
 

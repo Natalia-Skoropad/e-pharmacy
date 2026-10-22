@@ -6,7 +6,7 @@ import test from 'node:test';
 //===================================================================
 
 const source = readFileSync(
-  resolve(process.cwd(), 'src/services/auth.service.ts'),
+  resolve(process.cwd(), 'src/services/auth/auth.service.ts'),
   'utf8'
 );
 

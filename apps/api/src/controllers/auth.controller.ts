@@ -18,7 +18,7 @@ import {
   revokeUserSessionService,
   updateUserPasswordService,
   updateUserProfileService,
-} from '../services/auth.service';
+} from '../services/auth/auth.service';
 
 import {
   createRegistrationPharmacyDocumentUploadService,

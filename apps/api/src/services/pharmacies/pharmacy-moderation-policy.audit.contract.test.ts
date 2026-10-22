@@ -53,7 +53,7 @@ test('pharmacy domain remains five-status and on_moderation operational', async 
 
 test('registration yields a new owner without creating an accidental public pharmacy', async () => {
   const [registration, accountStatus] = await Promise.all([
-    source('services/auth.service.ts'),
+    source('services/auth/auth.service.ts'),
     source('utils/account-status.ts'),
   ]);
 

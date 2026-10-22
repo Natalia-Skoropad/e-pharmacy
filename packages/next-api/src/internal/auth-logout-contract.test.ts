@@ -50,7 +50,7 @@ test('logout-all also uses refresh identity and clears local cookies without a l
       readRepositoryFile('apps/pharmacy/src/app/api/auth/logout-all/route.ts'),
       readRepositoryFile('apps/api/src/routes/auth.routes.ts'),
       readRepositoryFile('apps/api/src/controllers/auth.controller.ts'),
-      readRepositoryFile('apps/api/src/services/auth.service.ts'),
+      readRepositoryFile('apps/api/src/services/auth/auth.service.ts'),
     ]);
 
   for (const route of [clientRoute, pharmacyRoute]) {

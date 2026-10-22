@@ -114,7 +114,7 @@ test('owner block cascades to every non-blocked pharmacy while reactivation leav
 //===================================================================
 
 test('auth permits new owners but still blocks blocked accounts on login and refresh', () => {
-  const auth = read('../auth.service.ts');
+  const auth = read('../auth/auth.service.ts');
 
   assert.match(
     auth,

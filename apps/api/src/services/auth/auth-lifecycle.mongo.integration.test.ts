@@ -4,39 +4,41 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { ADMIN_AUDIT_ACTIONS } from '../constants/admin-audit';
-import { PHARMACY_DOCUMENT_RULES } from '../constants/pharmacy-document-validation';
-import { AdminAuditLog } from '../models/adminAuditLog.model';
-import { Client } from '../models/client.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import type { PharmacyVerificationDocumentMetadata } from '../types/pharmacy';
-import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
-import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
-import { PharmacyRegistrationUploadSession } from '../models/pharmacyRegistrationUploadSession.model';
-import { Session } from '../models/session.model';
-import { User } from '../models/user.model';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
+import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacy-document-validation';
+import { AdminAuditLog } from '../../models/adminAuditLog.model';
+import { Client } from '../../models/client.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+
+import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacy';
+
+import { PharmacyDocumentFile } from '../../models/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
+import { PharmacyRegistrationUploadSession } from '../../models/pharmacyRegistrationUploadSession.model';
+import { Session } from '../../models/session.model';
+import { User } from '../../models/user.model';
 
 import {
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
-} from './owners/pharmacy-owner-document.service';
+} from '../owners/pharmacy-owner-document.service';
 
-import { comparePassword, hashPassword } from '../utils/password';
-import { updatePharmacyStatusByAdminService } from './admin/pharmacies/admin.service';
+import { comparePassword, hashPassword } from '../../utils/password';
+import { updatePharmacyStatusByAdminService } from '../admin/pharmacies/admin.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,
   createRegistrationPharmacyDocumentUploadService,
   createRegistrationPharmacyDocumentUploadSessionService,
   getPrivatePharmacyDocumentContentService,
-} from './pharmacies/pharmacy-document.service';
+} from '../pharmacies/pharmacy-document.service';
 
 import {
   getMyPharmacyProfileService,
   sendMyPharmacyForVerificationService,
   submitMyPharmacyModerationService,
   updateMyPharmacyProfileService,
-} from './pharmacies/pharmacy.service';
+} from '../pharmacies/pharmacy.service';
 
 import {
   loginUserService,

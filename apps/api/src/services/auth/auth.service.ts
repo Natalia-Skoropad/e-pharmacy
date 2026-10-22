@@ -7,21 +7,25 @@ import {
 
 import mongoose, { type ClientSession, type HydratedDocument } from 'mongoose';
 
-import { env } from '../config/env';
+import { env } from '../../config/env';
 
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../constants/admin-audit';
+} from '../../constants/admin-audit';
 
-import { AUTH_ERROR_CODES, USER_ROLES, USER_STATUSES } from '../constants/auth';
-import { API_MESSAGES } from '../constants/messages';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import {
+  AUTH_ERROR_CODES,
+  USER_ROLES,
+  USER_STATUSES,
+} from '../../constants/auth';
+import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
-import { Session } from '../models/session.model';
-import { Client } from '../models/client.model';
-import { User } from '../models/user.model';
+import { Session } from '../../models/session.model';
+import { Client } from '../../models/client.model';
+import { User } from '../../models/user.model';
 
 import type {
   AuthSessionResult,
@@ -33,34 +37,34 @@ import type {
   RegisterInput,
   UpdatePasswordInput,
   UpdateProfileInput,
-} from '../types/auth';
+} from '../../types/auth';
 
 import type {
   SessionContext,
   SessionResponseDto,
   SessionRevokedReason,
-} from '../types/session';
+} from '../../types/session';
 
-import type { UserEntity } from '../types/user';
+import type { UserEntity } from '../../types/user';
 
-import { httpError } from '../utils/httpError';
-import { signToken } from '../utils/jwt';
-import { parseDurationMs } from '../utils/duration';
+import { httpError } from '../../utils/httpError';
+import { signToken } from '../../utils/jwt';
+import { parseDurationMs } from '../../utils/duration';
 
 import {
   isDuplicateEmailError,
   isDuplicatePhoneError,
-} from '../utils/mongoError';
+} from '../../utils/mongoError';
 
-import { comparePassword, hashPassword } from '../utils/password';
-import { logger } from '../utils/logger';
-import { resolvePasswordResetAppUrl } from '../utils/password-reset-app-url';
-import { buildPasswordResetUrl } from '../utils/password-reset-url';
-import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
-import { getInitialAccountStatusForRole } from '../utils/account-status';
-import { toAuthUserResponse } from '../utils/userResponse';
-import { appendAdminAuditLog } from './admin/audit/admin-audit.service';
-import { claimRegistrationOwnerDocuments } from './pharmacies/pharmacy-document.service';
+import { comparePassword, hashPassword } from '../../utils/password';
+import { logger } from '../../utils/logger';
+import { resolvePasswordResetAppUrl } from '../../utils/password-reset-app-url';
+import { buildPasswordResetUrl } from '../../utils/password-reset-url';
+import { sendPasswordResetEmail } from '../../utils/passwordResetEmail';
+import { getInitialAccountStatusForRole } from '../../utils/account-status';
+import { toAuthUserResponse } from '../../utils/userResponse';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { claimRegistrationOwnerDocuments } from '../pharmacies/pharmacy-document.service';
 
 import {
   enforcePasswordResetResponseTiming,

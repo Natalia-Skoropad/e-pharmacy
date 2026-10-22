@@ -12,7 +12,7 @@ import { HTTP_STATUS } from '../constants/httpStatus';
 import {
   assertActiveSessionService,
   getUserByIdService,
-} from '../services/auth.service';
+} from '../services/auth/auth.service';
 
 import { httpError } from '../utils/httpError';
 import { logger } from '../utils/logger';

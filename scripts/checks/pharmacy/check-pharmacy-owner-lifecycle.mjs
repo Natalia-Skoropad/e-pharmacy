@@ -52,7 +52,7 @@ const [
   read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-lifecycle.service.ts'),
   read('apps', 'api', 'src', 'constants', 'pharmacy-owner-lifecycle.ts'),
-  read('apps', 'api', 'src', 'services', 'auth.service.ts'),
+  read('apps', 'api', 'src', 'services', 'auth/auth.service.ts'),
   read('apps', 'api', 'src', 'routes', 'pharmacy-owner.routes.ts'),
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
   read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-document.service.ts'),
