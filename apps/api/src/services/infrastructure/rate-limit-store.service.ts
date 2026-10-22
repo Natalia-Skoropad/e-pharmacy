@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto';
 
 import { RateLimitBucket } from '../../models/rateLimitBucket.model';
 
+import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
+
 //===============================================================
 
 export const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -53,17 +55,6 @@ function getBucketExpiresAt(window: RateLimitWindow): Date {
 
 //===============================================================
 
-function isDuplicateBucketInsert(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 11000
-  );
-}
-
-//===============================================================
-
 async function incrementWindow(window: RateLimitWindow): Promise<number> {
   try {
     const bucket = await RateLimitBucket.findOneAndUpdate(
@@ -88,7 +79,7 @@ async function incrementWindow(window: RateLimitWindow): Promise<number> {
     // Two replicas may both observe a missing fixed-window row and race its
     // initial upsert. If one loses the _id insert race, retry as a normal
     // increment instead of failing the protected auth request.
-    if (!isDuplicateBucketInsert(error)) throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
 
     const bucket = await RateLimitBucket.findOneAndUpdate(
       { _id: window.id },

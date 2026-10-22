@@ -97,7 +97,7 @@ test('comment creation is strict and idempotent by clientRequestId', () => {
 
   assert.match(serviceSource, /findCommentReplay\(/);
   assert.match(serviceSource, /assertReplayMatches\(/);
-  assert.match(serviceSource, /error\.code === 11000/);
+  assert.match(serviceSource, /hasMongoDuplicateKeyCode\(error\)/);
   assert.match(serviceSource, /createdByAdminUserId:\s*adminUserId/);
   assert.match(serviceSource, /clientRequestId/);
 });

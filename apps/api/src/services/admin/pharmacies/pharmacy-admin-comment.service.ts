@@ -18,6 +18,8 @@ import type { PharmacyAdminCommentDto } from '../../../types/pharmacy-admin-comm
 import { httpError } from '../../../utils/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit.service';
 
+import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
+
 //===================================================================
 
 // Intentionally distinct from PharmacyNote and PharmacyOwnerAdminComment.
@@ -250,15 +252,8 @@ export async function createPharmacyAdminCommentService(
       });
     });
   } catch (error) {
-    if (
-      !(
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === 11000
-      )
-    )
-      throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
+
     duplicateKey = true;
   } finally {
     await session.endSession();

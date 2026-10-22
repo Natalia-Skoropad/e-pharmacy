@@ -1,5 +1,5 @@
 import { Types, type PipelineStage } from 'mongoose';
-import { PHARMACY_STATUSES, USER_ROLES } from '../../../constants/auth';
+import { USER_ROLES } from '../../../constants/auth';
 import { Pharmacy } from '../../../models/pharmacy.model';
 import { User } from '../../../models/user.model';
 
@@ -10,29 +10,12 @@ import type {
 
 import { getEndOfDay, getStartOfDay } from '../../../utils/date-range';
 import { createSafeRegExp } from '../../../utils/regexp';
-import { buildPagedPharmacyItemsPipeline } from '../owners/admin-pharmacy-owner-read.service';
+import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
 
-//===============================================================
-
-// Rating labels are displayed with one decimal; the API intentionally uses
-// mathematically contiguous buckets, including unrated (rating=0) pharmacies.
-const RATING_BOUNDS = {
-  '0-0.9': { min: 0, max: 1, inclusiveMax: false },
-  '1-1.9': { min: 1, max: 2, inclusiveMax: false },
-  '2-2.9': { min: 2, max: 3, inclusiveMax: false },
-  '3-3.9': { min: 3, max: 4, inclusiveMax: false },
-  '4-5': { min: 4, max: 5, inclusiveMax: true },
-} as const;
-
-//===============================================================
-
-const STATUS_FIELDS = [
-  ['new', PHARMACY_STATUSES.NEW],
-  ['onVerification', PHARMACY_STATUSES.ON_VERIFICATION],
-  ['active', PHARMACY_STATUSES.ACTIVE],
-  ['onModeration', PHARMACY_STATUSES.ON_MODERATION],
-  ['blocked', PHARMACY_STATUSES.BLOCKED],
-] as const;
+import {
+  RATING_BOUNDS,
+  STATUS_FIELDS,
+} from '../../pharmacies/registry/pharmacy-registry.constants';
 
 //===============================================================
 
@@ -144,6 +127,7 @@ function pharmacyMatch(query: AdminPharmacyRegistryListQuery) {
 // expensive order/client aggregations happen AFTER it, for the selected page only.
 function ownerSearchStages(search?: string): PipelineStage[] {
   if (!search) return [];
+
   return [
     {
       $lookup: {
@@ -185,6 +169,7 @@ function pagedItems(
 
   return [
     ...pipeline,
+
     {
       $lookup: {
         from: User.collection.name,

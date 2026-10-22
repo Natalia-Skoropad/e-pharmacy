@@ -7,12 +7,15 @@ import { ProductOffer } from '../../models/productOffer.model';
 import { ProductRequest } from '../../models/productRequest.model';
 import { User } from '../../models/user.model';
 import { httpError } from '../../utils/httpError';
+
 import type { CreatePharmacyNoteInput } from '../../schemas/pharmacy-note.schema';
 
 import {
   findPharmacyForInternalNotesAccess,
   type PharmacyInternalNotesActor,
 } from './pharmacy-membership.service';
+
+import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
 
 //===============================================================
 
@@ -169,17 +172,6 @@ async function findPharmacyNoteReplay(input: {
 
 //===============================================================
 
-function isDuplicateKeyError(error: unknown): boolean {
-  return Boolean(
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 11000
-  );
-}
-
-//===============================================================
-
 export async function getPharmacyNotesService(
   actor: PharmacyInternalNotesActor,
   entityType: PharmacyNoteEntityType,
@@ -291,7 +283,7 @@ export async function createPharmacyNoteService(
 
     return { note: serializePharmacyNote(note, author?.pictureUrl) };
   } catch (error) {
-    if (!isDuplicateKeyError(error)) throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
 
     const replay = await findPharmacyNoteReplay(replayInput);
 

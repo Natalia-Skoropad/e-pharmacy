@@ -81,7 +81,7 @@ test('private notes enforce strict pagination, input and idempotency', () => {
 
   assert.match(service, /findReplay\(userId, input\.clientRequestId\)/);
   assert.match(service, /assertReplayMatches\(/);
-  assert.match(service, /error\.code === 11000/);
+  assert.match(service, /hasMongoDuplicateKeyCode\(error\)/);
   assert.match(service, /\.sort\(\{ createdAt: -1, _id: -1 \}\)/);
   assert.match(service, /Math\.min\(page, totalPages\)/);
 });

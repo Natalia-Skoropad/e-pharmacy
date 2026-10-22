@@ -17,8 +17,9 @@ import type {
 } from '../../../types/pharmacy';
 
 import { httpError } from '../../../utils/httpError';
-import { buildPagedPharmacyItemsPipeline } from '../owners/admin-pharmacy-owner-read.service';
+import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
 import { getOrderSalesStatisticsForPharmacyService } from '../../orders/order.service';
+import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
 
 import type { OrderSalesStatisticsQuery } from '../../../schemas/order.schema';
 
@@ -121,13 +122,6 @@ function serializeBankDetails(
 
 //===============================================================
 
-function bankTransferAvailable(bank?: EditablePharmacyBankDetails): boolean {
-  // Only the PUBLISHED details determine the active payment method.
-  return BANK_FIELDS.every((field) => Boolean(bank?.[field]));
-}
-
-//===============================================================
-
 function publishedData(pharmacy: DetailDocument) {
   const bankDetails = serializeBankDetails(pharmacy.bankDetails);
 
@@ -158,7 +152,7 @@ function publishedData(pharmacy: DetailDocument) {
     ...(pharmacy.license !== undefined ? { license: pharmacy.license } : {}),
     ...(bankDetails ? { bankDetails } : {}),
 
-    bankTransferAvailable: bankTransferAvailable(bankDetails),
+    bankTransferAvailable: hasCompleteBankDetails(bankDetails),
   };
 }
 
@@ -168,6 +162,7 @@ function submittedChanges(pending?: PharmacyEntity['pendingModeration']) {
   if (!pending) return undefined;
 
   const bankDetails = pending.bankDetails;
+
   // The pending payload is stored as Mixed. Never spread it into a response:
   // allowlist only the established domain fields and never expose fingerprints.
   const pendingBankDetails = bankDetails

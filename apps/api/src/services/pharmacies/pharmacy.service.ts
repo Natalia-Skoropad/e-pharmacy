@@ -34,8 +34,6 @@ import { Product } from '../../models/product.model';
 import { ProductOffer } from '../../models/productOffer.model';
 
 import type {
-  CompletePharmacyBankDetails,
-  EditablePharmacyBankDetails,
   PharmacyEntity,
   PharmacyCardSummaryResponseDto,
   CurrentPharmacySummaryResponseDto,
@@ -55,6 +53,12 @@ import type {
 } from '../../types/pharmacy';
 
 import { httpError } from '../../utils/httpError';
+
+import {
+  clonePharmacyLocation,
+  clonePendingModerationFields as normalizePendingModerationPayload,
+} from './pharmacy-location';
+
 import { isDuplicatePharmacyReviewError } from '../../utils/mongoError';
 import { createFlexibleSearchRegExp, escapeRegExp } from '../../utils/regexp';
 import { requireISODateTime } from '../../utils/date-contract';
@@ -69,6 +73,8 @@ import {
   findPharmacyForProfileAccess,
   findPharmacyForSummaryAccess,
 } from './pharmacy-membership.service';
+
+import { hasCompleteBankDetails } from './bank-details';
 
 //===============================================================
 
@@ -135,21 +141,6 @@ const PUBLIC_PHARMACY_STATUSES = [
 const PUBLIC_PHARMACY_STATUS_FILTER = {
   $in: [...PUBLIC_PHARMACY_STATUSES],
 };
-
-//===============================================================
-
-function hasCompleteBankDetails(
-  details?: EditablePharmacyBankDetails | null
-): details is CompletePharmacyBankDetails {
-  return Boolean(
-    details?.recipientName &&
-    details?.taxId &&
-    details?.iban &&
-    details?.bankName &&
-    details?.receiptEmail &&
-    details?.paymentPurpose
-  );
-}
 
 //===============================================================
 
@@ -343,41 +334,6 @@ function serializeProfileVerificationDocument(
 
 //===============================================================
 
-function clonePharmacyLocation(
-  location?: PharmacyLocationDraft
-): PharmacyLocationDraft | undefined {
-  if (!location) return undefined;
-
-  return {
-    ...(location.address !== undefined ? { address: location.address } : {}),
-
-    ...(location.settlement !== undefined
-      ? { settlement: location.settlement }
-      : {}),
-
-    ...(location.region !== undefined ? { region: location.region } : {}),
-
-    ...(location.countryCode !== undefined
-      ? { countryCode: location.countryCode }
-      : {}),
-
-    ...(location.geo !== undefined
-      ? {
-          geo: {
-            type: 'Point',
-
-            coordinates: [
-              location.geo.coordinates[0],
-              location.geo.coordinates[1],
-            ],
-          },
-        }
-      : {}),
-  };
-}
-
-//===============================================================
-
 function applyEditableLocationPatch(
   baseLocation: PharmacyLocationDraft | undefined,
   patch: NonNullable<ResolvedPharmacyProfileUpdate['location']>
@@ -401,47 +357,6 @@ function applyEditableLocationPatch(
   if (!nextLocation.countryCode) nextLocation.countryCode = 'UA';
 
   return nextLocation;
-}
-
-//===============================================================
-
-function normalizePendingModerationPayload(
-  current: PharmacyPendingModeration | undefined
-): PharmacyPendingModeration {
-  if (!current) return {};
-
-  return {
-    ...(current.name !== undefined ? { name: current.name } : {}),
-
-    ...(current.location !== undefined
-      ? { location: clonePharmacyLocation(current.location) }
-      : {}),
-
-    ...(current.phone !== undefined ? { phone: current.phone } : {}),
-    ...(current.email !== undefined ? { email: current.email } : {}),
-
-    ...(current.workingHours !== undefined
-      ? { workingHours: current.workingHours }
-      : {}),
-
-    ...(current.imageUrl !== undefined ? { imageUrl: current.imageUrl } : {}),
-
-    ...(current.description !== undefined
-      ? { description: current.description }
-      : {}),
-
-    ...(current.shortDescription !== undefined
-      ? { shortDescription: current.shortDescription }
-      : {}),
-
-    ...(current.documents !== undefined
-      ? { documents: [...current.documents] }
-      : {}),
-
-    ...(current.bankDetails !== undefined
-      ? { bankDetails: { ...current.bankDetails } }
-      : {}),
-  };
 }
 
 //===============================================================
@@ -1296,6 +1211,8 @@ function safePharmacyEditedSections(fields: object): string[] {
     ...new Set(Object.keys(fields).map((key) => names[key] ?? key)),
   ].sort();
 }
+
+//===============================================================
 
 async function appendPharmacyOwnerMutationAudit(
   userId: string,

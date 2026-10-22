@@ -17,6 +17,8 @@ import type { PharmacyOwnerAdminCommentDto } from '../../../types/pharmacy-owner
 import { httpError } from '../../../utils/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit.service';
 
+import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
+
 //===============================================================
 
 type CommentRecord = Readonly<{
@@ -43,6 +45,7 @@ function serializeComment(
     author: {
       userId: String(comment.createdByAdminUserId),
       displayName: comment.authorNameSnapshot,
+
       ...(pictureUrl ? { pictureUrl } : {}),
     },
   };
@@ -147,17 +150,6 @@ function assertReplayMatches(
 
 //===============================================================
 
-function isDuplicateKeyError(error: unknown): boolean {
-  return Boolean(
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 11000
-  );
-}
-
-//===============================================================
-
 export async function listPharmacyOwnerAdminCommentsService(
   ownerUserId: string
 ): Promise<PharmacyOwnerAdminCommentDto[]> {
@@ -167,6 +159,7 @@ export async function listPharmacyOwnerAdminCommentsService(
     .select(
       '_id ownerUserId text createdByAdminUserId authorNameSnapshot createdAt'
     )
+
     .sort({ createdAt: -1, _id: -1 })
     .lean<CommentRecord[]>();
 
@@ -272,7 +265,7 @@ export async function createPharmacyOwnerAdminCommentService(
       });
     });
   } catch (error) {
-    if (!isDuplicateKeyError(error)) throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
 
     duplicateKeyError = true;
   } finally {

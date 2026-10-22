@@ -2,10 +2,26 @@ import type { MongoDuplicateKeyError } from '../types/mongo';
 
 //===============================================================
 
+// Driver errors may be plain code-bearing objects, not Error instances.
+// Preserve the strict Error guard below for callers that read keyPattern or
+// keyValue. Idempotent replay/rate-limit guards historically accepted both.
+export function hasMongoDuplicateKeyCode(
+  error: unknown
+): error is { code: 11000 } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    error.code === 11000
+  );
+}
+
+//===============================================================
+
 export function isMongoDuplicateKeyError(
   error: unknown
 ): error is MongoDuplicateKeyError {
-  return error instanceof Error && 'code' in error && error.code === 11000;
+  return error instanceof Error && hasMongoDuplicateKeyCode(error);
 }
 
 //===============================================================

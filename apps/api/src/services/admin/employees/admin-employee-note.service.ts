@@ -10,6 +10,8 @@ import type { AdminAuthorization } from '../../../types/admin-access';
 
 import { httpError } from '../../../utils/httpError';
 
+import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
+
 //===============================================================
 
 type PrivateNoteRecord = Readonly<{
@@ -66,17 +68,6 @@ function assertReplayMatches(
       'Comment request key was already used for different content.'
     );
   }
-}
-
-//===============================================================
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return Boolean(
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 11000
-  );
 }
 
 //===============================================================
@@ -165,7 +156,7 @@ export async function createMyAdminEmployeePrivateNoteService(
 
     return serializePrivateNote(note, owner?.pictureUrl);
   } catch (error) {
-    if (!isDuplicateKeyError(error)) throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
 
     const replay = await findPrivateNoteReplay(userId, input.clientRequestId);
 

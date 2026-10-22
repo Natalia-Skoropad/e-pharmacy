@@ -80,13 +80,13 @@ import type {
 } from '../../types/product-category';
 
 import type {
-  CompletePharmacyBankDetails,
-  EditablePharmacyBankDetails,
   PharmacyEntity,
   PharmacyLocationDraft,
 } from '../../types/pharmacy';
 
 import type { UserRole } from '../../types/user';
+
+import { hasCompleteBankDetails } from '../pharmacies/bank-details';
 
 //===============================================================
 
@@ -201,21 +201,6 @@ const ORDER_STATUSES_FOR_STATISTICS = [
   'successful',
   'rejected',
 ] as const;
-
-//===============================================================
-
-function hasCompleteBankDetails(
-  bankDetails?: EditablePharmacyBankDetails
-): bankDetails is CompletePharmacyBankDetails {
-  return Boolean(
-    bankDetails?.recipientName &&
-    bankDetails.taxId &&
-    bankDetails.iban &&
-    bankDetails.bankName &&
-    bankDetails.receiptEmail &&
-    bankDetails.paymentPurpose
-  );
-}
 
 //===============================================================
 
@@ -2426,6 +2411,7 @@ function addSalesPeriod(
 
   if (groupBy === 'day') {
     nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+
     return nextDate;
   }
 

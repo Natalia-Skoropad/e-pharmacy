@@ -125,8 +125,14 @@ test('14.17: registry ratings use real-value contiguous buckets and AND all filt
     'services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'
   );
 
+  const sharedBounds = await read(
+    'services/pharmacies/registry/pharmacy-registry.constants.ts'
+  );
+
+  assert.match(registry, /RATING_BOUNDS\[query\.rating\]/);
+
   const bounds = [
-    ...registry.matchAll(
+    ...sharedBounds.matchAll(
       /'([0-5]-[0-9.]+)': \{ min: (\d), max: (\d), inclusiveMax: (true|false) \}/g
     ),
   ].map((match) => ({

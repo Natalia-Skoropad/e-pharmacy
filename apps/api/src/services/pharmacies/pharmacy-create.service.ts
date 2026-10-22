@@ -25,6 +25,8 @@ import { httpError } from '../../utils/httpError';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
 import { serializePharmacyProfile } from './pharmacy.service';
 
+import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
+
 //===============================================================
 
 type DraftCreationResult = Readonly<{
@@ -77,17 +79,6 @@ function draftFingerprint(draft: Record<string, unknown>): string {
   // The strict Zod schema produces a deterministic field order, even if the
   // incoming JSON property order differs; never hash user-controlled ownerId.
   return createHash('sha256').update(JSON.stringify(draft)).digest('hex');
-}
-
-//===============================================================
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return Boolean(
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 11000
-  );
 }
 
 //===============================================================
@@ -264,7 +255,7 @@ export async function createPharmacyDraftService(
       });
     });
   } catch (error) {
-    if (!isDuplicateKeyError(error)) throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
 
     duplicate = true;
   } finally {

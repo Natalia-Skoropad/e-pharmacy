@@ -3,8 +3,12 @@ import { Types } from 'mongoose';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { PharmacyUserPrivateNote } from '../../models/pharmacyUserPrivateNote.model';
 import { User } from '../../models/user.model';
+
 import type { CreatePharmacyUserPrivateNoteInput } from '../../schemas/pharmacy-user-private-note.schema';
+
 import { httpError } from '../../utils/httpError';
+
+import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
 
 //===============================================================
 
@@ -48,17 +52,6 @@ function assertReplayMatches(note: PrivateNoteRecord, text: string): void {
       'Comment request key was already used for different content.'
     );
   }
-}
-
-//===============================================================
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return Boolean(
-    error &&
-    typeof error === 'object' &&
-    'code' in error &&
-    error.code === 11000
-  );
 }
 
 //===============================================================
@@ -145,7 +138,7 @@ export async function createMyPharmacyUserPrivateNoteService(
 
     return serializePrivateNote(note, user.pictureUrl);
   } catch (error) {
-    if (!isDuplicateKeyError(error)) throw error;
+    if (!hasMongoDuplicateKeyCode(error)) throw error;
 
     // The unique (ownerUserId, clientRequestId) index is the concurrency guard.
     const concurrentlyCreated = await findReplay(userId, input.clientRequestId);

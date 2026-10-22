@@ -115,7 +115,7 @@ test('operating and non-working pharmacy definitions match the canonical Stage 1
 //===================================================================
 
 test('linked pharmacy metrics use a single group and count only successful orders', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('../../pharmacies/registry/pharmacy-registry-query.ts');
 
   assert.match(
     service,
@@ -136,14 +136,10 @@ test('linked pharmacy metrics use a single group and count only successful order
 //===================================================================
 
 test('pharmacy list aggregation does not nest $facet inside the pagination $facet', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('../../pharmacies/registry/pharmacy-registry-query.ts');
 
   const sharedPagePipeline = service.slice(
-    service.indexOf('export function buildPagedPharmacyItemsPipeline'),
-
-    service.indexOf(
-      'export async function listAdminPharmacyOwnerPharmaciesService'
-    )
+    service.indexOf('export function buildPagedPharmacyItemsPipeline')
   );
 
   // Both the global registry and owner-linked list call this shared pipeline
@@ -171,7 +167,7 @@ test('pharmacy list aggregation does not nest $facet inside the pagination $face
 //===================================================================
 
 test('active client aggregation keeps the pharmacy Clients domain definition including the default walk-in client', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('../../pharmacies/registry/pharmacy-registry-query.ts');
 
   assert.match(service, /orderClientIds: \{ \$addToSet: ['"]\$userId['"] \}/);
   assert.match(service, /isDefaultPharmacyClient/);
@@ -186,6 +182,11 @@ test('active client aggregation keeps the pharmacy Clients domain definition inc
 
 test('owner linked-pharmacy rating filters have gapless numeric bounds', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
+
+  const shared = read(
+    '../../pharmacies/registry/pharmacy-registry.constants.ts'
+  );
+
   const schema = read('../../../schemas/admin-pharmacy-owner.schema.ts');
 
   for (const [filter, min, max] of [
@@ -195,15 +196,11 @@ test('owner linked-pharmacy rating filters have gapless numeric bounds', () => {
     ['3-3.9', '3', '4'],
     ['4-5', '4', '5'],
   ] as const) {
-    assert.match(schema, new RegExp(`['\"]${filter}['\"]`));
-
-    assert.match(
-      service,
-      new RegExp(
-        `['\"]${filter}['\"]:\\s*\\{ min: ${min.replace('../..', '\\.')}, max: ${max.replace('../..', '\\.')} \\}`
-      )
-    );
+    assert.match(schema, new RegExp(`['"]${filter}['"]`));
+    assert.ok(shared.includes(`'${filter}': { min: ${min}, max: ${max},`));
   }
+
+  assert.match(service, /bounds\.inclusiveMax/);
 });
 
 //===================================================================
@@ -231,6 +228,7 @@ test('owner detail and linked-pharmacy reads support one owner with many pharmac
 
 test('linked pharmacy admin read model exposes canonical location instead of address/city aliases', () => {
   const service = read('./admin-pharmacy-owner-read.service.ts');
+  const pipeline = read('../../pharmacies/registry/pharmacy-registry-query.ts');
 
   const contracts = read(
     '../../../../../../packages/types/src/admin/pharmacy-owner.ts'
@@ -240,7 +238,7 @@ test('linked pharmacy admin read model exposes canonical location instead of add
   assert.doesNotMatch(contracts, /\bcity\?: string/);
 
   assert.match(
-    service,
+    pipeline,
     /location: \{ \$ifNull: \[['"]\$location['"], null\] \}/
   );
 
@@ -316,7 +314,10 @@ test('owner detail derives the last personal-data change from owner profile/phot
 
   const detailSection = service.slice(
     service.indexOf('export async function getAdminPharmacyOwnerDetailService'),
-    service.indexOf('function buildPagedPharmacyItemsPipeline')
+
+    service.indexOf(
+      'export async function listAdminPharmacyOwnerPharmaciesService'
+    )
   );
 
   assert.doesNotMatch(

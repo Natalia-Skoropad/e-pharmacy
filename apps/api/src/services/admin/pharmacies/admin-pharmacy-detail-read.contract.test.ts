@@ -45,7 +45,7 @@ test('Stage 14.5 missing pharmacies return 404, no data written, owner link uses
   );
 
   assert.match(service, /buildPagedPharmacyItemsPipeline\(0, 1\)/);
-  assert.match(service, /bankTransferAvailable\(bankDetails\)/);
+  assert.match(service, /hasCompleteBankDetails\(bankDetails\)/);
   assert.match(service, /documents\?\.length \?\? 0/);
   assert.match(service, /updatedAt: timestamp\(/);
   assert.doesNotMatch(service, /\.save\(|\.updateOne\(|\.findOneAndUpdate\(/);

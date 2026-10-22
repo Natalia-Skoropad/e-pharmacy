@@ -20,7 +20,6 @@ import { USER_ROLES, USER_STATUSES } from '../../../constants/auth';
 
 import type {
   PharmacyEntity,
-  PharmacyLocationDraft,
   PharmacyPendingModeration,
   PharmacyProfileResponseDto,
   PharmacyStatus,
@@ -28,100 +27,29 @@ import type {
 
 import { httpError } from '../../../utils/httpError';
 
+import {
+  clonePharmacyLocation,
+  clonePendingModerationFields,
+} from '../../pharmacies/pharmacy-location';
+
 import { appendAdminAuditLog } from '../audit/admin-audit.service';
 import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
 
 import { reconcileAttachedPharmacyDocumentStorage } from '../../pharmacies/pharmacy-document.service';
 import { activateNewPharmacyOwnerForPharmacy } from '../../owners/pharmacy-owner-lifecycle.service';
 
-//===============================================================
-
-function clonePharmacyLocation(
-  location?: PharmacyLocationDraft
-): PharmacyLocationDraft | undefined {
-  if (!location) return undefined;
-
-  return {
-    ...(location.address !== undefined ? { address: location.address } : {}),
-
-    ...(location.settlement !== undefined
-      ? { settlement: location.settlement }
-      : {}),
-
-    ...(location.region !== undefined ? { region: location.region } : {}),
-
-    ...(location.countryCode !== undefined
-      ? { countryCode: location.countryCode }
-      : {}),
-
-    ...(location.geo !== undefined
-      ? {
-          geo: {
-            type: 'Point',
-            coordinates: [
-              location.geo.coordinates[0],
-              location.geo.coordinates[1],
-            ],
-          },
-        }
-      : {}),
-  };
-}
+import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
 
 //===============================================================
 
 function normalizePendingModeration(
   current: PharmacyPendingModeration | undefined
 ): PharmacyPendingModeration | undefined {
+  // Admin moderation deliberately returns undefined for absent pending data;
+  // Owner draft normalization deliberately returns an empty patch instead.
   if (!current) return undefined;
 
-  return {
-    ...(current.name !== undefined ? { name: current.name } : {}),
-
-    ...(current.location
-      ? { location: clonePharmacyLocation(current.location) }
-      : {}),
-
-    ...(current.phone !== undefined ? { phone: current.phone } : {}),
-    ...(current.email !== undefined ? { email: current.email } : {}),
-
-    ...(current.workingHours !== undefined
-      ? { workingHours: current.workingHours }
-      : {}),
-
-    ...(current.imageUrl !== undefined ? { imageUrl: current.imageUrl } : {}),
-
-    ...(current.description !== undefined
-      ? { description: current.description }
-      : {}),
-
-    ...(current.shortDescription !== undefined
-      ? { shortDescription: current.shortDescription }
-      : {}),
-
-    ...(current.documents !== undefined
-      ? { documents: [...current.documents] }
-      : {}),
-
-    ...(current.bankDetails !== undefined
-      ? { bankDetails: { ...current.bankDetails } }
-      : {}),
-  };
-}
-
-//===============================================================
-
-function hasCompleteBankDetails(
-  bankDetails?: PharmacyEntity['bankDetails']
-): boolean {
-  return Boolean(
-    bankDetails?.recipientName &&
-    bankDetails.taxId &&
-    bankDetails.iban &&
-    bankDetails.bankName &&
-    bankDetails.receiptEmail &&
-    bankDetails.paymentPurpose
-  );
+  return clonePendingModerationFields(current);
 }
 
 //===============================================================
@@ -392,6 +320,7 @@ export async function decidePharmacyModerationByAdminService(
 
           break;
         }
+
         case 'approve': {
           if (
             (!isVerification && !isModeration) ||
@@ -473,6 +402,7 @@ export async function decidePharmacyModerationByAdminService(
           // Preserve historical activation and drafts; blocked must never be operational.
           break;
         }
+
         case 'review_reactivation': {
           if (!isBlocked)
             throw httpError(
@@ -609,6 +539,7 @@ export async function decidePharmacyModerationByAdminService(
         input.action === 'request_corrections'
       )
         changedFields.push('reviewState');
+
       if (publishedSections.length) changedFields.push('publishedSections');
 
       await appendAdminAuditLog({
@@ -684,6 +615,7 @@ export async function requestPharmacyCorrectionsByAdminService(
 ): Promise<PharmacyProfileResponseDto> {
   return decidePharmacyModerationByAdminService(
     pharmacyId,
+
     {
       action: 'request_corrections',
       reason: input.feedback,
@@ -706,6 +638,7 @@ export async function updatePharmacyStatusByAdminService(
 ): Promise<PharmacyProfileResponseDto> {
   return decidePharmacyModerationByAdminService(
     pharmacyId,
+
     {
       action: input.status === PHARMACY_STATUSES.BLOCKED ? 'block' : 'approve',
       reason: input.reason,
