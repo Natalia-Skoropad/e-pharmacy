@@ -21,7 +21,7 @@ import {
   listAdminProductCategoriesService,
   updateAdminPositionService,
   updateAdminProductCategoryService,
-} from '../services/admin-settings.service';
+} from '../services/admin/settings/admin-settings.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

@@ -57,10 +57,10 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'models', 'adminAccess.model.ts'],
   ['apps', 'api', 'src', 'models', 'adminAuthorizationState.model.ts'],
   ['apps', 'api', 'src', 'middlewares', 'admin-permission.middleware.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-access.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-permission-evaluator.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-access-policy.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-owner.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/access/admin-access.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/access/admin-permission-evaluator.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/access/admin-access-policy.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/platform-owners/admin-owner.service.ts'],
   ['apps', 'admin', 'src', 'lib', 'permissions', 'admin-permissions.ts'],
   ['apps', 'admin', 'src', 'lib', 'permissions', 'admin-access.ts'],
   ['apps', 'admin', 'src', 'lib', 'permissions', 'can-admin.ts'],
@@ -161,7 +161,7 @@ const ownerService = await read(
   'api',
   'src',
   'services',
-  'admin-owner.service.ts'
+  'admin/platform-owners/admin-owner.service.ts'
 );
 
 const policy = await read(
@@ -169,7 +169,7 @@ const policy = await read(
   'api',
   'src',
   'services',
-  'admin-access-policy.ts'
+  'admin/access/admin-access-policy.ts'
 );
 
 const seedOwner = await read(

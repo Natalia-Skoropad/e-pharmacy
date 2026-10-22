@@ -179,7 +179,7 @@ test('owner profile revisions isolate pending changes and on_moderation submit r
 //===============================================================
 
 test('first-activation timestamp is preserved in existing admin status service', async () => {
-  const admin = await source('services/admin.service.ts');
+  const admin = await source('services/admin/pharmacies/admin.service.ts');
 
   assert.match(admin, /activatedAt:\s*pharmacy\.activatedAt \?\? approvedAt/);
   assert.match(admin, /unsetFields\.pendingModeration = ''/);

@@ -11,7 +11,7 @@ import {
   getAdminAuditLogService,
   listAdminAuditActorsService,
   listAdminAuditLogsService,
-} from '../services/admin-audit.service';
+} from '../services/admin/audit/admin-audit.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

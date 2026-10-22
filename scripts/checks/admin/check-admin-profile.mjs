@@ -51,9 +51,9 @@ const requiredFiles = [
   ],
   ['apps', 'api', 'src', 'models', 'adminEmployeeDocument.model.ts'],
   ['apps', 'api', 'src', 'models', 'adminEmployeePrivateNote.model.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-profile.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-document.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-note.service.ts'],
 ];
 
 for (const file of requiredFiles) {
@@ -154,9 +154,9 @@ const [
   ),
 
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
-  read('apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'),
-  read('apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'),
-  read('apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'),
+  read('apps', 'api', 'src', 'services', 'admin/employees/admin-employee-profile.service.ts'),
+  read('apps', 'api', 'src', 'services', 'admin/employees/admin-employee-document.service.ts'),
+  read('apps', 'api', 'src', 'services', 'admin/employees/admin-employee-note.service.ts'),
   read('apps', 'api', 'src', 'models', 'adminEmployeeDocument.model.ts'),
 ]);
 

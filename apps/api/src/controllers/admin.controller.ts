@@ -4,7 +4,7 @@ import type { AdminAuditListQuery } from '../schemas/admin-audit.schema';
 
 import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { serializeAdminAccess } from '../services/admin-access.service';
+import { serializeAdminAccess } from '../services/admin/access/admin-access.service';
 
 import type {
   AdminPharmacyDocumentParams,
@@ -44,7 +44,7 @@ import {
   requestPharmacyCorrectionsByAdminService,
   updatePharmacyStatusByAdminService,
   decidePharmacyModerationByAdminService,
-} from '../services/admin.service';
+} from '../services/admin/pharmacies/admin.service';
 
 import { updatePharmacyOwnerStatusByAdminService } from '../services/owners/pharmacy-owner-lifecycle.service';
 
@@ -57,19 +57,19 @@ import {
   listAdminPharmacyOwnerOptionsService,
   listAdminPharmacyOwnerPharmaciesService,
   listAdminPharmacyOwnersService,
-} from '../services/admin-pharmacy-owner-read.service';
+} from '../services/admin/owners/admin-pharmacy-owner-read.service';
 
 import {
   listAdminPharmaciesService,
   getAdminPharmacyStatisticsService,
   listAdminPharmacyOptionsService,
   listAdminPharmacyRegistryOwnerOptionsService,
-} from '../services/admin-pharmacy-registry-read.service';
+} from '../services/admin/pharmacies/admin-pharmacy-registry-read.service';
 
 import {
   getAdminPharmacyDetailService,
   getAdminPharmacySalesStatisticsService,
-} from '../services/admin-pharmacy-detail-read.service';
+} from '../services/admin/pharmacies/admin-pharmacy-detail-read.service';
 
 import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
 
@@ -77,7 +77,7 @@ import {
   getAdminPharmacyActivityDetailsService,
   listAdminPharmacyActivityActorsService,
   listAdminPharmacyActivityService,
-} from '../services/admin-pharmacy-activity.service';
+} from '../services/admin/audit/admin-pharmacy-activity.service';
 
 import {
   downloadAdminPharmacyDocumentService,
@@ -88,7 +88,7 @@ import {
   createPharmacyAdminCommentService,
   deletePharmacyAdminCommentService,
   listPharmacyAdminCommentsService,
-} from '../services/pharmacy-admin-comment.service';
+} from '../services/admin/pharmacies/pharmacy-admin-comment.service';
 
 import type {
   CreatePharmacyAdminCommentInput,
@@ -104,7 +104,7 @@ import {
   createPharmacyOwnerAdminCommentService,
   deletePharmacyOwnerAdminCommentService,
   listPharmacyOwnerAdminCommentsService,
-} from '../services/pharmacy-owner-admin-comment.service';
+} from '../services/admin/owners/pharmacy-owner-admin-comment.service';
 
 import { moderateProductRequestByAdminService } from '../services/catalog/product-request.service';
 

@@ -22,7 +22,7 @@ import type { CreatePharmacyDraftInput } from '../../schemas/pharmacy.schema';
 import type { MyPharmacyProfileResponseDto } from '../../types/pharmacy';
 
 import { httpError } from '../../utils/httpError';
-import { appendAdminAuditLog } from '../admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
 import { serializePharmacyProfile } from './pharmacy.service';
 
 //===============================================================

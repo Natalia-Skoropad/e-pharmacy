@@ -195,7 +195,7 @@ test('14.13 private Admin API is guarded and generic public pharmacy API exclude
       read('../../../../api/src/controllers/admin.controller.ts'),
 
       read(
-        '../../../../api/src/services/admin-pharmacy-detail-read.service.ts'
+        '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'
       ),
 
       read('../../../../api/src/services/pharmacies/pharmacy.service.ts'),

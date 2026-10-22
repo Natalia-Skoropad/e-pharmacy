@@ -22,7 +22,7 @@ import type { PharmacyMembershipRole } from '../../types/pharmacy';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 import { httpError } from '../../utils/httpError';
 import { createSafeRegExp } from '../../utils/regexp';
-import { buildPagedPharmacyItemsPipeline } from '../admin-pharmacy-owner-read.service';
+import { buildPagedPharmacyItemsPipeline } from '../admin/owners/admin-pharmacy-owner-read.service';
 
 import {
   canPharmacyMembershipUseCapability,

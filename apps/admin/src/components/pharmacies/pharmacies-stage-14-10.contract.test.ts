@@ -126,7 +126,7 @@ test('owner autocomplete uses pharmacies.view and exposes only minimal linked ow
   const backend = await read('../../../../api/src/routes/admin.routes.ts');
 
   const service = await read(
-    '../../../../api/src/services/admin-pharmacy-registry-read.service.ts'
+    '../../../../api/src/services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'
   );
 
   const contract = await read(

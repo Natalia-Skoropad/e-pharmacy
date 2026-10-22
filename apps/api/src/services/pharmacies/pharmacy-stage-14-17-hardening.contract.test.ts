@@ -13,7 +13,7 @@ const read = (path: string) =>
 
 test('14.17: first activation accepts new (not blocked) owners and provisions a default client once', async () => {
   const [decisions, lifecycle, defaultClient] = await Promise.all([
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
     read('services/owners/pharmacy-owner-lifecycle.service.ts'),
     read('services/clients/default-pharmacy-client.service.ts'),
   ]);
@@ -45,7 +45,7 @@ test('14.17: first activation accepts new (not blocked) owners and provisions a 
 
 test('14.17: correction cycles are same-status, separately audited and CAS-protected', async () => {
   const [decisions, owner] = await Promise.all([
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
     read('services/pharmacies/pharmacy.service.ts'),
   ]);
 
@@ -73,7 +73,7 @@ test('14.17: correction cycles are same-status, separately audited and CAS-prote
 
 test('14.17: approving a pending draft is atomic and does not rewrite first activation date', async () => {
   const [decisions, documents] = await Promise.all([
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
     read('services/pharmacies/pharmacy-document.service.ts'),
   ]);
 
@@ -94,7 +94,7 @@ test('14.17: approving a pending draft is atomic and does not rewrite first acti
 
 test('14.17: blocking respects in-progress orders and reactivation never skips verification', async () => {
   const [decisions, statuses] = await Promise.all([
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
     read('constants/pharmacy-owner-lifecycle.ts'),
   ]);
 
@@ -122,7 +122,7 @@ test('14.17: blocking respects in-progress orders and reactivation never skips v
 
 test('14.17: registry ratings use real-value contiguous buckets and AND all filters before paging', async () => {
   const registry = await read(
-    'services/admin-pharmacy-registry-read.service.ts'
+    'services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'
   );
 
   const bounds = [
@@ -162,8 +162,8 @@ test('14.17: registry ratings use real-value contiguous buckets and AND all filt
 
 test('14.17: pharmacy-scoped activity cannot leak another pharmacy from the same owner', async () => {
   const [activity, audit] = await Promise.all([
-    read('services/admin-pharmacy-activity.service.ts'),
-    read('services/admin-audit.service.ts'),
+    read('services/admin/audit/admin-pharmacy-activity.service.ts'),
+    read('services/admin/audit/admin-audit.service.ts'),
   ]);
 
   assert.match(
@@ -226,7 +226,7 @@ test('14.17: document ownership and Admin comments are isolated from Owner/Pharm
   const [documents, comments, commentModel, pharmacyRoutes, ownerRoutes] =
     await Promise.all([
       read('services/pharmacies/pharmacy-document.service.ts'),
-      read('services/pharmacy-admin-comment.service.ts'),
+      read('services/admin/pharmacies/pharmacy-admin-comment.service.ts'),
       read('models/pharmacyAdminComment.model.ts'),
       read('routes/pharmacy.routes.ts'),
       read('routes/pharmacy-owner.routes.ts'),

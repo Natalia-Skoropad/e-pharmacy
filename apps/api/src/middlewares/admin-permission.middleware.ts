@@ -8,8 +8,8 @@ import {
 } from '../constants/admin-permissions';
 
 import { HTTP_STATUS } from '../constants/httpStatus';
-import { getAdminAuthorizationService } from '../services/admin-access.service';
-import { hasAdminPermission } from '../services/admin-permission-evaluator';
+import { getAdminAuthorizationService } from '../services/admin/access/admin-access.service';
+import { hasAdminPermission } from '../services/admin/access/admin-permission-evaluator';
 import { httpError } from '../utils/httpError';
 
 //===============================================================

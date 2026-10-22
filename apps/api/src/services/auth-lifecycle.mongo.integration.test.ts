@@ -22,7 +22,7 @@ import {
 } from './owners/pharmacy-owner-document.service';
 
 import { comparePassword, hashPassword } from '../utils/password';
-import { updatePharmacyStatusByAdminService } from './admin.service';
+import { updatePharmacyStatusByAdminService } from './admin/pharmacies/admin.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,
@@ -121,8 +121,10 @@ async function cleanup(email: string): Promise<void> {
 test(
   'registration rolls User back when Client creation fails',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('client-rollback');
     const originalCreate = Client.create.bind(Client);
 
@@ -158,8 +160,10 @@ test(
 test(
   'registration rolls User and Owner documents back when document claim fails',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('pharmacy-rollback');
 
     try {
@@ -194,6 +198,7 @@ test(
 test(
   'session creation failure does not roll back a committed registration',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -240,8 +245,10 @@ test(
 test(
   'concurrent duplicate email registration creates one identity only',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('duplicate-email');
 
     try {
@@ -284,6 +291,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('duplicate-phone');
     const secondEmail = uniqueIdentity('duplicate-phone-b').email;
 
@@ -328,6 +336,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('password-rollback');
     const oldPassword = 'SecurePassword123!';
     const newPassword = 'SecurePassword456!';
@@ -363,6 +372,7 @@ test(
       );
 
       const persisted = await User.findById(user._id).select('+password');
+
       assert.ok(persisted);
 
       assert.equal(
@@ -395,6 +405,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('reset-race');
 
     const token =
@@ -444,6 +455,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('refresh-revoke');
     const oldPassword = 'SecurePassword123!';
 
@@ -497,6 +509,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('login-enumeration');
     const pharmacyIdentity = uniqueIdentity('login-enumeration-pharmacy');
     const password = 'SecurePassword123!';
@@ -527,18 +540,21 @@ test(
             password: 'WrongPassword123!',
             application: 'client',
           }),
+
         () =>
           loginUserService({
             email: identity.email,
             password: 'WrongPassword123!',
             application: 'client',
           }),
+
         () =>
           loginUserService({
             email: identity.email,
             password,
             application: 'pharmacy',
           }),
+
         () =>
           loginUserService({
             email: pharmacyIdentity.email,
@@ -561,6 +577,7 @@ test(
       }
 
       user.status = 'blocked';
+
       await user.save();
 
       await assert.rejects(
@@ -606,6 +623,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('missing-pharmacy-profile');
 
     try {
@@ -639,8 +657,10 @@ test(
 test(
   'owner without a pharmacy can update their profile with owner-scoped audit',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('owner-no-pharmacy-profile');
 
     try {
@@ -688,6 +708,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('profile-document-atomicity');
     const content = Buffer.from('%PDF-1.4');
     const originalFindOneAndUpdate = Pharmacy.findOneAndUpdate;
@@ -723,6 +744,7 @@ test(
       );
 
       pharmacy.status = 'on_verification';
+
       await pharmacy.save();
 
       await assert.rejects(
@@ -744,6 +766,7 @@ test(
       assert.equal(stored.attachedAt, undefined);
 
       pharmacy.status = 'new';
+
       await pharmacy.save();
 
       Pharmacy.findOneAndUpdate = (async () => {
@@ -976,7 +999,9 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const content = Buffer.from('%PDF-1.4');
+
     let uploadSessionId: string | undefined;
 
     try {
@@ -1026,6 +1051,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const content = Buffer.from('%PDF-1.4');
     const uploadSessionIds: string[] = [];
 
@@ -1142,6 +1168,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('cross-upload-session');
     const content = Buffer.from('%PDF-1.4');
     const uploadSessionIds: string[] = [];
@@ -1236,6 +1263,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('document-replace');
     const firstContent = Buffer.from('%PDF-1.4');
     const secondContent = Buffer.from('%PDF-1.5');
@@ -1348,6 +1376,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('document-pending-replace');
     const approvedContent = Buffer.from('%PDF-1.4');
     const firstPendingContent = Buffer.from('%PDF-1.5');
@@ -1484,6 +1513,7 @@ test(
         persisted?.documents.map(
           (document: PharmacyVerificationDocumentMetadata) => document.id
         ),
+
         [approved.document.id]
       );
 
@@ -1599,6 +1629,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const adminIdentity = uniqueIdentity('activation-admin');
     const ownerIdentity = uniqueIdentity('activation-client-rollback');
     const originalFindOneAndUpdate = Client.findOneAndUpdate;
@@ -1771,6 +1802,7 @@ test(
       );
 
       assert.ok(before?.absoluteExpiresAt);
+
       const absoluteBefore = before.absoluteExpiresAt.getTime();
 
       const [firstRefresh, parallelRefresh] = await Promise.all([
@@ -1896,6 +1928,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('profile-mass-assignment');
 
     try {
@@ -1941,6 +1974,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('profile-revision-conflict');
 
     try {
@@ -1954,6 +1988,7 @@ test(
       });
 
       await Client.create({ userId: user._id });
+
       const initialRevision = user.updatedAt.toISOString();
 
       const newer = await updateUserProfileService(String(user._id), {
@@ -1980,6 +2015,7 @@ test(
       const persisted = await User.findById(user._id).lean<{
         name: string;
       } | null>();
+
       assert.equal(persisted?.name, 'Saved In Tab B');
     } finally {
       await cleanup(identity.email);
@@ -1996,6 +2032,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('moderation-lifecycle');
 
     try {
@@ -2062,6 +2099,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const ownerIdentity = uniqueIdentity('location-moderation-owner');
     const adminIdentity = uniqueIdentity('location-moderation-admin');
 
@@ -2117,6 +2155,7 @@ test(
       });
 
       let persisted = await Pharmacy.findById(pharmacy._id).lean();
+
       assert.equal(persisted?.location?.settlement, 'Odesa');
 
       assert.equal(
@@ -2176,6 +2215,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('pharmacy-profile-revision-conflict');
 
     try {
@@ -2242,6 +2282,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const ownerIdentity = uniqueIdentity('profile-owner');
     const managerIdentity = uniqueIdentity('profile-manager');
 
@@ -2320,6 +2361,7 @@ test(
       );
 
       const ownerProfile = await getMyPharmacyProfileService(String(owner._id));
+
       assert.equal(ownerProfile.pharmacy.membershipRole, 'owner');
 
       assert.equal(
@@ -2347,6 +2389,7 @@ test(
 
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const identity = uniqueIdentity('repeat-moderation-submit');
 
     try {

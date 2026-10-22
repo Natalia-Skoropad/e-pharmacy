@@ -33,7 +33,7 @@ test('owner lifecycle route is permission-protected and manual activation cannot
 //===================================================================
 
 test('first pharmacy activation runs owner auto-activation in the same transaction', () => {
-  const adminService = read('../admin.service.ts');
+  const adminService = read('../admin/pharmacies/admin.service.ts');
   const lifecycle = read('./pharmacy-owner-lifecycle.service.ts');
 
   assert.match(

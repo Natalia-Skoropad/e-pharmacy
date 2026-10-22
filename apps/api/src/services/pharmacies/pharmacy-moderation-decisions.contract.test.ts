@@ -14,7 +14,7 @@ test('one permissioned canonical endpoint with required reason, CAS and idempote
   const [routes, schema, service] = await Promise.all([
     read('routes/admin.routes.ts'),
     read('schemas/admin.schema.ts'),
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
   ]);
 
   assert.match(
@@ -46,7 +46,7 @@ test('one permissioned canonical endpoint with required reason, CAS and idempote
 //===============================================================
 
 test('all legacy routes delegate to the canonical decision service', async () => {
-  const service = await read('services/admin.service.ts');
+  const service = await read('services/admin/pharmacies/admin.service.ts');
 
   const wrappers = service.split(
     'export async function requestPharmacyCorrectionsByAdminService'
@@ -89,7 +89,7 @@ test('all legacy routes delegate to the canonical decision service', async () =>
 test('owner saves and submissions record only safe metadata in the same transaction', async () => {
   const [owner, audit, model] = await Promise.all([
     read('services/pharmacies/pharmacy.service.ts'),
-    read('services/admin-audit.service.ts'),
+    read('services/admin/audit/admin-audit.service.ts'),
     read('models/adminAuditLog.model.ts'),
   ]);
 

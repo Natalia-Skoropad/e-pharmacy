@@ -22,15 +22,15 @@ import {
   getMyAdminEmployeeDocumentContentService,
   listMyAdminEmployeeDocumentsService,
   replaceMyAdminEmployeeDocumentService,
-} from '../services/admin-employee-document.service';
+} from '../services/admin/employees/admin-employee-document.service';
 
-import { updateMyAdminEmployeeProfileService } from '../services/admin-employee-profile.service';
+import { updateMyAdminEmployeeProfileService } from '../services/admin/employees/admin-employee-profile.service';
 
 import {
   createMyAdminEmployeePrivateNoteService,
   deleteMyAdminEmployeePrivateNoteService,
   listMyAdminEmployeePrivateNotesService,
-} from '../services/admin-employee-note.service';
+} from '../services/admin/employees/admin-employee-note.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 

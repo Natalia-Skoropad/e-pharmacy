@@ -107,6 +107,7 @@ test('login does not branch on application-specific copy before credential proof
 
   const passwordComparison = login.indexOf('comparePassword');
   const blockedBranch = login.indexOf('USER_STATUSES.BLOCKED');
+
   assert.ok(passwordComparison >= 0 && blockedBranch > passwordComparison);
 });
 

@@ -13,7 +13,7 @@ const read = (path: string) => readFile(resolve(base, path), 'utf8');
 test('feedback endpoint is permissioned and cannot silently modify public status', async () => {
   const [routes, admin, schema] = await Promise.all([
     read('routes/admin.routes.ts'),
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
     read('models/pharmacy.model.ts'),
   ]);
 
@@ -75,7 +75,7 @@ test('on_moderation revisions only write pendingModeration; owner resubmits atom
 
 test('approval retains first activation, blocking retains historic approval and guards orders', async () => {
   const [admin, owner, pharmacy] = await Promise.all([
-    read('services/admin.service.ts'),
+    read('services/admin/pharmacies/admin.service.ts'),
     read('services/owners/pharmacy-owner-lifecycle.service.ts'),
     read('services/pharmacies/pharmacy.service.ts'),
   ]);

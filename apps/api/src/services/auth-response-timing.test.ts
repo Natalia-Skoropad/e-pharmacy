@@ -11,16 +11,19 @@ import {
 
 test('password recovery timing floor equalizes fast and slower account lookup paths without wall-clock sleeps', async () => {
   const startedAtMs = 1_000;
+
   const targetDurationMs =
     PASSWORD_RESET_MIN_RESPONSE_MS + Math.floor(PASSWORD_RESET_JITTER_MS / 2);
 
   async function run(simulatedWorkMs: number) {
     let nowMs = startedAtMs + simulatedWorkMs;
+
     const sleeps: number[] = [];
 
     await enforcePasswordResetResponseTiming(startedAtMs, {
       now: () => nowMs,
       random: () => 0.5,
+
       sleep: async (delayMs) => {
         sleeps.push(delayMs);
         nowMs += delayMs;
@@ -46,7 +49,9 @@ test('password recovery timing floor never adds delay once real work exceeded th
   await enforcePasswordResetResponseTiming(1_000, {
     now: () =>
       1_000 + PASSWORD_RESET_MIN_RESPONSE_MS + PASSWORD_RESET_JITTER_MS + 1,
+
     random: () => 1,
+
     sleep: async (delayMs) => {
       sleeps.push(delayMs);
     },

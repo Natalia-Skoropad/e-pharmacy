@@ -30,7 +30,7 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'settings-dictionary.ts'],
   ['apps', 'api', 'src', 'models', 'position.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-settings.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/settings/admin-settings.service.ts'],
   ['apps', 'api', 'src', 'controllers', 'admin-settings.controller.ts'],
   ['apps', 'api', 'src', 'types', 'admin-settings.ts'],
   ['apps', 'api', 'src', 'types', 'position.ts'],
@@ -53,7 +53,7 @@ const service = await read(
   'api',
   'src',
   'services',
-  'admin-settings.service.ts'
+  'admin/settings/admin-settings.service.ts'
 );
 
 const schema = await read(

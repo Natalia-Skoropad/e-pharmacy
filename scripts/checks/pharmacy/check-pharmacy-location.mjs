@@ -31,7 +31,7 @@ const SOURCE_ROOTS = [
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs']);
 
 const PHARMACY_DOMAIN_FILES = new Set([
-  'apps/api/src/services/admin.service.ts',
+  'apps/api/src/services/admin/pharmacies/admin.service.ts',
   'apps/api/src/scripts/seed.ts',
   'packages/api-client/src/response/shared-dto-parsers.ts',
 ]);
@@ -181,7 +181,7 @@ const [
   read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
   read('apps', 'api', 'src', 'schemas', 'pharmacy.schema.ts'),
   read('apps', 'api', 'src', 'services', 'pharmacies/pharmacy.service.ts'),
-  read('apps', 'api', 'src', 'services', 'admin.service.ts'),
+  read('apps', 'api', 'src', 'services', 'admin/pharmacies/admin.service.ts'),
   read('packages', 'types', 'src', 'pharmacies', 'responses.ts'),
 
   read(

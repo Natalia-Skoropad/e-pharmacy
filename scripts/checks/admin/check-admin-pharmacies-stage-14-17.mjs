@@ -29,10 +29,10 @@ const options = await read(
 );
 
 const routes = await read('apps/api/src/routes/admin.routes.ts');
-const backend = await read('apps/api/src/services/admin.service.ts');
+const backend = await read('apps/api/src/services/admin/pharmacies/admin.service.ts');
 
 const registry = await read(
-  'apps/api/src/services/admin-pharmacy-registry-read.service.ts'
+  'apps/api/src/services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'
 );
 
 //===================================================================

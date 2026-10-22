@@ -30,7 +30,7 @@ const [
 ] = await Promise.all([
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
   read('apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'admin-settings.service.ts'),
+  read('apps', 'api', 'src', 'services', 'admin/settings/admin-settings.service.ts'),
   read('apps', 'api', 'src', 'models', 'productCategory.model.ts'),
   read('apps', 'api', 'src', 'models', 'position.model.ts'),
 

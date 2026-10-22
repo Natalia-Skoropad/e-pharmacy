@@ -104,7 +104,7 @@ test('14.17.4: chart is pharmacy-scoped, permission-checked, lazy, cancellable a
   const routes = read('../../../../api/src/routes/admin.routes.ts');
 
   const detailService = read(
-    '../../../../api/src/services/admin-pharmacy-detail-read.service.ts'
+    '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'
   );
 
   const orderService = read('../../../../api/src/services/orders/order.service.ts');

@@ -32,7 +32,7 @@ import type {
 } from '../../schemas/product-request.schema';
 
 import { httpError } from '../../utils/httpError';
-import { appendAdminAuditLog } from '../admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
 
 import {
   requirePharmacyCapability,

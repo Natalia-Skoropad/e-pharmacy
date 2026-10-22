@@ -8,7 +8,7 @@ import { Order } from '../../models/order.model';
 import { Pharmacy } from '../../models/pharmacy.model';
 import { User } from '../../models/user.model';
 import { hashPassword } from '../../utils/password';
-import { decidePharmacyModerationByAdminService } from '../admin.service';
+import { decidePharmacyModerationByAdminService } from '../admin/pharmacies/admin.service';
 
 import {
   updateMyPharmacyProfileService,

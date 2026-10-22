@@ -12,7 +12,7 @@ import {
   ADMIN_AUDIT_SECTIONS,
 } from '../../constants/admin-audit';
 
-import { appendAdminAuditLog } from '../admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { REVIEW_ERROR_CODES } from '../../constants/reviews';
 import { API_MESSAGES } from '../../constants/messages';

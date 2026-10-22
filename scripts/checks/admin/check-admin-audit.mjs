@@ -30,7 +30,7 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'admin-audit.ts'],
   ['apps', 'api', 'src', 'models', 'adminAuditLog.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-audit.schema.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-audit.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/audit/admin-audit.service.ts'],
   [
     'apps',
     'api',
@@ -39,10 +39,10 @@ const requiredFiles = [
     'migrations/pharmacy-owner-registration-audit-migration.service.ts',
   ],
   ['apps', 'api', 'src', 'controllers', 'admin-audit.controller.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin-settings.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-profile.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-document.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-note.service.ts'],
+  ['apps', 'api', 'src', 'services', 'admin/settings/admin-settings.service.ts'],
   ['apps', 'admin', 'src', 'lib', 'audit', 'admin-audit.ts'],
   ['apps', 'admin', 'src', 'lib', 'api', 'browser', 'admin-audit.api.ts'],
   ['apps', 'admin', 'src', 'components', 'activity', 'ActivityHistory.tsx'],
@@ -130,7 +130,7 @@ const auditService = await read(
   'api',
   'src',
   'services',
-  'admin-audit.service.ts'
+  'admin/audit/admin-audit.service.ts'
 );
 
 const ownerRegistrationAuditMigration = await read(
@@ -146,7 +146,7 @@ const pharmacyService = await read(
   'api',
   'src',
   'services',
-  'admin.service.ts'
+  'admin/pharmacies/admin.service.ts'
 );
 
 const productRequestService = await read(
@@ -162,7 +162,7 @@ const ownerService = await read(
   'api',
   'src',
   'services',
-  'admin-owner.service.ts'
+  'admin/platform-owners/admin-owner.service.ts'
 );
 
 const ownerLifecycleService = await read(
@@ -194,7 +194,7 @@ const profileService = await read(
   'api',
   'src',
   'services',
-  'admin-employee-profile.service.ts'
+  'admin/employees/admin-employee-profile.service.ts'
 );
 
 const adminDocumentService = await read(
@@ -202,7 +202,7 @@ const adminDocumentService = await read(
   'api',
   'src',
   'services',
-  'admin-employee-document.service.ts'
+  'admin/employees/admin-employee-document.service.ts'
 );
 
 const privateNoteService = await read(
@@ -210,7 +210,7 @@ const privateNoteService = await read(
   'api',
   'src',
   'services',
-  'admin-employee-note.service.ts'
+  'admin/employees/admin-employee-note.service.ts'
 );
 
 const adminSettingsService = await read(
@@ -218,7 +218,7 @@ const adminSettingsService = await read(
   'api',
   'src',
   'services',
-  'admin-settings.service.ts'
+  'admin/settings/admin-settings.service.ts'
 );
 
 const navigation = await read(

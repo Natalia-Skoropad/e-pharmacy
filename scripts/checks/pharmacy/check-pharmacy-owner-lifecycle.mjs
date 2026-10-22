@@ -78,7 +78,7 @@ const [
     'api',
     'src',
     'services',
-    'pharmacy-owner-admin-comment.mongo.integration.test.ts'
+    'admin/owners/pharmacy-owner-admin-comment.mongo.integration.test.ts'
   ),
 
   read(
@@ -86,7 +86,7 @@ const [
     'api',
     'src',
     'services',
-    'admin-audit-owner-scope.mongo.integration.test.ts'
+    'admin/audit/admin-audit-owner-scope.mongo.integration.test.ts'
   ),
 
   read('package.json'),

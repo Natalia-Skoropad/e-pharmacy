@@ -59,7 +59,7 @@ import { buildPasswordResetUrl } from '../utils/password-reset-url';
 import { sendPasswordResetEmail } from '../utils/passwordResetEmail';
 import { getInitialAccountStatusForRole } from '../utils/account-status';
 import { toAuthUserResponse } from '../utils/userResponse';
-import { appendAdminAuditLog } from './admin-audit.service';
+import { appendAdminAuditLog } from './admin/audit/admin-audit.service';
 import { claimRegistrationOwnerDocuments } from './pharmacies/pharmacy-document.service';
 
 import {
@@ -73,6 +73,8 @@ const REFRESH_TOKEN_BYTES = 64;
 const REFRESH_TOKEN_VERSION = 'rt1';
 const REFRESH_TOKEN_ROTATION_GRACE_MS = 10_000;
 const OBJECT_ID_PATTERN = /^[a-f\d]{24}$/i;
+
+//===============================================================
 
 // Use one valid bcrypt hash for unknown-account login attempts so credential
 // verification has the same expensive code path without revealing whether an
@@ -263,7 +265,9 @@ async function createAuthSession(
   });
 
   const refreshToken = createRefreshToken(String(session._id));
+
   session.refreshTokenHash = hashRefreshToken(refreshToken);
+
   await session.save();
 
   const accessToken = signToken({
@@ -318,6 +322,7 @@ export async function registerUserService(
 
   const hashedPassword = await hashPassword(input.password);
   const mongoSession = await mongoose.startSession();
+
   let user: UserDocument | null = null;
 
   try {

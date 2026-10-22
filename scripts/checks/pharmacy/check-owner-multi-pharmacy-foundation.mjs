@@ -33,7 +33,7 @@ const [pharmacyModel, migration, ownerReadService, lifecycleIntegration] =
       'api',
       'src',
       'services',
-      'admin-pharmacy-owner-read.service.ts'
+      'admin/owners/admin-pharmacy-owner-read.service.ts'
     ),
 
     read(
