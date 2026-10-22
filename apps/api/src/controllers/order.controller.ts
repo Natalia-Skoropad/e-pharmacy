@@ -26,7 +26,7 @@ import {
   getOrdersService,
   updateOrderDetailsService,
   updateOrderStatusService,
-} from '../services/order.service';
+} from '../services/orders/order.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

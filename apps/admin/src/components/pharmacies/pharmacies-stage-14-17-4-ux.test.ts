@@ -107,7 +107,7 @@ test('14.17.4: chart is pharmacy-scoped, permission-checked, lazy, cancellable a
     '../../../../api/src/services/admin-pharmacy-detail-read.service.ts'
   );
 
-  const orderService = read('../../../../api/src/services/order.service.ts');
+  const orderService = read('../../../../api/src/services/orders/order.service.ts');
   const graph = read('./PharmacyDetailsPageContent/PharmacySalesChart.tsx');
 
   const bff = read(

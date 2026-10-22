@@ -18,7 +18,7 @@ import type {
 
 import { httpError } from '../utils/httpError';
 import { buildPagedPharmacyItemsPipeline } from './admin-pharmacy-owner-read.service';
-import { getOrderSalesStatisticsForPharmacyService } from './order.service';
+import { getOrderSalesStatisticsForPharmacyService } from './orders/order.service';
 import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
 
 //===============================================================

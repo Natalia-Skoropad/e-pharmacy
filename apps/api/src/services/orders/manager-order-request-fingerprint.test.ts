@@ -40,6 +40,7 @@ test('manager order request fingerprint changes when transactional order data ch
 
   const changed = createManagerOrderRequestFingerprint({
     ...BASE_INPUT,
+
     items: [
       { productOfferId: '507f1f77bcf86cd799439012', quantity: 2 },
       { productOfferId: '507f1f77bcf86cd799439013', quantity: 2 },

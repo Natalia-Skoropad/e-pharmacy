@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { HttpError } from '../types/errors';
+import type { HttpError } from '../../types/errors';
 import { getOrderByIdService } from './order.service';
 
 //===================================================================
@@ -14,8 +14,10 @@ async function assertInvalidOrderIdIsNotFound(
       getOrderByIdService('507f1f77bcf86cd799439011', 'not-an-order-id', role),
     (error: unknown) => {
       const httpError = error as HttpError;
+
       assert.equal(httpError.status, 404);
       assert.equal(httpError.message, 'Order was not found');
+
       return true;
     }
   );

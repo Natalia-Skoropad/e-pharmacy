@@ -7,7 +7,7 @@ import test from 'node:test';
 
 const servicePath = path.resolve(
   process.cwd(),
-  'src/services/order.service.ts'
+  'src/services/orders/order.service.ts'
 );
 
 //===============================================================
@@ -27,6 +27,7 @@ test('checkout and pharmacy edits keep cart, order and stock inside Mongo transa
   assert.notEqual(updateStart, -1);
 
   const checkoutSource = source.slice(checkoutStart, updateStart);
+
   assert.match(checkoutSource, /session\.withTransaction/);
   assert.match(checkoutSource, /reserveOfferStock/);
   assert.match(checkoutSource, /Order\.create/);
@@ -34,6 +35,7 @@ test('checkout and pharmacy edits keep cart, order and stock inside Mongo transa
   assert.match(checkoutSource, /groupFingerprint/);
 
   const updateSource = source.slice(updateStart);
+
   assert.match(updateSource, /session\.withTransaction/);
   assert.match(updateSource, /reserveOfferStock/);
   assert.match(updateSource, /releaseOfferStock/);

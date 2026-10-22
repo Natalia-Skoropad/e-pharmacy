@@ -7,7 +7,7 @@ import test from 'node:test';
 
 const servicePath = path.resolve(
   process.cwd(),
-  'src/services/order.service.ts'
+  'src/services/orders/order.service.ts'
 );
 
 const modelPath = path.resolve(process.cwd(), 'src/models/order.model.ts');

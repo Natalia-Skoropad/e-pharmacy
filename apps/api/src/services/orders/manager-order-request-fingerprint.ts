@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { CreateManagerOrderInput } from '../schemas/order.schema';
+import type { CreateManagerOrderInput } from '../../schemas/order.schema';
 
 //===================================================================
 
@@ -18,6 +18,7 @@ export function createManagerOrderRequestFingerprint(
 
   const normalized = {
     clientId: input.clientId,
+
     items: [...quantitiesByOffer.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([productOfferId, quantity]) => ({ productOfferId, quantity })),
@@ -25,9 +26,11 @@ export function createManagerOrderRequestFingerprint(
     paymentMethod: input.paymentMethod,
 
     deliveryMethod: input.deliveryMethod,
+
     ...(input.deliveryMethod === 'postal_delivery'
       ? { deliveryDetails: input.deliveryDetails }
       : {}),
+
     comment: input.comment ?? '',
   };
 

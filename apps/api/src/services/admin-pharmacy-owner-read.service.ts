@@ -35,7 +35,7 @@ import { httpError } from '../utils/httpError';
 import { createSafeRegExp } from '../utils/regexp';
 
 import { listAdminAuditLogsService } from './admin-audit.service';
-import { getOrderSalesStatisticsForPharmaciesService } from './order.service';
+import { getOrderSalesStatisticsForPharmaciesService } from './orders/order.service';
 import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
 
 //===============================================================

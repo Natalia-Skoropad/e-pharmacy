@@ -33,6 +33,7 @@ export function createCheckoutGroupFingerprint(
     .sort((left, right) =>
       left.id.toString().localeCompare(right.id.toString(), 'en')
     )
+
     .map((item) => ({
       id: item.id.toString(),
       productOfferId: item.productOfferId.toString(),

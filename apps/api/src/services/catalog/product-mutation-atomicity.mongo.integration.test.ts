@@ -14,7 +14,7 @@ import { User } from '../../models/user.model';
 import type { HttpError } from '../../types/errors';
 
 import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
-import { createManagerOrderService } from '../order.service';
+import { createManagerOrderService } from '../orders/order.service';
 
 import {
   addProductToMyPharmacyService,

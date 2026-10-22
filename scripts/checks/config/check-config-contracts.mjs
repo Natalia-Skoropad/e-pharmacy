@@ -253,7 +253,7 @@ const backendOrderService = await parse(
   'api',
   'src',
   'services',
-  'order.service.ts'
+  'orders/order.service.ts'
 );
 
 assert.equal(

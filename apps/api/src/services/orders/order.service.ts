@@ -1,15 +1,15 @@
 import mongoose, { Types } from 'mongoose';
 
-import { USER_ROLES } from '../constants/auth';
-import { API_MESSAGES } from '../constants/messages';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { STOCK_CHANGED_ERROR_CODE } from '../constants/stock';
-import { isPharmacyOperationalStatus } from '../constants/pharmacy-status';
+import { USER_ROLES } from '../../constants/auth';
+import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
+import { isPharmacyOperationalStatus } from '../../constants/pharmacy-status';
 
 import {
   requirePharmacyCapability,
   isPharmacyMembershipMissing,
-} from './pharmacies/pharmacy-membership.service';
+} from '../pharmacies/pharmacy-membership.service';
 
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
@@ -17,35 +17,35 @@ import {
   MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
   PHARMACY_UNAVAILABLE_ERROR_CODE,
-} from '../constants/order';
+} from '../../constants/order';
 
-import { Cart } from '../models/cart.model';
-import { Order } from '../models/order.model';
-import { Product } from '../models/product.model';
-import { ProductCategory } from '../models/productCategory.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
+import { Cart } from '../../models/cart.model';
+import { Order } from '../../models/order.model';
+import { Product } from '../../models/product.model';
+import { ProductCategory } from '../../models/productCategory.model';
+import { ProductOffer } from '../../models/productOffer.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { User } from '../../models/user.model';
 
-import { httpError } from '../utils/httpError';
-import { getEndOfDay, getStartOfDay } from '../utils/date-range';
-import { createSafeRegExp } from '../utils/regexp';
-import { isMongoDuplicateKeyError } from '../utils/mongoError';
+import { httpError } from '../../utils/httpError';
+import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
+import { createSafeRegExp } from '../../utils/regexp';
+import { isMongoDuplicateKeyError } from '../../utils/mongoError';
 
 import {
   commitReservedStock,
   releaseOfferStock,
   reserveOfferStock,
-} from './inventory/stock.service';
+} from '../inventory/stock.service';
 
-import { getCartService } from './cart/cart.service';
+import { getCartService } from '../cart/cart.service';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import { createManagerOrderRequestFingerprint } from './manager-order-request-fingerprint';
 
 import {
   getProductCategoryReferenceMap,
   getProductCategoryReferenceOrThrow,
-} from './catalog/product-category.service';
+} from '../catalog/product-category.service';
 
 import type {
   CheckoutOrderInput,
@@ -56,7 +56,7 @@ import type {
   OrdersQuery,
   UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
-} from '../schemas/order.schema';
+} from '../../schemas/order.schema';
 
 import type {
   OrderActivityHistoryItem,
@@ -70,23 +70,23 @@ import type {
   OrderSalesStatisticsDto,
   OrderSalesStatisticsGroupBy,
   OrderStatus,
-} from '../types/order';
+} from '../../types/order';
 
-import type { ProductEntity, ProductOfferEntity } from '../types/product';
+import type { ProductEntity, ProductOfferEntity } from '../../types/product';
 
 import type {
   ProductCategoryReferenceDto,
   ProductCategorySnapshotDto,
-} from '../types/product-category';
+} from '../../types/product-category';
 
 import type {
   CompletePharmacyBankDetails,
   EditablePharmacyBankDetails,
   PharmacyEntity,
   PharmacyLocationDraft,
-} from '../types/pharmacy';
+} from '../../types/pharmacy';
 
-import type { UserRole } from '../types/user';
+import type { UserRole } from '../../types/user';
 
 //===============================================================
 
@@ -1712,6 +1712,7 @@ export async function updateOrderDetailsService(
 
       const set: Record<string, unknown> = {};
       const unset: Record<string, ''> = {};
+
       let activityHistoryEntries: OrderActivityHistoryItem[] = [];
 
       if (input.paymentMethod) {
@@ -2119,6 +2120,7 @@ export async function createOrderManagerCommentService(
     });
 
     const finalComment = resultComment as OrderManagerCommentEntity | null;
+
     if (!finalComment) {
       throw httpError(
         HTTP_STATUS.INTERNAL_SERVER_ERROR,
@@ -2279,6 +2281,7 @@ export async function updateOrderStatusService(
 
         {
           $set: set,
+
           $push: {
             statusHistory: {
               status: input.status,
@@ -2705,6 +2708,7 @@ export async function getOrderSalesStatisticsForPharmaciesService(
             row._id.categoryName &&
             row._id.categorySlug
         )
+
         .map((row) => [
           `${String(row._id.categoryId)}:${row._id.categorySlug}`,
           {
@@ -2836,6 +2840,7 @@ export async function getOrdersService(
 
   if (query.clientId) {
     const clientObjectId = new Types.ObjectId(query.clientId);
+
     filter.userId = clientObjectId;
     earliestDateFilter.userId = clientObjectId;
   }

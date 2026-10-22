@@ -54,7 +54,7 @@ const LEGACY_LOCATION_ALLOWLIST = new Set([
 
   // Historical order snapshots are immutable facts. New snapshots use location.
   'apps/api/src/models/order.model.ts',
-  'apps/api/src/services/order.service.ts',
+  'apps/api/src/services/orders/order.service.ts',
   'apps/api/src/types/order.ts',
 ]);
 
@@ -204,7 +204,7 @@ const [
 
   read('apps', 'api', 'src', 'scripts', 'seed.ts'),
   read('apps', 'api', 'src', 'models', 'order.model.ts'),
-  read('apps', 'api', 'src', 'services', 'order.service.ts'),
+  read('apps', 'api', 'src', 'services', 'orders/order.service.ts'),
 ]);
 
 assert.doesNotMatch(pharmacyModel, /^\s*city\s*:/m);

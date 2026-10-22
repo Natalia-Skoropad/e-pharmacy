@@ -3,11 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
-import { ordersQuerySchema } from '../schemas/order.schema';
+import { ordersQuerySchema } from '../../schemas/order.schema';
 
 //===============================================================
 
-const servicePath = resolve(process.cwd(), 'src/services/order.service.ts');
+const servicePath = resolve(
+  process.cwd(),
+  'src/services/orders/order.service.ts'
+);
 
 //===============================================================
 
@@ -32,7 +35,7 @@ test('order client search covers historical and current client identity fields',
     'delivery.details.recipientPhone',
     'delivery.details.address',
   ]) {
-    assert.match(searchSource, new RegExp(field.replaceAll('.', '\\.')));
+    assert.match(searchSource, new RegExp(field.replaceAll('..', '\\.')));
   }
 
   for (const currentUserField of ['name', 'email', 'phone', 'address']) {
@@ -60,6 +63,7 @@ test('order client search accepts email and phone syntax', () => {
     '+38 (067) 222-11-10',
   ]) {
     const result = ordersQuerySchema.safeParse({ client });
+
     assert.equal(result.success, true, `Expected ${client} to be searchable`);
   }
 });

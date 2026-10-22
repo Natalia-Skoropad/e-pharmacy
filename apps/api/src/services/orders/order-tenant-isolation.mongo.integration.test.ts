@@ -3,16 +3,16 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { seedIntegrationPharmacyActors } from './__tests__/fixtures/pharmacy-integration-actors.helper';
+import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { Order } from '../models/order.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { Product } from '../models/product.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { User } from '../models/user.model';
-import type { HttpError } from '../types/errors';
+import { Order } from '../../models/order.model';
+import { Pharmacy } from '../../models/pharmacy.model';
+import { Product } from '../../models/product.model';
+import { ProductOffer } from '../../models/productOffer.model';
+import { User } from '../../models/user.model';
+import type { HttpError } from '../../types/errors';
 
-import { getTestProductCategoryId } from './catalog/__tests__/product-category-test.helper';
+import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
 import {
   createManagerOrderService,
@@ -68,6 +68,7 @@ async function expectHttpStatus(
 test(
   'order services keep owner/manager membership explicit and block a foreign pharmacy across read and mutation paths',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 

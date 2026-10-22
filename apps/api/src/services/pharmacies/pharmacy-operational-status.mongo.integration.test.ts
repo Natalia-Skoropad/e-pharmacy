@@ -22,7 +22,7 @@ import {
   getOrderManagerCommentsService,
   updateOrderDetailsService,
   updateOrderStatusService,
-} from '../order.service';
+} from '../orders/order.service';
 
 import {
   createProductRequestService,

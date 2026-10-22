@@ -7,6 +7,7 @@ import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 //===================================================================
 
 const pharmacyId = '507f1f77bcf86cd799439014';
+
 const first = {
   id: new Types.ObjectId('507f1f77bcf86cd799439011'),
   productOfferId: new Types.ObjectId('507f1f77bcf86cd799439012'),
