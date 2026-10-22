@@ -27,7 +27,7 @@ test('managed product reads bind pharmacy scope to the authenticated actor', asy
 
   assert.match(
     service,
-    /getCurrentUserPharmacyForManagedProductRead[\s\S]*?requirePharmacyCapability\(userId, 'read_products'\)/
+    /getCurrentUserPharmacyForManagedProductRead[\s\S]*?requirePharmacyCapability\(\s*userId,\s*'read_products'\s*\)/
   );
 
   assert.match(

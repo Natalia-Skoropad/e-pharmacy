@@ -64,7 +64,12 @@ test('owner detail dates come from persisted timestamps and audit, not guesses',
 
 test('editor uses shared confirmation and photo feedback', () => {
   assert.match(editor, /<ConfirmationModal/);
-  assert.match(editor, /toast\.success\(url \? 'Pharmacy photo updated\.'/);
+
+  assert.match(
+    editor,
+    /toast\.success\(\s*url\s*\?\s*'Pharmacy photo updated\.'\s*:\s*'Pharmacy photo removed\.'\s*\)/
+  );
+
   assert.doesNotMatch(editor, /window\.confirm\(/);
 });
 

@@ -49,7 +49,7 @@ test(
       await User.insertMany(
         userIds.map((id, index) => ({
           _id: id,
-          name: `Test Member ${index + 1}`,
+          name: 'Integration Member',
           email: `membership-${index}-${suffix}@example.com`,
           phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
           password: 'test-hash',

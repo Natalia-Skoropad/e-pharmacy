@@ -36,6 +36,7 @@ test('backend pharmacy profile transition graph is explicit for every status', (
           status as keyof typeof EXPECTED_TRANSITIONS,
           action
         ),
+
         (actions as readonly string[]).includes(action)
       );
     }
@@ -96,12 +97,12 @@ test('profile and document services enforce the membership capability matrix', a
 
   assert.match(
     profileService,
-    /getMyPharmacyProfileService[\s\S]*?findPharmacyForProfileAccess\(\s*userId,\s*'read_profile'\s*\)/
+    /getMyPharmacyProfileService[\s\S]*?findPharmacyForProfileAccess\(\s*userId,\s*'read_profile',\s*undefined,\s*pharmacyId\s*\)/
   );
 
   assert.match(
     profileService,
-    /findPharmacyForProfileAccess\(\s*userId,\s*'edit_profile',\s*mongoSession\s*\)/
+    /findPharmacyForProfileAccess\(\s*userId,\s*'edit_profile',\s*mongoSession,\s*pharmacyId\s*\)/
   );
 
   assert.match(
@@ -121,7 +122,7 @@ test('profile and document services enforce the membership capability matrix', a
 
   assert.match(
     documentService,
-    /findPharmacyForProfileAccess\(\s*userId,\s*'manage_documents'\s*\)/
+    /findPharmacyForProfileAccess\(\s*userId,\s*'manage_documents',\s*undefined,\s*pharmacyId\s*\)/
   );
 });
 

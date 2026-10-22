@@ -163,8 +163,14 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     './PharmacyDetailsPageContent/PharmacyModerationActions.tsx'
   );
 
-  const pharmacyProfile = await read(
-    '../../../../pharmacy/src/components/profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
+  // Stage 14.18 moved pharmacy-scoped moderation and owner feedback out of
+  // the owner's personal profile and into the selected pharmacy's detail page.
+  const ownedPharmacyDetail = await read(
+    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.tsx'
+  );
+
+  const pharmacyStatusPresentation = await read(
+    '../../../../../packages/config/src/presentation/pharmacies.ts'
   );
 
   const backend = await read('../../../../api/src/services/admin.service.ts');
@@ -212,8 +218,36 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
   assert.match(actionsSource, /unfinished orders/);
   assert.match(actionsSource, /The owner will see this reason/);
   assert.match(sharedModal, /required/);
-  assert.match(pharmacyProfile, /pharmacy\.status === 'blocked'/);
-  assert.match(pharmacyProfile, /pharmacy\.reviewFeedback/);
+
+  // Blocked pharmacies remain visibly blocked with an administrator reason,
+  // and neither blocked owners nor managers can submit them for verification.
+  assert.match(
+    ownedPharmacyDetail,
+    /<Field label="Pharmacy status">\s*<StatusBadge \{\.\.\.PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]\} \/>/
+  );
+
+  assert.match(
+    pharmacyStatusPresentation,
+    /blocked:\s*\{\s*label: 'Blocked',\s*tone: 'danger'\s*\}/
+  );
+
+  assert.match(
+    ownedPharmacyDetail,
+    /<Field label="Administrator feedback">\s*\{show\(pharmacy\.reviewFeedback\)\}/
+  );
+
+  assert.match(
+    ownedPharmacyDetail,
+    /<Field label="Status reason">\s*\{show\(pharmacy\.statusReason\)\}/
+  );
+
+  assert.match(
+    ownedPharmacyDetail,
+    /const canSubmit\s*=\s*pharmacy\?\.membershipRole === 'owner' &&\s*\(pharmacy\.status === 'new' \|\|\s*\(pharmacy\.status === 'on_verification' &&\s*pharmacy\.reviewState === 'changes_requested'\)\)/
+  );
+
+  assert.match(ownedPharmacyDetail, /if \(!canSubmit \|\| sending\) return;/);
+  assert.match(ownedPharmacyDetail, /\{canSubmit && \(/);
   assert.match(registry, /subscribeToPharmacyModerationRefresh/);
   assert.match(linked, /subscribeToPharmacyModerationRefresh/);
   assert.match(backend, /PHARMACY_CORRECTIONS_REQUESTED/);

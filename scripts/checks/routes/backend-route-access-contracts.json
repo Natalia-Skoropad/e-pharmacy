@@ -24,6 +24,12 @@
     }
   },
   {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/documents/:documentId",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/profile",
     "methods": {
       "GET": "private",

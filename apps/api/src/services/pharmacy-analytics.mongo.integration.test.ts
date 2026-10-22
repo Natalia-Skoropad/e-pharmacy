@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import { ProductRequest } from '../models/productRequest.model';
@@ -33,8 +36,10 @@ function getTestMongoUri(): string {
 test(
   'product-request statistics return one tenant-scoped status distribution',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -42,6 +47,8 @@ test(
     const ownerB = new Types.ObjectId();
     const pharmacyA = new Types.ObjectId();
     const pharmacyB = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerA, ownerB]);
 
     await Promise.all([
       Pharmacy.create({
@@ -150,6 +157,7 @@ test(
       await Promise.all([
         ProductRequest.deleteMany({ _id: { $in: requestIds } }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
+        User.deleteMany({ _id: { $in: [ownerA, ownerB] } }),
       ]);
 
       await mongoose.disconnect();
@@ -162,8 +170,10 @@ test(
 test(
   'managed-product statistics keep added/not-added counts scoped to the current pharmacy',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -171,6 +181,8 @@ test(
     const ownerB = new Types.ObjectId();
     const pharmacyA = new Types.ObjectId();
     const pharmacyB = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerA, ownerB]);
 
     await Promise.all([
       Pharmacy.create({
@@ -196,14 +208,9 @@ test(
     const offerIds = Array.from({ length: 4 }, () => new Types.ObjectId());
 
     try {
-      // Managed product statistics count the shared catalog, not only test fixtures.
-      // Preserve any products already present in the dedicated test database.
-      const [baselineActive, baselineBlocked] = await Promise.all([
-        Product.countDocuments({ status: 'active' }),
-        Product.countDocuments({ status: 'blocked' }),
-      ]);
-
-      const baselineTotal = baselineActive + baselineBlocked;
+      // Managed statistics include the shared catalog. Concurrent integration
+      // tests may add/remove unrelated products during this test, so never
+      // assert exact global totals captured before the fixture is created.
 
       await Product.create([
         {
@@ -292,19 +299,25 @@ test(
         role: 'pharmacy',
       });
 
-      assert.deepEqual(statisticsA, {
-        active: baselineActive + 2,
-        blocked: baselineBlocked + 2,
-        addedToPharmacy: 2,
-        notAddedToPharmacy: baselineTotal + 2,
-      });
+      // Both tenants see the same public catalog but only their own offers.
+      // No unrelated test product can be mistaken for an added offer.
+      assert.ok(statisticsA.active >= 2);
+      assert.ok(statisticsA.blocked >= 2);
+      assert.equal(statisticsA.addedToPharmacy, 2);
 
-      assert.deepEqual(statisticsB, {
-        active: baselineActive + 2,
-        blocked: baselineBlocked + 2,
-        addedToPharmacy: 1,
-        notAddedToPharmacy: baselineTotal + 3,
-      });
+      assert.equal(
+        statisticsA.notAddedToPharmacy,
+        statisticsA.active + statisticsA.blocked - statisticsA.addedToPharmacy
+      );
+
+      assert.ok(statisticsB.active >= 2);
+      assert.ok(statisticsB.blocked >= 2);
+      assert.equal(statisticsB.addedToPharmacy, 1);
+
+      assert.equal(
+        statisticsB.notAddedToPharmacy,
+        statisticsB.active + statisticsB.blocked - statisticsB.addedToPharmacy
+      );
 
       await assert.rejects(
         getManagedProductStatisticsService({
@@ -323,7 +336,9 @@ test(
         ProductOffer.deleteMany({ _id: { $in: offerIds } }),
         Product.deleteMany({ _id: { $in: productIds } }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
+        User.deleteMany({ _id: { $in: [ownerA, ownerB] } }),
       ]);
+
       await mongoose.disconnect();
     }
   }

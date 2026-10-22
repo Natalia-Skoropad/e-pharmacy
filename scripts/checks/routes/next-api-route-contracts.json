@@ -509,6 +509,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/documents/[documentId]",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/documents/:documentId",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/pharmacies/[pharmacyId]/profile",
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/profile",
     "methods": {

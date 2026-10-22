@@ -23,9 +23,9 @@ async function createUser(status: 'new' | 'active') {
   const suffix = new Types.ObjectId().toHexString();
 
   return User.create({
-    name: `Private Note ${suffix}`,
+    name: 'Private Note',
     email: `private-note-${suffix}@example.com`,
-    phone: `+380${String((BigInt('0x' + suffix.slice(0, 8)) % 900000000n) + 100000000n)}`,
+    phone: `+380${String((BigInt('0x' + suffix.slice(-12)) % 900000000n) + 100000000n)}`,
     password: 'test-password-hash',
     role: 'pharmacy',
     status,

@@ -168,11 +168,63 @@ assert.doesNotMatch(
 );
 
 //===================================================================
-// Admin comments stay in the Admin domain; owner routes expose documents only.
+// Admin comments and the pharmacy user's private notes are different domains.
+// Admin owner comments must keep their permission gates; owner self-notes may
+// use /me/comments only through authenticated PHARMACY routes.
 
-assert.match(apiRoutes, /\/pharmacy-owners\/:ownerId\/comments/);
-assert.doesNotMatch(ownerRoutes, /comment/i);
+assert.match(
+  apiRoutes,
+  /adminRoutes\.get\(\s*['"]\/pharmacy-owners\/:ownerId\/comments['"]\s*,\s*requireAdminPermission\(ADMIN_PERMISSIONS\.pharmacyOwners\.view\)/
+);
+
+assert.match(
+  apiRoutes,
+  /adminRoutes\.post\(\s*['"]\/pharmacy-owners\/:ownerId\/comments['"]\s*,\s*requireAdminPermission\(ADMIN_PERMISSIONS\.pharmacyOwners\.edit\)/
+);
+
+assert.match(
+  apiRoutes,
+  /adminRoutes\.delete\(\s*['"]\/pharmacy-owners\/:ownerId\/comments\/:commentId['"]\s*,\s*requireAdminPermission\(ADMIN_PERMISSIONS\.pharmacyOwners\.edit\)/
+);
+
 assert.match(ownerCommentService, /createdByAdminUserId/);
+
+assert.match(
+  ownerRoutes,
+  /pharmacyOwnerRoutes\.use\(\s*authenticate,\s*authorizeRoles\(USER_ROLES\.PHARMACY\)\s*\)/
+);
+
+const ownerCommentRoutes = [
+  ...ownerRoutes.matchAll(
+    /pharmacyOwnerRoutes\.(get|post|put|patch|delete)\(\s*['"]([^'"]*\/comments(?:\/[^'"]*)?)['"]/g
+  ),
+].map(([, method, route]) => `${method.toUpperCase()} ${route}`);
+
+assert.deepEqual(ownerCommentRoutes, [
+  'GET /me/comments',
+  'POST /me/comments',
+  'DELETE /me/comments/:commentId',
+]);
+
+assert.match(
+  ownerRoutes,
+  /pharmacyOwnerRoutes\.get\(\s*['"]\/me\/comments['"]\s*,\s*validate\(\{\s*query:\s*pharmacyUserPrivateNotesQuerySchema\s*\}\),\s*ctrlWrapper\(listMyPharmacyUserPrivateNotes\)/
+);
+
+assert.match(
+  ownerRoutes,
+  /pharmacyOwnerRoutes\.post\(\s*['"]\/me\/comments['"]\s*,\s*validate\(\{\s*body:\s*createPharmacyUserPrivateNoteSchema\s*\}\),\s*ctrlWrapper\(createMyPharmacyUserPrivateNote\)/
+);
+
+assert.match(
+  ownerRoutes,
+  /pharmacyOwnerRoutes\.delete\(\s*['"]\/me\/comments\/:commentId['"]\s*,\s*validate\(\{\s*params:\s*pharmacyUserPrivateNoteParamsSchema\s*\}\),\s*ctrlWrapper\(deleteMyPharmacyUserPrivateNote\)/
+);
+
+assert.doesNotMatch(
+  ownerRoutes,
+  /listPharmacyOwnerAdminCommentsByAdmin|createPharmacyOwnerAdminCommentByAdmin|deletePharmacyOwnerAdminCommentByAdmin/
+);
 
 //===================================================================
 // Owner list/detail reads aggregate in Mongo and do not regress to per-owner or

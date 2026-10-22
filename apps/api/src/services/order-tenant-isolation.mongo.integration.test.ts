@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
@@ -56,6 +58,7 @@ async function expectHttpStatus(
 ): Promise<void> {
   await assert.rejects(action, (error: unknown) => {
     assert.equal((error as HttpError).status, expectedStatus);
+
     return true;
   });
 }
@@ -67,7 +70,9 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
+
     await Order.syncIndexes();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -79,6 +84,13 @@ test(
     const productId = new Types.ObjectId();
     const offerId = new Types.ObjectId();
     const clientId = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerA, ownerB]);
+
+    await User.updateOne(
+      { _id: ownerA },
+      { $set: { name: 'Tenant Owner Original' } }
+    );
 
     await Promise.all([
       Pharmacy.create({
@@ -160,21 +172,42 @@ test(
         comment: '',
       });
 
-      const managerRead = await getOrderByIdService(
-        managerA.toString(),
+      // The Owner can read the order; a legacy Manager is not granted read_orders.
+      const ownerRead = await getOrderByIdService(
+        ownerA.toString(),
         created.order.id,
         'pharmacy'
       );
 
-      assert.equal(managerRead.order.id, created.order.id);
+      assert.equal(ownerRead.order.id, created.order.id);
 
-      const managerComments = await getOrderManagerCommentsService(
-        managerActor,
-        created.order.id,
-        { page: 1, perPage: 10 }
+      await expectHttpStatus(
+        () =>
+          getOrderByIdService(
+            managerA.toString(),
+            created.order.id,
+            'pharmacy'
+          ),
+        403
       );
 
-      assert.equal(managerComments.total, 0);
+      await expectHttpStatus(
+        () =>
+          getOrderManagerCommentsService(managerActor, created.order.id, {
+            page: 1,
+            perPage: 10,
+          }),
+        403
+      );
+
+      await expectHttpStatus(
+        () =>
+          createOrderManagerCommentService(managerActor, created.order.id, {
+            text: 'Manager cannot create order comments',
+            clientRequestId: '1fb1ade4-94ef-49f7-bffc-17c035215346',
+          }),
+        403
+      );
 
       await expectHttpStatus(
         () =>
@@ -231,20 +264,20 @@ test(
       const commentRequestId = '047f6380-56b4-4b49-b9ce-6b687559dd0b';
 
       const firstComment = await createOrderManagerCommentService(
-        managerActor,
+        ownerActor,
         created.order.id,
         {
-          text: 'Manager idempotent comment',
+          text: 'Owner idempotent comment',
           clientRequestId: commentRequestId,
         }
       );
 
       const retriedComment = await createOrderManagerCommentService(
-        managerActor,
+        ownerActor,
         created.order.id,
 
         {
-          text: 'Manager idempotent comment',
+          text: 'Owner idempotent comment',
           clientRequestId: commentRequestId,
         }
       );
@@ -252,7 +285,7 @@ test(
       assert.equal(retriedComment.comment.id, firstComment.comment.id);
 
       let persistedComments = await getOrderManagerCommentsService(
-        managerActor,
+        ownerActor,
         created.order.id,
         { page: 1, perPage: 10 }
       );
@@ -261,26 +294,13 @@ test(
 
       assert.equal(
         persistedComments.items[0]?.author.displayName,
-        'Tenant Manager Original'
+        'Tenant Owner Original'
       );
 
       await User.updateOne(
-        { _id: managerA },
-        { $set: { name: 'Tenant Manager Renamed' } }
+        { _id: ownerA },
+        { $set: { name: 'Tenant Owner Renamed' } }
       );
-
-      persistedComments = await getOrderManagerCommentsService(
-        managerActor,
-        created.order.id,
-        { page: 1, perPage: 10 }
-      );
-
-      assert.equal(
-        persistedComments.items[0]?.author.displayName,
-        'Tenant Manager Original'
-      );
-
-      await User.deleteOne({ _id: managerA });
 
       persistedComments = await getOrderManagerCommentsService(
         ownerActor,
@@ -290,12 +310,12 @@ test(
 
       assert.equal(
         persistedComments.items[0]?.author.displayName,
-        'Tenant Manager Original'
+        'Tenant Owner Original'
       );
 
       await expectHttpStatus(
         () =>
-          createOrderManagerCommentService(managerActor, created.order.id, {
+          createOrderManagerCommentService(ownerActor, created.order.id, {
             text: 'Different comment content',
             clientRequestId: commentRequestId,
           }),
@@ -314,13 +334,25 @@ test(
           }),
         400
       );
+
+      // The immutable author snapshot survives deleting the account.
+      await User.deleteOne({ _id: ownerA });
+
+      const storedOrder = await Order.findById(created.order.id)
+        .select('managerComments')
+        .lean<{ managerComments?: { authorDisplayName: string }[] } | null>();
+
+      assert.equal(
+        storedOrder?.managerComments?.[0]?.authorDisplayName,
+        'Tenant Owner Original'
+      );
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId: { $in: [pharmacyA, pharmacyB] } }),
         ProductOffer.deleteOne({ _id: offerId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
-        User.deleteMany({ _id: { $in: [clientId, managerA] } }),
+        User.deleteMany({ _id: { $in: [ownerA, ownerB, clientId, managerA] } }),
       ]);
 
       await mongoose.disconnect();

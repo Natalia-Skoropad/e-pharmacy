@@ -3,7 +3,10 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
 import { ProductRequest } from '../models/productRequest.model';
 
@@ -67,11 +70,14 @@ test(
   { skip: shouldSkip },
   async (context) => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Pharmacy.create({
       _id: pharmacyId,
@@ -206,6 +212,7 @@ test(
         ProductRequest.deleteMany({ _id: { $in: requestIds } }),
         PharmacyNote.deleteMany({ _id: { $in: noteIds } }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
+        User.deleteOne({ _id: ownerId }),
       ]);
 
       await mongoose.disconnect();

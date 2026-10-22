@@ -54,8 +54,27 @@ test('Owner documents live in owner profile regardless of pharmacy membership', 
     /pharmacy\.membershipRole|usePharmacyProfile/
   );
 
+  // The Owner profile matches the Admin employee profile: view/download only.
+  // Document mutations belong to the future Employees section.
   assert.match(ownerDocumentsSource, /getMyPharmacyOwnerDocuments/);
-  assert.match(ownerDocumentsSource, /uploadMyPharmacyOwnerDocument/);
-  assert.match(ownerDocumentsSource, /deleteMyPharmacyOwnerDocument/);
-  assert.match(ownerDocumentsSource, /confirmRemove/);
+  assert.match(ownerDocumentsSource, /getMyPharmacyOwnerDocument/);
+  assert.match(ownerDocumentsSource, /editable=\{false\}/);
+
+  assert.match(
+    ownerDocumentsSource,
+    /readOnlyUploadView=\{status === 'success'\}/
+  );
+
+  assert.match(ownerDocumentsSource, /onDownloadFile=\{handleDownload\}/);
+  assert.match(ownerDocumentsSource, /Employee documents/);
+
+  assert.doesNotMatch(
+    ownerDocumentsSource,
+    /uploadMyPharmacyOwnerDocument|replaceMyPharmacyOwnerDocument|deleteMyPharmacyOwnerDocument/
+  );
+
+  assert.doesNotMatch(
+    ownerDocumentsSource,
+    /onUploadFiles|onReplaceFile|onDeleteFile|canUpload|canReplace|canDelete/
+  );
 });

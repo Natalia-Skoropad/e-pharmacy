@@ -51,7 +51,9 @@ test('all pharmacy note operations pass through entity access validation', async
     'deletePharmacyNoteService',
   ]) {
     const start = source.indexOf(`export async function ${serviceName}`);
+
     assert.notEqual(start, -1);
+
     const nextExport = source.indexOf('export async function', start + 1);
 
     const body = source.slice(
@@ -72,6 +74,7 @@ test('pharmacy note routes require the authenticated pharmacy role', async () =>
   );
 
   assert.match(source, /pharmacyNoteRoutes\.use\([\s\S]*?authenticate/);
+
   assert.match(
     source,
     /pharmacyNoteRoutes\.use\([\s\S]*?authorizeRoles\(USER_ROLES\.PHARMACY\)/
@@ -96,9 +99,32 @@ test('pharmacy notes reuse centralized membership and blocked-pharmacy access', 
   assert.match(source, /'read_internal_notes'/);
   assert.match(source, /'manage_internal_notes'/);
 
+  // Stage 14.18 moved note permissions into the canonical capability matrix.
+  // Check both membership roles; a keyword anywhere in the file is not enough.
+  const ownerGrants = membershipSource.match(
+    /const OWNER_CAPABILITIES:[\s\S]*?\];/
+  )?.[0];
+
+  const managerGrants = membershipSource.match(
+    /const MANAGER_CAPABILITIES:[\s\S]*?\];/
+  )?.[0];
+
+  assert.ok(ownerGrants);
+  assert.ok(managerGrants);
+
+  for (const grants of [ownerGrants, managerGrants]) {
+    assert.match(grants, /'read_internal_notes'/);
+    assert.match(grants, /'manage_internal_notes'/);
+  }
+
   assert.match(
     membershipSource,
-    /PHARMACY_INTERNAL_NOTES_CAPABILITIES_BY_MEMBERSHIP/
+    /role === 'owner' \? OWNER_CAPABILITIES : MANAGER_CAPABILITIES/
+  );
+
+  assert.match(
+    membershipSource,
+    /findPharmacyForInternalNotesAccess[\s\S]*?requirePharmacyCapability\(actor\.id, capability, \{ session \}\)/
   );
 
   assert.match(

@@ -10,7 +10,7 @@
   display: grid;
   gap: 20px;
   min-width: 0;
-  padding: 20px;
+  padding: 16px;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -110,6 +110,11 @@
   align-items: center;
   justify-content: flex-end;
   min-width: 0;
+  width: 100%;
+}
+
+.createArea > button {
+  width: 100%;
 }
 
 .createArea p {
@@ -132,6 +137,10 @@
 }
 
 @media (min-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
   .statisticsBlock {
     display: grid;
   }
@@ -161,18 +170,10 @@
   .createArea {
     grid-column: 3;
     grid-row: 1;
+    width: auto;
   }
-}
 
-@media (max-width: 767px) {
-  .createArea,
   .createArea > button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .card {
-    padding: 16px;
+    width: auto;
   }
 }

@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../constants/order';
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
@@ -45,9 +47,12 @@ function getPhoneSuffix(seed: string): string {
 test(
   'retrying the same manager order request returns the committed order without reserving stock twice',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
+
     await Order.syncIndexes();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -57,6 +62,8 @@ test(
     const offerId = new Types.ObjectId();
     const clientId = new Types.ObjectId();
     const phoneSuffix = getPhoneSuffix(suffix);
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Promise.all([
       Pharmacy.create({
@@ -149,10 +156,13 @@ test(
               items: [{ productOfferId: offerId.toString(), quantity: 2 }],
             }
           ),
+
         (error: unknown) => {
           const httpError = error as HttpError;
+
           assert.equal(httpError.status, 409);
           assert.equal(httpError.code, MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE);
+
           return true;
         }
       );
@@ -173,7 +183,7 @@ test(
         ProductOffer.deleteOne({ _id: offerId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
-        User.deleteOne({ _id: clientId }),
+        User.deleteMany({ _id: { $in: [ownerId, clientId] } }),
       ]);
 
       await mongoose.disconnect();

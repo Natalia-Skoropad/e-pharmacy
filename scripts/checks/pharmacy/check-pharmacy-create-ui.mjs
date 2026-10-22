@@ -45,10 +45,22 @@ assert.match(routes, /'\/me\/pharmacies\/:pharmacyId\/profile'/);
 assert.match(routes, /'\/me\/pharmacies\/:pharmacyId\/documents'/);
 assert.match(routes, /'\/me\/pharmacies\/:pharmacyId\/send-for-verification'/);
 
-assert.match(
-  routes,
-  /validate\(\{ params: ownedPharmacyRegistryParamsSchema, body: updateMyPharmacyProfileSchema \}\)/
+// Match the specific scoped PATCH route, not a single formatting of validate().
+// A global schema-name match could pass even if a different route used it.
+const scopedProfilePatch = routes.match(
+  /pharmacyRoutes\.patch\(\s*'\/me\/pharmacies\/:pharmacyId\/profile',([\s\S]*?)\n\);/
 );
+
+assert.ok(scopedProfilePatch, 'Missing pharmacyId-scoped draft PATCH route.');
+assert.match(scopedProfilePatch[1], /authenticate/);
+assert.match(scopedProfilePatch[1], /authorizeRoles\(USER_ROLES\.PHARMACY\)/);
+
+assert.match(
+  scopedProfilePatch[1],
+  /validate\(\{\s*params:\s*ownedPharmacyRegistryParamsSchema,\s*body:\s*updateMyPharmacyProfileSchema,?\s*\}\)/
+);
+
+assert.match(scopedProfilePatch[1], /ctrlWrapper\(updateOwnedPharmacyDraft\)/);
 
 assert.match(
   controller,
@@ -80,7 +92,12 @@ const createSchema = draftSchema
   .split('export const createPharmacyDraftSchema')[1]
   .split('export const updateMyPharmacyProfileSchema')[0];
 
-assert.match(createSchema, /name: sharedPharmacyNameSchema\.optional\(\)/);
+assert.match(
+  createSchema,
+  /name: sharedPharmacyNameSchema\.min\(\s*10,/,
+  'New pharmacy draft must require a name with at least 10 characters.'
+);
+
 assert.match(createService, /removeEmptyFields\(editable\) \?\? \{\}/);
 assert.match(browser, /localApiRequest/);
 assert.doesNotMatch(browser, /\/admin\/|ownerId:/);
@@ -90,21 +107,35 @@ assert.match(editor, /getMyPharmacyOwnerDocuments/);
 
 assert.match(
   editor,
-  /validatePharmacyEditor\(values, documents\.length, 'draft'\)/
+  /validatePharmacyEditor\(\s*values,\s*documents\.length,\s*'draft',\s*!pharmacyId\s*\)/
 );
 
 assert.match(editor, /validatePharmacyEditor\(values, documents\.length\)/);
-assert.match(editor, /beforeunload/);
+
+assert.doesNotMatch(
+  editor,
+  /addEventListener\(['"]beforeunload['"]/,
+  'Navigation must not show native browser dialogs.'
+);
+
 assert.match(editor, /popstate/);
-assert.match(editor, /confirm\('You have unsaved pharmacy changes/);
+assert.match(editor, /<ConfirmationModal/);
+assert.match(editor, /isOpen=\{leaveDialogOpen\}/);
+assert.match(editor, /pendingNavigationRef\.current/);
 assert.match(editor, /<WorkingHoursInput/);
 assert.match(editor, /uploadOwnedPharmacyDocument/);
 assert.match(editor, /router\.replace\(getOwnedPharmacyPath/);
+
+assert.match(
+  editor,
+  /values\.name\.trim\(\)\.length >= NEW_PHARMACY_NAME_MIN_LENGTH/
+);
+
 assert.match(fields, /validatePharmacyContactForm\(values, mode\)/);
 assert.match(fields, /validatePharmacyAboutForm\(values, mode\)/);
 assert.match(fields, /validatePharmacyPaymentForm\(values, mode\)/);
 assert.match(fields, /buildPictureUrlError/);
 assert.match(list, /router\.push\(`\$\{PHARMACY_ROUTES\.PHARMACIES\}\/new`\)/);
-assert.match(detail, /<OwnedPharmacyEditor pharmacyId=\{pharmacyId\}/);
+assert.match(detail, /<OwnedPharmacyEditor\s+pharmacyId=\{pharmacyId\}/);
 
 console.log('Stage 14.18.10 scoped draft UI contracts passed.');

@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
@@ -112,6 +114,8 @@ async function createCheckoutFixture(options?: {
   const clientPhone = `+38050${getPhoneSuffix(suffix)}`;
   const clientAddress = 'Kyiv, Client Street 15';
 
+  await seedIntegrationPharmacyActors([pharmacyOwnerId]);
+
   await Promise.all([
     Pharmacy.create({
       _id: pharmacyId,
@@ -130,6 +134,7 @@ async function createCheckoutFixture(options?: {
       phone: '+380501234567',
       email: `checkout-${suffix.toLowerCase()}@example.com`,
       status: 'active',
+
       ...(options?.bankDetails ? { bankDetails: options.bankDetails } : {}),
     }),
 
@@ -234,7 +239,10 @@ async function removeFixture(fixture: CheckoutFixture): Promise<void> {
     ProductOffer.deleteOne({ _id: fixture.offerId }),
     Product.deleteOne({ _id: fixture.productId }),
     Pharmacy.deleteOne({ _id: fixture.pharmacyId }),
-    User.deleteOne({ _id: fixture.clientUserId }),
+
+    User.deleteMany({
+      _id: { $in: [fixture.clientUserId, fixture.pharmacyOwnerId] },
+    }),
   ]);
 }
 
@@ -255,6 +263,7 @@ async function checkoutFixture(fixture: CheckoutFixture) {
 test(
   'Mongo lifecycle keeps checkout snapshot immutable and stock reservation transactional',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -325,6 +334,7 @@ test(
 test(
   'Mongo transaction rolls back a reservation when later work fails',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -335,6 +345,7 @@ test(
       await assert.rejects(
         session.withTransaction(async () => {
           await reserveOfferStock(fixture.offerId, 2, session);
+
           throw new Error('force rollback');
         }),
         /force rollback/
@@ -386,6 +397,7 @@ test(
 test(
   'backend rejects bank transfer edits when the confirmed order snapshot has no bank details',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -423,6 +435,7 @@ test(
 test(
   'retrying the same checkout after a committed response is lost cannot create a duplicate order',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -480,6 +493,7 @@ test(
 test(
   'only one checkout can reserve the last available unit',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -576,6 +590,7 @@ test(
 test(
   'order details keep the historical client snapshot after the client profile changes',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -620,6 +635,7 @@ test(
 test(
   'successful sales use successfulAt instead of order creation time',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -649,6 +665,7 @@ test(
       assert.ok(completedOrder);
 
       const successfulAt = completedOrder.successfulAt;
+
       assert.ok(successfulAt);
 
       const successfulHistoryEntries = completedOrder.statusHistory.filter(
@@ -660,6 +677,7 @@ test(
       const successfulHistoryEntry = successfulHistoryEntries[0];
 
       assert.ok(successfulHistoryEntry);
+
       assert.equal(
         successfulAt.getTime(),
         successfulHistoryEntry.changedAt.getTime()
@@ -800,6 +818,7 @@ test(
 test(
   'rejected orders never contribute to sales statistics',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -861,6 +880,7 @@ test(
 test(
   'sales statistics remain isolated to the authenticated pharmacy',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -938,6 +958,7 @@ test(
 test(
   'concurrent terminal status changes commit exactly one stock outcome',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -976,6 +997,7 @@ test(
       assert.equal(rejected.length, 1);
 
       const rejectedError = rejected[0]?.reason as { status?: number };
+
       assert.equal(rejectedError.status, 409);
 
       const [order, offer] = await Promise.all([

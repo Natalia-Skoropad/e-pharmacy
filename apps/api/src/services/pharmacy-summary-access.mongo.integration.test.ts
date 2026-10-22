@@ -3,8 +3,11 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { PHARMACY_PROFILE_BLOCKED_ERROR_CODE } from '../constants/pharmacy-profile';
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import type { HttpError } from '../types/errors';
 
 import {
@@ -41,6 +44,8 @@ test(
     const ownerId = new Types.ObjectId();
     const managerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerId, managerId]);
 
     await Pharmacy.create({
       _id: pharmacyId,
@@ -83,6 +88,7 @@ test(
 
         (error: unknown) => {
           const httpError = error as HttpError;
+
           return (
             httpError.status === 403 &&
             httpError.code === PHARMACY_PROFILE_BLOCKED_ERROR_CODE
@@ -91,6 +97,7 @@ test(
       );
     } finally {
       await Pharmacy.deleteOne({ _id: pharmacyId });
+      await User.deleteMany({ _id: { $in: [ownerId, managerId] } });
       await mongoose.disconnect();
     }
   }

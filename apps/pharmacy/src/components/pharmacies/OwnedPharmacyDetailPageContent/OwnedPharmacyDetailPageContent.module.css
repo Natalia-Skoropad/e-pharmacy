@@ -10,7 +10,7 @@
   display: grid;
   gap: 20px;
   min-width: 0;
-  padding: 20px;
+  padding: 16px;
   overflow: hidden;
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -52,6 +52,15 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
+  width: 100%;
+}
+
+.actions > button {
+  width: 100%;
+}
+
+.statistics {
+  display: none;
 }
 
 .identityGrid {
@@ -233,7 +242,7 @@
   display: grid;
   gap: 12px;
   min-width: 0;
-  padding: 16px;
+  padding: 12px;
   border: 1px solid var(--color-border);
   border-left: 4px solid var(--color-accent);
   border-radius: var(--radius-lg);
@@ -246,6 +255,23 @@
 }
 
 @media (min-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .statistics {
+    display: grid;
+  }
+
+  .actions,
+  .actions > button {
+    width: auto;
+  }
+
+  .pendingSection {
+    padding: 16px;
+  }
+
   .pageHeader {
     display: flex;
     flex-wrap: wrap;
@@ -280,27 +306,6 @@
   }
 }
 
-@media (max-width: 767px) {
-  .statistics {
-    display: none;
-  }
-
-  .actions,
-  .actions > button {
-    width: 100%;
-  }
-
-  .pendingSection {
-    padding: 12px;
-  }
-}
-
-@media (max-width: 640px) {
-  .card {
-    padding: 16px;
-  }
-}
-
 .documentDetails {
   display: grid;
   gap: 8px;
@@ -317,7 +322,7 @@
   flex-wrap: wrap;
   min-width: 0;
   padding: 10px 12px;
-  background: var(--color-surface-subtle, #f7faf8);
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }

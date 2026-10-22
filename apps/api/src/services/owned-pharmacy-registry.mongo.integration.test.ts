@@ -46,7 +46,7 @@ test(
       await User.insertMany(
         userIds.map((id, index) => ({
           _id: id,
-          name: `Registry account ${index}`,
+          name: 'Registry Account',
           email: `owned-registry-${index}-${suffix}@example.com`,
           phone: `+380${randomInt(100_000_000, 1_000_000_000)}`,
           password: 'test-hash',
@@ -151,6 +151,7 @@ test(
           ?.successfulOrdersCount,
         1
       );
+
       assert.equal(
         list.items.find((item) => item.id === String(second))
           ?.successfulRevenue,

@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
@@ -39,6 +41,7 @@ function testPhone(prefix: string, suffix: string): string {
     .replace(/[^0-9]/g, '')
     .padEnd(7, '1')
     .slice(0, 7);
+
   return `+380${prefix}${digits}`;
 }
 
@@ -61,6 +64,7 @@ async function createSuccessfulOrder({
   totalPrice: number;
   quantity?: number;
   orderNumber: string;
+
   snapshot: Readonly<{
     name: string;
     article: string;
@@ -76,6 +80,7 @@ async function createSuccessfulOrder({
     pharmacyId,
     userId,
     pharmacySnapshot: { name: 'Client Aggregate Test Pharmacy' },
+
     items: [
       {
         productId,
@@ -86,6 +91,7 @@ async function createSuccessfulOrder({
         totalPrice,
       },
     ],
+
     totalItems: quantity,
     totalPrice,
     currency: '₴',
@@ -107,8 +113,10 @@ async function createSuccessfulOrder({
 test(
   'first-order filters are applied after canonical client metrics are derived',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
@@ -117,6 +125,8 @@ test(
     const septemberClientId = new Types.ObjectId();
     const productId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8);
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Pharmacy.create({
       _id: pharmacyId,
@@ -231,7 +241,11 @@ test(
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId }),
-        User.deleteMany({ _id: { $in: [januaryClientId, septemberClientId] } }),
+
+        User.deleteMany({
+          _id: { $in: [ownerId, januaryClientId, septemberClientId] },
+        }),
+
         Pharmacy.deleteOne({ _id: pharmacyId }),
       ]);
 
@@ -245,8 +259,10 @@ test(
 test(
   'purchased-product history stays on the order snapshot while current metadata controls availability',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
     const beautyCategoryId = await getTestProductCategoryId('beauty');
 
@@ -255,6 +271,8 @@ test(
     const clientId = new Types.ObjectId();
     const productId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8).toUpperCase();
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Promise.all([
       Pharmacy.create({
@@ -313,14 +331,17 @@ test(
       );
 
       const currentItem = current.items[0];
+
       assert.ok(currentItem);
       assert.equal(currentItem.name, 'Aspirin 100');
       assert.equal(currentItem.article, `OLD-${suffix}`);
+
       assert.deepEqual(currentItem.category, {
         id: medicineCategoryId.toString(),
         name: 'Medicine',
         slug: 'medicine',
       });
+
       assert.equal(currentItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(currentItem.totalAmount, 250);
       assert.equal(currentItem.currentProductExists, true);
@@ -338,14 +359,17 @@ test(
       );
 
       const blockedItem = blocked.items[0];
+
       assert.ok(blockedItem);
       assert.equal(blockedItem.name, 'Aspirin 100');
       assert.equal(blockedItem.article, `OLD-${suffix}`);
+
       assert.deepEqual(blockedItem.category, {
         id: medicineCategoryId.toString(),
         name: 'Medicine',
         slug: 'medicine',
       });
+
       assert.equal(blockedItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(blockedItem.currentProductExists, true);
       assert.equal(blockedItem.currentStatus, 'blocked');
@@ -359,14 +383,17 @@ test(
       );
 
       const deletedItem = deleted.items[0];
+
       assert.ok(deletedItem);
       assert.equal(deletedItem.name, 'Aspirin 100');
       assert.equal(deletedItem.article, `OLD-${suffix}`);
+
       assert.deepEqual(deletedItem.category, {
         id: medicineCategoryId.toString(),
         name: 'Medicine',
         slug: 'medicine',
       });
+
       assert.equal(deletedItem.photoUrl, 'https://example.com/historical.jpg');
       assert.equal(deletedItem.currentProductExists, false);
       assert.equal(deletedItem.currentStatus, null);
@@ -374,7 +401,7 @@ test(
       await Promise.all([
         Order.deleteMany({ pharmacyId }),
         Product.deleteOne({ _id: productId }),
-        User.deleteOne({ _id: clientId }),
+        User.deleteMany({ _id: { $in: [ownerId, clientId] } }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
       ]);
 
@@ -388,8 +415,10 @@ test(
 test(
   'purchased products aggregate repeated product purchases across successful orders',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
@@ -397,6 +426,8 @@ test(
     const clientId = new Types.ObjectId();
     const productId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8).toUpperCase();
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Promise.all([
       Pharmacy.create({
@@ -437,6 +468,7 @@ test(
         totalPrice: 500,
         quantity: 5,
         orderNumber: `AGG-1-${suffix}`,
+
         snapshot: {
           name: 'Historical Aggregate Product',
           article: `EPH-${suffix}`,
@@ -454,6 +486,7 @@ test(
         totalPrice: 770,
         quantity: 7,
         orderNumber: `AGG-2-${suffix}`,
+
         snapshot: {
           name: 'Historical Aggregate Product',
           article: `EPH-${suffix}`,
@@ -475,6 +508,7 @@ test(
       assert.equal(response.items.length, 1);
 
       const item = response.items[0];
+
       assert.ok(item);
       assert.equal(item.productId, productId.toString());
       assert.equal(item.firstOrderDate, '2026-09-15T10:00:00.000Z');
@@ -486,7 +520,7 @@ test(
       await Promise.all([
         Order.deleteMany({ pharmacyId }),
         Product.deleteOne({ _id: productId }),
-        User.deleteOne({ _id: clientId }),
+        User.deleteMany({ _id: { $in: [ownerId, clientId] } }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
       ]);
 

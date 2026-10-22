@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
@@ -62,6 +64,7 @@ async function expectHttpStatus(
 ): Promise<void> {
   await assert.rejects(action, (error: unknown) => {
     assert.equal((error as HttpError).status, expectedStatus);
+
     return true;
   });
 }
@@ -71,9 +74,12 @@ async function expectHttpStatus(
 test(
   'operational pharmacy mutations require active or on_moderation status while reads and tenant isolation remain intact',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
+
     await Promise.all([Order.syncIndexes(), ProductRequest.init()]);
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -85,6 +91,8 @@ test(
     const productId = new Types.ObjectId();
     const offerId = new Types.ObjectId();
     const clientId = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerA, ownerB]);
 
     await Promise.all([
       Pharmacy.create({
@@ -172,8 +180,21 @@ test(
 
       assert.equal(createdOrder.order.status, 'in_progress');
 
+      await expectHttpStatus(
+        () =>
+          createOrderManagerCommentService(
+            managerActor,
+            createdOrder.order.id,
+            {
+              text: 'Manager is not granted manage_orders',
+              clientRequestId: '9f0a9fa3-c8cf-4bb5-9756-e0d0c7351bf9',
+            }
+          ),
+        403
+      );
+
       const existingComment = await createOrderManagerCommentService(
-        managerActor,
+        ownerActor,
         createdOrder.order.id,
         {
           text: 'Existing comment before block',
@@ -192,8 +213,20 @@ test(
         }
       );
 
+      await expectHttpStatus(
+        () =>
+          createProductRequestService(managerA.toString(), {
+            status: 'draft',
+            name: 'Manager unauthorized request',
+            article: `OPS-UNAUTH-${suffix.slice(-8)}`,
+            categoryMode: 'catalog',
+            categoryId: medicineCategoryId.toString(),
+          }),
+        403
+      );
+
       const deleteRequest = await createProductRequestService(
-        managerA.toString(),
+        ownerA.toString(),
         {
           status: 'draft',
           name: 'Operational request delete',
@@ -268,13 +301,24 @@ test(
         403
       );
 
-      // Manager comments remain readable but cannot be mutated while blocked.
-      const blockedComments = await getOrderManagerCommentsService(
-        managerActor,
-        createdOrder.order.id,
-        { page: 1, perPage: 10 }
+      // A blocked pharmacy cannot read order comments, even as Owner.
+      await expectHttpStatus(
+        () =>
+          getOrderManagerCommentsService(ownerActor, createdOrder.order.id, {
+            page: 1,
+            perPage: 10,
+          }),
+        403
       );
-      assert.equal(blockedComments.total, 1);
+
+      await expectHttpStatus(
+        () =>
+          getOrderManagerCommentsService(managerActor, createdOrder.order.id, {
+            page: 1,
+            perPage: 10,
+          }),
+        403
+      );
 
       await expectHttpStatus(
         () =>
@@ -383,8 +427,17 @@ test(
         { $set: { status: 'on_moderation' } }
       );
 
+      // Moderation status restores Owner operations, not Manager grants.
+      await expectHttpStatus(
+        () =>
+          updateOrderDetailsService(managerActor, createdOrder.order.id, {
+            managerComment: 'Manager unauthorized while on moderation',
+          }),
+        403
+      );
+
       const updatedOrder = await updateOrderDetailsService(
-        managerActor,
+        ownerActor,
         createdOrder.order.id,
         { managerComment: 'Allowed while on moderation' }
       );
@@ -425,8 +478,16 @@ test(
 
       assert.equal(submittedRequest.request.status, 'new');
 
+      await expectHttpStatus(
+        () =>
+          deleteProductRequestService(
+            managerA.toString(),
+            deleteRequest.request.id
+          ),
+        403
+      );
       await deleteProductRequestService(
-        managerA.toString(),
+        ownerA.toString(),
         deleteRequest.request.id
       );
 
@@ -447,7 +508,7 @@ test(
         ProductOffer.deleteOne({ _id: offerId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
-        User.deleteMany({ _id: { $in: [clientId, managerA] } }),
+        User.deleteMany({ _id: { $in: [ownerA, ownerB, clientId, managerA] } }),
       ]);
 
       await mongoose.disconnect();

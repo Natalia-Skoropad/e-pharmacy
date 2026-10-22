@@ -43,12 +43,12 @@ test('creation requires a valid named pharmacy before draft saving', () => {
 
   assert.match(
     editor,
-    /!draftFieldErrors.name &&\s*\(hasSavedDraft \|\| values.name.trim\(\).length >= NEW_PHARMACY_NAME_MIN_LENGTH\)/
+    /const canSaveDraft\s*=\s*!draftFieldErrors\.name\s*&&\s*\(\s*hasSavedDraft\s*\|\|\s*values\.name\.trim\(\)\.length\s*>=\s*NEW_PHARMACY_NAME_MIN_LENGTH\s*\)/
   );
 
   assert.match(
     editor,
-    /disabled=\{busy !== null \|\| !canSaveDraft \|\| \(hasSavedDraft && !isDirty\)\}/
+    /disabled=\{\s*busy !== null\s*\|\|\s*!canSaveDraft\s*\|\|\s*\(hasSavedDraft && !isDirty\)\s*\}/
   );
 
   assert.match(
@@ -63,7 +63,7 @@ test('creation requires a valid named pharmacy before draft saving', () => {
 
   assert.match(
     createSchema,
-    /name: sharedPharmacyNameSchema\.min\(10, 'Pharmacy name must be at least 10 characters'\)/
+    /name:\s*sharedPharmacyNameSchema\.min\(\s*10,\s*'Pharmacy name must be at least 10 characters'\s*\)/
   );
 
   assert.doesNotMatch(

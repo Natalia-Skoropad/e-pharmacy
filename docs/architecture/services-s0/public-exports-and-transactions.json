@@ -1,0 +1,1752 @@
+{
+  "note": "Lexical inventory, not a runtime/API contract. See S0-BASELINE.md for protected behavior.",
+  "exports": [
+    {
+      "source": "apps/api/src/services/admin-access-policy.ts",
+      "line": 19,
+      "symbol": "assertCanManageAdminPermissions"
+    },
+    {
+      "source": "apps/api/src/services/admin-access-policy.ts",
+      "line": 90,
+      "symbol": "assertCanRevokeAdminAccess"
+    },
+    {
+      "source": "apps/api/src/services/admin-access.service.ts",
+      "line": 93,
+      "symbol": "getAdminAuthorizationService"
+    },
+    {
+      "source": "apps/api/src/services/admin-access.service.ts",
+      "line": 119,
+      "symbol": "serializeAdminAccess"
+    },
+    {
+      "source": "apps/api/src/services/admin-audit.service.ts",
+      "line": 104,
+      "symbol": "normalizeAdminAuditSnapshot"
+    },
+    {
+      "source": "apps/api/src/services/admin-audit.service.ts",
+      "line": 181,
+      "symbol": "appendAdminAuditLog"
+    },
+    {
+      "source": "apps/api/src/services/admin-audit.service.ts",
+      "line": 519,
+      "symbol": "listAdminAuditActorsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-audit.service.ts",
+      "line": 720,
+      "symbol": "buildPharmacyAuditScopeFilter"
+    },
+    {
+      "source": "apps/api/src/services/admin-audit.service.ts",
+      "line": 746,
+      "symbol": "listAdminAuditLogsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-audit.service.ts",
+      "line": 851,
+      "symbol": "getAdminAuditLogService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 150,
+      "symbol": "listMyAdminEmployeeDocumentsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 166,
+      "symbol": "getMyAdminEmployeeDocumentContentService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 193,
+      "symbol": "createMyAdminEmployeeDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 259,
+      "symbol": "replaceMyAdminEmployeeDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 334,
+      "symbol": "deleteMyAdminEmployeeDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-note.service.ts",
+      "line": 92,
+      "symbol": "listMyAdminEmployeePrivateNotesService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-note.service.ts",
+      "line": 127,
+      "symbol": "createMyAdminEmployeePrivateNoteService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-note.service.ts",
+      "line": 176,
+      "symbol": "deleteMyAdminEmployeePrivateNoteService"
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-profile.service.ts",
+      "line": 101,
+      "symbol": "updateMyAdminEmployeeProfileService"
+    },
+    {
+      "source": "apps/api/src/services/admin-owner.service.ts",
+      "line": 31,
+      "symbol": "setPlatformOwnerStatusService"
+    },
+    {
+      "source": "apps/api/src/services/admin-permission-evaluator.ts",
+      "line": 12,
+      "symbol": "hasAdminPermission"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-activity.service.ts",
+      "line": 31,
+      "symbol": "listAdminPharmacyActivityService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-activity.service.ts",
+      "line": 42,
+      "symbol": "listAdminPharmacyActivityActorsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-activity.service.ts",
+      "line": 52,
+      "symbol": "getAdminPharmacyActivityDetailsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-detail-read.service.ts",
+      "line": 214,
+      "symbol": "getAdminPharmacyDetailService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-detail-read.service.ts",
+      "line": 336,
+      "symbol": "getAdminPharmacySalesStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 255,
+      "symbol": "listAdminPharmacyOwnersService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 372,
+      "symbol": "getAdminPharmacyOwnerStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 414,
+      "symbol": "listAdminPharmacyOwnerOptionsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 457,
+      "symbol": "getAdminPharmacyOwnerDetailService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 681,
+      "symbol": "buildPagedPharmacyItemsPipeline"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 871,
+      "symbol": "listAdminPharmacyOwnerPharmaciesService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 938,
+      "symbol": "ADMIN_PHARMACY_OWNER_READ_DEFINITIONS"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 946,
+      "symbol": "listAdminPharmacyOwnerActivityService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 969,
+      "symbol": "getAdminPharmacyOwnerSalesStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "line": 996,
+      "symbol": "listAdminPharmacyOwnerSessionsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "line": 236,
+      "symbol": "listAdminPharmaciesService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "line": 299,
+      "symbol": "getAdminPharmacyStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "line": 334,
+      "symbol": "listAdminPharmacyOptionsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "line": 386,
+      "symbol": "listAdminPharmacyRegistryOwnerOptionsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "line": 442,
+      "symbol": "ADMIN_PHARMACY_REGISTRY_READ_DEFINITIONS"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 256,
+      "symbol": "listAdminProductCategoriesService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 313,
+      "symbol": "listAdminPositionsService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 369,
+      "symbol": "createAdminProductCategoryService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 446,
+      "symbol": "updateAdminProductCategoryService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 542,
+      "symbol": "deleteAdminProductCategoryService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 604,
+      "symbol": "createAdminPositionService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 657,
+      "symbol": "updateAdminPositionService"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 727,
+      "symbol": "deleteAdminPositionService"
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 185,
+      "symbol": "PharmacyModerationDecisionInput"
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 199,
+      "symbol": "RequestPharmacyCorrectionsInput"
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 246,
+      "symbol": "decidePharmacyModerationByAdminService"
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 663,
+      "symbol": "requestPharmacyCorrectionsByAdminService"
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 685,
+      "symbol": "updatePharmacyStatusByAdminService"
+    },
+    {
+      "source": "apps/api/src/services/auth-response-timing.ts",
+      "line": 5,
+      "symbol": "PASSWORD_RESET_MIN_RESPONSE_MS"
+    },
+    {
+      "source": "apps/api/src/services/auth-response-timing.ts",
+      "line": 6,
+      "symbol": "PASSWORD_RESET_JITTER_MS"
+    },
+    {
+      "source": "apps/api/src/services/auth-response-timing.ts",
+      "line": 26,
+      "symbol": "startPasswordResetResponseTiming"
+    },
+    {
+      "source": "apps/api/src/services/auth-response-timing.ts",
+      "line": 32,
+      "symbol": "enforcePasswordResetResponseTiming"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 299,
+      "symbol": "registerUserService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 481,
+      "symbol": "loginUserService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 527,
+      "symbol": "refreshAuthSessionService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 829,
+      "symbol": "revokeSessionByRefreshTokenService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 856,
+      "symbol": "revokeAllUserSessionsByRefreshTokensService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 910,
+      "symbol": "revokeAllUserSessionsService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 933,
+      "symbol": "assertActiveSessionService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1010,
+      "symbol": "requestPasswordResetService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1061,
+      "symbol": "resetPasswordService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1117,
+      "symbol": "getUserByIdService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1302,
+      "symbol": "updateUserProfileService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1403,
+      "symbol": "updateUserPasswordService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1453,
+      "symbol": "getActiveSessionsService"
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1500,
+      "symbol": "revokeUserSessionService"
+    },
+    {
+      "source": "apps/api/src/services/cart-cleanup.service.ts",
+      "line": 6,
+      "symbol": "runCartCleanupOnce"
+    },
+    {
+      "source": "apps/api/src/services/cart-item-availability.ts",
+      "line": 14,
+      "symbol": "getCartItemUnavailableReason"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 318,
+      "symbol": "cleanupExpiredCartItemsService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 354,
+      "symbol": "getCartService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 377,
+      "symbol": "addCartItemService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 462,
+      "symbol": "updateCartItemService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 523,
+      "symbol": "removeCartItemService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 552,
+      "symbol": "removeCartPharmacyService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 589,
+      "symbol": "removeCartProductOfferService"
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 617,
+      "symbol": "clearCartService"
+    },
+    {
+      "source": "apps/api/src/services/checkout-group-fingerprint.ts",
+      "line": 26,
+      "symbol": "createCheckoutGroupFingerprint"
+    },
+    {
+      "source": "apps/api/src/services/client.service.ts",
+      "line": 536,
+      "symbol": "getClientsService"
+    },
+    {
+      "source": "apps/api/src/services/client.service.ts",
+      "line": 574,
+      "symbol": "getClientByIdService"
+    },
+    {
+      "source": "apps/api/src/services/client.service.ts",
+      "line": 772,
+      "symbol": "getClientPurchasedProductsService"
+    },
+    {
+      "source": "apps/api/src/services/default-pharmacy-client.service.ts",
+      "line": 33,
+      "symbol": "ensureDefaultPharmacyClient"
+    },
+    {
+      "source": "apps/api/src/services/manager-order-request-fingerprint.ts",
+      "line": 7,
+      "symbol": "createManagerOrderRequestFingerprint"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 102,
+      "symbol": "canTransitionOrderStatus"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 910,
+      "symbol": "checkoutOrderService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 1273,
+      "symbol": "createManagerOrderService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 1689,
+      "symbol": "updateOrderDetailsService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2019,
+      "symbol": "getOrderManagerCommentsService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2055,
+      "symbol": "createOrderManagerCommentService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2137,
+      "symbol": "deleteOrderManagerCommentService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2200,
+      "symbol": "updateOrderStatusService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2558,
+      "symbol": "getOrderSalesStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2575,
+      "symbol": "getOrderSalesStatisticsForPharmacyService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2586,
+      "symbol": "getOrderSalesStatisticsForPharmaciesService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2769,
+      "symbol": "getOrdersService"
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 3017,
+      "symbol": "getOrderByIdService"
+    },
+    {
+      "source": "apps/api/src/services/owned-pharmacy-registry-read.service.ts",
+      "line": 279,
+      "symbol": "listOwnedPharmaciesService"
+    },
+    {
+      "source": "apps/api/src/services/owned-pharmacy-registry-read.service.ts",
+      "line": 343,
+      "symbol": "getOwnedPharmacyStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/owned-pharmacy-registry-read.service.ts",
+      "line": 380,
+      "symbol": "listOwnedPharmacyOptionsService"
+    },
+    {
+      "source": "apps/api/src/services/owned-pharmacy-registry-read.service.ts",
+      "line": 430,
+      "symbol": "getOwnedPharmacyDetailService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 148,
+      "symbol": "listPharmacyAdminCommentsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 178,
+      "symbol": "createPharmacyAdminCommentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 287,
+      "symbol": "deletePharmacyAdminCommentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-create.service.ts",
+      "line": 172,
+      "symbol": "createPharmacyDraftService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 86,
+      "symbol": "createRegistrationPharmacyDocumentUploadSessionService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 114,
+      "symbol": "createRegistrationPharmacyDocumentUploadService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 195,
+      "symbol": "claimRegistrationPharmacyDocuments"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 277,
+      "symbol": "claimRegistrationOwnerDocuments"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 407,
+      "symbol": "createPrivatePharmacyDocumentUploadService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 439,
+      "symbol": "resolvePrivatePharmacyDocumentSelections"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 491,
+      "symbol": "reconcileAttachedPharmacyDocumentStorage"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 521,
+      "symbol": "getPrivatePharmacyDocumentContentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 613,
+      "symbol": "listAdminPharmacyDocumentsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 661,
+      "symbol": "getAdminPharmacyDocumentContentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 676,
+      "symbol": "downloadAdminPharmacyDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-location-migration.service.ts",
+      "line": 40,
+      "symbol": "PharmacyLocationMigrationResult"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-location-migration.service.ts",
+      "line": 167,
+      "symbol": "buildLegacyPharmacyLocationMigrationPlan"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-location-migration.service.ts",
+      "line": 270,
+      "symbol": "buildLegacyPendingModerationMigrationPlan"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-location-migration.service.ts",
+      "line": 498,
+      "symbol": "migratePharmacyLocations"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 32,
+      "symbol": "PharmacyCapability"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 51,
+      "symbol": "PharmacyProfileCapability"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 56,
+      "symbol": "PharmacyInternalNotesCapability"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 61,
+      "symbol": "PharmacyInternalNotesActor"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 72,
+      "symbol": "PharmacyMembership"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 114,
+      "symbol": "canPharmacyMembershipUseCapability"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 125,
+      "symbol": "canPharmacyMembershipUseProfileCapability"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 146,
+      "symbol": "getPharmacyMembership"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 243,
+      "symbol": "resolveSelectedPharmacyMembership"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 285,
+      "symbol": "requirePharmacyCapability"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 336,
+      "symbol": "findPharmacyForSummaryAccess"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 348,
+      "symbol": "findPharmacyForProfileAccess"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 359,
+      "symbol": "findPharmacyForInternalNotesAccess"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 375,
+      "symbol": "listUserPharmacyMemberships"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 409,
+      "symbol": "isPharmacyMembershipMissing"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note.service.ts",
+      "line": 176,
+      "symbol": "getPharmacyNotesService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note.service.ts",
+      "line": 232,
+      "symbol": "createPharmacyNoteService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note.service.ts",
+      "line": 297,
+      "symbol": "deletePharmacyNoteService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 159,
+      "symbol": "listPharmacyOwnerAdminCommentsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 193,
+      "symbol": "createPharmacyOwnerAdminCommentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 309,
+      "symbol": "deletePharmacyOwnerAdminCommentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 147,
+      "symbol": "listPharmacyOwnerDocumentsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 162,
+      "symbol": "getPharmacyOwnerDocumentContentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 188,
+      "symbol": "createPharmacyOwnerDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 257,
+      "symbol": "deletePharmacyOwnerDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 325,
+      "symbol": "replacePharmacyOwnerDocumentService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-documents-migration.service.ts",
+      "line": 15,
+      "symbol": "OwnerDocumentsMigrationResult"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-documents-migration.service.ts",
+      "line": 81,
+      "symbol": "migratePharmacyOwnerRegistrationDocuments"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-foundation-migration.service.ts",
+      "line": 52,
+      "symbol": "PharmacyOwnerFoundationMigrationOptions"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-foundation-migration.service.ts",
+      "line": 81,
+      "symbol": "PharmacyOwnerFoundationMigrationResult"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-foundation-migration.service.ts",
+      "line": 370,
+      "symbol": "migratePharmacyOwnerFoundation"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-lifecycle.service.ts",
+      "line": 45,
+      "symbol": "PharmacyOwnerStatusMutationResult"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-lifecycle.service.ts",
+      "line": 167,
+      "symbol": "activateNewPharmacyOwnerForPharmacy"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-lifecycle.service.ts",
+      "line": 223,
+      "symbol": "updatePharmacyOwnerStatusByAdminService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-registration-audit-migration.service.ts",
+      "line": 53,
+      "symbol": "PharmacyOwnerRegistrationAuditMigrationResult"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-registration-audit-migration.service.ts",
+      "line": 297,
+      "symbol": "migratePharmacyOwnerRegistrationAudit"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-user-private-note.service.ts",
+      "line": 89,
+      "symbol": "listMyPharmacyUserPrivateNotesService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-user-private-note.service.ts",
+      "line": 120,
+      "symbol": "createMyPharmacyUserPrivateNoteService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-user-private-note.service.ts",
+      "line": 161,
+      "symbol": "deleteMyPharmacyUserPrivateNoteService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 490,
+      "symbol": "serializePharmacyProfile"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 556,
+      "symbol": "getPharmacyFiltersService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 620,
+      "symbol": "getPharmacyOptionsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 654,
+      "symbol": "getFavoritePharmacyIdsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 666,
+      "symbol": "getFavoritePharmaciesService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 714,
+      "symbol": "getPharmaciesService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 820,
+      "symbol": "getPharmacyDetailsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 848,
+      "symbol": "getPharmacyCheckoutDetailsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 893,
+      "symbol": "getPharmacyReviewsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 919,
+      "symbol": "createPharmacyReviewService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 959,
+      "symbol": "getPendingPharmacyReviewsService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1006,
+      "symbol": "moderatePharmacyReviewService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1065,
+      "symbol": "setFavoritePharmacyService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1147,
+      "symbol": "getCurrentPharmacySummaryService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1178,
+      "symbol": "getMyPharmacyProfileService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1355,
+      "symbol": "updateMyPharmacyProfileService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1571,
+      "symbol": "submitMyPharmacyModerationService"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1740,
+      "symbol": "sendMyPharmacyForVerificationService"
+    },
+    {
+      "source": "apps/api/src/services/product-category-bootstrap.service.ts",
+      "line": 11,
+      "symbol": "ProductCategoryBootstrapResult"
+    },
+    {
+      "source": "apps/api/src/services/product-category-bootstrap.service.ts",
+      "line": 18,
+      "symbol": "buildProductCategorySeedOperations"
+    },
+    {
+      "source": "apps/api/src/services/product-category-bootstrap.service.ts",
+      "line": 51,
+      "symbol": "ensureInitialProductCategories"
+    },
+    {
+      "source": "apps/api/src/services/product-category-migration.service.ts",
+      "line": 25,
+      "symbol": "LegacyProductCategoryResolution"
+    },
+    {
+      "source": "apps/api/src/services/product-category-migration.service.ts",
+      "line": 30,
+      "symbol": "ProductCategoryRelationMigrationResult"
+    },
+    {
+      "source": "apps/api/src/services/product-category-migration.service.ts",
+      "line": 56,
+      "symbol": "resolveLegacyProductCategory"
+    },
+    {
+      "source": "apps/api/src/services/product-category-migration.service.ts",
+      "line": 516,
+      "symbol": "migrateProductCategoryRelations"
+    },
+    {
+      "source": "apps/api/src/services/product-category-test.helper.ts",
+      "line": 9,
+      "symbol": "getTestProductCategoryId"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 22,
+      "symbol": "serializeProductCategoryReference"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 34,
+      "symbol": "findProductCategoryById"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 49,
+      "symbol": "findProductCategoryBySlug"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 64,
+      "symbol": "requireProductCategoryById"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 82,
+      "symbol": "getProductCategoryReferenceMap"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 111,
+      "symbol": "getProductCategoryReferenceOrThrow"
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 129,
+      "symbol": "getPublicProductCategoriesService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 141,
+      "symbol": "getProductRequestArticleAvailabilityService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 427,
+      "symbol": "createProductRequestService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 497,
+      "symbol": "updateProductRequestService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 615,
+      "symbol": "deleteProductRequestService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 877,
+      "symbol": "moderateProductRequestByAdminService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 1078,
+      "symbol": "getProductRequestStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 1108,
+      "symbol": "getProductRequestsService"
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 1212,
+      "symbol": "getProductRequestByIdService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 496,
+      "symbol": "getProductFiltersService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 892,
+      "symbol": "getProductsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 997,
+      "symbol": "getManagedProductStatisticsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1077,
+      "symbol": "getManagedProductsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1092,
+      "symbol": "getFavoriteProductIdsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1104,
+      "symbol": "getFavoriteProductsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1211,
+      "symbol": "getProductDetailsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1220,
+      "symbol": "getManagedProductDetailsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1274,
+      "symbol": "addProductToMyPharmacyService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1374,
+      "symbol": "removeProductFromMyPharmacyService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1458,
+      "symbol": "getProductReviewsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1473,
+      "symbol": "getManagedProductReviewsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1484,
+      "symbol": "createProductReviewService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1522,
+      "symbol": "setFavoriteProductService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1556,
+      "symbol": "getPendingProductReviewsService"
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1603,
+      "symbol": "moderateProductReviewService"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 7,
+      "symbol": "RATE_LIMIT_WINDOW_MS"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 12,
+      "symbol": "RateLimitWindow"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 17,
+      "symbol": "RateLimitCounter"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 30,
+      "symbol": "createRateLimitWindow"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 104,
+      "symbol": "incrementRateLimitCounter"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 119,
+      "symbol": "getRateLimitCounter"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 137,
+      "symbol": "decrementRateLimitCounter"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 148,
+      "symbol": "resetRateLimitCounter"
+    },
+    {
+      "source": "apps/api/src/services/rate-limit-store.service.ts",
+      "line": 156,
+      "symbol": "incrementRateLimitCounterInWindow"
+    },
+    {
+      "source": "apps/api/src/services/stock.service.ts",
+      "line": 66,
+      "symbol": "reserveOfferStock"
+    },
+    {
+      "source": "apps/api/src/services/stock.service.ts",
+      "line": 104,
+      "symbol": "releaseOfferStock"
+    },
+    {
+      "source": "apps/api/src/services/stock.service.ts",
+      "line": 145,
+      "symbol": "commitReservedStock"
+    },
+    {
+      "source": "apps/api/src/services/stock.service.ts",
+      "line": 187,
+      "symbol": "restoreCommittedStock"
+    },
+    {
+      "source": "apps/api/src/services/stock.service.ts",
+      "line": 220,
+      "symbol": "setPharmacyOfferStock"
+    },
+    {
+      "source": "apps/api/src/services/stockMovement.service.ts",
+      "line": 222,
+      "symbol": "recordStockMovement"
+    },
+    {
+      "source": "apps/api/src/services/stockMovement.service.ts",
+      "line": 279,
+      "symbol": "recordInitialStockArrival"
+    },
+    {
+      "source": "apps/api/src/services/stockMovement.service.ts",
+      "line": 775,
+      "symbol": "getProductStockMovementsService"
+    }
+  ],
+  "transactionCalls": [
+    {
+      "source": "apps/api/src/services/admin-access.service.ts",
+      "line": 101,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 206,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 210,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 273,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 277,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 342,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-document.service.ts",
+      "line": 345,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-profile.service.ts",
+      "line": 124,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-employee-profile.service.ts",
+      "line": 128,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-owner.service.ts",
+      "line": 37,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-owner.service.ts",
+      "line": 40,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 374,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 378,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 452,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 456,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 547,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 550,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 609,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 613,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 663,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 667,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 732,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.service.ts",
+      "line": 735,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 339,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/admin.service.ts",
+      "line": 342,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 320,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 325,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1066,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1069,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1166,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1169,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1408,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/auth.service.ts",
+      "line": 1411,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 325,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 327,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 355,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 357,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 381,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 383,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 467,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 469,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 527,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 529,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 556,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 558,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 597,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 599,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 618,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/cart.service.ts",
+      "line": 620,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/default-pharmacy-client.service.ts",
+      "line": 47,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 341,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 353,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 917,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 920,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 1285,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 1288,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 1694,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 1697,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2024,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2060,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2066,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2142,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2145,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2205,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/order.service.ts",
+      "line": 2208,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 86,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 126,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 193,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 198,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 293,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "line": 295,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-create.service.ts",
+      "line": 207,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-create.service.ts",
+      "line": 213,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 126,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 131,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document.service.ts",
+      "line": 460,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 173,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-membership.service.ts",
+      "line": 257,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 77,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 123,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 209,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 214,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 315,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "line": 318,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 80,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 198,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 203,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 262,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 265,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 336,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "line": 341,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-lifecycle.service.ts",
+      "line": 229,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-lifecycle.service.ts",
+      "line": 232,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1361,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1366,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1576,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1584,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1745,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/pharmacy.service.ts",
+      "line": 1748,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 43,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 58,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/product-category.service.ts",
+      "line": 98,
+      "operation": ".session("
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 640,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 643,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 896,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/product-request.service.ts",
+      "line": 899,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1298,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1301,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1387,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/product.service.ts",
+      "line": 1390,
+      "operation": ".withTransaction("
+    },
+    {
+      "source": "apps/api/src/services/stockMovement.service.ts",
+      "line": 779,
+      "operation": ".startSession("
+    },
+    {
+      "source": "apps/api/src/services/stockMovement.service.ts",
+      "line": 784,
+      "operation": ".withTransaction("
+    }
+  ]
+}

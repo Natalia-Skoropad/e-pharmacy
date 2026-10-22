@@ -209,12 +209,52 @@ assert.match(
   /PharmacyMembershipRole\s*=\s*['"]owner['"]\s*\|\s*['"]manager['"]/
 );
 
-assert.match(
+// Stage 14.18: capabilities are canonical arrays, not inline owner/manager
+// object properties. Assert both required grants and forbidden manager grants.
+function extractCapabilities(source, constantName) {
+  const match = source.match(
+    new RegExp(
+      `const ${constantName}: readonly PharmacyCapability\\[\\] = \\[([\\s\\S]*?)\\];`
+    )
+  );
+
+  assert.ok(match, `Could not find ${constantName} capability declaration.`);
+
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((entry) => entry[1]);
+}
+
+const ownerCapabilities = extractCapabilities(
   membershipServiceSource,
-  /owner:[\s\S]*?'read_profile'[\s\S]*?'edit_profile'[\s\S]*?'manage_documents'[\s\S]*?'submit_profile'/
+  'OWNER_CAPABILITIES'
 );
 
-assert.match(membershipServiceSource, /manager:\s*\[['"]read_profile['"]\]/);
+const managerCapabilities = extractCapabilities(
+  membershipServiceSource,
+  'MANAGER_CAPABILITIES'
+);
+
+for (const capability of [
+  'read_profile',
+  'edit_profile',
+  'manage_documents',
+  'submit_profile',
+]) {
+  assert.ok(
+    ownerCapabilities.includes(capability),
+    `Owner is missing ${capability}.`
+  );
+}
+
+assert.deepEqual(
+  managerCapabilities,
+  ['read_profile', 'read_internal_notes', 'manage_internal_notes'],
+  'Manager grants must not silently expand to owner-only permissions.'
+);
+
+assert.match(
+  membershipServiceSource,
+  /role === 'owner' \? OWNER_CAPABILITIES : MANAGER_CAPABILITIES/
+);
 
 assert.match(
   pharmacyServiceSource,

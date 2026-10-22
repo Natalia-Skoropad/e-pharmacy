@@ -63,7 +63,23 @@ test('comment routes enforce admin-only visibility and pharmacyOwners permission
     /adminRoutes\.delete\(\s*['"]\/pharmacy-owners\/:ownerId\/comments\/:commentId['"][\s\S]*?ADMIN_PERMISSIONS\.pharmacyOwners\.edit[\s\S]*?deletePharmacyOwnerAdminCommentByAdmin/
   );
 
-  assert.doesNotMatch(ownerRouteSource, /admin.?comment|comments/i);
+  // /me/comments is a private Owner note endpoint, not an Admin Owner comment.
+  assert.match(
+    ownerRouteSource,
+    /pharmacyOwnerRoutes\.use\(authenticate, authorizeRoles\(USER_ROLES\.PHARMACY\)\)/
+  );
+
+  assert.match(ownerRouteSource, /['"]\/me\/comments['"]/);
+
+  assert.doesNotMatch(
+    ownerRouteSource,
+    /PharmacyOwnerAdminComment|AdminCommentByAdmin/
+  );
+
+  assert.doesNotMatch(
+    ownerRouteSource,
+    /pharmacyOwnerRoutes\.(?:get|post|put|patch|delete)\(\s*['"]\/pharmacy-owners\/[^'"]*comments/
+  );
 });
 
 //===============================================================

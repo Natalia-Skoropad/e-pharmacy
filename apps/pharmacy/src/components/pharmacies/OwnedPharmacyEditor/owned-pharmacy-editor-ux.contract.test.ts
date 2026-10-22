@@ -34,13 +34,21 @@ test('one Save draft action lives beside the page title, with mobile stacked act
     /\.editorHeader\s*>\s*:last-child\s*\{[^}]*justify-self:\s*end/
   );
 
-  assert.match(styles, /@media only screen and \(max-width: 767px\)/);
+  // Mobile-first: stacked default actions, then progressive tablet/desktop rules.
+  assert.match(
+    styles,
+    /\.headerActions\s*\{[^}]*display:\s*grid;[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/
+  );
+
+  assert.match(styles, /@media only screen and \(min-width: 768px\)/);
+  assert.match(styles, /@media only screen and \(min-width: 1440px\)/);
+  assert.doesNotMatch(styles, /@media[^\{]*\(max-width:/);
   assert.match(styles, /\.headerActions\s*>\s*button\s*\{[^}]*width:\s*100%/);
 
-  assert.doesNotMatch(
-    editor,
-    /Back to pharmacies|Unsaved changes|Complete all four tabs/
-  );
+  // The shared ConfirmationModal may legitimately mention unsaved changes.
+  // Only the obsolete inline UI labels are forbidden.
+  assert.doesNotMatch(editor, /Back to pharmacies|Complete all four tabs/);
+  assert.doesNotMatch(editor, />\s*Unsaved changes\s*</);
 });
 
 //===================================================================
@@ -125,7 +133,7 @@ test('documents tab is hidden before saving a pharmacy and editable once the dra
 
   assert.match(
     editor,
-    /downloadOwnedPharmacyDocument\(pharmacyId, file\.documentId\)/
+    /downloadOwnedPharmacyDocument\(\s*pharmacyId,\s*file\.documentId\s*\)/
   );
 
   assert.doesNotMatch(

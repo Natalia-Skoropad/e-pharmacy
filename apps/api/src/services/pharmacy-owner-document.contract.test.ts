@@ -60,7 +60,21 @@ test('owner API mutates only the authenticated owner document collection', () =>
     /User\.exists\(\{ _id: ownerUserId, role: USER_ROLES\.PHARMACY \}\)/
   );
 
-  assert.doesNotMatch(serviceSource, /Pharmacy\.exists\(/);
+  // Registration-only owners (0 pharmacies) remain eligible; legacy managers
+  // with no owned pharmacy must not access Owner documents.
+  assert.match(serviceSource, /Pharmacy\.exists\(\{ ownerId: ownerUserId \}\)/);
+
+  assert.match(
+    serviceSource,
+    /Pharmacy\.exists\(\{ managerUserIds: ownerUserId \}\)/
+  );
+
+  assert.match(
+    serviceSource,
+    /if \(managesPharmacy && !ownsPharmacy\) \{[\s\S]*?HTTP_STATUS\.FORBIDDEN/
+  );
+
+  assert.doesNotMatch(serviceSource, /if \(!ownsPharmacy\) \{/);
 });
 
 //===============================================================

@@ -3,7 +3,10 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import { Product } from '../models/product.model';
 import { ProductRequest } from '../models/productRequest.model';
 import type { HttpError } from '../types/errors';
@@ -50,6 +53,7 @@ test(
   async (context) => {
     await mongoose.connect(getTestMongoUri());
     await Promise.all([Product.init(), ProductRequest.init()]);
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -58,6 +62,8 @@ test(
     const adminUserId = new Types.ObjectId();
     const pharmacyA = new Types.ObjectId();
     const pharmacyB = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerA, ownerB]);
 
     await Promise.all([
       Pharmacy.create({
@@ -87,6 +93,7 @@ test(
         'parallel creates keep one active request per article',
         async () => {
           const article = `REQ-RACE-${suffix.slice(-10)}`;
+
           const input = {
             status: 'draft' as const,
             name: 'Concurrent request product',
@@ -115,6 +122,7 @@ test(
           );
 
           const error = rejected ? getRejectedHttpError(rejected) : null;
+
           assert.ok(error);
           assert.equal(error.status, 409);
           assert.equal(error.code, 'PRODUCT_REQUEST_ARTICLE_CONFLICT');
@@ -158,6 +166,7 @@ test(
 
           const ownResult = await getProductRequestArticleAvailabilityService(
             ownerA.toString(),
+
             {
               article: ownArticle,
               excludeRequestId: String(ownRequest._id),
@@ -174,6 +183,7 @@ test(
 
             (error: unknown) => {
               const httpError = error as HttpError;
+
               return (
                 httpError.status === 404 &&
                 httpError.code === 'PRODUCT_REQUEST_NOT_FOUND'
@@ -189,6 +199,7 @@ test(
 
             (error: unknown) => {
               const httpError = error as HttpError;
+
               return (
                 httpError.status === 404 &&
                 httpError.code === 'PRODUCT_REQUEST_NOT_FOUND'
@@ -238,6 +249,7 @@ test(
 
             (error: unknown) => {
               const httpError = error as HttpError;
+
               return (
                 httpError.status === 409 &&
                 httpError.code === 'PRODUCT_REQUEST_ARTICLE_CONFLICT'
@@ -249,6 +261,7 @@ test(
             updateProductRequestService(
               ownerA.toString(),
               String(editableRequest._id),
+
               {
                 status: 'draft',
                 name: 'Conflicting update',
@@ -260,6 +273,7 @@ test(
 
             (error: unknown) => {
               const httpError = error as HttpError;
+
               return (
                 httpError.status === 409 &&
                 httpError.code === 'PRODUCT_REQUEST_ARTICLE_CONFLICT'
@@ -295,8 +309,10 @@ test(
               { status: 'in_progress' },
               adminUserId.toString()
             ),
+
             (error: unknown) => {
               const httpError = error as HttpError;
+
               return (
                 httpError.status === 409 &&
                 httpError.code === 'PRODUCT_REQUEST_INVALID_TRANSITION'
@@ -371,6 +387,7 @@ test(
             categoryMode: 'custom',
             customCategory: 'Herbal wellness blends',
             status: 'in_progress',
+
             fullDescription:
               'Custom metadata must remain historical request data.',
           });
@@ -471,8 +488,10 @@ test(
               { status: 'approved', productId: String(otherProduct._id) },
               adminUserId.toString()
             ),
+
             (error: unknown) => {
               const httpError = error as HttpError;
+
               return (
                 httpError.status === 409 &&
                 httpError.code === 'PRODUCT_REQUEST_APPROVAL_PRODUCT_CONFLICT'
@@ -550,7 +569,9 @@ test(
         ProductRequest.deleteMany({ _id: { $in: requestIds } }),
         Product.deleteMany({ _id: { $in: productIds } }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
+        User.deleteMany({ _id: { $in: [ownerA, ownerB] } }),
       ]);
+
       await mongoose.disconnect();
     }
   }

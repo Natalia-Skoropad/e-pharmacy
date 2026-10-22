@@ -1,0 +1,1241 @@
+{
+  "note": "Source path fragments and path segment candidates; review before relocation. These may also include import strings.",
+  "references": [
+    {
+      "source": "apps/admin/src/components/activity/ActivityHistory.contract.test.ts",
+      "line": 16,
+      "literal": "src/services/admin-audit.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/activity/ActivityHistory.contract.test.ts",
+      "line": 181,
+      "literal": "src/services/admin-audit.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-10.contract.test.ts",
+      "line": 129,
+      "literal": "src/services/admin-pharmacy-registry-read.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-13.test.ts",
+      "line": 198,
+      "literal": "src/services/admin-pharmacy-detail-read.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-13.test.ts",
+      "line": 201,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-14.test.ts",
+      "line": 170,
+      "literal": "src/services/admin.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-15.test.ts",
+      "line": 67,
+      "literal": "src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-15.test.ts",
+      "line": 98,
+      "literal": "src/services/pharmacy-admin-comment.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-16.test.ts",
+      "line": 17,
+      "literal": "src/services/admin-pharmacy-activity.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-17-4-ux.test.ts",
+      "line": 107,
+      "literal": "src/services/admin-pharmacy-detail-read.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/admin/src/components/pharmacies/pharmacies-stage-14-17-4-ux.test.ts",
+      "line": 110,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin-audit.controller.ts",
+      "line": 14,
+      "literal": "../services/admin-audit.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin-employee.controller.ts",
+      "line": 25,
+      "literal": "../services/admin-employee-document.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin-employee.controller.ts",
+      "line": 27,
+      "literal": "../services/admin-employee-profile.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin-employee.controller.ts",
+      "line": 33,
+      "literal": "../services/admin-employee-note.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin-settings.controller.ts",
+      "line": 24,
+      "literal": "../services/admin-settings.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 7,
+      "literal": "../services/admin-access.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 47,
+      "literal": "../services/admin.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 49,
+      "literal": "../services/pharmacy-owner-lifecycle.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 60,
+      "literal": "../services/admin-pharmacy-owner-read.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 67,
+      "literal": "../services/admin-pharmacy-registry-read.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 72,
+      "literal": "../services/admin-pharmacy-detail-read.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 80,
+      "literal": "../services/admin-pharmacy-activity.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 85,
+      "literal": "../services/pharmacy-document.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 91,
+      "literal": "../services/pharmacy-admin-comment.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 101,
+      "literal": "../services/pharmacy-owner-document.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 107,
+      "literal": "../services/pharmacy-owner-admin-comment.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/admin.controller.ts",
+      "line": 109,
+      "literal": "../services/product-request.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/auth.controller.ts",
+      "line": 21,
+      "literal": "../services/auth.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/auth.controller.ts",
+      "line": 26,
+      "literal": "../services/pharmacy-document.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/cart.controller.ts",
+      "line": 19,
+      "literal": "../services/cart.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/client.controller.ts",
+      "line": 15,
+      "literal": "../services/client.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/order.controller.ts",
+      "line": 29,
+      "literal": "../services/order.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy-note.controller.ts",
+      "line": 16,
+      "literal": "../services/pharmacy-note.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy-owner-document.controller.ts",
+      "line": 16,
+      "literal": "../services/pharmacy-owner-document.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy-user-private-note.controller.ts",
+      "line": 15,
+      "literal": "../services/pharmacy-user-private-note.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy.controller.ts",
+      "line": 47,
+      "literal": "../services/pharmacy.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy.controller.ts",
+      "line": 52,
+      "literal": "../services/pharmacy-document.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy.controller.ts",
+      "line": 54,
+      "literal": "../services/pharmacy-create.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy.controller.ts",
+      "line": 61,
+      "literal": "../services/owned-pharmacy-registry-read.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/pharmacy.controller.ts",
+      "line": 65,
+      "literal": "../services/pharmacy-membership.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/product-category.controller.ts",
+      "line": 4,
+      "literal": "../services/product-category.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/product-request.controller.ts",
+      "line": 20,
+      "literal": "../services/product-request.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/product.controller.ts",
+      "line": 34,
+      "literal": "../services/product.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/controllers/product.controller.ts",
+      "line": 36,
+      "literal": "../services/stockMovement.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/middlewares/admin-permission.middleware.ts",
+      "line": 11,
+      "literal": "../services/admin-access.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/middlewares/admin-permission.middleware.ts",
+      "line": 12,
+      "literal": "../services/admin-permission-evaluator",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/middlewares/auth.middleware.ts",
+      "line": 15,
+      "literal": "../services/auth.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/middlewares/rateLimit.middleware.test.ts",
+      "line": 55,
+      "literal": "../services/rate-limit-store.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/middlewares/rateLimit.middleware.ts",
+      "line": 12,
+      "literal": "../services/rate-limit-store.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/middlewares/role.middleware.ts",
+      "line": 8,
+      "literal": "../services/pharmacy-membership.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/cleanup-expired-cart-items.ts",
+      "line": 4,
+      "literal": "../services/cart-cleanup.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/migrate-pharmacy-location.ts",
+      "line": 4,
+      "literal": "../services/pharmacy-location-migration.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/migrate-pharmacy-owner-foundation.ts",
+      "line": 4,
+      "literal": "../services/pharmacy-owner-foundation-migration.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/migrate-pharmacy-owner-registration-audit.ts",
+      "line": 4,
+      "literal": "../services/pharmacy-owner-registration-audit-migration.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/migrate-pharmacy-owner-registration-documents.ts",
+      "line": 4,
+      "literal": "../services/pharmacy-owner-documents-migration.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/migrate-product-categories.ts",
+      "line": 4,
+      "literal": "../services/product-category-migration.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/seed.ts",
+      "line": 29,
+      "literal": "../services/default-pharmacy-client.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/scripts/seed.ts",
+      "line": 30,
+      "literal": "../services/product-category-bootstrap.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/admin-settings.contract.test.ts",
+      "line": 9,
+      "literal": "'src', 'services', 'admin-settings.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "apps/api/src/services/auth-security-lifecycle.contract.test.ts",
+      "line": 9,
+      "literal": "src/services/auth.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/cart-cleanup-deployment.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/cart.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/cart-pharmacy-removal.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/cart.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/cart-price-semantics.contract.test.ts",
+      "line": 14,
+      "literal": "src/services/cart.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/cart-quantity-limits.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/cart.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/cart-serialization.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/cart.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/cart-stock-semantics.test.ts",
+      "line": 10,
+      "literal": "src/services/cart.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/checkout-concurrency.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/client-service.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/client.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/order-client-search.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/order-client-snapshot.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/order-pagination.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/order-pharmacy-snapshot.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/order-transaction-boundaries.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/owner-registration-stage-14-18-2.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/auth.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/owner-registration-stage-14-18-2.contract.test.ts",
+      "line": 18,
+      "literal": "src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/owner-registration-stage-14-18-2.contract.test.ts",
+      "line": 19,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-documents-comments.contract.test.ts",
+      "line": 16,
+      "literal": "src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-documents-comments.contract.test.ts",
+      "line": 53,
+      "literal": "src/services/pharmacy-note.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-admin-documents-comments.contract.test.ts",
+      "line": 84,
+      "literal": "src/services/pharmacy-admin-comment.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-client-catalog.contract.test.ts",
+      "line": 15,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-client-catalog.contract.test.ts",
+      "line": 48,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-client-catalog.contract.test.ts",
+      "line": 76,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-client-catalog.contract.test.ts",
+      "line": 104,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-create.contract.test.ts",
+      "line": 16,
+      "literal": "src/services/pharmacy-create.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-create.contract.test.ts",
+      "line": 58,
+      "literal": "src/services/pharmacy-create.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-document-access.contract.test.ts",
+      "line": 16,
+      "literal": "src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-location-migration.contract.test.ts",
+      "line": 14,
+      "literal": "src/services/pharmacy-location-migration.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 15,
+      "literal": "src/services/pharmacy-membership.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 38,
+      "literal": "src/services/pharmacy-membership.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 39,
+      "literal": "src/services/pharmacy-owner-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 67,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 68,
+      "literal": "src/services/client.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 69,
+      "literal": "src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 70,
+      "literal": "src/services/product-request.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 71,
+      "literal": "src/services/stockMovement.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 73,
+      "literal": "src/services/pharmacy-note.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 76,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "line": 77,
+      "literal": "src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note-access.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/pharmacy-note.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note-access.contract.test.ts",
+      "line": 44,
+      "literal": "src/services/pharmacy-note.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note-access.contract.test.ts",
+      "line": 85,
+      "literal": "src/services/pharmacy-note.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-note-access.contract.test.ts",
+      "line": 90,
+      "literal": "src/services/pharmacy-membership.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-admin-comment.contract.test.ts",
+      "line": 15,
+      "literal": "src/services/pharmacy-owner-admin-comment.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-document.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/pharmacy-owner-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-documents-stage-14-18-3.contract.test.ts",
+      "line": 15,
+      "literal": "src/services/pharmacy-owner-documents-migration.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-documents-stage-14-18-3.contract.test.ts",
+      "line": 44,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-documents-stage-14-18-3.contract.test.ts",
+      "line": 57,
+      "literal": "src/services/pharmacy-owner-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-owner-registration-audit-migration.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/pharmacy-owner-registration-audit-migration.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-profile-access.contract.test.ts",
+      "line": 82,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-profile-access.contract.test.ts",
+      "line": 87,
+      "literal": "src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-profile-access.contract.test.ts",
+      "line": 132,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-profile-summary.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-public-bank-details.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/pharmacy-public-bank-details.contract.test.ts",
+      "line": 39,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-category-relation.contract.test.ts",
+      "line": 67,
+      "literal": "src/services/product-request.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-category-relation.contract.test.ts",
+      "line": 70,
+      "literal": "src/services/product-category.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-category-relation.contract.test.ts",
+      "line": 106,
+      "literal": "src/services/product-category-migration.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-management-scope.contract.test.ts",
+      "line": 15,
+      "literal": "src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-management-scope.contract.test.ts",
+      "line": 58,
+      "literal": "src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-mutation-atomicity.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-request-delete-atomicity.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/product-request.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-request-delete-atomicity.contract.test.ts",
+      "line": 51,
+      "literal": "src/services/product-request.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-request-workflow.contract.test.ts",
+      "line": 16,
+      "literal": "src/services/product-request.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/product-request-workflow.contract.test.ts",
+      "line": 37,
+      "literal": "src/services/product-request.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/public-product-visibility.contract.test.ts",
+      "line": 11,
+      "literal": "src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/public-product-visibility.contract.test.ts",
+      "line": 14,
+      "literal": "src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/stock-movement-legacy-backfill.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/stockMovement.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/stock-movement-legacy-backfill.contract.test.ts",
+      "line": 45,
+      "literal": "src/services/stockMovement.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/stock-movement-legacy-backfill.contract.test.ts",
+      "line": 70,
+      "literal": "src/services/stockMovement.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/services/stock-movement-response.contract.test.ts",
+      "line": 10,
+      "literal": "src/services/stockMovement.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/api/src/utils/pharmacyAccess.ts",
+      "line": 5,
+      "literal": "../services/pharmacy-membership.service",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/client/src/components/profile/ProfilePageContent/profile-filter-ui.contract.test.ts",
+      "line": 16,
+      "literal": "src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/pharmacy/src/components/pharmacies/owned-pharmacy-detail-stage-14-18-11.contract.test.ts",
+      "line": 18,
+      "literal": "src/services/owned-pharmacy-registry-read.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "apps/pharmacy/src/components/profile/OwnerPrivateComments/owner-private-comments.contract.test.ts",
+      "line": 17,
+      "literal": "src/services/pharmacy-user-private-note.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "packages/next-api/src/internal/auth-logout-contract.test.ts",
+      "line": 53,
+      "literal": "apps/api/src/services/auth.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/architecture/snapshot-services-s0.mjs",
+      "line": 98,
+      "literal": "'src', 'services', 'foo.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 33,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-audit.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 35,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'pharmacy-owner-registration-audit-migration.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 42,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 43,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 44,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 45,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-settings.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 129,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-audit.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 137,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'pharmacy-owner-registration-audit-migration.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 145,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 153,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'product-request.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 161,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-owner.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 169,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'pharmacy-owner-lifecycle.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 177,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'auth.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 193,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-employee-profile.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 201,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-employee-document.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 209,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-employee-note.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-audit.mjs",
+      "line": 217,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-settings.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-auth-foundation.mjs",
+      "line": 58,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'auth.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-permissions.mjs",
+      "line": 60,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-access.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-permissions.mjs",
+      "line": 61,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-permission-evaluator.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-permissions.mjs",
+      "line": 62,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-access-policy.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-permissions.mjs",
+      "line": 63,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-owner.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-permissions.mjs",
+      "line": 160,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-owner.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-permissions.mjs",
+      "line": 168,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-access-policy.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-pharmacies-stage-14-17.mjs",
+      "line": 32,
+      "literal": "apps/api/src/services/admin.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-pharmacies-stage-14-17.mjs",
+      "line": 35,
+      "literal": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-pharmacy-owners.mjs",
+      "line": 40,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'admin-pharmacy-owner-read.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-pharmacy-owners.mjs",
+      "line": 47,
+      "literal": "'apps', 'api', 'src', 'services', 'pharmacy-owner-document.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-pharmacy-owners.mjs",
+      "line": 51,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'pharmacy-owner-admin-comment.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-profile.mjs",
+      "line": 54,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-profile.mjs",
+      "line": 55,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-profile.mjs",
+      "line": 56,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-profile.mjs",
+      "line": 157,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-profile.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-profile.mjs",
+      "line": 158,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-document.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-profile.mjs",
+      "line": 159,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-employee-note.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-settings-backend.mjs",
+      "line": 33,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-settings.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-settings-backend.mjs",
+      "line": 52,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'admin-settings.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/admin/check-admin-settings-dictionaries.mjs",
+      "line": 33,
+      "literal": "'apps', 'api', 'src', 'services', 'admin-settings.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/auth/check-auth-contracts.mjs",
+      "line": 380,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'auth.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/client/check-client-catalog-performance.mjs",
+      "line": 39,
+      "literal": "apps/api/src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/client/check-client-lib-contracts.mjs",
+      "line": 29,
+      "literal": "apps/api/src/services/product.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/client/check-client-lib-contracts.mjs",
+      "line": 33,
+      "literal": "apps/api/src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/config/check-config-contracts.mjs",
+      "line": 252,
+      "literal": "'apps',\n  'api',\n  'src',\n  'services',\n  'order.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/config/check-config-contracts.mjs",
+      "line": 382,
+      "literal": "'apps', 'api', 'src', 'services', 'cart.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-owner-multi-pharmacy-foundation.mjs",
+      "line": 24,
+      "literal": "'apps',\n      'api',\n      'src',\n      'services',\n      'pharmacy-owner-foundation-migration.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-owner-multi-pharmacy-foundation.mjs",
+      "line": 32,
+      "literal": "'apps',\n      'api',\n      'src',\n      'services',\n      'admin-pharmacy-owner-read.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-owner-multi-pharmacy-foundation.mjs",
+      "line": 40,
+      "literal": "'apps',\n      'api',\n      'src',\n      'services',\n      'pharmacy-owner-lifecycle.mongo.integration.test.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-create-ui.mjs",
+      "line": 10,
+      "literal": "apps/api/src/services/pharmacy-membership.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-create-ui.mjs",
+      "line": 16,
+      "literal": "apps/api/src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-create-ui.mjs",
+      "line": 17,
+      "literal": "apps/api/src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-create-ui.mjs",
+      "line": 19,
+      "literal": "apps/api/src/services/pharmacy-create.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "line": 34,
+      "literal": "apps/api/src/services/admin.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "line": 53,
+      "literal": "apps/api/src/services/pharmacy-location-migration.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "line": 57,
+      "literal": "apps/api/src/services/order.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "line": 183,
+      "literal": "'apps', 'api', 'src', 'services', 'pharmacy.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "line": 184,
+      "literal": "'apps', 'api', 'src', 'services', 'admin.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "line": 207,
+      "literal": "'apps', 'api', 'src', 'services', 'order.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 53,
+      "literal": "'apps', 'api', 'src', 'services', 'pharmacy-owner-lifecycle.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 55,
+      "literal": "'apps', 'api', 'src', 'services', 'auth.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 58,
+      "literal": "'apps', 'api', 'src', 'services', 'pharmacy-owner-document.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 61,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'pharmacy-owner-lifecycle.mongo.integration.test.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 69,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'pharmacy-owner-document.mongo.integration.test.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 77,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'pharmacy-owner-admin-comment.mongo.integration.test.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/pharmacy/check-pharmacy-owner-lifecycle.mjs",
+      "line": 85,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'admin-audit-owner-scope.mongo.integration.test.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/product-categories/check-dynamic-product-categories.mjs",
+      "line": 149,
+      "literal": "'apps', 'api', 'src', 'services', 'product-category.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/product-categories/check-dynamic-product-categories.mjs",
+      "line": 153,
+      "literal": "'apps',\n    'api',\n    'src',\n    'services',\n    'product-category-migration.service.ts'",
+      "type": "path-segments"
+    },
+    {
+      "source": "scripts/checks/profile/check-profile-contracts.mjs",
+      "line": 31,
+      "literal": "apps/api/src/services/pharmacy.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/profile/check-profile-contracts.mjs",
+      "line": 48,
+      "literal": "apps/api/src/services/pharmacy-membership.service.ts",
+      "type": "path-fragment"
+    },
+    {
+      "source": "scripts/checks/profile/check-profile-contracts.mjs",
+      "line": 50,
+      "literal": "apps/api/src/services/pharmacy-document.service.ts",
+      "type": "path-fragment"
+    }
+  ]
+}

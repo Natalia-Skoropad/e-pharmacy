@@ -9,7 +9,7 @@
   display: grid;
   gap: 20px;
   min-width: 0;
-  padding: 24px;
+  padding: 16px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
@@ -18,7 +18,7 @@
 
 .editorHeader {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 16px;
 }
@@ -26,8 +26,8 @@
 /* PageHeader normally makes the actions full-width on large screens.
    This page deliberately keeps both actions to the right of its title. */
 .editorHeader > :last-child {
-  justify-self: end;
-  width: auto;
+  justify-self: stretch;
+  width: 100%;
   min-width: 0;
 }
 
@@ -45,12 +45,16 @@
 }
 
 .headerActions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: center;
-  justify-content: flex-end;
   min-width: 0;
+  width: 100%;
+}
+
+.headerActions > button {
+  width: 100%;
 }
 
 .tabStack,
@@ -129,6 +133,10 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .card {
+    padding: 24px;
+  }
+
   .fieldsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -136,50 +144,26 @@
   .fullWidth {
     grid-column: 1 / -1;
   }
-}
 
-@media only screen and (max-width: 767px) {
-  .card {
-    padding: 16px;
-  }
-
+  /* Keep the title and help icon together on tablet layouts. */
   .editorHeader {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .editorHeader > :last-child {
-    justify-self: stretch;
-    width: 100%;
-  }
-
-  .headerActions {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    width: 100%;
-  }
-
-  .headerActions > button {
-    width: 100%;
-  }
-}
-
-/* On tablet, preserve the headline and its help icon as one unit. */
-@media (min-width: 768px) and (max-width: 1199px) {
-  .editorHeader {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 
   .editorHeader > :last-child {
     justify-self: start;
-  }
-
-  .titleWithHelp {
-    flex-wrap: nowrap;
-    white-space: nowrap;
+    width: auto;
   }
 
   .headerActions {
+    display: flex;
+    flex-wrap: nowrap;
     justify-content: flex-start;
+    width: auto;
+  }
+
+  .headerActions > button {
+    width: auto;
   }
 
   .fullVerificationLabel {
@@ -191,12 +175,26 @@
   }
 }
 
-@media (min-width: 768px) and (max-width: 979px) {
+@media only screen and (min-width: 1440px) {
   .editorHeader {
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+
+  .editorHeader > :last-child {
+    justify-self: end;
   }
 
   .headerActions {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .fullVerificationLabel {
+    display: inline;
+  }
+
+  .tabletVerificationLabel {
+    display: none;
   }
 }

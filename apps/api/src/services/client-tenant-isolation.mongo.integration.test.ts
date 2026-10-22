@@ -4,6 +4,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { USER_ROLES } from '../constants/auth';
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
@@ -77,10 +79,12 @@ async function createSuccessfulOrder({
     pharmacyId,
     userId,
     pharmacySnapshot: { name: 'Tenant Isolation Pharmacy' },
+
     items: [
       {
         productId,
         productOfferId: new Types.ObjectId(),
+
         productSnapshot: {
           name: 'Tenant Isolation Product',
           article: `TENANT-${orderNumber}`,
@@ -88,6 +92,7 @@ async function createSuccessfulOrder({
           categoryNameSnapshot: 'Medicine',
           categorySlugSnapshot: 'medicine',
         },
+
         quantity: 1,
         unitPrice: 100,
         totalPrice: 100,
@@ -121,8 +126,10 @@ function isNotFound(error: unknown): boolean {
 test(
   'client resources are isolated to the authenticated owner or manager pharmacy',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerA = new Types.ObjectId();
@@ -136,6 +143,8 @@ test(
     const productA = new Types.ObjectId();
     const productB = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8);
+
+    await seedIntegrationPharmacyActors([ownerA, managerA, ownerB, managerB]);
 
     await Promise.all([
       Pharmacy.create({
@@ -214,46 +223,99 @@ test(
     ]);
 
     try {
-      for (const actorId of [ownerA, managerA]) {
-        const clients = await getClientsService(actorId.toString(), {
-          page: 1,
-          perPage: 20,
-        });
+      // Stage 14.18.6: only Owners have the clients/orders capabilities.
+      const clients = await getClientsService(ownerA.toString(), {
+        page: 1,
+        perPage: 20,
+      });
 
-        assert.deepEqual(
-          clients.items.map((client) => client.id),
-          [clientA.toString()]
-        );
+      assert.deepEqual(
+        clients.items.map((client) => client.id),
+        [clientA.toString()]
+      );
 
-        assert.equal(clients.items[0]?.isDefault, false);
+      assert.equal(clients.items[0]?.isDefault, false);
 
-        const details = await getClientByIdService(
-          actorId.toString(),
-          clientA.toString()
-        );
+      const details = await getClientByIdService(
+        ownerA.toString(),
+        clientA.toString()
+      );
 
-        assert.equal(details.client.id, clientA.toString());
+      assert.equal(details.client.id, clientA.toString());
 
-        const products = await getClientPurchasedProductsService(
-          actorId.toString(),
-          clientA.toString(),
+      const products = await getClientPurchasedProductsService(
+        ownerA.toString(),
+        clientA.toString(),
+        { page: 1, perPage: 20 }
+      );
+
+      assert.equal(products.total, 1);
+      assert.equal(products.items[0]?.productId, productA.toString());
+
+      const orders = await getOrdersService(
+        ownerA.toString(),
+        { page: 1, perPage: 20, clientId: clientA.toString() },
+        USER_ROLES.PHARMACY
+      );
+
+      assert.equal(orders.total, 1);
+      assert.equal(orders.items[0]?.clientId, clientA.toString());
+
+      await assert.rejects(
+        getClientByIdService(ownerA.toString(), clientB.toString()),
+        isNotFound
+      );
+
+      await assert.rejects(
+        getClientPurchasedProductsService(
+          ownerA.toString(),
+          clientB.toString(),
           { page: 1, perPage: 20 }
+        ),
+        isNotFound
+      );
+
+      const foreignOrders = await getOrdersService(
+        ownerA.toString(),
+        { page: 1, perPage: 20, clientId: clientB.toString() },
+        USER_ROLES.PHARMACY
+      );
+
+      assert.equal(foreignOrders.total, 0);
+      assert.deepEqual(foreignOrders.items, []);
+
+      // Legacy Managers retain only profile read and pharmacy-internal notes.
+      // They cannot access client identities, purchases or orders.
+      for (const action of [
+        () => getClientsService(managerA.toString(), { page: 1, perPage: 20 }),
+        () => getClientByIdService(managerA.toString(), clientA.toString()),
+
+        () =>
+          getClientPurchasedProductsService(
+            managerA.toString(),
+            clientA.toString(),
+            { page: 1, perPage: 20 }
+          ),
+
+        () =>
+          getOrdersService(
+            managerA.toString(),
+            { page: 1, perPage: 20, clientId: clientA.toString() },
+            USER_ROLES.PHARMACY
+          ),
+      ]) {
+        await assert.rejects(
+          action(),
+          (error: unknown) => (error as HttpError).status === 403
         );
+      }
 
-        assert.equal(products.total, 1);
-        assert.equal(products.items[0]?.productId, productA.toString());
-
-        const orders = await getOrdersService(
-          actorId.toString(),
-          { page: 1, perPage: 20, clientId: clientA.toString() },
-          USER_ROLES.PHARMACY
-        );
-
-        assert.equal(orders.total, 1);
-        assert.equal(orders.items[0]?.clientId, clientA.toString());
+      // Shared internal notes are the limited Manager capability that remains.
+      for (const actorId of [ownerA, managerA]) {
+        const actor = { id: actorId.toString(), role: USER_ROLES.PHARMACY };
 
         const ownNote = await createPharmacyNoteService(
-          { id: actorId.toString(), role: USER_ROLES.PHARMACY },
+          actor,
           'client',
           clientA.toString(),
           {
@@ -263,7 +325,7 @@ test(
         );
 
         const notes = await getPharmacyNotesService(
-          { id: actorId.toString(), role: USER_ROLES.PHARMACY },
+          actor,
           'client',
           clientA.toString(),
           1,
@@ -273,53 +335,22 @@ test(
         assert.ok(notes.items.some((note) => note.id === ownNote.note.id));
 
         await deletePharmacyNoteService(
-          { id: actorId.toString(), role: USER_ROLES.PHARMACY },
+          actor,
           'client',
           clientA.toString(),
           ownNote.note.id
         );
 
         await assert.rejects(
-          getClientByIdService(actorId.toString(), clientB.toString()),
+          getPharmacyNotesService(actor, 'client', clientB.toString(), 1, 10),
           isNotFound
         );
 
         await assert.rejects(
-          getClientPurchasedProductsService(
-            actorId.toString(),
-            clientB.toString(),
-            { page: 1, perPage: 20 }
-          ),
-          isNotFound
-        );
-
-        const foreignOrders = await getOrdersService(
-          actorId.toString(),
-          { page: 1, perPage: 20, clientId: clientB.toString() },
-          USER_ROLES.PHARMACY
-        );
-
-        assert.equal(foreignOrders.total, 0);
-        assert.deepEqual(foreignOrders.items, []);
-
-        await assert.rejects(
-          getPharmacyNotesService(
-            { id: actorId.toString(), role: USER_ROLES.PHARMACY },
-            'client',
-            clientB.toString(),
-            1,
-            10
-          ),
-          isNotFound
-        );
-
-        await assert.rejects(
-          createPharmacyNoteService(
-            { id: actorId.toString(), role: USER_ROLES.PHARMACY },
-            'client',
-            clientB.toString(),
-            { text: 'Foreign note', clientRequestId: randomUUID() }
-          ),
+          createPharmacyNoteService(actor, 'client', clientB.toString(), {
+            text: 'Foreign note',
+            clientRequestId: randomUUID(),
+          }),
           isNotFound
         );
       }
@@ -350,7 +381,11 @@ test(
 
         Order.deleteMany({ pharmacyId: { $in: [pharmacyA, pharmacyB] } }),
         Product.deleteMany({ _id: { $in: [productA, productB] } }),
-        User.deleteMany({ _id: { $in: [clientA, clientB] } }),
+
+        User.deleteMany({
+          _id: { $in: [ownerA, managerA, ownerB, managerB, clientA, clientB] },
+        }),
+
         Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
       ]);
 

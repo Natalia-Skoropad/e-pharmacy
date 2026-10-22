@@ -12,8 +12,13 @@ async function collectFiles(directory, predicate = () => true) {
   const files = [];
 
   for (const entry of entries) {
-    if (['node_modules', '.next', '.turbo', 'dist', '.artifacts'].includes(entry.name))
+    if (
+      ['node_modules', '.next', '.turbo', 'dist', '.artifacts'].includes(
+        entry.name
+      )
+    )
       continue;
+
     const absolute = path.join(directory, entry.name);
 
     if (entry.isDirectory())
@@ -36,6 +41,43 @@ const tsFiles = await collectFiles(root, (file) =>
   /\.[cm]?[jt]sx?$/.test(file)
 );
 
+// Match module specifiers, not arbitrary mentions of source file paths.
+// Contract tests may read Next API source as text without importing its code.
+const moduleSpecifierPatterns = [
+  /\bfrom\s*['"]([^'"]+)['"]/g,
+  /\bimport\s*['"]([^'"]+)['"]/g,
+  /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+  /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+];
+
+const nextApiRoot = path.join(root, 'packages/next-api');
+
+function importsNextApi(source, file) {
+  return moduleSpecifierPatterns.some((pattern) => {
+    pattern.lastIndex = 0;
+
+    return [...source.matchAll(pattern)].some((match) => {
+      const specifier = match[1];
+
+      if (/^@e-pharmacy\/next-api(?:\/|$)/.test(specifier)) return true;
+
+      // Also reject direct relative imports that bypass workspace exports.
+      if (!specifier.startsWith('.')) {
+        return /(?:^|\/)packages\/next-api(?:\/|$)/.test(specifier);
+      }
+
+      const resolved = path.resolve(path.dirname(file), specifier);
+
+      return (
+        resolved === nextApiRoot ||
+        resolved.startsWith(`${nextApiRoot}${path.sep}`)
+      );
+    });
+  });
+}
+
+//===================================================================
+
 const violations = [];
 
 //===================================================================
@@ -44,10 +86,7 @@ for (const file of tsFiles) {
   const rel = relative(file);
   const source = await readFile(file, 'utf8');
 
-  if (
-    rel.startsWith('apps/api/') &&
-    /@e-pharmacy\/next-api|packages\/next-api/.test(source)
-  ) {
+  if (rel.startsWith('apps/api/') && importsNextApi(source, file)) {
     violations.push(`${rel}: backend must not import packages/next-api`);
   }
 

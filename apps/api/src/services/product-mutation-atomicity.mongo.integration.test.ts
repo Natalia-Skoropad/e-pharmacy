@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Order } from '../models/order.model';
 import { Pharmacy } from '../models/pharmacy.model';
 import { Product } from '../models/product.model';
@@ -52,6 +54,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
@@ -60,6 +63,8 @@ test(
     const productId = new Types.ObjectId();
     const clientId = new Types.ObjectId();
     const phoneSuffix = getPhoneSuffix(suffix);
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Promise.all([
       Pharmacy.create({
@@ -174,6 +179,7 @@ test(
           persistedOffer,
           'committed order must retain its product offer'
         );
+
         assert.ok(relatedOrder, 'committed order must be persisted');
         assert.equal(removeResult.status, 'rejected');
       } else if (removeResult.status === 'fulfilled') {
@@ -188,6 +194,7 @@ test(
       const offers = await ProductOffer.find({ productId, pharmacyId })
         .select('_id')
         .lean<Array<{ _id: Types.ObjectId }>>();
+
       const offerIds = offers.map((offer) => offer._id);
 
       await Promise.all([
@@ -196,7 +203,8 @@ test(
         ProductOffer.deleteMany({ productId, pharmacyId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
-        User.deleteOne({ _id: clientId }),
+        User.deleteMany({ _id: { $in: [ownerId, clientId] } }),
+
         ...(offerIds.length
           ? [StockMovement.deleteMany({ productOfferId: { $in: offerIds } })]
           : []),

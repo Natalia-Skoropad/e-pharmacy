@@ -35,7 +35,6 @@ test(
 
     const userIds: Types.ObjectId[] = [];
     const pharmacyIds: Types.ObjectId[] = [];
-    const suffix = new Types.ObjectId().toHexString();
 
     async function makeOwner(status: 'new' | 'active' | 'blocked') {
       const id = new Types.ObjectId();
@@ -44,9 +43,9 @@ test(
 
       await User.create({
         _id: id,
-        name: `Draft Tester ${status}`,
-        email: `draft-${status}-${suffix}@example.com`,
-        phone: `+380${String((BigInt('0x' + id.toHexString().slice(0, 8)) % 900000000n) + 100000000n)}`,
+        name: 'Draft Tester',
+        email: `draft-${status}-${id.toHexString()}@example.com`,
+        phone: `+380${String((BigInt('0x' + id.toHexString().slice(-12)) % 900000000n) + 100000000n)}`,
         password: 'fake-hash',
         role: 'pharmacy',
         status,

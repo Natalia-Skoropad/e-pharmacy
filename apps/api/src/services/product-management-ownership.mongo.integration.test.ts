@@ -3,7 +3,10 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { Pharmacy } from '../models/pharmacy.model';
+import { User } from '../models/user.model';
 import { Product } from '../models/product.model';
 import { ProductOffer } from '../models/productOffer.model';
 import type { HttpError } from '../types/errors';
@@ -40,6 +43,7 @@ test(
   { skip: shouldSkip },
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const medicineCategoryId = await getTestProductCategoryId();
 
     const ownerId = new Types.ObjectId();
@@ -47,6 +51,8 @@ test(
     const currentPharmacyId = new Types.ObjectId();
     const foreignPharmacyId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8).toUpperCase();
+
+    await seedIntegrationPharmacyActors([ownerId, foreignOwnerId]);
 
     const product = await Product.create({
       name: `Ownership Product ${suffix}`,
@@ -98,6 +104,21 @@ test(
     ]);
 
     try {
+      // A blocked pharmacy cannot open managed-product reads.
+      await assert.rejects(
+        getManagedProductsService(
+          { page: 1, perPage: 20, pharmacyId: currentPharmacyId.toString() },
+          { userId: ownerId.toString(), role: 'pharmacy' },
+          { includeOffers: true }
+        ),
+        (error: unknown) => (error as HttpError).status === 403
+      );
+
+      await Pharmacy.updateOne(
+        { _id: currentPharmacyId },
+        { $set: { status: 'active' } }
+      );
+
       const ownResult = await getManagedProductsService(
         {
           page: 1,
@@ -109,7 +130,9 @@ test(
       );
 
       assert.equal(ownResult.total, 1);
+
       const ownProduct = ownResult.items[0];
+
       assert.ok(ownProduct);
 
       assert.ok(
@@ -159,6 +182,7 @@ test(
           { userId: ownerId.toString(), role: 'pharmacy' },
           { includeOffers: true }
         ),
+
         (error: unknown) => (error as HttpError).status === 403
       );
 
@@ -173,6 +197,24 @@ test(
       );
 
       assert.equal(adminResult.total, 1);
+
+      const managementDetails = await getManagedProductDetailsService(
+        product._id.toString(),
+        { userId: ownerId.toString(), role: 'pharmacy' }
+      );
+
+      const currentDetailsOffer = managementDetails.product.offers.find(
+        (offer) => offer.pharmacyId === currentPharmacyId.toString()
+      );
+
+      assert.ok(currentDetailsOffer);
+      assert.equal(currentDetailsOffer.totalQuantity, 10);
+      assert.equal(currentDetailsOffer.reservedQuantity, 2);
+
+      await Pharmacy.updateOne(
+        { _id: currentPharmacyId },
+        { $set: { status: 'blocked' } }
+      );
 
       const publicDetails = await getProductDetailsService(
         product._id.toString()
@@ -197,18 +239,14 @@ test(
         undefined
       );
 
-      const managementDetails = await getManagedProductDetailsService(
-        product._id.toString(),
-        { userId: ownerId.toString(), role: 'pharmacy' }
-      );
+      await assert.rejects(
+        getManagedProductDetailsService(product._id.toString(), {
+          userId: ownerId.toString(),
+          role: 'pharmacy',
+        }),
 
-      const blockedCurrentOffer = managementDetails.product.offers.find(
-        (offer) => offer.pharmacyId === currentPharmacyId.toString()
+        (error: unknown) => (error as HttpError).status === 403
       );
-
-      assert.ok(blockedCurrentOffer);
-      assert.equal(blockedCurrentOffer.totalQuantity, 10);
-      assert.equal(blockedCurrentOffer.reservedQuantity, 2);
     } finally {
       await Promise.all([
         ProductOffer.deleteMany({ productId: product._id }),
@@ -217,6 +255,8 @@ test(
         Pharmacy.deleteMany({
           _id: { $in: [currentPharmacyId, foreignPharmacyId] },
         }),
+
+        User.deleteMany({ _id: { $in: [ownerId, foreignOwnerId] } }),
       ]);
 
       await mongoose.disconnect();

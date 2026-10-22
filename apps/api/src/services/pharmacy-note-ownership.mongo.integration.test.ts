@@ -4,6 +4,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
+import { seedIntegrationPharmacyActors } from './pharmacy-integration-actors.helper';
+
 import { USER_ROLES } from '../constants/auth';
 import { Pharmacy } from '../models/pharmacy.model';
 import { PharmacyNote } from '../models/pharmacyNote.model';
@@ -50,6 +52,7 @@ function noteInput(text: string, clientRequestId = randomUUID()) {
 test(
   'pharmacy notes reject unrelated client and pharmacy entities',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -60,6 +63,8 @@ test(
     const ownClientId = new Types.ObjectId();
     const unrelatedClientId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8);
+
+    await seedIntegrationPharmacyActors([ownerId, otherOwnerId]);
 
     await User.create({
       _id: ownClientId,
@@ -125,6 +130,7 @@ test(
           otherPharmacyId.toString(),
           noteInput('Foreign pharmacy note')
         ),
+
         (error: unknown) => (error as HttpError).status === 404
       );
 
@@ -135,6 +141,7 @@ test(
           unrelatedClientId.toString(),
           noteInput('Unrelated client note')
         ),
+
         (error: unknown) => (error as HttpError).status === 404
       );
 
@@ -150,6 +157,7 @@ test(
           pharmacyId.toString(),
           noteInput('Blocked pharmacy note')
         ),
+
         (error: unknown) =>
           (error as HttpError).status === 403 &&
           (error as HttpError).code === 'PHARMACY_PROFILE_BLOCKED'
@@ -158,8 +166,12 @@ test(
       await Promise.all([
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteMany({ _id: { $in: [pharmacyId, otherPharmacyId] } }),
-        User.deleteMany({ _id: { $in: [ownClientId, unrelatedClientId] } }),
+
+        User.deleteMany({
+          _id: { $in: [ownerId, otherOwnerId, ownClientId, unrelatedClientId] },
+        }),
       ]);
+
       await mongoose.disconnect();
     }
   }
@@ -170,6 +182,7 @@ test(
 test(
   'internal pharmacy notes are shared: owner and managers can delete each other notes inside the same pharmacy',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -177,6 +190,8 @@ test(
     const managerAId = new Types.ObjectId();
     const managerBId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerId, managerAId, managerBId]);
 
     await Pharmacy.create({
       _id: pharmacyId,
@@ -245,7 +260,9 @@ test(
       await Promise.all([
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
+        User.deleteMany({ _id: { $in: [ownerId, managerAId, managerBId] } }),
       ]);
+
       await mongoose.disconnect();
     }
   }
@@ -256,6 +273,7 @@ test(
 test(
   'pharmacy note author snapshot survives author rename and deletion',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
 
@@ -263,6 +281,8 @@ test(
     const managerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().slice(-8);
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Promise.all([
       User.create({
@@ -329,6 +349,7 @@ test(
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
         User.deleteOne({ _id: managerId }),
+        User.deleteOne({ _id: ownerId }),
       ]);
 
       await mongoose.disconnect();
@@ -341,8 +362,10 @@ test(
 test(
   'internal pharmacy notes fail closed for a non-pharmacy actor even with stale pharmacy membership',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const staleClientId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
 
@@ -369,6 +392,7 @@ test(
           1,
           10
         ),
+
         (error: unknown) => (error as HttpError).status === 403
       );
 
@@ -379,6 +403,7 @@ test(
           pharmacyId.toString(),
           noteInput('Must stay forbidden')
         ),
+
         (error: unknown) => (error as HttpError).status === 403
       );
     } finally {
@@ -386,6 +411,7 @@ test(
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
       ]);
+
       await mongoose.disconnect();
     }
   }
@@ -396,11 +422,15 @@ test(
 test(
   'removed pharmacy manager immediately loses internal note read and delete access',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const ownerId = new Types.ObjectId();
     const managerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
+
+    await seedIntegrationPharmacyActors([ownerId, managerId]);
 
     await Pharmacy.create({
       _id: pharmacyId,
@@ -432,6 +462,7 @@ test(
           1,
           10
         ),
+
         (error: unknown) => (error as HttpError).status === 409
       );
 
@@ -442,6 +473,7 @@ test(
           pharmacyId.toString(),
           created.note.id
         ),
+
         (error: unknown) => (error as HttpError).status === 409
       );
 
@@ -455,7 +487,9 @@ test(
       await Promise.all([
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
+        User.deleteMany({ _id: { $in: [ownerId, managerId] } }),
       ]);
+
       await mongoose.disconnect();
     }
   }
@@ -466,11 +500,15 @@ test(
 test(
   'pharmacy note create is idempotent for an ambiguous retry and rejects request-key reuse with different text',
   { skip: shouldSkip },
+
   async () => {
     await mongoose.connect(getTestMongoUri());
+
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
     const clientRequestId = randomUUID();
+
+    await seedIntegrationPharmacyActors([ownerId]);
 
     await Pharmacy.create({
       _id: pharmacyId,
@@ -512,13 +550,16 @@ test(
           pharmacyId.toString(),
           noteInput('Different content', clientRequestId)
         ),
+
         (error: unknown) => (error as HttpError).status === 409
       );
     } finally {
       await Promise.all([
         PharmacyNote.deleteMany({ pharmacyId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
+        User.deleteOne({ _id: ownerId }),
       ]);
+
       await mongoose.disconnect();
     }
   }
