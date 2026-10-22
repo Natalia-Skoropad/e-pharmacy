@@ -5,10 +5,8 @@ import test from 'node:test';
 
 //===============================================================
 
-const servicePath = path.resolve(
-  process.cwd(),
-  'src/services/orders/order.service.ts'
-);
+const readOrderFile = (name: string) =>
+  readFile(path.resolve(process.cwd(), 'src/services/orders', name), 'utf8');
 
 const modelPath = path.resolve(process.cwd(), 'src/models/order.model.ts');
 const seedPath = path.resolve(process.cwd(), 'src/scripts/seed.ts');
@@ -16,7 +14,13 @@ const seedPath = path.resolve(process.cwd(), 'src/scripts/seed.ts');
 //===============================================================
 
 test('order responses keep the confirmed pharmacy snapshot immutable', async () => {
-  const source = await readFile(servicePath, 'utf8');
+  const source = (
+    await Promise.all([
+      readOrderFile('order-shared.ts'),
+      readOrderFile('order-mutations.service.ts'),
+      readOrderFile('order-query.service.ts'),
+    ])
+  ).join('\n');
 
   assert.doesNotMatch(source, /hydrateOrderPharmacyDetails/);
 
@@ -37,7 +41,12 @@ test('order responses keep the confirmed pharmacy snapshot immutable', async () 
 
 test('new order snapshots persist canonical location while legacy address/city snapshots remain readable', async () => {
   const [service, model] = await Promise.all([
-    readFile(servicePath, 'utf8'),
+    Promise.all([
+      readOrderFile('order-shared.ts'),
+      readOrderFile('order-checkout.service.ts'),
+      readOrderFile('order-manager-orders.service.ts'),
+    ]).then((parts) => parts.join('\n')),
+
     readFile(modelPath, 'utf8'),
   ]);
 

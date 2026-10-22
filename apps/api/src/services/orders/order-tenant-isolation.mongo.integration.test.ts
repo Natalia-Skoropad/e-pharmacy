@@ -10,19 +10,24 @@ import { Pharmacy } from '../../models/pharmacy.model';
 import { Product } from '../../models/product.model';
 import { ProductOffer } from '../../models/productOffer.model';
 import { User } from '../../models/user.model';
+
 import type { HttpError } from '../../types/errors';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
+import { createManagerOrderService } from './order-manager-orders.service';
 
 import {
-  createManagerOrderService,
   createOrderManagerCommentService,
   deleteOrderManagerCommentService,
-  getOrderByIdService,
   getOrderManagerCommentsService,
+} from './order-comments.service';
+
+import { getOrderByIdService } from './order-query.service';
+
+import {
   updateOrderDetailsService,
   updateOrderStatusService,
-} from './order.service';
+} from './order-mutations.service';
 
 //===================================================================
 

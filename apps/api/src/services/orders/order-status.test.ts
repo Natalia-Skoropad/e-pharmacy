@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { MAX_PHARMACY_GROUPS_PER_CART } from '../../constants/cart';
-import { canTransitionOrderStatus } from './order.service';
+import { canTransitionOrderStatus } from './order-status';
 
 //===============================================================
 

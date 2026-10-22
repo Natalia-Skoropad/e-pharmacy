@@ -15,14 +15,18 @@ import type { HttpError } from '../../types/errors';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
+import { createManagerOrderService } from '../orders/order-manager-orders.service';
+
 import {
-  createManagerOrderService,
   createOrderManagerCommentService,
   deleteOrderManagerCommentService,
   getOrderManagerCommentsService,
+} from '../orders/order-comments.service';
+
+import {
   updateOrderDetailsService,
   updateOrderStatusService,
-} from '../orders/order.service';
+} from '../orders/order-mutations.service';
 
 import {
   createProductRequestService,

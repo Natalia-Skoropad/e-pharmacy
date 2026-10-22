@@ -5,30 +5,44 @@ import test from 'node:test';
 
 //===============================================================
 
-const servicePath = path.resolve(
-  process.cwd(),
-  'src/services/orders/order.service.ts'
-);
+const readOrderFile = (name: string) =>
+  readFile(path.resolve(process.cwd(), 'src/services/orders', name), 'utf8');
 
 //===============================================================
 
 test('new checkout and manager orders persist immutable client snapshots', async () => {
-  const source = await readFile(servicePath, 'utf8');
+  const source = (
+    await Promise.all([
+      readOrderFile('order-checkout.service.ts'),
+      readOrderFile('order-manager-orders.service.ts'),
+    ])
+  ).join('\n');
+
+  const serializer = await readOrderFile('order-shared.ts');
 
   const snapshotWrites =
     source.match(/clientSnapshot:\s*createOrderClientSnapshot\(client\)/g) ??
     [];
 
   assert.equal(snapshotWrites.length, 2);
-  assert.match(source, /const clientSnapshot = order\.clientSnapshot/);
-  assert.match(source, /const clientIdentity = clientSnapshot \?\? clientUser/);
-  assert.match(source, /clientIdentity\?\.name \?\? clientIdentity\?\.email/);
-  assert.match(source, /clientIdentity\?\.phone/);
-  assert.match(source, /clientIdentity\?\.address/);
-  assert.match(source, /clientIdentity\?\.pictureUrl/);
+  assert.match(serializer, /const clientSnapshot = order\.clientSnapshot/);
+
+  assert.match(
+    serializer,
+    /const clientIdentity = clientSnapshot \?\? clientUser/
+  );
+
+  assert.match(
+    serializer,
+    /clientIdentity\?\.name \?\? clientIdentity\?\.email/
+  );
+
+  assert.match(serializer, /clientIdentity\?\.phone/);
+  assert.match(serializer, /clientIdentity\?\.address/);
+  assert.match(serializer, /clientIdentity\?\.pictureUrl/);
 
   assert.doesNotMatch(
-    source,
+    serializer,
     /clientSnapshot\?\.(?:phone|address|pictureUrl) \?\? clientUser\?\./
   );
 });
@@ -36,7 +50,7 @@ test('new checkout and manager orders persist immutable client snapshots', async
 //===============================================================
 
 test('Walk-in snapshots do not copy synthetic credentials into order history', async () => {
-  const source = await readFile(servicePath, 'utf8');
+  const source = await readOrderFile('order-shared.ts');
 
   assert.match(
     source,

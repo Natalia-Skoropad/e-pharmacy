@@ -33,9 +33,10 @@ import { httpError } from '../../../utils/httpError';
 import { createSafeRegExp } from '../../../utils/regexp';
 
 import { listAdminAuditLogsService } from '../audit/admin-audit.service';
-import { getOrderSalesStatisticsForPharmaciesService } from '../../orders/order.service';
+import { getOrderSalesStatisticsForPharmaciesService } from '../../orders/order-sales-statistics.service';
 import { RATING_BOUNDS } from '../../pharmacies/registry/pharmacy-registry.constants';
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
+
 import type { OrderSalesStatisticsQuery } from '../../../schemas/order.schema';
 
 //===============================================================

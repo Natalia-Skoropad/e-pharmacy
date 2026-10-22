@@ -9,7 +9,7 @@ import { ordersQuerySchema } from '../../schemas/order.schema';
 
 const servicePath = resolve(
   process.cwd(),
-  'src/services/orders/order.service.ts'
+  'src/services/orders/order-query.service.ts'
 );
 
 //===============================================================
@@ -21,7 +21,7 @@ test('order client search covers historical and current client identity fields',
     'async function createOrderClientSearchCondition'
   );
 
-  const end = source.indexOf('function assertManagerOrderReplayMatches', start);
+  const end = source.indexOf('export async function getOrdersService', start);
   const searchSource = source.slice(start, end);
 
   assert.ok(start >= 0 && end > start);

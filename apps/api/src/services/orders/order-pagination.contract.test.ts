@@ -7,7 +7,7 @@ import test from 'node:test';
 
 async function readOrderService(): Promise<string> {
   return readFile(
-    resolve(process.cwd(), 'src/services/orders/order.service.ts'),
+    resolve(process.cwd(), 'src/services/orders/order-query.service.ts'),
     'utf8'
   );
 }

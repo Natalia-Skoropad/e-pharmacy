@@ -31,6 +31,7 @@ function sorted(values) {
 function assertSameValues(label, frontend, backend) {
   assert.deepEqual(
     sorted(frontend),
+
     sorted(backend),
     `${label} differ between frontend and backend`
   );
@@ -253,7 +254,7 @@ const backendOrderService = await parse(
   'api',
   'src',
   'services',
-  'orders/order.service.ts'
+  'orders/order-status.ts'
 );
 
 assert.equal(
@@ -276,6 +277,7 @@ for (const errorCodeName of [
 ]) {
   assert.equal(
     getVariableLiteral(ts, frontendCheckoutErrors, errorCodeName),
+
     getVariableLiteral(ts, backendCheckoutErrors, errorCodeName),
     `${errorCodeName} differs between frontend and backend`
   );
@@ -342,6 +344,7 @@ for (const [domainValues, presentationFile, presentationName] of [
       typeof item.label === 'string' && item.label.trim().length > 0,
       true
     );
+
     assert.equal(
       semanticTones.has(item.tone),
       true,
@@ -561,6 +564,7 @@ assert.match(
   clientCartLimitSource,
   /backendCode\s*===\s*CART_PHARMACY_LIMIT_ERROR_CODE/
 );
+
 assert.doesNotMatch(clientCartLimitSource, /payload\s+as|message\.includes/);
 
 assert.match(productCategoriesSource, /ALL_PRODUCT_CATEGORIES_FILTER_OPTION/);
@@ -608,6 +612,8 @@ for (const canonicalCopySource of [
     `${canonicalCopySource} is not consumed by order UI`
   );
 }
+
+//===================================================================
 
 console.log(
   'Config contract check passed (runtime values, dynamic category consumers, status presentation, cart error code, app-local filters/statistics, canonical order copy, notes, and auth-hint ownership).'

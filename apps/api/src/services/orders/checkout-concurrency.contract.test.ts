@@ -7,7 +7,7 @@ import test from 'node:test';
 
 test('checkout rejects stale revision/fingerprint before stock reservation or order creation', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/orders/order.service.ts'),
+    resolve(process.cwd(), 'src/services/orders/order-checkout.service.ts'),
     'utf8'
   );
 

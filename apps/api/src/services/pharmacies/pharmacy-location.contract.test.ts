@@ -3,12 +3,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
-//===============================================================
+//===================================================================
 
 const read = (path: string) =>
   readFileSync(resolve(process.cwd(), 'src/services', path), 'utf8');
 
-//===============================================================
+//===================================================================
 
 test('Admin and Owner share field-safe location/pending copies without merging response policies', () => {
   const admin = read('admin/pharmacies/admin.service.ts');
@@ -18,7 +18,7 @@ test('Admin and Owner share field-safe location/pending copies without merging r
 
   assert.match(
     admin,
-    /import \{ clonePharmacyLocation, clonePendingModerationFields \}/
+    /import\s*\{\s*clonePharmacyLocation\s*,\s*clonePendingModerationFields\s*,?\s*\}\s*from\s*['"][^'"]*\/pharmacy-location['"]/
   );
 
   assert.match(

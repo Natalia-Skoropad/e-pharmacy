@@ -15,18 +15,26 @@ import type {
   UpdateOrderStatusInput,
 } from '../schemas/order.schema';
 
+import { checkoutOrderService } from '../services/orders/order-checkout.service';
+import { createManagerOrderService } from '../services/orders/order-manager-orders.service';
+
 import {
-  checkoutOrderService,
-  createManagerOrderService,
   createOrderManagerCommentService,
   deleteOrderManagerCommentService,
-  getOrderByIdService,
   getOrderManagerCommentsService,
-  getOrderSalesStatisticsService,
+} from '../services/orders/order-comments.service';
+
+import {
+  getOrderByIdService,
   getOrdersService,
+} from '../services/orders/order-query.service';
+
+import { getOrderSalesStatisticsService } from '../services/orders/order-sales-statistics.service';
+
+import {
   updateOrderDetailsService,
   updateOrderStatusService,
-} from '../services/orders/order.service';
+} from '../services/orders/order-mutations.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
@@ -39,6 +47,7 @@ export async function checkoutOrder(
 ): Promise<void> {
   const { body } = res.locals.validated;
   const data = await checkoutOrderService(req.user?.id ?? '', body);
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
 
@@ -50,6 +59,7 @@ export async function createManagerOrder(
 ): Promise<void> {
   const { body } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await createManagerOrderService(
@@ -67,7 +77,12 @@ export async function getOrders(
   res: ValidatedResponse<unknown, unknown, OrdersQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
-  const data = await getOrdersService(req.user?.id ?? '', query, req.user?.role);
+
+  const data = await getOrdersService(
+    req.user?.id ?? '',
+    query,
+    req.user?.role
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -79,6 +94,7 @@ export async function getOrderSalesStatistics(
   res: ValidatedResponse<unknown, unknown, OrderSalesStatisticsQuery>
 ): Promise<void> {
   const { query } = res.locals.validated;
+
   const data = await getOrderSalesStatisticsService(
     req.user?.id ?? '',
     query,
@@ -95,6 +111,7 @@ export async function getOrderById(
   res: ValidatedResponse<unknown, OrderParams>
 ): Promise<void> {
   const { orderId } = res.locals.validated.params;
+
   const data = await getOrderByIdService(
     req.user?.id ?? '',
     orderId,
@@ -112,10 +129,12 @@ export async function getOrderManagerComments(
 ): Promise<void> {
   const { params, query } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await getOrderManagerCommentsService(
     { id: user.id, role: user.role },
+
     params.orderId,
     query
   );
@@ -131,10 +150,12 @@ export async function createOrderManagerComment(
 ): Promise<void> {
   const { body, params } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await createOrderManagerCommentService(
     { id: user.id, role: user.role },
+
     params.orderId,
     body
   );
@@ -150,10 +171,12 @@ export async function deleteOrderManagerComment(
 ): Promise<void> {
   const { orderId, commentId } = res.locals.validated.params;
   const user = req.user;
+
   if (!user) return;
 
   const data = await deleteOrderManagerCommentService(
     { id: user.id, role: user.role },
+
     orderId,
     commentId
   );
@@ -169,10 +192,12 @@ export async function updateOrderDetails(
 ): Promise<void> {
   const { body, params } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await updateOrderDetailsService(
     { id: user.id, role: user.role },
+
     params.orderId,
     body
   );
@@ -188,10 +213,12 @@ export async function updateOrderStatus(
 ): Promise<void> {
   const { body, params } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await updateOrderStatusService(
     { id: user.id, role: user.role },
+
     params.orderId,
     body
   );

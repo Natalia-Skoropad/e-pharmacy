@@ -66,7 +66,7 @@ test('legacy managers cannot implicitly manage orders, products or owner documen
 
 test('all member-facing business modules use the centralized capability gate', async () => {
   const checks: Record<string, string> = {
-    'src/services/orders/order.service.ts': 'manage_orders',
+    'src/services/orders/order-access.ts': 'manage_orders',
     'src/services/clients/client.service.ts': 'read_clients',
     'src/services/catalog/product.service.ts': 'manage_products',
 

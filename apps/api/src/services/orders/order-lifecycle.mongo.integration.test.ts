@@ -20,13 +20,14 @@ import { User } from '../../models/user.model';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
+import { checkoutOrderService } from './order-checkout.service';
+import { getOrderByIdService } from './order-query.service';
+import { getOrderSalesStatisticsService } from './order-sales-statistics.service';
+
 import {
-  checkoutOrderService,
-  getOrderByIdService,
-  getOrderSalesStatisticsService,
   updateOrderDetailsService,
   updateOrderStatusService,
-} from './order.service';
+} from './order-mutations.service';
 
 import {
   commitReservedStock,

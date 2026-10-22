@@ -22,7 +22,7 @@ import {
   getClientsService,
 } from './client.service';
 
-import { getOrdersService } from '../orders/order.service';
+import { getOrdersService } from '../orders/order-query.service';
 
 import {
   createPharmacyNoteService,

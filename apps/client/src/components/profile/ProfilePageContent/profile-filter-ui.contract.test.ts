@@ -13,7 +13,9 @@ const profileState = read(
   '../../../../../../packages/ui/src/profile/ProfileResourceState.tsx'
 );
 
-const apiOrders = read('../../../../../api/src/services/orders/order.service.ts');
+const apiOrders = read(
+  '../../../../../api/src/services/orders/order-query.service.ts'
+);
 
 const dto = read(
   '../../../../../../packages/api-client/src/response/shared-dto-parsers.ts'

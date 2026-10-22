@@ -54,7 +54,7 @@ const LEGACY_LOCATION_ALLOWLIST = new Set([
 
   // Historical order snapshots are immutable facts. New snapshots use location.
   'apps/api/src/models/order.model.ts',
-  'apps/api/src/services/orders/order.service.ts',
+  'apps/api/src/services/orders/order-shared.ts',
   'apps/api/src/types/order.ts',
 ]);
 
@@ -77,6 +77,7 @@ async function collectProductionSources(directory) {
     }
 
     if (/\.(?:test|spec)\.[^.]+$/.test(entry.name)) continue;
+
     files.push(target);
   }
 
@@ -88,6 +89,8 @@ async function collectProductionSources(directory) {
 function stripComments(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/.*$/gm, ' ');
 }
+
+//===================================================================
 
 const productionFiles = (
   await Promise.all(
@@ -101,6 +104,7 @@ const violations = [];
 
 for (const file of productionFiles) {
   const relative = path.relative(ROOT_DIR, file).replaceAll('\\', '/');
+
   if (LEGACY_LOCATION_ALLOWLIST.has(relative)) continue;
 
   const source = await readFile(file, 'utf8');
@@ -204,7 +208,7 @@ const [
 
   read('apps', 'api', 'src', 'scripts', 'seed.ts'),
   read('apps', 'api', 'src', 'models', 'order.model.ts'),
-  read('apps', 'api', 'src', 'services', 'orders/order.service.ts'),
+  read('apps', 'api', 'src', 'services', 'orders/order-shared.ts'),
 ]);
 
 assert.doesNotMatch(pharmacyModel, /^\s*city\s*:/m);

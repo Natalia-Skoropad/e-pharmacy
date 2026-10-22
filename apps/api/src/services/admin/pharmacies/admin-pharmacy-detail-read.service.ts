@@ -18,7 +18,7 @@ import type {
 
 import { httpError } from '../../../utils/httpError';
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
-import { getOrderSalesStatisticsForPharmacyService } from '../../orders/order.service';
+import { getOrderSalesStatisticsForPharmacyService } from '../../orders/order-sales-statistics.service';
 import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
 
 import type { OrderSalesStatisticsQuery } from '../../../schemas/order.schema';
