@@ -1,0 +1,873 @@
+{
+  "schemaVersion": 1,
+  "sourceArchive": "e-pharmacy-14-19-1.zip",
+  "baseline": "docs/architecture/services-s0/",
+  "scope": "apps/api/src/services/",
+  "note": "S1 mapping only; stages S2-S8 perform physical moves after separate gate. S0 snapshot is immutable.",
+  "moves": [
+    {
+      "from": "apps/api/src/services/admin-access-policy.test.ts",
+      "to": "apps/api/src/services/admin/access/admin-access-policy.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-access-policy.ts",
+      "to": "apps/api/src/services/admin/access/admin-access-policy.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-access.service.ts",
+      "to": "apps/api/src/services/admin/access/admin-access.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-audit-owner-scope.mongo.integration.test.ts",
+      "to": "apps/api/src/services/admin/audit/admin-audit-owner-scope.mongo.integration.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-audit.service.test.ts",
+      "to": "apps/api/src/services/admin/audit/admin-audit.service.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-audit.service.ts",
+      "to": "apps/api/src/services/admin/audit/admin-audit.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-employee-document.contract.test.ts",
+      "to": "apps/api/src/services/admin/employees/admin-employee-document.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-employee-document.service.ts",
+      "to": "apps/api/src/services/admin/employees/admin-employee-document.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-employee-note.service.ts",
+      "to": "apps/api/src/services/admin/employees/admin-employee-note.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-employee-private-note.contract.test.ts",
+      "to": "apps/api/src/services/admin/employees/admin-employee-private-note.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-employee-profile.contract.test.ts",
+      "to": "apps/api/src/services/admin/employees/admin-employee-profile.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-employee-profile.service.ts",
+      "to": "apps/api/src/services/admin/employees/admin-employee-profile.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-owner.service.ts",
+      "to": "apps/api/src/services/admin/platform-owners/admin-owner.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-permission-evaluator.ts",
+      "to": "apps/api/src/services/admin/access/admin-permission-evaluator.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-activity.contract.test.ts",
+      "to": "apps/api/src/services/admin/audit/admin-pharmacy-activity.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-activity.mongo.integration.test.ts",
+      "to": "apps/api/src/services/admin/audit/admin-pharmacy-activity.mongo.integration.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-activity.service.ts",
+      "to": "apps/api/src/services/admin/audit/admin-pharmacy-activity.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-detail-read.contract.test.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin-pharmacy-detail-read.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-detail-read.mongo.integration.test.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin-pharmacy-detail-read.mongo.integration.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-detail-read.service.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-owner-read.contract.test.ts",
+      "to": "apps/api/src/services/admin/owners/admin-pharmacy-owner-read.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-owner-read.service.ts",
+      "to": "apps/api/src/services/admin/owners/admin-pharmacy-owner-read.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-registry-read.contract.test.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin-pharmacy-registry-read.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-registry-read.mongo.integration.test.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin-pharmacy-registry-read.mongo.integration.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-pharmacy-registry-read.service.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin-pharmacy-registry-read.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin-settings.contract.test.ts",
+      "to": "apps/api/src/services/admin/settings/admin-settings.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/admin-settings.service.ts",
+      "to": "apps/api/src/services/admin/settings/admin-settings.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/admin.service.ts",
+      "to": "apps/api/src/services/admin/pharmacies/admin.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/auth-lifecycle.mongo.integration.test.ts",
+      "to": "apps/api/src/services/auth/auth-lifecycle.mongo.integration.test.ts",
+      "stage": "S8",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/auth-response-timing.test.ts",
+      "to": "apps/api/src/services/auth/auth-response-timing.test.ts",
+      "stage": "S8",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/auth-response-timing.ts",
+      "to": "apps/api/src/services/auth/auth-response-timing.ts",
+      "stage": "S8",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/auth-security-lifecycle.contract.test.ts",
+      "to": "apps/api/src/services/auth/auth-security-lifecycle.contract.test.ts",
+      "stage": "S8",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/auth.service.ts",
+      "to": "apps/api/src/services/auth/auth.service.ts",
+      "stage": "S8",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/cart-cleanup-deployment.contract.test.ts",
+      "to": "apps/api/src/services/cart/cart-cleanup-deployment.contract.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart-cleanup.service.ts",
+      "to": "apps/api/src/services/cart/cart-cleanup.service.ts",
+      "stage": "S4",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/cart-item-availability.test.ts",
+      "to": "apps/api/src/services/cart/cart-item-availability.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart-item-availability.ts",
+      "to": "apps/api/src/services/cart/cart-item-availability.ts",
+      "stage": "S4",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/cart-pharmacy-removal.contract.test.ts",
+      "to": "apps/api/src/services/cart/cart-pharmacy-removal.contract.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart-price-semantics.contract.test.ts",
+      "to": "apps/api/src/services/cart/cart-price-semantics.contract.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart-quantity-limits.contract.test.ts",
+      "to": "apps/api/src/services/cart/cart-quantity-limits.contract.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart-serialization.contract.test.ts",
+      "to": "apps/api/src/services/cart/cart-serialization.contract.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart-stock-semantics.test.ts",
+      "to": "apps/api/src/services/cart/cart-stock-semantics.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/cart.service.ts",
+      "to": "apps/api/src/services/cart/cart.service.ts",
+      "stage": "S4",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/checkout-concurrency.contract.test.ts",
+      "to": "apps/api/src/services/orders/checkout-concurrency.contract.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/checkout-group-fingerprint.test.ts",
+      "to": "apps/api/src/services/orders/checkout-group-fingerprint.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/checkout-group-fingerprint.ts",
+      "to": "apps/api/src/services/orders/checkout-group-fingerprint.ts",
+      "stage": "S6",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/client-service.contract.test.ts",
+      "to": "apps/api/src/services/clients/client-service.contract.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/client-service.mongo.integration.test.ts",
+      "to": "apps/api/src/services/clients/client-service.mongo.integration.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/client-tenant-isolation.mongo.integration.test.ts",
+      "to": "apps/api/src/services/clients/client-tenant-isolation.mongo.integration.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/client.service.ts",
+      "to": "apps/api/src/services/clients/client.service.ts",
+      "stage": "S4",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/default-pharmacy-client.service.ts",
+      "to": "apps/api/src/services/clients/default-pharmacy-client.service.ts",
+      "stage": "S4",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/default-pharmacy-client.stage-14-17.mongo.integration.test.ts",
+      "to": "apps/api/src/services/clients/default-pharmacy-client.stage-14-17.mongo.integration.test.ts",
+      "stage": "S4",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/manager-order-idempotency.mongo.integration.test.ts",
+      "to": "apps/api/src/services/orders/manager-order-idempotency.mongo.integration.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/manager-order-request-fingerprint.test.ts",
+      "to": "apps/api/src/services/orders/manager-order-request-fingerprint.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/manager-order-request-fingerprint.ts",
+      "to": "apps/api/src/services/orders/manager-order-request-fingerprint.ts",
+      "stage": "S6",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/order-client-search.contract.test.ts",
+      "to": "apps/api/src/services/orders/order-client-search.contract.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-client-snapshot.contract.test.ts",
+      "to": "apps/api/src/services/orders/order-client-snapshot.contract.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-identity.test.ts",
+      "to": "apps/api/src/services/orders/order-identity.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-lifecycle.mongo.integration.test.ts",
+      "to": "apps/api/src/services/orders/order-lifecycle.mongo.integration.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-pagination.contract.test.ts",
+      "to": "apps/api/src/services/orders/order-pagination.contract.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-pharmacy-snapshot.contract.test.ts",
+      "to": "apps/api/src/services/orders/order-pharmacy-snapshot.contract.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-status.test.ts",
+      "to": "apps/api/src/services/orders/order-status.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-tenant-isolation.mongo.integration.test.ts",
+      "to": "apps/api/src/services/orders/order-tenant-isolation.mongo.integration.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order-transaction-boundaries.contract.test.ts",
+      "to": "apps/api/src/services/orders/order-transaction-boundaries.contract.test.ts",
+      "stage": "S6",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/order.service.ts",
+      "to": "apps/api/src/services/orders/order.service.ts",
+      "stage": "S6",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/owned-pharmacy-document-scope.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/owned-pharmacy-document-scope.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/owned-pharmacy-registry-read.service.ts",
+      "to": "apps/api/src/services/pharmacies/owned-pharmacy-registry-read.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/owned-pharmacy-registry.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/owned-pharmacy-registry.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/owned-pharmacy-registry.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/owned-pharmacy-registry.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/owner-registration-stage-14-18-2.contract.test.ts",
+      "to": "apps/api/src/services/auth/owner-registration-stage-14-18-2.contract.test.ts",
+      "stage": "S8",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-admin-comment.service.ts",
+      "to": "apps/api/src/services/admin/pharmacies/pharmacy-admin-comment.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-admin-documents-comments.contract.test.ts",
+      "to": "apps/api/src/services/admin/pharmacies/pharmacy-admin-documents-comments.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-admin-domains.mongo.integration.test.ts",
+      "to": "apps/api/src/services/admin/pharmacies/pharmacy-admin-domains.mongo.integration.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-analytics.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-analytics.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-client-catalog.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-client-catalog.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-create.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-create.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-create.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-create.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-create.service.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-create.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-demo-bank-details.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-demo-bank-details.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-document-access.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-document-access.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-document.service.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-document.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-integration-actors.helper.ts",
+      "to": "apps/api/src/services/__tests__/fixtures/pharmacy-integration-actors.helper.ts",
+      "stage": "S2",
+      "kind": "test-helper"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-location-migration.contract.test.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-location-migration.contract.test.ts",
+      "stage": "S2",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-location-migration.service.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-location-migration.service.ts",
+      "stage": "S2",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-membership.service.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-membership.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-moderation-decisions.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-moderation-decisions.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-moderation-decisions.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-moderation-decisions.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-moderation-foundation.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-moderation-foundation.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-moderation-policy.audit.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-moderation-policy.audit.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-multi-membership.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-multi-membership.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-multi-membership.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-multi-membership.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-note-access.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-note-access.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-note-ownership.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-note-ownership.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-note.service.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-note.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-operational-status.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-operational-status.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-admin-comment.contract.test.ts",
+      "to": "apps/api/src/services/admin/owners/pharmacy-owner-admin-comment.contract.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-admin-comment.mongo.integration.test.ts",
+      "to": "apps/api/src/services/admin/owners/pharmacy-owner-admin-comment.mongo.integration.test.ts",
+      "stage": "S7",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-admin-comment.service.ts",
+      "to": "apps/api/src/services/admin/owners/pharmacy-owner-admin-comment.service.ts",
+      "stage": "S7",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-document.contract.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-document.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-document.mongo.integration.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-document.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-document.owner-account.contract.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-document.owner-account.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-document.service.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-document.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-documents-migration.mongo.integration.test.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-owner-documents-migration.mongo.integration.test.ts",
+      "stage": "S2",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-documents-migration.service.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-owner-documents-migration.service.ts",
+      "stage": "S2",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-documents-stage-14-18-3.contract.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-documents-stage-14-18-3.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-foundation-migration.service.test.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-owner-foundation-migration.service.test.ts",
+      "stage": "S2",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-foundation-migration.service.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-owner-foundation-migration.service.ts",
+      "stage": "S2",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-lifecycle.contract.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-lifecycle.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-lifecycle.mongo.integration.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-lifecycle.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-lifecycle.service.ts",
+      "to": "apps/api/src/services/owners/pharmacy-owner-lifecycle.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-registration-audit-migration.contract.test.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-owner-registration-audit-migration.contract.test.ts",
+      "stage": "S2",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-owner-registration-audit-migration.service.ts",
+      "to": "apps/api/src/services/migrations/pharmacy-owner-registration-audit-migration.service.ts",
+      "stage": "S2",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-profile-access.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-profile-access.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-profile-summary.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-profile-summary.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-public-bank-details.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-public-bank-details.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-stage-14-17-hardening.contract.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-stage-14-17-hardening.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-summary-access.mongo.integration.test.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy-summary-access.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-user-private-note.contract.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-user-private-note.contract.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-user-private-note.mongo.integration.test.ts",
+      "to": "apps/api/src/services/owners/pharmacy-user-private-note.mongo.integration.test.ts",
+      "stage": "S5",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy-user-private-note.service.ts",
+      "to": "apps/api/src/services/owners/pharmacy-user-private-note.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/pharmacy.service.ts",
+      "to": "apps/api/src/services/pharmacies/pharmacy.service.ts",
+      "stage": "S5",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/product-category-bootstrap.service.test.ts",
+      "to": "apps/api/src/services/catalog/product-category-bootstrap.service.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-category-bootstrap.service.ts",
+      "to": "apps/api/src/services/catalog/product-category-bootstrap.service.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/product-category-migration.service.ts",
+      "to": "apps/api/src/services/migrations/product-category-migration.service.ts",
+      "stage": "S2",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/product-category-relation.contract.test.ts",
+      "to": "apps/api/src/services/catalog/product-category-relation.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-category-test.helper.ts",
+      "to": "apps/api/src/services/catalog/__tests__/product-category-test.helper.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/product-category.service.ts",
+      "to": "apps/api/src/services/catalog/product-category.service.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/product-management-ownership.mongo.integration.test.ts",
+      "to": "apps/api/src/services/catalog/product-management-ownership.mongo.integration.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-management-scope.contract.test.ts",
+      "to": "apps/api/src/services/catalog/product-management-scope.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-mutation-atomicity.contract.test.ts",
+      "to": "apps/api/src/services/catalog/product-mutation-atomicity.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-mutation-atomicity.mongo.integration.test.ts",
+      "to": "apps/api/src/services/catalog/product-mutation-atomicity.mongo.integration.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-request-delete-atomicity.contract.test.ts",
+      "to": "apps/api/src/services/catalog/product-request-delete-atomicity.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-request-delete-atomicity.mongo.integration.test.ts",
+      "to": "apps/api/src/services/catalog/product-request-delete-atomicity.mongo.integration.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-request-workflow.contract.test.ts",
+      "to": "apps/api/src/services/catalog/product-request-workflow.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-request-workflow.mongo.integration.test.ts",
+      "to": "apps/api/src/services/catalog/product-request-workflow.mongo.integration.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/product-request.service.ts",
+      "to": "apps/api/src/services/catalog/product-request.service.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/product.service.ts",
+      "to": "apps/api/src/services/catalog/product.service.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/public-product-visibility.contract.test.ts",
+      "to": "apps/api/src/services/catalog/public-product-visibility.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/rate-limit-store.mongo.integration.test.ts",
+      "to": "apps/api/src/services/infrastructure/rate-limit-store.mongo.integration.test.ts",
+      "stage": "S2",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/rate-limit-store.service.ts",
+      "to": "apps/api/src/services/infrastructure/rate-limit-store.service.ts",
+      "stage": "S2",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/stock-movement-legacy-backfill.contract.test.ts",
+      "to": "apps/api/src/services/inventory/stock-movement-legacy-backfill.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/stock-movement-response.contract.test.ts",
+      "to": "apps/api/src/services/inventory/stock-movement-response.contract.test.ts",
+      "stage": "S3",
+      "kind": "test"
+    },
+    {
+      "from": "apps/api/src/services/stock.service.ts",
+      "to": "apps/api/src/services/inventory/stock.service.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    },
+    {
+      "from": "apps/api/src/services/stockMovement.service.ts",
+      "to": "apps/api/src/services/inventory/stockMovement.service.ts",
+      "stage": "S3",
+      "kind": "implementation"
+    }
+  ]
+}
