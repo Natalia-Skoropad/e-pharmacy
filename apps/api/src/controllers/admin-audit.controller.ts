@@ -9,9 +9,10 @@ import type {
 
 import {
   getAdminAuditLogService,
-  listAdminAuditActorsService,
   listAdminAuditLogsService,
-} from '../services/admin/audit/admin-audit.service';
+} from '../services/admin/audit/admin-audit-read.service';
+
+import { listAdminAuditActorsService } from '../services/admin/audit/admin-audit-actors.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

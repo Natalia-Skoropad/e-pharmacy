@@ -169,9 +169,10 @@ test('14.17: registry ratings use real-value contiguous buckets and AND all filt
 //===================================================================
 
 test('14.17: pharmacy-scoped activity cannot leak another pharmacy from the same owner', async () => {
-  const [activity, audit] = await Promise.all([
+  const [activity, auditScope, auditRead] = await Promise.all([
     read('services/admin/audit/admin-pharmacy-activity.service.ts'),
-    read('services/admin/audit/admin-audit.service.ts'),
+    read('services/admin/audit/admin-audit-filters.ts'),
+    read('services/admin/audit/admin-audit-read.service.ts'),
   ]);
 
   assert.match(
@@ -187,7 +188,7 @@ test('14.17: pharmacy-scoped activity cannot leak another pharmacy from the same
   );
 
   const scope =
-    audit
+    auditScope
       .split('export function buildPharmacyAuditScopeFilter(')[1]
       ?.split(
         '//==============================================================='
@@ -197,7 +198,7 @@ test('14.17: pharmacy-scoped activity cannot leak another pharmacy from the same
   assert.match(scope, /entityId: id/);
   assert.match(scope, /scopeEntityId: id/);
   assert.doesNotMatch(scope, /PHARMACY_OWNER/);
-  assert.match(audit, /filter\.\$and = \[exactPharmacyFilter\]/);
+  assert.match(auditRead, /filter\.\$and = \[exactPharmacyFilter\]/);
 });
 
 //===================================================================

@@ -31,7 +31,16 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'admin-audit.ts'],
   ['apps', 'api', 'src', 'models', 'adminAuditLog.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-audit.schema.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/audit/admin-audit.service.ts'],
+
+  ...[
+    'admin-audit-normalization.ts',
+    'admin-audit-write.service.ts',
+    'admin-audit-projection.ts',
+    'admin-audit-filters.ts',
+    'admin-audit-actors.service.ts',
+    'admin-audit-read.service.ts',
+  ].map((name) => ['apps', 'api', 'src', 'services', 'admin/audit', name]),
+
   [
     'apps',
     'api',
@@ -150,13 +159,44 @@ const auditSchema = await read(
 
 const routes = await read('apps', 'api', 'src', 'routes', 'admin.routes.ts');
 
-const auditService = await read(
-  'apps',
-  'api',
-  'src',
-  'services',
-  'admin/audit/admin-audit.service.ts'
-);
+//===================================================================
+
+const [auditWrite, auditNormalization, auditActors, auditRead] =
+  await Promise.all([
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/audit/admin-audit-write.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/audit/admin-audit-normalization.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/audit/admin-audit-actors.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/audit/admin-audit-read.service.ts'
+    ),
+  ]);
+
+//===================================================================
 
 const ownerRegistrationAuditMigration = await read(
   'apps',
@@ -383,7 +423,7 @@ assert.match(permissions, /audit:\s*\['view'\]/);
 
 assert.match(auditConstants, /ADMIN_AUDIT_SECTIONS/);
 assert.match(model, /section:\s*\{/);
-assert.match(auditService, /section,/);
+assert.match(auditWrite, /section,/);
 assert.match(pharmacyService, /ADMIN_AUDIT_SECTIONS\.PHARMACIES/);
 assert.match(productRequestService, /ADMIN_AUDIT_SECTIONS\.PRODUCT_REQUESTS/);
 assert.match(ownerService, /ADMIN_AUDIT_SECTIONS\.EMPLOYEES/);
@@ -440,11 +480,11 @@ assert.match(
 assert.doesNotMatch(routes, /\.(?:post|patch|put|delete)\(\s*['"]\/audit/);
 assert.doesNotMatch(routes, /post\(\s*['"]\/pharmacies['"]/);
 
-assert.match(auditService, /SENSITIVE_AUDIT_KEY_PATTERN/);
-assert.match(auditService, /picture\|pictureurl/);
-assert.match(auditService, /AdminAuditLog\.create/);
-assert.match(auditService, /actorNameSnapshot/);
-assert.match(auditService, /requestId/);
+assert.match(auditNormalization, /SENSITIVE_AUDIT_KEY_PATTERN/);
+assert.match(auditNormalization, /picture\|pictureurl/);
+assert.match(auditWrite, /AdminAuditLog\.create/);
+assert.match(auditWrite, /actorNameSnapshot/);
+assert.match(auditWrite, /requestId/);
 
 assert.match(pharmacyService, /appendAdminAuditLog/);
 assert.match(productRequestService, /appendAdminAuditLog/);
@@ -545,17 +585,17 @@ assert.match(
   /scopeEntityType and scopeEntityId must be provided together/
 );
 
-assert.match(auditService, /Pharmacy\.distinct\(['"]ownerId['"]\)/);
-assert.match(auditService, /AdminAuditLog\.aggregate/);
-assert.match(auditService, /\$group:\s*\{\s*_id:\s*['"]\$actorUserId['"]/);
-assert.match(auditService, /from:\s*User\.collection\.name/);
-assert.match(auditService, /from:\s*Pharmacy\.collection\.name/);
-assert.match(auditService, /foreignField:\s*'managerUserIds'/);
-assert.match(auditService, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_OWNER/);
-assert.match(auditService, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_EMPLOYEE/);
-assert.match(auditService, /filter\.scopeEntityType = query\.scopeEntityType/);
-assert.match(auditService, /filter\.scopeEntityId = query\.scopeEntityId/);
-assert.match(auditService, /query\.actorType/);
+assert.match(auditActors, /Pharmacy\.distinct\(['"]ownerId['"]\)/);
+assert.match(auditActors, /AdminAuditLog\.aggregate/);
+assert.match(auditActors, /\$group:\s*\{\s*_id:\s*['"]\$actorUserId['"]/);
+assert.match(auditActors, /from:\s*User\.collection\.name/);
+assert.match(auditActors, /from:\s*Pharmacy\.collection\.name/);
+assert.match(auditActors, /foreignField:\s*'managerUserIds'/);
+assert.match(auditActors, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_OWNER/);
+assert.match(auditActors, /ADMIN_AUDIT_ACTOR_TYPES\.PHARMACY_EMPLOYEE/);
+assert.match(auditRead, /filter\.scopeEntityType = query\.scopeEntityType/);
+assert.match(auditRead, /filter\.scopeEntityId = query\.scopeEntityId/);
+assert.match(auditRead, /query\.actorType/);
 
 assert.match(
   pharmacyService,
@@ -602,7 +642,10 @@ assert.doesNotMatch(
   /before:\s*\{[^}]*pictureUrl|after:\s*\{[^}]*pictureUrl/
 );
 
-assert.match(auditService, /photo\|photourl\|image\|imageurl\|base64\|dataurl/);
+assert.match(
+  auditNormalization,
+  /photo\|photourl\|image\|imageurl\|base64\|dataurl/
+);
 
 const registrationAudit = registerAuthService;
 

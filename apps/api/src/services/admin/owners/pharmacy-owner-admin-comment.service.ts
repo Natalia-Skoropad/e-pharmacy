@@ -15,7 +15,7 @@ import type { CreatePharmacyOwnerAdminCommentInput } from '../../../schemas/phar
 import type { PharmacyOwnerAdminCommentDto } from '../../../types/pharmacy-owner-admin-comment';
 
 import { httpError } from '../../../utils/httpError';
-import { appendAdminAuditLog } from '../audit/admin-audit.service';
+import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
 

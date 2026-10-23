@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { normalizeAdminAuditSnapshot } from './admin-audit.service';
+import { normalizeAdminAuditSnapshot } from './admin-audit-normalization';
 
 //===============================================================
 

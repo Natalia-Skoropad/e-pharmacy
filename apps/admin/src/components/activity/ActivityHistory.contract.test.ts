@@ -13,7 +13,10 @@ test('activity history employee search excludes private address data', async () 
   const [source, employeeDetailsSource, serviceSource] = await Promise.all([
     read('./ActivityHistory.tsx'),
     read('./ActivityEmployeeDetails/ActivityEmployeeDetails.tsx'),
-    read('../../../../api/src/services/admin/audit/admin-audit.service.ts'),
+
+    read(
+      '../../../../api/src/services/admin/audit/admin-audit-actors.service.ts'
+    ),
   ]);
 
   assert.match(source, /label="Search by employee"/);
@@ -178,7 +181,10 @@ test('activity date filter is bounded by the first audit log and the shared cale
   const [historySource, drawerSource, serviceSource] = await Promise.all([
     read('./ActivityHistory.tsx'),
     read('./ActivityFiltersDrawer.tsx'),
-    read('../../../../api/src/services/admin/audit/admin-audit.service.ts'),
+
+    read(
+      '../../../../api/src/services/admin/audit/admin-audit-read.service.ts'
+    ),
   ]);
 
   assert.match(

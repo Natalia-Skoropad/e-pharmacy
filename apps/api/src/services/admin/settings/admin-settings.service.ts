@@ -46,7 +46,7 @@ import type {
 import { httpError } from '../../../utils/httpError';
 import { isMongoDuplicateKeyError } from '../../../utils/mongoError';
 import { createFlexibleSearchRegExp } from '../../../utils/regexp';
-import { appendAdminAuditLog } from '../audit/admin-audit.service';
+import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 //===============================================================
 

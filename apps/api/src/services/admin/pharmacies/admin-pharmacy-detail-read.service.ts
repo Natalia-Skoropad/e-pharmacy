@@ -2,13 +2,15 @@ import { Types } from 'mongoose';
 
 import { USER_ROLES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
+
 import { Pharmacy } from '../../../models/pharmacy.model';
 import { Order } from '../../../models/order.model';
 import { ProductRequest } from '../../../models/productRequest.model';
 import { PharmacyAdminComment } from '../../../models/pharmacyAdminComment.model';
 import { AdminAuditLog } from '../../../models/adminAuditLog.model';
-import { buildPharmacyAuditScopeFilter } from '../audit/admin-audit.service';
 import { User } from '../../../models/user.model';
+
+import { buildPharmacyAuditScopeFilter } from '../audit/admin-audit-filters';
 
 import type {
   EditablePharmacyBankDetails,

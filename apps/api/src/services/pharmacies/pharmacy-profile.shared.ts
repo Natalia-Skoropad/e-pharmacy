@@ -8,7 +8,7 @@ import {
 
 import { PHARMACY_PROFILE_CONFLICT_ERROR_CODE } from '../../constants/pharmacy-profile';
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import type {
   PharmacyEntity,

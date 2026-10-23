@@ -34,7 +34,7 @@ import type { UserEntity } from '../../types/user';
 
 import { httpError } from '../../utils/httpError';
 
-import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 import { revokeAllUserSessionsService } from '../auth/auth-sessions.service';
 
 //===============================================================

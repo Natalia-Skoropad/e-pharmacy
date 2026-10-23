@@ -32,7 +32,7 @@ import {
   clonePendingModerationFields,
 } from '../../pharmacies/pharmacy-location';
 
-import { appendAdminAuditLog } from '../audit/admin-audit.service';
+import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
 
 import { reconcileAttachedPharmacyDocumentStorage } from '../../pharmacies/pharmacy-document.service';

@@ -23,7 +23,7 @@ import type { AuthUserResponse, UpdateProfileInput } from '../../types/auth';
 import { httpError } from '../../utils/httpError';
 import { isDuplicatePhoneError } from '../../utils/mongoError';
 import { toAuthUserResponse } from '../../utils/userResponse';
-import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import {
   normalizePhoneForLookup,

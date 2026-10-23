@@ -14,10 +14,8 @@ import { Pharmacy } from '../../../models/pharmacy.model';
 import { User } from '../../../models/user.model';
 import { hashPassword } from '../../../utils/password';
 
-import {
-  listAdminAuditActorsService,
-  listAdminAuditLogsService,
-} from './admin-audit.service';
+import { listAdminAuditActorsService } from './admin-audit-actors.service';
+import { listAdminAuditLogsService } from './admin-audit-read.service';
 
 import { updateUserProfileService } from '../../auth/auth-profile.service';
 
@@ -199,6 +197,7 @@ test(
       assert.ok(photoLog);
       assert.deepEqual(photoLog.before, { profilePhotoChanged: false });
       assert.deepEqual(photoLog.after, { profilePhotoChanged: true });
+
       assert.deepEqual(photoLog.changedFields, ['profilePhotoChanged']);
       assert.doesNotMatch(JSON.stringify(photoLog), /example\.com|pictureUrl/i);
 

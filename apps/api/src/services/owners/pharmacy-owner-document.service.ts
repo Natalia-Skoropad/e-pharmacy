@@ -22,7 +22,7 @@ import type { PharmacyOwnerDocumentMetadataDto } from '../../types/pharmacy-owne
 
 import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
 import { httpError } from '../../utils/httpError';
-import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 //===============================================================
 

@@ -92,7 +92,7 @@ test('owner saves and submissions record only safe metadata in the same transact
       read('services/pharmacies/pharmacy-owner-profile.service.ts'),
       read('services/pharmacies/pharmacy-moderation.service.ts'),
       read('services/pharmacies/pharmacy-profile.shared.ts'),
-      read('services/admin/audit/admin-audit.service.ts'),
+      read('services/admin/audit/admin-audit-write.service.ts'),
       read('models/adminAuditLog.model.ts'),
     ]);
 

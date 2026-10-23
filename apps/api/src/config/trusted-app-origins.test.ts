@@ -23,6 +23,7 @@ test('derives trusted origins from client, pharmacy and admin application URLs',
     'https://admin.example.com',
     'https://preview.example.com',
   ]);
+
   assert.equal(origins.includes('https://malicious.example.com'), false);
 });
 
@@ -46,13 +47,16 @@ test('rejects unsafe trusted-origin configuration at startup', () => {
   );
 });
 
-
 //===============================================================
 
 test('CORS and mutation-origin middleware use the same trusted-origin set', async () => {
   const [appSource, originSource] = await Promise.all([
     readFile(path.resolve(__dirname, '../app.ts'), 'utf8'),
-    readFile(path.resolve(__dirname, '../middlewares/origin.middleware.ts'), 'utf8'),
+
+    readFile(
+      path.resolve(__dirname, '../middlewares/origin.middleware.ts'),
+      'utf8'
+    ),
   ]);
 
   assert.match(appSource, /env\.TRUSTED_APP_ORIGINS\.includes\(origin\)/);

@@ -46,33 +46,34 @@ test('Stage 14.7 dedicated pharmacy activity uses permission, params and shared 
 //===============================================================
 
 test('Stage 14.7 exact scope covers legacy owner-scoped moderation and pharmacy-scoped comments without weakening Owner Activity', async () => {
-  const [audit, model, owner] = await Promise.all([
-    read('services/admin/audit/admin-audit.service.ts'),
+  const [auditScope, auditRead, model, owner] = await Promise.all([
+    read('services/admin/audit/admin-audit-filters.ts'),
+    read('services/admin/audit/admin-audit-read.service.ts'),
     read('models/adminAuditLog.model.ts'),
     read('services/admin/owners/admin-pharmacy-owner-activity.service.ts'),
   ]);
 
-  assert.match(audit, /function buildPharmacyAuditScopeFilter/);
-  assert.match(audit, /\{ pharmacyId: id \}/);
+  assert.match(auditScope, /function buildPharmacyAuditScopeFilter/);
+  assert.match(auditScope, /\{ pharmacyId: id \}/);
 
   assert.match(
-    audit,
+    auditScope,
     /entityType: ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY, entityId: id/
   );
 
   assert.match(
-    audit,
+    auditScope,
     /scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY,[\s\S]*?scopeEntityId: id/
   );
 
-  assert.match(audit, /filter\.\$and = \[exactPharmacyFilter\]/);
+  assert.match(auditRead, /filter\.\$and = \[exactPharmacyFilter\]/);
 
   assert.match(
-    audit,
+    auditRead,
     /scopeFilter: Record<string, unknown> = exactPharmacyFilter/
   );
 
-  assert.match(audit, /findOne\(\{[\s\S]*?buildPharmacyAuditScopeFilter/);
+  assert.match(auditRead, /findOne\(\{[\s\S]*?buildPharmacyAuditScopeFilter/);
   assert.match(model, /pharmacyId:[\s\S]*?type: String/);
   assert.match(model, /index\(\s*\{ pharmacyId: 1, createdAt: -1/);
 

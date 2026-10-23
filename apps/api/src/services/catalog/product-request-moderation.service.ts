@@ -18,7 +18,7 @@ import type { ProductRequestStatus } from '../../types/product-request';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicateProductArticleError } from '../../utils/mongoError';
-import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import {
   getProductCategoryReferenceMap,

@@ -9,7 +9,7 @@ import { User } from '../../../models/user.model';
 import type { AdminPharmacyOwnerActivityQuery } from '../../../schemas/admin-pharmacy-owner.schema';
 
 import { httpError } from '../../../utils/httpError';
-import { listAdminAuditLogsService } from '../audit/admin-audit.service';
+import { listAdminAuditLogsService } from '../audit/admin-audit-read.service';
 
 //===============================================================
 

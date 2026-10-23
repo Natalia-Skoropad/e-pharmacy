@@ -111,6 +111,18 @@ for (const entry of moves) {
 // Stage S10 replaces the already-relocated Order service with canonical domain modules.
 // Preserve the historical S1 relocation ledger without retaining a proxy file.
 const S10_REPLACEMENTS = new Map([
+  // S10.9: audit validation, atomic write, scoped query and actor lookup are canonical.
+  [
+    'apps/api/src/services/admin/audit/admin-audit.service.ts',
+    [
+      'apps/api/src/services/admin/audit/admin-audit-normalization.ts',
+      'apps/api/src/services/admin/audit/admin-audit-write.service.ts',
+      'apps/api/src/services/admin/audit/admin-audit-projection.ts',
+      'apps/api/src/services/admin/audit/admin-audit-filters.ts',
+      'apps/api/src/services/admin/audit/admin-audit-actors.service.ts',
+      'apps/api/src/services/admin/audit/admin-audit-read.service.ts',
+    ],
+  ],
   // S10.8: Client access, registry aggregation and purchase snapshots have distinct owners.
   [
     'apps/api/src/services/clients/client.service.ts',

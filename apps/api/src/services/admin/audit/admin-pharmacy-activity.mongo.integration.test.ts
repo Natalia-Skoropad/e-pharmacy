@@ -20,7 +20,7 @@ import {
   listAdminPharmacyActivityService,
 } from './admin-pharmacy-activity.service';
 
-import { listAdminAuditLogsService } from './admin-audit.service';
+import { listAdminAuditLogsService } from './admin-audit-read.service';
 
 //===============================================================
 

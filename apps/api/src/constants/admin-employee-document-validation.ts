@@ -3,6 +3,7 @@ export const ADMIN_EMPLOYEE_DOCUMENT_RULES = {
   maxSizeBytes: 10 * 1024 * 1024,
   maxTotalSizeBytes: 30 * 1024 * 1024,
   fileNameMaxLength: 180,
+
   mimeTypes: [
     'application/pdf',
     'application/msword',
@@ -11,6 +12,7 @@ export const ADMIN_EMPLOYEE_DOCUMENT_RULES = {
     'image/png',
     'image/webp',
   ],
+
   fileNamePattern: /\.(?:pdf|docx?|jpe?g|png|webp)$/i,
 } as const;
 

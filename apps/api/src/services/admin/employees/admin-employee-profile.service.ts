@@ -19,7 +19,7 @@ import type { AuthUserResponse } from '../../../types/auth';
 
 import { httpError } from '../../../utils/httpError';
 import { toAuthUserResponse } from '../../../utils/userResponse';
-import { appendAdminAuditLog } from '../audit/admin-audit.service';
+import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 //===============================================================
 

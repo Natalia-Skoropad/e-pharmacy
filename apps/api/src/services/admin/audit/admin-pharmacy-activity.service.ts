@@ -2,13 +2,15 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 import { Pharmacy } from '../../../models/pharmacy.model';
+
 import type { AdminAuditListQuery } from '../../../schemas/admin-audit.schema';
 
 import {
   getAdminAuditLogService,
-  listAdminAuditActorsService,
   listAdminAuditLogsService,
-} from './admin-audit.service';
+} from './admin-audit-read.service';
+
+import { listAdminAuditActorsService } from './admin-audit-actors.service';
 
 import { httpError } from '../../../utils/httpError';
 

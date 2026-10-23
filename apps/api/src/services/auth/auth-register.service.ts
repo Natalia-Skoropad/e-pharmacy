@@ -28,7 +28,7 @@ import { hashPassword } from '../../utils/password';
 import { logger } from '../../utils/logger';
 import { getInitialAccountStatusForRole } from '../../utils/account-status';
 
-import { appendAdminAuditLog } from '../admin/audit/admin-audit.service';
+import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 import { claimRegistrationOwnerDocuments } from '../pharmacies/pharmacy-document.service';
 
 import {

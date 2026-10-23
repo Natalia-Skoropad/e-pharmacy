@@ -20,5 +20,3 @@ export const DEMO_REGIONS: Record<string, string> = Object.freeze({
 export function createDemoPharmacyShortDescription(name: string): string {
   return `${name} — trusted everyday care, friendly service, and easy pickup.`;
 }
-
-//===============================================================

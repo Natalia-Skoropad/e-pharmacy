@@ -22,7 +22,7 @@ import type { AdminEmployeeDocumentMetadataDto } from '../../../types/admin-empl
 
 import { decodeAndVerifyDocumentUpload } from '../../../utils/documentUpload';
 import { httpError } from '../../../utils/httpError';
-import { appendAdminAuditLog } from '../audit/admin-audit.service';
+import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 //===============================================================
 

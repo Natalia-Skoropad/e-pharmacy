@@ -27,10 +27,12 @@ export function buildTrustedAppOrigins(options: {
 }): string[] {
   const normalized = [
     ...options.appUrls.map((value) => ({ value, source: 'application URL' })),
+
     ...(options.extraOrigins ?? []).map((value) => ({
       value,
       source: 'TRUSTED_APP_ORIGINS',
     })),
+
     ...(options.localOrigins ?? []).map((value) => ({
       value,
       source: 'local trusted origin',
@@ -40,6 +42,7 @@ export function buildTrustedAppOrigins(options: {
       (entry): entry is { value: string; source: string } =>
         typeof entry.value === 'string' && entry.value.trim().length > 0
     )
+
     .map((entry) => normalizeTrustedOrigin(entry.value.trim(), entry.source));
 
   return Array.from(new Set(normalized));
