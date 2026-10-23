@@ -17,33 +17,47 @@ const read = (...segments) =>
 
 //===================================================================
 
-const [pharmacyModel, migration, ownerReadService, lifecycleIntegration] =
-  await Promise.all([
-    read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
-    read(
-      'apps',
-      'api',
-      'src',
-      'services',
-      'migrations/pharmacy-owner-foundation-migration.service.ts'
-    ),
+const [
+  pharmacyModel,
+  migration,
+  ownerReadService,
+  ownerPharmaciesService,
+  lifecycleIntegration,
+] = await Promise.all([
+  read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
 
-    read(
-      'apps',
-      'api',
-      'src',
-      'services',
-      'admin/owners/admin-pharmacy-owner-read.service.ts'
-    ),
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'migrations/pharmacy-owner-foundation-migration.service.ts'
+  ),
 
-    read(
-      'apps',
-      'api',
-      'src',
-      'services',
-      'owners/pharmacy-owner-lifecycle.mongo.integration.test.ts'
-    ),
-  ]);
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/owners/admin-pharmacy-owner-registry.service.ts'
+  ),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/owners/admin-pharmacy-owner-pharmacies.service.ts'
+  ),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'owners/pharmacy-owner-lifecycle.mongo.integration.test.ts'
+  ),
+]);
 
 //===================================================================
 // Pharmacy.ownerId is many-to-one: schema field has no unique flag and all
@@ -98,11 +112,11 @@ assert.match(
 );
 
 assert.match(
-  ownerReadService,
+  ownerPharmaciesService,
   /listAdminPharmacyOwnerPharmaciesService[\s\S]*?Pharmacy\.aggregate/
 );
 
-assert.doesNotMatch(ownerReadService, /Pharmacy\.findOne\(\{\s*ownerId/);
+assert.doesNotMatch(ownerPharmaciesService, /Pharmacy\.findOne\(\{\s*ownerId/);
 
 //===================================================================
 // Mongo lifecycle coverage creates multiple pharmacies for one owner and
@@ -120,5 +134,7 @@ assert.match(
 
 assert.match(lifecycleIntegration, /blockedPharmacies, 2/);
 assert.match(lifecycleIntegration, /\['blocked', 'blocked'\]/);
+
+//===================================================================
 
 console.log('Owner multi-pharmacy foundation checks passed.');

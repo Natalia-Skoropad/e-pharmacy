@@ -20,6 +20,7 @@ const read = (...segments) =>
 const [
   apiRoutes,
   ownerReadService,
+  ownerPharmaciesService,
   ownerDocumentService,
   ownerDocumentRoutes,
   ownerCommentService,
@@ -41,10 +42,24 @@ const [
     'api',
     'src',
     'services',
-    'admin/owners/admin-pharmacy-owner-read.service.ts'
+    'admin/owners/admin-pharmacy-owner-registry.service.ts'
   ),
 
-  read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-document.service.ts'),
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/owners/admin-pharmacy-owner-pharmacies.service.ts'
+  ),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'owners/pharmacy-owner-document.service.ts'
+  ),
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
 
   read(
@@ -236,17 +251,17 @@ assert.match(
 );
 
 assert.match(
-  ownerReadService,
+  ownerPharmaciesService,
   /listAdminPharmacyOwnerPharmaciesService[\s\S]*?Pharmacy\.aggregate<OwnerPharmaciesAggregateResult>/
 );
 
 assert.doesNotMatch(
-  ownerReadService,
+  `${ownerReadService}\n${ownerPharmaciesService}`,
   /(?:Pharmacy|User)\.findOne\(\{[\s\S]{0,160}?ownerId/
 );
 
 assert.doesNotMatch(
-  ownerReadService,
+  `${ownerReadService}\n${ownerPharmaciesService}`,
   /(?:for\s*\([^)]*owner|owners\.map\()[\s\S]{0,350}?(?:Pharmacy|Order|Client)\.(?:find|findOne|countDocuments)/
 );
 
@@ -304,5 +319,7 @@ assert.doesNotMatch(
   ownerDocumentAuditSnapshot,
   /content|dataUrl|base64|sha256|binary|pictureUrl/i
 );
+
+//===================================================================
 
 console.log('Admin Pharmacy Owners hardening checks passed.');

@@ -48,16 +48,18 @@ import {
 
 import { updatePharmacyOwnerStatusByAdminService } from '../services/owners/pharmacy-owner-lifecycle.service';
 
+import { getAdminPharmacyOwnerDetailService } from '../services/admin/owners/admin-pharmacy-owner-detail.service';
+import { getAdminPharmacyOwnerSalesStatisticsService } from '../services/admin/owners/admin-pharmacy-owner-sales.service';
+import { listAdminPharmacyOwnerSessionsService } from '../services/admin/owners/admin-pharmacy-owner-sessions.service';
+
 import {
-  getAdminPharmacyOwnerDetailService,
-  getAdminPharmacyOwnerSalesStatisticsService,
-  listAdminPharmacyOwnerSessionsService,
   getAdminPharmacyOwnerStatisticsService,
-  listAdminPharmacyOwnerActivityService,
   listAdminPharmacyOwnerOptionsService,
-  listAdminPharmacyOwnerPharmaciesService,
   listAdminPharmacyOwnersService,
-} from '../services/admin/owners/admin-pharmacy-owner-read.service';
+} from '../services/admin/owners/admin-pharmacy-owner-registry.service';
+
+import { listAdminPharmacyOwnerActivityService } from '../services/admin/owners/admin-pharmacy-owner-activity.service';
+import { listAdminPharmacyOwnerPharmaciesService } from '../services/admin/owners/admin-pharmacy-owner-pharmacies.service';
 
 import {
   listAdminPharmaciesService,

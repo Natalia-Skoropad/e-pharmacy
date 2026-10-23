@@ -46,7 +46,7 @@ test('each caller retains its own access scope, before entering shared KPI proje
   );
 
   const owned = read('pharmacies/owned-pharmacy-registry-read.service.ts');
-  const owner = read('admin/owners/admin-pharmacy-owner-read.service.ts');
+  const owner = read('admin/owners/admin-pharmacy-owner-pharmacies.service.ts');
   const detail = read('admin/pharmacies/admin-pharmacy-detail-read.service.ts');
 
   for (const service of [admin, owned, owner, detail]) {
@@ -57,6 +57,15 @@ test('each caller retains its own access scope, before entering shared KPI proje
   assert.match(admin, /ownerSearchStages\(query\.ownerSearch\)/);
   assert.match(owned, /\.\.\.membershipStages\(userId\)/);
   assert.match(owned, /assertRegistryUser\(/);
-  assert.match(owner, /ownerId: ownerObjectId/);
+
+  const ownerFilters = read('admin/owners/admin-pharmacy-owner-filters.ts');
+
+  assert.match(owner, /buildPharmacyMatch\(ownerObjectId, query\)/);
+
+  assert.match(
+    ownerFilters,
+    /const match: Record<string, unknown> = \{ ownerId \}/
+  );
+
   assert.doesNotMatch(owned, /admin-pharmacy-owner-read\.service/);
 });

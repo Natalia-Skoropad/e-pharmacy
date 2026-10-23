@@ -12,7 +12,7 @@ import {
   listAdminPharmacyOptionsService,
 } from './admin-pharmacy-registry-read.service';
 
-import { listAdminPharmacyOwnerPharmaciesService } from '../owners/admin-pharmacy-owner-read.service';
+import { listAdminPharmacyOwnerPharmaciesService } from '../owners/admin-pharmacy-owner-pharmacies.service';
 
 //===============================================================
 

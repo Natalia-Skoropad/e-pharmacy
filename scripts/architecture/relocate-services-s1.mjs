@@ -111,6 +111,19 @@ for (const entry of moves) {
 // Stage S10 replaces the already-relocated Order service with canonical domain modules.
 // Preserve the historical S1 relocation ledger without retaining a proxy file.
 const S10_REPLACEMENTS = new Map([
+  // S10.6: Owner administration read paths are decomposed without a legacy facade.
+  [
+    'apps/api/src/services/admin/owners/admin-pharmacy-owner-read.service.ts',
+    [
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-filters.ts',
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-registry.service.ts',
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-detail.service.ts',
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-pharmacies.service.ts',
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-activity.service.ts',
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-sales.service.ts',
+      'apps/api/src/services/admin/owners/admin-pharmacy-owner-sessions.service.ts',
+    ],
+  ],
   // S10.5: Product Request reads, mutations and moderation use direct canonical owners.
   [
     'apps/api/src/services/catalog/product-request.service.ts',

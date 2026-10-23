@@ -23,10 +23,7 @@ test('one rating/status definition serves admin and owned registries, without me
   );
 
   const owned = read('../owned-pharmacy-registry-read.service.ts');
-
-  const owners = read(
-    '../../admin/owners/admin-pharmacy-owner-read.service.ts'
-  );
+  const owners = read('../../admin/owners/admin-pharmacy-owner-filters.ts');
 
   for (const service of [admin, owned, owners]) {
     assert.match(service, /registry\.constants/);
@@ -53,5 +50,5 @@ test('one rating/status definition serves admin and owned registries, without me
 
   assert.match(admin, /ownerSearchStages\(query\.ownerSearch\)/);
   assert.match(owned, /membershipStages\(userId\)/);
-  assert.match(owners, /ownerId: ownerObjectId/);
+  assert.match(owners, /const match: Record<string, unknown> = \{ ownerId \}/);
 });

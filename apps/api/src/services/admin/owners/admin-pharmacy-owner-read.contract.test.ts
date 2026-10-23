@@ -83,12 +83,14 @@ test('owner and pharmacy list queries are pagination-aware and include the Stage
 //===================================================================
 
 test('owner list aggregates linked pharmacy counts without application-level N+1 queries', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-registry.service.ts');
 
   assert.match(
     service,
-    /listAdminPharmacyOwnersService[\s\S]*?User\.aggregate<OwnerListAggregateResult>[\s\S]*?\$lookup:[\s\S]*?Pharmacy\.collection\.name/
+    /listAdminPharmacyOwnersService[\s\S]*?\$lookup:[\s\S]*?Pharmacy\.collection\.name/
   );
+
+  assert.match(service, /User\.aggregate<OwnerListAggregateResult>/);
 
   assert.doesNotMatch(
     service,
@@ -99,7 +101,7 @@ test('owner list aggregates linked pharmacy counts without application-level N+1
 //===================================================================
 
 test('operating and non-working pharmacy definitions match the canonical Stage 13 contract', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-filters.ts');
 
   assert.match(
     service,
@@ -181,7 +183,7 @@ test('active client aggregation keeps the pharmacy Clients domain definition inc
 //===================================================================
 
 test('owner linked-pharmacy rating filters have gapless numeric bounds', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-filters.ts');
 
   const shared = read(
     '../../pharmacies/registry/pharmacy-registry.constants.ts'
@@ -206,20 +208,24 @@ test('owner linked-pharmacy rating filters have gapless numeric bounds', () => {
 //===================================================================
 
 test('owner detail and linked-pharmacy reads support one owner with many pharmacies', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-detail.service.ts');
 
   assert.match(
     service,
     /getAdminPharmacyOwnerDetailService[\s\S]*?\$lookup:[\s\S]*?\$eq: \[['"]\$ownerId['"], ['"]\$\$ownerId['"]\][\s\S]*?\$group/
   );
 
+  const pharmaciesService = read(
+    './admin-pharmacy-owner-pharmacies.service.ts'
+  );
+
   assert.match(
-    service,
+    pharmaciesService,
     /listAdminPharmacyOwnerPharmaciesService[\s\S]*?Pharmacy\.aggregate<OwnerPharmaciesAggregateResult>/
   );
 
   assert.doesNotMatch(
-    service,
+    pharmaciesService,
     /listAdminPharmacyOwnerPharmaciesService[\s\S]*?Pharmacy\.findOne\(\{\s*ownerId/
   );
 });
@@ -227,7 +233,7 @@ test('owner detail and linked-pharmacy reads support one owner with many pharmac
 //===================================================================
 
 test('linked pharmacy admin read model exposes canonical location instead of address/city aliases', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-pharmacies.service.ts');
   const pipeline = read('../../pharmacies/registry/pharmacy-registry-query.ts');
 
   const contracts = read(
@@ -257,7 +263,7 @@ test('linked pharmacy admin read model exposes canonical location instead of add
 
 test('owner activity reuses canonical audit logs while preserving pharmacyOwners.view permission', () => {
   const routes = read('../../../routes/admin.routes.ts');
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-activity.service.ts');
 
   assert.match(
     routes,
@@ -273,7 +279,7 @@ test('owner activity reuses canonical audit logs while preserving pharmacyOwners
 //===================================================================
 
 test('owner detail bootstrap returns tab counts without loading tab lists', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-detail.service.ts');
 
   const contracts = read(
     '../../../../../../packages/types/src/admin/pharmacy-owner.ts'
@@ -305,7 +311,7 @@ test('owner detail bootstrap returns tab counts without loading tab lists', () =
 //===================================================================
 
 test('owner detail derives the last personal-data change from owner profile/photo audit rather than account status updates', () => {
-  const service = read('./admin-pharmacy-owner-read.service.ts');
+  const service = read('./admin-pharmacy-owner-detail.service.ts');
 
   assert.match(
     service,
@@ -315,9 +321,7 @@ test('owner detail derives the last personal-data change from owner profile/phot
   const detailSection = service.slice(
     service.indexOf('export async function getAdminPharmacyOwnerDetailService'),
 
-    service.indexOf(
-      'export async function listAdminPharmacyOwnerPharmaciesService'
-    )
+    service.length
   );
 
   assert.doesNotMatch(
