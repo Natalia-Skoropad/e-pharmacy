@@ -6,31 +6,47 @@ import test from 'node:test';
 //===================================================================
 
 test('public product endpoints are active-only while blocked lifecycle access is management-only', async () => {
-  const [routes, service, pharmacyService, publicCatalogService] =
-    await Promise.all([
-      readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
+  const [
+    routes,
+    service,
+    reviews,
+    projections,
+    pharmacyService,
+    publicCatalogService,
+  ] = await Promise.all([
+    readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
 
-      readFile(
-        resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
-        'utf8'
-      ),
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product-shared.ts'),
+      'utf8'
+    ),
 
-      readFile(
-        resolve(
-          process.cwd(),
-          'src/services/pharmacies/pharmacy-public-status.ts'
-        ),
-        'utf8'
-      ),
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product-reviews.service.ts'),
+      'utf8'
+    ),
 
-      readFile(
-        resolve(
-          process.cwd(),
-          'src/services/pharmacies/pharmacy-public-catalog.service.ts'
-        ),
-        'utf8'
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product-projections.ts'),
+      'utf8'
+    ),
+
+    readFile(
+      resolve(
+        process.cwd(),
+        'src/services/pharmacies/pharmacy-public-status.ts'
       ),
-    ]);
+      'utf8'
+    ),
+
+    readFile(
+      resolve(
+        process.cwd(),
+        'src/services/pharmacies/pharmacy-public-catalog.service.ts'
+      ),
+      'utf8'
+    ),
+  ]);
 
   assert.match(
     routes,
@@ -71,10 +87,10 @@ test('public product endpoints are active-only while blocked lifecycle access is
     /status:\s*scope === 'public' \? 'active' : \{ \$in: \['active', 'blocked'\] \}/
   );
 
-  assert.match(service, /getProductReviewsService[\s\S]*?status:\s*'active'/);
+  assert.match(reviews, /getProductReviewsService[\s\S]*?status:\s*'active'/);
 
   assert.match(
-    service,
+    reviews,
     /getManagedProductReviewsService[\s\S]*?getManagedProductDetailsService[\s\S]*?getApprovedProductReviews/
   );
 
@@ -84,12 +100,12 @@ test('public product endpoints are active-only while blocked lifecycle access is
   );
 
   assert.match(
-    service,
+    projections,
     /const PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES = \[[\s\S]*?PHARMACY_STATUSES\.ACTIVE[\s\S]*?PHARMACY_STATUSES\.ON_MODERATION[\s\S]*?\] as const/
   );
 
   assert.match(
-    service,
+    projections,
     /visibility\.mode === 'public'[\s\S]*?pharmacyFilter\.status = \{ \$in: PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES \}/
   );
 

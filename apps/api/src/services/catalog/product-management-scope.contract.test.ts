@@ -13,7 +13,10 @@ test('managed product reads bind pharmacy scope to the authenticated actor', asy
     ),
 
     readFile(
-      resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
+      resolve(
+        process.cwd(),
+        'src/services/catalog/product-management-access.ts'
+      ),
       'utf8'
     ),
 
@@ -58,7 +61,7 @@ test('managed product reads bind pharmacy scope to the authenticated actor', asy
 
 test('pharmacy management offer projection exposes operational fields only for the current pharmacy', async () => {
   const service = await readFile(
-    resolve(process.cwd(), 'src/services/catalog/product.service.ts'),
+    resolve(process.cwd(), 'src/services/catalog/product-projections.ts'),
     'utf8'
   );
 

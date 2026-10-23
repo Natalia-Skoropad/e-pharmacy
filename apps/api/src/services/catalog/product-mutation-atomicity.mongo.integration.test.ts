@@ -20,7 +20,7 @@ import { createManagerOrderService } from '../orders/order-manager-orders.servic
 import {
   addProductToMyPharmacyService,
   removeProductFromMyPharmacyService,
-} from './product.service';
+} from './product-management.service';
 
 //===================================================================
 

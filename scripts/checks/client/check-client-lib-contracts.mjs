@@ -26,7 +26,7 @@ assert.match(publicSlugValidation, /parsePublicEntitySlugId/);
 assert.match(backendPublicSlug, /buildPublicEntitySlugId/);
 
 const backendProductService = await read(
-  'apps/api/src/services/catalog/product.service.ts'
+  'apps/api/src/services/catalog/product-projections.ts'
 );
 
 const backendPharmacyService = await read(

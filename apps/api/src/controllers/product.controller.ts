@@ -15,23 +15,29 @@ import type {
 } from '../schemas/product.schema';
 
 import {
-  addProductToMyPharmacyService,
-  createProductReviewService,
   getFavoriteProductIdsService,
   getFavoriteProductsService,
-  getManagedProductDetailsService,
-  getManagedProductReviewsService,
-  getManagedProductStatisticsService,
-  getManagedProductsService,
   getProductDetailsService,
   getProductFiltersService,
+  getProductsService,
+  setFavoriteProductService,
+} from '../services/catalog/product-public.service';
+
+import {
+  addProductToMyPharmacyService,
+  getManagedProductDetailsService,
+  getManagedProductStatisticsService,
+  getManagedProductsService,
+  removeProductFromMyPharmacyService,
+} from '../services/catalog/product-management.service';
+
+import {
+  createProductReviewService,
+  getManagedProductReviewsService,
   getPendingProductReviewsService,
   getProductReviewsService,
-  getProductsService,
   moderateProductReviewService,
-  removeProductFromMyPharmacyService,
-  setFavoriteProductService,
-} from '../services/catalog/product.service';
+} from '../services/catalog/product-reviews.service';
 
 import { getProductStockMovementsService } from '../services/inventory/stockMovement.service';
 import type { ValidatedResponse } from '../types/validated-request';

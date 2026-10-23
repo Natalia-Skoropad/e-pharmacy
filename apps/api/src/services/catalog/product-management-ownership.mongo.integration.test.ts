@@ -14,8 +14,9 @@ import type { HttpError } from '../../types/errors';
 import {
   getManagedProductDetailsService,
   getManagedProductsService,
-  getProductDetailsService,
-} from './product.service';
+} from './product-management.service';
+
+import { getProductDetailsService } from './product-public.service';
 
 import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 

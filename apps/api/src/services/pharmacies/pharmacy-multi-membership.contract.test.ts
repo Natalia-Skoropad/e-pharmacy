@@ -68,7 +68,7 @@ test('all member-facing business modules use the centralized capability gate', a
   const checks: Record<string, string> = {
     'src/services/orders/order-access.ts': 'manage_orders',
     'src/services/clients/client.service.ts': 'read_clients',
-    'src/services/catalog/product.service.ts': 'manage_products',
+    'src/services/catalog/product-management-access.ts': 'manage_products',
 
     'src/services/catalog/product-request.service.ts':
       'manage_product_requests',
