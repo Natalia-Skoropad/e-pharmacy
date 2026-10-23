@@ -12,7 +12,7 @@ import { ProductRequest } from '../../models/productRequest.model';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 import { getManagedProductStatisticsService } from '../catalog/product-management.service';
-import { getProductRequestStatisticsService } from '../catalog/product-request.service';
+import { getProductRequestStatisticsService } from '../catalog/product-request-read.service';
 
 //===================================================================
 

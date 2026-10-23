@@ -179,7 +179,7 @@ const productRequestService = await read(
   'api',
   'src',
   'services',
-  'catalog/product-request.service.ts'
+  'catalog/product-request-moderation.service.ts'
 );
 
 const ownerService = await read(
@@ -402,7 +402,6 @@ for (const [key, action] of [
 ]) {
   assert.match(
     auditConstants,
-
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
 
@@ -471,7 +470,6 @@ for (const [key, action] of [
 ]) {
   assert.match(
     auditConstants,
-
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
 
@@ -503,7 +501,6 @@ for (const [key, action] of [
 ]) {
   assert.match(
     auditConstants,
-
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
 

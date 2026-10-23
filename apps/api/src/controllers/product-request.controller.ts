@@ -12,12 +12,15 @@ import type {
 import {
   createProductRequestService,
   deleteProductRequestService,
+  updateProductRequestService,
+} from '../services/catalog/product-request-management.service';
+
+import {
   getProductRequestArticleAvailabilityService,
   getProductRequestByIdService,
   getProductRequestStatisticsService,
   getProductRequestsService,
-  updateProductRequestService,
-} from '../services/catalog/product-request.service';
+} from '../services/catalog/product-request-read.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

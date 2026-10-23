@@ -69,9 +69,7 @@ test('all member-facing business modules use the centralized capability gate', a
     'src/services/orders/order-access.ts': 'manage_orders',
     'src/services/clients/client.service.ts': 'read_clients',
     'src/services/catalog/product-management-access.ts': 'manage_products',
-
-    'src/services/catalog/product-request.service.ts':
-      'manage_product_requests',
+    'src/services/catalog/product-request-access.ts': 'manage_product_requests',
 
     'src/services/inventory/stockMovement.service.ts': 'read_stock',
 

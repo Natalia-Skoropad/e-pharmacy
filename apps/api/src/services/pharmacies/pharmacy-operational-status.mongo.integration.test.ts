@@ -32,7 +32,7 @@ import {
   createProductRequestService,
   deleteProductRequestService,
   updateProductRequestService,
-} from '../catalog/product-request.service';
+} from '../catalog/product-request-management.service';
 
 //===================================================================
 

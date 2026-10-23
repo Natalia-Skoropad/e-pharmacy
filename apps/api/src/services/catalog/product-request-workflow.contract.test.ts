@@ -13,7 +13,10 @@ test('active product request articles have a storage-level uniqueness backstop',
     ),
 
     readFile(
-      resolve(process.cwd(), 'src/services/catalog/product-request.service.ts'),
+      resolve(
+        process.cwd(),
+        'src/services/catalog/product-request-management.service.ts'
+      ),
       'utf8'
     ),
   ]);
@@ -34,7 +37,10 @@ test('admin moderation endpoint owns the request transition graph and approved p
     readFile(resolve(process.cwd(), 'src/routes/admin.routes.ts'), 'utf8'),
 
     readFile(
-      resolve(process.cwd(), 'src/services/catalog/product-request.service.ts'),
+      resolve(
+        process.cwd(),
+        'src/services/catalog/product-request-moderation.service.ts'
+      ),
       'utf8'
     ),
   ]);

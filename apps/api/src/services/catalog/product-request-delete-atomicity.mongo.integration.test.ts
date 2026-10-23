@@ -10,7 +10,7 @@ import { User } from '../../models/user.model';
 import { PharmacyNote } from '../../models/pharmacyNote.model';
 import { ProductRequest } from '../../models/productRequest.model';
 
-import { deleteProductRequestService } from './product-request.service';
+import { deleteProductRequestService } from './product-request-management.service';
 import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 
 //===================================================================

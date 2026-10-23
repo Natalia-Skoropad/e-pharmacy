@@ -9,14 +9,16 @@ import { Pharmacy } from '../../models/pharmacy.model';
 import { User } from '../../models/user.model';
 import { Product } from '../../models/product.model';
 import { ProductRequest } from '../../models/productRequest.model';
+
 import type { HttpError } from '../../types/errors';
 
 import {
   createProductRequestService,
-  getProductRequestArticleAvailabilityService,
-  moderateProductRequestByAdminService,
   updateProductRequestService,
-} from './product-request.service';
+} from './product-request-management.service';
+
+import { getProductRequestArticleAvailabilityService } from './product-request-read.service';
+import { moderateProductRequestByAdminService } from './product-request-moderation.service';
 
 import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 

@@ -7,7 +7,10 @@ import test from 'node:test';
 
 test('product request deletion keeps request and private-note cleanup in one transaction', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/catalog/product-request.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/catalog/product-request-management.service.ts'
+    ),
     'utf8'
   );
 
@@ -48,7 +51,10 @@ test('product request deletion keeps request and private-note cleanup in one tra
 
 test('legacy request history is explicitly marked as inferred in the API projection', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/catalog/product-request.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/catalog/product-request-projection.ts'
+    ),
     'utf8'
   );
 
