@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { User } from '../../../models/user.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { User } from '../../../models/accounts/user.model';
+
 import { getAdminPharmacyDetailService } from './admin-pharmacy-detail-read.service';
 
 //===============================================================

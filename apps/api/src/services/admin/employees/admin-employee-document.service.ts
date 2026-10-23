@@ -14,7 +14,7 @@ import {
 } from '../../../constants/admin-audit';
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { AdminEmployeeDocument } from '../../../models/adminEmployeeDocument.model';
+import { AdminEmployeeDocument } from '../../../models/admin/employees/adminEmployeeDocument.model';
 
 import type { AdminEmployeeDocumentUploadInput } from '../../../schemas/admin-employee-document.schema';
 import type { AdminAuthorization } from '../../../types/admin-access';

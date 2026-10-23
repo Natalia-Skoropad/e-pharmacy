@@ -54,8 +54,8 @@ function extractPermissionCalls(source) {
 const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'admin-permissions.ts'],
   ['apps', 'api', 'src', 'constants', 'admin-access.ts'],
-  ['apps', 'api', 'src', 'models', 'adminAccess.model.ts'],
-  ['apps', 'api', 'src', 'models', 'adminAuthorizationState.model.ts'],
+  ['apps', 'api', 'src', 'models', 'admin', 'access', 'adminAccess.model.ts'],
+  ['apps', 'api', 'src', 'models', 'admin', 'access', 'adminAuthorizationState.model.ts'],
   ['apps', 'api', 'src', 'middlewares', 'admin-permission.middleware.ts'],
   ['apps', 'api', 'src', 'services', 'admin/access/admin-access.service.ts'],
   ['apps', 'api', 'src', 'services', 'admin/access/admin-permission-evaluator.ts'],
@@ -110,6 +110,8 @@ const accessModel = await read(
   'api',
   'src',
   'models',
+  'admin',
+  'access',
   'adminAccess.model.ts'
 );
 

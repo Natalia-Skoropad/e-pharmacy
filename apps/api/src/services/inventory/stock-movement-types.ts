@@ -5,7 +5,7 @@ import type {
   StockMovementEntity,
   StockMovementEventType,
   StockMovementSource,
-} from '../../models/stockMovement.model';
+} from '../../models/inventory/stockMovement.model';
 
 import type { OrderStatus } from '../../types/order';
 

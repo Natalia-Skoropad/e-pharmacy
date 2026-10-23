@@ -13,9 +13,9 @@ async function read(relativePath: string): Promise<string> {
 
 test('product domain stores ProductCategory relations instead of static category strings', async () => {
   const [productModel, requestModel, orderModel] = await Promise.all([
-    read('src/models/product.model.ts'),
-    read('src/models/productRequest.model.ts'),
-    read('src/models/order.model.ts'),
+    read('src/models/catalog/product.model.ts'),
+    read('src/models/catalog/productRequest.model.ts'),
+    read('src/models/orders/order.model.ts'),
   ]);
 
   assert.match(

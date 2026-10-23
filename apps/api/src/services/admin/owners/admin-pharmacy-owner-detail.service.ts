@@ -8,11 +8,11 @@ import {
 import { USER_ROLES, PHARMACY_STATUSES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 
-import { AdminAuditLog } from '../../../models/adminAuditLog.model';
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { PharmacyOwnerAdminComment } from '../../../models/pharmacyOwnerAdminComment.model';
-import { PharmacyOwnerDocument } from '../../../models/pharmacyOwnerDocument.model';
-import { User } from '../../../models/user.model';
+import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { PharmacyOwnerAdminComment } from '../../../models/admin/comments/pharmacyOwnerAdminComment.model';
+import { PharmacyOwnerDocument } from '../../../models/owners/pharmacyOwnerDocument.model';
+import { User } from '../../../models/accounts/user.model';
 
 import { httpError } from '../../../utils/httpError';
 

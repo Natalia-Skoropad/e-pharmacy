@@ -12,10 +12,10 @@ import {
 } from '../../constants/pharmacy-owner-document-validation';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { User } from '../../models/user.model';
-import { Pharmacy } from '../../models/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { USER_ROLES } from '../../constants/auth';
-import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
+import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 
 import type { PharmacyOwnerDocumentUploadInput } from '../../schemas/pharmacy-owner-document.schema';
 import type { PharmacyOwnerDocumentMetadataDto } from '../../types/pharmacy-owner-document';

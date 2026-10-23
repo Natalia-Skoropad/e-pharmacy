@@ -49,7 +49,7 @@ test('Stage 14.7 exact scope covers legacy owner-scoped moderation and pharmacy-
   const [auditScope, auditRead, model, owner] = await Promise.all([
     read('services/admin/audit/admin-audit-filters.ts'),
     read('services/admin/audit/admin-audit-read.service.ts'),
-    read('models/adminAuditLog.model.ts'),
+    read('models/audit/adminAuditLog.model.ts'),
     read('services/admin/owners/admin-pharmacy-owner-activity.service.ts'),
   ]);
 

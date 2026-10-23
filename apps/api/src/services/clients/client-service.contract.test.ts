@@ -15,7 +15,7 @@ async function readClientFile(fileName: string): Promise<string> {
 //===================================================================
 
 async function readOrderModel(): Promise<string> {
-  return readFile(resolve(process.cwd(), 'src/models/order.model.ts'), 'utf8');
+  return readFile(resolve(process.cwd(), 'src/models/orders/order.model.ts'), 'utf8');
 }
 
 //===================================================================

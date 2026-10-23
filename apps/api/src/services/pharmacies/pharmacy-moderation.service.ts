@@ -11,8 +11,8 @@ import {
   PHARMACY_PROFILE_LOCKED_ERROR_CODE,
 } from '../../constants/pharmacy-profile';
 
-import { Pharmacy } from '../../models/pharmacy.model';
-import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 
 import type {
   MyPharmacyProfileResponseDto,

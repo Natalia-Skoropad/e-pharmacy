@@ -8,12 +8,12 @@ import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
 import { AUTH_ERROR_CODES } from '../../constants/auth';
 import { PHARMACY_OWNER_LIFECYCLE_ERROR_CODES } from '../../constants/pharmacy-owner-lifecycle';
 
-import { AdminAuditLog } from '../../models/adminAuditLog.model';
-import { Client } from '../../models/client.model';
-import { Order } from '../../models/order.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { Session } from '../../models/session.model';
-import { User } from '../../models/user.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+import { Client } from '../../models/clients/client.model';
+import { Order } from '../../models/orders/order.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { Session } from '../../models/accounts/session.model';
+import { User } from '../../models/accounts/user.model';
 
 import { hashPassword } from '../../utils/password';
 

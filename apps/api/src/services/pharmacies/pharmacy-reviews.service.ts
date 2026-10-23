@@ -1,8 +1,8 @@
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { API_MESSAGES } from '../../constants/messages';
 import { REVIEW_ERROR_CODES } from '../../constants/reviews';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { PharmacyReview } from '../../models/pharmacyReview.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyReview } from '../../models/reviews/pharmacyReview.model';
 
 import type {
   PharmacyReviewResponseDto,

@@ -262,6 +262,7 @@ const categoryModel = await read(
   'api',
   'src',
   'models',
+  'catalog',
   'productCategory.model.ts'
 );
 

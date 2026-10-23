@@ -1,9 +1,9 @@
 import type { PipelineStage } from 'mongoose';
 
 import { USER_STATUSES } from '../../../constants/auth';
-import { Order } from '../../../models/order.model';
-import { ProductOffer } from '../../../models/productOffer.model';
-import { User } from '../../../models/user.model';
+import { Order } from '../../../models/orders/order.model';
+import { ProductOffer } from '../../../models/inventory/productOffer.model';
+import { User } from '../../../models/accounts/user.model';
 
 //===============================================================
 

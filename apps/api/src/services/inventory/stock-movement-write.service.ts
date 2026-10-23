@@ -1,6 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 
-import { StockMovement } from '../../models/stockMovement.model';
+import { StockMovement } from '../../models/inventory/stockMovement.model';
 
 import {
   assertStockBalance,

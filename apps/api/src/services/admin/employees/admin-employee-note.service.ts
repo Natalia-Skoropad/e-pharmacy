@@ -2,8 +2,9 @@ import { Types } from 'mongoose';
 
 import { ADMIN_ACCESS_ERROR_CODES } from '../../../constants/admin-access';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { AdminEmployeePrivateNote } from '../../../models/adminEmployeePrivateNote.model';
-import { User } from '../../../models/user.model';
+
+import { AdminEmployeePrivateNote } from '../../../models/admin/employees/adminEmployeePrivateNote.model';
+import { User } from '../../../models/accounts/user.model';
 
 import type { CreateAdminEmployeePrivateNoteInput } from '../../../schemas/admin-employee-note.schema';
 import type { AdminAuthorization } from '../../../types/admin-access';

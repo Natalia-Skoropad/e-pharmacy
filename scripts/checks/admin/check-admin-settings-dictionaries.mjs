@@ -105,8 +105,8 @@ const [
     ),
   ]).then((sources) => sources.join('\n')),
 
-  read('apps', 'api', 'src', 'models', 'productCategory.model.ts'),
-  read('apps', 'api', 'src', 'models', 'position.model.ts'),
+  read('apps', 'api', 'src', 'models', 'catalog', 'productCategory.model.ts'),
+  read('apps', 'api', 'src', 'models', 'settings', 'position.model.ts'),
 
   read(
     'apps',

@@ -1,8 +1,9 @@
 import { type PipelineStage, type Types } from 'mongoose';
 
-import { Order } from '../../models/order.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { Order } from '../../models/orders/order.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+
 import type { ClientsQuery } from '../../schemas/client.schema';
 
 import { buildClientFilterStages } from './client-registry-filters';

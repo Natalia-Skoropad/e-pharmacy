@@ -2,8 +2,10 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/product-request';
-import { Product } from '../../models/product.model';
-import { ProductRequest } from '../../models/productRequest.model';
+
+import { Product } from '../../models/catalog/product.model';
+import { ProductRequest } from '../../models/catalog/productRequest.model';
+
 import { httpError } from '../../utils/httpError';
 
 //===============================================================

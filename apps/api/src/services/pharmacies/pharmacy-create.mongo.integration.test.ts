@@ -4,9 +4,9 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { AdminAuditLog } from '../../models/adminAuditLog.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
 import { createPharmacyDraftService } from './pharmacy-create.service';
 
 //===============================================================

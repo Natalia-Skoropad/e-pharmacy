@@ -4,8 +4,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
 import type { HttpError } from '../../types/errors';
 
 import {

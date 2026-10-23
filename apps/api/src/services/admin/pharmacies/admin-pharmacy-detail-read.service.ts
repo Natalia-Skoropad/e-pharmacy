@@ -3,12 +3,12 @@ import { Types } from 'mongoose';
 import { USER_ROLES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { Order } from '../../../models/order.model';
-import { ProductRequest } from '../../../models/productRequest.model';
-import { PharmacyAdminComment } from '../../../models/pharmacyAdminComment.model';
-import { AdminAuditLog } from '../../../models/adminAuditLog.model';
-import { User } from '../../../models/user.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { Order } from '../../../models/orders/order.model';
+import { ProductRequest } from '../../../models/catalog/productRequest.model';
+import { PharmacyAdminComment } from '../../../models/admin/comments/pharmacyAdminComment.model';
+import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
+import { User } from '../../../models/accounts/user.model';
 
 import { buildPharmacyAuditScopeFilter } from '../audit/admin-audit-filters';
 

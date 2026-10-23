@@ -24,7 +24,7 @@ const [
   ownerPharmaciesService,
   lifecycleIntegration,
 ] = await Promise.all([
-  read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
+  read('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacy.model.ts'),
 
   read(
     'apps',

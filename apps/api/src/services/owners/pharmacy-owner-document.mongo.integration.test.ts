@@ -4,9 +4,9 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { Pharmacy } from '../../models/pharmacy.model';
-import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
-import { User } from '../../models/user.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
+import { User } from '../../models/accounts/user.model';
 
 import {
   deletePharmacyOwnerDocumentService,

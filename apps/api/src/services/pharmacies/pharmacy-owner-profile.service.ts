@@ -9,7 +9,7 @@ import {
   canPharmacyProfilePerformAction,
 } from '../../constants/pharmacy-profile';
 
-import { Pharmacy } from '../../models/pharmacy.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
 import type {
   CurrentPharmacySummaryResponseDto,

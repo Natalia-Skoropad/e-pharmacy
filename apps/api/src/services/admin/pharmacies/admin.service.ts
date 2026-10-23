@@ -11,10 +11,11 @@ import {
   type AdminAuditAction,
 } from '../../../constants/admin-audit';
 
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { AdminAuditLog } from '../../../models/adminAuditLog.model';
-import { User } from '../../../models/user.model';
-import { Order } from '../../../models/order.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
+import { User } from '../../../models/accounts/user.model';
+import { Order } from '../../../models/orders/order.model';
+
 import { PHARMACY_OWNER_ACTIVE_ORDER_STATUSES } from '../../../constants/pharmacy-owner-lifecycle';
 import { USER_ROLES, USER_STATUSES } from '../../../constants/auth';
 

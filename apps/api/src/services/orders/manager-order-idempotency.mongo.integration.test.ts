@@ -6,11 +6,11 @@ import mongoose, { Types } from 'mongoose';
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
 import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../../constants/order';
-import { Order } from '../../models/order.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { User } from '../../models/user.model';
+import { Order } from '../../models/orders/order.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { User } from '../../models/accounts/user.model';
 import type { HttpError } from '../../types/errors';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';

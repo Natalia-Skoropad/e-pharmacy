@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { Session } from '../models/session.model';
+
+import { Session } from '../models/accounts/session.model';
 
 //===============================================================
 

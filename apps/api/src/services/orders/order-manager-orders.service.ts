@@ -10,10 +10,11 @@ import {
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
 } from '../../constants/order';
 
-import { Order } from '../../models/order.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { User } from '../../models/user.model';
+import { Order } from '../../models/orders/order.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { User } from '../../models/accounts/user.model';
+
 import { httpError } from '../../utils/httpError';
 import { isMongoDuplicateKeyError } from '../../utils/mongoError';
 import { reserveOfferStock } from '../inventory/stock.service';

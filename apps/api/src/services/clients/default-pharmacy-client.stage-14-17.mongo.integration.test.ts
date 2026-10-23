@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
-import { Client } from '../../models/client.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { Client } from '../../models/clients/client.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+
 import { ensureDefaultPharmacyClient } from './default-pharmacy-client.service';
 
 //===================================================================

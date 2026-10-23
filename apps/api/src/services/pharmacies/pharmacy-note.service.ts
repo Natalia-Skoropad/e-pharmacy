@@ -1,11 +1,11 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { Order } from '../../models/order.model';
-import { PharmacyNote } from '../../models/pharmacyNote.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { ProductRequest } from '../../models/productRequest.model';
-import { User } from '../../models/user.model';
+import { Order } from '../../models/orders/order.model';
+import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { ProductRequest } from '../../models/catalog/productRequest.model';
+import { User } from '../../models/accounts/user.model';
 import { httpError } from '../../utils/httpError';
 
 import type { CreatePharmacyNoteInput } from '../../schemas/pharmacy-note.schema';

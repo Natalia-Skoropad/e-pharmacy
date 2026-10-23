@@ -56,7 +56,7 @@ test('draft contract validates provided fields without requiring location or ban
 test('idempotent creation and audit are transactional and tenant scoped', async () => {
   const [service, model] = await Promise.all([
     read('src/services/pharmacies/pharmacy-create.service.ts'),
-    read('src/models/pharmacy.model.ts'),
+    read('src/models/pharmacies/pharmacy.model.ts'),
   ]);
 
   assert.match(

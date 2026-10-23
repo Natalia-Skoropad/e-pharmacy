@@ -8,7 +8,7 @@ import {
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 import { normalizeSettingsDictionaryNameKey } from '../../../constants/settings-dictionary';
-import { Position } from '../../../models/position.model';
+import { Position } from '../../../models/settings/position.model';
 
 import type {
   CreateAdminSettingsDictionaryItemInput,

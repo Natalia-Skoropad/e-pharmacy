@@ -2,7 +2,7 @@ import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
-import { ProductOffer } from '../../models/productOffer.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
 
 import { recordStockMovement } from './stock-movement-write.service';
 

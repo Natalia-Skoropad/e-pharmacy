@@ -5,8 +5,8 @@ import { AUTH_ERROR_CODES, USER_STATUSES } from '../../constants/auth';
 import { API_MESSAGES } from '../../constants/messages';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 
-import { Session } from '../../models/session.model';
-import { User } from '../../models/user.model';
+import { Session } from '../../models/accounts/session.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { AuthSessionResult, AuthTokens } from '../../types/auth';
 

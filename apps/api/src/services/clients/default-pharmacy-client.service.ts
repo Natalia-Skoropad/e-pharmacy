@@ -1,9 +1,11 @@
 import { Types, type ClientSession } from 'mongoose';
 
 import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
-import { Client } from '../../models/client.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+
+import { Client } from '../../models/clients/client.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+
 import { hashPassword } from '../../utils/password';
 
 //===============================================================

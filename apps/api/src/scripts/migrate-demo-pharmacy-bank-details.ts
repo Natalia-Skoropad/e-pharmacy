@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { Pharmacy } from '../models/pharmacy.model';
+
+import { Pharmacy } from '../models/pharmacies/pharmacy.model';
 
 //===============================================================
 

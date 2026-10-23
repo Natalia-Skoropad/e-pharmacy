@@ -14,7 +14,7 @@ const sessions = readAuthModule('auth-sessions.service.ts');
 const passwords = readAuthModule('auth-password.service.ts');
 
 const userModelSource = readFileSync(
-  resolve(process.cwd(), 'src/models/user.model.ts'),
+  resolve(process.cwd(), 'src/models/accounts/user.model.ts'),
   'utf8'
 );
 

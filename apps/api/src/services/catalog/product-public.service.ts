@@ -3,10 +3,10 @@ import { Types } from 'mongoose';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { API_MESSAGES } from '../../constants/messages';
 
-import { Client } from '../../models/client.model';
-import { Product } from '../../models/product.model';
-import { ProductCategory } from '../../models/productCategory.model';
-import { ProductOffer } from '../../models/productOffer.model';
+import { Client } from '../../models/clients/client.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
 
 import type {
   ProductFiltersQuery,

@@ -4,11 +4,13 @@ import mongoose, { type Types } from 'mongoose';
 
 import { ADMIN_AUDIT_ACTIONS } from '../constants/admin-audit';
 import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/pharmacy-owner-document-validation';
-import { AdminAuditLog } from '../models/adminAuditLog.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { PharmacyDocumentFile } from '../models/pharmacyDocumentFile.model';
-import { PharmacyOwnerDocument } from '../models/pharmacyOwnerDocument.model';
-import { User } from '../models/user.model';
+
+import { AdminAuditLog } from '../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../models/pharmacies/pharmacy.model';
+import { PharmacyDocumentFile } from '../models/pharmacies/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../models/owners/pharmacyOwnerDocument.model';
+import { User } from '../models/accounts/user.model';
+
 import { decodeAndVerifyDocumentUpload } from '../utils/documentUpload';
 
 //===================================================================

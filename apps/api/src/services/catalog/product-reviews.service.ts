@@ -2,8 +2,8 @@ import { HTTP_STATUS } from '../../constants/httpStatus';
 import { REVIEW_ERROR_CODES } from '../../constants/reviews';
 import { API_MESSAGES } from '../../constants/messages';
 
-import { Product } from '../../models/product.model';
-import { ProductReview } from '../../models/productReview.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductReview } from '../../models/reviews/productReview.model';
 
 import type {
   ProductReviewResponseDto,

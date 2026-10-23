@@ -1,7 +1,7 @@
 import { Types, type ClientSession } from 'mongoose';
 
-import { Product } from '../../../models/product.model';
-import { ProductRequest } from '../../../models/productRequest.model';
+import { Product } from '../../../models/catalog/product.model';
+import { ProductRequest } from '../../../models/catalog/productRequest.model';
 
 import type { ProductCategoryUsageDto } from '../../../types/admin-settings';
 

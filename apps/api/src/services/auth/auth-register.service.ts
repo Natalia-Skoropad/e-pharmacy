@@ -11,8 +11,8 @@ import { AUTH_ERROR_CODES, USER_ROLES } from '../../constants/auth';
 import { API_MESSAGES } from '../../constants/messages';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 
-import { Client } from '../../models/client.model';
-import { User } from '../../models/user.model';
+import { Client } from '../../models/clients/client.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { AuthSessionResult, RegisterInput } from '../../types/auth';
 import type { SessionContext } from '../../types/session';

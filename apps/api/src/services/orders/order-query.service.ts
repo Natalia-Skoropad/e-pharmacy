@@ -2,8 +2,8 @@ import { Types } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth';
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { Order } from '../../models/order.model';
-import { User } from '../../models/user.model';
+import { Order } from '../../models/orders/order.model';
+import { User } from '../../models/accounts/user.model';
 import { httpError } from '../../utils/httpError';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 import { createSafeRegExp } from '../../utils/regexp';

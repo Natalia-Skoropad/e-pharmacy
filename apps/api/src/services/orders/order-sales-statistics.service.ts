@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth';
-import { Order } from '../../models/order.model';
-import { ProductCategory } from '../../models/productCategory.model';
+import { Order } from '../../models/orders/order.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 
 import type { OrderSalesStatisticsQuery } from '../../schemas/order.schema';

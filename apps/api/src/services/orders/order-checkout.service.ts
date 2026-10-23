@@ -12,12 +12,13 @@ import {
   PHARMACY_UNAVAILABLE_ERROR_CODE,
 } from '../../constants/order';
 
-import { Cart } from '../../models/cart.model';
-import { Order } from '../../models/order.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { Cart } from '../../models/cart/cart.model';
+import { Order } from '../../models/orders/order.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+
 import { httpError } from '../../utils/httpError';
 import { reserveOfferStock } from '../inventory/stock.service';
 import { getCartService } from '../cart/cart.service';

@@ -24,9 +24,9 @@ import {
   PHARMACY_OWNER_LIFECYCLE_ERROR_CODES,
 } from '../../constants/pharmacy-owner-lifecycle';
 
-import { Order } from '../../models/order.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { Order } from '../../models/orders/order.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { UpdateAdminPharmacyOwnerStatusInput } from '../../schemas/admin-pharmacy-owner.schema';
 import type { PharmacyEntity } from '../../types/pharmacy';

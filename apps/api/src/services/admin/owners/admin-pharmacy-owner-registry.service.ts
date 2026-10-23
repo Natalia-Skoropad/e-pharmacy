@@ -1,8 +1,9 @@
 import type { PipelineStage } from 'mongoose';
 
 import { USER_ROLES, USER_STATUSES } from '../../../constants/auth';
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { User } from '../../../models/user.model';
+
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { User } from '../../../models/accounts/user.model';
 
 import type {
   AdminPharmacyOwnerListQuery,

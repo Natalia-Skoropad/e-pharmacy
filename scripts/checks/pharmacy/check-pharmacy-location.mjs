@@ -53,7 +53,7 @@ const LEGACY_LOCATION_ALLOWLIST = new Set([
   'apps/api/src/services/migrations/pharmacy-location-migration.service.ts',
 
   // Historical order snapshots are immutable facts. New snapshots use location.
-  'apps/api/src/models/order.model.ts',
+  'apps/api/src/models/orders/order.model.ts',
   'apps/api/src/services/orders/order-shared.ts',
   'apps/api/src/types/order.ts',
 ]);
@@ -182,7 +182,7 @@ const [
   orderModel,
   orderService,
 ] = await Promise.all([
-  read('apps', 'api', 'src', 'models', 'pharmacy.model.ts'),
+  read('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacy.model.ts'),
   read('apps', 'api', 'src', 'schemas', 'pharmacy.schema.ts'),
 
   read(
@@ -215,7 +215,7 @@ const [
   ),
 
   read('apps', 'api', 'src', 'scripts', 'seed.ts'),
-  read('apps', 'api', 'src', 'models', 'order.model.ts'),
+  read('apps', 'api', 'src', 'models', 'orders', 'order.model.ts'),
   read('apps', 'api', 'src', 'services', 'orders/order-shared.ts'),
 ]);
 

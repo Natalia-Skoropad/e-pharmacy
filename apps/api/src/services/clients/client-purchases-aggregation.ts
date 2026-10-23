@@ -1,6 +1,7 @@
 import { type PipelineStage, type Types } from 'mongoose';
 
-import { Product } from '../../models/product.model';
+import { Product } from '../../models/catalog/product.model';
+
 import type { ClientProductsQuery } from '../../schemas/client.schema';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 import { createSafeRegExp } from '../../utils/regexp';

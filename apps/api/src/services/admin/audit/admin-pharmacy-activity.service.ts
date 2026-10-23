@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { Pharmacy } from '../../../models/pharmacy.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 
 import type { AdminAuditListQuery } from '../../../schemas/admin-audit.schema';
 

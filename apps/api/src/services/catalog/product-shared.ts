@@ -2,8 +2,10 @@ import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { API_MESSAGES } from '../../constants/messages';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
+
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+
 import type { ManagedProductsQuery } from '../../schemas/product.schema';
 
 import {

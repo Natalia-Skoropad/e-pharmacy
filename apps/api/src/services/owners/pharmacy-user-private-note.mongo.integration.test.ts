@@ -4,8 +4,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { PharmacyUserPrivateNote } from '../../models/pharmacyUserPrivateNote.model';
-import { User } from '../../models/user.model';
+import { PharmacyUserPrivateNote } from '../../models/owners/pharmacyUserPrivateNote.model';
+import { User } from '../../models/accounts/user.model';
 
 import {
   createMyPharmacyUserPrivateNoteService,

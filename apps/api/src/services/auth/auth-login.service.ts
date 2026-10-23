@@ -3,7 +3,7 @@ import { AUTH_ERROR_CODES, USER_STATUSES } from '../../constants/auth';
 import { API_MESSAGES } from '../../constants/messages';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 
-import { User } from '../../models/user.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { AuthSessionResult, LoginInput } from '../../types/auth';
 import type { SessionContext } from '../../types/session';

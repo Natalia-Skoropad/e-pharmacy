@@ -12,19 +12,20 @@ import {
   USER_STATUSES,
 } from '../constants/auth';
 
-import { Product } from '../models/product.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { User } from '../models/user.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { ProductReview } from '../models/productReview.model';
-import { PharmacyReview } from '../models/pharmacyReview.model';
-import { Order } from '../models/order.model';
-import { Client } from '../models/client.model';
-import { Cart } from '../models/cart.model';
-import { StockMovement } from '../models/stockMovement.model';
-import { PharmacyNote } from '../models/pharmacyNote.model';
-import { ProductRequest } from '../models/productRequest.model';
-import { ProductCategory } from '../models/productCategory.model';
+import { Product } from '../models/catalog/product.model';
+import { Pharmacy } from '../models/pharmacies/pharmacy.model';
+import { User } from '../models/accounts/user.model';
+import { ProductOffer } from '../models/inventory/productOffer.model';
+import { ProductReview } from '../models/reviews/productReview.model';
+import { PharmacyReview } from '../models/reviews/pharmacyReview.model';
+import { Order } from '../models/orders/order.model';
+import { Client } from '../models/clients/client.model';
+import { Cart } from '../models/cart/cart.model';
+import { StockMovement } from '../models/inventory/stockMovement.model';
+import { PharmacyNote } from '../models/pharmacies/pharmacyNote.model';
+import { ProductRequest } from '../models/catalog/productRequest.model';
+import { ProductCategory } from '../models/catalog/productCategory.model';
+
 import { hashPassword } from '../utils/password';
 import { ensureDefaultPharmacyClient } from '../services/clients/default-pharmacy-client.service';
 import { ensureInitialProductCategories } from '../services/catalog/product-category-bootstrap.service';

@@ -5,10 +5,11 @@ import mongoose, { Types } from 'mongoose';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+
 import type { HttpError } from '../../types/errors';
 
 import {

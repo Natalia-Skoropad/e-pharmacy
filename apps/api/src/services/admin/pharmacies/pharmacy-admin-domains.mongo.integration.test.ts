@@ -3,11 +3,11 @@ import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
-import { AdminAuditLog } from '../../../models/adminAuditLog.model';
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { PharmacyAdminComment } from '../../../models/pharmacyAdminComment.model';
-import { PharmacyDocumentFile } from '../../../models/pharmacyDocumentFile.model';
-import { User } from '../../../models/user.model';
+import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { PharmacyAdminComment } from '../../../models/admin/comments/pharmacyAdminComment.model';
+import { PharmacyDocumentFile } from '../../../models/pharmacies/pharmacyDocumentFile.model';
+import { User } from '../../../models/accounts/user.model';
 
 import {
   createPharmacyAdminCommentService,

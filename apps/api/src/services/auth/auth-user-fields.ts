@@ -4,7 +4,8 @@ import type { HydratedDocument } from 'mongoose';
 import { AUTH_ERROR_CODES } from '../../constants/auth';
 import { API_MESSAGES } from '../../constants/messages';
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { User } from '../../models/user.model';
+
+import { User } from '../../models/accounts/user.model';
 
 import type { UserEntity } from '../../types/user';
 

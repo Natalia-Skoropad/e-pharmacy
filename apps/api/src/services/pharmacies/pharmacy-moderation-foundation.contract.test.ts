@@ -14,7 +14,7 @@ test('feedback endpoint is permissioned and cannot silently modify public status
   const [routes, admin, schema] = await Promise.all([
     read('routes/admin.routes.ts'),
     read('services/admin/pharmacies/admin.service.ts'),
-    read('models/pharmacy.model.ts'),
+    read('models/pharmacies/pharmacy.model.ts'),
   ]);
 
   assert.match(

@@ -4,7 +4,7 @@ import { ADMIN_AUDIT_ENTITY_TYPES } from '../../../constants/admin-audit';
 import { USER_ROLES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 
-import { User } from '../../../models/user.model';
+import { User } from '../../../models/accounts/user.model';
 
 import type { AdminPharmacyOwnerActivityQuery } from '../../../schemas/admin-pharmacy-owner.schema';
 

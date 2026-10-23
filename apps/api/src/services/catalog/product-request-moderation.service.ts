@@ -9,8 +9,8 @@ import {
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/product-request';
 
-import { ProductRequest } from '../../models/productRequest.model';
-import { Product } from '../../models/product.model';
+import { ProductRequest } from '../../models/catalog/productRequest.model';
+import { Product } from '../../models/catalog/product.model';
 
 import type { ProductRequestModerationInput } from '../../schemas/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';

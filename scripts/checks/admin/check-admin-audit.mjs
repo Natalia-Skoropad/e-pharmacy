@@ -29,7 +29,7 @@ const exists = async (...segments) => {
 
 const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'admin-audit.ts'],
-  ['apps', 'api', 'src', 'models', 'adminAuditLog.model.ts'],
+  ['apps', 'api', 'src', 'models', 'audit', 'adminAuditLog.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-audit.schema.ts'],
 
   ...[
@@ -154,6 +154,7 @@ const model = await read(
   'api',
   'src',
   'models',
+  'audit',
   'adminAuditLog.model.ts'
 );
 

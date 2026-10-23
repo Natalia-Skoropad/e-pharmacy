@@ -10,13 +10,14 @@ import {
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
 } from '../../constants/order';
 
-import { Cart } from '../../models/cart.model';
-import { Order } from '../../models/order.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { ProductCategory } from '../../models/productCategory.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { User } from '../../models/user.model';
+import { Cart } from '../../models/cart/cart.model';
+import { Order } from '../../models/orders/order.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { User } from '../../models/accounts/user.model';
+
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 

@@ -1,4 +1,4 @@
-import { ProductCategory } from '../../../models/productCategory.model';
+import { ProductCategory } from '../../../models/catalog/productCategory.model';
 
 import type { AdminSettingsDictionaryListQuery } from '../../../schemas/admin-settings.schema';
 import type { AdminProductCategoriesListDto } from '../../../types/admin-settings';

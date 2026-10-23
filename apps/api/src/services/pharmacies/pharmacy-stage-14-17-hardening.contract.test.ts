@@ -236,7 +236,7 @@ test('14.17: document ownership and Admin comments are isolated from Owner/Pharm
     await Promise.all([
       read('services/pharmacies/pharmacy-document.service.ts'),
       read('services/admin/pharmacies/pharmacy-admin-comment.service.ts'),
-      read('models/pharmacyAdminComment.model.ts'),
+      read('models/admin/comments/pharmacyAdminComment.model.ts'),
       read('routes/pharmacy.routes.ts'),
       read('routes/pharmacy-owner.routes.ts'),
     ]);
@@ -266,9 +266,9 @@ test('14.17: document ownership and Admin comments are isolated from Owner/Pharm
 
 test('14.17: audit and default-client indexes are safe on repeated deployment', async () => {
   const [audit, user, comment] = await Promise.all([
-    read('models/adminAuditLog.model.ts'),
-    read('models/user.model.ts'),
-    read('models/pharmacyAdminComment.model.ts'),
+    read('models/audit/adminAuditLog.model.ts'),
+    read('models/accounts/user.model.ts'),
+    read('models/admin/comments/pharmacyAdminComment.model.ts'),
   ]);
 
   assert.match(audit, /name: 'audit_entity_mutation_key_unique'/);

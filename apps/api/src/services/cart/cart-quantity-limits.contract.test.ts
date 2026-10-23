@@ -12,7 +12,7 @@ test('cart add never silently clamps requested quantity and enforces the shared 
       'utf8'
     ),
 
-    readFile(path.resolve(process.cwd(), 'src/models/cart.model.ts'), 'utf8'),
+    readFile(path.resolve(process.cwd(), 'src/models/cart/cart.model.ts'), 'utf8'),
   ]);
 
   assert.doesNotMatch(

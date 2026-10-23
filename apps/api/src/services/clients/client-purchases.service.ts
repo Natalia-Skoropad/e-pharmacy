@@ -1,8 +1,9 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { Order } from '../../models/order.model';
-import { User } from '../../models/user.model';
+
+import { Order } from '../../models/orders/order.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { ClientProductsQuery } from '../../schemas/client.schema';
 

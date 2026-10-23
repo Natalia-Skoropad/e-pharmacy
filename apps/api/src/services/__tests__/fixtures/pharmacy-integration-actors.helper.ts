@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-import { User } from '../../../models/user.model';
+import { User } from '../../../models/accounts/user.model';
 
 //===================================================================
 

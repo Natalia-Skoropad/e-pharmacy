@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-import type { StockMovementEventType } from '../../models/stockMovement.model';
+import type { StockMovementEventType } from '../../models/inventory/stockMovement.model';
 import type { OrderStatus } from '../../types/order';
 
 import { getMovementValueQuantity } from './stock-movement-balance';

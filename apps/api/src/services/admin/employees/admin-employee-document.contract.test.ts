@@ -12,7 +12,7 @@ const serviceSource = readSource(
   'services/admin/employees/admin-employee-document.service.ts'
 );
 
-const modelSource = readSource('models/adminEmployeeDocument.model.ts');
+const modelSource = readSource('models/admin/employees/adminEmployeeDocument.model.ts');
 const routeSource = readSource('routes/admin.routes.ts');
 const controllerSource = readSource('controllers/admin-employee.controller.ts');
 

@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-import { Pharmacy } from '../../models/pharmacy.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { pharmacyLocationDraftSchema } from '../../schemas/shared/pharmacy-location.schema';
 
 import type {

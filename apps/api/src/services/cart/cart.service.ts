@@ -12,10 +12,10 @@ import { API_MESSAGES } from '../../constants/messages';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
 
-import { Cart } from '../../models/cart.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { Pharmacy } from '../../models/pharmacy.model';
+import { Cart } from '../../models/cart/cart.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
 import { httpError } from '../../utils/httpError';
 import { getCartItemUnavailableReason } from './cart-item-availability';

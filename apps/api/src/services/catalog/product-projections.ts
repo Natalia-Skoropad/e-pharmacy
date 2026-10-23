@@ -2,10 +2,10 @@ import { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../../constants/auth';
 
-import { Client } from '../../models/client.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { Order } from '../../models/order.model';
+import { Client } from '../../models/clients/client.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { Order } from '../../models/orders/order.model';
 
 import type {
   ProductCardSummaryResponseDto,

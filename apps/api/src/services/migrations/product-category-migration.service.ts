@@ -2,9 +2,10 @@ import { Types, type Connection } from 'mongoose';
 
 import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../../constants/product-category';
 
-import { Product } from '../../models/product.model';
-import { ProductCategory } from '../../models/productCategory.model';
-import { ProductRequest } from '../../models/productRequest.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
+import { ProductRequest } from '../../models/catalog/productRequest.model';
+
 import { ensureInitialProductCategories } from '../catalog/product-category-bootstrap.service';
 
 //===============================================================

@@ -8,7 +8,7 @@ import test from 'node:test';
 const readOrderFile = (name: string) =>
   readFile(path.resolve(process.cwd(), 'src/services/orders', name), 'utf8');
 
-const modelPath = path.resolve(process.cwd(), 'src/models/order.model.ts');
+const modelPath = path.resolve(process.cwd(), 'src/models/orders/order.model.ts');
 const seedPath = path.resolve(process.cwd(), 'src/scripts/seed.ts');
 
 //===============================================================

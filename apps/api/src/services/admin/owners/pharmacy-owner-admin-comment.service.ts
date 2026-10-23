@@ -8,8 +8,9 @@ import {
 
 import { USER_ROLES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { PharmacyOwnerAdminComment } from '../../../models/pharmacyOwnerAdminComment.model';
-import { User } from '../../../models/user.model';
+
+import { PharmacyOwnerAdminComment } from '../../../models/admin/comments/pharmacyOwnerAdminComment.model';
+import { User } from '../../../models/accounts/user.model';
 
 import type { CreatePharmacyOwnerAdminCommentInput } from '../../../schemas/pharmacy-owner-admin-comment.schema';
 import type { PharmacyOwnerAdminCommentDto } from '../../../types/pharmacy-owner-admin-comment';

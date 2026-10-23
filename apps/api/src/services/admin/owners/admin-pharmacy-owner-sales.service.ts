@@ -3,8 +3,8 @@ import { Types } from 'mongoose';
 import { USER_ROLES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 
-import { Pharmacy } from '../../../models/pharmacy.model';
-import { User } from '../../../models/user.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { User } from '../../../models/accounts/user.model';
 
 import type { OrderSalesStatisticsQuery } from '../../../schemas/order.schema';
 import { httpError } from '../../../utils/httpError';

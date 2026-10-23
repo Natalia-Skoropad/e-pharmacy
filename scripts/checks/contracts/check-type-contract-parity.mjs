@@ -589,7 +589,7 @@ const [
 
   readSource('packages', 'config', 'src', 'cart', 'limits.ts'),
   readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
-  readSource('apps', 'api', 'src', 'models', 'product.model.ts'),
+  readSource('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
   readSource('apps', 'api', 'src', 'types', 'product.ts'),
 
   readSource(
@@ -601,7 +601,7 @@ const [
   ),
 
   readSource('apps', 'api', 'src', 'types', 'order.ts'),
-  readSource('apps', 'api', 'src', 'models', 'pharmacyNote.model.ts'),
+  readSource('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacyNote.model.ts'),
   readSource('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   readSource('apps', 'api', 'src', 'constants', 'cart.ts'),
 ]);

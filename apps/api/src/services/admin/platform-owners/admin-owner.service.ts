@@ -12,9 +12,11 @@ import {
 } from '../../../constants/admin-audit';
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { AdminAccess } from '../../../models/adminAccess.model';
-import { AdminAuthorizationState } from '../../../models/adminAuthorizationState.model';
-import { User } from '../../../models/user.model';
+
+import { AdminAccess } from '../../../models/admin/access/adminAccess.model';
+import { AdminAuthorizationState } from '../../../models/admin/access/adminAuthorizationState.model';
+import { User } from '../../../models/accounts/user.model';
+
 import { httpError } from '../../../utils/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 import { getAdminAuthorizationService } from '../access/admin-access.service';

@@ -3,10 +3,10 @@ import { Types, type PipelineStage } from 'mongoose';
 import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { AdminAuditLog } from '../../models/adminAuditLog.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
-import { User } from '../../models/user.model';
+import { User } from '../../models/accounts/user.model';
 
 import type {
   OwnedPharmacyRegistryListQuery,

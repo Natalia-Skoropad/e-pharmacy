@@ -11,7 +11,7 @@ import {
 } from '../../../constants/admin-permissions';
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { AdminAccess } from '../../../models/adminAccess.model';
+import { AdminAccess } from '../../../models/admin/access/adminAccess.model';
 
 import type {
   AdminAccessResponseDto,

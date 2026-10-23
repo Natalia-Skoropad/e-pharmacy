@@ -93,7 +93,7 @@ test('owner saves and submissions record only safe metadata in the same transact
       read('services/pharmacies/pharmacy-moderation.service.ts'),
       read('services/pharmacies/pharmacy-profile.shared.ts'),
       read('services/admin/audit/admin-audit-write.service.ts'),
-      read('models/adminAuditLog.model.ts'),
+      read('models/audit/adminAuditLog.model.ts'),
     ]);
 
   assert.match(ownerProfile, /PHARMACY_PROFILE_UPDATED/);

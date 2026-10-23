@@ -3,10 +3,10 @@ import { Types } from 'mongoose';
 import { PHARMACY_STATUSES } from '../../constants/auth';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { API_MESSAGES } from '../../constants/messages';
-import { Client } from '../../models/client.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
+import { Client } from '../../models/clients/client.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
 
 import type {
   PharmacyCardSummaryResponseDto,

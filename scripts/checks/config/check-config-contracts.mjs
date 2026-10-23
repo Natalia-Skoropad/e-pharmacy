@@ -79,10 +79,10 @@ const [
   parse('packages', 'config', 'src', 'presentation', 'product-requests.ts'),
   parse('packages', 'config', 'src', 'presentation', 'users.ts'),
   parse('apps', 'api', 'src', 'constants', 'auth.ts'),
-  parse('apps', 'api', 'src', 'models', 'product.model.ts'),
+  parse('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
   parse('apps', 'api', 'src', 'constants', 'product-request-validation.ts'),
   parse('apps', 'api', 'src', 'types', 'order.ts'),
-  parse('apps', 'api', 'src', 'models', 'pharmacyNote.model.ts'),
+  parse('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacyNote.model.ts'),
   parse('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   parse('apps', 'api', 'src', 'constants', 'cart.ts'),
 

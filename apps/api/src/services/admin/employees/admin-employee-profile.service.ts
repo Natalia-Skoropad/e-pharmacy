@@ -11,7 +11,8 @@ import {
 import { AUTH_ERROR_CODES, USER_ROLES } from '../../../constants/auth';
 import { HTTP_STATUS } from '../../../constants/httpStatus';
 import { API_MESSAGES } from '../../../constants/messages';
-import { User } from '../../../models/user.model';
+
+import { User } from '../../../models/accounts/user.model';
 
 import type { UpdateMyAdminEmployeeProfileInput } from '../../../schemas/admin-employee-profile.schema';
 import type { AdminAuthorization } from '../../../types/admin-access';

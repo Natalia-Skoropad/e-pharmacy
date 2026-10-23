@@ -80,7 +80,7 @@ test('Stage 14.6: comment APIs are scoped to admin role and permissions, never o
 //===================================================================
 
 test('Stage 14.6: independent comment collection uses unique idempotency and body-free pharmacy audit', () => {
-  const model = read('src/models/pharmacyAdminComment.model.ts');
+  const model = read('src/models/admin/comments/pharmacyAdminComment.model.ts');
 
   const service = read(
     'src/services/admin/pharmacies/pharmacy-admin-comment.service.ts'

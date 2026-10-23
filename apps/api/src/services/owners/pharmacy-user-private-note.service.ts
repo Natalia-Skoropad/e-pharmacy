@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PharmacyUserPrivateNote } from '../../models/pharmacyUserPrivateNote.model';
-import { User } from '../../models/user.model';
+import { PharmacyUserPrivateNote } from '../../models/owners/pharmacyUserPrivateNote.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { CreatePharmacyUserPrivateNoteInput } from '../../schemas/pharmacy-user-private-note.schema';
 

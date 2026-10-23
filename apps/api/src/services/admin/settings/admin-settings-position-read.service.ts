@@ -1,4 +1,4 @@
-import { Position } from '../../../models/position.model';
+import { Position } from '../../../models/settings/position.model';
 
 import type { AdminSettingsDictionaryListQuery } from '../../../schemas/admin-settings.schema';
 import type { AdminPositionsListDto } from '../../../types/admin-settings';

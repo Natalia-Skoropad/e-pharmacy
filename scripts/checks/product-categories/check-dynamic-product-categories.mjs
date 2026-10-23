@@ -140,9 +140,9 @@ const [
   productCategoryAlias,
   frontendCategoryConfig,
 ] = await Promise.all([
-  read('apps', 'api', 'src', 'models', 'product.model.ts'),
-  read('apps', 'api', 'src', 'models', 'productRequest.model.ts'),
-  read('apps', 'api', 'src', 'models', 'order.model.ts'),
+  read('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
+  read('apps', 'api', 'src', 'models', 'catalog', 'productRequest.model.ts'),
+  read('apps', 'api', 'src', 'models', 'orders', 'order.model.ts'),
   read('apps', 'api', 'src', 'schemas', 'product.schema.ts'),
   read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   read('apps', 'api', 'src', 'schemas', 'product-request.schema.ts'),

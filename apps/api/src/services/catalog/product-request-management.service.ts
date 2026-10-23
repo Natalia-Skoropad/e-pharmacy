@@ -4,8 +4,8 @@ import { HTTP_STATUS } from '../../constants/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/product-request';
 import { isPharmacyOperationalStatus } from '../../constants/pharmacy-status';
 
-import { PharmacyNote } from '../../models/pharmacyNote.model';
-import { ProductRequest } from '../../models/productRequest.model';
+import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
+import { ProductRequest } from '../../models/catalog/productRequest.model';
 
 import type { ProductRequestFormInput } from '../../schemas/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';

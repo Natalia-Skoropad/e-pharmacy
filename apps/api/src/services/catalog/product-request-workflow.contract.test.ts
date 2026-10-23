@@ -8,7 +8,7 @@ import test from 'node:test';
 test('active product request articles have a storage-level uniqueness backstop', async () => {
   const [model, service] = await Promise.all([
     readFile(
-      resolve(process.cwd(), 'src/models/productRequest.model.ts'),
+      resolve(process.cwd(), 'src/models/catalog/productRequest.model.ts'),
       'utf8'
     ),
 

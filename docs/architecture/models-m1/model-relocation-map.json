@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "scope": "apps/api/src/models/",
+  "moves": [
+    {
+      "from": "apps/api/src/models/adminAccess.model.ts",
+      "to": "apps/api/src/models/admin/access/adminAccess.model.ts",
+      "domain": "admin/access"
+    },
+    {
+      "from": "apps/api/src/models/adminAuditLog.model.ts",
+      "to": "apps/api/src/models/audit/adminAuditLog.model.ts",
+      "domain": "audit"
+    },
+    {
+      "from": "apps/api/src/models/adminAuthorizationState.model.ts",
+      "to": "apps/api/src/models/admin/access/adminAuthorizationState.model.ts",
+      "domain": "admin/access"
+    },
+    {
+      "from": "apps/api/src/models/adminEmployeeDocument.model.ts",
+      "to": "apps/api/src/models/admin/employees/adminEmployeeDocument.model.ts",
+      "domain": "admin/employees"
+    },
+    {
+      "from": "apps/api/src/models/adminEmployeePrivateNote.model.ts",
+      "to": "apps/api/src/models/admin/employees/adminEmployeePrivateNote.model.ts",
+      "domain": "admin/employees"
+    },
+    {
+      "from": "apps/api/src/models/cart.model.ts",
+      "to": "apps/api/src/models/cart/cart.model.ts",
+      "domain": "cart"
+    },
+    {
+      "from": "apps/api/src/models/client.model.ts",
+      "to": "apps/api/src/models/clients/client.model.ts",
+      "domain": "clients"
+    },
+    {
+      "from": "apps/api/src/models/model-validation.contract.test.ts",
+      "to": "apps/api/src/models/__tests__/model-validation.contract.test.ts",
+      "domain": "__tests__"
+    },
+    {
+      "from": "apps/api/src/models/order.model.ts",
+      "to": "apps/api/src/models/orders/order.model.ts",
+      "domain": "orders"
+    },
+    {
+      "from": "apps/api/src/models/pharmacy.model.ts",
+      "to": "apps/api/src/models/pharmacies/pharmacy.model.ts",
+      "domain": "pharmacies"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyAdminComment.model.ts",
+      "to": "apps/api/src/models/admin/comments/pharmacyAdminComment.model.ts",
+      "domain": "admin/comments"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyDocumentFile.model.ts",
+      "to": "apps/api/src/models/pharmacies/pharmacyDocumentFile.model.ts",
+      "domain": "pharmacies"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyNote.model.ts",
+      "to": "apps/api/src/models/pharmacies/pharmacyNote.model.ts",
+      "domain": "pharmacies"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyOwnerAdminComment.model.ts",
+      "to": "apps/api/src/models/admin/comments/pharmacyOwnerAdminComment.model.ts",
+      "domain": "admin/comments"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyOwnerDocument.model.ts",
+      "to": "apps/api/src/models/owners/pharmacyOwnerDocument.model.ts",
+      "domain": "owners"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyRegistrationUploadSession.model.ts",
+      "to": "apps/api/src/models/owners/pharmacyRegistrationUploadSession.model.ts",
+      "domain": "owners"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyReview.model.ts",
+      "to": "apps/api/src/models/reviews/pharmacyReview.model.ts",
+      "domain": "reviews"
+    },
+    {
+      "from": "apps/api/src/models/pharmacyUserPrivateNote.model.ts",
+      "to": "apps/api/src/models/owners/pharmacyUserPrivateNote.model.ts",
+      "domain": "owners"
+    },
+    {
+      "from": "apps/api/src/models/position.model.test.ts",
+      "to": "apps/api/src/models/settings/position.model.test.ts",
+      "domain": "settings"
+    },
+    {
+      "from": "apps/api/src/models/position.model.ts",
+      "to": "apps/api/src/models/settings/position.model.ts",
+      "domain": "settings"
+    },
+    {
+      "from": "apps/api/src/models/product.model.ts",
+      "to": "apps/api/src/models/catalog/product.model.ts",
+      "domain": "catalog"
+    },
+    {
+      "from": "apps/api/src/models/productCategory.model.test.ts",
+      "to": "apps/api/src/models/catalog/productCategory.model.test.ts",
+      "domain": "catalog"
+    },
+    {
+      "from": "apps/api/src/models/productCategory.model.ts",
+      "to": "apps/api/src/models/catalog/productCategory.model.ts",
+      "domain": "catalog"
+    },
+    {
+      "from": "apps/api/src/models/productOffer.model.ts",
+      "to": "apps/api/src/models/inventory/productOffer.model.ts",
+      "domain": "inventory"
+    },
+    {
+      "from": "apps/api/src/models/productRequest.model.ts",
+      "to": "apps/api/src/models/catalog/productRequest.model.ts",
+      "domain": "catalog"
+    },
+    {
+      "from": "apps/api/src/models/productReview.model.ts",
+      "to": "apps/api/src/models/reviews/productReview.model.ts",
+      "domain": "reviews"
+    },
+    {
+      "from": "apps/api/src/models/rateLimitBucket.model.ts",
+      "to": "apps/api/src/models/infrastructure/rateLimitBucket.model.ts",
+      "domain": "infrastructure"
+    },
+    {
+      "from": "apps/api/src/models/session.model.ts",
+      "to": "apps/api/src/models/accounts/session.model.ts",
+      "domain": "accounts"
+    },
+    {
+      "from": "apps/api/src/models/stockMovement.model.ts",
+      "to": "apps/api/src/models/inventory/stockMovement.model.ts",
+      "domain": "inventory"
+    },
+    {
+      "from": "apps/api/src/models/user.model.ts",
+      "to": "apps/api/src/models/accounts/user.model.ts",
+      "domain": "accounts"
+    }
+  ]
+}

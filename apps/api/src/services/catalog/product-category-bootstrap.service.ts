@@ -4,7 +4,7 @@ import {
   normalizeProductCategoryNameKey,
 } from '../../constants/product-category';
 
-import { ProductCategory } from '../../models/productCategory.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
 
 //===============================================================
 

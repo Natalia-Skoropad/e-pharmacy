@@ -28,7 +28,7 @@ const exists = async (...segments) => {
 
 const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'settings-dictionary.ts'],
-  ['apps', 'api', 'src', 'models', 'position.model.ts'],
+  ['apps', 'api', 'src', 'models', 'settings', 'position.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'],
 
   ...[
@@ -150,6 +150,7 @@ const positionModel = await read(
   'api',
   'src',
   'models',
+  'settings',
   'position.model.ts'
 );
 
@@ -158,6 +159,7 @@ const categoryModel = await read(
   'api',
   'src',
   'models',
+  'catalog',
   'productCategory.model.ts'
 );
 
@@ -166,6 +168,8 @@ const adminAccessModel = await read(
   'api',
   'src',
   'models',
+  'admin',
+  'access',
   'adminAccess.model.ts'
 );
 

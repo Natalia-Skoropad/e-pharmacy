@@ -7,9 +7,10 @@ import {
 } from '../../constants/admin-audit';
 
 import { USER_ROLES } from '../../constants/auth';
-import { AdminAuditLog } from '../../models/adminAuditLog.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
 
 import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacy';
 

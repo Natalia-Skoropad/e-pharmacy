@@ -9,7 +9,7 @@ import {
 } from '../../../constants/admin-audit';
 
 import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { AdminAuditLog } from '../../../models/adminAuditLog.model';
+import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 
 import type { AdminAuditListQuery } from '../../../schemas/admin-audit.schema';
 

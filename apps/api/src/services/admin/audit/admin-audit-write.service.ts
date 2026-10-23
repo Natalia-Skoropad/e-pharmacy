@@ -11,8 +11,8 @@ import {
   type AdminAuditSection,
 } from '../../../constants/admin-audit';
 
-import { AdminAuditLog } from '../../../models/adminAuditLog.model';
-import { User } from '../../../models/user.model';
+import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
+import { User } from '../../../models/accounts/user.model';
 
 import type { AdminAuditSnapshot } from '../../../types/admin-audit';
 

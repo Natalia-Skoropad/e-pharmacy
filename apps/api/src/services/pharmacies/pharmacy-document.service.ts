@@ -4,11 +4,13 @@ import mongoose, { Types, type ClientSession } from 'mongoose';
 import { HTTP_STATUS } from '../../constants/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacy-document-validation';
 import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/pharmacy-owner-document-validation';
-import { PharmacyDocumentFile } from '../../models/pharmacyDocumentFile.model';
-import { PharmacyOwnerDocument } from '../../models/pharmacyOwnerDocument.model';
-import { Pharmacy } from '../../models/pharmacy.model';
+import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+
 import type { AdminPharmacyDocumentDto } from '../../types/admin-pharmacy-document';
-import { PharmacyRegistrationUploadSession } from '../../models/pharmacyRegistrationUploadSession.model';
+
+import { PharmacyRegistrationUploadSession } from '../../models/owners/pharmacyRegistrationUploadSession.model';
 
 import type {
   PharmacyDocumentUploadInput,

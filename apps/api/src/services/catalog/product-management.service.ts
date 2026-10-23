@@ -5,9 +5,9 @@ import { HTTP_STATUS } from '../../constants/httpStatus';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/product-management';
 import { API_MESSAGES } from '../../constants/messages';
 
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
-import { Order } from '../../models/order.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { Order } from '../../models/orders/order.model';
 
 import type { ManagedProductsQuery } from '../../schemas/product.schema';
 

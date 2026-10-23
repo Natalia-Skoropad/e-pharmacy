@@ -34,7 +34,7 @@ const [
   read('apps/api/src/services/pharmacies/pharmacy-owner-profile.service.ts'),
   read('apps/api/src/services/pharmacies/pharmacy-moderation.service.ts'),
   read('packages/types/src/auth/payloads.ts'),
-  read('apps/api/src/models/pharmacyDocumentFile.model.ts'),
+  read('apps/api/src/models/pharmacies/pharmacyDocumentFile.model.ts'),
   read('packages/config/src/pharmacies/error-codes.ts'),
   read('apps/api/src/constants/pharmacy-profile.ts'),
 

@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import { ProductCategory } from '../../../models/productCategory.model';
+import { ProductCategory } from '../../../models/catalog/productCategory.model';
 import { ensureInitialProductCategories } from '../product-category-bootstrap.service';
 
 //===============================================================

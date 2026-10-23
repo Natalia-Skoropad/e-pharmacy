@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
-import { Product } from '../../models/product.model';
-import { ProductOffer } from '../../models/productOffer.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
 
 import {
   getProductCategoryReferenceMap,

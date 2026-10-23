@@ -8,7 +8,7 @@ import test from 'node:test';
 const readSource = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), 'src', relativePath), 'utf8');
 
-const modelSource = readSource('models/adminEmployeePrivateNote.model.ts');
+const modelSource = readSource('models/admin/employees/adminEmployeePrivateNote.model.ts');
 const schemaSource = readSource('schemas/admin-employee-note.schema.ts');
 
 const serviceSource = readSource(

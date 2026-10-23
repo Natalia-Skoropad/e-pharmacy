@@ -61,6 +61,7 @@ const PHARMACY_NOTE_MODEL_SOURCE = path.join(
   'api',
   'src',
   'models',
+  'pharmacies',
   'pharmacyNote.model.ts'
 );
 
@@ -79,6 +80,7 @@ const ORDER_MODEL_SOURCE = path.join(
   'api',
   'src',
   'models',
+  'orders',
   'order.model.ts'
 );
 

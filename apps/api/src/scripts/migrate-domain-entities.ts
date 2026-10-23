@@ -1,11 +1,12 @@
 import mongoose, { Types } from 'mongoose';
 
 import { env } from '../config/env';
-import { Client } from '../models/client.model';
-import { Pharmacy } from '../models/pharmacy.model';
-import { PharmacyReview } from '../models/pharmacyReview.model';
-import { ProductOffer } from '../models/productOffer.model';
-import { ProductReview } from '../models/productReview.model';
+
+import { Client } from '../models/clients/client.model';
+import { Pharmacy } from '../models/pharmacies/pharmacy.model';
+import { PharmacyReview } from '../models/reviews/pharmacyReview.model';
+import { ProductOffer } from '../models/inventory/productOffer.model';
+import { ProductReview } from '../models/reviews/productReview.model';
 
 //===============================================================
 

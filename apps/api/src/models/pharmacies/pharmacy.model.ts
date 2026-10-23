@@ -1,0 +1,652 @@
+import { Schema, model, models } from 'mongoose';
+
+import {
+  ADDRESS_PATTERN,
+  BANK_NAME_MAX_LENGTH,
+  BANK_NAME_MIN_LENGTH,
+  BANK_NAME_PATTERN,
+  BANK_RECIPIENT_NAME_MAX_LENGTH,
+  BANK_RECIPIENT_NAME_MIN_LENGTH,
+  BANK_RECIPIENT_NAME_PATTERN,
+  EMAIL_PATTERN,
+  IBAN_PATTERN,
+  MAX_REVIEW_RATING,
+  PAYMENT_PURPOSE_MAX_LENGTH,
+  PAYMENT_PURPOSE_PATTERN,
+  PHONE_PATTERN,
+  PHARMACY_NAME_MAX_LENGTH,
+  PHARMACY_NAME_MIN_LENGTH,
+  PHARMACY_NAME_PATTERN,
+  PICTURE_DATA_URL_MAX_LENGTH,
+  PICTURE_HTTP_URL_MAX_LENGTH,
+  SEARCH_TEXT_PATTERN,
+  TAX_ID_PATTERN,
+  TEXT_EDITOR_MAX_LENGTH,
+  TEXT_EDITOR_PATTERN,
+  USER_ADDRESS_MAX_LENGTH,
+  USER_ADDRESS_MIN_LENGTH,
+  USER_EMAIL_MAX_LENGTH,
+  USER_PHONE_MAX_LENGTH,
+  USER_PHONE_MIN_LENGTH,
+  USER_SEARCH_MAX_LENGTH,
+  VALIDATION_MESSAGES,
+  WORKING_HOURS_MAX_LENGTH,
+  WORKING_HOURS_PATTERN,
+  isHttpUrl,
+  isPictureDataUrl,
+} from '../../constants/validation';
+
+import { PHARMACY_STATUSES } from '../../constants/auth';
+
+import {
+  PHARMACY_DOCUMENT_RULES,
+  PHARMACY_DOCUMENT_VALIDATION_MESSAGES,
+} from '../../constants/pharmacy-document-validation';
+
+import { getWorkingHoursValidationIssue } from '../../utils/validation/working-hours';
+
+import type {
+  PharmacyEntity,
+  PharmacyVerificationDocumentMetadata,
+} from '../../types/pharmacy';
+
+//===============================================================
+
+const pharmacyVerificationDocumentSchema =
+  new Schema<PharmacyVerificationDocumentMetadata>(
+    {
+      id: {
+        type: String,
+        required: true,
+        match: /^[a-f\d]{24}$/i,
+      },
+
+      name: {
+        type: String,
+        required: true,
+        trim: true,
+
+        maxlength: [
+          PHARMACY_DOCUMENT_RULES.fileNameMaxLength,
+          PHARMACY_DOCUMENT_VALIDATION_MESSAGES.nameLength,
+        ],
+
+        match: [
+          PHARMACY_DOCUMENT_RULES.fileNamePattern,
+          PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
+        ],
+      },
+
+      size: {
+        type: Number,
+        required: true,
+        min: 1,
+
+        max: [
+          PHARMACY_DOCUMENT_RULES.maxSizeBytes,
+          PHARMACY_DOCUMENT_VALIDATION_MESSAGES.size,
+        ],
+      },
+
+      type: {
+        type: String,
+        required: true,
+        trim: true,
+
+        enum: {
+          values: [...PHARMACY_DOCUMENT_RULES.mimeTypes],
+          message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.format,
+        },
+      },
+
+      sha256: {
+        type: String,
+        required: true,
+        match: /^[a-f\d]{64}$/i,
+      },
+
+      uploadedAt: {
+        type: String,
+        required: true,
+
+        validate: {
+          validator: (value: string) => {
+            const parsed = new Date(value);
+            return (
+              !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value
+            );
+          },
+
+          message: 'Document uploadedAt must be a canonical ISO datetime.',
+        },
+      },
+    },
+    { _id: false, id: false }
+  );
+
+//===============================================================
+
+const pharmacyGeoPointSchema = new Schema(
+  {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
+    },
+
+    coordinates: {
+      type: [Number],
+      required: true,
+
+      validate: {
+        validator: (value: number[]) =>
+          Array.isArray(value) &&
+          value.length === 2 &&
+          Number.isFinite(value[0]) &&
+          Number.isFinite(value[1]) &&
+          value[0] >= -180 &&
+          value[0] <= 180 &&
+          value[1] >= -90 &&
+          value[1] <= 90,
+
+        message:
+          'Geo must be a valid GeoJSON Point with [longitude, latitude].',
+      },
+    },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
+const pharmacyLocationSchema = new Schema(
+  {
+    address: {
+      type: String,
+      required: false,
+      trim: true,
+
+      minlength: [
+        USER_ADDRESS_MIN_LENGTH,
+        VALIDATION_MESSAGES.limits.addressMin,
+      ],
+
+      maxlength: [
+        USER_ADDRESS_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.addressMax,
+      ],
+
+      match: [ADDRESS_PATTERN, VALIDATION_MESSAGES.format.address],
+      default: undefined,
+    },
+
+    settlement: {
+      type: String,
+      required: false,
+      trim: true,
+
+      minlength: [2, 'Settlement must be at least 2 characters'],
+
+      maxlength: [
+        USER_SEARCH_MAX_LENGTH,
+        `Settlement must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
+      ],
+
+      match: [
+        SEARCH_TEXT_PATTERN,
+        'Settlement contains unsupported characters',
+      ],
+
+      default: undefined,
+    },
+
+    region: {
+      type: String,
+      required: false,
+      trim: true,
+
+      minlength: [2, 'Region must be at least 2 characters'],
+
+      maxlength: [
+        USER_SEARCH_MAX_LENGTH,
+        `Region must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
+      ],
+
+      match: [SEARCH_TEXT_PATTERN, 'Region contains unsupported characters'],
+      default: undefined,
+    },
+
+    countryCode: {
+      type: String,
+      required: false,
+      trim: true,
+      uppercase: true,
+
+      match: [
+        /^[A-Z]{2}$/,
+        'Country code must contain two uppercase Latin letters',
+      ],
+
+      default: undefined,
+    },
+
+    geo: {
+      type: pharmacyGeoPointSchema,
+      required: false,
+      default: undefined,
+    },
+  },
+  { _id: false, id: false }
+);
+
+//===============================================================
+
+const pharmacySchema = new Schema<PharmacyEntity>(
+  {
+    name: {
+      type: String,
+      required: false,
+      trim: true,
+      default: '',
+
+      maxlength: [
+        PHARMACY_NAME_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.pharmacyNameMax,
+      ],
+
+      validate: [
+        {
+          validator: (value: string) =>
+            !value || value.length >= PHARMACY_NAME_MIN_LENGTH,
+          message: VALIDATION_MESSAGES.limits.pharmacyNameMin,
+        },
+        {
+          validator: (value: string) =>
+            !value || PHARMACY_NAME_PATTERN.test(value),
+          message: VALIDATION_MESSAGES.format.pharmacyName,
+        },
+      ],
+    },
+
+    location: {
+      type: pharmacyLocationSchema,
+      required: false,
+      default: undefined,
+    },
+
+    phone: {
+      type: String,
+      trim: true,
+      minlength: [USER_PHONE_MIN_LENGTH, VALIDATION_MESSAGES.limits.phoneMin],
+      maxlength: [USER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.limits.phoneMax],
+      match: [PHONE_PATTERN, VALIDATION_MESSAGES.format.phone],
+      default: undefined,
+    },
+
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      maxlength: [USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax],
+      match: [EMAIL_PATTERN, VALIDATION_MESSAGES.format.emailApi],
+      default: undefined,
+    },
+
+    workingHours: {
+      type: String,
+      trim: true,
+
+      maxlength: [
+        WORKING_HOURS_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.workingHoursMax,
+      ],
+
+      match: [WORKING_HOURS_PATTERN, VALIDATION_MESSAGES.format.workingHours],
+
+      validate: {
+        validator: (value?: string) =>
+          !value || getWorkingHoursValidationIssue(value) === null,
+        message: VALIDATION_MESSAGES.format.workingHours,
+      },
+
+      default: undefined,
+    },
+
+    bankDetails: {
+      recipientName: {
+        type: String,
+        required: false,
+        trim: true,
+
+        maxlength: [
+          BANK_RECIPIENT_NAME_MAX_LENGTH,
+          VALIDATION_MESSAGES.limits.bankRecipientNameMax,
+        ],
+
+        validate: [
+          {
+            validator: (value?: string) =>
+              !value || value.length >= BANK_RECIPIENT_NAME_MIN_LENGTH,
+            message: VALIDATION_MESSAGES.limits.bankRecipientNameMin,
+          },
+          {
+            validator: (value?: string) =>
+              !value || BANK_RECIPIENT_NAME_PATTERN.test(value),
+            message: VALIDATION_MESSAGES.format.bankRecipientName,
+          },
+        ],
+      },
+
+      taxId: {
+        type: String,
+        required: false,
+        trim: true,
+        match: [TAX_ID_PATTERN, VALIDATION_MESSAGES.format.taxId],
+      },
+
+      iban: {
+        type: String,
+        required: false,
+        trim: true,
+        uppercase: true,
+        match: [IBAN_PATTERN, VALIDATION_MESSAGES.format.iban],
+      },
+
+      bankName: {
+        type: String,
+        required: false,
+        trim: true,
+
+        maxlength: [
+          BANK_NAME_MAX_LENGTH,
+          VALIDATION_MESSAGES.limits.bankNameMax,
+        ],
+
+        validate: [
+          {
+            validator: (value?: string) =>
+              !value || value.length >= BANK_NAME_MIN_LENGTH,
+            message: VALIDATION_MESSAGES.limits.bankNameMin,
+          },
+          {
+            validator: (value?: string) =>
+              !value || BANK_NAME_PATTERN.test(value),
+            message: VALIDATION_MESSAGES.format.bankName,
+          },
+        ],
+      },
+
+      paymentPurpose: {
+        type: String,
+        required: false,
+        trim: true,
+
+        maxlength: [
+          PAYMENT_PURPOSE_MAX_LENGTH,
+          VALIDATION_MESSAGES.limits.paymentPurposeMax,
+        ],
+
+        minlength: [10, 'Payment purpose must be at least 10 characters'],
+
+        match: [
+          PAYMENT_PURPOSE_PATTERN,
+          VALIDATION_MESSAGES.format.paymentPurpose,
+        ],
+      },
+
+      receiptEmail: {
+        type: String,
+        required: false,
+        trim: true,
+        lowercase: true,
+        maxlength: [USER_EMAIL_MAX_LENGTH, VALIDATION_MESSAGES.limits.emailMax],
+        match: [EMAIL_PATTERN, VALIDATION_MESSAGES.format.emailApi],
+      },
+    },
+
+    status: {
+      type: String,
+      enum: Object.values(PHARMACY_STATUSES),
+      default: PHARMACY_STATUSES.NEW,
+      required: true,
+    },
+
+    rating: {
+      type: Number,
+      min: 0,
+      max: MAX_REVIEW_RATING,
+      default: 0,
+    },
+
+    imageUrl: {
+      type: String,
+      trim: true,
+
+      validate: {
+        validator: (value?: string) => {
+          if (!value) return true;
+
+          if (isPictureDataUrl(value)) {
+            return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
+          }
+
+          if (isHttpUrl(value))
+            return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
+
+          return false;
+        },
+
+        message: VALIDATION_MESSAGES.format.picture,
+      },
+
+      default: undefined,
+    },
+
+    shortDescription: {
+      type: String,
+      trim: true,
+
+      minlength: [
+        10,
+        'Short pharmacy description must be at least 10 characters',
+      ],
+
+      maxlength: [
+        200,
+        'Short pharmacy description must be at most 200 characters',
+      ],
+
+      default: undefined,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+
+      maxlength: [
+        TEXT_EDITOR_MAX_LENGTH,
+        VALIDATION_MESSAGES.limits.textEditorMax,
+      ],
+
+      match: [TEXT_EDITOR_PATTERN, VALIDATION_MESSAGES.format.textEditor],
+      default: undefined,
+    },
+
+    statusReason: {
+      type: String,
+      trim: true,
+      maxlength: [1000, 'Status reason must be at most 1000 characters'],
+      default: undefined,
+    },
+
+    reviewState: {
+      type: String,
+      enum: ['pending', 'changes_requested'],
+      default: undefined,
+    },
+
+    reviewFeedback: {
+      type: String,
+      trim: true,
+      minlength: 1,
+      maxlength: [1000, 'Feedback must be at most 1000 characters'],
+      default: undefined,
+    },
+
+    reviewedAt: { type: Date, default: undefined },
+
+    reviewedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    pendingModeration: {
+      type: Schema.Types.Mixed,
+      default: undefined,
+    },
+
+    reviewsCount: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+
+    // A unique owner + request UUID guarantees concurrency-safe draft creation.
+    creationRequestId: {
+      type: String,
+      trim: true,
+      default: undefined,
+    },
+
+    creationFingerprint: {
+      type: String,
+      match: /^[a-f0-9]{64}$/,
+      default: undefined,
+    },
+
+    managerUserIds: {
+      type: [Schema.Types.ObjectId],
+      ref: 'User',
+      default: [],
+    },
+
+    documents: {
+      type: [pharmacyVerificationDocumentSchema],
+
+      validate: {
+        validator: (documents: PharmacyVerificationDocumentMetadata[]) =>
+          documents.length <= PHARMACY_DOCUMENT_RULES.maxFiles,
+        message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count,
+      },
+
+      default: [],
+    },
+
+    license: {
+      type: String,
+      trim: true,
+      maxlength: [160, 'License must be at most 160 characters'],
+      default: undefined,
+    },
+
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    updatedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+    },
+
+    approvedAt: {
+      type: Date,
+      default: undefined,
+    },
+
+    activatedAt: {
+      type: Date,
+      default: undefined,
+    },
+  },
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+//===============================================================
+
+pharmacySchema.index(
+  {
+    name: 'text',
+    'location.address': 'text',
+    'location.settlement': 'text',
+  },
+  { name: 'pharmacy_location_text' }
+);
+
+//===============================================================
+
+pharmacySchema.index(
+  { 'location.settlement': 1 },
+  { name: 'pharmacy_location_settlement' }
+);
+
+//===============================================================
+
+pharmacySchema.index(
+  { ownerId: 1, creationRequestId: 1 },
+  {
+    name: 'pharmacy_owner_create_idempotency',
+    unique: true,
+    partialFilterExpression: { creationRequestId: { $type: 'string' } },
+  }
+);
+
+//===============================================================
+
+pharmacySchema.index({ ownerId: 1 });
+pharmacySchema.index({ ownerId: 1, status: 1 });
+pharmacySchema.index({ ownerId: 1, createdAt: -1 });
+pharmacySchema.index({ managerUserIds: 1, createdAt: -1, _id: -1 });
+pharmacySchema.index({ status: 1 });
+pharmacySchema.index({ status: 1, rating: -1 });
+
+//===============================================================
+
+// Admin registry: deterministic createdAt + _id pagination, both directions.
+pharmacySchema.index(
+  { createdAt: -1, _id: -1 },
+  { name: 'admin_pharmacy_created_order' }
+);
+
+pharmacySchema.index(
+  { status: 1, createdAt: -1, _id: -1 },
+  { name: 'admin_pharmacy_status_order' }
+);
+
+pharmacySchema.index(
+  { ownerId: 1, createdAt: -1, _id: -1 },
+  { name: 'admin_pharmacy_owner_order' }
+);
+
+//===============================================================
+
+export const Pharmacy =
+  models.Pharmacy || model<PharmacyEntity>('Pharmacy', pharmacySchema);

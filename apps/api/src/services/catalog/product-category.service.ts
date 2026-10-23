@@ -1,7 +1,7 @@
 import type { ClientSession, Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/httpStatus';
-import { ProductCategory } from '../../models/productCategory.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
 import type { ProductCategoryPersistenceEntity } from '../../types/product-category';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';
 import { httpError } from '../../utils/httpError';

@@ -3,10 +3,10 @@ import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
 import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
-import { AdminAuditLog } from '../../models/adminAuditLog.model';
-import { Order } from '../../models/order.model';
-import { Pharmacy } from '../../models/pharmacy.model';
-import { User } from '../../models/user.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+import { Order } from '../../models/orders/order.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
 import { hashPassword } from '../../utils/password';
 import { decidePharmacyModerationByAdminService } from '../admin/pharmacies/admin.service';
 
