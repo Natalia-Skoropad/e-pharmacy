@@ -5,9 +5,9 @@ import test from 'node:test';
 
 //===================================================================
 
-async function readClientService(): Promise<string> {
+async function readClientFile(fileName: string): Promise<string> {
   return readFile(
-    resolve(process.cwd(), 'src/services/clients/client.service.ts'),
+    resolve(process.cwd(), 'src/services/clients', fileName),
     'utf8'
   );
 }
@@ -21,7 +21,7 @@ async function readOrderModel(): Promise<string> {
 //===================================================================
 
 test('client list derives canonical metrics before applying first-order filters', async () => {
-  const source = await readClientService();
+  const source = await readClientFile('client-registry-aggregation.ts');
   const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
 
   const rowsEnd = source.indexOf(
@@ -31,7 +31,11 @@ test('client list derives canonical metrics before applying first-order filters'
 
   const rowsSource = source.slice(rowsStart, rowsEnd);
 
-  assert.match(source, /match\.firstOrderAt\s*=\s*\{/);
+  assert.match(
+    await readClientFile('client-registry-filters.ts'),
+    /match\.firstOrderAt\s*=\s*\{/
+  );
+
   assert.doesNotMatch(rowsSource, /orderFilter\.createdAt/);
   assert.doesNotMatch(rowsSource, /Order\.find\(/);
   assert.match(rowsSource, /firstOrderAt:\s*\{ \$min: '\$createdAt' \}/);
@@ -43,7 +47,7 @@ test('client list derives canonical metrics before applying first-order filters'
 //===================================================================
 
 test('client list pagination and statistics stay inside one Mongo aggregation', async () => {
-  const source = await readClientService();
+  const source = await readClientFile('client-registry-aggregation.ts');
   const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
 
   const rowsEnd = source.indexOf(
@@ -81,19 +85,13 @@ test('client list pagination and statistics stay inside one Mongo aggregation', 
 //===================================================================
 
 test('purchased products stay historical and paginate inside Mongo aggregation', async () => {
-  const source = await readClientService();
-
-  const start = source.indexOf(
-    'export async function getClientPurchasedProductsService'
+  const purchasedProductsSource = await readClientFile(
+    'client-purchases.service.ts'
   );
 
-  const purchasedProductsSource = source.slice(start);
-
-  const pipelineStart = source.indexOf(
-    'function buildClientProductsAggregationPipeline'
+  const pipelineSource = await readClientFile(
+    'client-purchases-aggregation.ts'
   );
-
-  const pipelineSource = source.slice(pipelineStart, start);
 
   assert.match(
     purchasedProductsSource,
@@ -163,7 +161,7 @@ test('purchased products stay historical and paginate inside Mongo aggregation',
 //===============================================================
 
 test('Walk-in identity is flag-based and never inferred from the display name', async () => {
-  const source = await readClientService();
+  const source = await readClientFile('client-registry-aggregation.ts');
 
   assert.match(
     source,
@@ -177,7 +175,7 @@ test('Walk-in identity is flag-based and never inferred from the display name', 
 //===================================================================
 
 test('client and purchased-product pagination clamp stale requested pages before returning data', async () => {
-  const source = await readClientService();
+  const source = await readClientFile('client-registry.service.ts');
 
   const clientsStart = source.indexOf(
     'export async function getClientsService'
@@ -202,11 +200,7 @@ test('client and purchased-product pagination clamp stale requested pages before
     /getClientRowsForPharmacy\(pharmacyId, \{ \.\.\.query, page \}\)/
   );
 
-  const productsStart = source.indexOf(
-    'export async function getClientPurchasedProductsService'
-  );
-
-  const productsSource = source.slice(productsStart);
+  const productsSource = await readClientFile('client-purchases.service.ts');
 
   assert.match(
     productsSource,
@@ -236,7 +230,7 @@ test('client purchase history has a compound order index for scoped pagination',
 //===================================================================
 
 test('default client projection suppresses synthetic contact fields and stays active', async () => {
-  const source = await readClientService();
+  const source = await readClientFile('client-registry-aggregation.ts');
   const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
 
   const rowsEnd = source.indexOf(

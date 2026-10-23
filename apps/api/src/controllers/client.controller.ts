@@ -10,9 +10,10 @@ import type {
 
 import {
   getClientByIdService,
-  getClientPurchasedProductsService,
   getClientsService,
-} from '../services/clients/client.service';
+} from '../services/clients/client-registry.service';
+
+import { getClientPurchasedProductsService } from '../services/clients/client-purchases.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

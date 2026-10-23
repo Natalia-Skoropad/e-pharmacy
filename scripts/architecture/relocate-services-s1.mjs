@@ -111,6 +111,19 @@ for (const entry of moves) {
 // Stage S10 replaces the already-relocated Order service with canonical domain modules.
 // Preserve the historical S1 relocation ledger without retaining a proxy file.
 const S10_REPLACEMENTS = new Map([
+  // S10.8: Client access, registry aggregation and purchase snapshots have distinct owners.
+  [
+    'apps/api/src/services/clients/client.service.ts',
+    [
+      'apps/api/src/services/clients/client-types.ts',
+      'apps/api/src/services/clients/client-access.ts',
+      'apps/api/src/services/clients/client-registry-filters.ts',
+      'apps/api/src/services/clients/client-registry-aggregation.ts',
+      'apps/api/src/services/clients/client-registry.service.ts',
+      'apps/api/src/services/clients/client-purchases-aggregation.ts',
+      'apps/api/src/services/clients/client-purchases.service.ts',
+    ],
+  ],
   // S10.7: Stock movement writes, legacy backfill, reconciliation and reads are separate.
   [
     'apps/api/src/services/inventory/stockMovement.service.ts',

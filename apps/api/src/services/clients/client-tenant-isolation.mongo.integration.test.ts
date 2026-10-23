@@ -18,9 +18,10 @@ import { getTestProductCategoryId } from '../catalog/__tests__/product-category-
 
 import {
   getClientByIdService,
-  getClientPurchasedProductsService,
   getClientsService,
-} from './client.service';
+} from './client-registry.service';
+
+import { getClientPurchasedProductsService } from './client-purchases.service';
 
 import { getOrdersService } from '../orders/order-query.service';
 

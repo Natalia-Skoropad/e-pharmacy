@@ -12,10 +12,8 @@ import { User } from '../../models/user.model';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
-import {
-  getClientPurchasedProductsService,
-  getClientsService,
-} from './client.service';
+import { getClientsService } from './client-registry.service';
+import { getClientPurchasedProductsService } from './client-purchases.service';
 
 //===================================================================
 
