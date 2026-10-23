@@ -9,10 +9,8 @@ import {
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
-import {
-  assertActiveSessionService,
-  getUserByIdService,
-} from '../services/auth/auth.service';
+import { assertActiveSessionService } from '../services/auth/auth-sessions.service';
+import { getUserByIdService } from '../services/auth/auth-profile.service';
 
 import { httpError } from '../utils/httpError';
 import { logger } from '../utils/logger';
@@ -53,6 +51,7 @@ function isAuthenticationCandidateError(error: unknown): boolean {
 
 function hasPreservedAuthLifecycleCode(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
+
   const code = (error as ErrorWithStatus).code;
 
   return (
@@ -90,8 +89,10 @@ function getCookieValues(
       if (cookieName !== name) return null;
 
       const value = valueParts.join('=');
+
       return value ? decodeURIComponent(value) : null;
     })
+
     .filter((value): value is string => Boolean(value));
 }
 
@@ -124,6 +125,7 @@ function getTokensFromRequest(req: Request): AuthTokenCandidate[] {
     ...(headerToken
       ? [{ token: headerToken, source: 'authorization' as const }]
       : []),
+
     ...getTokensFromCookies(req.headers.cookie),
   ];
 }
@@ -138,6 +140,7 @@ async function authenticateToken(req: Request): Promise<void> {
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.AUTH_REQUIRED,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -168,6 +171,7 @@ async function authenticateToken(req: Request): Promise<void> {
       return;
     } catch (error) {
       if (!isAuthenticationCandidateError(error)) throw error;
+
       lastCandidateError = error;
 
       // Keep checking the remaining cookie candidates. Browsers can send
@@ -184,6 +188,7 @@ async function authenticateToken(req: Request): Promise<void> {
     HTTP_STATUS.UNAUTHORIZED,
     API_MESSAGES.INVALID_TOKEN,
     undefined,
+
     AUTH_ERROR_CODES.SESSION_INVALID
   );
 }
@@ -209,6 +214,7 @@ export async function authenticate(
             HTTP_STATUS.UNAUTHORIZED,
             API_MESSAGES.INVALID_TOKEN,
             undefined,
+
             AUTH_ERROR_CODES.SESSION_INVALID
           )
         );
@@ -236,6 +242,7 @@ export async function optionalAuthenticate(
     }
 
     await authenticateToken(req);
+
     next();
   } catch (error) {
     if (isAuthenticationCandidateError(error)) {
@@ -247,6 +254,7 @@ export async function optionalAuthenticate(
             HTTP_STATUS.UNAUTHORIZED,
             API_MESSAGES.INVALID_TOKEN,
             undefined,
+
             AUTH_ERROR_CODES.SESSION_INVALID
           )
         );

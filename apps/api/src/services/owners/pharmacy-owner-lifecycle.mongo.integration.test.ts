@@ -18,7 +18,7 @@ import { User } from '../../models/user.model';
 import { hashPassword } from '../../utils/password';
 
 import { updatePharmacyStatusByAdminService } from '../admin/pharmacies/admin.service';
-import { loginUserService } from '../auth/auth.service';
+import { loginUserService } from '../auth/auth-login.service';
 import { updatePharmacyOwnerStatusByAdminService } from './pharmacy-owner-lifecycle.service';
 
 //===============================================================

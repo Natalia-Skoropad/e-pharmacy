@@ -6,19 +6,25 @@ import { isNextAuthProxyRequest } from '../middlewares/auth-bff.middleware';
 import { API_MESSAGES } from '../constants/messages';
 import { HTTP_STATUS } from '../constants/httpStatus';
 
+import { loginUserService } from '../services/auth/auth-login.service';
+
 import {
-  loginUserService,
   refreshAuthSessionService,
-  registerUserService,
-  requestPasswordResetService,
-  resetPasswordService,
   revokeAllUserSessionsByRefreshTokensService,
   revokeSessionByRefreshTokenService,
   getActiveSessionsService,
   revokeUserSessionService,
+} from '../services/auth/auth-sessions.service';
+
+import { registerUserService } from '../services/auth/auth-register.service';
+
+import {
+  requestPasswordResetService,
+  resetPasswordService,
   updateUserPasswordService,
-  updateUserProfileService,
-} from '../services/auth/auth.service';
+} from '../services/auth/auth-password.service';
+
+import { updateUserProfileService } from '../services/auth/auth-profile.service';
 
 import {
   createRegistrationPharmacyDocumentUploadService,
@@ -37,6 +43,7 @@ import type {
 import type { PharmacyRegistrationDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
 import type { SessionContext } from '../types/session';
 import type { ValidatedResponse } from '../types/validated-request';
+
 import { sendSuccessResponse } from '../utils/apiResponse';
 import { httpError } from '../utils/httpError';
 
@@ -93,6 +100,7 @@ function getCookieValues(req: Request, name: string): string[] {
       if (cookieName !== name) return null;
 
       const value = valueParts.join('=');
+
       return value ? decodeURIComponent(value) : null;
     })
     .filter((value): value is string => Boolean(value))
@@ -115,6 +123,7 @@ function requireRefreshTokensFromCookies(req: Request): string[] {
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.AUTH_REQUIRED,
       undefined,
+
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
@@ -200,6 +209,7 @@ export async function refreshAuthSession(
 ): Promise<void> {
   const refreshTokens = requireRefreshTokensFromCookies(req);
   const context = getSessionContext(req);
+
   let data: Awaited<ReturnType<typeof refreshAuthSessionService>> | null = null;
   let lastError: unknown;
 
@@ -210,6 +220,7 @@ export async function refreshAuthSession(
         context,
         refreshTokens
       );
+
       break;
     } catch (error) {
       lastError = error;
@@ -295,6 +306,7 @@ export async function updateCurrentUser(
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Profile was updated successfully.',
+
     data: {
       user,
     },
@@ -363,6 +375,7 @@ export function getClientOnlyTest(req: Request, res: Response): void {
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Client route is available',
+
     data: {
       user: req.user,
     },
@@ -376,6 +389,7 @@ export function getPharmacyOnlyTest(req: Request, res: Response): void {
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Pharmacy route is available',
+
     data: {
       user: req.user,
     },
@@ -389,6 +403,7 @@ export function getAdminOnlyTest(req: Request, res: Response): void {
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'Admin route is available',
+
     data: {
       user: req.user,
     },
@@ -402,8 +417,11 @@ export async function getActiveSessions(
   res: Response
 ): Promise<void> {
   const userId = req.user?.id;
+
   if (!userId) return;
+
   const data = await getActiveSessionsService(userId, req.authSessionId);
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -414,7 +432,9 @@ export async function revokeActiveSession(
   res: Response
 ): Promise<void> {
   const userId = req.user?.id;
+
   if (!userId) return;
+
   const sessionId = String(req.params.sessionId ?? '');
 
   if (req.authSessionId && sessionId === req.authSessionId) {
@@ -422,11 +442,13 @@ export async function revokeActiveSession(
       HTTP_STATUS.CONFLICT,
       'Use the logout endpoint to revoke the current session.',
       undefined,
+
       AUTH_ERROR_CODES.VALIDATION_FAILED
     );
   }
 
   await revokeUserSessionService(userId, sessionId);
+
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,

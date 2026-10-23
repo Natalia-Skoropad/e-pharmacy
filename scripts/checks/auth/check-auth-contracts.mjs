@@ -19,6 +19,7 @@ function extractQuotedValues(source, declarationName) {
   );
 
   assert.ok(match, `Could not find ${declarationName}`);
+
   return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]);
 }
 
@@ -30,6 +31,7 @@ function extractObjectStringValues(source, declarationName) {
   );
 
   assert.ok(match, `Could not find ${declarationName}`);
+
   return [...match[1].matchAll(/:\s*['"]([^'"]+)['"]/g)].map((item) => item[1]);
 }
 
@@ -37,18 +39,22 @@ function extractObjectStringValues(source, declarationName) {
 
 function extractZodObjectFields(source, declarationName) {
   const declarationIndex = source.indexOf(`export const ${declarationName}`);
+
   assert.notEqual(declarationIndex, -1, `Could not find ${declarationName}`);
 
   const objectIndex = source.indexOf('.object({', declarationIndex);
+
   assert.notEqual(objectIndex, -1, `Could not find ${declarationName} object`);
 
   const openingBraceIndex = source.indexOf('{', objectIndex);
+
   let depth = 0;
   let closingBraceIndex = -1;
 
   for (let index = openingBraceIndex; index < source.length; index += 1) {
     if (source[index] === '{') depth += 1;
     if (source[index] === '}') depth -= 1;
+
     if (depth === 0) {
       closingBraceIndex = index;
       break;
@@ -89,10 +95,12 @@ function extractTypeFields(source, typeName) {
 function extractFunctionCalls(source, functionName) {
   const calls = [];
   const marker = `${functionName}(`;
+
   let searchIndex = 0;
 
   while (searchIndex < source.length) {
     const startIndex = source.indexOf(marker, searchIndex);
+
     if (startIndex === -1) break;
 
     let depth = 1;
@@ -107,6 +115,7 @@ function extractFunctionCalls(source, functionName) {
         if (escaped) escaped = false;
         else if (character === '\\') escaped = true;
         else if (character === quote) quote = null;
+
         continue;
       }
 
@@ -175,6 +184,7 @@ const frontendCookies = await read(
   'auth',
   'cookie-names.ts'
 );
+
 for (const value of [
   'e_pharmacy_access_token',
   'e_pharmacy_refresh_token',
@@ -247,12 +257,14 @@ assert.ok(forgotPasswordSchemaBlock, 'Could not parse forgotPasswordSchema');
 for (const applicationName of ['CLIENT', 'PHARMACY', 'ADMIN']) {
   assert.match(
     loginSchemaBlock,
+
     new RegExp(`AUTH_APPLICATIONS\\.${applicationName}`),
     `loginSchema must support ${applicationName.toLowerCase()} application`
   );
 
   assert.match(
     forgotPasswordSchemaBlock,
+
     new RegExp(`AUTH_APPLICATIONS\\.${applicationName}`),
     `forgotPasswordSchema must support ${applicationName.toLowerCase()} application`
   );
@@ -354,6 +366,7 @@ for (const code of extractObjectStringValues(
 )) {
   assert.match(
     authErrorSource,
+
     new RegExp(code),
     `Missing frontend auth mapping for ${code}`
   );
@@ -376,13 +389,22 @@ const nextApiTokens = await read(
 assert.match(nextApiTokens, /accessTokenExpiresIn/);
 assert.match(nextApiTokens, /refreshTokenExpiresIn/);
 
-const authService = await read(
-  'apps',
-  'api',
-  'src',
-  'services',
-  'auth/auth.service.ts'
+const authModules = await Promise.all(
+  [
+    'auth-register.service.ts',
+    'auth-login.service.ts',
+    'auth-sessions.service.ts',
+    'auth-password.service.ts',
+    'auth-profile.service.ts',
+    'auth-user-fields.ts',
+  ].map((moduleName) =>
+    read('apps', 'api', 'src', 'services', `auth/${moduleName}`)
+  )
 );
+
+const authService = authModules.join('\n');
+const sessionService = authModules[2];
+const passwordService = authModules[3];
 
 const authController = await read(
   'apps',
@@ -409,12 +431,13 @@ const originMiddleware = await read(
 );
 
 for (const [label, source] of [
-  ['auth service', authService],
+  ...authModules.map((source, i) => [`auth module ${i}`, source]),
   ['auth controller', authController],
   ['auth middleware', authMiddleware],
   ['origin middleware', originMiddleware],
 ]) {
   const authHttpErrors = extractFunctionCalls(source, 'httpError');
+
   assert.ok(authHttpErrors.length > 0, `No httpError calls found in ${label}`);
 
   for (const call of authHttpErrors) {
@@ -426,7 +449,7 @@ for (const [label, source] of [
   }
 }
 
-assert.match(authService, /password_changed/);
+assert.match(passwordService, /password_changed/);
 
 assert.ok(
   (authService.match(/revokeAllUserSessionsService\(/g) ?? []).length >= 3,
@@ -675,7 +698,7 @@ assert.match(
 );
 
 assert.match(
-  authService,
+  sessionService,
   /revokeAllUserSessionsByRefreshTokensService[\s\S]*?const now = new Date\(\)[\s\S]*?revokedAt:\s*undefined[\s\S]*?expiresAt:\s*\{\s*\$gt:\s*now\s*\}[\s\S]*?absoluteExpiresAt/
 );
 
@@ -716,12 +739,14 @@ assert.match(
   /Referrer-Policy['"],\s*value:\s*['"]no-referrer/
 );
 
-assert.match(authService, /createPasswordResetUrl/);
+assert.match(passwordService, /createPasswordResetUrl/);
 
 assert.doesNotMatch(
-  authService,
+  passwordService,
   /searchParams\.set\(['"]token['"]/,
   'New reset links must keep raw secrets out of the HTTP query string'
 );
+
+//===================================================================
 
 console.log('Auth contract parity check passed.');

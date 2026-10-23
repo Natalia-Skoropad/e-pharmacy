@@ -6,6 +6,7 @@ import mongoose, { Types } from 'mongoose';
 
 import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
 import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacy-document-validation';
+
 import { AdminAuditLog } from '../../models/adminAuditLog.model';
 import { Client } from '../../models/client.model';
 import { Pharmacy } from '../../models/pharmacy.model';
@@ -43,16 +44,22 @@ import {
   submitMyPharmacyModerationService,
 } from '../pharmacies/pharmacy-moderation.service';
 
+import { loginUserService } from './auth-login.service';
+
 import {
-  loginUserService,
   refreshAuthSessionService,
-  registerUserService,
-  resetPasswordService,
   revokeAllUserSessionsByRefreshTokensService,
   revokeSessionByRefreshTokenService,
+} from './auth-sessions.service';
+
+import { registerUserService } from './auth-register.service';
+
+import {
+  resetPasswordService,
   updateUserPasswordService,
-  updateUserProfileService,
-} from './auth.service';
+} from './auth-password.service';
+
+import { updateUserProfileService } from './auth-profile.service';
 
 //===============================================================
 
@@ -211,7 +218,7 @@ test(
     const originalSave = Session.prototype.save;
 
     try {
-      // Session creation uses `new Session(...).save()` in auth.service.ts.
+      // Session creation uses `new Session(...).save()` in auth-sessions.service.ts.
       // Force that write path to fail so the assertion exercises recovery.
       Session.prototype.save = (async () => {
         throw new Error('forced session failure');

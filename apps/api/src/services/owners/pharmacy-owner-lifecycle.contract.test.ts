@@ -114,20 +114,21 @@ test('owner block cascades to every non-blocked pharmacy while reactivation leav
 //===================================================================
 
 test('auth permits new owners but still blocks blocked accounts on login and refresh', () => {
-  const auth = read('../auth/auth.service.ts');
+  const login = read('../auth/auth-login.service.ts');
+  const sessions = read('../auth/auth-sessions.service.ts');
 
   assert.match(
-    auth,
+    login,
     /export async function loginUserService[\s\S]*?user\.status === USER_STATUSES\.BLOCKED[\s\S]*?return buildAuthSessionResult/
   );
 
   assert.doesNotMatch(
-    auth,
+    login,
     /export async function loginUserService[\s\S]{0,1800}?user\.status === USER_STATUSES\.NEW[\s\S]{0,500}?throw httpError/
   );
 
   assert.match(
-    auth,
+    sessions,
     /export async function refreshAuthSessionService[\s\S]*?user\.status === USER_STATUSES\.BLOCKED[\s\S]*?revokedReason: 'user_blocked'/
   );
 });

@@ -25,7 +25,8 @@ const [
   clientSchema,
   lifecycleService,
   lifecycleConstants,
-  authService,
+  authLoginService,
+  authProfileService,
   ownerRoutes,
   adminRoutes,
   ownerDocumentService,
@@ -50,12 +51,28 @@ const [
   ),
 
   read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-lifecycle.service.ts'),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'owners/pharmacy-owner-lifecycle.service.ts'
+  ),
+
   read('apps', 'api', 'src', 'constants', 'pharmacy-owner-lifecycle.ts'),
-  read('apps', 'api', 'src', 'services', 'auth/auth.service.ts'),
+  read('apps', 'api', 'src', 'services', 'auth/auth-login.service.ts'),
+  read('apps', 'api', 'src', 'services', 'auth/auth-profile.service.ts'),
   read('apps', 'api', 'src', 'routes', 'pharmacy-owner.routes.ts'),
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
-  read('apps', 'api', 'src', 'services', 'owners/pharmacy-owner-document.service.ts'),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'owners/pharmacy-owner-document.service.ts'
+  ),
 
   read(
     'apps',
@@ -171,16 +188,7 @@ assert.match(
 // New owners may authenticate in the pharmacy app; blocked owners remain
 // rejected by the canonical auth lifecycle.
 
-const loginStart = authService.indexOf(
-  'export async function loginUserService'
-);
-
-const loginEnd = authService.indexOf(
-  'export async function refreshAuthSessionService',
-  loginStart
-);
-
-const loginService = authService.slice(loginStart, loginEnd);
+const loginService = authLoginService;
 
 assert.match(loginService, /user\.status === USER_STATUSES\.BLOCKED/);
 assert.match(loginService, /AUTH_ERROR_CODES\.USER_BLOCKED/);
@@ -233,7 +241,7 @@ const documentSnapshot = ownerDocumentService.slice(
 assert.doesNotMatch(documentSnapshot, /content|dataUrl|base64|sha256|binary/i);
 
 assert.match(
-  authService,
+  authProfileService,
   /PHARMACY_OWNER_PHOTO_UPDATED[\s\S]*?before:\s*\{ profilePhotoChanged: false \}[\s\S]*?after:\s*\{ profilePhotoChanged: true \}/
 );
 
@@ -286,5 +294,7 @@ assert.match(
 );
 
 assert.match(activityIntegration, /scopeEntityId: String\(owner\._id\)/);
+
+//===================================================================
 
 console.log('Pharmacy owner lifecycle hardening checks passed.');

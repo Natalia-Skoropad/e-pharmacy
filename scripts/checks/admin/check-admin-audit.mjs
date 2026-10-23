@@ -18,6 +18,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -39,10 +40,34 @@ const requiredFiles = [
     'migrations/pharmacy-owner-registration-audit-migration.service.ts',
   ],
   ['apps', 'api', 'src', 'controllers', 'admin-audit.controller.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-profile.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-document.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-note.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/settings/admin-settings.service.ts'],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-profile.service.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-document.service.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-note.service.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/settings/admin-settings.service.ts',
+  ],
   ['apps', 'admin', 'src', 'lib', 'audit', 'admin-audit.ts'],
   ['apps', 'admin', 'src', 'lib', 'api', 'browser', 'admin-audit.api.ts'],
   ['apps', 'admin', 'src', 'components', 'activity', 'ActivityHistory.tsx'],
@@ -173,12 +198,20 @@ const ownerLifecycleService = await read(
   'owners/pharmacy-owner-lifecycle.service.ts'
 );
 
-const authService = await read(
+const ownerProfileAuthService = await read(
   'apps',
   'api',
   'src',
   'services',
-  'auth/auth.service.ts'
+  'auth/auth-profile.service.ts'
+);
+
+const registerAuthService = await read(
+  'apps',
+  'api',
+  'src',
+  'services',
+  'auth/auth-register.service.ts'
 );
 
 const authController = await read(
@@ -369,6 +402,7 @@ for (const [key, action] of [
 ]) {
   assert.match(
     auditConstants,
+
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
 
@@ -437,6 +471,7 @@ for (const [key, action] of [
 ]) {
   assert.match(
     auditConstants,
+
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
 
@@ -468,6 +503,7 @@ for (const [key, action] of [
 ]) {
   assert.match(
     auditConstants,
+
     new RegExp(`${key}:\\s*'${action.replaceAll('.', '\\.')}'`)
   );
 
@@ -548,7 +584,7 @@ assert.match(
   /registerUserService\([\s\S]*?res\.locals\.requestId[\s\S]*?\)/
 );
 
-const ownerProfileAudit = authService.match(
+const ownerProfileAudit = ownerProfileAuthService.match(
   /async function updatePharmacyOwnerUserProfileWithAudit[\s\S]*?(?=\/\/={10,}\n\nexport async function updateUserProfileService)/
 )?.[0];
 
@@ -571,9 +607,7 @@ assert.doesNotMatch(
 
 assert.match(auditService, /photo\|photourl\|image\|imageurl\|base64\|dataurl/);
 
-const registrationAudit = authService.match(
-  /export async function registerUserService[\s\S]*?(?=\/\/={10,}\n\nexport async function loginUserService)/
-)?.[0];
+const registrationAudit = registerAuthService;
 
 assert.ok(registrationAudit);
 assert.match(registrationAudit, /PHARMACY_OWNER_ACCOUNT_CREATED/);
@@ -775,5 +809,7 @@ assert.match(browserApi, /ADMIN_API_ROUTES\.audit/);
 assert.doesNotMatch(browserApi, /https?:\/\//);
 assert.match(bffList, /createPrivateProxyRoute/);
 assert.match(apiClientRoutes, /\/admin\/audit/);
+
+//===================================================================
 
 console.log('Admin audit structural checks passed.');

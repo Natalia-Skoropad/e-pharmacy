@@ -14,7 +14,7 @@ const service = read('services/owners/pharmacy-user-private-note.service.ts');
 const controller = read('controllers/pharmacy-user-private-note.controller.ts');
 const routes = read('routes/pharmacy-owner.routes.ts');
 const authRoutes = read('routes/auth.routes.ts');
-const authService = read('services/auth/auth.service.ts');
+const authService = read('services/auth/auth-profile.service.ts');
 
 //===============================================================
 

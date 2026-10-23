@@ -111,6 +111,19 @@ for (const entry of moves) {
 // Stage S10 replaces the already-relocated Order service with canonical domain modules.
 // Preserve the historical S1 relocation ledger without retaining a proxy file.
 const S10_REPLACEMENTS = new Map([
+  // S10.4: Auth register/login/sessions/password/profile have canonical owners.
+  [
+    'apps/api/src/services/auth/auth.service.ts',
+    [
+      'apps/api/src/services/auth/auth-register.service.ts',
+      'apps/api/src/services/auth/auth-login.service.ts',
+      'apps/api/src/services/auth/auth-sessions.service.ts',
+      'apps/api/src/services/auth/auth-password.service.ts',
+      'apps/api/src/services/auth/auth-profile.service.ts',
+      'apps/api/src/services/auth/auth-session-tokens.ts',
+      'apps/api/src/services/auth/auth-user-fields.ts',
+    ],
+  ],
   // S10.3: Product public reads, management and reviews use canonical modules.
   [
     'apps/api/src/services/catalog/product.service.ts',

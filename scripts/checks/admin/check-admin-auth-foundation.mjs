@@ -23,6 +23,7 @@ const exists = async (...segments) => {
 //===================================================================
 
 const payloads = await read('packages', 'types', 'src', 'auth', 'payloads.ts');
+
 assert.match(payloads, /application:\s*AuthApplication/);
 assert.doesNotMatch(payloads, /application:\s*Extract<AuthApplication/);
 
@@ -38,6 +39,7 @@ for (const value of ['CLIENT', 'PHARMACY', 'ADMIN']) {
     schema,
     new RegExp(`loginSchema[\\s\\S]*?AUTH_APPLICATIONS\\.${value}`)
   );
+
   assert.match(
     schema,
     new RegExp(`forgotPasswordSchema[\\s\\S]*?AUTH_APPLICATIONS\\.${value}`)
@@ -59,7 +61,7 @@ const authService = await read(
   'api',
   'src',
   'services',
-  'auth/auth.service.ts'
+  'auth/auth-password.service.ts'
 );
 
 assert.match(authService, /resolvePasswordResetAppUrl/);
@@ -145,5 +147,7 @@ assert.equal(
   false,
   'Admin public registration BFF route must not exist'
 );
+
+//===================================================================
 
 console.log('Admin auth foundation structural check passed.');

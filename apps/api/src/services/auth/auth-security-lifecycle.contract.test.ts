@@ -5,10 +5,13 @@ import test from 'node:test';
 
 //===================================================================
 
-const source = readFileSync(
-  resolve(process.cwd(), 'src/services/auth/auth.service.ts'),
-  'utf8'
-);
+const readAuthModule = (name: string): string =>
+  readFileSync(resolve(process.cwd(), 'src/services/auth', name), 'utf8');
+
+const registration = readAuthModule('auth-register.service.ts');
+const login = readAuthModule('auth-login.service.ts');
+const sessions = readAuthModule('auth-sessions.service.ts');
+const passwords = readAuthModule('auth-password.service.ts');
 
 const userModelSource = readFileSync(
   resolve(process.cwd(), 'src/models/user.model.ts'),
@@ -28,11 +31,6 @@ const jwtSource = readFileSync(
 //===================================================================
 
 test('registration commits User and role profile before creating a browser session', () => {
-  const registration = source.slice(
-    source.indexOf('export async function registerUserService'),
-    source.indexOf('export async function loginUserService')
-  );
-
   assert.match(registration, /mongoose\.startSession\(\)/);
   assert.match(registration, /withTransaction\(async \(\) =>/);
 
@@ -62,7 +60,7 @@ test('registration commits User and role profile before creating a browser sessi
     'PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED'
   );
 
-  const authSessionBuild = registration.indexOf('buildAuthSessionResult');
+  const authSessionBuild = registration.lastIndexOf('buildAuthSessionResult');
 
   assert.ok(accountAudit >= 0 && accountAudit < transactionEnd);
   assert.ok(documentsAudit >= 0 && documentsAudit < transactionEnd);
@@ -73,14 +71,12 @@ test('registration commits User and role profile before creating a browser sessi
 //===================================================================
 
 test('password change and reset revoke sessions in the same Mongo transaction', () => {
-  const reset = source.slice(
-    source.indexOf('export async function resetPasswordService'),
-    source.indexOf('export async function getUserByIdService')
+  const reset = passwords.slice(
+    passwords.indexOf('export async function resetPasswordService')
   );
 
-  const update = source.slice(
-    source.indexOf('export async function updateUserPasswordService'),
-    source.indexOf('export async function getActiveSessionsService')
+  const update = passwords.slice(
+    passwords.indexOf('export async function updateUserPasswordService')
   );
 
   assert.match(reset, /withTransaction/);
@@ -96,11 +92,6 @@ test('password change and reset revoke sessions in the same Mongo transaction', 
 //===================================================================
 
 test('login does not branch on application-specific copy before credential proof', () => {
-  const login = source.slice(
-    source.indexOf('export async function loginUserService'),
-    source.indexOf('export async function refreshAuthSessionService')
-  );
-
   assert.doesNotMatch(login, /getAccountNotFoundMessage/);
   assert.match(login, /AUTH_ERROR_CODES\.INVALID_CREDENTIALS/);
   assert.match(login, /DUMMY_PASSWORD_HASH/);
@@ -114,9 +105,9 @@ test('login does not branch on application-specific copy before credential proof
 //===================================================================
 
 test('refresh rotates tokens, caps sliding expiry with an absolute lifetime, and keeps stale-cookie fallback safe', () => {
-  const refresh = source.slice(
-    source.indexOf('export async function refreshAuthSessionService'),
-    source.indexOf('export async function revokeSessionByRefreshTokenService')
+  const refresh = sessions.slice(
+    sessions.indexOf('export async function refreshAuthSessionService'),
+    sessions.indexOf('export async function revokeSessionByRefreshTokenService')
   );
 
   assert.match(refresh, /deriveRotatedRefreshToken/);
@@ -136,21 +127,20 @@ test('refresh rotates tokens, caps sliding expiry with an absolute lifetime, and
 //===================================================================
 
 test('password reset uses only opaque hashed reset secrets without stale application/JWT semantics', () => {
-  const requestReset = source.slice(
-    source.indexOf('export async function requestPasswordResetService'),
-    source.indexOf('export async function resetPasswordService')
+  const requestReset = passwords.slice(
+    passwords.indexOf('export async function requestPasswordResetService'),
+    passwords.indexOf('export async function resetPasswordService')
   );
 
-  const confirmReset = source.slice(
-    source.indexOf('export async function resetPasswordService'),
-    source.indexOf('export async function getUserByIdService')
+  const confirmReset = passwords.slice(
+    passwords.indexOf('export async function resetPasswordService')
   );
 
   assert.match(requestReset, /createPasswordResetToken/);
   assert.match(requestReset, /hashPasswordResetToken/);
   assert.match(confirmReset, /resetPasswordTokenHash:\s*tokenHash/);
 
-  assert.doesNotMatch(source, /resetPasswordApplication/);
+  assert.doesNotMatch(passwords, /resetPasswordApplication/);
   assert.doesNotMatch(userModelSource, /resetPasswordApplication/);
   assert.doesNotMatch(userTypeSource, /resetPasswordApplication/);
   assert.doesNotMatch(jwtSource, /PasswordResetJwtPayload/);
