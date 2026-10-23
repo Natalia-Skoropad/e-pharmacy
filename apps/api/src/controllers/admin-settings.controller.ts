@@ -13,15 +13,20 @@ import type {
 } from '../schemas/admin-settings.schema';
 
 import {
-  createAdminPositionService,
   createAdminProductCategoryService,
-  deleteAdminPositionService,
-  deleteAdminProductCategoryService,
-  listAdminPositionsService,
-  listAdminProductCategoriesService,
-  updateAdminPositionService,
   updateAdminProductCategoryService,
-} from '../services/admin/settings/admin-settings.service';
+  deleteAdminProductCategoryService,
+} from '../services/admin/settings/admin-settings-category-mutation.service';
+
+import { listAdminProductCategoriesService } from '../services/admin/settings/admin-settings-category-read.service';
+
+import {
+  createAdminPositionService,
+  updateAdminPositionService,
+  deleteAdminPositionService,
+} from '../services/admin/settings/admin-settings-position-mutation.service';
+
+import { listAdminPositionsService } from '../services/admin/settings/admin-settings-position-read.service';
 
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';

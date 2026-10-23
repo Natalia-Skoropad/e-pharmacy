@@ -75,7 +75,14 @@ const requiredFiles = [
     'api',
     'src',
     'services',
-    'admin/settings/admin-settings.service.ts',
+    'admin/settings/admin-settings-category-mutation.service.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/settings/admin-settings-position-mutation.service.ts',
   ],
   ['apps', 'admin', 'src', 'lib', 'audit', 'admin-audit.ts'],
   ['apps', 'admin', 'src', 'lib', 'api', 'browser', 'admin-audit.api.ts'],
@@ -118,6 +125,7 @@ const requiredFiles = [
 for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
+
     true,
     `Audit file must exist: ${file.join('/')}`
   );
@@ -286,13 +294,29 @@ const privateNoteService = await read(
   'admin/employees/admin-employee-note.service.ts'
 );
 
-const adminSettingsService = await read(
-  'apps',
-  'api',
-  'src',
-  'services',
-  'admin/settings/admin-settings.service.ts'
-);
+//===================================================================
+
+const adminSettingsService = (
+  await Promise.all([
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings/admin-settings-category-mutation.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings/admin-settings-position-mutation.service.ts'
+    ),
+  ])
+).join('\n');
+
+//===================================================================
 
 const navigation = await read(
   'apps',

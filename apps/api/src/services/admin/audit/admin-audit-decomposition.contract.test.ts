@@ -46,10 +46,14 @@ test('S10.9 removes Admin Audit monolith and binds callers directly to canonical
   assert.match(pharmacyActivity, /\.\/admin-audit-read\.service/);
   assert.match(pharmacyActivity, /\.\/admin-audit-actors\.service/);
 
-  const writer = readFileSync(
-    resolve(SRC, 'services/admin/settings/admin-settings.service.ts'),
-    'utf8'
-  );
+  const writer = [
+    'admin-settings-category-mutation.service.ts',
+    'admin-settings-position-mutation.service.ts',
+  ]
+    .map((name) =>
+      readFileSync(resolve(SRC, 'services/admin/settings', name), 'utf8')
+    )
+    .join('\n');
 
   assert.match(writer, /audit\/admin-audit-write\.service/);
 

@@ -30,7 +30,18 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'settings-dictionary.ts'],
   ['apps', 'api', 'src', 'models', 'position.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/settings/admin-settings.service.ts'],
+
+  ...[
+    'admin-settings-category-mutation.service.ts',
+    'admin-settings-position-mutation.service.ts',
+    'admin-settings-category-usage.ts',
+    'admin-settings-date-filters.ts',
+    'admin-settings-category-read.service.ts',
+    'admin-settings-position-read.service.ts',
+    'admin-settings-category-projection.ts',
+    'admin-settings-position-projection.ts',
+  ].map((name) => ['apps', 'api', 'src', 'services', 'admin/settings', name]),
+
   ['apps', 'api', 'src', 'controllers', 'admin-settings.controller.ts'],
   ['apps', 'api', 'src', 'types', 'admin-settings.ts'],
   ['apps', 'api', 'src', 'types', 'position.ts'],
@@ -48,13 +59,83 @@ for (const file of requiredFiles) {
 
 const routes = await read('apps', 'api', 'src', 'routes', 'admin.routes.ts');
 
-const service = await read(
-  'apps',
-  'api',
-  'src',
-  'services',
-  'admin/settings/admin-settings.service.ts'
-);
+//===================================================================
+
+const service = (
+  await Promise.all([
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-mutation.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-position-mutation.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-usage.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-date-filters.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-read.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-position-read.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-projection.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-position-projection.ts'
+    ),
+  ])
+).join('\n');
 
 const schema = await read(
   'apps',
@@ -103,6 +184,7 @@ for (const [pathPart, permission] of [
   ['positions/:positionId', 'positions.delete'],
 ]) {
   const [resource, action] = permission.split('.');
+
   assert.match(
     routes,
     new RegExp(
@@ -130,10 +212,13 @@ assert.match(service, /employeesCount/);
 assert.match(service, /earliestCreatedAt/);
 assert.match(service, /isMongoDuplicateKeyError/);
 assert.match(service, /HTTP_STATUS\.CONFLICT/);
+
 assert.equal((service.match(/session\.withTransaction/g) ?? []).length, 6);
 assert.equal((service.match(/appendAdminAuditLog\(/g) ?? []).length, 6);
 
 assert.doesNotMatch(adminAccessModel, /position(?:Id)?/i);
 assert.doesNotMatch(seed, /Position\.(?:create|insertMany|bulkWrite)/);
+
+//===================================================================
 
 console.log('Admin Settings CRUD backend structural checks passed.');

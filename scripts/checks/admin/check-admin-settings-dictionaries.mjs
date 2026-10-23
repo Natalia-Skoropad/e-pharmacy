@@ -30,7 +30,81 @@ const [
 ] = await Promise.all([
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
   read('apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'),
-  read('apps', 'api', 'src', 'services', 'admin/settings/admin-settings.service.ts'),
+
+  Promise.all([
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-mutation.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-position-mutation.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-usage.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-date-filters.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-read.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-position-read.service.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-category-projection.ts'
+    ),
+
+    read(
+      'apps',
+      'api',
+      'src',
+      'services',
+      'admin/settings',
+      'admin-settings-position-projection.ts'
+    ),
+  ]).then((sources) => sources.join('\n')),
+
   read('apps', 'api', 'src', 'models', 'productCategory.model.ts'),
   read('apps', 'api', 'src', 'models', 'position.model.ts'),
 
@@ -186,5 +260,7 @@ assert.match(
   auditPresentation,
   /positions:\s*ADMIN_ROUTES\.SETTINGS_POSITIONS/
 );
+
+//===================================================================
 
 console.log('Admin Settings dictionary hardening checks passed.');

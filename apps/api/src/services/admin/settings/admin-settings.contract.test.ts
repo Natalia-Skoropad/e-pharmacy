@@ -5,15 +5,23 @@ import test from 'node:test';
 
 //===============================================================
 
-const source = readFileSync(
-  resolve(
-    process.cwd(),
-    'src',
-    'services',
-    'admin/settings/admin-settings.service.ts'
-  ),
-  'utf8'
-);
+const source = [
+  'admin-settings-category-mutation.service.ts',
+  'admin-settings-position-mutation.service.ts',
+  'admin-settings-category-usage.ts',
+  'admin-settings-date-filters.ts',
+  'admin-settings-category-read.service.ts',
+  'admin-settings-position-read.service.ts',
+  'admin-settings-category-projection.ts',
+  'admin-settings-position-projection.ts',
+]
+  .map((file) =>
+    readFileSync(
+      resolve(process.cwd(), 'src', 'services', 'admin/settings', file),
+      'utf8'
+    )
+  )
+  .join('\n');
 
 //===============================================================
 
