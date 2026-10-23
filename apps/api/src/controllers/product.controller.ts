@@ -39,7 +39,8 @@ import {
   moderateProductReviewService,
 } from '../services/catalog/product-reviews.service';
 
-import { getProductStockMovementsService } from '../services/inventory/stockMovement.service';
+import { getProductStockMovementsService } from '../services/inventory/stock-movement-read.service';
+
 import type { ValidatedResponse } from '../types/validated-request';
 import { sendSuccessResponse } from '../utils/apiResponse';
 

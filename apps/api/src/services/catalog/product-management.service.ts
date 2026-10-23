@@ -11,7 +11,7 @@ import { Order } from '../../models/order.model';
 
 import type { ManagedProductsQuery } from '../../schemas/product.schema';
 
-import { recordInitialStockArrival } from '../inventory/stockMovement.service';
+import { recordInitialStockArrival } from '../inventory/stock-movement-write.service';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicateProductOfferError } from '../../utils/mongoError';

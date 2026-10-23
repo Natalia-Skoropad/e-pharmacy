@@ -7,7 +7,10 @@ import test from 'node:test';
 
 test('legacy stock backfill preserves the current balance when old orders cannot be replayed safely', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/inventory/stock-movement-legacy.service.ts'
+    ),
     'utf8'
   );
 
@@ -15,12 +18,7 @@ test('legacy stock backfill preserves the current balance when old orders cannot
     'async function backfillLegacyStockHistory'
   );
 
-  const reconcileStart = source.indexOf(
-    'async function reconcileOfferReservationBalance',
-    backfillStart
-  );
-
-  const backfillSource = source.slice(backfillStart, reconcileStart);
+  const backfillSource = source.slice(backfillStart);
 
   assert.match(backfillSource, /let canReconstructHistory = true/);
   assert.match(backfillSource, /canReconstructHistory = false/);
@@ -42,7 +40,10 @@ test('legacy stock backfill preserves the current balance when old orders cannot
 
 test('reservation reconciliation does not turn legacy over-reservation into a failed stock-movement response', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/inventory/stock-movement-reconcile.service.ts'
+    ),
     'utf8'
   );
 
@@ -50,12 +51,7 @@ test('reservation reconciliation does not turn legacy over-reservation into a fa
     'async function reconcileOfferReservationBalance'
   );
 
-  const reconcileEnd = source.indexOf(
-    'function getLatestOrderStockChangeDate',
-    reconcileStart
-  );
-
-  const reconcileSource = source.slice(reconcileStart, reconcileEnd);
+  const reconcileSource = source.slice(reconcileStart);
 
   assert.match(
     reconcileSource,
@@ -67,7 +63,10 @@ test('reservation reconciliation does not turn legacy over-reservation into a fa
 
 test('legacy stock replay tolerates incomplete historical order metadata', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/services/inventory/stockMovement.service.ts'),
+    resolve(
+      process.cwd(),
+      'src/services/inventory/stock-movement-legacy.service.ts'
+    ),
     'utf8'
   );
 

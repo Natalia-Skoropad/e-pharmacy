@@ -4,28 +4,18 @@ import { HTTP_STATUS } from '../../constants/httpStatus';
 import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
 import { ProductOffer } from '../../models/productOffer.model';
 
-import {
-  recordStockMovement,
-  type StockMovementContext,
-} from './stockMovement.service';
+import { recordStockMovement } from './stock-movement-write.service';
+
+import type {
+  StockMovementContext,
+  StockOfferSnapshot,
+} from './stock-movement-types';
 
 import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
 type StockTarget = string | Types.ObjectId;
-
-//===============================================================
-
-type StockOfferSnapshot = {
-  _id: Types.ObjectId;
-  productId: Types.ObjectId;
-  pharmacyId: Types.ObjectId;
-  price: number;
-  totalQuantity: number;
-  availableQuantity: number;
-  reservedQuantity: number;
-};
 
 //===============================================================
 

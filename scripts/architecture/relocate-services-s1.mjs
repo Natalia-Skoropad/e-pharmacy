@@ -111,6 +111,19 @@ for (const entry of moves) {
 // Stage S10 replaces the already-relocated Order service with canonical domain modules.
 // Preserve the historical S1 relocation ledger without retaining a proxy file.
 const S10_REPLACEMENTS = new Map([
+  // S10.7: Stock movement writes, legacy backfill, reconciliation and reads are separate.
+  [
+    'apps/api/src/services/inventory/stockMovement.service.ts',
+    [
+      'apps/api/src/services/inventory/stock-movement-types.ts',
+      'apps/api/src/services/inventory/stock-movement-balance.ts',
+      'apps/api/src/services/inventory/stock-movement-write.service.ts',
+      'apps/api/src/services/inventory/stock-movement-legacy.service.ts',
+      'apps/api/src/services/inventory/stock-movement-reconcile.service.ts',
+      'apps/api/src/services/inventory/stock-movement-projection.ts',
+      'apps/api/src/services/inventory/stock-movement-read.service.ts',
+    ],
+  ],
   // S10.6: Owner administration read paths are decomposed without a legacy facade.
   [
     'apps/api/src/services/admin/owners/admin-pharmacy-owner-read.service.ts',
