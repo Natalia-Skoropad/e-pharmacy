@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 
-import { REQUEST_ID_HEADER_NAME } from '../constants/bff';
-import { logger } from '../utils/logger';
+import { REQUEST_ID_HEADER_NAME } from '../../constants/bff';
+import { logger } from '../../utils/logger';
 
 //===============================================================
 
@@ -36,10 +36,12 @@ function getTraceId(req: Request): string | undefined {
 
 function getRequestId(req: Request): string {
   const value = req.get(REQUEST_ID_HEADER_NAME)?.trim();
+
   if (value && SAFE_REQUEST_ID_PATTERN.test(value)) return value;
 
   const traceparent = req.get('traceparent')?.trim();
   const traceMatch = traceparent?.match(TRACEPARENT_PATTERN);
+
   if (traceMatch && !/^0{32}$/.test(traceMatch[1])) {
     return formatTraceIdAsRequestId(traceMatch[1].toLowerCase());
   }
@@ -64,7 +66,9 @@ export function attachRequestContext(
   res.on('finish', () => {
     logger.request({
       requestId,
+
       ...(traceId ? { traceId } : {}),
+
       method: req.method,
       path: req.path,
       status: res.statusCode,

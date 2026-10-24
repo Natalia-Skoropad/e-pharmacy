@@ -6,7 +6,7 @@ import { adminRoutes } from './admin.routes';
 import { authRoutes } from './auth.routes';
 import { cartRoutes } from './cart.routes';
 import { clientRoutes } from './client.routes';
-import { healthRoutes } from './health.routes';
+import { healthRoutes } from './health/health.routes';
 import { orderRoutes } from './order.routes';
 import { productCategoryRoutes } from './product-category.routes';
 import { productRequestRoutes } from './product-request.routes';

@@ -23,13 +23,16 @@ test('traceparent preserves correlation without requiring x-request-id', () => {
   const res = {
     locals: {},
     statusCode: 200,
+
     setHeader: (name: string, value: string) => {
       responseHeaders.set(name.toLowerCase(), value);
     },
+
     on: () => res,
   } as unknown as Response;
 
   let nextCalled = false;
+
   const next = (() => {
     nextCalled = true;
   }) as NextFunction;
@@ -37,6 +40,7 @@ test('traceparent preserves correlation without requiring x-request-id', () => {
   attachRequestContext(req, res, next);
 
   const expectedRequestId = '123e4567-e89b-12d3-a456-426614174000';
+
   assert.equal(res.locals.requestId, expectedRequestId);
   assert.equal(responseHeaders.get('x-request-id'), expectedRequestId);
   assert.equal(nextCalled, true);

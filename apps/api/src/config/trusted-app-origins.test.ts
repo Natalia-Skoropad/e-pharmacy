@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+
 import { readFile } from 'node:fs/promises';
+
 import path from 'node:path';
 import test from 'node:test';
 
@@ -14,6 +16,7 @@ test('derives trusted origins from client, pharmacy and admin application URLs',
       'https://pharmacy.example.com/dashboard',
       'https://admin.example.com/',
     ],
+
     extraOrigins: ['https://preview.example.com/path'],
   });
 
@@ -54,7 +57,7 @@ test('CORS and mutation-origin middleware use the same trusted-origin set', asyn
     readFile(path.resolve(__dirname, '../app.ts'), 'utf8'),
 
     readFile(
-      path.resolve(__dirname, '../middlewares/origin.middleware.ts'),
+      path.resolve(__dirname, '../middlewares/security/origin.middleware.ts'),
       'utf8'
     ),
   ]);

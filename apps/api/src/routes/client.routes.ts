@@ -7,7 +7,7 @@ import {
 } from '../controllers/client.controller';
 
 import { authenticate } from '../middlewares/auth.middleware';
-import { validate } from '../middlewares/validate.middleware';
+import { validate } from '../middlewares/http/validate.middleware';
 
 import {
   clientParamsSchema,

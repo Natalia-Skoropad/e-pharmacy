@@ -1,11 +1,11 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError, type ZodType } from 'zod';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { API_MESSAGES } from '../constants/messages';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/messages';
 
-import type { ValidationErrorDetails } from '../types/errors';
-import { httpError } from '../utils/httpError';
+import type { ValidationErrorDetails } from '../../types/errors';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
@@ -26,7 +26,7 @@ function getValidationErrorDetails(
   }
 
   return error.issues.reduce<ValidationErrorDetails>((acc, issue) => {
-    const field = issue.path.length > 0 ? issue.path.join('.') : 'root';
+    const field = issue.path.length > 0 ? issue.path.join('..') : 'root';
 
     acc[field] = [...(acc[field] ?? []), issue.message];
 

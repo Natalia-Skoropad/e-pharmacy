@@ -27,9 +27,9 @@ import {
   optionalAuthenticate,
 } from '../middlewares/auth.middleware';
 
-import { reviewRateLimit } from '../middlewares/rateLimit.middleware';
+import { reviewRateLimit } from '../middlewares/security/rateLimit.middleware';
 import { authorizeRoles } from '../middlewares/role.middleware';
-import { validate } from '../middlewares/validate.middleware';
+import { validate } from '../middlewares/http/validate.middleware';
 
 import {
   createProductReviewSchema,

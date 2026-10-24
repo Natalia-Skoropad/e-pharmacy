@@ -387,7 +387,7 @@ const [
   ),
 
   readFile(
-    fromRoot('apps', 'api', 'src', 'middlewares', 'error.middleware.ts'),
+    fromRoot('apps', 'api', 'src', 'middlewares', 'http/error.middleware.ts'),
     'utf8'
   ),
 

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import { USER_ROLES } from '../constants/auth';
 import { ADMIN_PERMISSIONS } from '../constants/admin-permissions';
 
@@ -75,7 +76,7 @@ import {
 } from '../middlewares/admin-permission.middleware';
 
 import { authorizeRoles } from '../middlewares/role.middleware';
-import { validate } from '../middlewares/validate.middleware';
+import { validate } from '../middlewares/http/validate.middleware';
 
 import {
   adminPharmacyDocumentParamsSchema,

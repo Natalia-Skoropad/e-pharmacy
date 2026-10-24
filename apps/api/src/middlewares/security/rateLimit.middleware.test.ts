@@ -52,12 +52,15 @@ test('distributed auth rate limiting uses Mongo instead of process-local buckets
   );
 
   const store = readFileSync(
-    resolve(__dirname, '../services/infrastructure/rate-limit-store.service.ts'),
+    resolve(
+      __dirname,
+      '../../services/infrastructure/rate-limit-store.service.ts'
+    ),
     'utf8'
   );
 
   const model = readFileSync(
-    resolve(__dirname, '../models/infrastructure/rateLimitBucket.model.ts'),
+    resolve(__dirname, '../../models/infrastructure/rateLimitBucket.model.ts'),
     'utf8'
   );
 
@@ -72,7 +75,7 @@ test('distributed auth rate limiting uses Mongo instead of process-local buckets
 
 test('auth routes combine IP and account dimensions for credential-sensitive flows', () => {
   const routes = readFileSync(
-    resolve(__dirname, '../routes/auth.routes.ts'),
+    resolve(__dirname, '../../routes/auth.routes.ts'),
     'utf8'
   );
 
@@ -85,10 +88,8 @@ test('auth routes combine IP and account dimensions for credential-sensitive flo
     middleware,
     /function getEmailIpKey[\s\S]*?getEmailKey\(req, res\)[\s\S]*?getIpKey\(req\)[\s\S]*?emailKey && ipKey/
   );
-  assert.doesNotMatch(
-    middleware,
-    /export const loginAccountRateLimit/
-  );
+
+  assert.doesNotMatch(middleware, /export const loginAccountRateLimit/);
 
   assert.match(
     routes,

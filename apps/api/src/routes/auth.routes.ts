@@ -41,10 +41,10 @@ import {
   registrationDocumentIpRateLimit,
   registrationDocumentSessionIpRateLimit,
   registrationIpRateLimit,
-} from '../middlewares/rateLimit.middleware';
+} from '../middlewares/security/rateLimit.middleware';
 
 import { authorizeRoles } from '../middlewares/role.middleware';
-import { validate } from '../middlewares/validate.middleware';
+import { validate } from '../middlewares/http/validate.middleware';
 
 import {
   forgotPasswordSchema,
@@ -94,9 +94,11 @@ authRoutes.post(
   '/register',
   requireTrustedAuthProxy,
   registrationIpRateLimit,
+
   validateAuth({
     body: registerSchema,
   }),
+
   registrationAccountRateLimit,
   ctrlWrapper(registerUser)
 );
@@ -107,9 +109,11 @@ authRoutes.post(
   '/login',
   requireTrustedAuthProxy,
   loginIpRateLimit,
+
   validateAuth({
     body: loginSchema,
   }),
+
   loginProgressiveDelay,
   loginAccountIpRateLimit,
   ctrlWrapper(loginUser)
@@ -128,9 +132,11 @@ authRoutes.post(
 authRoutes.post(
   '/password-reset/request',
   passwordResetRequestIpRateLimit,
+
   validateAuth({
     body: forgotPasswordSchema,
   }),
+
   passwordResetAccountRateLimit,
   ctrlWrapper(requestPasswordReset)
 );
@@ -140,9 +146,11 @@ authRoutes.post(
 authRoutes.post(
   '/password-reset/confirm',
   passwordResetConfirmIpRateLimit,
+
   validateAuth({
     body: resetPasswordSchema,
   }),
+
   passwordResetTokenRateLimit,
   ctrlWrapper(resetPassword)
 );
@@ -156,9 +164,11 @@ authRoutes.get('/current', authenticate, ctrlWrapper(getCurrentUser));
 authRoutes.patch(
   '/current',
   authenticate,
+
   validateAuth({
     body: updateProfileSchema,
   }),
+
   ctrlWrapper(updateCurrentUser)
 );
 
@@ -168,9 +178,11 @@ authRoutes.patch(
   '/current/password',
   authenticate,
   passwordChangeIpRateLimit,
+
   validateAuth({
     body: updatePasswordSchema,
   }),
+
   passwordChangeProgressiveDelay,
   passwordChangeAccountRateLimit,
   ctrlWrapper(updateCurrentUserPassword)

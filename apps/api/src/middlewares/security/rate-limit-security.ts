@@ -12,6 +12,7 @@ export function normalizeRateLimitEmail(value: unknown): string | null {
   if (typeof value !== 'string') return null;
 
   const normalized = value.trim().toLowerCase();
+
   return normalized || null;
 }
 
@@ -21,6 +22,7 @@ export function hashRateLimitSecret(value: unknown): string | null {
   if (typeof value !== 'string') return null;
 
   const normalized = value.trim();
+
   if (!normalized) return null;
 
   return createHash('sha256').update(normalized).digest('hex');

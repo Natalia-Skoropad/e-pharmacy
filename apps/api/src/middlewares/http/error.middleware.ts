@@ -1,14 +1,15 @@
 import type { ErrorRequestHandler } from 'express';
 
-import { AUTH_ERROR_CODES } from '../constants/auth';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { API_MESSAGES } from '../constants/messages';
-import type { HttpError } from '../types/errors';
+import { AUTH_ERROR_CODES } from '../../constants/auth';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/messages';
+
+import type { HttpError } from '../../types/errors';
 
 import {
   isDuplicateEmailError,
   isDuplicatePhoneError,
-} from '../utils/mongoError';
+} from '../../utils/mongoError';
 
 //===============================================================
 
@@ -33,12 +34,15 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
   if (isDuplicateEmailError(error) || isDuplicatePhoneError(error)) {
     res.status(HTTP_STATUS.CONFLICT).json({
       status: 'error',
+
       message: isDuplicatePhoneError(error)
         ? API_MESSAGES.PHONE_IN_USE
         : API_MESSAGES.EMAIL_IN_USE,
+
       code: isDuplicatePhoneError(error)
         ? AUTH_ERROR_CODES.PHONE_CONFLICT
         : AUTH_ERROR_CODES.EMAIL_CONFLICT,
+
       ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
     });
 
@@ -59,9 +63,11 @@ export const errorMiddleware: ErrorRequestHandler = (error, req, res, next) => {
   const responseBody = {
     status: 'error',
     message,
+
     ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
     ...(isHttpError(error) && error.code ? { code: error.code } : {}),
     ...(isHttpError(error) && error.details ? { details: error.details } : {}),
+
     ...(!isProduction && error instanceof Error && error.stack
       ? { stack: error.stack }
       : {}),

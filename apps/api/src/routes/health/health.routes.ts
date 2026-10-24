@@ -1,9 +1,13 @@
 import { Router } from 'express';
 
-import { echoHealth, getHealth } from '../controllers/health.controller';
-import { validate } from '../middlewares/validate.middleware';
-import { healthEchoSchema } from '../schemas/health.schema';
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import {
+  echoHealth,
+  getHealth,
+} from '../../controllers/health/health.controller';
+
+import { validate } from '../../middlewares/http/validate.middleware';
+import { healthEchoSchema } from '../../schemas/health.schema';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 
@@ -17,8 +21,10 @@ healthRoutes.get('/', ctrlWrapper(getHealth));
 
 healthRoutes.post(
   '/echo',
+
   validate({
     body: healthEchoSchema,
   }),
+
   ctrlWrapper(echoHealth)
 );

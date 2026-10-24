@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { AUTH_ERROR_CODES } from '../constants/auth';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { AUTH_ERROR_CODES } from '../../constants/auth';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import {
   decrementRateLimitCounter,
@@ -9,9 +9,9 @@ import {
   incrementRateLimitCounter,
   incrementRateLimitCounterInWindow,
   resetRateLimitCounter,
-} from '../services/infrastructure/rate-limit-store.service';
+} from '../../services/infrastructure/rate-limit-store.service';
 
-import { logger } from '../utils/logger';
+import { logger } from '../../utils/logger';
 
 import {
   fingerprintRateLimitKey,
@@ -30,6 +30,7 @@ function getValidatedBody(res: Response): Record<string, unknown> | null {
   const validated = res.locals.validated as { body?: unknown } | undefined;
 
   const body = validated?.body;
+
   return body && typeof body === 'object'
     ? (body as Record<string, unknown>)
     : null;
@@ -39,6 +40,7 @@ function getValidatedBody(res: Response): Record<string, unknown> | null {
 
 function getEmailKey(_req: Request, res: Response): string | null {
   const email = normalizeRateLimitEmail(getValidatedBody(res)?.email);
+
   return email ? `email:${email}` : null;
 }
 
@@ -46,6 +48,7 @@ function getEmailKey(_req: Request, res: Response): string | null {
 
 function getResetTokenKey(_req: Request, res: Response): string | null {
   const tokenHash = hashRateLimitSecret(getValidatedBody(res)?.token);
+
   return tokenHash ? `reset-token:${tokenHash}` : null;
 }
 
@@ -53,6 +56,7 @@ function getResetTokenKey(_req: Request, res: Response): string | null {
 
 function getAuthenticatedUserKey(req: Request): string | null {
   const userId = req.user?.id;
+
   return userId ? `user:${userId}` : null;
 }
 
@@ -109,6 +113,7 @@ function createProgressiveDelay(
       runAfterResponse(res, async () => {
         if (res.statusCode >= 200 && res.statusCode < 400) {
           await resetRateLimitCounter(counter.window);
+
           return;
         }
 
@@ -119,6 +124,7 @@ function createProgressiveDelay(
 
       if (delayMs <= 0) {
         next();
+
         return;
       }
 
@@ -172,6 +178,7 @@ function createRateLimit(options: {
     try {
       const counter = await incrementRateLimitCounter(policy, key);
       const remaining = Math.max(0, limit - counter.hits);
+
       const resetSeconds = Math.max(
         1,
         Math.ceil((counter.window.resetAt.getTime() - Date.now()) / 1000)
@@ -199,15 +206,18 @@ function createRateLimit(options: {
       logger.security({
         action: 'auth_rate_limited',
         policy,
+
         accountFingerprint: fingerprintRateLimitKey(
           resolveKey ? key : undefined
         ),
+
         ipFingerprint: fingerprintRateLimitKey(req.ip),
       });
 
       res.status(HTTP_STATUS.TOO_MANY_REQUESTS).json({
         status: 'error',
         message,
+
         ...(code ? { code } : {}),
         ...(res.locals.requestId ? { requestId: res.locals.requestId } : {}),
       });

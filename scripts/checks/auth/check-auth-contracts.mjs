@@ -321,6 +321,7 @@ for (const [role, frontendType, statusType] of [
 ]) {
   assert.match(
     frontendAuthTypes,
+
     new RegExp(
       String.raw`type\s+${frontendType}[\s\S]*?role:\s*['"]${role}['"][\s\S]*?status:\s*${statusType}`
     )
@@ -328,6 +329,7 @@ for (const [role, frontendType, statusType] of [
 
   assert.match(
     backendAuthTypes,
+
     new RegExp(
       String.raw`role:\s*['"]${role}['"][\s\S]*?status:\s*${statusType}`
     )
@@ -427,7 +429,7 @@ const originMiddleware = await read(
   'api',
   'src',
   'middlewares',
-  'origin.middleware.ts'
+  'security/origin.middleware.ts'
 );
 
 for (const [label, source] of [

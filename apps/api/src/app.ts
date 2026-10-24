@@ -5,11 +5,13 @@ import path from 'path';
 
 import { env } from './config/env';
 import { API_JSON_BODY_LIMITS } from './constants/request-body';
-import { errorMiddleware } from './middlewares/error.middleware';
-import { notFoundMiddleware } from './middlewares/notFound.middleware';
-import { validateMutationOrigin } from './middlewares/origin.middleware';
-import { attachRequestContext } from './middlewares/request-context.middleware';
+
+import { errorMiddleware } from './middlewares/http/error.middleware';
+import { notFoundMiddleware } from './middlewares/http/notFound.middleware';
+import { validateMutationOrigin } from './middlewares/security/origin.middleware';
+import { attachRequestContext } from './middlewares/http/request-context.middleware';
 import { attachPharmacySelection } from './middlewares/pharmacy-selection.middleware';
+
 import { routes } from './routes';
 
 //===============================================================

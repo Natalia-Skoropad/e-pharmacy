@@ -23,6 +23,12 @@ const ROOT = path.resolve(
 );
 
 const MANIFEST = 'docs/architecture/transport-c1/transport-relocation-map.json';
+
+// Regression tests intentionally contain OLD flat transport paths as fixtures.
+// Keep their literals stable across all C2-C6 apply runs.
+const RELOCATION_TEST_FIXTURE =
+  'scripts/architecture/relocate-api-transport-c1.test.mjs';
+
 const SCOPES = [
   'apps/api/src/controllers/',
   'apps/api/src/routes/',
@@ -144,13 +150,16 @@ const completed = new Set(
   moves.filter((m) => relocatedDestinationExists(m.to)).map((m) => m.from)
 );
 
-
 // Refuse to relocate later domains before the earlier stages are complete.
 if (mode === 'apply') {
   const selectedNumber = Number(stage.slice(1));
+
   for (const move of moves) {
     if (Number(move.stage.slice(1)) < selectedNumber)
-      assert(completed.has(move.from), `Previous stage ${move.stage} is incomplete`);
+      assert(
+        completed.has(move.from),
+        `Previous stage ${move.stage} is incomplete`
+      );
   }
 }
 
@@ -251,10 +260,15 @@ function sourceLiteral(value) {
     (whole, domain, filename) => {
       const original = `apps/api/src/${domain}/${filename}`;
       const target = moved.get(original);
+
       if (!target) return whole;
 
       // Preserve the original prefix (apps/api/src/, src/, or bare domain/).
-      const prefix = whole.slice(0, whole.length - domain.length - filename.length - 1);
+      const prefix = whole.slice(
+        0,
+        whole.length - domain.length - filename.length - 1
+      );
+
       return prefix + target.slice('apps/api/src/'.length);
     }
   );
@@ -289,21 +303,27 @@ function rewriteSegments(source) {
     (block) => {
       const matches = [...block.matchAll(/(['"`])([\w.-]+)\1/g)];
       const tokens = matches.map((x) => x[2]);
+
       const index = tokens.findIndex((x) =>
         ['controllers', 'routes', 'middlewares'].includes(x)
       );
+
       if (index < 0 || index + 1 >= tokens.length) return block;
 
       const target = moved.get(
         `apps/api/src/${tokens[index]}/${tokens[index + 1]}`
       );
+
       if (!target) return block;
 
       const newToken = target.slice(`apps/api/src/${tokens[index]}/`.length);
       const matched = matches[index + 1];
+
       return (
         block.slice(0, matched.index) +
-        matched[1] + newToken + matched[1] +
+        matched[1] +
+        newToken +
+        matched[1] +
         block.slice(matched.index + matched[0].length)
       );
     }
@@ -314,6 +334,8 @@ function rewriteSegments(source) {
 
 // Keep quote styles, line endings and all non-path code verbatim. No proxy files.
 function rewrite(content, from, to) {
+  if (from === RELOCATION_TEST_FIXTURE) return content;
+
   let result = content.replace(
     /(['"`])((?:(?!\1)[^'"`\r\n])*)\1/g,
     (match, quote, value) => {
@@ -349,31 +371,59 @@ for (const file of files) {
 // Keep source-level HTTP method registrations, mount prefixes and order intact.
 // Relocation is allowed to change only source references and import paths.
 const registrations = (text) =>
-  [...text.matchAll(/\b[\w.]+\.(?:get|post|put|patch|delete|options|head)\s*\(/g)]
-    .map((match) => match[0]);
+  [
+    ...text.matchAll(
+      /\b[\w.]+\.(?:get|post|put|patch|delete|options|head)\s*\(/g
+    ),
+  ].map((match) => match[0]);
+
 const routeLiterals = (text) =>
-  [...text.matchAll(/(['"`])(\/[^'"`\r\n]*)\1/g)]
-    .map((match) => match[2]);
+  [...text.matchAll(/(['"`])(\/[^'"`\r\n]*)\1/g)].map((match) => match[2]);
+
 const mountPrefixes = (text) =>
-  [...text.matchAll(/\broutes\.use\s*\(\s*['"]([^'"]+)['"]/g)]
-    .map((match) => match[1]);
+  [...text.matchAll(/\broutes\.use\s*\(\s*['"]([^'"]+)['"]/g)].map(
+    (match) => match[1]
+  );
 
 let registeredRouteMethods = 0;
+
 for (const file of files.filter((p) => p.startsWith('apps/api/src/routes/'))) {
   const old = currentFile(file);
   const before = readFileSync(abs(file), 'utf8');
   const after = predicted.get(mappedPath(old));
-  assert.deepEqual(registrations(after), registrations(before),
-    `HTTP method registrations changed in ${file}`);
-  assert.deepEqual(routeLiterals(after), routeLiterals(before),
-    `Absolute route/URL literals changed in ${file}`);
+
+  assert.deepEqual(
+    registrations(after),
+    registrations(before),
+    `HTTP method registrations changed in ${file}`
+  );
+
+  assert.deepEqual(
+    routeLiterals(after),
+    routeLiterals(before),
+    `Absolute route/URL literals changed in ${file}`
+  );
+
   registeredRouteMethods += registrations(after).length;
 }
+
 const routeIndex = predicted.get('apps/api/src/routes/index.ts');
+
 assert(routeIndex, 'Missing route composition root');
+
 const registeredMounts = mountPrefixes(routeIndex).length;
-assert.equal(registeredMounts, manifest.httpContracts.mounts, 'API route mount count drift');
-assert.equal(registeredRouteMethods, manifest.httpContracts.registrations, 'API method registry count drift');
+
+assert.equal(
+  registeredMounts,
+  manifest.httpContracts.mounts,
+  'API route mount count drift'
+);
+
+assert.equal(
+  registeredRouteMethods,
+  manifest.httpContracts.registrations,
+  'API method registry count drift'
+);
 
 const rewrites = changes.filter((c) => c.before !== c.after).length;
 const projected = new Set(files.map((f) => mappedPath(currentFile(f))));
@@ -423,8 +473,11 @@ for (const file of files) {
   const beforeImports = getImports(before);
   const afterImports = getImports(after);
 
-  assert.equal(afterImports.length, beforeImports.length,
-    `Import count changed in ${file}`);
+  assert.equal(
+    afterImports.length,
+    beforeImports.length,
+    `Import count changed in ${file}`
+  );
 
   for (let index = 0; index < beforeImports.length; index++) {
     const spec = beforeImports[index];
@@ -432,9 +485,12 @@ for (const file of files) {
 
     // C1 must never introduce an explicit .ts import, a regression caught at M1.
     if (/\.tsx?$/.test(newSpec) && !/\.tsx?$/.test(spec))
-      importErrors.push(`${file}: unexpected TypeScript import extension ${newSpec}`);
+      importErrors.push(
+        `${file}: unexpected TypeScript import extension ${newSpec}`
+      );
 
     const originalTarget = resolveInSet(file, spec, currentFiles);
+
     if (!originalTarget) continue; // Pre-existing missing imports are out of scope.
 
     const oldTarget = destination.get(originalTarget)?.from ?? originalTarget;
@@ -472,6 +528,9 @@ function verifyProjected() {
     /(?:apps\/api\/src\/|src\/)?(controllers|routes|middlewares)\/([\w.-]+\.ts)/g;
 
   for (const [file, content] of predicted) {
+    // This test file necessarily describes the pre-relocation source layout.
+    if (file === RELOCATION_TEST_FIXTURE) continue;
+
     for (const x of content.matchAll(pathPattern)) {
       const target = `apps/api/src/${x[1]}/${x[2]}`;
 

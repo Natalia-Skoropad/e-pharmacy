@@ -15,7 +15,7 @@ const backendRouteFiles = {
   '/auth': 'apps/api/src/routes/auth.routes.ts',
   '/cart': 'apps/api/src/routes/cart.routes.ts',
   '/clients': 'apps/api/src/routes/client.routes.ts',
-  '/health': 'apps/api/src/routes/health.routes.ts',
+  '/health': 'apps/api/src/routes/health/health.routes.ts',
   '/orders': 'apps/api/src/routes/order.routes.ts',
   '/pharmacies': 'apps/api/src/routes/pharmacy.routes.ts',
   '/pharmacy-owners': 'apps/api/src/routes/pharmacy-owner.routes.ts',
@@ -33,6 +33,7 @@ async function collectRouteFiles(directory) {
 
   for (const entry of entries) {
     const absolute = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await collectRouteFiles(absolute)));
     else if (entry.name === 'route.ts') files.push(absolute);
   }
@@ -54,6 +55,7 @@ function routePathFromFile(file, routeRoot) {
 
 function normalizeBackendPath(prefix, localPath) {
   if (localPath === '/') return prefix;
+
   return `${prefix}${localPath.startsWith('/') ? localPath : `/${localPath}`}`;
 }
 
@@ -79,15 +81,18 @@ function getBackendRouteDescriptor(backendPath) {
 
 function inferBackendAccessMode(source, method, localPath) {
   const escapedPath = localPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   const routePattern = new RegExp(
     `\\b(\\w+Routes)\\.${method.toLowerCase()}\\(\\s*['"]${escapedPath}['"]`
   );
+
   const match = routePattern.exec(source);
 
   if (!match) return undefined;
 
   const routerName = match[1];
   const blockEnd = source.indexOf('\n);', match.index);
+
   const routeBlock = source.slice(
     match.index,
     blockEnd === -1 ? source.length : blockEnd + 3
@@ -96,6 +101,7 @@ function inferBackendAccessMode(source, method, localPath) {
   if (/\boptionalAuthenticate\b/.test(routeBlock)) return 'optional';
 
   const beforeRoute = source.slice(0, match.index);
+
   const hasRouterAuthGuard = new RegExp(
     `\\b${routerName}\\.use\\(\\s*authenticate\\s*\\)`
   ).test(beforeRoute);
@@ -171,6 +177,7 @@ const backendSources = new Map();
 
 for (const [prefix, relativeFile] of Object.entries(backendRouteFiles)) {
   const source = await readFile(path.join(root, relativeFile), 'utf8');
+
   backendSources.set(prefix, source);
 
   const matches = source.matchAll(
@@ -180,12 +187,14 @@ for (const [prefix, relativeFile] of Object.entries(backendRouteFiles)) {
   for (const match of matches) {
     const method = match[1].toUpperCase();
     const backendPath = normalizeBackendPath(prefix, match[2]);
+
     backendHandlers.add(`${method} ${backendPath}`);
   }
 }
 
 const violations = [];
 const discoveredKeys = new Set();
+
 let handlerCount = 0;
 let backendAccessAssertionCount = 0;
 
@@ -203,6 +212,7 @@ for (const [handlerKey, expectedAccess] of backendAccessByHandler) {
   }
 
   const source = backendSources.get(descriptor.prefix);
+
   const actualAccess = source
     ? inferBackendAccessMode(source, method, descriptor.localPath)
     : undefined;
@@ -224,6 +234,7 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
     const route = routePathFromFile(file, routeRoot);
     const key = `${app}:${route}`;
     const source = await readFile(file, 'utf8');
+
     const methods = [
       ...source.matchAll(/export const (GET|POST|PUT|PATCH|DELETE)\s*=/g),
     ].map((match) => match[1]);
@@ -288,12 +299,15 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
 
     if (!methods.length)
       violations.push(`${rel}: no HTTP handler export found`);
+
     if (/AUTH_PROXY_ROUTES/.test(source))
       violations.push(`${rel}: AUTH_PROXY_ROUTES alias is forbidden`);
+
     if (/`\/pharmacy-notes\//.test(source))
       violations.push(
         `${rel}: literal pharmacy-notes backend path is forbidden`
       );
+
     if (/orders\.details\([^)]*\)\}\/status/.test(source))
       violations.push(`${rel}: order status must use canonical route builder`);
 
@@ -301,6 +315,7 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
       const hasCanonicalRoute = /API_ROUTES\.|authRoutes\.|apiRoutes\./.test(
         source
       );
+
       const usesSharedVariable =
         /backendPath\s*,/.test(source) && hasCanonicalRoute;
 
@@ -401,6 +416,8 @@ const backendAccessContractLabel =
   backendAccessContracts.length === 1
     ? 'backend access contract'
     : 'backend access contracts';
+
+//===================================================================
 
 console.log(
   `Next API structural route check passed (${contracts.length} routes, ${handlerCount} handlers, backend method/path parity verified, ${backendAccessContracts.length} ${backendAccessContractLabel} and ${backendAccessAssertionCount} BFF access comparisons verified).`
