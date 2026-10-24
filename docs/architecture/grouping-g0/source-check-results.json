@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "sourceArchive": "e-pharmacy-14-20-4.zip",
+  "notes": "Executed on unpacked source with Node 22.16.0. Not a substitute for pnpm lint/type-check/test/integration/build; node_modules were not present in this sandbox.",
+  "checks": [
+    {
+      "command": "node scripts/architecture/check-api-grouping-g0.mjs --check",
+      "exitCode": 0,
+      "result": "G0 PASS: 153 tracked, 140 planned, 13 stable, 917 imports into scope, 50 source paths, 14 script commands"
+    },
+    {
+      "command": "node --test scripts/architecture/check-api-grouping-g0.test.mjs",
+      "exitCode": 0,
+      "result": "5/5 tests passed"
+    },
+    {
+      "command": "node scripts/architecture/relocate-services-s1.mjs --check",
+      "exitCode": 0,
+      "result": "144/144 completed; 0 selected"
+    },
+    {
+      "command": "node scripts/architecture/relocate-api-transport-c1.mjs --check",
+      "exitCode": 0,
+      "result": "48/48 completed; 0 selected; 159 route registrations"
+    },
+    {
+      "command": "node scripts/architecture/check-models-m1.mjs",
+      "exitCode": 0,
+      "result": "30 models/tests located; 0 invalid fingerprints"
+    },
+    {
+      "command": "node --test scripts/architecture/check-models-m1.test.mjs scripts/architecture/relocate-api-transport-c1.test.mjs scripts/architecture/relocate-services-s1.test.mjs",
+      "exitCode": 0,
+      "result": "7/7 tests passed"
+    },
+    {
+      "command": "node scripts/checks/boundaries/check-api-package-boundaries.mjs",
+      "exitCode": 0,
+      "result": "461 API source files scanned"
+    },
+    {
+      "command": "node scripts/checks/product-categories/check-dynamic-product-categories.mjs",
+      "exitCode": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "node scripts/checks/pharmacy/check-pharmacy-location.mjs",
+      "exitCode": 0,
+      "result": "PASS; 1225 production modules scanned; 4 legacy files allowlisted"
+    }
+  ]
+}
