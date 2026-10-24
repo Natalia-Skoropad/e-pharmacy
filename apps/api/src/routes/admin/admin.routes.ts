@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { USER_ROLES } from '../../constants/auth';
-import { ADMIN_PERMISSIONS } from '../../constants/admin-permissions';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { ADMIN_PERMISSIONS } from '../../constants/admin/access/admin-permissions';
 
 import {
   getCurrentAdminAccess,

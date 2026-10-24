@@ -108,7 +108,7 @@ const BACKEND_SETTINGS_DICTIONARY_CONSTANTS_SOURCE = path.join(
   'api',
   'src',
   'constants',
-  'settings-dictionary.ts'
+  'admin/settings/settings-dictionary.ts'
 );
 
 const BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE = path.join(
@@ -117,7 +117,7 @@ const BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE = path.join(
   'api',
   'src',
   'constants',
-  'product-category.ts'
+  'catalog/product-category.ts'
 );
 
 //===================================================================
@@ -139,7 +139,9 @@ function requireIntegerMatch(source, pattern, label) {
   assert.ok(match, `${label} was not found`);
 
   const value = Number(match[1]);
+
   assert.equal(Number.isInteger(value), true, `${label} is not an integer`);
+
   return value;
 }
 
@@ -151,6 +153,7 @@ function requireRegexLiteral(source, variableName, label) {
   );
 
   assert.ok(match, `${label} was not found`);
+
   return `/${match[1]}/${match[2]}`;
 }
 
@@ -336,6 +339,8 @@ assert.equal(
 
   'Shared and backend product category slug patterns differ'
 );
+
+//===================================================================
 
 console.log(
   `Validation contract parity check passed (${frontendFixture.cases.length} mirrored cases).`

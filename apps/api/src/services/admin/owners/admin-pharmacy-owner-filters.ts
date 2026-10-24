@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES, USER_ROLES } from '../../../constants/auth';
+import { PHARMACY_STATUSES, USER_ROLES } from '../../../constants/auth/auth';
 
 import type {
   AdminPharmacyOwnerListQuery,

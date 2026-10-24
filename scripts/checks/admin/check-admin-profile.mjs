@@ -18,6 +18,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -145,7 +146,7 @@ const [
   ),
 
   read('apps', 'admin', 'src', 'lib', 'layout', 'breadcrumbs.ts'),
-  read('apps', 'api', 'src', 'constants', 'admin-permissions.ts'),
+  read('apps', 'api', 'src', 'constants', 'admin/access/admin-permissions.ts'),
 
   read(
     'apps',

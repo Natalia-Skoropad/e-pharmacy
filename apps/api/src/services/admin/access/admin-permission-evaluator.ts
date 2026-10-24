@@ -1,9 +1,9 @@
-import { ADMIN_ACCESS_STATUSES } from '../../../constants/admin-access';
+import { ADMIN_ACCESS_STATUSES } from '../../../constants/admin/access/admin-access';
 
 import {
   isAdminPermission,
   type AdminPermission,
-} from '../../../constants/admin-permissions';
+} from '../../../constants/admin/access/admin-permissions';
 
 import type { AdminAuthorization } from '../../../types/admin-access';
 

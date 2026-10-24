@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { USER_ROLES } from '../../constants/auth';
+import { USER_ROLES } from '../../constants/auth/auth';
 
 import {
   deleteMyPharmacyOwnerDocument,

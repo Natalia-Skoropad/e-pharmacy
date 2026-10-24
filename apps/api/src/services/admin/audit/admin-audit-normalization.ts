@@ -1,4 +1,4 @@
-import { ADMIN_AUDIT_LIMITS } from '../../../constants/admin-audit';
+import { ADMIN_AUDIT_LIMITS } from '../../../constants/admin/audit/admin-audit';
 
 import type {
   AdminAuditSnapshot,

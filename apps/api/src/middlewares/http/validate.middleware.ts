@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError, type ZodType } from 'zod';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
 
 import type { ValidationErrorDetails } from '../../types/errors';
 import { httpError } from '../../utils/httpError';

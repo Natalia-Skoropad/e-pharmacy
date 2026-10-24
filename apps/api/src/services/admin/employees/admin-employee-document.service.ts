@@ -1,19 +1,19 @@
 import mongoose, { Types, type ClientSession } from 'mongoose';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../../../constants/admin-access';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../../constants/admin/access/admin-access';
 
 import {
   ADMIN_EMPLOYEE_DOCUMENT_RULES,
   ADMIN_EMPLOYEE_DOCUMENT_VALIDATION_MESSAGES,
-} from '../../../constants/admin-employee-document-validation';
+} from '../../../constants/admin/employees/admin-employee-document-validation';
 
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminEmployeeDocument } from '../../../models/admin/employees/adminEmployeeDocument.model';
 
 import type { AdminEmployeeDocumentUploadInput } from '../../../schemas/admin-employee-document.schema';

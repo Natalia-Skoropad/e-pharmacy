@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/product-request';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-request';
 
 import { Product } from '../../models/catalog/product.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';

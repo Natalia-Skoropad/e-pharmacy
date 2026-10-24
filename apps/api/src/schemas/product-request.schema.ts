@@ -17,7 +17,7 @@ import {
 
 import { optionalTrimmedTextSchema } from './shared/optional-text.schema';
 import { productCategorySlugSchema } from './product-category.schema';
-import { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/product-request';
+import { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/catalog/product-request';
 
 import {
   PRODUCT_REQUEST_ARTICLE_PATTERN,
@@ -28,7 +28,7 @@ import {
   PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
   PRODUCT_REQUEST_STATUSES,
   PRODUCT_REQUEST_VALIDATION_MESSAGES,
-} from '../constants/product-request-validation';
+} from '../constants/catalog/product-request-validation';
 
 //===============================================================
 

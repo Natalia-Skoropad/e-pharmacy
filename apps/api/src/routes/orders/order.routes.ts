@@ -13,7 +13,7 @@ import {
   updateOrderStatus,
 } from '../../controllers/orders/order.controller';
 
-import { USER_ROLES } from '../../constants/auth';
+import { USER_ROLES } from '../../constants/auth/auth';
 
 import { authenticate } from '../../middlewares/auth/auth.middleware';
 import { authorizeRoles } from '../../middlewares/auth/role.middleware';

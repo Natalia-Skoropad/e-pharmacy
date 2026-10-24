@@ -125,7 +125,7 @@ test('14.15: pharmacy comments reuse shared UI and are scoped, audited, idempote
   assert.match(schema, /max\(PHARMACY_OWNER_ADMIN_COMMENT_MAX_LENGTH\)/);
 
   const limit = await read(
-    '../../../../api/src/constants/pharmacy-owner-admin-comment.ts'
+    '../../../../api/src/constants/owners/pharmacy-owner-admin-comment.ts'
   );
 
   assert.match(limit, /= 1000/);

@@ -4,7 +4,7 @@ import {
   PHARMACY_OWNER_ACCOUNT_STATUSES,
   PHARMACY_STATUSES,
   USER_STATUSES,
-} from '../constants/auth';
+} from '../constants/auth/auth';
 
 import {
   DATE_RANGE_MESSAGE,

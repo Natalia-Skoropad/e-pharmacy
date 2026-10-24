@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import type {
   AddCartItemInput,

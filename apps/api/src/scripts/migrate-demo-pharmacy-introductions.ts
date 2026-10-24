@@ -6,7 +6,7 @@ import { Pharmacy } from '../models/pharmacies/pharmacy.model';
 import {
   DEMO_REGIONS,
   createDemoPharmacyShortDescription,
-} from '../constants/demo-pharmacy-profiles';
+} from '../constants/fixtures/demo-pharmacy-profiles';
 
 //===================================================================
 

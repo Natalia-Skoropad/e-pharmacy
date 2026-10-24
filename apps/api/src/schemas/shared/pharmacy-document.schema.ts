@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   PHARMACY_DOCUMENT_RULES,
   PHARMACY_DOCUMENT_VALIDATION_MESSAGES,
-} from '../../constants/pharmacy-document-validation';
+} from '../../constants/pharmacies/pharmacy-document-validation';
 
 import { mongoIdSchema } from './id.schema';
 

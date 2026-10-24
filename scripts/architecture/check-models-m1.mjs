@@ -254,6 +254,7 @@ assert.equal(manifest.scope, scope);
 assert.equal(manifest.moves.length, inventory.files.length);
 assert.equal(inventory.modelCount, 27);
 assert.equal(inventory.testCount, 3);
+
 assert.deepEqual(
   new Set(layoutInsensitiveSha256.keys()),
   new Set(inventory.files.map((item) => item.toPath)),
@@ -284,6 +285,49 @@ for (const entry of manifest.moves) {
     existsSync(path.join(root, entry.to)),
     `Missing canonical model: ${entry.to}`
   );
+}
+
+//===================================================================
+
+// G1 Constants changes physical import targets, not model logic. Fold only
+// completed, exact manifest paths back to their immutable pre-G1 identity.
+// This retains the original M1 source fingerprints without relaxing hashing.
+const g1MapFile = 'docs/architecture/grouping-g0/relocation-plan.json';
+
+if (existsSync(path.join(root, g1MapFile))) {
+  const grouping = JSON.parse(readFileSync(path.join(root, g1MapFile), 'utf8'));
+  const constantMoves = grouping.moves.filter((item) => item.stage === 'G1');
+
+  assert.equal(
+    constantMoves.length,
+    35,
+    'G1 canonical constant map must be complete'
+  );
+
+  const migrated = constantMoves.filter((item) =>
+    existsSync(path.join(root, item.to))
+  );
+
+  assert(
+    migrated.length === 0 || migrated.length === constantMoves.length,
+    'Partially migrated constants are not a valid M1 dependency baseline'
+  );
+
+  if (migrated.length) {
+    for (const item of constantMoves) {
+      assert(
+        !existsSync(path.join(root, item.from)),
+        `Legacy constants proxy prohibited: ${item.from}`
+      );
+
+      assert(
+        !canonicalOld.has(item.to),
+        `Duplicate canonical M1/G1 path: ${item.to}`
+      );
+
+      canonicalOld.set(item.to, item.from);
+    }
+  }
 }
 
 //===================================================================
@@ -329,6 +373,7 @@ function canonicalSource(source, caller) {
 
 let indexes = 0;
 let schemaCount = 0;
+
 const invalidFingerprints = [];
 
 for (const item of inventory.files) {

@@ -20,7 +20,7 @@ import {
   setFavoriteProduct,
 } from '../../controllers/catalog/product.controller';
 
-import { USER_ROLES } from '../../constants/auth';
+import { USER_ROLES } from '../../constants/auth/auth';
 
 import {
   authenticate,

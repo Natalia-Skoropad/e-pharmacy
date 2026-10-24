@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
-import { USER_ROLES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { isPharmacyOperationalStatus } from '../../constants/pharmacy-status';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
 
 import {
   requirePharmacyCapability,

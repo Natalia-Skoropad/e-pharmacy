@@ -36,7 +36,7 @@ const [
   read('packages/types/src/auth/payloads.ts'),
   read('apps/api/src/models/pharmacies/pharmacyDocumentFile.model.ts'),
   read('packages/config/src/pharmacies/error-codes.ts'),
-  read('apps/api/src/constants/pharmacy-profile.ts'),
+  read('apps/api/src/constants/pharmacies/pharmacy-profile.ts'),
 
   read(
     'apps/client/src/components/profile/ProfilePageContent/ProfilePageContent.tsx'
@@ -47,13 +47,13 @@ const [
   ),
 
   read('packages/config/src/pharmacies/profile-transitions.ts'),
-  read('apps/api/src/constants/pharmacy-profile.ts'),
+  read('apps/api/src/constants/pharmacies/pharmacy-profile.ts'),
   read('scripts/contracts/pharmacy-profile-transition-matrix.json'),
   read('apps/api/src/services/pharmacies/pharmacy-membership.service.ts'),
   read('packages/types/src/pharmacies/pharmacy-profile.ts'),
   read('apps/api/src/services/pharmacies/pharmacy-document.service.ts'),
   read('packages/validation/src/files/pharmacy-document-validation.ts'),
-  read('apps/api/src/constants/pharmacy-document-validation.ts'),
+  read('apps/api/src/constants/pharmacies/pharmacy-document-validation.ts'),
 ]);
 
 //===================================================================

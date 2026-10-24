@@ -1,6 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
-import { ACTIVE_REVIEW_STATUSES } from '../../constants/reviews';
+import { ACTIVE_REVIEW_STATUSES } from '../../constants/reviews/reviews';
 
 import {
   MAX_REVIEW_RATING,
@@ -9,7 +9,7 @@ import {
   USER_REVIEW_COMMENT_MAX_LENGTH,
   USER_REVIEW_COMMENT_MIN_LENGTH,
   VALIDATION_MESSAGES,
-} from '../../constants/validation';
+} from '../../constants/shared/validation';
 
 //===============================================================
 

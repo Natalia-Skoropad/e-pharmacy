@@ -1,7 +1,7 @@
 import type { Types } from 'mongoose';
 import type { z } from 'zod';
 
-import type { PHARMACY_STATUSES } from '../constants/auth';
+import type { PHARMACY_STATUSES } from '../constants/auth/auth';
 
 import type {
   submitMyPharmacyModerationSchema,
@@ -128,6 +128,7 @@ export type PharmacyEntity = {
   pendingModeration?: PharmacyPendingModeration;
   reviewsCount?: number;
   ownerId: Types.ObjectId;
+
   /** Private owner-scoped idempotency key; never supplied as an ownerId. */
   creationRequestId?: string;
   creationFingerprint?: string;

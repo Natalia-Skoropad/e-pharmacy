@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   PRODUCT_CATEGORY_SLUG_MAX_LENGTH,
   PRODUCT_CATEGORY_SLUG_PATTERN,
-} from '../constants/product-category';
+} from '../constants/catalog/product-category';
 
 //===============================================================
 

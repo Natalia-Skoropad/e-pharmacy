@@ -1,4 +1,4 @@
-import { PHARMACY_STATUSES } from '../../../constants/auth';
+import { PHARMACY_STATUSES } from '../../../constants/auth/auth';
 
 //===============================================================
 

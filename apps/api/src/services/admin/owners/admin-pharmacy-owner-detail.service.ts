@@ -3,10 +3,10 @@ import { Types } from 'mongoose';
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { USER_ROLES, PHARMACY_STATUSES } from '../../../constants/auth';
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { USER_ROLES, PHARMACY_STATUSES } from '../../../constants/auth/auth';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';

@@ -6,9 +6,9 @@ import {
   normalizeStoredAdminAuditAction,
   type AdminAuditAction,
   type AdminAuditSection,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 
 import type { AdminAuditListQuery } from '../../../schemas/admin-audit.schema';

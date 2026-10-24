@@ -78,13 +78,21 @@ const [
   parse('packages', 'config', 'src', 'presentation', 'pharmacies.ts'),
   parse('packages', 'config', 'src', 'presentation', 'product-requests.ts'),
   parse('packages', 'config', 'src', 'presentation', 'users.ts'),
-  parse('apps', 'api', 'src', 'constants', 'auth.ts'),
+  parse('apps', 'api', 'src', 'constants', 'auth/auth.ts'),
   parse('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
-  parse('apps', 'api', 'src', 'constants', 'product-request-validation.ts'),
+
+  parse(
+    'apps',
+    'api',
+    'src',
+    'constants',
+    'catalog/product-request-validation.ts'
+  ),
+
   parse('apps', 'api', 'src', 'types', 'order.ts'),
   parse('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacyNote.model.ts'),
   parse('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
-  parse('apps', 'api', 'src', 'constants', 'cart.ts'),
+  parse('apps', 'api', 'src', 'constants', 'cart/cart.ts'),
 
   parse('packages', 'api-client', 'src', 'response', 'shared-dto-parsers.ts'),
 
@@ -157,6 +165,7 @@ assertSameValues(
 
 assertSameValues(
   'Client successful-order filters',
+
   getVariableLiteral(
     ts,
     clientFilters,
@@ -215,7 +224,7 @@ const backendCartErrors = await parse(
   'api',
   'src',
   'constants',
-  'cart.ts'
+  'cart/cart.ts'
 );
 
 const backendStockErrors = await parse(
@@ -223,7 +232,7 @@ const backendStockErrors = await parse(
   'api',
   'src',
   'constants',
-  'stock.ts'
+  'inventory/stock.ts'
 );
 
 const frontendCheckoutErrors = await parse(
@@ -238,7 +247,7 @@ const backendCheckoutErrors = await parse(
   'api',
   'src',
   'constants',
-  'order.ts'
+  'orders/order.ts'
 );
 
 const frontendOrderTransitions = await parse(
@@ -608,6 +617,7 @@ for (const canonicalCopySource of [
 ]) {
   assert.match(
     orderCopyConsumersSource,
+
     new RegExp(canonicalCopySource),
     `${canonicalCopySource} is not consumed by order UI`
   );

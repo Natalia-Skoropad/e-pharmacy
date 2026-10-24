@@ -4,16 +4,16 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 
 import {
   PRODUCT_CATEGORY_DEFAULT_COLOR,
   createProductCategorySlugFromName,
   normalizeProductCategoryColor,
   normalizeProductCategoryNameKey,
-} from '../../../constants/product-category';
+} from '../../../constants/catalog/product-category';
 
 import { ProductCategory } from '../../../models/catalog/productCategory.model';
 

@@ -10,7 +10,7 @@ import {
   PHARMACY_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../constants/auth';
+} from '../constants/auth/auth';
 
 import { Product } from '../models/catalog/product.model';
 import { Pharmacy } from '../models/pharmacies/pharmacy.model';
@@ -34,7 +34,7 @@ import type { PharmacyEntity } from '../types/pharmacy';
 import {
   DEMO_REGIONS,
   createDemoPharmacyShortDescription,
-} from '../constants/demo-pharmacy-profiles';
+} from '../constants/fixtures/demo-pharmacy-profiles';
 
 import type { ProductEntity } from '../types/product';
 

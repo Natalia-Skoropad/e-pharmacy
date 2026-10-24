@@ -1,6 +1,6 @@
 import { Schema, model, models, type Types } from 'mongoose';
 
-import { ADMIN_EMPLOYEE_DOCUMENT_RULES } from '../../../constants/admin-employee-document-validation';
+import { ADMIN_EMPLOYEE_DOCUMENT_RULES } from '../../../constants/admin/employees/admin-employee-document-validation';
 
 //===============================================================
 

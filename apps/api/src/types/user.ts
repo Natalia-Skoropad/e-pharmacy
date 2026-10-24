@@ -6,7 +6,7 @@ import type {
   PHARMACY_OWNER_ACCOUNT_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../constants/auth';
+} from '../constants/auth/auth';
 
 //===============================================================
 

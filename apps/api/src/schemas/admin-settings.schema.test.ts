@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { PRODUCT_CATEGORY_ICONS } from '../constants/product-category-icon';
+import { PRODUCT_CATEGORY_ICONS } from '../constants/catalog/product-category-icon';
 
 import {
   adminSettingsDictionaryListQuerySchema,

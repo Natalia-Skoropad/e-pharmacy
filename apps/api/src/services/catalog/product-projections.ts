@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../../constants/auth';
+import { PHARMACY_STATUSES } from '../../constants/auth/auth';
 
 import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';

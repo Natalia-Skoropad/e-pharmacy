@@ -1,9 +1,9 @@
 // S10.4: Canonical Auth user-fields domain.
 import type { HydratedDocument } from 'mongoose';
 
-import { AUTH_ERROR_CODES } from '../../constants/auth';
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { AUTH_ERROR_CODES } from '../../constants/auth/auth';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 

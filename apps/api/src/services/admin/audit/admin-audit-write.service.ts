@@ -9,7 +9,7 @@ import {
   type AdminAuditAction,
   type AdminAuditEntityType,
   type AdminAuditSection,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';

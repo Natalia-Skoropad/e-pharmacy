@@ -28,7 +28,7 @@ const exists = async (...segments) => {
 //===================================================================
 
 const requiredFiles = [
-  ['apps', 'api', 'src', 'constants', 'admin-audit.ts'],
+  ['apps', 'api', 'src', 'constants', 'admin/audit/admin-audit.ts'],
   ['apps', 'api', 'src', 'models', 'audit', 'adminAuditLog.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-audit.schema.ts'],
 
@@ -138,7 +138,7 @@ const permissions = await read(
   'api',
   'src',
   'constants',
-  'admin-permissions.ts'
+  'admin/access/admin-permissions.ts'
 );
 
 const auditConstants = await read(
@@ -146,7 +146,7 @@ const auditConstants = await read(
   'api',
   'src',
   'constants',
-  'admin-audit.ts'
+  'admin/audit/admin-audit.ts'
 );
 
 const model = await read(

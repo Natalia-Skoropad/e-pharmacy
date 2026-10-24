@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { mongoIdSchema } from './shared';
-import { PHARMACY_STATUSES } from '../constants/auth';
+import { PHARMACY_STATUSES } from '../constants/auth/auth';
 
 //===============================================================
 

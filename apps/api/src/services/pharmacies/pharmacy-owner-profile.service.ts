@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../../constants/auth';
-import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { PHARMACY_STATUSES } from '../../constants/auth/auth';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import {
   PHARMACY_PROFILE_LOCKED_ERROR_CODE,
   canPharmacyProfilePerformAction,
-} from '../../constants/pharmacy-profile';
+} from '../../constants/pharmacies/pharmacy-profile';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 

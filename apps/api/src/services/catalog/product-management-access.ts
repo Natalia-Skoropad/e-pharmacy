@@ -1,6 +1,6 @@
-import { PHARMACY_STATUSES, USER_ROLES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/product-management';
+import { PHARMACY_STATUSES, USER_ROLES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/catalog/product-management';
 
 import {
   requirePharmacyCapability,

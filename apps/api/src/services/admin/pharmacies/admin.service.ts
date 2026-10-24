@@ -1,23 +1,23 @@
 import mongoose, { type HydratedDocument } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../../../constants/auth';
-import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { API_MESSAGES } from '../../../constants/messages';
+import { PHARMACY_STATUSES } from '../../../constants/auth/auth';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
+import { API_MESSAGES } from '../../../constants/shared/messages';
 
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
   type AdminAuditAction,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';
 import { Order } from '../../../models/orders/order.model';
 
-import { PHARMACY_OWNER_ACTIVE_ORDER_STATUSES } from '../../../constants/pharmacy-owner-lifecycle';
-import { USER_ROLES, USER_STATUSES } from '../../../constants/auth';
+import { PHARMACY_OWNER_ACTIVE_ORDER_STATUSES } from '../../../constants/owners/pharmacy-owner-lifecycle';
+import { USER_ROLES, USER_STATUSES } from '../../../constants/auth/auth';
 
 import type {
   PharmacyEntity,

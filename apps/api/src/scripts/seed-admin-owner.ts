@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-import { ADMIN_ACCESS_STATUSES } from '../constants/admin-access';
-import { USER_ROLES, USER_STATUSES } from '../constants/auth';
+import { ADMIN_ACCESS_STATUSES } from '../constants/admin/access/admin-access';
+import { USER_ROLES, USER_STATUSES } from '../constants/auth/auth';
 import { connectDB } from '../db/connectDB';
 
 import { AdminAccess } from '../models/admin/access/adminAccess.model';

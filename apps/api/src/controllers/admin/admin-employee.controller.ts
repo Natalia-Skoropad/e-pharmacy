@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin-access';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin/access/admin-access';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import type {
   AdminEmployeeDocumentParams,

@@ -1,6 +1,6 @@
 import { Schema, model, models, type Types } from 'mongoose';
 
-import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacy-document-validation';
+import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-document-validation';
 
 //===================================================================
 

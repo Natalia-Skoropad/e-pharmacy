@@ -1,6 +1,6 @@
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { API_MESSAGES } from '../../constants/messages';
-import { REVIEW_ERROR_CODES } from '../../constants/reviews';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { REVIEW_ERROR_CODES } from '../../constants/reviews/reviews';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { PharmacyReview } from '../../models/reviews/pharmacyReview.model';
 

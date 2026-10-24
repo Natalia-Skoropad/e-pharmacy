@@ -1,6 +1,6 @@
 import { Types, type Connection } from 'mongoose';
 
-import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../../constants/product-category';
+import { PRODUCT_CATEGORY_SEED_DEFINITIONS } from '../../constants/catalog/product-category';
 
 import { Product } from '../../models/catalog/product.model';
 import { ProductCategory } from '../../models/catalog/productCategory.model';

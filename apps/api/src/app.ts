@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import path from 'path';
 
 import { env } from './config/env';
-import { API_JSON_BODY_LIMITS } from './constants/request-body';
+import { API_JSON_BODY_LIMITS } from './constants/http/request-body';
 
 import { errorMiddleware } from './middlewares/http/error.middleware';
 import { notFoundMiddleware } from './middlewares/http/notFound.middleware';

@@ -1,9 +1,9 @@
 import mongoose, { Types } from 'mongoose';
 
-import { USER_ROLES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/product-management';
-import { API_MESSAGES } from '../../constants/messages';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/catalog/product-management';
+import { API_MESSAGES } from '../../constants/shared/messages';
 
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PHARMACY_OWNER_ADMIN_COMMENT_MAX_LENGTH } from '../constants/pharmacy-owner-admin-comment';
+import { PHARMACY_OWNER_ADMIN_COMMENT_MAX_LENGTH } from '../constants/owners/pharmacy-owner-admin-comment';
 
 import { mongoIdSchema } from './shared';
 

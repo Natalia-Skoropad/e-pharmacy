@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ADMIN_EMPLOYEE_PRIVATE_NOTE_MAX_LENGTH } from '../constants/admin-employee-private-note';
+import { ADMIN_EMPLOYEE_PRIVATE_NOTE_MAX_LENGTH } from '../constants/admin/employees/admin-employee-private-note';
 
 import {
   createPerPageSchema,

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PHARMACY_STATUSES } from '../constants/auth';
+import { PHARMACY_STATUSES } from '../constants/auth/auth';
 import { ADMIN_PHARMACY_REGISTRY_RATINGS } from './admin-pharmacy-registry.schema';
 
 import {

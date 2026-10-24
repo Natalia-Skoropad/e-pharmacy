@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   PRODUCT_CATEGORY_KINDS,
   PRODUCT_CATEGORY_SEED_DEFINITIONS,
-} from '../../constants/product-category';
+} from '../../constants/catalog/product-category';
 
 import { buildProductCategorySeedOperations } from './product-category-bootstrap.service';
 import { resolveLegacyProductCategory } from '../migrations/product-category-migration.service';

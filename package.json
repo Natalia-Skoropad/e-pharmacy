@@ -152,7 +152,10 @@
     "check:build:serial": "pnpm exec turbo build --concurrency=1",
     "check:before-deploy:staged": "pnpm check:transport-c1 && pnpm check:source:api && pnpm check:source:shared && pnpm check:source:client && pnpm check:source:pharmacy && pnpm check:source:admin && pnpm check:lint:serial && pnpm check:type-check:serial && pnpm check:test:serial && pnpm check:react:serial && pnpm check:integration:serial && pnpm check:build:serial && pnpm check:deploy-artifact",
     "check:grouping-g0": "node scripts/architecture/check-api-grouping-g0.mjs --check",
-    "test:grouping-g0": "node --test scripts/architecture/check-api-grouping-g0.test.mjs"
+    "test:grouping-g0": "node --test scripts/architecture/check-api-grouping-g0.test.mjs",
+    "grouping:relocate": "node scripts/architecture/relocate-api-grouping-g1.mjs",
+    "check:grouping-g1": "node scripts/architecture/relocate-api-grouping-g1.mjs --check --stage G1",
+    "test:grouping-g1": "node --test scripts/architecture/relocate-api-grouping-g1.test.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

@@ -17,6 +17,7 @@ const ROOT_DIR = path.resolve(
 async function loadTypeScript() {
   try {
     const module = await import('typescript');
+
     return module.default ?? module;
   } catch {
     const fallbackPath = path.join(
@@ -30,6 +31,7 @@ async function loadTypeScript() {
     );
 
     const module = await import(pathToFileURL(fallbackPath).href);
+
     return module.default ?? module;
   }
 }
@@ -48,6 +50,7 @@ async function collectTypeScriptFiles(directory, output = []) {
 
     if (entry.isDirectory()) {
       await collectTypeScriptFiles(entryPath, output);
+
       continue;
     }
 
@@ -87,6 +90,7 @@ function getNamedType(ts, program, relativeFile, typeName) {
   assert.ok(sourceFile, `Could not load ${relativeFile}`);
 
   const declaration = findNamedTypeDeclaration(ts, sourceFile, typeName);
+
   return {
     checker: program.getTypeChecker(),
     declaration,
@@ -108,6 +112,7 @@ function getUnionMemberByDiscriminant(
 
   const member = unionType.types.find((candidate) => {
     const property = checker.getPropertyOfType(candidate, propertyName);
+
     if (!property) return false;
 
     const propertyType = checker.getTypeOfSymbolAtLocation(
@@ -122,6 +127,7 @@ function getUnionMemberByDiscriminant(
   });
 
   assert.ok(member, `Could not find ${label} union member`);
+
   return member;
 }
 
@@ -435,6 +441,7 @@ async function assertActualTypeShapes(frontendFixture) {
   );
 
   const dateTime = frontendFixture.dateExamples.dateTime;
+
   assert.equal(
     new Date(dateTime).toISOString(),
     dateTime,
@@ -460,6 +467,7 @@ function extractQuotedValues(source, constName, opening, closing) {
   const pattern = new RegExp(
     `(?:export\\s+)?const\\s+${constName}\\s*=\\s*\\${opening}([\\s\\S]*?)\\${closing}\\s*as\\s+const`
   );
+
   const match = source.match(pattern);
 
   assert.ok(match, `Could not read ${constName}`);
@@ -500,6 +508,7 @@ function extractZodEnumValues(source, propertyName) {
   const pattern = new RegExp(
     `${propertyName}\\s*:\\s*z\\.enum\\(\\[([\\s\\S]*?)\\]\\)`
   );
+
   const match = source.match(pattern);
 
   assert.ok(match, `Could not read z.enum values for ${propertyName}`);
@@ -526,6 +535,7 @@ function assertSameValues(label, frontendValues, backendValues) {
   assert.deepEqual(
     [...backendValues].sort(),
     [...frontendValues].sort(),
+
     `${label} differ between frontend and backend`
   );
 }
@@ -588,7 +598,7 @@ const [
   ),
 
   readSource('packages', 'config', 'src', 'cart', 'limits.ts'),
-  readSource('apps', 'api', 'src', 'constants', 'auth.ts'),
+  readSource('apps', 'api', 'src', 'constants', 'auth/auth.ts'),
   readSource('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
   readSource('apps', 'api', 'src', 'types', 'product.ts'),
 
@@ -597,13 +607,22 @@ const [
     'api',
     'src',
     'constants',
-    'product-request-validation.ts'
+    'catalog/product-request-validation.ts'
   ),
 
   readSource('apps', 'api', 'src', 'types', 'order.ts'),
-  readSource('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacyNote.model.ts'),
+
+  readSource(
+    'apps',
+    'api',
+    'src',
+    'models',
+    'pharmacies',
+    'pharmacyNote.model.ts'
+  ),
+
   readSource('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
-  readSource('apps', 'api', 'src', 'constants', 'cart.ts'),
+  readSource('apps', 'api', 'src', 'constants', 'cart/cart.ts'),
 ]);
 
 //===================================================================
@@ -714,10 +733,12 @@ assertSameValues(
 
 assertSameValues(
   'Client successful-order filters',
+
   extractArrayValues(
     frontendClientFilters,
     'CLIENT_SUCCESSFUL_ORDER_FILTER_VALUES'
   ),
+
   extractZodEnumValues(backendClientSchema, 'successfulOrders')
 );
 

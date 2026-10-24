@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   SEARCH_TEXT_PATTERN,
   USER_SEARCH_MAX_LENGTH,
-} from '../../constants/validation';
+} from '../../constants/shared/validation';
 
 import { clearableSchema, optionalSchema } from './optional-text.schema';
 import { sharedRequiredAddressSchema } from '../shared-validation.schema';

@@ -39,7 +39,7 @@ const [
 ] = await Promise.all([
   read('packages', 'types', 'src', 'auth', 'role.ts'),
   read('packages', 'config', 'src', 'users', 'domain-values.ts'),
-  read('apps', 'api', 'src', 'constants', 'auth.ts'),
+  read('apps', 'api', 'src', 'constants', 'auth/auth.ts'),
 
   read(
     'apps',
@@ -60,7 +60,7 @@ const [
     'owners/pharmacy-owner-lifecycle.service.ts'
   ),
 
-  read('apps', 'api', 'src', 'constants', 'pharmacy-owner-lifecycle.ts'),
+  read('apps', 'api', 'src', 'constants', 'owners/pharmacy-owner-lifecycle.ts'),
   read('apps', 'api', 'src', 'services', 'auth/auth-login.service.ts'),
   read('apps', 'api', 'src', 'services', 'auth/auth-profile.service.ts'),
   read('apps', 'api', 'src', 'routes', 'owners/pharmacy-owner.routes.ts'),

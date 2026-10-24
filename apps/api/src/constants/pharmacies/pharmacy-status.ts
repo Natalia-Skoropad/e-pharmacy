@@ -1,4 +1,4 @@
-import { PHARMACY_STATUSES } from './auth';
+import { PHARMACY_STATUSES } from '../auth/auth';
 
 //===============================================================
 

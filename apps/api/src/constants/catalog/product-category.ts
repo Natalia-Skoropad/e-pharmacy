@@ -3,7 +3,7 @@ import {
   SETTINGS_DICTIONARY_NAME_PATTERN,
   normalizeSettingsDictionaryName,
   normalizeSettingsDictionaryNameKey,
-} from './settings-dictionary';
+} from '../admin/settings/settings-dictionary';
 
 //===============================================================
 

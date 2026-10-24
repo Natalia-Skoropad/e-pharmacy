@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
-import { USER_ROLES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import type {
   CreatePharmacyDraftInput,

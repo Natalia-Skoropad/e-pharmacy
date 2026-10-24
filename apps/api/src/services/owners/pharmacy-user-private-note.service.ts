@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { PharmacyUserPrivateNote } from '../../models/owners/pharmacyUserPrivateNote.model';
 import { User } from '../../models/accounts/user.model';
 

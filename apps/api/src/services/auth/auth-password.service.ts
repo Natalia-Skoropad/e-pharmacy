@@ -3,9 +3,9 @@ import { createHash, randomBytes } from 'node:crypto';
 import mongoose from 'mongoose';
 import { env } from '../../config/env';
 
-import { AUTH_ERROR_CODES, USER_STATUSES } from '../../constants/auth';
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { AUTH_ERROR_CODES, USER_STATUSES } from '../../constants/auth/auth';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 

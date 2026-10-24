@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { env } from '../../config/env';
-import { AUTH_ERROR_CODES, USER_ROLES } from '../../constants/auth';
+import { AUTH_ERROR_CODES, USER_ROLES } from '../../constants/auth/auth';
 
 import {
   getAdminOnlyTest,

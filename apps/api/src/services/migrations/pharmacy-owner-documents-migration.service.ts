@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import { Types } from 'mongoose';
 
-import { USER_ROLES } from '../../constants/auth';
-import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/pharmacy-owner-document-validation';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/owners/pharmacy-owner-document-validation';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';

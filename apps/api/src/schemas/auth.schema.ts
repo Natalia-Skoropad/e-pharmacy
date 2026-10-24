@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { VALIDATION_MESSAGES } from '../constants/validation';
+import { VALIDATION_MESSAGES } from '../constants/shared/validation';
 
 import {
   sharedEmailSchema,
@@ -14,7 +14,7 @@ import {
   sharedRequiredPhoneSchema,
 } from './shared-validation.schema';
 
-import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth';
+import { AUTH_APPLICATIONS, USER_ROLES } from '../constants/auth/auth';
 
 import {
   pharmacyRegistrationDocumentUploadSchema,

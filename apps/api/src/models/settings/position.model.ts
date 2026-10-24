@@ -5,7 +5,7 @@ import {
   SETTINGS_DICTIONARY_NAME_PATTERN,
   normalizeSettingsDictionaryName,
   normalizeSettingsDictionaryNameKey,
-} from '../../constants/settings-dictionary';
+} from '../../constants/admin/settings/settings-dictionary';
 
 import type { PositionPersistenceEntity } from '../../types/position';
 

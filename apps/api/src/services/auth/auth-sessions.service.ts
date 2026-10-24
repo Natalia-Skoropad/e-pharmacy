@@ -1,9 +1,9 @@
 // S10.4: Canonical Auth sessions domain.
 import type { ClientSession } from 'mongoose';
 
-import { AUTH_ERROR_CODES, USER_STATUSES } from '../../constants/auth';
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { AUTH_ERROR_CODES, USER_STATUSES } from '../../constants/auth/auth';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { Session } from '../../models/accounts/session.model';
 import { User } from '../../models/accounts/user.model';

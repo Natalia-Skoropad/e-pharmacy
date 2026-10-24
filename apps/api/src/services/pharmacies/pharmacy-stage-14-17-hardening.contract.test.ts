@@ -97,7 +97,7 @@ test('14.17: approving a pending draft is atomic and does not rewrite first acti
 test('14.17: blocking respects in-progress orders and reactivation never skips verification', async () => {
   const [decisions, statuses] = await Promise.all([
     read('services/admin/pharmacies/admin.service.ts'),
-    read('constants/pharmacy-owner-lifecycle.ts'),
+    read('constants/owners/pharmacy-owner-lifecycle.ts'),
   ]);
 
   assert.match(statuses, /'new'/);

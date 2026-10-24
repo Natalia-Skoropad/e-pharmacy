@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { PRIVATE_COMMENT_MAX_LENGTH } from '../constants/private-comment';
+import { PRIVATE_COMMENT_MAX_LENGTH } from '../constants/shared/private-comment';
 
 import {
   createPerPageSchema,

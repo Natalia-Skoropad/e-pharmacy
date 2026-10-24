@@ -1,13 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin-access';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin/access/admin-access';
 
 import {
   isAdminPermission,
   type AdminPermission,
-} from '../../constants/admin-permissions';
+} from '../../constants/admin/access/admin-permissions';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { getAdminAuthorizationService } from '../../services/admin/access/admin-access.service';
 import { hasAdminPermission } from '../../services/admin/access/admin-permission-evaluator';
 import { httpError } from '../../utils/httpError';

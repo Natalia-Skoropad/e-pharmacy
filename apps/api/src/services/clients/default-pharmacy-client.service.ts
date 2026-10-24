@@ -1,6 +1,6 @@
 import { Types, type ClientSession } from 'mongoose';
 
-import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
 import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';

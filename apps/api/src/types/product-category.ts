@@ -3,7 +3,7 @@ import type { Types } from 'mongoose';
 import type {
   ProductCategoryKind,
   ProductCategoryStatus,
-} from '../constants/product-category';
+} from '../constants/catalog/product-category';
 
 //===============================================================
 

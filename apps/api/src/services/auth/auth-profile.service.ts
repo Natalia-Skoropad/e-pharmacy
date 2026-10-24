@@ -5,16 +5,16 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../constants/admin-audit';
+} from '../../constants/admin/audit/admin-audit';
 
 import {
   AUTH_ERROR_CODES,
   USER_ROLES,
   USER_STATUSES,
-} from '../../constants/auth';
+} from '../../constants/auth/auth';
 
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 

@@ -3,14 +3,14 @@ import type { ClientSession } from 'mongoose';
 import {
   ADMIN_ACCESS_ERROR_CODES,
   ADMIN_ACCESS_STATUSES,
-} from '../../../constants/admin-access';
+} from '../../../constants/admin/access/admin-access';
 
 import {
   normalizeAdminPermissions,
   type AdminPermission,
-} from '../../../constants/admin-permissions';
+} from '../../../constants/admin/access/admin-permissions';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminAccess } from '../../../models/admin/access/adminAccess.model';
 
 import type {

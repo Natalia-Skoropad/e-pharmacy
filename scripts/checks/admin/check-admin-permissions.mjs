@@ -18,6 +18,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -53,8 +54,8 @@ function extractPermissionCalls(source) {
 //===================================================================
 
 const requiredFiles = [
-  ['apps', 'api', 'src', 'constants', 'admin-permissions.ts'],
-  ['apps', 'api', 'src', 'constants', 'admin-access.ts'],
+  ['apps', 'api', 'src', 'constants', 'admin/access/admin-permissions.ts'],
+  ['apps', 'api', 'src', 'constants', 'admin/access/admin-access.ts'],
   ['apps', 'api', 'src', 'models', 'admin', 'access', 'adminAccess.model.ts'],
 
   [
@@ -115,14 +116,20 @@ for (const file of requiredFiles) {
 
 //===================================================================
 
-const authConstants = await read('apps', 'api', 'src', 'constants', 'auth.ts');
+const authConstants = await read(
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'auth/auth.ts'
+);
 
 const backendPermissions = await read(
   'apps',
   'api',
   'src',
   'constants',
-  'admin-permissions.ts'
+  'admin/access/admin-permissions.ts'
 );
 
 const frontendPermissions = await read(
@@ -175,7 +182,7 @@ const backendAccessCodes = await read(
   'api',
   'src',
   'constants',
-  'admin-access.ts'
+  'admin/access/admin-access.ts'
 );
 
 const frontendAccessCodes = await read(
@@ -219,6 +226,7 @@ const adminLayout = await read(
   'admin',
   'layout.tsx'
 );
+
 const navigation = await read(
   'apps',
   'admin',
@@ -483,6 +491,8 @@ for (const scriptName of ['check:admin', 'check:before-deploy']) {
   assert.equal(steps.filter((step) => step === check).length, 1);
   assert.ok(steps.indexOf(check) > steps.indexOf('pnpm check:admin-shell'));
 }
+
+//===================================================================
 
 console.log(
   'Admin Stage 8 permissions and Platform Owner structural check passed.'

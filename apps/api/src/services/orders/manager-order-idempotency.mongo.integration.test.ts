@@ -5,7 +5,7 @@ import mongoose, { Types } from 'mongoose';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../../constants/order';
+import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../../constants/orders/order';
 import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { Product } from '../../models/catalog/product.model';

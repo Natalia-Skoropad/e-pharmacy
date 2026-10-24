@@ -5,7 +5,7 @@ import {
   PRODUCT_CATEGORY_SEED_DEFINITIONS,
   type ProductCategoryKind,
   type ProductCategoryStatus,
-} from '../../../constants/product-category';
+} from '../../../constants/catalog/product-category';
 
 import type {
   AdminProductCategoryDto,

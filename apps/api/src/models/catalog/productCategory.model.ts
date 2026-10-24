@@ -10,9 +10,9 @@ import {
   PRODUCT_CATEGORY_STATUSES,
   normalizeProductCategoryName,
   normalizeProductCategoryNameKey,
-} from '../../constants/product-category';
+} from '../../constants/catalog/product-category';
 
-import { PRODUCT_CATEGORY_ICONS } from '../../constants/product-category-icon';
+import { PRODUCT_CATEGORY_ICONS } from '../../constants/catalog/product-category-icon';
 
 import type { ProductCategoryPersistenceEntity } from '../../types/product-category';
 

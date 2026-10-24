@@ -1,15 +1,15 @@
 import {
   ADMIN_ACCESS_ERROR_CODES,
   ADMIN_ACCESS_STATUSES,
-} from '../../../constants/admin-access';
+} from '../../../constants/admin/access/admin-access';
 
 import {
   ADMIN_PERMISSIONS,
   normalizeAdminPermissions,
   type AdminPermission,
-} from '../../../constants/admin-permissions';
+} from '../../../constants/admin/access/admin-permissions';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import type { AdminAuthorization } from '../../../types/admin-access';
 import { httpError } from '../../../utils/httpError';
 import { hasAdminPermission } from './admin-permission-evaluator';

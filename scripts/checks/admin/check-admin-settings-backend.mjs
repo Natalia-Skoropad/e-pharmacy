@@ -28,7 +28,7 @@ const exists = async (...segments) => {
 //===================================================================
 
 const requiredFiles = [
-  ['apps', 'api', 'src', 'constants', 'settings-dictionary.ts'],
+  ['apps', 'api', 'src', 'constants', 'admin/settings/settings-dictionary.ts'],
   ['apps', 'api', 'src', 'models', 'settings', 'position.model.ts'],
   ['apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'],
 

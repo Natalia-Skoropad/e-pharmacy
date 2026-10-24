@@ -6,7 +6,7 @@ import mongoose, { Types } from 'mongoose';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
-import { USER_ROLES } from '../../constants/auth';
+import { USER_ROLES } from '../../constants/auth/auth';
 
 import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';

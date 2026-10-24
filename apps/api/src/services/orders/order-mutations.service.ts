@@ -1,8 +1,8 @@
 import mongoose, { Types } from 'mongoose';
 
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE } from '../../constants/order';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE } from '../../constants/orders/order';
 import { Order } from '../../models/orders/order.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';

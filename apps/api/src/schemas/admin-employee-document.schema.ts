@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   ADMIN_EMPLOYEE_DOCUMENT_RULES,
   ADMIN_EMPLOYEE_DOCUMENT_VALIDATION_MESSAGES,
-} from '../constants/admin-employee-document-validation';
+} from '../constants/admin/employees/admin-employee-document-validation';
 
 import { mongoIdSchema } from './shared';
 

@@ -1,8 +1,8 @@
 import mongoose, { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/product-request';
-import { isPharmacyOperationalStatus } from '../../constants/pharmacy-status';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-request';
+import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
 
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';

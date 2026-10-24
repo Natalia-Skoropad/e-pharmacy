@@ -21,9 +21,9 @@ async function source(path: string): Promise<string> {
 
 test('pharmacy domain remains five-status and on_moderation operational', async () => {
   const [auth, operational, profile] = await Promise.all([
-    source('constants/auth.ts'),
-    source('constants/pharmacy-status.ts'),
-    source('constants/pharmacy-profile.ts'),
+    source('constants/auth/auth.ts'),
+    source('constants/pharmacies/pharmacy-status.ts'),
+    source('constants/pharmacies/pharmacy-profile.ts'),
   ]);
 
   const statuses = auth.match(
@@ -108,7 +108,7 @@ test('client public pharmacy list/detail and checkout keep pending fields unpubl
 test('owner cascade checks all linked pharmacies for in-flight orders and does not auto-unblock them', async () => {
   const [lifecycle, lifecycleConstants] = await Promise.all([
     source('services/owners/pharmacy-owner-lifecycle.service.ts'),
-    source('constants/pharmacy-owner-lifecycle.ts'),
+    source('constants/owners/pharmacy-owner-lifecycle.ts'),
   ]);
 
   assert.match(
@@ -143,7 +143,7 @@ test('owner cascade checks all linked pharmacies for in-flight orders and does n
 test('admin pharmacy status endpoint uses pharmacies.moderate backend permission', async () => {
   const [routes, permissions] = await Promise.all([
     source('routes/admin/admin.routes.ts'),
-    source('constants/admin-permissions.ts'),
+    source('constants/admin/access/admin-permissions.ts'),
   ]);
 
   assert.match(

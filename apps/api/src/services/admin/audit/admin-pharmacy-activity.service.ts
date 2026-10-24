@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 
 import type { AdminAuditListQuery } from '../../../schemas/admin-audit.schema';

@@ -17,9 +17,9 @@ import {
   VALIDATION_MESSAGES,
   isHttpUrl,
   isPictureDataUrl,
-} from '../../constants/validation';
+} from '../../constants/shared/validation';
 
-import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
 import type { UserEntity } from '../../types/user';
 

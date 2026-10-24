@@ -5,15 +5,15 @@ import {
   PHARMACY_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../../constants/auth';
+} from '../../constants/auth/auth';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import {
   PHARMACY_OWNER_REQUIRED_ERROR_CODE,
   PHARMACY_PROFILE_BLOCKED_ERROR_CODE,
   PHARMACY_PROFILE_MISSING_ERROR_CODE,
-} from '../../constants/pharmacy-profile';
+} from '../../constants/pharmacies/pharmacy-profile';
 
 import { getSelectedPharmacyId } from '../../middlewares/pharmacies/pharmacy-selection.middleware';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';

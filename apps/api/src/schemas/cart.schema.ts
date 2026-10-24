@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CART_ITEM_MAX_QUANTITY } from '../constants/cart';
+import { CART_ITEM_MAX_QUANTITY } from '../constants/cart/cart';
 import { mongoIdSchema } from './shared';
 
 //===============================================================

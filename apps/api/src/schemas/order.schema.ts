@@ -26,7 +26,7 @@ import {
   ORDER_REJECTION_REASON_MIN_LENGTH,
   ORDER_STATUS_COMMENT_MAX_LENGTH,
   ORDER_STATUS_VALIDATION_MESSAGES,
-} from '../constants/order-validation';
+} from '../constants/orders/order-validation';
 
 //===============================================================
 

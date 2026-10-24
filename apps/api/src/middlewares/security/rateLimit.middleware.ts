@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { AUTH_ERROR_CODES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { AUTH_ERROR_CODES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import {
   decrementRateLimitCounter,

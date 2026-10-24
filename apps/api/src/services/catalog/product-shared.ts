@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
 
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';

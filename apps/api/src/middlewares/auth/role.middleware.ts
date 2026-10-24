@@ -1,9 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { USER_ROLES } from '../../constants/auth';
-import { PHARMACY_OPERATIONAL_STATUSES } from '../../constants/pharmacy-status';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { API_MESSAGES } from '../../constants/messages';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { PHARMACY_OPERATIONAL_STATUSES } from '../../constants/pharmacies/pharmacy-status';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
 
 import { requirePharmacyCapability } from '../../services/pharmacies/pharmacy-membership.service';
 import type { UserRole } from '../../types/user';

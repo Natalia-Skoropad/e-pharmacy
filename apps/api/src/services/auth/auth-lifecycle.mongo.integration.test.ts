@@ -4,8 +4,8 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
-import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacy-document-validation';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
+import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-document-validation';
 
 import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { Client } from '../../models/clients/client.model';

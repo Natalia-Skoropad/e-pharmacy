@@ -1,6 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
-import { CART_ITEM_MAX_QUANTITY } from '../../constants/cart';
+import { CART_ITEM_MAX_QUANTITY } from '../../constants/cart/cart';
 import type { CartEntity } from '../../types/cart';
 
 //===============================================================

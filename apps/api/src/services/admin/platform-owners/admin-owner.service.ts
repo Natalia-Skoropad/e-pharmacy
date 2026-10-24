@@ -3,15 +3,15 @@ import mongoose from 'mongoose';
 import {
   ADMIN_ACCESS_ERROR_CODES,
   ADMIN_ACCESS_STATUSES,
-} from '../../../constants/admin-access';
+} from '../../../constants/admin/access/admin-access';
 
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 
 import { AdminAccess } from '../../../models/admin/access/adminAccess.model';
 import { AdminAuthorizationState } from '../../../models/admin/access/adminAuthorizationState.model';

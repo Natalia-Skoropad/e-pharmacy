@@ -4,10 +4,10 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   AUTH_COOKIE_NAME,
   AUTH_ERROR_CODES,
-} from '../../constants/auth';
+} from '../../constants/auth/auth';
 
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { assertActiveSessionService } from '../../services/auth/auth-sessions.service';
 import { getUserByIdService } from '../../services/auth/auth-profile.service';

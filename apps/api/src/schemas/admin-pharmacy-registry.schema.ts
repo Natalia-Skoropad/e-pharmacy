@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PHARMACY_STATUSES } from '../constants/auth';
+import { PHARMACY_STATUSES } from '../constants/auth/auth';
 
 import {
   DATE_RANGE_MESSAGE,

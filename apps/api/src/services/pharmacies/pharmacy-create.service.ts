@@ -6,15 +6,15 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../constants/admin-audit';
+} from '../../constants/admin/audit/admin-audit';
 
 import {
   PHARMACY_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../../constants/auth';
+} from '../../constants/auth/auth';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 

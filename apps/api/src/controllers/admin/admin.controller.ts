@@ -2,8 +2,8 @@ import type { Request } from 'express';
 
 import type { AdminAuditListQuery } from '../../schemas/admin-audit.schema';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin-access';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin/access/admin-access';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { serializeAdminAccess } from '../../services/admin/access/admin-access.service';
 
 import type {

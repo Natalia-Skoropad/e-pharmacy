@@ -18,6 +18,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -37,7 +38,11 @@ const SOURCE_ROOTS = [
   ['packages', 'validation', 'src'],
 ];
 
+//===================================================================
+
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs']);
+
+//===================================================================
 
 async function collectProductionSources(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -56,6 +61,7 @@ async function collectProductionSources(directory) {
     }
 
     if (/\.(?:test|spec)\.[^.]+$/.test(entry.name)) continue;
+
     files.push(target);
   }
 
@@ -74,6 +80,7 @@ const productionFiles = (
 
 assert.equal(
   await exists('apps', 'api', 'src', 'types', 'categories.ts'),
+
   false,
   'Obsolete static apps/api/src/types/categories.ts must be deleted.'
 );
@@ -147,7 +154,7 @@ const [
   read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
   read('apps', 'api', 'src', 'schemas', 'product-request.schema.ts'),
   read('apps', 'api', 'src', 'services', 'catalog/product-category.service.ts'),
-  read('apps', 'api', 'src', 'constants', 'product-category.ts'),
+  read('apps', 'api', 'src', 'constants', 'catalog/product-category.ts'),
 
   read(
     'apps',
@@ -207,5 +214,7 @@ assert.match(migrationService, /categoryMode = 'custom'/);
 assert.match(migrationService, /categoryNameSnapshot/);
 assert.match(migrationService, /categorySlugSnapshot/);
 assert.match(migrationService, /\$unset:[\s\S]*?category:\s*''/);
+
+//===================================================================
 
 console.log('Dynamic product-category structural checks passed.');

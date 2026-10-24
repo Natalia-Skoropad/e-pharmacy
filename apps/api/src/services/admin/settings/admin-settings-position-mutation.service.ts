@@ -4,10 +4,10 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { HTTP_STATUS } from '../../../constants/httpStatus';
-import { normalizeSettingsDictionaryNameKey } from '../../../constants/settings-dictionary';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
+import { normalizeSettingsDictionaryNameKey } from '../../../constants/admin/settings/settings-dictionary';
 import { Position } from '../../../models/settings/position.model';
 
 import type {

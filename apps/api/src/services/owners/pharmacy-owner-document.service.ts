@@ -4,17 +4,17 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../constants/admin-audit';
+} from '../../constants/admin/audit/admin-audit';
 
 import {
   PHARMACY_OWNER_DOCUMENT_RULES,
   PHARMACY_OWNER_DOCUMENT_VALIDATION_MESSAGES,
-} from '../../constants/pharmacy-owner-document-validation';
+} from '../../constants/owners/pharmacy-owner-document-validation';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { User } from '../../models/accounts/user.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
-import { USER_ROLES } from '../../constants/auth';
+import { USER_ROLES } from '../../constants/auth/auth';
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 
 import type { PharmacyOwnerDocumentUploadInput } from '../../schemas/pharmacy-owner-document.schema';

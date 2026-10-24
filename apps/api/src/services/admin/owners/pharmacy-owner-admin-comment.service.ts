@@ -4,10 +4,10 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { USER_ROLES } from '../../../constants/auth';
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { USER_ROLES } from '../../../constants/auth/auth';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 
 import { PharmacyOwnerAdminComment } from '../../../models/admin/comments/pharmacyOwnerAdminComment.model';
 import { User } from '../../../models/accounts/user.model';

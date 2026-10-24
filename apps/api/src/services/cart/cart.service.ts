@@ -6,11 +6,11 @@ import {
   CART_ITEM_TTL_DAYS,
   CART_PHARMACY_LIMIT_ERROR_CODE,
   MAX_PHARMACY_GROUPS_PER_CART,
-} from '../../constants/cart';
+} from '../../constants/cart/cart';
 
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../../constants/inventory/stock';
 
 import { Cart } from '../../models/cart/cart.model';
 import { Product } from '../../models/catalog/product.model';

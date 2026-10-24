@@ -8,21 +8,21 @@ import {
   PHARMACY_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../../constants/auth';
+} from '../../constants/auth/auth';
 
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../constants/admin-audit';
+} from '../../constants/admin/audit/admin-audit';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import {
   PHARMACY_OWNER_ACTIVE_ORDER_STATUSES,
   PHARMACY_OWNER_AUTO_ACTIVATION_REASON,
   PHARMACY_OWNER_LIFECYCLE_ERROR_CODES,
-} from '../../constants/pharmacy-owner-lifecycle';
+} from '../../constants/owners/pharmacy-owner-lifecycle';
 
 import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';

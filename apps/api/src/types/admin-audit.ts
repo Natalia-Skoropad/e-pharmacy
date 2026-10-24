@@ -5,7 +5,7 @@ import type {
   AdminAuditActorType,
   AdminAuditEntityType,
   AdminAuditSection,
-} from '../constants/admin-audit';
+} from '../constants/admin/audit/admin-audit';
 
 //===============================================================
 

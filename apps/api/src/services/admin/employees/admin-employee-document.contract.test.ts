@@ -107,7 +107,7 @@ test('admin document mutations and audit records commit in the same transaction'
 //===============================================================
 
 test('admin document AuditLog uses the canonical Stage 10 action names', () => {
-  const auditConstants = readSource('constants/admin-audit.ts');
+  const auditConstants = readSource('constants/admin/audit/admin-audit.ts');
 
   assert.match(
     auditConstants,

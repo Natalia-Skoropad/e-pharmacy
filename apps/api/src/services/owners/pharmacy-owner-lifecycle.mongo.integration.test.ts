@@ -4,9 +4,9 @@ import test from 'node:test';
 
 import mongoose, { Types } from 'mongoose';
 
-import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
-import { AUTH_ERROR_CODES } from '../../constants/auth';
-import { PHARMACY_OWNER_LIFECYCLE_ERROR_CODES } from '../../constants/pharmacy-owner-lifecycle';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
+import { AUTH_ERROR_CODES } from '../../constants/auth/auth';
+import { PHARMACY_OWNER_LIFECYCLE_ERROR_CODES } from '../../constants/owners/pharmacy-owner-lifecycle';
 
 import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { Client } from '../../models/clients/client.model';

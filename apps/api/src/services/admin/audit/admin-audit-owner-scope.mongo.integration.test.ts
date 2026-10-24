@@ -7,7 +7,7 @@ import mongoose, { Types } from 'mongoose';
 import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';

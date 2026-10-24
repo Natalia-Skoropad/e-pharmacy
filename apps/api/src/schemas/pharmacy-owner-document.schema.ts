@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   PHARMACY_OWNER_DOCUMENT_RULES,
   PHARMACY_OWNER_DOCUMENT_VALIDATION_MESSAGES,
-} from '../constants/pharmacy-owner-document-validation';
+} from '../constants/owners/pharmacy-owner-document-validation';
 
 import { mongoIdSchema } from './shared';
 

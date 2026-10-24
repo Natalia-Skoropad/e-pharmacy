@@ -3,7 +3,7 @@ import { z } from 'zod';
 import {
   SETTINGS_DICTIONARY_NAME_MAX_LENGTH,
   SETTINGS_DICTIONARY_NAME_PATTERN,
-} from '../constants/settings-dictionary';
+} from '../constants/admin/settings/settings-dictionary';
 
 import {
   createPerPageSchema,
@@ -19,8 +19,8 @@ import {
 } from './shared/date.schema';
 
 import { sharedSearchSchema } from './shared-validation.schema';
-import { PRODUCT_CATEGORY_COLOR_PATTERN } from '../constants/product-category';
-import { PRODUCT_CATEGORY_ICONS } from '../constants/product-category-icon';
+import { PRODUCT_CATEGORY_COLOR_PATTERN } from '../constants/catalog/product-category';
+import { PRODUCT_CATEGORY_ICONS } from '../constants/catalog/product-category-icon';
 
 //===============================================================
 

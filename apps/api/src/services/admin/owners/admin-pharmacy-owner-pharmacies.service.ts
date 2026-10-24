@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
-import { USER_ROLES } from '../../../constants/auth';
-import { HTTP_STATUS } from '../../../constants/httpStatus';
+import { USER_ROLES } from '../../../constants/auth/auth';
+import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { User } from '../../../models/accounts/user.model';

@@ -10,7 +10,7 @@ import {
   type AdminAuditActorType,
   type AdminAuditEntityType,
   type AdminAuditSection,
-} from '../constants/admin-audit';
+} from '../constants/admin/audit/admin-audit';
 
 import { mongoIdSchema } from './shared';
 

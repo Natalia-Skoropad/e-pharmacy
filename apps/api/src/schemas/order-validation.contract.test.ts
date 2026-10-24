@@ -7,7 +7,7 @@ import {
   updateOrderStatusSchema,
 } from './order.schema';
 
-import { ORDER_REJECTION_REASON_MIN_LENGTH } from '../constants/order-validation';
+import { ORDER_REJECTION_REASON_MIN_LENGTH } from '../constants/orders/order-validation';
 
 //===============================================================
 

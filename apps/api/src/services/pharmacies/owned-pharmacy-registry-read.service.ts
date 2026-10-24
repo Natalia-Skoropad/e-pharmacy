@@ -1,11 +1,11 @@
 import { Types, type PipelineStage } from 'mongoose';
 
-import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
-import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin-audit';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
 import { User } from '../../models/accounts/user.model';
 
 import type {

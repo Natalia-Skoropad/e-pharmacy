@@ -1,6 +1,6 @@
 import mongoose, { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Order } from '../../models/orders/order.model';
 import { User } from '../../models/accounts/user.model';
 import { httpError } from '../../utils/httpError';

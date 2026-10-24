@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from 'node:crypto';
 import mongoose, { Types, type ClientSession } from 'mongoose';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacy-document-validation';
-import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/pharmacy-owner-document-validation';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-document-validation';
+import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/owners/pharmacy-owner-document-validation';
 import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';

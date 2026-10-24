@@ -65,7 +65,7 @@ test('custom Product Request behavior is metadata-based and public categories ha
   const [requestService, categoryConstants, routes, categoryService] =
     await Promise.all([
       read('src/services/catalog/product-request-management.service.ts'),
-      read('src/constants/product-category.ts'),
+      read('src/constants/catalog/product-category.ts'),
       read('src/routes/index.ts'),
       read('src/services/catalog/product-category.service.ts'),
     ]);

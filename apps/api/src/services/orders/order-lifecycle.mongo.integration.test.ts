@@ -8,7 +8,7 @@ import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-in
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
-} from '../../constants/order';
+} from '../../constants/orders/order';
 
 import { Cart } from '../../models/cart/cart.model';
 import { Order } from '../../models/orders/order.model';

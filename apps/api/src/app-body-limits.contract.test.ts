@@ -9,7 +9,7 @@ test('ordinary JSON uses a small global parser while document payloads opt into 
   const appSource = readFileSync(path.resolve(__dirname, './app.ts'), 'utf8');
 
   const limitsSource = readFileSync(
-    path.resolve(__dirname, './constants/request-body.ts'),
+    path.resolve(__dirname, './constants/http/request-body.ts'),
     'utf8'
   );
 

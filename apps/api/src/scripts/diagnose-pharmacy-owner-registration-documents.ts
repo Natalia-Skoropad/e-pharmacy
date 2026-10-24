@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto';
 import dotenv from 'dotenv';
 import mongoose, { type Types } from 'mongoose';
 
-import { ADMIN_AUDIT_ACTIONS } from '../constants/admin-audit';
-import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/pharmacy-owner-document-validation';
+import { ADMIN_AUDIT_ACTIONS } from '../constants/admin/audit/admin-audit';
+import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/owners/pharmacy-owner-document-validation';
 
 import { AdminAuditLog } from '../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../models/pharmacies/pharmacy.model';

@@ -47,7 +47,7 @@ import {
   VALIDATION_MESSAGES,
   isHttpUrl,
   isPictureDataUrl,
-} from '../constants/validation';
+} from '../constants/shared/validation';
 
 import { clearableSchema, optionalSchema } from './shared/optional-text.schema';
 import { getWorkingHoursValidationIssue } from '../utils/validation/working-hours';

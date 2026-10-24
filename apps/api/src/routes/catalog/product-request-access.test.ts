@@ -5,7 +5,7 @@ import test from 'node:test';
 
 import type { NextFunction, Request, Response } from 'express';
 
-import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
 import { authenticate } from '../../middlewares/auth/auth.middleware';
 import { authorizeRoles } from '../../middlewares/auth/role.middleware';

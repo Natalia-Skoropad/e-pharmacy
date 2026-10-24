@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 
-import { PHARMACY_STATUSES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { API_MESSAGES } from '../../constants/messages';
+import { PHARMACY_STATUSES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
 import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { Product } from '../../models/catalog/product.model';

@@ -4,10 +4,10 @@ import {
   ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
-} from '../../constants/admin-audit';
+} from '../../constants/admin/audit/admin-audit';
 
-import { PHARMACY_PROFILE_CONFLICT_ERROR_CODE } from '../../constants/pharmacy-profile';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { PHARMACY_PROFILE_CONFLICT_ERROR_CODE } from '../../constants/pharmacies/pharmacy-profile';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import type {

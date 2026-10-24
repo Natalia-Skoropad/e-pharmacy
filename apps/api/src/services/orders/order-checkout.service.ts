@@ -1,16 +1,16 @@
 import mongoose, { Types } from 'mongoose';
 
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { STOCK_CHANGED_ERROR_CODE } from '../../constants/stock';
-import { isPharmacyOperationalStatus } from '../../constants/pharmacy-status';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { STOCK_CHANGED_ERROR_CODE } from '../../constants/inventory/stock';
+import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
 
 import {
   CHECKOUT_CART_CHANGED_ERROR_CODE,
   CHECKOUT_GROUP_MISSING_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
   PHARMACY_UNAVAILABLE_ERROR_CODE,
-} from '../../constants/order';
+} from '../../constants/orders/order';
 
 import { Cart } from '../../models/cart/cart.model';
 import { Order } from '../../models/orders/order.model';

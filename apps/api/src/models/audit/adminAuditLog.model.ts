@@ -6,7 +6,7 @@ import {
   ADMIN_AUDIT_LIMITS,
   ADMIN_AUDIT_RETENTION_SECONDS,
   ADMIN_AUDIT_SECTION_VALUES,
-} from '../../constants/admin-audit';
+} from '../../constants/admin/audit/admin-audit';
 
 import type { AdminAuditLogEntity } from '../../types/admin-audit';
 

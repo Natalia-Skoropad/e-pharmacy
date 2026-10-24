@@ -1,11 +1,11 @@
 import { Schema, model, models } from 'mongoose';
 
-import { ADMIN_ACCESS_STATUSES } from '../../../constants/admin-access';
+import { ADMIN_ACCESS_STATUSES } from '../../../constants/admin/access/admin-access';
 
 import {
   ADMIN_PERMISSION_VALUES,
   normalizeAdminPermissions,
-} from '../../../constants/admin-permissions';
+} from '../../../constants/admin/access/admin-permissions';
 
 import type { AdminAccessEntity } from '../../../types/admin-access';
 

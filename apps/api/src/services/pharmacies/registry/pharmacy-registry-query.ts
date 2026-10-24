@@ -1,6 +1,6 @@
 import type { PipelineStage } from 'mongoose';
 
-import { USER_STATUSES } from '../../../constants/auth';
+import { USER_STATUSES } from '../../../constants/auth/auth';
 import { Order } from '../../../models/orders/order.model';
 import { ProductOffer } from '../../../models/inventory/productOffer.model';
 import { User } from '../../../models/accounts/user.model';

@@ -1,7 +1,8 @@
 import type { Types } from 'mongoose';
 
-import type { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/product-request';
-import type { PRODUCT_REQUEST_STATUSES } from '../constants/product-request-validation';
+import type { PRODUCT_REQUEST_CATEGORY_MODES } from '../constants/catalog/product-request';
+import type { PRODUCT_REQUEST_STATUSES } from '../constants/catalog/product-request-validation';
+
 import type { ProductCategoryReferenceDto } from './product-category';
 import type { CalendarDateString, ISODateTimeString } from './date';
 

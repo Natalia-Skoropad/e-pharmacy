@@ -241,7 +241,6 @@ const S10_REPLACEMENTS = new Map([
   ],
 ]);
 
-const rel = (p) => path.relative(ROOT, p).replaceAll('\\', '/');
 const abs = (p) => path.join(ROOT, p);
 const norm = (p) => p.replaceAll('\\', '/');
 const isFile = (p) => existsSync(abs(p));

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../constants/http/httpStatus';
 import { httpError } from './httpError';
 
 //===================================================================
@@ -56,6 +56,7 @@ function decodeBase64DataUrl(dataUrl: string): {
 
 function hasPrefix(buffer: Buffer, bytes: readonly number[]): boolean {
   if (buffer.length < bytes.length) return false;
+
   return bytes.every((byte, index) => buffer[index] === byte);
 }
 
@@ -108,6 +109,7 @@ function detectDocumentMimeType(
 
 function hasExpectedFileExtension(name: string, type: string): boolean {
   const extension = name.toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
+
   const allowedExtensions: Readonly<Record<string, readonly string[]>> = {
     'application/pdf': ['pdf'],
     'application/msword': ['doc'],

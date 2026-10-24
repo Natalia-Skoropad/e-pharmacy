@@ -1,14 +1,14 @@
 import mongoose, { Types } from 'mongoose';
 
-import { USER_ROLES } from '../../constants/auth';
-import { HTTP_STATUS } from '../../constants/httpStatus';
-import { isPharmacyOperationalStatus } from '../../constants/pharmacy-status';
+import { USER_ROLES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
 import { requirePharmacyCapability } from '../pharmacies/pharmacy-membership.service';
 
 import {
   MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
-} from '../../constants/order';
+} from '../../constants/orders/order';
 
 import { Order } from '../../models/orders/order.model';
 import { Product } from '../../models/catalog/product.model';

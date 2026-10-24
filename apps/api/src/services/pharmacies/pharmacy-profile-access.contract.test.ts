@@ -6,7 +6,7 @@ import test from 'node:test';
 import {
   PHARMACY_PROFILE_ACTIONS_BY_STATUS,
   canPharmacyProfilePerformAction,
-} from '../../constants/pharmacy-profile';
+} from '../../constants/pharmacies/pharmacy-profile';
 
 import { canPharmacyMembershipUseProfileCapability } from './pharmacy-membership.service';
 

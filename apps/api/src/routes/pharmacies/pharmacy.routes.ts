@@ -33,7 +33,7 @@ import {
   uploadMyPharmacyDocument,
 } from '../../controllers/pharmacies/pharmacy.controller';
 
-import { USER_ROLES } from '../../constants/auth';
+import { USER_ROLES } from '../../constants/auth/auth';
 
 import {
   authenticate,

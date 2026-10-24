@@ -61,6 +61,7 @@ function readNumericProperty(source, propertyName) {
   );
 
   assert.ok(match?.[1], `Could not read numeric contract ${propertyName}`);
+
   const expression = match[1].replaceAll('_', '').trim();
 
   assert.match(
@@ -221,7 +222,11 @@ const [
     'utf8'
   ),
 
-  readFile(path.join(root, 'apps/api/src/constants/request-body.ts'), 'utf8'),
+  readFile(
+    path.join(root, 'apps/api/src/constants/http/request-body.ts'),
+    'utf8'
+  ),
+
   readFile(
     path.join(root, 'apps/pharmacy/src/app/api/product-requests/route.ts'),
     'utf8'
@@ -293,6 +298,8 @@ assert.match(
 );
 
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Pharmacy product-component check passed (${files.length} feature source files scanned).`

@@ -4,9 +4,9 @@ import {
   ADMIN_AUDIT_ACTOR_TYPES,
   ADMIN_AUDIT_ENTITY_TYPES,
   type AdminAuditActorType,
-} from '../../../constants/admin-audit';
+} from '../../../constants/admin/audit/admin-audit';
 
-import { USER_ROLES } from '../../../constants/auth';
+import { USER_ROLES } from '../../../constants/auth/auth';
 
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';

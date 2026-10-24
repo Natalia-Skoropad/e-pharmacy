@@ -6,7 +6,7 @@ import {
   BFF_AUTH_PROXY_HEADER_NAME,
   BFF_AUTH_PROXY_MARKER_VALUE,
   BFF_PROXY_SECRET_HEADER_NAME,
-} from '../../constants/bff';
+} from '../../constants/http/bff';
 
 //===================================================================
 

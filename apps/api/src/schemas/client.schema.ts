@@ -18,7 +18,7 @@ import { productCategorySlugSchema } from './product-category.schema';
 import {
   USER_SEARCH_MAX_LENGTH,
   VALIDATION_MESSAGES,
-} from '../constants/validation';
+} from '../constants/shared/validation';
 
 import { sharedSearchSchema } from './shared-validation.schema';
 

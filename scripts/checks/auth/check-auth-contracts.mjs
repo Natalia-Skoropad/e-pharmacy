@@ -159,7 +159,7 @@ const backendConstants = await read(
   'api',
   'src',
   'constants',
-  'auth.ts'
+  'auth/auth.ts'
 );
 
 assert.deepEqual(

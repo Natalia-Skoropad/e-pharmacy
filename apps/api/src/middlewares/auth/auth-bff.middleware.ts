@@ -1,15 +1,15 @@
 import type { NextFunction, Request, Response } from 'express';
 
 import { env } from '../../config/env';
-import { AUTH_ERROR_CODES } from '../../constants/auth';
+import { AUTH_ERROR_CODES } from '../../constants/auth/auth';
 
 import {
   BFF_AUTH_PROXY_HEADER_NAME,
   BFF_AUTH_PROXY_MARKER_VALUE,
   BFF_PROXY_SECRET_HEADER_NAME,
-} from '../../constants/bff';
+} from '../../constants/http/bff';
 
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { httpError } from '../../utils/httpError';
 
 //===============================================================

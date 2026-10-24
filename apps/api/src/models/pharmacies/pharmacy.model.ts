@@ -34,14 +34,14 @@ import {
   WORKING_HOURS_PATTERN,
   isHttpUrl,
   isPictureDataUrl,
-} from '../../constants/validation';
+} from '../../constants/shared/validation';
 
-import { PHARMACY_STATUSES } from '../../constants/auth';
+import { PHARMACY_STATUSES } from '../../constants/auth/auth';
 
 import {
   PHARMACY_DOCUMENT_RULES,
   PHARMACY_DOCUMENT_VALIDATION_MESSAGES,
-} from '../../constants/pharmacy-document-validation';
+} from '../../constants/pharmacies/pharmacy-document-validation';
 
 import { getWorkingHoursValidationIssue } from '../../utils/validation/working-hours';
 

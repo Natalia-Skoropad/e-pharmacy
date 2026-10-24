@@ -3,10 +3,10 @@ import type { Request, Response } from 'express';
 import {
   AUTH_ERROR_CODES,
   REFRESH_TOKEN_COOKIE_NAME,
-} from '../../constants/auth';
+} from '../../constants/auth/auth';
 
-import { API_MESSAGES } from '../../constants/messages';
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/shared/messages';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { isNextAuthProxyRequest } from '../../middlewares/auth/auth-bff.middleware';
 

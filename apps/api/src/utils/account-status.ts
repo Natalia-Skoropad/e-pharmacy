@@ -4,7 +4,7 @@ import {
   PHARMACY_OWNER_ACCOUNT_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../constants/auth';
+} from '../constants/auth/auth';
 
 import type {
   AdminAccountStatus,
@@ -48,6 +48,7 @@ export function isAccountStatusAllowedForRole(
 ): boolean {
   if (role === USER_ROLES.CLIENT) return isClientAccountStatus(status);
   if (role === USER_ROLES.ADMIN) return isAdminAccountStatus(status);
+
   return isPharmacyOwnerAccountStatus(status);
 }
 

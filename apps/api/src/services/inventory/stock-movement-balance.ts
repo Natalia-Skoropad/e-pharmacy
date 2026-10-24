@@ -1,4 +1,4 @@
-import { HTTP_STATUS } from '../../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { httpError } from '../../utils/httpError';
 
 //===============================================================
