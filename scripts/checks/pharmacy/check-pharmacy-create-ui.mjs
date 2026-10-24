@@ -5,8 +5,11 @@ import { resolve } from 'node:path';
 //===================================================================
 
 const read = (relative) => readFileSync(resolve(relative), 'utf8');
-const routes = read('apps/api/src/routes/pharmacy.routes.ts');
-const controller = read('apps/api/src/controllers/pharmacy.controller.ts');
+const routes = read('apps/api/src/routes/pharmacies/pharmacy.routes.ts');
+
+const controller = read(
+  'apps/api/src/controllers/pharmacies/pharmacy.controller.ts'
+);
 
 const member = read(
   'apps/api/src/services/pharmacies/pharmacy-membership.service.ts'

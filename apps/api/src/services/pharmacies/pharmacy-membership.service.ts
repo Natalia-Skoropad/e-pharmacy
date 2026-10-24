@@ -15,7 +15,7 @@ import {
   PHARMACY_PROFILE_MISSING_ERROR_CODE,
 } from '../../constants/pharmacy-profile';
 
-import { getSelectedPharmacyId } from '../../middlewares/pharmacy-selection.middleware';
+import { getSelectedPharmacyId } from '../../middlewares/pharmacies/pharmacy-selection.middleware';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 

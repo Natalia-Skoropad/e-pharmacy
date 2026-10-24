@@ -27,6 +27,7 @@ async function collectSourceFiles(relativeDir) {
 
   for (const entry of entries) {
     const relativePath = path.join(relativeDir, entry.name);
+
     if (entry.isDirectory()) {
       files.push(...(await collectSourceFiles(relativePath)));
     } else if (
@@ -53,6 +54,7 @@ const componentFiles = (
 
 for (const file of componentFiles) {
   const source = await readSource(file);
+
   assert.doesNotMatch(source, /\bfetch\s*\(/, `${file} uses raw fetch`);
 
   assert.doesNotMatch(
@@ -114,7 +116,7 @@ assert.match(commentsResource, /activeDeleteControllerRef/);
 assert.match(commentsResource, /clientRequestId/);
 
 const notesRoute = await readSource(
-  'apps/api/src/routes/pharmacy-note.routes.ts'
+  'apps/api/src/routes/pharmacies/pharmacy-note.routes.ts'
 );
 
 assert.match(notesRoute, /authenticate/);
@@ -129,6 +131,7 @@ const browserApiFiles = [
 
 for (const file of browserApiFiles) {
   const source = await readSource(file);
+
   assert.match(source, /localApiRequest/);
   assert.doesNotMatch(source, /\bfetch\s*\(|Authorization|https?:\/\//);
 }
@@ -141,6 +144,7 @@ const privateBffFiles = [
 
 for (const file of privateBffFiles) {
   const source = await readSource(file);
+
   assert.match(
     source,
     /createPrivateProxyRoute/,

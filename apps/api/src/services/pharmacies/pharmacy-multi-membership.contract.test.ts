@@ -97,7 +97,7 @@ test('all member-facing business modules use the centralized capability gate', a
 
 test('selected pharmacy is request-local and BFF forwards only a valid id', async () => {
   const [middleware, app, bff, route] = await Promise.all([
-    read('src/middlewares/pharmacy-selection.middleware.ts'),
+    read('src/middlewares/pharmacies/pharmacy-selection.middleware.ts'),
     read('src/app.ts'),
     read('../../packages/next-api/src/internal/request-headers.ts'),
     read('../pharmacy/src/app/api/pharmacies/me/memberships/route.ts'),

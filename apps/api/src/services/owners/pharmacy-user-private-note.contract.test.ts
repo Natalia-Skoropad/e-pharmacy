@@ -11,8 +11,8 @@ const read = (path: string) =>
 const model = read('models/owners/pharmacyUserPrivateNote.model.ts');
 const schema = read('schemas/pharmacy-user-private-note.schema.ts');
 const service = read('services/owners/pharmacy-user-private-note.service.ts');
-const controller = read('controllers/pharmacy-user-private-note.controller.ts');
-const routes = read('routes/pharmacy-owner.routes.ts');
+const controller = read('controllers/owners/pharmacy-user-private-note.controller.ts');
+const routes = read('routes/owners/pharmacy-owner.routes.ts');
 const authRoutes = read('routes/auth/auth.routes.ts');
 const authService = read('services/auth/auth-profile.service.ts');
 

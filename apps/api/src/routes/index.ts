@@ -1,5 +1,3 @@
-import { pharmacyNoteRoutes } from './pharmacy-note.routes';
-
 import { Router } from 'express';
 
 import { adminRoutes } from './admin.routes';
@@ -13,8 +11,9 @@ import { productCategoryRoutes } from './catalog/product-category.routes';
 import { productRequestRoutes } from './catalog/product-request.routes';
 import { productRoutes } from './catalog/product.routes';
 
-import { pharmacyRoutes } from './pharmacy.routes';
-import { pharmacyOwnerRoutes } from './pharmacy-owner.routes';
+import { pharmacyRoutes } from './pharmacies/pharmacy.routes';
+import { pharmacyOwnerRoutes } from './owners/pharmacy-owner.routes';
+import { pharmacyNoteRoutes } from './pharmacies/pharmacy-note.routes';
 
 //===============================================================
 

@@ -162,7 +162,7 @@ test('verification readiness requires the pharmacy region on the backend', async
 
 test('private pharmacy document responses are explicitly non-cacheable at the backend boundary', async () => {
   const controllerSource = await readFile(
-    resolve(process.cwd(), 'src/controllers/pharmacy.controller.ts'),
+    resolve(process.cwd(), 'src/controllers/pharmacies/pharmacy.controller.ts'),
     'utf8'
   );
 

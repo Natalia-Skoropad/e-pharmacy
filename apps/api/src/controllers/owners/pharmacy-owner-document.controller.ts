@@ -1,11 +1,11 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   PharmacyOwnerDocumentParams,
   PharmacyOwnerDocumentUploadInput,
-} from '../schemas/pharmacy-owner-document.schema';
+} from '../../schemas/pharmacy-owner-document.schema';
 
 import {
   createPharmacyOwnerDocumentService,
@@ -13,10 +13,10 @@ import {
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
   replacePharmacyOwnerDocumentService,
-} from '../services/owners/pharmacy-owner-document.service';
+} from '../../services/owners/pharmacy-owner-document.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
@@ -116,6 +116,7 @@ export async function deleteMyPharmacyOwnerDocument(
 
 export async function replaceMyPharmacyOwnerDocument(
   req: Request,
+
   res: ValidatedResponse<
     PharmacyOwnerDocumentUploadInput,
     PharmacyOwnerDocumentParams

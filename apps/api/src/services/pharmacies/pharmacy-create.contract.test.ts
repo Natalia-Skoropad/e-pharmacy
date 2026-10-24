@@ -11,8 +11,8 @@ const read = (name: string) => readFile(resolve(process.cwd(), name), 'utf8');
 
 test('private pharmacy creation uses only authenticated pharmacy identity', async () => {
   const [routes, controller, service] = await Promise.all([
-    read('src/routes/pharmacy.routes.ts'),
-    read('src/controllers/pharmacy.controller.ts'),
+    read('src/routes/pharmacies/pharmacy.routes.ts'),
+    read('src/controllers/pharmacies/pharmacy.controller.ts'),
     read('src/services/pharmacies/pharmacy-create.service.ts'),
   ]);
 

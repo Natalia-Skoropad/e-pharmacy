@@ -46,7 +46,7 @@ test('complete bank details remain owned by the authenticated checkout endpoint'
       'utf8'
     ),
 
-    readFile(resolve(process.cwd(), 'src/routes/pharmacy.routes.ts'), 'utf8'),
+    readFile(resolve(process.cwd(), 'src/routes/pharmacies/pharmacy.routes.ts'), 'utf8'),
   ]);
 
   const checkoutService = serviceSource.slice(

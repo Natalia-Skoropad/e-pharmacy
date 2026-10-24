@@ -10,7 +10,7 @@ import { errorMiddleware } from './middlewares/http/error.middleware';
 import { notFoundMiddleware } from './middlewares/http/notFound.middleware';
 import { validateMutationOrigin } from './middlewares/security/origin.middleware';
 import { attachRequestContext } from './middlewares/http/request-context.middleware';
-import { attachPharmacySelection } from './middlewares/pharmacy-selection.middleware';
+import { attachPharmacySelection } from './middlewares/pharmacies/pharmacy-selection.middleware';
 
 import { routes } from './routes';
 

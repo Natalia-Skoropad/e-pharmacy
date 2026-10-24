@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
-import { USER_ROLES } from '../constants/auth';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { USER_ROLES } from '../../constants/auth';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   CreatePharmacyDraftInput,
@@ -15,16 +15,16 @@ import type {
   SendMyPharmacyForVerificationInput,
   SubmitMyPharmacyModerationInput,
   UpdateMyPharmacyProfileInput,
-} from '../schemas/pharmacy.schema';
+} from '../../schemas/pharmacy.schema';
 
-import type { PharmacyDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
+import type { PharmacyDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
 
 import type {
   OwnedPharmacyRegistryListQuery,
   OwnedPharmacyRegistryOptionsQuery,
   OwnedPharmacyRegistryParams,
   OwnedPharmacyDocumentParams,
-} from '../schemas/owned-pharmacy-registry.schema';
+} from '../../schemas/owned-pharmacy-registry.schema';
 
 import {
   getFavoritePharmacyIdsService,
@@ -35,44 +35,44 @@ import {
   getPharmacyFiltersService,
   getPharmacyOptionsService,
   setFavoritePharmacyService,
-} from '../services/pharmacies/pharmacy-public-catalog.service';
+} from '../../services/pharmacies/pharmacy-public-catalog.service';
 
 import {
   createPharmacyReviewService,
   getPendingPharmacyReviewsService,
   getPharmacyReviewsService,
   moderatePharmacyReviewService,
-} from '../services/pharmacies/pharmacy-reviews.service';
+} from '../../services/pharmacies/pharmacy-reviews.service';
 
 import {
   getCurrentPharmacySummaryService,
   getMyPharmacyProfileService,
   updateMyPharmacyProfileService,
-} from '../services/pharmacies/pharmacy-owner-profile.service';
+} from '../../services/pharmacies/pharmacy-owner-profile.service';
 
 import {
   sendMyPharmacyForVerificationService,
   submitMyPharmacyModerationService,
-} from '../services/pharmacies/pharmacy-moderation.service';
+} from '../../services/pharmacies/pharmacy-moderation.service';
 
 import {
   createPrivatePharmacyDocumentUploadService,
   getPrivatePharmacyDocumentContentService,
-} from '../services/pharmacies/pharmacy-document.service';
+} from '../../services/pharmacies/pharmacy-document.service';
 
-import { createPharmacyDraftService } from '../services/pharmacies/pharmacy-create.service';
+import { createPharmacyDraftService } from '../../services/pharmacies/pharmacy-create.service';
 
 import {
   getOwnedPharmacyDetailService,
   getOwnedPharmacyStatisticsService,
   listOwnedPharmaciesService,
   listOwnedPharmacyOptionsService,
-} from '../services/pharmacies/owned-pharmacy-registry-read.service';
+} from '../../services/pharmacies/owned-pharmacy-registry-read.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
+import type { ValidatedResponse } from '../../types/validated-request';
 
-import { listUserPharmacyMemberships } from '../services/pharmacies/pharmacy-membership.service';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import { listUserPharmacyMemberships } from '../../services/pharmacies/pharmacy-membership.service';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 

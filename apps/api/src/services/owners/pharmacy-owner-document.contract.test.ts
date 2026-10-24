@@ -13,11 +13,11 @@ const serviceSource = read(
 );
 
 const modelSource = read('src/models/owners/pharmacyOwnerDocument.model.ts');
-const ownerRouteSource = read('src/routes/pharmacy-owner.routes.ts');
+const ownerRouteSource = read('src/routes/owners/pharmacy-owner.routes.ts');
 const adminRouteSource = read('src/routes/admin.routes.ts');
 
 const controllerSource = read(
-  'src/controllers/pharmacy-owner-document.controller.ts'
+  'src/controllers/owners/pharmacy-owner-document.controller.ts'
 );
 
 //===============================================================

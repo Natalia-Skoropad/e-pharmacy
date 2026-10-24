@@ -12,7 +12,7 @@ const read = (path: string) =>
 
 test('Stage 14.6: admin-only document routes are GET-only and require view permission', () => {
   const admin = read('src/routes/admin.routes.ts');
-  const pharmacy = read('src/routes/pharmacy.routes.ts');
+  const pharmacy = read('src/routes/pharmacies/pharmacy.routes.ts');
   const service = read('src/services/pharmacies/pharmacy-document.service.ts');
 
   assert.match(
@@ -48,8 +48,8 @@ test('Stage 14.6: admin-only document routes are GET-only and require view permi
 
 test('Stage 14.6: comment APIs are scoped to admin role and permissions, never owner routes', () => {
   const admin = read('src/routes/admin.routes.ts');
-  const owner = read('src/routes/pharmacy-owner.routes.ts');
-  const pharmacy = read('src/routes/pharmacy.routes.ts');
+  const owner = read('src/routes/owners/pharmacy-owner.routes.ts');
+  const pharmacy = read('src/routes/pharmacies/pharmacy.routes.ts');
   const notes = read('src/services/pharmacies/pharmacy-note.service.ts');
 
   assert.match(

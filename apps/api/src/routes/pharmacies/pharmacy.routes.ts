@@ -31,18 +31,18 @@ import {
   setFavoritePharmacy,
   updateMyPharmacyProfile,
   uploadMyPharmacyDocument,
-} from '../controllers/pharmacy.controller';
+} from '../../controllers/pharmacies/pharmacy.controller';
 
-import { USER_ROLES } from '../constants/auth';
+import { USER_ROLES } from '../../constants/auth';
 
 import {
   authenticate,
   optionalAuthenticate,
-} from '../middlewares/auth/auth.middleware';
+} from '../../middlewares/auth/auth.middleware';
 
-import { reviewRateLimit } from '../middlewares/security/rateLimit.middleware';
-import { authorizeRoles } from '../middlewares/auth/role.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { reviewRateLimit } from '../../middlewares/security/rateLimit.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   createPharmacyDraftSchema,
@@ -57,18 +57,18 @@ import {
   submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
   uploadMyPharmacyDocumentSchema,
-} from '../schemas/pharmacy.schema';
+} from '../../schemas/pharmacy.schema';
 
-import { emptyQuerySchema } from '../schemas/shared';
+import { emptyQuerySchema } from '../../schemas/shared';
 
 import {
   ownedPharmacyRegistryListQuerySchema,
   ownedPharmacyRegistryOptionsQuerySchema,
   ownedPharmacyRegistryParamsSchema,
   ownedPharmacyDocumentParamsSchema,
-} from '../schemas/owned-pharmacy-registry.schema';
+} from '../../schemas/owned-pharmacy-registry.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

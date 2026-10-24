@@ -63,7 +63,7 @@ const [
   read('apps', 'api', 'src', 'constants', 'pharmacy-owner-lifecycle.ts'),
   read('apps', 'api', 'src', 'services', 'auth/auth-login.service.ts'),
   read('apps', 'api', 'src', 'services', 'auth/auth-profile.service.ts'),
-  read('apps', 'api', 'src', 'routes', 'pharmacy-owner.routes.ts'),
+  read('apps', 'api', 'src', 'routes', 'owners/pharmacy-owner.routes.ts'),
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
 
   read(

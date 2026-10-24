@@ -1,22 +1,22 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   CreatePharmacyNoteInput,
   PharmacyNoteDeleteParams,
   PharmacyNoteParams,
   PharmacyNotesQuery,
-} from '../schemas/pharmacy-note.schema';
+} from '../../schemas/pharmacy-note.schema';
 
 import {
   createPharmacyNoteService,
   deletePharmacyNoteService,
   getPharmacyNotesService,
-} from '../services/pharmacies/pharmacy-note.service';
+} from '../../services/pharmacies/pharmacy-note.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
@@ -25,11 +25,13 @@ export async function getPharmacyNotes(
   res: ValidatedResponse<unknown, PharmacyNoteParams, PharmacyNotesQuery>
 ) {
   const { params, query } = res.locals.validated;
+
   const user = req.user;
   if (!user) return;
 
   const data = await getPharmacyNotesService(
     { id: user.id, role: user.role },
+
     params.entityType,
     params.entityId,
     query.page,
@@ -47,10 +49,12 @@ export async function createPharmacyNote(
 ) {
   const { body, params } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await createPharmacyNoteService(
     { id: user.id, role: user.role },
+
     params.entityType,
     params.entityId,
     body
@@ -67,10 +71,12 @@ export async function deletePharmacyNote(
 ) {
   const { params } = res.locals.validated;
   const user = req.user;
+
   if (!user) return;
 
   const data = await deletePharmacyNoteService(
     { id: user.id, role: user.role },
+
     params.entityType,
     params.entityId,
     params.noteId

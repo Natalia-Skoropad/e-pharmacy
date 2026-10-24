@@ -11,7 +11,7 @@ const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 //===================================================================
 
 test('verification document content has owner/admin-only route boundaries', () => {
-  const pharmacyRoutes = read('src/routes/pharmacy.routes.ts');
+  const pharmacyRoutes = read('src/routes/pharmacies/pharmacy.routes.ts');
   const adminRoutes = read('src/routes/admin.routes.ts');
   const service = read('src/services/pharmacies/pharmacy-document.service.ts');
 

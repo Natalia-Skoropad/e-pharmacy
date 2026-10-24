@@ -11,9 +11,9 @@ const read = (file: string) =>
 //===============================================================
 
 test('pharmacy document downloads are scoped to a named pharmacy and authenticated', () => {
-  const route = read('routes/pharmacy.routes.ts');
+  const route = read('routes/pharmacies/pharmacy.routes.ts');
   const service = read('services/pharmacies/pharmacy-document.service.ts');
-  const controller = read('controllers/pharmacy.controller.ts');
+  const controller = read('controllers/pharmacies/pharmacy.controller.ts');
 
   assert.match(
     route,

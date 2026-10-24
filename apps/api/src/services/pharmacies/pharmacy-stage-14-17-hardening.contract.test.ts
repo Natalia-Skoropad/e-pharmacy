@@ -237,8 +237,8 @@ test('14.17: document ownership and Admin comments are isolated from Owner/Pharm
       read('services/pharmacies/pharmacy-document.service.ts'),
       read('services/admin/pharmacies/pharmacy-admin-comment.service.ts'),
       read('models/admin/comments/pharmacyAdminComment.model.ts'),
-      read('routes/pharmacy.routes.ts'),
-      read('routes/pharmacy-owner.routes.ts'),
+      read('routes/pharmacies/pharmacy.routes.ts'),
+      read('routes/owners/pharmacy-owner.routes.ts'),
     ]);
 
   assert.match(documents, /getPharmacyDocumentReferences\(pharmacyId\)/);

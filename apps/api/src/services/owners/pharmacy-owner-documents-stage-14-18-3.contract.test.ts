@@ -58,7 +58,7 @@ test('14.18.3 owner documents support atomic replace and guard the last file', (
     'src/services/owners/pharmacy-owner-document.service.ts'
   );
 
-  const route = read('src/routes/pharmacy-owner.routes.ts');
+  const route = read('src/routes/owners/pharmacy-owner.routes.ts');
 
   assert.match(service, /replacePharmacyOwnerDocumentService/);
   assert.match(service, /session.withTransaction/);

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { USER_ROLES } from '../constants/auth';
+import { USER_ROLES } from '../../constants/auth';
 
 import {
   deleteMyPharmacyOwnerDocument,
@@ -8,30 +8,30 @@ import {
   listMyPharmacyOwnerDocuments,
   uploadMyPharmacyOwnerDocument,
   replaceMyPharmacyOwnerDocument,
-} from '../controllers/pharmacy-owner-document.controller';
+} from '../../controllers/owners/pharmacy-owner-document.controller';
 
 import {
   createMyPharmacyUserPrivateNote,
   deleteMyPharmacyUserPrivateNote,
   listMyPharmacyUserPrivateNotes,
-} from '../controllers/pharmacy-user-private-note.controller';
+} from '../../controllers/owners/pharmacy-user-private-note.controller';
 
-import { authenticate } from '../middlewares/auth/auth.middleware';
-import { authorizeRoles } from '../middlewares/auth/role.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   pharmacyOwnerDocumentParamsSchema,
   pharmacyOwnerDocumentUploadSchema,
-} from '../schemas/pharmacy-owner-document.schema';
+} from '../../schemas/pharmacy-owner-document.schema';
 
 import {
   createPharmacyUserPrivateNoteSchema,
   pharmacyUserPrivateNoteParamsSchema,
   pharmacyUserPrivateNotesQuerySchema,
-} from '../schemas/pharmacy-user-private-note.schema';
+} from '../../schemas/pharmacy-user-private-note.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

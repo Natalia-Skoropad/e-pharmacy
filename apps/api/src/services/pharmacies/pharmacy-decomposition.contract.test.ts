@@ -27,7 +27,7 @@ test('S10.2 removes the old service without proxy/barrel and controllers import 
   assert.equal(existsSync(resolve(services, 'pharmacy.service.ts')), false);
 
   const controller = readFileSync(
-    resolve(src, 'controllers/pharmacy.controller.ts'),
+    resolve(src, 'controllers/pharmacies/pharmacy.controller.ts'),
     'utf8'
   );
 
@@ -39,7 +39,7 @@ test('S10.2 removes the old service without proxy/barrel and controllers import 
   ]) {
     assert.match(
       controller,
-      new RegExp(`from ['"]\\.\\./services/pharmacies/${name}['"]`)
+      new RegExp(`from ['"]\\.\\./\\.\\./services/pharmacies/${name}['"]`)
     );
   }
 

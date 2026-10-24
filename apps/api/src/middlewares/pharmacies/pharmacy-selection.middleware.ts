@@ -2,8 +2,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import type { NextFunction, Request, Response } from 'express';
 import { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { httpError } from '../utils/httpError';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 

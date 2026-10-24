@@ -1,25 +1,25 @@
 import { Router } from 'express';
 
-import { USER_ROLES } from '../constants/auth';
+import { USER_ROLES } from '../../constants/auth';
 
 import {
   createPharmacyNote,
   deletePharmacyNote,
   getPharmacyNotes,
-} from '../controllers/pharmacy-note.controller';
+} from '../../controllers/pharmacies/pharmacy-note.controller';
 
-import { authenticate } from '../middlewares/auth/auth.middleware';
-import { authorizeRoles } from '../middlewares/auth/role.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   createPharmacyNoteSchema,
   pharmacyNoteDeleteParamsSchema,
   pharmacyNoteParamsSchema,
   pharmacyNotesQuerySchema,
-} from '../schemas/pharmacy-note.schema';
+} from '../../schemas/pharmacy-note.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

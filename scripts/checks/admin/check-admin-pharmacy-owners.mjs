@@ -60,6 +60,7 @@ const [
     'services',
     'owners/pharmacy-owner-document.service.ts'
   ),
+
   read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
 
   read(
@@ -70,7 +71,7 @@ const [
     'admin/owners/pharmacy-owner-admin-comment.service.ts'
   ),
 
-  read('apps', 'api', 'src', 'routes', 'pharmacy-owner.routes.ts'),
+  read('apps', 'api', 'src', 'routes', 'owners/pharmacy-owner.routes.ts'),
 
   read(
     'apps',

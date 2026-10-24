@@ -17,9 +17,9 @@ const backendRouteFiles = {
   '/clients': 'apps/api/src/routes/clients/client.routes.ts',
   '/health': 'apps/api/src/routes/health/health.routes.ts',
   '/orders': 'apps/api/src/routes/orders/order.routes.ts',
-  '/pharmacies': 'apps/api/src/routes/pharmacy.routes.ts',
-  '/pharmacy-owners': 'apps/api/src/routes/pharmacy-owner.routes.ts',
-  '/pharmacy-notes': 'apps/api/src/routes/pharmacy-note.routes.ts',
+  '/pharmacies': 'apps/api/src/routes/pharmacies/pharmacy.routes.ts',
+  '/pharmacy-owners': 'apps/api/src/routes/owners/pharmacy-owner.routes.ts',
+  '/pharmacy-notes': 'apps/api/src/routes/pharmacies/pharmacy-note.routes.ts',
   '/product-requests': 'apps/api/src/routes/catalog/product-request.routes.ts',
 
   '/product-categories':

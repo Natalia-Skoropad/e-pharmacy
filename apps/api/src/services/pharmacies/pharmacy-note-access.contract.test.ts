@@ -69,7 +69,7 @@ test('all pharmacy note operations pass through entity access validation', async
 
 test('pharmacy note routes require the authenticated pharmacy role', async () => {
   const source = await readFile(
-    resolve(process.cwd(), 'src/routes/pharmacy-note.routes.ts'),
+    resolve(process.cwd(), 'src/routes/pharmacies/pharmacy-note.routes.ts'),
     'utf8'
   );
 

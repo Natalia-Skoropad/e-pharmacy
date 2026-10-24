@@ -1,22 +1,23 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   CreatePharmacyUserPrivateNoteInput,
   PharmacyUserPrivateNoteParams,
   PharmacyUserPrivateNotesQuery,
-} from '../schemas/pharmacy-user-private-note.schema';
+} from '../../schemas/pharmacy-user-private-note.schema';
 
 import {
   createMyPharmacyUserPrivateNoteService,
   deleteMyPharmacyUserPrivateNoteService,
   listMyPharmacyUserPrivateNotesService,
-} from '../services/owners/pharmacy-user-private-note.service';
+} from '../../services/owners/pharmacy-user-private-note.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
-import { httpError } from '../utils/httpError';
+import type { ValidatedResponse } from '../../types/validated-request';
+
+import { sendSuccessResponse } from '../../utils/apiResponse';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
