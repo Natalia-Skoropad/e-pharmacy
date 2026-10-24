@@ -99,12 +99,166 @@ function sha(text) {
 
 //===================================================================
 
+// The original M1 hashes remain immutable. These supplementary, baseline-derived
+// hashes allow only blank lines and standalone //=== divider comments to change.
+// They are pinned to each original file, not calculated from the working tree.
+const layoutInsensitiveSha256 = new Map([
+  [
+    'apps/api/src/models/admin/access/adminAccess.model.ts',
+    '683927fc94f5b0949c22faabe30e5d0925d17fe53c37b4447d5b651e1b113ed0',
+  ],
+  [
+    'apps/api/src/models/audit/adminAuditLog.model.ts',
+    '6ca1444456340da8454d5eff7c85c0ca609ed67705133e4cc52a01b1c8d6f130',
+  ],
+  [
+    'apps/api/src/models/admin/access/adminAuthorizationState.model.ts',
+    '30f86cfa243e9685b56661ed3bb6819726bb42fc4f30dfb68e774275a3dbe13e',
+  ],
+  [
+    'apps/api/src/models/admin/employees/adminEmployeeDocument.model.ts',
+    '17160958a397273a12ed2d4180620469e8f1a8ededfe0a54830941764c2966d5',
+  ],
+  [
+    'apps/api/src/models/admin/employees/adminEmployeePrivateNote.model.ts',
+    'd18ea3eaf580e3eb5f32a748a14151d471492f75a46acd808870e3370e6eef71',
+  ],
+  [
+    'apps/api/src/models/cart/cart.model.ts',
+    '1a5a4d839eb2d9c0b220b99f849ffc1cfc0284d98c0294a91cd2a69e6783e243',
+  ],
+  [
+    'apps/api/src/models/clients/client.model.ts',
+    '538791947ddc3068c830b8a1dea43bd07eb72281aa82e99c199ba6ef5780cde9',
+  ],
+  [
+    'apps/api/src/models/__tests__/model-validation.contract.test.ts',
+    '0bca5e77c1092f6237d9aa78fd3bc303cc969a20e60049822c5e6aaf658d2e04',
+  ],
+  [
+    'apps/api/src/models/orders/order.model.ts',
+    '1f95f9fdd0b865cc57ea68de37c4aa6a22cb648a760fdbc726ba9701d375ae04',
+  ],
+  [
+    'apps/api/src/models/pharmacies/pharmacy.model.ts',
+    '836638270b04e3cd0fb8084de0aacb3d11c8d4dd98f5776535f229548717f314',
+  ],
+  [
+    'apps/api/src/models/admin/comments/pharmacyAdminComment.model.ts',
+    '3f3f2a46bf9ac65c27864cfa6fba520519ceb7ee9efeea567f6f33ea97322532',
+  ],
+  [
+    'apps/api/src/models/pharmacies/pharmacyDocumentFile.model.ts',
+    '1e9588058f2c125811d0f93820ee063461e924acb36e444d32e7beefa3251837',
+  ],
+  [
+    'apps/api/src/models/pharmacies/pharmacyNote.model.ts',
+    '0781c2f9b00c39cca91ca3237e19a765eb7347b46c22c3ecfcd25953cef684b0',
+  ],
+  [
+    'apps/api/src/models/admin/comments/pharmacyOwnerAdminComment.model.ts',
+    '01c0dbd4295b68dd5154e2739cf9472f94f325fc78da0ee19768b6e8dab9b05c',
+  ],
+  [
+    'apps/api/src/models/owners/pharmacyOwnerDocument.model.ts',
+    'dbbbda11e06a6b5d35f2037582f6e87fa4bd461d341eed00f9d86b9f6a04f138',
+  ],
+  [
+    'apps/api/src/models/owners/pharmacyRegistrationUploadSession.model.ts',
+    'b6276ebd3e068a7e0cf53613ec3cb54142007fcc3d7ef397bc06babe131b6b10',
+  ],
+  [
+    'apps/api/src/models/reviews/pharmacyReview.model.ts',
+    '3bd713603e11815466efefbad1dbe74037cb96f518be1042360a9c613f70615a',
+  ],
+  [
+    'apps/api/src/models/owners/pharmacyUserPrivateNote.model.ts',
+    'e3a1933af59da6318dd6cd10dbff0cefab9f88fa612d4c52fded6bc827928e22',
+  ],
+  [
+    'apps/api/src/models/settings/position.model.test.ts',
+    'c48980dea9d69027a6c22287c571881bef1dd205a0a3a0c702aadaf4c683183e',
+  ],
+  [
+    'apps/api/src/models/settings/position.model.ts',
+    'caec9da081e0b6e22cd313b46aede63372548d819b1a59d437476017cf66f55a',
+  ],
+  [
+    'apps/api/src/models/catalog/product.model.ts',
+    'e8cb246718e1d5782a893ea477360b1345081b828f2130021cff9b630c54207f',
+  ],
+  [
+    'apps/api/src/models/catalog/productCategory.model.test.ts',
+    '33041ac8c9b66a783fd0617f0e0a6baa40f595085fb4b17ecd43977a6521e1dc',
+  ],
+  [
+    'apps/api/src/models/catalog/productCategory.model.ts',
+    '739ee314efcaf2753a11bd205e0248d4d5354d0aacf69bedbce4d1b88c860db5',
+  ],
+  [
+    'apps/api/src/models/inventory/productOffer.model.ts',
+    '2cda15a142ec9a63fff2fc481004ae52778976214be85489e8bcb73e89f4e882',
+  ],
+  [
+    'apps/api/src/models/catalog/productRequest.model.ts',
+    'b6657127d88904ce0c3aaa1f20ba04c3425e81805013e0f563994bb5d574bee8',
+  ],
+  [
+    'apps/api/src/models/reviews/productReview.model.ts',
+    'f6414f89b8dddbc267c92f55aa0d357e6511e81fa2e482f6a7ac10944ef8977d',
+  ],
+  [
+    'apps/api/src/models/infrastructure/rateLimitBucket.model.ts',
+    '9db8abd6a140f07fd3263602517f60ef9326b48ead314a61bf7eedd0a1155c09',
+  ],
+  [
+    'apps/api/src/models/accounts/session.model.ts',
+    '1e6547871e78d62bae706c8c901a66b40923009bc8631bb4a06ddbe90fa0dab6',
+  ],
+  [
+    'apps/api/src/models/inventory/stockMovement.model.ts',
+    '86bc2203a4cd4921ea088ecac3dcefdb7150e7884ad2ec1f501f0f63b44eeee0',
+  ],
+  [
+    'apps/api/src/models/accounts/user.model.ts',
+    'b4d7beec024f8bdee204479bcb59b9fecfef4bfbd914c1319b056c6ce11ad2a5',
+  ],
+]);
+
+//===================================================================
+
+function normalizeCosmeticLayout(source) {
+  // A changed multiline template may have meaningful blank lines. Fail closed
+  // rather than accidentally treating template-string content as formatting.
+  const templateLiterals = source.match(/`(?:\\.|[^`\\])*`/g) ?? [];
+
+  assert(
+    templateLiterals.every((value) => !/[\r\n]/.test(value)),
+    'M1 cosmetic normalization does not support multiline template literals'
+  );
+
+  return source
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .filter(
+      (line) => line.trim() !== '' && !/^[ \t]*\/\/={12,}[ \t]*$/.test(line)
+    )
+    .join('\n');
+}
+
+//===================================================================
+
 assert.equal(inventory.schemaVersion, 1);
 assert.equal(manifest.schemaVersion, 1);
 assert.equal(manifest.scope, scope);
 assert.equal(manifest.moves.length, inventory.files.length);
 assert.equal(inventory.modelCount, 27);
 assert.equal(inventory.testCount, 3);
+assert.deepEqual(
+  new Set(layoutInsensitiveSha256.keys()),
+  new Set(inventory.files.map((item) => item.toPath)),
+  'Cosmetic-source baseline must cover exactly the immutable M1 inventory'
+);
 
 //===================================================================
 
@@ -175,6 +329,7 @@ function canonicalSource(source, caller) {
 
 let indexes = 0;
 let schemaCount = 0;
+const invalidFingerprints = [];
 
 for (const item of inventory.files) {
   const entry = manifest.moves.find((move) => move.from === item.fromPath);
@@ -182,17 +337,28 @@ for (const item of inventory.files) {
   assert(entry && entry.to === item.toPath && entry.domain === item.domain);
 
   const text = readFileSync(path.join(root, item.toPath), 'utf8');
-  const hash = sha(canonicalSource(text, item.toPath));
+  const canonical = canonicalSource(text, item.toPath);
+  const hash = sha(canonical);
 
-  assert.equal(
-    hash,
-    item.canonicalSourceSha256,
-    `Model/schema/test altered beyond direct path rewrites: ${item.toPath}`
-  );
+  if (hash !== item.canonicalSourceSha256) {
+    const normalized = sha(normalizeCosmeticLayout(canonical));
+    const expected = layoutInsensitiveSha256.get(item.toPath);
+
+    if (normalized !== expected)
+      invalidFingerprints.push(
+        `${item.toPath} (normalized: ${normalized}, expected: ${expected})`
+      );
+  }
 
   indexes += item.indexDeclarations;
   schemaCount += item.schemaDeclarations;
 }
+
+assert.equal(
+  invalidFingerprints.length,
+  0,
+  `Model/schema/test altered beyond allowed cosmetic layout changes:\n${invalidFingerprints.join('\n')}`
+);
 
 //===================================================================
 

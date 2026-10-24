@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   CheckoutOrderInput,
@@ -13,31 +13,31 @@ import type {
   OrderSalesStatisticsQuery,
   UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
-} from '../schemas/order.schema';
+} from '../../schemas/order.schema';
 
-import { checkoutOrderService } from '../services/orders/order-checkout.service';
-import { createManagerOrderService } from '../services/orders/order-manager-orders.service';
+import { checkoutOrderService } from '../../services/orders/order-checkout.service';
+import { createManagerOrderService } from '../../services/orders/order-manager-orders.service';
 
 import {
   createOrderManagerCommentService,
   deleteOrderManagerCommentService,
   getOrderManagerCommentsService,
-} from '../services/orders/order-comments.service';
+} from '../../services/orders/order-comments.service';
 
 import {
   getOrderByIdService,
   getOrdersService,
-} from '../services/orders/order-query.service';
+} from '../../services/orders/order-query.service';
 
-import { getOrderSalesStatisticsService } from '../services/orders/order-sales-statistics.service';
+import { getOrderSalesStatisticsService } from '../../services/orders/order-sales-statistics.service';
 
 import {
   updateOrderDetailsService,
   updateOrderStatusService,
-} from '../services/orders/order-mutations.service';
+} from '../../services/orders/order-mutations.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 

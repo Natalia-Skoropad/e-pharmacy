@@ -39,7 +39,7 @@ test('S10 Order has no legacy service, proxy or barrel, and controllers use cano
     assert.doesNotMatch(source, /^export\s+(?:\*|\{[^}]+\})\s+from\s+/m, name);
   }
 
-  const controller = read('controllers/order.controller.ts');
+  const controller = read('controllers/orders/order.controller.ts');
 
   assert.doesNotMatch(controller, /orders\/order\.service/);
 

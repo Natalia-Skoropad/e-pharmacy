@@ -8,22 +8,22 @@ import {
   getProductRequestStatistics,
   getProductRequests,
   updateProductRequest,
-} from '../controllers/product-request.controller';
+} from '../../controllers/catalog/product-request.controller';
 
-import { USER_ROLES } from '../constants/auth';
+import { USER_ROLES } from '../../constants/auth';
 
-import { authenticate } from '../middlewares/auth/auth.middleware';
-import { authorizeRoles } from '../middlewares/auth/role.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   productRequestArticleAvailabilityQuerySchema,
   productRequestFormSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
-} from '../schemas/product-request.schema';
+} from '../../schemas/product-request.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

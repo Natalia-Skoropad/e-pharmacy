@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 
-import { USER_ROLES } from '../constants/auth';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { USER_ROLES } from '../../constants/auth';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   CreateProductReviewInput,
@@ -12,7 +12,7 @@ import type {
   ProductReviewParams,
   ManagedProductsQuery,
   PublicProductsQuery,
-} from '../schemas/product.schema';
+} from '../../schemas/product.schema';
 
 import {
   getFavoriteProductIdsService,
@@ -21,7 +21,7 @@ import {
   getProductFiltersService,
   getProductsService,
   setFavoriteProductService,
-} from '../services/catalog/product-public.service';
+} from '../../services/catalog/product-public.service';
 
 import {
   addProductToMyPharmacyService,
@@ -29,7 +29,7 @@ import {
   getManagedProductStatisticsService,
   getManagedProductsService,
   removeProductFromMyPharmacyService,
-} from '../services/catalog/product-management.service';
+} from '../../services/catalog/product-management.service';
 
 import {
   createProductReviewService,
@@ -37,12 +37,12 @@ import {
   getPendingProductReviewsService,
   getProductReviewsService,
   moderateProductReviewService,
-} from '../services/catalog/product-reviews.service';
+} from '../../services/catalog/product-reviews.service';
 
-import { getProductStockMovementsService } from '../services/inventory/stock-movement-read.service';
+import { getProductStockMovementsService } from '../../services/inventory/stock-movement-read.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
@@ -145,6 +145,7 @@ export async function getFavoriteProductIds(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getFavoriteProductIdsService(req.user?.id ?? '');
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 

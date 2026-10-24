@@ -29,7 +29,7 @@ test('S10.7 uses direct stock movement services without retaining the monolith o
 
   const [controller, management, stock] = await Promise.all([
     readFile(
-      resolve(process.cwd(), 'src/controllers/product.controller.ts'),
+      resolve(process.cwd(), 'src/controllers/catalog/product.controller.ts'),
       'utf8'
     ),
 

@@ -5,18 +5,18 @@ import test from 'node:test';
 
 import type { NextFunction, Request, Response } from 'express';
 
-import { USER_ROLES, USER_STATUSES } from '../constants/auth';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth';
 
-import { authenticate } from '../middlewares/auth/auth.middleware';
-import { authorizeRoles } from '../middlewares/auth/role.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
 
-import type { HttpError } from '../types/errors';
+import type { HttpError } from '../../types/errors';
 
 //===============================================================
 
 test('article availability route requires authentication and pharmacy role', async () => {
   const routes = await readFile(
-    resolve(process.cwd(), 'src/routes/product-request.routes.ts'),
+    resolve(process.cwd(), 'src/routes/catalog/product-request.routes.ts'),
     'utf8'
   );
 

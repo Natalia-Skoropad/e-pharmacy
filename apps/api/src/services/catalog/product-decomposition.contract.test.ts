@@ -26,7 +26,7 @@ test('S10 Product has no legacy proxy; controller imports canonical modules dire
   });
 
   const controller = await readFile(
-    resolve(process.cwd(), 'src/controllers/product.controller.ts'),
+    resolve(process.cwd(), 'src/controllers/catalog/product.controller.ts'),
     'utf8'
   );
 

@@ -1,29 +1,29 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   ProductRequestArticleAvailabilityQuery,
   ProductRequestFormInput,
   ProductRequestParams,
   ProductRequestsQuery,
-} from '../schemas/product-request.schema';
+} from '../../schemas/product-request.schema';
 
 import {
   createProductRequestService,
   deleteProductRequestService,
   updateProductRequestService,
-} from '../services/catalog/product-request-management.service';
+} from '../../services/catalog/product-request-management.service';
 
 import {
   getProductRequestArticleAvailabilityService,
   getProductRequestByIdService,
   getProductRequestStatisticsService,
   getProductRequestsService,
-} from '../services/catalog/product-request-read.service';
+} from '../../services/catalog/product-request-read.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 

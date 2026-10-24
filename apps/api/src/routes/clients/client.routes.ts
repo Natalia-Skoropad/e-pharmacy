@@ -4,18 +4,18 @@ import {
   getClientById,
   getClientPurchasedProducts,
   getClients,
-} from '../controllers/client.controller';
+} from '../../controllers/clients/client.controller';
 
-import { authenticate } from '../middlewares/auth/auth.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   clientParamsSchema,
   clientProductsQuerySchema,
   clientsQuerySchema,
-} from '../schemas/client.schema';
+} from '../../schemas/client.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

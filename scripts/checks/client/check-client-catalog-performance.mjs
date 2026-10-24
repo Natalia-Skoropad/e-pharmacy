@@ -37,7 +37,7 @@ const [
   read('packages/types/src/products/product-card-summary.ts'),
   read('packages/types/src/pharmacies/pharmacy-card-summary.ts'),
   read('apps/api/src/services/catalog/product-projections.ts'),
-  read('apps/api/src/controllers/product.controller.ts'),
+  read('apps/api/src/controllers/catalog/product.controller.ts'),
 
   read(
     'apps/client/src/components/product-catalog/ProductCard/ProductCard.tsx'
@@ -242,6 +242,8 @@ if (violations.length) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   `Client catalog performance check passed (product ${productBytes} B, pharmacy ${pharmacyBytes} B).`

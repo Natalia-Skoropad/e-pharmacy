@@ -35,7 +35,7 @@ test('S10.5 Product Request has no legacy proxy and controllers use direct domai
   }
 
   const ownerController = readFileSync(
-    resolve(process.cwd(), 'src/controllers/product-request.controller.ts'),
+    resolve(process.cwd(), 'src/controllers/catalog/product-request.controller.ts'),
     'utf8'
   );
 

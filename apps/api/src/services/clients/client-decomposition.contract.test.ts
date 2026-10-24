@@ -42,7 +42,7 @@ test('S10.8 removes Client monolith and uses direct canonical imports', () => {
   }
 
   const controller = readFileSync(
-    resolve(ROOT, 'controllers/client.controller.ts'),
+    resolve(ROOT, 'controllers/clients/client.controller.ts'),
     'utf8'
   );
 

@@ -1,22 +1,22 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   ClientParams,
   ClientProductsQuery,
   ClientsQuery,
-} from '../schemas/client.schema';
+} from '../../schemas/client.schema';
 
 import {
   getClientByIdService,
   getClientsService,
-} from '../services/clients/client-registry.service';
+} from '../../services/clients/client-registry.service';
 
-import { getClientPurchasedProductsService } from '../services/clients/client-purchases.service';
+import { getClientPurchasedProductsService } from '../../services/clients/client-purchases.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
@@ -49,6 +49,7 @@ export async function getClientPurchasedProducts(
   res: ValidatedResponse<unknown, ClientParams, ClientProductsQuery>
 ): Promise<void> {
   const { params, query } = res.locals.validated;
+
   const data = await getClientPurchasedProductsService(
     req.user?.id ?? '',
     params.clientId,

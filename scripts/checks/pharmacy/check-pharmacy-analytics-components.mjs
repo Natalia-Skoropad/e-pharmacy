@@ -46,9 +46,13 @@ function isTestFile(file) {
   return /\.(?:test|react\.test|integration\.test)\.(?:ts|tsx)$/.test(file);
 }
 
+//===================================================================
+
 function isPresentationFeature(relativePath) {
   return /apps\/pharmacy\/src\/components\/statistics\//.test(relativePath);
 }
+
+//===================================================================
 
 function getFunctionSource(source, functionName) {
   const functionStart = source.indexOf(`function ${functionName}`);
@@ -212,14 +216,20 @@ assert.doesNotMatch(
 
 const [orderRoutesSource, productRequestRoutesSource, productRoutesSource] =
   await Promise.all([
-    readFile(path.join(root, 'apps/api/src/routes/order.routes.ts'), 'utf8'),
-
     readFile(
-      path.join(root, 'apps/api/src/routes/product-request.routes.ts'),
+      path.join(root, 'apps/api/src/routes/orders/order.routes.ts'),
       'utf8'
     ),
 
-    readFile(path.join(root, 'apps/api/src/routes/product.routes.ts'), 'utf8'),
+    readFile(
+      path.join(root, 'apps/api/src/routes/catalog/product-request.routes.ts'),
+      'utf8'
+    ),
+
+    readFile(
+      path.join(root, 'apps/api/src/routes/catalog/product.routes.ts'),
+      'utf8'
+    ),
   ]);
 
 assert.match(

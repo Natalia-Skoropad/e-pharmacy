@@ -11,13 +11,13 @@ import {
   getOrders,
   updateOrderDetails,
   updateOrderStatus,
-} from '../controllers/order.controller';
+} from '../../controllers/orders/order.controller';
 
-import { USER_ROLES } from '../constants/auth';
+import { USER_ROLES } from '../../constants/auth';
 
-import { authenticate } from '../middlewares/auth/auth.middleware';
-import { authorizeRoles } from '../middlewares/auth/role.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   checkoutOrderSchema,
@@ -30,9 +30,9 @@ import {
   ordersQuerySchema,
   updateOrderDetailsSchema,
   updateOrderStatusSchema,
-} from '../schemas/order.schema';
+} from '../../schemas/order.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

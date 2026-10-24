@@ -8,7 +8,7 @@ import test from 'node:test';
 test('managed product reads bind pharmacy scope to the authenticated actor', async () => {
   const [controller, service, pharmacyBff] = await Promise.all([
     readFile(
-      resolve(process.cwd(), 'src/controllers/product.controller.ts'),
+      resolve(process.cwd(), 'src/controllers/catalog/product.controller.ts'),
       'utf8'
     ),
 

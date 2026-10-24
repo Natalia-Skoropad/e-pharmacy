@@ -13,16 +13,19 @@ const routeRoots = {
 const backendRouteFiles = {
   '/admin': 'apps/api/src/routes/admin.routes.ts',
   '/auth': 'apps/api/src/routes/auth/auth.routes.ts',
-  '/cart': 'apps/api/src/routes/cart.routes.ts',
-  '/clients': 'apps/api/src/routes/client.routes.ts',
+  '/cart': 'apps/api/src/routes/cart/cart.routes.ts',
+  '/clients': 'apps/api/src/routes/clients/client.routes.ts',
   '/health': 'apps/api/src/routes/health/health.routes.ts',
-  '/orders': 'apps/api/src/routes/order.routes.ts',
+  '/orders': 'apps/api/src/routes/orders/order.routes.ts',
   '/pharmacies': 'apps/api/src/routes/pharmacy.routes.ts',
   '/pharmacy-owners': 'apps/api/src/routes/pharmacy-owner.routes.ts',
   '/pharmacy-notes': 'apps/api/src/routes/pharmacy-note.routes.ts',
-  '/product-requests': 'apps/api/src/routes/product-request.routes.ts',
-  '/product-categories': 'apps/api/src/routes/product-category.routes.ts',
-  '/products': 'apps/api/src/routes/product.routes.ts',
+  '/product-requests': 'apps/api/src/routes/catalog/product-request.routes.ts',
+
+  '/product-categories':
+    'apps/api/src/routes/catalog/product-category.routes.ts',
+
+  '/products': 'apps/api/src/routes/catalog/product.routes.ts',
 };
 
 //===================================================================

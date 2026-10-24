@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { getPublicProductCategories } from '../controllers/product-category.controller';
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { getPublicProductCategories } from '../../controllers/catalog/product-category.controller';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

@@ -14,7 +14,7 @@ test('public product endpoints are active-only while blocked lifecycle access is
     pharmacyService,
     publicCatalogService,
   ] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/routes/product.routes.ts'), 'utf8'),
+    readFile(resolve(process.cwd(), 'src/routes/catalog/product.routes.ts'), 'utf8'),
 
     readFile(
       resolve(process.cwd(), 'src/services/catalog/product-shared.ts'),

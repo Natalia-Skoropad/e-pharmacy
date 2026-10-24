@@ -1,13 +1,13 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   AddCartItemInput,
   CartItemParams,
   CartPharmacyParams,
   UpdateCartItemInput,
-} from '../schemas/cart.schema';
+} from '../../schemas/cart.schema';
 
 import {
   addCartItemService,
@@ -16,10 +16,10 @@ import {
   removeCartItemService,
   removeCartPharmacyService,
   updateCartItemService,
-} from '../services/cart/cart.service';
+} from '../../services/cart/cart.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
@@ -28,6 +28,7 @@ export async function getCart(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await getCartService(req.user?.id ?? '');
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
@@ -50,6 +51,7 @@ export async function updateCartItem(
   res: ValidatedResponse<UpdateCartItemInput, CartItemParams>
 ): Promise<void> {
   const { body, params } = res.locals.validated;
+
   const data = await updateCartItemService(
     req.user?.id ?? '',
     params.cartItemId,
@@ -90,5 +92,6 @@ export async function clearCart(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await clearCartService(req.user?.id ?? '');
+
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
