@@ -1,0 +1,361 @@
+{
+  "schemaVersion": 1,
+  "sourceArchive": "e-pharmacy-14-20-2.zip",
+  "scope": [
+    "apps/api/src/controllers/",
+    "apps/api/src/routes/",
+    "apps/api/src/middlewares/"
+  ],
+  "stages": {
+    "C2": "HTTP infrastructure, security and health",
+    "C3": "Authentication, session and trusted BFF middleware",
+    "C4": "Catalog, cart, clients and orders",
+    "C5": "Pharmacies and pharmacy owners",
+    "C6": "Admin controllers, routes and permissions"
+  },
+  "stableEntryPoints": [
+    "apps/api/src/routes/index.ts"
+  ],
+  "moves": [
+    {
+      "from": "apps/api/src/controllers/health.controller.ts",
+      "to": "apps/api/src/controllers/health/health.controller.ts",
+      "stage": "C2",
+      "category": "controllers",
+      "sha256": "7e81179defbb1b48f26867e165d657067e0f8dcf79bf0f8e6f7df351e5db3cbe"
+    },
+    {
+      "from": "apps/api/src/middlewares/error.middleware.ts",
+      "to": "apps/api/src/middlewares/http/error.middleware.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "1328586682f0380f395dda8b56945e7e94fd02f13251ab3e1eb0ce1a44fc1540"
+    },
+    {
+      "from": "apps/api/src/middlewares/notFound.middleware.ts",
+      "to": "apps/api/src/middlewares/http/notFound.middleware.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "2bf8b21081abb52e1e64006b812e6b42121fcba987f353a56a481295d5cadba8"
+    },
+    {
+      "from": "apps/api/src/middlewares/origin.middleware.ts",
+      "to": "apps/api/src/middlewares/security/origin.middleware.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "4335c538c449aca69ab18bde73eef09cadc27f50e9eac41f8d66ac7134bafff1"
+    },
+    {
+      "from": "apps/api/src/middlewares/rate-limit-security.ts",
+      "to": "apps/api/src/middlewares/security/rate-limit-security.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "d9ccd360c102852637807ed1b7f892db7294e797e1ee1879e56d978ab5eb9ac4"
+    },
+    {
+      "from": "apps/api/src/middlewares/rateLimit.middleware.test.ts",
+      "to": "apps/api/src/middlewares/security/rateLimit.middleware.test.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "21a4fb5ca075631bb98eae0d152579689660c0eb9480f3a3319962be661ccec5"
+    },
+    {
+      "from": "apps/api/src/middlewares/rateLimit.middleware.ts",
+      "to": "apps/api/src/middlewares/security/rateLimit.middleware.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "22026d6e0b7b08287be1a4edc0b58a66769bbd6749b9d2cdc85b88c190a5aae3"
+    },
+    {
+      "from": "apps/api/src/middlewares/request-context.middleware.test.ts",
+      "to": "apps/api/src/middlewares/http/request-context.middleware.test.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "ad9d020a53a7f451f571858290166834b5f3861f47d73f62c65eb52bf34607da"
+    },
+    {
+      "from": "apps/api/src/middlewares/request-context.middleware.ts",
+      "to": "apps/api/src/middlewares/http/request-context.middleware.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "7379dbd2b3e35d9806ab9693a40752f88728b9b1abdc911a4f307a64d47828c6"
+    },
+    {
+      "from": "apps/api/src/middlewares/validate.middleware.ts",
+      "to": "apps/api/src/middlewares/http/validate.middleware.ts",
+      "stage": "C2",
+      "category": "middlewares",
+      "sha256": "3dc4a77396faa48e71b493b958cbc9107f88ea31c3225524ae264b23634088fa"
+    },
+    {
+      "from": "apps/api/src/routes/health.routes.ts",
+      "to": "apps/api/src/routes/health/health.routes.ts",
+      "stage": "C2",
+      "category": "routes",
+      "sha256": "3d04f1aa2a54e663032bb70a9af4505833dd1543052883b8e57aaea2282bb537"
+    },
+    {
+      "from": "apps/api/src/controllers/auth-bff-ownership.contract.test.ts",
+      "to": "apps/api/src/controllers/auth/auth-bff-ownership.contract.test.ts",
+      "stage": "C3",
+      "category": "controllers",
+      "sha256": "4bfeb82462724f84d6887a413f18ce5772cf0cc9c0c9832676433c5406de8cfb"
+    },
+    {
+      "from": "apps/api/src/controllers/auth.controller.ts",
+      "to": "apps/api/src/controllers/auth/auth.controller.ts",
+      "stage": "C3",
+      "category": "controllers",
+      "sha256": "bc62fc45ad5856248fa254606f2997b50db1c618ed29c0f0732f57259c8f4a24"
+    },
+    {
+      "from": "apps/api/src/middlewares/auth-bff.middleware.test.ts",
+      "to": "apps/api/src/middlewares/auth/auth-bff.middleware.test.ts",
+      "stage": "C3",
+      "category": "middlewares",
+      "sha256": "6792e9d5a614e19f451530790c34aeda27e39fc9f7ac4433e2789af88ce6108e"
+    },
+    {
+      "from": "apps/api/src/middlewares/auth-bff.middleware.ts",
+      "to": "apps/api/src/middlewares/auth/auth-bff.middleware.ts",
+      "stage": "C3",
+      "category": "middlewares",
+      "sha256": "68515c23ecf86e77ce5e3cbae2c0db3f1995722841241dab3cdb45182bf10970"
+    },
+    {
+      "from": "apps/api/src/middlewares/auth-legacy-cookie.contract.test.ts",
+      "to": "apps/api/src/middlewares/auth/auth-legacy-cookie.contract.test.ts",
+      "stage": "C3",
+      "category": "middlewares",
+      "sha256": "a2873dc9b134d05b3a4bdbf32023cc2fc16774672e97f61b72844f6e6db52994"
+    },
+    {
+      "from": "apps/api/src/middlewares/auth.middleware.ts",
+      "to": "apps/api/src/middlewares/auth/auth.middleware.ts",
+      "stage": "C3",
+      "category": "middlewares",
+      "sha256": "155e218323e65e2291fd2a4afe28006c485641b60e8a1c11402372ad36be452f"
+    },
+    {
+      "from": "apps/api/src/middlewares/optional-auth.middleware.test.ts",
+      "to": "apps/api/src/middlewares/auth/optional-auth.middleware.test.ts",
+      "stage": "C3",
+      "category": "middlewares",
+      "sha256": "cc0c0f07a66cba68a76bc6c2d1858b355ae38dade11b5e94dfa9f44e54256372"
+    },
+    {
+      "from": "apps/api/src/middlewares/role.middleware.ts",
+      "to": "apps/api/src/middlewares/auth/role.middleware.ts",
+      "stage": "C3",
+      "category": "middlewares",
+      "sha256": "87c58860828f9726d96b7a7877d7644152f4793916a8ef22de23866d97538d1e"
+    },
+    {
+      "from": "apps/api/src/routes/auth.routes.ts",
+      "to": "apps/api/src/routes/auth/auth.routes.ts",
+      "stage": "C3",
+      "category": "routes",
+      "sha256": "81fc6077e8042f5b13f3fd5f483c3a5cd535c8306d0dec4daffa50f6dac0dba3"
+    },
+    {
+      "from": "apps/api/src/controllers/cart.controller.ts",
+      "to": "apps/api/src/controllers/cart/cart.controller.ts",
+      "stage": "C4",
+      "category": "controllers",
+      "sha256": "820e02ce9e26cb4dcf40919768c1178909c1c3a8405deb1840f81f0d8cd850aa"
+    },
+    {
+      "from": "apps/api/src/controllers/client.controller.ts",
+      "to": "apps/api/src/controllers/clients/client.controller.ts",
+      "stage": "C4",
+      "category": "controllers",
+      "sha256": "46e98af7d252919456f2d8ec20b36bc7508b84e5f755deb6ac2576bf32af70d2"
+    },
+    {
+      "from": "apps/api/src/controllers/order.controller.ts",
+      "to": "apps/api/src/controllers/orders/order.controller.ts",
+      "stage": "C4",
+      "category": "controllers",
+      "sha256": "b227f618f008607d2ad43392e36f4a347a40f79ffe44e1035d859ea5da48baf0"
+    },
+    {
+      "from": "apps/api/src/controllers/product-category.controller.ts",
+      "to": "apps/api/src/controllers/catalog/product-category.controller.ts",
+      "stage": "C4",
+      "category": "controllers",
+      "sha256": "86244008ccf29887f6de16901478c66fa0505480d2862f17589c3ce5e3c4895c"
+    },
+    {
+      "from": "apps/api/src/controllers/product-request.controller.ts",
+      "to": "apps/api/src/controllers/catalog/product-request.controller.ts",
+      "stage": "C4",
+      "category": "controllers",
+      "sha256": "936ff570d86203213ec2a9d43b0ecdb89263e3647fc40c896d452844c6ecba1c"
+    },
+    {
+      "from": "apps/api/src/controllers/product.controller.ts",
+      "to": "apps/api/src/controllers/catalog/product.controller.ts",
+      "stage": "C4",
+      "category": "controllers",
+      "sha256": "b9bb34cb9b700034986a3b926f0d6c9d04e08b2d8948a7f94309fa254646ed53"
+    },
+    {
+      "from": "apps/api/src/routes/cart.routes.ts",
+      "to": "apps/api/src/routes/cart/cart.routes.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "bd3e08b50a3be5ba1cf6a767e9084b2f896cb11a666463372bb08f6ea9235fb8"
+    },
+    {
+      "from": "apps/api/src/routes/client.routes.ts",
+      "to": "apps/api/src/routes/clients/client.routes.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "fb27c06b83f229f63211bda80db6ef40f886c6fc157aec86c5b526c1118dab18"
+    },
+    {
+      "from": "apps/api/src/routes/order.routes.ts",
+      "to": "apps/api/src/routes/orders/order.routes.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "70f380f8f3ec5a76403e170271892963a0c00fd1fe337a3b13014c688f21350b"
+    },
+    {
+      "from": "apps/api/src/routes/product-category.routes.ts",
+      "to": "apps/api/src/routes/catalog/product-category.routes.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "e5fcc859c390d00377694c027fb4654c37374ecaa66d62f9d526d2693d03d735"
+    },
+    {
+      "from": "apps/api/src/routes/product-request-access.test.ts",
+      "to": "apps/api/src/routes/catalog/product-request-access.test.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "1e1e33be7e11938570b19e01697e78d5430d9f2c77509cb202d6fadf677f737d"
+    },
+    {
+      "from": "apps/api/src/routes/product-request.routes.ts",
+      "to": "apps/api/src/routes/catalog/product-request.routes.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "5a21064834306b1cd4723ffb9dea4b6381e1911ef35af4daea0cd68f13a301b1"
+    },
+    {
+      "from": "apps/api/src/routes/product.routes.ts",
+      "to": "apps/api/src/routes/catalog/product.routes.ts",
+      "stage": "C4",
+      "category": "routes",
+      "sha256": "9e5064fb013785112020177b7bfca49ddeb1024fc246d0d14fb3f4575a4330db"
+    },
+    {
+      "from": "apps/api/src/controllers/pharmacy-note.controller.ts",
+      "to": "apps/api/src/controllers/pharmacies/pharmacy-note.controller.ts",
+      "stage": "C5",
+      "category": "controllers",
+      "sha256": "3590103ea406aa0745ca6dbc24b8185bf1008e871b0cebb151b1846d093333a1"
+    },
+    {
+      "from": "apps/api/src/controllers/pharmacy-owner-document.controller.ts",
+      "to": "apps/api/src/controllers/owners/pharmacy-owner-document.controller.ts",
+      "stage": "C5",
+      "category": "controllers",
+      "sha256": "5fd306fe840c45c0006aa52fab1db12fdc626a1e89989b41e09606dc6a9608fe"
+    },
+    {
+      "from": "apps/api/src/controllers/pharmacy-user-private-note.controller.ts",
+      "to": "apps/api/src/controllers/owners/pharmacy-user-private-note.controller.ts",
+      "stage": "C5",
+      "category": "controllers",
+      "sha256": "dad94232627c1f8a8592a1ad9c47ff25da368a3fbbde50a9d5ae0c19354ae7e4"
+    },
+    {
+      "from": "apps/api/src/controllers/pharmacy.controller.ts",
+      "to": "apps/api/src/controllers/pharmacies/pharmacy.controller.ts",
+      "stage": "C5",
+      "category": "controllers",
+      "sha256": "93f418b2a57b2f21b8aaaa0beeaa1bd78266d68baa1a06891da7b5f630c4d30d"
+    },
+    {
+      "from": "apps/api/src/middlewares/pharmacy-selection.middleware.ts",
+      "to": "apps/api/src/middlewares/pharmacies/pharmacy-selection.middleware.ts",
+      "stage": "C5",
+      "category": "middlewares",
+      "sha256": "846d078ab990f900ce43c3eb99b6bd904e6301d6c1526a6683f5a81eb2443fda"
+    },
+    {
+      "from": "apps/api/src/routes/pharmacy-note.routes.ts",
+      "to": "apps/api/src/routes/pharmacies/pharmacy-note.routes.ts",
+      "stage": "C5",
+      "category": "routes",
+      "sha256": "00da680a20234208e0d422bf76ec6b452a0271025a23af4b375272d3677daae5"
+    },
+    {
+      "from": "apps/api/src/routes/pharmacy-owner.routes.ts",
+      "to": "apps/api/src/routes/owners/pharmacy-owner.routes.ts",
+      "stage": "C5",
+      "category": "routes",
+      "sha256": "ee3537a317bd7f491771c21d19d4bef22d3116a5b4715550141fb6954b345b5e"
+    },
+    {
+      "from": "apps/api/src/routes/pharmacy.routes.ts",
+      "to": "apps/api/src/routes/pharmacies/pharmacy.routes.ts",
+      "stage": "C5",
+      "category": "routes",
+      "sha256": "ad85a21aeb9bc07d02139170fe4f3c94c7a9b30ddee104b1290323d10ab3707e"
+    },
+    {
+      "from": "apps/api/src/controllers/admin-audit.controller.ts",
+      "to": "apps/api/src/controllers/admin/admin-audit.controller.ts",
+      "stage": "C6",
+      "category": "controllers",
+      "sha256": "c327882f48382ec920a2bfb175376c23a54445f209791cb614c9e58dad55326a"
+    },
+    {
+      "from": "apps/api/src/controllers/admin-employee.controller.ts",
+      "to": "apps/api/src/controllers/admin/admin-employee.controller.ts",
+      "stage": "C6",
+      "category": "controllers",
+      "sha256": "e13a73be8fd3bc7b4835074fa65e3430f3397abb28282ceffff2f4c352c9da85"
+    },
+    {
+      "from": "apps/api/src/controllers/admin-settings.controller.ts",
+      "to": "apps/api/src/controllers/admin/admin-settings.controller.ts",
+      "stage": "C6",
+      "category": "controllers",
+      "sha256": "29276a4419d153d0a12a96a08ad832a34e1aa6e2fda73646942592dc81d1e26f"
+    },
+    {
+      "from": "apps/api/src/controllers/admin.controller.ts",
+      "to": "apps/api/src/controllers/admin/admin.controller.ts",
+      "stage": "C6",
+      "category": "controllers",
+      "sha256": "e78f184635c0ba3eecf3328e5009f720c2dce1552cf1f309e229b73db2430d21"
+    },
+    {
+      "from": "apps/api/src/middlewares/admin-permission.middleware.ts",
+      "to": "apps/api/src/middlewares/admin/admin-permission.middleware.ts",
+      "stage": "C6",
+      "category": "middlewares",
+      "sha256": "5d3a60d21bd4cf2e05a714890f9421db398125ceac03ee6d28e10f7ac682403b"
+    },
+    {
+      "from": "apps/api/src/routes/admin-audit-access.test.ts",
+      "to": "apps/api/src/routes/admin/admin-audit-access.test.ts",
+      "stage": "C6",
+      "category": "routes",
+      "sha256": "1977655dfab8bc758e9afe27953ffd4ae034d23b582191f0f6e1cbb0a859e729"
+    },
+    {
+      "from": "apps/api/src/routes/admin.routes.ts",
+      "to": "apps/api/src/routes/admin/admin.routes.ts",
+      "stage": "C6",
+      "category": "routes",
+      "sha256": "2e17d41b35d4c9121413d155523a9004c4352be94300f5968e35d4042947debe"
+    }
+  ],
+  "httpContracts": {
+    "mounts": 13,
+    "registrations": 159
+  }
+}
