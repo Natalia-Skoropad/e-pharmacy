@@ -12,7 +12,7 @@ const read = (path: string) =>
 
 test('one permissioned canonical endpoint with required reason, CAS and idempotency key', async () => {
   const [routes, schema, service] = await Promise.all([
-    read('routes/admin.routes.ts'),
+    read('routes/admin/admin.routes.ts'),
     read('schemas/admin.schema.ts'),
     read('services/admin/pharmacies/admin.service.ts'),
   ]);

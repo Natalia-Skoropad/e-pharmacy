@@ -123,7 +123,7 @@ test('creation date, status and no-gap ratings use existing URL-backed registry 
 //===================================================================
 
 test('owner autocomplete uses pharmacies.view and exposes only minimal linked owner identity', async () => {
-  const backend = await read('../../../../api/src/routes/admin.routes.ts');
+  const backend = await read('../../../../api/src/routes/admin/admin.routes.ts');
 
   const service = await read(
     '../../../../api/src/services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'

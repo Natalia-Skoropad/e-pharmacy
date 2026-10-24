@@ -96,7 +96,7 @@ test('BFF routes use a private proxy and canonical backend builders', async () =
 
 test('permission denial is enforced by backend for every pharmacy resource', async () => {
   const backendRoutes = await read(
-    '../../../../api/src/routes/admin.routes.ts'
+    '../../../../api/src/routes/admin/admin.routes.ts'
   );
 
   for (const verb of ['get', 'post', 'patch', 'delete']) {

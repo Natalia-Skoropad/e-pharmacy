@@ -12,8 +12,8 @@ const read = (path: string) =>
 
 test('Stage 14.7 dedicated pharmacy activity uses permission, params and shared Audit, not browser filtering', async () => {
   const [routes, controller, service] = await Promise.all([
-    read('routes/admin.routes.ts'),
-    read('controllers/admin.controller.ts'),
+    read('routes/admin/admin.routes.ts'),
+    read('controllers/admin/admin.controller.ts'),
     read('services/admin/audit/admin-pharmacy-activity.service.ts'),
   ]);
 

@@ -14,7 +14,7 @@ const serviceSource = read(
 
 const modelSource = read('src/models/owners/pharmacyOwnerDocument.model.ts');
 const ownerRouteSource = read('src/routes/owners/pharmacy-owner.routes.ts');
-const adminRouteSource = read('src/routes/admin.routes.ts');
+const adminRouteSource = read('src/routes/admin/admin.routes.ts');
 
 const controllerSource = read(
   'src/controllers/owners/pharmacy-owner-document.controller.ts'

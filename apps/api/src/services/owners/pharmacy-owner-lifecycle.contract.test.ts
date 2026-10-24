@@ -12,7 +12,7 @@ function read(relativePath: string): string {
 //===================================================================
 
 test('owner lifecycle route is permission-protected and manual activation cannot target new', () => {
-  const routes = read('../../routes/admin.routes.ts');
+  const routes = read('../../routes/admin/admin.routes.ts');
   const schema = read('../../schemas/admin-pharmacy-owner.schema.ts');
 
   assert.match(

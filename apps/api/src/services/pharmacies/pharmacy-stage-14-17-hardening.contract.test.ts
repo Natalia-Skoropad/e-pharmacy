@@ -204,7 +204,7 @@ test('14.17: pharmacy-scoped activity cannot leak another pharmacy from the same
 //===================================================================
 
 test('14.17: view permission is read-only for moderation even through direct API calls', async () => {
-  const routes = await read('routes/admin.routes.ts');
+  const routes = await read('routes/admin/admin.routes.ts');
 
   for (const path of [
     '/pharmacies/:pharmacyId/moderation-decisions',

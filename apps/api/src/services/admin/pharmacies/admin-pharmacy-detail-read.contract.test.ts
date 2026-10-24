@@ -10,9 +10,9 @@ const read = (file: string) => readFileSync(resolve(__dirname, file), 'utf8');
 //===================================================================
 
 test('Stage 14.5 backend detail has explicit permission and validated ID', () => {
-  const routes = read('../../../routes/admin.routes.ts');
+  const routes = read('../../../routes/admin/admin.routes.ts');
   const schema = read('../../../schemas/admin.schema.ts');
-  const controller = read('../../../controllers/admin.controller.ts');
+  const controller = read('../../../controllers/admin/admin.controller.ts');
 
   assert.match(
     routes,

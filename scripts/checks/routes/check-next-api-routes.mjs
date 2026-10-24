@@ -11,7 +11,7 @@ const routeRoots = {
 };
 
 const backendRouteFiles = {
-  '/admin': 'apps/api/src/routes/admin.routes.ts',
+  '/admin': 'apps/api/src/routes/admin/admin.routes.ts',
   '/auth': 'apps/api/src/routes/auth/auth.routes.ts',
   '/cart': 'apps/api/src/routes/cart/cart.routes.ts',
   '/clients': 'apps/api/src/routes/clients/client.routes.ts',

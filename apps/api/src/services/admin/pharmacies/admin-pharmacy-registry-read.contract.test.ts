@@ -11,9 +11,9 @@ const read = (relativePath: string) =>
 //===============================================================
 
 test('Stage 14.4 exposes three view-only routes with strict schema validation', () => {
-  const routes = read('../../../routes/admin.routes.ts');
+  const routes = read('../../../routes/admin/admin.routes.ts');
   const schema = read('../../../schemas/admin-pharmacy-registry.schema.ts');
-  const controller = read('../../../controllers/admin.controller.ts');
+  const controller = read('../../../controllers/admin/admin.controller.ts');
 
   for (const route of [
     '/pharmacies',
@@ -104,7 +104,7 @@ test('admin BFF registry routes remain present when Stage 14.5 backend detail is
     assert.match(read(root + file), /createPrivateProxyRoute/);
   }
 
-  const routes = read('../../../routes/admin.routes.ts');
+  const routes = read('../../../routes/admin/admin.routes.ts');
 
   assert.match(routes, /'\/pharmacies\/:pharmacyId'/);
   assert.match(routes, /ctrlWrapper\(getPharmacyDetailByAdmin\)/);

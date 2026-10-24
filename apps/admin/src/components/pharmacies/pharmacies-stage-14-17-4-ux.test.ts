@@ -102,7 +102,7 @@ test('14.17.4: published identity, copy controls, owner link, dates and chart ar
 //===================================================================
 
 test('14.17.4: chart is pharmacy-scoped, permission-checked, lazy, cancellable and reuses canonical sales chart', () => {
-  const routes = read('../../../../api/src/routes/admin.routes.ts');
+  const routes = read('../../../../api/src/routes/admin/admin.routes.ts');
 
   const detailService = read(
     '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'

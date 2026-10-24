@@ -1,21 +1,21 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   AdminAuditListQuery,
   AdminAuditLogParams,
-} from '../schemas/admin-audit.schema';
+} from '../../schemas/admin-audit.schema';
 
 import {
   getAdminAuditLogService,
   listAdminAuditLogsService,
-} from '../services/admin/audit/admin-audit-read.service';
+} from '../../services/admin/audit/admin-audit-read.service';
 
-import { listAdminAuditActorsService } from '../services/admin/audit/admin-audit-actors.service';
+import { listAdminAuditActorsService } from '../../services/admin/audit/admin-audit-actors.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
@@ -24,6 +24,7 @@ export async function getAdminAuditLogs(
   res: ValidatedResponse<unknown, unknown, AdminAuditListQuery>
 ): Promise<void> {
   const data = await listAdminAuditLogsService(res.locals.validated.query);
+
   res.setHeader('Cache-Control', 'no-store');
 
   sendSuccessResponse({
@@ -40,6 +41,7 @@ export async function getAdminAuditActors(
   res: ValidatedResponse
 ): Promise<void> {
   const data = await listAdminAuditActorsService();
+
   res.setHeader('Cache-Control', 'no-store');
 
   sendSuccessResponse({

@@ -191,8 +191,8 @@ test('14.13 pharmacy description and bank details render in independent read-onl
 test('14.13 private Admin API is guarded and generic public pharmacy API excludes banking credentials', async () => {
   const [route, backendRoutes, readService, publicService, bff] =
     await Promise.all([
-      read('../../../../api/src/routes/admin.routes.ts'),
-      read('../../../../api/src/controllers/admin.controller.ts'),
+      read('../../../../api/src/routes/admin/admin.routes.ts'),
+      read('../../../../api/src/controllers/admin/admin.controller.ts'),
 
       read(
         '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'

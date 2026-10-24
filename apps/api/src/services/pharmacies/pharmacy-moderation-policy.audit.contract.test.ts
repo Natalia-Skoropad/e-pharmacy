@@ -142,7 +142,7 @@ test('owner cascade checks all linked pharmacies for in-flight orders and does n
 
 test('admin pharmacy status endpoint uses pharmacies.moderate backend permission', async () => {
   const [routes, permissions] = await Promise.all([
-    source('routes/admin.routes.ts'),
+    source('routes/admin/admin.routes.ts'),
     source('constants/admin-permissions.ts'),
   ]);
 

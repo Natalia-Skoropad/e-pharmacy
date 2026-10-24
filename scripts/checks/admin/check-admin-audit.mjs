@@ -48,7 +48,7 @@ const requiredFiles = [
     'services',
     'migrations/pharmacy-owner-registration-audit-migration.service.ts',
   ],
-  ['apps', 'api', 'src', 'controllers', 'admin-audit.controller.ts'],
+  ['apps', 'api', 'src', 'controllers', 'admin/admin-audit.controller.ts'],
   [
     'apps',
     'api',
@@ -166,7 +166,13 @@ const auditSchema = await read(
   'admin-audit.schema.ts'
 );
 
-const routes = await read('apps', 'api', 'src', 'routes', 'admin.routes.ts');
+const routes = await read(
+  'apps',
+  'api',
+  'src',
+  'routes',
+  'admin/admin.routes.ts'
+);
 
 //===================================================================
 

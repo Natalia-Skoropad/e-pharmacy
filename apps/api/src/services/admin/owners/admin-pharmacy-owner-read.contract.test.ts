@@ -12,7 +12,7 @@ function read(relativePath: string): string {
 //===================================================================
 
 test('pharmacy-owner read routes are view-permission protected and expose the Stage 13.3 endpoints', () => {
-  const routes = read('../../../routes/admin.routes.ts');
+  const routes = read('../../../routes/admin/admin.routes.ts');
 
   for (const route of [
     '/pharmacy-owners',
@@ -262,7 +262,7 @@ test('linked pharmacy admin read model exposes canonical location instead of add
 //===================================================================
 
 test('owner activity reuses canonical audit logs while preserving pharmacyOwners.view permission', () => {
-  const routes = read('../../../routes/admin.routes.ts');
+  const routes = read('../../../routes/admin/admin.routes.ts');
   const service = read('./admin-pharmacy-owner-activity.service.ts');
 
   assert.match(

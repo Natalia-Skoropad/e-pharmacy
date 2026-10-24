@@ -40,7 +40,7 @@ test('S10.5 Product Request has no legacy proxy and controllers use direct domai
   );
 
   const adminController = readFileSync(
-    resolve(process.cwd(), 'src/controllers/admin.controller.ts'),
+    resolve(process.cwd(), 'src/controllers/admin/admin.controller.ts'),
     'utf8'
   );
 

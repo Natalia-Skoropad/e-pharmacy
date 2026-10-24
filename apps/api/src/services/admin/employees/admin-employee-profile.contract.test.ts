@@ -12,8 +12,8 @@ const serviceSource = readSource(
   'services/admin/employees/admin-employee-profile.service.ts'
 );
 
-const routeSource = readSource('routes/admin.routes.ts');
-const controllerSource = readSource('controllers/admin-employee.controller.ts');
+const routeSource = readSource('routes/admin/admin.routes.ts');
+const controllerSource = readSource('controllers/admin/admin-employee.controller.ts');
 
 //===============================================================
 

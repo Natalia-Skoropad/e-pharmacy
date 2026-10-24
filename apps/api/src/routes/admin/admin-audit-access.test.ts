@@ -11,7 +11,7 @@ const ROOT_DIR = path.resolve(process.cwd(), 'src');
 
 test('admin audit read routes require audit.view and expose no mutation route', async () => {
   const source = await readFile(
-    path.join(ROOT_DIR, 'routes', 'admin.routes.ts'),
+    path.join(ROOT_DIR, 'routes', 'admin/admin.routes.ts'),
     'utf8'
   );
 

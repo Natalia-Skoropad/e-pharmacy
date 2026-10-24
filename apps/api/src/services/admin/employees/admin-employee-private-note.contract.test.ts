@@ -15,7 +15,7 @@ const serviceSource = readSource(
   'services/admin/employees/admin-employee-note.service.ts'
 );
 
-const routeSource = readSource('routes/admin.routes.ts');
+const routeSource = readSource('routes/admin/admin.routes.ts');
 
 //===============================================================
 

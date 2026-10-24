@@ -1,20 +1,20 @@
 import type { Request } from 'express';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin-access';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   AdminEmployeeDocumentParams,
   AdminEmployeeDocumentUploadInput,
-} from '../schemas/admin-employee-document.schema';
+} from '../../schemas/admin-employee-document.schema';
 
-import type { UpdateMyAdminEmployeeProfileInput } from '../schemas/admin-employee-profile.schema';
+import type { UpdateMyAdminEmployeeProfileInput } from '../../schemas/admin-employee-profile.schema';
 
 import type {
   AdminEmployeePrivateNoteParams,
   AdminEmployeePrivateNotesQuery,
   CreateAdminEmployeePrivateNoteInput,
-} from '../schemas/admin-employee-note.schema';
+} from '../../schemas/admin-employee-note.schema';
 
 import {
   createMyAdminEmployeeDocumentService,
@@ -22,20 +22,20 @@ import {
   getMyAdminEmployeeDocumentContentService,
   listMyAdminEmployeeDocumentsService,
   replaceMyAdminEmployeeDocumentService,
-} from '../services/admin/employees/admin-employee-document.service';
+} from '../../services/admin/employees/admin-employee-document.service';
 
-import { updateMyAdminEmployeeProfileService } from '../services/admin/employees/admin-employee-profile.service';
+import { updateMyAdminEmployeeProfileService } from '../../services/admin/employees/admin-employee-profile.service';
 
 import {
   createMyAdminEmployeePrivateNoteService,
   deleteMyAdminEmployeePrivateNoteService,
   listMyAdminEmployeePrivateNotesService,
-} from '../services/admin/employees/admin-employee-note.service';
+} from '../../services/admin/employees/admin-employee-note.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
+import type { ValidatedResponse } from '../../types/validated-request';
 
-import { sendSuccessResponse } from '../utils/apiResponse';
-import { httpError } from '../utils/httpError';
+import { sendSuccessResponse } from '../../utils/apiResponse';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
@@ -99,6 +99,7 @@ export async function listMyAdminEmployeeDocuments(
   res: ValidatedResponse
 ): Promise<void> {
   const { userId, authorization } = requireSelfAdminContext(req);
+
   const documents = await listMyAdminEmployeeDocumentsService(
     userId,
     authorization
@@ -169,6 +170,7 @@ export async function createMyAdminEmployeeDocument(
 
 export async function replaceMyAdminEmployeeDocument(
   req: Request,
+
   res: ValidatedResponse<
     AdminEmployeeDocumentUploadInput,
     AdminEmployeeDocumentParams

@@ -34,7 +34,7 @@ test('S10.9 removes Admin Audit monolith and binds callers directly to canonical
   }
 
   const controller = readFileSync(
-    resolve(SRC, 'controllers/admin-audit.controller.ts'),
+    resolve(SRC, 'controllers/admin/admin-audit.controller.ts'),
     'utf8'
   );
 

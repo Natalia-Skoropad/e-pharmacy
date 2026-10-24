@@ -98,7 +98,7 @@ test('14.15: pharmacy comments reuse shared UI and are scoped, audited, idempote
     '../../../../api/src/services/admin/pharmacies/pharmacy-admin-comment.service.ts'
   );
 
-  const routes = await read('../../../../api/src/routes/admin.routes.ts');
+  const routes = await read('../../../../api/src/routes/admin/admin.routes.ts');
 
   const schema = await read(
     '../../../../api/src/schemas/pharmacy-admin-comment.schema.ts'

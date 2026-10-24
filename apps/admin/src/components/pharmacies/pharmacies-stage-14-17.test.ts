@@ -107,7 +107,7 @@ test('14.17: permissions protect both the moderation menu and direct admin API',
   const [detailUi, moderation, routes] = await Promise.all([
     read('./PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'),
     read('./PharmacyDetailsPageContent/PharmacyModerationActions.tsx'),
-    read('../../../../api/src/routes/admin.routes.ts'),
+    read('../../../../api/src/routes/admin/admin.routes.ts'),
   ]);
 
   assert.match(
@@ -186,7 +186,7 @@ test('14.17: document UI is read-only, aborts requests and revokes private previ
 test('14.17: admin comments are private, permission-gated, idempotent and abortable', async () => {
   const [comments, routes] = await Promise.all([
     read('./PharmacyDetailsPageContent/PharmacyCommentsTab.tsx'),
-    read('../../../../api/src/routes/admin.routes.ts'),
+    read('../../../../api/src/routes/admin/admin.routes.ts'),
   ]);
 
   assert.match(comments, /if \(\s*!canManage/);

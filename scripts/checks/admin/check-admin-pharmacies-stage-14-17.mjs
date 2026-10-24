@@ -28,8 +28,11 @@ const options = await read(
   `${app}/lib/pharmacies/pharmacy-moderation-actions.ts`
 );
 
-const routes = await read('apps/api/src/routes/admin.routes.ts');
-const backend = await read('apps/api/src/services/admin/pharmacies/admin.service.ts');
+const routes = await read('apps/api/src/routes/admin/admin.routes.ts');
+
+const backend = await read(
+  'apps/api/src/services/admin/pharmacies/admin.service.ts'
+);
 
 const registry = await read(
   'apps/api/src/services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'
@@ -70,6 +73,7 @@ assert.doesNotMatch(
 );
 
 const uiDirectory = path.join(root, section);
+
 let scanned = 0;
 
 async function scan(dir) {
@@ -87,6 +91,7 @@ async function scan(dir) {
     if (/\.test\.tsx?$/.test(entry.name)) continue;
 
     scanned++;
+
     const src = await readFile(file, 'utf8');
     const label = path.relative(root, file);
 

@@ -1,10 +1,10 @@
 import type { Request } from 'express';
 
-import type { AdminAuditListQuery } from '../schemas/admin-audit.schema';
+import type { AdminAuditListQuery } from '../../schemas/admin-audit.schema';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { serializeAdminAccess } from '../services/admin/access/admin-access.service';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin-access';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { serializeAdminAccess } from '../../services/admin/access/admin-access.service';
 
 import type {
   AdminPharmacyDocumentParams,
@@ -12,12 +12,12 @@ import type {
   UpdateAdminPharmacyStatusInput,
   RequestAdminPharmacyCorrectionsInput,
   PharmacyModerationDecisionInput,
-} from '../schemas/admin.schema';
+} from '../../schemas/admin.schema';
 
 import type {
   AdminPharmacyRegistryListQuery,
   AdminPharmacyRegistryOptionsQuery,
-} from '../schemas/admin-pharmacy-registry.schema';
+} from '../../schemas/admin-pharmacy-registry.schema';
 
 import type {
   AdminPharmacyOwnerActivityQuery,
@@ -26,93 +26,93 @@ import type {
   AdminPharmacyOwnerParams,
   AdminPharmacyOwnerPharmaciesQuery,
   UpdateAdminPharmacyOwnerStatusInput,
-} from '../schemas/admin-pharmacy-owner.schema';
+} from '../../schemas/admin-pharmacy-owner.schema';
 
-import type { AdminPharmacyOwnerDocumentParams } from '../schemas/pharmacy-owner-document.schema';
+import type { AdminPharmacyOwnerDocumentParams } from '../../schemas/pharmacy-owner-document.schema';
 
 import type {
   CreatePharmacyOwnerAdminCommentInput,
   PharmacyOwnerAdminCommentParams,
-} from '../schemas/pharmacy-owner-admin-comment.schema';
+} from '../../schemas/pharmacy-owner-admin-comment.schema';
 
 import type {
   ProductRequestModerationInput,
   ProductRequestParams,
-} from '../schemas/product-request.schema';
+} from '../../schemas/product-request.schema';
 
 import {
   requestPharmacyCorrectionsByAdminService,
   updatePharmacyStatusByAdminService,
   decidePharmacyModerationByAdminService,
-} from '../services/admin/pharmacies/admin.service';
+} from '../../services/admin/pharmacies/admin.service';
 
-import { updatePharmacyOwnerStatusByAdminService } from '../services/owners/pharmacy-owner-lifecycle.service';
+import { updatePharmacyOwnerStatusByAdminService } from '../../services/owners/pharmacy-owner-lifecycle.service';
 
-import { getAdminPharmacyOwnerDetailService } from '../services/admin/owners/admin-pharmacy-owner-detail.service';
-import { getAdminPharmacyOwnerSalesStatisticsService } from '../services/admin/owners/admin-pharmacy-owner-sales.service';
-import { listAdminPharmacyOwnerSessionsService } from '../services/admin/owners/admin-pharmacy-owner-sessions.service';
+import { getAdminPharmacyOwnerDetailService } from '../../services/admin/owners/admin-pharmacy-owner-detail.service';
+import { getAdminPharmacyOwnerSalesStatisticsService } from '../../services/admin/owners/admin-pharmacy-owner-sales.service';
+import { listAdminPharmacyOwnerSessionsService } from '../../services/admin/owners/admin-pharmacy-owner-sessions.service';
 
 import {
   getAdminPharmacyOwnerStatisticsService,
   listAdminPharmacyOwnerOptionsService,
   listAdminPharmacyOwnersService,
-} from '../services/admin/owners/admin-pharmacy-owner-registry.service';
+} from '../../services/admin/owners/admin-pharmacy-owner-registry.service';
 
-import { listAdminPharmacyOwnerActivityService } from '../services/admin/owners/admin-pharmacy-owner-activity.service';
-import { listAdminPharmacyOwnerPharmaciesService } from '../services/admin/owners/admin-pharmacy-owner-pharmacies.service';
+import { listAdminPharmacyOwnerActivityService } from '../../services/admin/owners/admin-pharmacy-owner-activity.service';
+import { listAdminPharmacyOwnerPharmaciesService } from '../../services/admin/owners/admin-pharmacy-owner-pharmacies.service';
 
 import {
   listAdminPharmaciesService,
   getAdminPharmacyStatisticsService,
   listAdminPharmacyOptionsService,
   listAdminPharmacyRegistryOwnerOptionsService,
-} from '../services/admin/pharmacies/admin-pharmacy-registry-read.service';
+} from '../../services/admin/pharmacies/admin-pharmacy-registry-read.service';
 
 import {
   getAdminPharmacyDetailService,
   getAdminPharmacySalesStatisticsService,
-} from '../services/admin/pharmacies/admin-pharmacy-detail-read.service';
+} from '../../services/admin/pharmacies/admin-pharmacy-detail-read.service';
 
-import type { OrderSalesStatisticsQuery } from '../schemas/order.schema';
+import type { OrderSalesStatisticsQuery } from '../../schemas/order.schema';
 
 import {
   getAdminPharmacyActivityDetailsService,
   listAdminPharmacyActivityActorsService,
   listAdminPharmacyActivityService,
-} from '../services/admin/audit/admin-pharmacy-activity.service';
+} from '../../services/admin/audit/admin-pharmacy-activity.service';
 
 import {
   downloadAdminPharmacyDocumentService,
   listAdminPharmacyDocumentsService,
-} from '../services/pharmacies/pharmacy-document.service';
+} from '../../services/pharmacies/pharmacy-document.service';
 
 import {
   createPharmacyAdminCommentService,
   deletePharmacyAdminCommentService,
   listPharmacyAdminCommentsService,
-} from '../services/admin/pharmacies/pharmacy-admin-comment.service';
+} from '../../services/admin/pharmacies/pharmacy-admin-comment.service';
 
 import type {
   CreatePharmacyAdminCommentInput,
   PharmacyAdminCommentParams,
-} from '../schemas/pharmacy-admin-comment.schema';
+} from '../../schemas/pharmacy-admin-comment.schema';
 
 import {
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
-} from '../services/owners/pharmacy-owner-document.service';
+} from '../../services/owners/pharmacy-owner-document.service';
 
 import {
   createPharmacyOwnerAdminCommentService,
   deletePharmacyOwnerAdminCommentService,
   listPharmacyOwnerAdminCommentsService,
-} from '../services/admin/owners/pharmacy-owner-admin-comment.service';
+} from '../../services/admin/owners/pharmacy-owner-admin-comment.service';
 
-import { moderateProductRequestByAdminService } from '../services/catalog/product-request-moderation.service';
+import { moderateProductRequestByAdminService } from '../../services/catalog/product-request-moderation.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
-import { httpError } from '../utils/httpError';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
@@ -204,7 +204,9 @@ export async function createPharmacyAdminCommentByAdmin(
   res: ValidatedResponse<CreatePharmacyAdminCommentInput, AdminPharmacyParams>
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
+
   const requestId = res.locals.requestId;
 
   if (!requestId)
@@ -234,7 +236,9 @@ export async function deletePharmacyAdminCommentByAdmin(
   res: ValidatedResponse<unknown, PharmacyAdminCommentParams>
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
+
   const requestId = res.locals.requestId;
 
   if (!requestId)
@@ -342,6 +346,7 @@ export async function getPharmacyOwnerSalesStatisticsByAdmin(
 
 export async function getPharmacySalesStatisticsByAdmin(
   _req: Request,
+
   res: ValidatedResponse<
     unknown,
     AdminPharmacyParams,
@@ -427,6 +432,7 @@ export async function getPharmacyOwnerDetailByAdmin(
 
 export async function listPharmacyOwnerPharmaciesByAdmin(
   _req: Request,
+
   res: ValidatedResponse<
     unknown,
     AdminPharmacyOwnerParams,
@@ -581,6 +587,7 @@ export async function createPharmacyOwnerAdminCommentByAdmin(
   >
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
 
   const requestId = res.locals.requestId;
@@ -613,6 +620,7 @@ export async function deletePharmacyOwnerAdminCommentByAdmin(
   res: ValidatedResponse<unknown, PharmacyOwnerAdminCommentParams>
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
 
   const requestId = res.locals.requestId;
@@ -644,6 +652,7 @@ export async function updatePharmacyOwnerStatusByAdmin(
   >
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
 
   const { ownerId } = res.locals.validated.params;
@@ -698,6 +707,7 @@ export async function updatePharmacyStatusByAdmin(
   res: ValidatedResponse<UpdateAdminPharmacyStatusInput, AdminPharmacyParams>
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
 
   const { pharmacyId } = res.locals.validated.params;
@@ -727,6 +737,7 @@ export async function requestPharmacyCorrectionsByAdmin(
   >
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
 
   const pharmacy = await requestPharmacyCorrectionsByAdminService(
@@ -751,6 +762,7 @@ export async function updateProductRequestStatusByAdmin(
   res: ValidatedResponse<ProductRequestModerationInput, ProductRequestParams>
 ): Promise<void> {
   const adminUserId = req.user?.id;
+
   if (!adminUserId) return;
 
   const { requestId: productRequestId } = res.locals.validated.params;

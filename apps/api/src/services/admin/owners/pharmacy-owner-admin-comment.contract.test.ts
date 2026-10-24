@@ -15,7 +15,7 @@ const serviceSource = read(
   'src/services/admin/owners/pharmacy-owner-admin-comment.service.ts'
 );
 
-const adminRouteSource = read('src/routes/admin.routes.ts');
+const adminRouteSource = read('src/routes/admin/admin.routes.ts');
 const ownerRouteSource = read('src/routes/owners/pharmacy-owner.routes.ts');
 
 const sharedTypesSource = read(

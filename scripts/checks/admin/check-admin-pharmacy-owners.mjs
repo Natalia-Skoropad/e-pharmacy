@@ -35,7 +35,7 @@ const [
   ownersPage,
   linkedPharmaciesTab,
 ] = await Promise.all([
-  read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
+  read('apps', 'api', 'src', 'routes', 'admin/admin.routes.ts'),
 
   read(
     'apps',
@@ -61,7 +61,7 @@ const [
     'owners/pharmacy-owner-document.service.ts'
   ),
 
-  read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
+  read('apps', 'api', 'src', 'routes', 'admin/admin.routes.ts'),
 
   read(
     'apps',

@@ -36,7 +36,7 @@ test('S10.10 removes the Admin Settings monolith and uses direct canonical impor
   }
 
   const controller = readFileSync(
-    resolve(SRC, 'controllers/admin-settings.controller.ts'),
+    resolve(SRC, 'controllers/admin/admin-settings.controller.ts'),
     'utf8'
   );
 

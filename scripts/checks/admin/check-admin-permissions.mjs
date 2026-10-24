@@ -32,6 +32,7 @@ async function collectFiles(directory) {
 
   for (const entry of entries) {
     const entryPath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await collectFiles(entryPath)));
     else files.push(entryPath);
   }
@@ -55,15 +56,41 @@ const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'admin-permissions.ts'],
   ['apps', 'api', 'src', 'constants', 'admin-access.ts'],
   ['apps', 'api', 'src', 'models', 'admin', 'access', 'adminAccess.model.ts'],
-  ['apps', 'api', 'src', 'models', 'admin', 'access', 'adminAuthorizationState.model.ts'],
-  ['apps', 'api', 'src', 'middlewares', 'admin-permission.middleware.ts'],
+
+  [
+    'apps',
+    'api',
+    'src',
+    'models',
+    'admin',
+    'access',
+    'adminAuthorizationState.model.ts',
+  ],
+  ['apps', 'api', 'src', 'middlewares', 'admin/admin-permission.middleware.ts'],
   ['apps', 'api', 'src', 'services', 'admin/access/admin-access.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/access/admin-permission-evaluator.ts'],
+
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/access/admin-permission-evaluator.ts',
+  ],
+
   ['apps', 'api', 'src', 'services', 'admin/access/admin-access-policy.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/platform-owners/admin-owner.service.ts'],
+
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/platform-owners/admin-owner.service.ts',
+  ],
+
   ['apps', 'admin', 'src', 'lib', 'permissions', 'admin-permissions.ts'],
   ['apps', 'admin', 'src', 'lib', 'permissions', 'admin-access.ts'],
   ['apps', 'admin', 'src', 'lib', 'permissions', 'can-admin.ts'],
+
   [
     'apps',
     'admin',
@@ -72,6 +99,7 @@ const requiredFiles = [
     'AdminAuthorizationProvider',
     'AdminAuthorizationProvider.tsx',
   ],
+
   ['apps', 'admin', 'src', 'components', 'auth', 'AdminPermissionGate.tsx'],
   ['apps', 'admin', 'src', 'app', 'api', 'admin', 'access', 'me', 'route.ts'],
 ];
@@ -79,6 +107,7 @@ const requiredFiles = [
 for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
+
     true,
     `Stage 8 file must exist: ${file.join('/')}`
   );
@@ -120,7 +149,7 @@ const apiAdminRoutes = await read(
   'api',
   'src',
   'routes',
-  'admin.routes.ts'
+  'admin/admin.routes.ts'
 );
 
 const permissionMiddleware = await read(
@@ -128,7 +157,7 @@ const permissionMiddleware = await read(
   'api',
   'src',
   'middlewares',
-  'admin-permission.middleware.ts'
+  'admin/admin-permission.middleware.ts'
 );
 
 const adminController = await read(
@@ -136,7 +165,7 @@ const adminController = await read(
   'api',
   'src',
   'controllers',
-  'admin.controller.ts'
+  'admin/admin.controller.ts'
 );
 
 const jwt = await read('apps', 'api', 'src', 'utils', 'jwt.ts');
@@ -400,6 +429,7 @@ const uiFiles = await collectFiles(
 
 for (const file of uiFiles.filter((file) => /\.(?:ts|tsx)$/.test(file))) {
   const source = await readFile(file, 'utf8');
+
   assert.doesNotMatch(
     source,
     /isPlatformOwner|employees\.managePermissions|products\.edit|AdminPermission/,
@@ -431,6 +461,7 @@ for (const futurePage of [
 ]) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', 'admin', ...futurePage),
+
     false,
     `Stage 8 must not create CRUD placeholder ${futurePage.join('/')}`
   );

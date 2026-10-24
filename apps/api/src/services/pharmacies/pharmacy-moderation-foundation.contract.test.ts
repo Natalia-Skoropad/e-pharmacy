@@ -12,7 +12,7 @@ const read = (path: string) => readFile(resolve(base, path), 'utf8');
 
 test('feedback endpoint is permissioned and cannot silently modify public status', async () => {
   const [routes, admin, schema] = await Promise.all([
-    read('routes/admin.routes.ts'),
+    read('routes/admin/admin.routes.ts'),
     read('services/admin/pharmacies/admin.service.ts'),
     read('models/pharmacies/pharmacy.model.ts'),
   ]);

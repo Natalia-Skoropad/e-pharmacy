@@ -34,7 +34,7 @@ test('active product request articles have a storage-level uniqueness backstop',
 
 test('admin moderation endpoint owns the request transition graph and approved product relation', async () => {
   const [routes, service] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/routes/admin.routes.ts'), 'utf8'),
+    readFile(resolve(process.cwd(), 'src/routes/admin/admin.routes.ts'), 'utf8'),
 
     readFile(
       resolve(

@@ -49,16 +49,51 @@ const requiredFiles = [
     'profile',
     'route.ts',
   ],
-  ['apps', 'api', 'src', 'models', 'admin', 'employees', 'adminEmployeeDocument.model.ts'],
-  ['apps', 'api', 'src', 'models', 'admin', 'employees', 'adminEmployeePrivateNote.model.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-profile.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-document.service.ts'],
-  ['apps', 'api', 'src', 'services', 'admin/employees/admin-employee-note.service.ts'],
+  [
+    'apps',
+    'api',
+    'src',
+    'models',
+    'admin',
+    'employees',
+    'adminEmployeeDocument.model.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'models',
+    'admin',
+    'employees',
+    'adminEmployeePrivateNote.model.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-profile.service.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-document.service.ts',
+  ],
+  [
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-note.service.ts',
+  ],
 ];
 
 for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
+
     true,
     `Stage 10 profile file must exist: ${file.join('/')}`
   );
@@ -153,11 +188,41 @@ const [
     'route.ts'
   ),
 
-  read('apps', 'api', 'src', 'routes', 'admin.routes.ts'),
-  read('apps', 'api', 'src', 'services', 'admin/employees/admin-employee-profile.service.ts'),
-  read('apps', 'api', 'src', 'services', 'admin/employees/admin-employee-document.service.ts'),
-  read('apps', 'api', 'src', 'services', 'admin/employees/admin-employee-note.service.ts'),
-  read('apps', 'api', 'src', 'models', 'admin', 'employees', 'adminEmployeeDocument.model.ts'),
+  read('apps', 'api', 'src', 'routes', 'admin/admin.routes.ts'),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-profile.service.ts'
+  ),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-document.service.ts'
+  ),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'services',
+    'admin/employees/admin-employee-note.service.ts'
+  ),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'models',
+    'admin',
+    'employees',
+    'adminEmployeeDocument.model.ts'
+  ),
 ]);
 
 assert.match(adminLayout, /AdminProtectedRoute/);

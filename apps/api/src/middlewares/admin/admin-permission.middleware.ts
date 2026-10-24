@@ -1,16 +1,16 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { ADMIN_ACCESS_ERROR_CODES } from '../constants/admin-access';
+import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin-access';
 
 import {
   isAdminPermission,
   type AdminPermission,
-} from '../constants/admin-permissions';
+} from '../../constants/admin-permissions';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { getAdminAuthorizationService } from '../services/admin/access/admin-access.service';
-import { hasAdminPermission } from '../services/admin/access/admin-permission-evaluator';
-import { httpError } from '../utils/httpError';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { getAdminAuthorizationService } from '../../services/admin/access/admin-access.service';
+import { hasAdminPermission } from '../../services/admin/access/admin-permission-evaluator';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
@@ -49,6 +49,7 @@ export function requireAdminPermission(permission: AdminPermission) {
           ADMIN_ACCESS_ERROR_CODES.PERMISSION_DENIED
         )
       );
+
       return;
     }
 

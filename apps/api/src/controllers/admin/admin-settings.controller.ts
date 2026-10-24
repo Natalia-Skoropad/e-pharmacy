@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
 import type {
   AdminPositionParams,
@@ -10,32 +10,34 @@ import type {
   CreateAdminSettingsDictionaryItemInput,
   UpdateAdminProductCategoryInput,
   UpdateAdminSettingsDictionaryItemInput,
-} from '../schemas/admin-settings.schema';
+} from '../../schemas/admin-settings.schema';
 
 import {
   createAdminProductCategoryService,
   updateAdminProductCategoryService,
   deleteAdminProductCategoryService,
-} from '../services/admin/settings/admin-settings-category-mutation.service';
+} from '../../services/admin/settings/admin-settings-category-mutation.service';
 
-import { listAdminProductCategoriesService } from '../services/admin/settings/admin-settings-category-read.service';
+import { listAdminProductCategoriesService } from '../../services/admin/settings/admin-settings-category-read.service';
 
 import {
   createAdminPositionService,
   updateAdminPositionService,
   deleteAdminPositionService,
-} from '../services/admin/settings/admin-settings-position-mutation.service';
+} from '../../services/admin/settings/admin-settings-position-mutation.service';
 
-import { listAdminPositionsService } from '../services/admin/settings/admin-settings-position-read.service';
+import { listAdminPositionsService } from '../../services/admin/settings/admin-settings-position-read.service';
 
-import type { ValidatedResponse } from '../types/validated-request';
-import { sendSuccessResponse } from '../utils/apiResponse';
+import type { ValidatedResponse } from '../../types/validated-request';
+import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================
 
 function requireAdminUserId(req: Request): string {
   const userId = req.user?.id;
+
   if (!userId) throw new Error('Authenticated admin user is missing.');
+
   return userId;
 }
 
@@ -155,6 +157,7 @@ export async function createAdminPosition(
 
 export async function updateAdminPosition(
   req: Request,
+
   res: ValidatedResponse<
     UpdateAdminSettingsDictionaryItemInput,
     AdminPositionParams

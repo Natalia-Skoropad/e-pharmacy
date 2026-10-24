@@ -18,6 +18,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -42,7 +43,7 @@ const requiredFiles = [
     'admin-settings-position-projection.ts',
   ].map((name) => ['apps', 'api', 'src', 'services', 'admin/settings', name]),
 
-  ['apps', 'api', 'src', 'controllers', 'admin-settings.controller.ts'],
+  ['apps', 'api', 'src', 'controllers', 'admin/admin-settings.controller.ts'],
   ['apps', 'api', 'src', 'types', 'admin-settings.ts'],
   ['apps', 'api', 'src', 'types', 'position.ts'],
 ];
@@ -57,7 +58,13 @@ for (const file of requiredFiles) {
 
 //===================================================================
 
-const routes = await read('apps', 'api', 'src', 'routes', 'admin.routes.ts');
+const routes = await read(
+  'apps',
+  'api',
+  'src',
+  'routes',
+  'admin/admin.routes.ts'
+);
 
 //===================================================================
 
