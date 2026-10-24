@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
-import { env } from '../config/env';
-import { AUTH_ERROR_CODES, USER_ROLES } from '../constants/auth';
+import { env } from '../../config/env';
+import { AUTH_ERROR_CODES, USER_ROLES } from '../../constants/auth';
 
 import {
   getAdminOnlyTest,
@@ -21,10 +21,10 @@ import {
   resetPassword,
   updateCurrentUser,
   updateCurrentUserPassword,
-} from '../controllers/auth.controller';
+} from '../../controllers/auth/auth.controller';
 
-import { authenticate } from '../middlewares/auth.middleware';
-import { requireTrustedAuthProxy } from '../middlewares/auth-bff.middleware';
+import { authenticate } from '../../middlewares/auth/auth.middleware';
+import { requireTrustedAuthProxy } from '../../middlewares/auth/auth-bff.middleware';
 
 import {
   loginAccountIpRateLimit,
@@ -41,10 +41,10 @@ import {
   registrationDocumentIpRateLimit,
   registrationDocumentSessionIpRateLimit,
   registrationIpRateLimit,
-} from '../middlewares/security/rateLimit.middleware';
+} from '../../middlewares/security/rateLimit.middleware';
 
-import { authorizeRoles } from '../middlewares/role.middleware';
-import { validate } from '../middlewares/http/validate.middleware';
+import { authorizeRoles } from '../../middlewares/auth/role.middleware';
+import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   forgotPasswordSchema,
@@ -54,9 +54,9 @@ import {
   updatePasswordSchema,
   updateProfileSchema,
   uploadRegistrationPharmacyDocumentSchema,
-} from '../schemas/auth.schema';
+} from '../../schemas/auth.schema';
 
-import { ctrlWrapper } from '../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================
 

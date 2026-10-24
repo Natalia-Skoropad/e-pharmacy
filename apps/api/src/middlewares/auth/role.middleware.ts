@@ -1,13 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 
-import { USER_ROLES } from '../constants/auth';
-import { PHARMACY_OPERATIONAL_STATUSES } from '../constants/pharmacy-status';
-import { HTTP_STATUS } from '../constants/httpStatus';
-import { API_MESSAGES } from '../constants/messages';
+import { USER_ROLES } from '../../constants/auth';
+import { PHARMACY_OPERATIONAL_STATUSES } from '../../constants/pharmacy-status';
+import { HTTP_STATUS } from '../../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/messages';
 
-import { requirePharmacyCapability } from '../services/pharmacies/pharmacy-membership.service';
-import type { UserRole } from '../types/user';
-import { httpError } from '../utils/httpError';
+import { requirePharmacyCapability } from '../../services/pharmacies/pharmacy-membership.service';
+import type { UserRole } from '../../types/user';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
@@ -15,11 +15,13 @@ export function authorizeRoles(...allowedRoles: UserRole[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED));
+
       return;
     }
 
     if (!allowedRoles.includes(req.user.role)) {
       next(httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ROLE));
+
       return;
     }
 
@@ -37,11 +39,13 @@ export async function requireActivePharmacy(
   try {
     if (!req.user) {
       next(httpError(HTTP_STATUS.UNAUTHORIZED, API_MESSAGES.AUTH_REQUIRED));
+
       return;
     }
 
     if (req.user.role !== USER_ROLES.PHARMACY) {
       next(httpError(HTTP_STATUS.FORBIDDEN, API_MESSAGES.FORBIDDEN_ROLE));
+
       return;
     }
 

@@ -65,8 +65,11 @@ export function transformAuthResponseBody(
 
   const rawTokens = data.tokens;
   const { tokens: _tokens, ...safeData } = data;
+
   void _tokens;
+
   parsed.data = safeData;
+
   const safeBody = JSON.stringify(parsed);
 
   if (rawTokens === undefined) {
@@ -85,6 +88,7 @@ export function transformAuthResponseBody(
 
   return {
     body: safeBody,
+
     tokens: {
       accessToken: rawTokens.accessToken,
       refreshToken: rawTokens.refreshToken,

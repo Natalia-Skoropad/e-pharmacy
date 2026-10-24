@@ -51,6 +51,8 @@ const pharmacyRegistrationUploadSessionSchema =
     }
   );
 
+//===============================================================
+
 pharmacyRegistrationUploadSessionSchema.index(
   { expiresAt: 1 },
   { expireAfterSeconds: 0 }

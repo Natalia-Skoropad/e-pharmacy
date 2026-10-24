@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
+
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+
 import test from 'node:test';
 
 import {
@@ -75,7 +77,7 @@ test('distributed auth rate limiting uses Mongo instead of process-local buckets
 
 test('auth routes combine IP and account dimensions for credential-sensitive flows', () => {
   const routes = readFileSync(
-    resolve(__dirname, '../../routes/auth.routes.ts'),
+    resolve(__dirname, '../../routes/auth/auth.routes.ts'),
     'utf8'
   );
 

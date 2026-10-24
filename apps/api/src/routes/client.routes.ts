@@ -6,7 +6,7 @@ import {
   getClients,
 } from '../controllers/client.controller';
 
-import { authenticate } from '../middlewares/auth.middleware';
+import { authenticate } from '../middlewares/auth/auth.middleware';
 import { validate } from '../middlewares/http/validate.middleware';
 
 import {

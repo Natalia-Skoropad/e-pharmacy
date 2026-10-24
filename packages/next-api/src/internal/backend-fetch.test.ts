@@ -17,12 +17,14 @@ const originalFetch = globalThis.fetch;
 
 function configureEnvironment(): () => void {
   const previous = { ...process.env };
+
   process.env.NODE_ENV = 'test';
   process.env.API_BASE_URL = 'http://backend.example';
   process.env.BFF_PROXY_SECRET = 'test-secret';
 
   return () => {
     globalThis.fetch = originalFetch;
+
     for (const key of Object.keys(process.env)) {
       if (!(key in previous)) delete process.env[key];
     }
@@ -40,6 +42,7 @@ test('forwards query parameters for every supported HTTP method and disables red
   try {
     globalThis.fetch = async (input, init) => {
       calls.push({ url: String(input), init });
+
       return new Response(JSON.stringify({ status: 'success' }), {
         headers: { 'content-type': 'application/json' },
       });
@@ -50,6 +53,7 @@ test('forwards query parameters for every supported HTTP method and disables red
         'https://client.example/api/example?tag=one&tag=two&name=%D0%90%D0%BF%D1%82%D0%B5%D0%BA%D0%B0',
         {
           method,
+
           ...(method === 'GET'
             ? {}
             : {
@@ -77,6 +81,7 @@ test('forwards query parameters for every supported HTTP method and disables red
         call.url,
         'http://backend.example/resource?existing=yes&tag=one&tag=two&name=%D0%90%D0%BF%D1%82%D0%B5%D0%BA%D0%B0'
       );
+
       assert.equal(call.init?.redirect, 'manual');
     }
   } finally {
@@ -89,6 +94,7 @@ test('forwards query parameters for every supported HTTP method and disables red
 test('propagates incoming request abort to a direct backend fetch', async () => {
   const restore = configureEnvironment();
   const requestController = new AbortController();
+
   let observedSignal: AbortSignal | null | undefined;
 
   try {
@@ -128,6 +134,7 @@ test('propagates incoming request abort to a direct backend fetch', async () => 
     });
 
     await Promise.resolve();
+
     requestController.abort(
       new DOMException('The client closed the request.', 'AbortError')
     );
@@ -188,6 +195,7 @@ test('propagates incoming request abort to backend fetch and does not retry', as
     });
 
     await Promise.resolve();
+
     requestController.abort(
       new DOMException('The client closed the request.', 'AbortError')
     );

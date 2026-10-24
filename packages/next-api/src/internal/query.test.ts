@@ -57,6 +57,7 @@ test('rejects query strings above the practical encoded-length limit', () => {
         '/products',
         `?q=${'a'.repeat(MAX_PROXY_QUERY_LENGTH)}`
       ),
+
     (error: unknown) =>
       error instanceof ProxyQueryError &&
       error.status === 414 &&
@@ -74,6 +75,7 @@ test('counts repeated parameters toward the practical query parameter limit', ()
 
   assert.throws(
     () => appendSearchParams('/products', search),
+
     (error: unknown) =>
       error instanceof ProxyQueryError &&
       error.status === 400 &&
@@ -88,6 +90,7 @@ test('rejects an excessive combined backend path and query URL length', () => {
 
   assert.throws(
     () => appendSearchParams(path, '?q=1'),
+
     (error: unknown) =>
       error instanceof ProxyQueryError &&
       error.status === 414 &&

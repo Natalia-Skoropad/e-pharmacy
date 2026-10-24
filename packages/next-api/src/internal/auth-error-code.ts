@@ -16,6 +16,7 @@ export function getAuthErrorCodeFromBody(body: string): string | null {
     if (!value || typeof value !== 'object') return null;
 
     const code = (value as { code?: unknown }).code;
+
     return typeof code === 'string' ? code : null;
   } catch {
     return null;
@@ -43,6 +44,7 @@ async function getAuthErrorCodeFromResponse(
 
   try {
     const body = await response.clone().text();
+
     return getAuthErrorCodeFromBody(body);
   } catch {
     return null;
@@ -55,6 +57,7 @@ export async function responseRequiresAuthRefresh(
   response: Response
 ): Promise<boolean> {
   if (response.status !== 401) return false;
+
   return isRefreshableAuthErrorCode(
     await getAuthErrorCodeFromResponse(response)
   );

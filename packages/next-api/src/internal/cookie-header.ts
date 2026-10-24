@@ -26,10 +26,12 @@ export function parseCookieHeader(cookieHeader: string): Map<string, string> {
     .filter(Boolean)
     .forEach((cookie) => {
       const separatorIndex = cookie.indexOf('=');
+
       if (separatorIndex <= 0) return;
 
       const name = cookie.slice(0, separatorIndex).trim();
       const value = cookie.slice(separatorIndex + 1);
+
       if (!name || !value || /[\r\n]/.test(name) || /[\r\n]/.test(value))
         return;
 
@@ -54,10 +56,12 @@ export function createAllowedAuthCookieHeader(
 
   if (mode === 'refresh-only') {
     const refreshToken = source.get(REFRESH_TOKEN_COOKIE_NAME);
+
     if (refreshToken) allowed.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
   } else {
     ACCESS_COOKIE_NAMES.forEach((name) => {
       const value = source.get(name);
+
       if (value) allowed.set(name, value);
     });
   }
@@ -81,6 +85,7 @@ export function createPrivateCookieHeaderWithAccessToken(
   cookies.set(ACCESS_TOKEN_COOKIE_NAME, accessToken);
 
   const legacyToken = source.get(LEGACY_AUTH_COOKIE_NAME);
+
   if (legacyToken) cookies.set(LEGACY_AUTH_COOKIE_NAME, legacyToken);
 
   return Array.from(cookies.entries())

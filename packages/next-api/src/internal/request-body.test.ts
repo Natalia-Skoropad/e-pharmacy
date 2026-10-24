@@ -29,6 +29,7 @@ test('forwards JSON bodies for POST, PATCH, PUT, and DELETE', async () => {
 test('uses semantic limits for small, standard, and document JSON payloads', () => {
   assert.equal(getProxyRequestBodyLimitBytes('smallJson'), 64 * 1024);
   assert.equal(getProxyRequestBodyLimitBytes('standardJson'), 1024 * 1024);
+
   assert.equal(
     getProxyRequestBodyLimitBytes('documentUpload'),
     32 * 1024 * 1024
@@ -65,15 +66,18 @@ test('returns undefined for an empty mutation body', async () => {
 test('rejects declared oversized small JSON bodies before buffering', async () => {
   const request = new Request('https://example.test/api/auth/login', {
     method: 'POST',
+
     headers: {
       'content-type': 'application/json',
       'content-length': String(64 * 1024 + 1),
     },
+
     body: '{}',
   });
 
   await assert.rejects(
     readProxyRequestBody(request, 'POST', 'smallJson'),
+
     (error: unknown) =>
       error instanceof ProxyRequestBodyError && error.status === 413
   );
@@ -84,10 +88,12 @@ test('rejects declared oversized small JSON bodies before buffering', async () =
 test('rejects actual standard JSON size even when Content-Length is spoofed smaller', async () => {
   const request = new Request('https://example.test/api/orders/checkout', {
     method: 'POST',
+
     headers: {
       'content-type': 'application/json',
       'content-length': '2',
     },
+
     body: JSON.stringify({ value: 'x'.repeat(1024 * 1024) }),
   });
 
@@ -103,6 +109,7 @@ test('rejects actual standard JSON size even when Content-Length is spoofed smal
 test('accepts a realistic base64-sized document payload under documentUpload limit', async () => {
   const base64Bytes = Math.floor(13.4 * 1024 * 1024);
   const body = JSON.stringify({ dataUrl: 'x'.repeat(base64Bytes) });
+
   const request = new Request(
     'https://example.test/api/auth/pharmacy-documents',
     {
@@ -132,6 +139,7 @@ test('rejects invalid UTF-8 text bodies', async () => {
 
   await assert.rejects(
     readProxyRequestBody(request, 'POST'),
+
     (error: unknown) =>
       error instanceof ProxyRequestBodyError && error.status === 415
   );

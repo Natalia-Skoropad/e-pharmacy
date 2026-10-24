@@ -15,8 +15,8 @@ import {
 
 import { USER_ROLES } from '../constants/auth';
 
-import { authenticate } from '../middlewares/auth.middleware';
-import { authorizeRoles } from '../middlewares/role.middleware';
+import { authenticate } from '../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../middlewares/auth/role.middleware';
 import { validate } from '../middlewares/http/validate.middleware';
 
 import {

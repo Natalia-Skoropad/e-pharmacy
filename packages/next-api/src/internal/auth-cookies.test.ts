@@ -17,6 +17,7 @@ import {
 
 function configureEnvironment(): () => void {
   const previous = { ...process.env };
+
   process.env.NODE_ENV = 'test';
   process.env.API_BASE_URL = 'http://backend.example';
   process.env.BFF_PROXY_SECRET = 'test-secret';
@@ -28,6 +29,7 @@ function configureEnvironment(): () => void {
     for (const key of Object.keys(process.env)) {
       if (!(key in previous)) delete process.env[key];
     }
+
     Object.assign(process.env, previous);
   };
 }
@@ -49,9 +51,11 @@ test('uses backend expiry metadata for access, refresh, and hint cookies', () =>
     });
 
     const header = response.headers.get('set-cookie') ?? '';
+
     assert.match(header, new RegExp(ACCESS_TOKEN_COOKIE_NAME));
     assert.match(header, new RegExp(REFRESH_TOKEN_COOKIE_NAME));
     assert.match(header, new RegExp(AUTH_READY_COOKIE_NAME));
+
     assert.match(header, /Max-Age=321/);
     assert.match(header, /Max-Age=654/);
     assert.match(header, /SameSite=strict/i);
@@ -73,6 +77,7 @@ test('clears host-only, current-domain, and legacy-domain variants', () => {
     clearClientAuthCookies(response, request);
 
     const header = response.headers.get('set-cookie') ?? '';
+
     assert.match(header, /Max-Age=0/);
     assert.match(header, /Domain=\.example\.com/i);
     assert.match(header, /Domain=\.old\.example\.com/i);

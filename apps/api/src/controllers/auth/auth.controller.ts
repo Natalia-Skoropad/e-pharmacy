@@ -1,12 +1,16 @@
 import type { Request, Response } from 'express';
 
-import { AUTH_ERROR_CODES, REFRESH_TOKEN_COOKIE_NAME } from '../constants/auth';
+import {
+  AUTH_ERROR_CODES,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from '../../constants/auth';
 
-import { isNextAuthProxyRequest } from '../middlewares/auth-bff.middleware';
-import { API_MESSAGES } from '../constants/messages';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
-import { loginUserService } from '../services/auth/auth-login.service';
+import { isNextAuthProxyRequest } from '../../middlewares/auth/auth-bff.middleware';
+
+import { loginUserService } from '../../services/auth/auth-login.service';
 
 import {
   refreshAuthSessionService,
@@ -14,22 +18,22 @@ import {
   revokeSessionByRefreshTokenService,
   getActiveSessionsService,
   revokeUserSessionService,
-} from '../services/auth/auth-sessions.service';
+} from '../../services/auth/auth-sessions.service';
 
-import { registerUserService } from '../services/auth/auth-register.service';
+import { registerUserService } from '../../services/auth/auth-register.service';
 
 import {
   requestPasswordResetService,
   resetPasswordService,
   updateUserPasswordService,
-} from '../services/auth/auth-password.service';
+} from '../../services/auth/auth-password.service';
 
-import { updateUserProfileService } from '../services/auth/auth-profile.service';
+import { updateUserProfileService } from '../../services/auth/auth-profile.service';
 
 import {
   createRegistrationPharmacyDocumentUploadService,
   createRegistrationPharmacyDocumentUploadSessionService,
-} from '../services/pharmacies/pharmacy-document.service';
+} from '../../services/pharmacies/pharmacy-document.service';
 
 import type {
   ForgotPasswordInput,
@@ -38,14 +42,15 @@ import type {
   RegisterInput,
   UpdatePasswordInput,
   UpdateProfileInput,
-} from '../types/auth';
+} from '../../types/auth';
 
-import type { PharmacyRegistrationDocumentUploadInput } from '../schemas/shared/pharmacy-document.schema';
-import type { SessionContext } from '../types/session';
-import type { ValidatedResponse } from '../types/validated-request';
+import type { SessionContext } from '../../types/session';
+import type { ValidatedResponse } from '../../types/validated-request';
 
-import { sendSuccessResponse } from '../utils/apiResponse';
-import { httpError } from '../utils/httpError';
+import type { PharmacyRegistrationDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
+
+import { sendSuccessResponse } from '../../utils/apiResponse';
+import { httpError } from '../../utils/httpError';
 
 //===============================================================
 
@@ -80,6 +85,7 @@ function createAuthResponseData(
 } {
   return {
     user: data.user,
+
     ...(isNextAuthProxyRequest(req) ? { tokens: data.tokens } : {}),
   };
 }
@@ -103,6 +109,7 @@ function getCookieValues(req: Request, name: string): string[] {
 
       return value ? decodeURIComponent(value) : null;
     })
+
     .filter((value): value is string => Boolean(value))
     .reverse();
 }
@@ -279,6 +286,7 @@ export function getCurrentUser(req: Request, res: Response): void {
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
+
     data: {
       user: req.user,
     },

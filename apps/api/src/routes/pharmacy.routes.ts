@@ -38,10 +38,10 @@ import { USER_ROLES } from '../constants/auth';
 import {
   authenticate,
   optionalAuthenticate,
-} from '../middlewares/auth.middleware';
+} from '../middlewares/auth/auth.middleware';
 
 import { reviewRateLimit } from '../middlewares/security/rateLimit.middleware';
-import { authorizeRoles } from '../middlewares/role.middleware';
+import { authorizeRoles } from '../middlewares/auth/role.middleware';
 import { validate } from '../middlewares/http/validate.middleware';
 
 import {

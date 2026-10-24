@@ -69,6 +69,7 @@ export async function readProxyRequestBody(
   }
 
   const bytes = new Uint8Array(await request.arrayBuffer());
+
   if (bytes.byteLength === 0) return undefined;
 
   if (bytes.byteLength > maxBytes) {

@@ -413,7 +413,7 @@ const authController = await read(
   'api',
   'src',
   'controllers',
-  'auth.controller.ts'
+  'auth/auth.controller.ts'
 );
 
 const authMiddleware = await read(
@@ -421,7 +421,7 @@ const authMiddleware = await read(
   'api',
   'src',
   'middlewares',
-  'auth.middleware.ts'
+  'auth/auth.middleware.ts'
 );
 
 const originMiddleware = await read(
@@ -644,7 +644,7 @@ const backendAuthRoutes = await read(
   'api',
   'src',
   'routes',
-  'auth.routes.ts'
+  'auth/auth.routes.ts'
 );
 
 assert.match(
@@ -691,7 +691,7 @@ const backendAuthController = await read(
   'api',
   'src',
   'controllers',
-  'auth.controller.ts'
+  'auth/auth.controller.ts'
 );
 
 assert.match(

@@ -8,6 +8,7 @@ const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/;
 export class InvalidRouteParameterError extends Error {
   constructor(
     readonly parameterName: string,
+
     message: string
   ) {
     super(message);

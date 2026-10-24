@@ -75,6 +75,7 @@ export function createProxyResponseHeaders(
   });
 
   const location = getSafeRelativeLocation(source.get('location'));
+
   if (location) headers.set('Location', location);
 
   headers.set('Cache-Control', cacheControl);

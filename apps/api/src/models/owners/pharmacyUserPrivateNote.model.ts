@@ -64,6 +64,8 @@ pharmacyUserPrivateNoteSchema.index({
   _id: -1,
 });
 
+//===============================================================
+
 pharmacyUserPrivateNoteSchema.index(
   { ownerUserId: 1, clientRequestId: 1 },
   { unique: true }

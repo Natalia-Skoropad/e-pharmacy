@@ -54,6 +54,7 @@ function parseCookieDomain(value: string, variableName: string): string {
 
 function getCookieDomain(): string | undefined {
   const value = process.env.AUTH_COOKIE_DOMAIN?.trim();
+  
   return value ? parseCookieDomain(value, 'AUTH_COOKIE_DOMAIN') : undefined;
 }
 

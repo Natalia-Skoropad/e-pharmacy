@@ -47,6 +47,7 @@ export async function refreshAuthSession(
 ): Promise<AuthRefreshResult> {
   const fingerprint = getRefreshFingerprint(refreshToken);
   const existing = refreshPromises.get(fingerprint);
+
   if (existing) return existing;
 
   const nextPromise = executeBackendFetch({
@@ -82,5 +83,6 @@ export async function refreshAuthSession(
     });
 
   refreshPromises.set(fingerprint, nextPromise);
+
   return nextPromise;
 }

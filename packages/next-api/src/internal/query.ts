@@ -33,6 +33,7 @@ export class ProxyQueryError extends Error {
 function assertPracticalUrlLength(path: string, search: string): void {
   const separatorLength =
     search && search !== '?' && !search.startsWith('?') ? 1 : 0;
+
   const combinedLength = path.length + separatorLength + search.length;
 
   if (combinedLength > MAX_PROXY_URL_LENGTH) {
@@ -56,6 +57,7 @@ function assertPracticalQueryLimits(search: string): void {
   }
 
   const incoming = new URLSearchParams(rawQuery);
+
   let parameterCount = 0;
 
   for (const _entry of incoming) {
@@ -81,6 +83,7 @@ export function appendSearchParams(path: string, search: string): string {
   assertPracticalQueryLimits(search);
 
   const url = new URL(path, INTERNAL_ORIGIN);
+
   const incoming = new URLSearchParams(
     search.startsWith('?') ? search.slice(1) : search
   );

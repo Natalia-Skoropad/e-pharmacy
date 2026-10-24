@@ -6,7 +6,7 @@ import {
   BFF_AUTH_PROXY_HEADER_NAME,
   BFF_AUTH_PROXY_MARKER_VALUE,
   BFF_PROXY_SECRET_HEADER_NAME,
-} from '../constants/bff';
+} from '../../constants/bff';
 
 //===================================================================
 
@@ -35,12 +35,15 @@ async function loadMiddleware(): Promise<AuthBffMiddlewareModule> {
 
 test('rejects direct auth-session requests before downstream middleware', async () => {
   const { requireTrustedAuthProxy } = await loadMiddleware();
+
   let nextCalls = 0;
   let nextError: unknown;
 
   requireTrustedAuthProxy(
     { headers: {} } as never,
+
     {} as never,
+
     (error?: unknown) => {
       nextCalls += 1;
       nextError = error;
@@ -56,6 +59,7 @@ test('rejects direct auth-session requests before downstream middleware', async 
 
 test('allows only the marker plus the configured BFF secret', async () => {
   const { requireTrustedAuthProxy } = await loadMiddleware();
+
   let nextError: unknown = new Error('not called');
 
   requireTrustedAuthProxy(
@@ -65,7 +69,9 @@ test('allows only the marker plus the configured BFF secret', async () => {
         [BFF_PROXY_SECRET_HEADER_NAME]: process.env.BFF_PROXY_SECRET,
       },
     } as never,
+
     {} as never,
+
     (error?: unknown) => {
       nextError = error;
     }

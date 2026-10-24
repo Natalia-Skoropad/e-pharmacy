@@ -21,12 +21,12 @@ const pathOf = (name: string) => resolve(root, 'services/auth', name);
 const read = (name: string) => readFileSync(pathOf(name), 'utf8');
 
 const controller = readFileSync(
-  resolve(root, 'controllers/auth.controller.ts'),
+  resolve(root, 'controllers/auth/auth.controller.ts'),
   'utf8'
 );
 
 const middleware = readFileSync(
-  resolve(root, 'middlewares/auth.middleware.ts'),
+  resolve(root, 'middlewares/auth/auth.middleware.ts'),
   'utf8'
 );
 

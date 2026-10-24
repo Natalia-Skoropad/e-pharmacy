@@ -6,8 +6,10 @@ import test from 'node:test';
 import type { NextFunction, Request, Response } from 'express';
 
 import { USER_ROLES, USER_STATUSES } from '../constants/auth';
-import { authenticate } from '../middlewares/auth.middleware';
-import { authorizeRoles } from '../middlewares/role.middleware';
+
+import { authenticate } from '../middlewares/auth/auth.middleware';
+import { authorizeRoles } from '../middlewares/auth/role.middleware';
+
 import type { HttpError } from '../types/errors';
 
 //===============================================================
@@ -27,7 +29,9 @@ test('article availability route requires authentication and pharmacy role', asy
 
   await authenticate(
     { headers: {} } as Request,
+
     {} as Response,
+
     ((error?: unknown) => {
       anonymousError = error;
     }) as NextFunction
@@ -36,6 +40,7 @@ test('article availability route requires authentication and pharmacy role', asy
   assert.equal((anonymousError as HttpError).status, 401);
 
   let clientError: unknown;
+
   authorizeRoles(USER_ROLES.PHARMACY)(
     {
       user: {
@@ -46,7 +51,9 @@ test('article availability route requires authentication and pharmacy role', asy
         status: USER_STATUSES.ACTIVE,
       },
     } as Request,
+
     {} as Response,
+
     ((error?: unknown) => {
       clientError = error;
     }) as NextFunction

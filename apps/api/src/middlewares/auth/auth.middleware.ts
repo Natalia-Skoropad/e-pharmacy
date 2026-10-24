@@ -4,17 +4,17 @@ import {
   ACCESS_TOKEN_COOKIE_NAME,
   AUTH_COOKIE_NAME,
   AUTH_ERROR_CODES,
-} from '../constants/auth';
+} from '../../constants/auth';
 
-import { API_MESSAGES } from '../constants/messages';
-import { HTTP_STATUS } from '../constants/httpStatus';
+import { API_MESSAGES } from '../../constants/messages';
+import { HTTP_STATUS } from '../../constants/httpStatus';
 
-import { assertActiveSessionService } from '../services/auth/auth-sessions.service';
-import { getUserByIdService } from '../services/auth/auth-profile.service';
+import { assertActiveSessionService } from '../../services/auth/auth-sessions.service';
+import { getUserByIdService } from '../../services/auth/auth-profile.service';
 
-import { httpError } from '../utils/httpError';
-import { logger } from '../utils/logger';
-import { verifyToken } from '../utils/jwt';
+import { httpError } from '../../utils/httpError';
+import { logger } from '../../utils/logger';
+import { verifyToken } from '../../utils/jwt';
 
 //===============================================================
 
@@ -83,6 +83,7 @@ function getCookieValues(
   return cookieHeader
     .split(';')
     .map((cookie) => cookie.trim())
+
     .map((cookie) => {
       const [cookieName, ...valueParts] = cookie.split('=');
 

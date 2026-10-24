@@ -73,6 +73,7 @@ const userSchema = new Schema<UserEntity>(
             get?: (path: string) => unknown;
             role?: unknown;
           };
+
           const role = context.get?.('role') ?? context.role;
 
           if (!Object.values(USER_ROLES).includes(role as UserEntity['role'])) {
@@ -108,6 +109,7 @@ const userSchema = new Schema<UserEntity>(
     address: {
       type: String,
       trim: true,
+
       minlength: [
         USER_ADDRESS_MIN_LENGTH,
         VALIDATION_MESSAGES.limits.addressMin,
@@ -125,17 +127,22 @@ const userSchema = new Schema<UserEntity>(
     pictureUrl: {
       type: String,
       trim: true,
+
       validate: {
         validator: (value?: string) => {
           if (!value) return true;
+
           if (isPictureDataUrl(value)) {
             return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
           }
+
           if (isHttpUrl(value)) {
             return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
           }
+
           return false;
         },
+
         message: VALIDATION_MESSAGES.format.picture,
       },
 
@@ -202,6 +209,8 @@ const userSchema = new Schema<UserEntity>(
 userSchema.index({ role: 1, status: 1 });
 userSchema.index({ role: 1, createdAt: -1 });
 userSchema.index({ approvedBy: 1 });
+
+//===============================================================
 
 userSchema.index(
   { defaultClientPharmacyId: 1, isDefaultPharmacyClient: 1 },

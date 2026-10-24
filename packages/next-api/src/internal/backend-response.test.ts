@@ -42,6 +42,7 @@ test('generic JSON validation rejects HTML and malformed JSON backend responses'
         headers: { 'content-type': 'text/html' },
       })
     ),
+
     InvalidBackendResponseError
   );
 
@@ -51,6 +52,7 @@ test('generic JSON validation rejects HTML and malformed JSON backend responses'
         headers: { 'content-type': 'application/json' },
       })
     ),
+
     InvalidBackendResponseError
   );
 });

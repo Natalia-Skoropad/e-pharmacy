@@ -138,6 +138,8 @@ productCategorySchema.index(
   { unique: true, name: 'product_category_slug_unique' }
 );
 
+//===============================================================
+
 productCategorySchema.index({ status: 1, sortOrder: 1, _id: 1 });
 
 //===============================================================

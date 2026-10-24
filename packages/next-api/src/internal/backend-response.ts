@@ -42,6 +42,7 @@ export async function validateBackendJsonResponse(
   response: Response
 ): Promise<void> {
   if (response.status === 204 || response.status === 205) return;
+
   await readBackendJson(response);
 }
 
@@ -91,6 +92,7 @@ export async function validateBackendDownloadResponse(
   }
 
   const contentType = response.headers.get('content-type')?.trim();
+
   const contentDisposition = response.headers
     .get('content-disposition')
     ?.trim();

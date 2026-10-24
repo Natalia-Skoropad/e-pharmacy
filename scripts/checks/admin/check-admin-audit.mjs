@@ -268,7 +268,7 @@ const authController = await read(
   'api',
   'src',
   'controllers',
-  'auth.controller.ts'
+  'auth/auth.controller.ts'
 );
 
 const profileService = await read(

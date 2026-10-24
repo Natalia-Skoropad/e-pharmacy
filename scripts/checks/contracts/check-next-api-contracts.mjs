@@ -39,6 +39,7 @@ const pharmacyAuthProvider = await read(
 
 const authReactPublicApi = await read('packages/auth/src/react.ts');
 const authPackage = JSON.parse(await read('packages/auth/package.json'));
+
 const authSessionCore = await read(
   'packages/auth/src/core/AuthProviderCore.tsx'
 );
@@ -64,6 +65,7 @@ const sharedFetchExecutor = await read(
 );
 
 const sharedApiUrl = await read('packages/api-client/src/transport/api-url.ts');
+
 const sharedRequestUtils = await read(
   'packages/api-client/src/transport/request-utils.ts'
 );
@@ -73,14 +75,14 @@ const sharedRequestTypes = await read(
 );
 
 const backendAuthController = await read(
-  'apps/api/src/controllers/auth.controller.ts'
+  'apps/api/src/controllers/auth/auth.controller.ts'
 );
 
 const backendAuthBffMiddleware = await read(
-  'apps/api/src/middlewares/auth-bff.middleware.ts'
+  'apps/api/src/middlewares/auth/auth-bff.middleware.ts'
 );
 
-const backendAuthRoutes = await read('apps/api/src/routes/auth.routes.ts');
+const backendAuthRoutes = await read('apps/api/src/routes/auth/auth.routes.ts');
 
 //===================================================================
 
@@ -94,6 +96,7 @@ const nextApiSources = [
 
 function extractString(source, name) {
   const match = source.match(new RegExp(`${name}\\s*=\\s*['\"]([^'\"]+)['\"]`));
+
   return match?.[1];
 }
 
@@ -126,6 +129,7 @@ for (const name of [
 ]) {
   const backendName =
     name === 'LEGACY_AUTH_COOKIE_NAME' ? 'AUTH_COOKIE_NAME' : name;
+
   if (
     extractString(frontendCookies, name) !==
     extractString(backendCookies, backendName)

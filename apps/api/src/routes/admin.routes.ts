@@ -68,14 +68,14 @@ import {
   getAdminAuditLogs,
 } from '../controllers/admin-audit.controller';
 
-import { authenticate } from '../middlewares/auth.middleware';
+import { authenticate } from '../middlewares/auth/auth.middleware';
 
 import {
   requireAdminPermission,
   resolveAdminAuthorization,
 } from '../middlewares/admin-permission.middleware';
 
-import { authorizeRoles } from '../middlewares/role.middleware';
+import { authorizeRoles } from '../middlewares/auth/role.middleware';
 import { validate } from '../middlewares/http/validate.middleware';
 
 import {

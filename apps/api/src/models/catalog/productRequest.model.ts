@@ -39,6 +39,7 @@ type ProductRequestStoredFile = {
 
 function getDataUrlByteSize(dataUrl: string): number | null {
   const commaIndex = dataUrl.indexOf(',');
+
   if (commaIndex < 0) return null;
 
   const base64 = dataUrl.slice(commaIndex + 1);
@@ -66,10 +67,12 @@ function createProductRequestFileSchema({
         type: String,
         required: true,
         trim: true,
+
         maxlength: [
           PRODUCT_REQUEST_LIMITS.fileNameMax,
           PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName,
         ],
+
         match: [fileNamePattern, invalidFormatMessage],
       },
 
@@ -77,10 +80,12 @@ function createProductRequestFileSchema({
         type: String,
         required: true,
         trim: true,
+
         maxlength: [
           PRODUCT_REQUEST_LIMITS.fileTypeMax,
           PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileType,
         ],
+
         enum: { values: [...mimeTypes], message: invalidFormatMessage },
       },
 
@@ -93,12 +98,15 @@ function createProductRequestFileSchema({
 
       dataUrl: {
         type: String,
+
         required: [
           requireDataUrl,
           PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentDataRequired,
         ],
+
         maxlength: [maxDataUrlLength, maxDataMessage],
         match: [dataUrlPattern, invalidFormatMessage],
+
         validate: [
           {
             validator: function (
@@ -106,21 +114,27 @@ function createProductRequestFileSchema({
               value?: string
             ) {
               if (!value) return !requireDataUrl;
+
               const dataUrlMimeType = value.match(
                 /^data:([^;,]+);base64,/i
               )?.[1];
+
               return dataUrlMimeType?.toLowerCase() === this.type.toLowerCase();
             },
+
             message: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.attachmentData,
           },
           {
             validator: function (
               this: ProductRequestStoredFile,
+
               value?: string
             ) {
               if (!value) return !requireDataUrl;
+
               return getDataUrlByteSize(value) === this.size;
             },
+
             message:
               PRODUCT_REQUEST_VALIDATION_MESSAGES.format.fileSizeMismatch,
           },
@@ -167,6 +181,7 @@ const productRequestHistorySchema = new Schema(
       enum: PRODUCT_REQUEST_STATUSES,
       required: true,
     },
+
     title: { type: String, trim: true, required: true, maxlength: 180 },
     description: { type: String, trim: true, required: true, maxlength: 1000 },
     createdAt: { type: Date, required: true },
@@ -189,10 +204,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       type: String,
       required: [true, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.name],
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.nameMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.name,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -204,10 +221,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       required: [true, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article],
       trim: true,
       uppercase: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.articleMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article,
       ],
+
       match: [
         PRODUCT_REQUEST_ARTICLE_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article,
@@ -229,10 +248,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     customCategory: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.customCategoryMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -262,10 +283,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     manufacturer: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.manufacturerMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -275,10 +298,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     countryOfOrigin: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -288,10 +313,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     dosage: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.dosageMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -301,10 +328,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     packageSize: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.packageSizeMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -314,10 +343,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     form: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.formMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -327,10 +358,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     activeSubstance: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance,
       ],
+
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
@@ -340,6 +373,7 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     prescriptionType: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType,
@@ -349,10 +383,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     fullDescription: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.fullDescriptionMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescription,
       ],
+
       match: [
         PRODUCT_REQUEST_LONG_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
@@ -362,10 +398,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     pharmacyComment: {
       type: String,
       trim: true,
+
       maxlength: [
         PRODUCT_REQUEST_LIMITS.pharmacyCommentMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.pharmacyComment,
       ],
+
       match: [
         PRODUCT_REQUEST_LONG_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
@@ -375,10 +413,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     additionalFiles: {
       type: [productRequestFileSchema],
       default: undefined,
+
       validate: [
         {
           validator: (files?: Array<{ size: number }>) =>
             !files || files.length <= PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles,
+
           message: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsCount,
         },
         {
@@ -386,6 +426,7 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
             !files ||
             files.reduce((total, file) => total + file.size, 0) <=
               PRODUCT_REQUEST_ATTACHMENT_RULES.maxTotalSizeBytes,
+
           message:
             PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsTotalSize,
         },
@@ -428,15 +469,20 @@ productRequestSchema.index({ pharmacyId: 1, categoryId: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, categoryMode: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, article: 1 });
 
+//===============================================================
+
 productRequestSchema.index(
   { article: 1 },
   {
     unique: true,
+
     partialFilterExpression: {
       status: { $in: ['draft', 'new', 'in_progress', 'approved'] },
     },
   }
 );
+
+//===============================================================
 
 productRequestSchema.index({ name: 'text', article: 'text' });
 

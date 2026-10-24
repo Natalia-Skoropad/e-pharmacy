@@ -12,7 +12,7 @@ const routeRoots = {
 
 const backendRouteFiles = {
   '/admin': 'apps/api/src/routes/admin.routes.ts',
-  '/auth': 'apps/api/src/routes/auth.routes.ts',
+  '/auth': 'apps/api/src/routes/auth/auth.routes.ts',
   '/cart': 'apps/api/src/routes/cart.routes.ts',
   '/clients': 'apps/api/src/routes/client.routes.ts',
   '/health': 'apps/api/src/routes/health/health.routes.ts',
@@ -208,6 +208,7 @@ for (const [handlerKey, expectedAccess] of backendAccessByHandler) {
     violations.push(
       `${handlerKey}: backend access contract does not map to a known backend route file`
     );
+
     continue;
   }
 
@@ -246,6 +247,7 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
 
     if (!contract) {
       violations.push(`${rel}: route is missing from the BFF route contract`);
+
       continue;
     }
 

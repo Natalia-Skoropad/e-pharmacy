@@ -3,7 +3,7 @@ import { pharmacyNoteRoutes } from './pharmacy-note.routes';
 import { Router } from 'express';
 
 import { adminRoutes } from './admin.routes';
-import { authRoutes } from './auth.routes';
+import { authRoutes } from './auth/auth.routes';
 import { cartRoutes } from './cart.routes';
 import { clientRoutes } from './client.routes';
 import { healthRoutes } from './health/health.routes';

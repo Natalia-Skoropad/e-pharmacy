@@ -20,6 +20,7 @@ test('reads only structured auth codes from JSON response bodies', () => {
   );
 
   assert.equal(getAuthErrorCodeFromBody('not-json'), null);
+
   assert.equal(
     getAuthErrorCodeFromBody(JSON.stringify({ message: 'blocked' })),
     null
@@ -48,10 +49,12 @@ test('refreshes only stable session-invalid 401 responses', async () => {
     JSON.stringify({ code: 'AUTH_SESSION_INVALID' }),
     { status: 401 }
   );
+
   const wrongPassword = new Response(
     JSON.stringify({ code: 'AUTH_INVALID_CREDENTIALS' }),
     { status: 401 }
   );
+
   const misleadingStatus = new Response(
     JSON.stringify({ code: 'AUTH_SESSION_INVALID' }),
     { status: 409 }

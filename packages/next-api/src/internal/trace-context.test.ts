@@ -38,6 +38,7 @@ test('cacheable server requests keep correlation outside the application cache-k
 
 test('no-store server requests preserve x-request-id correlation', () => {
   const headers = new Headers();
+
   applyServerCorrelationHeaders(
     headers,
     '123e4567-e89b-12d3-a456-426614174000',

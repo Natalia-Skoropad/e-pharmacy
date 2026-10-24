@@ -17,10 +17,12 @@ const positionSchema = new Schema<PositionPersistenceEntity>(
       type: String,
       required: [true, 'Position name is required'],
       trim: true,
+
       maxlength: [
         SETTINGS_DICTIONARY_NAME_MAX_LENGTH,
         `Position name must be at most ${SETTINGS_DICTIONARY_NAME_MAX_LENGTH} characters`,
       ],
+
       match: [
         SETTINGS_DICTIONARY_NAME_PATTERN,
         'Use Latin letters and spaces, starting with an uppercase letter',

@@ -1,6 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../../constants/validation';
+
 import type { OrderEntity } from '../../types/order';
 
 //===============================================================
@@ -149,6 +150,7 @@ const orderItemSchema = new Schema(
       type: Number,
       required: true,
       min: 0,
+
       validate: {
         validator(
           this: { quantity: number; unitPrice: number },
@@ -156,6 +158,7 @@ const orderItemSchema = new Schema(
         ) {
           return value === this.quantity * this.unitPrice;
         },
+
         message:
           'Order item total price must equal unit price multiplied by quantity.',
       },
@@ -189,12 +192,14 @@ const activityHistorySchema = new Schema(
   {
     type: {
       type: String,
+
       enum: [
         'product_added',
         'product_removed',
         'quantity_increased',
         'quantity_decreased',
       ],
+
       required: true,
     },
 
@@ -259,6 +264,7 @@ const orderSchema = new Schema<OrderEntity>(
     items: {
       type: [orderItemSchema],
       required: true,
+
       validate: {
         validator: (items: unknown[]) => items.length > 0,
         message: 'Order must contain at least one item',
@@ -359,6 +365,8 @@ orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ pharmacyId: 1, createdAt: -1 });
 orderSchema.index({ pharmacyId: 1, status: 1, successfulAt: -1 });
 orderSchema.index({ pharmacyId: 1, userId: 1, status: 1, createdAt: -1 });
+
+//===============================================================
 
 orderSchema.index(
   { pharmacyId: 1, managerRequestId: 1 },

@@ -41,6 +41,7 @@ function getAuthCookieBaseOptions(request: NextRequest) {
     path: '/',
     sameSite,
     secure: isSecureRequest(request) || sameSite === 'none',
+
     ...(environment.authCookieDomain
       ? { domain: environment.authCookieDomain }
       : {}),
@@ -51,7 +52,9 @@ function getAuthCookieBaseOptions(request: NextRequest) {
 
 function getAuthHintCookieOptions(request: NextRequest) {
   const { httpOnly: _httpOnly, ...options } = getAuthCookieBaseOptions(request);
+
   void _httpOnly;
+
   return options;
 }
 

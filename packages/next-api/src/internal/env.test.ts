@@ -29,13 +29,16 @@ test('every environment requires the BFF proxy secret and production also requir
     );
 
     process.env.NODE_ENV = 'development';
+
     delete process.env.BFF_PROXY_SECRET;
+
     assert.throws(
       () => getNextApiServerEnvironment(),
       /BFF_PROXY_SECRET is required/
     );
 
     process.env.BFF_PROXY_SECRET = 'development-secret';
+
     assert.equal(
       getNextApiServerEnvironment().bffProxySecret,
       'development-secret'
@@ -43,6 +46,7 @@ test('every environment requires the BFF proxy secret and production also requir
 
     process.env.NODE_ENV = 'production';
     process.env.API_BASE_URL = 'http://api.example.com';
+
     assert.throws(
       () => getNextApiServerEnvironment(),
       /must use https in production/
@@ -72,6 +76,7 @@ test('rejects invalid SameSite and cookie-domain configuration', () => {
     assert.throws(() => getNextApiServerEnvironment(), /AUTH_COOKIE_DOMAIN/);
 
     delete process.env.AUTH_COOKIE_DOMAIN;
+
     process.env.AUTH_COOKIE_LEGACY_DOMAINS = '.old.example.com,old.example.com';
 
     assert.deepEqual(getNextApiServerEnvironment().authCookieLegacyDomains, [
@@ -98,18 +103,20 @@ test('trusted client IP forwarding requires an explicit proxy provider', () => {
     process.env.BFF_PROXY_SECRET = 'test-secret';
 
     delete process.env.BFF_TRUSTED_PROXY_PROVIDER;
+
     assert.equal(getNextApiServerEnvironment().trustedProxyProvider, 'none');
-
     process.env.BFF_TRUSTED_PROXY_PROVIDER = 'vercel';
-    assert.equal(getNextApiServerEnvironment().trustedProxyProvider, 'vercel');
 
+    assert.equal(getNextApiServerEnvironment().trustedProxyProvider, 'vercel');
     process.env.BFF_TRUSTED_PROXY_PROVIDER = 'cloudflare';
+
     assert.equal(
       getNextApiServerEnvironment().trustedProxyProvider,
       'cloudflare'
     );
 
     process.env.BFF_TRUSTED_PROXY_PROVIDER = 'browser-header';
+
     assert.throws(
       () => getNextApiServerEnvironment(),
       /BFF_TRUSTED_PROXY_PROVIDER/

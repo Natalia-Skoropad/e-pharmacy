@@ -36,9 +36,11 @@ export function validateBffMutationRequest(
   }
 
   const fetchSite = request.headers.get('sec-fetch-site')?.toLowerCase();
+
   if (fetchSite === 'cross-site') throw new CsrfValidationError();
 
   const requestOrigin = new URL(request.url).origin;
+
   const suppliedOrigin =
     toOrigin(request.headers.get('origin')) ||
     toOrigin(request.headers.get('referer'));

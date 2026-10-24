@@ -19,8 +19,8 @@ test('logout forwards refresh identity and always clears browser cookies', async
     await Promise.all([
       readRepositoryFile('apps/client/src/app/api/auth/logout/route.ts'),
       readRepositoryFile('apps/pharmacy/src/app/api/auth/logout/route.ts'),
-      readRepositoryFile('apps/api/src/routes/auth.routes.ts'),
-      readRepositoryFile('apps/api/src/controllers/auth.controller.ts'),
+      readRepositoryFile('apps/api/src/routes/auth/auth.routes.ts'),
+      readRepositoryFile('apps/api/src/controllers/auth/auth.controller.ts'),
     ]);
 
   for (const route of [clientRoute, pharmacyRoute]) {
@@ -48,9 +48,9 @@ test('logout-all also uses refresh identity and clears local cookies without a l
     await Promise.all([
       readRepositoryFile('apps/client/src/app/api/auth/logout-all/route.ts'),
       readRepositoryFile('apps/pharmacy/src/app/api/auth/logout-all/route.ts'),
-      readRepositoryFile('apps/api/src/routes/auth.routes.ts'),
-      readRepositoryFile('apps/api/src/controllers/auth.controller.ts'),
-      readRepositoryFile('apps/api/src/services/auth/auth.service.ts'),
+      readRepositoryFile('apps/api/src/routes/auth/auth.routes.ts'),
+      readRepositoryFile('apps/api/src/controllers/auth/auth.controller.ts'),
+      readRepositoryFile('apps/api/src/services/auth/auth-sessions.service.ts'),
     ]);
 
   for (const route of [clientRoute, pharmacyRoute]) {

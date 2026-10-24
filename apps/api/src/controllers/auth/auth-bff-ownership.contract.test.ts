@@ -14,9 +14,9 @@ test('token-bearing auth endpoints require the trusted BFF before rate limiting 
   const [controllerSource, middlewareSource, routesSource, envSource] =
     await Promise.all([
       readSource('./auth.controller.ts'),
-      readSource('../middlewares/auth-bff.middleware.ts'),
-      readSource('../routes/auth.routes.ts'),
-      readSource('../config/env.ts'),
+      readSource('../../middlewares/auth/auth-bff.middleware.ts'),
+      readSource('../../routes/auth/auth.routes.ts'),
+      readSource('../../config/env.ts'),
     ]);
 
   assert.match(
@@ -53,7 +53,7 @@ test('token-bearing auth endpoints require the trusted BFF before rate limiting 
 
 test('a browser-supplied marker alone cannot satisfy the BFF trust check', async () => {
   const middlewareSource = await readSource(
-    '../middlewares/auth-bff.middleware.ts'
+    '../../middlewares/auth/auth-bff.middleware.ts'
   );
 
   assert.match(

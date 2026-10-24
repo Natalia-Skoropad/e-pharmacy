@@ -63,6 +63,7 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
       type: String,
       required: [true, 'Review comment is required'],
       trim: true,
+
       minlength: [
         USER_REVIEW_COMMENT_MIN_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMin,
@@ -72,6 +73,7 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
         USER_REVIEW_COMMENT_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMax,
       ],
+
       match: [REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment],
     },
 
@@ -109,6 +111,8 @@ const pharmacyReviewSchema = new Schema<PharmacyReviewEntity>(
 
 pharmacyReviewSchema.index({ pharmacyId: 1, status: 1, createdAt: -1 });
 pharmacyReviewSchema.index({ status: 1, createdAt: -1 });
+
+//===============================================================
 
 pharmacyReviewSchema.index(
   { pharmacyId: 1, userId: 1 },

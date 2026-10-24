@@ -40,6 +40,8 @@ const rateLimitBucketSchema = new Schema<RateLimitBucketEntity>(
   }
 );
 
+//===============================================================
+
 // The fixed-window id already gives every replica the same counter. Mongo TTL
 // removes old buckets after a short grace period; request authorization never
 // depends on the TTL worker deleting the row exactly at resetAt.

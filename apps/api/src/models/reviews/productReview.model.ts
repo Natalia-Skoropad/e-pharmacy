@@ -63,14 +63,17 @@ const productReviewSchema = new Schema<ProductReviewEntity>(
       type: String,
       required: [true, 'Review comment is required'],
       trim: true,
+
       minlength: [
         USER_REVIEW_COMMENT_MIN_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMin,
       ],
+
       maxlength: [
         USER_REVIEW_COMMENT_MAX_LENGTH,
         VALIDATION_MESSAGES.limits.reviewCommentMax,
       ],
+
       match: [REVIEW_COMMENT_PATTERN, VALIDATION_MESSAGES.format.reviewComment],
     },
 
@@ -108,6 +111,8 @@ const productReviewSchema = new Schema<ProductReviewEntity>(
 
 productReviewSchema.index({ productId: 1, status: 1, createdAt: -1 });
 productReviewSchema.index({ status: 1, createdAt: -1 });
+
+//===============================================================
 
 productReviewSchema.index(
   { productId: 1, userId: 1 },

@@ -112,6 +112,7 @@ const pharmacyVerificationDocumentSchema =
         validate: {
           validator: (value: string) => {
             const parsed = new Date(value);
+
             return (
               !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value
             );
@@ -543,6 +544,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       validate: {
         validator: (documents: PharmacyVerificationDocumentMetadata[]) =>
           documents.length <= PHARMACY_DOCUMENT_RULES.maxFiles,
+
         message: PHARMACY_DOCUMENT_VALIDATION_MESSAGES.count,
       },
 

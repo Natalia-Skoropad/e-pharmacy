@@ -8,6 +8,7 @@ import { Position } from './position.model';
 
 test('Position normalizes name and case-insensitive uniqueness key', async () => {
   const actorId = new Types.ObjectId();
+
   const position = new Position({
     name: '  Content  manager  ',
     normalizedName: 'ignored input',
@@ -25,6 +26,7 @@ test('Position normalizes name and case-insensitive uniqueness key', async () =>
 
 test('Position rejects invalid names and has unique normalizedName index', async () => {
   const actorId = new Types.ObjectId();
+
   const invalid = new Position({
     name: 'content manager',
     createdBy: actorId,

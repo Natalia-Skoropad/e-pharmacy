@@ -1,6 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth';
+
 import type { SessionEntity } from '../../types/session';
 
 //===============================================================
@@ -82,6 +83,7 @@ const sessionSchema = new Schema<SessionEntity>(
 
     revokedReason: {
       type: String,
+
       enum: [
         'logout',
         'logout_all',
@@ -90,6 +92,7 @@ const sessionSchema = new Schema<SessionEntity>(
         'token_reuse',
         'admin_revoked',
       ],
+
       default: undefined,
     },
   },
@@ -106,10 +109,14 @@ sessionSchema.index({ userId: 1, revokedAt: 1, expiresAt: 1 });
 sessionSchema.index({ userId: 1, revokedAt: 1, absoluteExpiresAt: 1 });
 sessionSchema.index({ refreshTokenHash: 1 }, { unique: true });
 
+//===============================================================
+
 sessionSchema.index({
   previousRefreshTokenHash: 1,
   previousRefreshTokenValidUntil: 1,
 });
+
+//===============================================================
 
 sessionSchema.index(
   { expiresAt: 1 },

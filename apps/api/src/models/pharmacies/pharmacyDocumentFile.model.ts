@@ -100,6 +100,8 @@ const pharmacyDocumentFileSchema = new Schema<PharmacyDocumentFileEntity>(
   }
 );
 
+//===============================================================
+
 // Unclaimed registration uploads and private uploads that never become part of
 // a saved profile are removed automatically. Attached files unset expiresAt.
 pharmacyDocumentFileSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
