@@ -7,7 +7,7 @@ import type {
   ProductRequestFormInput,
   ProductRequestParams,
   ProductRequestsQuery,
-} from '../../schemas/product-request.schema';
+} from '../../schemas/catalog/product-request.schema';
 
 import {
   createProductRequestService,

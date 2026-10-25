@@ -7,7 +7,7 @@ import type {
   PharmacyNoteDeleteParams,
   PharmacyNoteParams,
   PharmacyNotesQuery,
-} from '../../schemas/pharmacy-note.schema';
+} from '../../schemas/pharmacies/pharmacy-note.schema';
 
 import {
   createPharmacyNoteService,

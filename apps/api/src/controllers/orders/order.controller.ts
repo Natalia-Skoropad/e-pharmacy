@@ -13,7 +13,7 @@ import type {
   OrderSalesStatisticsQuery,
   UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
-} from '../../schemas/order.schema';
+} from '../../schemas/orders/order.schema';
 
 import { checkoutOrderService } from '../../services/orders/order-checkout.service';
 import { createManagerOrderService } from '../../services/orders/order-manager-orders.service';

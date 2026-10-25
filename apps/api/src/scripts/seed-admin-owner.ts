@@ -2,13 +2,14 @@ import mongoose from 'mongoose';
 
 import { ADMIN_ACCESS_STATUSES } from '../constants/admin/access/admin-access';
 import { USER_ROLES, USER_STATUSES } from '../constants/auth/auth';
+
 import { connectDB } from '../db/connectDB';
 
 import { AdminAccess } from '../models/admin/access/adminAccess.model';
 import { AdminAuthorizationState } from '../models/admin/access/adminAuthorizationState.model';
 import { User } from '../models/accounts/user.model';
 
-import { adminOwnerBootstrapSchema } from '../schemas/admin-bootstrap.schema';
+import { adminOwnerBootstrapSchema } from '../schemas/admin/owners/admin-bootstrap.schema';
 import { hashPassword } from '../utils/password';
 
 //===============================================================
@@ -34,6 +35,7 @@ function readBootstrapInput() {
     const issueLines = result.error.issues.map((issue) => {
       const field = String(issue.path[0] ?? '');
       const envName = envNamesByField[field] ?? 'ADMIN_OWNER_*';
+
       return `- ${envName}: ${issue.message}`;
     });
 
@@ -121,7 +123,9 @@ async function seedAdminOwner(): Promise<void> {
     }
 
     await ensureOwnerAccess(existingAdmin._id);
+
     console.log('Admin owner bootstrap already completed. Access is valid.');
+
     return;
   }
 

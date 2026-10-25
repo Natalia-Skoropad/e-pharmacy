@@ -7,7 +7,7 @@ import {
   isPharmacyMembershipMissing,
 } from '../pharmacies/pharmacy-membership.service';
 
-import type { ManagedProductsQuery } from '../../schemas/product.schema';
+import type { ManagedProductsQuery } from '../../schemas/catalog/product.schema';
 import type { UserRole } from '../../types/user';
 
 import { httpError } from '../../utils/httpError';

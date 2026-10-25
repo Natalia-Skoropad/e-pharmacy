@@ -20,7 +20,7 @@ import {
   cartItemParamsSchema,
   cartPharmacyParamsSchema,
   updateCartItemSchema,
-} from '../../schemas/cart.schema';
+} from '../../schemas/cart/cart.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

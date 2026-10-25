@@ -621,7 +621,7 @@ const [
     'pharmacyNote.model.ts'
   ),
 
-  readSource('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
+  readSource('apps', 'api', 'src', 'schemas', 'clients/client.schema.ts'),
   readSource('apps', 'api', 'src', 'constants', 'cart/cart.ts'),
 ]);
 

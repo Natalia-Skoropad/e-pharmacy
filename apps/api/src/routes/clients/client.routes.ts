@@ -13,7 +13,7 @@ import {
   clientParamsSchema,
   clientProductsQuerySchema,
   clientsQuerySchema,
-} from '../../schemas/client.schema';
+} from '../../schemas/clients/client.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

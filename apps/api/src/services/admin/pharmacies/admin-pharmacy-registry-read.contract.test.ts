@@ -12,7 +12,7 @@ const read = (relativePath: string) =>
 
 test('Stage 14.4 exposes three view-only routes with strict schema validation', () => {
   const routes = read('../../../routes/admin/admin.routes.ts');
-  const schema = read('../../../schemas/admin-pharmacy-registry.schema.ts');
+  const schema = read('../../../schemas/admin/pharmacies/admin-pharmacy-registry.schema.ts');
   const controller = read('../../../controllers/admin/admin.controller.ts');
 
   for (const route of [

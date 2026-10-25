@@ -4,7 +4,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { PharmacyUserPrivateNote } from '../../models/owners/pharmacyUserPrivateNote.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { CreatePharmacyUserPrivateNoteInput } from '../../schemas/pharmacy-user-private-note.schema';
+import type { CreatePharmacyUserPrivateNoteInput } from '../../schemas/pharmacies/pharmacy-user-private-note.schema';
 
 import { httpError } from '../../utils/httpError';
 

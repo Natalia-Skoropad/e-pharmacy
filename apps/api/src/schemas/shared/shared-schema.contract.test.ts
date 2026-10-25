@@ -18,6 +18,7 @@ test('shared ObjectId schema accepts only 24 hexadecimal characters', () => {
     mongoIdSchema.safeParse('507f1f77bcf86cd799439011').success,
     true
   );
+
   assert.equal(mongoIdSchema.safeParse('not-an-object-id').success, false);
 });
 
@@ -26,6 +27,7 @@ test('shared ObjectId schema accepts only 24 hexadecimal characters', () => {
 test('shared pagination schemas normalize aliases and preserve endpoint limits', () => {
   const schema = z.preprocess(
     normalizePaginationQuery,
+
     z.object({
       page: positivePageSchema,
       perPage: createPerPageSchema({ defaultValue: 20, max: 50 }),

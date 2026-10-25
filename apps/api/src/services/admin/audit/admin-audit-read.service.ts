@@ -11,7 +11,7 @@ import {
 import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 
-import type { AdminAuditListQuery } from '../../../schemas/admin-audit.schema';
+import type { AdminAuditListQuery } from '../../../schemas/admin/audit/admin-audit.schema';
 
 import type {
   AdminAuditDetailsDto,

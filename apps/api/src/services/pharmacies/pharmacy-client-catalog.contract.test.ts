@@ -76,7 +76,7 @@ test('Stage 13.4.5 builds Location options only from active pharmacies and keeps
 test('Stage 13.4.5 address search covers address, settlement and region and location filters are structured', async () => {
   const [serviceSource, schemaSource] = await Promise.all([
     read('src/services/pharmacies/pharmacy-public-catalog.service.ts'),
-    read('src/schemas/pharmacy.schema.ts'),
+    read('src/schemas/pharmacies/pharmacy.schema.ts'),
   ]);
 
   const catalogService = serviceSource.slice(

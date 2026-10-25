@@ -6,7 +6,7 @@ import type {
   ClientParams,
   ClientProductsQuery,
   ClientsQuery,
-} from '../../schemas/client.schema';
+} from '../../schemas/clients/client.schema';
 
 import {
   getClientByIdService,

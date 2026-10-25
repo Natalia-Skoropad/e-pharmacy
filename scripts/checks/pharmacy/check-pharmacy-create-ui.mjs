@@ -31,7 +31,7 @@ const upload = read(
   'apps/api/src/services/pharmacies/pharmacy-document.service.ts'
 );
 
-const draftSchema = read('apps/api/src/schemas/pharmacy.schema.ts');
+const draftSchema = read('apps/api/src/schemas/pharmacies/pharmacy.schema.ts');
 
 const createService = read(
   'apps/api/src/services/pharmacies/pharmacy-create.service.ts'

@@ -50,7 +50,7 @@ const [
     'admin-pharmacy-owner.ts'
   ),
 
-  read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
+  read('apps', 'api', 'src', 'schemas', 'clients/client.schema.ts'),
 
   read(
     'apps',

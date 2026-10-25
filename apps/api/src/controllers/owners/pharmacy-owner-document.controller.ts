@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import type {
   PharmacyOwnerDocumentParams,
   PharmacyOwnerDocumentUploadInput,
-} from '../../schemas/pharmacy-owner-document.schema';
+} from '../../schemas/owners/pharmacy-owner-document.schema';
 
 import {
   createPharmacyOwnerDocumentService,

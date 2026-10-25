@@ -7,7 +7,7 @@ import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 
-import type { ProductRequestFormInput } from '../../schemas/product-request.schema';
+import type { ProductRequestFormInput } from '../../schemas/catalog/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';
 
 import { httpError } from '../../utils/httpError';

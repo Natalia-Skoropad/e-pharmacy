@@ -23,13 +23,13 @@ import { validate } from '../../middlewares/http/validate.middleware';
 import {
   pharmacyOwnerDocumentParamsSchema,
   pharmacyOwnerDocumentUploadSchema,
-} from '../../schemas/pharmacy-owner-document.schema';
+} from '../../schemas/owners/pharmacy-owner-document.schema';
 
 import {
   createPharmacyUserPrivateNoteSchema,
   pharmacyUserPrivateNoteParamsSchema,
   pharmacyUserPrivateNotesQuerySchema,
-} from '../../schemas/pharmacy-user-private-note.schema';
+} from '../../schemas/pharmacies/pharmacy-user-private-note.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

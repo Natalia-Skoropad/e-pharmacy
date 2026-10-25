@@ -219,7 +219,7 @@ const backendAuthSchema = await read(
   'api',
   'src',
   'schemas',
-  'auth.schema.ts'
+  'auth/auth.schema.ts'
 );
 
 for (const [frontendType, backendSchema] of [

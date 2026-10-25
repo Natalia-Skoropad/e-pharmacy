@@ -8,7 +8,7 @@ import { User } from '../../../models/accounts/user.model';
 import type {
   AdminPharmacyOwnerListQuery,
   AdminPharmacyOwnerOptionsQuery,
-} from '../../../schemas/admin-pharmacy-owner.schema';
+} from '../../../schemas/admin/owners/admin-pharmacy-owner.schema';
 
 import {
   OPERATING_PHARMACY_STATUSES,

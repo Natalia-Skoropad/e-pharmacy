@@ -15,7 +15,7 @@ import type {
   SendMyPharmacyForVerificationInput,
   SubmitMyPharmacyModerationInput,
   UpdateMyPharmacyProfileInput,
-} from '../../schemas/pharmacy.schema';
+} from '../../schemas/pharmacies/pharmacy.schema';
 
 import type { PharmacyDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
 
@@ -24,7 +24,7 @@ import type {
   OwnedPharmacyRegistryOptionsQuery,
   OwnedPharmacyRegistryParams,
   OwnedPharmacyDocumentParams,
-} from '../../schemas/owned-pharmacy-registry.schema';
+} from '../../schemas/owners/owned-pharmacy-registry.schema';
 
 import {
   getFavoritePharmacyIdsService,

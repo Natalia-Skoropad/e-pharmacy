@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
-import { ordersQuerySchema } from '../../schemas/order.schema';
+import { ordersQuerySchema } from '../../schemas/orders/order.schema';
 
 //===============================================================
 

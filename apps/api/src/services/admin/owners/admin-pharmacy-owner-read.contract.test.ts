@@ -61,7 +61,7 @@ test('shared Pharmacy Owners read contracts are exported from the admin types en
 //===================================================================
 
 test('owner and pharmacy list queries are pagination-aware and include the Stage 13.3 filters', () => {
-  const schema = read('../../../schemas/admin-pharmacy-owner.schema.ts');
+  const schema = read('../../../schemas/admin/owners/admin-pharmacy-owner.schema.ts');
 
   assert.match(schema, /adminPharmacyOwnerListQuerySchema/);
   assert.match(schema, /search: adminOwnerSearchSchema/);
@@ -189,7 +189,7 @@ test('owner linked-pharmacy rating filters have gapless numeric bounds', () => {
     '../../pharmacies/registry/pharmacy-registry.constants.ts'
   );
 
-  const schema = read('../../../schemas/admin-pharmacy-owner.schema.ts');
+  const schema = read('../../../schemas/admin/owners/admin-pharmacy-owner.schema.ts');
 
   for (const [filter, min, max] of [
     ['0-0.9', '0', '1'],

@@ -86,7 +86,7 @@ test('Stage 14.6: independent comment collection uses unique idempotency and bod
     'src/services/admin/pharmacies/pharmacy-admin-comment.service.ts'
   );
 
-  const schema = read('src/schemas/pharmacy-admin-comment.schema.ts');
+  const schema = read('src/schemas/admin/pharmacies/pharmacy-admin-comment.schema.ts');
 
   assert.match(
     model,

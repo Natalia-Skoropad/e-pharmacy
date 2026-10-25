@@ -29,7 +29,7 @@ import {
   getProductCategoryReferenceOrThrow,
 } from '../catalog/product-category.service';
 
-import type { CheckoutOrderInput } from '../../schemas/order.schema';
+import type { CheckoutOrderInput } from '../../schemas/orders/order.schema';
 import type { OrderItemEntity, OrderResponseDto } from '../../types/order';
 
 import { hasCompleteBankDetails } from '../pharmacies/bank-details';

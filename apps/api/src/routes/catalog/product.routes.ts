@@ -40,7 +40,7 @@ import {
   productReviewParamsSchema,
   managedProductsQuerySchema,
   publicProductsQuerySchema,
-} from '../../schemas/product.schema';
+} from '../../schemas/catalog/product.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

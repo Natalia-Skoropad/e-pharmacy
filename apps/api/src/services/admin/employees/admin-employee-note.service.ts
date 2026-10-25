@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminEmployeePrivateNote } from '../../../models/admin/employees/adminEmployeePrivateNote.model';
 import { User } from '../../../models/accounts/user.model';
 
-import type { CreateAdminEmployeePrivateNoteInput } from '../../../schemas/admin-employee-note.schema';
+import type { CreateAdminEmployeePrivateNoteInput } from '../../../schemas/admin/employees/admin-employee-note.schema';
 import type { AdminAuthorization } from '../../../types/admin-access';
 
 import { httpError } from '../../../utils/httpError';

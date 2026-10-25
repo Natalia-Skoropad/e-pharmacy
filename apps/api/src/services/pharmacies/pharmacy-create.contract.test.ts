@@ -33,7 +33,7 @@ test('private pharmacy creation uses only authenticated pharmacy identity', asyn
 //===============================================================
 
 test('draft contract validates provided fields without requiring location or bank details', async () => {
-  const schema = await read('src/schemas/pharmacy.schema.ts');
+  const schema = await read('src/schemas/pharmacies/pharmacy.schema.ts');
 
   const slice = schema.slice(
     schema.indexOf('export const createPharmacyDraftSchema'),

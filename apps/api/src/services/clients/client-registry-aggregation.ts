@@ -4,7 +4,7 @@ import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { ClientsQuery } from '../../schemas/client.schema';
+import type { ClientsQuery } from '../../schemas/clients/client.schema';
 
 import { buildClientFilterStages } from './client-registry-filters';
 

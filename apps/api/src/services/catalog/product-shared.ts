@@ -6,7 +6,7 @@ import { API_MESSAGES } from '../../constants/shared/messages';
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 
-import type { ManagedProductsQuery } from '../../schemas/product.schema';
+import type { ManagedProductsQuery } from '../../schemas/catalog/product.schema';
 
 import {
   findProductCategoryBySlug,

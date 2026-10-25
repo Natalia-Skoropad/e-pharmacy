@@ -6,7 +6,7 @@ import type { PHARMACY_STATUSES } from '../constants/auth/auth';
 import type {
   submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
-} from '../schemas/pharmacy.schema';
+} from '../schemas/pharmacies/pharmacy.schema';
 
 import type { ISODateTimeString } from './date';
 

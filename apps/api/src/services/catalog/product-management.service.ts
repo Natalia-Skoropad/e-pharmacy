@@ -9,7 +9,7 @@ import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { Order } from '../../models/orders/order.model';
 
-import type { ManagedProductsQuery } from '../../schemas/product.schema';
+import type { ManagedProductsQuery } from '../../schemas/catalog/product.schema';
 
 import { recordInitialStockArrival } from '../inventory/stock-movement-write.service';
 

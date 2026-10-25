@@ -5,7 +5,7 @@ import { Order } from '../../models/orders/order.model';
 import { ProductCategory } from '../../models/catalog/productCategory.model';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 
-import type { OrderSalesStatisticsQuery } from '../../schemas/order.schema';
+import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schema';
 
 import type {
   OrderSalesStatisticsDto,

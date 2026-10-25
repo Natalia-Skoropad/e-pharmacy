@@ -54,7 +54,7 @@ import {
   updatePasswordSchema,
   updateProfileSchema,
   uploadRegistrationPharmacyDocumentSchema,
-} from '../../schemas/auth.schema';
+} from '../../schemas/auth/auth.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

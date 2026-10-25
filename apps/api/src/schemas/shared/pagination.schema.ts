@@ -18,11 +18,13 @@ export function normalizePaginationQuery(value: unknown): unknown {
   if (!isPaginationQueryRecord(value)) return value;
 
   const query = { ...value };
+
   if (query.perPage === undefined && query.limit !== undefined) {
     query.perPage = query.limit;
   }
 
   delete query.limit;
+
   return query;
 }
 

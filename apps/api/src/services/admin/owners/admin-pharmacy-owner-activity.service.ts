@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 
 import { User } from '../../../models/accounts/user.model';
 
-import type { AdminPharmacyOwnerActivityQuery } from '../../../schemas/admin-pharmacy-owner.schema';
+import type { AdminPharmacyOwnerActivityQuery } from '../../../schemas/admin/owners/admin-pharmacy-owner.schema';
 
 import { httpError } from '../../../utils/httpError';
 import { listAdminAuditLogsService } from '../audit/admin-audit-read.service';

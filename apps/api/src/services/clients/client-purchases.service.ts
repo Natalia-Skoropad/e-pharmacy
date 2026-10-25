@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Order } from '../../models/orders/order.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { ClientProductsQuery } from '../../schemas/client.schema';
+import type { ClientProductsQuery } from '../../schemas/clients/client.schema';
 
 import { httpError } from '../../utils/httpError';
 

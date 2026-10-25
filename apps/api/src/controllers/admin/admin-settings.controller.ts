@@ -10,7 +10,7 @@ import type {
   CreateAdminSettingsDictionaryItemInput,
   UpdateAdminProductCategoryInput,
   UpdateAdminSettingsDictionaryItemInput,
-} from '../../schemas/admin-settings.schema';
+} from '../../schemas/admin/settings/admin-settings.schema';
 
 import {
   createAdminProductCategoryService,

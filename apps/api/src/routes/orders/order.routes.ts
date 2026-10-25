@@ -30,7 +30,7 @@ import {
   ordersQuerySchema,
   updateOrderDetailsSchema,
   updateOrderStatusSchema,
-} from '../../schemas/order.schema';
+} from '../../schemas/orders/order.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

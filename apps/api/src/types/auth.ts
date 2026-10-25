@@ -7,7 +7,7 @@ import type {
   registerSchema,
   updatePasswordSchema,
   updateProfileSchema,
-} from '../schemas/auth.schema';
+} from '../schemas/auth/auth.schema';
 
 import type {
   AdminAccountStatus,

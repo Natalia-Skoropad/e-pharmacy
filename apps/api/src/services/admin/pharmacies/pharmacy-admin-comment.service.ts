@@ -13,7 +13,7 @@ import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { PharmacyAdminComment } from '../../../models/admin/comments/pharmacyAdminComment.model';
 import { User } from '../../../models/accounts/user.model';
 
-import type { CreatePharmacyAdminCommentInput } from '../../../schemas/pharmacy-admin-comment.schema';
+import type { CreatePharmacyAdminCommentInput } from '../../../schemas/admin/pharmacies/pharmacy-admin-comment.schema';
 import type { PharmacyAdminCommentDto } from '../../../types/pharmacy-admin-comment';
 
 import { httpError } from '../../../utils/httpError';

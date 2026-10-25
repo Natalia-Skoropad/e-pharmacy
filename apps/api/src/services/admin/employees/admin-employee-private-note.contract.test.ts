@@ -9,7 +9,7 @@ const readSource = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), 'src', relativePath), 'utf8');
 
 const modelSource = readSource('models/admin/employees/adminEmployeePrivateNote.model.ts');
-const schemaSource = readSource('schemas/admin-employee-note.schema.ts');
+const schemaSource = readSource('schemas/admin/employees/admin-employee-note.schema.ts');
 
 const serviceSource = readSource(
   'services/admin/employees/admin-employee-note.service.ts'

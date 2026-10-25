@@ -6,7 +6,7 @@ import {
 } from '../../constants/shared/validation';
 
 import { clearableSchema, optionalSchema } from './optional-text.schema';
-import { sharedRequiredAddressSchema } from '../shared-validation.schema';
+import { sharedRequiredAddressSchema } from './shared-validation.schema';
 
 //===============================================================
 

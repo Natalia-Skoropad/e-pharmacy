@@ -11,7 +11,7 @@ import { User } from '../../models/accounts/user.model';
 import type {
   OwnedPharmacyRegistryListQuery,
   OwnedPharmacyRegistryOptionsQuery,
-} from '../../schemas/owned-pharmacy-registry.schema';
+} from '../../schemas/owners/owned-pharmacy-registry.schema';
 
 import type { PharmacyMembershipRole } from '../../types/pharmacy';
 

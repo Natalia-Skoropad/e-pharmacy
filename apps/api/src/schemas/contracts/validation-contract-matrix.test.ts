@@ -19,10 +19,10 @@ import {
   sharedReviewCommentSchema,
   sharedUserNameSchema,
   sharedWorkingHoursSchema,
-} from '../shared-validation.schema';
+} from '../shared/shared-validation.schema';
 
 import { calendarDateSchema } from '../shared/date.schema';
-import { productRequestFormSchema } from '../product-request.schema';
+import { productRequestFormSchema } from '../catalog/product-request.schema';
 
 //===============================================================
 
@@ -116,6 +116,7 @@ function parseContractCase(value: unknown): ContractCase {
     contract: value.contract,
     input: value.input,
     valid: value.valid,
+
     ...(value.normalized === undefined ? {} : { normalized: value.normalized }),
   };
 }
@@ -124,6 +125,7 @@ function readContractCases(): ContractCase[] {
   const fixturePath = path.join(__dirname, 'validation-contract-cases.json');
 
   const parsed: unknown = JSON.parse(readFileSync(fixturePath, 'utf8'));
+
   if (!isRecord(parsed) || !Array.isArray(parsed.cases)) {
     throw new Error('Invalid backend validation contract fixture');
   }
@@ -135,10 +137,12 @@ function readContractCases(): ContractCase[] {
 
 function evaluateStringSchema(schema: ZodType, input: string): ContractResult {
   const result = schema.safeParse(input);
+
   if (!result.success) return { valid: false };
 
   return {
     valid: true,
+
     ...(typeof result.data === 'string' ? { normalized: result.data } : {}),
   };
 }
@@ -153,16 +157,19 @@ function evaluateProductRequestCase(
     name: 'Product',
     categoryMode: 'catalog' as const,
     categoryId: '507f1f77bcf86cd799439011',
+
     ...(contractCase.contract === 'productRequestArticle'
       ? { article: contractCase.input }
       : { article: 'MED-001', fullDescription: contractCase.input }),
   };
 
   const result = productRequestFormSchema.safeParse(payload);
+
   if (!result.success) return { valid: false };
 
   return {
     valid: true,
+
     normalized:
       contractCase.contract === 'productRequestArticle'
         ? result.data.article

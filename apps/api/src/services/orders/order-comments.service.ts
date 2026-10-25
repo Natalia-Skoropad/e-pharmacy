@@ -8,7 +8,7 @@ import { httpError } from '../../utils/httpError';
 import type {
   CreateOrderManagerCommentInput,
   OrderCommentsQuery,
-} from '../../schemas/order.schema';
+} from '../../schemas/orders/order.schema';
 
 import type { OrderManagerCommentEntity } from '../../types/order';
 import type { UserRole } from '../../types/user';

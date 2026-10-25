@@ -173,8 +173,13 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     '../../../../../packages/config/src/presentation/pharmacies.ts'
   );
 
-  const backend = await read('../../../../api/src/services/admin/pharmacies/admin.service.ts');
-  const schema = await read('../../../../api/src/schemas/admin.schema.ts');
+  const backend = await read(
+    '../../../../api/src/services/admin/pharmacies/admin.service.ts'
+  );
+
+  const schema = await read(
+    '../../../../api/src/schemas/admin/admin.schema.ts'
+  );
 
   const sharedModal = await read(
     '../../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.tsx'

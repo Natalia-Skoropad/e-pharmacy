@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { User } from '../../../models/accounts/user.model';
 
-import type { OrderSalesStatisticsQuery } from '../../../schemas/order.schema';
+import type { OrderSalesStatisticsQuery } from '../../../schemas/orders/order.schema';
 import { httpError } from '../../../utils/httpError';
 
 import { getOrderSalesStatisticsForPharmaciesService } from '../../orders/order-sales-statistics.service';

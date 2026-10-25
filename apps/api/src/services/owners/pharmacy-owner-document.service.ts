@@ -17,7 +17,7 @@ import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { USER_ROLES } from '../../constants/auth/auth';
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 
-import type { PharmacyOwnerDocumentUploadInput } from '../../schemas/pharmacy-owner-document.schema';
+import type { PharmacyOwnerDocumentUploadInput } from '../../schemas/owners/pharmacy-owner-document.schema';
 import type { PharmacyOwnerDocumentMetadataDto } from '../../types/pharmacy-owner-document';
 
 import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';

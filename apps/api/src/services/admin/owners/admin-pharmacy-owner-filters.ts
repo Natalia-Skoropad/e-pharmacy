@@ -5,7 +5,7 @@ import { PHARMACY_STATUSES, USER_ROLES } from '../../../constants/auth/auth';
 import type {
   AdminPharmacyOwnerListQuery,
   AdminPharmacyOwnerPharmaciesQuery,
-} from '../../../schemas/admin-pharmacy-owner.schema';
+} from '../../../schemas/admin/owners/admin-pharmacy-owner.schema';
 
 import { getStartOfDay, getEndOfDay } from '../../../utils/date-range';
 import { createSafeRegExp } from '../../../utils/regexp';

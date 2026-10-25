@@ -20,7 +20,10 @@ const fields = readFileSync(
 );
 
 const schema = readFileSync(
-  new URL('../../../../../api/src/schemas/pharmacy.schema.ts', import.meta.url),
+  new URL(
+    '../../../../../api/src/schemas/pharmacies/pharmacy.schema.ts',
+    import.meta.url
+  ),
   'utf8'
 );
 

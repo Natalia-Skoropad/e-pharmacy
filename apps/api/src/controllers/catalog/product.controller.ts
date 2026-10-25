@@ -12,7 +12,7 @@ import type {
   ProductReviewParams,
   ManagedProductsQuery,
   PublicProductsQuery,
-} from '../../schemas/product.schema';
+} from '../../schemas/catalog/product.schema';
 
 import {
   getFavoriteProductIdsService,

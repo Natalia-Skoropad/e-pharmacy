@@ -149,7 +149,7 @@ test('the proxy forwards a distinct request ID and body idempotency key to backe
   assert.match(backendFetch, /requestId,/);
   assert.match(headers, /headers\.set\(REQUEST_ID_HEADER_NAME, requestId\)/);
 
-  const body = await read('../../../../api/src/schemas/admin.schema.ts');
+  const body = await read('../../../../api/src/schemas/admin/admin.schema.ts');
 
   assert.match(body, /clientRequestId: pharmacyModerationMutationKey/g);
 });

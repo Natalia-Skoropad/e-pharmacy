@@ -52,7 +52,7 @@ const PHARMACY_NOTE_SCHEMA_SOURCE = path.join(
   'api',
   'src',
   'schemas',
-  'pharmacy-note.schema.ts'
+  'pharmacies/pharmacy-note.schema.ts'
 );
 
 const PHARMACY_NOTE_MODEL_SOURCE = path.join(
@@ -71,7 +71,7 @@ const ORDER_SCHEMA_SOURCE = path.join(
   'api',
   'src',
   'schemas',
-  'order.schema.ts'
+  'orders/order.schema.ts'
 );
 
 const ORDER_MODEL_SOURCE = path.join(
@@ -127,6 +127,7 @@ async function readFixture(filePath) {
 }
 
 //===================================================================
+
 async function readSource(filePath) {
   return readFile(filePath, 'utf8');
 }

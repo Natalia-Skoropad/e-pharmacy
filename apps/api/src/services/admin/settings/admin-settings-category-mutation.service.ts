@@ -20,7 +20,7 @@ import { ProductCategory } from '../../../models/catalog/productCategory.model';
 import type {
   CreateAdminProductCategoryInput,
   UpdateAdminProductCategoryInput,
-} from '../../../schemas/admin-settings.schema';
+} from '../../../schemas/admin/settings/admin-settings.schema';
 
 import type { AdminProductCategoryDto } from '../../../types/admin-settings';
 

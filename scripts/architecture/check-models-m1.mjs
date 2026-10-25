@@ -332,6 +332,43 @@ if (existsSync(path.join(root, g1MapFile))) {
 
 //===================================================================
 
+// G2 schemas update resolved relative targets only. Require an all-or-none
+// relocation and fold the exact immutable G0 map into historical M1 hashes.
+if (existsSync(path.join(root, g1MapFile))) {
+  const grouping = JSON.parse(readFileSync(path.join(root, g1MapFile), 'utf8'));
+  const schemas = grouping.moves.filter((item) => item.stage === 'G2');
+  const movedSchemas = schemas.filter((item) => !item.stable);
+
+  assert.equal(schemas.length, 50);
+  assert.equal(movedSchemas.length, 38);
+
+  const migrated = movedSchemas.filter((item) =>
+    existsSync(path.join(root, item.to))
+  );
+
+  assert(
+    migrated.length === 0 || migrated.length === movedSchemas.length,
+    'Partial G2 schemas relocation is not a valid M1 dependency state'
+  );
+
+  if (migrated.length)
+    for (const item of movedSchemas) {
+      assert(
+        !existsSync(path.join(root, item.from)),
+        `Legacy schemas proxy prohibited: ${item.from}`
+      );
+
+      assert(
+        !canonicalOld.has(item.to),
+        `Duplicate M1/G2 canonical target: ${item.to}`
+      );
+
+      canonicalOld.set(item.to, item.from);
+    }
+}
+
+//===================================================================
+
 const files = new Set(
   ['apps', 'packages', 'scripts'].flatMap((dir) => walk(dir))
 );

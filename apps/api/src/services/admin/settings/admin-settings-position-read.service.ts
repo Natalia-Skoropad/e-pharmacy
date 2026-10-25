@@ -1,6 +1,6 @@
 import { Position } from '../../../models/settings/position.model';
 
-import type { AdminSettingsDictionaryListQuery } from '../../../schemas/admin-settings.schema';
+import type { AdminSettingsDictionaryListQuery } from '../../../schemas/admin/settings/admin-settings.schema';
 import type { AdminPositionsListDto } from '../../../types/admin-settings';
 
 import { createFlexibleSearchRegExp } from '../../../utils/regexp';

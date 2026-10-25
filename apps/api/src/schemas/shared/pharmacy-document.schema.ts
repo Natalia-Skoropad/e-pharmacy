@@ -42,6 +42,7 @@ const documentMetadataShape = {
 
 export const pharmacyDocumentUploadSchema = z.object({
   ...documentMetadataShape,
+
   dataUrl: z
     .string()
     .min(1, 'Document content is required')
@@ -62,6 +63,7 @@ export const pharmacyDocumentUploadSchema = z.object({
 export const pharmacyRegistrationDocumentUploadSchema =
   pharmacyDocumentUploadSchema.extend({
     uploadSessionId: mongoIdSchema,
+
     uploadToken: z
       .string()
       .trim()

@@ -14,6 +14,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -32,7 +33,13 @@ assert.match(
   /role\?:\s*Extract<UserRole,\s*'client'\s*\|\s*'pharmacy'>/
 );
 
-const schema = await read('apps', 'api', 'src', 'schemas', 'auth.schema.ts');
+const schema = await read(
+  'apps',
+  'api',
+  'src',
+  'schemas',
+  'auth/auth.schema.ts'
+);
 
 for (const value of ['CLIENT', 'PHARMACY', 'ADMIN']) {
   assert.match(
@@ -129,6 +136,7 @@ assert.match(
 
 assert.equal(
   await exists('apps', 'admin', 'src', 'app', 'register', 'page.tsx'),
+
   false,
   'Admin public registration page must not exist'
 );
@@ -144,6 +152,7 @@ assert.equal(
     'register',
     'route.ts'
   ),
+
   false,
   'Admin public registration BFF route must not exist'
 );

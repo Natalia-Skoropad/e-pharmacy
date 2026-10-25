@@ -98,6 +98,7 @@ test('G1 rejects malformed flags and does not move files on accidental --check',
     // --apply without a stage is intentionally supported to ease automation,
     // so reject a deliberate unknown flag instead.
     const actual = args.length === 1 ? ['--apply', '--unknown'] : args;
+
     const result = spawnSync(
       process.execPath,
       ['scripts/architecture/relocate-api-grouping-g1.mjs', ...actual],
@@ -129,19 +130,25 @@ test('G1 rejects malformed flags and does not move files on accidental --check',
 
 test('G1 retains verified immutable hashes and keeps non-G1 scope untouched', () => {
   const nonG1 = plan.moves.filter((m) => m.stage !== 'G1');
+  const g2Moves = plan.moves.filter((m) => m.stage === 'G2' && !m.stable);
+  const completedG2 = g2Moves.every((m) => existsSync(path.join(root, m.to)));
 
+  assert.equal(g2Moves.length, 38);
   assert.equal(nonG1.length, 118);
 
   for (const m of nonG1) {
+    const alreadyRelocated = completedG2 && m.stage === 'G2' && !m.stable;
+    const canonical = alreadyRelocated ? m.to : m.from;
+
     assert(
-      existsSync(path.join(root, m.from)),
-      `Future grouping source missing: ${m.from}`
+      existsSync(path.join(root, canonical)),
+      `Grouping source missing: ${canonical}`
     );
 
     if (!m.stable)
       assert(
-        !existsSync(path.join(root, m.to)),
-        `Unexpected future stage: ${m.to}`
+        !existsSync(path.join(root, alreadyRelocated ? m.from : m.to)),
+        `Unexpected legacy or premature grouping target: ${m.from}`
       );
   }
 

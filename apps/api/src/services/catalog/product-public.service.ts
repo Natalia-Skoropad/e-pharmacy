@@ -11,7 +11,7 @@ import { ProductOffer } from '../../models/inventory/productOffer.model';
 import type {
   ProductFiltersQuery,
   PublicProductsQuery,
-} from '../../schemas/product.schema';
+} from '../../schemas/catalog/product.schema';
 
 import type { ProductFilterOptionsResponseDto } from '../../types/product';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';

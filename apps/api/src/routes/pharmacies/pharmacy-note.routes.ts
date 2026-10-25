@@ -17,7 +17,7 @@ import {
   pharmacyNoteDeleteParamsSchema,
   pharmacyNoteParamsSchema,
   pharmacyNotesQuerySchema,
-} from '../../schemas/pharmacy-note.schema';
+} from '../../schemas/pharmacies/pharmacy-note.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

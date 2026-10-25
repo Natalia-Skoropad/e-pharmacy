@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 
-import type { AdminAuditListQuery } from '../../schemas/admin-audit.schema';
+import type { AdminAuditListQuery } from '../../schemas/admin/audit/admin-audit.schema';
 
 import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin/access/admin-access';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
@@ -12,12 +12,12 @@ import type {
   UpdateAdminPharmacyStatusInput,
   RequestAdminPharmacyCorrectionsInput,
   PharmacyModerationDecisionInput,
-} from '../../schemas/admin.schema';
+} from '../../schemas/admin/admin.schema';
 
 import type {
   AdminPharmacyRegistryListQuery,
   AdminPharmacyRegistryOptionsQuery,
-} from '../../schemas/admin-pharmacy-registry.schema';
+} from '../../schemas/admin/pharmacies/admin-pharmacy-registry.schema';
 
 import type {
   AdminPharmacyOwnerActivityQuery,
@@ -26,19 +26,19 @@ import type {
   AdminPharmacyOwnerParams,
   AdminPharmacyOwnerPharmaciesQuery,
   UpdateAdminPharmacyOwnerStatusInput,
-} from '../../schemas/admin-pharmacy-owner.schema';
+} from '../../schemas/admin/owners/admin-pharmacy-owner.schema';
 
-import type { AdminPharmacyOwnerDocumentParams } from '../../schemas/pharmacy-owner-document.schema';
+import type { AdminPharmacyOwnerDocumentParams } from '../../schemas/owners/pharmacy-owner-document.schema';
 
 import type {
   CreatePharmacyOwnerAdminCommentInput,
   PharmacyOwnerAdminCommentParams,
-} from '../../schemas/pharmacy-owner-admin-comment.schema';
+} from '../../schemas/owners/pharmacy-owner-admin-comment.schema';
 
 import type {
   ProductRequestModerationInput,
   ProductRequestParams,
-} from '../../schemas/product-request.schema';
+} from '../../schemas/catalog/product-request.schema';
 
 import {
   requestPharmacyCorrectionsByAdminService,
@@ -73,7 +73,7 @@ import {
   getAdminPharmacySalesStatisticsService,
 } from '../../services/admin/pharmacies/admin-pharmacy-detail-read.service';
 
-import type { OrderSalesStatisticsQuery } from '../../schemas/order.schema';
+import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schema';
 
 import {
   getAdminPharmacyActivityDetailsService,
@@ -95,7 +95,7 @@ import {
 import type {
   CreatePharmacyAdminCommentInput,
   PharmacyAdminCommentParams,
-} from '../../schemas/pharmacy-admin-comment.schema';
+} from '../../schemas/admin/pharmacies/pharmacy-admin-comment.schema';
 
 import {
   getPharmacyOwnerDocumentContentService,

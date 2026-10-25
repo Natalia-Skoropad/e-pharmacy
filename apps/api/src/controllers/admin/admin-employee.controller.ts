@@ -6,15 +6,15 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import type {
   AdminEmployeeDocumentParams,
   AdminEmployeeDocumentUploadInput,
-} from '../../schemas/admin-employee-document.schema';
+} from '../../schemas/admin/employees/admin-employee-document.schema';
 
-import type { UpdateMyAdminEmployeeProfileInput } from '../../schemas/admin-employee-profile.schema';
+import type { UpdateMyAdminEmployeeProfileInput } from '../../schemas/admin/employees/admin-employee-profile.schema';
 
 import type {
   AdminEmployeePrivateNoteParams,
   AdminEmployeePrivateNotesQuery,
   CreateAdminEmployeePrivateNoteInput,
-} from '../../schemas/admin-employee-note.schema';
+} from '../../schemas/admin/employees/admin-employee-note.schema';
 
 import {
   createMyAdminEmployeeDocumentService,

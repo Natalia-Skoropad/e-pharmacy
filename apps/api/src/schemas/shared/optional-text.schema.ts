@@ -6,6 +6,7 @@ export function emptyStringToUndefined(value: unknown): unknown {
   if (typeof value !== 'string') return value;
 
   const normalizedValue = value.trim();
+
   return normalizedValue === '' ? undefined : normalizedValue;
 }
 
@@ -63,4 +64,3 @@ export function clearableTrimmedTextSchema({
 export function clearableSchema<TSchema extends z.ZodType>(schema: TSchema) {
   return z.union([schema, z.null()]).optional();
 }
-

@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { User } from '../../../models/accounts/user.model';
 
-import type { AdminPharmacyOwnerPharmaciesQuery } from '../../../schemas/admin-pharmacy-owner.schema';
+import type { AdminPharmacyOwnerPharmaciesQuery } from '../../../schemas/admin/owners/admin-pharmacy-owner.schema';
 import type { PharmacyLocationDraft } from '../../../types/pharmacy';
 
 import { httpError } from '../../../utils/httpError';

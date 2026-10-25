@@ -150,9 +150,9 @@ const [
   read('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
   read('apps', 'api', 'src', 'models', 'catalog', 'productRequest.model.ts'),
   read('apps', 'api', 'src', 'models', 'orders', 'order.model.ts'),
-  read('apps', 'api', 'src', 'schemas', 'product.schema.ts'),
-  read('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
-  read('apps', 'api', 'src', 'schemas', 'product-request.schema.ts'),
+  read('apps', 'api', 'src', 'schemas', 'catalog/product.schema.ts'),
+  read('apps', 'api', 'src', 'schemas', 'clients/client.schema.ts'),
+  read('apps', 'api', 'src', 'schemas', 'catalog/product-request.schema.ts'),
   read('apps', 'api', 'src', 'services', 'catalog/product-category.service.ts'),
   read('apps', 'api', 'src', 'constants', 'catalog/product-category.ts'),
 

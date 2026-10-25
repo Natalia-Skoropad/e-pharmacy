@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { CreateManagerOrderInput } from '../../schemas/order.schema';
+import type { CreateManagerOrderInput } from '../../schemas/orders/order.schema';
 
 //===================================================================
 

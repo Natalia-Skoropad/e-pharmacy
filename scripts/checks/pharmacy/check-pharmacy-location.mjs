@@ -183,7 +183,7 @@ const [
   orderService,
 ] = await Promise.all([
   read('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacy.model.ts'),
-  read('apps', 'api', 'src', 'schemas', 'pharmacy.schema.ts'),
+  read('apps', 'api', 'src', 'schemas', 'pharmacies/pharmacy.schema.ts'),
 
   read(
     'apps',

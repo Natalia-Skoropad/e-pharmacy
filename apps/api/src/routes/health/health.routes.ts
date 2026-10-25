@@ -6,7 +6,7 @@ import {
 } from '../../controllers/health/health.controller';
 
 import { validate } from '../../middlewares/http/validate.middleware';
-import { healthEchoSchema } from '../../schemas/health.schema';
+import { healthEchoSchema } from '../../schemas/infrastructure/health.schema';
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //===============================================================

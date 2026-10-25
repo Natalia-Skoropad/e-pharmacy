@@ -21,7 +21,7 @@ import {
   productRequestFormSchema,
   productRequestParamsSchema,
   productRequestsQuerySchema,
-} from '../../schemas/product-request.schema';
+} from '../../schemas/catalog/product-request.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

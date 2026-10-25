@@ -23,7 +23,7 @@ import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharm
 import { getOrderSalesStatisticsForPharmacyService } from '../../orders/order-sales-statistics.service';
 import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
 
-import type { OrderSalesStatisticsQuery } from '../../../schemas/order.schema';
+import type { OrderSalesStatisticsQuery } from '../../../schemas/orders/order.schema';
 
 //===============================================================
 

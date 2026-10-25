@@ -9,7 +9,7 @@ import { ProductRequest } from '../../models/catalog/productRequest.model';
 import type {
   ProductRequestArticleAvailabilityQuery,
   ProductRequestsQuery,
-} from '../../schemas/product-request.schema';
+} from '../../schemas/catalog/product-request.schema';
 
 import type { ProductRequestStatus } from '../../types/product-request';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';

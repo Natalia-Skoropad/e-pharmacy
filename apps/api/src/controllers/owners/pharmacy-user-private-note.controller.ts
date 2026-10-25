@@ -6,7 +6,7 @@ import type {
   CreatePharmacyUserPrivateNoteInput,
   PharmacyUserPrivateNoteParams,
   PharmacyUserPrivateNotesQuery,
-} from '../../schemas/pharmacy-user-private-note.schema';
+} from '../../schemas/pharmacies/pharmacy-user-private-note.schema';
 
 import {
   createMyPharmacyUserPrivateNoteService,

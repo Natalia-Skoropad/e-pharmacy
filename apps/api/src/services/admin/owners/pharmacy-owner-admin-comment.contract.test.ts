@@ -9,7 +9,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 const modelSource = read('src/models/admin/comments/pharmacyOwnerAdminComment.model.ts');
-const schemaSource = read('src/schemas/pharmacy-owner-admin-comment.schema.ts');
+const schemaSource = read('src/schemas/owners/pharmacy-owner-admin-comment.schema.ts');
 
 const serviceSource = read(
   'src/services/admin/owners/pharmacy-owner-admin-comment.service.ts'

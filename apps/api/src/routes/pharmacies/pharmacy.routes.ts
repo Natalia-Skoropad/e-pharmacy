@@ -57,7 +57,7 @@ import {
   submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
   uploadMyPharmacyDocumentSchema,
-} from '../../schemas/pharmacy.schema';
+} from '../../schemas/pharmacies/pharmacy.schema';
 
 import { emptyQuerySchema } from '../../schemas/shared';
 
@@ -66,7 +66,7 @@ import {
   ownedPharmacyRegistryOptionsQuerySchema,
   ownedPharmacyRegistryParamsSchema,
   ownedPharmacyDocumentParamsSchema,
-} from '../../schemas/owned-pharmacy-registry.schema';
+} from '../../schemas/owners/owned-pharmacy-registry.schema';
 
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 

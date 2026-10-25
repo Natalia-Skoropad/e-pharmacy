@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import type {
   AdminAuditListQuery,
   AdminAuditLogParams,
-} from '../../schemas/admin-audit.schema';
+} from '../../schemas/admin/audit/admin-audit.schema';
 
 import {
   getAdminAuditLogService,

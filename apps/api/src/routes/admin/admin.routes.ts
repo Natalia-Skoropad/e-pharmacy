@@ -84,12 +84,12 @@ import {
   updateAdminPharmacyStatusSchema,
   pharmacyModerationDecisionSchema,
   requestAdminPharmacyCorrectionsSchema,
-} from '../../schemas/admin.schema';
+} from '../../schemas/admin/admin.schema';
 
 import {
   adminPharmacyRegistryListQuerySchema,
   adminPharmacyRegistryOptionsQuerySchema,
-} from '../../schemas/admin-pharmacy-registry.schema';
+} from '../../schemas/admin/pharmacies/admin-pharmacy-registry.schema';
 
 import {
   adminPharmacyOwnerActivityQuerySchema,
@@ -98,31 +98,31 @@ import {
   adminPharmacyOwnerParamsSchema,
   adminPharmacyOwnerPharmaciesQuerySchema,
   updateAdminPharmacyOwnerStatusSchema,
-} from '../../schemas/admin-pharmacy-owner.schema';
+} from '../../schemas/admin/owners/admin-pharmacy-owner.schema';
 
 import {
   adminEmployeeDocumentParamsSchema,
   adminEmployeeDocumentUploadSchema,
-} from '../../schemas/admin-employee-document.schema';
+} from '../../schemas/admin/employees/admin-employee-document.schema';
 
-import { updateMyAdminEmployeeProfileSchema } from '../../schemas/admin-employee-profile.schema';
-import { adminPharmacyOwnerDocumentParamsSchema } from '../../schemas/pharmacy-owner-document.schema';
+import { updateMyAdminEmployeeProfileSchema } from '../../schemas/admin/employees/admin-employee-profile.schema';
+import { adminPharmacyOwnerDocumentParamsSchema } from '../../schemas/owners/pharmacy-owner-document.schema';
 
 import {
   createPharmacyAdminCommentSchema,
   pharmacyAdminCommentParamsSchema,
-} from '../../schemas/pharmacy-admin-comment.schema';
+} from '../../schemas/admin/pharmacies/pharmacy-admin-comment.schema';
 
 import {
   createPharmacyOwnerAdminCommentSchema,
   pharmacyOwnerAdminCommentParamsSchema,
-} from '../../schemas/pharmacy-owner-admin-comment.schema';
+} from '../../schemas/owners/pharmacy-owner-admin-comment.schema';
 
 import {
   adminEmployeePrivateNoteParamsSchema,
   adminEmployeePrivateNotesQuerySchema,
   createAdminEmployeePrivateNoteSchema,
-} from '../../schemas/admin-employee-note.schema';
+} from '../../schemas/admin/employees/admin-employee-note.schema';
 
 import {
   adminPositionParamsSchema,
@@ -132,20 +132,20 @@ import {
   createAdminSettingsDictionaryItemSchema,
   updateAdminProductCategorySchema,
   updateAdminSettingsDictionaryItemSchema,
-} from '../../schemas/admin-settings.schema';
+} from '../../schemas/admin/settings/admin-settings.schema';
 
 import {
   adminAuditListQuerySchema,
   adminAuditLogParamsSchema,
   adminPharmacyAuditLogParamsSchema,
-} from '../../schemas/admin-audit.schema';
+} from '../../schemas/admin/audit/admin-audit.schema';
 
 import {
   productRequestModerationSchema,
   productRequestParamsSchema,
-} from '../../schemas/product-request.schema';
+} from '../../schemas/catalog/product-request.schema';
 
-import { orderSalesStatisticsQuerySchema } from '../../schemas/order.schema';
+import { orderSalesStatisticsQuerySchema } from '../../schemas/orders/order.schema';
 import { ctrlWrapper } from '../../utils/ctrlWrapper';
 
 //=================================================================================

@@ -29,7 +29,14 @@ const [
   auditPresentation,
 ] = await Promise.all([
   read('apps', 'api', 'src', 'routes', 'admin/admin.routes.ts'),
-  read('apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'),
+
+  read(
+    'apps',
+    'api',
+    'src',
+    'schemas',
+    'admin/settings/admin-settings.schema.ts'
+  ),
 
   Promise.all([
     read(

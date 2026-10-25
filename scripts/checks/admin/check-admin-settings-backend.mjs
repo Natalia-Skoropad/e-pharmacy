@@ -30,7 +30,7 @@ const exists = async (...segments) => {
 const requiredFiles = [
   ['apps', 'api', 'src', 'constants', 'admin/settings/settings-dictionary.ts'],
   ['apps', 'api', 'src', 'models', 'settings', 'position.model.ts'],
-  ['apps', 'api', 'src', 'schemas', 'admin-settings.schema.ts'],
+  ['apps', 'api', 'src', 'schemas', 'admin/settings/admin-settings.schema.ts'],
 
   ...[
     'admin-settings-category-mutation.service.ts',
@@ -149,7 +149,7 @@ const schema = await read(
   'api',
   'src',
   'schemas',
-  'admin-settings.schema.ts'
+  'admin/settings/admin-settings.schema.ts'
 );
 
 const positionModel = await read(

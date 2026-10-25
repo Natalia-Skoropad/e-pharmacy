@@ -16,7 +16,7 @@ import {
 import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminEmployeeDocument } from '../../../models/admin/employees/adminEmployeeDocument.model';
 
-import type { AdminEmployeeDocumentUploadInput } from '../../../schemas/admin-employee-document.schema';
+import type { AdminEmployeeDocumentUploadInput } from '../../../schemas/admin/employees/admin-employee-document.schema';
 import type { AdminAuthorization } from '../../../types/admin-access';
 import type { AdminEmployeeDocumentMetadataDto } from '../../../types/admin-employee-document';
 

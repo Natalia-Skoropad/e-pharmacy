@@ -12,7 +12,7 @@ import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-req
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { Product } from '../../models/catalog/product.model';
 
-import type { ProductRequestModerationInput } from '../../schemas/product-request.schema';
+import type { ProductRequestModerationInput } from '../../schemas/catalog/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/product-category';
 import type { ProductRequestStatus } from '../../types/product-request';
 

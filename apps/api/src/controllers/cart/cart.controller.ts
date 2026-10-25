@@ -7,7 +7,7 @@ import type {
   CartItemParams,
   CartPharmacyParams,
   UpdateCartItemInput,
-} from '../../schemas/cart.schema';
+} from '../../schemas/cart/cart.schema';
 
 import {
   addCartItemService,

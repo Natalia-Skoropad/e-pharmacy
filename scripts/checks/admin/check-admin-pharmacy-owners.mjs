@@ -92,7 +92,14 @@ const [
     'admin-pharmacy-owner.ts'
   ),
 
-  read('apps', 'api', 'src', 'schemas', 'admin-pharmacy-owner.schema.ts'),
+  read(
+    'apps',
+    'api',
+    'src',
+    'schemas',
+    'admin/owners/admin-pharmacy-owner.schema.ts'
+  ),
+
   read('apps', 'admin', 'src', 'lib', 'layout', 'navigation.ts'),
 
   read(

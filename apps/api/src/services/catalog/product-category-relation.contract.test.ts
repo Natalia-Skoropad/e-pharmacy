@@ -48,9 +48,9 @@ test('product domain stores ProductCategory relations instead of static category
 
 test('query validation accepts dynamic category slugs without a static enum', async () => {
   const [productSchema, clientSchema, requestSchema] = await Promise.all([
-    read('src/schemas/product.schema.ts'),
-    read('src/schemas/client.schema.ts'),
-    read('src/schemas/product-request.schema.ts'),
+    read('src/schemas/catalog/product.schema.ts'),
+    read('src/schemas/clients/client.schema.ts'),
+    read('src/schemas/catalog/product-request.schema.ts'),
   ]);
 
   for (const source of [productSchema, clientSchema, requestSchema]) {

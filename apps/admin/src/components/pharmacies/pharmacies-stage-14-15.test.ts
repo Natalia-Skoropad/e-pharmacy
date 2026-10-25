@@ -101,7 +101,7 @@ test('14.15: pharmacy comments reuse shared UI and are scoped, audited, idempote
   const routes = await read('../../../../api/src/routes/admin/admin.routes.ts');
 
   const schema = await read(
-    '../../../../api/src/schemas/pharmacy-admin-comment.schema.ts'
+    '../../../../api/src/schemas/admin/pharmacies/pharmacy-admin-comment.schema.ts'
   );
 
   const owner = await read(

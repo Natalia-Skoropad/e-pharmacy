@@ -8,7 +8,7 @@ import { User } from '../../../models/accounts/user.model';
 import type {
   AdminPharmacyRegistryListQuery,
   AdminPharmacyRegistryOptionsQuery,
-} from '../../../schemas/admin-pharmacy-registry.schema';
+} from '../../../schemas/admin/pharmacies/admin-pharmacy-registry.schema';
 
 import { getEndOfDay, getStartOfDay } from '../../../utils/date-range';
 import { createSafeRegExp } from '../../../utils/regexp';

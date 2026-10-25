@@ -451,14 +451,39 @@ const expected = JSON.parse(readFileSync(abs(checksPath), 'utf8'));
 
 assert.equal(Object.keys(expected.hashes).length, moves.length);
 
+// After G2, constants can contain new *paths* to schema dependencies.
+// Keep immutable G1 baseline; pin the approved post-G2 hashes separately.
+const g2Moved = manifest.moves.filter((m) => m.stage === 'G2' && !m.stable);
+
+assert.equal(g2Moved.length, 38);
+
+const g2Completed = g2Moved.filter((m) => oldExists(m.to)).length;
+
+assert(
+  g2Completed === 0 || g2Completed === 38,
+  'Partially migrated G2 schemas detected during G1 verification'
+);
+
+const g2ConstantHashes = g2Completed
+  ? JSON.parse(
+      readFileSync(
+        abs('docs/architecture/grouping-g2/source-fingerprints.json'),
+        'utf8'
+      )
+    ).constantAfterG2Hashes
+  : {};
+
 for (const m of moves) {
   const transformed =
     predicted.get(m.to) ??
     readFileSync(abs(done.length ? m.to : m.from), 'utf8');
 
+  const approved = g2ConstantHashes[m.to];
+
   const valid = hasMultilineTemplate(transformed)
-    ? rawHash(transformed) === expected.rawHashes[m.to]
-    : sourceHash(transformed) === expected.hashes[m.to];
+    ? rawHash(transformed) === (approved?.raw ?? expected.rawHashes[m.to])
+    : sourceHash(transformed) ===
+      (approved?.normalized ?? expected.hashes[m.to]);
 
   if (!valid)
     issues.push(`Changed canonical source beyond safe layout: ${m.to}`);

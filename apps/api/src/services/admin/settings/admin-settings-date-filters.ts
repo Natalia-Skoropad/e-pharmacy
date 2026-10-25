@@ -1,4 +1,4 @@
-import type { AdminSettingsDictionaryListQuery } from '../../../schemas/admin-settings.schema';
+import type { AdminSettingsDictionaryListQuery } from '../../../schemas/admin/settings/admin-settings.schema';
 
 //===============================================================
 

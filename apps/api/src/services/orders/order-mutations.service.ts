@@ -23,7 +23,7 @@ import {
 import type {
   UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
-} from '../../schemas/order.schema';
+} from '../../schemas/orders/order.schema';
 
 import type {
   OrderActivityHistoryItem,

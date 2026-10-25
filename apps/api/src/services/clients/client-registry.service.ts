@@ -1,6 +1,6 @@
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { httpError } from '../../utils/httpError';
-import type { ClientsQuery } from '../../schemas/client.schema';
+import type { ClientsQuery } from '../../schemas/clients/client.schema';
 
 import { getCurrentPharmacyId } from './client-access';
 import { getClientRowsForPharmacy } from './client-registry-aggregation';

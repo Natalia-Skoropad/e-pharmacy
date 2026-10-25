@@ -8,7 +8,7 @@ import { httpError } from '../../utils/httpError';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 import { createSafeRegExp } from '../../utils/regexp';
 
-import type { OrdersQuery } from '../../schemas/order.schema';
+import type { OrdersQuery } from '../../schemas/orders/order.schema';
 
 import type {
   OrderResponseDto,

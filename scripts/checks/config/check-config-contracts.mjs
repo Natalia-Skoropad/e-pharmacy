@@ -91,7 +91,7 @@ const [
 
   parse('apps', 'api', 'src', 'types', 'order.ts'),
   parse('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacyNote.model.ts'),
-  parse('apps', 'api', 'src', 'schemas', 'client.schema.ts'),
+  parse('apps', 'api', 'src', 'schemas', 'clients/client.schema.ts'),
   parse('apps', 'api', 'src', 'constants', 'cart/cart.ts'),
 
   parse('packages', 'api-client', 'src', 'response', 'shared-dto-parsers.ts'),
@@ -242,6 +242,7 @@ const frontendCheckoutErrors = await parse(
   'orders',
   'error-codes.ts'
 );
+
 const backendCheckoutErrors = await parse(
   'apps',
   'api',

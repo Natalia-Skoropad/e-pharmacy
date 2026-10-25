@@ -9,7 +9,7 @@ const read = (path: string) =>
   readFileSync(resolve(process.cwd(), 'src', path), 'utf8');
 
 const model = read('models/owners/pharmacyUserPrivateNote.model.ts');
-const schema = read('schemas/pharmacy-user-private-note.schema.ts');
+const schema = read('schemas/pharmacies/pharmacy-user-private-note.schema.ts');
 const service = read('services/owners/pharmacy-user-private-note.service.ts');
 const controller = read('controllers/owners/pharmacy-user-private-note.controller.ts');
 const routes = read('routes/owners/pharmacy-owner.routes.ts');

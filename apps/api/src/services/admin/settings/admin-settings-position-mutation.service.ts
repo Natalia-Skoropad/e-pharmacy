@@ -13,7 +13,7 @@ import { Position } from '../../../models/settings/position.model';
 import type {
   CreateAdminSettingsDictionaryItemInput,
   UpdateAdminSettingsDictionaryItemInput,
-} from '../../../schemas/admin-settings.schema';
+} from '../../../schemas/admin/settings/admin-settings.schema';
 
 import type { AdminPositionDto } from '../../../types/admin-settings';
 

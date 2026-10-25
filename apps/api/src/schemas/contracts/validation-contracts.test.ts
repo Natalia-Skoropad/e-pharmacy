@@ -1,0 +1,394 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import {
+  clientsQuerySchema,
+  clientProductsQuerySchema,
+} from '../clients/client.schema';
+
+import {
+  orderCommentsQuerySchema,
+  ordersQuerySchema,
+  orderSalesStatisticsQuerySchema,
+} from '../orders/order.schema';
+
+import {
+  pharmaciesQuerySchema,
+  updateMyPharmacyProfileSchema,
+  uploadMyPharmacyDocumentSchema,
+} from '../pharmacies/pharmacy.schema';
+
+import {
+  managedProductsQuerySchema,
+  productFiltersQuerySchema,
+  publicProductsQuerySchema,
+} from '../catalog/product.schema';
+
+import {
+  productRequestArticleAvailabilityQuerySchema,
+  productRequestsQuerySchema,
+} from '../catalog/product-request.schema';
+
+import { pharmacyNotesQuerySchema } from '../pharmacies/pharmacy-note.schema';
+import { sharedWorkingHoursSchema } from '../shared/shared-validation.schema';
+import { emptyQuerySchema } from '../shared/index';
+
+//===============================================================
+
+const EXPECTED_REVISION = '2026-08-14T12:00:00.000Z';
+
+//===============================================================
+
+const validWorkingHours = [
+  'Mon: 09:00-18:00',
+  'Tue: 09:00-18:00',
+  'Wed: 09:00-18:00',
+  'Thu: 09:00-18:00',
+  'Fri: 09:00-18:00',
+  'Sat: Closed',
+  'Sun: Closed',
+].join('; ');
+
+//===============================================================
+
+test('working hours require every day exactly once', () => {
+  assert.equal(
+    sharedWorkingHoursSchema.safeParse(validWorkingHours).success,
+    true
+  );
+
+  assert.equal(
+    sharedWorkingHoursSchema.safeParse('Open every day').success,
+    false
+  );
+
+  assert.equal(
+    sharedWorkingHoursSchema.safeParse(
+      validWorkingHours.replace('; Sun: Closed', '')
+    ).success,
+    false
+  );
+
+  assert.equal(
+    sharedWorkingHoursSchema.safeParse(`${validWorkingHours}; Mon: Closed`)
+      .success,
+    false
+  );
+
+  assert.equal(
+    sharedWorkingHoursSchema.safeParse(
+      'Mon: Closed; Tue: Closed; Wed: Closed; Thu: Closed; Fri: Closed; Sat: Closed; Sun: Closed'
+    ).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('query schemas validate real calendar dates and ordered ranges', () => {
+  const invalidCalendarDate = { dateFrom: '2026-99-45' };
+  const invertedRange = { dateFrom: '2026-08-01', dateTo: '2026-07-31' };
+
+  assert.equal(ordersQuerySchema.safeParse(invalidCalendarDate).success, false);
+  assert.equal(ordersQuerySchema.safeParse(invertedRange).success, false);
+
+  assert.equal(
+    orderSalesStatisticsQuerySchema.safeParse(invertedRange).success,
+    false
+  );
+
+  assert.equal(
+    managedProductsQuerySchema.safeParse({
+      addedFrom: invertedRange.dateFrom,
+      addedTo: invertedRange.dateTo,
+    }).success,
+
+    false
+  );
+
+  assert.equal(
+    clientsQuerySchema.safeParse({
+      firstOrderFrom: invertedRange.dateFrom,
+      firstOrderTo: invertedRange.dateTo,
+    }).success,
+
+    false
+  );
+
+  assert.equal(
+    clientProductsQuerySchema.safeParse(invertedRange).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('client contact search accepts email, phone and postal address values', () => {
+  for (const contact of [
+    'anna.rudenko.portfolio@ukr.net',
+    '+380968016907',
+    '27 Wellness Street, Lviv',
+  ]) {
+    const result = clientsQuerySchema.safeParse({ contact });
+
+    assert.equal(
+      result.success,
+      true,
+      `Expected contact search to accept: ${contact}`
+    );
+  }
+});
+
+//===============================================================
+
+test('public product queries reject management-only lifecycle filters', () => {
+  assert.equal(
+    publicProductsQuerySchema.safeParse({ includeBlocked: true }).success,
+    false
+  );
+
+  assert.equal(
+    publicProductsQuerySchema.safeParse({ status: 'blocked' }).success,
+    false
+  );
+
+  assert.equal(
+    managedProductsQuerySchema.safeParse({
+      includeBlocked: true,
+      status: 'blocked',
+    }).success,
+
+    true
+  );
+});
+
+//===============================================================
+
+test('public cacheable query schemas reject unknown parameters', () => {
+  assert.equal(
+    pharmaciesQuerySchema.safeParse({
+      settlement: 'Nova Ivanivka',
+      region: 'Odesa region',
+    }).success,
+
+    true
+  );
+
+  assert.equal(pharmaciesQuerySchema.safeParse({ junk: 'a' }).success, false);
+
+  assert.equal(
+    productFiltersQuerySchema.safeParse({ junk: 'a' }).success,
+    false
+  );
+
+  assert.equal(emptyQuerySchema.safeParse({ junk: 'a' }).success, false);
+  assert.equal(emptyQuerySchema.safeParse({}).success, true);
+});
+
+//===============================================================
+
+test('sales statistics query rejects unknown parameters', () => {
+  assert.equal(
+    orderSalesStatisticsQuerySchema.safeParse({
+      dateFrom: '2026-09-01',
+      dateTo: '2026-09-30',
+      groupBy: 'day',
+      junk: 'unexpected-cache-variant',
+    }).success,
+
+    false
+  );
+});
+
+//===============================================================
+
+test('private resource query schemas reject unknown parameters', () => {
+  const cases = [
+    clientsQuerySchema.safeParse({ unknown: '1' }),
+    clientProductsQuerySchema.safeParse({ unknown: '1' }),
+    ordersQuerySchema.safeParse({ unknown: '1' }),
+    orderCommentsQuerySchema.safeParse({ unknown: '1' }),
+    productRequestsQuerySchema.safeParse({ unknown: '1' }),
+
+    productRequestArticleAvailabilityQuerySchema.safeParse({
+      article: 'ABC-123',
+      unknown: '1',
+    }),
+
+    pharmacyNotesQuerySchema.safeParse({ unknown: '1' }),
+  ];
+
+  for (const result of cases) {
+    assert.equal(result.success, false);
+  }
+});
+
+//===============================================================
+
+test('strict pagination query schemas preserve the supported limit alias', () => {
+  assert.deepEqual(ordersQuerySchema.parse({ page: '2', limit: '25' }), {
+    page: 2,
+    perPage: 25,
+  });
+
+  assert.deepEqual(
+    clientsQuerySchema.parse({ page: '3', perPage: '30', limit: '10' }),
+    {
+      page: 3,
+      perPage: 30,
+    }
+  );
+
+  assert.equal(
+    ordersQuerySchema.safeParse({ page: ['1', '2'] }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('pharmacy profile location updates use the canonical nested contract', () => {
+  const parsed = updateMyPharmacyProfileSchema.parse({
+    expectedRevision: EXPECTED_REVISION,
+
+    location: {
+      address: '  36 Bolharskykh Opolchentsiv Street  ',
+      settlement: '  Bolhrad  ',
+      region: '  Odesa region  ',
+    },
+  });
+
+  assert.deepEqual(parsed.location, {
+    address: '36 Bolharskykh Opolchentsiv Street',
+    settlement: 'Bolhrad',
+    region: 'Odesa region',
+  });
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      address: 'Legacy address',
+    }).success,
+
+    false
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      city: 'Legacy city',
+    }).success,
+
+    false
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      location: { countryCode: 'UA' },
+    }).success,
+
+    false
+  );
+});
+
+//===============================================================
+
+test('empty nested bank details do not count as a profile change', () => {
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      bankDetails: {},
+    }).success,
+
+    false
+  );
+
+  const normalized = updateMyPharmacyProfileSchema.parse({
+    expectedRevision: EXPECTED_REVISION,
+
+    bankDetails: {
+      iban: ' ua123456789012345678901234567 ',
+      receiptEmail: ' Billing@Example.COM ',
+    },
+  });
+
+  assert.equal(normalized.bankDetails?.iban, 'UA123456789012345678901234567');
+  assert.equal(normalized.bankDetails?.receiptEmail, 'billing@example.com');
+});
+
+//===============================================================
+
+test('profile updates use null for explicit clears and reject empty-string clear ambiguity', () => {
+  const clearResult = updateMyPharmacyProfileSchema.safeParse({
+    expectedRevision: EXPECTED_REVISION,
+    description: null,
+    bankDetails: { receiptEmail: null },
+  });
+
+  assert.equal(clearResult.success, true);
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      description: '',
+    }).success,
+
+    false
+  );
+});
+
+//===============================================================
+
+test('pharmacy document upload validates content while profile stores references', () => {
+  const validDocument = {
+    name: 'license.pdf',
+    type: 'application/pdf' as const,
+    size: 9,
+    dataUrl: 'data:application/pdf;base64,JVBERi0xLjQ=',
+  };
+
+  assert.equal(
+    uploadMyPharmacyDocumentSchema.safeParse(validDocument).success,
+    true
+  );
+
+  assert.equal(
+    uploadMyPharmacyDocumentSchema.safeParse({
+      ...validDocument,
+      name: 'license.exe',
+    }).success,
+
+    false
+  );
+
+  assert.equal(
+    uploadMyPharmacyDocumentSchema.safeParse({
+      ...validDocument,
+      size: 10 * 1024 * 1024 + 1,
+    }).success,
+
+    false
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+      documents: [{ documentId: '507f1f77bcf86cd799439011' }],
+    }).success,
+
+    true
+  );
+
+  assert.equal(
+    updateMyPharmacyProfileSchema.safeParse({
+      expectedRevision: EXPECTED_REVISION,
+
+      documents: Array.from({ length: 7 }, (_, index) => ({
+        documentId: `507f1f77bcf86cd7994390${String(index + 11).padStart(2, '0')}`,
+      })),
+    }).success,
+
+    false
+  );
+});

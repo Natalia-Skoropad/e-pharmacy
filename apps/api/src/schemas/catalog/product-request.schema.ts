@@ -1,0 +1,474 @@
+import { z } from 'zod';
+
+import {
+  createPerPageSchema,
+  mongoIdSchema,
+  normalizePaginationQuery,
+  positivePageSchema,
+} from '../shared/index';
+
+import { sharedSearchSchema } from '../shared/shared-validation.schema';
+
+import {
+  DATE_RANGE_MESSAGE,
+  isDateRangeOrdered,
+  dateQuerySchema,
+} from '../shared/date.schema';
+
+import { optionalTrimmedTextSchema } from '../shared/optional-text.schema';
+import { productCategorySlugSchema } from './product-category.schema';
+import { PRODUCT_REQUEST_CATEGORY_MODES } from '../../constants/catalog/product-request';
+
+import {
+  PRODUCT_REQUEST_ARTICLE_PATTERN,
+  PRODUCT_REQUEST_ATTACHMENT_RULES,
+  PRODUCT_REQUEST_IMAGE_RULES,
+  PRODUCT_REQUEST_LIMITS,
+  PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+  PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+  PRODUCT_REQUEST_STATUSES,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES,
+} from '../../constants/catalog/product-request-validation';
+
+//===============================================================
+
+const productRequestsPerPageSchema = createPerPageSchema({
+  defaultValue: 20,
+  max: 200,
+});
+
+//===============================================================
+
+function getDataUrlByteSize(dataUrl: string): number | null {
+  const commaIndex = dataUrl.indexOf(',');
+
+  if (commaIndex < 0) return null;
+
+  const base64 = dataUrl.slice(commaIndex + 1);
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
+
+//===============================================================
+
+type ProductRequestFileRules = Readonly<{
+  maxSizeBytes: number;
+  requireDataUrl?: boolean;
+  maxDataUrlLength: number;
+  mimeTypes: readonly [string, ...string[]];
+  fileNamePattern: RegExp;
+  dataUrlPattern: RegExp;
+}>;
+
+//===============================================================
+
+function createProductRequestFileSchema(
+  rules: ProductRequestFileRules,
+  formatMessage: string,
+  sizeMessage: string,
+  dataMessage: string
+) {
+  return z
+    .object({
+      name: z
+        .string()
+        .trim()
+        .min(1, 'File name is required.')
+
+        .max(
+          PRODUCT_REQUEST_LIMITS.fileNameMax,
+          PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName
+        )
+
+        .regex(rules.fileNamePattern, formatMessage),
+
+      type: z.enum(rules.mimeTypes),
+
+      size: z
+        .number()
+        .int()
+        .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileSize)
+        .max(rules.maxSizeBytes, sizeMessage),
+
+      dataUrl: z
+        .string()
+        .max(rules.maxDataUrlLength, dataMessage)
+        .regex(rules.dataUrlPattern, formatMessage)
+        .optional(),
+    })
+
+    .superRefine((file, context) => {
+      if (!file.dataUrl) {
+        if (rules.requireDataUrl) {
+          context.addIssue({
+            code: 'custom',
+            path: ['dataUrl'],
+
+            message:
+              PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentDataRequired,
+          });
+        }
+
+        return;
+      }
+
+      const dataUrlMimeType = file.dataUrl.match(
+        /^data:([^;,]+);base64,/i
+      )?.[1];
+
+      if (dataUrlMimeType?.toLowerCase() !== file.type.toLowerCase()) {
+        context.addIssue({
+          code: 'custom',
+          path: ['dataUrl'],
+          message: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.attachmentData,
+        });
+      }
+
+      const dataUrlSize = getDataUrlByteSize(file.dataUrl);
+
+      if (dataUrlSize === null || dataUrlSize !== file.size) {
+        context.addIssue({
+          code: 'custom',
+          path: ['size'],
+          message: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.fileSizeMismatch,
+        });
+      } else if (dataUrlSize > rules.maxSizeBytes) {
+        context.addIssue({
+          code: 'custom',
+          path: ['dataUrl'],
+          message: sizeMessage,
+        });
+      }
+    });
+}
+
+//===============================================================
+
+const productRequestFileSchema = createProductRequestFileSchema(
+  { ...PRODUCT_REQUEST_ATTACHMENT_RULES, requireDataUrl: true },
+
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.format.attachment,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentSize,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentData
+);
+
+//===============================================================
+
+const productImageSchema = createProductRequestFileSchema(
+  PRODUCT_REQUEST_IMAGE_RULES,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.format.productImage,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageSize,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageData
+);
+
+//===============================================================
+
+export const productRequestsQuerySchema = z.preprocess(
+  normalizePaginationQuery,
+  z
+    .object({
+      page: positivePageSchema,
+      perPage: productRequestsPerPageSchema,
+      dateFrom: dateQuerySchema,
+      dateTo: dateQuerySchema,
+      requestNumber: sharedSearchSchema,
+      productName: sharedSearchSchema,
+      productArticle: sharedSearchSchema,
+      name: sharedSearchSchema,
+      article: sharedSearchSchema,
+      category: productCategorySlugSchema.optional(),
+      categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES).optional(),
+      status: z.enum(PRODUCT_REQUEST_STATUSES).optional(),
+    })
+
+    .strict()
+
+    .refine((query) => isDateRangeOrdered(query.dateFrom, query.dateTo), {
+      path: ['dateTo'],
+      message: DATE_RANGE_MESSAGE,
+    })
+
+    .refine((query) => !(query.category && query.categoryMode === 'custom'), {
+      path: ['category'],
+      message: 'A category slug can be used only for catalog categories.',
+    })
+);
+
+//===============================================================
+
+export const productRequestFormSchema = z
+  .object({
+    status: z.enum(['draft', 'new']).default('draft'),
+
+    name: z
+      .string()
+      .trim()
+      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.name)
+
+      .max(
+        PRODUCT_REQUEST_LIMITS.nameMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.name
+      )
+
+      .regex(
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText
+      ),
+
+    article: z
+      .string()
+      .trim()
+      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
+
+      .max(
+        PRODUCT_REQUEST_LIMITS.articleMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
+      )
+
+      .regex(
+        PRODUCT_REQUEST_ARTICLE_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+      )
+
+      .transform((value) => value.toUpperCase()),
+
+    categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES),
+
+    categoryId: mongoIdSchema.optional(),
+
+    customCategory: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.customCategoryMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    productImage: productImageSchema.optional(),
+
+    manufacturer: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.manufacturerMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    countryOfOrigin: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    dosage: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.dosageMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    packageSize: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.packageSizeMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    form: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.formMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    activeSubstance: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    prescriptionType: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType,
+    }),
+
+    fullDescription: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.fullDescriptionMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescription,
+      pattern: PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
+    }),
+
+    pharmacyComment: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.pharmacyCommentMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.pharmacyComment,
+      pattern: PRODUCT_REQUEST_LONG_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
+    }),
+
+    additionalFiles: z
+      .array(productRequestFileSchema)
+
+      .max(
+        PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsCount
+      )
+
+      .refine(
+        (files) =>
+          files.reduce((total, file) => total + file.size, 0) <=
+          PRODUCT_REQUEST_ATTACHMENT_RULES.maxTotalSizeBytes,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsTotalSize
+      )
+
+      .optional(),
+  })
+
+  .superRefine((value, context) => {
+    if (value.categoryMode === 'catalog' && !value.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category,
+      });
+    }
+
+    if (value.categoryMode === 'custom' && value.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message: 'Custom category requests must not select a catalog category.',
+      });
+    }
+
+    if (value.categoryMode === 'custom' && !value.customCategory?.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['customCategory'],
+        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory,
+      });
+    }
+
+    if (value.status !== 'new') return;
+
+    const requiredForModeration = [
+      [
+        'productImage',
+        value.productImage,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.productImage,
+      ],
+      [
+        'manufacturer',
+        value.manufacturer,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.manufacturer,
+      ],
+      [
+        'countryOfOrigin',
+        value.countryOfOrigin,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.countryOfOrigin,
+      ],
+      [
+        'fullDescription',
+        value.fullDescription,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,
+      ],
+    ] as const;
+
+    for (const [field, fieldValue, message] of requiredForModeration) {
+      const isFilled =
+        typeof fieldValue === 'string'
+          ? Boolean(fieldValue.trim())
+          : Boolean(fieldValue);
+
+      if (isFilled) continue;
+
+      context.addIssue({
+        code: 'custom',
+        path: [field],
+        message,
+      });
+    }
+  });
+
+//===============================================================
+
+export const productRequestArticleAvailabilityQuerySchema = z
+  .object({
+    article: z
+      .string()
+      .trim()
+      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
+
+      .max(
+        PRODUCT_REQUEST_LIMITS.articleMax,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
+      )
+
+      .regex(
+        PRODUCT_REQUEST_ARTICLE_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+      )
+
+      .transform((value) => value.toUpperCase()),
+    excludeRequestId: mongoIdSchema.optional(),
+  })
+  .strict();
+
+//===============================================================
+
+export const productRequestParamsSchema = z.object({
+  requestId: mongoIdSchema,
+});
+
+//===============================================================
+
+export const productRequestModerationSchema = z
+  .object({
+    status: z.enum(['in_progress', 'approved', 'rejected']),
+    reason: z.string().trim().max(1000).optional(),
+    productId: mongoIdSchema.optional(),
+    categoryId: mongoIdSchema.optional(),
+  })
+
+  .superRefine((value, context) => {
+    if (value.status === 'rejected' && !value.reason?.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['reason'],
+        message: 'Rejection reason is required.',
+      });
+    }
+
+    if (value.status !== 'approved' && value.productId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['productId'],
+        message: 'Catalog product can be linked only when approving a request.',
+      });
+    }
+
+    if (value.status !== 'approved' && value.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message:
+          'Product category can be assigned only when approving a request.',
+      });
+    }
+  });
+
+//===============================================================
+
+export type ProductRequestParams = z.infer<typeof productRequestParamsSchema>;
+export type ProductRequestsQuery = z.infer<typeof productRequestsQuerySchema>;
+
+export type ProductRequestArticleAvailabilityQuery = z.infer<
+  typeof productRequestArticleAvailabilityQuerySchema
+>;
+
+export type ProductRequestFormInput = z.infer<typeof productRequestFormSchema>;
+
+export type ProductRequestModerationInput = z.infer<
+  typeof productRequestModerationSchema
+>;

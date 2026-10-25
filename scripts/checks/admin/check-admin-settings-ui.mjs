@@ -18,6 +18,7 @@ const read = (...segments) =>
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -123,6 +124,7 @@ const requiredFiles = [
 for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
+
     true,
     `Admin Settings file must exist: ${file.join('/')}`
   );
@@ -271,7 +273,7 @@ const categorySchema = await read(
   'api',
   'src',
   'schemas',
-  'admin-settings.schema.ts'
+  'admin/settings/admin-settings.schema.ts'
 );
 
 assert.match(categoryModel, /color:/);

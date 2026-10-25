@@ -8,7 +8,7 @@ import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { User } from '../../models/accounts/user.model';
 import { httpError } from '../../utils/httpError';
 
-import type { CreatePharmacyNoteInput } from '../../schemas/pharmacy-note.schema';
+import type { CreatePharmacyNoteInput } from '../../schemas/pharmacies/pharmacy-note.schema';
 
 import {
   findPharmacyForInternalNotesAccess,
