@@ -15,7 +15,7 @@ test('cart reads clean their own stale items while global cleanup is deployment-
     readFile(path.resolve(process.cwd(), 'src/server.ts'), 'utf8'),
 
     readFile(
-      path.resolve(process.cwd(), 'src/scripts/cleanup-expired-cart-items.ts'),
+      path.resolve(process.cwd(), 'src/scripts/maintenance/cleanup-expired-cart-items.ts'),
       'utf8'
     ),
   ]);

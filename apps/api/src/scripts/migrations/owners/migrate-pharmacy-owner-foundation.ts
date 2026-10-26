@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { migratePharmacyOwnerFoundation } from '../services/migrations/pharmacy-owner-foundation-migration.service';
-import { hashPassword } from '../utils/password';
+import { migratePharmacyOwnerFoundation } from '../../../services/migrations/pharmacy-owner-foundation-migration.service';
+import { hashPassword } from '../../../utils/password';
 
 //===============================================================
 
@@ -28,9 +28,11 @@ async function migrate(): Promise<void> {
   await mongoose.connect(getMongoDbUri(), { autoIndex: false });
 
   const db = mongoose.connection.db;
+
   if (!db) throw new Error('MongoDB connection is unavailable.');
 
   const demoOwnerPasswordHash = await hashPassword(LEGACY_DEMO_OWNER_PASSWORD);
+
   const result = await migratePharmacyOwnerFoundation(db, {
     demoOwnerPasswordHash,
   });
@@ -47,6 +49,7 @@ async function migrate(): Promise<void> {
     console.log(
       `Created ${result.createdDemoOwnerAccounts} missing demo owner account(s) while preserving existing Pharmacy.ownerId values and pharmacy-linked data.`
     );
+
     console.log(
       `Demo owner login password: ${LEGACY_DEMO_OWNER_PASSWORD}. Each synthesized owner uses the linked demo pharmacy email as its login email.`
     );
@@ -54,8 +57,10 @@ async function migrate(): Promise<void> {
 
   if (result.unresolvedOwnerIds > 0) {
     const sample = result.unresolvedOwnerIdSamples.join(', ');
+
     const remaining =
       result.unresolvedOwnerIds - result.unresolvedOwnerIdSamples.length;
+
     const suffix = remaining > 0 ? `, ... +${remaining} more` : '';
 
     console.warn(

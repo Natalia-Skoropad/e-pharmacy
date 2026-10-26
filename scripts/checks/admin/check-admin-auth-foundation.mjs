@@ -94,7 +94,7 @@ const bootstrapScript = await read(
   'api',
   'src',
   'scripts',
-  'seed-admin-owner.ts'
+  'seeds/seed-admin-owner.ts'
 );
 
 assert.match(bootstrapScript, /USER_ROLES\.ADMIN/);
@@ -117,7 +117,7 @@ const apiPackage = JSON.parse(await read('apps', 'api', 'package.json'));
 
 assert.equal(
   apiPackage.scripts['seed:admin-owner'],
-  'node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/seed-admin-owner.ts'
+  'node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/seeds/seed-admin-owner.ts'
 );
 
 const rootPackage = JSON.parse(await read('package.json'));

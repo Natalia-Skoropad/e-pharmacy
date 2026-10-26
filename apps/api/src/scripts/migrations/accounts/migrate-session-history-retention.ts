@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { Session } from '../models/accounts/session.model';
+import { Session } from '../../../models/accounts/session.model';
 
 //===============================================================
 
@@ -13,7 +13,9 @@ dotenv.config();
 // Previously purged documents cannot be recovered by changing the TTL index.
 async function migrate(): Promise<void> {
   const uri = process.env.MONGODB_URI?.trim();
+
   if (!uri) throw new Error('MONGODB_URI is required');
+
   await mongoose.connect(uri, { autoIndex: false });
 
   try {

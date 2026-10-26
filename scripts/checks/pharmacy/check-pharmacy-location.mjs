@@ -32,7 +32,7 @@ const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs']);
 
 const PHARMACY_DOMAIN_FILES = new Set([
   'apps/api/src/services/admin/pharmacies/admin.service.ts',
-  'apps/api/src/scripts/seed.ts',
+  'apps/api/src/scripts/seeds/seed.ts',
   'packages/api-client/src/response/shared-dto-parsers.ts',
 ]);
 
@@ -214,7 +214,7 @@ const [
     'pharmacies-catalog-paths.ts'
   ),
 
-  read('apps', 'api', 'src', 'scripts', 'seed.ts'),
+  read('apps', 'api', 'src', 'scripts', 'seeds/seed.ts'),
   read('apps', 'api', 'src', 'models', 'orders', 'order.model.ts'),
   read('apps', 'api', 'src', 'services', 'orders/order-shared.ts'),
 ]);

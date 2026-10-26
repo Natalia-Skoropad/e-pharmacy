@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-import { env } from '../config/env';
-import { migrateProductCategoryRelations } from '../services/migrations/product-category-migration.service';
+import { env } from '../../../config/env';
+import { migrateProductCategoryRelations } from '../../../services/migrations/product-category-migration.service';
 
 //===============================================================
 
@@ -9,6 +9,7 @@ async function migrateProductCategories(): Promise<void> {
   await mongoose.connect(env.MONGODB_URI);
 
   const db = mongoose.connection.db;
+
   if (!db) throw new Error('MongoDB connection is unavailable.');
 
   const result = await migrateProductCategoryRelations(db);

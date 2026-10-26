@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { migratePharmacyOwnerRegistrationAudit } from '../services/migrations/pharmacy-owner-registration-audit-migration.service';
+import { migratePharmacyLocations } from '../../../services/migrations/pharmacy-location-migration.service';
 
 //===============================================================
 
@@ -24,30 +24,28 @@ function getMongoDbUri(): string {
 async function migrate(): Promise<void> {
   await mongoose.connect(getMongoDbUri(), { autoIndex: false });
 
-  const result = await migratePharmacyOwnerRegistrationAudit();
+  const result = await migratePharmacyLocations();
+
+  console.log('Pharmacy location migration completed.');
+  console.log(`Total pharmacies: ${result.totalPharmacies}`);
+  console.log(`Migrated: ${result.migrated}`);
+  console.log(`Missing address: ${result.missingAddress}`);
+  console.log(`Missing settlement: ${result.missingSettlement}`);
+  console.log(`Already migrated: ${result.alreadyMigrated}`);
+  console.log(`Invalid: ${result.invalid}`);
 
   console.log(
-    `Pharmacy owner registration audit migration completed: ${result.ownersScanned} owner account(s) scanned (${result.demoOwners} demo, ${result.legacyOwners} legacy).`
+    `Pending moderation migrated: ${result.pendingModerationMigrated}`
   );
 
-  console.log(
-    `Owner account-created events: ${result.accountEventsCreated} created, ${result.accountEventsSkipped} already present.`
-  );
-
-  console.log(
-    `Pharmacy-created events: ${result.pharmacyEventsCreated} created, ${result.pharmacyEventsSkipped} already present.`
-  );
-
-  console.log(
-    `Registration-document events: ${result.documentEventsCreated} created, ${result.documentEventsSkipped} already present.`
-  );
+  console.log(`Pending moderation invalid: ${result.pendingModerationInvalid}`);
 }
 
 //===============================================================
 
 void migrate()
   .catch((error: unknown) => {
-    console.error('Pharmacy owner registration audit migration failed.');
+    console.error('Pharmacy location migration failed.');
 
     if (error instanceof Error) {
       console.error(error.message);
@@ -57,6 +55,7 @@ void migrate()
 
     process.exitCode = 1;
   })
+
   .finally(async () => {
     await mongoose.disconnect();
   });

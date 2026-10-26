@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "stage": "G3",
+  "sourceArchive": "e-pharmacy-14-20-6.zip",
+  "baselineHashes": {
+    "apps/api/src/scripts/cleanup-expired-cart-items.ts": {
+      "raw": "c40b0f49dfd287335cf87bcc3cf2a55c38daa03e73ecf43a46ea99b9c12b7b45",
+      "normalized": "0c2938bf5e8c9708026ae347052b7ab2d1b1994f2c01f1a5676d7c86b90c50be"
+    },
+    "apps/api/src/scripts/copy-templates.mjs": {
+      "raw": "4309cb2af69671e5f9ecd82d415b6878050804a015c64899dcdb196fad9aabb8",
+      "normalized": "d721a99c0b88f3e0605f7cacdb440337c970fae7630ca46489e828837ccc2e94"
+    },
+    "apps/api/src/scripts/diagnose-pharmacy-owner-registration-documents.ts": {
+      "raw": "8c735275158594fbb9c2147f9ecd53f3360b7c0002ae833aa9c99b2d89408c75",
+      "normalized": "531293892970ad3dce7f1bf9274ceb408094340ff156188c9f841c3618605e14"
+    },
+    "apps/api/src/scripts/migrate-demo-pharmacy-bank-details.ts": {
+      "raw": "866a3d85c19600b3882e2b943280eeebc01a1908c16641b06d5b1d589dc81746",
+      "normalized": "2d773964f34eb142ae36899eaeb6ff12e5dc9f94684009afe1a7b8b064a0e3b6"
+    },
+    "apps/api/src/scripts/migrate-demo-pharmacy-introductions.ts": {
+      "raw": "ec8f61ed1fbeb2c84088bf262eddde7565875a525c091fed786f97c584bc4877",
+      "normalized": "4632024afacd2b077141c441c2e2c8b1c373cc1d8b72da7e5be6d4a8b287cf66"
+    },
+    "apps/api/src/scripts/migrate-domain-entities.ts": {
+      "raw": "610680039eba1b190053c32ee30593e25e1fdc845f6829f74062d293a4b654f9",
+      "normalized": "1a4b9c390ec744ae90862586e32b3e569871b651b4b36707c7726b5008ae347c"
+    },
+    "apps/api/src/scripts/migrate-pharmacy-location.ts": {
+      "raw": "e966f61288fa331bc687dfebad8aef5b3cc9c149da0eccd9a104f6fc2a5369b0",
+      "normalized": "c764e0cdefb887572251cbf3968f0ceec4e0715bb6160c9aa60e9f1635e3a227"
+    },
+    "apps/api/src/scripts/migrate-pharmacy-owner-foundation.ts": {
+      "raw": "50b0b7a5159ec63726c530bd03ad8d8accaaa7600301dd78335dea55420f5e33",
+      "normalized": "19c02d34e8f3d1e6f0332006241b4f51d3a3193e6a73bcf2165aa182eec129ba"
+    },
+    "apps/api/src/scripts/migrate-pharmacy-owner-registration-audit.ts": {
+      "raw": "e98a046267aa783d817f755866f72920063e1e014812e1b6b7287528dbd23ae9",
+      "normalized": "c9dc1788d64301f3bfc2ade5d2b8fed196f5857b53bbdebc5d35356dcdce0d3c"
+    },
+    "apps/api/src/scripts/migrate-pharmacy-owner-registration-documents.ts": {
+      "raw": "3b8ebc8afb739ef9b40962b9c3a9b4e559defb6e060323ef9932c35d257d7990",
+      "normalized": "1554dba7c655e31782fa464261ba92c12e5d7646f854e2974451106917544f32"
+    },
+    "apps/api/src/scripts/migrate-product-categories.ts": {
+      "raw": "827151e309b908bf932978865079aba9ea95623dbe69acae6cdd02932ddb5912",
+      "normalized": "eba6b2f3aea901b5856affee412b7d003e677c68659137fa7031941e23b509a3"
+    },
+    "apps/api/src/scripts/migrate-session-history-retention.ts": {
+      "raw": "1967105e947bfe57c1c8b55650f3d14427cb12f5594a8834a5518f8d15cca953",
+      "normalized": "6fc2334dd3f1d0bb9b1bea5d84bd16f5132aadc0cca0c0307f6d16f36ce5ee12"
+    },
+    "apps/api/src/scripts/seed-admin-owner.ts": {
+      "raw": "79169ea4fce14bba8082493c3318c7afa57d18e307d6c0642a06ec11c7729b65",
+      "normalized": "ae064451a1dd02f3fe4ca0b4270cd91471883667b499f65c99d9dde6a9ba8cd2"
+    },
+    "apps/api/src/scripts/seed.ts": {
+      "raw": "9dba460e17916bf6de8d7abf791365a720cf6bee729871c9e84c5fe8101537bd",
+      "normalized": "78c9d308729195bd205c294863b101af1bcabb6e60dc5c7f6505dab59b490675"
+    }
+  },
+  "canonicalHashes": {
+    "apps/api/src/scripts/maintenance/cleanup-expired-cart-items.ts": {
+      "raw": "baa6519fc85105eb777130b6ec3c47b18cb7d00e49662ca36c90d17723b0cf93",
+      "normalized": "df46439f5e7f917a746f9f25d9c9e82652d88fc078f15d8735c1a9f1a670d304"
+    },
+    "apps/api/src/scripts/build/copy-templates.mjs": {
+      "raw": "72e64d1e6c7e1342fe8c6b7a7a536a33f3b399d663292ed41c177ecfa49da666",
+      "normalized": "60a5e08d8467d15618e7bcb789ced3962bc59a43281f37b17cf8e496ef995af6"
+    },
+    "apps/api/src/scripts/diagnostics/diagnose-pharmacy-owner-registration-documents.ts": {
+      "raw": "2d8b2b680c494cb78cb60370b556b1d1f59fa60b88fc1ab40e89054dea2d5028",
+      "normalized": "7cf896bcdb12faf0d0d5eaf8dc6b6805778576742940329bcc35529beb5377a5"
+    },
+    "apps/api/src/scripts/migrations/pharmacies/migrate-demo-pharmacy-bank-details.ts": {
+      "raw": "3ff6dc534d0fa7c62bb678b63afe31472ed16278698f13f56a236a82a456a99d",
+      "normalized": "2d8fd0387b642fc9d0827242292b2d04d036289871a13f95750fdbaae4f67323"
+    },
+    "apps/api/src/scripts/migrations/pharmacies/migrate-demo-pharmacy-introductions.ts": {
+      "raw": "a60d0428a9a3ef04dddbe53943d9b6bb2bc19c30db280f1e3f3b00ae259df06c",
+      "normalized": "666ea5862be9dbc74519dbe53e8fe5041463eed9552c8cfef3202477d9b95b9e"
+    },
+    "apps/api/src/scripts/migrations/domains/migrate-domain-entities.ts": {
+      "raw": "88bd148368cd4034c1da28a8f9f9025e7f99bfdd5da459928c78c50fef286642",
+      "normalized": "3b48b58052e8738d9f6856c4705c455dbe1c8b3b1a7aef8e06ee7415a7b6c4a3"
+    },
+    "apps/api/src/scripts/migrations/pharmacies/migrate-pharmacy-location.ts": {
+      "raw": "357a63f752dec2a35879d132b1ebb7ba8d241a0947e0fe6de1d6cedba5ce0514",
+      "normalized": "b9eb243f29fbdc1868295aff6e5dab61d78f93512b455716aa78b4c58891ef8b"
+    },
+    "apps/api/src/scripts/migrations/owners/migrate-pharmacy-owner-foundation.ts": {
+      "raw": "3d51a7c323abeaf6e248c8fd80fe0e1aed42fa801f0c208ec88d91203f50d0ef",
+      "normalized": "7c172affb18390d416ad5d6d45607fc579425c2afa9a2cf753e5032156a56de6"
+    },
+    "apps/api/src/scripts/migrations/owners/migrate-pharmacy-owner-registration-audit.ts": {
+      "raw": "585738c7883847dd4da6e2aeb8dfb0d6410b74a7c682ed05521e1172ec08c31c",
+      "normalized": "e523fd75e8f12b627c87e4cf80b663233e758493e3ba92877fb6ea6694767438"
+    },
+    "apps/api/src/scripts/migrations/owners/migrate-pharmacy-owner-registration-documents.ts": {
+      "raw": "e44dc388b0966c2235ffa5c5299444c6705a917aba90beda2341d5dc643a19ae",
+      "normalized": "40abbcf0d6b97b322d12c32f883722cb2770b2f764007679ee7746fdda993482"
+    },
+    "apps/api/src/scripts/migrations/catalog/migrate-product-categories.ts": {
+      "raw": "5013b439ae2c4989f9e6a864b506e6f1fe24721194c4b044b67ed57284fa67ff",
+      "normalized": "69761ae6d8a2e1c12e90d608eaadc4dfb77dbdce73cb4dd101a4d3ad3d9632a1"
+    },
+    "apps/api/src/scripts/migrations/accounts/migrate-session-history-retention.ts": {
+      "raw": "3830b15d2c164b34976283c00ffdd5b181879ea0c255792608a14eed8fcaf6a5",
+      "normalized": "f340c1a2a6e0c6f894d425556d6b9aca89e37812e5eed3cf557cc217d3c28459"
+    },
+    "apps/api/src/scripts/seeds/seed-admin-owner.ts": {
+      "raw": "2178769dd89266901101bfd99914cd9c39c7255492af70e64b626e501c13909b",
+      "normalized": "95509eef8620d4db61b94cedff1093b4eb5268766a5067d911c59ec8dc747c3b"
+    },
+    "apps/api/src/scripts/seeds/seed.ts": {
+      "raw": "f1b6f9daddf1144a0b60efef9371fb972ebd6d1fb02ba4f515328385246c464e",
+      "normalized": "07b8fe08fb217201101f67f47208e9c0c3324c482df945d639982068bcf8b160"
+    }
+  }
+}

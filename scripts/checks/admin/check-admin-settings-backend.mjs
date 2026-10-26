@@ -51,6 +51,7 @@ const requiredFiles = [
 for (const file of requiredFiles) {
   assert.equal(
     await exists(...file),
+
     true,
     `Admin Settings backend file must exist: ${file.join('/')}`
   );
@@ -180,7 +181,7 @@ const adminAccessModel = await read(
   'adminAccess.model.ts'
 );
 
-const seed = await read('apps', 'api', 'src', 'scripts', 'seed.ts');
+const seed = await read('apps', 'api', 'src', 'scripts', 'seeds/seed.ts');
 
 //===================================================================
 

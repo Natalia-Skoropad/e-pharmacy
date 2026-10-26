@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { Pharmacy } from '../models/pharmacies/pharmacy.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 
 //===============================================================
 
@@ -23,6 +23,7 @@ async function migrate(): Promise<void> {
       email: /^pharmacy\.\d+@e-pharmacy\.example\.com$/i,
       'bankDetails.recipientName': { $exists: true, $ne: '' },
       'bankDetails.iban': { $exists: true, $ne: '' },
+
       $or: [
         { 'bankDetails.receiptEmail': { $exists: false } },
         { 'bankDetails.receiptEmail': null },
@@ -34,6 +35,7 @@ async function migrate(): Promise<void> {
 
     for (const pharmacy of pharmacies) {
       const email = pharmacy.email?.trim();
+
       if (!email) continue;
 
       const result = await Pharmacy.updateOne(
@@ -45,6 +47,7 @@ async function migrate(): Promise<void> {
             { 'bankDetails.receiptEmail': '' },
           ],
         },
+
         { $set: { 'bankDetails.receiptEmail': email } },
         { runValidators: true }
       );

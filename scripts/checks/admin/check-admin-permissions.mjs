@@ -215,7 +215,7 @@ const seedOwner = await read(
   'api',
   'src',
   'scripts',
-  'seed-admin-owner.ts'
+  'seeds/seed-admin-owner.ts'
 );
 
 const adminLayout = await read(

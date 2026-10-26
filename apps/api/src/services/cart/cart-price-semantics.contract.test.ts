@@ -16,7 +16,7 @@ test('cart persistence stores intent only while response prices stay live', asyn
     ),
 
     readFile(
-      path.resolve(process.cwd(), 'src/scripts/migrate-domain-entities.ts'),
+      path.resolve(process.cwd(), 'src/scripts/migrations/domains/migrate-domain-entities.ts'),
       'utf8'
     ),
   ]);

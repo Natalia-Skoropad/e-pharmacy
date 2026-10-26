@@ -2,16 +2,16 @@ import { createHash } from 'node:crypto';
 import dotenv from 'dotenv';
 import mongoose, { type Types } from 'mongoose';
 
-import { ADMIN_AUDIT_ACTIONS } from '../constants/admin/audit/admin-audit';
-import { PHARMACY_OWNER_DOCUMENT_RULES } from '../constants/owners/pharmacy-owner-document-validation';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
+import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/owners/pharmacy-owner-document-validation';
 
-import { AdminAuditLog } from '../models/audit/adminAuditLog.model';
-import { Pharmacy } from '../models/pharmacies/pharmacy.model';
-import { PharmacyDocumentFile } from '../models/pharmacies/pharmacyDocumentFile.model';
-import { PharmacyOwnerDocument } from '../models/owners/pharmacyOwnerDocument.model';
-import { User } from '../models/accounts/user.model';
+import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';
+import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
+import { User } from '../../models/accounts/user.model';
 
-import { decodeAndVerifyDocumentUpload } from '../utils/documentUpload';
+import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
 
 //===================================================================
 // Diagnostic only. No create/update/delete/migration methods are called.

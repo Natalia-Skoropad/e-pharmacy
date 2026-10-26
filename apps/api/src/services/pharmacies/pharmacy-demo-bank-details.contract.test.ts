@@ -8,8 +8,8 @@ import test from 'node:test';
 const readSource = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), 'src', relativePath), 'utf8');
 
-const seed = readSource('scripts/seed.ts');
-const migration = readSource('scripts/migrate-demo-pharmacy-bank-details.ts');
+const seed = readSource('scripts/seeds/seed.ts');
+const migration = readSource('scripts/migrations/pharmacies/migrate-demo-pharmacy-bank-details.ts');
 
 //===================================================================
 

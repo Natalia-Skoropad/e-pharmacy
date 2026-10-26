@@ -136,7 +136,7 @@ test('auth permits new owners but still blocks blocked accounts on login and ref
 //===================================================================
 
 test('demo pharmacy seed creates real owner users and reuses their ids for pharmacy ownerId', () => {
-  const seed = read('../../scripts/seed.ts');
+  const seed = read('../../scripts/seeds/seed.ts');
 
   const migration = read(
     '../migrations/pharmacy-owner-foundation-migration.service.ts'

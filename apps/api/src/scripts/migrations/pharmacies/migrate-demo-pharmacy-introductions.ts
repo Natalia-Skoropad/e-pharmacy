@@ -1,18 +1,20 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { Pharmacy } from '../models/pharmacies/pharmacy.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 
 import {
   DEMO_REGIONS,
   createDemoPharmacyShortDescription,
-} from '../constants/fixtures/demo-pharmacy-profiles';
+} from '../../../constants/fixtures/demo-pharmacy-profiles';
 
 //===================================================================
 
 // Idempotent, non-destructive backfill. Never use seed:api on a working DB
 // merely to add test location and introduction fields.
 dotenv.config();
+
+//===================================================================
 
 const DEMO_ACCOUNT_EMAILS = [
   'nata5@ukr.net',
@@ -24,6 +26,7 @@ const DEMO_ACCOUNT_EMAILS = [
 
 async function migrate(): Promise<void> {
   const uri = process.env.MONGODB_URI?.trim();
+
   if (!uri) throw new Error('MONGODB_URI is required');
 
   await mongoose.connect(uri, { autoIndex: false });

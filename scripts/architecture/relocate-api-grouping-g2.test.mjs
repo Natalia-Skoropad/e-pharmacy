@@ -143,17 +143,24 @@ test('G2 never applies on invalid flags or silently checks an unrelocated tree',
 
 //===================================================================
 
-test('G2 protects JSON contracts and leaves G3–G5 source paths intact', () => {
+test('G2 protects JSON contracts, honors completed G3 and leaves G4–G5 pending', () => {
   assert.equal(pinned.schemaVersion, 1);
   assert.equal(pinned.stage, 'G2');
+
+  const g3Moves = plan.moves.filter((m) => m.stage === 'G3' && !m.stable);
+  const completedG3 = g3Moves.every((m) => pathExists(m.to));
 
   for (const m of plan.moves.filter((x) =>
     ['G3', 'G4', 'G5'].includes(x.stage)
   )) {
-    assert(pathExists(m.from), `Premature move of future stage: ${m.from}`);
+    const moved = completedG3 && m.stage === 'G3' && !m.stable;
+    const current = moved ? m.to : m.from;
+    const obsolete = moved ? m.from : m.to;
+
+    assert(pathExists(current), `Missing grouping source: ${current}`);
 
     if (!m.stable)
-      assert(!pathExists(m.to), `Unexpected future target: ${m.to}`);
+      assert(!pathExists(obsolete), `Unexpected duplicate path: ${obsolete}`);
   }
 
   const jsonFixture = stable.find((m) =>

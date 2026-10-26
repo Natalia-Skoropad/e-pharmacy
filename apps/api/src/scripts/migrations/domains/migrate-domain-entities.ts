@@ -1,12 +1,12 @@
 import mongoose, { Types } from 'mongoose';
 
-import { env } from '../config/env';
+import { env } from '../../../config/env';
 
-import { Client } from '../models/clients/client.model';
-import { Pharmacy } from '../models/pharmacies/pharmacy.model';
-import { PharmacyReview } from '../models/reviews/pharmacyReview.model';
-import { ProductOffer } from '../models/inventory/productOffer.model';
-import { ProductReview } from '../models/reviews/productReview.model';
+import { Client } from '../../../models/clients/client.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+import { PharmacyReview } from '../../../models/reviews/pharmacyReview.model';
+import { ProductOffer } from '../../../models/inventory/productOffer.model';
+import { ProductReview } from '../../../models/reviews/productReview.model';
 
 //===============================================================
 
@@ -18,6 +18,7 @@ const LEGACY_POSTAL_DELIVERY_METHOD = ['po', 'st'].join('');
 
 function hasCanonicalVerificationDocument(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false;
+
   const document = value as Record<string, unknown>;
 
   return (
@@ -39,7 +40,9 @@ function hasCanonicalVerificationDocument(value: unknown): boolean {
 
 async function migrate(): Promise<void> {
   await mongoose.connect(env.MONGODB_URI);
+
   const db = mongoose.connection.db;
+
   if (!db) throw new Error('MongoDB connection is unavailable.');
 
   const users = db.collection('users');
@@ -65,9 +68,11 @@ async function migrate(): Promise<void> {
     }
 
     const legacyPharmacyStatus = user[['pharmacy', 'Status'].join('')];
+
     if (user.role === 'pharmacy' && legacyPharmacyStatus) {
       const status =
         legacyPharmacyStatus === 'inactive' ? 'blocked' : legacyPharmacyStatus;
+
       await Pharmacy.updateOne({ ownerId: user._id }, { $set: { status } });
     }
   }
@@ -76,6 +81,7 @@ async function migrate(): Promise<void> {
     for (const offer of product.offers ?? []) {
       const reservedQuantity = offer.reservedQuantity ?? 0;
       const totalQuantity = offer.totalQuantity ?? 0;
+
       const availableQuantity =
         offer.availableQuantity ??
         offer[LEGACY_AVAILABLE_QUANTITY_KEY] ??
@@ -90,11 +96,13 @@ async function migrate(): Promise<void> {
             availableQuantity,
             reservedQuantity,
           },
+
           $unset: {
             [LEGACY_OFFER_AVAILABILITY_KEY]: '',
             [LEGACY_AVAILABLE_QUANTITY_KEY]: '',
           },
         },
+
         { upsert: true }
       );
     }
@@ -109,12 +117,14 @@ async function migrate(): Promise<void> {
             userName: review.userName,
             rating: review.rating,
             comment: review.comment,
+
             status:
               review.status === 'approved' || review.isModerated
                 ? 'approved'
                 : review.status === 'rejected'
                   ? 'rejected'
                   : 'on_moderation',
+
             moderationReason: review.moderationReason,
             moderatedBy: review.moderatedBy,
             moderatedAt: review.moderatedAt,
@@ -127,6 +137,7 @@ async function migrate(): Promise<void> {
 
     const status =
       product.status === 'inactive' ? 'blocked' : (product.status ?? 'active');
+
     await products.updateOne(
       { _id: product._id },
       {
@@ -147,12 +158,14 @@ async function migrate(): Promise<void> {
             userName: review.userName,
             rating: review.rating,
             comment: review.comment,
+
             status:
               review.status === 'approved' || review.isModerated
                 ? 'approved'
                 : review.status === 'rejected'
                   ? 'rejected'
                   : 'on_moderation',
+
             moderationReason: review.moderationReason,
             moderatedBy: review.moderatedBy,
             moderatedAt: review.moderatedAt,
@@ -189,11 +202,14 @@ async function migrate(): Promise<void> {
         $set: {
           status,
           managerUserIds: pharmacy.managerUserIds ?? [],
+
           ...(legacyDocuments ? { documents: [] } : {}),
         },
+
         $unset: {
           reviews: '',
           isActive: '',
+
           ...(legacyPendingDocuments
             ? { 'pendingModeration.documents': '' }
             : {}),
@@ -206,6 +222,7 @@ async function migrate(): Promise<void> {
   for await (const offer of productOffers.find({})) {
     const reservedQuantity = offer.reservedQuantity ?? 0;
     const totalQuantity = offer.totalQuantity ?? 0;
+
     const availableQuantity =
       offer.availableQuantity ??
       offer[LEGACY_AVAILABLE_QUANTITY_KEY] ??
@@ -215,6 +232,7 @@ async function migrate(): Promise<void> {
       { _id: offer._id },
       {
         $set: { totalQuantity, availableQuantity, reservedQuantity },
+
         $unset: {
           [LEGACY_AVAILABLE_QUANTITY_KEY]: '',
           [LEGACY_OFFER_AVAILABILITY_KEY]: '',
@@ -227,6 +245,7 @@ async function migrate(): Promise<void> {
   // Otherwise, multiple migrated carts are indexed as userId: null and fail
   // with an E11000 duplicate key error.
   const cartIndexes = await carts.indexes();
+
   const legacyUserIdIndex = cartIndexes.find(
     (index) =>
       index.name === 'userId_1' ||
@@ -252,11 +271,13 @@ async function migrate(): Promise<void> {
 
     for (const item of cart.items ?? []) {
       let productOfferId = item.productOfferId;
+
       if (!productOfferId && item.productId && item.pharmacyId) {
         const offer = await productOffers.findOne({
           productId: item.productId,
           pharmacyId: item.pharmacyId,
         });
+
         productOfferId = offer?._id;
       }
 
@@ -307,6 +328,7 @@ async function migrate(): Promise<void> {
       .toArray();
 
     const [primaryCart, ...redundantCarts] = duplicateCarts;
+
     if (!primaryCart) continue;
 
     const mergedItems = new Map<string, Record<string, unknown>>();
@@ -316,6 +338,7 @@ async function migrate(): Promise<void> {
         if (!item.productOfferId) continue;
 
         const key = item.productOfferId.toString();
+
         const existing = mergedItems.get(key) as
           | (Record<string, unknown> & { quantity?: number })
           | undefined;
@@ -328,6 +351,7 @@ async function migrate(): Promise<void> {
         mergedItems.set(key, {
           ...existing,
           ...item,
+
           _id: existing._id ?? item._id ?? new Types.ObjectId(),
           quantity: (existing.quantity ?? 0) + (item.quantity ?? 0),
         });
@@ -352,6 +376,7 @@ async function migrate(): Promise<void> {
 
   if (cartsWithoutClientUserId === 0) {
     const updatedCartIndexes = await carts.indexes();
+
     const clientUserIdIndexExists = updatedCartIndexes.some(
       (index) =>
         index.name === 'clientUserId_1' ||
@@ -376,11 +401,13 @@ async function migrate(): Promise<void> {
 
     for (const item of order.items ?? []) {
       let productOfferId = item.productOfferId;
+
       if (!productOfferId && item.productId && order.pharmacyId) {
         const offer = await productOffers.findOne({
           productId: item.productId,
           pharmacyId: order.pharmacyId,
         });
+
         productOfferId = offer?._id;
       }
 
@@ -389,33 +416,40 @@ async function migrate(): Promise<void> {
       const unitPrice = item.unitPrice ?? item.price ?? 0;
       nextItems.push({
         _id: item._id ?? new Types.ObjectId(),
+
         productId: item.productId,
         productOfferId,
         productSnapshot: {
           name: item.productSnapshot?.name,
           slug: item.productSnapshot?.slug,
           article: item.productSnapshot?.article,
+
           ...(item.productSnapshot?.category
             ? { category: item.productSnapshot.category }
             : {}),
+
           ...(item.productSnapshot?.categoryId
             ? { categoryId: item.productSnapshot.categoryId }
             : {}),
+
           ...(item.productSnapshot?.categoryNameSnapshot
             ? {
                 categoryNameSnapshot: item.productSnapshot.categoryNameSnapshot,
               }
             : {}),
+
           ...(item.productSnapshot?.categorySlugSnapshot
             ? {
                 categorySlugSnapshot: item.productSnapshot.categorySlugSnapshot,
               }
             : {}),
+
           imageUrl: item.productSnapshot?.imageUrl,
           manufacturer: item.productSnapshot?.manufacturer,
           dosage: item.productSnapshot?.dosage,
           packageQuantity: item.productSnapshot?.packageQuantity,
         },
+
         quantity: item.quantity,
         unitPrice,
         totalPrice: item.quantity * unitPrice,
@@ -427,6 +461,7 @@ async function migrate(): Promise<void> {
       (order.deliveryMethod === LEGACY_POSTAL_DELIVERY_METHOD
         ? 'postal_delivery'
         : (order.deliveryMethod ?? 'pickup'));
+
     const delivery =
       deliveryMethod === 'postal_delivery'
         ? {
@@ -436,6 +471,7 @@ async function migrate(): Promise<void> {
         : { method: 'pickup' };
 
     const createdAt = order.createdAt ?? new Date();
+
     const statusHistory = order.statusHistory?.length
       ? order.statusHistory
       : [
@@ -449,6 +485,7 @@ async function migrate(): Promise<void> {
     const successfulHistoryEntry = [...statusHistory]
       .reverse()
       .find((entry) => entry.status === 'successful');
+
     const successfulAt =
       order.status === 'successful'
         ? (order.successfulAt ?? successfulHistoryEntry?.changedAt)
@@ -462,8 +499,10 @@ async function migrate(): Promise<void> {
           currency: order.currency ?? '₴',
           delivery,
           statusHistory,
+
           ...(successfulAt ? { successfulAt } : {}),
         },
+
         $unset: { deliveryMethod: '', deliveryDetails: '' },
       }
     );
@@ -487,6 +526,8 @@ async function migrate(): Promise<void> {
 
 migrate().catch(async (error) => {
   console.error(error);
+
   await mongoose.disconnect();
+
   process.exitCode = 1;
 });

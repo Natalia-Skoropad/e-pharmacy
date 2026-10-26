@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
 
-import { ADMIN_ACCESS_STATUSES } from '../constants/admin/access/admin-access';
-import { USER_ROLES, USER_STATUSES } from '../constants/auth/auth';
+import { ADMIN_ACCESS_STATUSES } from '../../constants/admin/access/admin-access';
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
-import { connectDB } from '../db/connectDB';
+import { connectDB } from '../../db/connectDB';
 
-import { AdminAccess } from '../models/admin/access/adminAccess.model';
-import { AdminAuthorizationState } from '../models/admin/access/adminAuthorizationState.model';
-import { User } from '../models/accounts/user.model';
+import { AdminAccess } from '../../models/admin/access/adminAccess.model';
+import { AdminAuthorizationState } from '../../models/admin/access/adminAuthorizationState.model';
+import { User } from '../../models/accounts/user.model';
 
-import { adminOwnerBootstrapSchema } from '../schemas/admin/owners/admin-bootstrap.schema';
-import { hashPassword } from '../utils/password';
+import { adminOwnerBootstrapSchema } from '../../schemas/admin/owners/admin-bootstrap.schema';
+import { hashPassword } from '../../utils/password';
 
 //===============================================================
 

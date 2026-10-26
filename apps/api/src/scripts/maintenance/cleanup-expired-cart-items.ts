@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
-import { connectDB } from '../db/connectDB';
-import { runCartCleanupOnce } from '../services/cart/cart-cleanup.service';
-import { logger } from '../utils/logger';
+import { connectDB } from '../../db/connectDB';
+import { runCartCleanupOnce } from '../../services/cart/cart-cleanup.service';
+import { logger } from '../../utils/logger';
 
 //===============================================================
 
@@ -11,6 +11,7 @@ async function main(): Promise<void> {
 
   try {
     const removedItems = await runCartCleanupOnce();
+
     logger.info(`Cart cleanup completed (${removedItems} item(s) removed).`);
   } finally {
     await mongoose.disconnect();

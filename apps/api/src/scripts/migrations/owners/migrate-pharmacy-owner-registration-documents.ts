@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-import { migratePharmacyOwnerRegistrationDocuments } from '../services/migrations/pharmacy-owner-documents-migration.service';
+import { migratePharmacyOwnerRegistrationDocuments } from '../../../services/migrations/pharmacy-owner-documents-migration.service';
 
 //===============================================================
 

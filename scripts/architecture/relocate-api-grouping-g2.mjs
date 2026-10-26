@@ -358,6 +358,8 @@ for (const file of codeFiles) {
     changed.push({ from: file, to, before, after });
 }
 
+//===================================================================
+
 // Also move the JSON contract fixture unchanged; do not edit JSON values.
 for (const m of moves.filter((x) => !code.test(x.from))) {
   const current = done.length ? m.to : m.from;
@@ -371,6 +373,8 @@ for (const m of moves.filter((x) => !code.test(x.from))) {
       after: readFileSync(abs(current)),
     });
 }
+
+//===================================================================
 
 // No unexpected flat schema file remains after relocation.
 const flat = walk('apps/api/src/schemas').filter(
@@ -442,6 +446,31 @@ for (const file of codeFiles) {
 // committed alongside this script, not regenerated during execution.
 const expected = JSON.parse(readFileSync(abs(checksPath), 'utf8'));
 
+//===================================================================
+
+// G3 documents three formatting-only adjustments present in the newest source
+// archive. Accept only these exact additional hashes; never mutate G2 history.
+const formattingPath =
+  'docs/architecture/grouping-g3/approved-g2-formatting.json';
+
+const formatting = existsSync(abs(formattingPath))
+  ? JSON.parse(readFileSync(abs(formattingPath), 'utf8')).files
+  : {};
+
+const matchesApprovedSource = (source, pinned, alternative) => {
+  const value = hasMultilineTemplate(source)
+    ? rawHash(source)
+    : sourceHash(source);
+
+  const field = hasMultilineTemplate(source) ? 'raw' : 'normalized';
+
+  return (
+    value === pinned[field] || (alternative && value === alternative[field])
+  );
+};
+
+//===================================================================
+
 assert.equal(expected.schemaVersion, 1);
 assert.equal(expected.stage, stage);
 assert.equal(Object.keys(expected.baselineHashes).length, 50);
@@ -462,22 +491,24 @@ for (const entry of allEntries) {
   const value = done.length ? canonical : baseline;
 
   if (
-    hasMultilineTemplate(original.toString('utf8'))
-      ? rawHash(original) !== value.raw
-      : sourceHash(original.toString('utf8')) !== value.normalized
+    !matchesApprovedSource(
+      original.toString('utf8'),
+      value,
+      done.length ? formatting[current] : null
+    )
   )
     issues.push(`Changed existing G2 source: ${current}`);
 
   if (
     projectedMoving &&
-    (hasMultilineTemplate(actual)
-      ? rawHash(actual) !== canonical.raw
-      : sourceHash(actual) !== canonical.normalized)
+    !matchesApprovedSource(actual, canonical, formatting[entry.to])
   )
     issues.push(
       `Changed projected G2 schema beyond approved paths: ${entry.to}`
     );
 }
+
+//===================================================================
 
 // Forbid new source references to old schemas in the resulting code files.
 if (projectedMoving)
