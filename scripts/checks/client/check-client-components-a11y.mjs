@@ -8,13 +8,19 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 const read = (path) => readFile(resolve(ROOT, path), 'utf8');
 const violations = [];
 
+//===================================================================
+
 const requirePattern = (source, pattern, message) => {
   if (!pattern.test(source)) violations.push(message);
 };
 
+//===================================================================
+
 const forbidPattern = (source, pattern, message) => {
   if (pattern.test(source)) violations.push(message);
 };
+
+//===================================================================
 
 const [
   appShell,
@@ -323,5 +329,7 @@ if (violations.length) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log('Client component accessibility contract check passed.');

@@ -43,6 +43,7 @@ const privatePages = (await collectFiles(privateRoot)).filter((file) =>
 
 for (const file of privatePages) {
   const source = await readFile(file, 'utf8');
+
   assert.doesNotMatch(
     source,
     /ProtectedRoute/,
@@ -53,11 +54,13 @@ for (const file of privatePages) {
 //===================================================================
 
 const guestLayout = await readFile(path.join(guestRoot, 'layout.tsx'), 'utf8');
+
 assert.match(guestLayout, /ClientGuestOnlyRoute/);
 
 for (const route of ['login', 'register', 'password-recovery']) {
   const page = path.join(guestRoot, route, 'page.tsx');
   const source = await readFile(page, 'utf8');
+
   assert.doesNotMatch(source, /GuestOnlyRoute/);
 }
 
@@ -90,6 +93,7 @@ assert.match(accessDecision, /user\.role === 'client'/);
 assert.match(accessDecision, /user\.status === 'active'/);
 
 const proxy = await readFile(path.join(root, 'apps/client/proxy.ts'), 'utf8');
+
 assert.match(proxy, /CLIENT_PRIVATE_ROUTE_PREFIXES/);
 
 const accessPolicy = await readFile(
@@ -115,10 +119,12 @@ const segmentValues = new Map(
 );
 
 const routeValues = new Map();
+
 for (const match of routesSource.matchAll(
   /(\w+):\s*`\/\$\{ROUTE_SEGMENTS\.(\w+)\}`/g
 )) {
   const segment = segmentValues.get(match[2]);
+
   assert.ok(segment, `Missing ROUTE_SEGMENTS.${match[2]} value.`);
   routeValues.set(match[1], `/${segment}`);
 }
@@ -132,7 +138,9 @@ assert.ok(privateArray, 'CLIENT_PRIVATE_ROUTE_PREFIXES must remain explicit.');
 const registeredPrivateRoots = [...privateArray.matchAll(/ROUTES\.(\w+)/g)]
   .map((match) => {
     const value = routeValues.get(match[1]);
+
     assert.ok(value, `Unable to resolve ROUTES.${match[1]}.`);
+
     return value;
   })
   .sort();
@@ -148,6 +156,7 @@ const actualPrivateRoots = (await readdir(privateRoot, { withFileTypes: true }))
   .sort();
 
 const matcherBlock = proxy.match(/matcher:\s*\[([\s\S]*?)\]/)?.[1];
+
 assert.ok(matcherBlock, 'proxy.config.matcher must remain explicit.');
 
 const proxyMatcherRoots = [...matcherBlock.matchAll(/['"]([^'"]+)['"]/g)]
@@ -196,6 +205,7 @@ for (const documentedRoute of [
 ]) {
   assert.match(
     clientReadme,
+
     new RegExp(documentedRoute.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
     `Client README must document ${documentedRoute}.`
   );
@@ -231,6 +241,7 @@ const pharmacyConfig = await readFile(
   path.join(root, 'apps/client/src/lib/auth/pharmacy-app-config-core.ts'),
   'utf8'
 );
+
 for (const contract of [
   'INSECURE_PRODUCTION_URL',
   'CREDENTIALS_NOT_ALLOWED',
@@ -248,6 +259,8 @@ const loginDestination = await readFile(
 
 assert.match(loginDestination, /requirePharmacyAppConfiguration/);
 assert.doesNotMatch(loginDestination, /\? ROUTES\.HOME/);
+
+//===================================================================
 
 console.log(
   `Client route-access check passed (${privatePages.length} private pages, 3 guest-preferred routes, reset-password token policy).`

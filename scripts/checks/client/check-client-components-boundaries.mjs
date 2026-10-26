@@ -5,8 +5,12 @@ import process from 'node:process';
 //===================================================================
 
 const ROOT = resolve(import.meta.dirname, '../../..');
+
+//===================================================================
+
 const COMPONENT_ROOT = resolve(ROOT, 'apps/client/src/components');
 const LAYERS = ['common', 'home', 'info', 'layout'];
+
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx']);
 const violations = [];
 
@@ -18,6 +22,7 @@ async function collect(directory) {
 
   for (const entry of entries) {
     const path = resolve(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await collect(path)));
     else if (
       SOURCE_EXTENSIONS.has(extname(entry.name)) &&
@@ -33,6 +38,7 @@ async function collect(directory) {
 
 for (const layer of LAYERS) {
   const files = await collect(resolve(COMPONENT_ROOT, layer));
+
   for (const file of files) {
     const source = await readFile(file, 'utf8');
     const display = relative(ROOT, file);
@@ -97,5 +103,7 @@ if (violations.length) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log('Client component boundary check passed.');

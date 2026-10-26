@@ -8,13 +8,19 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 const read = (path) => readFile(resolve(ROOT, path), 'utf8');
 const violations = [];
 
+//===================================================================
+
 const requirePattern = (source, pattern, message) => {
   if (!pattern.test(source)) violations.push(message);
 };
 
+//===================================================================
+
 const forbidPattern = (source, pattern, message) => {
   if (pattern.test(source)) violations.push(message);
 };
+
+//===================================================================
 
 const [
   semantics,
@@ -75,6 +81,8 @@ const [
     'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
   ),
 ]);
+
+//===================================================================
 
 requirePattern(
   semantics,
@@ -207,6 +215,8 @@ if (violations.length > 0) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   'Client catalog accessibility check passed (cards, lists, filters, details, offers, email actions and tabs).'

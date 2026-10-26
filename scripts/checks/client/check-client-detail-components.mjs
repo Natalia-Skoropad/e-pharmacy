@@ -8,6 +8,8 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 const read = (path) => readFile(resolve(ROOT, path), 'utf8');
 const violations = [];
 
+//===================================================================
+
 const requirePattern = (source, pattern, message) => {
   if (!pattern.test(source)) violations.push(message);
 };
@@ -15,6 +17,8 @@ const requirePattern = (source, pattern, message) => {
 const forbidPattern = (source, pattern, message) => {
   if (pattern.test(source)) violations.push(message);
 };
+
+//===================================================================
 
 const requiredProductParts = [
   'ProductDetailsHero.tsx',
@@ -30,6 +34,8 @@ const requiredProductParts = [
   'useProductOfferCart.ts',
 ];
 
+//===================================================================
+
 const requiredPharmacyParts = [
   'PharmacyDetailsHero.tsx',
   'PharmacyDetailsTabs.tsx',
@@ -39,6 +45,8 @@ const requiredPharmacyParts = [
   'PharmacyReviewsPanel.tsx',
   'usePharmacyBankDetails.ts',
 ];
+
+//===================================================================
 
 for (const file of requiredProductParts) {
   try {
@@ -67,6 +75,8 @@ for (const file of requiredPharmacyParts) {
     violations.push(`Pharmacy Details split is missing ${file}.`);
   }
 }
+
+//===================================================================
 
 const [
   productPage,
@@ -145,6 +155,8 @@ const [
   read('packages/api-client/src/response/shared-dto-parsers.ts'),
 ]);
 
+//===================================================================
+
 for (const [label, source, budget] of [
   ['ProductDetailsPageContent', productPage, 220],
   // The pharmacy detail shell additionally coordinates the protected payment tab.
@@ -161,6 +173,8 @@ for (const [label, source, budget] of [
     `${label} must not silently swallow errors.`
   );
 }
+
+//===================================================================
 
 forbidPattern(
   productPage,
@@ -319,6 +333,8 @@ if (violations.length > 0) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   'Client detail component check passed (splits, SSR ownership, offers, cart, bank details, content, reviews and runtime invariants).'

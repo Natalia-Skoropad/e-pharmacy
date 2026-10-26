@@ -8,6 +8,8 @@ import process from 'node:process';
 const ROOT = resolve(import.meta.dirname, '../../..');
 const COMPONENT_ROOT = resolve(ROOT, 'apps/client/src/components');
 
+//===================================================================
+
 const AUDITED_ROOTS = [
   ...['common', 'home', 'info', 'layout'].map((name) =>
     resolve(COMPONENT_ROOT, name)
@@ -28,6 +30,7 @@ async function collect(directory) {
 
   for (const entry of entries) {
     const path = resolve(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await collect(path)));
     else files.push(path);
   }
@@ -63,6 +66,7 @@ for (const file of cssFiles) {
 
   const hash = createHash('sha256').update(css).digest('hex');
   const duplicates = hashes.get(hash) ?? [];
+
   duplicates.push(display);
   hashes.set(hash, duplicates);
 
@@ -105,6 +109,7 @@ for (const selector of [
   const count = (
     infoCss.match(new RegExp(`^\\.${selector}\\s*\\{`, 'gm')) ?? []
   ).length;
+
   if (count > 1)
     violations.push(
       `InfoPage.module.css: .${selector} has ${count} base declarations.`
@@ -130,6 +135,8 @@ if (violations.length) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   `Client component style check passed (${cssFiles.length} CSS modules scanned).`

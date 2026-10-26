@@ -12,6 +12,7 @@ const providersRoot = path.join(root, 'apps/client/src/providers');
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -45,7 +46,6 @@ async function read(relativePath) {
 //===================================================================
 
 const composition = await read('apps/client/src/providers/ClientProviders.tsx');
-
 const stack = await read('apps/client/src/providers/client-provider-stack.tsx');
 
 for (const binding of [
@@ -74,6 +74,7 @@ assert.ok(
 );
 
 const rootLayout = await read('apps/client/src/app/layout.tsx');
+
 assert.match(rootLayout, /<ClientProviders>/);
 
 assert.doesNotMatch(
@@ -101,6 +102,7 @@ for (const [name, source] of [
   ['CartProvider', cartProvider],
 ]) {
   assert.match(source, /useClientSessionScope/);
+
   assert.doesNotMatch(
     source,
     /from\s+['"]@\/hooks['"]/,
@@ -131,6 +133,7 @@ for (const removedPath of [
 ]) {
   assert.equal(
     await exists(removedPath),
+
     false,
     `${removedPath} must stay deleted.`
   );
@@ -145,12 +148,15 @@ for (const testPath of [
 ]) {
   assert.equal(
     await exists(testPath),
+
     true,
     `Missing provider test: ${testPath}.`
   );
 }
 
 const providerFiles = await collectProviderFiles(providersRoot);
+
+//===================================================================
 
 console.log(
   `Client providers check passed (${providerFiles.length} provider modules, enforced Auth → Favorites → Cart ownership order, session-scoped state, no event loop).`

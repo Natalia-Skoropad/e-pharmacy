@@ -8,13 +8,19 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 const read = (path) => readFile(resolve(ROOT, path), 'utf8');
 const violations = [];
 
+//===================================================================
+
 const requirePattern = (source, pattern, message) => {
   if (!pattern.test(source)) violations.push(message);
 };
 
+//===================================================================
+
 const forbidPattern = (source, pattern, message) => {
   if (pattern.test(source)) violations.push(message);
 };
+
+//===================================================================
 
 const [
   productTypes,
@@ -180,6 +186,8 @@ for (const [label, source] of [
   );
 }
 
+//===================================================================
+
 const productBudgetFixture = {
   id: '507f1f77bcf86cd799439011',
   name: 'Representative product name',
@@ -201,6 +209,8 @@ const productBudgetFixture = {
   createdAt: '2026-05-01T10:00:00.000Z',
   updatedAt: '2026-05-02T10:00:00.000Z',
 };
+
+//===================================================================
 
 const pharmacyBudgetFixture = {
   id: '507f1f77bcf86cd799439012',

@@ -11,6 +11,7 @@ const root = process.cwd();
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -34,14 +35,19 @@ for (const removedPath of [
 ]) {
   assert.equal(
     await exists(removedPath),
+
     false,
     `${removedPath} must be deleted.`
   );
 }
 
+//===================================================================
+
 const provider = await read(
   'apps/client/src/providers/CartProvider/CartProvider.tsx'
 );
+
+//===================================================================
 
 for (const contract of [
   'createCartMutationQueue',
@@ -57,6 +63,8 @@ for (const contract of [
   assert.match(provider, new RegExp(contract));
 }
 
+//===================================================================
+
 assert.doesNotMatch(provider, /mutationVersionRef|CART_UPDATED_EVENT/);
 assert.doesNotMatch(provider, /return EMPTY_CART;\s*\/\/.*abort/s);
 
@@ -69,6 +77,7 @@ const clientSources = [
 
 for (const relativePath of clientSources) {
   const source = await read(relativePath);
+
   assert.doesNotMatch(source, /cart-events|cart-commands|useCartMutations/);
 }
 
@@ -88,8 +97,8 @@ assert.match(cartApi, /MutationRequestOptions/);
 assert.match(cartApi, /\.\.\.options/);
 assert.doesNotMatch(cartApi, /JsonResponseRequestOptions/);
 
-
 const cartGroups = await read('apps/client/src/lib/cart/cart-groups.ts');
+
 assert.doesNotMatch(cartGroups, /getCartOrderTotal/);
 assert.doesNotMatch(cartGroups, /hasInconsistentPharmacyMetadata/);
 
@@ -113,6 +122,8 @@ assert.match(
 );
 
 assert.doesNotMatch(cartItemCard, /Math\.max\([\s\S]*stockQuantity/);
+
+//===================================================================
 
 console.log(
   'Client cart check passed (state machine, serialized mutations, atomic pharmacy-group delete, abortable API writes, no event/wrapper layer).'

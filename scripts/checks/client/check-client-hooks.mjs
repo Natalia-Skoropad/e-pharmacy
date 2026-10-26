@@ -8,6 +8,8 @@ const root = process.cwd();
 const clientSourceRoot = path.join(root, 'apps/client/src');
 const hooksRoot = path.join(clientSourceRoot, 'hooks');
 
+//===================================================================
+
 const ignoredDirectories = new Set([
   '.next',
   '.turbo',
@@ -21,6 +23,7 @@ const ignoredDirectories = new Set([
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -86,6 +89,7 @@ for (const removedPath of [
 ]) {
   assert.equal(
     await exists(removedPath),
+
     false,
     `${removedPath} must stay deleted.`
   );
@@ -152,6 +156,7 @@ for (const behavioralTest of [
 ]) {
   assert.equal(
     await exists(behavioralTest),
+
     true,
     `Missing client hook/provider behavioral test: ${behavioralTest}.`
   );
@@ -163,12 +168,15 @@ const sharedHooksSources = await collectSourceFiles(
 
 for (const file of sharedHooksSources) {
   const source = await readFile(file, 'utf8');
+
   assert.doesNotMatch(
     source,
     /apps\/client|@\/hooks|useClientAuthCapabilities|useFavoriteActions|useReviewForm/,
     `${path.relative(root, file)} must not absorb client application hooks.`
   );
 }
+
+//===================================================================
 
 console.log(
   `Client hooks check passed (${hookFiles.length} hook modules, identity-scoped mutations, one favorite collection owner, behavioral companions present).`

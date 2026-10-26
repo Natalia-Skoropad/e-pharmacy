@@ -8,13 +8,19 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 const read = (path) => readFile(resolve(ROOT, path), 'utf8');
 const violations = [];
 
+//===================================================================
+
 const requirePattern = (source, pattern, message) => {
   if (!pattern.test(source)) violations.push(message);
 };
 
+//===================================================================
+
 const forbidPattern = (source, pattern, message) => {
   if (pattern.test(source)) violations.push(message);
 };
+
+//===================================================================
 
 const [
   productSummary,
@@ -79,6 +85,8 @@ const [
   read('apps/client/src/components/pharmacies/server/PharmacyDetailPage.tsx'),
   read('packages/api-client/src/response/shared-dto-parsers.ts'),
 ]);
+
+//===================================================================
 
 forbidPattern(
   productSummary,
@@ -311,6 +319,8 @@ if (violations.length > 0) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   'Client catalog contract check passed (structured locations, summary/public DTOs, resource states, filters, offers, bank details and review totals).'

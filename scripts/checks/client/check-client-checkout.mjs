@@ -13,6 +13,8 @@ const submit = await read(
   'apps/client/src/components/checkout/hooks/useCheckoutSubmit.ts'
 );
 
+//===================================================================
+
 for (const contract of [
   'submitLockRef',
   'AbortController',
@@ -29,6 +31,8 @@ for (const contract of [
     new RegExp(contract.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
   );
 }
+
+//===================================================================
 
 assert.match(
   submit,
@@ -66,8 +70,11 @@ assert.match(browserOrders, /ROUTES\.orders\.checkout/);
 assert.doesNotMatch(browserOrders, /https?:\/\//);
 
 const bff = await read('apps/client/src/app/api/orders/checkout/route.ts');
+
 assert.match(bff, /createPrivateProxyRoute/);
 assert.match(bff, /API_ROUTES\.orders\.checkout/);
+
+//===================================================================
 
 console.log(
   'Client checkout check passed (reviewed snapshot comparison, revision/fingerprint contract, abortable locked submit, same-origin BFF).'

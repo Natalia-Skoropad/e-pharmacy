@@ -23,9 +23,12 @@ const ignored = new Set([
 
 async function listFiles(directory) {
   const files = [];
+
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (ignored.has(entry.name)) continue;
+
     const target = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await listFiles(target)));
     else if (/\.(?:ts|tsx|mts)$/.test(entry.name)) files.push(target);
   }
@@ -180,6 +183,7 @@ if (
 
 for (const directory of ['apps/api', 'apps/pharmacy', 'packages']) {
   const files = await listFiles(path.join(root, directory));
+
   for (const file of files) {
     const source = await readFile(file, 'utf8');
 
@@ -194,6 +198,8 @@ for (const directory of ['apps/api', 'apps/pharmacy', 'packages']) {
 //===================================================================
 
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Client-lib boundary check passed (${libFiles.length} lib modules scanned).`

@@ -6,6 +6,9 @@ import path from 'node:path';
 
 const root = process.cwd();
 const clientRoot = path.join(root, 'apps/client/src');
+
+//===================================================================
+
 const ignored = new Set([
   '.next',
   '.turbo',
@@ -18,12 +21,16 @@ const ignored = new Set([
 
 async function listSourceFiles(directory) {
   const files = [];
+
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (ignored.has(entry.name)) continue;
+
     const target = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await listSourceFiles(target)));
     else if (/\.[cm]?[jt]sx?$/.test(entry.name)) files.push(target);
   }
+
   return files;
 }
 
@@ -32,6 +39,7 @@ async function listSourceFiles(directory) {
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -56,10 +64,13 @@ for (const removedPath of [
 ]) {
   assert.equal(
     await exists(removedPath),
+
     false,
     `${removedPath} must be deleted.`
   );
 }
+
+//===================================================================
 
 const sources = await Promise.all(
   (await listSourceFiles(clientRoot)).map(async (file) => ({
@@ -68,11 +79,14 @@ const sources = await Promise.all(
   }))
 );
 
+//===================================================================
+
 const favoriteIdConsumers = sources.filter(
   ({ relative, source }) =>
     !relative.includes('/lib/api/browser/') &&
     /\bgetFavorite(?:Product|Pharmacy)Ids\b/.test(source)
 );
+
 assert.deepEqual(
   favoriteIdConsumers.map(({ relative }) => relative),
   ['apps/client/src/providers/FavoritesProvider/FavoritesProvider.tsx']
@@ -102,6 +116,7 @@ assert.match(favoriteActions, /unavailableMessage/);
 assert.match(favoriteActions, /clientAccountRequiredMessage/);
 
 const reviewForm = await read('apps/client/src/hooks/useReviewForm.ts');
+
 for (const contract of [
   'scopeKey: string',
   'useClientSessionScope',
@@ -144,7 +159,11 @@ const authProvider = await read(
   'apps/client/src/providers/AuthProvider/AuthProvider.tsx'
 );
 
+//===================================================================
+
 assert.match(authProvider, /ClientSessionScopeProvider/);
+
+//===================================================================
 
 console.log(
   'Client user-state check passed (keyed session boundary, one favorite collection owner, scoped reviews, serialized cart controller).'

@@ -18,6 +18,7 @@ for (const check of [
     cwd: root,
     encoding: 'utf8',
   });
+
   assert.equal(
     result.status,
     0,
@@ -90,6 +91,7 @@ const catalogFiles = [];
 async function walk(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const target = path.join(directory, entry.name);
+
     if (entry.isDirectory()) await walk(target);
     else if (/\.(?:ts|tsx)$/.test(entry.name) && !entry.name.includes('.test.'))
       catalogFiles.push(target);
@@ -108,6 +110,8 @@ assert.doesNotMatch(
   catalogSource,
   /['"`]\/(?:pharmacies|product-catalog)['"`]/
 );
+
+//===================================================================
 
 console.log(
   'Client-lib route/SEO parity check passed (application routes, proxy/BFF parity, sitemap and robots classifications).'

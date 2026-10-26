@@ -12,6 +12,7 @@ const read = (relativePath) => readFile(path.join(root, relativePath), 'utf8');
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -28,6 +29,7 @@ async function listFiles(directory) {
     withFileTypes: true,
   })) {
     const relativePath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await listFiles(relativePath)));
     else files.push(relativePath);
   }
@@ -150,6 +152,8 @@ assert.doesNotMatch(
 
 assert.doesNotMatch(controller, /fetchAdmin|\/api\/admin|\/admin\/profile/);
 
+//===================================================================
+
 // Keep the historical client/admin-header boundary valid as the admin app evolves.
 // `/admin/profile` is part of Stage 10.4, so it must no longer be treated as
 // forbidden by this Stage 5 regression check. The dashboard is still outside
@@ -161,6 +165,7 @@ for (const forbiddenPath of [
 ]) {
   assert.equal(
     await exists(forbiddenPath),
+
     false,
     `${forbiddenPath} is outside the current admin stage or is a legacy shell path.`
   );
@@ -173,6 +178,8 @@ assert.equal(
   false,
   'A client-local AdminUserBadge must not be introduced.'
 );
+
+//===================================================================
 
 console.log(
   'Client admin-header compatibility contracts passed through Stage 10.4.'

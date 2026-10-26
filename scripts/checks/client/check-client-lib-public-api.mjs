@@ -12,6 +12,7 @@ const libRoot = path.join(root, 'apps/client/src/lib');
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -22,11 +23,13 @@ async function exists(relativePath) {
 
 async function listFiles(directory) {
   const files = [];
+
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (['node_modules', '.next', '.turbo', 'dist'].includes(entry.name))
       continue;
 
     const target = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await listFiles(target)));
     else if (/\.(?:ts|tsx)$/.test(entry.name)) files.push(target);
   }
@@ -58,6 +61,7 @@ for (const barrel of [
   'apps/client/src/lib/api/server/index.ts',
 ]) {
   const source = await readFile(path.join(root, barrel), 'utf8');
+
   assert.doesNotMatch(source, /export\s+\*/);
 }
 
@@ -96,6 +100,8 @@ for (const internalName of [
     new RegExp(`export\\s+(?:type\\s+|const\\s+)${internalName}\\b`)
   );
 }
+
+//===================================================================
 
 console.log(
   `Client-lib public API check passed (${files.length} lib modules, explicit environment entrypoints).`

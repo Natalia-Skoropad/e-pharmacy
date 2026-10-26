@@ -6,6 +6,9 @@ import path from 'node:path';
 
 const root = process.cwd();
 const clientRoot = path.join(root, 'apps/client/src');
+
+//===================================================================
+
 const ignored = new Set([
   '.next',
   '.turbo',
@@ -19,6 +22,7 @@ const ignored = new Set([
 async function exists(relativePath) {
   try {
     await access(path.join(root, relativePath));
+
     return true;
   } catch {
     return false;
@@ -29,12 +33,16 @@ async function exists(relativePath) {
 
 async function listFiles(directory) {
   const files = [];
+
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (ignored.has(entry.name)) continue;
+
     const target = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await listFiles(target)));
     else if (/\.[cm]?[jt]sx?$/.test(entry.name)) files.push(target);
   }
+
   return files;
 }
 
@@ -47,6 +55,7 @@ for (const removedPath of [
 ]) {
   assert.equal(
     await exists(removedPath),
+
     false,
     `${removedPath} must be deleted.`
   );
@@ -59,9 +68,7 @@ for (const file of files) {
   const source = await readFile(file, 'utf8');
   const relative = path.relative(root, file).replaceAll('\\', '/');
 
-  if (
-    /^export\s+(?:\*|\{[^}]+\})\s+from\s+['"]@e-pharmacy\//m.test(source)
-  ) {
+  if (/^export\s+(?:\*|\{[^}]+\})\s+from\s+['"]@e-pharmacy\//m.test(source)) {
     suspiciousSharedReexports.push(relative);
   }
 }
@@ -80,6 +87,8 @@ const routesBarrel = await readFile(
 assert.match(routesBarrel, /ClientProtectedRoute/);
 assert.match(routesBarrel, /ClientGuestOnlyRoute/);
 assert.doesNotMatch(routesBarrel, /export \{ default \} from/);
+
+//===================================================================
 
 console.log(
   `Client no-op wrapper check passed (${files.length} client source files scanned).`

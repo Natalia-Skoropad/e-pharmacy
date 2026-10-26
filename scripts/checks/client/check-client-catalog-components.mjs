@@ -8,13 +8,19 @@ const ROOT = resolve(import.meta.dirname, '../../..');
 const read = (path) => readFile(resolve(ROOT, path), 'utf8');
 const violations = [];
 
+//===================================================================
+
 const requirePattern = (source, pattern, message) => {
   if (!pattern.test(source)) violations.push(message);
 };
 
+//===================================================================
+
 const forbidPattern = (source, pattern, message) => {
   if (pattern.test(source)) violations.push(message);
 };
+
+//===================================================================
 
 const requiredPaths = [
   'apps/client/src/components/catalog/CatalogEntityCard/CatalogEntityCard.tsx',
@@ -37,6 +43,8 @@ const requiredPaths = [
   'packages/ui/src/navigation/Tabs/Tabs.test.tsx',
 ];
 
+//===================================================================
+
 for (const path of requiredPaths) {
   try {
     await access(resolve(ROOT, path));
@@ -44,6 +52,8 @@ for (const path of requiredPaths) {
     violations.push(`${path}: required catalog component is missing.`);
   }
 }
+
+//===================================================================
 
 const [
   cardFoundation,
@@ -101,6 +111,8 @@ const [
   read('apps/client/src/components/product-catalog/index.ts'),
   read('apps/client/src/components/pharmacies/index.ts'),
 ]);
+
+//===================================================================
 
 forbidPattern(
   cardFoundation,
@@ -174,6 +186,8 @@ if (productDetails.split(/\r?\n/).length > 220) {
   );
 }
 
+//===================================================================
+
 // The pharmacy detail coordinator also handles the protected bank-details tab
 // and location header, so its bounded presentation budget is slightly larger.
 if (pharmacyDetails.split(/\r?\n/).length > 230) {
@@ -231,6 +245,7 @@ for (const path of [
 ]) {
   try {
     await access(resolve(ROOT, path));
+
     violations.push(`${path}: nested no-op barrel must be removed.`);
   } catch {
     // Expected.
@@ -241,6 +256,8 @@ if (violations.length > 0) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   'Client catalog component check passed (foundation, ownership, server boundaries, size budgets and public APIs).'

@@ -8,9 +8,13 @@ import process from 'node:process';
 const ROOT = resolve(import.meta.dirname, '../../..');
 const COMPONENT_ROOT = resolve(ROOT, 'apps/client/src/components');
 
+//===================================================================
+
 const roots = ['catalog', 'product-catalog', 'pharmacies'].map((name) =>
   resolve(COMPONENT_ROOT, name)
 );
+
+//===================================================================
 
 const violations = [];
 
@@ -22,6 +26,7 @@ async function collectCss(directory) {
 
   for (const entry of entries) {
     const path = resolve(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await collectCss(path)));
     else if (entry.name.endsWith('.module.css')) files.push(path);
   }
@@ -119,6 +124,8 @@ if (violations.length > 0) {
   console.error(violations.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   `Client catalog style check passed (${files.length} CSS modules; exact and near-duplicate analysis complete).`

@@ -7,6 +7,8 @@ import ts from 'typescript';
 
 const root = process.cwd();
 
+//===================================================================
+
 const removedCandidates = [
   'getApiHealth',
   'logoutAllUserSessions',
@@ -23,6 +25,8 @@ const removedCandidates = [
   'PASSWORD_RECOVERY_BENEFITS',
   'RESET_PASSWORD_BENEFITS',
 ];
+
+//===================================================================
 
 const internalCandidates = new Map([
   [
@@ -86,6 +90,7 @@ async function walk(directory) {
 
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const target = path.join(directory, entry.name);
+
     if (entry.isDirectory()) await walk(target);
     else if (/\.(?:ts|tsx)$/.test(entry.name)) libFiles.push(target);
   }
@@ -100,6 +105,7 @@ await walk(path.join(root, 'apps/client/src/lib'));
 const combined = (
   await Promise.all(libFiles.map((file) => readFile(file, 'utf8')))
 ).join('\n');
+
 for (const name of removedCandidates) {
   assert.doesNotMatch(
     combined,
@@ -122,6 +128,8 @@ for (const [relativePath, names] of internalCandidates) {
     );
   }
 }
+
+//===================================================================
 
 console.log(
   `Client-lib unused-export check passed (${removedCandidates.length} dead candidates absent, ${[...internalCandidates.values()].flat().length} symbols internal).`

@@ -108,7 +108,7 @@ function overshadows(before, after) {
 
 //===================================================================
 
-function handlerName(arg, ast) {
+function handlerName(arg) {
   const input = unwrap(arg);
 
   if (
@@ -189,7 +189,7 @@ function extractRoutes(file, code) {
           else {
             const chain = node.arguments.slice(1).map((arg) => text(arg, ast));
             const last = node.arguments.at(-1);
-            const handler = last && handlerName(last, ast);
+            const handler = last && handlerName(last);
 
             if (!handler)
               errors.push(
@@ -235,7 +235,7 @@ function authGuards(root, file, content) {
 
     const matches = [...statement.getText(ast).matchAll(EARLY_RETURN)];
 
-    for (const _match of matches)
+    for (let index = 0; index < matches.length; index++)
       results.push({ file, handler: statement.name.text });
   }
 
@@ -655,9 +655,9 @@ export function assertReadOnlyCheckFlags(args) {
 function cli() {
   assertReadOnlyCheckFlags(process.argv.slice(2));
 
-  const { evidence: _evidence, ...result } = auditRoutes();
+  const result = auditRoutes();
 
-  console.log(JSON.stringify(result, null, 2));
+  console.log(JSON.stringify({ ...result, evidence: undefined }, null, 2));
   assert.equal(result.status, 'PASS', result.errors.join('\n'));
 }
 
