@@ -41,6 +41,8 @@ const tsFiles = await collectFiles(root, (file) =>
   /\.[cm]?[jt]sx?$/.test(file)
 );
 
+//===================================================================
+
 // Match module specifiers, not arbitrary mentions of source file paths.
 // Contract tests may read Next API source as text without importing its code.
 const moduleSpecifierPatterns = [

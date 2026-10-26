@@ -7,6 +7,8 @@ import path from 'node:path';
 const root = process.cwd();
 const layoutRoot = path.join(root, 'apps/pharmacy/src/components/layout');
 
+//===================================================================
+
 const ignored = new Set([
   'node_modules',
   '.next',
@@ -127,20 +129,26 @@ const [header, mobileMenu, shell, breadcrumbEvent, navigation] =
       path.join(layoutRoot, 'PharmacyHeader/PharmacyHeader.tsx'),
       'utf8'
     ),
+
     readFile(
       path.join(layoutRoot, 'PharmacyMobileMenu/PharmacyMobileMenu.tsx'),
       'utf8'
     ),
+
     readFile(path.join(layoutRoot, 'PharmacyShell/PharmacyShell.tsx'), 'utf8'),
+
     readFile(
       path.join(root, 'apps/pharmacy/src/lib/layout/breadcrumb-label-event.ts'),
       'utf8'
     ),
+
     readFile(
       path.join(root, 'apps/pharmacy/src/lib/layout/navigation.ts'),
       'utf8'
     ),
   ]);
+
+//===================================================================
 
 assert.match(
   header,
@@ -207,7 +215,11 @@ await assertMissing(
   'PharmacyMobileMenu is an internal Header child and must not keep an unused public barrel'
 );
 
+//===================================================================
+
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Pharmacy-layout check passed (${files.length} layout source/style files scanned).`

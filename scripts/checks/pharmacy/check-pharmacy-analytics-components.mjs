@@ -6,10 +6,14 @@ import path from 'node:path';
 
 const root = process.cwd();
 
+//===================================================================
+
 const featureRoots = [
   'apps/pharmacy/src/components/dashboard',
   'apps/pharmacy/src/components/statistics',
 ].map((relativePath) => path.join(root, relativePath));
+
+//===================================================================
 
 const ignored = new Set([
   'node_modules',
@@ -253,6 +257,8 @@ assert.match(
 //===================================================================
 
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Pharmacy analytics-component check passed (${files.length} feature source files scanned; request fan-out and role guards verified).`

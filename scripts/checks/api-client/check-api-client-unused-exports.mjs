@@ -12,6 +12,8 @@ const repositoryRoot = path.resolve(
 
 const sourceRoot = path.join(repositoryRoot, 'packages/api-client/src');
 
+//===================================================================
+
 const barrels = (
   await Promise.all(
     ['contracts/index.ts', 'transport/index.ts', 'response/index.ts'].map(
@@ -19,6 +21,8 @@ const barrels = (
     )
   )
 ).join('\n');
+
+//===================================================================
 
 const removedOrInternalCandidates = [
   'API_HEADERS',
@@ -41,9 +45,12 @@ const removedOrInternalCandidates = [
   'RequirePaginationContext',
 ];
 
+//===================================================================
+
 for (const symbol of removedOrInternalCandidates) {
   assert.equal(
     new RegExp(`\\b${symbol}\\b`).test(barrels),
+
     false,
     `${symbol} is internal/dead and must not be exported.`
   );
@@ -61,11 +68,14 @@ const deletedFiles = [
 for (const relativePath of deletedFiles) {
   try {
     await readFile(path.join(sourceRoot, relativePath), 'utf8');
+
     assert.fail(`${relativePath} must remain deleted.`);
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
   }
 }
+
+//===================================================================
 
 console.log(
   `API-client unused-export check passed (${removedOrInternalCandidates.length} internal/dead candidates guarded).`

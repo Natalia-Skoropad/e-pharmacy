@@ -6,6 +6,7 @@ import path from 'node:path';
 //===================================================================
 
 const argumentsList = process.argv.slice(2);
+
 const requestedDirectory =
   argumentsList.find((argument) => !argument.startsWith('--')) ?? 'src';
 
@@ -52,6 +53,7 @@ async function collectTestFiles(directory) {
     }
 
     const matches = matchSuffixes.some((suffix) => entry.name.endsWith(suffix));
+
     const excluded = excludeSuffixes.some((suffix) =>
       entry.name.endsWith(suffix)
     );
@@ -91,5 +93,6 @@ if (testFiles.length === 0) {
   );
 
   if (result.error) throw result.error;
+
   process.exitCode = result.status ?? 1;
 }

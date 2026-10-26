@@ -1,0 +1,270 @@
+{
+  "stage": "A4",
+  "base": "e-pharmacy-14-20-11.zip + A3 Windows fixes",
+  "summary": {
+    "stage": "A4",
+    "status": "PASS",
+    "routeFiles": 12,
+    "routerMounts": 13,
+    "methodRegistrations": 159,
+    "mountedEndpoints": 190,
+    "protectedRegistrations": 138,
+    "publicRegistrations": 21,
+    "permissionGuardedRegistrations": 43,
+    "controllerEarlyReturns": 22,
+    "guardedEarlyReturns": 22,
+    "danglingHandlerImports": 0,
+    "sourceRouteFiles": {
+      "admin/admin.routes.ts": 53,
+      "auth/auth.routes.ts": 17,
+      "cart/cart.routes.ts": 6,
+      "catalog/product-category.routes.ts": 1,
+      "catalog/product-request.routes.ts": 7,
+      "catalog/product.routes.ts": 18,
+      "clients/client.routes.ts": 3,
+      "health/health.routes.ts": 2,
+      "index.ts": 0,
+      "orders/order.routes.ts": 10,
+      "owners/pharmacy-owner.routes.ts": 8,
+      "pharmacies/pharmacy-note.routes.ts": 3,
+      "pharmacies/pharmacy.routes.ts": 31
+    },
+    "warnings": [
+      "22 pre-existing controller early returns are unreachable without passing authenticate; they remain a defensive-response quality issue, not an A4 guard bypass.",
+      "The /pharmacy and /pharmacies mounts are an intentional alias. Admin route declarations remain in one module to preserve legacy static contracts."
+    ],
+    "errors": []
+  },
+  "routerMounts": [
+    {
+      "prefix": "/admin",
+      "router": "adminRoutes"
+    },
+    {
+      "prefix": "/auth",
+      "router": "authRoutes"
+    },
+    {
+      "prefix": "/cart",
+      "router": "cartRoutes"
+    },
+    {
+      "prefix": "/clients",
+      "router": "clientRoutes"
+    },
+    {
+      "prefix": "/pharmacy-notes",
+      "router": "pharmacyNoteRoutes"
+    },
+    {
+      "prefix": "/health",
+      "router": "healthRoutes"
+    },
+    {
+      "prefix": "/orders",
+      "router": "orderRoutes"
+    },
+    {
+      "prefix": "/products",
+      "router": "productRoutes"
+    },
+    {
+      "prefix": "/product-categories",
+      "router": "productCategoryRoutes"
+    },
+    {
+      "prefix": "/product-requests",
+      "router": "productRequestRoutes"
+    },
+    {
+      "prefix": "/pharmacies",
+      "router": "pharmacyRoutes"
+    },
+    {
+      "prefix": "/pharmacy-owners",
+      "router": "pharmacyOwnerRoutes"
+    },
+    {
+      "prefix": "/pharmacy",
+      "router": "pharmacyRoutes"
+    }
+  ],
+  "controllerEarlyReturnEvidence": [
+    {
+      "file": "apps/api/src/controllers/admin/admin-owner-comments.controller.ts",
+      "handler": "createPharmacyOwnerAdminCommentByAdmin",
+      "paths": [
+        "POST /admin/pharmacy-owners/:ownerId/comments"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin-owner-comments.controller.ts",
+      "handler": "deletePharmacyOwnerAdminCommentByAdmin",
+      "paths": [
+        "DELETE /admin/pharmacy-owners/:ownerId/comments/:commentId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin-pharmacy-comments.controller.ts",
+      "handler": "createPharmacyAdminCommentByAdmin",
+      "paths": [
+        "POST /admin/pharmacies/:pharmacyId/comments"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin-pharmacy-comments.controller.ts",
+      "handler": "deletePharmacyAdminCommentByAdmin",
+      "paths": [
+        "DELETE /admin/pharmacies/:pharmacyId/comments/:commentId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin.controller.ts",
+      "handler": "updatePharmacyOwnerStatusByAdmin",
+      "paths": [
+        "PATCH /admin/pharmacy-owners/:ownerId/status"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin.controller.ts",
+      "handler": "decidePharmacyModerationByAdmin",
+      "paths": [
+        "POST /admin/pharmacies/:pharmacyId/moderation-decisions"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin.controller.ts",
+      "handler": "updatePharmacyStatusByAdmin",
+      "paths": [
+        "PATCH /admin/pharmacies/:pharmacyId/status"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin.controller.ts",
+      "handler": "requestPharmacyCorrectionsByAdmin",
+      "paths": [
+        "POST /admin/pharmacies/:pharmacyId/review/corrections"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin.controller.ts",
+      "handler": "updateProductRequestStatusByAdmin",
+      "paths": [
+        "PATCH /admin/product-requests/:requestId/status"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/auth/auth-password.controller.ts",
+      "handler": "updateCurrentUserPassword",
+      "paths": [
+        "PATCH /auth/current/password"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/auth/auth-profile.controller.ts",
+      "handler": "updateCurrentUser",
+      "paths": [
+        "PATCH /auth/current"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/auth/auth-session-management.controller.ts",
+      "handler": "getActiveSessions",
+      "paths": [
+        "GET /auth/sessions"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/auth/auth-session-management.controller.ts",
+      "handler": "revokeActiveSession",
+      "paths": [
+        "DELETE /auth/sessions/:sessionId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/orders/order.controller.ts",
+      "handler": "createManagerOrder",
+      "paths": [
+        "POST /orders"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/orders/order.controller.ts",
+      "handler": "getOrderManagerComments",
+      "paths": [
+        "GET /orders/:orderId/comments"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/orders/order.controller.ts",
+      "handler": "createOrderManagerComment",
+      "paths": [
+        "POST /orders/:orderId/comments"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/orders/order.controller.ts",
+      "handler": "deleteOrderManagerComment",
+      "paths": [
+        "DELETE /orders/:orderId/comments/:commentId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/orders/order.controller.ts",
+      "handler": "updateOrderDetails",
+      "paths": [
+        "PATCH /orders/:orderId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/orders/order.controller.ts",
+      "handler": "updateOrderStatus",
+      "paths": [
+        "PATCH /orders/:orderId/status"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/pharmacies/pharmacy-note.controller.ts",
+      "handler": "getPharmacyNotes",
+      "paths": [
+        "GET /pharmacy-notes/:entityType/:entityId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/pharmacies/pharmacy-note.controller.ts",
+      "handler": "createPharmacyNote",
+      "paths": [
+        "POST /pharmacy-notes/:entityType/:entityId"
+      ],
+      "authenticated": true
+    },
+    {
+      "file": "apps/api/src/controllers/pharmacies/pharmacy-note.controller.ts",
+      "handler": "deletePharmacyNote",
+      "paths": [
+        "DELETE /pharmacy-notes/:entityType/:entityId/:noteId"
+      ],
+      "authenticated": true
+    }
+  ]
+}

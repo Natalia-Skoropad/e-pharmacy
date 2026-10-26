@@ -63,6 +63,7 @@ async function collectSourceFiles(directory) {
 
 function isPathInside(candidatePath, parentPath) {
   const relativePath = path.relative(parentPath, candidatePath);
+
   return (
     relativePath !== '' &&
     !relativePath.startsWith(`..${path.sep}`) &&
@@ -80,6 +81,7 @@ function isForbiddenSpecifier(specifier, sourceFile) {
   if (!specifier.startsWith('.')) return false;
 
   const resolvedPath = path.resolve(path.dirname(sourceFile), specifier);
+
   return (
     isPathInside(resolvedPath, PACKAGES_DIR) || resolvedPath === PACKAGES_DIR
   );
@@ -95,9 +97,11 @@ function findForbiddenImports(source, sourceFile) {
 
     for (const match of source.matchAll(pattern)) {
       const specifier = match[1];
+
       if (!specifier || !isForbiddenSpecifier(specifier, sourceFile)) continue;
 
       const line = source.slice(0, match.index).split('\n').length;
+
       imports.push({ line, specifier });
     }
   }

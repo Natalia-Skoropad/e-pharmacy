@@ -7,8 +7,12 @@ import { fileURLToPath } from 'node:url';
 
 const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
+
 const IGNORED = new Set([
   'node_modules',
   'dist',
@@ -22,10 +26,13 @@ const IGNORED = new Set([
 async function collectFiles(directory, output = []) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (entry.isDirectory() && IGNORED.has(entry.name)) continue;
+
     const entryPath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) await collectFiles(entryPath, output);
     else if (/\.(?:ts|tsx)$/.test(entry.name)) output.push(entryPath);
   }
+
   return output;
 }
 
@@ -138,9 +145,12 @@ assert.match(pharmacyAuthApi, /parseAuthResponse/);
 const authTestFiles = (
   await collectFiles(path.join(ROOT_DIR, 'packages', 'auth', 'src'))
 ).filter((filePath) => /\.test\.tsx?$/.test(filePath));
+
 const sourceReadingTests = [];
+
 for (const filePath of authTestFiles) {
   const source = await readFile(filePath, 'utf8');
+
   if (/readFile\s*\(|assert\.match\(\s*source/.test(source)) {
     sourceReadingTests.push(
       path.relative(ROOT_DIR, filePath).replaceAll('\\', '/')
@@ -160,6 +170,7 @@ const appFiles = [
 ];
 
 const noOpWrappers = [];
+
 for (const filePath of appFiles) {
   const source = (await readFile(filePath, 'utf8'))
     .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -173,11 +184,16 @@ for (const filePath of appFiles) {
     noOpWrappers.push(path.relative(ROOT_DIR, filePath).replaceAll('\\', '/'));
   }
 }
+
+//===================================================================
+
 assert.deepEqual(
   noOpWrappers,
   [],
   `No-op auth wrappers found:\n${noOpWrappers.join('\n')}`
 );
+
+//===================================================================
 
 console.log(
   `Auth lifecycle check passed (${appFiles.length} application source files scanned).`

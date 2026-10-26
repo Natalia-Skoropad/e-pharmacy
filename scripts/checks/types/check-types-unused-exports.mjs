@@ -120,6 +120,7 @@ const INTENTIONALLY_PUBLIC = new Set([
 async function loadTypeScript() {
   try {
     const module = await import('typescript');
+
     return module.default ?? module;
   } catch {
     const fallbackPath = path.join(
@@ -133,6 +134,7 @@ async function loadTypeScript() {
     );
 
     const module = await import(pathToFileURL(fallbackPath).href);
+
     return module.default ?? module;
   }
 }
@@ -241,6 +243,7 @@ for (const file of consumerFiles) {
     if (!match || !usedExports.has(match[1])) continue;
 
     const namedBindings = statement.importClause?.namedBindings;
+
     if (!namedBindings) continue;
 
     if (ts.isNamespaceImport(namedBindings)) {
@@ -267,6 +270,7 @@ for (const [entrypoint, exports] of publicExports) {
     if (usedExports.get(entrypoint).has(exportName)) continue;
 
     const key = `${entrypoint}:${exportName}`;
+
     if (!INTENTIONALLY_PUBLIC.has(key)) {
       unexpectedUnusedExports.push(key);
     }

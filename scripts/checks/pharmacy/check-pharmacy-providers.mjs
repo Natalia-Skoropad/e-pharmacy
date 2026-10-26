@@ -80,14 +80,13 @@ assert.doesNotMatch(orderDetailsPage, /pharmacyProfile\.bankDetails/);
 assert.match(pharmacySummaryRoute, /createPrivateProxyRoute/);
 assert.match(pharmacySummaryRoute, /API_ROUTES\.pharmacies\.mySummary/);
 
-for (const [label, source] of [
-  ['AuthProvider', authProvider],
-  ['PharmacyProfileProvider', pharmacyProfileProvider],
-]) {
+for (const source of [authProvider, pharmacyProfileProvider]) {
   assert.doesNotMatch(source, /accessToken|refreshToken/);
   assert.doesNotMatch(source, /localStorage|sessionStorage|indexedDB/i);
   assert.doesNotMatch(source, /API_BASE_URL|BACKEND_URL/);
 }
+
+//===================================================================
 
 console.log(
   'Pharmacy provider check passed (Auth → protected pharmacy profile summary ownership, same-origin browser APIs, no token/private persistence).'

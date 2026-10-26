@@ -58,6 +58,7 @@ async function resolveExistingCandidate(specifier, parentURL) {
 
     try {
       await access(candidate);
+
       return candidate.href;
     } catch {
       // Try the next supported TypeScript source candidate.
@@ -134,6 +135,7 @@ export async function load(url, context, nextLoad) {
 
   if (url.startsWith('file:') && TYPESCRIPT_MODULE_PATTERN.test(url)) {
     const source = await readFile(fileURLToPath(url), 'utf8');
+
     const transpiled = ts.transpileModule(source, {
       fileName: fileURLToPath(url),
 
@@ -146,6 +148,7 @@ export async function load(url, context, nextLoad) {
         verbatimModuleSyntax: true,
         sourceMap: false,
       },
+
       reportDiagnostics: false,
     });
 

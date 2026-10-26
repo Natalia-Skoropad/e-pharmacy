@@ -73,6 +73,7 @@ function isExcludedFile(relativePath) {
 
   return SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS.some((pattern) => {
     pattern.lastIndex = 0;
+
     return pattern.test(normalized);
   });
 }
@@ -102,6 +103,7 @@ async function collectFiles(directory, relativeDirectory = '') {
       files.push(
         ...(await collectFiles(path.join(directory, entry.name), relativePath))
       );
+
       continue;
     }
 
@@ -124,6 +126,7 @@ export async function createSourceArchiveZip(sourceDirectory, outputPath) {
   const files = await collectFiles(sourceDirectory);
   const localParts = [];
   const centralParts = [];
+
   let localOffset = 0;
 
   for (const file of files) {
@@ -141,6 +144,7 @@ export async function createSourceArchiveZip(sourceDirectory, outputPath) {
     const { dosDate, dosTime } = toDosDateTime(fileStats.mtime);
 
     const localHeader = Buffer.alloc(30);
+
     localHeader.writeUInt32LE(LOCAL_FILE_HEADER_SIGNATURE, 0);
     localHeader.writeUInt16LE(20, 4);
     localHeader.writeUInt16LE(UTF8_FLAG, 6);
@@ -156,6 +160,7 @@ export async function createSourceArchiveZip(sourceDirectory, outputPath) {
     localParts.push(localHeader, fileName, compressed);
 
     const centralHeader = Buffer.alloc(46);
+
     centralHeader.writeUInt32LE(CENTRAL_DIRECTORY_HEADER_SIGNATURE, 0);
     centralHeader.writeUInt16LE(20, 4);
     centralHeader.writeUInt16LE(20, 6);
@@ -192,6 +197,7 @@ export async function createSourceArchiveZip(sourceDirectory, outputPath) {
   end.writeUInt16LE(0, 20);
 
   await mkdir(path.dirname(outputPath), { recursive: true });
+
   await writeFile(
     outputPath,
     Buffer.concat([...localParts, centralDirectory, end])
@@ -222,7 +228,9 @@ function findEndOfCentralDirectory(buffer) {
 function readZipEntriesFromBuffer(buffer) {
   const eocdOffset = findEndOfCentralDirectory(buffer);
   const entryCount = buffer.readUInt16LE(eocdOffset + 10);
+
   let centralOffset = buffer.readUInt32LE(eocdOffset + 16);
+
   const entries = [];
 
   for (let index = 0; index < entryCount; index += 1) {
@@ -241,6 +249,7 @@ function readZipEntriesFromBuffer(buffer) {
     const commentLength = buffer.readUInt16LE(centralOffset + 32);
     const localHeaderOffset = buffer.readUInt32LE(centralOffset + 42);
     const fileNameStart = centralOffset + 46;
+
     const fileName = buffer
       .subarray(fileNameStart, fileNameStart + fileNameLength)
       .toString('utf8');
@@ -253,8 +262,10 @@ function readZipEntriesFromBuffer(buffer) {
 
     const localFileNameLength = buffer.readUInt16LE(localHeaderOffset + 26);
     const localExtraLength = buffer.readUInt16LE(localHeaderOffset + 28);
+
     const dataStart =
       localHeaderOffset + 30 + localFileNameLength + localExtraLength;
+
     const compressed = buffer.subarray(dataStart, dataStart + compressedSize);
 
     let content;
@@ -341,6 +352,7 @@ export async function verifySourceArchiveZip(
   const buffer = await readFile(archivePath);
   const entries = readZipEntriesFromBuffer(buffer);
   const entryNames = new Set(entries.map((entry) => entry.name));
+
   const violations = collectArchiveViolations(
     buffer,
     path.basename(archivePath)

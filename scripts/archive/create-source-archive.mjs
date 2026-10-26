@@ -2,6 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { prepareSourceArchive } from './prepare-source-archive.mjs';
+
 import {
   createSourceArchiveZip,
   verifySourceArchiveZip,
@@ -23,6 +24,8 @@ const stagingPath = path.resolve(
   process.argv[3] ?? '.artifacts/e-pharmacy-source'
 );
 
+//===================================================================
+
 const requiredFiles = [
   'package.json',
   'pnpm-lock.yaml',
@@ -40,9 +43,12 @@ const stagedRoot = await prepareSourceArchive({
 });
 
 const created = await createSourceArchiveZip(stagedRoot, outputPath);
+
 const verified = await verifySourceArchiveZip(outputPath, {
   requiredFiles,
 });
+
+//===================================================================
 
 console.log(
   `Clean source ZIP created at ${created.outputPath} (${created.fileCount} files; ${verified.entryCount} verified entries).`

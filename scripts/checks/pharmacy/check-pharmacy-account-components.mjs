@@ -152,6 +152,8 @@ for (const file of privateBffFiles) {
   );
 }
 
+//===================================================================
+
 console.log(
   `Pharmacy account component check passed (${componentFiles.length} source files scanned).`
 );

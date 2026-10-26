@@ -47,6 +47,7 @@ const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs']);
 async function pathExists(filePath) {
   try {
     await access(filePath);
+
     return true;
   } catch {
     return false;
@@ -63,6 +64,7 @@ async function collectSourceFiles(directory, output = []) {
 
     if (entry.isDirectory()) {
       await collectSourceFiles(entryPath, output);
+
       continue;
     }
 
@@ -104,6 +106,7 @@ for (const [entrypoint, target] of Object.entries(EXPECTED_EXPORTS)) {
 
 assert.equal(
   await pathExists(path.join(CONFIG_SRC_DIR, 'index.ts')),
+
   false,
   'packages/config/src/index.ts must not exist because root imports are forbidden'
 );
@@ -111,6 +114,7 @@ assert.equal(
 for (const directoryName of FORBIDDEN_SUBPATHS) {
   assert.equal(
     await pathExists(path.join(CONFIG_SRC_DIR, directoryName)),
+
     false,
     `Forbidden config area still exists: src/${directoryName}`
   );
@@ -130,6 +134,7 @@ for (const sourceFile of sourceFiles) {
   if (sourceFile === CURRENT_FILE) continue;
 
   const source = await readFile(sourceFile, 'utf8');
+
   const relativePath = path
     .relative(ROOT_DIR, sourceFile)
     .replaceAll('\\', '/');
@@ -155,11 +160,15 @@ for (const sourceFile of sourceFiles) {
   }
 }
 
+//===================================================================
+
 assert.deepEqual(
   violations,
   [],
   `Config public API violations:\n${violations.map((item) => `- ${item}`).join('\n')}`
 );
+
+//===================================================================
 
 console.log(
   `Config public API check passed (${sourceFiles.length} source files scanned, ${Object.keys(EXPECTED_EXPORTS).length} approved entrypoints).`

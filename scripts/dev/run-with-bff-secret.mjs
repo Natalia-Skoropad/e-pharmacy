@@ -18,6 +18,7 @@ function readSharedDevelopmentSecret() {
 
   try {
     const existing = readFileSync(secretPath, 'utf8').trim();
+
     if (existing) return existing;
   } catch (error) {
     if (error?.code !== 'ENOENT') throw error;
@@ -31,9 +32,11 @@ function readSharedDevelopmentSecret() {
       flag: 'wx',
       mode: 0o600,
     });
+
     return generated;
   } catch (error) {
     if (error?.code !== 'EEXIST') throw error;
+
     return readFileSync(secretPath, 'utf8').trim();
   }
 }
@@ -51,17 +54,22 @@ const bffProxySecret =
 
 const child = spawn(command, args, {
   cwd: process.cwd(),
+
   env: {
     ...process.env,
     BFF_PROXY_SECRET: bffProxySecret,
   },
+
   stdio: 'inherit',
   shell: process.platform === 'win32',
 });
 
+//===================================================================
+
 child.on('exit', (code, signal) => {
   if (signal) {
     process.kill(process.pid, signal);
+
     return;
   }
 

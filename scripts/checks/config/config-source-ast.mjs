@@ -13,6 +13,7 @@ export function loadTypeScript(rootDir) {
     const configRequire = createRequire(
       path.join(rootDir, 'packages', 'config', 'package.json')
     );
+
     return configRequire('typescript');
   }
 }
@@ -21,6 +22,7 @@ export function loadTypeScript(rootDir) {
 
 export async function parseTypeScriptFile(ts, filePath) {
   const source = await readFile(filePath, 'utf8');
+
   return ts.createSourceFile(
     filePath,
     source,
@@ -63,6 +65,7 @@ export function evaluateLiteralExpression(ts, expression) {
 
   if (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand)) {
     const value = Number(node.operand.text);
+
     return node.operator === ts.SyntaxKind.MinusToken ? -value : value;
   }
 
@@ -75,10 +78,13 @@ export function evaluateLiteralExpression(ts, expression) {
 
     for (const property of node.properties) {
       if (!ts.isPropertyAssignment(property)) {
-        throw new Error(`Unsupported object property in ${node.getSourceFile().fileName}`);
+        throw new Error(
+          `Unsupported object property in ${node.getSourceFile().fileName}`
+        );
       }
 
       const name = property.name;
+
       const key =
         ts.isIdentifier(name) || ts.isStringLiteral(name)
           ? name.text
@@ -183,12 +189,14 @@ export function findPropertyCallStringArray(ts, sourceFile, propertyName) {
         (ts.isStringLiteral(node.name) && node.name.text === propertyName))
     ) {
       const initializer = unwrapExpression(ts, node.initializer);
+
       let candidate = ts.isArrayLiteralExpression(initializer)
         ? initializer
         : null;
 
       function findInlineArray(current) {
         if (candidate) return;
+
         const unwrapped = unwrapExpression(ts, current);
 
         if (ts.isArrayLiteralExpression(unwrapped)) {
@@ -200,7 +208,9 @@ export function findPropertyCallStringArray(ts, sourceFile, propertyName) {
           for (const argument of unwrapped.arguments) {
             findInlineArray(argument);
           }
+
           findInlineArray(unwrapped.expression);
+
           return;
         }
 

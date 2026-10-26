@@ -9,6 +9,8 @@ const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 const AUTH_DIR = path.join(ROOT_DIR, 'packages', 'auth');
 
+//===================================================================
+
 const EXPECTED_EXPORTS = {
   './react': './src/react.ts',
   './next': './src/next.ts',
@@ -16,6 +18,8 @@ const EXPECTED_EXPORTS = {
   './routing': './src/routing/index.ts',
   './reset-password': './src/reset-password.ts',
 };
+
+//===================================================================
 
 const IGNORED = new Set([
   'node_modules',
@@ -25,6 +29,8 @@ const IGNORED = new Set([
   'coverage',
 ]);
 
+//===================================================================
+
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs']);
 
 //===================================================================
@@ -32,6 +38,7 @@ const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs']);
 async function exists(filePath) {
   try {
     await access(filePath);
+
     return true;
   } catch {
     return false;
@@ -43,11 +50,14 @@ async function exists(filePath) {
 async function collectFiles(directory, output = []) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (entry.isDirectory() && IGNORED.has(entry.name)) continue;
+
     const entryPath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) await collectFiles(entryPath, output);
     else if (SOURCE_EXTENSIONS.has(path.extname(entry.name)))
       output.push(entryPath);
   }
+
   return output;
 }
 
@@ -63,6 +73,7 @@ assert.equal(packageJson.sideEffects, false);
 for (const [entrypoint, target] of Object.entries(EXPECTED_EXPORTS)) {
   assert.equal(
     await exists(path.join(AUTH_DIR, target.replace(/^\.\//, ''))),
+
     true,
     `${entrypoint} points to a missing target`
   );
@@ -74,6 +85,7 @@ const publicIndexFiles = Object.values(EXPECTED_EXPORTS).map((target) =>
 
 for (const filePath of publicIndexFiles) {
   const source = await readFile(filePath, 'utf8');
+
   assert.doesNotMatch(
     source,
     /export\s+\*\s+from/,
@@ -84,12 +96,14 @@ for (const filePath of publicIndexFiles) {
 for (const legacyEntrypoint of ['src/react/index.ts', 'src/next/index.ts']) {
   assert.equal(
     await exists(path.join(AUTH_DIR, legacyEntrypoint)),
+
     false,
     `${legacyEntrypoint} must not recreate one-file entrypoint folders`
   );
 }
 
 const reactEntry = await readFile(path.join(AUTH_DIR, 'src/react.ts'), 'utf8');
+
 assert.match(reactEntry, /AuthProviderCore/);
 assert.match(reactEntry, /useAuth/);
 
@@ -99,6 +113,7 @@ assert.doesNotMatch(
 );
 
 const nextEntry = await readFile(path.join(AUTH_DIR, 'src/next.ts'), 'utf8');
+
 assert.match(nextEntry, /GuestOnlyRouteProps/);
 assert.match(nextEntry, /RoleProtectedRouteProps/);
 
@@ -119,6 +134,7 @@ const violations = [];
 
 for (const filePath of sourceFiles) {
   if (filePath === CURRENT_FILE) continue;
+
   const source = await readFile(filePath, 'utf8');
   const relative = path.relative(ROOT_DIR, filePath).replaceAll('\\', '/');
 
@@ -137,11 +153,15 @@ for (const filePath of sourceFiles) {
   }
 }
 
+//===================================================================
+
 assert.deepEqual(
   violations,
   [],
   `Auth public API violations:\n${violations.map((item) => `- ${item}`).join('\n')}`
 );
+
+//===================================================================
 
 console.log(
   `Auth public API check passed (${sourceFiles.length} source files scanned).`

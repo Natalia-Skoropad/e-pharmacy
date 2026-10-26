@@ -8,6 +8,8 @@ const root = process.cwd();
 const pharmacyLib = path.join(root, 'apps/pharmacy/src/lib');
 const browserApiDirectory = path.join(pharmacyLib, 'api/browser');
 
+//===================================================================
+
 const ignored = new Set([
   'node_modules',
   '.next',
@@ -48,6 +50,7 @@ function isTestFile(file) {
 async function exists(file) {
   try {
     await access(file);
+
     return true;
   } catch {
     return false;
@@ -145,7 +148,11 @@ if (await exists(path.join(pharmacyLib, 'layout/routes.ts'))) {
   );
 }
 
+//===================================================================
+
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Pharmacy-lib check passed (${libFiles.length} lib modules, ${browserApiFiles.length} browser API adapters scanned).`

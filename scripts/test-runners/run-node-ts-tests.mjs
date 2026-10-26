@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 const rawArguments = process.argv.slice(2);
 const roots = [];
+
 let allowEmpty = false;
 let matchSuffixes = ['.test.ts', '.test.tsx'];
 
@@ -23,6 +24,7 @@ for (const argument of rawArguments) {
       .split(',')
       .map((value) => value.trim())
       .filter(Boolean);
+
     continue;
   }
 

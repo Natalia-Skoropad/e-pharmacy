@@ -12,6 +12,8 @@ const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 const CONFIG_SRC_DIR = path.join(ROOT_DIR, 'packages', 'config', 'src');
 const ts = loadTypeScript(ROOT_DIR);
 
+//===================================================================
+
 const IGNORED_DIRECTORIES = new Set([
   'node_modules',
   'dist',
@@ -44,6 +46,7 @@ const configFiles = await collectFiles(
   CONFIG_SRC_DIR,
   new Set(['.ts', '.tsx'])
 );
+
 const violations = [];
 
 for (const filePath of configFiles) {
@@ -110,6 +113,7 @@ for (const [directory, label] of [
 
   for (const filePath of files) {
     const source = await readFile(filePath, 'utf8');
+
     if (
       source.includes('@e-pharmacy/config') ||
       source.includes('packages/config')
@@ -129,6 +133,7 @@ for (const packagePath of [
 ]) {
   const packageJsonPath = path.join(ROOT_DIR, ...packagePath);
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+
   const dependencies = {
     ...(packageJson.dependencies ?? {}),
     ...(packageJson.devDependencies ?? {}),

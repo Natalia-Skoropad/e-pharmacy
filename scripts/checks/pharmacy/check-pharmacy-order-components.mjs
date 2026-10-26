@@ -7,6 +7,8 @@ import path from 'node:path';
 const root = process.cwd();
 const featureRoot = path.join(root, 'apps/pharmacy/src/components/orders');
 
+//===================================================================
+
 const ignored = new Set([
   'node_modules',
   '.next',
@@ -136,6 +138,8 @@ for (const file of files) {
 //===================================================================
 
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Pharmacy order-component check passed (${files.length} feature source files scanned).`

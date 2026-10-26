@@ -64,6 +64,8 @@ assert.match(routes, /'\/me\/pharmacies\/:pharmacyId\/profile'/);
 assert.match(routes, /'\/me\/pharmacies\/:pharmacyId\/documents'/);
 assert.match(routes, /'\/me\/pharmacies\/:pharmacyId\/send-for-verification'/);
 
+//===================================================================
+
 // Match the specific scoped PATCH route, not a single formatting of validate().
 // A global schema-name match could pass even if a different route used it.
 const scopedProfilePatch = routes.match(

@@ -45,6 +45,7 @@ async function listFiles(directory) {
 
   for (const entry of entries) {
     if (ignoredDirectories.has(entry.name)) continue;
+
     const absolutePath = path.join(directory, entry.name);
 
     if (entry.isDirectory()) {
@@ -144,6 +145,8 @@ if (failures.length > 0) {
   console.error(failures.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log(
   `Hooks public API check passed (${outsidePointerConsumers} DOM consumers, ${debounceConsumers} timing consumers).`

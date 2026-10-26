@@ -22,6 +22,7 @@ async function collectSourceFiles(directory) {
     }
 
     const absolutePath = path.join(directory, entry.name);
+
     if (entry.isDirectory())
       files.push(...(await collectSourceFiles(absolutePath)));
     else if (/\.(?:ts|tsx|mjs)$/.test(entry.name)) files.push(absolutePath);
@@ -38,9 +39,11 @@ async function findMatches(directories, pattern) {
   for (const directory of directories) {
     for (const file of await collectSourceFiles(directory)) {
       const source = await readFile(file, 'utf8');
+
       if (pattern.test(source)) {
         matches.push(path.relative(repositoryRoot, file).replaceAll('\\', '/'));
       }
+
       pattern.lastIndex = 0;
     }
   }
@@ -51,6 +54,7 @@ async function findMatches(directories, pattern) {
 //===================================================================
 
 const apiClientSource = path.join(repositoryRoot, 'packages/api-client/src');
+
 const apiClientViolations = await findMatches(
   [apiClientSource],
   /(?:from\s+|import\s*\()['"](?:@e-pharmacy\/(?:next-api|ui|auth)|next(?:\/|['"]|$)|server-only|client-only|@\/|apps\/)/m
@@ -71,11 +75,15 @@ const reverseDependencyViolations = await findMatches(
   /@e-pharmacy\/api-client|packages\/api-client/
 );
 
+//===================================================================
+
 assert.deepEqual(
   reverseDependencyViolations,
   [],
   `Backend/types/validation must not depend on API-client:\n${reverseDependencyViolations.join('\n')}`
 );
+
+//===================================================================
 
 console.log(
   `API-client boundary check passed (${(await collectSourceFiles(apiClientSource)).length} package source files scanned).`

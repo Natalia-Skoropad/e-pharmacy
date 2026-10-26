@@ -68,6 +68,8 @@ async function collectProductionSources(directory) {
   return files;
 }
 
+//===================================================================
+
 const productionFiles = (
   await Promise.all(
     SOURCE_ROOTS.map((segments) =>
@@ -84,6 +86,8 @@ assert.equal(
   false,
   'Obsolete static apps/api/src/types/categories.ts must be deleted.'
 );
+
+//===================================================================
 
 for (const file of productionFiles) {
   const source = await readFile(file, 'utf8');
@@ -205,6 +209,8 @@ assert.doesNotMatch(
   /name:\s*['"]Other['"]/,
   'Other must not be bootstrapped as a ProductCategory.'
 );
+
+//===================================================================
 
 // Legacy data is migrated once; it is not a runtime category source.
 assert.match(migrationService, /collection\('products'\)/);

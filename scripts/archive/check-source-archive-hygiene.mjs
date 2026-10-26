@@ -25,6 +25,8 @@ const gitignore = await readFile(
   'utf8'
 );
 
+//===================================================================
+
 const requiredIgnoredPaths = [
   'node_modules',
   '.artifacts',
@@ -37,6 +39,8 @@ const requiredIgnoredPaths = [
   'next-env.d.ts',
 ];
 
+//===================================================================
+
 const requiredStagedFiles = [
   'package.json',
   'pnpm-lock.yaml',
@@ -45,6 +49,8 @@ const requiredStagedFiles = [
   'apps/client/package.json',
   'apps/pharmacy/package.json',
 ];
+
+//===================================================================
 
 const failures = [];
 
@@ -76,6 +82,7 @@ function matchesExcludedFile(relativePath) {
 
   return SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS.some((pattern) => {
     pattern.lastIndex = 0;
+
     return pattern.test(normalized);
   });
 }
@@ -105,6 +112,7 @@ async function collectStagedArchiveViolations(
           relativePath
         ))
       );
+
       continue;
     }
 
@@ -131,6 +139,7 @@ try {
   for (const requiredFile of requiredStagedFiles) {
     try {
       const fileStats = await stat(path.join(stagedRoot, requiredFile));
+
       if (!fileStats.isFile()) {
         failures.push(`Staged source entry is not a file: ${requiredFile}.`);
       }
@@ -140,6 +149,7 @@ try {
   }
 
   const contentViolations = await collectStagedArchiveViolations(stagedRoot);
+
   failures.push(...contentViolations);
 
   const finalArchivePath = path.join(temporaryRoot, 'e-pharmacy-source.zip');
@@ -166,6 +176,7 @@ if (failures.length > 0) {
       ...failures.map((item) => `- ${item}`),
     ].join('\n')
   );
+
   process.exit(1);
 }
 

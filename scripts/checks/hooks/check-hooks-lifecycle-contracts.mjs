@@ -5,6 +5,8 @@ import path from 'node:path';
 
 const repositoryRoot = process.cwd();
 
+//===================================================================
+
 const ignoredDirectories = new Set([
   '.git',
   '.next',
@@ -14,6 +16,8 @@ const ignoredDirectories = new Set([
   'node_modules',
 ]);
 
+//===================================================================
+
 const sourceRoots = {
   client: path.join(repositoryRoot, 'apps/client/src'),
   pharmacy: path.join(repositoryRoot, 'apps/pharmacy/src'),
@@ -21,6 +25,8 @@ const sourceRoots = {
   auth: path.join(repositoryRoot, 'packages/auth/src'),
   hooks: path.join(repositoryRoot, 'packages/hooks/src'),
 };
+
+//===================================================================
 
 const sharedDebounceConsumers = [
   'apps/pharmacy/src/components/orders/OrdersPageContent/OrdersPageContent.tsx',
@@ -282,6 +288,8 @@ for (const relativePath of sharedDebounceConsumers) {
   }
 }
 
+//===================================================================
+
 for (const relativePath of catalogDebounceConsumers) {
   const source = await readRepositoryFile(relativePath);
 
@@ -434,6 +442,7 @@ const metrics = {};
 
 for (const [area, entries] of sourcesByArea) {
   const combined = entries.map(({ source }) => source).join('\n');
+
   metrics[area] = {
     useEffect: countMatches(combined, /\buseEffect\s*\(/g),
     setTimeout: countMatches(combined, /\bsetTimeout\s*\(/g),
@@ -458,6 +467,8 @@ if (failures.length > 0) {
   console.error(failures.join('\n'));
   process.exit(1);
 }
+
+//===================================================================
 
 console.log('Hooks lifecycle contract check passed.');
 console.log(JSON.stringify(metrics, null, 2));

@@ -5,10 +5,14 @@ import path from 'node:path';
 
 const root = process.cwd();
 
+//===================================================================
+
 const routeRoots = {
   client: path.join(root, 'apps/client/src/app/api'),
   pharmacy: path.join(root, 'apps/pharmacy/src/app/api'),
 };
+
+//===================================================================
 
 const backendRouteFiles = {
   '/admin': 'apps/api/src/routes/admin/admin.routes.ts',
@@ -250,7 +254,6 @@ for (const [app, routeRoot] of Object.entries(routeRoots)) {
 
     if (!contract) {
       violations.push(`${rel}: route is missing from the BFF route contract`);
-
       continue;
     }
 

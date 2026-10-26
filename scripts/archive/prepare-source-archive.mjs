@@ -25,6 +25,8 @@ export const SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES = new Set([
   'out',
 ]);
 
+//===================================================================
+
 export const SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS = [
   /(^|\/)\.env(?:\..*)?$/i,
   /(^|\/)(?:npm|pnpm|yarn)-debug\.log(?:\..*)?$/i,
@@ -48,6 +50,7 @@ function isExcludedFile(relativePath) {
 
   return SOURCE_ARCHIVE_EXCLUDED_FILE_PATTERNS.some((pattern) => {
     pattern.lastIndex = 0;
+
     return pattern.test(normalized);
   });
 }
@@ -56,6 +59,7 @@ function isExcludedFile(relativePath) {
 
 function isInside(parentPath, candidatePath) {
   const relative = path.relative(parentPath, candidatePath);
+
   return (
     relative === '' ||
     (!relative.startsWith('..') && !path.isAbsolute(relative))
@@ -83,11 +87,13 @@ async function copySourceTree({
       if (SOURCE_ARCHIVE_EXCLUDED_DIRECTORIES.has(entry.name)) continue;
 
       await mkdir(destinationPath, { recursive: true });
+
       await copySourceTree({
         sourceRoot,
         destinationRoot,
         currentDirectory: sourcePath,
       });
+
       continue;
     }
 
@@ -96,6 +102,7 @@ async function copySourceTree({
 
       await mkdir(path.dirname(destinationPath), { recursive: true });
       await copyFile(sourcePath, destinationPath);
+
       continue;
     }
 
@@ -122,6 +129,7 @@ export async function prepareSourceArchive({ repositoryRoot, outputPath }) {
   const destinationRoot = path.resolve(outputPath);
 
   const sourceStats = await lstat(sourceRoot);
+
   if (!sourceStats.isDirectory()) {
     throw new Error(`Repository root is not a directory: ${sourceRoot}`);
   }

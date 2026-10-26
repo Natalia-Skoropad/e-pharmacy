@@ -23,6 +23,7 @@ const isMongoIntegrationRun = argumentsList.some(
 
 if (isMongoIntegrationRun) {
   const envPath = resolve(process.cwd(), '.env');
+
   if (existsSync(envPath)) loadEnvFile(envPath);
 
   if (!process.env.E_PHARMACY_TEST_MONGODB_URI) {
@@ -39,7 +40,9 @@ if (isMongoIntegrationRun) {
 
 const result = spawnSync(
   process.execPath,
+
   [genericRunnerPath, ...argumentsList],
+
   {
     cwd: process.cwd(),
 
@@ -57,4 +60,5 @@ const result = spawnSync(
 );
 
 if (result.error) throw result.error;
+
 process.exitCode = result.status ?? 1;

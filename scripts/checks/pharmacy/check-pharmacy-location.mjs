@@ -28,7 +28,11 @@ const SOURCE_ROOTS = [
   ['packages', 'validation', 'src'],
 ];
 
+//===================================================================
+
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.mjs']);
+
+//===================================================================
 
 const PHARMACY_DOMAIN_FILES = new Set([
   'apps/api/src/services/admin/pharmacies/admin.service.ts',

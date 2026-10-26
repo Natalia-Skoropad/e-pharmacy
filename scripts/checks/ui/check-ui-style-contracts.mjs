@@ -16,6 +16,7 @@ const STYLE_ROOTS = [
 //===================================================================
 
 const TOKENS_PATH = resolve(ROOT, 'packages/ui/src/styles/tokens.css');
+
 const CONTAINER_PATH = resolve(
   ROOT,
   'packages/ui/src/layout/Container/Container.module.css'
@@ -31,6 +32,8 @@ const ALLOWED_DYNAMIC_CUSTOM_PROPERTIES = new Set([
   '--table-image-preview-size',
   '--toast-offset',
 ]);
+
+//===================================================================
 
 const EXPECTED_TOKENS = new Map([
   ['--container-max-mobile', '375px'],
@@ -103,9 +106,11 @@ function assertContainerContract(source, selector, file, errors) {
   const basePattern = new RegExp(
     `\\.${selector}\\s*\\{[\\s\\S]*?max-width:\\s*var\\(--container-max-mobile\\);[\\s\\S]*?padding-inline:\\s*var\\(--container-padding-mobile\\);[\\s\\S]*?\\}`
   );
+
   const tabletPattern = new RegExp(
     `@media only screen and \\(min-width: 768px\\)[\\s\\S]*?\\.${selector}\\s*\\{[\\s\\S]*?max-width:\\s*var\\(--container-max-tablet\\);[\\s\\S]*?padding-inline:\\s*var\\(--container-padding-tablet\\);[\\s\\S]*?\\}`
   );
+
   const desktopPattern = new RegExp(
     `@media only screen and \\(min-width: 1440px\\)[\\s\\S]*?\\.${selector}\\s*\\{[\\s\\S]*?max-width:\\s*var\\(--container-max-desktop\\);[\\s\\S]*?padding-inline:\\s*var\\(--container-padding-desktop\\);[\\s\\S]*?\\}`
   );
@@ -170,6 +175,7 @@ for (const file of cssFiles) {
   }
 
   const breakpoints = getMediaBreakpoints(source);
+
   for (const breakpoint of breakpoints) {
     if (breakpoint !== 768 && breakpoint !== 1440) {
       errors.push(
@@ -183,12 +189,14 @@ for (const file of cssFiles) {
       errors.push(
         `${path} places a smaller breakpoint after a larger breakpoint`
       );
+
       break;
     }
   }
 
   for (const match of source.matchAll(/z-index:\s*(-?\d+)\s*;/g)) {
     const value = Number(match[1]);
+
     if (Math.abs(value) > 10) {
       errors.push(
         `${path} uses numeric z-index ${value}; use a semantic --z-* token`
@@ -198,6 +206,7 @@ for (const file of cssFiles) {
 
   for (const [, name] of source.matchAll(/var\((--[a-z0-9-]+)/gi)) {
     const paths = usedVariables.get(name) ?? new Set();
+
     paths.add(path);
     usedVariables.set(name, paths);
   }
@@ -227,6 +236,7 @@ const tokenDeclarations = readDeclarations(tokenSource);
 
 for (const [name, expectedValue] of EXPECTED_TOKENS) {
   const actualValue = tokenDeclarations.get(name);
+
   if (actualValue !== expectedValue) {
     errors.push(
       `${formatPath(TOKENS_PATH)} must define ${name}: ${expectedValue}; received ${actualValue ?? 'missing'}`
@@ -254,7 +264,9 @@ assertContainerContract(
 
 if (errors.length > 0) {
   console.error('UI style contract check failed:');
+
   for (const error of errors) console.error(`- ${error}`);
+
   process.exitCode = 1;
 } else {
   console.log(

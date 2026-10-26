@@ -6,7 +6,11 @@ import path from 'node:path';
 
 const root = process.cwd();
 
+//===================================================================
+
 const featureRoot = path.join(root, 'apps/pharmacy/src/components/clients');
+
+//===================================================================
 
 const ignored = new Set([
   'node_modules',
@@ -43,9 +47,13 @@ function isTestFile(file) {
   return /\.(?:test|react\.test|integration\.test)\.(?:ts|tsx)$/.test(file);
 }
 
+//===================================================================
+
 function isTableOrDrawer(relativePath) {
   return /(?:Table|FiltersDrawer)\/[^/]+\.tsx$/.test(relativePath);
 }
+
+//===================================================================
 
 function isComponentBarrel(relativePath) {
   return /(?:^|\/)index\.ts$/.test(relativePath);
@@ -137,6 +145,8 @@ for (const file of files) {
 //===================================================================
 
 assert.deepEqual(violations, [], violations.join('\n'));
+
+//===================================================================
 
 console.log(
   `Pharmacy client-component check passed (${files.length} feature source files scanned).`

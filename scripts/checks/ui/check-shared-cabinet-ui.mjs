@@ -109,6 +109,8 @@ await assertMissing(
   'pharmacy-local fullscreen tests must move with the shared fullscreen contract'
 );
 
+//===================================================================
+
 console.log(
   'Shared cabinet UI check passed (fullscreen, dropdown and one-level nested navigation contracts).'
 );

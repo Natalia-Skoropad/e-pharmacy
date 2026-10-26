@@ -21,7 +21,9 @@ async function collectFiles(directory) {
   for (const entry of entries) {
     if (['node_modules', 'dist', '.turbo', '.next'].includes(entry.name))
       continue;
+
     const absolutePath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) files.push(...(await collectFiles(absolutePath)));
     else if (/\.(?:ts|tsx|mjs)$/.test(entry.name)) files.push(absolutePath);
   }
@@ -94,6 +96,7 @@ const publicBarrels = (
 for (const symbol of forbiddenPublicSymbols) {
   assert.equal(
     new RegExp(`\\b${symbol}\\b`).test(publicBarrels),
+
     false,
     `${symbol} must not be part of the stable public API.`
   );
@@ -109,7 +112,9 @@ const forbiddenImports = [];
 
 for (const file of consumerFiles) {
   if (file.startsWith(packageRoot)) continue;
+
   const source = await readFile(file, 'utf8');
+
   if (
     /from\s+['"]@e-pharmacy\/api-client['"]/.test(source) ||
     /@e-pharmacy\/api-client\/src/.test(source) ||
@@ -143,6 +148,8 @@ await access(
     'packages/next-api/test/integration/api-client-bff-transport.test.ts'
   )
 );
+
+//===================================================================
 
 console.log(
   `API-client public API check passed (${consumerFiles.length} repository source files scanned, 3 approved entrypoints).`

@@ -27,6 +27,7 @@ async function collectTypeScriptFiles(directory) {
     }
 
     const absolutePath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) {
       files.push(...(await collectTypeScriptFiles(absolutePath)));
     } else if (
@@ -75,6 +76,7 @@ assert.doesNotMatch(
   /FormData|Blob|ReadableStream|ArrayBuffer/,
   'Binary or streaming request bodies must not enter the generic API-client body contract.'
 );
+
 assert.match(types, /responseType\?: 'json' \| 'no-content' \| 'blob'/);
 assert.match(types, /export type BlobResponseRequestOptions/);
 assert.match(requestBody, /INVALID_REQUEST_BODY/);
@@ -146,6 +148,8 @@ for (const [pattern, message] of [
 ]) {
   assert.doesNotMatch(endpointBoundarySource, pattern, message);
 }
+
+//===================================================================
 
 console.log(
   'API-client contract check passed (transport, bodies, JSON, envelopes, endpoint DTOs, pagination, query and build policy).'

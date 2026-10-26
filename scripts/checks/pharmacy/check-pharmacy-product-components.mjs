@@ -6,11 +6,15 @@ import path from 'node:path';
 
 const root = process.cwd();
 
+//===================================================================
+
 const featureRoots = [
   'apps/pharmacy/src/components/all-products',
   'apps/pharmacy/src/components/products',
   'apps/pharmacy/src/components/product-requests',
 ].map((relativePath) => path.join(root, relativePath));
+
+//===================================================================
 
 const ignored = new Set([
   'node_modules',

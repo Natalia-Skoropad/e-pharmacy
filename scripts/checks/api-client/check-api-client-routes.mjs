@@ -23,6 +23,7 @@ async function collectFiles(directory) {
     }
 
     const absolutePath = path.join(directory, entry.name);
+
     if (entry.isDirectory()) {
       files.push(...(await collectFiles(absolutePath)));
     } else if (/\.ts$/.test(entry.name)) {
@@ -54,6 +55,7 @@ function withoutComments(source) {
 function collectLocalRouteShapes(source) {
   const values = [];
   const code = withoutComments(source);
+
   const patterns = [
     /'(\/api\/[^'\n]+)'/g,
     /"(\/api\/[^"\n]+)"/g,
@@ -101,10 +103,12 @@ function collectAppSharedAuthShapes(source, sharedAuthRoutes) {
 
   return routeNames.map((name) => {
     const route = sharedAuthRoutes.get(name);
+
     assert.ok(
       route,
       `Unknown shared auth route referenced by application: ${name}`
     );
+
     return route;
   });
 }
@@ -113,12 +117,14 @@ function collectAppSharedAuthShapes(source, sharedAuthRoutes) {
 
 const routeCheck = spawnSync(
   process.execPath,
+
   [
     path.join(
       repositoryRoot,
       'scripts/checks/routes/check-next-api-routes.mjs'
     ),
   ],
+
   { cwd: repositoryRoot, stdio: 'inherit' }
 );
 
@@ -153,6 +159,8 @@ for (const directory of browserApiDirectories) {
   }
 }
 
+//===================================================================
+
 assert.deepEqual(
   literalLocalCalls,
   [],
@@ -178,8 +186,10 @@ const routeContracts = JSON.parse(
 );
 
 const contractsByApp = new Map();
+
 for (const contract of routeContracts) {
   const appRoutes = contractsByApp.get(contract.app) ?? new Set();
+
   appRoutes.add(normalizeLocalRoute(`/api${contract.route}`));
   contractsByApp.set(contract.app, appRoutes);
 }
@@ -192,6 +202,7 @@ const routeSources = {
     ),
     'utf8'
   ),
+
   pharmacy: await readFile(
     path.join(
       repositoryRoot,
@@ -214,6 +225,7 @@ const missingBffContracts = [];
 
 for (const [app, source] of Object.entries(routeSources)) {
   const appContractRoutes = contractsByApp.get(app) ?? new Set();
+
   const routeShapes = [
     ...collectLocalRouteShapes(source),
     ...collectAppSharedAuthShapes(source, sharedAuthRoutes),
@@ -226,6 +238,8 @@ for (const [app, source] of Object.entries(routeSources)) {
   }
 }
 
+//===================================================================
+
 assert.deepEqual(
   missingBffContracts,
   [],
@@ -236,6 +250,7 @@ assert.deepEqual(
 
 const routeHandlerFiles = [
   ...(await collectFiles(path.join(repositoryRoot, 'apps/client/src/app/api'))),
+
   ...(await collectFiles(
     path.join(repositoryRoot, 'apps/pharmacy/src/app/api')
   )),
@@ -245,6 +260,7 @@ const literalBackendPaths = [];
 
 for (const file of routeHandlerFiles) {
   const source = await readFile(file, 'utf8');
+
   if (/backendPath:\s*['"`]\//.test(source)) {
     literalBackendPaths.push(path.relative(repositoryRoot, file));
   }
@@ -260,6 +276,7 @@ const apiClientContracts = await readFile(
   path.join(repositoryRoot, 'packages/api-client/src/contracts/index.ts'),
   'utf8'
 );
+
 assert.doesNotMatch(apiClientContracts, /localAuthApiRoutes|local-api-routes/);
 
 const nextContracts = await readFile(
@@ -296,6 +313,8 @@ await access(
     'apps/pharmacy/src/app/api/product-requests/article-availability/route.ts'
   )
 );
+
+//===================================================================
 
 console.log(
   `API-client route check passed (${routeHandlerFiles.length} BFF handler files, ${sharedAuthRoutes.size} shared auth contracts and 0 hidden browser routes).`

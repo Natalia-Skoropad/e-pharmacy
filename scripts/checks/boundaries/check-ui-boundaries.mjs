@@ -15,10 +15,12 @@ async function collectFiles(directory) {
 
   for (const entry of entries) {
     const absolutePath = join(directory, entry.name);
+
     if (entry.isDirectory()) {
       if (['node_modules', '.next', '.turbo', 'dist'].includes(entry.name)) {
         continue;
       }
+
       files.push(...(await collectFiles(absolutePath)));
     } else if (SOURCE_EXTENSIONS.has(extname(entry.name))) {
       files.push(absolutePath);
@@ -33,6 +35,7 @@ async function collectFiles(directory) {
 async function exists(path) {
   try {
     await access(path, constants.F_OK);
+
     return true;
   } catch {
     return false;
@@ -97,6 +100,7 @@ for (const directory of lowerLayerRoots) {
 
   for (const file of await collectFiles(directory)) {
     const source = await readFile(file, 'utf8');
+
     if (/@e-pharmacy\/ui(?:\/|['"])/.test(source)) {
       errors.push(
         `${formatPath(file)} creates a forbidden lower-layer dependency on UI`
@@ -116,6 +120,7 @@ for (const legacyDirectory of [
   'packages/ui/src/primitives/ButtonLink',
 ]) {
   const absolutePath = resolve(ROOT, legacyDirectory);
+
   if (await exists(absolutePath)) {
     errors.push(`${legacyDirectory} must not exist`);
   }
@@ -132,6 +137,7 @@ const forbiddenFeatureNames =
 
 for (const file of uiSourceFiles) {
   if (file.includes(`${join('src', 'a11y')}`)) continue;
+
   const source = await readFile(file, 'utf8');
 
   if (forbiddenFeatureNames.test(source)) {
@@ -187,9 +193,13 @@ if (!/MarkdownTextarea/.test(formsIndex)) {
   errors.push('packages/ui/src/forms/index.ts must export MarkdownTextarea');
 }
 
+//===================================================================
+
 if (errors.length > 0) {
   console.error('UI boundary check failed:');
+
   for (const error of errors) console.error(`- ${error}`);
+
   process.exitCode = 1;
 } else {
   console.log(

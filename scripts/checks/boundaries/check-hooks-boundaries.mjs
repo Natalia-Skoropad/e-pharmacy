@@ -11,6 +11,8 @@ const scannedRoots = [
   path.join(repositoryRoot, 'packages'),
 ];
 
+//===================================================================
+
 const ignoredDirectories = new Set([
   '.git',
   '.next',
@@ -19,6 +21,8 @@ const ignoredDirectories = new Set([
   'dist',
   'node_modules',
 ]);
+
+//===================================================================
 
 const forbiddenHooksImportPatterns = [
   /(?:from|import\s*)\s*['"](?:@e-pharmacy\/(?:ui|api-client|next-api)|next(?:\/|['"])|@\/|\.\.\/\.\.\/apps\/)/,
