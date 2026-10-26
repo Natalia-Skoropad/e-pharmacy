@@ -7,7 +7,7 @@ import type {
   StockMovementSource,
 } from '../../models/inventory/stockMovement.model';
 
-import type { OrderStatus } from '../../types/order';
+import type { OrderStatus } from '../../types/orders/order';
 
 //===============================================================
 

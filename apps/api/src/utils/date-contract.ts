@@ -1,4 +1,4 @@
-import type { ISODateTimeString } from '../types/date';
+import type { ISODateTimeString } from '../types/shared/date';
 
 //===============================================================
 

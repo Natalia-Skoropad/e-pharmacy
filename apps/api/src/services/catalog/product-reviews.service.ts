@@ -8,7 +8,7 @@ import { ProductReview } from '../../models/reviews/productReview.model';
 import type {
   ProductReviewResponseDto,
   ReviewModerationStatus,
-} from '../../types/product';
+} from '../../types/catalog/product';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicateProductReviewError } from '../../utils/mongoError';

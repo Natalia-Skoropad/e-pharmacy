@@ -1,7 +1,7 @@
 import type {
   CompletePharmacyBankDetails,
   EditablePharmacyBankDetails,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 

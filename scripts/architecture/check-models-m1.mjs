@@ -369,6 +369,41 @@ if (existsSync(path.join(root, g1MapFile))) {
 
 //===================================================================
 
+// G4 moves TypeScript declarations/DTOs only. Fold their *exact* immutable
+// canonical paths back to G0 identities when checking historical M1 sources.
+if (existsSync(path.join(root, g1MapFile))) {
+  const grouping = JSON.parse(readFileSync(path.join(root, g1MapFile), 'utf8'));
+  const types = grouping.moves.filter((item) => item.stage === 'G4');
+
+  assert.equal(types.length, 23, 'G4 type map must stay immutable');
+
+  const migrated = types.filter((item) => existsSync(path.join(root, item.to)));
+
+  assert(
+    migrated.length === 0 || migrated.length === types.length,
+    'Partial G4 types relocation is not a valid M1 dependency state'
+  );
+
+  if (migrated.length)
+    for (const item of types) {
+      assert(!item.stable, `Unexpected stable G4 type: ${item.from}`);
+
+      assert(
+        !existsSync(path.join(root, item.from)),
+        `Legacy types proxy prohibited: ${item.from}`
+      );
+
+      assert(
+        !canonicalOld.has(item.to),
+        `Duplicate M1/G4 canonical target: ${item.to}`
+      );
+
+      canonicalOld.set(item.to, item.from);
+    }
+}
+
+//===================================================================
+
 const files = new Set(
   ['apps', 'packages', 'scripts'].flatMap((dir) => walk(dir))
 );

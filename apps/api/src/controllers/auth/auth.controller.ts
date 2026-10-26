@@ -42,10 +42,10 @@ import type {
   RegisterInput,
   UpdatePasswordInput,
   UpdateProfileInput,
-} from '../../types/auth';
+} from '../../types/auth/auth';
 
-import type { SessionContext } from '../../types/session';
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { SessionContext } from '../../types/auth/session';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import type { PharmacyRegistrationDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
 

@@ -10,7 +10,7 @@ import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 import { authenticate } from '../../middlewares/auth/auth.middleware';
 import { authorizeRoles } from '../../middlewares/auth/role.middleware';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 //===============================================================
 

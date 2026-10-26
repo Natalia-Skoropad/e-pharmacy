@@ -29,9 +29,9 @@ import type {
   CartIssueResponseDto,
   CartProductResponseDto,
   CartResponseDto,
-} from '../../types/cart';
+} from '../../types/cart/cart';
 
-import type { ProductEntity } from '../../types/product';
+import type { ProductEntity } from '../../types/catalog/product';
 
 //===============================================================
 

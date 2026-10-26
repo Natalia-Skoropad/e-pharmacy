@@ -24,7 +24,7 @@ import type {
   PharmacyPendingModeration,
   PharmacyProfileResponseDto,
   PharmacyStatus,
-} from '../../../types/pharmacy';
+} from '../../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../../utils/httpError';
 

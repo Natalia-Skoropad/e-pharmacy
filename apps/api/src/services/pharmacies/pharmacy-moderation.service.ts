@@ -17,7 +17,7 @@ import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument
 import type {
   MyPharmacyProfileResponseDto,
   SubmitMyPharmacyModerationInput,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/httpError';
 

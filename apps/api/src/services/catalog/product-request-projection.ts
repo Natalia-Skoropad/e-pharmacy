@@ -5,9 +5,9 @@ import type {
   ProductRequestHistoryEntry,
   ProductRequestResponseDto,
   ProductRequestStatus,
-} from '../../types/product-request';
+} from '../../types/catalog/product-request';
 
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
 //===============================================================
 

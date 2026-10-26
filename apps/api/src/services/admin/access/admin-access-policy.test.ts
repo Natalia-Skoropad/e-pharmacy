@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { ADMIN_ACCESS_STATUSES } from '../../../constants/admin/access/admin-access';
 import { ADMIN_PERMISSIONS } from '../../../constants/admin/access/admin-permissions';
-import type { AdminAuthorization } from '../../../types/admin-access';
+import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 
 import {
   assertCanManageAdminPermissions,

@@ -1,7 +1,7 @@
 import { Schema, model, models } from 'mongoose';
 
 import { MAX_REVIEW_RATING } from '../../constants/shared/validation';
-import type { ProductEntity } from '../../types/product';
+import type { ProductEntity } from '../../types/catalog/product';
 
 //===============================================================
 

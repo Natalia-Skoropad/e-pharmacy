@@ -4,7 +4,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { API_MESSAGES } from '../../constants/shared/messages';
 
 import type { HealthEchoInput } from '../../schemas/infrastructure/health.schema';
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import { sendSuccessResponse } from '../../utils/apiResponse';
 

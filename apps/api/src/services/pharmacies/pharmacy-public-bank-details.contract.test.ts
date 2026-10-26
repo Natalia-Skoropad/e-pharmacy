@@ -15,7 +15,7 @@ test('generic public pharmacy details expose availability but never payment cred
       'utf8'
     ),
 
-    readFile(resolve(process.cwd(), 'src/types/pharmacy.ts'), 'utf8'),
+    readFile(resolve(process.cwd(), 'src/types/pharmacies/pharmacy.ts'), 'utf8'),
   ]);
 
   const publicSerializer = serviceSource.slice(

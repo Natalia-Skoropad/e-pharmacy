@@ -5,8 +5,8 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 
-import type { AuthSessionResult, LoginInput } from '../../types/auth';
-import type { SessionContext } from '../../types/session';
+import type { AuthSessionResult, LoginInput } from '../../types/auth/auth';
+import type { SessionContext } from '../../types/auth/session';
 
 import { httpError } from '../../utils/httpError';
 import { comparePassword } from '../../utils/password';

@@ -14,7 +14,7 @@ import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { Product } from '../../models/catalog/product.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 

@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 
-import type { UserRole } from './user';
+import type { UserRole } from '../accounts/user';
 
 //===============================================================
 
@@ -26,6 +26,7 @@ export type SessionEntity = {
   createdAt?: Date;
   updatedAt?: Date;
   expiresAt: Date;
+
   /** Optional only for sessions created before absolute-lifetime migration. */
   absoluteExpiresAt?: Date;
   lastUsedAt: Date;

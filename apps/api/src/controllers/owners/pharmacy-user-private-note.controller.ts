@@ -14,7 +14,7 @@ import {
   listMyPharmacyUserPrivateNotesService,
 } from '../../services/owners/pharmacy-user-private-note.service';
 
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import { sendSuccessResponse } from '../../utils/apiResponse';
 import { httpError } from '../../utils/httpError';

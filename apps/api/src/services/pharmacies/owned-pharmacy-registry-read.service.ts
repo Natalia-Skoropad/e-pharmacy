@@ -13,7 +13,7 @@ import type {
   OwnedPharmacyRegistryOptionsQuery,
 } from '../../schemas/owners/owned-pharmacy-registry.schema';
 
-import type { PharmacyMembershipRole } from '../../types/pharmacy';
+import type { PharmacyMembershipRole } from '../../types/pharmacies/pharmacy';
 
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
 import { httpError } from '../../utils/httpError';

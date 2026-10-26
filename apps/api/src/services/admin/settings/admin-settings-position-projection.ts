@@ -3,9 +3,9 @@ import { Types } from 'mongoose';
 import type {
   AdminPositionDto,
   PositionUsageDto,
-} from '../../../types/admin-settings';
+} from '../../../types/admin/settings/admin-settings';
 
-import type { PositionPersistenceEntity } from '../../../types/position';
+import type { PositionPersistenceEntity } from '../../../types/admin/settings/position';
 
 //===============================================================
 

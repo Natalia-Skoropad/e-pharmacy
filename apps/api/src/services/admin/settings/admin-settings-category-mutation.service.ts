@@ -22,7 +22,7 @@ import type {
   UpdateAdminProductCategoryInput,
 } from '../../../schemas/admin/settings/admin-settings.schema';
 
-import type { AdminProductCategoryDto } from '../../../types/admin-settings';
+import type { AdminProductCategoryDto } from '../../../types/admin/settings/admin-settings';
 
 import { httpError } from '../../../utils/httpError';
 import { isMongoDuplicateKeyError } from '../../../utils/mongoError';

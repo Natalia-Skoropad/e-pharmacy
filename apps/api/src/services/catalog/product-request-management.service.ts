@@ -8,7 +8,7 @@ import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 
 import type { ProductRequestFormInput } from '../../schemas/catalog/product-request.schema';
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicateProductRequestArticleError } from '../../utils/mongoError';

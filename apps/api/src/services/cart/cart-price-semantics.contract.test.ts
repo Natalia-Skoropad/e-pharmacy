@@ -8,7 +8,7 @@ import test from 'node:test';
 test('cart persistence stores intent only while response prices stay live', async () => {
   const [model, types, service, migration] = await Promise.all([
     readFile(path.resolve(process.cwd(), 'src/models/cart/cart.model.ts'), 'utf8'),
-    readFile(path.resolve(process.cwd(), 'src/types/cart.ts'), 'utf8'),
+    readFile(path.resolve(process.cwd(), 'src/types/cart/cart.ts'), 'utf8'),
 
     readFile(
       path.resolve(process.cwd(), 'src/services/cart/cart.service.ts'),

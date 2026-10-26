@@ -2,7 +2,7 @@ import { Schema, model, models } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth/auth';
 
-import type { SessionEntity } from '../../types/session';
+import type { SessionEntity } from '../../types/auth/session';
 
 //===============================================================
 

@@ -236,11 +236,26 @@ test('G3 preserves copy-template and demo seed filesystem roots', () => {
 
 //===================================================================
 
-test('G3 leaves G4–G5 untouched and historical baselines present', () => {
-  for (const m of plan.moves.filter((x) => ['G4', 'G5'].includes(x.stage))) {
-    assert(exists(m.from), `Future source missing: ${m.from}`);
+test('G3 honors completed G4, leaves G5 pending and preserves historical baselines', () => {
+  const g4 = plan.moves.filter((m) => m.stage === 'G4');
+  const g4Done = g4.every((m) => exists(m.to) && !exists(m.from));
+  const g4Pending = g4.every((m) => exists(m.from) && !exists(m.to));
 
-    if (!m.stable) assert(!exists(m.to), `Premature future move: ${m.to}`);
+  assert(g4Done || g4Pending, 'No partial G4 types relocation');
+
+  for (const m of plan.moves.filter((x) => ['G4', 'G5'].includes(x.stage))) {
+    const completedMove = m.stage === 'G4' && g4Done && !m.stable;
+
+    assert(
+      exists(completedMove ? m.to : m.from),
+      `Expected G3/G4 source missing: ${m.from}`
+    );
+
+    if (!m.stable)
+      assert(
+        !exists(completedMove ? m.from : m.to),
+        `Duplicate or premature future move: ${m.to}`
+      );
   }
 
   for (const item of [

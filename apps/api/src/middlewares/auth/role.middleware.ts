@@ -6,7 +6,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { API_MESSAGES } from '../../constants/shared/messages';
 
 import { requirePharmacyCapability } from '../../services/pharmacies/pharmacy-membership.service';
-import type { UserRole } from '../../types/user';
+import type { UserRole } from '../../types/accounts/user';
 import { httpError } from '../../utils/httpError';
 
 //===============================================================

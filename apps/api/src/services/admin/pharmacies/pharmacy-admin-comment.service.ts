@@ -14,7 +14,7 @@ import { PharmacyAdminComment } from '../../../models/admin/comments/pharmacyAdm
 import { User } from '../../../models/accounts/user.model';
 
 import type { CreatePharmacyAdminCommentInput } from '../../../schemas/admin/pharmacies/pharmacy-admin-comment.schema';
-import type { PharmacyAdminCommentDto } from '../../../types/pharmacy-admin-comment';
+import type { PharmacyAdminCommentDto } from '../../../types/admin/pharmacies/pharmacy-admin-comment';
 
 import { httpError } from '../../../utils/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';

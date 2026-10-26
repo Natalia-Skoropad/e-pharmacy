@@ -89,7 +89,7 @@ const [
     'catalog/product-request-validation.ts'
   ),
 
-  parse('apps', 'api', 'src', 'types', 'order.ts'),
+  parse('apps', 'api', 'src', 'types', 'orders/order.ts'),
   parse('apps', 'api', 'src', 'models', 'pharmacies', 'pharmacyNote.model.ts'),
   parse('apps', 'api', 'src', 'schemas', 'clients/client.schema.ts'),
   parse('apps', 'api', 'src', 'constants', 'cart/cart.ts'),

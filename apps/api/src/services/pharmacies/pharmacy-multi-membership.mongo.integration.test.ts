@@ -6,7 +6,7 @@ import mongoose, { Types } from 'mongoose';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import {
   canPharmacyMembershipUseCapability,

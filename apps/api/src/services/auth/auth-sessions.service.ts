@@ -8,13 +8,13 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Session } from '../../models/accounts/session.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { AuthSessionResult, AuthTokens } from '../../types/auth';
+import type { AuthSessionResult, AuthTokens } from '../../types/auth/auth';
 
 import type {
   SessionContext,
   SessionResponseDto,
   SessionRevokedReason,
-} from '../../types/session';
+} from '../../types/auth/session';
 
 import { httpError } from '../../utils/httpError';
 import { signToken } from '../../utils/jwt';

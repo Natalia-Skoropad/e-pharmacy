@@ -10,7 +10,7 @@ import {
   type StockMovementEventType,
 } from '../../models/inventory/stockMovement.model';
 
-import type { OrderStatus } from '../../types/order';
+import type { OrderStatus } from '../../types/orders/order';
 
 import { httpError } from '../../utils/httpError';
 import { isValidStockBalance } from './stock-movement-balance';

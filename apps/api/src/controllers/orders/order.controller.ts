@@ -36,7 +36,7 @@ import {
   updateOrderStatusService,
 } from '../../services/orders/order-mutations.service';
 
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================

@@ -19,7 +19,7 @@ const userModelSource = readFileSync(
 );
 
 const userTypeSource = readFileSync(
-  resolve(process.cwd(), 'src/types/user.ts'),
+  resolve(process.cwd(), 'src/types/accounts/user.ts'),
   'utf8'
 );
 

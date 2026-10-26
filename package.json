@@ -159,7 +159,9 @@
     "check:grouping-g2": "node scripts/architecture/relocate-api-grouping-g2.mjs --check --stage G2",
     "test:grouping-g2": "node --test scripts/architecture/relocate-api-grouping-g2.test.mjs",
     "check:grouping-g3": "node scripts/architecture/relocate-api-grouping-g3.mjs --check --stage G3",
-    "test:grouping-g3": "node --test scripts/architecture/relocate-api-grouping-g3.test.mjs"
+    "test:grouping-g3": "node --test scripts/architecture/relocate-api-grouping-g3.test.mjs",
+    "check:grouping-g4": "node scripts/architecture/relocate-api-grouping-g4.mjs --check --stage G4",
+    "test:grouping-g4": "node --test scripts/architecture/relocate-api-grouping-g4.test.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

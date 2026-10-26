@@ -16,7 +16,7 @@ import type { AdminAuditListQuery } from '../../../schemas/admin/audit/admin-aud
 import type {
   AdminAuditDetailsDto,
   AdminAuditListResponseDto,
-} from '../../../types/admin-audit';
+} from '../../../types/admin/audit/admin-audit';
 
 import { httpError } from '../../../utils/httpError';
 

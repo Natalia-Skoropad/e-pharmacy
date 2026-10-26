@@ -1,8 +1,8 @@
 import type { Types } from 'mongoose';
 
-import type { ProductStatus } from '../../types/product';
-import type { ProductCategorySnapshotDto } from '../../types/product-category';
-import type { PharmacyEntity } from '../../types/pharmacy';
+import type { ProductStatus } from '../../types/catalog/product';
+import type { ProductCategorySnapshotDto } from '../../types/catalog/product-category';
+import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 

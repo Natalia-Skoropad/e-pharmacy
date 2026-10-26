@@ -1,14 +1,14 @@
 import type { Types } from 'mongoose';
 import type { z } from 'zod';
 
-import type { PHARMACY_STATUSES } from '../constants/auth/auth';
+import type { PHARMACY_STATUSES } from '../../constants/auth/auth';
 
 import type {
   submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
-} from '../schemas/pharmacies/pharmacy.schema';
+} from '../../schemas/pharmacies/pharmacy.schema';
 
-import type { ISODateTimeString } from './date';
+import type { ISODateTimeString } from '../shared/date';
 
 //===============================================================
 

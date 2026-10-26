@@ -7,7 +7,7 @@ import {
   normalizeAdminPermissions,
 } from '../../../constants/admin/access/admin-permissions';
 
-import type { AdminAccessEntity } from '../../../types/admin-access';
+import type { AdminAccessEntity } from '../../../types/admin/access/admin-access';
 
 //===============================================================
 

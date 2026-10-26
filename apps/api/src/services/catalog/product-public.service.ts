@@ -13,8 +13,8 @@ import type {
   PublicProductsQuery,
 } from '../../schemas/catalog/product.schema';
 
-import type { ProductFilterOptionsResponseDto } from '../../types/product';
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
+import type { ProductFilterOptionsResponseDto } from '../../types/catalog/product';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
 import {
   getProductCategoryReferenceMap,

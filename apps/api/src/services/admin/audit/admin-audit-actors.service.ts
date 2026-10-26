@@ -15,7 +15,7 @@ import { User } from '../../../models/accounts/user.model';
 import type {
   AdminAuditActorDto,
   AdminAuditActorsResponseDto,
-} from '../../../types/admin-audit';
+} from '../../../types/admin/audit/admin-audit';
 
 import { buildPharmacyAuditScopeFilter } from './admin-audit-filters';
 

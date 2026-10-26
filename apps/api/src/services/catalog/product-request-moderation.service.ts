@@ -13,8 +13,8 @@ import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { Product } from '../../models/catalog/product.model';
 
 import type { ProductRequestModerationInput } from '../../schemas/catalog/product-request.schema';
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
-import type { ProductRequestStatus } from '../../types/product-request';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
+import type { ProductRequestStatus } from '../../types/catalog/product-request';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicateProductArticleError } from '../../utils/mongoError';

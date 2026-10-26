@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 import { env } from '../config/env';
-import type { UserRole } from '../types/user';
+import type { UserRole } from '../types/accounts/user';
 
 //===============================================================
 

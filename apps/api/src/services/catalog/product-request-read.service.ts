@@ -11,8 +11,8 @@ import type {
   ProductRequestsQuery,
 } from '../../schemas/catalog/product-request.schema';
 
-import type { ProductRequestStatus } from '../../types/product-request';
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
+import type { ProductRequestStatus } from '../../types/catalog/product-request';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
 import { httpError } from '../../utils/httpError';
 import { getEndOfDay, getStartOfDay } from '../../utils/date-range';

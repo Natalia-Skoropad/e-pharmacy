@@ -7,7 +7,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 
-import type { UserEntity } from '../../types/user';
+import type { UserEntity } from '../../types/accounts/user';
 
 import { httpError } from '../../utils/httpError';
 

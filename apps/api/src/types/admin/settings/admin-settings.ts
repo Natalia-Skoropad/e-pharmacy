@@ -1,7 +1,7 @@
 import type {
   ProductCategoryKind,
   ProductCategoryStatus,
-} from '../constants/catalog/product-category';
+} from '../../../constants/catalog/product-category';
 
 //===============================================================
 

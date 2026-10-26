@@ -12,7 +12,7 @@ import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacy';
+import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 

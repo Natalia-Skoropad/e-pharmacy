@@ -7,7 +7,7 @@ import {
   normalizeSettingsDictionaryNameKey,
 } from '../../constants/admin/settings/settings-dictionary';
 
-import type { PositionPersistenceEntity } from '../../types/position';
+import type { PositionPersistenceEntity } from '../../types/admin/settings/position';
 
 //===============================================================
 

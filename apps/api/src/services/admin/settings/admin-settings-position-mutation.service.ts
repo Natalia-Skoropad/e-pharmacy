@@ -15,7 +15,7 @@ import type {
   UpdateAdminSettingsDictionaryItemInput,
 } from '../../../schemas/admin/settings/admin-settings.schema';
 
-import type { AdminPositionDto } from '../../../types/admin-settings';
+import type { AdminPositionDto } from '../../../types/admin/settings/admin-settings';
 
 import { httpError } from '../../../utils/httpError';
 import { isMongoDuplicateKeyError } from '../../../utils/mongoError';

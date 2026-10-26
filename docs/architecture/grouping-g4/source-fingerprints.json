@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "stage": "G4",
+  "baselineHashes": {
+    "apps/api/src/types/admin-access.ts": {
+      "raw": "9005b6e322de0f8476405aafde889f98644e96b4a7c2e3770764b8d54a6a5754",
+      "normalized": "e32aa79581afa0a98d1fcd86b340a9734b0ff3a77fd13bdb7008c1db01effea2"
+    },
+    "apps/api/src/types/admin-audit.ts": {
+      "raw": "fd56ae5dfdb7933feba3d9272098c5dbc37122f2d4461eea5978161c5c48f9eb",
+      "normalized": "a9181ae0ad1241ad52513e8419f57e78a0edef5d9c1658a62b7819d9dd733ab9"
+    },
+    "apps/api/src/types/admin-employee-document.ts": {
+      "raw": "50ef8ec3b6d24f73cec671e9cd48a51921c320e38d018b3882e942e794f0d0e5",
+      "normalized": "d0b22e8c33a5c381b64126e41d32fb6c8f9a0e959044c2229add3a838082ecc0"
+    },
+    "apps/api/src/types/admin-pharmacy-document.ts": {
+      "raw": "9485c971f411e7f5194c2b5996bcbb0b99d2edcfbbf535246965084b41cb844d",
+      "normalized": "7110997351fe6a6ab5f67ffe065291e7cbb43f5a67c54c78f8462509242fe6a7"
+    },
+    "apps/api/src/types/admin-settings.ts": {
+      "raw": "33f6182738736592d78f584c0e223fb57ba9dd6ba89a9ec775cb8ee4deb6c76d",
+      "normalized": "7e7d6dd6d0ff9c671835e66ccca4bf123c29dabdb45c7e12692dc0e75a2c2fe7"
+    },
+    "apps/api/src/types/auth.ts": {
+      "raw": "c0515f97d5e7d609c551a2768ae0aa1292a07013c48049eaa1b4918296f84e34",
+      "normalized": "f3e886b72c5e50b36bd2753d0b4d09406e149273d39c9e9015558611d33d5c01"
+    },
+    "apps/api/src/types/cart.ts": {
+      "raw": "b312fee2b82ee3688874712cac6dc5d37bb5b9c2b13b0b71dbe9973d9a97c280",
+      "normalized": "8cdb7a9ca293e7cc545b416dfe6e385b38ebb61673febe15fbcd859bc63f2280"
+    },
+    "apps/api/src/types/date.ts": {
+      "raw": "1c315754c24fa54657dba98ed9a4446dbf4308397d18811e8708faa7ac08a21b",
+      "normalized": "780753e6cdc9a1f4e6fbab474845817b1bd957d7d52179657acb2ed9645c9112"
+    },
+    "apps/api/src/types/errors.ts": {
+      "raw": "1bea4a90238b6f50a06fd11cde9ecbea559b95622b33524cd7a28c69f073004d",
+      "normalized": "2236b9faa03209ea1588c28d6def0056f7b9ac94769304665cf49c0e9bbf8f46"
+    },
+    "apps/api/src/types/express.ts": {
+      "raw": "63fa0302a6f8712c668cdd64fb6ff1f40301a72a204998cc1d16676cb91ec8de",
+      "normalized": "9b8d1a6881e0d5325c4b5197f1ea226ccb881e7516f467a3a54ebda605e1f846"
+    },
+    "apps/api/src/types/mongo.ts": {
+      "raw": "b56ae9438a6803ba901301978c325e4111ba9d7b745d11a3e245b58112072412",
+      "normalized": "e7ebcfa7f4c166e4761d3342b6506f9745e5a8e499d71a71acf0304c6651a80d"
+    },
+    "apps/api/src/types/order.ts": {
+      "raw": "6ac243dae2877a508683a9479e4b4e3ec41ece12d74de933914dfd5633576e3c",
+      "normalized": "afaf700dc44efedd66357fff72508050eebb19d46672b1ba045279de41c1fec6"
+    },
+    "apps/api/src/types/pharmacy-admin-comment.ts": {
+      "raw": "4d895cc0633c080a1ab710f3bdae0568cda2904f08f11ee3ff2bcfadaabe0bc9",
+      "normalized": "953f722aea0d1e83217b4b909c54a59c70c6b39f386d751b0273a285f863b002"
+    },
+    "apps/api/src/types/pharmacy-owner-admin-comment.ts": {
+      "raw": "eaa9402c489e0e87782e7c1a6d8a435b0dfa87ef45be9d1e9b1c900ebb1a6263",
+      "normalized": "eaea46840d9357d96024a5153cabec5970faf1c1893ec1580f00a59db0b8a108"
+    },
+    "apps/api/src/types/pharmacy-owner-document.ts": {
+      "raw": "b0c4f0e1c03c21aab7187117369519d4e8144496665a85615dc780f1e1c28816",
+      "normalized": "5dea8d67512fe757527e17ebcfd664eff83e0b3bf577cf7b38b6e5c534d7507f"
+    },
+    "apps/api/src/types/pharmacy.ts": {
+      "raw": "236b1cb7a89f1e202a4cd9313d5227e48eabca696b1bc862f5219e8aa8e729b5",
+      "normalized": "5f2e47c99548792e1556cfe7d656cf2dcaa88c50aaccf3fbaab69cf1cc1f5753"
+    },
+    "apps/api/src/types/position.ts": {
+      "raw": "c1d8c96d46637fb65ec1d3dffa2f68df30cbf52c79e877a26318b9ef89b38100",
+      "normalized": "ec441cd642ce13b0b5ab6d1ebf3cb3490025a659b2e3e80d0a102a1c62ee3c1c"
+    },
+    "apps/api/src/types/product-category.ts": {
+      "raw": "35f7930a5253eab355f8ae9b335d6d2079a8f81aac6824f3c8fbb4bee1be9879",
+      "normalized": "c4348b0fe0adb6c5d22a30bbcf1ff01242758f2254aa1182f6b0c8806372002c"
+    },
+    "apps/api/src/types/product-request.ts": {
+      "raw": "acd156968dd0735105c7b7f3ee7464a4c09770f16bac28eb4c011d6ac952ef2b",
+      "normalized": "b3c613bdc0456de35b6161f8ec7f04c67346012acfa23b138add2b471a53995c"
+    },
+    "apps/api/src/types/product.ts": {
+      "raw": "0ef3c0ea90708b2cd92d259de6279fb5370a44771868b285f7e215e4f4a4ccbe",
+      "normalized": "bfb7f85e11a7d07bbd3ec4b3b9ce9530293e69a126973de4d032ee7a49a5d8a1"
+    },
+    "apps/api/src/types/session.ts": {
+      "raw": "e870ddf40b7e60c89f5a26d4e28d107822e307d7f0bbfe92e1161a162834532f",
+      "normalized": "62de80c3112ce41458876ab0a88887687f9ae907e03d73f0688feb3f230db1ba"
+    },
+    "apps/api/src/types/user.ts": {
+      "raw": "6df8dd60127de921e629275bf8fbb964f2bae3d6a323effd1a4909ec652100b6",
+      "normalized": "77f5499f92428ac516e1e4d7bf4e9c1a3b20c36faed9f508b38dfb98e9d90679"
+    },
+    "apps/api/src/types/validated-request.ts": {
+      "raw": "14fbf130d9ca3c936ea602a66a209dac8d44472ca38bd62e62c55efba6c235e5",
+      "normalized": "1b04829d88d980aa1aa50ef776b17fa68a768694dfc5785bda29616d6d90edb7"
+    }
+  },
+  "canonicalHashes": {
+    "apps/api/src/types/admin/access/admin-access.ts": {
+      "raw": "7c6758242c7226c8bb624f519210689d5c6ad77665d4196af93190a41b83f041",
+      "normalized": "475f9db839db9f9500833727bcbafca26d6e68baf6880f37aae1ef3675f4d707"
+    },
+    "apps/api/src/types/admin/audit/admin-audit.ts": {
+      "raw": "60d14d5b2b9e0c197890cad90f962118bfa367f1d5066b4ed82c2ef4e9b61a2d",
+      "normalized": "aae84da5c3ffcda586f9af5d6b4f7ff99f71b959094ddb94275466d3745ea78b"
+    },
+    "apps/api/src/types/admin/employees/admin-employee-document.ts": {
+      "raw": "50ef8ec3b6d24f73cec671e9cd48a51921c320e38d018b3882e942e794f0d0e5",
+      "normalized": "d0b22e8c33a5c381b64126e41d32fb6c8f9a0e959044c2229add3a838082ecc0"
+    },
+    "apps/api/src/types/admin/pharmacies/admin-pharmacy-document.ts": {
+      "raw": "6f34de0a6ef85f004bc78b36533651c5dd7425e0a0094baa03fe72dc70390483",
+      "normalized": "a0ebed027ac94f2a0deb218f8dc01d1ddd1ae56f5f935b1edc949a112b28cf1e"
+    },
+    "apps/api/src/types/admin/settings/admin-settings.ts": {
+      "raw": "b0d244f9ed6e78efdf9c7260dc4c8c84e8b46177b326041307e0f65bd090e7a2",
+      "normalized": "cd55ba2a80126d7dccccdeea66a4418909bdbe8cac962a10bea88277557e4db5"
+    },
+    "apps/api/src/types/auth/auth.ts": {
+      "raw": "d3b8454c8f99f4a42159001b6d376a031b87cae96269bef70ed0e98ab384ee3f",
+      "normalized": "111ef66d7c26a9307bb3f8b5a1fdf28cd849509780e093ce700ce6b19bf00652"
+    },
+    "apps/api/src/types/cart/cart.ts": {
+      "raw": "179fcef447ccd8158c9da7f2d593e982468a3a8ceede7aca02741b066cddfd93",
+      "normalized": "56aff81a2563cf2f333c4a5d9892e74189f42246243b4b4d8750b6b9c642ef6e"
+    },
+    "apps/api/src/types/shared/date.ts": {
+      "raw": "1c315754c24fa54657dba98ed9a4446dbf4308397d18811e8708faa7ac08a21b",
+      "normalized": "780753e6cdc9a1f4e6fbab474845817b1bd957d7d52179657acb2ed9645c9112"
+    },
+    "apps/api/src/types/http/errors.ts": {
+      "raw": "1bea4a90238b6f50a06fd11cde9ecbea559b95622b33524cd7a28c69f073004d",
+      "normalized": "2236b9faa03209ea1588c28d6def0056f7b9ac94769304665cf49c0e9bbf8f46"
+    },
+    "apps/api/src/types/infrastructure/express.ts": {
+      "raw": "fa79cb6f86acc64055c67f693994acd3390b1d908d57da2dd84edb8312fdfe5f",
+      "normalized": "fc93b15803f75af2fcbe48e5a17bb0e50a9fab7b0ff42fd227af1b25ed5268f3"
+    },
+    "apps/api/src/types/infrastructure/mongo.ts": {
+      "raw": "b56ae9438a6803ba901301978c325e4111ba9d7b745d11a3e245b58112072412",
+      "normalized": "e7ebcfa7f4c166e4761d3342b6506f9745e5a8e499d71a71acf0304c6651a80d"
+    },
+    "apps/api/src/types/orders/order.ts": {
+      "raw": "50a5cc803f198b17de4321e1fbc038ab33511f546b96674f547e40640f240756",
+      "normalized": "70c64e4119d4c75d0e9a1bc9b26f316a9a0add65be9d5f3cba62eace2996ed45"
+    },
+    "apps/api/src/types/admin/pharmacies/pharmacy-admin-comment.ts": {
+      "raw": "4d895cc0633c080a1ab710f3bdae0568cda2904f08f11ee3ff2bcfadaabe0bc9",
+      "normalized": "953f722aea0d1e83217b4b909c54a59c70c6b39f386d751b0273a285f863b002"
+    },
+    "apps/api/src/types/owners/pharmacy-owner-admin-comment.ts": {
+      "raw": "eaa9402c489e0e87782e7c1a6d8a435b0dfa87ef45be9d1e9b1c900ebb1a6263",
+      "normalized": "eaea46840d9357d96024a5153cabec5970faf1c1893ec1580f00a59db0b8a108"
+    },
+    "apps/api/src/types/owners/pharmacy-owner-document.ts": {
+      "raw": "b0c4f0e1c03c21aab7187117369519d4e8144496665a85615dc780f1e1c28816",
+      "normalized": "5dea8d67512fe757527e17ebcfd664eff83e0b3bf577cf7b38b6e5c534d7507f"
+    },
+    "apps/api/src/types/pharmacies/pharmacy.ts": {
+      "raw": "8c7406ec1728960ae3235a0cc59c98de04f357b4bdd980121b1c1c65f5400776",
+      "normalized": "1ffbde6a166ce5469b90cefafcba3669524ffa39256aa868d3618ad1613c3cc4"
+    },
+    "apps/api/src/types/admin/settings/position.ts": {
+      "raw": "c1d8c96d46637fb65ec1d3dffa2f68df30cbf52c79e877a26318b9ef89b38100",
+      "normalized": "ec441cd642ce13b0b5ab6d1ebf3cb3490025a659b2e3e80d0a102a1c62ee3c1c"
+    },
+    "apps/api/src/types/catalog/product-category.ts": {
+      "raw": "5a308b3edb212bd57578b0c0ac9052103028edcec96790d181cf363538f0d2d3",
+      "normalized": "ba64f64e55cdc79d0919d1876b0e451cf99cab65c310fe056cc957a47ce324c1"
+    },
+    "apps/api/src/types/catalog/product-request.ts": {
+      "raw": "30e9ac0c2a848635a85d9de437aacc659b511d9ec1f3fd59cb0bf6acb5839e97",
+      "normalized": "0d071048727dc783c9cfb7eadfaf3647ba29aa9c1f3d93ff16dd3a629cd6695a"
+    },
+    "apps/api/src/types/catalog/product.ts": {
+      "raw": "cc80da1a7ef987c503559f898f0aa1ddf19b83b0c80f5cb3e83cb922058075d2",
+      "normalized": "b9b705e85fa4f28d53cccb3d7ba0368736da67f05bb628ae3626ea192e901a71"
+    },
+    "apps/api/src/types/auth/session.ts": {
+      "raw": "df868abf93f079312bf0fac796b545c023f307be28473f0562f169f94bb8e5ea",
+      "normalized": "f22d40934a6e17b4c625afefa9a7b2c8358c8fc9f069440c8519487b1bd3f5bd"
+    },
+    "apps/api/src/types/accounts/user.ts": {
+      "raw": "cf6b5c0473b825834a08b602f14b547a1030ae6bf7ccccea66d913d18b402f17",
+      "normalized": "40e07d8866107500dd2b6a74f80a75d681dd6b45db2f6486c6a462ae7a7ccaf5"
+    },
+    "apps/api/src/types/http/validated-request.ts": {
+      "raw": "14fbf130d9ca3c936ea602a66a209dac8d44472ca38bd62e62c55efba6c235e5",
+      "normalized": "1b04829d88d980aa1aa50ef776b17fa68a768694dfc5785bda29616d6d90edb7"
+    }
+  }
+}

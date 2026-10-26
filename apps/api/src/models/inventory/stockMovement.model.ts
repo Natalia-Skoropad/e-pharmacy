@@ -1,6 +1,6 @@
 import { Schema, model, models } from 'mongoose';
 
-import type { OrderStatus } from '../../types/order';
+import type { OrderStatus } from '../../types/orders/order';
 
 //===============================================================
 

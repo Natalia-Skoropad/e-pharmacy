@@ -493,6 +493,48 @@ for (const file of codeFiles) {
 
 //===================================================================
 
+// G4 has an exact, separately pinned post-relocation hash for the one G3
+// operational script whose type-only import path changes. G3's historical
+// pre/post fingerprints themselves remain untouched.
+const g4TypeMoves = manifest.moves.filter((item) => item.stage === 'G4');
+
+assert.equal(g4TypeMoves.length, 23, 'Missing immutable G4 grouping map');
+
+const g4Finished = g4TypeMoves.every(
+  (item) => existsSync(abs(item.to)) && !existsSync(abs(item.from))
+);
+
+const g4Pending = g4TypeMoves.every(
+  (item) => existsSync(abs(item.from)) && !existsSync(abs(item.to))
+);
+
+assert(g4Finished || g4Pending, 'Partially relocated G4 types are forbidden');
+
+const approvedG4Path =
+  'docs/architecture/grouping-g4/approved-g3-after-g4.json';
+
+const approvedG4 = g4Finished
+  ? JSON.parse(readFileSync(abs(approvedG4Path), 'utf8')).files
+  : {};
+
+assert.deepEqual(
+  Object.keys(approvedG4),
+  g4Finished ? ['apps/api/src/scripts/seeds/seed.ts'] : []
+);
+
+const approvedG3SourceHash = (source, expected, alternative) => {
+  const usesRaw = hasMultilineTemplate(source);
+  const key = usesRaw ? 'raw' : 'normalized';
+  const actual = usesRaw ? rawHash(source) : sourceHash(source);
+
+  return (
+    actual === expected[key] ||
+    (alternative !== undefined && actual === alternative[key])
+  );
+};
+
+//===================================================================
+
 // Pinned G3 before/after hashes are calculated from the supplied post-G2 archive,
 // not regenerated when users run relocation. Intentional path-depth patches
 // for copy-templates and demo seed are part of canonical G3 fingerprints.
@@ -518,17 +560,13 @@ for (const entry of allEntries) {
   const value = done.length ? canonical : baseline;
 
   if (
-    hasMultilineTemplate(original.toString('utf8'))
-      ? rawHash(original) !== value.raw
-      : sourceHash(original.toString('utf8')) !== value.normalized
+    !approvedG3SourceHash(original.toString('utf8'), value, approvedG4[current])
   )
     issues.push(`Changed existing G3 source: ${current}`);
 
   if (
     projectedMoving &&
-    (hasMultilineTemplate(actual)
-      ? rawHash(actual) !== canonical.raw
-      : sourceHash(actual) !== canonical.normalized)
+    !approvedG3SourceHash(actual, canonical, approvedG4[entry.to])
   )
     issues.push(
       `Changed projected G3 script beyond approved paths: ${entry.to}`

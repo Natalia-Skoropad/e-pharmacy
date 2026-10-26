@@ -11,8 +11,8 @@ import {
 
 import { httpError } from '../../utils/httpError';
 
-import type { PharmacyEntity } from '../../types/pharmacy';
-import type { UserRole } from '../../types/user';
+import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
+import type { UserRole } from '../../types/accounts/user';
 import type { OrderDocument } from './order-shared';
 
 //===============================================================

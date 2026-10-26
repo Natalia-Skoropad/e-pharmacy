@@ -19,7 +19,7 @@ const backendCookies = await read('apps/api/src/constants/auth/auth.ts');
 const backendEnv = await read('apps/api/src/config/env.ts');
 const nextApiEnv = await read('packages/next-api/src/internal/env.ts');
 
-const backendAuthTypes = await read('apps/api/src/types/auth.ts');
+const backendAuthTypes = await read('apps/api/src/types/auth/auth.ts');
 
 const frontendAuthTokens = await read(
   'packages/next-api/src/internal/auth-tokens.ts'

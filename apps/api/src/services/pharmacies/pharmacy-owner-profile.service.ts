@@ -15,7 +15,7 @@ import type {
   CurrentPharmacySummaryResponseDto,
   MyPharmacyProfileResponseDto,
   UpdateMyPharmacyProfileInput,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/httpError';
 

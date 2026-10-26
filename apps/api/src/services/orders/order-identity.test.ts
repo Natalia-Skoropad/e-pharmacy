@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import { getOrderByIdService } from './order-query.service';
 

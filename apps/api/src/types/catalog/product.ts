@@ -1,8 +1,8 @@
 import type { Types } from 'mongoose';
 
-import type { PharmacyLocationDraft } from './pharmacy';
+import type { PharmacyLocationDraft } from '../pharmacies/pharmacy';
 import type { ProductCategoryReferenceDto } from './product-category';
-import type { ISODateTimeString } from './date';
+import type { ISODateTimeString } from '../shared/date';
 
 //===============================================================
 

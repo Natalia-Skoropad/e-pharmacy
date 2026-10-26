@@ -8,7 +8,7 @@ import {
 
 import { env } from '../../config/env';
 
-import type { SessionContext } from '../../types/session';
+import type { SessionContext } from '../../types/auth/session';
 
 import { parseDurationMs } from '../../utils/duration';
 

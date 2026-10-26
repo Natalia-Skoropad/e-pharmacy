@@ -3,7 +3,7 @@ import { ADMIN_AUDIT_LIMITS } from '../../../constants/admin/audit/admin-audit';
 import type {
   AdminAuditSnapshot,
   AdminAuditValue,
-} from '../../../types/admin-audit';
+} from '../../../types/admin/audit/admin-audit';
 
 //===============================================================
 

@@ -69,7 +69,7 @@ import {
   listOwnedPharmacyOptionsService,
 } from '../../services/pharmacies/owned-pharmacy-registry-read.service';
 
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import { listUserPharmacyMemberships } from '../../services/pharmacies/pharmacy-membership.service';
 import { sendSuccessResponse } from '../../utils/apiResponse';

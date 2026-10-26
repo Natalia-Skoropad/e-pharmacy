@@ -1,5 +1,6 @@
 import type { Types } from 'mongoose';
-import type { ProductCategoryReferenceDto } from './product-category';
+
+import type { ProductCategoryReferenceDto } from '../catalog/product-category';
 
 //===============================================================
 

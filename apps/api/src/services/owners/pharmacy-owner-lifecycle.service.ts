@@ -29,8 +29,8 @@ import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
 import type { UpdateAdminPharmacyOwnerStatusInput } from '../../schemas/admin/owners/admin-pharmacy-owner.schema';
-import type { PharmacyEntity } from '../../types/pharmacy';
-import type { UserEntity } from '../../types/user';
+import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
+import type { UserEntity } from '../../types/accounts/user';
 
 import { httpError } from '../../utils/httpError';
 

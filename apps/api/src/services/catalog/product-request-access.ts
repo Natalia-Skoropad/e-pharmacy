@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-import type { PharmacyEntity } from '../../types/pharmacy';
+import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
 
 import {
   requirePharmacyCapability,

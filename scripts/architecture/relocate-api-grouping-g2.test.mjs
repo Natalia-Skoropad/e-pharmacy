@@ -143,17 +143,22 @@ test('G2 never applies on invalid flags or silently checks an unrelocated tree',
 
 //===================================================================
 
-test('G2 protects JSON contracts, honors completed G3 and leaves G4–G5 pending', () => {
+test('G2 protects JSON contracts, honors completed G3/G4 and leaves G5 pending', () => {
   assert.equal(pinned.schemaVersion, 1);
   assert.equal(pinned.stage, 'G2');
 
   const g3Moves = plan.moves.filter((m) => m.stage === 'G3' && !m.stable);
   const completedG3 = g3Moves.every((m) => pathExists(m.to));
+  const g4Moves = plan.moves.filter((m) => m.stage === 'G4' && !m.stable);
+  const completedG4 = g4Moves.every((m) => pathExists(m.to));
 
   for (const m of plan.moves.filter((x) =>
     ['G3', 'G4', 'G5'].includes(x.stage)
   )) {
-    const moved = completedG3 && m.stage === 'G3' && !m.stable;
+    const moved =
+      !m.stable &&
+      ((completedG3 && m.stage === 'G3') || (completedG4 && m.stage === 'G4'));
+
     const current = moved ? m.to : m.from;
     const obsolete = moved ? m.from : m.to;
 

@@ -10,7 +10,7 @@ import {
 } from '../../../constants/admin/access/admin-permissions';
 
 import { HTTP_STATUS } from '../../../constants/http/httpStatus';
-import type { AdminAuthorization } from '../../../types/admin-access';
+import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 import { httpError } from '../../../utils/httpError';
 import { hasAdminPermission } from './admin-permission-evaluator';
 

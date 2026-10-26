@@ -3,14 +3,14 @@ import type { Types } from 'mongoose';
 import type {
   CompletePharmacyBankDetails,
   PharmacyLocationDraft,
-} from './pharmacy';
+} from '../pharmacies/pharmacy';
 
 import type {
   ProductCategoryReferenceDto,
   ProductCategorySnapshotDto,
-} from './product-category';
+} from '../catalog/product-category';
 
-import type { CalendarDateString, ISODateTimeString } from './date';
+import type { CalendarDateString, ISODateTimeString } from '../shared/date';
 
 //===============================================================
 
@@ -43,8 +43,10 @@ export type OrderClientSnapshot = {
 export type OrderPharmacySnapshot = {
   name: string;
   location?: PharmacyLocationDraft;
+
   /** @deprecated Stage 13.4.7 historical order snapshot compatibility only. */
   address?: string;
+
   /** @deprecated Stage 13.4.7 historical order snapshot compatibility only. */
   city?: string;
   phone?: string;
@@ -289,7 +291,6 @@ export type OrdersResponseDto = {
   totalPages: number;
   statistics: OrderStatisticsDto;
   earliestCreatedAt: CalendarDateString | null;
-
   orderNumberOptions?: string[];
 
   pharmacyOptions?: Array<{

@@ -10,10 +10,10 @@ import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schem
 import type {
   OrderSalesStatisticsDto,
   OrderSalesStatisticsGroupBy,
-} from '../../types/order';
+} from '../../types/orders/order';
 
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
-import type { UserRole } from '../../types/user';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
+import type { UserRole } from '../../types/accounts/user';
 
 import { padDatePart } from './order-shared';
 import { getCurrentPharmacyId } from './order-access';

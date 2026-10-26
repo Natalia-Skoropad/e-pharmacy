@@ -26,8 +26,8 @@ import {
 } from '../catalog/product-category.service';
 
 import type { CreateManagerOrderInput } from '../../schemas/orders/order.schema';
-import type { OrderResponseDto } from '../../types/order';
-import type { UserRole } from '../../types/user';
+import type { OrderResponseDto } from '../../types/orders/order';
+import type { UserRole } from '../../types/accounts/user';
 import { hasCompleteBankDetails } from '../pharmacies/bank-details';
 
 import type {

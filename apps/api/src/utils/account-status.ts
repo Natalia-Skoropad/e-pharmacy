@@ -12,7 +12,7 @@ import type {
   PharmacyOwnerAccountStatus,
   UserRole,
   UserStatus,
-} from '../types/user';
+} from '../types/accounts/user';
 
 //===============================================================
 

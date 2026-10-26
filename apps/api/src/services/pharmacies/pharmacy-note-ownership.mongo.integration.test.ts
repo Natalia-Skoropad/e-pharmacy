@@ -10,7 +10,7 @@ import { USER_ROLES } from '../../constants/auth/auth';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { User } from '../../models/accounts/user.model';
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import {
   createPharmacyNoteService,

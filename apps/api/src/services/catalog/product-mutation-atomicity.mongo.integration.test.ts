@@ -12,7 +12,7 @@ import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { StockMovement } from '../../models/inventory/stockMovement.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 import { createManagerOrderService } from '../orders/order-manager-orders.service';

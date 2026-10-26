@@ -22,7 +22,7 @@ import {
   getProductRequestsService,
 } from '../../services/catalog/product-request-read.service';
 
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 import { sendSuccessResponse } from '../../utils/apiResponse';
 
 //===============================================================

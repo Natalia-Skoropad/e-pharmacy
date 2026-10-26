@@ -1,7 +1,7 @@
 import type { Types } from 'mongoose';
 
-import type { ADMIN_ACCESS_STATUSES } from '../constants/admin/access/admin-access';
-import type { AdminPermission } from '../constants/admin/access/admin-permissions';
+import type { ADMIN_ACCESS_STATUSES } from '../../../constants/admin/access/admin-access';
+import type { AdminPermission } from '../../../constants/admin/access/admin-permissions';
 
 //===============================================================
 

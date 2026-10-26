@@ -16,7 +16,7 @@ import { AdminAccess } from '../../../models/admin/access/adminAccess.model';
 import type {
   AdminAccessResponseDto,
   AdminAuthorization,
-} from '../../../types/admin-access';
+} from '../../../types/admin/access/admin-access';
 
 import { httpError } from '../../../utils/httpError';
 

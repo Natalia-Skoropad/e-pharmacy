@@ -7,7 +7,7 @@ import { PharmacyReview } from '../../models/reviews/pharmacyReview.model';
 import type {
   PharmacyReviewResponseDto,
   ReviewModerationStatus,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicatePharmacyReviewError } from '../../utils/mongoError';

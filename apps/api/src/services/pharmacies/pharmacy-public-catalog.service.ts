@@ -13,7 +13,7 @@ import type {
   PublicPharmacyResponseDto,
   PharmacyFilterOptionsResponseDto,
   PharmacyLocationDraft,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/httpError';
 import { createFlexibleSearchRegExp, escapeRegExp } from '../../utils/regexp';

@@ -15,8 +15,8 @@ import { API_MESSAGES } from '../../../constants/shared/messages';
 import { User } from '../../../models/accounts/user.model';
 
 import type { UpdateMyAdminEmployeeProfileInput } from '../../../schemas/admin/employees/admin-employee-profile.schema';
-import type { AdminAuthorization } from '../../../types/admin-access';
-import type { AuthUserResponse } from '../../../types/auth';
+import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
+import type { AuthUserResponse } from '../../../types/auth/auth';
 
 import { httpError } from '../../../utils/httpError';
 import { toAuthUserResponse } from '../../../utils/userResponse';

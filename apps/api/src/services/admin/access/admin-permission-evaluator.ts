@@ -5,7 +5,7 @@ import {
   type AdminPermission,
 } from '../../../constants/admin/access/admin-permissions';
 
-import type { AdminAuthorization } from '../../../types/admin-access';
+import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 
 //===============================================================
 

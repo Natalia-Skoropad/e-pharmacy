@@ -6,7 +6,7 @@ import { pharmacyLocationDraftSchema } from '../../schemas/shared/pharmacy-locat
 import type {
   PharmacyGeoPoint,
   PharmacyLocationDraft,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 

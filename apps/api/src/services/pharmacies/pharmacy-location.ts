@@ -1,7 +1,7 @@
 import type {
   PharmacyLocationDraft,
   PharmacyPendingModeration,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 

@@ -13,7 +13,7 @@ import type {
   ForgotPasswordInput,
   ResetPasswordInput,
   UpdatePasswordInput,
-} from '../../types/auth';
+} from '../../types/auth/auth';
 
 import { httpError } from '../../utils/httpError';
 import { parseDurationMs } from '../../utils/duration';

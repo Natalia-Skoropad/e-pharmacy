@@ -7,7 +7,7 @@ import { AdminEmployeePrivateNote } from '../../../models/admin/employees/adminE
 import { User } from '../../../models/accounts/user.model';
 
 import type { CreateAdminEmployeePrivateNoteInput } from '../../../schemas/admin/employees/admin-employee-note.schema';
-import type { AdminAuthorization } from '../../../types/admin-access';
+import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 
 import { httpError } from '../../../utils/httpError';
 

@@ -8,7 +8,7 @@ import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFi
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
-import type { AdminPharmacyDocumentDto } from '../../types/admin-pharmacy-document';
+import type { AdminPharmacyDocumentDto } from '../../types/admin/pharmacies/admin-pharmacy-document';
 
 import { PharmacyRegistrationUploadSession } from '../../models/owners/pharmacyRegistrationUploadSession.model';
 
@@ -19,7 +19,7 @@ import type {
   PharmacyRegistrationDocumentClaimInput,
 } from '../../schemas/shared/pharmacy-document.schema';
 
-import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacy';
+import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacies/pharmacy';
 import { httpError } from '../../utils/httpError';
 import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
 import { findPharmacyForProfileAccess } from './pharmacy-membership.service';

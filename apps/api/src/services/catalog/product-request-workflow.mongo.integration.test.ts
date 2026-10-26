@@ -10,7 +10,7 @@ import { User } from '../../models/accounts/user.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import {
   createProductRequestService,

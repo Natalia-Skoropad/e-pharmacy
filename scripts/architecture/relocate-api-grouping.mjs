@@ -10,11 +10,14 @@ import { fileURLToPath } from 'node:url';
 const args = process.argv.slice(2);
 const index = args.indexOf('--stage');
 
-assert(index !== -1, 'Use --stage G1, G2 or G3');
+assert(index !== -1, 'Use --stage G1, G2, G3 or G4');
 
 const stage = args[index + 1];
 
-assert(['G1', 'G2', 'G3'].includes(stage), 'Supported stages: G1, G2, G3');
+assert(
+  ['G1', 'G2', 'G3', 'G4'].includes(stage),
+  'Supported stages: G1, G2, G3, G4'
+);
 
 const count = args.filter((arg) =>
   ['--dry-run', '--apply', '--check'].includes(arg)

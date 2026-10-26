@@ -9,7 +9,7 @@ import { PHARMACY_PROFILE_BLOCKED_ERROR_CODE } from '../../constants/pharmacies/
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import {
   getCurrentPharmacySummaryService,

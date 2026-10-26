@@ -18,7 +18,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 
-import type { AuthUserResponse, UpdateProfileInput } from '../../types/auth';
+import type { AuthUserResponse, UpdateProfileInput } from '../../types/auth/auth';
 
 import { httpError } from '../../utils/httpError';
 import { isDuplicatePhoneError } from '../../utils/mongoError';

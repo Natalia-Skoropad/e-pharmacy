@@ -14,8 +14,8 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Client } from '../../models/clients/client.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { AuthSessionResult, RegisterInput } from '../../types/auth';
-import type { SessionContext } from '../../types/session';
+import type { AuthSessionResult, RegisterInput } from '../../types/auth/auth';
+import type { SessionContext } from '../../types/auth/session';
 
 import { httpError } from '../../utils/httpError';
 

@@ -11,7 +11,7 @@ import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
-import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacy';
+import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacies/pharmacy';
 
 import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';

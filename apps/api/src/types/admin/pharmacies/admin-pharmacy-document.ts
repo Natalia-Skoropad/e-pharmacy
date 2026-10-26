@@ -1,4 +1,4 @@
-import type { PharmacyProfileVerificationDocumentResponseDto } from './pharmacy';
+import type { PharmacyProfileVerificationDocumentResponseDto } from '../../pharmacies/pharmacy';
 
 //===============================================================
 

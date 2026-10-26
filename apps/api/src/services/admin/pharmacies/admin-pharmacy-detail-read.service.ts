@@ -16,7 +16,7 @@ import type {
   EditablePharmacyBankDetails,
   PharmacyEntity,
   PharmacyLocationDraft,
-} from '../../../types/pharmacy';
+} from '../../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../../utils/httpError';
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';

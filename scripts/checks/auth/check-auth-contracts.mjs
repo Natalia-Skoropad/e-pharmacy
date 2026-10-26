@@ -307,7 +307,13 @@ const frontendResponses = await read(
   'responses.ts'
 );
 
-const backendAuthTypes = await read('apps', 'api', 'src', 'types', 'auth.ts');
+const backendAuthTypes = await read(
+  'apps',
+  'api',
+  'src',
+  'types',
+  'auth/auth.ts'
+);
 
 assert.deepEqual(
   extractTypeFields(frontendAuthTypes, 'AuthUserBase'),
@@ -347,7 +353,13 @@ const frontendSessions = await read(
   'session.ts'
 );
 
-const backendSessions = await read('apps', 'api', 'src', 'types', 'session.ts');
+const backendSessions = await read(
+  'apps',
+  'api',
+  'src',
+  'types',
+  'auth/session.ts'
+);
 
 assert.deepEqual(
   extractTypeFields(frontendSessions, 'ActiveSession'),

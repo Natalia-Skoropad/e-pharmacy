@@ -4,7 +4,7 @@ import { ZodError, type ZodType } from 'zod';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { API_MESSAGES } from '../../constants/shared/messages';
 
-import type { ValidationErrorDetails } from '../../types/errors';
+import type { ValidationErrorDetails } from '../../types/http/errors';
 import { httpError } from '../../utils/httpError';
 
 //===============================================================

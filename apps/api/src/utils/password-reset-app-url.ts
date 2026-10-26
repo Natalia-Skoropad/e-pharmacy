@@ -1,4 +1,4 @@
-import type { ForgotPasswordInput } from '../types/auth';
+import type { ForgotPasswordInput } from '../types/auth/auth';
 
 //===============================================================
 

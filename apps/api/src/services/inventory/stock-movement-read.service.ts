@@ -16,7 +16,7 @@ import {
   isPharmacyMembershipMissing,
 } from '../pharmacies/pharmacy-membership.service';
 
-import type { OrderStatus } from '../../types/order';
+import type { OrderStatus } from '../../types/orders/order';
 import { httpError } from '../../utils/httpError';
 import { getMovementValueQuantity } from './stock-movement-balance';
 import { backfillLegacyStockHistory } from './stock-movement-legacy.service';

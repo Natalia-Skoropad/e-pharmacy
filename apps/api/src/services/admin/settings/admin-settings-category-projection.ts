@@ -10,9 +10,9 @@ import {
 import type {
   AdminProductCategoryDto,
   ProductCategoryUsageDto,
-} from '../../../types/admin-settings';
+} from '../../../types/admin/settings/admin-settings';
 
-import type { ProductCategoryPersistenceEntity } from '../../../types/product-category';
+import type { ProductCategoryPersistenceEntity } from '../../../types/catalog/product-category';
 
 //===============================================================
 

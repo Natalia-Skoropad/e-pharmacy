@@ -14,9 +14,9 @@ import type {
   OrderResponseDto,
   OrderPharmacySnapshot,
   OrdersResponseDto,
-} from '../../types/order';
+} from '../../types/orders/order';
 
-import type { UserRole } from '../../types/user';
+import type { UserRole } from '../../types/accounts/user';
 
 import type {
   OrderDocument,

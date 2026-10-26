@@ -48,7 +48,7 @@ import { getWorkingHoursValidationIssue } from '../../utils/validation/working-h
 import type {
   PharmacyEntity,
   PharmacyVerificationDocumentMetadata,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 

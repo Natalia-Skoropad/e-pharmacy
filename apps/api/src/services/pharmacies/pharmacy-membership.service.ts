@@ -22,9 +22,9 @@ import { User } from '../../models/accounts/user.model';
 import type {
   PharmacyEntity,
   PharmacyMembershipRole,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
-import type { UserRole } from '../../types/user';
+import type { UserRole } from '../../types/accounts/user';
 
 import { httpError } from '../../utils/httpError';
 

@@ -7,13 +7,13 @@ import type {
   registerSchema,
   updatePasswordSchema,
   updateProfileSchema,
-} from '../schemas/auth/auth.schema';
+} from '../../schemas/auth/auth.schema';
 
 import type {
   AdminAccountStatus,
   ClientAccountStatus,
   PharmacyOwnerAccountStatus,
-} from './user';
+} from '../accounts/user';
 
 //===============================================================
 

@@ -1,5 +1,5 @@
-import type { AdminAuthorization } from './admin-access';
-import type { UserRole, UserStatus } from './user';
+import type { AdminAuthorization } from '../admin/access/admin-access';
+import type { UserRole, UserStatus } from '../accounts/user';
 
 //===============================================================
 

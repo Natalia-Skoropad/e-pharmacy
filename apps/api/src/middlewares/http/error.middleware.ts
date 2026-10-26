@@ -4,7 +4,7 @@ import { AUTH_ERROR_CODES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { API_MESSAGES } from '../../constants/shared/messages';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import {
   isDuplicateEmailError,

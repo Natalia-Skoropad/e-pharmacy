@@ -19,7 +19,7 @@ import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
 import type { CreatePharmacyDraftInput } from '../../schemas/pharmacies/pharmacy.schema';
-import type { MyPharmacyProfileResponseDto } from '../../types/pharmacy';
+import type { MyPharmacyProfileResponseDto } from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/httpError';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';

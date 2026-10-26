@@ -11,7 +11,7 @@ import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { User } from '../../models/accounts/user.model';
 
-import type { HttpError } from '../../types/errors';
+import type { HttpError } from '../../types/http/errors';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 import { createManagerOrderService } from './order-manager-orders.service';

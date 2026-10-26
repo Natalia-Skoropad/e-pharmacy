@@ -30,7 +30,7 @@ import {
 } from '../catalog/product-category.service';
 
 import type { CheckoutOrderInput } from '../../schemas/orders/order.schema';
-import type { OrderItemEntity, OrderResponseDto } from '../../types/order';
+import type { OrderItemEntity, OrderResponseDto } from '../../types/orders/order';
 
 import { hasCompleteBankDetails } from '../pharmacies/bank-details';
 

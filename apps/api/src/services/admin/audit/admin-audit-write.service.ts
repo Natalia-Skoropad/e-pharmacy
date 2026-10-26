@@ -14,7 +14,7 @@ import {
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';
 
-import type { AdminAuditSnapshot } from '../../../types/admin-audit';
+import type { AdminAuditSnapshot } from '../../../types/admin/audit/admin-audit';
 
 import {
   normalizeAdminAuditSnapshot,

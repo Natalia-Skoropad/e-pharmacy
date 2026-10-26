@@ -10,8 +10,8 @@ import type {
   OrderCommentsQuery,
 } from '../../schemas/orders/order.schema';
 
-import type { OrderManagerCommentEntity } from '../../types/order';
-import type { UserRole } from '../../types/user';
+import type { OrderManagerCommentEntity } from '../../types/orders/order';
+import type { UserRole } from '../../types/accounts/user';
 import type { OrderDocument, UserDocument } from './order-shared';
 
 import { serializeManagerComments } from './order-shared';

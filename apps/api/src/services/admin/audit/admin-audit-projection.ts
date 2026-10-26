@@ -13,7 +13,7 @@ import type {
   AdminAuditDetailsDto,
   AdminAuditListItemDto,
   AdminAuditValue,
-} from '../../../types/admin-audit';
+} from '../../../types/admin/audit/admin-audit';
 
 //===============================================================
 

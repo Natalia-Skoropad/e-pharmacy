@@ -9,7 +9,7 @@ import {
   type AdminAuditSection,
 } from '../../../constants/admin/audit/admin-audit';
 
-import type { AdminAuditLogEntity } from '../../../types/admin-audit';
+import type { AdminAuditLogEntity } from '../../../types/admin/audit/admin-audit';
 
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { User } from '../../../models/accounts/user.model';

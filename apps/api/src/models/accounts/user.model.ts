@@ -21,7 +21,7 @@ import {
 
 import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
-import type { UserEntity } from '../../types/user';
+import type { UserEntity } from '../../types/accounts/user';
 
 import { isAccountStatusAllowedForRole } from '../../utils/account-status';
 

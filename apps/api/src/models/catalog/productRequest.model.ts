@@ -13,7 +13,7 @@ import {
 
 import { PRODUCT_REQUEST_CATEGORY_MODES } from '../../constants/catalog/product-request';
 
-import type { ProductRequestEntity } from '../../types/product-request';
+import type { ProductRequestEntity } from '../../types/catalog/product-request';
 
 //===============================================================
 

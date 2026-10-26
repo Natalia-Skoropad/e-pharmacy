@@ -55,7 +55,7 @@ const LEGACY_LOCATION_ALLOWLIST = new Set([
   // Historical order snapshots are immutable facts. New snapshots use location.
   'apps/api/src/models/orders/order.model.ts',
   'apps/api/src/services/orders/order-shared.ts',
-  'apps/api/src/types/order.ts',
+  'apps/api/src/types/orders/order.ts',
 ]);
 
 //===================================================================

@@ -44,8 +44,8 @@ const requiredFiles = [
   ].map((name) => ['apps', 'api', 'src', 'services', 'admin/settings', name]),
 
   ['apps', 'api', 'src', 'controllers', 'admin/admin-settings.controller.ts'],
-  ['apps', 'api', 'src', 'types', 'admin-settings.ts'],
-  ['apps', 'api', 'src', 'types', 'position.ts'],
+  ['apps', 'api', 'src', 'types', 'admin/settings/admin-settings.ts'],
+  ['apps', 'api', 'src', 'types', 'admin/settings/position.ts'],
 ];
 
 for (const file of requiredFiles) {

@@ -3,7 +3,7 @@ import { Types, type ClientSession } from 'mongoose';
 import { Product } from '../../../models/catalog/product.model';
 import { ProductRequest } from '../../../models/catalog/productRequest.model';
 
-import type { ProductCategoryUsageDto } from '../../../types/admin-settings';
+import type { ProductCategoryUsageDto } from '../../../types/admin/settings/admin-settings';
 
 //===============================================================
 

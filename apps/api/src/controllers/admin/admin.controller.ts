@@ -110,7 +110,7 @@ import {
 
 import { moderateProductRequestByAdminService } from '../../services/catalog/product-request-moderation.service';
 
-import type { ValidatedResponse } from '../../types/validated-request';
+import type { ValidatedResponse } from '../../types/http/validated-request';
 import { sendSuccessResponse } from '../../utils/apiResponse';
 import { httpError } from '../../utils/httpError';
 

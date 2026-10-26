@@ -338,38 +338,50 @@ async function assertActualTypeShapes(frontendFixture) {
   }
 
   const backendContracts = [
-    ['pharmacyGeoPoint', 'apps/api/src/types/pharmacy.ts', 'PharmacyGeoPoint'],
-    ['pharmacyLocation', 'apps/api/src/types/pharmacy.ts', 'PharmacyLocation'],
+    [
+      'pharmacyGeoPoint',
+      'apps/api/src/types/pharmacies/pharmacy.ts',
+      'PharmacyGeoPoint',
+    ],
+    [
+      'pharmacyLocation',
+      'apps/api/src/types/pharmacies/pharmacy.ts',
+      'PharmacyLocation',
+    ],
     [
       'pharmacyLocationDraft',
-      'apps/api/src/types/pharmacy.ts',
+      'apps/api/src/types/pharmacies/pharmacy.ts',
       'PharmacyLocationDraft',
     ],
     [
       'editableBankDetails',
-      'apps/api/src/types/pharmacy.ts',
+      'apps/api/src/types/pharmacies/pharmacy.ts',
       'EditablePharmacyBankDetails',
     ],
     [
       'completeBankDetails',
-      'apps/api/src/types/pharmacy.ts',
+      'apps/api/src/types/pharmacies/pharmacy.ts',
       'CompletePharmacyBankDetails',
     ],
     [
       'verificationDocument',
-      'apps/api/src/types/pharmacy.ts',
+      'apps/api/src/types/pharmacies/pharmacy.ts',
       'PharmacyVerificationDocumentMetadata',
     ],
     [
       'productRequestFile',
-      'apps/api/src/types/product-request.ts',
+      'apps/api/src/types/catalog/product-request.ts',
       'ProductRequestFile',
     ],
-    ['clientOrder', 'apps/api/src/types/order.ts', 'OrderResponseDto'],
-    ['clientOrderItem', 'apps/api/src/types/order.ts', 'OrderItemResponseDto'],
+    ['clientOrder', 'apps/api/src/types/orders/order.ts', 'OrderResponseDto'],
+    [
+      'clientOrderItem',
+      'apps/api/src/types/orders/order.ts',
+      'OrderItemResponseDto',
+    ],
     [
       'productRequestResponse',
-      'apps/api/src/types/product-request.ts',
+      'apps/api/src/types/catalog/product-request.ts',
       'ProductRequestResponseDto',
     ],
   ];
@@ -392,7 +404,7 @@ async function assertActualTypeShapes(frontendFixture) {
   const backendDelivery = getNamedType(
     ts,
     backendProgram,
-    'apps/api/src/types/order.ts',
+    'apps/api/src/types/orders/order.ts',
     'Delivery'
   );
 
@@ -417,8 +429,11 @@ async function assertActualTypeShapes(frontendFixture) {
   }
 
   for (const [relativeFile, typeName] of [
-    ['apps/api/src/types/product-request.ts', 'ProductRequestsResponseDto'],
-    ['apps/api/src/types/order.ts', 'OrdersResponseDto'],
+    [
+      'apps/api/src/types/catalog/product-request.ts',
+      'ProductRequestsResponseDto',
+    ],
+    ['apps/api/src/types/orders/order.ts', 'OrdersResponseDto'],
   ]) {
     const { checker, type } = getNamedType(
       ts,
@@ -600,7 +615,7 @@ const [
   readSource('packages', 'config', 'src', 'cart', 'limits.ts'),
   readSource('apps', 'api', 'src', 'constants', 'auth/auth.ts'),
   readSource('apps', 'api', 'src', 'models', 'catalog', 'product.model.ts'),
-  readSource('apps', 'api', 'src', 'types', 'product.ts'),
+  readSource('apps', 'api', 'src', 'types', 'catalog/product.ts'),
 
   readSource(
     'apps',
@@ -610,7 +625,7 @@ const [
     'catalog/product-request-validation.ts'
   ),
 
-  readSource('apps', 'api', 'src', 'types', 'order.ts'),
+  readSource('apps', 'api', 'src', 'types', 'orders/order.ts'),
 
   readSource(
     'apps',

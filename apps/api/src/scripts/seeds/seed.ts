@@ -41,8 +41,8 @@ import { hashPassword } from '../../utils/password';
 import { ensureDefaultPharmacyClient } from '../../services/clients/default-pharmacy-client.service';
 import { ensureInitialProductCategories } from '../../services/catalog/product-category-bootstrap.service';
 
-import type { PharmacyEntity } from '../../types/pharmacy';
-import type { ProductEntity } from '../../types/product';
+import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
+import type { ProductEntity } from '../../types/catalog/product';
 
 //===============================================================
 

@@ -29,9 +29,9 @@ import type {
   OrderActivityHistoryItem,
   OrderItemEntity,
   OrderResponseDto,
-} from '../../types/order';
+} from '../../types/orders/order';
 
-import type { UserRole } from '../../types/user';
+import type { UserRole } from '../../types/accounts/user';
 
 import { hasCompleteBankDetails } from '../pharmacies/bank-details';
 import { canTransitionOrderStatus } from './order-status';

@@ -12,9 +12,9 @@ import type {
   ProductEntity,
   ProductOfferResponseDto,
   ProductResponseDto,
-} from '../../types/product';
+} from '../../types/catalog/product';
 
-import type { ProductCategoryReferenceDto } from '../../types/product-category';
+import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
 import { requireISODateTime } from '../../utils/date-contract';
 import { buildPublicEntitySlugId } from '../../utils/public-slug-id';

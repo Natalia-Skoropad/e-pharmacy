@@ -13,19 +13,19 @@ import type {
   OrderEntity,
   OrderItemEntity,
   OrderResponseDto,
-} from '../../types/order';
+} from '../../types/orders/order';
 
-import type { ProductEntity, ProductOfferEntity } from '../../types/product';
+import type { ProductEntity, ProductOfferEntity } from '../../types/catalog/product';
 
 import type {
   ProductCategoryReferenceDto,
   ProductCategorySnapshotDto,
-} from '../../types/product-category';
+} from '../../types/catalog/product-category';
 
 import type {
   PharmacyEntity,
   PharmacyLocationDraft,
-} from '../../types/pharmacy';
+} from '../../types/pharmacies/pharmacy';
 
 import { hasCompleteBankDetails } from '../pharmacies/bank-details';
 
