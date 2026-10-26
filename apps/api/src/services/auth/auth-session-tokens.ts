@@ -10,7 +10,7 @@ import { env } from '../../config/env';
 
 import type { SessionContext } from '../../types/auth/session';
 
-import { parseDurationMs } from '../../utils/duration';
+import { parseDurationMs } from '../../utils/dates/duration';
 
 //===============================================================
 

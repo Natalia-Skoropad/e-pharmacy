@@ -17,7 +17,7 @@ import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 import { getCartItemUnavailableReason } from './cart-item-availability';
 
 import {

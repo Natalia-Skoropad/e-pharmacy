@@ -34,7 +34,7 @@ test('idempotent comment, draft, and rate-limit races use the structural duplica
     );
   }
 
-  const helper = read('utils/mongoError.ts');
+  const helper = read('utils/database/mongoError.ts');
 
   assert.match(
     helper,

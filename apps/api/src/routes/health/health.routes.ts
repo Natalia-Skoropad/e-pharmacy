@@ -7,7 +7,7 @@ import {
 
 import { validate } from '../../middlewares/http/validate.middleware';
 import { healthEchoSchema } from '../../schemas/infrastructure/health.schema';
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

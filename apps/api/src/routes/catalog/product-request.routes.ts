@@ -23,7 +23,7 @@ import {
   productRequestsQuerySchema,
 } from '../../schemas/catalog/product-request.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

@@ -7,7 +7,7 @@ import { Order } from '../../models/orders/order.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { User } from '../../models/accounts/user.model';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import {
   commitReservedStock,

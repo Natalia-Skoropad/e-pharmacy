@@ -6,7 +6,7 @@ import { API_MESSAGES } from '../../constants/shared/messages';
 import type { HealthEchoInput } from '../../schemas/infrastructure/health.schema';
 import type { ValidatedResponse } from '../../types/http/validated-request';
 
-import { sendSuccessResponse } from '../../utils/apiResponse';
+import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
 //===============================================================
 

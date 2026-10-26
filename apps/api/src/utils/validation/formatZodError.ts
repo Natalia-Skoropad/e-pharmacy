@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { ValidationErrorDetails } from '../types/http/errors';
+import type { ValidationErrorDetails } from '../../types/http/errors';
 
 //===============================================================
 

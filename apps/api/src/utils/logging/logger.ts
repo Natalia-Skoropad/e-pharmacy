@@ -1,4 +1,4 @@
-import { env } from '../config/env';
+import { env } from '../../config/env';
 
 //===============================================================
 
@@ -39,6 +39,7 @@ export const logger = {
   error(message: string, error?: unknown): void {
     if (error) {
       console.error(message, error);
+
       return;
     }
 

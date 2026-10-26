@@ -11,7 +11,7 @@ import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFi
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 import { User } from '../../models/accounts/user.model';
 
-import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
+import { decodeAndVerifyDocumentUpload } from '../../utils/documents/documentUpload';
 
 //===================================================================
 // Diagnostic only. No create/update/delete/migration methods are called.

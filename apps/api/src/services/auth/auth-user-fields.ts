@@ -9,7 +9,7 @@ import { User } from '../../models/accounts/user.model';
 
 import type { UserEntity } from '../../types/accounts/user';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

@@ -15,10 +15,10 @@ import type {
   PharmacyLocationDraft,
 } from '../../types/pharmacies/pharmacy';
 
-import { httpError } from '../../utils/httpError';
-import { createFlexibleSearchRegExp, escapeRegExp } from '../../utils/regexp';
-import { requireISODateTime } from '../../utils/date-contract';
-import { buildPublicEntitySlugId } from '../../utils/public-slug-id';
+import { httpError } from '../../utils/http/httpError';
+import { createFlexibleSearchRegExp, escapeRegExp } from '../../utils/validation/regexp';
+import { requireISODateTime } from '../../utils/dates/date-contract';
+import { buildPublicEntitySlugId } from '../../utils/catalog/public-slug-id';
 import { clonePharmacyLocation } from './pharmacy-location';
 import { hasCompleteBankDetails } from './bank-details';
 

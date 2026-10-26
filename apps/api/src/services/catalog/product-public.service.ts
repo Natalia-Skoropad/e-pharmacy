@@ -22,7 +22,7 @@ import {
   serializeProductCategoryReference,
 } from './product-category.service';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import { getProductsByScope, getProductDetailsByScope } from './product-shared';
 

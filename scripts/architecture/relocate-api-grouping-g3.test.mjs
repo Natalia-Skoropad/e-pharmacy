@@ -236,15 +236,23 @@ test('G3 preserves copy-template and demo seed filesystem roots', () => {
 
 //===================================================================
 
-test('G3 honors completed G4, leaves G5 pending and preserves historical baselines', () => {
+test('G3 honors completed G4/G5 and preserves historical baselines', () => {
   const g4 = plan.moves.filter((m) => m.stage === 'G4');
   const g4Done = g4.every((m) => exists(m.to) && !exists(m.from));
   const g4Pending = g4.every((m) => exists(m.from) && !exists(m.to));
 
   assert(g4Done || g4Pending, 'No partial G4 types relocation');
 
+  const g5 = plan.moves.filter((x) => x.stage === 'G5' && !x.stable);
+  const g5Done = g5.every((x) => exists(x.to) && !exists(x.from));
+  const g5Pending = g5.every((x) => exists(x.from) && !exists(x.to));
+
+  assert(g5Done || g5Pending, 'No partial G5 utilities relocation');
+
   for (const m of plan.moves.filter((x) => ['G4', 'G5'].includes(x.stage))) {
-    const completedMove = m.stage === 'G4' && g4Done && !m.stable;
+    const completedMove =
+      ((m.stage === 'G4' && g4Done) || (m.stage === 'G5' && g5Done)) &&
+      !m.stable;
 
     assert(
       exists(completedMove ? m.to : m.from),

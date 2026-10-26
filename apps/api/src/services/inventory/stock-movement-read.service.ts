@@ -17,7 +17,7 @@ import {
 } from '../pharmacies/pharmacy-membership.service';
 
 import type { OrderStatus } from '../../types/orders/order';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 import { getMovementValueQuantity } from './stock-movement-balance';
 import { backfillLegacyStockHistory } from './stock-movement-legacy.service';
 import { reconcileOfferReservationBalance } from './stock-movement-reconcile.service';

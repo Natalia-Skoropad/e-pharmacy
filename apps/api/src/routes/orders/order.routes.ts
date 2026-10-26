@@ -32,7 +32,7 @@ import {
   updateOrderStatusSchema,
 } from '../../schemas/orders/order.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

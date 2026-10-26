@@ -13,7 +13,7 @@ const publicSlugValidation = await read(
   'packages/validation/src/url/slug-id.ts'
 );
 
-const backendPublicSlug = await read('apps/api/src/utils/public-slug-id.ts');
+const backendPublicSlug = await read('apps/api/src/utils/catalog/public-slug-id.ts');
 
 for (const prefix of ["product: 'pr'", "pharmacy: 'ph'"]) {
   const pattern = new RegExp(prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));

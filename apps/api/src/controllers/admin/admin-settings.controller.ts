@@ -29,7 +29,7 @@ import {
 import { listAdminPositionsService } from '../../services/admin/settings/admin-settings-position-read.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
-import { sendSuccessResponse } from '../../utils/apiResponse';
+import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
 //===============================================================
 

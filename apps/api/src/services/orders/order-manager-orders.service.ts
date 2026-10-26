@@ -15,8 +15,8 @@ import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { User } from '../../models/accounts/user.model';
 
-import { httpError } from '../../utils/httpError';
-import { isMongoDuplicateKeyError } from '../../utils/mongoError';
+import { httpError } from '../../utils/http/httpError';
+import { isMongoDuplicateKeyError } from '../../utils/database/mongoError';
 import { reserveOfferStock } from '../inventory/stock.service';
 import { createManagerOrderRequestFingerprint } from './manager-order-request-fingerprint';
 

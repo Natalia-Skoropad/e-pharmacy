@@ -17,8 +17,8 @@ import type {
 
 import type { AdminPositionDto } from '../../../types/admin/settings/admin-settings';
 
-import { httpError } from '../../../utils/httpError';
-import { isMongoDuplicateKeyError } from '../../../utils/mongoError';
+import { httpError } from '../../../utils/http/httpError';
+import { isMongoDuplicateKeyError } from '../../../utils/database/mongoError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 import {

@@ -1,7 +1,7 @@
 import type { HydratedDocument } from 'mongoose';
 
-import type { AuthUserResponse } from '../types/auth/auth';
-import type { UserEntity } from '../types/accounts/user';
+import type { AuthUserResponse } from '../../types/auth/auth';
+import type { UserEntity } from '../../types/accounts/user';
 
 import {
   isAdminAccountStatus,

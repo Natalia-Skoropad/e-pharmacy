@@ -7,7 +7,7 @@ import { User } from '../../models/accounts/user.model';
 
 import type { ClientProductsQuery } from '../../schemas/clients/client.schema';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import { getCurrentPharmacyId } from './client-access';
 import { buildClientProductsAggregationPipeline } from './client-purchases-aggregation';

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 import { env } from '../config/env';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/logging/logger';
 
 //===============================================================
 

@@ -204,15 +204,27 @@ test('Express.Request ambient augmentation is retained at the new canonical path
 
 //===================================================================
 
-test('G4 creates no flat proxies and does not prematurely move G5 utilities', () => {
+test('G4 creates no flat proxies and honors the all-or-none G5 utility stage', () => {
   const utilities = plan.moves.filter((m) => m.stage === 'G5');
 
   assert.equal(utilities.length, 31);
 
-  for (const m of utilities) {
-    assert(existsSync(absolute(m.from)), `Unexpected G5 change: ${m.from}`);
+  const moved = utilities.filter((m) => !m.stable);
 
-    if (!m.stable) assert(!existsSync(absolute(m.to)));
+  const g5Done = moved.every(
+    (m) => existsSync(absolute(m.to)) && !existsSync(absolute(m.from))
+  );
+
+  const g5Pending = moved.every(
+    (m) => existsSync(absolute(m.from)) && !existsSync(absolute(m.to))
+  );
+
+  assert(g5Done || g5Pending, 'Partially relocated G5 utilities');
+
+  for (const m of utilities) {
+    const current = m.stable || !g5Done ? m.from : m.to;
+    assert(existsSync(absolute(current)), `Missing G5 utility: ${current}`);
+    if (!m.stable) assert(!existsSync(absolute(g5Done ? m.from : m.to)));
   }
 
   const directory = 'apps/api/src/types';

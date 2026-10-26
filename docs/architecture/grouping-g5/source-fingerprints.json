@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "stage": "G5",
+  "baselineHashes": {
+    "apps/api/src/utils/account-status.ts": {
+      "raw": "8dcc5042b4e8bddadbeb86d80c36a9458de4eb1fab0124062857a71658976683",
+      "normalized": "d23d49a836a95342a90a70792b8b7468f64f9bc76516c1440100062d404a2908"
+    },
+    "apps/api/src/utils/apiResponse.ts": {
+      "raw": "4ea3b08bb2f165394ccba5ca5249dc8038cfcd22bc6fccb9bce89ab2aff71545",
+      "normalized": "68a34e1e06d26106d8eb15c19f9c96a22b2f4bf21caf95011294629b37bc6343"
+    },
+    "apps/api/src/utils/ctrlWrapper.ts": {
+      "raw": "18828affb3f7b06d486ee791999995e48996d571c1237cb426746b5e9226ffb1",
+      "normalized": "3fd325da4ccefaa9d0e83f72f51acbbe41dc31161b1dd5e26e63f4b663e1f19c"
+    },
+    "apps/api/src/utils/date-contract.ts": {
+      "raw": "fafaf08be7263d6ad3028ba18f0e98f5bae6a74005666ae55f0ebd04217d382a",
+      "normalized": "a57d4c24fb8221b1f1c5f7fe579f0b7a7529d709ddc5ded0f4dd7c20aa28d6ec"
+    },
+    "apps/api/src/utils/date-range.test.ts": {
+      "raw": "e9ebc96da6dc67bfec0077dc61368ec5d5dada60ca195ada80b33ec8f8d5f822",
+      "normalized": "e81312e40072cb9a2be35c7a848bb18a9655f20b6b281538737408c18bb3379e"
+    },
+    "apps/api/src/utils/date-range.ts": {
+      "raw": "58e308247170cbc532d8a29c4387d80738a7097ac1840db073ea623338fe4d9e",
+      "normalized": "62b566808aa45dc9c44e82b163f49016c31ab1db92b3eb2e0c142e258eb92c04"
+    },
+    "apps/api/src/utils/documentUpload.ts": {
+      "raw": "7f6d390a362370ae59974240f9eede9cfc0142ef3e3c44f4dd1df946672a3e0f",
+      "normalized": "ac17656d7faaf0dbbbf9f054cf92d7c5e0d3f5a0409868457fe2cfc899a7539b"
+    },
+    "apps/api/src/utils/duration.ts": {
+      "raw": "a67a055ccc766a61ecfa4937587152633dbdf252c7c491ddcc5462ab43712b58",
+      "normalized": "9bd8402f79add35c83bd9c681bd218a1623d165283fc8a1b66f74ac5d416b8b5"
+    },
+    "apps/api/src/utils/email-log-metadata.test.ts": {
+      "raw": "315147425a2e9233483970d4c5ecb029b919f1026b0155fe49de6cae534abf32",
+      "normalized": "c0f32f7c968c855f44c9706b2548a6ff3af2c5514041f0d7d633452326fdd5ed"
+    },
+    "apps/api/src/utils/email-log-metadata.ts": {
+      "raw": "b175ebc4d6b293cebbb5889b63746354c329199ecd793b7ff6bfae45e93ad371",
+      "normalized": "a1906d91864acb0dca6dd2880f3643fcb32eba8054276edddb5af397ea0d69da"
+    },
+    "apps/api/src/utils/formatZodError.ts": {
+      "raw": "404abf7548d8c9da0a85ff3deb8088d08aa3686619de5465021a9f7e503c107e",
+      "normalized": "46fc0b009d039ee21ea63cf9d8ac57b0fa4ce5ec105474aaa0f9522adf675b3b"
+    },
+    "apps/api/src/utils/httpError.test.ts": {
+      "raw": "a47b75716918db1106d6f267773e64ff80d777cecd18db23632140e811410627",
+      "normalized": "c3090eb7d9729242616bceaf1dd75873be03cf3514414e494da33aac1aaa7d85"
+    },
+    "apps/api/src/utils/httpError.ts": {
+      "raw": "752331cd10a7680583dee568a4a4abaab007b270ae061be188fa8b4347fa96df",
+      "normalized": "8190f238549051f137d07ee4f7dbbb6a2f27f0878936a5aeb428525066a0b41c"
+    },
+    "apps/api/src/utils/jwt.ts": {
+      "raw": "7ecb24cf8d2417cad09d8ba7a18d7ad3e8b698c81991ea5bf1968429f50cee88",
+      "normalized": "15fd43c5d965e4a2d79be0398dcf9849fb59feb5c1951687a6d25c9f4a57c697"
+    },
+    "apps/api/src/utils/logger.ts": {
+      "raw": "6f2b2fcb6771498e7a18a3b3eb76666bd1c08a9ba7cc7cbe3ae5cdb751614797",
+      "normalized": "440fe88dc314087b03883c329475dcb10551545323013b4140bca0b6d54835a4"
+    },
+    "apps/api/src/utils/mongoError.test.ts": {
+      "raw": "2a733e2013581ea7b814a0d14e201e2ebb68e466e7c9902e12aed4b39eee2d9f",
+      "normalized": "ecf1855087b584d2052107c734970ca970c2a0c1797c2e55e477ddbd9ec81669"
+    },
+    "apps/api/src/utils/mongoError.ts": {
+      "raw": "5ef9b73e4f084b1116e33de54e9bbdfd2bf4df59b6f78fb78b8d85d4bef1e417",
+      "normalized": "f9c7fac8d765e9c80ce32ba9a961c3ded2424e45d66e0d87dc1a568cdbf54002"
+    },
+    "apps/api/src/utils/password-reset-app-url.test.ts": {
+      "raw": "9f5e1f3cf00359a7525abca140c817e58e4d0c4842247a6a96bdb62bc0750cf6",
+      "normalized": "ddf5a8766c81455b1bb6c650e0c6bc55ad82efb961a6bf9530633f618113ca02"
+    },
+    "apps/api/src/utils/password-reset-app-url.ts": {
+      "raw": "b4cd3155f499e61da08bddc6219af61d7d28ffcdbc0411811244a44bba48d5db",
+      "normalized": "d68ec704ec7c650a7dd5b5625622bd3cf0f85c2e0c8f032c78abacd6733001e5"
+    },
+    "apps/api/src/utils/password-reset-url.test.ts": {
+      "raw": "c95b55e413976b089f93135d7b6d7f36fc12cb19553f843738df3e8e5e9bac84",
+      "normalized": "84f8be9ef21f1d02a1ea3c6a771b85e9391a2e5571642ea52005be8521651dd4"
+    },
+    "apps/api/src/utils/password-reset-url.ts": {
+      "raw": "a90b72e1aee6c8385041c98f32eff0cf0ddb480fec93d556b8decea0fda619db",
+      "normalized": "e2ab54d884440123bfa3688a5550cadb94b58b24d20c42ff7b28000002b9f5b5"
+    },
+    "apps/api/src/utils/password.ts": {
+      "raw": "9b854000da6b7c047c6922d0d5f630cd6e88ed553b6dc9aa396f382d9b61a515",
+      "normalized": "f5c6a9c151ac683e1abe6c588559ebe24c07c295798e077d230970af31689b6d"
+    },
+    "apps/api/src/utils/passwordResetEmail.ts": {
+      "raw": "8147e2a843ec58aa7cc04dd6760433f174dab62fcb6775ed232d30d9b8a96702",
+      "normalized": "93ac1318968ad927061703d036b17d8f9e27c4690ed52c29deac91693dc179e3"
+    },
+    "apps/api/src/utils/pharmacyAccess.ts": {
+      "raw": "63631777ac41f105ef1b95f136c9de64f4e0fe5ab75d1ee575c38d3adf3a82ae",
+      "normalized": "5070e81f7ee85f15d2b63e12ea13b0d7a5d5f61be1dd163141b50a9cf049b28b"
+    },
+    "apps/api/src/utils/public-slug-id.test.ts": {
+      "raw": "d98477b3dd897e8ace91a3ad359605a60191fc946e3fa4aeeb50abd4238d18aa",
+      "normalized": "aa0c661915b524f8d4b1ec433b0df9032d94a8f4a371835403ed14d0ef106f9e"
+    },
+    "apps/api/src/utils/public-slug-id.ts": {
+      "raw": "ac39e29c9cbd4a249aabc511ce2daef3aea4ddf3fbb38a98de7c5439fac53f2f",
+      "normalized": "2c07bee0c7a9dd171c36bfcfebcf442cf6f70f96b6826f25eccf50d116bc9d91"
+    },
+    "apps/api/src/utils/regexp.test.ts": {
+      "raw": "9a1270ac595362cf87ceeef28cf8ab757347816f8017a34087048fc827d424f1",
+      "normalized": "2442258568b59e4c160d55195c64c71c573fd14adab192cc572c25ecd39d550e"
+    },
+    "apps/api/src/utils/regexp.ts": {
+      "raw": "3e108716114cf5bc436595941454a14c22979d0aa7bccdd5184053b55d367cc5",
+      "normalized": "40af77040445553141f56c2fcc7a4299c19192101406008054170c6d69e3d236"
+    },
+    "apps/api/src/utils/sendEmail.ts": {
+      "raw": "861c099d01c1144345f2670f305ce85126e7a664c5b50b7ca3169b2c2fad62f5",
+      "normalized": "468a67d7f743559fac3692f09b899606312cb6cbc31a4fa30526800a41dc3bf5"
+    },
+    "apps/api/src/utils/userResponse.ts": {
+      "raw": "dc53b22887e1ed3bb26b1ac9dfaf5aa3985f5aaf602552524eb8acfbbb13bd70",
+      "normalized": "cb300887130dc0c3d60efdfc9f42cfc47b538e32091c2a6c6ebe64aa0cd85dd1"
+    },
+    "apps/api/src/utils/validation/working-hours.ts": {
+      "raw": "0d4fc8c0725883c15a0dbd6f27246add6becbaf95fb2935baf0207db19e6c00a",
+      "normalized": "91e1321f87203143eebd9a906278bd0f0c716a00bcf04804e95829e53d5a0775"
+    }
+  },
+  "canonicalHashes": {
+    "apps/api/src/utils/accounts/account-status.ts": {
+      "raw": "b9cc4c4a46452cdb94186aa16e5f886a4ccbc985182fcb0c54e83848c3b86a34",
+      "normalized": "0779198ccee03d5f5630cb309b1a1a7bb19833537ef84f3710940fc406815ed8"
+    },
+    "apps/api/src/utils/http/apiResponse.ts": {
+      "raw": "4ea3b08bb2f165394ccba5ca5249dc8038cfcd22bc6fccb9bce89ab2aff71545",
+      "normalized": "68a34e1e06d26106d8eb15c19f9c96a22b2f4bf21caf95011294629b37bc6343"
+    },
+    "apps/api/src/utils/http/ctrlWrapper.ts": {
+      "raw": "18828affb3f7b06d486ee791999995e48996d571c1237cb426746b5e9226ffb1",
+      "normalized": "3fd325da4ccefaa9d0e83f72f51acbbe41dc31161b1dd5e26e63f4b663e1f19c"
+    },
+    "apps/api/src/utils/dates/date-contract.ts": {
+      "raw": "18cde21ae58f7e338bacb250c5ede2ebe9cebffd8fd0090726483351f78b091a",
+      "normalized": "573e0fcb58126d3f7a3d95f35e262e9eb1870119777dfb86ef04178d138a4043"
+    },
+    "apps/api/src/utils/dates/date-range.test.ts": {
+      "raw": "e9ebc96da6dc67bfec0077dc61368ec5d5dada60ca195ada80b33ec8f8d5f822",
+      "normalized": "e81312e40072cb9a2be35c7a848bb18a9655f20b6b281538737408c18bb3379e"
+    },
+    "apps/api/src/utils/dates/date-range.ts": {
+      "raw": "58e308247170cbc532d8a29c4387d80738a7097ac1840db073ea623338fe4d9e",
+      "normalized": "62b566808aa45dc9c44e82b163f49016c31ab1db92b3eb2e0c142e258eb92c04"
+    },
+    "apps/api/src/utils/documents/documentUpload.ts": {
+      "raw": "10a023ebf2b8e7d89f5300ddd44069d94db61ecb936d203f7a921f194839e62e",
+      "normalized": "ce6615b8152ac2642e56e8be36774396d0d2e4d65ef8859b43921832eb1f9ff5"
+    },
+    "apps/api/src/utils/dates/duration.ts": {
+      "raw": "a67a055ccc766a61ecfa4937587152633dbdf252c7c491ddcc5462ab43712b58",
+      "normalized": "9bd8402f79add35c83bd9c681bd218a1623d165283fc8a1b66f74ac5d416b8b5"
+    },
+    "apps/api/src/utils/email/email-log-metadata.test.ts": {
+      "raw": "315147425a2e9233483970d4c5ecb029b919f1026b0155fe49de6cae534abf32",
+      "normalized": "c0f32f7c968c855f44c9706b2548a6ff3af2c5514041f0d7d633452326fdd5ed"
+    },
+    "apps/api/src/utils/email/email-log-metadata.ts": {
+      "raw": "b175ebc4d6b293cebbb5889b63746354c329199ecd793b7ff6bfae45e93ad371",
+      "normalized": "a1906d91864acb0dca6dd2880f3643fcb32eba8054276edddb5af397ea0d69da"
+    },
+    "apps/api/src/utils/validation/formatZodError.ts": {
+      "raw": "9bc5486e3b0aebffe00a86c6b93a81296fc713c8281baae52aaab6bffe058159",
+      "normalized": "12652b0717b6dd26fd1b5ad6b607c2490331605450061796e4d481e75c481544"
+    },
+    "apps/api/src/utils/http/httpError.test.ts": {
+      "raw": "a47b75716918db1106d6f267773e64ff80d777cecd18db23632140e811410627",
+      "normalized": "c3090eb7d9729242616bceaf1dd75873be03cf3514414e494da33aac1aaa7d85"
+    },
+    "apps/api/src/utils/http/httpError.ts": {
+      "raw": "7d5a5873001ce2ecd86a15e40c5eb4eaaf4ff74a0a25235d35397d38cf8fc638",
+      "normalized": "b14c14cb7fd1a59c8d0f96016ecbcce379a3903fa366c9f1d2d0c62b066ab8e9"
+    },
+    "apps/api/src/utils/auth/jwt.ts": {
+      "raw": "216c53af057ef0cdf9581f6bc4c3bf954b4933afc88bb7050268b047d5832f78",
+      "normalized": "b18f94514f7cce23355fd74e51ea6074e39a84360efed66e4f7a5d66f9b8c2dd"
+    },
+    "apps/api/src/utils/logging/logger.ts": {
+      "raw": "dd1ae17a103a932a74b46e3270bef66f8864b77adb6046b451b18a318cb86b79",
+      "normalized": "8b1833d570a3549f9447379a92dceac78897b5707f5ccff7ea8266249788356b"
+    },
+    "apps/api/src/utils/database/mongoError.test.ts": {
+      "raw": "2a733e2013581ea7b814a0d14e201e2ebb68e466e7c9902e12aed4b39eee2d9f",
+      "normalized": "ecf1855087b584d2052107c734970ca970c2a0c1797c2e55e477ddbd9ec81669"
+    },
+    "apps/api/src/utils/database/mongoError.ts": {
+      "raw": "1b2115f1fa777172a122bf3e3ef29091e97ca7b4bd827af74b6cf71fffe00077",
+      "normalized": "770024d217306cfc2b2f9cb691b11add5f807e92ccd8604cc021abd5e6680f50"
+    },
+    "apps/api/src/utils/auth/password-reset-app-url.test.ts": {
+      "raw": "9f5e1f3cf00359a7525abca140c817e58e4d0c4842247a6a96bdb62bc0750cf6",
+      "normalized": "ddf5a8766c81455b1bb6c650e0c6bc55ad82efb961a6bf9530633f618113ca02"
+    },
+    "apps/api/src/utils/auth/password-reset-app-url.ts": {
+      "raw": "98571b77accae2e47ee24e07bf97ce6852c2bd392c1cc8ee2bffa60b2ea5019b",
+      "normalized": "3e23e84ba2aa2e8ffc7defae173c97e6845ce5a4b31159d2f17faa61aef51185"
+    },
+    "apps/api/src/utils/auth/password-reset-url.test.ts": {
+      "raw": "c95b55e413976b089f93135d7b6d7f36fc12cb19553f843738df3e8e5e9bac84",
+      "normalized": "84f8be9ef21f1d02a1ea3c6a771b85e9391a2e5571642ea52005be8521651dd4"
+    },
+    "apps/api/src/utils/auth/password-reset-url.ts": {
+      "raw": "a90b72e1aee6c8385041c98f32eff0cf0ddb480fec93d556b8decea0fda619db",
+      "normalized": "e2ab54d884440123bfa3688a5550cadb94b58b24d20c42ff7b28000002b9f5b5"
+    },
+    "apps/api/src/utils/auth/password.ts": {
+      "raw": "380e65c38a66f84188a26f9f68496bcc85d79cbf343388e4b92e56794cc5b590",
+      "normalized": "a31d244e5e4dc13f270605e21aac7e1080a6f0ff23904bec74c8b2c51940693f"
+    },
+    "apps/api/src/utils/email/passwordResetEmail.ts": {
+      "raw": "8147e2a843ec58aa7cc04dd6760433f174dab62fcb6775ed232d30d9b8a96702",
+      "normalized": "93ac1318968ad927061703d036b17d8f9e27c4690ed52c29deac91693dc179e3"
+    },
+    "apps/api/src/utils/pharmacies/pharmacyAccess.ts": {
+      "raw": "745f749b29c0a2df7713632736ed505e9e9f06cd8c0e52e6294bef29ab43590b",
+      "normalized": "e727a28d8791156c5d1d56705839d78ce3f3ff13addd521dfc741a8dd723cd47"
+    },
+    "apps/api/src/utils/catalog/public-slug-id.test.ts": {
+      "raw": "d98477b3dd897e8ace91a3ad359605a60191fc946e3fa4aeeb50abd4238d18aa",
+      "normalized": "aa0c661915b524f8d4b1ec433b0df9032d94a8f4a371835403ed14d0ef106f9e"
+    },
+    "apps/api/src/utils/catalog/public-slug-id.ts": {
+      "raw": "ac39e29c9cbd4a249aabc511ce2daef3aea4ddf3fbb38a98de7c5439fac53f2f",
+      "normalized": "2c07bee0c7a9dd171c36bfcfebcf442cf6f70f96b6826f25eccf50d116bc9d91"
+    },
+    "apps/api/src/utils/validation/regexp.test.ts": {
+      "raw": "9a1270ac595362cf87ceeef28cf8ab757347816f8017a34087048fc827d424f1",
+      "normalized": "2442258568b59e4c160d55195c64c71c573fd14adab192cc572c25ecd39d550e"
+    },
+    "apps/api/src/utils/validation/regexp.ts": {
+      "raw": "3e108716114cf5bc436595941454a14c22979d0aa7bccdd5184053b55d367cc5",
+      "normalized": "40af77040445553141f56c2fcc7a4299c19192101406008054170c6d69e3d236"
+    },
+    "apps/api/src/utils/email/sendEmail.ts": {
+      "raw": "36cae77cdd534a64ba781b65fda9060858609c89296818bdff1d2f42e85b428f",
+      "normalized": "584a99338704d769796ff29195cbeb885f4594b145b31f3e60e5deee5e14b95b"
+    },
+    "apps/api/src/utils/accounts/userResponse.ts": {
+      "raw": "b09085e1e7bc9931f23f1eccc3dd834c05978a0487922754c6d09b0d08453919",
+      "normalized": "320d494dedb311aa6321f189ffb521b28452a200e26ae84ae29d213bab7b147d"
+    },
+    "apps/api/src/utils/validation/working-hours.ts": {
+      "raw": "0d4fc8c0725883c15a0dbd6f27246add6becbaf95fb2935baf0207db19e6c00a",
+      "normalized": "91e1321f87203143eebd9a906278bd0f0c716a00bcf04804e95829e53d5a0775"
+    }
+  }
+}

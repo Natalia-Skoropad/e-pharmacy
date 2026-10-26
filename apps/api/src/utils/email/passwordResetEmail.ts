@@ -77,6 +77,7 @@ async function getResetPasswordTemplatePath(): Promise<string> {
   for (const templatePath of paths) {
     try {
       await fs.access(templatePath);
+
       return templatePath;
     } catch {
       // Try the next path.

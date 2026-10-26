@@ -42,7 +42,7 @@ import {
   publicProductsQuerySchema,
 } from '../../schemas/catalog/product.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

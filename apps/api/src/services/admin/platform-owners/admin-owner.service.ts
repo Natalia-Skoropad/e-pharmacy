@@ -17,7 +17,7 @@ import { AdminAccess } from '../../../models/admin/access/adminAccess.model';
 import { AdminAuthorizationState } from '../../../models/admin/access/adminAuthorizationState.model';
 import { User } from '../../../models/accounts/user.model';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 import { getAdminAuthorizationService } from '../access/admin-access.service';
 

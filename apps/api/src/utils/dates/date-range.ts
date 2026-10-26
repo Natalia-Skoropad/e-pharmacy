@@ -12,6 +12,7 @@ function parseValidatedCalendarDate(value: string, endOfDay: boolean): Date {
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
+
   const date = new Date(
     Date.UTC(
       year,

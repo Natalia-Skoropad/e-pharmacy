@@ -14,13 +14,13 @@ import {
   getProductCategoryReferenceOrThrow,
 } from './product-category.service';
 
-import { httpError } from '../../utils/httpError';
-import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
+import { httpError } from '../../utils/http/httpError';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 
 import {
   createFlexibleSearchRegExp,
   createSafeRegExp,
-} from '../../utils/regexp';
+} from '../../utils/validation/regexp';
 
 import type { ProductOfferVisibility } from './product-projections';
 

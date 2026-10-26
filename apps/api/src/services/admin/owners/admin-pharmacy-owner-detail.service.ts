@@ -14,7 +14,7 @@ import { PharmacyOwnerAdminComment } from '../../../models/admin/comments/pharma
 import { PharmacyOwnerDocument } from '../../../models/owners/pharmacyOwnerDocument.model';
 import { User } from '../../../models/accounts/user.model';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 
 //===============================================================
 

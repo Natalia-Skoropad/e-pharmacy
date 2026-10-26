@@ -10,8 +10,8 @@ import { ProductRequest } from '../../models/catalog/productRequest.model';
 import type { ProductRequestFormInput } from '../../schemas/catalog/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
-import { httpError } from '../../utils/httpError';
-import { isDuplicateProductRequestArticleError } from '../../utils/mongoError';
+import { httpError } from '../../utils/http/httpError';
+import { isDuplicateProductRequestArticleError } from '../../utils/database/mongoError';
 
 import {
   getProductCategoryReferenceMap,

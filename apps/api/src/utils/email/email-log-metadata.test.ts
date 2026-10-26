@@ -7,6 +7,7 @@ import { createSafeEmailLogMetadata } from './email-log-metadata';
 
 test('email preview metadata never contains message bodies or reset secrets', () => {
   const resetToken = 'super-secret-reset-token';
+
   const options = {
     to: 'user@example.com',
     subject: 'Reset your password',

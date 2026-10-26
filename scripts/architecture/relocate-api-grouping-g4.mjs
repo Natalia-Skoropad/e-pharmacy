@@ -108,6 +108,8 @@ const manifest = JSON.parse(readFileSync(abs(mapPath), 'utf8'));
 assert.equal(inventory.schemaVersion, 1);
 assert.equal(manifest.schemaVersion, 1);
 
+//===================================================================
+
 // G4 must follow G1–G3; do not silently accept a mixed tree.
 for (const prior of ['G1', 'G2', 'G3']) {
   const previous = manifest.moves.filter((m) => m.stage === prior && !m.stable);

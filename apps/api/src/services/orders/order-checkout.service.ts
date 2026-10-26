@@ -19,7 +19,7 @@ import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 import { reserveOfferStock } from '../inventory/stock.service';
 import { getCartService } from '../cart/cart.service';
 import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';

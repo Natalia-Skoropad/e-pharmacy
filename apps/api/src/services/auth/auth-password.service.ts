@@ -15,13 +15,13 @@ import type {
   UpdatePasswordInput,
 } from '../../types/auth/auth';
 
-import { httpError } from '../../utils/httpError';
-import { parseDurationMs } from '../../utils/duration';
-import { comparePassword, hashPassword } from '../../utils/password';
-import { logger } from '../../utils/logger';
-import { resolvePasswordResetAppUrl } from '../../utils/password-reset-app-url';
-import { buildPasswordResetUrl } from '../../utils/password-reset-url';
-import { sendPasswordResetEmail } from '../../utils/passwordResetEmail';
+import { httpError } from '../../utils/http/httpError';
+import { parseDurationMs } from '../../utils/dates/duration';
+import { comparePassword, hashPassword } from '../../utils/auth/password';
+import { logger } from '../../utils/logging/logger';
+import { resolvePasswordResetAppUrl } from '../../utils/auth/password-reset-app-url';
+import { buildPasswordResetUrl } from '../../utils/auth/password-reset-url';
+import { sendPasswordResetEmail } from '../../utils/email/passwordResetEmail';
 
 import {
   enforcePasswordResetResponseTiming,

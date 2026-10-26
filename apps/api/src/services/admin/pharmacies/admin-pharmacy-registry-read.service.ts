@@ -10,8 +10,8 @@ import type {
   AdminPharmacyRegistryOptionsQuery,
 } from '../../../schemas/admin/pharmacies/admin-pharmacy-registry.schema';
 
-import { getEndOfDay, getStartOfDay } from '../../../utils/date-range';
-import { createSafeRegExp } from '../../../utils/regexp';
+import { getEndOfDay, getStartOfDay } from '../../../utils/dates/date-range';
+import { createSafeRegExp } from '../../../utils/validation/regexp';
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
 
 import {

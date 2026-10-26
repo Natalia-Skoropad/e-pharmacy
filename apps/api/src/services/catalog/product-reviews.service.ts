@@ -10,8 +10,8 @@ import type {
   ReviewModerationStatus,
 } from '../../types/catalog/product';
 
-import { httpError } from '../../utils/httpError';
-import { isDuplicateProductReviewError } from '../../utils/mongoError';
+import { httpError } from '../../utils/http/httpError';
+import { isDuplicateProductReviewError } from '../../utils/database/mongoError';
 
 import { getManagedProductDetailsService } from './product-management.service';
 

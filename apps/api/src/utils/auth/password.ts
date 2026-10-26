@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 
-import { PASSWORD_SALT_ROUNDS } from '../constants/auth/auth';
+import { PASSWORD_SALT_ROUNDS } from '../../constants/auth/auth';
 
 //===============================================================
 

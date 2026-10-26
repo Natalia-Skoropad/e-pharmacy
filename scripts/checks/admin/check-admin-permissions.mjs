@@ -175,7 +175,7 @@ const adminController = await read(
   'admin/admin.controller.ts'
 );
 
-const jwt = await read('apps', 'api', 'src', 'utils', 'jwt.ts');
+const jwt = await read('apps', 'api', 'src', 'utils', 'auth/jwt.ts');
 
 const backendAccessCodes = await read(
   'apps',

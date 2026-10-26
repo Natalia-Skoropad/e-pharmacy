@@ -9,8 +9,8 @@ import type {
   ReviewModerationStatus,
 } from '../../types/pharmacies/pharmacy';
 
-import { httpError } from '../../utils/httpError';
-import { isDuplicatePharmacyReviewError } from '../../utils/mongoError';
+import { httpError } from '../../utils/http/httpError';
+import { isDuplicatePharmacyReviewError } from '../../utils/database/mongoError';
 import { PUBLIC_PHARMACY_STATUS_FILTER } from './pharmacy-public-status';
 
 //===============================================================

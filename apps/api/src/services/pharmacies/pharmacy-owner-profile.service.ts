@@ -17,7 +17,7 @@ import type {
   UpdateMyPharmacyProfileInput,
 } from '../../types/pharmacies/pharmacy';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import {
   resolvePrivatePharmacyDocumentSelections,

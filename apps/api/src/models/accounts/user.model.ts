@@ -23,7 +23,7 @@ import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 
 import type { UserEntity } from '../../types/accounts/user';
 
-import { isAccountStatusAllowedForRole } from '../../utils/account-status';
+import { isAccountStatusAllowedForRole } from '../../utils/accounts/account-status';
 
 //===============================================================
 

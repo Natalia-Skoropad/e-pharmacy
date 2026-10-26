@@ -2,7 +2,7 @@ import type {
   HttpError,
   HttpErrorStatus,
   ValidationErrorDetails,
-} from '../types/http/errors';
+} from '../../types/http/errors';
 
 //===============================================================
 

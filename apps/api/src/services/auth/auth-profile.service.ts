@@ -20,9 +20,9 @@ import { User } from '../../models/accounts/user.model';
 
 import type { AuthUserResponse, UpdateProfileInput } from '../../types/auth/auth';
 
-import { httpError } from '../../utils/httpError';
-import { isDuplicatePhoneError } from '../../utils/mongoError';
-import { toAuthUserResponse } from '../../utils/userResponse';
+import { httpError } from '../../utils/http/httpError';
+import { isDuplicatePhoneError } from '../../utils/database/mongoError';
+import { toAuthUserResponse } from '../../utils/accounts/userResponse';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import {

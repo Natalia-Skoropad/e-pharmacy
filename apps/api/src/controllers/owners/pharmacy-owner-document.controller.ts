@@ -16,7 +16,7 @@ import {
 } from '../../services/owners/pharmacy-owner-document.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
-import { sendSuccessResponse } from '../../utils/apiResponse';
+import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
 //===============================================================
 

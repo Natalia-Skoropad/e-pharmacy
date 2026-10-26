@@ -12,7 +12,7 @@ import {
 
 import { listAdminAuditActorsService } from './admin-audit-actors.service';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 
 //===============================================================
 

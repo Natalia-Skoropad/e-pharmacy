@@ -42,16 +42,20 @@ export function getWorkingHoursValidationIssue(
 
   for (const part of parts) {
     const match = part.match(WORKING_HOURS_ENTRY_PATTERN);
+
     if (!match) return 'format';
 
     const day = match[1] as WorkingDayKey;
+
     if (seenDays.has(day)) return 'duplicate-days';
+
     seenDays.add(day);
 
     if (match[2] === 'Closed') continue;
 
     const from = match[3];
     const to = match[4];
+
     if (!from || !to || from >= to) return 'range';
   }
 

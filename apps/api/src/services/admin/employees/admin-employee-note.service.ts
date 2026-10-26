@@ -9,9 +9,9 @@ import { User } from '../../../models/accounts/user.model';
 import type { CreateAdminEmployeePrivateNoteInput } from '../../../schemas/admin/employees/admin-employee-note.schema';
 import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 
-import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
+import { hasMongoDuplicateKeyCode } from '../../../utils/database/mongoError';
 
 //===============================================================
 

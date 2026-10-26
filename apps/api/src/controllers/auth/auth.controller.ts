@@ -49,8 +49,8 @@ import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import type { PharmacyRegistrationDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
 
-import { sendSuccessResponse } from '../../utils/apiResponse';
-import { httpError } from '../../utils/httpError';
+import { sendSuccessResponse } from '../../utils/http/apiResponse';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

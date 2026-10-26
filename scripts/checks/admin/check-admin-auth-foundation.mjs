@@ -79,7 +79,7 @@ const passwordResetRouting = await read(
   'api',
   'src',
   'utils',
-  'password-reset-app-url.ts'
+  'auth/password-reset-app-url.ts'
 );
 
 assert.match(passwordResetRouting, /admin:\s*urls\.admin/);

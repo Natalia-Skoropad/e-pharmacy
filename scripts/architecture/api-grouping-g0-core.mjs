@@ -63,6 +63,8 @@ export const json = (p) => JSON.parse(readFileSync(absolute(p), 'utf8'));
 export const sha = (buffer) =>
   createHash('sha256').update(buffer).digest('hex');
 
+//===================================================================
+
 // Cosmetic blank lines do not invalidate source-reference parity. Line numbers
 // remain in the audit report as navigational hints only.
 export const referenceFingerprint = (rows) =>

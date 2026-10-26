@@ -6,9 +6,9 @@ import { User } from '../../models/accounts/user.model';
 
 import type { CreatePharmacyUserPrivateNoteInput } from '../../schemas/pharmacies/pharmacy-user-private-note.schema';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
-import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
+import { hasMongoDuplicateKeyCode } from '../../utils/database/mongoError';
 
 //===============================================================
 

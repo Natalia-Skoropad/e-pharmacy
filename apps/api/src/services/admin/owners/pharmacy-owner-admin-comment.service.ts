@@ -15,10 +15,10 @@ import { User } from '../../../models/accounts/user.model';
 import type { CreatePharmacyOwnerAdminCommentInput } from '../../../schemas/owners/pharmacy-owner-admin-comment.schema';
 import type { PharmacyOwnerAdminCommentDto } from '../../../types/owners/pharmacy-owner-admin-comment';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
-import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
+import { hasMongoDuplicateKeyCode } from '../../../utils/database/mongoError';
 
 //===============================================================
 

@@ -1,4 +1,4 @@
-import type { MongoDuplicateKeyError } from '../types/infrastructure/mongo';
+import type { MongoDuplicateKeyError } from '../../types/infrastructure/mongo';
 
 //===============================================================
 

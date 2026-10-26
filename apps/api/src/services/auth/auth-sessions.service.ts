@@ -16,9 +16,9 @@ import type {
   SessionRevokedReason,
 } from '../../types/auth/session';
 
-import { httpError } from '../../utils/httpError';
-import { signToken } from '../../utils/jwt';
-import { toAuthUserResponse } from '../../utils/userResponse';
+import { httpError } from '../../utils/http/httpError';
+import { signToken } from '../../utils/auth/jwt';
+import { toAuthUserResponse } from '../../utils/accounts/userResponse';
 
 import {
   REFRESH_TOKEN_ROTATION_GRACE_MS,

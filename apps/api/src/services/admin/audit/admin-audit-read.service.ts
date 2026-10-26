@@ -18,7 +18,7 @@ import type {
   AdminAuditListResponseDto,
 } from '../../../types/admin/audit/admin-audit';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 
 import { getAuditActorIdsByType } from './admin-audit-actors.service';
 

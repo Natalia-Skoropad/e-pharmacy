@@ -64,6 +64,7 @@ test('G0 rejects path collisions, traversal and unaccounted changes rather than 
 
 test('G0 permits blank lines and decorative separators, but rejects meaningful code drift', () => {
   const original = 'const options = {\n  required: true,\n};\n';
+
   const cosmetics =
     '//===============================================================\r\n\r\nconst options = {\r\n\r\n  required: true,\r\n};\r\n';
 

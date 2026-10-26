@@ -32,7 +32,7 @@ import type { UpdateAdminPharmacyOwnerStatusInput } from '../../schemas/admin/ow
 import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
 import type { UserEntity } from '../../types/accounts/user';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 import { revokeAllUserSessionsService } from '../auth/auth-sessions.service';

@@ -13,7 +13,7 @@ import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { PharmacyOwnerAdminComment } from '../../../models/admin/comments/pharmacyOwnerAdminComment.model';
 import { User } from '../../../models/accounts/user.model';
 
-import { hashPassword } from '../../../utils/password';
+import { hashPassword } from '../../../utils/auth/password';
 
 import {
   createPharmacyOwnerAdminCommentService,

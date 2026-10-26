@@ -522,14 +522,58 @@ assert.deepEqual(
   g4Finished ? ['apps/api/src/scripts/seeds/seed.ts'] : []
 );
 
-const approvedG3SourceHash = (source, expected, alternative) => {
+const g5UtilMoves = manifest.moves.filter(
+  (item) => item.stage === 'G5' && !item.stable
+);
+
+assert.equal(g5UtilMoves.length, 30);
+
+const g5Finished = g5UtilMoves.every(
+  (item) => existsSync(abs(item.to)) && !existsSync(abs(item.from))
+);
+
+const g5Pending = g5UtilMoves.every(
+  (item) => existsSync(abs(item.from)) && !existsSync(abs(item.to))
+);
+
+assert(
+  g5Finished || g5Pending,
+  'Partially relocated G5 utilities are forbidden'
+);
+
+const approvedG5 = g5Finished
+  ? JSON.parse(
+      readFileSync(
+        abs('docs/architecture/grouping-g5/approved-g3-after-g5.json'),
+        'utf8'
+      )
+    ).files
+  : {};
+
+assert.deepEqual(
+  Object.keys(approvedG5).sort(),
+
+  g5Finished
+    ? [
+        'apps/api/src/scripts/diagnostics/diagnose-pharmacy-owner-registration-documents.ts',
+        'apps/api/src/scripts/maintenance/cleanup-expired-cart-items.ts',
+        'apps/api/src/scripts/migrations/owners/migrate-pharmacy-owner-foundation.ts',
+        'apps/api/src/scripts/seeds/seed-admin-owner.ts',
+        'apps/api/src/scripts/seeds/seed.ts',
+      ]
+    : []
+);
+
+const approvedG3SourceHash = (source, expected, ...alternatives) => {
   const usesRaw = hasMultilineTemplate(source);
   const key = usesRaw ? 'raw' : 'normalized';
   const actual = usesRaw ? rawHash(source) : sourceHash(source);
 
   return (
     actual === expected[key] ||
-    (alternative !== undefined && actual === alternative[key])
+    alternatives.some(
+      (alternative) => alternative !== undefined && actual === alternative[key]
+    )
   );
 };
 
@@ -560,13 +604,23 @@ for (const entry of allEntries) {
   const value = done.length ? canonical : baseline;
 
   if (
-    !approvedG3SourceHash(original.toString('utf8'), value, approvedG4[current])
+    !approvedG3SourceHash(
+      original.toString('utf8'),
+      value,
+      approvedG4[current],
+      approvedG5[current]
+    )
   )
     issues.push(`Changed existing G3 source: ${current}`);
 
   if (
     projectedMoving &&
-    !approvedG3SourceHash(actual, canonical, approvedG4[entry.to])
+    !approvedG3SourceHash(
+      actual,
+      canonical,
+      approvedG4[entry.to],
+      approvedG5[entry.to]
+    )
   )
     issues.push(
       `Changed projected G3 script beyond approved paths: ${entry.to}`

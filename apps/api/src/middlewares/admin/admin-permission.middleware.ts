@@ -10,7 +10,7 @@ import {
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { getAdminAuthorizationService } from '../../services/admin/access/admin-access.service';
 import { hasAdminPermission } from '../../services/admin/access/admin-permission-evaluator';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

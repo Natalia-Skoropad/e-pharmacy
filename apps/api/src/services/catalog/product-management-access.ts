@@ -10,7 +10,7 @@ import {
 import type { ManagedProductsQuery } from '../../schemas/catalog/product.schema';
 import type { UserRole } from '../../types/accounts/user';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import type { ProductOfferVisibility } from './product-projections';
 

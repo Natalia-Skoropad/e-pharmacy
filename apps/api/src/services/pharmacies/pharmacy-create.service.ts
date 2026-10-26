@@ -21,11 +21,11 @@ import { User } from '../../models/accounts/user.model';
 import type { CreatePharmacyDraftInput } from '../../schemas/pharmacies/pharmacy.schema';
 import type { MyPharmacyProfileResponseDto } from '../../types/pharmacies/pharmacy';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 import { serializePharmacyProfile } from './pharmacy-profile.shared';
 
-import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
+import { hasMongoDuplicateKeyCode } from '../../utils/database/mongoError';
 
 //===============================================================
 

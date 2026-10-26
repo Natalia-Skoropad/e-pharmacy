@@ -86,6 +86,8 @@ for (const key of [
     );
 }
 
+//===================================================================
+
 // Verify *exact* reference inventory, not counts alone: catches stale source-path
 // rewrites or missing relative targets where totals happen to stay the same.
 for (const key of [

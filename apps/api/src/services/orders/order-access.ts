@@ -9,7 +9,7 @@ import {
   isPharmacyMembershipMissing,
 } from '../pharmacies/pharmacy-membership.service';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
 import type { UserRole } from '../../types/accounts/user';

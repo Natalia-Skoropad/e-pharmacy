@@ -72,7 +72,7 @@ import {
 import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import { listUserPharmacyMemberships } from '../../services/pharmacies/pharmacy-membership.service';
-import { sendSuccessResponse } from '../../utils/apiResponse';
+import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
 //===============================================================
 

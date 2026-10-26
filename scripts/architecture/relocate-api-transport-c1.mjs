@@ -24,6 +24,8 @@ const ROOT = path.resolve(
 
 const MANIFEST = 'docs/architecture/transport-c1/transport-relocation-map.json';
 
+//===================================================================
+
 // Regression tests intentionally contain OLD flat transport paths as fixtures.
 // Keep their literals stable across all C2-C6 apply runs.
 const RELOCATION_TEST_FIXTURE =
@@ -150,6 +152,8 @@ const completed = new Set(
   moves.filter((m) => relocatedDestinationExists(m.to)).map((m) => m.from)
 );
 
+//===================================================================
+
 // Refuse to relocate later domains before the earlier stages are complete.
 if (mode === 'apply') {
   const selectedNumber = Number(stage.slice(1));
@@ -176,6 +180,8 @@ const moved = new Map(
     )
     .map((m) => [m.from, m.to])
 );
+
+//===================================================================
 
 // --check verifies current disk and never assumes the selected stage has run.
 if (mode === 'check') {
@@ -367,6 +373,8 @@ for (const file of files) {
   if (after !== before || to !== file)
     changes.push({ from: file, to, before, after });
 }
+
+//===================================================================
 
 // Keep source-level HTTP method registrations, mount prefixes and order intact.
 // Relocation is allowed to change only source references and import paths.
@@ -589,6 +597,8 @@ if (mode === 'apply') {
   for (const c of changes)
     if (c.before !== c.after) writeFileSync(abs(c.to), c.after, 'utf8');
 }
+
+//===================================================================
 
 const report = {
   mode,

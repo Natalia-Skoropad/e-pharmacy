@@ -441,6 +441,8 @@ for (const file of codeFiles) {
   }
 }
 
+//===================================================================
+
 // Pinned pre-G2 hashes are captured from the supplied post-G1 archive.
 // Pinned post-G2 hashes are produced in an isolated dry-run simulation and
 // committed alongside this script, not regenerated during execution.

@@ -4,7 +4,7 @@ import {
   PHARMACY_OWNER_ACCOUNT_STATUSES,
   USER_ROLES,
   USER_STATUSES,
-} from '../constants/auth/auth';
+} from '../../constants/auth/auth';
 
 import type {
   AdminAccountStatus,
@@ -12,7 +12,7 @@ import type {
   PharmacyOwnerAccountStatus,
   UserRole,
   UserStatus,
-} from '../types/accounts/user';
+} from '../../types/accounts/user';
 
 //===============================================================
 

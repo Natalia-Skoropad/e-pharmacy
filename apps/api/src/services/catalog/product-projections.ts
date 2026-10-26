@@ -16,8 +16,8 @@ import type {
 
 import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
-import { requireISODateTime } from '../../utils/date-contract';
-import { buildPublicEntitySlugId } from '../../utils/public-slug-id';
+import { requireISODateTime } from '../../utils/dates/date-contract';
+import { buildPublicEntitySlugId } from '../../utils/catalog/public-slug-id';
 
 //===============================================================
 

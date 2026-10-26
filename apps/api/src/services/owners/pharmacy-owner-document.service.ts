@@ -20,8 +20,8 @@ import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument
 import type { PharmacyOwnerDocumentUploadInput } from '../../schemas/owners/pharmacy-owner-document.schema';
 import type { PharmacyOwnerDocumentMetadataDto } from '../../types/owners/pharmacy-owner-document';
 
-import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
-import { httpError } from '../../utils/httpError';
+import { decodeAndVerifyDocumentUpload } from '../../utils/documents/documentUpload';
+import { httpError } from '../../utils/http/httpError';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 //===============================================================

@@ -3,7 +3,7 @@ import type { Request } from 'express';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { getPublicProductCategoriesService } from '../../services/catalog/product-category.service';
 import type { ValidatedResponse } from '../../types/http/validated-request';
-import { sendSuccessResponse } from '../../utils/apiResponse';
+import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
 //===============================================================
 

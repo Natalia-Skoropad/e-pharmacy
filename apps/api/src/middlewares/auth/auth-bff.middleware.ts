@@ -10,7 +10,7 @@ import {
 } from '../../constants/http/bff';
 
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

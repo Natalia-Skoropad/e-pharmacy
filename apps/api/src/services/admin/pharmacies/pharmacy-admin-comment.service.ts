@@ -16,10 +16,10 @@ import { User } from '../../../models/accounts/user.model';
 import type { CreatePharmacyAdminCommentInput } from '../../../schemas/admin/pharmacies/pharmacy-admin-comment.schema';
 import type { PharmacyAdminCommentDto } from '../../../types/admin/pharmacies/pharmacy-admin-comment';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
-import { hasMongoDuplicateKeyCode } from '../../../utils/mongoError';
+import { hasMongoDuplicateKeyCode } from '../../../utils/database/mongoError';
 
 //===================================================================
 

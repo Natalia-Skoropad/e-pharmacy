@@ -16,8 +16,8 @@ import type { ProductRequestModerationInput } from '../../schemas/catalog/produc
 import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 import type { ProductRequestStatus } from '../../types/catalog/product-request';
 
-import { httpError } from '../../utils/httpError';
-import { isDuplicateProductArticleError } from '../../utils/mongoError';
+import { httpError } from '../../utils/http/httpError';
+import { isDuplicateProductArticleError } from '../../utils/database/mongoError';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import {

@@ -31,7 +31,7 @@ import {
   pharmacyUserPrivateNotesQuerySchema,
 } from '../../schemas/pharmacies/pharmacy-user-private-note.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

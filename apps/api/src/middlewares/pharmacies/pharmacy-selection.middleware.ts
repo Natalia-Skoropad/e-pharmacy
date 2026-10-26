@@ -3,7 +3,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

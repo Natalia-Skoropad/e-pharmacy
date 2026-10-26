@@ -7,7 +7,7 @@ import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { User } from '../../../models/accounts/user.model';
 
 import type { OrderSalesStatisticsQuery } from '../../../schemas/orders/order.schema';
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 
 import { getOrderSalesStatisticsForPharmaciesService } from '../../orders/order-sales-statistics.service';
 

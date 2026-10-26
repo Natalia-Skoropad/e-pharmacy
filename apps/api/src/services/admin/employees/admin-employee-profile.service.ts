@@ -18,8 +18,8 @@ import type { UpdateMyAdminEmployeeProfileInput } from '../../../schemas/admin/e
 import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 import type { AuthUserResponse } from '../../../types/auth/auth';
 
-import { httpError } from '../../../utils/httpError';
-import { toAuthUserResponse } from '../../../utils/userResponse';
+import { httpError } from '../../../utils/http/httpError';
+import { toAuthUserResponse } from '../../../utils/accounts/userResponse';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 //===============================================================

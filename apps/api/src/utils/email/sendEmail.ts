@@ -2,9 +2,9 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
-import { env } from '../config/env';
+import { env } from '../../config/env';
 import { createSafeEmailLogMetadata } from './email-log-metadata';
-import { logger } from './logger';
+import { logger } from '../logging/logger';
 
 //===============================================================
 
@@ -46,10 +46,14 @@ function isBrevoSmtpHost(): boolean {
 
 function getSmtpFallbackPorts(): number[] {
   const configuredPorts = env.SMTP_FALLBACK_PORTS;
-  const defaultPorts = isBrevoSmtpHost() ? [...DEFAULT_BREVO_FALLBACK_PORTS] : [];
+
+  const defaultPorts = isBrevoSmtpHost()
+    ? [...DEFAULT_BREVO_FALLBACK_PORTS]
+    : [];
 
   return [...configuredPorts, ...defaultPorts].filter(
-    (port, index, ports) => port !== env.SMTP_PORT && ports.indexOf(port) === index
+    (port, index, ports) =>
+      port !== env.SMTP_PORT && ports.indexOf(port) === index
   );
 }
 
@@ -80,7 +84,9 @@ function isConnectionError(error: unknown): boolean {
   const code = 'code' in error ? String(error.code) : '';
   const command = 'command' in error ? String(error.command) : '';
 
-  return CONNECTION_ERROR_CODES.has(code) || CONNECTION_ERROR_CODES.has(command);
+  return (
+    CONNECTION_ERROR_CODES.has(code) || CONNECTION_ERROR_CODES.has(command)
+  );
 }
 
 //===============================================================
@@ -110,6 +116,7 @@ async function sendViaSmtp(options: SendEmailOptions): Promise<void> {
 
   try {
     await sendWithTransporter(primaryTransporter, options);
+
     return;
   } catch (error) {
     if (!isConnectionError(error)) {
@@ -129,7 +136,9 @@ async function sendViaSmtp(options: SendEmailOptions): Promise<void> {
 
     try {
       await sendWithTransporter(fallbackTransporter, options);
+
       logger.info(`[email] SMTP fallback succeeded on port ${port}`);
+
       return;
     } catch (error) {
       logger.error(`[email] SMTP fallback failed on port ${port}`, error);
@@ -155,6 +164,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
 
   if (!primaryTransporter || !env.SMTP_FROM) {
     logger.info('[email:local-preview]', fallbackLogPayload);
+
     return;
   }
 

@@ -12,9 +12,9 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { assertActiveSessionService } from '../../services/auth/auth-sessions.service';
 import { getUserByIdService } from '../../services/auth/auth-profile.service';
 
-import { httpError } from '../../utils/httpError';
-import { logger } from '../../utils/logger';
-import { verifyToken } from '../../utils/jwt';
+import { httpError } from '../../utils/http/httpError';
+import { logger } from '../../utils/logging/logger';
+import { verifyToken } from '../../utils/auth/jwt';
 
 //===============================================================
 

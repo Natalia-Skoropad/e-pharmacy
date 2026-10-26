@@ -7,8 +7,8 @@ import type {
   AdminPharmacyOwnerPharmaciesQuery,
 } from '../../../schemas/admin/owners/admin-pharmacy-owner.schema';
 
-import { getStartOfDay, getEndOfDay } from '../../../utils/date-range';
-import { createSafeRegExp } from '../../../utils/regexp';
+import { getStartOfDay, getEndOfDay } from '../../../utils/dates/date-range';
+import { createSafeRegExp } from '../../../utils/validation/regexp';
 
 import { RATING_BOUNDS } from '../../pharmacies/registry/pharmacy-registry.constants';
 

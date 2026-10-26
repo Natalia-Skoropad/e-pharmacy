@@ -1,7 +1,7 @@
 import type { PipelineStage } from 'mongoose';
 
-import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
-import { createSafeRegExp } from '../../utils/regexp';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+import { createSafeRegExp } from '../../utils/validation/regexp';
 import type { ClientsQuery } from '../../schemas/clients/client.schema';
 
 //===============================================================

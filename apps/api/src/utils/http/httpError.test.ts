@@ -14,6 +14,7 @@ test('preserves a stable business error code', () => {
   );
 
   assert.equal(error.status, 400);
+
   assert.equal(error.code, 'CART_PHARMACY_LIMIT_EXCEEDED');
   assert.equal(error.message, 'Mutable user-facing message');
 });

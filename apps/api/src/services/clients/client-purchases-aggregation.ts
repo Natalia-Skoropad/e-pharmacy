@@ -3,8 +3,8 @@ import { type PipelineStage, type Types } from 'mongoose';
 import { Product } from '../../models/catalog/product.model';
 
 import type { ClientProductsQuery } from '../../schemas/clients/client.schema';
-import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
-import { createSafeRegExp } from '../../utils/regexp';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+import { createSafeRegExp } from '../../utils/validation/regexp';
 
 //===============================================================
 

@@ -404,6 +404,43 @@ if (existsSync(path.join(root, g1MapFile))) {
 
 //===================================================================
 
+// G5 utilities are relocated, not refactored. Canonicalize only exact G0 paths
+// to preserve immutable historical M1 source fingerprints.
+if (existsSync(path.join(root, g1MapFile))) {
+  const grouping = JSON.parse(readFileSync(path.join(root, g1MapFile), 'utf8'));
+  const utils = grouping.moves.filter((item) => item.stage === 'G5');
+  const movedUtils = utils.filter((item) => !item.stable);
+
+  assert.equal(utils.length, 31, 'G5 utility map must stay immutable');
+  assert.equal(movedUtils.length, 30);
+
+  const migrated = movedUtils.filter((item) =>
+    existsSync(path.join(root, item.to))
+  );
+
+  assert(
+    migrated.length === 0 || migrated.length === movedUtils.length,
+    'Partial G5 utilities relocation is not a valid M1 dependency state'
+  );
+
+  if (migrated.length)
+    for (const item of movedUtils) {
+      assert(
+        !existsSync(path.join(root, item.from)),
+        `Legacy utility proxy prohibited: ${item.from}`
+      );
+
+      assert(
+        !canonicalOld.has(item.to),
+        `Duplicate M1/G5 canonical target: ${item.to}`
+      );
+
+      canonicalOld.set(item.to, item.from);
+    }
+}
+
+//===================================================================
+
 const files = new Set(
   ['apps', 'packages', 'scripts'].flatMap((dir) => walk(dir))
 );

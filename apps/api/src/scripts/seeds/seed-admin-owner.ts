@@ -10,7 +10,7 @@ import { AdminAuthorizationState } from '../../models/admin/access/adminAuthoriz
 import { User } from '../../models/accounts/user.model';
 
 import { adminOwnerBootstrapSchema } from '../../schemas/admin/owners/admin-bootstrap.schema';
-import { hashPassword } from '../../utils/password';
+import { hashPassword } from '../../utils/auth/password';
 
 //===============================================================
 

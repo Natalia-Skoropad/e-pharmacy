@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Order } from '../../models/orders/order.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 import { assertStockBalance } from './stock-movement-balance';
 
 import type {

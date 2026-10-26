@@ -13,8 +13,8 @@ import type { ManagedProductsQuery } from '../../schemas/catalog/product.schema'
 
 import { recordInitialStockArrival } from '../inventory/stock-movement-write.service';
 
-import { httpError } from '../../utils/httpError';
-import { isDuplicateProductOfferError } from '../../utils/mongoError';
+import { httpError } from '../../utils/http/httpError';
+import { isDuplicateProductOfferError } from '../../utils/database/mongoError';
 
 import { getProductsByScope, getProductDetailsByScope } from './product-shared';
 

@@ -24,7 +24,7 @@ const userTypeSource = readFileSync(
 );
 
 const jwtSource = readFileSync(
-  resolve(process.cwd(), 'src/utils/jwt.ts'),
+  resolve(process.cwd(), 'src/utils/auth/jwt.ts'),
   'utf8'
 );
 

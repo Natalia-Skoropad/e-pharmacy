@@ -288,6 +288,8 @@ const moved = new Map(
     .map((m) => [m.from, m.to])
 );
 
+//===================================================================
+
 // --check verifies current disk and never assumes the selected stage has run.
 if (mode === 'check') {
   moved.clear();

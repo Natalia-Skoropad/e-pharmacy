@@ -6,7 +6,7 @@ import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-req
 import { Product } from '../../models/catalog/product.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

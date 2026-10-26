@@ -22,7 +22,7 @@ import {
   updateCartItemSchema,
 } from '../../schemas/cart/cart.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

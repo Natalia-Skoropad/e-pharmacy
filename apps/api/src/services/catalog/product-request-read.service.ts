@@ -14,13 +14,13 @@ import type {
 import type { ProductRequestStatus } from '../../types/catalog/product-request';
 import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
 
-import { httpError } from '../../utils/httpError';
-import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
+import { httpError } from '../../utils/http/httpError';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 
 import {
   createFlexibleSearchRegExp,
   createSafeRegExp,
-} from '../../utils/regexp';
+} from '../../utils/validation/regexp';
 
 import {
   getProductCategoryReferenceMap,

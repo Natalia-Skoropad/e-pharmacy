@@ -20,8 +20,8 @@ import type {
 } from '../../schemas/shared/pharmacy-document.schema';
 
 import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacies/pharmacy';
-import { httpError } from '../../utils/httpError';
-import { decodeAndVerifyDocumentUpload } from '../../utils/documentUpload';
+import { httpError } from '../../utils/http/httpError';
+import { decodeAndVerifyDocumentUpload } from '../../utils/documents/documentUpload';
 import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 
 //===================================================================

@@ -1,7 +1,7 @@
 import { app } from './app';
 import { env } from './config/env';
 import { connectDB } from './db/connectDB';
-import { logger } from './utils/logger';
+import { logger } from './utils/logging/logger';
 
 //===============================================================
 

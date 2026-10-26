@@ -17,16 +17,16 @@ import { User } from '../../models/accounts/user.model';
 import type { AuthSessionResult, RegisterInput } from '../../types/auth/auth';
 import type { SessionContext } from '../../types/auth/session';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import {
   isDuplicateEmailError,
   isDuplicatePhoneError,
-} from '../../utils/mongoError';
+} from '../../utils/database/mongoError';
 
-import { hashPassword } from '../../utils/password';
-import { logger } from '../../utils/logger';
-import { getInitialAccountStatusForRole } from '../../utils/account-status';
+import { hashPassword } from '../../utils/auth/password';
+import { logger } from '../../utils/logging/logger';
+import { getInitialAccountStatusForRole } from '../../utils/accounts/account-status';
 
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 import { claimRegistrationOwnerDocuments } from '../pharmacies/pharmacy-document.service';

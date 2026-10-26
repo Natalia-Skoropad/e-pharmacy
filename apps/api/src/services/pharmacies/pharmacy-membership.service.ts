@@ -26,7 +26,7 @@ import type {
 
 import type { UserRole } from '../../types/accounts/user';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

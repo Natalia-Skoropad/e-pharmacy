@@ -15,7 +15,7 @@ import {
   clientsQuerySchema,
 } from '../../schemas/clients/client.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

@@ -8,8 +8,8 @@ import { User } from '../../models/accounts/user.model';
 import type { AuthSessionResult, LoginInput } from '../../types/auth/auth';
 import type { SessionContext } from '../../types/auth/session';
 
-import { httpError } from '../../utils/httpError';
-import { comparePassword } from '../../utils/password';
+import { httpError } from '../../utils/http/httpError';
+import { comparePassword } from '../../utils/auth/password';
 import { buildAuthSessionResult } from './auth-sessions.service';
 
 //===============================================================

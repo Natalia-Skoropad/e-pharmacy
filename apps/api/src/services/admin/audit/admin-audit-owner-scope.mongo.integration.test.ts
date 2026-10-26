@@ -13,7 +13,7 @@ import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { User } from '../../../models/accounts/user.model';
 
-import { hashPassword } from '../../../utils/password';
+import { hashPassword } from '../../../utils/auth/password';
 
 import { listAdminAuditActorsService } from './admin-audit-actors.service';
 import { listAdminAuditLogsService } from './admin-audit-read.service';

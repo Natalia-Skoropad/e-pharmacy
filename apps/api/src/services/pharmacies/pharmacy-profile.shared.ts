@@ -23,8 +23,8 @@ import type {
   UpdateMyPharmacyProfileInput,
 } from '../../types/pharmacies/pharmacy';
 
-import { httpError } from '../../utils/httpError';
-import { requireISODateTime } from '../../utils/date-contract';
+import { httpError } from '../../utils/http/httpError';
+import { requireISODateTime } from '../../utils/dates/date-contract';
 
 import {
   clonePharmacyLocation,

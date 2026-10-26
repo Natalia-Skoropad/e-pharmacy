@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 
 import { REQUEST_ID_HEADER_NAME } from '../../constants/http/bff';
-import { logger } from '../../utils/logger';
+import { logger } from '../../utils/logging/logger';
 
 //===============================================================
 

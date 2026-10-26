@@ -11,7 +11,7 @@ import type {
   StockOfferSnapshot,
 } from './stock-movement-types';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

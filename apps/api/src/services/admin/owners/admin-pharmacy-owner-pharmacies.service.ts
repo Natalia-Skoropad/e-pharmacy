@@ -9,7 +9,7 @@ import { User } from '../../../models/accounts/user.model';
 import type { AdminPharmacyOwnerPharmaciesQuery } from '../../../schemas/admin/owners/admin-pharmacy-owner.schema';
 import type { PharmacyLocationDraft } from '../../../types/pharmacies/pharmacy';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
 import { buildPharmacyMatch } from './admin-pharmacy-owner-filters';
 

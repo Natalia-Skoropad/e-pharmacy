@@ -36,7 +36,7 @@ import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { ProductCategory } from '../../models/catalog/productCategory.model';
 import { Product } from '../../models/catalog/product.model';
 
-import { hashPassword } from '../../utils/password';
+import { hashPassword } from '../../utils/auth/password';
 
 import { ensureDefaultPharmacyClient } from '../../services/clients/default-pharmacy-client.service';
 import { ensureInitialProductCategories } from '../../services/catalog/product-category-bootstrap.service';

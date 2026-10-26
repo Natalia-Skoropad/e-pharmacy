@@ -136,6 +136,14 @@ test('G1 retains verified immutable hashes and keeps non-G1 scope untouched', ()
   const completedG3 = g3Moves.every((m) => existsSync(path.join(root, m.to)));
   const g4Moves = plan.moves.filter((m) => m.stage === 'G4' && !m.stable);
   const completedG4 = g4Moves.every((m) => existsSync(path.join(root, m.to)));
+  const g5Moves = plan.moves.filter((m) => m.stage === 'G5' && !m.stable);
+  const completedG5 = g5Moves.every((m) => existsSync(path.join(root, m.to)));
+
+  assert(
+    g5Moves.every((m) =>
+      existsSync(path.join(root, completedG5 ? m.to : m.from))
+    )
+  );
 
   assert.equal(g2Moves.length, 38);
   assert.equal(nonG1.length, 118);
@@ -145,7 +153,8 @@ test('G1 retains verified immutable hashes and keeps non-G1 scope untouched', ()
       !m.stable &&
       ((completedG2 && m.stage === 'G2') ||
         (completedG3 && m.stage === 'G3') ||
-        (completedG4 && m.stage === 'G4'));
+        (completedG4 && m.stage === 'G4') ||
+        (completedG5 && m.stage === 'G5'));
 
     const canonical = alreadyRelocated ? m.to : m.from;
 

@@ -12,7 +12,7 @@ import {
 
 import type { OrderStatus } from '../../types/orders/order';
 
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 import { isValidStockBalance } from './stock-movement-balance';
 
 import type { StockOfferSnapshot } from './stock-movement-types';

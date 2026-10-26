@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 
-import { HTTP_STATUS } from '../constants/http/httpStatus';
-import { httpError } from './httpError';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { httpError } from '../http/httpError';
 
 //===================================================================
 

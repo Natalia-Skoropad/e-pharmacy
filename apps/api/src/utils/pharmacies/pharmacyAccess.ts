@@ -1,9 +1,9 @@
 import { Types } from 'mongoose';
 
-import { HTTP_STATUS } from '../constants/http/httpStatus';
-import { ProductOffer } from '../models/inventory/productOffer.model';
-import { requirePharmacyCapability } from '../services/pharmacies/pharmacy-membership.service';
-import { httpError } from './httpError';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { requirePharmacyCapability } from '../../services/pharmacies/pharmacy-membership.service';
+import { httpError } from '../http/httpError';
 
 //===============================================================
 

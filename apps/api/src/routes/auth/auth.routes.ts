@@ -56,7 +56,7 @@ import {
   uploadRegistrationPharmacyDocumentSchema,
 } from '../../schemas/auth/auth.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

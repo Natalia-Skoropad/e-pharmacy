@@ -15,9 +15,9 @@ import type {
 
 import type { PharmacyMembershipRole } from '../../types/pharmacies/pharmacy';
 
-import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
-import { httpError } from '../../utils/httpError';
-import { createSafeRegExp } from '../../utils/regexp';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+import { httpError } from '../../utils/http/httpError';
+import { createSafeRegExp } from '../../utils/validation/regexp';
 import { buildPagedPharmacyItemsPipeline } from './registry/pharmacy-registry-query';
 
 import {

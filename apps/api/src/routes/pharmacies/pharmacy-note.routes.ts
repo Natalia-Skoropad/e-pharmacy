@@ -19,7 +19,7 @@ import {
   pharmacyNotesQuerySchema,
 } from '../../schemas/pharmacies/pharmacy-note.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

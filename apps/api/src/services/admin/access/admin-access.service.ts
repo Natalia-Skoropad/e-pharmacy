@@ -18,7 +18,7 @@ import type {
   AdminAuthorization,
 } from '../../../types/admin/access/admin-access';
 
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 
 //===============================================================
 

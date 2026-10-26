@@ -7,7 +7,7 @@ import { API_MESSAGES } from '../../constants/shared/messages';
 
 import { requirePharmacyCapability } from '../../services/pharmacies/pharmacy-membership.service';
 import type { UserRole } from '../../types/accounts/user';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 

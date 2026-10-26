@@ -24,7 +24,7 @@ import {
   listPharmacyOwnerDocumentsService,
 } from '../owners/pharmacy-owner-document.service';
 
-import { comparePassword, hashPassword } from '../../utils/password';
+import { comparePassword, hashPassword } from '../../utils/auth/password';
 import { updatePharmacyStatusByAdminService } from '../admin/pharmacies/admin.service';
 
 import {

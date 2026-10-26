@@ -6,7 +6,7 @@ import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 
-import { hashPassword } from '../../utils/password';
+import { hashPassword } from '../../utils/auth/password';
 
 //===============================================================
 

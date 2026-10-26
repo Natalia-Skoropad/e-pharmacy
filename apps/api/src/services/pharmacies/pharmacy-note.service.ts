@@ -6,7 +6,7 @@ import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { User } from '../../models/accounts/user.model';
-import { httpError } from '../../utils/httpError';
+import { httpError } from '../../utils/http/httpError';
 
 import type { CreatePharmacyNoteInput } from '../../schemas/pharmacies/pharmacy-note.schema';
 
@@ -15,7 +15,7 @@ import {
   type PharmacyInternalNotesActor,
 } from './pharmacy-membership.service';
 
-import { hasMongoDuplicateKeyCode } from '../../utils/mongoError';
+import { hasMongoDuplicateKeyCode } from '../../utils/database/mongoError';
 
 //===============================================================
 

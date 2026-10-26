@@ -11,7 +11,7 @@ import {
   resetRateLimitCounter,
 } from '../../services/infrastructure/rate-limit-store.service';
 
-import { logger } from '../../utils/logger';
+import { logger } from '../../utils/logging/logger';
 
 import {
   fingerprintRateLimitKey,

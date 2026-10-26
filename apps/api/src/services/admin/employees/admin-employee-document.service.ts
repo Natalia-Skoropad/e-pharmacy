@@ -20,8 +20,8 @@ import type { AdminEmployeeDocumentUploadInput } from '../../../schemas/admin/em
 import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
 import type { AdminEmployeeDocumentMetadataDto } from '../../../types/admin/employees/admin-employee-document';
 
-import { decodeAndVerifyDocumentUpload } from '../../../utils/documentUpload';
-import { httpError } from '../../../utils/httpError';
+import { decodeAndVerifyDocumentUpload } from '../../../utils/documents/documentUpload';
+import { httpError } from '../../../utils/http/httpError';
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
 
 //===============================================================

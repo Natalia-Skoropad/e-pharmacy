@@ -68,7 +68,7 @@ import {
   ownedPharmacyDocumentParamsSchema,
 } from '../../schemas/owners/owned-pharmacy-registry.schema';
 
-import { ctrlWrapper } from '../../utils/ctrlWrapper';
+import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
 
 //===============================================================
 

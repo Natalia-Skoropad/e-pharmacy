@@ -4,9 +4,9 @@ import { USER_ROLES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { Order } from '../../models/orders/order.model';
 import { User } from '../../models/accounts/user.model';
-import { httpError } from '../../utils/httpError';
-import { getEndOfDay, getStartOfDay } from '../../utils/date-range';
-import { createSafeRegExp } from '../../utils/regexp';
+import { httpError } from '../../utils/http/httpError';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+import { createSafeRegExp } from '../../utils/validation/regexp';
 
 import type { OrdersQuery } from '../../schemas/orders/order.schema';
 

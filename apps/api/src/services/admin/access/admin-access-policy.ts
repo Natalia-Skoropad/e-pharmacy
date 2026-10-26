@@ -11,7 +11,7 @@ import {
 
 import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import type { AdminAuthorization } from '../../../types/admin/access/admin-access';
-import { httpError } from '../../../utils/httpError';
+import { httpError } from '../../../utils/http/httpError';
 import { hasAdminPermission } from './admin-permission-evaluator';
 
 //===============================================================

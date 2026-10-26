@@ -360,6 +360,8 @@ for (const m of moves.filter((x) => !code.test(x.from))) {
     });
 }
 
+//===================================================================
+
 // No unexpected flat constants file remains after relocation.
 const flat = walk('apps/api/src/constants').filter(
   (f) => path.posix.dirname(f) === 'apps/api/src/constants'
@@ -425,6 +427,8 @@ for (const file of codeFiles) {
   }
 }
 
+//===================================================================
+
 // All moved files must retain their G0 source (aside from canonical path edits).
 for (const m of moves) {
   if (done.length === 0 && oldExists(m.from)) {
@@ -439,6 +443,8 @@ for (const m of moves) {
   }
 }
 
+//===================================================================
+
 // Fixed transformed hashes come from the trusted G0 source tree; never
 // regenerate while checking. A multiline template is raw-frozen so removing
 // blank lines *inside the template value* cannot masquerade as formatting.
@@ -450,6 +456,8 @@ assert(
 const expected = JSON.parse(readFileSync(abs(checksPath), 'utf8'));
 
 assert.equal(Object.keys(expected.hashes).length, moves.length);
+
+//===================================================================
 
 // After G2, constants can contain new *paths* to schema dependencies.
 // Keep immutable G1 baseline; pin the approved post-G2 hashes separately.
@@ -488,6 +496,8 @@ for (const m of moves) {
   if (!valid)
     issues.push(`Changed canonical source beyond safe layout: ${m.to}`);
 }
+
+//===================================================================
 
 // Forbid new source references to old constants in the resulting code files.
 if (projectedMoving)

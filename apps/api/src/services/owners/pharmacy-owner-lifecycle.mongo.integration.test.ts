@@ -15,7 +15,7 @@ import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { Session } from '../../models/accounts/session.model';
 import { User } from '../../models/accounts/user.model';
 
-import { hashPassword } from '../../utils/password';
+import { hashPassword } from '../../utils/auth/password';
 
 import { updatePharmacyStatusByAdminService } from '../admin/pharmacies/admin.service';
 import { loginUserService } from '../auth/auth-login.service';

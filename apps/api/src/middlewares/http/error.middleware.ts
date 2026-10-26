@@ -9,7 +9,7 @@ import type { HttpError } from '../../types/http/errors';
 import {
   isDuplicateEmailError,
   isDuplicatePhoneError,
-} from '../../utils/mongoError';
+} from '../../utils/database/mongoError';
 
 //===============================================================
 
