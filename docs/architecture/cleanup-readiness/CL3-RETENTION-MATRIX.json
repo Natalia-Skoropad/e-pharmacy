@@ -1,0 +1,516 @@
+{
+  "stage": "CL3 — Architecture Cleanup closure",
+  "sourceArchive": "e-pharmacy-14-20-19.zip",
+  "verifiedLocalLog": "Вставлений текст(20261026-202412).txt",
+  "inventoryPolicy": "Retain CL1 snapshot unchanged. A command reference establishes reachability, not proof that an instrument is irreducibly necessary.",
+  "baselineTools": 46,
+  "newCL2Tools": 2,
+  "currentTools": 48,
+  "rootCommandTargets": 47,
+  "internallyReferencedOnly": 1,
+  "approvedDeletePaths": [],
+  "blockedOn": "Separate, explicit approval plus equivalent read-only replacement with negative/regression tests and a passing local full gate.",
+  "gateEvidence": {
+    "cl2": {
+      "protectedRoots": 5,
+      "checkedCommands": 141,
+      "historicalWriteEntrypoints": 3,
+      "testsPassed": 12
+    },
+    "final": {
+      "auditedAreas": 9,
+      "regressionTestsPassed": 11
+    },
+    "historicalG6": {
+      "passed": 30,
+      "total": 30
+    },
+    "deploymentSourceZIP": {
+      "verifiedEntries": 2686
+    },
+    "finalArchitectureGate": "PASS"
+  },
+  "tools": [
+    {
+      "path": "scripts/architecture/audits/check-api-controllers-a1.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:controllers-a1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-controllers-a1.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:controllers-a1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-middlewares-a2.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:middlewares-a2"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-middlewares-a2.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:middlewares-a2"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-routes-a4.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:routes-a4"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-routes-a4.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:routes-a4"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/constants/check-api-constants-a5.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:constants-a5"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/constants/check-api-constants-a5.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:constants-a5"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:cross-folder-final"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/final/check-api-cross-folder-final.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:cross-folder-final"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g0/api-grouping-g0-core.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [],
+      "internalDependency": "G0 grouping core for historical checkers",
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g0/check-api-grouping-g0.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g0"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g0/check-api-grouping-g0.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g0"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g1/relocate-api-grouping-g1.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g1/relocate-api-grouping-g1.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g2"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g2/relocate-api-grouping-g2.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g2"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g3"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g3/relocate-api-grouping-g3.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g3"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g4"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g4"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g5"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g5"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g6/check-api-grouping-g6.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g6"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g6/check-api-grouping-g6.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:grouping-g6"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/g6/run-api-grouping-g6-gates.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:grouping-g6:full",
+        "check:grouping-g6:history"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/grouping/relocate-api-grouping.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "grouping:relocate"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/maintenance/check-script-layout.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:architecture-layout"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/maintenance/check-script-layout.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:architecture-layout"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/maintenance/check-tool-safety-cl2.mjs",
+      "origin": "CL2 safety addition",
+      "rootPackageCommands": [
+        "check:tool-safety-cl2"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/maintenance/check-tool-safety-cl2.test.mjs",
+      "origin": "CL2 safety addition",
+      "rootPackageCommands": [
+        "test:tool-safety-cl2"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/models/check-api-models-a3.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:models-a3"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/models/check-api-models-a3.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:models-a3"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/models/check-models-m1.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:models-m1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/models/check-models-m1.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:models-m1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/schemas/check-api-schemas-a6.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:schemas-a6"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/schemas/check-api-schemas-a6.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:schemas-a6"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/scripts/check-api-scripts-a7.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:scripts-a7"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/scripts/check-api-scripts-a7.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:scripts-a7"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/services/relocate-services-s1.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:services-s1",
+        "services:relocate"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/services/relocate-services-s1.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:services-s1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/services/snapshot-services-s0.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:services-s0-baseline"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/transport/relocate-api-transport-c1.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:transport-c1",
+        "transport:relocate"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/transport/relocate-api-transport-c1.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:transport-c1"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/types/check-api-types-a8.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:types-a8"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/types/check-api-types-a8.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:types-a8"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/utils/check-api-utils-a9.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "check:utils-a9"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    },
+    {
+      "path": "scripts/architecture/utils/check-api-utils-a9.test.mjs",
+      "origin": "CL1 pinned baseline",
+      "rootPackageCommands": [
+        "test:utils-a9"
+      ],
+      "internalDependency": null,
+      "decision": "RETAIN",
+      "deletionApproved": false
+    }
+  ]
+}

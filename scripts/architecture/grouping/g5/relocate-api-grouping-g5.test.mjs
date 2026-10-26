@@ -195,7 +195,33 @@ function expectedRelativeImportsAfterA1() {
       );
     }
 
-    return afterA9 + finalApproval.approvedAdditions.length;
+    const afterFinal = afterA9 + finalApproval.approvedAdditions.length;
+
+    const cl2Path =
+      'docs/architecture/cleanup-readiness/CL2-APPROVED-IMPORTS.json';
+
+    if (!existsSync(absolute(cl2Path))) return afterFinal;
+
+    const cl2 = JSON.parse(read(cl2Path));
+
+    assert.equal(cl2.schemaVersion, 1);
+    assert.equal(cl2.stage, 'CL2');
+    assert.equal(cl2.historicalAfterFinal, afterFinal);
+
+    assert.deepEqual(cl2.approvedAdditions, [
+      {
+        file: 'scripts/architecture/maintenance/check-tool-safety-cl2.test.mjs',
+        specifier: './check-tool-safety-cl2.mjs',
+      },
+    ]);
+
+    for (const { file, specifier } of cl2.approvedAdditions)
+      assert(
+        read(file).includes(`from '${specifier}'`),
+        `Missing CL2 approved import: ${file} / ${specifier}`
+      );
+
+    return afterFinal + cl2.approvedAdditions.length;
   }
 
   const deltaPath =

@@ -51,3 +51,13 @@ The original repository README already warns that seeds and domain migrations ma
 - Removed or moved source files: **0**.
 - Root package scripts or historical hashes changed: **0**.
 - This documentation-only delta does not claim a newly run full G6 after it is applied; rerun locally when publishing changes.
+
+## CL3 close-out (2026-10-26)
+
+The later `e-pharmacy-14-20-19.zip` contains all **46** pinned CL1 files and
+**two new CL2** checker/test modules, for **48** architecture JavaScript files.
+The final local `check:architecture:final` passed (**G6 30/30**, 2,686 deployment
+ZIP entries). No legacy file became unreferenced or explicitly authorized for
+retirement. The 46-path inventory above is preserved unchanged; current per-file
+status and the **NO DELETIONS** decision are recorded in
+[`CL3-CLOSURE-REPORT.md`](./CL3-CLOSURE-REPORT.md).

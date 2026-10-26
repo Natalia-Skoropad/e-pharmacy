@@ -70,3 +70,31 @@ pnpm check:architecture:final
 Do **not** run historic `grouping:relocate`, `services:relocate`, `transport:relocate` or `--apply` actions as routine checks. Relocation implementations are still consumed by the historical Gate and must not be deleted without a tested replacement.
 
 The reviewed inventory and staged deletion criteria are in [`docs/architecture/cleanup-readiness/CLEANUP-READINESS-REPORT.md`](../docs/architecture/cleanup-readiness/CLEANUP-READINESS-REPORT.md). This is a **retention** assessment: no existing architecture scripts are approved for immediate deletion.
+
+### CL2 safety gate
+
+`check:architecture:final`, `check:before-deploy:staged` and `check:before-deploy`
+run the read-only CL2 checker and its regression tests before other commands:
+
+```bash
+pnpm check:tool-safety-cl2
+pnpm test:tool-safety-cl2
+```
+
+CL2 checks whether historical write-capable relocation commands are reachable
+from protected verification command paths. It does **not** disable manually
+invoked migration/relocation actions. The exact scope and limitations are
+recorded in [`CL2-TOOL-SAFETY-REPORT.md`](../docs/architecture/cleanup-readiness/CL2-TOOL-SAFETY-REPORT.md).
+
+### CL3 architecture tooling closure
+
+The final dependency review of `e-pharmacy-14-20-19.zip` retained **all 48**
+architecture tools (46 original CL1 entries plus two CL2 safety files).
+There are **no approved deletion paths**. The locally run
+`pnpm check:architecture:final` completed with **G6 30/30 PASS**.
+
+The original 46-path CL1 inventory is a pinned baseline, **not** a list of
+files to remove. See
+[`CL3-CLOSURE-REPORT.md`](../docs/architecture/cleanup-readiness/CL3-CLOSURE-REPORT.md)
+for the final decision and per-file matrix. Historical write-capable relocation
+tools must not be run as routine checks.

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "stage": "CL2",
+  "historicalAfterFinal": 3584,
+  "approvedAdditions": [
+    {
+      "file": "scripts/architecture/maintenance/check-tool-safety-cl2.test.mjs",
+      "specifier": "./check-tool-safety-cl2.mjs"
+    }
+  ]
+}
