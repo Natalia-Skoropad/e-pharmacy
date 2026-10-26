@@ -1,0 +1,14 @@
+{
+  "stage": "A5",
+  "historicalAfterA2": 3570,
+  "approvedAdditions": [
+    {
+      "file": "scripts/architecture/constants/check-api-constants-a5.test.mjs",
+      "specifier": "./check-api-constants-a5.mjs"
+    },
+    {
+      "file": "scripts/architecture/maintenance/check-script-layout.test.mjs",
+      "specifier": "./check-script-layout.mjs"
+    }
+  ]
+}
