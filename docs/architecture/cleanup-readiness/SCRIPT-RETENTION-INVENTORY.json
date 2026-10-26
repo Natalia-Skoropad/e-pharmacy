@@ -1,0 +1,640 @@
+{
+  "stage": "Architecture Cleanup — readiness and retention inventory",
+  "baselineArchive": "e-pharmacy-14-20-18.zip",
+  "mode": "read-only assessment; no deletion",
+  "inventoryCount": 46,
+  "directRootPackageTargets": 45,
+  "sharedInternalModulesWithoutRootCommand": 1,
+  "verifiedPathsPresent": 46,
+  "unreferencedScripts": [],
+  "immediatelyApprovedDeletions": [],
+  "folderCounts": {
+    "audits": 6,
+    "constants": 2,
+    "final": 2,
+    "grouping": 17,
+    "maintenance": 2,
+    "models": 4,
+    "schemas": 2,
+    "scripts": 2,
+    "services": 3,
+    "transport": 2,
+    "types": 2,
+    "utils": 2
+  },
+  "categoryCounts": {
+    "architecture-layout-checker": 1,
+    "final-audit-checker": 1,
+    "full-and-historical-gate-runner": 1,
+    "historical-baseline-tool": 1,
+    "historical-checker": 3,
+    "historical-relocation-tool-and-checker": 8,
+    "regression-test": 21,
+    "shared-historical-core": 1,
+    "stage-audit-checker": 9
+  },
+  "referencePolicy": "Root package command literal matches; otherArchitectureFileMentions are conservative basename text matches, not proof of runtime execution.",
+  "scripts": [
+    {
+      "path": "scripts/architecture/audits/check-api-controllers-a1.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:controllers-a1"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/audits/check-api-controllers-a1.test.mjs",
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-controllers-a1.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:controllers-a1"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-middlewares-a2.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:middlewares-a2"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/audits/check-api-middlewares-a2.test.mjs",
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-middlewares-a2.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:middlewares-a2"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-routes-a4.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:routes-a4"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/audits/check-api-routes-a4.test.mjs",
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/audits/check-api-routes-a4.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:routes-a4"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/constants/check-api-constants-a5.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:constants-a5"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/constants/check-api-constants-a5.test.mjs",
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/constants/check-api-constants-a5.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:constants-a5"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "category": "final-audit-checker",
+      "packageScripts": [
+        "check:cross-folder-final"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/final/check-api-cross-folder-final.test.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/final/check-api-cross-folder-final.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:cross-folder-final"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g0/api-grouping-g0-core.mjs",
+      "category": "shared-historical-core",
+      "packageScripts": [],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g0/check-api-grouping-g0.mjs",
+        "scripts/architecture/grouping/g0/check-api-grouping-g0.test.mjs",
+        "scripts/architecture/grouping/g1/relocate-api-grouping-g1.mjs",
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs",
+        "scripts/architecture/grouping/g6/check-api-grouping-g6.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Used by historical architecture modules; no direct root command"
+    },
+    {
+      "path": "scripts/architecture/grouping/g0/check-api-grouping-g0.mjs",
+      "category": "historical-checker",
+      "packageScripts": [
+        "check:grouping-g0"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g0/check-api-grouping-g0.test.mjs",
+        "scripts/architecture/grouping/g1/relocate-api-grouping-g1.mjs",
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g0/check-api-grouping-g0.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g0"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g1/relocate-api-grouping-g1.mjs",
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g1/relocate-api-grouping-g1.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:grouping-g1"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g1/relocate-api-grouping-g1.test.mjs",
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g1/relocate-api-grouping-g1.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g1"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g1/relocate-api-grouping-g1.mjs",
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:grouping-g2"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.test.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g2/relocate-api-grouping-g2.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g2"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:grouping-g3"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.test.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g3/relocate-api-grouping-g3.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g3"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:grouping-g4"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g4"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:grouping-g5"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g5"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g6/check-api-grouping-g6.mjs",
+      "category": "historical-checker",
+      "packageScripts": [
+        "check:grouping-g6"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g6/check-api-grouping-g6.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g6/check-api-grouping-g6.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:grouping-g6"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/g6/run-api-grouping-g6-gates.mjs",
+      "category": "full-and-historical-gate-runner",
+      "packageScripts": [
+        "check:grouping-g6:full",
+        "check:grouping-g6:history"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g6/check-api-grouping-g6.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/grouping/relocate-api-grouping.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "grouping:relocate"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g2/relocate-api-grouping-g2.mjs",
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/maintenance/check-script-layout.mjs",
+      "category": "architecture-layout-checker",
+      "packageScripts": [
+        "check:architecture-layout"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/maintenance/check-script-layout.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/maintenance/check-script-layout.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:architecture-layout"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/models/check-api-models-a3.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:models-a3"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+        "scripts/architecture/models/check-api-models-a3.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/models/check-api-models-a3.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:models-a3"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/models/check-models-m1.mjs",
+      "category": "historical-checker",
+      "packageScripts": [
+        "check:models-m1"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/models/check-models-m1.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/models/check-models-m1.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:models-m1"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/schemas/check-api-schemas-a6.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:schemas-a6"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+        "scripts/architecture/schemas/check-api-schemas-a6.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/schemas/check-api-schemas-a6.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:schemas-a6"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/scripts/check-api-scripts-a7.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:scripts-a7"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+        "scripts/architecture/scripts/check-api-scripts-a7.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/scripts/check-api-scripts-a7.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:scripts-a7"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/services/relocate-services-s1.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:services-s1",
+        "services:relocate"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/services/relocate-services-s1.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/services/relocate-services-s1.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:services-s1"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g3/relocate-api-grouping-g3.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/services/snapshot-services-s0.mjs",
+      "category": "historical-baseline-tool",
+      "packageScripts": [
+        "check:services-s0-baseline"
+      ],
+      "otherArchitectureFileMentions": [],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/transport/relocate-api-transport-c1.mjs",
+      "category": "historical-relocation-tool-and-checker",
+      "packageScripts": [
+        "check:transport-c1",
+        "transport:relocate"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/transport/relocate-api-transport-c1.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/transport/relocate-api-transport-c1.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:transport-c1"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/transport/relocate-api-transport-c1.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/types/check-api-types-a8.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:types-a8"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+        "scripts/architecture/types/check-api-types-a8.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/types/check-api-types-a8.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:types-a8"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/utils/check-api-utils-a9.mjs",
+      "category": "stage-audit-checker",
+      "packageScripts": [
+        "check:utils-a9"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/final/check-api-cross-folder-final.mjs",
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs",
+        "scripts/architecture/utils/check-api-utils-a9.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    },
+    {
+      "path": "scripts/architecture/utils/check-api-utils-a9.test.mjs",
+      "category": "regression-test",
+      "packageScripts": [
+        "test:utils-a9"
+      ],
+      "otherArchitectureFileMentions": [
+        "scripts/architecture/grouping/g4/relocate-api-grouping-g4.test.mjs",
+        "scripts/architecture/grouping/g5/relocate-api-grouping-g5.test.mjs"
+      ],
+      "disposition": "KEEP",
+      "reason": "Referenced by root package scripts"
+    }
+  ]
+}

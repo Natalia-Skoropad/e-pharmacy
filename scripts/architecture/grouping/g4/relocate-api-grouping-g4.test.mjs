@@ -149,7 +149,53 @@ function expectedRelativeImportsAfterA1() {
         `Missing approved A9 test import: ${file}`
       );
 
-    return afterA8 + a9.approvedAdditions.length;
+    // Final cross-folder audit introduces nine explicitly reviewed module imports.
+    // Approvals are restricted to the checker file and exact paths; no G0–G6
+    // hashes, manifests, or prior allowances are changed.
+    const afterA9 = afterA8 + a9.approvedAdditions.length;
+
+    const finalPath =
+      'docs/architecture/cross-folder-final/approved-relative-imports.json';
+
+    if (!existsSync(absolute(finalPath))) return afterA9;
+
+    const finalApproval = JSON.parse(read(finalPath));
+
+    assert.equal(finalApproval.schemaVersion, 1);
+    assert.equal(finalApproval.stage, 'Final');
+    assert.equal(finalApproval.historicalAfterA9, afterA9);
+
+    assert.deepEqual(
+      finalApproval.approvedAdditions,
+      [
+        '../audits/check-api-controllers-a1.mjs',
+        '../audits/check-api-middlewares-a2.mjs',
+        '../audits/check-api-routes-a4.mjs',
+        '../models/check-api-models-a3.mjs',
+        '../constants/check-api-constants-a5.mjs',
+        '../schemas/check-api-schemas-a6.mjs',
+        '../scripts/check-api-scripts-a7.mjs',
+        '../types/check-api-types-a8.mjs',
+        '../utils/check-api-utils-a9.mjs',
+        './check-api-cross-folder-final.mjs',
+      ].map((specifier) => ({
+        file:
+          specifier === './check-api-cross-folder-final.mjs'
+            ? 'scripts/architecture/final/check-api-cross-folder-final.test.mjs'
+            : 'scripts/architecture/final/check-api-cross-folder-final.mjs',
+
+        specifier,
+      }))
+    );
+
+    for (const { file, specifier } of finalApproval.approvedAdditions) {
+      assert(
+        read(file).includes(`from '${specifier}'`),
+        `Missing approved Final import: ${file} / ${specifier}`
+      );
+    }
+
+    return afterA9 + finalApproval.approvedAdditions.length;
   }
 
   const deltaPath =

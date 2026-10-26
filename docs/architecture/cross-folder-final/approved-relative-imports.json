@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "stage": "Final",
+  "historicalAfterA9": 3574,
+  "approvedAdditions": [
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../audits/check-api-controllers-a1.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../audits/check-api-middlewares-a2.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../audits/check-api-routes-a4.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../models/check-api-models-a3.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../constants/check-api-constants-a5.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../schemas/check-api-schemas-a6.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../scripts/check-api-scripts-a7.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../types/check-api-types-a8.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.mjs",
+      "specifier": "../utils/check-api-utils-a9.mjs"
+    },
+    {
+      "file": "scripts/architecture/final/check-api-cross-folder-final.test.mjs",
+      "specifier": "./check-api-cross-folder-final.mjs"
+    }
+  ]
+}

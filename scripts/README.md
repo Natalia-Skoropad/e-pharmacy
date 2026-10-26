@@ -51,3 +51,22 @@ pnpm check:client-content-contracts
 ```
 
 These checks cover the audited `common`, `home`, `info`, and `layout` layers. They reject cross-layer feature imports, no-op shared re-exports, one-line nested barrels, duplicate or stale CSS, `!important`, invisible desktop modal hiding, missing skip/dialog/rating/pending semantics, invalid revision metadata, generated title anchors, misleading home claims, and placeholder social URLs. Product-details presentation CSS is included where it owns the local order-information card.
+
+## Architecture audit and historical tools
+
+`scripts/architecture/` is deliberately separated by responsibility:
+
+- `audits/`, `models/`, `constants/`, `schemas/`, `scripts/`, `types/`, `utils/` — canonical A1–A9 and M1 checkers/tests;
+- `final/` — cross-folder contract audit and parity tests;
+- `maintenance/` — grouping/layout contract checks;
+- `grouping/g0`–`grouping/g6`, `services/`, `transport/` — historical relocation implementations, baseline verification, and regression tests.
+
+Run the canonical final read-only verification from the repository root:
+
+```bash
+pnpm check:architecture:final
+```
+
+Do **not** run historic `grouping:relocate`, `services:relocate`, `transport:relocate` or `--apply` actions as routine checks. Relocation implementations are still consumed by the historical Gate and must not be deleted without a tested replacement.
+
+The reviewed inventory and staged deletion criteria are in [`docs/architecture/cleanup-readiness/CLEANUP-READINESS-REPORT.md`](../docs/architecture/cleanup-readiness/CLEANUP-READINESS-REPORT.md). This is a **retention** assessment: no existing architecture scripts are approved for immediate deletion.
