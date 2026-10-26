@@ -1,0 +1,76 @@
+{
+  "source": "e-pharmacy-14-20-9.zip + G6 only-changed-files patch",
+  "auditScope": "apps/api/src/controllers",
+  "stage": "A1",
+  "controllerFiles": 16,
+  "handlerExports": 157,
+  "testFilesPriorToA1": 1,
+  "fileStatistics": {
+    "admin/admin-audit.controller.ts": {
+      "handlers": 3,
+      "lines": 72
+    },
+    "admin/admin-employee.controller.ts": {
+      "handlers": 9,
+      "lines": 275
+    },
+    "admin/admin-settings.controller.ts": {
+      "handlers": 8,
+      "lines": 198
+    },
+    "admin/admin.controller.ts": {
+      "handlers": 33,
+      "lines": 780
+    },
+    "auth/auth.controller.ts": {
+      "handlers": 17,
+      "lines": 466
+    },
+    "cart/cart.controller.ts": {
+      "handlers": 6,
+      "lines": 98
+    },
+    "catalog/product-category.controller.ts": {
+      "handlers": 1,
+      "lines": 18
+    },
+    "catalog/product-request.controller.ts": {
+      "handlers": 7,
+      "lines": 127
+    },
+    "catalog/product.controller.ts": {
+      "handlers": 17,
+      "lines": 307
+    },
+    "clients/client.controller.ts": {
+      "handlers": 3,
+      "lines": 61
+    },
+    "health/health.controller.ts": {
+      "handlers": 2,
+      "lines": 42
+    },
+    "orders/order.controller.ts": {
+      "handlers": 10,
+      "lines": 228
+    },
+    "owners/pharmacy-owner-document.controller.ts": {
+      "handlers": 5,
+      "lines": 134
+    },
+    "owners/pharmacy-user-private-note.controller.ts": {
+      "handlers": 3,
+      "lines": 89
+    },
+    "pharmacies/pharmacy-note.controller.ts": {
+      "handlers": 3,
+      "lines": 87
+    },
+    "pharmacies/pharmacy.controller.ts": {
+      "handlers": 30,
+      "lines": 549
+    }
+  },
+  "warningCountSilentReturns": 22,
+  "attachmentEndpoints": 6
+}

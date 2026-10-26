@@ -1,5 +1,7 @@
 import type { Request } from 'express';
 
+import { documentAttachmentDisposition } from '../shared/document-attachment';
+
 import type { AdminAuditListQuery } from '../../schemas/admin/audit/admin-audit.schema';
 
 import { ADMIN_ACCESS_ERROR_CODES } from '../../constants/admin/access/admin-access';
@@ -160,10 +162,7 @@ export async function getAdminPharmacyDocument(
 
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename*=UTF-8''${encodeURIComponent(document.name).replace(
-      /[!'()*]/g,
-      (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
-    )}`
+    documentAttachmentDisposition(document.name)
   );
 
   res.status(HTTP_STATUS.OK).send(content);
@@ -549,10 +548,7 @@ export async function downloadPharmacyOwnerDocumentByAdmin(
 
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename*=UTF-8''${encodeURIComponent(document.name).replace(
-      /[!'()*]/g,
-      (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
-    )}`
+    documentAttachmentDisposition(document.name)
   );
 
   res.status(HTTP_STATUS.OK).send(content);

@@ -1,5 +1,7 @@
 import type { Request } from 'express';
 
+import { documentAttachmentDisposition } from '../shared/document-attachment';
+
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import type {
@@ -17,15 +19,6 @@ import {
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
 import { sendSuccessResponse } from '../../utils/http/apiResponse';
-
-//===============================================================
-
-function encodeContentDispositionFilename(value: string): string {
-  return encodeURIComponent(value).replace(
-    /[!'()*]/g,
-    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-}
 
 //===============================================================
 
@@ -63,7 +56,7 @@ export async function downloadMyPharmacyOwnerDocument(
 
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename*=UTF-8''${encodeContentDispositionFilename(document.name)}`
+    documentAttachmentDisposition(document.name)
   );
 
   res.status(HTTP_STATUS.OK).send(content);

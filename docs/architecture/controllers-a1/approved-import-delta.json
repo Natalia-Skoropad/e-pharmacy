@@ -1,0 +1,30 @@
+{
+  "historicalRelativeImports": 3494,
+  "stage": "A1",
+  "approvedAdditions": [
+    {
+      "file": "apps/api/src/controllers/admin/admin.controller.ts",
+      "specifier": "../shared/document-attachment"
+    },
+    {
+      "file": "apps/api/src/controllers/admin/admin-employee.controller.ts",
+      "specifier": "../shared/document-attachment"
+    },
+    {
+      "file": "apps/api/src/controllers/owners/pharmacy-owner-document.controller.ts",
+      "specifier": "../shared/document-attachment"
+    },
+    {
+      "file": "apps/api/src/controllers/pharmacies/pharmacy.controller.ts",
+      "specifier": "../shared/document-attachment"
+    },
+    {
+      "file": "apps/api/src/controllers/shared/document-attachment.test.ts",
+      "specifier": "./document-attachment"
+    },
+    {
+      "file": "scripts/architecture/check-api-controllers-a1.test.mjs",
+      "specifier": "./check-api-controllers-a1.mjs"
+    }
+  ]
+}

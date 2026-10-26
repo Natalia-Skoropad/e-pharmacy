@@ -1,5 +1,7 @@
 import type { Request } from 'express';
 
+import { documentAttachmentDisposition } from '../shared/document-attachment';
+
 import { USER_ROLES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
@@ -73,15 +75,6 @@ import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import { listUserPharmacyMemberships } from '../../services/pharmacies/pharmacy-membership.service';
 import { sendSuccessResponse } from '../../utils/http/apiResponse';
-
-//===============================================================
-
-function encodeContentDispositionFilename(value: string): string {
-  return encodeURIComponent(value).replace(
-    /[!'()*]/g,
-    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-}
 
 //===============================================================
 
@@ -200,7 +193,7 @@ export async function downloadOwnedPharmacyDocument(
 
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename*=UTF-8''${encodeContentDispositionFilename(document.name)}`
+    documentAttachmentDisposition(document.name)
   );
 
   res.status(HTTP_STATUS.OK).send(content);
@@ -298,7 +291,7 @@ export async function getMyPharmacyDocument(
 
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename*=UTF-8''${encodeContentDispositionFilename(document.name)}`
+    documentAttachmentDisposition(document.name)
   );
 
   res.status(HTTP_STATUS.OK).send(content);

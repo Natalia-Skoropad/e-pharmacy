@@ -16,6 +16,41 @@ const root = path.resolve(
 
 const absolute = (name) => path.join(root, name);
 const read = (name) => readFileSync(absolute(name), 'utf8');
+
+//===================================================================
+
+// A1 adds six reviewed source imports. Preserve the G4/G5 historical baseline.
+function expectedRelativeImportsAfterA1() {
+  const deltaPath =
+    'docs/architecture/controllers-a1/approved-import-delta.json';
+
+  if (!existsSync(absolute(deltaPath))) return 3494;
+
+  const delta = JSON.parse(read(deltaPath));
+
+  assert.equal(delta.historicalRelativeImports, 3494);
+  assert.equal(delta.stage, 'A1');
+  assert.equal(delta.approvedAdditions.length, 6);
+
+  const unique = new Set();
+
+  for (const { file, specifier } of delta.approvedAdditions) {
+    assert.equal(unique.has(file), false, `Duplicate A1 approval: ${file}`);
+    unique.add(file);
+
+    const content = read(file);
+
+    assert(
+      content.includes(`from '${specifier}'`),
+      `Missing approved A1 import: ${file}`
+    );
+  }
+
+  return delta.historicalRelativeImports + delta.approvedAdditions.length;
+}
+
+//===================================================================
+
 const digest = (value) => createHash('sha256').update(value).digest('hex');
 
 const normalized = (value) =>
@@ -158,7 +193,12 @@ test('G5 dry-run or applied check is deterministic, read-only and resolves impor
 
   assert.equal(report.status, 'PASS');
   assert.equal(report.manifestEntries, 30);
-  assert.equal(report.verifiedRelativeImports, 3494);
+
+  assert.equal(
+    report.verifiedRelativeImports,
+    expectedRelativeImportsAfterA1()
+  );
+
   assert.equal(report.obsoleteProxyFiles, 0);
 
   if (completed()) {

@@ -17,6 +17,40 @@ const root = path.resolve(
 const absolute = (name) => path.join(root, name);
 const read = (name) => readFileSync(absolute(name), 'utf8');
 
+//===================================================================
+
+// A1 adds six reviewed source imports. Preserve the G4/G5 historical baseline.
+function expectedRelativeImportsAfterA1() {
+  const deltaPath =
+    'docs/architecture/controllers-a1/approved-import-delta.json';
+
+  if (!existsSync(absolute(deltaPath))) return 3494;
+
+  const delta = JSON.parse(read(deltaPath));
+
+  assert.equal(delta.historicalRelativeImports, 3494);
+  assert.equal(delta.stage, 'A1');
+  assert.equal(delta.approvedAdditions.length, 6);
+
+  const unique = new Set();
+
+  for (const { file, specifier } of delta.approvedAdditions) {
+    assert.equal(unique.has(file), false, `Duplicate A1 approval: ${file}`);
+    unique.add(file);
+
+    const content = read(file);
+
+    assert(
+      content.includes(`from '${specifier}'`),
+      `Missing approved A1 import: ${file}`
+    );
+  }
+
+  return delta.historicalRelativeImports + delta.approvedAdditions.length;
+}
+
+//===================================================================
+
 const plan = JSON.parse(
   read('docs/architecture/grouping-g0/relocation-plan.json')
 );
@@ -141,7 +175,11 @@ test('G4 dry-run and completed-stage check are deterministic and read-only', () 
   assert.equal(summary.status, 'PASS');
   assert.equal(summary.manifestEntries, 23);
   assert.equal(summary.obsoleteProxyFiles, 0);
-  assert.equal(summary.verifiedRelativeImports, 3494);
+
+  assert.equal(
+    summary.verifiedRelativeImports,
+    expectedRelativeImportsAfterA1()
+  );
 
   if (isCompleted()) {
     assert.equal(summary.selectedMoves, 0);
