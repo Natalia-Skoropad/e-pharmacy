@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Stage A7: read-only operational-script audit. Never connect to a DB or run a script.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { dirname, join, resolve, relative } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import ts from 'typescript';

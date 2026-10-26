@@ -183,7 +183,9 @@
     "check:scripts-a7": "node scripts/architecture/scripts/check-api-scripts-a7.mjs --check",
     "test:scripts-a7": "node scripts/architecture/scripts/check-api-scripts-a7.test.mjs",
     "check:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.mjs --check",
-    "test:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.test.mjs"
+    "test:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.test.mjs",
+    "check:types-a8": "node scripts/architecture/types/check-api-types-a8.mjs --check",
+    "test:types-a8": "node scripts/architecture/types/check-api-types-a8.test.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

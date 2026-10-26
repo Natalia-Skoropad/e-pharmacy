@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "stage": "A8",
+  "historicalAfterA5": 3572,
+  "approvedAdditions": [
+    {
+      "file": "scripts/architecture/types/check-api-types-a8.test.mjs",
+      "specifier": "./check-api-types-a8.mjs"
+    }
+  ]
+}

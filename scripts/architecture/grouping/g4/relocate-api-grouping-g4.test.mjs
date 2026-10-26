@@ -95,7 +95,37 @@ function expectedRelativeImportsAfterA1() {
       );
     }
 
-    return a2.expectedRelativeImports + approval.approvedAdditions.length;
+    // A8 adds one peer import for the independently tested type audit.
+    // The pinned A5/G0–G6 baselines remain unchanged.
+    const a8Path = 'docs/architecture/types-a8/approved-relative-imports.json';
+
+    if (!existsSync(absolute(a8Path)))
+      return a2.expectedRelativeImports + approval.approvedAdditions.length;
+
+    const a8 = JSON.parse(read(a8Path));
+
+    assert.equal(a8.schemaVersion, 1);
+    assert.equal(a8.stage, 'A8');
+
+    assert.equal(
+      a8.historicalAfterA5,
+      a2.expectedRelativeImports + approval.approvedAdditions.length
+    );
+
+    assert.deepEqual(a8.approvedAdditions, [
+      {
+        file: 'scripts/architecture/types/check-api-types-a8.test.mjs',
+        specifier: './check-api-types-a8.mjs',
+      },
+    ]);
+
+    for (const { file, specifier } of a8.approvedAdditions)
+      assert(
+        read(file).includes(`from '${specifier}'`),
+        `Missing A8 ESM import: ${file}`
+      );
+
+    return a8.historicalAfterA5 + a8.approvedAdditions.length;
   }
 
   const deltaPath =
