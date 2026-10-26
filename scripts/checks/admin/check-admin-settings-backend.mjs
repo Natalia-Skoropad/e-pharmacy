@@ -12,8 +12,12 @@ const ROOT_DIR = path.resolve(
   '..'
 );
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {

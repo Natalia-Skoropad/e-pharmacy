@@ -29,7 +29,6 @@ const [
   grid,
   filtersShell,
   productHero,
-  pharmacyHero,
   offerCard,
   contactPanel,
   bankPanel,
@@ -54,10 +53,6 @@ const [
 
   read(
     'apps/client/src/components/product-catalog/ProductDetailsPageContent/ProductDetailsHero.tsx'
-  ),
-
-  read(
-    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsHero.tsx'
   ),
 
   read(

@@ -180,6 +180,8 @@
     "test:constants-a5": "node scripts/architecture/constants/check-api-constants-a5.test.mjs",
     "check:schemas-a6": "node scripts/architecture/schemas/check-api-schemas-a6.mjs --check",
     "test:schemas-a6": "node scripts/architecture/schemas/check-api-schemas-a6.test.mjs",
+    "check:scripts-a7": "node scripts/architecture/scripts/check-api-scripts-a7.mjs --check",
+    "test:scripts-a7": "node scripts/architecture/scripts/check-api-scripts-a7.test.mjs",
     "check:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.mjs --check",
     "test:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.test.mjs"
   },

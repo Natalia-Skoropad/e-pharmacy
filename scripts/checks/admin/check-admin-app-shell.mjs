@@ -7,6 +7,8 @@ const root = new URL('../../../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
 const admin = (path) => read(`apps/admin/${path}`);
 
+//===================================================================
+
 const required = [
   'package.json',
   'tsconfig.json',
@@ -25,6 +27,8 @@ const required = [
   'src/lib/routes/index.ts',
 ];
 
+//===================================================================
+
 for (const path of required) {
   assert.ok(
     admin(path).trim(),
@@ -37,6 +41,7 @@ const page = admin('src/app/page.tsx');
 
 const forbidden =
   /\b(?:fetch|localApiRequest)\s*\(|API_BASE_URL|Authorization|accessToken|refreshToken|document\s*\.\s*cookie|localStorage|sessionStorage|@\/lib\/api/;
+
 for (const [name, source] of [
   ['layout', layout],
   ['page', page],

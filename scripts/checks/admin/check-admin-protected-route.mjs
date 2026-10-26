@@ -8,12 +8,17 @@ import { fileURLToPath } from 'node:url';
 const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -364,6 +369,7 @@ for (const pagePath of [
 ]) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', ...pagePath),
+
     true,
     `Stage 10.2 auth page must exist: ${pagePath.join('/')}`
   );
@@ -371,6 +377,7 @@ for (const pagePath of [
 
 assert.equal(
   await exists('apps', 'admin', 'src', 'app', 'register', 'page.tsx'),
+
   false,
   'Admin public registration page must not exist'
 );
@@ -386,6 +393,7 @@ assert.equal(
     'register',
     'route.ts'
   ),
+
   false,
   'Admin public registration BFF route must not exist'
 );
@@ -454,6 +462,8 @@ assert.ok(
   !deploy.includes('pnpm check:admin'),
   'check:before-deploy must not duplicate the full admin check'
 );
+
+//===================================================================
 
 console.log(
   'Admin protected-route and Stage 10.2 auth UI structural check passed.'

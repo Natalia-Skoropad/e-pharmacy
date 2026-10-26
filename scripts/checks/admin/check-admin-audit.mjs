@@ -12,8 +12,12 @@ const ROOT_DIR = path.resolve(
   '..'
 );
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
@@ -121,6 +125,8 @@ const requiredFiles = [
     'route.ts',
   ],
 ];
+
+//===================================================================
 
 for (const file of requiredFiles) {
   assert.equal(
@@ -739,6 +745,8 @@ assert.match(
 
 assert.match(activityHistory, /<ActivityActorIdentity/);
 
+//===================================================================
+
 // Keep the shared audit table and its links aligned across the global history
 // and the pharmacy-owner detail view. Icons/photos are intentionally NOT links.
 assert.match(activityHistory, /<ActivitySectionLink item=\{item\} \/>/);
@@ -791,6 +799,8 @@ const [sectionLinkComponent, pageLinkComponent] = activitySectionLinks.split(
 );
 
 assert.ok(pageLinkComponent, 'Page link component must be present.');
+
+//===================================================================
 
 // Same shared TextActionButton class as Changed by; no standalone link styles.
 for (const component of [sectionLinkComponent, pageLinkComponent]) {

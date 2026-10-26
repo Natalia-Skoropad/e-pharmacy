@@ -12,8 +12,12 @@ const ROOT_DIR = path.resolve(
   '..'
 );
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
@@ -120,6 +124,8 @@ const requiredFiles = [
     'PositionsSettings.tsx',
   ],
 ];
+
+//===================================================================
 
 for (const file of requiredFiles) {
   assert.equal(
@@ -364,6 +370,10 @@ for (const token of [
   assert.match(positionsSettings, new RegExp(token.replaceAll('.', '\\.')));
 }
 
+//===================================================================
+
 assert.doesNotMatch(positionsSettings, /ColorPicker|defaultColor|color:/);
+
+//===================================================================
 
 console.log('Admin Settings CRUD pages structural checks passed.');

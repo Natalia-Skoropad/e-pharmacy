@@ -76,12 +76,15 @@ const uiDirectory = path.join(root, section);
 
 let scanned = 0;
 
+//===================================================================
+
 async function scan(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const file = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
       await scan(file);
+
       continue;
     }
 
@@ -128,6 +131,8 @@ async function scan(dir) {
     );
   }
 }
+
+//===================================================================
 
 await scan(uiDirectory);
 

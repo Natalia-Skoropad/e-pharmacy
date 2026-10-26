@@ -7,6 +7,8 @@ const root = new URL('../../../', import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), 'utf8');
 const admin = (path) => read(`apps/admin/${path}`);
 
+//===================================================================
+
 const required = [
   'src/app/loading.tsx',
   'src/app/not-found.tsx',
@@ -18,12 +20,16 @@ const required = [
   'src/app/error.react.test.tsx',
 ];
 
+//===================================================================
+
 for (const path of required) {
   assert.ok(
     admin(path).trim(),
     `Admin status-page file must exist and be non-empty: ${path}`
   );
 }
+
+//===================================================================
 
 const loading = admin('src/app/loading.tsx');
 const notFound = admin('src/app/not-found.tsx');
@@ -118,6 +124,7 @@ for (const stylesheet of ['tokens', 'reset', 'base', 'utilities']) {
     `global-error.tsx must import ${stylesheet}.css directly`
   );
 }
+
 assert.match(globalError, /import ['"]\.\/styles\.css['"]/);
 
 //===================================================================
@@ -156,6 +163,7 @@ assert.doesNotMatch(
 );
 
 const boundarySources = [loading, notFound, error, globalError];
+
 const forbiddenRuntimeLogic =
   /\b(?:fetch|localApiRequest|XMLHttpRequest|WebSocket)\s*\(|axios|API_BASE_URL|BACKEND_URL|accessToken|refreshToken|Authorization|document\s*\.\s*cookie|localStorage|sessionStorage|indexedDB/;
 

@@ -12,8 +12,12 @@ const ROOT_DIR = path.resolve(
   '..'
 );
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
@@ -444,6 +448,8 @@ for (const file of uiFiles.filter((file) => /\.(?:ts|tsx)$/.test(file))) {
     `Shared UI must not own admin authorization: ${path.relative(ROOT_DIR, file)}`
   );
 }
+
+//===================================================================
 
 // Stage 14 legitimately adds the pharmacy registry. Retain its permission
 // gate instead of treating this implemented module as a Stage 8 placeholder.

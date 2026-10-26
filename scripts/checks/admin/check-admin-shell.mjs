@@ -8,17 +8,24 @@ import { fileURLToPath } from 'node:url';
 const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
   }
 };
+
+//===================================================================
 
 const adminRead = (...segments) => read('apps', 'admin', ...segments);
 
@@ -35,9 +42,12 @@ const requiredFiles = [
   ['src', 'lib', 'layout', 'breadcrumbs.ts'],
 ];
 
+//===================================================================
+
 for (const file of requiredFiles) {
   assert.equal(
     await exists('apps', 'admin', ...file),
+
     true,
     `Stage 7 file must exist: ${file.join('/')}`
   );
@@ -252,6 +262,7 @@ for (const futurePage of [
 ]) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', 'admin', ...futurePage),
+
     false,
     `Stage 7 must not create placeholder page ${futurePage.join('/')}`
   );
@@ -283,11 +294,15 @@ for (const scriptName of ['check:admin', 'check:before-deploy']) {
   );
 }
 
+//===================================================================
+
 assert.ok(
   rootPackage.scripts['check:admin'].split(/\s*&&\s*/).indexOf(stage7Check) <
     rootPackage.scripts['check:admin']
       .split(/\s*&&\s*/)
       .indexOf('pnpm --filter @e-pharmacy/admin lint')
 );
+
+//===================================================================
 
 console.log('Admin Stage 7 shell structural check passed.');

@@ -12,8 +12,12 @@ const ROOT_DIR = path.resolve(
   '..'
 );
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
@@ -90,6 +94,8 @@ const requiredFiles = [
     'admin/employees/admin-employee-note.service.ts',
   ],
 ];
+
+//===================================================================
 
 for (const file of requiredFiles) {
   assert.equal(
@@ -226,6 +232,8 @@ const [
   ),
 ]);
 
+//===================================================================
+
 assert.match(adminLayout, /AdminProtectedRoute/);
 assert.match(adminLayout, /AdminShell/);
 assert.match(adminRoutes, /PROFILE:\s*['"]\/admin\/profile['"]/);
@@ -306,6 +314,8 @@ assert.equal(
   'node scripts/checks/admin/check-admin-profile.mjs'
 );
 
+//===================================================================
+
 for (const scriptName of ['check:admin', 'check:before-deploy']) {
   const steps = rootPackage.scripts[scriptName].split(/\s*&&\s*/);
 
@@ -315,5 +325,7 @@ for (const scriptName of ['check:admin', 'check:before-deploy']) {
     `${profileCheck} must run exactly once in ${scriptName}`
   );
 }
+
+//===================================================================
 
 console.log('Admin Stage 10 profile structural checks passed.');

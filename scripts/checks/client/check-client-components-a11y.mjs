@@ -41,7 +41,6 @@ const [
   productHero,
   productOfferCard,
   pharmacyDetails,
-  pharmacyHero,
   pharmacyContact,
   pharmacyBankDetails,
   tabs,
@@ -96,10 +95,6 @@ const [
 
   read(
     'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsPageContent.tsx'
-  ),
-
-  read(
-    'apps/client/src/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsHero.tsx'
   ),
 
   read(

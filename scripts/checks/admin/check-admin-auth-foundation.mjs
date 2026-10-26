@@ -8,8 +8,12 @@ import { fileURLToPath } from 'node:url';
 const CURRENT_FILE = fileURLToPath(import.meta.url);
 const ROOT_DIR = path.resolve(path.dirname(CURRENT_FILE), '..', '..', '..');
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {

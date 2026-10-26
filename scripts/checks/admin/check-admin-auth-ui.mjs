@@ -12,12 +12,17 @@ const ROOT_DIR = path.resolve(
   '..'
 );
 
+//===================================================================
+
 const read = (...segments) =>
   readFile(path.join(ROOT_DIR, ...segments), 'utf8');
+
+//===================================================================
 
 const exists = async (...segments) => {
   try {
     await access(path.join(ROOT_DIR, ...segments));
+
     return true;
   } catch {
     return false;
@@ -32,9 +37,12 @@ const adminAuthPages = [
   ['(auth)', 'reset-password', 'page.tsx'],
 ];
 
+//===================================================================
+
 for (const pagePath of adminAuthPages) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', ...pagePath),
+
     true,
     `Stage 10 admin auth page must exist: ${pagePath.join('/')}`
   );
@@ -47,6 +55,7 @@ for (const routePath of [
 ]) {
   assert.equal(
     await exists('apps', 'admin', 'src', 'app', 'api', 'auth', ...routePath),
+
     true,
     `Stage 10 admin auth BFF route must exist: ${routePath.join('/')}`
   );
@@ -54,6 +63,7 @@ for (const routePath of [
 
 assert.equal(
   await exists('apps', 'admin', 'src', 'app', 'register', 'page.tsx'),
+
   false,
   'Admin public registration page must not exist'
 );
@@ -69,6 +79,7 @@ assert.equal(
     'register',
     'route.ts'
   ),
+
   false,
   'Admin public registration BFF must not exist'
 );
@@ -193,6 +204,8 @@ const [
   ),
 ]);
 
+//===================================================================
+
 for (const page of [loginPage, recoveryPage, resetPage]) {
   assert.match(page, /AuthPageShell/);
   assert.match(page, /robots:\s*\{\s*index:\s*false,\s*follow:\s*false\s*\}/);
@@ -280,5 +293,7 @@ for (const scriptName of ['check:admin', 'check:before-deploy']) {
     `${authUiCheck} must run exactly once in ${scriptName}`
   );
 }
+
+//===================================================================
 
 console.log('Admin Stage 10 auth UI structural checks passed.');

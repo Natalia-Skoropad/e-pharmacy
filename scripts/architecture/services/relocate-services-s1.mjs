@@ -22,8 +22,12 @@ const ROOT = path.resolve(
   '../../..'
 );
 
+//===================================================================
+
 const MANIFEST = 'docs/architecture/services-s1/service-relocation-map.json';
 const SCOPE = 'apps/api/src/services/';
+
+//===================================================================
 
 const EXCLUDED = new Set([
   'node_modules',
@@ -35,6 +39,8 @@ const EXCLUDED = new Set([
   'coverage',
   '.artifacts',
 ]);
+
+//===================================================================
 
 const CODE = /\.(?:ts|tsx|mts|cts|js|jsx|mjs|cjs)$/;
 const args = process.argv.slice(2);
