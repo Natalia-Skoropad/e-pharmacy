@@ -1,0 +1,228 @@
+{
+  "status": "PASS",
+  "stage": "A3",
+  "modelFiles": 27,
+  "modelTestFiles": 3,
+  "registeredModels": 27,
+  "schemaDeclarations": 41,
+  "explicitIndexDeclarations": 91,
+  "inlineIndexDeclarations": 54,
+  "modelRefs": 69,
+  "unresolvedRefs": 0,
+  "duplicateIndexDefinitions": 0,
+  "legacyModelFiles": 0,
+  "intentionallyMirroredReviewFields": 8,
+  "largestModels": [
+    {
+      "file": "pharmacies/pharmacy.model.ts",
+      "lines": 654
+    },
+    {
+      "file": "catalog/productRequest.model.ts",
+      "lines": 493
+    },
+    {
+      "file": "orders/order.model.ts",
+      "lines": 381
+    },
+    {
+      "file": "accounts/user.model.ts",
+      "lines": 225
+    },
+    {
+      "file": "audit/adminAuditLog.model.ts",
+      "lines": 193
+    }
+  ],
+  "fileStatistics": {
+    "accounts/session.model.ts": {
+      "model": "Session",
+      "lines": 129,
+      "schemas": 1,
+      "explicitIndexes": 5,
+      "inlineIndexes": 2
+    },
+    "accounts/user.model.ts": {
+      "model": "User",
+      "lines": 225,
+      "schemas": 1,
+      "explicitIndexes": 4,
+      "inlineIndexes": 2
+    },
+    "admin/access/adminAccess.model.ts": {
+      "model": "AdminAccess",
+      "lines": 61,
+      "schemas": 1,
+      "explicitIndexes": 1,
+      "inlineIndexes": 3
+    },
+    "admin/access/adminAuthorizationState.model.ts": {
+      "model": "AdminAuthorizationState",
+      "lines": 43,
+      "schemas": 1,
+      "explicitIndexes": 0,
+      "inlineIndexes": 0
+    },
+    "admin/comments/pharmacyAdminComment.model.ts": {
+      "model": "PharmacyAdminComment",
+      "lines": 74,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 1
+    },
+    "admin/comments/pharmacyOwnerAdminComment.model.ts": {
+      "model": "PharmacyOwnerAdminComment",
+      "lines": 91,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 2
+    },
+    "admin/employees/adminEmployeeDocument.model.ts": {
+      "model": "AdminEmployeeDocument",
+      "lines": 87,
+      "schemas": 1,
+      "explicitIndexes": 1,
+      "inlineIndexes": 2
+    },
+    "admin/employees/adminEmployeePrivateNote.model.ts": {
+      "model": "AdminEmployeePrivateNote",
+      "lines": 81,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 1
+    },
+    "audit/adminAuditLog.model.ts": {
+      "model": "AdminAuditLog",
+      "lines": 193,
+      "schemas": 1,
+      "explicitIndexes": 9,
+      "inlineIndexes": 6
+    },
+    "cart/cart.model.ts": {
+      "model": "Cart",
+      "lines": 52,
+      "schemas": 2,
+      "explicitIndexes": 2,
+      "inlineIndexes": 0
+    },
+    "catalog/product.model.ts": {
+      "model": "Product",
+      "lines": 165,
+      "schemas": 1,
+      "explicitIndexes": 12,
+      "inlineIndexes": 1
+    },
+    "catalog/productCategory.model.ts": {
+      "model": "ProductCategory",
+      "lines": 152,
+      "schemas": 1,
+      "explicitIndexes": 3,
+      "inlineIndexes": 0
+    },
+    "catalog/productRequest.model.ts": {
+      "model": "ProductRequest",
+      "lines": 493,
+      "schemas": 3,
+      "explicitIndexes": 7,
+      "inlineIndexes": 3
+    },
+    "clients/client.model.ts": {
+      "model": "Client",
+      "lines": 43,
+      "schemas": 1,
+      "explicitIndexes": 0,
+      "inlineIndexes": 1
+    },
+    "infrastructure/rateLimitBucket.model.ts": {
+      "model": "RateLimitBucket",
+      "lines": 54,
+      "schemas": 1,
+      "explicitIndexes": 1,
+      "inlineIndexes": 0
+    },
+    "inventory/productOffer.model.ts": {
+      "model": "ProductOffer",
+      "lines": 77,
+      "schemas": 1,
+      "explicitIndexes": 4,
+      "inlineIndexes": 2
+    },
+    "inventory/stockMovement.model.ts": {
+      "model": "StockMovement",
+      "lines": 131,
+      "schemas": 1,
+      "explicitIndexes": 3,
+      "inlineIndexes": 7
+    },
+    "orders/order.model.ts": {
+      "model": "Order",
+      "lines": 381,
+      "schemas": 9,
+      "explicitIndexes": 5,
+      "inlineIndexes": 5
+    },
+    "owners/pharmacyOwnerDocument.model.ts": {
+      "model": "PharmacyOwnerDocument",
+      "lines": 96,
+      "schemas": 1,
+      "explicitIndexes": 1,
+      "inlineIndexes": 2
+    },
+    "owners/pharmacyRegistrationUploadSession.model.ts": {
+      "model": "PharmacyRegistrationUploadSession",
+      "lines": 68,
+      "schemas": 1,
+      "explicitIndexes": 1,
+      "inlineIndexes": 0
+    },
+    "owners/pharmacyUserPrivateNote.model.ts": {
+      "model": "PharmacyUserPrivateNote",
+      "lines": 81,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 1
+    },
+    "pharmacies/pharmacy.model.ts": {
+      "model": "Pharmacy",
+      "lines": 654,
+      "schemas": 4,
+      "explicitIndexes": 12,
+      "inlineIndexes": 0
+    },
+    "pharmacies/pharmacyDocumentFile.model.ts": {
+      "model": "PharmacyDocumentFile",
+      "lines": 117,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 4
+    },
+    "pharmacies/pharmacyNote.model.ts": {
+      "model": "PharmacyNote",
+      "lines": 82,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 3
+    },
+    "reviews/pharmacyReview.model.ts": {
+      "model": "PharmacyReview",
+      "lines": 132,
+      "schemas": 1,
+      "explicitIndexes": 3,
+      "inlineIndexes": 3
+    },
+    "reviews/productReview.model.ts": {
+      "model": "ProductReview",
+      "lines": 132,
+      "schemas": 1,
+      "explicitIndexes": 3,
+      "inlineIndexes": 3
+    },
+    "settings/position.model.ts": {
+      "model": "Position",
+      "lines": 78,
+      "schemas": 1,
+      "explicitIndexes": 2,
+      "inlineIndexes": 0
+    }
+  }
+}

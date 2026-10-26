@@ -111,6 +111,8 @@
     "check:transport-c1": "node scripts/architecture/relocate-api-transport-c1.mjs --check",
     "test:transport-c1": "node --test scripts/architecture/relocate-api-transport-c1.test.mjs",
     "transport:relocate": "node scripts/architecture/relocate-api-transport-c1.mjs",
+    "check:models-a3": "node scripts/architecture/check-api-models-a3.mjs --check",
+    "test:models-a3": "node scripts/architecture/check-api-models-a3.test.mjs",
     "check:models-m1": "node scripts/architecture/check-models-m1.mjs",
     "test:models-m1": "node --test scripts/architecture/check-models-m1.test.mjs",
     "test:services-s1": "node --test scripts/architecture/relocate-services-s1.test.mjs",
