@@ -40,8 +40,6 @@ const norm = (s) =>
     )
     .join('\n');
 
-const uniqueSorted = (a) => [...new Set(a)].sort();
-
 const exported = (node) =>
   node.modifiers?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword) ?? false;
 

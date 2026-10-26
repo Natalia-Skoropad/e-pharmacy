@@ -185,7 +185,9 @@
     "check:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.mjs --check",
     "test:architecture-layout": "node scripts/architecture/maintenance/check-script-layout.test.mjs",
     "check:types-a8": "node scripts/architecture/types/check-api-types-a8.mjs --check",
-    "test:types-a8": "node scripts/architecture/types/check-api-types-a8.test.mjs"
+    "test:types-a8": "node scripts/architecture/types/check-api-types-a8.test.mjs",
+    "check:utils-a9": "node scripts/architecture/utils/check-api-utils-a9.mjs --check",
+    "test:utils-a9": "node scripts/architecture/utils/check-api-utils-a9.test.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

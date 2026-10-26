@@ -125,7 +125,31 @@ function expectedRelativeImportsAfterA1() {
         `Missing A8 ESM import: ${file}`
       );
 
-    return a8.historicalAfterA5 + a8.approvedAdditions.length;
+    const a9Path = 'docs/architecture/utils-a9/approved-relative-imports.json';
+    const afterA8 = a8.historicalAfterA5 + a8.approvedAdditions.length;
+
+    if (!existsSync(absolute(a9Path))) return afterA8;
+
+    const a9 = JSON.parse(read(a9Path));
+
+    assert.equal(a9.schemaVersion, 1);
+    assert.equal(a9.stage, 'A9');
+    assert.equal(a9.historicalAfterA8, afterA8);
+
+    assert.deepEqual(a9.approvedAdditions, [
+      {
+        file: 'scripts/architecture/utils/check-api-utils-a9.test.mjs',
+        specifier: './check-api-utils-a9.mjs',
+      },
+    ]);
+
+    for (const { file, specifier } of a9.approvedAdditions)
+      assert(
+        read(file).includes(`from '${specifier}'`),
+        `Missing approved A9 test import: ${file}`
+      );
+
+    return afterA8 + a9.approvedAdditions.length;
   }
 
   const deltaPath =

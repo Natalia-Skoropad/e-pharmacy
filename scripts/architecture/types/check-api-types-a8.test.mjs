@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+
 import { auditTypes, assertReadOnlyFlags } from './check-api-types-a8.mjs';
 
 //===================================================================

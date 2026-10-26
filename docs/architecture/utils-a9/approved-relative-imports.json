@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "stage": "A9",
+  "historicalAfterA8": 3573,
+  "approvedAdditions": [
+    {
+      "file": "scripts/architecture/utils/check-api-utils-a9.test.mjs",
+      "specifier": "./check-api-utils-a9.mjs"
+    }
+  ]
+}
