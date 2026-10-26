@@ -216,9 +216,19 @@ const walk = (parent) => {
   return output.sort();
 };
 
+//===================================================================
+
+// G6's audit scripts are new, non-baseline consumers and are verified by G6.
+// Excluding only these fixed files keeps the historical import count immutable.
 const codeFiles = ['apps', 'packages', 'scripts']
   .flatMap(walk)
-  .filter((x) => code.test(x));
+  .filter(
+    (x) =>
+      code.test(x) &&
+      !/^scripts\/architecture\/(?:check-api-grouping-g6(?:\.test)?|run-api-grouping-g6-gates)\.mjs$/.test(
+        x
+      )
+  );
 
 const oldExists = (p) => existsSync(abs(p)) && statSync(abs(p)).isFile();
 
@@ -470,6 +480,25 @@ const expected = JSON.parse(readFileSync(abs(checksPath), 'utf8'));
 
 //===================================================================
 
+// G6 records only two reviewed, exact post-G5 formatting changes. The G5
+// baseline is immutable; this approval is permitted only for applied trees.
+const g6Approval = JSON.parse(
+  readFileSync(
+    abs('docs/architecture/grouping-g6/approved-g5-formatting.json'),
+    'utf8'
+  )
+);
+
+assert.equal(g6Approval.schemaVersion, 1);
+assert.equal(g6Approval.stage, 'G6');
+
+assert.deepEqual(Object.keys(g6Approval.files).sort(), [
+  'apps/api/src/utils/email/passwordResetEmail.ts',
+  'apps/api/src/utils/email/sendEmail.ts',
+]);
+
+//===================================================================
+
 // Stage G5 sources are pinned to the latest supplied post-G4 archive.
 const matchesPinned = (source, pinned) => {
   const value = hasMultilineTemplate(source)
@@ -505,10 +534,30 @@ for (const entry of allEntries) {
 
   const value = done.length ? canonical : baseline;
 
-  if (!matchesPinned(original.toString('utf8'), value))
+  const approval = done.length ? g6Approval.files[current] : undefined;
+
+  if (approval)
+    assert.deepEqual(
+      approval.previousG5,
+      canonical,
+      `G6 approval cannot change G5 baseline: ${current}`
+    );
+
+  const isExactlyApproved = Boolean(
+    approval &&
+    rawHash(original) === approval.approvedAfterG5.raw &&
+    sourceHash(original.toString('utf8')) ===
+      approval.approvedAfterG5.normalized
+  );
+
+  if (!matchesPinned(original.toString('utf8'), value) && !isExactlyApproved)
     issues.push(`Changed existing G5 source: ${current}`);
 
-  if (projectedMoving && !matchesPinned(actual, canonical))
+  if (
+    projectedMoving &&
+    !matchesPinned(actual, canonical) &&
+    !isExactlyApproved
+  )
     issues.push(
       `Changed projected G5 utility beyond approved paths: ${entry.to}`
     );

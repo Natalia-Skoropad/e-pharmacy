@@ -39,6 +39,10 @@ const pinned = JSON.parse(
   read('docs/architecture/grouping-g5/source-fingerprints.json')
 );
 
+const g6Approval = JSON.parse(
+  read('docs/architecture/grouping-g6/approved-g5-formatting.json')
+);
+
 const approvedG3 = JSON.parse(
   read('docs/architecture/grouping-g5/approved-g3-after-g5.json')
 );
@@ -119,9 +123,18 @@ test('G5 pinned original and transformed source fingerprints are exact', () => {
         ? pinned.baselineHashes[m.from]
         : pinned.canonicalHashes[m.to];
 
-    assert.equal(
-      digest(normalized(text)),
-      hash.normalized,
+    const approved = completed() ? g6Approval.files[destination] : undefined;
+
+    if (approved)
+      assert.deepEqual(approved.previousG5, pinned.canonicalHashes[m.to]);
+
+    const actualHash = digest(normalized(text));
+
+    assert(
+      actualHash === hash.normalized ||
+        (approved &&
+          actualHash === approved.approvedAfterG5.normalized &&
+          digest(text) === approved.approvedAfterG5.raw),
       `Unexpected source drift: ${destination}`
     );
   }

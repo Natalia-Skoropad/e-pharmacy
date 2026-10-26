@@ -150,7 +150,7 @@
     "check:react:serial": "pnpm test:react",
     "check:integration:serial": "pnpm test:integration",
     "check:build:serial": "pnpm exec turbo build --concurrency=1",
-    "check:before-deploy:staged": "pnpm check:transport-c1 && pnpm check:source:api && pnpm check:source:shared && pnpm check:source:client && pnpm check:source:pharmacy && pnpm check:source:admin && pnpm check:lint:serial && pnpm check:type-check:serial && pnpm check:test:serial && pnpm check:react:serial && pnpm check:integration:serial && pnpm check:build:serial && pnpm check:deploy-artifact",
+    "check:before-deploy:staged": "pnpm check:transport-c1 && pnpm check:grouping-g6 && pnpm check:source:api && pnpm check:source:shared && pnpm check:source:client && pnpm check:source:pharmacy && pnpm check:source:admin && pnpm check:lint:serial && pnpm check:type-check:serial && pnpm check:test:serial && pnpm check:react:serial && pnpm check:integration:serial && pnpm check:build:serial && pnpm check:deploy-artifact",
     "check:grouping-g0": "node scripts/architecture/check-api-grouping-g0.mjs --check",
     "test:grouping-g0": "node --test scripts/architecture/check-api-grouping-g0.test.mjs",
     "grouping:relocate": "node scripts/architecture/relocate-api-grouping.mjs",
@@ -163,7 +163,11 @@
     "check:grouping-g4": "node scripts/architecture/relocate-api-grouping-g4.mjs --check --stage G4",
     "test:grouping-g4": "node --test scripts/architecture/relocate-api-grouping-g4.test.mjs",
     "check:grouping-g5": "node scripts/architecture/relocate-api-grouping-g5.mjs --check --stage G5",
-    "test:grouping-g5": "node --test scripts/architecture/relocate-api-grouping-g5.test.mjs"
+    "test:grouping-g5": "node --test scripts/architecture/relocate-api-grouping-g5.test.mjs",
+    "check:grouping-g6": "node scripts/architecture/check-api-grouping-g6.mjs --check",
+    "test:grouping-g6": "node --test scripts/architecture/check-api-grouping-g6.test.mjs",
+    "check:grouping-g6:history": "node scripts/architecture/run-api-grouping-g6-gates.mjs --history",
+    "check:grouping-g6:full": "node scripts/architecture/run-api-grouping-g6-gates.mjs --full"
   },
   "devDependencies": {
     "turbo": "latest",

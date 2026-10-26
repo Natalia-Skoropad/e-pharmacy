@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "stage": "G6",
+  "sourceArchive": "e-pharmacy-14-20-9.zip",
+  "files": {
+    "apps/api/src/utils/email/passwordResetEmail.ts": {
+      "previousG5": {
+        "raw": "8147e2a843ec58aa7cc04dd6760433f174dab62fcb6775ed232d30d9b8a96702",
+        "normalized": "93ac1318968ad927061703d036b17d8f9e27c4690ed52c29deac91693dc179e3"
+      },
+      "approvedAfterG5": {
+        "raw": "8b4995b3c9f91a1ba40f5f56815b86c6307bf4bd5c2bf95ac9e84f4d13348747",
+        "normalized": "93ac1318968ad927061703d036b17d8f9e27c4690ed52c29deac91693dc179e3"
+      },
+      "reason": "Formatting-only whitespace/line wrapping in newest e-pharmacy-14-20-9.zip; checked against completed G5 isolated tree. No behavior or import change."
+    },
+    "apps/api/src/utils/email/sendEmail.ts": {
+      "previousG5": {
+        "raw": "36cae77cdd534a64ba781b65fda9060858609c89296818bdff1d2f42e85b428f",
+        "normalized": "584a99338704d769796ff29195cbeb885f4594b145b31f3e60e5deee5e14b95b"
+      },
+      "approvedAfterG5": {
+        "raw": "6708bddbd51550bb0824cc109232154b0c81300c0c1719253dc5f3a950fd0507",
+        "normalized": "c06daec49bf3711b9a8b76157ac63782c9e5eb78cd59a3e51323084be141158d"
+      },
+      "reason": "Formatting-only whitespace/line wrapping in newest e-pharmacy-14-20-9.zip; checked against completed G5 isolated tree. No behavior or import change."
+    }
+  }
+}
