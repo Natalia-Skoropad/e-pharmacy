@@ -21,6 +21,62 @@ const read = (name) => readFileSync(absolute(name), 'utf8');
 
 // A1 adds six reviewed source imports. Preserve the G4/G5 historical baseline.
 function expectedRelativeImportsAfterA1() {
+  const a2Path = 'docs/architecture/middlewares-a2/approved-import-delta.json';
+
+  if (existsSync(absolute(a2Path))) {
+    const a2 = JSON.parse(read(a2Path));
+
+    const originalA1 = JSON.parse(
+      read('docs/architecture/controllers-a1/approved-import-delta.json')
+    );
+
+    assert.equal(originalA1.historicalRelativeImports, 3494);
+    assert.equal(originalA1.approvedAdditions.length, 6);
+    assert.equal(a2.stage, 'A2');
+    assert.equal(a2.historicalAfterA1, 3500);
+    assert.equal(a2.preservedHandlers, 80);
+    assert.equal(a2.canonicalControllerModules, 16);
+
+    for (const file of a2.migratedDocumentHelpers) {
+      assert.match(
+        read(file),
+        /from ['"]\.\.\/shared\/document-attachment['"]/
+      );
+    }
+
+    for (const [moduleName, expectedHash] of Object.entries(
+      a2.newControllerImportHashes
+    )) {
+      const actualImports = [
+        ...read(`apps/api/src/controllers/${moduleName}`).matchAll(
+          /from ['"]([^'"]+)['"]/g
+        ),
+      ]
+        .map((match) => match[1])
+        .join('\n');
+
+      const actualHash = createHash('sha256')
+        .update(actualImports)
+        .digest('hex');
+
+      // A2 approved both exact import orders below. Swapping the HTTP_STATUS and AdminAuditListQuery
+      // import declarations is formatting-only; every other import change remains rejected.
+      const approvedActivityImportOrder =
+        moduleName === 'admin/admin-activity.controller.ts' &&
+        actualHash ===
+          '34a1a83695e55aa5ad2bfb922bb3b7e2f0b75e371dd02096976dba54daccd7ca';
+
+      assert(
+        actualHash === expectedHash || approvedActivityImportOrder,
+        `Unexpected A2 module import changes: ${moduleName}\n` +
+          `Actual SHA-256: ${actualHash}\nExpected SHA-256: ${expectedHash}`
+      );
+    }
+
+    // Only the reviewed A2 import set extends the original 3494+6 baseline.
+    return a2.expectedRelativeImports;
+  }
+
   const deltaPath =
     'docs/architecture/controllers-a1/approved-import-delta.json';
 

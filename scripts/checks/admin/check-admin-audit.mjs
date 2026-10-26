@@ -277,6 +277,14 @@ const authController = await read(
   'auth/auth.controller.ts'
 );
 
+const authProfileController = await read(
+  'apps',
+  'api',
+  'src',
+  'controllers',
+  'auth/auth-profile.controller.ts'
+);
+
 const profileService = await read(
   'apps',
   'api',
@@ -643,7 +651,7 @@ assert.match(
 assert.match(ownerLifecycleService, /scopeEntityId:/);
 
 assert.match(
-  authController,
+  authProfileController,
   /updateUserProfileService\([\s\S]*?res\.locals\.requestId[\s\S]*?\)/
 );
 

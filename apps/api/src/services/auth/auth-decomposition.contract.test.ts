@@ -20,10 +20,15 @@ const names = [
 const pathOf = (name: string) => resolve(root, 'services/auth', name);
 const read = (name: string) => readFileSync(pathOf(name), 'utf8');
 
-const controller = readFileSync(
-  resolve(root, 'controllers/auth/auth.controller.ts'),
-  'utf8'
-);
+const controller = [
+  'auth.controller.ts',
+  'auth-documents.controller.ts',
+  'auth-password.controller.ts',
+  'auth-profile.controller.ts',
+  'auth-session-management.controller.ts',
+]
+  .map((name) => readFileSync(resolve(root, 'controllers/auth', name), 'utf8'))
+  .join('\n');
 
 const middleware = readFileSync(
   resolve(root, 'middlewares/auth/auth.middleware.ts'),

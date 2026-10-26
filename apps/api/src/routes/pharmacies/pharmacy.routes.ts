@@ -1,34 +1,43 @@
 import { Router } from 'express';
 
 import {
+  getOwnedPharmacyDetail,
+  getOwnedPharmacyStatistics,
+  listOwnedPharmacies,
+  listOwnedPharmacyOptions,
+} from '../../controllers/pharmacies/pharmacy-registry.controller';
+
+import {
+  getFavoritePharmacyIds,
+  getFavoritePharmacies,
+  getPharmacyCheckoutDetails,
+  getPharmacyDetails,
+  getPharmacyFilters,
+  getPharmacyOptions,
+  getPharmacies,
+  setFavoritePharmacy,
+} from '../../controllers/pharmacies/pharmacy-public.controller';
+
+import {
+  createPharmacyReview,
+  getPendingPharmacyReviews,
+  getPharmacyReviews,
+  moderatePharmacyReview,
+} from '../../controllers/pharmacies/pharmacy-reviews.controller';
+
+import {
   createPharmacyDraft,
   getOwnedPharmacyProfile,
   updateOwnedPharmacyDraft,
   submitOwnedPharmacyForVerification,
   uploadOwnedPharmacyDocument,
   downloadOwnedPharmacyDocument,
-  getOwnedPharmacyDetail,
-  getOwnedPharmacyStatistics,
-  listOwnedPharmacies,
-  listOwnedPharmacyOptions,
-  createPharmacyReview,
-  getFavoritePharmacyIds,
-  getFavoritePharmacies,
   getMyPharmacyDocument,
   getCurrentPharmacySummary,
   listMyPharmacyMemberships,
   getMyPharmacyProfile,
-  getPendingPharmacyReviews,
-  getPharmacyCheckoutDetails,
-  getPharmacyDetails,
-  getPharmacyFilters,
-  getPharmacyOptions,
-  getPharmacyReviews,
-  getPharmacies,
-  moderatePharmacyReview,
   sendMyPharmacyForVerification,
   submitMyPharmacyModeration,
-  setFavoritePharmacy,
   updateMyPharmacyProfile,
   uploadMyPharmacyDocument,
 } from '../../controllers/pharmacies/pharmacy.controller';

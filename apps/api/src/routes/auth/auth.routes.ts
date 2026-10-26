@@ -4,23 +4,35 @@ import { env } from '../../config/env';
 import { AUTH_ERROR_CODES, USER_ROLES } from '../../constants/auth/auth';
 
 import {
+  uploadRegistrationPharmacyDocument,
+  createRegistrationPharmacyDocumentUploadSession,
+} from '../../controllers/auth/auth-documents.controller';
+
+import {
+  requestPasswordReset,
+  resetPassword,
+  updateCurrentUserPassword,
+} from '../../controllers/auth/auth-password.controller';
+
+import {
   getAdminOnlyTest,
   getCurrentUser,
   getClientOnlyTest,
   getPharmacyOnlyTest,
-  loginUser,
-  logoutAllUserSessions,
+  updateCurrentUser,
+} from '../../controllers/auth/auth-profile.controller';
+
+import {
   getActiveSessions,
   revokeActiveSession,
+} from '../../controllers/auth/auth-session-management.controller';
+
+import {
+  loginUser,
+  logoutAllUserSessions,
   logoutUser,
   refreshAuthSession,
-  requestPasswordReset,
   registerUser,
-  uploadRegistrationPharmacyDocument,
-  createRegistrationPharmacyDocumentUploadSession,
-  resetPassword,
-  updateCurrentUser,
-  updateCurrentUserPassword,
 } from '../../controllers/auth/auth.controller';
 
 import { authenticate } from '../../middlewares/auth/auth.middleware';

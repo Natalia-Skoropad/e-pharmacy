@@ -30,7 +30,12 @@ test('S10.6 owner read removes its monolith and imports canonical functions dire
     false
   );
 
-  const controller = read('../../../controllers/admin/admin.controller.ts');
+  const controller = [
+    'admin-owner-read.controller.ts',
+    'admin-activity.controller.ts',
+  ]
+    .map((name) => read(`../../../controllers/admin/${name}`))
+    .join('\n');
 
   const contracts = [
     [

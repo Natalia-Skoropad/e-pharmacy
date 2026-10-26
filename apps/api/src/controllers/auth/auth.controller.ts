@@ -10,44 +10,18 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { isNextAuthProxyRequest } from '../../middlewares/auth/auth-bff.middleware';
 
-import { loginUserService } from '../../services/auth/auth-login.service';
-
 import {
   refreshAuthSessionService,
   revokeAllUserSessionsByRefreshTokensService,
   revokeSessionByRefreshTokenService,
-  getActiveSessionsService,
-  revokeUserSessionService,
 } from '../../services/auth/auth-sessions.service';
 
 import { registerUserService } from '../../services/auth/auth-register.service';
+import { loginUserService } from '../../services/auth/auth-login.service';
 
-import {
-  requestPasswordResetService,
-  resetPasswordService,
-  updateUserPasswordService,
-} from '../../services/auth/auth-password.service';
-
-import { updateUserProfileService } from '../../services/auth/auth-profile.service';
-
-import {
-  createRegistrationPharmacyDocumentUploadService,
-  createRegistrationPharmacyDocumentUploadSessionService,
-} from '../../services/pharmacies/pharmacy-document.service';
-
-import type {
-  ForgotPasswordInput,
-  LoginInput,
-  ResetPasswordInput,
-  RegisterInput,
-  UpdatePasswordInput,
-  UpdateProfileInput,
-} from '../../types/auth/auth';
-
+import type { LoginInput, RegisterInput } from '../../types/auth/auth';
 import type { SessionContext } from '../../types/auth/session';
 import type { ValidatedResponse } from '../../types/http/validated-request';
-
-import type { PharmacyRegistrationDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
 
 import { sendSuccessResponse } from '../../utils/http/apiResponse';
 import { httpError } from '../../utils/http/httpError';
@@ -140,37 +114,6 @@ function requireRefreshTokensFromCookies(req: Request): string[] {
 
 //===============================================================
 
-export async function createRegistrationPharmacyDocumentUploadSession(
-  _req: Request,
-  res: Response
-): Promise<void> {
-  const data = await createRegistrationPharmacyDocumentUploadSessionService();
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
-}
-
-//===============================================================
-
-export async function uploadRegistrationPharmacyDocument(
-  _req: Request,
-  res: ValidatedResponse<PharmacyRegistrationDocumentUploadInput>
-): Promise<void> {
-  const input = res.locals.validated.body;
-  const data = await createRegistrationPharmacyDocumentUploadService(input);
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.CREATED,
-    data,
-  });
-}
-
-//===============================================================
-
 export async function registerUser(
   req: Request,
   res: ValidatedResponse<RegisterInput>
@@ -248,101 +191,6 @@ export async function refreshAuthSession(
 
 //===============================================================
 
-export async function requestPasswordReset(
-  req: Request,
-  res: ValidatedResponse<ForgotPasswordInput>
-): Promise<void> {
-  const input = res.locals.validated.body;
-
-  await requestPasswordResetService(input);
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: API_MESSAGES.PASSWORD_RESET_EMAIL_SENT,
-  });
-}
-
-//===============================================================
-
-export async function resetPassword(
-  req: Request,
-  res: ValidatedResponse<ResetPasswordInput>
-): Promise<void> {
-  const input = res.locals.validated.body;
-
-  await resetPasswordService(input);
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: API_MESSAGES.PASSWORD_RESET_SUCCESS,
-  });
-}
-
-//===============================================================
-
-export function getCurrentUser(req: Request, res: Response): void {
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-
-    data: {
-      user: req.user,
-    },
-  });
-}
-
-//===============================================================
-
-export async function updateCurrentUser(
-  req: Request,
-  res: ValidatedResponse<UpdateProfileInput>
-): Promise<void> {
-  const input = res.locals.validated.body;
-  const userId = req.user?.id;
-
-  if (!userId) return;
-
-  const user = await updateUserProfileService(
-    userId,
-    input,
-    res.locals.requestId
-  );
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Profile was updated successfully.',
-
-    data: {
-      user,
-    },
-  });
-}
-
-//===============================================================
-
-export async function updateCurrentUserPassword(
-  req: Request,
-  res: ValidatedResponse<UpdatePasswordInput>
-): Promise<void> {
-  const input = res.locals.validated.body;
-  const userId = req.user?.id;
-
-  if (!userId) return;
-
-  await updateUserPasswordService(userId, input);
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Password was updated successfully. Please sign in again.',
-  });
-}
-
-//===============================================================
-
 export async function logoutUser(req: Request, res: Response): Promise<void> {
   const refreshTokens = getRefreshTokensFromCookies(req);
 
@@ -373,93 +221,5 @@ export async function logoutAllUserSessions(
     res,
     statusCode: HTTP_STATUS.OK,
     message: 'You have been signed out from all devices.',
-  });
-}
-
-//===============================================================
-
-export function getClientOnlyTest(req: Request, res: Response): void {
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Client route is available',
-
-    data: {
-      user: req.user,
-    },
-  });
-}
-
-//===============================================================
-
-export function getPharmacyOnlyTest(req: Request, res: Response): void {
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Pharmacy route is available',
-
-    data: {
-      user: req.user,
-    },
-  });
-}
-
-//===============================================================
-
-export function getAdminOnlyTest(req: Request, res: Response): void {
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Admin route is available',
-
-    data: {
-      user: req.user,
-    },
-  });
-}
-
-//===============================================================
-
-export async function getActiveSessions(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const userId = req.user?.id;
-
-  if (!userId) return;
-
-  const data = await getActiveSessionsService(userId, req.authSessionId);
-
-  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
-}
-
-//===============================================================
-
-export async function revokeActiveSession(
-  req: Request,
-  res: Response
-): Promise<void> {
-  const userId = req.user?.id;
-
-  if (!userId) return;
-
-  const sessionId = String(req.params.sessionId ?? '');
-
-  if (req.authSessionId && sessionId === req.authSessionId) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'Use the logout endpoint to revoke the current session.',
-      undefined,
-
-      AUTH_ERROR_CODES.VALIDATION_FAILED
-    );
-  }
-
-  await revokeUserSessionService(userId, sessionId);
-
-  sendSuccessResponse({
-    res,
-    statusCode: HTTP_STATUS.OK,
-    message: 'Session was revoked successfully.',
   });
 }

@@ -4,35 +4,53 @@ import { USER_ROLES } from '../../constants/auth/auth';
 import { ADMIN_PERMISSIONS } from '../../constants/admin/access/admin-permissions';
 
 import {
-  getCurrentAdminAccess,
-  createPharmacyOwnerAdminCommentByAdmin,
-  deletePharmacyOwnerAdminCommentByAdmin,
-  downloadPharmacyOwnerDocumentByAdmin,
-  getPharmacyOwnerDetailByAdmin,
-  getPharmacyOwnerSummaryByAdmin,
-  listPharmacyOwnerActivityByAdmin,
-  listPharmacyActivityByAdmin,
-  listPharmacyActivityActorsByAdmin,
-  getPharmacyActivityDetailsByAdmin,
-  listPharmacyOwnerDocumentsByAdmin,
-  listPharmacyOwnerAdminCommentsByAdmin,
-  listPharmacyOwnerOptionsByAdmin,
-  listPharmacyOwnerPharmaciesByAdmin,
-  listPharmacyOwnersByAdmin,
   listPharmaciesByAdmin,
   getPharmacyRegistryStatisticsByAdmin,
   listPharmacyRegistryOptionsByAdmin,
   listPharmacyRegistryOwnerOptionsByAdmin,
   getPharmacyDetailByAdmin,
   getPharmacySalesStatisticsByAdmin,
-  getPharmacyOwnerSalesStatisticsByAdmin,
-  getPharmacyOwnerSessionsByAdmin,
   listPharmacyDocumentsByAdmin,
+  getAdminPharmacyDocument,
+} from '../../controllers/admin/admin-pharmacy-read.controller';
+
+import {
   listPharmacyAdminCommentsByAdmin,
   createPharmacyAdminCommentByAdmin,
   deletePharmacyAdminCommentByAdmin,
+} from '../../controllers/admin/admin-pharmacy-comments.controller';
+
+import {
+  getPharmacyOwnerDetailByAdmin,
+  getPharmacyOwnerSummaryByAdmin,
+  listPharmacyOwnerOptionsByAdmin,
+  listPharmacyOwnerPharmaciesByAdmin,
+  listPharmacyOwnersByAdmin,
+  getPharmacyOwnerSalesStatisticsByAdmin,
+  getPharmacyOwnerSessionsByAdmin,
+} from '../../controllers/admin/admin-owner-read.controller';
+
+import {
+  listPharmacyOwnerActivityByAdmin,
+  listPharmacyActivityByAdmin,
+  listPharmacyActivityActorsByAdmin,
+  getPharmacyActivityDetailsByAdmin,
+} from '../../controllers/admin/admin-activity.controller';
+
+import {
+  downloadPharmacyOwnerDocumentByAdmin,
+  listPharmacyOwnerDocumentsByAdmin,
+} from '../../controllers/admin/admin-owner-documents.controller';
+
+import {
+  createPharmacyOwnerAdminCommentByAdmin,
+  deletePharmacyOwnerAdminCommentByAdmin,
+  listPharmacyOwnerAdminCommentsByAdmin,
+} from '../../controllers/admin/admin-owner-comments.controller';
+
+import {
+  getCurrentAdminAccess,
   updatePharmacyOwnerStatusByAdmin,
-  getAdminPharmacyDocument,
   updatePharmacyStatusByAdmin,
   decidePharmacyModerationByAdmin,
   requestPharmacyCorrectionsByAdmin,

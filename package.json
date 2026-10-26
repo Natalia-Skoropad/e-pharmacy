@@ -169,6 +169,8 @@
     "check:grouping-g6:history": "node scripts/architecture/run-api-grouping-g6-gates.mjs --history",
     "check:grouping-g6:full": "node scripts/architecture/run-api-grouping-g6-gates.mjs --full",
     "check:controllers-a1": "node scripts/architecture/check-api-controllers-a1.mjs --check",
+    "check:middlewares-a2": "node scripts/architecture/check-api-middlewares-a2.mjs --check",
+    "test:middlewares-a2": "node --test scripts/architecture/check-api-middlewares-a2.test.mjs",
     "test:controllers-a1": "node --test scripts/architecture/check-api-controllers-a1.test.mjs"
   },
   "devDependencies": {

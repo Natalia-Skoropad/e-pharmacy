@@ -26,10 +26,15 @@ const modules = [
 test('S10.2 removes the old service without proxy/barrel and controllers import direct domain modules', () => {
   assert.equal(existsSync(resolve(services, 'pharmacy.service.ts')), false);
 
-  const controller = readFileSync(
-    resolve(src, 'controllers/pharmacies/pharmacy.controller.ts'),
-    'utf8'
-  );
+  const controller = [
+    'pharmacy.controller.ts',
+    'pharmacy-public.controller.ts',
+    'pharmacy-reviews.controller.ts',
+  ]
+    .map((name) =>
+      readFileSync(resolve(src, 'controllers/pharmacies', name), 'utf8')
+    )
+    .join('\n');
 
   for (const name of [
     'pharmacy-public-catalog.service',

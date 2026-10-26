@@ -49,9 +49,9 @@ function fixtures() {
 
 //===================================================================
 
-test('A1 covers 16 domain controllers, 157 routed handlers, and six document attachments', () => {
+test('A1 covers 29 domain controllers, 157 routed handlers, and six document attachments', () => {
   assert.equal(base.status, 'PASS', base.errors.join('\n'));
-  assert.equal(base.controllerFiles, 16);
+  assert.equal(base.controllerFiles, 29);
   assert.equal(base.handlerExports, 157);
   assert.equal(base.attachmentHeaders, 6);
   assert.equal(base.notReferencedByRoutes, 0);

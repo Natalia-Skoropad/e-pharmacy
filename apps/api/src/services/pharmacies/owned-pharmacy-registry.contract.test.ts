@@ -11,7 +11,11 @@ const read = (path: string) => readFileSync(resolve(__dirname, path), 'utf8');
 
 test('Stage 14.18.8: every owned registry endpoint is private and validated', () => {
   const routes = read('../../routes/pharmacies/pharmacy.routes.ts');
-  const controller = read('../../controllers/pharmacies/pharmacy.controller.ts');
+
+  const controller = read(
+    '../../controllers/pharmacies/pharmacy-registry.controller.ts'
+  );
+
   const schema = read('../../schemas/owners/owned-pharmacy-registry.schema.ts');
 
   for (const [path, handler] of [

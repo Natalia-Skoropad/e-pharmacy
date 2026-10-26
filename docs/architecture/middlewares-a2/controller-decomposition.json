@@ -1,0 +1,350 @@
+{
+  "stage": "A2",
+  "baseline": "e-pharmacy-14-20-10.zip",
+  "controllerGroups": {
+    "admin/admin.controller.ts": [
+      "admin/admin.controller.ts",
+      "admin/admin-pharmacy-read.controller.ts",
+      "admin/admin-pharmacy-comments.controller.ts",
+      "admin/admin-owner-read.controller.ts",
+      "admin/admin-activity.controller.ts",
+      "admin/admin-owner-documents.controller.ts",
+      "admin/admin-owner-comments.controller.ts"
+    ],
+    "pharmacies/pharmacy.controller.ts": [
+      "pharmacies/pharmacy.controller.ts",
+      "pharmacies/pharmacy-registry.controller.ts",
+      "pharmacies/pharmacy-public.controller.ts",
+      "pharmacies/pharmacy-reviews.controller.ts"
+    ],
+    "auth/auth.controller.ts": [
+      "auth/auth.controller.ts",
+      "auth/auth-documents.controller.ts",
+      "auth/auth-password.controller.ts",
+      "auth/auth-profile.controller.ts",
+      "auth/auth-session-management.controller.ts"
+    ]
+  },
+  "handlerFingerprints": {
+    "getCurrentAdminAccess": {
+      "module": "admin/admin.controller.ts",
+      "sha256": "b81077b7313f9c272198c1bf4445e2065d699c3446f85f61ab6febfa38865e04"
+    },
+    "getAdminPharmacyDocument": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "417e35bcff6e54c017bb82c41fa631fd9a8831c07c62b124543f70d873156c26"
+    },
+    "listPharmacyDocumentsByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "85db039dc4fe0e8fdd463a91f3497da304dbdc1234a5cedf910852640cb5ec47"
+    },
+    "listPharmacyAdminCommentsByAdmin": {
+      "module": "admin/admin-pharmacy-comments.controller.ts",
+      "sha256": "b4581481c3a8e2a01247c7edd3b93b76ee6e7745c54d805b3c13147257680dd1"
+    },
+    "createPharmacyAdminCommentByAdmin": {
+      "module": "admin/admin-pharmacy-comments.controller.ts",
+      "sha256": "3bee283ccccb7d69c93abcfe0d222c065f0f1d1a1b8e9514473463dc0561ef78"
+    },
+    "deletePharmacyAdminCommentByAdmin": {
+      "module": "admin/admin-pharmacy-comments.controller.ts",
+      "sha256": "4b4720cc7093d694f0eb8ce8ee06a7e66eb2ca3c6486998fd46abaf97bf53ced"
+    },
+    "listPharmaciesByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "7f8620e4760d6d8bac960b5be7a6a63b94644173c16cba11d6fa91c2235487b8"
+    },
+    "getPharmacyRegistryStatisticsByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "a0d880114d10c2852bafdf1628812756ac313ba686d69fdb622d1a972f6b0b27"
+    },
+    "listPharmacyRegistryOptionsByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "173853a4cb88adf7751bacde2265e13c4c6bef9b7da17ec0afadbba46ca0929b"
+    },
+    "listPharmacyRegistryOwnerOptionsByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "6dba8d9d46826dcd3d9757e49e26edd6bbb08d1c766384b588c34a90f843b9a6"
+    },
+    "getPharmacyOwnerSessionsByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "c1cb0701cf60909a3bd11bb2633d48a0c4764478c6fc700b242f4da737e19aea"
+    },
+    "getPharmacyOwnerSalesStatisticsByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "0c6317d5544c12a0c18cb9a27903ea41136fc248b90daaf8292874c4aa518cd7"
+    },
+    "getPharmacySalesStatisticsByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "39f8c87f51d7ed50b965afcc05f01ea89d0996207c593fc8f1ca8316864a6a42"
+    },
+    "getPharmacyDetailByAdmin": {
+      "module": "admin/admin-pharmacy-read.controller.ts",
+      "sha256": "d4d082d0b5544ce8137951f77bbc3fd6fa6ba9a400652f6ebad55ed9acfb3c9a"
+    },
+    "listPharmacyOwnersByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "81823b7e359fa1835b2514e44e2f6af910c69002f7a03a3cde00a349c82a0e8a"
+    },
+    "getPharmacyOwnerSummaryByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "6111f60d4f9a93750a123848132678f5fbd5b4b5f3d876793f1e34b16aee693a"
+    },
+    "listPharmacyOwnerOptionsByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "40ac31e4fdfb19c9ac4cc46ab3377ee03af936caa8fe908030d3377e727af976"
+    },
+    "getPharmacyOwnerDetailByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "58175abdaa27a687d5c3de4bac3dcb3e40d6837416fc1171f974e0618d0547ae"
+    },
+    "listPharmacyOwnerPharmaciesByAdmin": {
+      "module": "admin/admin-owner-read.controller.ts",
+      "sha256": "45fabd525d705a18f5e8b6fe57488792c8d3b6a392d48aed0d8ffcb35146112b"
+    },
+    "listPharmacyActivityByAdmin": {
+      "module": "admin/admin-activity.controller.ts",
+      "sha256": "f8c86ad411433f3df4fd8580a7ad0805d7d36b38ae872b135e1ca11499d24a85"
+    },
+    "listPharmacyActivityActorsByAdmin": {
+      "module": "admin/admin-activity.controller.ts",
+      "sha256": "9e19f7b1897f755b5effa3f9fd71a5d0dfbf96dd3ac71b1b56a3e19010f92987"
+    },
+    "getPharmacyActivityDetailsByAdmin": {
+      "module": "admin/admin-activity.controller.ts",
+      "sha256": "a10db9c7e4c4abfad67e1ee1434a17c2bd170ce6df7407142a1a84f37063b660"
+    },
+    "listPharmacyOwnerActivityByAdmin": {
+      "module": "admin/admin-activity.controller.ts",
+      "sha256": "d7c266a5062832c65fbc9bdd01efcbd1bccbbdfb498c141d91d699654d75ad82"
+    },
+    "listPharmacyOwnerDocumentsByAdmin": {
+      "module": "admin/admin-owner-documents.controller.ts",
+      "sha256": "428e361c69820e07db75f212d3f8e5d18c756b050d209d6278b85291c23fb950"
+    },
+    "downloadPharmacyOwnerDocumentByAdmin": {
+      "module": "admin/admin-owner-documents.controller.ts",
+      "sha256": "5f8accc84f79b30ecd549612210ad075c3523ccddec63b046ba7f0dca4ff9262"
+    },
+    "listPharmacyOwnerAdminCommentsByAdmin": {
+      "module": "admin/admin-owner-comments.controller.ts",
+      "sha256": "aa3e9e926044517eb44f937f6556935332e64c5c60434eaf2f21f9fe326d751f"
+    },
+    "createPharmacyOwnerAdminCommentByAdmin": {
+      "module": "admin/admin-owner-comments.controller.ts",
+      "sha256": "fafd44f0876aae49003a28cfba4fc74e0cc7d987868987f2e66b1a86855f2205"
+    },
+    "deletePharmacyOwnerAdminCommentByAdmin": {
+      "module": "admin/admin-owner-comments.controller.ts",
+      "sha256": "955e519c67f42fbdcb81a2a18fadc21c643bafdf78fa8e4091b9d006f04134ea"
+    },
+    "updatePharmacyOwnerStatusByAdmin": {
+      "module": "admin/admin.controller.ts",
+      "sha256": "4fc6e052994263781b41a62215231e6f418f6afe314f78d010ee6a2fc6c23878"
+    },
+    "decidePharmacyModerationByAdmin": {
+      "module": "admin/admin.controller.ts",
+      "sha256": "7c61c784ca8fc0f14bae13f1711fc39317c4c0a24d31c2cccd7c095a5ba67744"
+    },
+    "updatePharmacyStatusByAdmin": {
+      "module": "admin/admin.controller.ts",
+      "sha256": "c2d0a4059a2c7a49c3b371683a511448bdf30fea300379584029fe31509733b2"
+    },
+    "requestPharmacyCorrectionsByAdmin": {
+      "module": "admin/admin.controller.ts",
+      "sha256": "0b5d083a21e95f78406e65be5eaf129a0be9eef61ba377bc54296210006b0196"
+    },
+    "updateProductRequestStatusByAdmin": {
+      "module": "admin/admin.controller.ts",
+      "sha256": "95a53df91767a8fb1aa82e3691472e4b2ddf6a0beca34ec2055b2d1331908ea1"
+    },
+    "createPharmacyDraft": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "ddad92b0aba4b79f9e947e49799cb43c48f74808b820d08569012c36b63b31a6"
+    },
+    "getOwnedPharmacyProfile": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "60c6f13f8ff13154ddfb1fe78a79ad8b21822817cc887d3f9cd6f278deee2f6f"
+    },
+    "updateOwnedPharmacyDraft": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "d63c0e6c6d027757c8d3c49153db9d11f37112d8b05fe0e2abb7a1e744d20c82"
+    },
+    "submitOwnedPharmacyForVerification": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "c0a815e023acc3b015483f165ee82b335e225a5df2d0589881559cad93f542e0"
+    },
+    "uploadOwnedPharmacyDocument": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "ab0fd1ccb924e58597dc82e904642e0ead0b11924a9b07f8f28630322731b4f6"
+    },
+    "downloadOwnedPharmacyDocument": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "482605f9d8b71c97a7e2719b3088ed3addb11db1fad78ecfc897d9f7ed90d694"
+    },
+    "listOwnedPharmacies": {
+      "module": "pharmacies/pharmacy-registry.controller.ts",
+      "sha256": "3d07503f1d71f2046a8d21af178c3831eee37d9d92b3262aeba9a865451aa242"
+    },
+    "getOwnedPharmacyStatistics": {
+      "module": "pharmacies/pharmacy-registry.controller.ts",
+      "sha256": "7e097b0008618c20275c06f1a8331356325a6a85544dd1069140f684100e0547"
+    },
+    "listOwnedPharmacyOptions": {
+      "module": "pharmacies/pharmacy-registry.controller.ts",
+      "sha256": "3e2012b86fea3c5183f8de90af404a1bb1864845b3c7552f41b86e74d5ab9862"
+    },
+    "getOwnedPharmacyDetail": {
+      "module": "pharmacies/pharmacy-registry.controller.ts",
+      "sha256": "dee923eea6bde2c912689bd1352b7c2e321c53c4e04dcd32c0f4a9778be8e1f5"
+    },
+    "uploadMyPharmacyDocument": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "7837a6c0c25269292d8611c3795aab2df758da875820a2c65c84488c88c1ebb9"
+    },
+    "getMyPharmacyDocument": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "ce21d830751171a08897a9ab139c26ad0da5d8b9d4d386fb54dc8541947c0460"
+    },
+    "getCurrentPharmacySummary": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "6d789b5421cbf8890220fb138f5e21a27e74a39adb9a20d8a584ae4b1a7f149b"
+    },
+    "getMyPharmacyProfile": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "5269a30c426cc0cc1b6e8eb448b33499436b7a6dd64bb915102fd23c328b0f59"
+    },
+    "updateMyPharmacyProfile": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "b0028777c8a31a926a23e320d67c477064ede7f6611c205dfd967f30a2372917"
+    },
+    "submitMyPharmacyModeration": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "0cf1cdb30c064f457510f860b72249c7f791dc2bf2e091be9c4fe110d1c64678"
+    },
+    "sendMyPharmacyForVerification": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "4c4511244c14ddb79f010e14ace4e34b406f0f91f2bec5b55a2b5c49a6bd44a5"
+    },
+    "getPharmacies": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "3c9e3372a2484f52ca28be26a8a37afd9565237cfd3301c88d2295b6b54da68d"
+    },
+    "getPharmacyFilters": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "9107f62aa77cba49d8bda0cd8325cdb5e1bffeaeb7950102a5b27666454dcca3"
+    },
+    "getPharmacyOptions": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "89b13cdb267bbe0a1ea82e22580b0611b46f8b453e19907e543b2637943bcc7b"
+    },
+    "getFavoritePharmacyIds": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "4ed0bf1db627a04cb04726001fc9117c9ae4f1bd89ce7c56a9418002744c8d06"
+    },
+    "getFavoritePharmacies": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "02b78b9ce5c79f1543439e850e191d3697e2c5e960e5dbf708149bb41811b042"
+    },
+    "getPharmacyDetails": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "4b1c720fe96281d60d00dc158d17608938aadcaeac06136b875fbe0ae30bffa4"
+    },
+    "getPharmacyCheckoutDetails": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "c51c13d06562d113ebb42dc94fb34a99d5ef5ea1b8409f2f148cea8527778c65"
+    },
+    "getPendingPharmacyReviews": {
+      "module": "pharmacies/pharmacy-reviews.controller.ts",
+      "sha256": "2c69df1fec271c83a659016c066c7dade066ead39a0c4f06991abba8fd0e647e"
+    },
+    "getPharmacyReviews": {
+      "module": "pharmacies/pharmacy-reviews.controller.ts",
+      "sha256": "40b5174a75b74c7ab49732ec079e48c1852206deeed20ebca4246e4a0172b89f"
+    },
+    "createPharmacyReview": {
+      "module": "pharmacies/pharmacy-reviews.controller.ts",
+      "sha256": "b47b2f1cc9ca6fa564109e5842eb3985b09352c1b3662906351d2e5dd9f23f44"
+    },
+    "moderatePharmacyReview": {
+      "module": "pharmacies/pharmacy-reviews.controller.ts",
+      "sha256": "17d2f73c264a126d1d9cbf4b59b06c8bf8cab55733afa60f288e1f1a2bfc07f4"
+    },
+    "setFavoritePharmacy": {
+      "module": "pharmacies/pharmacy-public.controller.ts",
+      "sha256": "82f2dd7bc4a5a60ad4f73571f773260fd737586ee7794cc869885382adeab6b1"
+    },
+    "listMyPharmacyMemberships": {
+      "module": "pharmacies/pharmacy.controller.ts",
+      "sha256": "06e4e61452f8dab5c5902000b160ab2d14c04f23d8a0bbaea729e31ef5afa922"
+    },
+    "createRegistrationPharmacyDocumentUploadSession": {
+      "module": "auth/auth-documents.controller.ts",
+      "sha256": "6286fa1069afcab6b44cda4de4736f9ee313cfdf8da719212c79f68a65d72fe2"
+    },
+    "uploadRegistrationPharmacyDocument": {
+      "module": "auth/auth-documents.controller.ts",
+      "sha256": "8106c6142fb4067b03fe05cbf9b765077d1b0464a1d4eebae11d9453575f1f85"
+    },
+    "registerUser": {
+      "module": "auth/auth.controller.ts",
+      "sha256": "9effe6042afbb4d9e4f8d356d30289d85f0ddece580989c878a70367b1e4102a"
+    },
+    "loginUser": {
+      "module": "auth/auth.controller.ts",
+      "sha256": "306077022b7b20b4743231ab35b3c971824038fd138270820669e784299d782b"
+    },
+    "refreshAuthSession": {
+      "module": "auth/auth.controller.ts",
+      "sha256": "2c5b166c57cf64ec80ba7756ec4a02cc9f666d87bae555dd9a68f26d583fdc51"
+    },
+    "requestPasswordReset": {
+      "module": "auth/auth-password.controller.ts",
+      "sha256": "01a39e6c35e26cd371ac28fb14d7171beccbe771840a70b65b6b0a3f06ee6ada"
+    },
+    "resetPassword": {
+      "module": "auth/auth-password.controller.ts",
+      "sha256": "ee0aaef1a9e4049f6d349046eb43552d23f39e43718bdc54e3d36cb24543a319"
+    },
+    "getCurrentUser": {
+      "module": "auth/auth-profile.controller.ts",
+      "sha256": "9605821b40d7fa8fcea16283d68c3f56a4f3b30d80327e158344410ea6f0b4c4"
+    },
+    "updateCurrentUser": {
+      "module": "auth/auth-profile.controller.ts",
+      "sha256": "26ae2fc79c0fa38f146d62c3b3784c1cb3157e568da3a69bd0537b7a240d73e6"
+    },
+    "updateCurrentUserPassword": {
+      "module": "auth/auth-password.controller.ts",
+      "sha256": "11e3ca200683c7025f550c5b47d1bab6bc530665c31164ecf6068611cba5c427"
+    },
+    "logoutUser": {
+      "module": "auth/auth.controller.ts",
+      "sha256": "fcaaa9965aef0d393357e6415dc1c167377946beaa67ab788047b74160cf7f3c"
+    },
+    "logoutAllUserSessions": {
+      "module": "auth/auth.controller.ts",
+      "sha256": "bfa6996d8ee467c6e145f3a84d03d310373e60d56f61fff6b833867eaf69ec20"
+    },
+    "getClientOnlyTest": {
+      "module": "auth/auth-profile.controller.ts",
+      "sha256": "6ec0e5a4411f378037f9f69b1ac983eb8994f591525bdbd9bed0f04f5c7a36d1"
+    },
+    "getPharmacyOnlyTest": {
+      "module": "auth/auth-profile.controller.ts",
+      "sha256": "b140d981c8fe8760c74f45450ccff1c0e96aef87fc29dad6e57ddf9bdb2d2da0"
+    },
+    "getAdminOnlyTest": {
+      "module": "auth/auth-profile.controller.ts",
+      "sha256": "eb229b94763dbb7fa347dfbc33443d91572ae51d4b5e560447e8cdc79b8ed429"
+    },
+    "getActiveSessions": {
+      "module": "auth/auth-session-management.controller.ts",
+      "sha256": "e3b2e3805bdf149abdd443fd4a6aeda4b7ccc98cdf7b1c1a333707f306605764"
+    },
+    "revokeActiveSession": {
+      "module": "auth/auth-session-management.controller.ts",
+      "sha256": "e89f16d1e79542b8a4af93d4e0e542484b4468ccee513f1c2861b214dbcf62ac"
+    }
+  }
+}

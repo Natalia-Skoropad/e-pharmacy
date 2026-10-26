@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url';
 //===================================================================
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const SRC = join(ROOT, 'apps/api/src');
 
 //===================================================================
 
@@ -37,8 +36,9 @@ export function auditControllers({
   const counts = {};
 
   const expectedConsumers = new Map([
-    ['admin/admin.controller.ts', 2],
+    ['admin/admin-pharmacy-read.controller.ts', 1],
     ['admin/admin-employee.controller.ts', 1],
+    ['admin/admin-owner-documents.controller.ts', 1],
     ['owners/pharmacy-owner-document.controller.ts', 1],
     ['pharmacies/pharmacy.controller.ts', 2],
   ]);
@@ -136,8 +136,8 @@ export function auditControllers({
       `Expected 6 document download headers, got ${attachmentHeaders}`
     );
 
-  if (Object.keys(controllerFiles).length !== 16)
-    errors.push('Expected 16 controller implementation files');
+  if (Object.keys(controllerFiles).length !== 29)
+    errors.push('Expected 29 controller implementation files');
 
   if (handlers.length !== 157)
     errors.push(`Expected 157 routed handler exports, got ${handlers.length}`);

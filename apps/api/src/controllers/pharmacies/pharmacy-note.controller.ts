@@ -27,6 +27,7 @@ export async function getPharmacyNotes(
   const { params, query } = res.locals.validated;
 
   const user = req.user;
+
   if (!user) return;
 
   const data = await getPharmacyNotesService(
