@@ -54,16 +54,23 @@ function CatalogFiltersShell({
         <div
           className={clsx(
             css.searchGrid,
+
             layout === 'wide'
               ? css.searchGridWide
               : layout === 'pharmacy'
-                ? css.searchGridPharmacy
+                ? clsx(
+                    css.searchGridPharmacy,
+                    resetAction && css.searchGridPharmacyWithReset
+                  )
                 : css.searchGridCompact
           )}
         >
           {searchFields}
           <div className={css.desktopFilters}>{desktopFilterFields}</div>
-          <div className={css.desktopResetSlot}>{resetAction}</div>
+
+          {layout !== 'pharmacy' || resetAction ? (
+            <div className={css.desktopResetSlot}>{resetAction}</div>
+          ) : null}
           <div className={css.mobileFilterSlot}>{filterButton}</div>
         </div>
       </div>

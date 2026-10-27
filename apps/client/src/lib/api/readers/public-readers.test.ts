@@ -10,6 +10,7 @@ import { createPublicPharmaciesReader } from './public-pharmacies-reader';
 
 const validProductsPayload = {
   status: 'success',
+
   data: {
     items: [],
     page: 1,
@@ -27,6 +28,7 @@ test('public reader injects transport while keeping route/query/envelope logic s
 
   const request = async (path: string, options?: RequestOptions) => {
     calls.push({ path, options });
+
     return validProductsPayload;
   };
 
@@ -57,6 +59,7 @@ test('pharmacy reader shares route and runtime parsing behavior', async () => {
   const reader = createPublicPharmaciesReader(
     async (path: string) => {
       calls.push(path);
+
       return {
         status: 'success',
         data: { items: [], page: 1, perPage: 24, total: 0, totalPages: 0 },
@@ -66,6 +69,7 @@ test('pharmacy reader shares route and runtime parsing behavior', async () => {
     {
       list: '/pharmacies',
       options: '/pharmacies/options',
+      searchOptions: '/pharmacies/search-options',
       filters: '/pharmacies/filters',
       details: (id) => `/pharmacies/${id}`,
       reviews: (id) => `/pharmacies/${id}/reviews`,
@@ -77,6 +81,7 @@ test('pharmacy reader shares route and runtime parsing behavior', async () => {
       settlement: 'Київ',
       region: 'Київська область',
     }),
+
     {
       items: [],
       page: 1,

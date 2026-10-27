@@ -9,6 +9,7 @@ import {
   parsePharmacyDetailsResponse,
   parsePharmacyFilterOptionsResponse,
   parsePharmacyOptionsResponse,
+  parsePharmacySearchOptionsResponse,
   parseReviewsResponse,
 } from '@e-pharmacy/api-client/response';
 
@@ -18,6 +19,8 @@ import type {
   PharmacyDetailsResponse,
   PharmacyFilterOptionsResponse,
   PharmacyOptionsResponse,
+  PharmacySearchOptionsResponse,
+  PharmacySearchOptionsParams,
 } from '@e-pharmacy/types/pharmacies';
 
 import type { ReviewsResponse } from '@e-pharmacy/types/reviews';
@@ -29,6 +32,7 @@ import type { ApiReaderRequester } from './types';
 type PublicPharmacyReadRoutes = Readonly<{
   list: string;
   options: string;
+  searchOptions: string;
   filters: string;
   details: (id: string) => string;
   reviews: (id: string) => string;
@@ -49,6 +53,7 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
 
       return parseApiResponseData(
         await request(path, options),
+
         parsePharmaciesResponse,
         { url: path, method: 'GET' }
       );
@@ -57,8 +62,23 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
     async getOptions(options?: TOptions): Promise<PharmacyOptionsResponse> {
       return parseApiResponseData(
         await request(routes.options, options),
+
         parsePharmacyOptionsResponse,
         { url: routes.options, method: 'GET' }
+      );
+    },
+
+    async getSearchOptions(
+      params: PharmacySearchOptionsParams,
+      options?: TOptions
+    ): Promise<PharmacySearchOptionsResponse> {
+      const path = appendQueryParams(routes.searchOptions, params);
+
+      return parseApiResponseData(
+        await request(path, options),
+
+        parsePharmacySearchOptionsResponse,
+        { url: path, method: 'GET' }
       );
     },
 
@@ -67,6 +87,7 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
     ): Promise<PharmacyFilterOptionsResponse> {
       return parseApiResponseData(
         await request(routes.filters, options),
+
         parsePharmacyFilterOptionsResponse,
         { url: routes.filters, method: 'GET' }
       );
@@ -80,6 +101,7 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
 
       return parseApiResponseData(
         await request(path, options),
+
         parsePharmacyDetailsResponse,
         { url: path, method: 'GET' }
       );
@@ -90,6 +112,7 @@ export function createPublicPharmaciesReader<TOptions extends RequestOptions>(
 
       return parseApiResponseData(
         await request(path, options),
+
         parseReviewsResponse,
         { url: path, method: 'GET' }
       );

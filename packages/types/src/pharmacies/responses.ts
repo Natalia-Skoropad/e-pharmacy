@@ -99,3 +99,37 @@ export type SendPharmacyForVerificationResponse = Readonly<{
   pharmacy: MyPharmacyProfile;
   message: string;
 }>;
+
+//=============================================================================
+
+// Server-filtered, bounded options for shared search comboboxes.
+export type PharmacySearchOptionsParams = Readonly<{
+  kind: 'pharmacy' | 'location';
+  page?: number;
+  perPage?: number;
+  query?: string;
+  pharmacyId?: string;
+  settlement?: string;
+  region?: string;
+  selectedId?: string;
+}>;
+
+//=============================================================================
+
+export type PharmacySearchOptionsResponse =
+  | Readonly<{
+      kind: 'pharmacy';
+      items: readonly PharmacyOption[];
+      page: number;
+      perPage: number;
+      total: number;
+      totalPages: number;
+    }>
+  | Readonly<{
+      kind: 'location';
+      items: readonly PharmacyLocationFilterOption[];
+      page: number;
+      perPage: number;
+      total: number;
+      totalPages: number;
+    }>;

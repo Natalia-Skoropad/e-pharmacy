@@ -50,6 +50,7 @@ const publicPharmaciesReader = createPublicPharmaciesReader<ReadRequestOptions>(
 
 export const getPharmacies = publicPharmaciesReader.getPharmacies;
 export const getPharmacyOptions = publicPharmaciesReader.getOptions;
+export const getPharmacySearchOptions = publicPharmaciesReader.getSearchOptions;
 export const getPharmacyFilters = publicPharmaciesReader.getFilters;
 export const getPharmacyDetails = publicPharmaciesReader.getDetails;
 export const getPharmacyReviews = publicPharmaciesReader.getReviews;
@@ -63,6 +64,7 @@ export async function getCurrentPharmacySummary(
 
   return parseApiResponseData(
     await localApiRequest(path, options),
+
     parseCurrentPharmacySummaryResponse,
     { url: path, method: 'GET' }
   );
@@ -78,6 +80,7 @@ export async function getFavoritePharmacies(
 
   return parseApiResponseData(
     await localApiRequest(path, options),
+
     parsePharmaciesResponse,
     { url: path, method: 'GET' }
   );
@@ -92,6 +95,7 @@ export async function getFavoritePharmacyIds(
 
   return parseApiResponseData(
     await localApiRequest(path, options),
+
     parseFavoriteIdsResponse,
     { url: path, method: 'GET' }
   );
@@ -107,6 +111,7 @@ export async function getPharmacyCheckoutDetails(
 
   return parseApiResponseData(
     await localApiRequest(path, options),
+
     parsePharmacyCheckoutDetailsResponse,
     { url: path, method: 'GET' }
   );
@@ -123,6 +128,7 @@ export async function createPharmacyReview(
 
   return parseApiResponseData(
     await localApiRequest(path, { ...options, method: 'POST', body: payload }),
+
     parseReviewMutationResponse,
     { url: path, method: 'POST' }
   );
@@ -138,6 +144,7 @@ export async function addFavoritePharmacy(
 
   return parseApiResponseData(
     await localApiRequest(path, { ...options, method: 'PUT' }),
+
     parseFavoriteMutationResponse,
     { url: path, method: 'PUT' }
   );
@@ -153,6 +160,7 @@ export async function removeFavoritePharmacy(
 
   return parseApiResponseData(
     await localApiRequest(path, { ...options, method: 'DELETE' }),
+
     parseFavoriteMutationResponse,
     { url: path, method: 'DELETE' }
   );

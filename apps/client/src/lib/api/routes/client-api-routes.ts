@@ -1,5 +1,6 @@
 import { encodeRouteSegment } from '@e-pharmacy/api-client/contracts';
 import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
+
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
 //===================================================================
@@ -11,6 +12,7 @@ export const clientApiRoutes = {
   pharmacies: {
     list: '/api/pharmacies',
     options: '/api/pharmacies/options',
+    searchOptions: '/api/pharmacies/search-options',
     favorites: '/api/pharmacies/favorites',
     favoriteIds: '/api/pharmacies/favorites/ids',
     filters: '/api/pharmacies/filters',
@@ -22,6 +24,7 @@ export const clientApiRoutes = {
 
     reviews: (id: EntityId) =>
       `/api/pharmacies/${encodeRouteSegment(id)}/reviews`,
+
     favorite: (id: EntityId) =>
       `/api/pharmacies/${encodeRouteSegment(id)}/favorite`,
   },
@@ -32,8 +35,10 @@ export const clientApiRoutes = {
     favoriteIds: '/api/products/favorites/ids',
     filters: '/api/products/filters',
     details: (id: EntityId) => `/api/products/${encodeRouteSegment(id)}`,
+
     reviews: (id: EntityId) =>
       `/api/products/${encodeRouteSegment(id)}/reviews`,
+
     favorite: (id: EntityId) =>
       `/api/products/${encodeRouteSegment(id)}/favorite`,
   },

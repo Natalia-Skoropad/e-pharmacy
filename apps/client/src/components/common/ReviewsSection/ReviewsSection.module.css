@@ -70,6 +70,17 @@
 .reviewActions {
   display: grid;
   gap: 10px;
+  width: 100%;
+  min-width: 0;
+  justify-items: stretch;
+}
+
+/* Higher specificity keeps the button full-width on mobile in production. */
+.reviewActions > .reviewSubmitButton {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  justify-self: stretch;
 }
 
 .reviewSubmitButton {
@@ -162,6 +173,13 @@
   }
 
   .reviewActions {
+    width: auto;
     min-width: 0;
+  }
+
+  .reviewActions > .reviewSubmitButton {
+    width: fit-content;
+    min-width: 220px;
+    justify-self: end;
   }
 }

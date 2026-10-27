@@ -1,3 +1,5 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import Link from 'next/link';
 
 import type { PaginationLabels } from '../PaginationView';
@@ -37,6 +39,7 @@ export function LinkPagination({
   labels,
 }: LinkPaginationProps) {
   const state = normalizePaginationState(currentPage, totalPages);
+
   if (!state || state.totalPages <= 1) return null;
 
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
@@ -52,10 +55,12 @@ export function LinkPagination({
               href={getPageHref(state.currentPage - 1)}
               aria-label={`${mergedLabels.previous}, ${mergedLabels.page.toLowerCase()} ${state.currentPage - 1}`}
             >
+              <ChevronLeft size={16} aria-hidden="true" />{' '}
               {mergedLabels.previous}
             </Link>
           ) : (
             <span className={css.linkDisabled} aria-disabled="true">
+              <ChevronLeft size={16} aria-hidden="true" />{' '}
               {mergedLabels.previous}
             </span>
           )}
@@ -101,11 +106,11 @@ export function LinkPagination({
               href={getPageHref(state.currentPage + 1)}
               aria-label={`${mergedLabels.next}, ${mergedLabels.page.toLowerCase()} ${state.currentPage + 1}`}
             >
-              {mergedLabels.next}
+              {mergedLabels.next} <ChevronRight size={16} aria-hidden="true" />
             </Link>
           ) : (
             <span className={css.linkDisabled} aria-disabled="true">
-              {mergedLabels.next}
+              {mergedLabels.next} <ChevronRight size={16} aria-hidden="true" />
             </span>
           )}
         </li>

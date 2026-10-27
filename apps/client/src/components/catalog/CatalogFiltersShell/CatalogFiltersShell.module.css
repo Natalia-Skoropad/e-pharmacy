@@ -64,17 +64,28 @@
   }
 }
 
+/* Pharmacy-only layout: both selectors are available at every viewport.
+   With the old filter drawer removed, Location and Reset must not be hidden. */
+.pharmacyLayout .desktopFilters {
+  display: block;
+  min-width: 0;
+}
+
+.pharmacyLayout .desktopResetSlot {
+  display: flex;
+  align-items: end;
+  min-width: 0;
+}
+
+/* Match the 48px SearchableSelect trigger without changing shared buttons. */
+.pharmacyLayout .desktopResetSlot > * {
+  width: 100%;
+  height: 48px;
+}
+
 /* Pharmacy-only layout: keep the product catalog's responsive toolbar intact. */
 .mobileFilterSlot {
   display: none;
-}
-
-.pharmacyLayout .mobileFilterSlot {
-  display: block;
-}
-
-.pharmacyLayout .mobileFilterSlot > * {
-  width: 100%;
 }
 
 .pharmacyLayout .catalogToolbar {
@@ -114,13 +125,16 @@
     margin-bottom: 28px;
   }
 
-  .pharmacyLayout .mobileFilterSlot {
-    display: block;
-    grid-column: 2;
-    align-self: end;
+  .searchGridPharmacy {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
   }
 
-  .pharmacyLayout .mobileFilterSlot > * {
+  .searchGridPharmacyWithReset {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .pharmacyLayout .desktopResetSlot > * {
     width: auto;
   }
 
@@ -137,15 +151,6 @@
   .pharmacyLayout .catalogToolbar > :first-child {
     width: fit-content;
     text-align: left;
-  }
-
-  .searchGridPharmacy {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-
-  .searchGridPharmacy > :first-child {
-    grid-column: 1;
   }
 }
 
@@ -205,20 +210,20 @@
     width: 240px;
   }
 
-  .pharmacyLayout .mobileFilterSlot {
-    display: none;
+  .pharmacyLayout .desktopFilters {
+    display: contents;
   }
 
   .searchGridPharmacy {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr) auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: stretch;
+  }
+
+  .searchGridPharmacyWithReset {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr) auto;
   }
 
   .searchGridPharmacy .desktopResetSlot {
     justify-content: flex-end;
-  }
-
-  .searchGridPharmacy > :first-child {
-    grid-column: auto;
   }
 }

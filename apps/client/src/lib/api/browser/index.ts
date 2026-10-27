@@ -50,6 +50,7 @@ export {
   getPharmacyDetails,
   getPharmacyFilters,
   getPharmacyOptions,
+  getPharmacySearchOptions,
   getPharmacyReviews,
   removeFavoritePharmacy,
 } from './pharmacies.api';

@@ -167,6 +167,7 @@ export const backendRoutes = {
       '/pharmacies/me/profile/moderation-submission',
 
     options: '/pharmacies/options',
+    searchOptions: '/pharmacies/search-options',
     favorites: '/pharmacies/favorites',
     favoriteIds: '/pharmacies/favorites/ids',
     filters: '/pharmacies/filters',

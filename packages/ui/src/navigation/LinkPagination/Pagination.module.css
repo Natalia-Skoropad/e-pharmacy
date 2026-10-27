@@ -61,3 +61,9 @@
 .linkDisabled {
   opacity: 0.6;
 }
+
+/* Shared previous/next icons: consistent alignment across both pagination modes. */
+.link,
+.linkDisabled {
+  gap: 6px;
+}

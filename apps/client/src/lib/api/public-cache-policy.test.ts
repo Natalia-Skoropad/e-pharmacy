@@ -65,10 +65,21 @@ test('commerce, review, and dictionary readers select their domain cache presets
     /getPharmacies[\s\S]*PUBLIC_COMMERCE_CACHE_OPTIONS/
   );
 
+  // Pharmacy and location dictionaries are now fetched in bounded pages.
+  // Both search readers must retain the dictionary cache preset.
   assert.match(
     pharmacyCatalog,
-    /getPharmacyFilters[\s\S]*PUBLIC_DICTIONARY_CACHE_OPTIONS/
+    /getPharmacySearchOptions\(\s*\{\s*kind:\s*'location'[\s\S]*?PUBLIC_DICTIONARY_CACHE_OPTIONS/
   );
+
+  assert.match(
+    pharmacyCatalog,
+    /getPharmacySearchOptions\(\s*\{\s*kind:\s*'pharmacy'[\s\S]*?PUBLIC_DICTIONARY_CACHE_OPTIONS/
+  );
+
+  // Prevent regressions to eagerly materializing the full dictionaries.
+  assert.doesNotMatch(pharmacyCatalog, /\bgetPharmacyFilters\s*\(/);
+  assert.doesNotMatch(pharmacyCatalog, /\bgetPharmacyOptions\s*\(/);
 
   assert.match(productDetail, /PUBLIC_COMMERCE_CACHE_OPTIONS/);
   assert.match(pharmacyDetail, /PUBLIC_COMMERCE_CACHE_OPTIONS/);

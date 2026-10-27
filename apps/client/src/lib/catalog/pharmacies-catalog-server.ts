@@ -9,13 +9,12 @@ import {
   resolveServerDataState,
 } from '@/lib/api/server';
 
-import {
-  getPharmacyFilters,
-  getPharmacies,
-  getPharmacyOptions,
-} from '@/lib/api/server';
+import { getPharmacies, getPharmacySearchOptions } from '@/lib/api/server';
 
-import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
+import type {
+  PharmacyOption,
+  PharmacyLocationFilterOption,
+} from '@e-pharmacy/types/pharmacies';
 
 import { getCatalogRedirectPage } from './catalog-resource-state';
 
@@ -33,19 +32,40 @@ import {
 
 //===================================================================
 
+// Only resolve matching location candidates when the URL contains a location.
+// The unfiltered page no longer materializes the location dictionary.
 export async function resolvePharmaciesCatalogFilters(
   parsedFilters: PharmacyFilters
 ) {
-  const filterState = await resolveServerDataState(
-    getPharmacyFilters(PUBLIC_DICTIONARY_CACHE_OPTIONS)
-  );
+  const locationState = parsedFilters.settlement
+    ? await resolveServerDataState(
+        getPharmacySearchOptions(
+          {
+            kind: 'location',
+            settlement: parsedFilters.settlement,
+            ...(parsedFilters.region ? { region: parsedFilters.region } : {}),
+            page: 1,
+            perPage: 50,
+          },
 
-  const locationOptions =
-    filterState.status === 'success' ? filterState.data.locations : [];
+          PUBLIC_DICTIONARY_CACHE_OPTIONS
+        )
+      )
+    : null;
+
+  const locations: readonly PharmacyLocationFilterOption[] =
+    locationState?.status === 'success' &&
+    locationState.data.kind === 'location'
+      ? locationState.data.items
+      : [];
 
   return {
-    filters: normalizePharmacyFiltersLocation(parsedFilters, locationOptions),
-    filterState,
+    filters: normalizePharmacyFiltersLocation(parsedFilters, locations),
+
+    filterState:
+      locationState?.status === 'unavailable'
+        ? locationState
+        : ({ status: 'success', data: { locations, sort: [] } } as const),
   };
 }
 
@@ -56,7 +76,7 @@ export async function loadPharmaciesCatalogPageData(
 ): Promise<
   PharmaciesCatalogPageData & { pharmacyOptions: readonly PharmacyOption[] }
 > {
-  const [filterResolution, initialPharmaciesState, pharmacyOptionsState] =
+  const [filterResolution, initialPharmaciesState, selectedPharmacyState] =
     await Promise.all([
       resolvePharmaciesCatalogFilters(parsedFilters),
 
@@ -67,18 +87,29 @@ export async function loadPharmaciesCatalogPageData(
         )
       ),
 
-      resolveServerDataState(
-        getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)
-      ),
+      parsedFilters.pharmacyId
+        ? resolveServerDataState(
+            getPharmacySearchOptions(
+              {
+                kind: 'pharmacy',
+                selectedId: parsedFilters.pharmacyId,
+                page: 1,
+                perPage: 1,
+              },
+
+              PUBLIC_DICTIONARY_CACHE_OPTIONS
+            )
+          )
+        : Promise.resolve(null),
     ]);
 
   const { filters, filterState } = filterResolution;
 
-  const shouldRefetchWithNormalizedLocation =
+  const changed =
     filters.settlement !== parsedFilters.settlement ||
     filters.region !== parsedFilters.region;
 
-  const pharmaciesState = shouldRefetchWithNormalizedLocation
+  const pharmaciesState = changed
     ? await resolveServerDataState(
         getPharmacies(
           buildPharmacyApiParams(filters),
@@ -93,9 +124,7 @@ export async function loadPharmaciesCatalogPageData(
     filterState,
   });
 
-  if (pageData.resourceState.status === 'unavailable') {
-    noStore();
-  }
+  if (pageData.resourceState.status === 'unavailable') noStore();
 
   const redirectPage = getCatalogRedirectPage(
     filters.page,
@@ -103,33 +132,36 @@ export async function loadPharmaciesCatalogPageData(
     pageData.resourceState
   );
 
-  if (redirectPage !== null) {
+  if (redirectPage !== null)
     redirect(buildPharmacyPath({ ...filters, page: redirectPage }));
-  }
 
   return {
     ...pageData,
+
+    // Selected entry only. Options for opening/scrolling are loaded by the browser.
     pharmacyOptions:
-      pharmacyOptionsState.status === 'success'
-        ? pharmacyOptionsState.data.items
+      selectedPharmacyState?.status === 'success' &&
+      selectedPharmacyState.data.kind === 'pharmacy'
+        ? selectedPharmacyState.data.items
         : [],
   };
 }
 
 //===================================================================
 
-// Use the public option snapshot for both page metadata and the visible heading.
-// A missing/stale option must not leak an internal ID into public SEO copy.
 export async function getSelectedPharmacySeoName(
   pharmacyId?: string
 ): Promise<string | undefined> {
   if (!pharmacyId) return undefined;
 
   const state = await resolveServerDataState(
-    getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)
+    getPharmacySearchOptions(
+      { kind: 'pharmacy', selectedId: pharmacyId, page: 1, perPage: 1 },
+      PUBLIC_DICTIONARY_CACHE_OPTIONS
+    )
   );
 
-  return state.status === 'success'
-    ? state.data.items.find((pharmacy) => pharmacy.id === pharmacyId)?.name
+  return state.status === 'success' && state.data.kind === 'pharmacy'
+    ? state.data.items[0]?.name
     : undefined;
 }

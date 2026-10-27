@@ -1,4 +1,5 @@
 import { permanentRedirect } from 'next/navigation';
+
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
 
 import {
@@ -18,7 +19,7 @@ import { loadProductCatalogPageData } from '@/lib/catalog/product-catalog-server
 import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
 
 import {
-  getPharmacyOptions,
+  getPharmacySearchOptions,
   getProductFilters,
   PUBLIC_DICTIONARY_CACHE_OPTIONS,
 } from '@/lib/api/server';
@@ -46,12 +47,14 @@ export async function generateMetadata({
   );
 
   let categoryLabel: string | undefined;
+
   if (filters.category !== 'all') {
     try {
       const filterOptions = await getProductFilters(
         {},
         PUBLIC_DICTIONARY_CACHE_OPTIONS
       );
+
       categoryLabel = filterOptions.categories.find(
         (option) => option.value === filters.category
       )?.label;
@@ -64,8 +67,17 @@ export async function generateMetadata({
 
   if (filters.pharmacyId) {
     try {
-      pharmacies = (await getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS))
-        .items;
+      const response = await getPharmacySearchOptions(
+        {
+          kind: 'pharmacy',
+          selectedId: filters.pharmacyId,
+          page: 1,
+          perPage: 1,
+        },
+        PUBLIC_DICTIONARY_CACHE_OPTIONS
+      );
+
+      pharmacies = response.kind === 'pharmacy' ? response.items : [];
     } catch {
       pharmacies = [];
     }
@@ -84,6 +96,7 @@ export async function generateMetadata({
     title: getProductCatalogTitle(filters, seoContext),
     description: getProductCatalogDescription(filters, seoContext),
     path: buildProductCatalogCanonicalPath(filters, pharmacies),
+
     noIndex:
       isProductCatalogNoIndex(filters) ||
       (filters.category !== 'all' && !categoryLabel),
@@ -100,6 +113,7 @@ async function ProductCatalogSegmentsPage({
   const routeResult = parseProductCatalogSegments(resolvedParams);
 
   const resolvedSearchParams = await searchParams;
+
   const filters = mergeProductCatalogFilters(
     routeResult.filters,
     parseProductCatalogSearchParams(resolvedSearchParams)

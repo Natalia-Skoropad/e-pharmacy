@@ -69,6 +69,9 @@ import {
 } from '../../schemas/pharmacies/pharmacy.schema';
 
 import { emptyQuerySchema } from '../../schemas/shared';
+import { pharmacySearchOptionsQuerySchema } from '../../schemas/pharmacies/pharmacy-search-options.schema';
+
+import { getPharmacySearchOptions } from '../../controllers/pharmacies/pharmacy-public.controller';
 
 import {
   ownedPharmacyRegistryListQuerySchema,
@@ -307,6 +310,14 @@ pharmacyRoutes.get(
   '/filters',
   validate({ query: emptyQuerySchema }),
   ctrlWrapper(getPharmacyFilters)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/search-options',
+  validate({ query: pharmacySearchOptionsQuerySchema }),
+  ctrlWrapper(getPharmacySearchOptions)
 );
 
 //=================================================================================

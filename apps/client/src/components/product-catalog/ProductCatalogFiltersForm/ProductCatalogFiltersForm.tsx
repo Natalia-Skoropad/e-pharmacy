@@ -36,6 +36,7 @@ import {
 import CatalogFiltersShell from '@/components/catalog/CatalogFiltersShell/CatalogFiltersShell';
 import { useCatalogNavigation } from '@/components/catalog/hooks/useCatalogNavigation';
 import { useCatalogSearchDraft } from '@/components/catalog/hooks/useCatalogSearchDraft';
+import { useRemotePharmacyOptions } from '@/components/catalog/hooks/useRemotePharmacyOptions';
 
 //===================================================================
 
@@ -77,6 +78,7 @@ function createProductsResetFiltersHref(pharmacies: PharmacyOption[]) {
       pharmacyId: undefined,
       sort: 'newest',
     },
+
     pharmacies
   );
 }
@@ -93,8 +95,29 @@ function ProductCatalogFiltersForm({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const { isPending, navigate } = useCatalogNavigation();
 
+  const pharmacySearch = useRemotePharmacyOptions('pharmacy');
+
+  const availablePharmacies = useMemo(
+    () => [
+      ...pharmacySearch.items,
+
+      ...pharmacies.filter(
+        (item) =>
+          (!pharmacySearch.isOpen || !pharmacySearch.query.trim()) &&
+          !pharmacySearch.items.some((loaded) => loaded.id === item.id)
+      ),
+    ],
+    [
+      pharmacies,
+      pharmacySearch.items,
+      pharmacySearch.isOpen,
+      pharmacySearch.query,
+    ]
+  );
+
   const committedSearch = useMemo<ProductSearchDraft>(
     () => ({ name: filters.name, article: filters.article }),
+
     [filters.article, filters.name]
   );
 
@@ -109,10 +132,14 @@ function ProductCatalogFiltersForm({
   const commitSearch = useCallback(
     (search: ProductSearchDraft) => {
       navigate(
-        buildProductsFiltersHref({ ...filters, ...search, page: 1 }, pharmacies)
+        buildProductsFiltersHref(
+          { ...filters, ...search, page: 1 },
+          availablePharmacies
+        )
       );
     },
-    [filters, navigate, pharmacies]
+
+    [filters, navigate, availablePharmacies]
   );
 
   const { draft, isDraftDirty, setDraft, resetDraft } = useCatalogSearchDraft({
@@ -128,23 +155,26 @@ function ProductCatalogFiltersForm({
       name: draft.name.trim(),
       article: draft.article.trim(),
     }),
+
     [draft.article, draft.name, filters]
   );
 
   const activeFiltersCount =
     getProductCatalogActiveFiltersCount(effectiveFilters);
+
   const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createProductsResetFiltersHref(pharmacies);
+  const resetHref = createProductsResetFiltersHref(availablePharmacies);
 
   const pharmacyOptions = useMemo(
     () => [
       { value: 'all', label: 'All pharmacies' },
-      ...pharmacies.map((pharmacy) => ({
+      ...availablePharmacies.map((pharmacy) => ({
         value: pharmacy.id,
         label: pharmacy.name,
       })),
     ],
-    [pharmacies]
+
+    [availablePharmacies]
   );
 
   const productCatalogSortOptions = useMemo(
@@ -157,6 +187,7 @@ function ProductCatalogFiltersForm({
           label: string;
         }> => isProductSortFilter(option.value)
       ),
+
     [filterOptions.sort]
   );
 
@@ -165,7 +196,10 @@ function ProductCatalogFiltersForm({
   };
 
   const updateCatalog = (nextFilters: CatalogHrefFilters) => {
-    navigate(buildProductsFiltersHref({ ...nextFilters, page: 1 }, pharmacies));
+    navigate(
+      buildProductsFiltersHref({ ...nextFilters, page: 1 }, availablePharmacies)
+    );
+
     setIsFiltersOpen(false);
   };
 
@@ -200,6 +234,14 @@ function ProductCatalogFiltersForm({
         label="Pharmacy"
         value={filters.pharmacyId ?? 'all'}
         options={pharmacyOptions}
+        filterOptions={false}
+        onOpenChange={pharmacySearch.setIsOpen}
+        onQueryChange={pharmacySearch.setQuery}
+        isOptionsLoading={pharmacySearch.isOptionsLoading}
+        hasMoreOptions={pharmacySearch.hasMore}
+        isLoadingMore={pharmacySearch.isLoadingMore}
+        loadMoreError={pharmacySearch.error}
+        onLoadMore={pharmacySearch.loadMore}
         placeholder="All pharmacies"
         emptyMessage="No pharmacies found"
         isActive={Boolean(filters.pharmacyId)}

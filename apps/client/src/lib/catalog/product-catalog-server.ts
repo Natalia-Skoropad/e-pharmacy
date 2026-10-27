@@ -10,7 +10,7 @@ import {
 } from '@/lib/api/server';
 
 import {
-  getPharmacyOptions,
+  getPharmacySearchOptions,
   getProductFilters,
   getProducts,
 } from '@/lib/api/server';
@@ -42,8 +42,26 @@ export async function loadProductCatalogPageData(
         )
       ),
 
-      resolveServerDataState(getPharmacyOptions(PUBLIC_DICTIONARY_CACHE_OPTIONS)),
-      resolveServerDataState(getProductFilters({}, PUBLIC_DICTIONARY_CACHE_OPTIONS)),
+      filters.pharmacyId
+        ? resolveServerDataState(
+            getPharmacySearchOptions(
+              {
+                kind: 'pharmacy',
+                selectedId: filters.pharmacyId,
+                page: 1,
+                perPage: 1,
+              },
+
+              PUBLIC_DICTIONARY_CACHE_OPTIONS
+            ).then((response) => ({
+              items: response.kind === 'pharmacy' ? response.items : [],
+            }))
+          )
+        : Promise.resolve({ status: 'success' as const, data: { items: [] } }),
+
+      resolveServerDataState(
+        getProductFilters({}, PUBLIC_DICTIONARY_CACHE_OPTIONS)
+      ),
     ]);
 
   const pageData = createProductCatalogPageData({

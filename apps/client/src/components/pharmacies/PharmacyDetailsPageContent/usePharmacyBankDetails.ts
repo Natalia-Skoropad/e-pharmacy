@@ -43,7 +43,9 @@ export function usePharmacyBankDetails(
       if (!canLoadPharmacyBankDetails(current, options.force)) return;
 
       controllerRef.current?.abort();
+
       const controller = new AbortController();
+
       controllerRef.current = controller;
       updateState({ status: 'loading' });
 
@@ -55,6 +57,7 @@ export function usePharmacyBankDetails(
         if (controller.signal.aborted || !mountedRef.current) return;
 
         const bankDetails = data.pharmacy.bankDetails;
+
         updateState(
           bankDetails
             ? { status: 'success', data: bankDetails }
@@ -62,6 +65,7 @@ export function usePharmacyBankDetails(
         );
       } catch (error) {
         if (controller.signal.aborted || !mountedRef.current) return;
+
         updateState({ status: 'error', error });
       } finally {
         if (controllerRef.current === controller) {
@@ -87,6 +91,13 @@ export function usePharmacyBankDetails(
     return () => {
       mountedRef.current = false;
       controllerRef.current?.abort();
+      controllerRef.current = null;
+
+      // React StrictMode replays effects during development. The first
+      // request was aborted; allow the next setup to issue a real request.
+      if (stateRef.current.status === 'loading') {
+        stateRef.current = { status: 'idle' };
+      }
     };
   }, []);
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import {
   getPaginationItems,
   normalizePaginationState,
@@ -43,6 +45,7 @@ export function PaginationView({
   onPageChange,
 }: PaginationViewProps) {
   const state = normalizePaginationState(currentPage, totalPages);
+
   if (!state || state.totalPages <= 1) return null;
 
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
@@ -57,6 +60,7 @@ export function PaginationView({
       <p className="visually-hidden" aria-live="polite">
         {mergedLabels.page} {state.currentPage} of {state.totalPages}
       </p>
+
       <ul className={css.list}>
         <li>
           <button
@@ -66,7 +70,7 @@ export function PaginationView({
             aria-label={`${mergedLabels.previous}, ${mergedLabels.page.toLowerCase()} ${state.currentPage - 1}`}
             onClick={() => changePage(state.currentPage - 1)}
           >
-            {mergedLabels.previous}
+            <ChevronLeft size={16} aria-hidden="true" /> {mergedLabels.previous}
           </button>
         </li>
 
@@ -109,7 +113,7 @@ export function PaginationView({
             aria-label={`${mergedLabels.next}, ${mergedLabels.page.toLowerCase()} ${state.currentPage + 1}`}
             onClick={() => changePage(state.currentPage + 1)}
           >
-            {mergedLabels.next}
+            {mergedLabels.next} <ChevronRight size={16} aria-hidden="true" />
           </button>
         </li>
       </ul>

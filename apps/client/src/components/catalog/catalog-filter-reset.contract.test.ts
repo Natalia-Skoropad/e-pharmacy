@@ -20,8 +20,9 @@ test('pharmacy reset clears the selected pharmacy, location and sorting together
     /createPharmaciesResetFiltersHref[\s\S]*?name:\s*''[\s\S]*?address:\s*''[\s\S]*?pharmacyId:\s*''[\s\S]*?settlement:\s*''[\s\S]*?region:\s*''[\s\S]*?sort:\s*'newest'/
   );
 
-  assert.match(source, /<ResetFiltersButton[\s\S]*?href=\{resetHref\}/);
-  assert.match(source, /<FilterDrawer[\s\S]*?resetHref=\{resetHref\}/);
+  assert.match(source, /hasActiveFilters \? \(\s*<ResetFiltersButton/);
+  assert.match(source, /onClick=\{\(\) => navigate\(resetHref\)\}/);
+  assert.doesNotMatch(source, /<FilterDrawer/);
 });
 
 //===================================================================
@@ -37,4 +38,32 @@ test('product reset clears every catalog filter together', async () => {
   );
 
   assert.match(source, /resetDraft\(\{ name: '', article: '' \}\)/);
+});
+
+//===================================================================
+
+test('pharmacy loading shows two 48px controls, and reset matches their height', async () => {
+  const [loading, loadingStyles, shellStyles] = await Promise.all([
+    readSource('./CatalogPageLoading/CatalogPageLoading.tsx'),
+    readSource('./CatalogPageLoading/CatalogPageLoading.module.css'),
+    readSource('./CatalogFiltersShell/CatalogFiltersShell.module.css'),
+  ]);
+
+  assert.match(loading, /filterCount = variant === 'product' \? 5 : 2/);
+  assert.match(loading, /css\.filtersPharmacy/);
+
+  assert.match(
+    loadingStyles,
+    /\.filtersPharmacy \.filterControl \{\s*height: 48px;/
+  );
+
+  assert.match(
+    loadingStyles,
+    /\.filtersPharmacy \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/
+  );
+
+  assert.match(
+    shellStyles,
+    /\.pharmacyLayout \.desktopResetSlot > \* \{[^}]*height: 48px;/
+  );
 });

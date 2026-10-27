@@ -16,6 +16,7 @@ test('keeps the cart limit message single-action and fully described', async () 
   );
 
   assert.equal((modal.match(/<Button\b/g) ?? []).length, 1);
+
   assert.match(modal, /describedBy=\{descriptionId\}/);
   assert.match(modal, /initialFocusRef=\{dismissButtonRef\}/);
   assert.doesNotMatch(modal, /ConfirmationModal|cancelLabel|onCancel/);
@@ -175,7 +176,7 @@ test('catalog routes use six-card skeleton loading states with reduced-motion su
   assert.match(skeletonStyles, /min-height:\s*210px/);
   assert.match(skeletonStyles, /prefers-reduced-motion:\s*reduce/);
   assert.match(catalogLoading, /<CatalogCardSkeleton count=\{6\}/);
-  assert.match(catalogLoading, /filterCount = variant === 'product' \? 5 : 3/);
+  assert.match(catalogLoading, /filterCount = variant === 'product' \? 5 : 2/);
   assert.match(productLoading, /label="Loading products" variant="product"/);
 
   assert.match(
@@ -189,6 +190,7 @@ test('catalog routes use six-card skeleton loading states with reduced-motion su
 test('does not publish placeholder social links or developer diagnostics', async () => {
   const sources = await Promise.all([
     readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
+
     readComponent('./layout/Footer/Footer.tsx'),
     readComponent('./common/ReviewsSection/ReviewsSection.tsx'),
     readComponent('./home/config/content.ts'),
@@ -234,6 +236,7 @@ test('preserves all home blocks while keeping stats and customer reviews stable'
     await Promise.all([
       readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
       readFile(new URL('../app/page.module.css', import.meta.url), 'utf8'),
+
       readComponent('./home/config/content.ts'),
       readComponent('./home/HomeReviewsSection/HomeReviewsSection.tsx'),
       readComponent('./home/HomeReviewsSection/HomeReviewsSection.module.css'),
@@ -256,6 +259,7 @@ test('preserves all home blocks while keeping stats and customer reviews stable'
 
   for (const marker of orderedHomeMarkers) {
     const currentIndex = homePage.indexOf(marker);
+
     assert.ok(
       currentIndex > previousIndex,
       `Missing or reordered home block: ${marker}`

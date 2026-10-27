@@ -26,5 +26,6 @@ export {
   getPharmacyDetails,
   getPharmacyFilters,
   getPharmacyOptions,
+  getPharmacySearchOptions,
   getPharmacyReviews,
 } from './pharmacies.api';

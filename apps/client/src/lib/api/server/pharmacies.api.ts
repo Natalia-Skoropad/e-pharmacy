@@ -25,6 +25,7 @@ const publicPharmaciesReader = createPublicPharmaciesReader<ServerReadOptions>(
 
 export const getPharmacies = publicPharmaciesReader.getPharmacies;
 export const getPharmacyOptions = publicPharmaciesReader.getOptions;
+export const getPharmacySearchOptions = publicPharmaciesReader.getSearchOptions;
 export const getPharmacyFilters = publicPharmaciesReader.getFilters;
 export const getPharmacyDetails = publicPharmaciesReader.getDetails;
 export const getPharmacyReviews = publicPharmaciesReader.getReviews;

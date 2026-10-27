@@ -92,7 +92,7 @@ test('active sessions panel renders auth sessions without app-specific copy', ()
       deviceName: 'Chrome on Windows',
       roleAtLogin: 'admin',
       lastUsedAt: '2026-09-24T10:00:00.000Z' as ISODateTimeString,
-      expiresAt: '2026-10-24T10:00:00.000Z' as ISODateTimeString,
+      expiresAt: '2099-10-24T10:00:00.000Z' as ISODateTimeString,
       isCurrent: true,
     },
   ];

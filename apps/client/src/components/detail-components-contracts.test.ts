@@ -114,7 +114,9 @@ test('keeps Pharmacy Details retryable and separates contact from receipt email'
   assert.match(contact, /CopyButton/);
   assert.match(contact, /Copy pharmacy email/);
   assert.match(bankPanel, /state\.data\.receiptEmail/);
-  assert.ok((bankPanel.match(/<CopyButton/g) ?? []).length >= 2);
+  assert.equal((bankPanel.match(/<CopyButton/g) ?? []).length, 1);
+  assert.match(bankPanel, /\['Receipt email', state\.data\.receiptEmail\]/);
+  assert.match(bankPanel, /className=\{css\.copyAction\}/);
   assert.match(bankPanel, /Retry/);
   assert.match(bankState, /status: 'error'/);
   assert.match(bankHook, /controllerRef\.current\?\.abort\(\)/);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import {
   ArrowDownAZ,
@@ -22,27 +22,22 @@ import type {
 import { CountLabel, formatInitials } from '@e-pharmacy/ui/data-display';
 import { SearchableSelect, SelectField } from '@e-pharmacy/ui/forms';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { FilterDrawer, InfoTooltip } from '@e-pharmacy/ui/overlays';
-import { FiltersButton, ResetFiltersButton } from '@e-pharmacy/ui/primitives';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { ResetFiltersButton } from '@e-pharmacy/ui/primitives';
 import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 
 import {
   buildPharmacyPath,
   formatPharmacyLocationLabel,
-  getPharmacyActiveFiltersCount,
   PHARMACIES_SORT_OPTIONS,
   type PharmacyFilters,
 } from '@/lib/catalog/pharmacies-catalog';
-
-import {
-  filterLocationOptionsByPharmacy,
-  filterPharmacyOptionsByLocation,
-} from '@/lib/catalog/pharmacies-filter-relationships';
 
 import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 
 import CatalogFiltersShell from '@/components/catalog/CatalogFiltersShell/CatalogFiltersShell';
 import { useCatalogNavigation } from '@/components/catalog/hooks/useCatalogNavigation';
+import { useRemotePharmacyOptions } from '@/components/catalog/hooks/useRemotePharmacyOptions';
 
 import css from './PharmaciesCatalogFiltersForm.module.css';
 
@@ -96,42 +91,72 @@ function PharmaciesCatalogFiltersForm({
   visiblePharmaciesCount,
   pharmaciesCount,
 }: PharmaciesCatalogFiltersFormProps) {
-  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const { isPending, navigate } = useCatalogNavigation();
 
-  const activeFiltersCount = getPharmacyActiveFiltersCount(filters);
-  const hasActiveFilters = activeFiltersCount > 0;
-  const resetHref = createPharmaciesResetFiltersHref();
-
-  const selectedPharmacy = pharmacyOptions.find(
-    (pharmacy) => pharmacy.id === filters.pharmacyId
+  const hasActiveFilters = Boolean(
+    filters.pharmacyId ||
+    filters.name ||
+    filters.address ||
+    filters.settlement ||
+    filters.region ||
+    filters.sort !== 'newest'
   );
 
+  const resetHref = createPharmaciesResetFiltersHref();
+
+  const pharmacySearch = useRemotePharmacyOptions('pharmacy', {
+    settlement: filters.settlement,
+    region: filters.region,
+  });
+
+  const locationSearch = useRemotePharmacyOptions('location', {
+    pharmacyId: filters.pharmacyId,
+  });
+
   const availablePharmacyOptions = useMemo(
-    () =>
-      filterPharmacyOptionsByLocation(
-        pharmacyOptions,
-        filters.settlement,
-        filters.region,
-        filters.pharmacyId
+    () => [
+      ...pharmacySearch.items,
+
+      ...pharmacyOptions.filter(
+        (item) =>
+          (!pharmacySearch.isOpen || !pharmacySearch.query.trim()) &&
+          !pharmacySearch.items.some((loaded) => loaded.id === item.id)
       ),
-    [filters.pharmacyId, filters.region, filters.settlement, pharmacyOptions]
+    ],
+    [
+      pharmacySearch.items,
+      pharmacySearch.isOpen,
+      pharmacySearch.query,
+      pharmacyOptions,
+    ]
   );
 
   const availableLocationOptions = useMemo(
-    () =>
-      filterLocationOptionsByPharmacy(
-        locationOptions,
-        selectedPharmacy,
-        filters.settlement,
-        filters.region
+    () => [
+      ...locationSearch.items,
+
+      ...locationOptions.filter(
+        (item) =>
+          (!locationSearch.isOpen || !locationSearch.query.trim()) &&
+          !locationSearch.items.some(
+            (loaded) =>
+              getLocationOptionValue(loaded) === getLocationOptionValue(item)
+          )
       ),
-    [filters.region, filters.settlement, locationOptions, selectedPharmacy]
+    ],
+    [
+      locationSearch.items,
+      locationSearch.isOpen,
+      locationSearch.query,
+      locationOptions,
+    ]
   );
 
   const pharmacySelectOptions = useMemo(
     () => [
-      { value: '', label: 'All pharmacies' },
+      ...(!pharmacySearch.query.trim()
+        ? [{ value: '', label: 'All pharmacies' }]
+        : []),
 
       ...availablePharmacyOptions.map((pharmacy) => ({
         value: pharmacy.id,
@@ -157,15 +182,14 @@ function PharmaciesCatalogFiltersForm({
           .join(' '),
       })),
     ],
-    [availablePharmacyOptions]
+    [availablePharmacyOptions, pharmacySearch.query]
   );
 
   const locationSelectOptions = useMemo(
     () => [
-      {
-        value: 'all',
-        label: 'All locations',
-      },
+      ...(!locationSearch.query.trim()
+        ? [{ value: 'all', label: 'All locations' }]
+        : []),
 
       ...availableLocationOptions.map((location) => ({
         value: getLocationOptionValue(location),
@@ -183,7 +207,7 @@ function PharmaciesCatalogFiltersForm({
       })),
     ],
 
-    [availableLocationOptions]
+    [availableLocationOptions, locationSearch.query]
   );
 
   const selectedLocationValue = useMemo(() => {
@@ -197,7 +221,6 @@ function PharmaciesCatalogFiltersForm({
 
   const updateCatalog = (nextFilters: PharmaciesHrefFilters) => {
     navigate(buildPharmacyFiltersHref({ ...nextFilters, page: 1 }));
-    setIsFiltersOpen(false);
   };
 
   const locationControl = (idSuffix: string) => (
@@ -208,7 +231,6 @@ function PharmaciesCatalogFiltersForm({
         <InfoTooltip
           label="Location search help"
           title="Location"
-          escapeOverflow={idSuffix === 'mobile'}
           icon={<Map size={20} aria-hidden="true" />}
           items={[
             {
@@ -222,9 +244,18 @@ function PharmaciesCatalogFiltersForm({
       }
       value={selectedLocationValue}
       options={locationSelectOptions}
+      filterOptions={false}
+      onOpenChange={locationSearch.setIsOpen}
+      onQueryChange={locationSearch.setQuery}
+      isOptionsLoading={locationSearch.isOptionsLoading}
+      hasMoreOptions={locationSearch.hasMore}
+      isLoadingMore={locationSearch.isLoadingMore}
+      loadMoreError={locationSearch.error}
+      onLoadMore={locationSearch.loadMore}
       placeholder="All locations"
       emptyMessage="No locations found"
       isActive={Boolean(filters.settlement)}
+      isLoading={isPending}
       disabled={isPending}
       maxLength={USER_SEARCH_MAX_LENGTH}
       sanitizeQuery={sanitizeCatalogTextSearch}
@@ -234,7 +265,7 @@ function PharmaciesCatalogFiltersForm({
           return;
         }
 
-        const location = locationOptions.find(
+        const location = availableLocationOptions.find(
           (option) => getLocationOptionValue(option) === value
         );
 
@@ -257,6 +288,7 @@ function PharmaciesCatalogFiltersForm({
       value={filters.sort}
       options={PHARMACIES_SORT_OPTIONS.map((option) => ({
         ...option,
+
         content: (
           <span className={css.sortOption}>
             <span
@@ -316,9 +348,18 @@ function PharmaciesCatalogFiltersForm({
           }
           value={filters.pharmacyId ?? ''}
           options={pharmacySelectOptions}
+          filterOptions={false}
+          onOpenChange={pharmacySearch.setIsOpen}
+          onQueryChange={pharmacySearch.setQuery}
+          isOptionsLoading={pharmacySearch.isOptionsLoading}
+          hasMoreOptions={pharmacySearch.hasMore}
+          isLoadingMore={pharmacySearch.isLoadingMore}
+          loadMoreError={pharmacySearch.error}
+          onLoadMore={pharmacySearch.loadMore}
           placeholder="Name, phone, email, or address"
           emptyMessage="No pharmacies found"
           isActive={Boolean(filters.pharmacyId)}
+          isLoading={isPending}
           disabled={isPending}
           maxLength={USER_SEARCH_MAX_LENGTH}
           sanitizeQuery={sanitizeCatalogTextSearch}
@@ -329,16 +370,17 @@ function PharmaciesCatalogFiltersForm({
       }
       desktopFilterFields={locationControl('desktop')}
       resetAction={
-        <ResetFiltersButton
-          href={resetHref}
-          label={
-            <>
-              <RotateCcw size={16} aria-hidden="true" /> Reset filters
-            </>
-          }
-          isVisible={hasActiveFilters}
-          disabled={isPending}
-        />
+        hasActiveFilters ? (
+          <ResetFiltersButton
+            onClick={() => navigate(resetHref)}
+            label={
+              <>
+                <RotateCcw size={16} aria-hidden="true" /> Reset filters
+              </>
+            }
+            disabled={isPending}
+          />
+        ) : null
       }
       countLabel={
         <CountLabel
@@ -348,30 +390,9 @@ function PharmaciesCatalogFiltersForm({
           fullWidthOnMobile
         />
       }
-      filterButton={
-        <FiltersButton
-          activeCount={activeFiltersCount}
-          controlsId="pharmacies-filters-panel"
-          isExpanded={isFiltersOpen}
-          disabled={isPending}
-          onClick={() => setIsFiltersOpen(true)}
-        />
-      }
+      filterButton={null}
       desktopSort={sortControl('pharmacies-sort-desktop')}
-      drawer={
-        <FilterDrawer
-          id="pharmacies-filters-panel"
-          eyebrow="Pharmacies"
-          title="Filters"
-          isOpen={isFiltersOpen}
-          hasActiveFilters={hasActiveFilters}
-          resetHref={resetHref}
-          onClose={() => setIsFiltersOpen(false)}
-          onReset={() => setIsFiltersOpen(false)}
-        >
-          {locationControl('mobile')}
-        </FilterDrawer>
-      }
+      drawer={null}
     />
   );
 }

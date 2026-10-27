@@ -88,6 +88,11 @@
   border-radius: var(--radius-pill);
 }
 
+/* Pharmacy search controls are 48px tall in the loaded page. */
+.filtersPharmacy .filterControl {
+  height: 48px;
+}
+
 .toolbar {
   display: flex;
   gap: 16px;
@@ -166,9 +171,8 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
-  .filtersCompact {
-    grid-template-columns: repeat(3, minmax(220px, 240px));
-    justify-content: start;
+  .filtersPharmacy {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sortField {

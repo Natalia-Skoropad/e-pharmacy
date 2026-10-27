@@ -95,3 +95,5 @@ export {
   parseOwnedPharmacyOptionsResponse,
   parseOwnedPharmacyDetailResponse,
 } from './owned-pharmacy-registry-parsers';
+
+export { parsePharmacySearchOptionsResponse } from './pharmacy-search-options-parser';

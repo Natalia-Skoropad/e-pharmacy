@@ -30,6 +30,7 @@ export function PharmacyBankDetailsPanel({
         <span className={css.headerIcon} aria-hidden="true">
           <Landmark size={22} />
         </span>
+
         <div>
           <h2 className={css.title}>Bank details</h2>
           <p className={css.subtitle}>
@@ -62,6 +63,7 @@ export function PharmacyBankDetailsPanel({
           <span className={css.stateIcon} aria-hidden="true">
             <WalletCards size={28} />
           </span>
+
           <div>
             <h3>Bank details are not available yet</h3>
             <p>
@@ -81,33 +83,26 @@ export function PharmacyBankDetailsPanel({
             ['IBAN', state.data.iban],
             ['Bank name', state.data.bankName],
             ['Payment purpose', state.data.paymentPurpose],
+            ['Receipt email', state.data.receiptEmail],
           ].map(([label, value]) => (
-            <div key={label}>
+            <div className={css.bankRow} key={label}>
               <dt>{label}</dt>
               <dd>
-                <span>{value}</span>
+                {label === 'Receipt email' ? (
+                  <a href={`mailto:${value}`}>{value}</a>
+                ) : (
+                  <span>{value}</span>
+                )}
+              </dd>
+
+              <span className={css.copyAction}>
                 <CopyButton
                   label={`Copy ${label} ${value}`}
                   onClick={() => void onCopy(value, label)}
                 />
-              </dd>
+              </span>
             </div>
           ))}
-
-          <div>
-            <dt>Receipt email</dt>
-            <dd>
-              <a href={`mailto:${state.data.receiptEmail}`}>
-                {state.data.receiptEmail}
-              </a>
-              <CopyButton
-                label={`Copy receipt email ${state.data.receiptEmail}`}
-                onClick={() =>
-                  void onCopy(state.data.receiptEmail, 'Receipt email')
-                }
-              />
-            </dd>
-          </div>
         </dl>
       ) : null}
     </>

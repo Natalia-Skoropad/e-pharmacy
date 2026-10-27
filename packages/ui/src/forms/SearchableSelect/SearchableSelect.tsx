@@ -49,6 +49,12 @@ export type SearchableSelectProps<TValue extends string = string> = Readonly<{
   maxLength?: number;
   sanitizeQuery?: (value: string) => string;
   onQueryChange?: (value: string) => void;
+  onOpenChange?: (isOpen: boolean) => void;
+  hasMoreOptions?: boolean;
+  isLoadingMore?: boolean;
+  loadMoreError?: string;
+  onLoadMore?: () => void;
+  pageSize?: number;
   onChange: (value: TValue) => void;
 }>;
 
@@ -74,6 +80,12 @@ function SearchableSelect<TValue extends string = string>({
   maxLength = 80,
   sanitizeQuery,
   onQueryChange,
+  onOpenChange,
+  hasMoreOptions = false,
+  isLoadingMore = false,
+  loadMoreError,
+  onLoadMore,
+  pageSize = 50,
   onChange,
 }: SearchableSelectProps<TValue>) {
   const generatedId = useId();
@@ -90,6 +102,15 @@ function SearchableSelect<TValue extends string = string>({
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const localPageSize = Number.isFinite(pageSize)
+    ? Math.max(1, Math.min(50, Math.floor(pageSize)))
+    : 50;
+
+  const [visibleLimit, setVisibleLimit] = useState(localPageSize);
+
+  useEffect(() => {
+    setVisibleLimit(localPageSize);
+  }, [localPageSize]);
 
   const selectedOption = options.find((option) => option.value === value);
   const isSelectionLoading = !isOpen && (isLoading || isOptionsLoading);
@@ -102,6 +123,7 @@ function SearchableSelect<TValue extends string = string>({
 
   const filteredOptions = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
+
     if (!normalizedQuery || !filterOptions) return options;
 
     return options.filter((option) =>
@@ -111,9 +133,25 @@ function SearchableSelect<TValue extends string = string>({
     );
   }, [filterOptions, options, query]);
 
+  // Local lists render progressively (50 DOM options by default).
+  // Remote lists delegate pagination to the caller so no fetched page is hidden.
+  const isLocalPaging = !onLoadMore;
+
+  const visibleOptions = isLocalPaging
+    ? filteredOptions.slice(0, visibleLimit)
+    : filteredOptions;
+
+  const hasMoreLocal = isLocalPaging && visibleLimit < filteredOptions.length;
+  const canLoadMore = hasMoreOptions || hasMoreLocal;
+
+  const loadNextPage = () => {
+    if (hasMoreLocal) setVisibleLimit((current) => current + localPageSize);
+    else if (hasMoreOptions) onLoadMore?.();
+  };
+
   const isOptionDisabled = useCallback(
-    (index: number) => Boolean(filteredOptions[index]?.disabled),
-    [filteredOptions]
+    (index: number) => Boolean(visibleOptions[index]?.disabled),
+    [visibleOptions]
   );
 
   const {
@@ -123,10 +161,10 @@ function SearchableSelect<TValue extends string = string>({
     moveToEnd,
     resetActiveIndex,
     setActiveIndex,
-  } = useListboxNavigation(filteredOptions.length, 0, isOptionDisabled);
+  } = useListboxNavigation(visibleOptions.length, 0, isOptionDisabled);
 
   const activeOption =
-    activeIndex >= 0 ? filteredOptions[activeIndex] : undefined;
+    activeIndex >= 0 ? visibleOptions[activeIndex] : undefined;
 
   const activeOptionId =
     isOpen && activeIndex >= 0
@@ -135,6 +173,7 @@ function SearchableSelect<TValue extends string = string>({
 
   useEffect(() => {
     if (!isOpen || activeIndex < 0) return;
+
     optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
   }, [activeIndex, isOpen]);
 
@@ -144,6 +183,7 @@ function SearchableSelect<TValue extends string = string>({
 
     onOutside: () => {
       setIsOpen(false);
+      onOpenChange?.(false);
       setQuery('');
       onQueryChange?.('');
     },
@@ -151,6 +191,7 @@ function SearchableSelect<TValue extends string = string>({
 
   const closeSelect = () => {
     setIsOpen(false);
+    onOpenChange?.(false);
     setQuery('');
     onQueryChange?.('');
   };
@@ -159,6 +200,7 @@ function SearchableSelect<TValue extends string = string>({
     if (disabled || isLoading) return;
 
     setIsOpen(true);
+    onOpenChange?.(true);
     setQuery('');
     onQueryChange?.('');
     resetActiveIndex(0);
@@ -180,6 +222,7 @@ function SearchableSelect<TValue extends string = string>({
     const normalizedQuery = sanitizedQuery.slice(0, maxLength);
 
     setQuery(normalizedQuery);
+    setVisibleLimit(localPageSize);
     onQueryChange?.(normalizedQuery);
     resetActiveIndex(0);
     setIsOpen(true);
@@ -187,6 +230,17 @@ function SearchableSelect<TValue extends string = string>({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (disabled || isLoading) return;
+
+    if (
+      event.key === 'ArrowDown' &&
+      isOpen &&
+      activeIndex >= visibleOptions.length - 2 &&
+      canLoadMore &&
+      !isLoadingMore &&
+      !isOptionsLoading
+    ) {
+      loadNextPage();
+    }
 
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
@@ -198,7 +252,9 @@ function SearchableSelect<TValue extends string = string>({
 
     if (event.key === 'Home' || event.key === 'End') {
       if (!isOpen) return;
+
       event.preventDefault();
+
       if (event.key === 'Home') moveToStart();
       else moveToEnd();
 
@@ -208,7 +264,6 @@ function SearchableSelect<TValue extends string = string>({
     if (event.key === 'Enter' && isOpen) {
       event.preventDefault();
       handleSelect(activeOption);
-
       return;
     }
 
@@ -290,6 +345,7 @@ function SearchableSelect<TValue extends string = string>({
             onClick={() => {
               if (isOpen) closeSelect();
               else openSelect();
+
               inputRef.current?.focus();
             }}
           >
@@ -309,6 +365,19 @@ function SearchableSelect<TValue extends string = string>({
 
         {isOpen ? (
           <ul
+            onScroll={(event) => {
+              const element = event.currentTarget;
+              if (
+                canLoadMore &&
+                !loadMoreError &&
+                !isLoadingMore &&
+                !isOptionsLoading &&
+                element.scrollTop + element.clientHeight >=
+                  element.scrollHeight - 60
+              ) {
+                loadNextPage();
+              }
+            }}
             className={css.options}
             id={listboxId}
             role="listbox"
@@ -318,8 +387,8 @@ function SearchableSelect<TValue extends string = string>({
               <li className={css.empty} role="status">
                 {loadingMessage}
               </li>
-            ) : filteredOptions.length ? (
-              filteredOptions.map((option, index) => {
+            ) : visibleOptions.length ? (
+              visibleOptions.map((option, index) => {
                 const isSelected = option.value === value;
                 const isOptionActive = index === activeIndex;
 
@@ -367,6 +436,26 @@ function SearchableSelect<TValue extends string = string>({
                 {emptyMessage}
               </li>
             )}
+            {isLoadingMore ? (
+              <li className={css.loadMore} role="status" aria-live="polite">
+                <LoaderCircle
+                  className={css.spinner}
+                  size={16}
+                  aria-hidden="true"
+                />
+                Loading more…
+              </li>
+            ) : loadMoreError ? (
+              <li className={css.loadMore}>
+                <button
+                  type="button"
+                  className={css.retryButton}
+                  onClick={onLoadMore}
+                >
+                  {loadMoreError} — Retry
+                </button>
+              </li>
+            ) : null}
           </ul>
         ) : null}
       </div>

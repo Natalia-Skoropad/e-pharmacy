@@ -1,11 +1,16 @@
 import type { Request } from 'express';
-import { USER_ROLES } from '../../constants/auth/auth';
 
+import { getPharmacySearchOptionsService } from '../../services/pharmacies/pharmacy-search-options.service';
+
+import { USER_ROLES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
+
 import type {
   PharmaciesQuery,
   PharmacyIdParams,
 } from '../../schemas/pharmacies/pharmacy.schema';
+
+import type { PharmacySearchOptionsQuery } from '../../schemas/pharmacies/pharmacy-search-options.schema';
 
 import {
   getFavoritePharmacyIdsService,
@@ -124,6 +129,18 @@ export async function setFavoritePharmacy(
     pharmacyId,
     req.user?.id ?? '',
     req.method === 'PUT'
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+// Bounded, server-filtered options for public search comboboxes.
+export async function getPharmacySearchOptions(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, PharmacySearchOptionsQuery>
+): Promise<void> {
+  const data = await getPharmacySearchOptionsService(
+    res.locals.validated.query
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
