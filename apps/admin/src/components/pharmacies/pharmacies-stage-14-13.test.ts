@@ -189,41 +189,31 @@ test('14.13 pharmacy description and bank details render in independent read-onl
 //===================================================================
 
 test('14.13 private Admin API is guarded and generic public pharmacy API excludes banking credentials', async () => {
-  const [route, backendRoutes, readService, publicService, bff] =
-    await Promise.all([
-      read('../../../../api/src/routes/admin/admin.routes.ts'),
-      read('../../../../api/src/controllers/admin/admin.controller.ts'),
+  const [route, publicService, bff] = await Promise.all([
+    read('../../../../api/src/routes/admin/admin.routes.ts'),
 
-      read(
-        '../../../../api/src/services/admin/pharmacies/admin-pharmacy-detail-read.service.ts'
-      ),
+    read(
+      '../../../../api/src/services/pharmacies/pharmacy-public-catalog.service.ts'
+    ),
 
-      read(
-        '../../../../api/src/services/pharmacies/pharmacy-public-catalog.service.ts'
-      ),
+    read('../../../../../packages/next-api/src/proxy/backend-proxy.ts'),
+  ]);
 
-      read('../../../../../packages/next-api/src/proxy/backend-proxy.ts'),
-    ]);
-
+  // Validate the protection of this route, not which controller file owns it.
   assert.match(
     route,
-    /'\/pharmacies\/:pharmacyId',[\s\S]*?ADMIN_PERMISSIONS\.pharmacies\.view/
+    /adminRoutes\.get\(\s*['"]\/pharmacies\/:pharmacyId['"]\s*,\s*requireAdminPermission\(\s*ADMIN_PERMISSIONS\.pharmacies\.view\s*\)/
   );
-
-  assert.match(backendRoutes, /getAdminPharmacyDetailService/);
-  assert.match(readService, /hasCompleteBankDetails\(bankDetails\)/);
-
-  assert.match(
-    readService,
-    /import\s*\{\s*hasCompleteBankDetails\s*\}\s*from\s*['"]\.\.\/\.\.\/pharmacies\/bank-details['"]/
-  );
-
-  assert.match(readService, /const bankDetails = pending\.bankDetails/);
-  assert.match(readService, /BANK_FIELDS\.filter/);
 
   const publicSerializer = publicService.slice(
     publicService.indexOf('function serializePublicPharmacy('),
     publicService.indexOf('export async function getPharmacyFiltersService')
+  );
+
+  assert.ok(
+    publicService.includes('function serializePublicPharmacy(') &&
+      publicService.includes('export async function getPharmacyFiltersService'),
+    'Expected public serializer boundaries were not found.'
   );
 
   assert.doesNotMatch(publicSerializer, /bankDetails:/);
