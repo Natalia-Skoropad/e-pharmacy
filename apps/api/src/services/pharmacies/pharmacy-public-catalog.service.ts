@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { PHARMACY_STATUSES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { API_MESSAGES } from '../../constants/shared/messages';
+
 import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { Product } from '../../models/catalog/product.model';
@@ -16,9 +17,15 @@ import type {
 } from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/http/httpError';
-import { createFlexibleSearchRegExp, escapeRegExp } from '../../utils/validation/regexp';
+
+import {
+  createCanonicalLocationRegExp,
+  createFlexibleSearchRegExp,
+} from '../../utils/validation/regexp';
+
 import { requireISODateTime } from '../../utils/dates/date-contract';
 import { buildPublicEntitySlugId } from '../../utils/catalog/public-slug-id';
+
 import { clonePharmacyLocation } from './pharmacy-location';
 import { hasCompleteBankDetails } from './bank-details';
 
@@ -410,17 +417,13 @@ export async function getPharmaciesService(
   // Match every pharmacy belonging to the same deduplicated location,
   // including owner-entered case/outer-space variants (e.g. Dnipro/dnipro).
   if (query.settlement) {
-    filter['location.settlement'] = new RegExp(
-      `^\\s*${escapeRegExp(query.settlement.trim())}\\s*$`,
-      'i'
+    filter['location.settlement'] = createCanonicalLocationRegExp(
+      query.settlement
     );
   }
 
   if (query.region) {
-    filter['location.region'] = new RegExp(
-      `^\\s*${escapeRegExp(query.region.trim())}\\s*$`,
-      'i'
-    );
+    filter['location.region'] = createCanonicalLocationRegExp(query.region);
   }
 
   const sort: Record<string, 1 | -1> =

@@ -19,7 +19,7 @@ import {
   PHARMACY_NAME_PATTERN,
   PICTURE_DATA_URL_MAX_LENGTH,
   PICTURE_HTTP_URL_MAX_LENGTH,
-  SEARCH_TEXT_PATTERN,
+  PHARMACY_LOCATION_NAME_PATTERN,
   TAX_ID_PATTERN,
   TEXT_EDITOR_MAX_LENGTH,
   TEXT_EDITOR_PATTERN,
@@ -194,8 +194,8 @@ const pharmacyLocationSchema = new Schema(
       ],
 
       match: [
-        SEARCH_TEXT_PATTERN,
-        'Settlement contains unsupported characters',
+        PHARMACY_LOCATION_NAME_PATTERN,
+        'Use Latin letters, spaces and single hyphens only',
       ],
 
       default: undefined,
@@ -213,7 +213,11 @@ const pharmacyLocationSchema = new Schema(
         `Region must be at most ${USER_SEARCH_MAX_LENGTH} characters`,
       ],
 
-      match: [SEARCH_TEXT_PATTERN, 'Region contains unsupported characters'],
+      match: [
+        PHARMACY_LOCATION_NAME_PATTERN,
+        'Use Latin letters, spaces and single hyphens only',
+      ],
+
       default: undefined,
     },
 
@@ -307,6 +311,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       validate: {
         validator: (value?: string) =>
           !value || getWorkingHoursValidationIssue(value) === null,
+
         message: VALIDATION_MESSAGES.format.workingHours,
       },
 
@@ -328,11 +333,13 @@ const pharmacySchema = new Schema<PharmacyEntity>(
           {
             validator: (value?: string) =>
               !value || value.length >= BANK_RECIPIENT_NAME_MIN_LENGTH,
+
             message: VALIDATION_MESSAGES.limits.bankRecipientNameMin,
           },
           {
             validator: (value?: string) =>
               !value || BANK_RECIPIENT_NAME_PATTERN.test(value),
+
             message: VALIDATION_MESSAGES.format.bankRecipientName,
           },
         ],
@@ -367,11 +374,13 @@ const pharmacySchema = new Schema<PharmacyEntity>(
           {
             validator: (value?: string) =>
               !value || value.length >= BANK_NAME_MIN_LENGTH,
+
             message: VALIDATION_MESSAGES.limits.bankNameMin,
           },
           {
             validator: (value?: string) =>
               !value || BANK_NAME_PATTERN.test(value),
+
             message: VALIDATION_MESSAGES.format.bankName,
           },
         ],

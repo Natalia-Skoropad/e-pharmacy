@@ -77,3 +77,20 @@ test('bank-copy buttons share a fixed trailing action column', async () => {
 
   assert.match(hook, /stateRef\.current = \{ status: 'idle' \}/);
 });
+
+//===================================================================
+
+test('deep-linked locations stay selected when remote suggestions are absent', async () => {
+  const source = await readSource(
+    '../pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm.tsx'
+  );
+
+  // The selected URL value is not required to appear in the first remote page.
+  assert.match(source, /const selectedLocationValue = useMemo/);
+  assert.match(source, /const selectedLocation = useMemo/);
+  assert.match(source, /normalizeLocationKey\(option\.settlement\)/);
+  assert.match(source, /settlement: filters\.settlement/);
+  assert.match(source, /value: selectedLocationValue/);
+  assert.match(source, /selectedFallbackLabel=\{/);
+  assert.match(source, /if \(value === selectedLocationValue\) return/);
+});

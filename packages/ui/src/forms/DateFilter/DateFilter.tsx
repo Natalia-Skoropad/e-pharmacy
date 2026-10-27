@@ -16,6 +16,8 @@ import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 import { getBusinessCalendarDate } from '@e-pharmacy/utils/date';
 import { validateDateRange } from '@e-pharmacy/validation/url';
 
+import { placeCalendarPopover } from './calendar-position';
+
 import css from './DateFilter.module.css';
 
 //===================================================================
@@ -73,6 +75,8 @@ function padDatePart(value: number): string {
   return String(value).padStart(2, '0');
 }
 
+//===================================================================
+
 function parseCalendarDate(
   value: string | undefined
 ): CalendarDateParts | null {
@@ -92,6 +96,7 @@ function parseCalendarDate(
   }
 
   const date = new Date(Date.UTC(year, month - 1, day));
+
   if (
     date.getUTCFullYear() !== year ||
     date.getUTCMonth() + 1 !== month ||
@@ -103,36 +108,52 @@ function parseCalendarDate(
   return { year, month, day };
 }
 
+//===================================================================
+
 function toCalendarDate(parts: CalendarDateParts): string {
   return `${parts.year}-${padDatePart(parts.month)}-${padDatePart(parts.day)}`;
 }
+
+//===================================================================
 
 function toUtcDate(parts: CalendarDateParts): Date {
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
 }
 
+//===================================================================
+
 function formatDisplayDate(value: string): string {
   const parts = parseCalendarDate(value);
+
   if (!parts) return '';
+
   return `${padDatePart(parts.day)}.${padDatePart(parts.month)}.${parts.year}`;
 }
 
+//===================================================================
+
 function getMonthStart(value: string | undefined): CalendarDateParts {
   const parsed = parseCalendarDate(value);
+
   const fallback = parseCalendarDate(getBusinessCalendarDate() ?? '') ?? {
     year: 1970,
     month: 1,
     day: 1,
   };
+
   const source = parsed ?? fallback;
+
   return { year: source.year, month: source.month, day: 1 };
 }
+
+//===================================================================
 
 function addMonths(
   parts: CalendarDateParts,
   amount: number
 ): CalendarDateParts {
   const date = new Date(Date.UTC(parts.year, parts.month - 1 + amount, 1));
+
   return {
     year: date.getUTCFullYear(),
     month: date.getUTCMonth() + 1,
@@ -140,14 +161,21 @@ function addMonths(
   };
 }
 
+//===================================================================
+
 function compareCalendarDates(first: string, second: string): number {
   return first.localeCompare(second);
 }
 
+//===================================================================
+
 function getMaxDate(...values: Array<string | undefined>) {
   const validValues = values.filter(Boolean) as string[];
+
   return validValues.length ? [...validValues].sort()[0] : undefined;
 }
+
+//===================================================================
 
 function getFieldBounds(
   field: CalendarField,
@@ -166,6 +194,8 @@ function getFieldBounds(
       };
 }
 
+//===================================================================
+
 function clampMonth(
   month: CalendarDateParts,
   minDate: string | undefined,
@@ -177,19 +207,25 @@ function clampMonth(
 
   if (minKey && monthKey < minKey) return getMonthStart(minDate);
   if (maxKey && monthKey > maxKey) return getMonthStart(maxDate);
+
   return month;
 }
+
+//===================================================================
 
 function getCalendarDays(month: CalendarDateParts): CalendarDateParts[] {
   const monthStart = toUtcDate(month);
   const weekDay = monthStart.getUTCDay();
   const mondayIndex = (weekDay + 6) % 7;
   const firstCell = new Date(monthStart);
+
   firstCell.setUTCDate(firstCell.getUTCDate() - mondayIndex);
 
   return Array.from({ length: 42 }, (_, index) => {
     const date = new Date(firstCell);
+
     date.setUTCDate(firstCell.getUTCDate() + index);
+
     return {
       year: date.getUTCFullYear(),
       month: date.getUTCMonth() + 1,
@@ -198,6 +234,8 @@ function getCalendarDays(month: CalendarDateParts): CalendarDateParts[] {
   });
 }
 
+//===================================================================
+
 function isDateAllowed(
   value: string,
   minDate: string | undefined,
@@ -205,8 +243,11 @@ function isDateAllowed(
 ) {
   if (minDate && compareCalendarDates(value, minDate) < 0) return false;
   if (maxDate && compareCalendarDates(value, maxDate) > 0) return false;
+
   return true;
 }
+
+//===================================================================
 
 function areDatesEqual(first: DateFilterValue, second: DateFilterValue) {
   return first.from === second.from && first.to === second.to;
@@ -231,6 +272,7 @@ export function DateFilter({
   onChange,
 }: DateFilterProps) {
   const rootRef = useRef<HTMLFieldSetElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
   const generatedErrorId = useId();
   const [draftValue, setDraftValue] = useState<DateFilterValue>(value);
   const [openField, setOpenField] = useState<CalendarField | null>(null);
@@ -251,13 +293,58 @@ export function DateFilter({
   }, [valueFrom, valueTo]);
 
   useOutsidePointerDown({
-    refs: [rootRef],
+    refs: [rootRef, calendarRef],
     enabled: openField !== null,
     onOutside: () => setOpenField(null),
   });
 
+  // Native popover top-layer escapes the scroll/clipping region of FilterDrawer
+  // while retaining the calendar inside its dialog for focus management.
+  useEffect(() => {
+    if (!openField) return;
+
+    const calendar = calendarRef.current;
+    const trigger = document.getElementById(`${id}-${openField}`);
+
+    if (!calendar || !trigger) return;
+
+    if (typeof calendar.showPopover === 'function') {
+      calendar.showPopover();
+    }
+
+    const positionCalendar = () => {
+      const anchor = trigger.getBoundingClientRect();
+      const popup = calendar.getBoundingClientRect();
+
+      const position = placeCalendarPopover(anchor, popup, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+
+      calendar.style.top = `${position.top}px`;
+      calendar.style.left = `${position.left}px`;
+    };
+
+    positionCalendar();
+    window.addEventListener('resize', positionCalendar);
+    window.addEventListener('scroll', positionCalendar, true);
+
+    return () => {
+      window.removeEventListener('resize', positionCalendar);
+      window.removeEventListener('scroll', positionCalendar, true);
+
+      if (
+        typeof calendar.hidePopover === 'function' &&
+        calendar.matches(':popover-open')
+      ) {
+        calendar.hidePopover();
+      }
+    };
+  }, [id, openField]);
+
   const requiresFullRange = rangeMode === 'full';
   const hasAnyDate = Boolean(currentValue.from || currentValue.to);
+
   const hasRequiredDates = requiresFullRange
     ? Boolean(currentValue.from && currentValue.to)
     : hasAnyDate;
@@ -297,6 +384,7 @@ export function DateFilter({
     const bounds = getFieldBounds(field, currentValue, minDate, maxDate);
     const selected = currentValue[field];
     const anchor = selected || bounds.max || bounds.min || today;
+
     setVisibleMonth(clampMonth(getMonthStart(anchor), bounds.min, bounds.max));
     setOpenField(field);
   };
@@ -315,12 +403,14 @@ export function DateFilter({
 
   const clearDate = () => {
     if (!openField) return;
+
     updateValue({ ...currentValue, [openField]: '' });
     setOpenField(null);
   };
 
   const handleCalendarKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Escape') return;
+
     event.preventDefault();
     setOpenField(null);
   };
@@ -356,10 +446,12 @@ export function DateFilter({
         {(['from', 'to'] as const).map((field) => {
           const fieldLabel = field === 'from' ? fromLabel : toLabel;
           const fieldValue = currentValue[field];
+
           const fieldError =
             field === 'from'
               ? validation.from || validation.range
               : validation.to || validation.range;
+
           const buttonId = `${id}-${field}`;
           const popupId = `${buttonId}-calendar`;
           const isOpen = openField === field;
@@ -400,6 +492,8 @@ export function DateFilter({
 
                 {isOpen ? (
                   <div
+                    ref={calendarRef}
+                    popover="manual"
                     className={css.calendar}
                     id={popupId}
                     role="dialog"
@@ -424,6 +518,7 @@ export function DateFilter({
                         >
                           <ChevronLeft size={18} aria-hidden="true" />
                         </button>
+
                         <button
                           className={css.monthButton}
                           type="button"
@@ -447,8 +542,10 @@ export function DateFilter({
                     <div className={css.days} role="grid">
                       {calendarDays.map((parts) => {
                         const date = toCalendarDate(parts);
+
                         const isOutsideMonth =
                           parts.month !== visibleMonth.month;
+
                         const isDisabled = !isDateAllowed(
                           date,
                           activeBounds.min,
@@ -484,15 +581,16 @@ export function DateFilter({
                         disabled={!selectedDate}
                         onClick={clearDate}
                       >
-                        Clear
+                        <span className={css.calendarActionLabel}>Clear</span>
                       </button>
+
                       <button
                         className={css.calendarTextButton}
                         type="button"
                         disabled={!canSelectToday}
                         onClick={() => selectDate(today)}
                       >
-                        Today
+                        <span className={css.calendarActionLabel}>Today</span>
                       </button>
                     </div>
                   </div>

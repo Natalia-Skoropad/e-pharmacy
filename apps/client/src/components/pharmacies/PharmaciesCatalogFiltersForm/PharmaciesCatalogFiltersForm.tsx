@@ -29,6 +29,7 @@ import { USER_SEARCH_MAX_LENGTH } from '@e-pharmacy/validation/url';
 import {
   buildPharmacyPath,
   formatPharmacyLocationLabel,
+  normalizeLocationKey,
   PHARMACIES_SORT_OPTIONS,
   type PharmacyFilters,
 } from '@/lib/catalog/pharmacies-catalog';
@@ -185,31 +186,6 @@ function PharmaciesCatalogFiltersForm({
     [availablePharmacyOptions, pharmacySearch.query]
   );
 
-  const locationSelectOptions = useMemo(
-    () => [
-      ...(!locationSearch.query.trim()
-        ? [{ value: 'all', label: 'All locations' }]
-        : []),
-
-      ...availableLocationOptions.map((location) => ({
-        value: getLocationOptionValue(location),
-
-        label: formatPharmacyLocationLabel(
-          location.settlement,
-          location.region
-        ),
-
-        leading: (
-          <span className={css.locationIcon}>
-            <Map size={16} />
-          </span>
-        ),
-      })),
-    ],
-
-    [availableLocationOptions, locationSearch.query]
-  );
-
   const selectedLocationValue = useMemo(() => {
     if (!filters.settlement) return 'all';
 
@@ -218,6 +194,70 @@ function PharmaciesCatalogFiltersForm({
       ...(filters.region ? { region: filters.region } : {}),
     });
   }, [filters.region, filters.settlement]);
+
+  // A selected location must survive opening a deep link, an empty remote
+  // page and cache misses. The URL is the source of truth for the selection,
+  // not the first 50 server-side suggestions.
+  const selectedLocation = useMemo(() => {
+    if (!filters.settlement) return null;
+
+    return (
+      availableLocationOptions.find(
+        (option) =>
+          normalizeLocationKey(option.settlement) ===
+            normalizeLocationKey(filters.settlement) &&
+          normalizeLocationKey(option.region ?? '') ===
+            normalizeLocationKey(filters.region)
+      ) ?? {
+        settlement: filters.settlement,
+        region: filters.region,
+      }
+    );
+  }, [availableLocationOptions, filters.settlement, filters.region]);
+
+  const locationSelectOptions = useMemo(() => {
+    const searching = Boolean(locationSearch.query.trim());
+
+    const asOption = (
+      location: Pick<PharmacyLocationFilterOption, 'settlement' | 'region'>
+    ) => ({
+      value: getLocationOptionValue(location),
+      label: formatPharmacyLocationLabel(location.settlement, location.region),
+
+      leading: (
+        <span className={css.locationIcon}>
+          <Map size={16} />
+        </span>
+      ),
+    });
+
+    return [
+      ...(!searching ? [{ value: 'all', label: 'All locations' }] : []),
+
+      // Pin the active option to its URL value even if the API returned the
+      // same location with different punctuation/capitalization.
+      ...(!searching && selectedLocation
+        ? [{ ...asOption(selectedLocation), value: selectedLocationValue }]
+        : []),
+
+      ...availableLocationOptions
+        .filter(
+          (location) =>
+            searching ||
+            !selectedLocation ||
+            normalizeLocationKey(location.settlement) !==
+              normalizeLocationKey(selectedLocation.settlement) ||
+            normalizeLocationKey(location.region ?? '') !==
+              normalizeLocationKey(selectedLocation.region ?? '')
+        )
+        .map(asOption),
+    ];
+  }, [
+    availableLocationOptions,
+    locationSearch.query,
+    selectedLocation,
+    selectedLocationValue,
+  ]);
 
   const updateCatalog = (nextFilters: PharmaciesHrefFilters) => {
     navigate(buildPharmacyFiltersHref({ ...nextFilters, page: 1 }));
@@ -244,6 +284,14 @@ function PharmaciesCatalogFiltersForm({
       }
       value={selectedLocationValue}
       options={locationSelectOptions}
+      selectedFallbackLabel={
+        selectedLocation
+          ? formatPharmacyLocationLabel(
+              selectedLocation.settlement,
+              selectedLocation.region
+            )
+          : undefined
+      }
       filterOptions={false}
       onOpenChange={locationSearch.setIsOpen}
       onQueryChange={locationSearch.setQuery}
@@ -264,6 +312,9 @@ function PharmaciesCatalogFiltersForm({
           updateCatalog({ ...filters, settlement: '', region: '' });
           return;
         }
+
+        // Selecting the pinned, already-active option is a no-op.
+        if (value === selectedLocationValue) return;
 
         const location = availableLocationOptions.find(
           (option) => getLocationOptionValue(option) === value

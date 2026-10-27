@@ -6,7 +6,7 @@ import type {
 
 import {
   buildAddressError,
-  SEARCH_TEXT_PATTERN,
+  PHARMACY_LOCATION_NAME_PATTERN,
   USER_SEARCH_MAX_LENGTH,
 } from '../shared';
 
@@ -23,6 +23,8 @@ export type PharmacyLocationValidationErrors = Partial<
 export const PHARMACY_COUNTRY_CODE_PATTERN = /^[A-Z]{2}$/;
 export const PHARMACY_LOCATION_TEXT_MAX_LENGTH = USER_SEARCH_MAX_LENGTH;
 
+//===================================================================
+
 export const PHARMACY_LOCATION_VALIDATION_MESSAGES = {
   required: {
     settlement: 'Settlement is required',
@@ -36,8 +38,8 @@ export const PHARMACY_LOCATION_VALIDATION_MESSAGES = {
   },
 
   format: {
-    settlement: 'Settlement contains unsupported characters',
-    region: 'Region contains unsupported characters',
+    settlement: 'Use Latin letters, spaces and single hyphens only',
+    region: 'Use Latin letters, spaces and single hyphens only',
     countryCode: 'Country code must contain two uppercase Latin letters',
     geo: 'Geo must be a valid GeoJSON Point with [longitude, latitude]',
   },
@@ -66,7 +68,7 @@ function buildLocationTextError(
     return PHARMACY_LOCATION_VALIDATION_MESSAGES.limits[field];
   }
 
-  if (!SEARCH_TEXT_PATTERN.test(normalized)) {
+  if (!PHARMACY_LOCATION_NAME_PATTERN.test(normalized)) {
     return PHARMACY_LOCATION_VALIDATION_MESSAGES.format[field];
   }
 

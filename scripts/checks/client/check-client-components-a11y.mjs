@@ -195,7 +195,7 @@ forbidPattern(
 
 requirePattern(
   details,
-  /<main>/,
+  /<main>|landmark="main"/,
   'DetailsUnavailablePage: main landmark is missing.'
 );
 

@@ -89,7 +89,11 @@ test('Stage 13.4.5 address search covers address, settlement and region and loca
   assert.match(catalogService, /'location\.region'/);
 
   assert.match(catalogService, /if \(query\.settlement\) \{/);
-  assert.match(catalogService, /filter\['location\.settlement'\] = new RegExp/);
+
+  assert.match(
+    catalogService,
+    /filter\['location\.settlement'\] = createCanonicalLocationRegExp/
+  );
 
   assert.doesNotMatch(catalogService, /query\.city/);
   assert.match(catalogService, /query\.region/);
@@ -130,4 +134,30 @@ test('Stage 13.4.5 public pharmacy details expose canonical structured location'
   assert.match(publicDto, /location\?:\s*PharmacyLocationDraft/);
   assert.doesNotMatch(publicDto, /\baddress\?:/);
   assert.doesNotMatch(publicDto, /\bcity\?:/);
+});
+
+//===================================================================
+
+test('location-option deep links use the same canonical matching as pharmacy listings', async () => {
+  const serviceSource = await read(
+    'src/services/pharmacies/pharmacy-search-options.service.ts'
+  );
+
+  const locationBranch = serviceSource.slice(
+    serviceSource.indexOf(
+      '// Restrict locations by an explicitly selected pharmacy'
+    )
+  );
+
+  assert.match(
+    locationBranch,
+    /filter\['location\.settlement'\] = createCanonicalLocationRegExp\(settlement\)/
+  );
+
+  assert.match(
+    locationBranch,
+    /filter\['location\.region'\] = createCanonicalLocationRegExp\(region\)/
+  );
+
+  assert.doesNotMatch(locationBranch, /escapeRegExp\(/);
 });

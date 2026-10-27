@@ -4,8 +4,8 @@ import { PHARMACY_STATUSES } from '../../constants/auth/auth';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
 import {
+  createCanonicalLocationRegExp,
   createFlexibleSearchRegExp,
-  escapeRegExp,
 } from '../../utils/validation/regexp';
 
 import { clonePharmacyLocation } from './pharmacy-location';
@@ -36,17 +36,11 @@ export async function getPharmacySearchOptionsService({
     };
 
     if (settlement) {
-      filter['location.settlement'] = new RegExp(
-        `^\\s*${escapeRegExp(settlement.trim())}\\s*$`,
-        'i'
-      );
+      filter['location.settlement'] = createCanonicalLocationRegExp(settlement);
     }
 
     if (region) {
-      filter['location.region'] = new RegExp(
-        `^\\s*${escapeRegExp(region.trim())}\\s*$`,
-        'i'
-      );
+      filter['location.region'] = createCanonicalLocationRegExp(region);
     }
 
     if (selectedId) filter._id = new Types.ObjectId(selectedId);
@@ -71,11 +65,13 @@ export async function getPharmacySearchOptionsService({
         .skip(skip)
         .limit(perPage)
         .lean(),
+
       Pharmacy.countDocuments(filter),
     ]);
 
     return {
       kind,
+
       items: rows.map((pharmacy) => ({
         id: String(pharmacy._id),
         name: pharmacy.name,
@@ -113,17 +109,11 @@ export async function getPharmacySearchOptionsService({
   };
 
   if (settlement && !pharmacyId) {
-    filter['location.settlement'] = new RegExp(
-      `^\\s*${escapeRegExp(settlement.trim())}\\s*$`,
-      'i'
-    );
+    filter['location.settlement'] = createCanonicalLocationRegExp(settlement);
   }
 
   if (region && !pharmacyId) {
-    filter['location.region'] = new RegExp(
-      `^\\s*${escapeRegExp(region.trim())}\\s*$`,
-      'i'
-    );
+    filter['location.region'] = createCanonicalLocationRegExp(region);
   }
 
   if (pharmacyId) {
@@ -131,15 +121,13 @@ export async function getPharmacySearchOptionsService({
       return { kind, items: [], page, perPage, total: 0, totalPages: 0 };
     }
 
-    filter['location.settlement'] = new RegExp(
-      `^\\s*${escapeRegExp(selectedPharmacy.location.settlement.trim())}\\s*$`,
-      'i'
+    filter['location.settlement'] = createCanonicalLocationRegExp(
+      selectedPharmacy.location.settlement
     );
 
     if (selectedPharmacy.location.region) {
-      filter['location.region'] = new RegExp(
-        `^\\s*${escapeRegExp(selectedPharmacy.location.region.trim())}\\s*$`,
-        'i'
+      filter['location.region'] = createCanonicalLocationRegExp(
+        selectedPharmacy.location.region
       );
     }
   }

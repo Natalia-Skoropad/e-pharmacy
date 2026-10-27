@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createFlexibleSearchRegExp } from './regexp';
+import {
+  createCanonicalLocationRegExp,
+  createFlexibleSearchRegExp,
+} from './regexp';
 
 //===================================================================
 
@@ -19,4 +22,21 @@ test('matches pharmacy names across hyphenated words', () => {
   );
 
   assert.match('DobroMed Pharmacy Ivano-Frankivsk 81', expression);
+});
+
+//===================================================================
+
+test('SEO location slugs resolve stored hyphens, spaces and punctuation', () => {
+  const settlement = createCanonicalLocationRegExp('Ivano Frankivsk');
+
+  assert.match('Ivano-Frankivsk', settlement);
+  assert.match(' Ivano Frankivsk ', settlement);
+  assert.match('IVANO–FRANKIVSK', settlement);
+  assert.doesNotMatch('Ivano Frankivsk Extra', settlement);
+  assert.doesNotMatch('Frankivsk', settlement);
+
+  const region = createCanonicalLocationRegExp('Ivano Frankivsk region');
+
+  assert.match('Ivano-Frankivsk region', region);
+  assert.doesNotMatch('Lviv region', region);
 });

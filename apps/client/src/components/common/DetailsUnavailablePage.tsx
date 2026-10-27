@@ -30,15 +30,23 @@ export function DetailsUnavailablePage({
   const copy = getDetailsUnavailableCopy(entityLabel, error.reason);
 
   return (
-    <main>
-      <ErrorPage
-        title={copy.title}
-        description={`${copy.description}${formatDetailsSupportReference(error.requestId)}`}
-        onRetry={() => router.refresh()}
-        homeHref={ROUTES.HOME}
-        homeLabel="Back to home"
-        retryLabel={copy.retryLabel}
-      />
-    </main>
+    <ErrorPage
+      eyebrow="Page error"
+      title={copy.title}
+      description={`${copy.description}${formatDetailsSupportReference(error.requestId)}`}
+      onRetry={() => router.refresh()}
+      homeHref={ROUTES.HOME}
+      homeLabel="Back to home"
+      retryLabel={copy.retryLabel}
+      variant="brand"
+      landmark="main"
+      image={{
+        src: '/images/status/status-pills.png',
+        alt: '',
+        width: 749,
+        height: 508,
+        priority: true,
+      }}
+    />
   );
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import {
-  SEARCH_TEXT_PATTERN,
+  PHARMACY_LOCATION_NAME_PATTERN,
   USER_SEARCH_MAX_LENGTH,
 } from '../../constants/shared/validation';
 
@@ -20,7 +20,10 @@ export const pharmacySettlementSchema = z
     `Settlement must be at most ${USER_SEARCH_MAX_LENGTH} characters`
   )
 
-  .regex(SEARCH_TEXT_PATTERN, 'Settlement contains unsupported characters');
+  .regex(
+    PHARMACY_LOCATION_NAME_PATTERN,
+    'Use Latin letters, spaces and single hyphens only'
+  );
 
 //===============================================================
 
@@ -34,7 +37,10 @@ const pharmacyRegionValueSchema = z
     `Region must be at most ${USER_SEARCH_MAX_LENGTH} characters`
   )
 
-  .regex(SEARCH_TEXT_PATTERN, 'Region contains unsupported characters');
+  .regex(
+    PHARMACY_LOCATION_NAME_PATTERN,
+    'Use Latin letters, spaces and single hyphens only'
+  );
 
 //===============================================================
 

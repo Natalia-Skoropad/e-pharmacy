@@ -94,3 +94,49 @@ test('verification rejects malformed country code and out-of-range GeoJSON Point
     'Geo must be a valid GeoJSON Point with [longitude, latitude]'
   );
 });
+
+//===================================================================
+
+test('settlement and region names accept only Latin letters, spaces and hyphens', () => {
+  for (const valid of ['Ivano-Frankivsk', 'Ivano Frankivsk', 'Odesa region']) {
+    assert.equal(
+      validatePharmacyLocation({ settlement: valid, region: valid }, 'draft')
+        .settlement,
+      undefined
+    );
+
+    assert.equal(
+      validatePharmacyLocation({ settlement: valid, region: valid }, 'draft')
+        .region,
+      undefined
+    );
+  }
+
+  for (const invalid of [
+    'Ivano.Frankivsk',
+    'Kyiv/Region',
+    'Львів',
+    'Odesa--region',
+    'Odesa  region',
+    'Lviv2',
+    '-Kyiv',
+    'Kyiv-',
+  ]) {
+    const errors = validatePharmacyLocation(
+      { settlement: invalid, region: invalid },
+      'draft'
+    );
+
+    assert.equal(
+      errors.settlement,
+      'Use Latin letters, spaces and single hyphens only',
+      invalid
+    );
+
+    assert.equal(
+      errors.region,
+      'Use Latin letters, spaces and single hyphens only',
+      invalid
+    );
+  }
+});

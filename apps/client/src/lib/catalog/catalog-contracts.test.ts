@@ -74,6 +74,20 @@ test('normalizes settlements and resolves same-name locations by region', () => 
     region: '',
   });
 
+  assert.deepEqual(
+    resolvePharmacyLocation('Ivano Frankivsk', 'Ivano Frankivsk region', [
+      {
+        settlement: 'Ivano-Frankivsk',
+        region: 'Ivano-Frankivsk region',
+        label: 'Ivano-Frankivsk (Ivano-Frankivsk region)',
+      },
+    ]),
+    {
+      settlement: 'Ivano-Frankivsk',
+      region: 'Ivano-Frankivsk region',
+    }
+  );
+
   assert.equal(
     formatPharmacyLocationLabel('nova ivanivka', 'odesa region'),
     'nova ivanivka (odesa region)'
@@ -305,6 +319,7 @@ test('uses semantic, neutral catalog SEO content', () => {
     assert.equal(typeof content.ordering, 'string');
 
     const text = Object.values(content).join(' ');
+
     assert.doesNotMatch(text, /tiny assistant|white coat|22:59/i);
   }
 });

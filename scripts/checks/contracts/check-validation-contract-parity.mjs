@@ -37,6 +37,27 @@ const BACKEND_FIXTURE = path.join(
 
 //===================================================================
 
+const PHARMACY_LOCATION_NAME_VALIDATION_SOURCE = path.join(
+  ROOT_DIR,
+  'packages',
+  'validation',
+  'src',
+  'shared',
+  'patterns.ts'
+);
+
+const PHARMACY_LOCATION_NAME_BACKEND_SOURCE = path.join(
+  ROOT_DIR,
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'shared',
+  'validation.ts'
+);
+
+//===================================================================
+
 const PHARMACY_NOTE_VALIDATION_SOURCE = path.join(
   ROOT_DIR,
   'packages',
@@ -200,6 +221,8 @@ const [
   productCategorySlugValidationSource,
   backendSettingsDictionaryConstantsSource,
   backendProductCategoryConstantsSource,
+  pharmacyLocationNameValidationSource,
+  pharmacyLocationNameBackendSource,
 ] = await Promise.all([
   readFixture(FRONTEND_FIXTURE),
   readFixture(BACKEND_FIXTURE),
@@ -212,6 +235,8 @@ const [
   readSource(PRODUCT_CATEGORY_SLUG_VALIDATION_SOURCE),
   readSource(BACKEND_SETTINGS_DICTIONARY_CONSTANTS_SOURCE),
   readSource(BACKEND_PRODUCT_CATEGORY_CONSTANTS_SOURCE),
+  readSource(PHARMACY_LOCATION_NAME_VALIDATION_SOURCE),
+  readSource(PHARMACY_LOCATION_NAME_BACKEND_SOURCE),
 ]);
 
 //===================================================================
@@ -339,6 +364,23 @@ assert.equal(
   ),
 
   'Shared and backend product category slug patterns differ'
+);
+
+//===================================================================
+
+assert.equal(
+  requireRegexLiteral(
+    pharmacyLocationNameValidationSource,
+    'PHARMACY_LOCATION_NAME_PATTERN',
+    'Frontend pharmacy location name pattern'
+  ),
+
+  requireRegexLiteral(
+    pharmacyLocationNameBackendSource,
+    'PHARMACY_LOCATION_NAME_PATTERN',
+    'Backend pharmacy location name pattern'
+  ),
+  'Frontend and backend pharmacy location name patterns differ'
 );
 
 //===================================================================
