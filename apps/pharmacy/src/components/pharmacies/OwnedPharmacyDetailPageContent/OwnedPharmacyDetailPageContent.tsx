@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
-
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -17,74 +10,40 @@ import {
   CircleHelp,
   ClipboardList,
   CreditCard,
-  Eye,
   FileText,
-  Files,
   History,
-  ImageOff,
-  Mail,
   MessageSquareText,
   Package,
   PackageSearch,
   Pencil,
-  Phone,
-  ShieldCheck,
   ShoppingBag,
   Star,
   UsersRound,
-  X,
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
 
-import type {
-  MyPharmacyProfile,
-  OwnedPharmacyDetailResponse,
-  PharmacyPendingModeration,
-} from '@e-pharmacy/types/pharmacies';
-
-import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
-import type { EditablePharmacyBankDetails } from '@e-pharmacy/types/pharmacies';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { MarkdownContent } from '@e-pharmacy/ui/data-display';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import { InfoTooltip, ModalBase } from '@e-pharmacy/ui/overlays';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import {
-  DocumentsPanel,
-  PharmacyAboutFields,
-  PharmacyPaymentFields,
   ProfileResourceState,
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
-
-import { Button, CopyButton } from '@e-pharmacy/ui/primitives';
+import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
   StatsCard,
   StatsGrid,
   StatsLoadingSkeleton,
-  StatusBadge,
 } from '@e-pharmacy/ui/statistics';
-
 import { formatMoney } from '@e-pharmacy/utils';
-import { formatDateTime } from '@e-pharmacy/utils/date';
-
-import {
-  PHARMACY_DOCUMENT_ACCEPT,
-  PHARMACY_DOCUMENT_RULES,
-} from '@e-pharmacy/validation/files';
 
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
-
-import {
-  downloadOwnedPharmacyDocument,
-  getOwnedPharmacyProfile,
-  sendOwnedPharmacyForVerification,
-} from '@/lib/api/browser/owned-pharmacy-editor.api';
+import { sendOwnedPharmacyForVerification } from '@/lib/api/browser/owned-pharmacy-editor.api';
 
 import {
   createPharmacyNote,
@@ -99,9 +58,14 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
+import { dispatchPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+
 import { OwnedPharmacyEditor } from '../OwnedPharmacyEditor/OwnedPharmacyEditor';
+import { Information } from './OwnedPharmacyInformationTab';
+import { About, Payment } from './OwnedPharmacyAboutPaymentTabs';
+import { DocumentsResource } from './OwnedPharmacyDocumentsTab';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -209,706 +173,6 @@ const DEFERRED: Partial<
 
 //===================================================================
 
-const show = (value?: string | null) => value?.trim() || '—';
-
-//===================================================================
-
-function DateValue({ value }: { value?: string }) {
-  return value ? (
-    <time dateTime={value}>{formatDateTime(value) ?? '—'}</time>
-  ) : (
-    <span>—</span>
-  );
-}
-
-//===================================================================
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className={css.field}>
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
-
-//===================================================================
-
-function Photo({ url, name }: { url?: string | null; name: string }) {
-  return (
-    <div className={css.photo}>
-      {url ? (
-        <ShimmerImage
-          src={url}
-          alt={name}
-          className={css.coverImage}
-          sizes="(max-width: 767px) 90vw, 400px"
-          unoptimized
-        />
-      ) : (
-        <div className={css.photoEmpty}>
-          <Building2 size={48} />
-          <ImageOff size={20} />
-          <span>No pharmacy photo uploaded</span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-//===================================================================
-
-function Contact({ value, type }: { value?: string; type: 'email' | 'phone' }) {
-  const toast = useToast();
-
-  if (!value) return <span>—</span>;
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-
-      toast.success(`${type === 'email' ? 'Email' : 'Phone'} copied.`);
-    } catch {
-      toast.error(`Could not copy ${type}.`);
-    }
-  };
-
-  return (
-    <span className={css.contact}>
-      {type === 'email' ? <Mail size={16} /> : <Phone size={16} />}
-      <a href={`${type === 'email' ? 'mailto' : 'tel'}:${value}`}>{value}</a>
-
-      <CopyButton
-        label={`Copy pharmacy ${type}: ${value}`}
-        onClick={() => void copy()}
-      />
-    </span>
-  );
-}
-
-//===================================================================
-
-const COMPARABLE: readonly {
-  label: string;
-  key: keyof Omit<
-    PharmacyPendingModeration,
-    'location' | 'bankDetails' | 'documents'
-  >;
-}[] = [
-  { label: 'Name', key: 'name' },
-  { label: 'Phone', key: 'phone' },
-  { label: 'Email', key: 'email' },
-  { label: 'Photo', key: 'imageUrl' },
-  { label: 'Short description', key: 'shortDescription' },
-  { label: 'About pharmacy', key: 'description' },
-];
-
-//===================================================================
-
-function PendingChanges({
-  pending,
-  pharmacy,
-}: {
-  pending: PharmacyPendingModeration;
-  pharmacy: MyPharmacyProfile;
-}) {
-  const changed: Array<{
-    label: string;
-    published?: string | null;
-    submitted?: string | null;
-  }> = COMPARABLE.filter(({ key }) => key in pending).map(({ key, label }) => ({
-    label,
-    published: pharmacy[key],
-    submitted: pending[key],
-  }));
-
-  for (const key of ['region', 'settlement', 'address'] as const) {
-    if (pending.location && key in pending.location)
-      changed.push({
-        label:
-          key === 'address'
-            ? 'Pharmacy address'
-            : key === 'region'
-              ? 'Region'
-              : 'Settlement',
-
-        published: pharmacy.location?.[key],
-        submitted: pending.location[key],
-      });
-  }
-
-  return (
-    <section className={css.sectionCard} aria-label="Submitted changes">
-      <div className={css.sectionHeading}>
-        <ShieldCheck size={20} />
-        <h3>Published data / Submitted changes</h3>
-      </div>
-
-      <p className={css.muted}>
-        Proposed changes are not public until approved by an administrator.
-      </p>
-      {changed.length ||
-      pending.workingHours !== undefined ||
-      pending.bankDetails ||
-      pending.documents ? (
-        <dl className={css.compareGrid}>
-          {changed.map(({ label, published, submitted }) => (
-            <div className={css.compareRow} key={label}>
-              <dt>
-                {label}
-                <span>Changed · not approved</span>
-              </dt>
-              <dd>
-                <small>Published data</small>
-                {show(published)}
-              </dd>
-              <dd>
-                <small>Submitted changes</small>
-                {show(submitted)}
-              </dd>
-            </div>
-          ))}
-
-          {pending.workingHours !== undefined && (
-            <div className={css.compareRow}>
-              <dt>Working hours (managed in Pharmacy data)</dt>
-              <dd>
-                <small>Published data</small>
-                {show(pharmacy.workingHours)}
-              </dd>
-              <dd>
-                <small>Submitted changes</small>
-                {show(pending.workingHours)}
-              </dd>
-            </div>
-          )}
-
-          {pending.bankDetails && (
-            <div className={css.compareRow}>
-              <dt>Payment details</dt>
-              <dd>Published details are retained</dd>
-              <dd>Payment changes submitted for review</dd>
-            </div>
-          )}
-
-          {pending.documents && (
-            <div className={css.compareRow}>
-              <dt>Documents</dt>
-              <dd>Current verification documents</dd>
-              <dd>{pending.documents.length} submitted documents</dd>
-            </div>
-          )}
-        </dl>
-      ) : (
-        <p className={css.muted}>
-          There are no submitted profile fields to compare.
-        </p>
-      )}
-    </section>
-  );
-}
-
-//===================================================================
-
-function Information({ detail }: { detail: OwnedPharmacyDetailResponse }) {
-  const { pharmacy, dates } = detail;
-
-  return (
-    <div className={css.infoStack}>
-      <div className={css.identityGrid}>
-        <section
-          className={css.photoCard}
-          aria-label="Published pharmacy photo"
-        >
-          <Photo url={pharmacy.imageUrl} name={pharmacy.name || 'Pharmacy'} />
-        </section>
-
-        <section
-          className={css.sectionCard}
-          aria-label="Published pharmacy details"
-        >
-          <dl className={css.details}>
-            <Field label="Pharmacy status">
-              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
-            </Field>
-
-            <Field label="Pharmacy ID">{pharmacy.id}</Field>
-
-            <Field label="Phone">
-              <Contact value={pharmacy.phone} type="phone" />
-            </Field>
-
-            <Field label="Email">
-              <Contact value={pharmacy.email} type="email" />
-            </Field>
-
-            <Field label="Country code">
-              {show(pharmacy.location?.countryCode)}
-            </Field>
-
-            <Field label="Region">{show(pharmacy.location?.region)}</Field>
-
-            <Field label="Settlement">
-              {show(pharmacy.location?.settlement)}
-            </Field>
-
-            <Field label="Pharmacy address">
-              {show(pharmacy.location?.address)}
-            </Field>
-
-            <Field label="Created at">
-              <DateValue value={dates.createdAt} />
-            </Field>
-
-            <Field label="Last edited">
-              <DateValue value={dates.updatedAt} />
-            </Field>
-          </dl>
-        </section>
-      </div>
-
-      <section className={css.sectionCard} aria-label="Pharmacy verification">
-        <ProfileSectionHeader
-          title="Verification and administrator feedback"
-          description="Review progress, administrator decisions and requested corrections."
-          icon={<ShieldCheck size={21} />}
-        />
-
-        <dl className={css.details}>
-          <Field label="Submitted for verification">
-            <DateValue value={dates.submittedAt} />
-          </Field>
-
-          <Field label="Approved at">
-            <DateValue value={dates.approvedAt} />
-          </Field>
-
-          <Field label="Activated at">
-            <DateValue value={dates.activatedAt} />
-          </Field>
-
-          <Field label="Review state">
-            {pharmacy.reviewState === 'changes_requested'
-              ? 'Changes requested'
-              : pharmacy.reviewState === 'pending'
-                ? 'Awaiting administrator review'
-                : '—'}
-          </Field>
-
-          <Field label="Last reviewed">
-            <DateValue value={pharmacy.reviewedAt} />
-          </Field>
-
-          <Field label="Administrator feedback">
-            {show(pharmacy.reviewFeedback)}
-          </Field>
-
-          <Field label="Status reason">{show(pharmacy.statusReason)}</Field>
-        </dl>
-      </section>
-      {pharmacy.pendingModeration ? (
-        <PendingChanges
-          pending={pharmacy.pendingModeration}
-          pharmacy={pharmacy}
-        />
-      ) : null}
-    </div>
-  );
-}
-
-//===================================================================
-
-function About({ pharmacy }: { pharmacy: MyPharmacyProfile }) {
-  return (
-    <div className={css.formStack}>
-      <PharmacyAboutFields value={pharmacy.description ?? ''} disabled />
-      {pharmacy.pendingModeration?.description !== undefined && (
-        <section className={css.pendingSection}>
-          <h3>Submitted description · Pending review</h3>
-          <p className={css.muted}>
-            The proposal does not replace the published description until
-            approved.
-          </p>
-          {pharmacy.pendingModeration.description?.trim() ? (
-            <MarkdownContent value={pharmacy.pendingModeration.description} />
-          ) : (
-            <p>The submitted change will clear the description.</p>
-          )}
-        </section>
-      )}
-    </div>
-  );
-}
-
-//===================================================================
-
-function Payment({ pharmacy }: { pharmacy: MyPharmacyProfile }) {
-  if (pharmacy.membershipRole !== 'owner')
-    return (
-      <ProfileResourceState
-        variant="empty"
-        title="Payment details are private"
-        description="Only the pharmacy owner can view bank details."
-      />
-    );
-
-  const bank = pharmacy.bankDetails;
-
-  const published: Record<
-    keyof EditablePharmacyBankDetails,
-    string | undefined
-  > = {
-    recipientName: bank?.recipientName,
-    taxId: bank?.taxId,
-    iban: bank?.iban,
-    bankName: bank?.bankName,
-    receiptEmail: bank?.receiptEmail,
-    paymentPurpose: bank?.paymentPurpose,
-  };
-
-  return (
-    <div className={css.formStack}>
-      <PharmacyPaymentFields
-        disabled
-        values={{
-          recipientName: bank?.recipientName ?? '',
-          taxId: bank?.taxId ?? '',
-          iban: bank?.iban ?? '',
-          bankName: bank?.bankName ?? '',
-          receiptEmail: bank?.receiptEmail ?? '',
-          paymentPurpose: bank?.paymentPurpose ?? '',
-        }}
-      />
-      {pharmacy.pendingModeration?.bankDetails && (
-        <section className={css.pendingSection}>
-          <h3>Submitted payment changes · Pending review</h3>
-          <p className={css.muted}>
-            Approved details remain unchanged until moderation.
-          </p>
-
-          <dl className={css.details}>
-            {Object.entries(pharmacy.pendingModeration.bankDetails).map(
-              ([key, value]) => (
-                <Field key={key} label={key.replace(/([A-Z])/g, ' $1')}>
-                  <span className={css.comparisonLabels}>
-                    Published:{' '}
-                    {show(published[key as keyof EditablePharmacyBankDetails])}
-                  </span>
-                  <span className={css.comparisonLabels}>
-                    Submitted: {show(value)}
-                  </span>
-                </Field>
-              )
-            )}
-          </dl>
-        </section>
-      )}
-    </div>
-  );
-}
-
-//===================================================================
-
-type DocumentPreview = Readonly<{
-  url: string;
-  name: string;
-  kind: 'image' | 'pdf';
-}>;
-
-//===================================================================
-
-const PREVIEW_TYPES: Readonly<Record<string, DocumentPreview['kind']>> = {
-  'application/pdf': 'pdf',
-  'image/jpeg': 'image',
-  'image/png': 'image',
-  'image/webp': 'image',
-};
-
-//===================================================================
-
-function Documents({
-  pharmacy,
-  pharmacyId,
-}: {
-  pharmacy: MyPharmacyProfile;
-  pharmacyId: string;
-}) {
-  const toast = useToast();
-  const [preview, setPreview] = useState<DocumentPreview | null>(null);
-  const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
-  const downloadsRef = useRef(new Set<AbortController>());
-  const urlsRef = useRef(new Set<string>());
-
-  useEffect(() => {
-    const requests = downloadsRef.current;
-    const urls = urlsRef.current;
-
-    return () => {
-      for (const controller of requests) controller.abort();
-      for (const url of urls) URL.revokeObjectURL(url);
-
-      requests.clear();
-      urls.clear();
-    };
-  }, [pharmacyId]);
-
-  const documents = [
-    ...pharmacy.documents.map((doc) => ({
-      ...doc,
-      source: 'published' as const,
-    })),
-
-    ...(pharmacy.pendingModeration?.documents ?? []).map((doc) => ({
-      ...doc,
-      source: 'pending' as const,
-    })),
-  ];
-
-  const files: BrowserUploadFile[] = documents.map((doc) => ({
-    id: doc.id,
-    documentId: doc.id,
-    name: doc.name,
-    size: doc.size,
-    type: doc.type,
-  }));
-
-  const loadFile = async (documentId: string): Promise<Blob | null> => {
-    const controller = new AbortController();
-
-    downloadsRef.current.add(controller);
-
-    try {
-      const blob = await downloadOwnedPharmacyDocument(pharmacyId, documentId, {
-        signal: controller.signal,
-      });
-
-      return controller.signal.aborted ? null : blob;
-    } catch {
-      if (!controller.signal.aborted)
-        toast.error('Could not open the private document. Please try again.');
-
-      return null;
-    } finally {
-      downloadsRef.current.delete(controller);
-    }
-  };
-
-  const registerUrl = (blob: Blob): string => {
-    const url = URL.createObjectURL(blob);
-
-    urlsRef.current.add(url);
-
-    return url;
-  };
-
-  const closePreview = () => {
-    setPreview((current) => {
-      if (current) {
-        URL.revokeObjectURL(current.url);
-        urlsRef.current.delete(current.url);
-      }
-
-      return null;
-    });
-  };
-
-  const openPreview = async (file: (typeof documents)[number]) => {
-    if (previewLoadingId) return;
-
-    const kind = PREVIEW_TYPES[file.type.toLowerCase()];
-
-    if (!kind) return;
-
-    setPreviewLoadingId(file.id);
-
-    try {
-      const blob = await loadFile(file.id);
-
-      if (!blob) return;
-
-      // Prevent browsers from rendering arbitrary HTML/SVG from private uploads.
-      const url = registerUrl(
-        new Blob([blob], { type: file.type.toLowerCase() })
-      );
-
-      closePreview();
-      setPreview({ url, name: file.name, kind });
-    } finally {
-      setPreviewLoadingId(null);
-    }
-  };
-
-  const downloadFile = async (file: BrowserUploadFile): Promise<string> => {
-    if (!file.documentId) return '';
-
-    const blob = await loadFile(file.documentId);
-
-    if (!blob) return '';
-
-    const url = registerUrl(blob);
-
-    window.setTimeout(() => {
-      URL.revokeObjectURL(url);
-      urlsRef.current.delete(url);
-    }, 60_000);
-    return url;
-  };
-
-  return (
-    <>
-      <DocumentsPanel
-        id="owned-pharmacy-detail-documents"
-        name="pharmacyDocuments"
-        title="Pharmacy documents"
-        description="Published and submitted documents. Manage them in the pharmacy editor when available."
-        headerIcon={<Files size={22} />}
-        value={files}
-        editable={false}
-        readOnlyUploadView
-        maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
-        accept={PHARMACY_DOCUMENT_ACCEPT}
-        emptyTitle="No pharmacy documents"
-        emptyText="No published or submitted documents for this pharmacy."
-        beforeDocuments={
-          documents.length ? (
-            <ul
-              className={css.documentDetails}
-              aria-label="Document sources and preview"
-            >
-              {documents.map((file) => (
-                <li
-                  key={`${file.source}:${file.id}`}
-                  className={css.documentDetail}
-                >
-                  <div className={css.documentText}>
-                    <strong>{file.name}</strong>
-                    <span>
-                      {file.source === 'pending'
-                        ? 'Submitted changes'
-                        : 'Published'}{' '}
-                      · {file.type} · {formatDateTime(file.uploadedAt) ?? '—'}
-                    </span>
-                  </div>
-                  {PREVIEW_TYPES[file.type.toLowerCase()] ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      iconLeft={<Eye size={16} aria-hidden="true" />}
-                      disabled={Boolean(previewLoadingId)}
-                      isLoading={previewLoadingId === file.id}
-                      onClick={() => void openPreview(file)}
-                    >
-                      Preview
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : null
-        }
-        onDownloadFile={downloadFile}
-      />
-
-      <ModalBase
-        isOpen={Boolean(preview)}
-        ariaLabel={preview ? `Preview ${preview.name}` : 'Document preview'}
-        onClose={closePreview}
-        dialogClassName={css.previewDialog}
-      >
-        {preview ? (
-          <div className={css.previewContent}>
-            <div className={css.previewHeader}>
-              <strong>{preview.name}</strong>
-
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={closePreview}
-              >
-                <X size={18} aria-hidden="true" /> Close
-              </Button>
-            </div>
-            {preview.kind === 'image' ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={preview.url}
-                alt={preview.name}
-                className={css.previewImage}
-              />
-            ) : (
-              <iframe
-                title={`PDF preview of ${preview.name}`}
-                src={preview.url}
-                sandbox="allow-scripts"
-                className={css.previewFrame}
-              />
-            )}
-          </div>
-        ) : null}
-      </ModalBase>
-    </>
-  );
-}
-
-//===================================================================
-
-/** Documents use their own scoped resource, just like the Admin documents tab. */
-function DocumentsResource({ pharmacyId }: { pharmacyId: string }) {
-  const [version, setVersion] = useState(0);
-
-  const [result, setResult] = useState<Readonly<{
-    pharmacyId: string;
-    version: number;
-    pharmacy: MyPharmacyProfile | null;
-    failed: boolean;
-  }> | null>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    void getOwnedPharmacyProfile(pharmacyId)
-      .then(({ pharmacy }) => {
-        if (active) setResult({ pharmacyId, version, pharmacy, failed: false });
-      })
-
-      .catch(() => {
-        if (active)
-          setResult({ pharmacyId, version, pharmacy: null, failed: true });
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [pharmacyId, version]);
-
-  const current =
-    result?.pharmacyId === pharmacyId && result?.version === version
-      ? result
-      : null;
-
-  return current?.pharmacy ? (
-    <Documents pharmacy={current.pharmacy} pharmacyId={pharmacyId} />
-  ) : current?.failed ? (
-    <ProfileResourceState
-      variant="error"
-      title="Pharmacy documents could not be loaded"
-      description="The private document list is unavailable."
-      retryLabel="Retry documents"
-      onRetry={() => setVersion((v) => v + 1)}
-    />
-  ) : (
-    <ProfileResourceState
-      variant="loading"
-      title="Loading pharmacy documents"
-      description="Checking the pharmacy’s attached files."
-    />
-  );
-}
-
-//===================================================================
-
 type DetailResult = Readonly<{
   pharmacyId: string;
   retry: number;
@@ -961,6 +225,7 @@ export function OwnedPharmacyDetailPageContent({
         if (controller.signal.aborted) return;
 
         const status = isApiError(cause) ? cause.httpStatus : undefined;
+
         setResult({
           pharmacyId,
           retry,
@@ -993,6 +258,8 @@ export function OwnedPharmacyDetailPageContent({
 
     try {
       await sendOwnedPharmacyForVerification(pharmacyId);
+
+      dispatchPharmacyCounterRefresh();
 
       toast.success('Pharmacy sent for verification.');
       refresh();

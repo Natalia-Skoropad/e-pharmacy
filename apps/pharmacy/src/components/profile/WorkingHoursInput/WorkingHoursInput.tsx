@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { CircleAlert } from 'lucide-react';
 
 import { SelectField, type SelectOption } from '@e-pharmacy/ui/forms';
 
@@ -239,9 +240,12 @@ function WorkingHoursInput({
       </div>
 
       <div className={css.metaRow}>
-        <p className={css.error} id={errorId} aria-live="polite">
-          {isTouched ? (error ?? '') : ''}
-        </p>
+        {hasError ? (
+          <p className={css.error} id={errorId} role="alert">
+            <CircleAlert size={16} aria-hidden="true" />
+            {error}
+          </p>
+        ) : null}
       </div>
     </fieldset>
   );

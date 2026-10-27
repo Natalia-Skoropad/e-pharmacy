@@ -96,6 +96,7 @@ export function PharmacyPaymentFields({
             id="tax-id"
             name="taxId"
             required
+            hint="Enter 8–10 digits for the registered taxpayer or company identification number (EDRPOU)."
             value={values.taxId}
             error={errors.taxId}
             isTouched={Boolean(touched.taxId)}
@@ -130,7 +131,7 @@ export function PharmacyPaymentFields({
             name="bankName"
             required
             label="Bank name"
-            hint="Use at least 2 English letters or numbers."
+            hint="Enter the full official bank name using English letters and numbers (at least 2 characters)."
             value={values.bankName}
             error={errors.bankName}
             isTouched={Boolean(touched.bankName)}

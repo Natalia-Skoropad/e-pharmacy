@@ -12,6 +12,23 @@ const detail = source(
 );
 
 const editor = source('./OwnedPharmacyEditor/OwnedPharmacyEditor.tsx');
+
+const editorTabs = source(
+  './OwnedPharmacyEditor/OwnedPharmacyEditorTabContent.tsx'
+);
+
+const info = source(
+  './OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
+);
+
+const aboutPayment = source(
+  './OwnedPharmacyDetailPageContent/OwnedPharmacyAboutPaymentTabs.tsx'
+);
+
+const documents = source(
+  './OwnedPharmacyDetailPageContent/OwnedPharmacyDocumentsTab.tsx'
+);
+
 const backend = source('../../lib/api/browser/owned-pharmacy-registry.api.ts');
 
 const service = source(
@@ -33,7 +50,7 @@ test('owner detail uses scoped response, reusable UI and status-aware owner acti
     'Tabs',
     'ProfileSectionHeader',
   ]) {
-    assert.match(detail, new RegExp(`<${name}\\b`));
+    assert.match(detail + info, new RegExp(`<${name}\\b`));
   }
 
   assert.match(detail, /getOwnedPharmacyDetail\(pharmacyId/);
@@ -57,7 +74,7 @@ test('owner detail dates come from persisted timestamps and audit, not guesses',
   assert.match(service, /submission\.createdAt\.toISOString\(\)/);
   assert.match(parser, /isoDate\(dates\.createdAt\)/);
   assert.match(parser, /isoDate\(dates\.submittedAt\)/);
-  assert.match(detail, /<DateValue value=\{dates\.submittedAt\}/);
+  assert.match(info, /<DateValue value=\{dates\.submittedAt\}/);
 });
 
 //===================================================================
@@ -66,7 +83,7 @@ test('editor uses shared confirmation and photo feedback', () => {
   assert.match(editor, /<ConfirmationModal/);
 
   assert.match(
-    editor,
+    editorTabs,
     /toast\.success\(\s*url\s*\?\s*'Pharmacy photo updated\.'\s*:\s*'Pharmacy photo removed\.'\s*\)/
   );
 
@@ -98,9 +115,9 @@ test('detail tabs follow the admin URL and resource-mounting model', () => {
     /router\.replace\(buildOwnedPharmacyDetailUrl\(pharmacyId, tab\)/
   );
 
-  assert.match(detail, /<PharmacyAboutFields/);
-  assert.match(detail, /<PharmacyPaymentFields/);
-  assert.match(detail, /<DocumentsPanel/);
+  assert.match(aboutPayment, /<PharmacyAboutFields/);
+  assert.match(aboutPayment, /<PharmacyPaymentFields/);
+  assert.match(documents, /<DocumentsPanel/);
   assert.match(detail, /<EntityComments/);
   assert.match(page, /activeTab=\{route\.tab\}/);
 });

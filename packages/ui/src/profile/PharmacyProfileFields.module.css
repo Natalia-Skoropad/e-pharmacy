@@ -23,8 +23,17 @@
 
 @media (min-width: 768px) {
   .grid {
+    align-items: stretch;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* Align the three in-flow rows (label, hint, control) across paired fields.
+     FormFieldError is absolutely positioned against the field: a fourth
+     subgrid row would pull its badge below the input border. */
+  .grid > * {
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+  }
+
   .wide {
     grid-column: 1 / -1;
   }

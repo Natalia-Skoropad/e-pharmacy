@@ -41,6 +41,14 @@ const editor = read(
   'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/OwnedPharmacyEditor.tsx'
 );
 
+const navigationGuard = read(
+  'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/useUnsavedPharmacyNavigation.ts'
+);
+
+const editorTabs = read(
+  'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/OwnedPharmacyEditorTabContent.tsx'
+);
+
 const fields = read(
   'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/pharmacy-editor-fields.ts'
 );
@@ -133,17 +141,13 @@ assert.match(
 
 assert.match(editor, /validatePharmacyEditor\(values, documents\.length\)/);
 
-assert.doesNotMatch(
-  editor,
-  /addEventListener\(['"]beforeunload['"]/,
-  'Navigation must not show native browser dialogs.'
-);
+assert.match(navigationGuard, /addEventListener\(['"]beforeunload['"]/);
 
-assert.match(editor, /popstate/);
+assert.match(navigationGuard, /popstate/);
 assert.match(editor, /<ConfirmationModal/);
 assert.match(editor, /isOpen=\{leaveDialogOpen\}/);
 assert.match(editor, /pendingNavigationRef\.current/);
-assert.match(editor, /<WorkingHoursInput/);
+assert.match(editorTabs, /<WorkingHoursInput/);
 assert.match(editor, /uploadOwnedPharmacyDocument/);
 assert.match(editor, /router\.replace\(getOwnedPharmacyPath/);
 

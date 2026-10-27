@@ -9,6 +9,11 @@ const editor = readFileSync(
   'utf8'
 );
 
+const presentation = readFileSync(
+  new URL('./OwnedPharmacyEditorTabContent.tsx', import.meta.url),
+  'utf8'
+);
+
 const styles = readFileSync(
   new URL('./OwnedPharmacyEditor.module.css', import.meta.url),
   'utf8'
@@ -83,10 +88,15 @@ test('creation requires a valid named pharmacy before draft saving', () => {
 //===================================================================
 
 test('create pharmacy uses compact shared photo layout and stacked full-width name fields', () => {
-  assert.match(editor, /<PictureCard\s+compactLayout/);
-  assert.match(editor, /JPG, PNG, or WEBP photo up to 450 KB/);
-  assert.match(editor, /<div className=\{css.nameFields\}>\s*\{input\('name'/);
-  assert.match(editor, /name="shortDescription"/);
+  assert.match(presentation, /<PictureCard\s+compactLayout/);
+  assert.match(presentation, /JPG, PNG, or WEBP photo up to 450 KB/);
+
+  assert.match(
+    presentation,
+    /<div className=\{css.nameFields\}>\s*\{input\('name'/
+  );
+
+  assert.match(presentation, /name="shortDescription"/);
 
   assert.match(
     styles,

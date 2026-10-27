@@ -8,6 +8,8 @@ import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
+import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
+import { subscribeToPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 import { subscribeToOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 
@@ -49,25 +51,36 @@ export function PharmacySidebar({
 
   const orderCounts = getVisibleOrderCounts(orderCounterState);
 
+  const [pharmacyCounts, setPharmacyCounts] = useState<null | {
+    new: number;
+    onVerification: number;
+    onModeration: number;
+  }>(null);
+
   useEffect(() => {
     let requestVersion = 0;
     let activeController: AbortController | null = null;
 
     const loadOrderCounts = async () => {
       requestVersion += 1;
+
       const currentVersion = requestVersion;
 
       activeController?.abort();
+
       const controller = new AbortController();
+
       activeController = controller;
 
       try {
         const requestOptions = { signal: controller.signal };
+
         const [newOrders, inProgressOrders] = await Promise.all([
           getPharmacyOrders(
             { page: 1, perPage: 1, status: 'new' },
             requestOptions
           ),
+
           getPharmacyOrders(
             { page: 1, perPage: 1, status: 'in_progress' },
             requestOptions
@@ -113,6 +126,54 @@ export function PharmacySidebar({
     };
   }, []);
 
+  useEffect(() => {
+    let generation = 0;
+    let activeController: AbortController | null = null;
+
+    const refresh = async () => {
+      const version = ++generation;
+
+      activeController?.abort();
+
+      const controller = new AbortController();
+
+      activeController = controller;
+
+      try {
+        const stats = await getOwnedPharmacyStatistics({
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted || generation !== version) return;
+
+        setPharmacyCounts({
+          new: stats.new,
+          onVerification: stats.onVerification,
+          onModeration: stats.onModeration,
+        });
+      } catch {
+        if (!controller.signal.aborted && generation === version) {
+          setPharmacyCounts(null);
+        }
+      }
+    };
+
+    const onFocus = () => void refresh();
+
+    void refresh();
+
+    const unsubscribe = subscribeToPharmacyCounterRefresh(onFocus);
+
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      generation += 1;
+      activeController?.abort();
+      unsubscribe();
+      window.removeEventListener('focus', onFocus);
+    };
+  }, []);
+
   return (
     <CabinetSidebar
       className={css.sidebar}
@@ -133,6 +194,16 @@ export function PharmacySidebar({
       )}
       renderLink={({ item, href, className, children, ...props }) => {
         const isOrdersLink = item.href === PHARMACY_ROUTES.ORDERS;
+        const isPharmaciesLink = item.href === PHARMACY_ROUTES.PHARMACIES;
+
+        const showPharmacyCounters = Boolean(
+          isPharmaciesLink &&
+          pharmacyCounts &&
+          (pharmacyCounts.new ||
+            pharmacyCounts.onVerification ||
+            pharmacyCounts.onModeration)
+        );
+
         const hasNotifications = Boolean(
           isOrdersLink && orderCounts && hasOrderNotifications(orderCounts)
         );
@@ -141,7 +212,9 @@ export function PharmacySidebar({
           <Link
             href={href}
             className={
-              isOrdersLink ? `${className} ${css.ordersLink}` : className
+              isOrdersLink || isPharmaciesLink
+                ? `${className} ${css.ordersLink}`
+                : className
             }
             {...props}
           >
@@ -170,6 +243,44 @@ export function PharmacySidebar({
                   </span>
                 ) : null}
               </span>
+            ) : null}
+
+            {!isCollapsed && showPharmacyCounters && pharmacyCounts ? (
+              <span
+                className={css.orderCounters}
+                aria-label="Pharmacy status totals"
+              >
+                {pharmacyCounts.new > 0 ? (
+                  <span
+                    className={css.newCounter}
+                    aria-label={`${pharmacyCounts.new} new pharmacies`}
+                  >
+                    {formatVisibleOrderCount(pharmacyCounts.new)}
+                  </span>
+                ) : null}
+                {pharmacyCounts.onVerification > 0 ? (
+                  <span
+                    className={css.verificationCounter}
+                    aria-label={`${pharmacyCounts.onVerification} pharmacies on verification`}
+                  >
+                    {formatVisibleOrderCount(pharmacyCounts.onVerification)}
+                  </span>
+                ) : null}
+                {pharmacyCounts.onModeration > 0 ? (
+                  <span
+                    className={css.moderationCounter}
+                    aria-label={`${pharmacyCounts.onModeration} pharmacies on moderation`}
+                  >
+                    {formatVisibleOrderCount(pharmacyCounts.onModeration)}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+            {isCollapsed && showPharmacyCounters && pharmacyCounts ? (
+              <span
+                className={css.collapsedCounter}
+                aria-label={`${pharmacyCounts.new} new, ${pharmacyCounts.onVerification} on verification, ${pharmacyCounts.onModeration} on moderation`}
+              />
             ) : null}
 
             {isCollapsed && hasNotifications && orderCounts ? (

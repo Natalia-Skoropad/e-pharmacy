@@ -169,6 +169,12 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.tsx'
   );
 
+  // After the owner-detail decomposition, status/feedback fields live in the
+  // canonical information tab rather than its page-level data loader.
+  const ownedPharmacyInformation = await read(
+    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
+  );
+
   const pharmacyStatusPresentation = await read(
     '../../../../../packages/config/src/presentation/pharmacies.ts'
   );
@@ -227,7 +233,7 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
   // Blocked pharmacies remain visibly blocked with an administrator reason,
   // and neither blocked owners nor managers can submit them for verification.
   assert.match(
-    ownedPharmacyDetail,
+    ownedPharmacyInformation,
     /<Field label="Pharmacy status">\s*<StatusBadge \{\.\.\.PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]\} \/>/
   );
 
@@ -237,12 +243,12 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
   );
 
   assert.match(
-    ownedPharmacyDetail,
+    ownedPharmacyInformation,
     /<Field label="Administrator feedback">\s*\{show\(pharmacy\.reviewFeedback\)\}/
   );
 
   assert.match(
-    ownedPharmacyDetail,
+    ownedPharmacyInformation,
     /<Field label="Status reason">\s*\{show\(pharmacy\.statusReason\)\}/
   );
 

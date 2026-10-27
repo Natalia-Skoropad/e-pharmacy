@@ -14,6 +14,11 @@ const styles = readFileSync(
   'utf8'
 );
 
+const presentation = readFileSync(
+  new URL('./OwnedPharmacyEditorTabContent.tsx', import.meta.url),
+  'utf8'
+);
+
 const fields = readFileSync(
   new URL('./pharmacy-editor-fields.ts', import.meta.url),
   'utf8'
@@ -21,12 +26,20 @@ const fields = readFileSync(
 
 //===================================================================
 
-test('one Save draft action lives beside the page title, with mobile stacked actions', () => {
-  assert.equal((editor.match(/>\s*Save draft\s*</g) ?? []).length, 1);
+test('one Save action lives beside the page title, with mobile stacked actions', () => {
+  // Locate the actual button by its handler, regardless of JSX whitespace
+  // or whether its label is wrapped by presentation markup.
+  const draftSaveButtons =
+    editor.match(
+      /<Button\b(?:(?!<\/Button>)[\s\S])*?onClick=\{\s*\(\s*\)\s*=>\s*void\s+saveDraft\(\s*\)\s*\}[\s\S]*?<\/Button>/g
+    ) ?? [];
+
+  assert.equal(draftSaveButtons.length, 1);
+  assert.match(draftSaveButtons[0]!, />\s*Save\s*<\/Button>/);
 
   assert.match(
     editor,
-    /<PageHeader[\s\S]*?actions=\{[\s\S]*?Save draft[\s\S]*?<Tabs/
+    /<PageHeader[\s\S]*?actions=\{[\s\S]*?onClick=\{\s*\(\s*\)\s*=>\s*void\s+saveDraft\(\s*\)\s*\}[\s\S]*?<Tabs/
   );
 
   assert.match(
@@ -66,7 +79,7 @@ test('editor uses existing shared tab, section, image, document and form compone
     'WorkingHoursInput',
     'InfoTooltip',
   ]) {
-    assert.match(editor, new RegExp(`<${component}\\b`));
+    assert.match(editor + presentation, new RegExp(`<${component}\\b`));
   }
 
   assert.doesNotMatch(
@@ -79,11 +92,11 @@ test('editor uses existing shared tab, section, image, document and form compone
 
 test('pharmacy data has three vertically separated sections and canonical input hints/counters', () => {
   for (const title of ['Pharmacy information', 'Working hours']) {
-    assert.match(editor, new RegExp(`title="${title}"`));
+    assert.match(presentation, new RegExp(`title="${title}"`));
   }
 
   assert.match(
-    editor,
+    presentation,
     /Pharmacy photo <span className=\{css\.required\}>\*<\/span>/
   );
 
@@ -93,24 +106,24 @@ test('pharmacy data has three vertically separated sections and canonical input 
   );
 
   assert.match(
-    editor,
+    presentation,
     /tab === 'data'[\s\S]*?<CommentInput[\s\S]*?name="shortDescription"/
   );
 
   assert.match(fields, /data: \[\s*'name',\s*'shortDescription',/);
 
   assert.match(
-    editor,
+    presentation,
     /input\('region'[\s\S]*input\('settlement'[\s\S]*css\.fullWidth[\s\S]*input\('address'/
   );
 
   assert.match(
-    editor,
+    presentation,
     /input\('phone', \{ maxLength: USER_PHONE_MAX_LENGTH \}\)/
   );
 
   assert.match(
-    editor,
+    presentation,
     /input\('email', \{ maxLength: USER_EMAIL_MAX_LENGTH \}\)/
   );
 
@@ -127,12 +140,12 @@ test('documents tab is hidden before saving a pharmacy and editable once the dra
   );
 
   assert.match(editor, /items=\{visibleTabs\}/);
-  assert.match(editor, /onChange=\{\(selection\) =>/);
-  assert.match(editor, /disabled=\{busy !== null\}/);
-  assert.match(editor, /onDownloadFile=\{async \(file\) =>/);
+  assert.match(presentation, /onChange=\{\(selection\) =>/);
+  assert.match(presentation, /disabled=\{busy !== null\}/);
+  assert.match(presentation, /onDownloadFile=\{async \(file\) =>/);
 
   assert.match(
-    editor,
+    presentation,
     /downloadOwnedPharmacyDocument\(\s*pharmacyId,\s*file\.documentId\s*\)/
   );
 
