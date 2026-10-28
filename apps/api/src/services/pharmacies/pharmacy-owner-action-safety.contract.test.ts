@@ -19,9 +19,12 @@ test('deactivation eligibility and mutation check the same unfinished work predi
   assert.match(deactivation, /PHARMACY_OWNER_ACTIVE_ORDER_STATUSES/);
   assert.match(deactivation, /\['draft', 'new', 'in_progress'\]/);
 
+  // The eligibility read and the transactional mutation use the same helper.
+  assert.match(deactivation, /countUnfinishedPharmacyWork\(pharmacy\._id\)/);
+
   assert.match(
     deactivation,
-    /countUnfinishedPharmacyWork\(pharmacy\._id, session\)/
+    /countUnfinishedPharmacyWork\(\s*pharmacy\._id,\s*session\s*\)/
   );
 
   assert.match(deactivation, /membershipRole !== 'owner'/);

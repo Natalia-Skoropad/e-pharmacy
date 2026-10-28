@@ -120,9 +120,15 @@ test('profile and document services enforce the membership capability matrix', a
     /findPharmacyForProfileAccess\(\s*userId,\s*'edit_profile',\s*mongoSession,\s*pharmacyId\s*\)/
   );
 
+  // Both moderation and initial verification are scoped to one pharmacy.
   assert.match(
     moderationService,
-    /findPharmacyForProfileAccess\(\s*userId,\s*'submit_profile',\s*mongoSession\s*\)/
+    /findPharmacyForProfileAccess\(\s*userId,\s*'submit_profile',\s*mongoSession,\s*pharmacyId\s*\)/
+  );
+
+  assert.match(
+    moderationService,
+    /findPharmacyForProfileAccess\(\s*userId,\s*'submit_profile',\s*session,\s*pharmacyId\s*\)/
   );
 
   assert.match(

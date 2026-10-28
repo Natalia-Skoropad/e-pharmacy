@@ -44,12 +44,20 @@
 }
 
 .titleWithHelp {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
+  display: inline;
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+/* The name can wrap freely, but its help icon stays with the last word. */
+.titleEnding {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.titleEnding > * {
+  margin-left: 6px;
 }
 
 .actions {
@@ -259,58 +267,6 @@
   margin-bottom: 8px;
 }
 
-@media (min-width: 768px) {
-  .card {
-    padding: 20px;
-  }
-
-  .statistics {
-    display: grid;
-  }
-
-  .actions,
-  .actions > button {
-    width: auto;
-  }
-
-  .pendingSection {
-    padding: 16px;
-  }
-
-  .pageHeader {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .pageHeader > :nth-child(2) {
-    justify-content: flex-end;
-    width: auto;
-    min-width: 0;
-    margin-left: auto;
-  }
-
-  .details {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .compareRow {
-    grid-template-columns: minmax(125px, 1fr) repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1440px) {
-  .identityGrid {
-    grid-template-columns: minmax(230px, 0.35fr) minmax(0, 0.65fr);
-    align-items: stretch;
-  }
-
-  .photo,
-  .photoCard {
-    min-height: 340px;
-  }
-}
-
 .documentDetails {
   display: grid;
   gap: 8px;
@@ -384,7 +340,75 @@
   display: flex;
   justify-content: flex-end;
   min-width: 0;
-  margin-top: 14px;
+  width: 100%;
+}
+
+/* Only Pharmacy data moves the mobile Save above the photo section. */
+.dataDesktopAction {
+  display: none;
+}
+
+.dataMobileAction {
+  min-width: 0;
+}
+
+.dataMobileAction .sectionActions > button {
+  width: 100%;
+}
+
+.moderationSummary {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+}
+
+.moderationSummary > strong {
+  color: var(--color-text-primary);
+}
+
+.moderationSummary ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moderationSummary li {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Match the shared section-header icon treatment at a compact modal size. */
+.moderationTabIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border-radius: 50%;
+}
+
+.moderationTabDescription {
+  min-width: 0;
+  padding-top: 6px;
+  overflow-wrap: anywhere;
+}
+
+.moderationTabDescription > span {
+  color: var(--color-text-secondary);
 }
 
 .reviewGrid {
@@ -405,17 +429,8 @@
 
 .reviewValues {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
-}
-
-@media (max-width: 600px) {
-  .reviewValues {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .sectionActions > button {
-    width: 100%;
-  }
 }
 
 .statusMenu {
@@ -432,7 +447,7 @@
 
 .statusMenuOptions {
   position: absolute;
-  z-index: 30;
+  z-index: var(--z-dropdown);
   top: calc(100% + 8px);
   right: 0;
   display: grid;
@@ -495,22 +510,6 @@
   white-space: pre-wrap;
 }
 
-@media only screen and (max-width: 767px) {
-  .statusMenu,
-  .statusMenu > button {
-    width: 100%;
-  }
-
-  .statusMenu > button {
-    justify-content: center;
-  }
-  .statusMenuOptions {
-    left: 0;
-    right: auto;
-    width: 100%;
-  }
-}
-
 .reviewFeedback {
   display: grid;
   gap: 8px;
@@ -531,13 +530,175 @@
 
 .reviewItemHeading {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
 }
 
 .reviewItemHeading > strong {
   font-size: var(--fz-14);
   color: var(--color-text-primary);
+}
+
+/* Consistent with the profile action layout on mobile and tablet. */
+.reviewPhoto {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-background);
+}
+
+.reviewPhotoImage {
+  object-fit: cover;
+}
+
+.reviewWorkingHours {
+  justify-content: flex-start;
+}
+
+.reviewDocuments {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+.reviewDocuments li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reviewDocumentDifference {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-semi-bold);
+  color: var(--color-error);
+}
+
+/* Same destructive-action language as the shared document controls. */
+.reviewRemoveButton {
+  color: var(--color-error);
+  background: #fff0ef;
+  border: 1px solid #ffd3d0;
+}
+
+.reviewItemHeading .reviewRemoveButton:hover:not(:disabled),
+.reviewItemHeading .reviewRemoveButton:focus-visible:not(:disabled) {
+  color: var(--color-error);
+  background: #ffe5e2;
+  border-color: var(--color-error);
+}
+
+/* Mobile-first controls: show the action directly below the header copy. */
+.reviewItemHeading > button {
+  width: 100%;
+}
+
+.sectionActions > button,
+.statusMenu,
+.statusMenu > button {
+  width: 100%;
+}
+
+.statusMenu > button {
+  justify-content: center;
+}
+
+.statusMenuOptions {
+  left: 0;
+  right: auto;
+  width: 100%;
+}
+
+/* Tablet and desktop preserve the same action proportions as Profile. */
+@media (min-width: 768px) {
+  .dataMobileAction {
+    display: none;
+  }
+
+  .dataDesktopAction {
+    display: block;
+    width: 100%;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .statistics {
+    display: grid;
+  }
+
+  .actions,
+  .actions > button {
+    width: auto;
+  }
+
+  .pendingSection {
+    padding: 16px;
+  }
+
+  .pageHeader {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .pageHeader > :nth-child(2) {
+    justify-content: flex-end;
+    width: auto;
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  .details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .compareRow {
+    grid-template-columns: minmax(125px, 1fr) repeat(2, minmax(0, 1fr));
+  }
+
+  .reviewValues {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reviewItemHeading {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .reviewItemHeading > button {
+    width: auto;
+  }
+
+  .sectionActions > button,
+  .statusMenu,
+  .statusMenu > button {
+    width: auto;
+  }
+
+  .statusMenuOptions {
+    left: auto;
+    right: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .identityGrid {
+    grid-template-columns: minmax(230px, 0.35fr) minmax(0, 0.65fr);
+    align-items: stretch;
+  }
+
+  .photo,
+  .photoCard {
+    min-height: 340px;
+  }
 }

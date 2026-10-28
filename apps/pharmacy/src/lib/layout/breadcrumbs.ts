@@ -2,6 +2,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import { isClientsFilterRoute } from '@/lib/clients/client-paths';
 import { isOrdersFilterRoute } from '@/lib/orders/order-paths';
+
 import { isProductRequestsFilterRoute } from '@/lib/product-requests/product-request-paths';
 import { isAllProductsFilterRoute } from '@/lib/products/all-product-paths';
 import { isOwnProductsFilterRoute } from '@/lib/products/own-product-paths';
@@ -220,6 +221,7 @@ export function getPharmacyBreadcrumbsByPathname(
     const [pharmacyId, tab] = route.segments;
 
     const tabNames: Record<string, string> = {
+      data: 'Pharmacy data',
       about: 'About pharmacy',
       payment: 'Payment details',
       documents: 'Documents',

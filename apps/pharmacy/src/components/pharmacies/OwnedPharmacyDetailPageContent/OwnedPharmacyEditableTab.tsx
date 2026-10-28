@@ -3,7 +3,12 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { Save } from 'lucide-react';
 
-import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
+import type {
+  MyPharmacyProfile,
+  PharmacyProfileResponse,
+} from '@e-pharmacy/types/pharmacies';
+
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -17,6 +22,7 @@ import {
 
 import {
   updateOwnedPharmacyDraft,
+  getOwnedPharmacyProfile,
   uploadOwnedPharmacyDocument,
 } from '@/lib/api/browser/owned-pharmacy-editor.api';
 
@@ -25,6 +31,7 @@ import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 import {
   buildPharmacyEditorPayload,
   validatePharmacyEditor,
+  valuesFromPharmacy,
   effectivePharmacyEditorValues,
   type PharmacyEditorField,
   type PharmacyEditorTab,
@@ -41,6 +48,7 @@ import type {
 } from '../OwnedPharmacyEditor/pharmacy-editor-types';
 
 import { OwnedPharmacyEditorTabContent } from '../OwnedPharmacyEditor/OwnedPharmacyEditorTabContent';
+import { mergeProposedPharmacyDocuments } from './pharmacy-document-changes';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -63,21 +71,15 @@ export function OwnedPharmacyEditableTab({
   readOnly = false,
 }: Props) {
   const toast = useToast();
-
-  const [values, setValues] = useState(() =>
-    effectivePharmacyEditorValues(pharmacy)
-  );
-
-  const [saved, setSaved] = useState(() =>
-    effectivePharmacyEditorValues(pharmacy)
-  );
+  const [values, setValues] = useState(() => valuesFromPharmacy(pharmacy));
+  const [saved, setSaved] = useState(() => valuesFromPharmacy(pharmacy));
 
   const [documents, setDocuments] = useState<PharmacyDocument[]>(() => [
-    ...(pharmacy.pendingModeration?.documents ?? pharmacy.documents),
+    ...pharmacy.documents,
   ]);
 
   const [savedDocuments, setSavedDocuments] = useState<PharmacyDocument[]>(
-    () => [...(pharmacy.pendingModeration?.documents ?? pharmacy.documents)]
+    () => [...pharmacy.documents]
   );
 
   const [revision, setRevision] = useState(pharmacy.updatedAt);
@@ -221,21 +223,78 @@ export function OwnedPharmacyEditableTab({
         documents.map((doc) => doc.id).join(',') !==
         savedDocuments.map((doc) => doc.id).join(',')
       ) {
-        changes.documents = documents.map((doc) => ({ documentId: doc.id }));
+        const proposed =
+          pharmacy.pendingModeration?.documents ?? pharmacy.documents;
+
+        const next = mergeProposedPharmacyDocuments(
+          savedDocuments,
+          documents,
+          proposed
+        );
+
+        changes.documents = next.map((doc) => ({ documentId: doc.id }));
       }
 
-      const result = await updateOwnedPharmacyDraft(pharmacy.id, {
-        ...changes,
-        expectedRevision: revision,
-      });
+      let result: PharmacyProfileResponse;
+
+      try {
+        result = await updateOwnedPharmacyDraft(pharmacy.id, {
+          ...changes,
+          expectedRevision: revision,
+        });
+      } catch (cause) {
+        if (!isApiError(cause) || cause.httpStatus !== 409) throw cause;
+
+        // A document upload or another tab can advance the revision. Retry
+        // only if the exact fields being edited have not changed remotely.
+        // Otherwise preserve the form and ask the owner to review the conflict.
+        const latest = await getOwnedPharmacyProfile(pharmacy.id);
+        const originalValues = effectivePharmacyEditorValues(pharmacy);
+        const latestValues = effectivePharmacyEditorValues(latest.pharmacy);
+
+        const fieldsChangedElsewhere = keys.some(
+          (key) =>
+            key !== 'documents' &&
+            originalValues[key as PharmacyEditorField] !==
+              latestValues[key as PharmacyEditorField]
+        );
+
+        const originalDocuments =
+          pharmacy.pendingModeration?.documents ?? pharmacy.documents;
+
+        const latestDocuments =
+          latest.pharmacy.pendingModeration?.documents ??
+          latest.pharmacy.documents;
+
+        const documentsChangedElsewhere =
+          tab === 'documents' &&
+          originalDocuments.map((doc) => doc.id).join(',') !==
+            latestDocuments.map((doc) => doc.id).join(',');
+
+        if (fieldsChangedElsewhere || documentsChangedElsewhere) throw cause;
+
+        result = await updateOwnedPharmacyDraft(pharmacy.id, {
+          ...changes,
+          expectedRevision: latest.pharmacy.updatedAt,
+        });
+      }
 
       const removedDocuments = savedDocuments.some(
         (document) => !documents.some((entry) => entry.id === document.id)
       );
 
-      setSaved(effectivePharmacyEditorValues(result.pharmacy));
+      // Keep the form on approved/published data. Pending proposals are
+      // displayed only in the per-tab comparison panel above this form.
+      const published = valuesFromPharmacy(result.pharmacy);
+
+      setSaved(published);
+      setValues(published);
       setRevision(result.pharmacy.updatedAt);
-      setSavedDocuments([...documents]);
+
+      const publishedDocuments = [...result.pharmacy.documents];
+
+      setSavedDocuments(publishedDocuments);
+      setDocuments(publishedDocuments);
       setErrors({});
 
       toast.success(
@@ -259,23 +318,30 @@ export function OwnedPharmacyEditableTab({
     }
   };
 
+  const headerAction = !readOnly ? (
+    <div className={css.sectionActions}>
+      <Button
+        iconLeft={<Save size={17} />}
+        disabled={!dirty || busy !== null}
+        isLoading={busy === 'save'}
+        onClick={() => void save()}
+      >
+        Save changes
+      </Button>
+    </div>
+  ) : undefined;
+
   return (
     <div className={css.formStack}>
-      {!readOnly && (
-        <div className={css.sectionActions}>
-          <Button
-            iconLeft={<Save size={17} />}
-            disabled={!dirty || busy !== null}
-            isLoading={busy === 'save'}
-            onClick={() => void save()}
-          >
-            Save changes
-          </Button>
-        </div>
-      )}
-
+      {tab === 'data' && headerAction ? (
+        <div className={css.dataMobileAction}>{headerAction}</div>
+      ) : null}
       <OwnedPharmacyEditorTabContent
         tab={tab}
+        headerAction={headerAction}
+        headerActionClassName={
+          tab === 'data' && headerAction ? css.dataDesktopAction : undefined
+        }
         values={values}
         busy={readOnly ? 'save' : busy}
         errors={errors}

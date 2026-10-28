@@ -175,6 +175,14 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
   );
 
+  const ownedPharmacySectionReview = await read(
+    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacySectionReview.tsx'
+  );
+
+  const ownedPharmacyActions = await read(
+    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
+  );
+
   const pharmacyStatusPresentation = await read(
     '../../../../../packages/config/src/presentation/pharmacies.ts'
   );
@@ -242,23 +250,53 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     /blocked:\s*\{\s*label: 'Blocked',\s*tone: 'danger'\s*\}/
   );
 
+  // Owner feedback belongs to the changed section, not the published
+  // Pharmacy information card. Blocking reasons remain visible with status.
   assert.match(
-    ownedPharmacyInformation,
-    /<Field label="Administrator feedback">\s*\{show\(pharmacy\.reviewFeedback\)\}/
+    ownedPharmacySectionReview,
+    /<strong>Administrator feedback<\/strong>/
   );
+
+  assert.match(ownedPharmacySectionReview, /\{pharmacy\.reviewFeedback\}/);
 
   assert.match(
     ownedPharmacyInformation,
-    /<Field label="Status reason">\s*\{show\(pharmacy\.statusReason\)\}/
+    /<Field label="Status reason">\{show\(pharmacy\.statusReason\)\}<\/Field>/
+  );
+
+  // Stage 14.18 moved verification and moderation into the owner action menu.
+  // Only owners may use these actions; verification still requires a completed
+  // pharmacy and owner documents, while moderation requires saved changes.
+  assert.match(ownedPharmacyDetail, /<OwnedPharmacyActions/);
+
+  assert.match(
+    ownedPharmacyActions,
+    /if \(pharmacy\.membershipRole !== 'owner'\) return null;/
+  );
+
+  assert.match(ownedPharmacyActions, /const needsVerification\s*=/);
+  assert.match(ownedPharmacyActions, /pharmacy\.status === 'new'/);
+
+  assert.match(
+    ownedPharmacyActions,
+    /pharmacy\.reviewState === 'changes_requested'/
   );
 
   assert.match(
-    ownedPharmacyDetail,
-    /const canSubmit\s*=\s*pharmacy\?\.membershipRole === 'owner' &&\s*\(pharmacy\.status === 'new' \|\|\s*\(pharmacy\.status === 'on_verification' &&\s*pharmacy\.reviewState === 'changes_requested'\)\)/
+    ownedPharmacyActions,
+    /disabled=\{verificationIncomplete \|\| !ownerHasDocuments\}/
   );
 
-  assert.match(ownedPharmacyDetail, /if \(!canSubmit \|\| sending\) return;/);
-  assert.match(ownedPharmacyDetail, /\{canSubmit && \(/);
+  assert.match(
+    ownedPharmacyActions,
+    /await sendOwnedPharmacyForVerification\(pharmacy\.id, comment\.trim\(\)\)/
+  );
+
+  assert.match(
+    ownedPharmacyActions,
+    /disabled=\{!hasChanges \|\| moderationIncomplete\}/
+  );
+
   assert.match(registry, /subscribeToPharmacyModerationRefresh/);
   assert.match(linked, /subscribeToPharmacyModerationRefresh/);
   assert.match(backend, /PHARMACY_CORRECTIONS_REQUESTED/);

@@ -26,6 +26,7 @@ import {
   reconcileAttachedPharmacyDocumentStorage,
 } from './pharmacy-document.service';
 
+import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
 import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 import { clonePendingModerationFields as normalizePendingModerationPayload } from './pharmacy-location';
 
@@ -186,71 +187,10 @@ export async function submitMyPharmacyModerationService(
           )
         : normalizePendingModerationPayload(pharmacy.pendingModeration);
 
-      const effectiveLocation = {
-        ...pharmacy.location,
-        ...pendingBeforeSubmission.location,
-      };
-
-      const effectiveBank = {
-        ...pharmacy.bankDetails,
-        ...pendingBeforeSubmission.bankDetails,
-      };
-
-      const effectiveFields: Record<string, unknown> = {
-        name:
-          pendingBeforeSubmission.name !== undefined
-            ? pendingBeforeSubmission.name
-            : pharmacy.name,
-
-        phone:
-          pendingBeforeSubmission.phone !== undefined
-            ? pendingBeforeSubmission.phone
-            : pharmacy.phone,
-
-        email:
-          pendingBeforeSubmission.email !== undefined
-            ? pendingBeforeSubmission.email
-            : pharmacy.email,
-
-        imageUrl:
-          pendingBeforeSubmission.imageUrl !== undefined
-            ? pendingBeforeSubmission.imageUrl
-            : pharmacy.imageUrl,
-
-        description:
-          pendingBeforeSubmission.description !== undefined
-            ? pendingBeforeSubmission.description
-            : pharmacy.description,
-
-        shortDescription:
-          pendingBeforeSubmission.shortDescription !== undefined
-            ? pendingBeforeSubmission.shortDescription
-            : pharmacy.shortDescription,
-
-        workingHours:
-          pendingBeforeSubmission.workingHours !== undefined
-            ? pendingBeforeSubmission.workingHours
-            : pharmacy.workingHours,
-
-        address: effectiveLocation.address,
-        settlement: effectiveLocation.settlement,
-        region: effectiveLocation.region,
-        countryCode: effectiveLocation.countryCode,
-        recipientName: effectiveBank.recipientName,
-        taxId: effectiveBank.taxId,
-        iban: effectiveBank.iban,
-        bankName: effectiveBank.bankName,
-        receiptEmail: effectiveBank.receiptEmail,
-        paymentPurpose: effectiveBank.paymentPurpose,
-
-        documents:
-          pendingBeforeSubmission.documents?.length ??
-          pharmacy.documents?.length,
-      };
-
-      const missing = Object.entries(effectiveFields)
-        .filter(([, value]) => !value)
-        .map(([name]) => name);
+      const missing = missingRequiredModerationFields(
+        pharmacy,
+        pendingBeforeSubmission
+      );
 
       if (missing.length) {
         throw httpError(

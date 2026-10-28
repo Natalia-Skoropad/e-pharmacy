@@ -1,11 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Ban, ChevronDown, ClipboardCheck, ShieldCheck } from 'lucide-react';
+
+import {
+  Ban,
+  ChevronDown,
+  ClipboardCheck,
+  ClipboardList,
+  CreditCard,
+  FileText,
+  ShieldCheck,
+  type LucideIcon,
+} from 'lucide-react';
 
 import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { InfoTooltip, ReasonModal } from '@e-pharmacy/ui/overlays';
+import { ReasonModal } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
@@ -24,11 +34,24 @@ import {
   effectivePharmacyEditorValues,
 } from '../OwnedPharmacyEditor/pharmacy-editor-fields';
 
+import { FIELD_LABELS } from '../OwnedPharmacyEditor/pharmacy-editor-presentation';
+import { getPharmacyModerationSummary } from './pharmacy-moderation-summary';
+
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
 //===================================================================
 
 type Action = 'verification' | 'moderation' | 'deactivate';
+
+//===================================================================
+
+// Keep these icons consistent with the corresponding pharmacy detail tabs.
+const MODERATION_TAB_ICONS: Record<string, LucideIcon> = {
+  'Pharmacy data': ClipboardList,
+  'About pharmacy': FileText,
+  'Payment details': CreditCard,
+  Documents: FileText,
+};
 
 //===================================================================
 
@@ -67,17 +90,49 @@ export function OwnedPharmacyActions({
 
   const pending = pharmacy.pendingModeration;
   const hasChanges = Boolean(pending && Object.keys(pending).length);
+  const moderationSummary = getPharmacyModerationSummary(pharmacy);
 
   const documentsCount =
     pending?.documents?.length ?? pharmacy.documents.length;
 
-  const invalid =
+  const effective = effectivePharmacyEditorValues(pharmacy);
+
+  // Moderation of an already active pharmacy must not reject an otherwise
+  // complete record because of legacy formatting in an unchanged field.
+  // This matches the backend's required-field check for the *effective*
+  // published + pending record, rather than re-verifying every old value.
+  const moderationRequired = [
+    'name',
+    'address',
+    'settlement',
+    'region',
+    'phone',
+    'email',
+    'workingHours',
+    'imageUrl',
+    'description',
+    'shortDescription',
+    'recipientName',
+    'taxId',
+    'iban',
+    'bankName',
+    'receiptEmail',
+    'paymentPurpose',
+  ] as const;
+
+  const missingModerationFields = moderationRequired.filter(
+    (field) => !effective[field].trim()
+  );
+
+  const moderationIncomplete =
+    missingModerationFields.length > 0 ||
+    !documentsCount ||
+    !pharmacy.location?.countryCode;
+
+  // Initial verification remains stricter than moderation of approved data.
+  const verificationIncomplete =
     Object.keys(
-      validatePharmacyEditor(
-        effectivePharmacyEditorValues(pharmacy),
-        documentsCount,
-        'verification'
-      )
+      validatePharmacyEditor(effective, documentsCount, 'verification')
     ).length > 0;
 
   useEffect(() => {
@@ -220,9 +275,9 @@ export function OwnedPharmacyActions({
                   type="button"
                   role="menuitem"
                   className={css.approveAction}
-                  disabled={invalid || !ownerHasDocuments}
+                  disabled={verificationIncomplete || !ownerHasDocuments}
                   title={
-                    invalid || !ownerHasDocuments
+                    verificationIncomplete || !ownerHasDocuments
                       ? 'Complete required fields and attach pharmacy and owner documents first.'
                       : undefined
                   }
@@ -237,11 +292,23 @@ export function OwnedPharmacyActions({
                   type="button"
                   role="menuitem"
                   className={css.approveAction}
-                  disabled={invalid || !hasChanges}
+                  disabled={!hasChanges || moderationIncomplete}
                   title={
-                    invalid || !hasChanges
-                      ? 'Save valid changes before sending them for moderation.'
-                      : undefined
+                    !hasChanges
+                      ? 'Save at least one change before sending for moderation.'
+                      : moderationIncomplete
+                        ? `Complete the required fields: ${[
+                            ...missingModerationFields.map(
+                              (field) => FIELD_LABELS[field]
+                            ),
+
+                            ...(!documentsCount ? ['Pharmacy documents'] : []),
+
+                            ...(!pharmacy.location?.countryCode
+                              ? ['Country']
+                              : []),
+                          ].join(', ')}.`
+                        : undefined
                   }
                   onClick={() => open('moderation')}
                 >
@@ -268,25 +335,6 @@ export function OwnedPharmacyActions({
             </div>
           ) : null}
         </div>
-        {canDeactivate && eligibility && !eligibility.canDeactivate ? (
-          <InfoTooltip
-            label="Why is deactivation unavailable?"
-            title="Deactivation requirements"
-            escapeOverflow
-            items={[
-              {
-                title: 'Unfinished orders',
-                description: `${eligibility.activeOrders} unfinished orders must be closed before deactivation.`,
-                icon: <ClipboardCheck size={17} />,
-              },
-              {
-                title: 'Product requests',
-                description: `${eligibility.activeProductRequests} draft, new or in-progress product requests must be completed first.`,
-                icon: <ShieldCheck size={17} />,
-              },
-            ]}
-          />
-        ) : null}
       </div>
 
       {action ? (
@@ -303,6 +351,36 @@ export function OwnedPharmacyActions({
             action === 'deactivate'
               ? 'The pharmacy will become unavailable. All unfinished orders and product requests must be closed first; this action and its reason are recorded in Activity history.'
               : 'Provide a short description for the administrator. Saved and submitted values will remain separate until a decision is made.'
+          }
+          details={
+            action === 'moderation' ? (
+              <section
+                className={css.moderationSummary}
+                aria-label="Changes for moderation"
+              >
+                <strong>Changes you are about to send</strong>
+                <ul>
+                  {moderationSummary.map((group) => {
+                    const Icon = MODERATION_TAB_ICONS[group.title] ?? FileText;
+
+                    return (
+                      <li key={group.title}>
+                        <span
+                          className={css.moderationTabIcon}
+                          aria-hidden="true"
+                        >
+                          <Icon size={18} />
+                        </span>
+                        <div className={css.moderationTabDescription}>
+                          <strong>{group.title}</strong>{' '}
+                          <span>({group.fields.join(', ')})</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : undefined
           }
           value={comment}
           fieldName="pharmacyOwnerActionDescription"

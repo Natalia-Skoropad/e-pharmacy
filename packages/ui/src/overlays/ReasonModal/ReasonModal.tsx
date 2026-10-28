@@ -22,6 +22,10 @@ export type ReasonModalProps = Readonly<{
   eyebrow: string;
   title: string;
   description: ReactNode;
+
+  /** Optional review content between the explanation and the reason field. */
+  details?: ReactNode;
+
   value: string;
   fieldName: string;
   fieldLabel: string;
@@ -45,6 +49,7 @@ function ReasonModal({
   eyebrow,
   title,
   description,
+  details,
   value,
   fieldName,
   fieldLabel,
@@ -96,6 +101,8 @@ function ReasonModal({
           <MessageSquareText size={20} aria-hidden="true" />
           <p id={descriptionId}>{description}</p>
         </div>
+
+        {details ? <div>{details}</div> : null}
 
         <CommentInput
           id={fieldId}

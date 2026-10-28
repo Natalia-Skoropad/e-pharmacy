@@ -34,6 +34,8 @@ type InfoTooltipProps = Readonly<{
   escapeOverflow?: boolean;
   /** Use the browser top layer for tooltips inside clipped or stacked layouts. */
   preferTopLayer?: boolean;
+  /** Allow visitors to scroll a long tooltip without losing hover focus. */
+  scrollable?: boolean;
 }>;
 
 type FloatingTooltipPosition = Readonly<{
@@ -43,6 +45,7 @@ type FloatingTooltipPosition = Readonly<{
   width: number;
   arrowLeft: number;
   openAbove: boolean;
+  maxHeight: number;
 }>;
 
 //===================================================================
@@ -56,11 +59,13 @@ function InfoTooltip({
   icon,
   escapeOverflow = false,
   preferTopLayer = false,
+  scrollable = false,
 }: InfoTooltipProps) {
   const tooltipId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const floatingTooltipRef = useRef<HTMLSpanElement | null>(null);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
 
   const [floatingPosition, setFloatingPosition] =
     useState<FloatingTooltipPosition | null>(null);
@@ -69,6 +74,7 @@ function InfoTooltip({
     if (!escapeOverflow || typeof window === 'undefined') return;
 
     const trigger = triggerRef.current;
+
     if (!trigger) return;
 
     const rect = trigger.getBoundingClientRect();
@@ -90,23 +96,33 @@ function InfoTooltip({
       ...(openAbove
         ? { bottom: window.innerHeight - rect.top + 12 }
         : { top: rect.bottom + 12 }),
+
       left,
       width,
       arrowLeft,
       openAbove,
+
+      maxHeight: Math.max(
+        80,
+        Math.min(
+          window.innerHeight - 32,
+          (openAbove ? availableAbove : availableBelow) - 12
+        )
+      ),
     });
   }, [escapeOverflow]);
 
   const showFloatingTooltip = useCallback(() => {
     if (!escapeOverflow) return;
+
     updateFloatingPosition();
     setIsFloatingOpen(true);
   }, [escapeOverflow, updateFloatingPosition]);
 
   const hideFloatingTooltip = useCallback(() => {
     if (!escapeOverflow) return;
-    setIsFloatingOpen(false);
-  }, [escapeOverflow]);
+    if (!isPinned) setIsFloatingOpen(false);
+  }, [escapeOverflow, isPinned]);
 
   useEffect(() => {
     if (!escapeOverflow || !isFloatingOpen) return;
@@ -138,6 +154,39 @@ function InfoTooltip({
     tooltip.showPopover();
   }, [escapeOverflow, preferTopLayer, isFloatingOpen]);
 
+  useEffect(() => {
+    if (!isPinned) return;
+
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+
+      if (
+        triggerRef.current?.contains(target) ||
+        floatingTooltipRef.current?.contains(target)
+      )
+        return;
+
+      setIsPinned(false);
+      setIsFloatingOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+
+      setIsPinned(false);
+      setIsFloatingOpen(false);
+      triggerRef.current?.focus();
+    };
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isPinned]);
+
   const tooltipContent = (
     <span
       ref={floatingTooltipRef}
@@ -146,12 +195,16 @@ function InfoTooltip({
         css.tooltip,
         escapeOverflow && preferTopLayer && css.floatingTooltipTopLayer,
         escapeOverflow && css.floatingTooltip,
+        scrollable && css.scrollableTooltip,
         escapeOverflow &&
           floatingPosition?.openAbove &&
           css.floatingTooltipAbove
       )}
       id={tooltipId}
       role="tooltip"
+      tabIndex={scrollable ? 0 : undefined}
+      onMouseEnter={scrollable ? () => setIsFloatingOpen(true) : undefined}
+      onMouseLeave={scrollable ? hideFloatingTooltip : undefined}
       style={
         escapeOverflow && floatingPosition
           ? ({
@@ -159,6 +212,7 @@ function InfoTooltip({
               bottom: floatingPosition.bottom,
               left: floatingPosition.left,
               width: floatingPosition.width,
+              ...(scrollable ? { maxHeight: floatingPosition.maxHeight } : {}),
               '--info-tooltip-arrow-left': `${floatingPosition.arrowLeft}px`,
             } as CSSProperties)
           : undefined
@@ -205,7 +259,7 @@ function InfoTooltip({
       className={clsx(css.root, className)}
       onMouseEnter={showFloatingTooltip}
       onMouseLeave={hideFloatingTooltip}
-      onFocusCapture={showFloatingTooltip}
+      onFocusCapture={scrollable ? undefined : showFloatingTooltip}
       onBlurCapture={hideFloatingTooltip}
     >
       <button
@@ -213,13 +267,27 @@ function InfoTooltip({
         className={css.trigger}
         type="button"
         aria-label={label}
+        aria-expanded={scrollable ? isFloatingOpen : undefined}
         aria-describedby={
           !escapeOverflow || isFloatingOpen ? tooltipId : undefined
         }
         onPointerEnter={showFloatingTooltip}
         onMouseEnter={showFloatingTooltip}
-        onFocus={showFloatingTooltip}
-        onClick={showFloatingTooltip}
+        onFocus={scrollable ? undefined : showFloatingTooltip}
+        onClick={() => {
+          if (!scrollable) {
+            showFloatingTooltip();
+            return;
+          }
+
+          if (isPinned) {
+            setIsPinned(false);
+            setIsFloatingOpen(false);
+          } else {
+            showFloatingTooltip();
+            setIsPinned(true);
+          }
+        }}
       >
         <MessageCircleQuestion size={20} strokeWidth={2.2} aria-hidden="true" />
       </button>

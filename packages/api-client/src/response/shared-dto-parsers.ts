@@ -107,6 +107,7 @@ function isRecord(value: unknown): value is UnknownRecord {
   }
 
   const prototype = Object.getPrototypeOf(value);
+
   return prototype === Object.prototype || prototype === null;
 }
 
@@ -326,7 +327,12 @@ const SHA256_PATTERN = /^[a-f\d]{64}$/i;
 const PROFILE_PHARMACY_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
 const PROFILE_ADDRESS_PATTERN = /^[A-Za-z0-9 .,'’/#&()\-]+$/;
 const PROFILE_SEARCH_TEXT_PATTERN = /^[\p{L}\p{N} .,'’/#&()\-]*$/u;
-const PROFILE_TEXT_EDITOR_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*\n\r]+$/;
+
+// Must mirror packages/validation/src/shared/patterns.ts TEXT_EDITOR_PATTERN.
+// Markdown links, emphasis and URL characters are valid persisted content.
+const PROFILE_TEXT_EDITOR_PATTERN =
+  /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*\[\]_:?&=@~\n\r]+$/;
+
 const PROFILE_BANK_TEXT_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 '’&().,/\-]*$/;
 const PROFILE_PAYMENT_PURPOSE_PATTERN = /^[A-Za-z0-9\s.,!?;:'"“”()\-–—/#%+*]+$/;
 

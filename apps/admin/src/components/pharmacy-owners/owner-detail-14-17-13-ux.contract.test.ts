@@ -78,6 +78,18 @@ test('linked pharmacy order metrics uses a floating tooltip with hover and focus
   assert.match(styles, /\.tableHeaderWithHelp button\s*\{[^}]*width: 24px;/);
   assert.match(tooltip, /onPointerEnter=\{showFloatingTooltip\}/);
   assert.match(tooltip, /onMouseEnter=\{showFloatingTooltip\}/);
-  assert.match(tooltip, /onFocus=\{showFloatingTooltip\}/);
+
+  // Normal tooltips remain keyboard-focusable. Long scrollable tooltips
+  // use click-to-pin instead of reopening during focus transitions.
+  assert.match(
+    tooltip,
+    /onFocus=\{scrollable \? undefined : showFloatingTooltip\}/
+  );
+
+  assert.match(
+    tooltip,
+    /onFocusCapture=\{scrollable \? undefined : showFloatingTooltip\}/
+  );
+
   assert.match(tooltip, /createPortal\(tooltipContent, document\.body\)/);
 });

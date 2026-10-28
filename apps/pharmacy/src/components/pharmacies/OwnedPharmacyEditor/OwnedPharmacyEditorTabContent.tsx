@@ -72,6 +72,8 @@ function asBrowserFile(document: PharmacyDocument): BrowserUploadFile {
 
 export type OwnedPharmacyEditorTabContentProps = Readonly<{
   tab: PharmacyEditorTab;
+  headerAction?: ReactNode;
+  headerActionClassName?: string;
   values: PharmacyEditorValues;
   busy: 'save' | 'verify' | 'upload' | null;
   errors: EditorErrors;
@@ -96,6 +98,8 @@ export type OwnedPharmacyEditorTabContentProps = Readonly<{
 
 export function OwnedPharmacyEditorTabContent({
   tab,
+  headerAction,
+  headerActionClassName,
   values,
   busy,
   errors,
@@ -125,6 +129,8 @@ export function OwnedPharmacyEditorTabContent({
               }
               description="Clients see this photo on your pharmacy page and next to your pharmacy in search results and listings."
               icon={<Camera size={22} aria-hidden="true" />}
+              action={headerAction}
+              actionClassName={headerActionClassName}
             />
 
             <div className={css.pictureColumn}>
@@ -247,6 +253,7 @@ export function OwnedPharmacyEditorTabContent({
             title="About pharmacy"
             description="Tell clients about the pharmacy, services and pickup information."
             icon={<FileText size={22} aria-hidden="true" />}
+            action={headerAction}
           />
 
           <PharmacyAboutFields
@@ -264,6 +271,7 @@ export function OwnedPharmacyEditorTabContent({
             title="Payment details"
             description="Payment information used for pharmacy orders."
             icon={<CreditCard size={22} aria-hidden="true" />}
+            action={headerAction}
           />
 
           <PharmacyPaymentFields
@@ -304,6 +312,7 @@ export function OwnedPharmacyEditorTabContent({
             title="Pharmacy documents"
             description="Upload the pharmacy documents needed for verification."
             headerIcon={<Files size={22} aria-hidden="true" />}
+            headerAction={headerAction}
             required
             value={documents.map(asBrowserFile)}
             maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}

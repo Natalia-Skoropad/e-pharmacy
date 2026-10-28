@@ -132,14 +132,19 @@ assert.match(browser, /localApiRequest/);
 assert.doesNotMatch(browser, /\/admin\/|ownerId:/);
 assert.match(editor, /useRef<string \| null>\(null\)/);
 assert.match(editor, /crypto\.randomUUID\(\)/);
-assert.match(editor, /getMyPharmacyOwnerDocuments/);
+
+// Owner document readiness is checked by the saved pharmacy status action,
+// not by the draft-only Create pharmacy editor.
+const ownerActions = read(
+  'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
+);
+
+assert.match(ownerActions, /getMyPharmacyOwnerDocuments/);
 
 assert.match(
   editor,
   /validatePharmacyEditor\(\s*values,\s*documents\.length,\s*'draft',\s*!pharmacyId\s*\)/
 );
-
-assert.match(editor, /validatePharmacyEditor\(values, documents\.length\)/);
 
 assert.match(navigationGuard, /addEventListener\(['"]beforeunload['"]/);
 
@@ -161,7 +166,10 @@ assert.match(fields, /validatePharmacyAboutForm\(values, mode\)/);
 assert.match(fields, /validatePharmacyPaymentForm\(values, mode\)/);
 assert.match(fields, /buildPictureUrlError/);
 assert.match(list, /router\.push\(`\$\{PHARMACY_ROUTES\.PHARMACIES\}\/new`\)/);
-assert.match(detail, /<OwnedPharmacyEditor\s+pharmacyId=\{pharmacyId\}/);
+
+// Saved pharmacy edits reuse the canonical tab fields without mounting the
+// create-only editor on the pharmacy details page.
+assert.match(detail, /<OwnedPharmacyEditableTab/);
 
 //===================================================================
 

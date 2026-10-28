@@ -10,6 +10,7 @@ export type ProfileSectionHeaderProps = Readonly<{
   icon: ReactNode;
   titleId?: string;
   action?: ReactNode;
+  actionClassName?: string;
 }>;
 
 //===================================================================
@@ -20,6 +21,7 @@ export function ProfileSectionHeader({
   icon,
   titleId,
   action,
+  actionClassName,
 }: ProfileSectionHeaderProps) {
   return (
     <div className={css.sectionHeader}>
@@ -38,7 +40,15 @@ export function ProfileSectionHeader({
         </div>
       </div>
 
-      {action ? <div className={css.sectionHeaderAction}>{action}</div> : null}
+      {action ? (
+        <div
+          className={[css.sectionHeaderAction, actionClassName]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }

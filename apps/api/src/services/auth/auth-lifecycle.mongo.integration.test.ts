@@ -52,6 +52,8 @@ import {
   revokeSessionByRefreshTokenService,
 } from './auth-sessions.service';
 
+import { moderationReadyPharmacyFields } from '../__tests__/fixtures/pharmacy-moderation-ready.helper';
+
 import { registerUserService } from './auth-register.service';
 
 import {
@@ -2057,11 +2059,9 @@ test(
       });
 
       const pharmacy = await Pharmacy.create({
+        ...moderationReadyPharmacyFields(identity),
         ownerId: owner._id,
         name: 'Moderation Lifecycle Pharmacy',
-        email: identity.email,
-        phone: identity.phone,
-        description: 'Approved description',
         status: 'active',
         approvedAt: new Date(),
         activatedAt: new Date(),
@@ -2133,6 +2133,7 @@ test(
       });
 
       const pharmacy = await Pharmacy.create({
+        ...moderationReadyPharmacyFields(ownerIdentity),
         ownerId: owner._id,
         managerUserIds: [],
         name: 'Location Moderation Pharmacy',
@@ -2144,9 +2145,6 @@ test(
           countryCode: 'UA',
         },
 
-        email: ownerIdentity.email,
-        phone: ownerIdentity.phone,
-        documents: [],
         status: 'active',
         approvedAt: new Date(),
         activatedAt: new Date(),

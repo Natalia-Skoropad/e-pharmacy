@@ -82,6 +82,25 @@ test('canonical filter segments are never classified as entity detail ids', () =
 
 //===================================================================
 
+test('Pharmacy data has a third breadcrumb like other detail tabs', () => {
+  assert.deepEqual(
+    getPharmacyBreadcrumbsByPathname(
+      `/pharmacy/pharmacies/${ENTITY_ID}/data`,
+      'Care Pharmacy Lviv'
+    ),
+    [
+      { label: 'Pharmacies', href: '/pharmacy/pharmacies' },
+      {
+        label: 'Care Pharmacy Lviv',
+        href: `/pharmacy/pharmacies/${ENTITY_ID}`,
+      },
+      { label: 'Pharmacy data' },
+    ]
+  );
+});
+
+//===================================================================
+
 test('real entity ids still produce detail breadcrumbs for each domain', () => {
   assert.deepEqual(
     getPharmacyBreadcrumbsByPathname(`/pharmacy/orders/${ENTITY_ID}`),

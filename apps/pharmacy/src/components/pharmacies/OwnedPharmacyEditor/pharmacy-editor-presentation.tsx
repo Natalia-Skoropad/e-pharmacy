@@ -21,13 +21,13 @@ export const FIELD_LABELS: Record<PharmacyEditorField, string> = {
 
   workingHours: 'Working hours',
 
-  imageUrl: 'Image URL',
+  imageUrl: 'Pharmacy photo',
 
   description: 'Description',
   shortDescription: 'Short description',
 
   recipientName: 'Recipient name',
-  taxId: 'Tax ID',
+  taxId: 'Tax ID / EDRPOU',
   iban: 'IBAN',
   bankName: 'Bank name',
   receiptEmail: 'Receipt email',

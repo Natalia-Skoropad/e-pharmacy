@@ -4,9 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
-  Activity,
   Building2,
-  CircleHelp,
   ClipboardList,
   CreditCard,
   FileText,
@@ -24,7 +22,6 @@ import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import {
   ProfileResourceState,
@@ -36,6 +33,7 @@ import {
   StatsGrid,
   StatsLoadingSkeleton,
 } from '@e-pharmacy/ui/statistics';
+
 import { formatMoney } from '@e-pharmacy/utils';
 
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
@@ -60,6 +58,7 @@ import { Payment } from './OwnedPharmacyAboutPaymentTabs';
 import { DocumentsResource } from './OwnedPharmacyDocumentsTab';
 import { OwnedPharmacyEditableTab } from './OwnedPharmacyEditableTab';
 import { OwnedPharmacyActions } from './OwnedPharmacyActions';
+import { OwnedPharmacyHelp } from './OwnedPharmacyHelp';
 import { OwnedPharmacySectionReview } from './OwnedPharmacySectionReview';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
@@ -199,6 +198,15 @@ export function OwnedPharmacyDetailPageContent({
   const loading = !detail && !error;
   const pharmacy = detail?.pharmacy;
 
+  // Keep the information icon beside the last word instead of leaving
+  // it alone on a new line when a long pharmacy name wraps on mobile.
+  const pharmacyName = pharmacy?.name.trim() || 'Pharmacy';
+  const lastSpace = pharmacyName.lastIndexOf(' ');
+  const titlePrefix = lastSpace >= 0 ? pharmacyName.slice(0, lastSpace) : '';
+
+  const titleEnd =
+    lastSpace >= 0 ? pharmacyName.slice(lastSpace + 1) : pharmacyName;
+
   useEffect(() => {
     dispatchPharmacyBreadcrumbLabel(`Pharmacy #${pharmacyId}`);
   }, [pharmacyId]);
@@ -220,6 +228,18 @@ export function OwnedPharmacyDetailPageContent({
         if (controller.signal.aborted) return;
 
         const status = isApiError(cause) ? cause.httpStatus : undefined;
+
+        // A successful HTTP response can still fail DTO validation. Log only
+        // safe metadata in development, never the private pharmacy payload.
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[owned-pharmacy-detail] load failed', {
+            status,
+            code: isApiError(cause) ? cause.transportCode : undefined,
+
+            message:
+              cause instanceof Error ? cause.message : 'Unknown load error',
+          });
+        }
 
         setResult({
           pharmacyId,
@@ -279,33 +299,11 @@ export function OwnedPharmacyDetailPageContent({
             className={css.pageHeader}
             title={
               <span className={css.titleWithHelp}>
-                {pharmacy?.name || 'Pharmacy'}
-                <InfoTooltip
-                  label="About pharmacy details"
-                  title="Pharmacy details"
-                  icon={<CircleHelp size={20} aria-hidden="true" />}
-                  escapeOverflow
-                  items={[
-                    {
-                      title: 'Current pharmacy status',
-                      description:
-                        'The status is displayed in Pharmacy information.',
-                      icon: <Building2 size={17} />,
-                    },
-                    {
-                      title: 'Pharmacy overview',
-                      description:
-                        'Four cards summarize clients, orders, products and reviews.',
-                      icon: <ClipboardList size={17} />,
-                    },
-                    {
-                      title: 'Pharmacy data and history',
-                      description:
-                        'Each tab has its own URL. Inactive tabs do not fetch data.',
-                      icon: <Activity size={17} />,
-                    },
-                  ]}
-                />
+                {titlePrefix ? `${titlePrefix} ` : null}
+                <span className={css.titleEnding}>
+                  {titleEnd}
+                  {pharmacy ? <OwnedPharmacyHelp pharmacy={pharmacy} /> : null}
+                </span>
               </span>
             }
             titleId="owned-pharmacy-title"

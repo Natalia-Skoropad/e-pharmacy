@@ -509,6 +509,22 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/deactivate",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/deactivate",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/deactivation-eligibility",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/deactivation-eligibility",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/pharmacies/[pharmacyId]/documents",
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/documents",
     "methods": {
@@ -525,11 +541,35 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/moderation-submission",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/moderation-submission",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/pending-changes",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/pending-changes",
+    "methods": {
+      "DELETE": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/pharmacies/[pharmacyId]/profile",
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/profile",
     "methods": {
       "GET": "private",
       "PATCH": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/sales-statistics",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/sales-statistics",
+    "methods": {
+      "GET": "private"
     }
   },
   {

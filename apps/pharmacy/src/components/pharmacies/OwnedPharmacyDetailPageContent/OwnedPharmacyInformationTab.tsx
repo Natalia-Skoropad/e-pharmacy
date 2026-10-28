@@ -1,7 +1,6 @@
 'use client';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-
 import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -38,6 +37,10 @@ export function Information({
             <Field label="Pharmacy status">
               <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
             </Field>
+
+            {pharmacy.status === 'blocked' && pharmacy.statusReason ? (
+              <Field label="Status reason">{show(pharmacy.statusReason)}</Field>
+            ) : null}
 
             <Field label="Pharmacy ID">{pharmacy.id}</Field>
 

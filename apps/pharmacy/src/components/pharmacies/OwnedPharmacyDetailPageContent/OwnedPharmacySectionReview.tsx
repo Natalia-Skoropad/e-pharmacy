@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { ShieldCheck, Trash2 } from 'lucide-react';
+import { ShieldCheck, Trash2, X } from 'lucide-react';
 
 import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
-import { MarkdownContent } from '@e-pharmacy/ui/data-display';
+import { MarkdownContent, WorkingHours } from '@e-pharmacy/ui/data-display';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -127,6 +128,63 @@ function comparisons(
 
 //===================================================================
 
+/** Use the same read-only presentation as the public-facing pharmacy views. */
+function ComparisonValue({
+  change,
+  value,
+  otherValue,
+}: Readonly<{
+  change: Comparison;
+  value: string | null | undefined;
+  otherValue: string | null | undefined;
+}>) {
+  if (!value?.trim()) return <span className={css.reviewBody}>—</span>;
+
+  if (change.field === 'imageUrl') {
+    return (
+      <div className={css.reviewPhoto}>
+        <ShimmerImage
+          src={value}
+          alt={`${change.label} preview`}
+          className={css.reviewPhotoImage}
+          sizes="110px"
+          unoptimized
+        />
+      </div>
+    );
+  }
+
+  if (change.field === 'workingHours') {
+    return <WorkingHours value={value} className={css.reviewWorkingHours} />;
+  }
+
+  if (change.field === 'documents') {
+    const selectedNames = value.split('\n').filter(Boolean);
+    const otherNames = new Set((otherValue ?? '').split('\n').filter(Boolean));
+
+    return (
+      <ul className={css.reviewDocuments}>
+        {selectedNames.map((name) => (
+          <li key={name}>
+            {name}
+            {!otherNames.has(name) ? (
+              <span className={css.reviewDocumentDifference}>
+                {value === change.current ? 'Removed' : 'Added'}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (change.richText) return <MarkdownContent value={value} />;
+
+  return <span className={css.reviewBody}>{show(value)}</span>;
+}
+
+//===================================================================
+
 export function OwnedPharmacySectionReview({
   section,
   pharmacy,
@@ -206,7 +264,8 @@ export function OwnedPharmacySectionReview({
                 <Button
                   type="button"
                   size="sm"
-                  variant="ghost"
+                  variant="secondary"
+                  className={css.reviewRemoveButton}
                   iconLeft={<Trash2 size={15} />}
                   onClick={() => setSelectedChange(change)}
                 >
@@ -217,11 +276,11 @@ export function OwnedPharmacySectionReview({
 
             <dl className={css.reviewValues}>
               <Field label="Saved / published">
-                {change.richText && change.current ? (
-                  <MarkdownContent value={change.current} />
-                ) : (
-                  <span className={css.reviewBody}>{show(change.current)}</span>
-                )}
+                <ComparisonValue
+                  change={change}
+                  value={change.current}
+                  otherValue={change.submitted}
+                />
               </Field>
 
               <Field
@@ -229,13 +288,11 @@ export function OwnedPharmacySectionReview({
                   isSubmitted ? 'Submitted for review' : 'Saved for submission'
                 }
               >
-                {change.richText && change.submitted ? (
-                  <MarkdownContent value={change.submitted} />
-                ) : (
-                  <span className={css.reviewBody}>
-                    {show(change.submitted)}
-                  </span>
-                )}
+                <ComparisonValue
+                  change={change}
+                  value={change.submitted}
+                  otherValue={change.current}
+                />
               </Field>
             </dl>
           </div>
@@ -251,6 +308,7 @@ export function OwnedPharmacySectionReview({
         cancelLabel="Keep changes"
         destructive
         confirmIconLeft={<Trash2 size={17} />}
+        cancelIconLeft={<X size={17} />}
         isLoading={busy}
         onConfirm={() => void discard()}
         onCancel={() => {

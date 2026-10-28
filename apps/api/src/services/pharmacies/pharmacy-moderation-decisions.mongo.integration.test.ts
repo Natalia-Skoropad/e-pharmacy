@@ -10,6 +10,8 @@ import { User } from '../../models/accounts/user.model';
 import { hashPassword } from '../../utils/auth/password';
 import { decidePharmacyModerationByAdminService } from '../admin/pharmacies/admin.service';
 
+import { moderationReadyPharmacyFields } from '../__tests__/fixtures/pharmacy-moderation-ready.helper';
+
 import { updateMyPharmacyProfileService } from './pharmacy-owner-profile.service';
 import { submitMyPharmacyModerationService } from './pharmacy-moderation.service';
 
@@ -66,12 +68,16 @@ test(
       adminId = admin._id;
 
       const pharmacy = await Pharmacy.create({
+        ...moderationReadyPharmacyFields({
+          email: owner.email,
+          phone: owner.phone,
+        }),
+
         ownerId,
         name: 'Moderation Test Pharmacy',
         status: 'active',
         activatedAt: new Date(),
         approvedAt: new Date(),
-        documents: [],
       });
 
       pharmacyId = pharmacy._id;

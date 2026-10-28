@@ -32,6 +32,7 @@ export type DocumentsPanelProps = Readonly<{
   title?: string;
   description?: ReactNode;
   headerIcon?: ReactNode;
+  headerAction?: ReactNode;
   value: BrowserUploadFile[];
   editable?: boolean;
   readOnlyUploadView?: boolean;
@@ -78,6 +79,7 @@ export type DocumentsPanelProps = Readonly<{
 function formatFileSize(size: number): string {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
@@ -101,6 +103,7 @@ export function DocumentsPanel({
   title = 'Documents',
   description,
   headerIcon = <Files size={22} />,
+  headerAction,
   value,
   editable = true,
   readOnlyUploadView = false,
@@ -139,15 +142,19 @@ export function DocumentsPanel({
     useState<BrowserUploadFile | null>(null);
 
   const canEdit = editable && Boolean(onChange);
+
   const usesResourceActions = Boolean(
     onUploadFiles || onReplaceFile || onDeleteFile
   );
+
   const hasReachedLimit =
     typeof maxFiles === 'number' && value.length >= maxFiles;
+
   const hasPendingResourceMutation = Boolean(pendingDocumentId) || isUploading;
 
   const handleSubmit = async () => {
     if (!onSubmit || disabled || isSaving || submitDisabled) return;
+
     await onSubmit();
   };
 
@@ -155,9 +162,11 @@ export function DocumentsPanel({
     if (!onDownloadFile) return;
 
     const downloadUrl = await onDownloadFile(file);
+
     if (!downloadUrl || typeof document === 'undefined') return;
 
     const anchor = document.createElement('a');
+
     anchor.href = downloadUrl;
     anchor.download = file.name;
     anchor.rel = 'noopener';
@@ -170,6 +179,7 @@ export function DocumentsPanel({
     event: ChangeEvent<HTMLInputElement>
   ) => {
     const selectedFiles = Array.from(event.target.files ?? []);
+
     event.target.value = '';
 
     if (!onUploadFiles || selectedFiles.length === 0) return;
@@ -197,14 +207,17 @@ export function DocumentsPanel({
     event: ChangeEvent<HTMLInputElement>
   ) => {
     const replacement = event.target.files?.[0];
+
     event.target.value = '';
 
     if (!replacement || !onReplaceFile) return;
 
     const replacementValue = toBrowserUploadFile(replacement, 0);
+
     const nextFiles = value.map((file) =>
       file.id === currentFile.id ? replacementValue : file
     );
+
     const selectionError = validateSelection?.(nextFiles) ?? '';
 
     if (selectionError) {
@@ -219,7 +232,9 @@ export function DocumentsPanel({
     if (!pendingDeleteFile || !onDeleteFile) return;
 
     const target = pendingDeleteFile;
+
     setPendingDeleteFile(null);
+
     await onDeleteFile(target);
   };
 
@@ -303,6 +318,7 @@ export function DocumentsPanel({
           description={description}
           titleId={`${id}-title`}
           icon={headerIcon}
+          action={headerAction}
         />
       </div>
 
