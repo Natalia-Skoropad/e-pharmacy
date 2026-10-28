@@ -11,7 +11,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { Building2, CheckCircle2, Files, LogOut, X, Save } from 'lucide-react';
 
-import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -28,15 +27,11 @@ import {
   validatePharmacyDocuments,
 } from '@e-pharmacy/validation/files';
 
-import {
-  getMyPharmacyOwnerDocuments,
-  getOwnedPharmacyMemberships,
-} from '@/lib/api/browser';
+import { getOwnedPharmacyMemberships } from '@/lib/api/browser';
 
 import {
   createOwnedPharmacyDraft,
   getOwnedPharmacyProfile,
-  sendOwnedPharmacyForVerification,
   updateOwnedPharmacyDraft,
   uploadOwnedPharmacyDocument,
 } from '@/lib/api/browser/owned-pharmacy-editor.api';
@@ -79,39 +74,6 @@ function documentIds(documents: readonly PharmacyDocument[]) {
 
 //===================================================================
 
-function serverErrors(cause: unknown): EditorErrors {
-  if (!isApiError(cause)) return {};
-
-  const details = cause.details;
-
-  if (
-    !details ||
-    typeof details !== 'object' ||
-    !('missingFields' in details) ||
-    !Array.isArray(details.missingFields)
-  )
-    return {};
-
-  const errors: EditorErrors = {};
-
-  for (const missing of details.missingFields) {
-    if (typeof missing !== 'string') continue;
-
-    if (
-      missing === 'documents' ||
-      missing === 'ownerDocuments' ||
-      missing in EMPTY_FIELDS
-    ) {
-      errors[missing as keyof EditorErrors] =
-        `${FIELD_LABELS[missing as PharmacyEditorField] ?? missing} is required`;
-    }
-  }
-
-  return errors;
-}
-
-//===================================================================
-
 export function OwnedPharmacyEditor({
   pharmacyId,
   onSaved,
@@ -134,7 +96,7 @@ export function OwnedPharmacyEditor({
   const [errors, setErrors] = useState<EditorErrors>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [busy, setBusy] = useState<'save' | 'verify' | 'upload' | null>(null);
+  const [busy, setBusy] = useState<'save' | 'upload' | null>(null);
   const mutationLock = useRef(false);
   const requestId = useRef<string | null>(null);
 
@@ -308,79 +270,6 @@ export function OwnedPharmacyEditor({
     }
   }
 
-  async function verify() {
-    if (mutationLock.current) return;
-
-    const nextErrors = validatePharmacyEditor(values, documents.length);
-
-    // Only an existing, saved draft can be verified; do not create/submit
-    // half-finished data or silently discard changes.
-    if (Object.keys(nextErrors).length) {
-      setErrors(nextErrors);
-
-      setTab(
-        EDITOR_TABS.find((item) => tabHasErrors(item.id, nextErrors))?.id ??
-          'data'
-      );
-
-      toast.error('Complete the highlighted tabs before verification.');
-
-      return;
-    }
-
-    if (isDirty || !pharmacyId) {
-      toast.error('Save your draft before sending it for verification.');
-
-      return;
-    }
-
-    mutationLock.current = true;
-    setBusy('verify');
-
-    try {
-      const owner = await getMyPharmacyOwnerDocuments();
-
-      if (!owner.documents.length) {
-        setErrors((prev) => ({
-          ...prev,
-          ownerDocuments: 'Upload Owner documents in your personal profile.',
-        }));
-
-        setTab('documents');
-        toast.error('Owner documents are required.');
-
-        return;
-      }
-
-      await sendOwnedPharmacyForVerification(pharmacyId);
-
-      allowNavigateRef.current = true;
-      toast.success('Pharmacy sent for verification.');
-      dispatchPharmacyCounterRefresh();
-      window.location.assign(getOwnedPharmacyPath(pharmacyId));
-    } catch (cause) {
-      const next = serverErrors(cause);
-
-      if (Object.keys(next).length) {
-        setErrors(next);
-
-        setTab(
-          EDITOR_TABS.find((item) => tabHasErrors(item.id, next))?.id ?? tab
-        );
-      }
-
-      toast.error(
-        getProfileErrorMessage(
-          cause,
-          'Could not send pharmacy for verification.'
-        )
-      );
-    } finally {
-      setBusy(null);
-      mutationLock.current = false;
-    }
-  }
-
   async function upload(files: readonly File[]) {
     if (!files.length || !pharmacyId || mutationLock.current) return;
 
@@ -541,7 +430,6 @@ export function OwnedPharmacyEditor({
           actions={
             <div className={css.headerActions}>
               <Button
-                variant="secondary"
                 iconLeft={<Save size={17} />}
                 disabled={
                   busy !== null || !canSaveDraft || (hasSavedDraft && !isDirty)
@@ -549,20 +437,7 @@ export function OwnedPharmacyEditor({
                 isLoading={busy === 'save'}
                 onClick={() => void saveDraft()}
               >
-                Save
-              </Button>
-              <Button
-                iconLeft={<CheckCircle2 size={17} />}
-                disabled={busy !== null || !hasSavedDraft || isDirty}
-                isLoading={busy === 'verify'}
-                onClick={() => void verify()}
-              >
-                <span className={css.fullVerificationLabel}>
-                  Send for verification
-                </span>
-                <span className={css.tabletVerificationLabel}>
-                  To verification
-                </span>
+                Save draft
               </Button>
             </div>
           }

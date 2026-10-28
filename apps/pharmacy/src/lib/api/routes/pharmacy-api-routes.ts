@@ -1,5 +1,6 @@
 import { encodeRouteSegment } from '@e-pharmacy/api-client/contracts';
 import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
+
 import type { PharmacyNoteEntityType } from '@e-pharmacy/types/notes';
 
 //===================================================================
@@ -97,6 +98,21 @@ export const pharmacyApiRoutes = {
 
     ownedVerification: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/send-for-verification`,
+
+    ownedModeration: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/moderation-submission`,
+
+    ownedDeactivationEligibility: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/deactivation-eligibility`,
+
+    ownedPendingChanges: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/pending-changes`,
+
+    ownedDeactivation: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/deactivate`,
+
+    ownedSalesStatistics: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/sales-statistics`,
 
     ownedDocuments: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents`,

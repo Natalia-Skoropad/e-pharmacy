@@ -79,6 +79,17 @@ export const pharmaciesQuerySchema = z.preprocess(
 
 //===============================================================
 
+export const ownedPharmacyDiscardSchema = z
+  .object({
+    section: z.enum(['data', 'about', 'payment', 'documents']),
+    field: z.string().min(1).max(32),
+    expectedRevision: sharedExpectedRevisionSchema,
+  })
+
+  .strict();
+
+//===============================================================
+
 export const pharmacyIdParamsSchema = z.object({
   pharmacyId: mongoIdSchema,
 });
@@ -215,6 +226,23 @@ export const updateMyPharmacyProfileSchema = pharmacyProfileUpdateChangesSchema
 
 export const submitMyPharmacyModerationSchema = z.object({
   changes: pharmacyProfileUpdateChangesSchema,
+  expectedRevision: sharedExpectedRevisionSchema,
+});
+
+//===============================================================
+
+// Explicit pharmacy actions require a short note for the administrator.
+export const ownedPharmacyModerationSchema =
+  submitMyPharmacyModerationSchema.extend({
+    comment: z.string().trim().min(1).max(500),
+  });
+
+export const ownedPharmacyVerificationSchema = z.object({
+  comment: z.string().trim().min(1).max(500),
+});
+
+export const ownedPharmacyDeactivateSchema = z.object({
+  reason: z.string().trim().min(2).max(1000),
   expectedRevision: sharedExpectedRevisionSchema,
 });
 

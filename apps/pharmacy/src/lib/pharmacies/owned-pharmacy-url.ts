@@ -53,6 +53,7 @@ export type OwnedPharmacySearchParams = Readonly<
 
 export const OWNED_PHARMACY_DETAIL_TABS = [
   'information',
+  'data',
   'about',
   'payment',
   'documents',

@@ -15,7 +15,6 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
-import { useAuth } from '@e-pharmacy/auth/react';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import type {
@@ -130,8 +129,7 @@ export function OwnedPharmaciesPageContent({
   initialState,
 }: OwnedPharmaciesPageContentProps) {
   const router = useRouter();
-  const { user } = useAuth();
-  const [canCreate, setCanCreate] = useState(false);
+  const [canCreate, setCanCreate] = useState(true);
   const [membershipReady, setMembershipReady] = useState(false);
   const state = initialState;
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -536,6 +534,7 @@ export function OwnedPharmaciesPageContent({
 
       <section className={css.card} aria-label="Pharmacies search and filters">
         <h2 className={css.visuallyHidden}>Pharmacies search and filters</h2>
+
         <div className={css.searchGrid}>
           <OwnedPharmacySearch
             value={state.pharmacyId}
@@ -565,28 +564,25 @@ export function OwnedPharmaciesPageContent({
               onChange={changeRowsPerPage}
             />
           </div>
-          {data && !listError ? (
-            <CountLabel
-              className={css.countLabel}
-              shown={data.items.length}
-              total={data.total}
-              label="pharmacies"
-              fullWidthOnMobile
-            />
-          ) : null}
-          {membershipReady &&
-          canCreate &&
-          (user?.status === 'new' || user?.status === 'active') ? (
-            <div className={css.createArea}>
-              <Button
-                type="button"
-                onClick={() => router.push(`${PHARMACY_ROUTES.PHARMACIES}/new`)}
-                iconLeft={<Plus size={18} aria-hidden="true" />}
-              >
-                Create pharmacy
-              </Button>
-            </div>
-          ) : null}
+
+          <CountLabel
+            className={css.countLabel}
+            shown={data?.items.length ?? 0}
+            total={data?.total ?? 0}
+            label="pharmacies"
+            fullWidthOnMobile
+          />
+
+          <div className={css.createArea}>
+            <Button
+              type="button"
+              disabled={membershipReady && !canCreate}
+              onClick={() => router.push(`${PHARMACY_ROUTES.PHARMACIES}/new`)}
+              iconLeft={<Plus size={18} aria-hidden="true" />}
+            >
+              Create pharmacy
+            </Button>
+          </div>
         </div>
 
         {listError ? (

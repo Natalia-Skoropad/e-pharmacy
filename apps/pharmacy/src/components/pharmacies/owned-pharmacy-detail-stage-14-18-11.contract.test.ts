@@ -21,6 +21,10 @@ const info = source(
   './OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
 );
 
+const actions = source(
+  './OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
+);
+
 const aboutPayment = source(
   './OwnedPharmacyDetailPageContent/OwnedPharmacyAboutPaymentTabs.tsx'
 );
@@ -54,14 +58,14 @@ test('owner detail uses scoped response, reusable UI and status-aware owner acti
   }
 
   assert.match(detail, /getOwnedPharmacyDetail\(pharmacyId/);
-  assert.match(detail, /sendOwnedPharmacyForVerification\(pharmacyId\)/);
-  assert.match(detail, /membershipRole === 'owner'/);
+  assert.match(actions, /sendOwnedPharmacyForVerification\(pharmacy\.id/);
+  assert.match(actions, /submitOwnedPharmacyModeration\(pharmacy\.id/);
+  assert.match(actions, /deactivateOwnedPharmacy\(pharmacy\.id/);
+  assert.match(actions, /membershipRole !== 'owner'/);
   assert.match(detail, /changes_requested/);
 
-  assert.doesNotMatch(
-    detail,
-    /Manage pharmacy status|Pharmacy owner|Published working hours/
-  );
+  assert.match(actions, /Manage pharmacy status/);
+  assert.doesNotMatch(detail, /Published working hours/);
 
   assert.match(backend, /parseOwnedPharmacyDetailResponse/);
 });
@@ -74,7 +78,8 @@ test('owner detail dates come from persisted timestamps and audit, not guesses',
   assert.match(service, /submission\.createdAt\.toISOString\(\)/);
   assert.match(parser, /isoDate\(dates\.createdAt\)/);
   assert.match(parser, /isoDate\(dates\.submittedAt\)/);
-  assert.match(info, /<DateValue value=\{dates\.submittedAt\}/);
+  assert.match(info, /<DateValue value=\{dates\.createdAt\}/);
+  assert.match(info, /<DateValue value=\{dates\.updatedAt\}/);
 });
 
 //===================================================================

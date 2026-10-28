@@ -26,7 +26,7 @@ const fields = readFileSync(
 
 //===================================================================
 
-test('one Save action lives beside the page title, with mobile stacked actions', () => {
+test('one Save draft action lives beside the page title, with mobile stacked actions', () => {
   // Locate the actual button by its handler, regardless of JSX whitespace
   // or whether its label is wrapped by presentation markup.
   const draftSaveButtons =
@@ -35,7 +35,13 @@ test('one Save action lives beside the page title, with mobile stacked actions',
     ) ?? [];
 
   assert.equal(draftSaveButtons.length, 1);
-  assert.match(draftSaveButtons[0]!, />\s*Save\s*<\/Button>/);
+
+  assert.doesNotMatch(
+    editor,
+    /<Button[\s\S]*?>\s*Send for verification\s*<\/Button>/
+  );
+
+  assert.match(draftSaveButtons[0]!, />\s*Save draft\s*<\/Button>/);
 
   assert.match(
     editor,

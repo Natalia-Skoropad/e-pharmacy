@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import {
   Activity,
   Building2,
-  CheckCircle2,
   CircleHelp,
   ClipboardList,
   CreditCard,
@@ -15,7 +14,6 @@ import {
   MessageSquareText,
   Package,
   PackageSearch,
-  Pencil,
   ShoppingBag,
   Star,
   UsersRound,
@@ -24,7 +22,6 @@ import {
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
 
-import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
@@ -33,7 +30,6 @@ import {
   ProfileResourceState,
   ProfileSectionHeader,
 } from '@e-pharmacy/ui/profile';
-import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
   StatsCard,
@@ -43,7 +39,6 @@ import {
 import { formatMoney } from '@e-pharmacy/utils';
 
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
-import { sendOwnedPharmacyForVerification } from '@/lib/api/browser/owned-pharmacy-editor.api';
 
 import {
   createPharmacyNote,
@@ -57,15 +52,15 @@ import {
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
-import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
-import { dispatchPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
-import { OwnedPharmacyEditor } from '../OwnedPharmacyEditor/OwnedPharmacyEditor';
 import { Information } from './OwnedPharmacyInformationTab';
-import { About, Payment } from './OwnedPharmacyAboutPaymentTabs';
+import { Payment } from './OwnedPharmacyAboutPaymentTabs';
 import { DocumentsResource } from './OwnedPharmacyDocumentsTab';
+import { OwnedPharmacyEditableTab } from './OwnedPharmacyEditableTab';
+import { OwnedPharmacyActions } from './OwnedPharmacyActions';
+import { OwnedPharmacySectionReview } from './OwnedPharmacySectionReview';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -77,6 +72,7 @@ const TABS: TabItem<OwnedPharmacyDetailTab>[] = [
     label: 'Pharmacy information',
     icon: <Building2 size={17} />,
   },
+  { value: 'data', label: 'Pharmacy data', icon: <ClipboardList size={17} /> },
   { value: 'about', label: 'About pharmacy', icon: <FileText size={17} /> },
   {
     value: 'payment',
@@ -106,6 +102,8 @@ const TABS: TabItem<OwnedPharmacyDetailTab>[] = [
 const DESCRIPTIONS: Record<OwnedPharmacyDetailTab, string> = {
   information:
     'Review published pharmacy details separately from submitted changes awaiting moderation.',
+
+  data: 'Edit your pharmacy photo, contacts, location and working hours.',
 
   about: 'Review the approved pharmacy description and any proposed changes.',
 
@@ -190,11 +188,8 @@ export function OwnedPharmacyDetailPageContent({
   activeTab: OwnedPharmacyDetailTab;
 }>) {
   const router = useRouter();
-  const toast = useToast();
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<DetailResult | null>(null);
-  const [editing, setEditing] = useState(false);
-  const [sending, setSending] = useState(false);
 
   const isCurrent =
     result?.pharmacyId === pharmacyId && result?.retry === retry;
@@ -244,52 +239,6 @@ export function OwnedPharmacyDetailPageContent({
   }, [pharmacyId, retry]);
 
   const refresh = useCallback(() => setRetry((n) => n + 1), []);
-
-  const canSubmit =
-    pharmacy?.membershipRole === 'owner' &&
-    (pharmacy.status === 'new' ||
-      (pharmacy.status === 'on_verification' &&
-        pharmacy.reviewState === 'changes_requested'));
-
-  const sendForVerification = async () => {
-    if (!canSubmit || sending) return;
-
-    setSending(true);
-
-    try {
-      await sendOwnedPharmacyForVerification(pharmacyId);
-
-      dispatchPharmacyCounterRefresh();
-
-      toast.success('Pharmacy sent for verification.');
-      refresh();
-    } catch (cause) {
-      toast.error(
-        getProfileErrorMessage(
-          cause,
-          'Complete and save the pharmacy details and documents before verification.'
-        )
-      );
-    } finally {
-      setSending(false);
-    }
-  };
-
-  if (
-    editing &&
-    pharmacy?.membershipRole === 'owner' &&
-    pharmacy.status === 'new'
-  ) {
-    return (
-      <OwnedPharmacyEditor
-        pharmacyId={pharmacyId}
-        onSaved={() => {
-          setEditing(false);
-          refresh();
-        }}
-      />
-    );
-  }
 
   if (error)
     return (
@@ -362,28 +311,8 @@ export function OwnedPharmacyDetailPageContent({
             titleId="owned-pharmacy-title"
             icon={<Building2 size={23} aria-hidden="true" />}
             actions={
-              pharmacy?.membershipRole === 'owner' ? (
-                <div className={css.actions}>
-                  {pharmacy.status === 'new' && (
-                    <Button
-                      variant="secondary"
-                      iconLeft={<Pencil size={17} />}
-                      onClick={() => setEditing(true)}
-                    >
-                      Edit draft
-                    </Button>
-                  )}
-                  {canSubmit && (
-                    <Button
-                      iconLeft={<CheckCircle2 size={17} />}
-                      isLoading={sending}
-                      disabled={sending}
-                      onClick={() => void sendForVerification()}
-                    >
-                      Send for verification
-                    </Button>
-                  )}
-                </div>
+              pharmacy ? (
+                <OwnedPharmacyActions pharmacy={pharmacy} onRefresh={refresh} />
               ) : undefined
             }
           />
@@ -465,19 +394,71 @@ export function OwnedPharmacyDetailPageContent({
             id={`owned-pharmacy-detail-panel-${activeTab}`}
             aria-labelledby={`owned-pharmacy-detail-tab-${activeTab}`}
           >
-            {activeTab !== 'documents' && activeTab !== 'comments' && (
+            {((loading && activeTab !== 'comments') ||
+              !['data', 'about', 'payment', 'documents', 'comments'].includes(
+                activeTab
+              )) && (
               <ProfileSectionHeader
                 title={selected.label}
                 description={DESCRIPTIONS[activeTab]}
                 icon={selected.icon ?? <Building2 size={21} />}
               />
             )}
-            {activeTab === 'documents' ? (
-              <DocumentsResource key={pharmacyId} pharmacyId={pharmacyId} />
+            {loading && activeTab !== 'comments' ? (
+              <ProfileResourceState
+                variant="loading"
+                title="Loading pharmacy details"
+                description="The pharmacy overview is being loaded."
+              />
+            ) : detail && pharmacy && activeTab === 'information' ? (
+              <Information detail={detail} />
+            ) : pharmacy &&
+              ['data', 'about', 'payment', 'documents'].includes(activeTab) ? (
+              <div className={css.formStack}>
+                {pharmacy.membershipRole === 'owner' ? (
+                  <OwnedPharmacySectionReview
+                    section={
+                      activeTab as 'data' | 'about' | 'payment' | 'documents'
+                    }
+                    pharmacy={pharmacy}
+                    onChanged={refresh}
+                  />
+                ) : null}
+                {activeTab === 'payment' &&
+                pharmacy.membershipRole !== 'owner' ? (
+                  <Payment pharmacy={pharmacy} />
+                ) : activeTab === 'documents' &&
+                  pharmacy.membershipRole !== 'owner' ? (
+                  <DocumentsResource key={pharmacyId} pharmacyId={pharmacyId} />
+                ) : (
+                  <OwnedPharmacyEditableTab
+                    key={`${pharmacy.updatedAt}:${activeTab}`}
+                    pharmacy={pharmacy}
+                    tab={
+                      activeTab as 'data' | 'about' | 'payment' | 'documents'
+                    }
+                    readOnly={
+                      pharmacy.membershipRole !== 'owner' ||
+                      !(
+                        pharmacy.status === 'new' ||
+                        pharmacy.status === 'active' ||
+                        ((pharmacy.status === 'on_verification' ||
+                          pharmacy.status === 'on_moderation') &&
+                          pharmacy.reviewState === 'changes_requested')
+                      )
+                    }
+                    onSaved={refresh}
+                  />
+                )}
+              </div>
             ) : activeTab === 'comments' ? (
               <EntityComments
                 entityKey={`pharmacy:${pharmacyId}`}
+                presentation="profile"
+                title="Comments"
                 description={DESCRIPTIONS.comments}
+                emptyTitle="No internal comments yet"
+                emptyText="Internal pharmacy comments will appear here."
                 load={(page, options) =>
                   getPharmacyNotes('pharmacy', pharmacyId, page, options)
                 }
@@ -494,18 +475,6 @@ export function OwnedPharmacyDetailPageContent({
                   deletePharmacyNote('pharmacy', pharmacyId, id, options)
                 }
               />
-            ) : loading ? (
-              <ProfileResourceState
-                variant="loading"
-                title="Loading pharmacy details"
-                description="The pharmacy overview is being loaded."
-              />
-            ) : detail && activeTab === 'information' ? (
-              <Information detail={detail} />
-            ) : pharmacy && activeTab === 'about' ? (
-              <About pharmacy={pharmacy} />
-            ) : pharmacy && activeTab === 'payment' ? (
-              <Payment pharmacy={pharmacy} />
             ) : deferred ? (
               <ProfileResourceState
                 variant="empty"

@@ -12,8 +12,10 @@ import {
 
 import Button from '../../primitives/Button/Button';
 import { CloseIconButton } from '../../primitives/CloseIconButton/CloseIconButton';
+
 import ModalBase from '../../overlays/ModalBase/ModalBase';
 import ModalRoot from '../../overlays/ModalRoot/ModalRoot';
+
 import FormFieldLayout from '../FormFieldLayout/FormFieldLayout';
 import { SelectField } from '../SelectField/SelectField';
 
@@ -42,22 +44,33 @@ export type MarkdownTextareaProps = Readonly<{
 
 //===================================================================
 
-type EditorBlockType = 'p' | 'h1' | 'h2' | 'h3';
+type EditorBlockType = 'p' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
 //===================================================================
 
 const BLOCK_STYLE_OPTIONS = [
   { value: 'p', label: 'Text' },
-  { value: 'h1', label: 'Heading 1' },
   { value: 'h2', label: 'Heading 2' },
   { value: 'h3', label: 'Heading 3' },
+  { value: 'h4', label: 'Heading 4' },
+  { value: 'h5', label: 'Heading 5' },
+  { value: 'h6', label: 'Heading 6' },
 ] as const;
 
 //===================================================================
 
-const BLOCK_TAGS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'UL', 'OL']);
-
-//===================================================================
+const BLOCK_TAGS = new Set([
+  'P',
+  'DIV',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'UL',
+  'OL',
+]);
 
 //===================================================================
 
@@ -74,16 +87,23 @@ function serializeInlineNode(node: Node): string {
   switch (element.tagName) {
     case 'BR':
       return '\n';
+
     case 'STRONG':
+
     case 'B':
       return `**${children}**`;
+
     case 'EM':
+
     case 'I':
       return `*${children}*`;
+
     case 'A': {
       const href = element.getAttribute('href')?.trim();
+
       return href ? `[${children || href}](${href})` : children;
     }
+
     default:
       return children;
   }
@@ -127,6 +147,9 @@ function serializeBlockNode(node: Node): string {
   if (element.tagName === 'H1') return `# ${content}\n\n`;
   if (element.tagName === 'H2') return `## ${content}\n\n`;
   if (element.tagName === 'H3') return `### ${content}\n\n`;
+  if (element.tagName === 'H4') return `#### ${content}\n\n`;
+  if (element.tagName === 'H5') return `##### ${content}\n\n`;
+  if (element.tagName === 'H6') return `###### ${content}\n\n`;
 
   if (element.tagName === 'P' || element.tagName === 'DIV') {
     return `${content}\n\n`;
@@ -150,6 +173,7 @@ function editorToMarkdown(editor: HTMLElement): string {
 
 function normalizeLinkUrl(value: string): string | null {
   const rawValue = value.trim();
+
   if (!rawValue) return null;
 
   const candidate = /^(?:https?:\/\/|mailto:)/i.test(rawValue)
@@ -295,6 +319,7 @@ function MarkdownTextarea({
     if (disabled) return;
 
     const url = normalizeLinkUrl(linkUrl);
+
     if (!url) {
       setLinkError('Enter a valid web or email link.');
       return;
@@ -532,6 +557,7 @@ function MarkdownTextarea({
                   }
                   onChange={(event) => {
                     setLinkUrl(event.target.value);
+
                     if (linkError) setLinkError('');
                   }}
                   onKeyDown={(event) => {
@@ -554,6 +580,7 @@ function MarkdownTextarea({
                 >
                   Cancel
                 </Button>
+
                 <Button
                   type="button"
                   size="sm"

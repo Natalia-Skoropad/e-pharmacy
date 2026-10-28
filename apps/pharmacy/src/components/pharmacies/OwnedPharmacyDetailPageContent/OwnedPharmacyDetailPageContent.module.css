@@ -18,6 +18,11 @@
   box-shadow: var(--shadow-card);
 }
 
+/* The status dropdown must remain visible outside the header card on mobile. */
+.page > .card:first-child {
+  overflow: visible;
+}
+
 .headerStack,
 .tabsStack,
 .tabPanel,
@@ -372,4 +377,167 @@
 
 .previewImage {
   object-fit: contain;
+}
+
+/* Owner-specific actions and per-tab moderation comparisons. */
+.sectionActions {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+  margin-top: 14px;
+}
+
+.reviewGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.reviewItem {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.reviewItem > strong {
+  font-size: var(--fz-14);
+  color: var(--color-text-primary);
+}
+
+.reviewValues {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .reviewValues {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sectionActions > button {
+    width: 100%;
+  }
+}
+
+.statusMenu {
+  position: relative;
+  display: inline-grid;
+  min-width: 0;
+}
+
+.statusMenu > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusMenuOptions {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  padding: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.approveAction,
+.dangerAction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  color: var(--color-text-primary);
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.approveAction:hover:not(:disabled),
+.approveAction:focus-visible:not(:disabled),
+.dangerAction:hover:not(:disabled),
+.dangerAction:focus-visible:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.approveAction {
+  color: #167e46;
+  background: #e7f6eb;
+}
+
+.dangerAction {
+  color: var(--color-error);
+  background: #fff0ef;
+}
+
+.statusMenuOptions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.reviewValues > .field {
+  min-width: 0;
+}
+
+.reviewBody {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media only screen and (max-width: 767px) {
+  .statusMenu,
+  .statusMenu > button {
+    width: 100%;
+  }
+
+  .statusMenu > button {
+    justify-content: center;
+  }
+  .statusMenuOptions {
+    left: 0;
+    right: auto;
+    width: 100%;
+  }
+}
+
+.reviewFeedback {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+}
+
+.reviewFeedback > strong {
+  font-size: var(--fz-14);
+}
+.reviewFeedback > p {
+  margin: 0;
+  line-height: var(--lh-base);
+}
+
+.reviewItemHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reviewItemHeading > strong {
+  font-size: var(--fz-14);
+  color: var(--color-text-primary);
 }

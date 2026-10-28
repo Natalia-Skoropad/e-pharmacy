@@ -4,12 +4,10 @@ import mongoose, { Types, type ClientSession } from 'mongoose';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-document-validation';
 import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/owners/pharmacy-owner-document-validation';
+
 import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';
 import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
-
-import type { AdminPharmacyDocumentDto } from '../../types/admin/pharmacies/admin-pharmacy-document';
-
 import { PharmacyRegistrationUploadSession } from '../../models/owners/pharmacyRegistrationUploadSession.model';
 
 import type {
@@ -20,8 +18,11 @@ import type {
 } from '../../schemas/shared/pharmacy-document.schema';
 
 import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacies/pharmacy';
+import type { AdminPharmacyDocumentDto } from '../../types/admin/pharmacies/admin-pharmacy-document';
+
 import { httpError } from '../../utils/http/httpError';
 import { decodeAndVerifyDocumentUpload } from '../../utils/documents/documentUpload';
+
 import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 
 //===================================================================
@@ -467,9 +468,31 @@ export async function resolvePrivatePharmacyDocumentSelections(
     documents.map((document) => [String(document._id), document])
   );
 
-  const ordered = ids.map((id) => byId.get(id));
+  // Older seeded/migrated pharmacy documents may be stored as trusted
+  // metadata directly on this pharmacy, without a PharmacyDocumentFile row.
+  // Reattaching them must not fail. Never accept an arbitrary client-supplied
+  // document ID: the fallback is limited to this pharmacy's saved metadata.
+  const pharmacyQuery = Pharmacy.findById(pharmacyId).select(
+    'documents pendingModeration.documents'
+  );
 
-  if (ordered.some((document) => !document)) {
+  if (session) pharmacyQuery.session(session);
+
+  const existingPharmacy = await pharmacyQuery;
+
+  const trustedAttached = new Map(
+    [
+      ...(existingPharmacy?.documents ?? []),
+      ...(existingPharmacy?.pendingModeration?.documents ?? []),
+    ].map((document) => [document.id, document])
+  );
+
+  const ordered = ids.map((id) => ({
+    uploaded: byId.get(id),
+    attached: trustedAttached.get(id),
+  }));
+
+  if (ordered.some(({ uploaded, attached }) => !uploaded && !attached)) {
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
       'One or more pharmacy documents are unavailable.'
@@ -485,7 +508,9 @@ export async function resolvePrivatePharmacyDocumentSelections(
     { session }
   );
 
-  return ordered.map((document) => serializeDocument(document!));
+  return ordered.map(({ uploaded, attached }) =>
+    uploaded ? serializeDocument(uploaded) : attached!
+  );
 }
 
 //===================================================================

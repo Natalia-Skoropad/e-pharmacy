@@ -6,11 +6,11 @@
   overflow-wrap: anywhere;
 }
 
-.content :is(h1, h2, h3, p, ul, ol) {
+.content :is(h1, h2, h3, h4, h5, h6, p, ul, ol) {
   margin: 0 0 12px;
 }
 
-.content :is(h1, h2, h3) {
+.content :is(h1, h2, h3, h4, h5, h6) {
   color: var(--color-accent);
   line-height: var(--lh-heading);
 }
@@ -25,6 +25,18 @@
 
 .content h3 {
   font-size: var(--fz-20);
+}
+
+.content h4 {
+  font-size: var(--fz-18);
+}
+
+.content h5 {
+  font-size: var(--fz-16);
+}
+
+.content h6 {
+  font-size: var(--fz-14);
 }
 
 .content :is(ul, ol) {

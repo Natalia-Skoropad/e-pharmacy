@@ -88,6 +88,7 @@ export type OwnedPharmacyEditorTabContentProps = Readonly<{
   documents: PharmacyDocument[];
   setDocuments: Dispatch<SetStateAction<PharmacyDocument[]>>;
   pharmacyId?: string;
+  documentsEditable?: boolean;
   upload: (files: readonly File[]) => Promise<void>;
 }>;
 
@@ -106,6 +107,7 @@ export function OwnedPharmacyEditorTabContent({
   documents,
   setDocuments,
   pharmacyId,
+  documentsEditable = true,
   upload,
 }: OwnedPharmacyEditorTabContentProps) {
   const documentError = errors.documents;
@@ -124,6 +126,7 @@ export function OwnedPharmacyEditorTabContent({
               description="Clients see this photo on your pharmacy page and next to your pharmacy in search results and listings."
               icon={<Camera size={22} aria-hidden="true" />}
             />
+
             <div className={css.pictureColumn}>
               <PictureCard
                 compactLayout
@@ -167,10 +170,12 @@ export function OwnedPharmacyEditorTabContent({
               description="Tell clients what your pharmacy is called, how to contact it and where to find it."
               icon={<Building2 size={22} aria-hidden="true" />}
             />
+
             <div className={css.fieldGroups}>
               <div className={css.fieldGroup}>
                 <div className={css.nameFields}>
                   {input('name', { maxLength: PHARMACY_NAME_MAX_LENGTH })}
+
                   <CommentInput
                     id="pharmacy-short-description"
                     name="shortDescription"
@@ -189,12 +194,14 @@ export function OwnedPharmacyEditorTabContent({
                   />
                 </div>
               </div>
+
               <div className={css.fieldGroup}>
                 <div className={css.fieldsGrid}>
                   {input('phone', { maxLength: USER_PHONE_MAX_LENGTH })}
                   {input('email', { maxLength: USER_EMAIL_MAX_LENGTH })}
                 </div>
               </div>
+
               <div className={css.fieldGroup}>
                 <div className={css.fieldsGrid}>
                   {input('region', {
@@ -221,6 +228,7 @@ export function OwnedPharmacyEditorTabContent({
               description="Let clients know when your pharmacy is open and when they can visit or collect an order."
               icon={<Clock3 size={22} aria-hidden="true" />}
             />
+
             <WorkingHoursInput
               id="new-pharmacy-working-hours"
               value={values.workingHours}
@@ -240,6 +248,7 @@ export function OwnedPharmacyEditorTabContent({
             description="Tell clients about the pharmacy, services and pickup information."
             icon={<FileText size={22} aria-hidden="true" />}
           />
+
           <PharmacyAboutFields
             value={values.description}
             disabled={busy !== null}
@@ -300,8 +309,10 @@ export function OwnedPharmacyEditorTabContent({
             maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
             accept={PHARMACY_DOCUMENT_ACCEPT}
             hint={`PDF, DOC, DOCX, JPG, PNG or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
-            editable
+            editable={documentsEditable}
             onChange={(selection) => {
+              if (!documentsEditable) return;
+
               const incoming = selection.flatMap((file) =>
                 file.file ? [file.file] : []
               );
@@ -314,6 +325,12 @@ export function OwnedPharmacyEditorTabContent({
               const attached = new Set(
                 selection.map((file) => file.documentId)
               );
+
+              if (documents.some((file) => !attached.has(file.id))) {
+                toast.success(
+                  'Document removed from selection. Save changes to confirm.'
+                );
+              }
 
               setDocuments((current) =>
                 current.filter((file) => attached.has(file.id))
@@ -330,6 +347,7 @@ export function OwnedPharmacyEditorTabContent({
             }
             onDownloadFile={async (file) => {
               if (!pharmacyId || !file.documentId) return '';
+
               try {
                 const blob = await downloadOwnedPharmacyDocument(
                   pharmacyId,

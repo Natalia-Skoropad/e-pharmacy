@@ -30,6 +30,11 @@ import {
   getOwnedPharmacyProfile,
   updateOwnedPharmacyDraft,
   submitOwnedPharmacyForVerification,
+  submitOwnedPharmacyForModeration,
+  deactivateOwnedPharmacy,
+  getOwnedPharmacyDeactivationEligibility,
+  discardOwnedPharmacyPendingSection,
+  getOwnedPharmacySalesStatistics,
   uploadOwnedPharmacyDocument,
   downloadOwnedPharmacyDocument,
   getMyPharmacyDocument,
@@ -41,6 +46,8 @@ import {
   updateMyPharmacyProfile,
   uploadMyPharmacyDocument,
 } from '../../controllers/pharmacies/pharmacy.controller';
+
+import { getPharmacySearchOptions } from '../../controllers/pharmacies/pharmacy-public.controller';
 
 import { USER_ROLES } from '../../constants/auth/auth';
 
@@ -63,15 +70,18 @@ import {
   pharmacyReviewParamsSchema,
   pharmaciesQuerySchema,
   sendMyPharmacyForVerificationSchema,
+  ownedPharmacyModerationSchema,
+  ownedPharmacyVerificationSchema,
+  ownedPharmacyDeactivateSchema,
+  ownedPharmacyDiscardSchema,
   submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
   uploadMyPharmacyDocumentSchema,
 } from '../../schemas/pharmacies/pharmacy.schema';
 
+import { orderSalesStatisticsQuerySchema } from '../../schemas/orders/order.schema';
 import { emptyQuerySchema } from '../../schemas/shared';
 import { pharmacySearchOptionsQuerySchema } from '../../schemas/pharmacies/pharmacy-search-options.schema';
-
-import { getPharmacySearchOptions } from '../../controllers/pharmacies/pharmacy-public.controller';
 
 import {
   ownedPharmacyRegistryListQuerySchema,
@@ -188,13 +198,73 @@ pharmacyRoutes.post(
 
   validate({
     params: ownedPharmacyRegistryParamsSchema,
-    body: sendMyPharmacyForVerificationSchema,
+    body: ownedPharmacyVerificationSchema,
   }),
 
   ctrlWrapper(submitOwnedPharmacyForVerification)
 );
 
 //=================================================================================
+
+pharmacyRoutes.post(
+  '/me/pharmacies/:pharmacyId/moderation-submission',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: ownedPharmacyModerationSchema,
+  }),
+
+  ctrlWrapper(submitOwnedPharmacyForModeration)
+);
+
+//===============================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/:pharmacyId/deactivation-eligibility',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    query: emptyQuerySchema,
+  }),
+
+  ctrlWrapper(getOwnedPharmacyDeactivationEligibility)
+);
+
+//===============================================================
+
+pharmacyRoutes.delete(
+  '/me/pharmacies/:pharmacyId/pending-changes',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: ownedPharmacyDiscardSchema,
+  }),
+
+  ctrlWrapper(discardOwnedPharmacyPendingSection)
+);
+
+//===============================================================
+
+pharmacyRoutes.post(
+  '/me/pharmacies/:pharmacyId/deactivate',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: ownedPharmacyDeactivateSchema,
+  }),
+
+  ctrlWrapper(deactivateOwnedPharmacy)
+);
+
+//===============================================================
 
 pharmacyRoutes.post(
   '/me/pharmacies/:pharmacyId/documents',
@@ -235,6 +305,21 @@ pharmacyRoutes.get(
 );
 
 //=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/:pharmacyId/sales-statistics',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    query: orderSalesStatisticsQuerySchema,
+  }),
+
+  ctrlWrapper(getOwnedPharmacySalesStatistics)
+);
+
+//===============================================================
 
 pharmacyRoutes.get(
   '/me/memberships',

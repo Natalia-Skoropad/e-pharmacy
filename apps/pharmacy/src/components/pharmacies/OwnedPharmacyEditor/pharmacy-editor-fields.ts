@@ -142,6 +142,48 @@ export function valuesFromPharmacy(
 
 //===================================================================
 
+// Saved moderation drafts must remain editable after reloading their pharmacy page.
+export function effectivePharmacyEditorValues(
+  pharmacy: MyPharmacyProfile
+): PharmacyEditorValues {
+  const values = valuesFromPharmacy(pharmacy);
+  const pending = pharmacy.pendingModeration;
+
+  if (!pending) return values;
+
+  for (const key of [
+    'name',
+    'phone',
+    'email',
+    'imageUrl',
+    'workingHours',
+    'shortDescription',
+    'description',
+  ] as const) {
+    if (pending[key] !== undefined) values[key] = pending[key] ?? '';
+  }
+
+  for (const key of ['address', 'settlement', 'region'] as const) {
+    if (pending.location?.[key] !== undefined)
+      values[key] = pending.location[key] ?? '';
+  }
+
+  for (const key of [
+    'recipientName',
+    'taxId',
+    'iban',
+    'bankName',
+    'receiptEmail',
+    'paymentPurpose',
+  ] as const) {
+    if (pending.bankDetails?.[key] !== undefined)
+      values[key] = pending.bankDetails[key] ?? '';
+  }
+  return values;
+}
+
+//===================================================================
+
 export function buildPharmacyEditorPayload(
   current: PharmacyEditorValues,
   saved?: PharmacyEditorValues

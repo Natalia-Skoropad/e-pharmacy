@@ -131,8 +131,9 @@ test('both large files use direct canonical submodules and preserve the public c
   assert.match(editorTab, /<WorkingHoursInput/);
   assert.match(detail, /<DocumentsResource/);
   assert.match(detail, /<Information detail=\{detail\}/);
-  assert.match(detail, /<About pharmacy=\{pharmacy\}/);
-  assert.match(detail, /<Payment pharmacy=\{pharmacy\}/);
+  assert.match(detail, /<OwnedPharmacyEditableTab/);
+  assert.match(detail, /<OwnedPharmacySectionReview/);
+  assert.match(detail, /<OwnedPharmacyActions/);
 
   assert.ok(editor.split('\n').length < 650);
   assert.ok(detail.split('\n').length < 650);

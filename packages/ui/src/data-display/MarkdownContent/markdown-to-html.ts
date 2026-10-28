@@ -40,7 +40,7 @@ export function markdownToHtml(markdown: string): string {
       continue;
     }
 
-    const heading = /^(#{1,3})\s+(.+)$/.exec(line);
+    const heading = /^(#{1,6})\s+(.+)$/.exec(line);
 
     if (heading) {
       const level = heading[1]?.length ?? 1;

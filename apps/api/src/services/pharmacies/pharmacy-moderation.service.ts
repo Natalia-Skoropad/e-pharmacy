@@ -93,7 +93,9 @@ function assertReadyForVerification(pharmacy: PharmacyHydratedDocument): void {
 export async function submitMyPharmacyModerationService(
   userId: string,
   input: SubmitMyPharmacyModerationInput,
-  auditRequestId?: string
+  auditRequestId?: string,
+  pharmacyId?: string,
+  comment?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
   const mongoSession = await mongoose.startSession();
 
@@ -107,7 +109,8 @@ export async function submitMyPharmacyModerationService(
       const { pharmacy, membershipRole } = await findPharmacyForProfileAccess(
         userId,
         'submit_profile',
-        mongoSession
+        mongoSession,
+        pharmacyId
       );
 
       const isResubmission =
@@ -172,6 +175,93 @@ export async function submitMyPharmacyModerationService(
         );
       }
 
+      // Validate the effective pharmacy before submitting changes for review.
+      // A pending null/blank field may not invalidate the published record,
+      // but must block an incomplete proposed replacement from moderation.
+      const pendingBeforeSubmission = hasNewChanges
+        ? buildPendingModerationPayload(
+            pharmacy.pendingModeration,
+            resolvedChanges,
+            pharmacy.location
+          )
+        : normalizePendingModerationPayload(pharmacy.pendingModeration);
+
+      const effectiveLocation = {
+        ...pharmacy.location,
+        ...pendingBeforeSubmission.location,
+      };
+
+      const effectiveBank = {
+        ...pharmacy.bankDetails,
+        ...pendingBeforeSubmission.bankDetails,
+      };
+
+      const effectiveFields: Record<string, unknown> = {
+        name:
+          pendingBeforeSubmission.name !== undefined
+            ? pendingBeforeSubmission.name
+            : pharmacy.name,
+
+        phone:
+          pendingBeforeSubmission.phone !== undefined
+            ? pendingBeforeSubmission.phone
+            : pharmacy.phone,
+
+        email:
+          pendingBeforeSubmission.email !== undefined
+            ? pendingBeforeSubmission.email
+            : pharmacy.email,
+
+        imageUrl:
+          pendingBeforeSubmission.imageUrl !== undefined
+            ? pendingBeforeSubmission.imageUrl
+            : pharmacy.imageUrl,
+
+        description:
+          pendingBeforeSubmission.description !== undefined
+            ? pendingBeforeSubmission.description
+            : pharmacy.description,
+
+        shortDescription:
+          pendingBeforeSubmission.shortDescription !== undefined
+            ? pendingBeforeSubmission.shortDescription
+            : pharmacy.shortDescription,
+
+        workingHours:
+          pendingBeforeSubmission.workingHours !== undefined
+            ? pendingBeforeSubmission.workingHours
+            : pharmacy.workingHours,
+
+        address: effectiveLocation.address,
+        settlement: effectiveLocation.settlement,
+        region: effectiveLocation.region,
+        countryCode: effectiveLocation.countryCode,
+        recipientName: effectiveBank.recipientName,
+        taxId: effectiveBank.taxId,
+        iban: effectiveBank.iban,
+        bankName: effectiveBank.bankName,
+        receiptEmail: effectiveBank.receiptEmail,
+        paymentPurpose: effectiveBank.paymentPurpose,
+
+        documents:
+          pendingBeforeSubmission.documents?.length ??
+          pharmacy.documents?.length,
+      };
+
+      const missing = Object.entries(effectiveFields)
+        .filter(([, value]) => !value)
+        .map(([name]) => name);
+
+      if (missing.length) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Complete all required pharmacy fields before moderation.',
+          { missingFields: missing },
+
+          PHARMACY_PROFILE_INCOMPLETE_ERROR_CODE
+        );
+      }
+
       const pendingModeration = hasNewChanges
         ? buildPendingModerationPayload(
             pharmacy.pendingModeration,
@@ -232,7 +322,8 @@ export async function submitMyPharmacyModerationService(
         ),
 
         mongoSession,
-        auditRequestId
+        auditRequestId,
+        comment
       );
 
       result = {
@@ -262,7 +353,8 @@ export async function submitMyPharmacyModerationService(
 export async function sendMyPharmacyForVerificationService(
   userId: string,
   auditRequestId?: string,
-  pharmacyId?: string
+  pharmacyId?: string,
+  comment?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
   const session = await mongoose.startSession();
 
@@ -343,7 +435,8 @@ export async function sendMyPharmacyForVerificationService(
         ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
         ['verificationSubmission'],
         session,
-        auditRequestId
+        auditRequestId,
+        comment
       );
 
       return {

@@ -1,4 +1,5 @@
 import type { Request } from 'express';
+import type { z } from 'zod';
 
 import { documentAttachmentDisposition } from '../shared/document-attachment';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
@@ -9,9 +10,13 @@ import type {
   SendMyPharmacyForVerificationInput,
   SubmitMyPharmacyModerationInput,
   UpdateMyPharmacyProfileInput,
+  ownedPharmacyDeactivateSchema,
+  ownedPharmacyDiscardSchema,
+  ownedPharmacyModerationSchema,
 } from '../../schemas/pharmacies/pharmacy.schema';
 
 import type { PharmacyDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
+import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schema';
 
 import type {
   OwnedPharmacyRegistryParams,
@@ -34,7 +39,16 @@ import {
   getPrivatePharmacyDocumentContentService,
 } from '../../services/pharmacies/pharmacy-document.service';
 
+import { getOrderSalesStatisticsForPharmacyService } from '../../services/orders/order-sales-statistics.service';
+import { getPharmacyMembership } from '../../services/pharmacies/pharmacy-membership.service';
 import { createPharmacyDraftService } from '../../services/pharmacies/pharmacy-create.service';
+
+import {
+  deactivateOwnedPharmacyService,
+  getOwnedPharmacyDeactivationEligibilityService,
+} from '../../services/pharmacies/pharmacy-owner-deactivation.service';
+
+import { discardOwnedPharmacyPendingSectionService } from '../../services/pharmacies/pharmacy-owner-pending-discard.service';
 import { listUserPharmacyMemberships } from '../../services/pharmacies/pharmacy-membership.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
@@ -112,9 +126,108 @@ export async function submitOwnedPharmacyForVerification(
   const data = await sendMyPharmacyForVerificationService(
     req.user?.id ?? '',
     res.locals.requestId,
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body.comment
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function submitOwnedPharmacyForModeration(
+  req: Request,
+  res: ValidatedResponse<
+    z.infer<typeof ownedPharmacyModerationSchema>,
+    OwnedPharmacyRegistryParams
+  >
+): Promise<void> {
+  const { comment, ...payload } = res.locals.validated.body;
+
+  const data = await submitMyPharmacyModerationService(
+    req.user?.id ?? '',
+    payload,
+    res.locals.requestId,
+    res.locals.validated.params.pharmacyId,
+    comment
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getOwnedPharmacyDeactivationEligibility(
+  req: Request,
+  res: ValidatedResponse<unknown, OwnedPharmacyRegistryParams>
+): Promise<void> {
+  const data = await getOwnedPharmacyDeactivationEligibilityService(
+    req.user?.id ?? '',
     res.locals.validated.params.pharmacyId
   );
 
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function discardOwnedPharmacyPendingSection(
+  req: Request,
+  res: ValidatedResponse<
+    z.infer<typeof ownedPharmacyDiscardSchema>,
+    OwnedPharmacyRegistryParams
+  >
+): Promise<void> {
+  const data = await discardOwnedPharmacyPendingSectionService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function deactivateOwnedPharmacy(
+  req: Request,
+  res: ValidatedResponse<
+    z.infer<typeof ownedPharmacyDeactivateSchema>,
+    OwnedPharmacyRegistryParams
+  >
+): Promise<void> {
+  const data = await deactivateOwnedPharmacyService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getOwnedPharmacySalesStatistics(
+  req: Request,
+  res: ValidatedResponse<
+    unknown,
+    OwnedPharmacyRegistryParams,
+    OrderSalesStatisticsQuery
+  >
+): Promise<void> {
+  const pharmacyId = res.locals.validated.params.pharmacyId;
+
+  await getPharmacyMembership(req.user?.id ?? '', pharmacyId);
+
+  const data = await getOrderSalesStatisticsForPharmacyService(
+    pharmacyId,
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 

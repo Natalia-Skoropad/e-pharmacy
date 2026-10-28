@@ -163,11 +163,15 @@ function EntityCommentsContent({
 
       <CommentComposer
         id={`${entityKey}-comment`}
-        label="New manager comment"
+        label={isProfilePresentation ? 'New comment' : 'New manager comment'}
         value={comments.draft}
         maxLength={PHARMACY_NOTE_MAX_LENGTH}
         placeholder={placeholder}
-        disabled={!isEditable}
+        disabled={
+          !isEditable ||
+          (isProfilePresentation &&
+            (comments.status !== 'success' || Boolean(comments.deletingId)))
+        }
         isSaving={comments.isSaving}
         onValueChange={(value) =>
           comments.setDraft(value.slice(0, PHARMACY_NOTE_MAX_LENGTH))
@@ -180,7 +184,7 @@ function EntityCommentsContent({
           <ProfileResourceState
             variant="loading"
             title="Loading comments"
-            description="Please wait while manager comments are loaded."
+            description="Loading private pharmacy notes."
           />
         ) : comments.status === 'error' ? (
           <ProfileResourceState

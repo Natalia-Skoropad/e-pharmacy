@@ -187,6 +187,21 @@ export const backendRoutes = {
     ownedVerification: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}/send-for-verification`,
 
+    ownedModeration: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/moderation-submission`,
+
+    ownedDeactivationEligibility: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/deactivation-eligibility`,
+
+    ownedPendingChanges: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/pending-changes`,
+
+    ownedDeactivation: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/deactivate`,
+
+    ownedSalesStatistics: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/sales-statistics`,
+
     ownedDocuments: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}/documents`,
 

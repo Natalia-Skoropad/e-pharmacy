@@ -330,7 +330,8 @@ export async function appendPharmacyOwnerMutationAudit(
 
   sections: string[],
   session: ClientSession,
-  requestId?: string
+  requestId?: string,
+  reason?: string
 ): Promise<void> {
   const beforeSnapshot = {
     status: before.status,
@@ -368,6 +369,9 @@ export async function appendPharmacyOwnerMutationAudit(
     before: beforeSnapshot,
     after: afterSnapshot,
     changedFields,
+
+    ...(reason ? { reason: reason.trim().slice(0, 500) } : {}),
+
     requestId: requestId ?? new Types.ObjectId().toHexString(),
     session,
   });
