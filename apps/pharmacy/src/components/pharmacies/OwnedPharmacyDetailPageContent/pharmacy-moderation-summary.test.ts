@@ -78,3 +78,15 @@ test('a single changed field renders a single tab and label', () => {
     { title: 'Pharmacy data', fields: ['Email'] },
   ]);
 });
+
+//===================================================================
+
+test('clearing an already empty optional field does not create a false change', () => {
+  const value = {
+    ...pharmacy,
+    email: undefined,
+    pendingModeration: { email: null },
+  } as unknown as MyPharmacyProfile;
+
+  assert.deepEqual(getPharmacyModerationSummary(value), []);
+});

@@ -23,7 +23,8 @@ export function getLockedFeatureBannerStatus(
   if (
     pharmacyStatus === 'new' ||
     pharmacyStatus === 'on_verification' ||
-    pharmacyStatus === 'blocked'
+    pharmacyStatus === 'blocked' ||
+    pharmacyStatus === 'on_reactivation'
   ) {
     return pharmacyStatus;
   }

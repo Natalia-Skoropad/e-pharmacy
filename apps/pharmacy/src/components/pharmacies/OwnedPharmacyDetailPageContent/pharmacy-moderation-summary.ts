@@ -32,7 +32,10 @@ export function getPharmacyModerationSummary(
     'workingHours',
     'imageUrl',
   ] as const) {
-    if (pending[key] !== undefined && pending[key] !== pharmacy[key]) {
+    if (
+      pending[key] !== undefined &&
+      (pending[key] ?? '') !== (pharmacy[key] ?? '')
+    ) {
       data.push(FIELD_LABELS[key]);
     }
   }
@@ -40,14 +43,17 @@ export function getPharmacyModerationSummary(
   for (const key of ['address', 'settlement', 'region'] as const) {
     const proposed = pending.location?.[key];
 
-    if (proposed !== undefined && proposed !== pharmacy.location?.[key]) {
+    if (
+      proposed !== undefined &&
+      (proposed ?? '') !== (pharmacy.location?.[key] ?? '')
+    ) {
       data.push(FIELD_LABELS[key]);
     }
   }
 
   if (
     pending.description !== undefined &&
-    pending.description !== pharmacy.description
+    (pending.description ?? '') !== (pharmacy.description ?? '')
   ) {
     about.push(FIELD_LABELS.description);
   }
@@ -62,7 +68,10 @@ export function getPharmacyModerationSummary(
   ] as const) {
     const proposed = pending.bankDetails?.[key];
 
-    if (proposed !== undefined && proposed !== pharmacy.bankDetails?.[key]) {
+    if (
+      proposed !== undefined &&
+      (proposed ?? '') !== (pharmacy.bankDetails?.[key] ?? '')
+    ) {
       payment.push(FIELD_LABELS[key]);
     }
   }

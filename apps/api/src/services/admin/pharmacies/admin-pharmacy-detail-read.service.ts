@@ -19,11 +19,12 @@ import type {
 } from '../../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../../utils/http/httpError';
-import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
-import { getOrderSalesStatisticsForPharmacyService } from '../../orders/order-sales-statistics.service';
-import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
 
+import { getOrderSalesStatisticsForPharmacyService } from '../../orders/order-sales-statistics.service';
 import type { OrderSalesStatisticsQuery } from '../../../schemas/orders/order.schema';
+
+import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
+import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
 
 //===============================================================
 
@@ -285,6 +286,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
+    ...(pharmacy.blockSource ? { blockSource: pharmacy.blockSource } : {}),
 
     ...(pharmacy.reviewFeedback
       ? { reviewFeedback: pharmacy.reviewFeedback }

@@ -102,6 +102,22 @@ export const pharmacyApiRoutes = {
     ownedModeration: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/moderation-submission`,
 
+    ownedCancelReview: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/cancel-review`,
+    ownedLifecycleHistory: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/lifecycle-history`,
+
+    ownedRequestReactivation: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/request-reactivation`,
+
+    ownedDeleteDraft: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/draft`,
+
+    newPaymentAvailability: '/api/pharmacies/me/payment-availability',
+
+    ownedPaymentAvailability: (pharmacyId: string) =>
+      `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/payment-availability`,
+
     ownedDeactivationEligibility: (pharmacyId: string) =>
       `/api/pharmacies/me/pharmacies/${segment(pharmacyId)}/deactivation-eligibility`,
 

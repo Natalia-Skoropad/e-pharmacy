@@ -13,7 +13,8 @@ const EXPECTED = {
   on_verification: [],
   on_moderation: [],
   active: ['edit', 'submit_for_moderation'],
-  blocked: [],
+  blocked: ['edit'],
+  on_reactivation: [],
 } as const;
 
 //===================================================================
@@ -32,8 +33,36 @@ test('pharmacy profile transition matrix is explicit for every status', () => {
           status as keyof typeof EXPECTED,
           action
         ),
+
         (actions as readonly string[]).includes(action)
       );
     }
   }
+});
+
+//===================================================================
+
+test('reviews are immutable during pending and editable after corrections', () => {
+  for (const status of [
+    'on_verification',
+    'on_moderation',
+    'on_reactivation',
+  ] as const) {
+    assert.equal(
+      canPharmacyProfilePerformAction(status, 'edit', 'pending'),
+      false
+    );
+
+    assert.equal(
+      canPharmacyProfilePerformAction(status, 'edit', 'changes_requested'),
+      true
+    );
+  }
+
+  assert.equal(
+    canPharmacyProfilePerformAction('blocked', 'edit', 'pending'),
+    false
+  );
+
+  assert.equal(canPharmacyProfilePerformAction('blocked', 'edit'), true);
 });

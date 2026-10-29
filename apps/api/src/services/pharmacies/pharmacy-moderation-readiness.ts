@@ -16,7 +16,7 @@ const proposedOrPublished = (proposed: unknown, published: unknown): unknown =>
 
 export function missingRequiredModerationFields(
   pharmacy: PharmacyEntity,
-  pending: PharmacyPendingModeration
+  pending: PharmacyPendingModeration = {}
 ): string[] {
   // Location patches are normalized against the published location before
   // submission. When a pending location exists, it is the full replacement;
@@ -76,6 +76,71 @@ export function missingRequiredModerationFields(
   };
 
   return Object.entries(required)
-    .filter(([, value]) => !value)
+    .filter(([, value]) => (typeof value === 'string' ? !value.trim() : !value))
     .map(([field]) => field);
+}
+
+//===============================================================
+
+/** Empty/stale pending objects are not changes, even when a nested object exists. */
+export function hasEffectiveModerationChanges(
+  pharmacy: PharmacyEntity,
+  pending: PharmacyPendingModeration
+): boolean {
+  for (const key of [
+    'name',
+    'phone',
+    'email',
+    'workingHours',
+    'imageUrl',
+    'description',
+    'shortDescription',
+  ] as const) {
+    if (
+      pending[key] !== undefined &&
+      (pending[key] ?? '') !== (pharmacy[key] ?? '')
+    )
+      return true;
+  }
+
+  if (pending.location !== undefined) {
+    for (const key of [
+      'address',
+      'settlement',
+      'region',
+      'countryCode',
+    ] as const) {
+      if ((pending.location[key] ?? '') !== (pharmacy.location?.[key] ?? ''))
+        return true;
+    }
+  }
+
+  if (pending.bankDetails !== undefined) {
+    for (const key of [
+      'recipientName',
+      'taxId',
+      'iban',
+      'bankName',
+      'receiptEmail',
+      'paymentPurpose',
+    ] as const) {
+      if (
+        pending.bankDetails[key] !== undefined &&
+        (pending.bankDetails[key] ?? '') !== (pharmacy.bankDetails?.[key] ?? '')
+      )
+        return true;
+    }
+  }
+
+  if (pending.documents !== undefined) {
+    const ids = (docs: PharmacyEntity['documents']) =>
+      docs
+        .map((item) => item.id)
+        .sort()
+        .join('|');
+
+    if (ids(pending.documents) !== ids(pharmacy.documents ?? [])) return true;
+  }
+
+  return false;
 }

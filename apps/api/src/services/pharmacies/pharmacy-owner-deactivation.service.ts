@@ -72,6 +72,7 @@ export async function getOwnedPharmacyDeactivationEligibilityService(
     userId,
     pharmacyId
   );
+
   if (membershipRole !== 'owner') {
     throw httpError(
       HTTP_STATUS.FORBIDDEN,
@@ -84,7 +85,8 @@ export async function getOwnedPharmacyDeactivationEligibilityService(
 
   const operational =
     pharmacy.status === PHARMACY_STATUSES.ACTIVE ||
-    pharmacy.status === PHARMACY_STATUSES.ON_MODERATION;
+    (pharmacy.status === PHARMACY_STATUSES.ON_MODERATION &&
+      pharmacy.reviewState === 'changes_requested');
 
   const canDeactivate = operational && !activeOrders && !activeProductRequests;
 
@@ -125,11 +127,14 @@ export async function deactivateOwnedPharmacyService(
 
       if (
         pharmacy.status !== PHARMACY_STATUSES.ACTIVE &&
-        pharmacy.status !== PHARMACY_STATUSES.ON_MODERATION
+        !(
+          pharmacy.status === PHARMACY_STATUSES.ON_MODERATION &&
+          pharmacy.reviewState === 'changes_requested'
+        )
       ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Only an operational pharmacy can be deactivated.'
+          'Only an active pharmacy or one returned for corrections can be deactivated.'
         );
       }
 
@@ -157,12 +162,24 @@ export async function deactivateOwnedPharmacyService(
           _id: pharmacy._id,
           status: pharmacy.status,
           updatedAt: pharmacy.updatedAt,
+
+          ...(pharmacy.status === PHARMACY_STATUSES.ACTIVE
+            ? {}
+            : { reviewState: 'changes_requested' }),
         },
         {
           $set: {
             status: PHARMACY_STATUSES.BLOCKED,
+            blockSource: 'owner_deactivated',
             statusReason: input.reason.trim(),
             updatedBy: userId,
+          },
+
+          $unset: {
+            reviewState: '',
+            reviewFeedback: '',
+            reviewedAt: '',
+            reviewedBy: '',
           },
         },
         { session, new: true, runValidators: true }

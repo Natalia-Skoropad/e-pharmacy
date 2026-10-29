@@ -53,6 +53,7 @@ export type AdminPharmacyDetail = Readonly<{
   pendingChanges?: AdminPharmacyPendingChanges;
   statusReason?: string;
   reviewState?: 'pending' | 'changes_requested';
+  blockSource?: 'owner_deactivated' | 'admin_blocked';
   reviewFeedback?: string;
   reviewedAt?: ISODateTimeString;
   reviewedBy?: EntityId;
@@ -87,7 +88,13 @@ export type AdminPharmacyDetail = Readonly<{
 
 /** Stage 14.8: clientRequestId is supplied by the caller for safe retries. */
 export type AdminPharmacyModerationDecisionPayload = Readonly<{
-  action: 'approve' | 'request_corrections' | 'block' | 'review_reactivation';
+  action:
+    | 'approve'
+    | 'request_corrections'
+    | 'block'
+    | 'review_reactivation'
+    | 'reject_reactivation';
+
   reason: string;
   expectedRevision: string;
   clientRequestId: string;

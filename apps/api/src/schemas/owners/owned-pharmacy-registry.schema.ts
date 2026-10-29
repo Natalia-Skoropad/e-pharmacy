@@ -27,6 +27,7 @@ const status = optionalSchema(
     PHARMACY_STATUSES.ON_VERIFICATION,
     PHARMACY_STATUSES.ACTIVE,
     PHARMACY_STATUSES.ON_MODERATION,
+    PHARMACY_STATUSES.ON_REACTIVATION,
     PHARMACY_STATUSES.BLOCKED,
   ])
 );
@@ -106,3 +107,13 @@ export type OwnedPharmacyRegistryParams = z.infer<
 export type OwnedPharmacyDocumentParams = z.infer<
   typeof ownedPharmacyDocumentParamsSchema
 >;
+
+//===============================================================
+
+/** Read-only owner activity pagination. Never accept an owner ID in the query. */
+export const ownedPharmacyLifecycleHistoryQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(10000).default(1),
+  })
+
+  .strict();

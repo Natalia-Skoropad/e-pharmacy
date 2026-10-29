@@ -24,7 +24,7 @@ test('one permissioned canonical endpoint with required reason, CAS and idempote
 
   assert.match(
     schema,
-    /action:\s*z\.enum\(\s*\[\s*'approve',\s*'request_corrections',\s*'block',\s*'review_reactivation',?\s*\]\s*\)/
+    /action:\s*z\.enum\(\s*\[\s*'approve',\s*'request_corrections',\s*'block',\s*'review_reactivation',\s*'reject_reactivation',?\s*\]\s*\)/
   );
 
   assert.match(schema, /reason: pharmacyModerationReason/);
@@ -40,7 +40,11 @@ test('one permissioned canonical endpoint with required reason, CAS and idempote
   assert.match(service, /updatedAt: expectedDate/);
   assert.match(service, /mutationKey: input\.clientRequestId/);
   assert.match(service, /await appendAdminAuditLog\(/);
-  assert.match(service, /if \(!pharmacy\.activatedAt\)/);
+
+  assert.match(
+    service,
+    /if \(!pharmacy\.activatedAt && nextStatus === PHARMACY_STATUSES\.ACTIVE\)/
+  );
 });
 
 //===============================================================
@@ -65,7 +69,7 @@ test('all legacy routes delegate to the canonical decision service', async () =>
 
   assert.match(
     service,
-    /case 'block':[\s\S]*?assertPharmacyHasNoActiveOrders\(pharmacy\._id, session\)/
+    /case 'block':[\s\S]*?nextUpdate\.blockSource = 'admin_blocked'/
   );
 
   assert.match(

@@ -489,6 +489,12 @@ const pharmacySchema = new Schema<PharmacyEntity>(
       default: undefined,
     },
 
+    blockSource: {
+      type: String,
+      enum: ['owner_deactivated', 'admin_blocked'],
+      default: undefined,
+    },
+
     reviewState: {
       type: String,
       enum: ['pending', 'changes_requested'],

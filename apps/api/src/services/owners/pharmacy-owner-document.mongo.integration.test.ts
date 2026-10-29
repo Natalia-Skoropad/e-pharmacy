@@ -12,6 +12,7 @@ import {
   deletePharmacyOwnerDocumentService,
   getPharmacyOwnerDocumentContentService,
   listPharmacyOwnerDocumentsService,
+  replacePharmacyOwnerDocumentService,
 } from './pharmacy-owner-document.service';
 
 //===============================================================
@@ -180,6 +181,111 @@ test(
         []
       );
     } finally {
+      await User.deleteOne({ _id: owner._id });
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'Block 1.3: last Owner document is protected and replacing it preserves verified binary content',
+  { skip: shouldSkip },
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const owner = await createOwner('document-replacement');
+    const originalContent = Buffer.from('%PDF-1.4 original owner identity');
+
+    const replacementContent = Buffer.from(
+      '%PDF-1.4 replacement owner identity'
+    );
+
+    const original = await PharmacyOwnerDocument.create({
+      ownerUserId: owner._id,
+      uploadedByUserId: owner._id,
+      name: 'identity.pdf',
+      size: originalContent.length,
+      type: 'application/pdf',
+      sha256: createHash('sha256').update(originalContent).digest('hex'),
+      content: originalContent,
+    });
+
+    try {
+      await assert.rejects(
+        () =>
+          deletePharmacyOwnerDocumentService(
+            String(owner._id),
+            String(original._id),
+            `last-owner-document-${new Types.ObjectId().toHexString()}`
+          ),
+        /At least one owner document is required/
+      );
+
+      // Invalid binary data must never destroy the existing document.
+      const invalidContent = Buffer.from('not a PDF');
+
+      await assert.rejects(
+        () =>
+          replacePharmacyOwnerDocumentService(
+            String(owner._id),
+            String(original._id),
+            {
+              name: 'identity.pdf',
+              size: invalidContent.length,
+              type: 'application/pdf',
+              dataUrl: `data:application/pdf;base64,${invalidContent.toString('base64')}`,
+            },
+            `invalid-replacement-${new Types.ObjectId().toHexString()}`
+          ),
+        /Document/
+      );
+
+      const unchanged = await getPharmacyOwnerDocumentContentService(
+        String(owner._id),
+        String(original._id)
+      );
+
+      assert.deepEqual(unchanged.content, originalContent);
+
+      const replacement = await replacePharmacyOwnerDocumentService(
+        String(owner._id),
+        String(original._id),
+        {
+          name: 'new-identity.pdf',
+          size: replacementContent.length,
+          type: 'application/pdf',
+          dataUrl: `data:application/pdf;base64,${replacementContent.toString('base64')}`,
+        },
+        `valid-replacement-${new Types.ObjectId().toHexString()}`
+      );
+
+      assert.equal(replacement.id, String(original._id));
+
+      const downloaded = await getPharmacyOwnerDocumentContentService(
+        String(owner._id),
+        String(original._id)
+      );
+
+      assert.deepEqual(downloaded.content, replacementContent);
+      assert.equal(downloaded.document.name, 'new-identity.pdf');
+
+      const stored = await PharmacyOwnerDocument.findById(original._id).select(
+        '+content'
+      );
+
+      assert.equal(
+        stored?.sha256,
+        createHash('sha256').update(replacementContent).digest('hex')
+      );
+
+      assert.equal(
+        await PharmacyOwnerDocument.countDocuments({ ownerUserId: owner._id }),
+        1
+      );
+    } finally {
+      await PharmacyOwnerDocument.deleteMany({ ownerUserId: owner._id });
       await User.deleteOne({ _id: owner._id });
       await mongoose.disconnect();
     }

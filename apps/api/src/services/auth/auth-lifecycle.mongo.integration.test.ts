@@ -10,6 +10,7 @@ import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-doc
 import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyPaymentIdentifier } from '../../models/pharmacies/pharmacyPaymentIdentifier.model';
 
 import type { PharmacyVerificationDocumentMetadata } from '../../types/pharmacies/pharmacy';
 
@@ -102,6 +103,8 @@ async function cleanup(email: string): Promise<void> {
 
   if (!user) return;
 
+  const pharmacyIds = await Pharmacy.distinct('_id', { ownerId: user._id });
+
   const registrationUploadSessionIds = await PharmacyDocumentFile.find({
     uploadedByUserId: user._id,
     registrationUploadSessionId: { $exists: true },
@@ -118,6 +121,7 @@ async function cleanup(email: string): Promise<void> {
 
     Client.deleteMany({ userId: user._id }),
     Pharmacy.deleteMany({ ownerId: user._id }),
+    PharmacyPaymentIdentifier.deleteMany({ pharmacyId: { $in: pharmacyIds } }),
     Session.deleteMany({ userId: user._id }),
     PharmacyDocumentFile.deleteMany({ uploadedByUserId: user._id }),
     PharmacyOwnerDocument.deleteMany({ ownerUserId: user._id }),
@@ -739,7 +743,7 @@ test(
       const pharmacy = await Pharmacy.create({
         ownerId: user._id,
         managerUserIds: [],
-        name: '',
+        name: 'Atomicity Test Pharmacy',
         phone: user.phone,
         email: user.email,
         documents: [],
@@ -867,7 +871,7 @@ test(
 
       assert.equal(
         profileAudits[0]?.entityLabelSnapshot,
-        `Pharmacy ${String(pharmacy._id)}`
+        'Atomicity Test Pharmacy'
       );
     } finally {
       Pharmacy.findOneAndUpdate = originalFindOneAndUpdate;
@@ -1294,7 +1298,7 @@ test(
       const pharmacy = await Pharmacy.create({
         ownerId: user._id,
         managerUserIds: [],
-        name: '',
+        name: 'Document Replacement Pharmacy',
         phone: identity.phone,
         email: identity.email,
         documents: [],
@@ -1406,6 +1410,7 @@ test(
       });
 
       const pharmacy = await Pharmacy.create({
+        ...moderationReadyPharmacyFields(identity),
         ownerId: user._id,
         managerUserIds: [],
         name: 'Pending Document Pharmacy',
@@ -1507,8 +1512,30 @@ test(
         await PharmacyDocumentFile.exists({ _id: secondPending.document.id })
       );
 
+      // An active pharmacy cannot propose an empty verification-document set.
+      // The rejected edit must leave both published and pending files intact.
+      await assert.rejects(
+        () =>
+          updateMyPharmacyProfileService(String(user._id), {
+            documents: [],
+            expectedRevision: secondPendingUpdate.pharmacy.updatedAt,
+          }),
+
+        (error: unknown) =>
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'PHARMACY_PROFILE_INCOMPLETE'
+      );
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: secondPending.document.id })
+      );
+
+      // Reverting the proposal to the approved document is valid and must
+      // delete the now-unreferenced pending upload without deleting the
+      // published binary.
       await updateMyPharmacyProfileService(String(user._id), {
-        documents: [],
+        documents: [{ documentId: approved.document.id }],
         expectedRevision: secondPendingUpdate.pharmacy.updatedAt,
       });
 
@@ -1531,7 +1558,13 @@ test(
         [approved.document.id]
       );
 
-      assert.deepEqual(persisted?.pendingModeration?.documents, []);
+      assert.deepEqual(
+        persisted?.pendingModeration?.documents.map(
+          (document: PharmacyVerificationDocumentMetadata) => document.id
+        ),
+        [approved.document.id]
+      );
+
       assert.equal(initial.pharmacy.documents[0]?.id, approved.document.id);
     } finally {
       await cleanup(identity.email);
@@ -2238,6 +2271,7 @@ test(
       });
 
       const pharmacy = await Pharmacy.create({
+        ...moderationReadyPharmacyFields(identity),
         ownerId: owner._id,
         name: 'Revision Pharmacy',
         email: identity.email,

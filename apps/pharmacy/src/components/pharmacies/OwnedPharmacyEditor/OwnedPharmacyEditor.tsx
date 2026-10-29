@@ -63,6 +63,7 @@ import {
 import type { EditorErrors, PharmacyDocument } from './pharmacy-editor-types';
 import { OwnedPharmacyEditorTabContent } from './OwnedPharmacyEditorTabContent';
 import { useUnsavedPharmacyNavigation } from './useUnsavedPharmacyNavigation';
+import { usePaymentAvailability } from './usePaymentAvailability';
 
 import css from './OwnedPharmacyEditor.module.css';
 
@@ -190,7 +191,7 @@ export function OwnedPharmacyEditor({
   };
 
   async function saveDraft(): Promise<string | null> {
-    if (mutationLock.current) return null;
+    if (mutationLock.current || paymentAvailability.blocked) return null;
     if (pharmacyId && !isDirty) return pharmacyId;
 
     const draftErrors = validatePharmacyEditor(
@@ -348,6 +349,12 @@ export function OwnedPharmacyEditor({
     return <NameInput {...common} autoComplete="off" />;
   }
 
+  const paymentAvailability = usePaymentAvailability(
+    pharmacyId,
+    values,
+    Boolean(values.taxId || values.iban || values.receiptEmail)
+  );
+
   if (loading)
     return (
       <main className={css.page} aria-label="Loading pharmacy draft">
@@ -382,10 +389,15 @@ export function OwnedPharmacyEditor({
   );
 
   const fieldError = (name: PharmacyEditorField) =>
-    errors[name] ?? (values[name].trim() ? draftFieldErrors[name] : undefined);
+    errors[name] ??
+    (values[name].trim() || name === 'name'
+      ? draftFieldErrors[name]
+      : undefined) ??
+    paymentAvailability.errors[name as 'taxId' | 'iban' | 'receiptEmail'];
 
   const canSaveDraft =
-    !draftFieldErrors.name &&
+    Object.keys(draftFieldErrors).length === 0 &&
+    !paymentAvailability.blocked &&
     (hasSavedDraft ||
       values.name.trim().length >= NEW_PHARMACY_NAME_MIN_LENGTH);
 

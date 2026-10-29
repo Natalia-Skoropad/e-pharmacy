@@ -130,10 +130,7 @@ test('Save changes uses the shared header action on all editable tabs', () => {
 //===================================================================
 
 test('moderation with one saved change uses required-field completeness, not re-verification', () => {
-  assert.match(
-    actions,
-    /const hasChanges = Boolean\(pending && Object\.keys\(pending\)\.length\)/
-  );
+  assert.match(actions, /const hasChanges = moderationSummary\.length > 0/);
 
   assert.match(actions, /const moderationIncomplete =/);
   assert.match(actions, /disabled=\{!hasChanges \|\| moderationIncomplete\}/);

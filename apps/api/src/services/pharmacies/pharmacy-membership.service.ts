@@ -355,7 +355,11 @@ export async function findPharmacyForProfileAccess(
   session?: ClientSession,
   pharmacyId?: string
 ): Promise<PharmacyMembership> {
-  return requirePharmacyCapability(userId, capability, { session, pharmacyId });
+  return requirePharmacyCapability(userId, capability, {
+    session,
+    pharmacyId,
+    allowBlocked: true,
+  });
 }
 
 //===============================================================

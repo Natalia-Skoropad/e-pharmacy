@@ -108,7 +108,7 @@ assert.match(
 
 assert.match(
   member,
-  /requirePharmacyCapability\(userId, capability, \{ session, pharmacyId \}\)/
+  /requirePharmacyCapability\(userId, capability, \{ session, pharmacyId, allowBlocked: true \}\)/
 );
 
 assert.match(profile, /'submit_profile',\s*session,\s*pharmacyId/);
@@ -132,6 +132,8 @@ assert.match(browser, /localApiRequest/);
 assert.doesNotMatch(browser, /\/admin\/|ownerId:/);
 assert.match(editor, /useRef<string \| null>\(null\)/);
 assert.match(editor, /crypto\.randomUUID\(\)/);
+
+//===================================================================
 
 // Owner document readiness is checked by the saved pharmacy status action,
 // not by the draft-only Create pharmacy editor.
@@ -166,6 +168,8 @@ assert.match(fields, /validatePharmacyAboutForm\(values, mode\)/);
 assert.match(fields, /validatePharmacyPaymentForm\(values, mode\)/);
 assert.match(fields, /buildPictureUrlError/);
 assert.match(list, /router\.push\(`\$\{PHARMACY_ROUTES\.PHARMACIES\}\/new`\)/);
+
+//===================================================================
 
 // Saved pharmacy edits reuse the canonical tab fields without mounting the
 // create-only editor on the pharmacy details page.

@@ -32,7 +32,15 @@ export type OwnedPharmacyRegistryQuery = Readonly<{
   pharmacySearch?: string;
   settlement?: string;
   region?: string;
-  status?: 'new' | 'on_verification' | 'active' | 'on_moderation' | 'blocked';
+
+  status?:
+    | 'new'
+    | 'on_verification'
+    | 'active'
+    | 'on_moderation'
+    | 'on_reactivation'
+    | 'blocked';
+
   createdFrom?: string;
   createdTo?: string;
   rating?: '0-0.9' | '1-1.9' | '2-2.9' | '3-3.9' | '4-5';
@@ -51,6 +59,7 @@ export async function getOwnedPharmacies(
     pharmacyApiRoutes.pharmacies.ownedRegistry,
     params
   );
+
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
 

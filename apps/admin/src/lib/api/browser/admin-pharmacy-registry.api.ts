@@ -18,6 +18,8 @@ import type {
   AdminPharmacyRegistryOwnerOptionsResponse,
 } from '@e-pharmacy/types/admin';
 
+import type { AdminPharmacyStatus } from '@/lib/pharmacies/admin-pharmacy';
+
 import { adminApiRoutes } from '@/lib/api/routes/admin-api-routes';
 
 //===================================================================
@@ -27,7 +29,7 @@ export type AdminPharmacyRegistryQueryParams = Readonly<{
   ownerId?: string;
   pharmacySearch?: string;
   ownerSearch?: string;
-  status?: 'new' | 'on_verification' | 'active' | 'on_moderation' | 'blocked';
+  status?: AdminPharmacyStatus;
   createdFrom?: string;
   createdTo?: string;
   rating?: '0-0.9' | '1-1.9' | '2-2.9' | '3-3.9' | '4-5';

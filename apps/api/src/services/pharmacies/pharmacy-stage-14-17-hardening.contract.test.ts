@@ -22,7 +22,7 @@ test('14.17: first activation accepts new (not blocked) owners and provisions a 
 
   assert.match(
     decisions,
-    /if \(!pharmacy\.activatedAt\) \{[\s\S]*?ensureDefaultPharmacyClient\([\s\S]*?activateNewPharmacyOwnerForPharmacy\(/
+    /if \(!pharmacy\.activatedAt && nextStatus === PHARMACY_STATUSES\.ACTIVE\) \{[\s\S]*?ensureDefaultPharmacyClient\([\s\S]*?activateNewPharmacyOwnerForPharmacy\(/
   );
 
   assert.match(lifecycle, /USER_STATUSES\.NEW/);
@@ -103,11 +103,7 @@ test('14.17: blocking respects in-progress orders and reactivation never skips v
   assert.match(statuses, /'new'/);
   assert.match(statuses, /'in_progress'/);
 
-  assert.match(
-    decisions,
-    /assertPharmacyHasNoActiveOrders\(pharmacy\._id, session\)/
-  );
-
+  assert.match(decisions, /nextUpdate\.blockSource = 'admin_blocked'/);
   assert.match(decisions, /nextUpdate\.statusReason = reason/);
 
   const reactivation =

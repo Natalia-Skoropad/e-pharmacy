@@ -8,6 +8,7 @@ export const ADMIN_PHARMACY_STATUSES = [
   'on_verification',
   'active',
   'on_moderation',
+  'on_reactivation',
   'blocked',
 ] as const;
 

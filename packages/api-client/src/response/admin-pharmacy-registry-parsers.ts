@@ -21,6 +21,7 @@ const PHARMACY_STATUSES: readonly string[] = [
   'on_verification',
   'active',
   'on_moderation',
+  'on_reactivation',
   'blocked',
 ];
 
@@ -102,6 +103,7 @@ function amount(value: unknown, label: string): number {
 
 function location(value: unknown): PharmacyLocationDraft | undefined {
   if (value === undefined || value === null) return undefined;
+
   const row = record(value, 'pharmacy location');
 
   // Location is a partial draft during onboarding. Reject malformed fields,
@@ -225,6 +227,7 @@ export function parseAdminPharmacyListItem(
     item.owner === null ? null : record(item.owner, 'pharmacy owner link');
 
   const rating = amount(item.rating, 'pharmacy rating');
+
   if (rating > 5) throw new TypeError('Invalid pharmacy rating.');
 
   return {
@@ -317,6 +320,12 @@ export function parseAdminPharmacyStatistics(
 
     active: count(response.active, 'active pharmacies'),
     onModeration: count(response.onModeration, 'on moderation pharmacies'),
+
+    onReactivation: count(
+      response.onReactivation ?? 0,
+      'reactivation pharmacies'
+    ),
+
     blocked: count(response.blocked, 'blocked pharmacies'),
   };
 
@@ -326,9 +335,11 @@ export function parseAdminPharmacyStatistics(
       result.onVerification +
       result.active +
       result.onModeration +
+      result.onReactivation +
       result.blocked
   ) {
     throw new TypeError('Invalid pharmacy status counts.');
   }
+
   return result;
 }

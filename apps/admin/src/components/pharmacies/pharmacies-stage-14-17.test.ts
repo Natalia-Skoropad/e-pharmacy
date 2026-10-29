@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import type { ISODateTimeString } from '@e-pharmacy/types/primitives';
+
 import { getPharmacyModerationOptions } from '../../lib/pharmacies/pharmacy-moderation-actions';
 
 //===================================================================
@@ -17,11 +18,13 @@ function detail(
   status: AdminPharmacyDetail['status'],
   ownerStatus: 'new' | 'active' | 'blocked',
   activated = false,
-  reviewState: AdminPharmacyDetail['reviewState'] = 'pending'
+  reviewState: AdminPharmacyDetail['reviewState'] = 'pending',
+  blockSource?: AdminPharmacyDetail['blockSource']
 ): AdminPharmacyDetail {
   return {
     id: '507f1f77bcf86cd799439011',
     status,
+    ...(blockSource ? { blockSource } : {}),
 
     owner: {
       id: '507f1f77bcf86cd799439012',
@@ -79,24 +82,42 @@ test('14.17: resubmission and blocked transitions retain canonical UI matrix', (
       getPharmacyModerationOptions(
         detail(status, 'new', false, 'changes_requested')
       ).map(({ action }) => action),
-      ['request_corrections', 'block']
+      ['block'] // Requested corrections must first be resubmitted by Owner.
     );
   }
 
   assert.equal(
-    getPharmacyModerationOptions(detail('blocked', 'new', false))[0]
-      ?.targetStatus,
+    getPharmacyModerationOptions(
+      detail('blocked', 'new', false, 'pending', 'admin_blocked')
+    )[0]?.targetStatus,
     'on_verification'
   );
 
   assert.equal(
-    getPharmacyModerationOptions(detail('blocked', 'active', true))[0]
-      ?.targetStatus,
+    getPharmacyModerationOptions(
+      detail('blocked', 'active', true, 'pending', 'admin_blocked')
+    )[0]?.targetStatus,
     'active'
   );
 
   assert.deepEqual(
-    getPharmacyModerationOptions(detail('blocked', 'blocked', true)),
+    getPharmacyModerationOptions(
+      detail('blocked', 'blocked', true, 'pending', 'admin_blocked')
+    ),
+    []
+  );
+
+  assert.deepEqual(
+    getPharmacyModerationOptions(
+      detail('blocked', 'active', true, 'pending', 'owner_deactivated')
+    ),
+    []
+  );
+
+  assert.deepEqual(
+    getPharmacyModerationOptions(
+      detail('on_reactivation', 'active', true, 'changes_requested')
+    ),
     []
   );
 });

@@ -8,8 +8,7 @@ export const PHARMACY_STATUS_PRESENTATION = {
   new: { label: 'New', tone: 'info' },
   on_verification: { label: 'On verification', tone: 'warning' },
   on_moderation: { label: 'On moderation', tone: 'pending' },
+  on_reactivation: { label: 'Reactivation requested', tone: 'pending' },
   active: { label: 'Active', tone: 'success' },
-  blocked: { label: 'Blocked', tone: 'danger' },
-} as const satisfies Readonly<
-  Record<PharmacyStatus, StatusPresentation>
->;
+  blocked: { label: 'Inactive', tone: 'danger' },
+} as const satisfies Readonly<Record<PharmacyStatus, StatusPresentation>>;

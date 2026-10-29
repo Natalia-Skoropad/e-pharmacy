@@ -24,6 +24,13 @@ import {
   reconcileAttachedPharmacyDocumentStorage,
 } from './pharmacy-document.service';
 
+import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
+
+import {
+  ensurePharmacyPaymentUniqueIndex,
+  syncPharmacyPaymentIdentifiers,
+} from './pharmacy-payment-uniqueness.service';
+
 import {
   findPharmacyForProfileAccess,
   findPharmacyForSummaryAccess,
@@ -103,6 +110,8 @@ export async function updateMyPharmacyProfileService(
   auditRequestId?: string,
   pharmacyId?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto }> {
+  await ensurePharmacyPaymentUniqueIndex();
+
   const mongoSession = await mongoose.startSession();
 
   let result: { pharmacy: MyPharmacyProfileResponseDto } | null = null;
@@ -155,12 +164,36 @@ export async function updateMyPharmacyProfileService(
           : {}),
       };
 
+      // Saving an active pharmacy must never stage an incomplete replacement.
+      // A new pharmacy can remain a draft, but its name may not be cleared.
+      if (
+        pharmacy.status === PHARMACY_STATUSES.NEW ||
+        (pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION &&
+          pharmacy.reviewState === 'changes_requested')
+      ) {
+        if (!(resolvedInput.name ?? pharmacy.name)?.trim()) {
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Pharmacy name is required before saving.',
+            { missingFields: ['name'] },
+            'PHARMACY_PROFILE_INCOMPLETE'
+          );
+        }
+      }
+
+      const isReactivationDraft =
+        pharmacy.status === PHARMACY_STATUSES.BLOCKED ||
+        (pharmacy.status === PHARMACY_STATUSES.ON_REACTIVATION &&
+          pharmacy.reviewState === 'changes_requested');
+
       const isCorrectionDraft =
         pharmacy.status === PHARMACY_STATUSES.ON_MODERATION &&
         pharmacy.reviewState === 'changes_requested';
 
       if (
-        (pharmacy.status === PHARMACY_STATUSES.ACTIVE || isCorrectionDraft) &&
+        (pharmacy.status === PHARMACY_STATUSES.ACTIVE ||
+          isCorrectionDraft ||
+          isReactivationDraft) &&
         hasModeratedProfileChanges(resolvedInput)
       ) {
         const pendingModeration = buildPendingModerationPayload(
@@ -169,13 +202,30 @@ export async function updateMyPharmacyProfileService(
           pharmacy.location
         );
 
+        const missingFields = missingRequiredModerationFields(
+          pharmacy,
+          pendingModeration
+        );
+
+        if (missingFields.length && !isReactivationDraft) {
+          throw httpError(
+            HTTP_STATUS.BAD_REQUEST,
+            'Complete all required pharmacy fields before saving changes.',
+            { missingFields },
+            'PHARMACY_PROFILE_INCOMPLETE'
+          );
+        }
+
         const updatedPharmacy = await Pharmacy.findOneAndUpdate(
           {
             _id: pharmacy._id,
             updatedAt: new Date(expectedRevision),
             status: pharmacy.status,
 
-            ...(isCorrectionDraft ? { reviewState: 'changes_requested' } : {}),
+            ...(isCorrectionDraft ||
+            pharmacy.status === PHARMACY_STATUSES.ON_REACTIVATION
+              ? { reviewState: 'changes_requested' }
+              : {}),
           },
 
           {
@@ -184,13 +234,15 @@ export async function updateMyPharmacyProfileService(
               updatedBy: userId,
             },
 
-            $unset: { statusReason: '' },
+            ...(isReactivationDraft ? {} : { $unset: { statusReason: '' } }),
           },
 
           { new: true, runValidators: true, session: mongoSession }
         );
 
         if (!updatedPharmacy) throwPharmacyProfileConflict();
+
+        await syncPharmacyPaymentIdentifiers(updatedPharmacy, mongoSession);
 
         await reconcileAttachedPharmacyDocumentStorage(
           updatedPharmacy._id,
@@ -275,6 +327,8 @@ export async function updateMyPharmacyProfileService(
       );
 
       if (!updatedPharmacy) throwPharmacyProfileConflict();
+
+      await syncPharmacyPaymentIdentifiers(updatedPharmacy, mongoSession);
 
       await reconcileAttachedPharmacyDocumentStorage(
         updatedPharmacy._id,

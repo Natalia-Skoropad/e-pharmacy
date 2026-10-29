@@ -5,7 +5,10 @@ import { Types } from 'mongoose';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { moderationReadyPharmacyFields } from '../__tests__/fixtures/pharmacy-moderation-ready.helper';
 
-import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
+import {
+  hasEffectiveModerationChanges,
+  missingRequiredModerationFields,
+} from './pharmacy-moderation-readiness';
 
 //===============================================================
 
@@ -80,4 +83,65 @@ test('an incomplete proposed location cannot fall back to the published address'
     }),
     []
   );
+});
+
+//===============================================================
+
+test('empty or unchanged proposals must not activate moderation submission', () => {
+  const pharmacy = activePharmacy();
+
+  assert.equal(hasEffectiveModerationChanges(pharmacy, {}), false);
+
+  assert.equal(
+    hasEffectiveModerationChanges(pharmacy, { name: pharmacy.name }),
+    false
+  );
+
+  assert.equal(
+    hasEffectiveModerationChanges(pharmacy, {
+      bankDetails: { taxId: pharmacy.bankDetails?.taxId },
+
+      location: {
+        address: pharmacy.location?.address,
+        settlement: pharmacy.location?.settlement,
+        region: pharmacy.location?.region,
+        countryCode: pharmacy.location?.countryCode,
+      },
+    }),
+    false
+  );
+
+  assert.equal(
+    hasEffectiveModerationChanges(pharmacy, { name: 'Changed Pharmacy Name' }),
+    true
+  );
+});
+
+test('cleared approved fields are real proposals but must fail readiness', () => {
+  const pharmacy = activePharmacy();
+  const pending = { bankDetails: { taxId: null } };
+
+  assert.equal(hasEffectiveModerationChanges(pharmacy, pending), true);
+
+  assert.deepEqual(missingRequiredModerationFields(pharmacy, pending), [
+    'taxId',
+  ]);
+});
+
+//===============================================================
+
+test('a null proposal for an already absent field is not a real change', () => {
+  const pharmacy = activePharmacy();
+
+  pharmacy.email = undefined;
+  assert.equal(hasEffectiveModerationChanges(pharmacy, { email: null }), false);
+});
+
+//===============================================================
+
+test('reactivation readiness accepts an approved pharmacy without a pending proposal', () => {
+  const pharmacy = activePharmacy();
+
+  assert.deepEqual(missingRequiredModerationFields(pharmacy), []);
+  assert.deepEqual(missingRequiredModerationFields(pharmacy, undefined), []);
 });

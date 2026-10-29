@@ -440,8 +440,11 @@ export function OwnedPharmacyDetailPageContent({
                       !(
                         pharmacy.status === 'new' ||
                         pharmacy.status === 'active' ||
+                        (pharmacy.status === 'blocked' &&
+                          pharmacy.reviewState !== 'pending') ||
                         ((pharmacy.status === 'on_verification' ||
-                          pharmacy.status === 'on_moderation') &&
+                          pharmacy.status === 'on_moderation' ||
+                          pharmacy.status === 'on_reactivation') &&
                           pharmacy.reviewState === 'changes_requested')
                       )
                     }

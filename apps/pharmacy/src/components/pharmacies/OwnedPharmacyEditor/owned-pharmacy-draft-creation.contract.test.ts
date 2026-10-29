@@ -9,7 +9,7 @@ const editor = readFileSync(
   'utf8'
 );
 
-const presentation = readFileSync(
+const tabContent = readFileSync(
   new URL('./OwnedPharmacyEditorTabContent.tsx', import.meta.url),
   'utf8'
 );
@@ -51,7 +51,7 @@ test('creation requires a valid named pharmacy before draft saving', () => {
 
   assert.match(
     editor,
-    /const canSaveDraft\s*=\s*!draftFieldErrors\.name\s*&&\s*\(\s*hasSavedDraft\s*\|\|\s*values\.name\.trim\(\)\.length\s*>=\s*NEW_PHARMACY_NAME_MIN_LENGTH\s*\)/
+    /const canSaveDraft\s*=\s*Object\.keys\(draftFieldErrors\)\.length\s*===\s*0\s*&&\s*!paymentAvailability\.blocked\s*&&\s*\(\s*hasSavedDraft\s*\|\|\s*values\.name\.trim\(\)\.length\s*>=\s*NEW_PHARMACY_NAME_MIN_LENGTH\s*\)/
   );
 
   assert.match(
@@ -88,15 +88,15 @@ test('creation requires a valid named pharmacy before draft saving', () => {
 //===================================================================
 
 test('create pharmacy uses compact shared photo layout and stacked full-width name fields', () => {
-  assert.match(presentation, /<PictureCard\s+compactLayout/);
-  assert.match(presentation, /JPG, PNG, or WEBP photo up to 450 KB/);
+  assert.match(tabContent, /<PictureCard\s+compactLayout/);
+  assert.match(tabContent, /JPG, PNG, or WEBP photo up to 450 KB/);
 
   assert.match(
-    presentation,
+    tabContent,
     /<div className=\{css.nameFields\}>\s*\{input\('name'/
   );
 
-  assert.match(presentation, /name="shortDescription"/);
+  assert.match(tabContent, /name="shortDescription"/);
 
   assert.match(
     styles,

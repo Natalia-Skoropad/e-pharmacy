@@ -27,6 +27,11 @@ import { serializePharmacyProfile } from './pharmacy-profile.shared';
 
 import { hasMongoDuplicateKeyCode } from '../../utils/database/mongoError';
 
+import {
+  ensurePharmacyPaymentUniqueIndex,
+  syncPharmacyPaymentIdentifiers,
+} from './pharmacy-payment-uniqueness.service';
+
 //===============================================================
 
 type DraftCreationResult = Readonly<{
@@ -168,6 +173,8 @@ export async function createPharmacyDraftService(
   input: CreatePharmacyDraftInput,
   auditRequestId: string
 ): Promise<DraftCreationResult> {
+  await ensurePharmacyPaymentUniqueIndex();
+
   const draft = normalizeDraft(input);
   const fingerprint = draftFingerprint(draft);
 
@@ -236,6 +243,8 @@ export async function createPharmacyDraftService(
       );
 
       created = pharmacy;
+
+      await syncPharmacyPaymentIdentifiers(pharmacy, session);
 
       await appendAdminAuditLog({
         actorUserId: ownerUserId,

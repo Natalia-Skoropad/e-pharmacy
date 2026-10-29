@@ -24,6 +24,10 @@ export function moderationReadyPharmacyFields(contact: {
 }) {
   const documentContent = Buffer.from('%PDF-1.4');
 
+  // The User phone is globally unique. Derive test-only financial identifiers
+  // from it so separate integration pharmacies never share reserved values.
+  const phoneDigits = contact.phone.replace(/\D/g, '').slice(-9);
+
   return {
     email: contact.email,
     phone: contact.phone,
@@ -42,8 +46,8 @@ export function moderationReadyPharmacyFields(contact: {
 
     bankDetails: {
       recipientName: 'Moderation Pharmacy LLC',
-      taxId: '12345678',
-      iban: 'UA123456789012345678901234567',
+      taxId: phoneDigits,
+      iban: `UA${'0'.repeat(18)}${phoneDigits}`,
       bankName: 'Example Bank',
       receiptEmail: contact.email,
       paymentPurpose: 'Payment for medicines',

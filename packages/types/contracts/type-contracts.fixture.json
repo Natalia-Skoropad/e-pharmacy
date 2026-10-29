@@ -8,6 +8,7 @@
       "new",
       "on_verification",
       "on_moderation",
+      "on_reactivation",
       "active",
       "blocked"
     ],
@@ -30,6 +31,7 @@
   },
 
   "cartPharmacyLimit": 15,
+
   "shapes": {
     "pagination": {
       "required": ["items", "page", "perPage", "total", "totalPages"],

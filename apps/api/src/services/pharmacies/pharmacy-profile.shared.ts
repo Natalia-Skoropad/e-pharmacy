@@ -1,9 +1,9 @@
 import { Types, type HydratedDocument, type ClientSession } from 'mongoose';
 
 import {
-  ADMIN_AUDIT_ACTIONS,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
+  type AdminAuditAction,
 } from '../../constants/admin/audit/admin-audit';
 
 import { PHARMACY_PROFILE_CONFLICT_ERROR_CODE } from '../../constants/pharmacies/pharmacy-profile';
@@ -190,6 +190,7 @@ export function serializePharmacyProfile(
       : {}),
 
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
+    ...(pharmacy.blockSource ? { blockSource: pharmacy.blockSource } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
 
     ...(pharmacy.reviewFeedback
@@ -323,10 +324,7 @@ export async function appendPharmacyOwnerMutationAudit(
   userId: string,
   before: PharmacyHydratedDocument,
   after: PharmacyHydratedDocument,
-
-  action:
-    | typeof ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED
-    | typeof ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
+  action: AdminAuditAction,
 
   sections: string[],
   session: ClientSession,

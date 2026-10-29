@@ -90,6 +90,46 @@ export const ownedPharmacyDiscardSchema = z
 
 //===============================================================
 
+export const ownedPharmacyReactivationSchema = z
+  .object({
+    expectedRevision: sharedExpectedRevisionSchema,
+    reason: z.string().trim().min(1).max(500),
+  })
+
+  .strict();
+
+//===============================================================
+
+export const ownedPharmacyCancellationSchema = z
+  .object({
+    type: z.enum(['verification', 'moderation', 'reactivation']),
+    expectedRevision: sharedExpectedRevisionSchema,
+  })
+
+  .strict();
+
+//===============================================================
+
+export const ownedPharmacyDeleteDraftSchema = z
+  .object({
+    expectedRevision: sharedExpectedRevisionSchema,
+  })
+
+  .strict();
+
+//===============================================================
+
+export const pharmacyPaymentAvailabilityQuerySchema = z
+  .object({
+    taxId: z.string().trim().max(10).optional(),
+    iban: z.string().trim().max(34).optional(),
+    receiptEmail: z.string().trim().max(254).optional(),
+  })
+
+  .strict();
+
+//===============================================================
+
 export const pharmacyIdParamsSchema = z.object({
   pharmacyId: mongoIdSchema,
 });

@@ -163,6 +163,7 @@ export const backendRoutes = {
 
     sendMyProfileForVerification:
       '/pharmacies/me/profile/send-for-verification',
+
     submitMyProfileForModeration:
       '/pharmacies/me/profile/moderation-submission',
 
@@ -189,6 +190,22 @@ export const backendRoutes = {
 
     ownedModeration: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}/moderation-submission`,
+
+    ownedCancelReview: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/cancel-review`,
+    ownedLifecycleHistory: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/lifecycle-history`,
+
+    ownedRequestReactivation: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/request-reactivation`,
+
+    ownedDeleteDraft: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/draft`,
+
+    newPaymentAvailability: '/pharmacies/me/payment-availability',
+
+    ownedPaymentAvailability: (pharmacyId: EntityId) =>
+      `/pharmacies/me/pharmacies/${segment(pharmacyId)}/payment-availability`,
 
     ownedDeactivationEligibility: (pharmacyId: EntityId) =>
       `/pharmacies/me/pharmacies/${segment(pharmacyId)}/deactivation-eligibility`,

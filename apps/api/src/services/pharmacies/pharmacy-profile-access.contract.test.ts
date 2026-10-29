@@ -17,7 +17,8 @@ const EXPECTED_TRANSITIONS = {
   on_verification: [],
   on_moderation: [],
   active: ['edit', 'submit_for_moderation'],
-  blocked: [],
+  blocked: ['edit'],
+  on_reactivation: [],
 } as const;
 
 //===================================================================

@@ -59,6 +59,7 @@ export type PharmacyProfile = PharmacyModerationReview &
     description?: string;
     shortDescription?: string;
     statusReason?: string;
+    blockSource?: 'owner_deactivated' | 'admin_blocked';
     pendingModeration?: PharmacyPendingModeration;
     reviewsCount: number;
     updatedAt: ISODateTimeString;

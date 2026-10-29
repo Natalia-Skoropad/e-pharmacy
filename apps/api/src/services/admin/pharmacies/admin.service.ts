@@ -3,6 +3,7 @@ import mongoose, { type HydratedDocument } from 'mongoose';
 import { PHARMACY_STATUSES } from '../../../constants/auth/auth';
 import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { API_MESSAGES } from '../../../constants/shared/messages';
+import { USER_ROLES, USER_STATUSES } from '../../../constants/auth/auth';
 
 import {
   ADMIN_AUDIT_ACTIONS,
@@ -14,10 +15,7 @@ import {
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';
-import { Order } from '../../../models/orders/order.model';
-
-import { PHARMACY_OWNER_ACTIVE_ORDER_STATUSES } from '../../../constants/owners/pharmacy-owner-lifecycle';
-import { USER_ROLES, USER_STATUSES } from '../../../constants/auth/auth';
+import { PharmacyOwnerDocument } from '../../../models/owners/pharmacyOwnerDocument.model';
 
 import type {
   PharmacyEntity,
@@ -28,18 +26,23 @@ import type {
 
 import { httpError } from '../../../utils/http/httpError';
 
+import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
+import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
+import { activateNewPharmacyOwnerForPharmacy } from '../../owners/pharmacy-owner-lifecycle.service';
+
+import { reconcileAttachedPharmacyDocumentStorage } from '../../pharmacies/pharmacy-document.service';
+import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
+import { missingRequiredModerationFields } from '../../pharmacies/pharmacy-moderation-readiness';
+
 import {
   clonePharmacyLocation,
   clonePendingModerationFields,
 } from '../../pharmacies/pharmacy-location';
 
-import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
-import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
-
-import { reconcileAttachedPharmacyDocumentStorage } from '../../pharmacies/pharmacy-document.service';
-import { activateNewPharmacyOwnerForPharmacy } from '../../owners/pharmacy-owner-lifecycle.service';
-
-import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
+import {
+  ensurePharmacyPaymentUniqueIndex,
+  syncPharmacyPaymentIdentifiers,
+} from '../../pharmacies/pharmacy-payment-uniqueness.service';
 
 //===============================================================
 
@@ -84,6 +87,7 @@ function serializePharmacyProfile(
       : {}),
 
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
+    ...(pharmacy.blockSource ? { blockSource: pharmacy.blockSource } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
 
     ...(pharmacy.reviewFeedback
@@ -112,7 +116,13 @@ function serializePharmacyProfile(
 //===============================================================
 
 export type PharmacyModerationDecisionInput = {
-  action: 'approve' | 'request_corrections' | 'block' | 'review_reactivation';
+  action:
+    | 'approve'
+    | 'request_corrections'
+    | 'block'
+    | 'review_reactivation'
+    | 'reject_reactivation';
+
   reason: string;
   expectedRevision: string;
   clientRequestId?: string;
@@ -152,25 +162,6 @@ async function assertPharmacyOwnerCanOperate(
 
 //===============================================================
 
-async function assertPharmacyHasNoActiveOrders(
-  pharmacyId: mongoose.Types.ObjectId,
-  session: mongoose.ClientSession
-): Promise<void> {
-  const activeOrders = await Order.countDocuments({
-    pharmacyId,
-    status: { $in: PHARMACY_OWNER_ACTIVE_ORDER_STATUSES },
-  }).session(session);
-
-  if (activeOrders > 0) {
-    throw httpError(
-      HTTP_STATUS.CONFLICT,
-      'A pharmacy with unfinished orders cannot be blocked.'
-    );
-  }
-}
-
-//=================================================================
-
 /** All administrator moderation decisions share one transaction and one transition policy. */
 export async function decidePharmacyModerationByAdminService(
   pharmacyId: string,
@@ -206,6 +197,7 @@ export async function decidePharmacyModerationByAdminService(
       'request_corrections',
       'block',
       'review_reactivation',
+      'reject_reactivation',
     ].includes(input.action)
   ) {
     throw httpError(HTTP_STATUS.BAD_REQUEST, 'Unknown moderation decision.');
@@ -268,6 +260,8 @@ export async function decidePharmacyModerationByAdminService(
 
   if (earlier) return earlier;
 
+  await ensurePharmacyPaymentUniqueIndex();
+
   const session = await mongoose.startSession();
 
   try {
@@ -291,6 +285,10 @@ export async function decidePharmacyModerationByAdminService(
 
       const isModeration = previousStatus === PHARMACY_STATUSES.ON_MODERATION;
       const isBlocked = previousStatus === PHARMACY_STATUSES.BLOCKED;
+
+      const isReactivation =
+        previousStatus === PHARMACY_STATUSES.ON_REACTIVATION;
+
       const nextUpdate: Record<string, unknown> = { updatedBy: adminUserId };
       const unsetFields: Record<string, string> = {};
 
@@ -304,7 +302,10 @@ export async function decidePharmacyModerationByAdminService(
 
       switch (input.action) {
         case 'request_corrections': {
-          if (!isVerification && !isModeration) {
+          if (
+            (!isVerification && !isModeration && !isReactivation) ||
+            pharmacy.reviewState !== 'pending'
+          ) {
             throw httpError(
               HTTP_STATUS.CONFLICT,
               'Pharmacy is not awaiting review.'
@@ -382,6 +383,7 @@ export async function decidePharmacyModerationByAdminService(
           if (
             !isVerification &&
             !isModeration &&
+            !isReactivation &&
             previousStatus !== PHARMACY_STATUSES.ACTIVE
           ) {
             throw httpError(
@@ -390,11 +392,13 @@ export async function decidePharmacyModerationByAdminService(
             );
           }
 
-          await assertPharmacyHasNoActiveOrders(pharmacy._id, session);
+          // Emergency Admin block must remain possible even with unfinished orders.
+          // Existing orders still require supervised fulfillment/refunds.
 
           nextStatus = PHARMACY_STATUSES.BLOCKED;
           nextUpdate.status = nextStatus;
           nextUpdate.statusReason = reason;
+          nextUpdate.blockSource = 'admin_blocked';
           unsetFields.reviewState = '';
           unsetFields.reviewFeedback = '';
           unsetFields.reviewedAt = '';
@@ -404,34 +408,107 @@ export async function decidePharmacyModerationByAdminService(
           break;
         }
 
-        case 'review_reactivation': {
-          if (!isBlocked)
+        case 'reject_reactivation': {
+          if (!isReactivation || pharmacy.reviewState !== 'pending') {
             throw httpError(
               HTTP_STATUS.CONFLICT,
-              'Only blocked pharmacies can be reviewed for reactivation.'
+              'No pending reactivation request to reject.'
             );
+          }
+
+          nextStatus = PHARMACY_STATUSES.BLOCKED;
+          nextUpdate.status = nextStatus;
+          nextUpdate.statusReason = reason;
+          nextReviewState = 'pending';
+          unsetFields.reviewState = '';
+          unsetFields.reviewFeedback = '';
+          unsetFields.reviewedAt = '';
+          unsetFields.reviewedBy = '';
+          action = ADMIN_AUDIT_ACTIONS.PHARMACY_REACTIVATION_REJECTED;
+
+          break;
+        }
+
+        case 'review_reactivation': {
+          if (
+            !(isReactivation && pharmacy.reviewState === 'pending') &&
+            !(isBlocked && pharmacy.blockSource === 'admin_blocked')
+          ) {
+            throw httpError(
+              HTTP_STATUS.CONFLICT,
+              'Reactivation requires a pending request or an administrator-issued block.'
+            );
+          }
 
           await assertPharmacyOwnerCanOperate(pharmacy.ownerId, session);
 
-          // Never transition blocked -> on_moderation (an operational state).
-          // A previously activated pharmacy is explicitly restored by this admin action;
-          // an unactivated pharmacy must pass initial verification.
+          const missing = missingRequiredModerationFields(
+            pharmacy,
+            pharmacy.pendingModeration ?? {}
+          );
+
+          if (missing.length)
+            throw httpError(
+              HTTP_STATUS.CONFLICT,
+              'Complete required pharmacy fields before reactivation.',
+              { missingFields: missing }
+            );
+
+          const ownerDocument = await PharmacyOwnerDocument.exists({
+            ownerUserId: pharmacy.ownerId,
+          }).session(session);
+
+          if (!ownerDocument)
+            throw httpError(
+              HTTP_STATUS.CONFLICT,
+              'Pharmacy owner documents are required for reactivation.'
+            );
+
           nextStatus = pharmacy.activatedAt
             ? PHARMACY_STATUSES.ACTIVE
             : PHARMACY_STATUSES.ON_VERIFICATION;
 
           nextUpdate.status = nextStatus;
 
+          if (isReactivation) {
+            // Apply the exact frozen proposed version reviewed by Admin, never a later edit.
+            const pending =
+              normalizePendingModeration(pharmacy.pendingModeration) ?? {};
+
+            const { location, bankDetails, ...rootFields } = pending;
+
+            for (const [key, value] of Object.entries(rootFields)) {
+              if (value === null) unsetFields[key] = '';
+              else if (value !== undefined) nextUpdate[key] = value;
+            }
+
+            if (location !== undefined)
+              nextUpdate.location = clonePharmacyLocation(location);
+
+            if (bankDetails) {
+              for (const [key, value] of Object.entries(bankDetails)) {
+                const path = `bankDetails.${key}`;
+                if (value === null) unsetFields[path] = '';
+                else if (value !== undefined) nextUpdate[path] = value;
+              }
+            }
+
+            unsetFields.pendingModeration = '';
+          }
+
           if (nextStatus === PHARMACY_STATUSES.ON_VERIFICATION) {
             nextUpdate.reviewState = 'pending';
+            nextReviewState = 'pending';
+          } else {
+            unsetFields.reviewState = '';
             nextReviewState = 'pending';
           }
 
           unsetFields.statusReason = '';
+          unsetFields.blockSource = '';
           unsetFields.reviewFeedback = '';
           unsetFields.reviewedAt = '';
           unsetFields.reviewedBy = '';
-
           action = ADMIN_AUDIT_ACTIONS.PHARMACY_REACTIVATION_REVIEWED;
 
           break;
@@ -461,7 +538,12 @@ export async function decidePharmacyModerationByAdminService(
           'Pharmacy review has changed. Refresh and retry.'
         );
 
-      if (input.action === 'approve') {
+      if (
+        input.action === 'approve' ||
+        (input.action === 'review_reactivation' && isReactivation)
+      ) {
+        await syncPharmacyPaymentIdentifiers(saved, session);
+
         await reconcileAttachedPharmacyDocumentStorage(
           saved._id,
           saved.documents ?? [],
@@ -470,7 +552,7 @@ export async function decidePharmacyModerationByAdminService(
         );
 
         // Only initial activation needs a default client and owner lifecycle event.
-        if (!pharmacy.activatedAt) {
+        if (!pharmacy.activatedAt && nextStatus === PHARMACY_STATUSES.ACTIVE) {
           const defaultClient = await ensureDefaultPharmacyClient(
             saved._id,
             adminUserId,
@@ -556,6 +638,7 @@ export async function decidePharmacyModerationByAdminService(
         before: {
           status: previousStatus,
           reviewState: priorReviewState,
+          blockSource: pharmacy.blockSource ?? null,
           revision: input.expectedRevision,
           moderationAction: input.action,
           publishedSections: [] as string[],
@@ -564,6 +647,7 @@ export async function decidePharmacyModerationByAdminService(
         after: {
           status: saved.status,
           reviewState: afterReviewState,
+          blockSource: saved.blockSource ?? null,
           revision: saved.updatedAt.toISOString(),
           moderationAction: input.action,
           publishedSections,

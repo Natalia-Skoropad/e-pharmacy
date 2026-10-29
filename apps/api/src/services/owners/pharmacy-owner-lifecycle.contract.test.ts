@@ -13,7 +13,10 @@ function read(relativePath: string): string {
 
 test('owner lifecycle route is permission-protected and manual activation cannot target new', () => {
   const routes = read('../../routes/admin/admin.routes.ts');
-  const schema = read('../../schemas/admin/owners/admin-pharmacy-owner.schema.ts');
+
+  const schema = read(
+    '../../schemas/admin/owners/admin-pharmacy-owner.schema.ts'
+  );
 
   assert.match(
     routes,
@@ -36,9 +39,31 @@ test('first pharmacy activation runs owner auto-activation in the same transacti
   const adminService = read('../admin/pharmacies/admin.service.ts');
   const lifecycle = read('./pharmacy-owner-lifecycle.service.ts');
 
+  // Initial activation is still performed by Admin's approve decision.
   assert.match(
     adminService,
-    /session\.withTransaction[\s\S]*?if \(input\.action === 'approve'\)[\s\S]*?if \(!pharmacy\.activatedAt\)[\s\S]*?await ensureDefaultPharmacyClient\([\s\S]*?session\s*\)[\s\S]*?await activateNewPharmacyOwnerForPharmacy\([\s\S]*?session\s*\)/
+    /session\.withTransaction[\s\S]*?case 'approve': \{[\s\S]*?nextStatus = PHARMACY_STATUSES\.ACTIVE/
+  );
+
+  // The shared post-review path now also handles reactivation, but it must
+  // activate a new Owner only for the pharmacy's *first* Active transition.
+  const activationGuard =
+    'if (!pharmacy.activatedAt && nextStatus === PHARMACY_STATUSES.ACTIVE)';
+
+  const guardIndex = adminService.indexOf(activationGuard);
+
+  assert.ok(guardIndex > adminService.indexOf('session.withTransaction('));
+
+  assert.ok(
+    guardIndex >
+      adminService.indexOf('const saved = await Pharmacy.findOneAndUpdate(')
+  );
+
+  const firstActivation = adminService.slice(guardIndex);
+
+  assert.match(
+    firstActivation,
+    /await ensureDefaultPharmacyClient\([\s\S]*?session\s*\)[\s\S]*?await activateNewPharmacyOwnerForPharmacy\([\s\S]*?session\s*\)/
   );
 
   assert.match(

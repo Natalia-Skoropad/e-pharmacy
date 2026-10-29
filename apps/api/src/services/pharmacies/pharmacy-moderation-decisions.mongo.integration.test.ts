@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
 import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
+
 import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
 import { Order } from '../../models/orders/order.model';
-import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
+
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { PharmacyPaymentIdentifier } from '../../models/pharmacies/pharmacyPaymentIdentifier.model';
+import { PharmacyOwnerDocument } from '../../models/owners/pharmacyOwnerDocument.model';
+
 import { hashPassword } from '../../utils/auth/password';
 import { decidePharmacyModerationByAdminService } from '../admin/pharmacies/admin.service';
 
@@ -81,6 +87,20 @@ test(
       });
 
       pharmacyId = pharmacy._id;
+
+      const ownerDocumentContent = Buffer.from(
+        '%PDF-1.4 owner registration evidence'
+      );
+
+      await PharmacyOwnerDocument.create({
+        ownerUserId: ownerId,
+        uploadedByUserId: ownerId,
+        name: 'owner-registration.pdf',
+        size: ownerDocumentContent.length,
+        type: 'application/pdf',
+        sha256: createHash('sha256').update(ownerDocumentContent).digest('hex'),
+        content: ownerDocumentContent,
+      });
 
       const pharmacyKey = String(pharmacyId);
       const actorKey = String(adminId);
@@ -193,18 +213,8 @@ test(
         status: 'new',
       });
 
-      await assert.rejects(
-        () =>
-          decidePharmacyModerationByAdminService(
-            pharmacyKey,
-            decision('block', approved.updatedAt, `block-conflict-${marker}`),
-            actorKey
-          ),
-        /unfinished orders/i
-      );
-
-      await Order.collection.deleteOne({ _id: orderId });
-
+      // Emergency Admin blocking remains available even with unfinished
+      // orders. These orders are retained for supervised resolution.
       const blocked = await decidePharmacyModerationByAdminService(
         pharmacyKey,
         decision('block', approved.updatedAt, `block-${marker}`),
@@ -212,7 +222,9 @@ test(
       );
 
       assert.equal(blocked.status, 'blocked');
+      assert.ok(await Order.exists({ _id: orderId, pharmacyId }));
 
+      await Order.collection.deleteOne({ _id: orderId });
       await User.updateOne({ _id: ownerId }, { $set: { status: 'blocked' } });
 
       await assert.rejects(
@@ -273,6 +285,8 @@ test(
           ],
         });
 
+        await PharmacyPaymentIdentifier.deleteMany({ pharmacyId });
+        await PharmacyOwnerDocument.deleteMany({ ownerUserId: ownerId });
         await Pharmacy.deleteOne({ _id: pharmacyId });
         await User.deleteMany({ defaultClientPharmacyId: pharmacyId });
       }

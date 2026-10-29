@@ -26,7 +26,16 @@ import {
   reconcileAttachedPharmacyDocumentStorage,
 } from './pharmacy-document.service';
 
-import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
+import {
+  hasEffectiveModerationChanges,
+  missingRequiredModerationFields,
+} from './pharmacy-moderation-readiness';
+
+import {
+  ensurePharmacyPaymentUniqueIndex,
+  syncPharmacyPaymentIdentifiers,
+} from './pharmacy-payment-uniqueness.service';
+
 import { findPharmacyForProfileAccess } from './pharmacy-membership.service';
 import { clonePendingModerationFields as normalizePendingModerationPayload } from './pharmacy-location';
 
@@ -98,6 +107,8 @@ export async function submitMyPharmacyModerationService(
   pharmacyId?: string,
   comment?: string
 ): Promise<{ pharmacy: MyPharmacyProfileResponseDto; message: string }> {
+  await ensurePharmacyPaymentUniqueIndex();
+
   const mongoSession = await mongoose.startSession();
 
   let result: {
@@ -161,21 +172,6 @@ export async function submitMyPharmacyModerationService(
 
       const hasNewChanges = hasModeratedProfileChanges(resolvedChanges);
 
-      const hasExistingPendingChanges = Boolean(
-        pharmacy.pendingModeration &&
-        Object.keys(pharmacy.pendingModeration).length > 0
-      );
-
-      if (!hasNewChanges && !hasExistingPendingChanges) {
-        throw httpError(
-          HTTP_STATUS.BAD_REQUEST,
-          'There are no pharmacy changes to send for moderation.',
-          undefined,
-
-          PHARMACY_NO_PENDING_CHANGES_ERROR_CODE
-        );
-      }
-
       // Validate the effective pharmacy before submitting changes for review.
       // A pending null/blank field may not invalidate the published record,
       // but must block an incomplete proposed replacement from moderation.
@@ -186,6 +182,15 @@ export async function submitMyPharmacyModerationService(
             pharmacy.location
           )
         : normalizePendingModerationPayload(pharmacy.pendingModeration);
+
+      if (!hasEffectiveModerationChanges(pharmacy, pendingBeforeSubmission)) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'There are no pharmacy changes to send for moderation.',
+          undefined,
+          PHARMACY_NO_PENDING_CHANGES_ERROR_CODE
+        );
+      }
 
       const missing = missingRequiredModerationFields(
         pharmacy,
@@ -243,6 +248,8 @@ export async function submitMyPharmacyModerationService(
       );
 
       if (!updatedPharmacy) throwPharmacyProfileConflict();
+
+      await syncPharmacyPaymentIdentifiers(updatedPharmacy, mongoSession);
 
       await reconcileAttachedPharmacyDocumentStorage(
         updatedPharmacy._id,

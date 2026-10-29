@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import mongoose, { Types, type ClientSession } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { canPharmacyProfilePerformAction } from '../../constants/pharmacies/pharmacy-profile';
 import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-document-validation';
 import { PHARMACY_OWNER_DOCUMENT_RULES } from '../../constants/owners/pharmacy-owner-document-validation';
 
@@ -418,6 +419,19 @@ export async function createPrivatePharmacyDocumentUploadService(
     undefined,
     pharmacyId
   );
+
+  if (
+    !canPharmacyProfilePerformAction(
+      pharmacy.status,
+      'edit',
+      pharmacy.reviewState
+    )
+  ) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'Pharmacy documents cannot be modified while under review.'
+    );
+  }
 
   const verified = decodeAndVerifyDocumentUpload(
     input,

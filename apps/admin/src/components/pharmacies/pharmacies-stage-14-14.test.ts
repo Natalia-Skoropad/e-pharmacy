@@ -22,11 +22,13 @@ function pharmacy(
   status: AdminPharmacyDetail['status'],
   ownerStatus: 'new' | 'active' | 'blocked' | null = 'active',
   reviewState: AdminPharmacyDetail['reviewState'] = 'pending',
-  wasActivated = true
+  wasActivated = true,
+  blockSource?: AdminPharmacyDetail['blockSource']
 ): AdminPharmacyDetail {
   return {
     id: '507f1f77bcf86cd799439011',
     status,
+    ...(blockSource ? { blockSource } : {}),
 
     owner: ownerStatus
       ? {
@@ -67,26 +69,51 @@ const actions = (detail: AdminPharmacyDetail) =>
 
 //===================================================================
 
-test('14.14: canonical transition matrix excludes new, same-status changes and forbidden approvals', () => {
+test('14.14: canonical transition matrix gates review decisions and emergency blocking', () => {
   for (const review of ['pending', 'changes_requested'] as const) {
     for (const owner of ['new', 'active', 'blocked', null] as const) {
+      const ownerCanOperate = owner === 'active' || owner === 'new';
+
       assert.deepEqual(actions(pharmacy('new', owner, review)), []);
       assert.deepEqual(actions(pharmacy('active', owner, review)), ['block']);
 
       for (const status of ['on_verification', 'on_moderation'] as const) {
-        const visible = actions(pharmacy(status, owner, review));
-
         assert.deepEqual(
-          visible,
-          review === 'pending' && (owner === 'active' || owner === 'new')
-            ? ['approve', 'request_corrections', 'block']
-            : ['request_corrections', 'block']
+          actions(pharmacy(status, owner, review)),
+
+          review === 'changes_requested'
+            ? ['block'] // Only the emergency Admin action remains available.
+            : ownerCanOperate
+              ? ['approve', 'request_corrections', 'block']
+              : ['request_corrections', 'block']
         );
       }
 
       assert.deepEqual(
-        actions(pharmacy('blocked', owner, review)),
-        owner === 'active' || owner === 'new' ? ['review_reactivation'] : []
+        actions(pharmacy('on_reactivation', owner, review)),
+
+        review === 'changes_requested'
+          ? [] // Admin awaits the owner's corrected resubmission.
+          : ownerCanOperate
+            ? [
+                'review_reactivation',
+                'request_corrections',
+                'reject_reactivation',
+              ]
+            : ['request_corrections', 'reject_reactivation']
+      );
+
+      // An Owner-initiated deactivation must not be overridden by Admin.
+      assert.deepEqual(actions(pharmacy('blocked', owner, review)), []);
+
+      assert.deepEqual(
+        actions(pharmacy('blocked', owner, review, true, 'owner_deactivated')),
+        []
+      );
+
+      assert.deepEqual(
+        actions(pharmacy('blocked', owner, review, true, 'admin_blocked')),
+        ownerCanOperate ? ['review_reactivation'] : []
       );
     }
   }
@@ -121,7 +148,7 @@ test('14.14: corrections are explicit audited same-status decisions, not status 
 
 test('14.14: reactivation never silently enters operational moderation or publishes pending drafts', () => {
   const previouslyActive = getPharmacyModerationOptions(
-    pharmacy('blocked', 'active', 'pending', true)
+    pharmacy('blocked', 'active', 'pending', true, 'admin_blocked')
   );
 
   assert.equal(previouslyActive[0]?.targetStatus, 'active');
@@ -132,13 +159,30 @@ test('14.14: reactivation never silently enters operational moderation or publis
   );
 
   const neverActivated = getPharmacyModerationOptions(
-    pharmacy('blocked', 'active', 'pending', false)
+    pharmacy('blocked', 'active', 'pending', false, 'admin_blocked')
   );
 
   assert.equal(neverActivated[0]?.targetStatus, 'on_verification');
 
   assert.ok(
     !neverActivated.some((action) => action.targetStatus === 'on_moderation')
+  );
+
+  const submittedReactivation = getPharmacyModerationOptions(
+    pharmacy('on_reactivation', 'active', 'pending', false)
+  );
+
+  assert.equal(submittedReactivation[0]?.action, 'review_reactivation');
+  assert.equal(submittedReactivation[0]?.targetStatus, 'on_verification');
+
+  assert.deepEqual(
+    submittedReactivation.map(({ action }) => action),
+    ['review_reactivation', 'request_corrections', 'reject_reactivation']
+  );
+
+  assert.deepEqual(
+    actions(pharmacy('on_reactivation', 'active', 'changes_requested')),
+    []
   );
 });
 
@@ -175,12 +219,12 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
   );
 
-  const ownedPharmacySectionReview = await read(
-    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacySectionReview.tsx'
-  );
-
   const ownedPharmacyActions = await read(
     '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
+  );
+
+  const ownedPharmacyReview = await read(
+    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacySectionReview.tsx'
   );
 
   const pharmacyStatusPresentation = await read(
@@ -238,69 +282,57 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
   assert.match(actionsSource, /The owner will see this reason/);
   assert.match(sharedModal, /required/);
 
-  // Blocked pharmacies remain visibly blocked with an administrator reason,
-  // and neither blocked owners nor managers can submit them for verification.
+  // Review state is shown alongside the status, not by replacing the badge.
+  assert.match(ownedPharmacyInformation, /<Field label="Pharmacy status">/);
+
   assert.match(
     ownedPharmacyInformation,
-    /<Field label="Pharmacy status">\s*<StatusBadge \{\.\.\.PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]\} \/>/
+    /<StatusBadge \{\.\.\.PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]\} \/>/
   );
+
+  assert.match(
+    ownedPharmacyInformation,
+    /pharmacy\.reviewState === 'changes_requested'/
+  );
+
+  assert.match(ownedPharmacyInformation, /Needs changes/);
+  assert.match(ownedPharmacyInformation, /Pharmacy status activity/);
 
   assert.match(
     pharmacyStatusPresentation,
-    /blocked:\s*\{\s*label: 'Blocked',\s*tone: 'danger'\s*\}/
+    /blocked:\s*\{\s*label: 'Inactive',\s*tone: 'danger'\s*\}/
   );
 
-  // Owner feedback belongs to the changed section, not the published
-  // Pharmacy information card. Blocking reasons remain visible with status.
-  assert.match(
-    ownedPharmacySectionReview,
-    /<strong>Administrator feedback<\/strong>/
-  );
+  assert.match(ownedPharmacyReview, /pharmacy\.reviewFeedback/);
+  assert.match(ownedPharmacyInformation, /<Field label="Status reason">/);
+  assert.match(ownedPharmacyInformation, /show\(pharmacy\.statusReason\)/);
 
-  assert.match(ownedPharmacySectionReview, /\{pharmacy\.reviewFeedback\}/);
-
-  assert.match(
-    ownedPharmacyInformation,
-    /<Field label="Status reason">\{show\(pharmacy\.statusReason\)\}<\/Field>/
-  );
-
-  // Stage 14.18 moved verification and moderation into the owner action menu.
-  // Only owners may use these actions; verification still requires a completed
-  // pharmacy and owner documents, while moderation requires saved changes.
+  // Owner actions moved into their own component. Pending reviews do not
+  // offer Cancel; the Needs changes state restores owner actions.
   assert.match(ownedPharmacyDetail, /<OwnedPharmacyActions/);
-
-  assert.match(
-    ownedPharmacyActions,
-    /if \(pharmacy\.membershipRole !== 'owner'\) return null;/
-  );
-
   assert.match(ownedPharmacyActions, /const needsVerification\s*=/);
-  assert.match(ownedPharmacyActions, /pharmacy\.status === 'new'/);
+  assert.match(ownedPharmacyActions, /const needsModeration\s*=/);
+  assert.match(ownedPharmacyActions, /const canCancelReview\s*=/);
 
   assert.match(
     ownedPharmacyActions,
     /pharmacy\.reviewState === 'changes_requested'/
   );
 
-  assert.match(
-    ownedPharmacyActions,
-    /disabled=\{verificationIncomplete \|\| !ownerHasDocuments\}/
-  );
-
-  assert.match(
-    ownedPharmacyActions,
-    /await sendOwnedPharmacyForVerification\(pharmacy\.id, comment\.trim\(\)\)/
-  );
-
-  assert.match(
-    ownedPharmacyActions,
-    /disabled=\{!hasChanges \|\| moderationIncomplete\}/
-  );
-
+  assert.match(ownedPharmacyActions, /sendOwnedPharmacyForVerification\(/);
+  assert.match(ownedPharmacyActions, /submitOwnedPharmacyModeration\(/);
+  assert.match(ownedPharmacyActions, /cancelOwnedPharmacyReview\(/);
   assert.match(registry, /subscribeToPharmacyModerationRefresh/);
   assert.match(linked, /subscribeToPharmacyModerationRefresh/);
   assert.match(backend, /PHARMACY_CORRECTIONS_REQUESTED/);
-  assert.match(backend, /assertPharmacyHasNoActiveOrders/);
+
+  // Emergency Admin blocking is allowed even with unfinished orders.
+  assert.match(
+    backend,
+    /Emergency Admin block must remain possible even with unfinished orders/
+  );
+
+  assert.doesNotMatch(backend, /assertPharmacyHasNoActiveOrders/);
   assert.match(backend, /assertPharmacyOwnerCanOperate/);
   assert.match(schema, /max\(1000\)/);
 });

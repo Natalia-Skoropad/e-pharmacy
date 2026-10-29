@@ -39,7 +39,8 @@ export const PHARMACY_PROFILE_ACTIONS_BY_STATUS = {
   on_verification: [],
   on_moderation: [],
   active: ['edit', 'submit_for_moderation'],
-  blocked: [],
+  blocked: ['edit'],
+  on_reactivation: [],
 } as const;
 
 //===============================================================
@@ -49,15 +50,20 @@ export function canPharmacyProfilePerformAction(
   action: PharmacyProfileAction,
   reviewState?: 'pending' | 'changes_requested'
 ): boolean {
+  if (status === 'blocked' && reviewState === 'pending') return false;
   if (
-    (status === 'on_verification' || status === 'on_moderation') &&
+    (status === 'on_verification' ||
+      status === 'on_moderation' ||
+      status === 'on_reactivation') &&
     reviewState === 'changes_requested'
   ) {
     return (
       action === 'edit' ||
       (status === 'on_verification'
         ? action === 'submit_for_verification'
-        : action === 'submit_for_moderation')
+        : status === 'on_moderation'
+          ? action === 'submit_for_moderation'
+          : false)
     );
   }
 

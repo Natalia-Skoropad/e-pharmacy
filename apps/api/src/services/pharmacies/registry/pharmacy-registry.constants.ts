@@ -19,5 +19,6 @@ export const STATUS_FIELDS = [
   ['onVerification', PHARMACY_STATUSES.ON_VERIFICATION],
   ['active', PHARMACY_STATUSES.ACTIVE],
   ['onModeration', PHARMACY_STATUSES.ON_MODERATION],
+  ['onReactivation', PHARMACY_STATUSES.ON_REACTIVATION],
   ['blocked', PHARMACY_STATUSES.BLOCKED],
 ] as const;

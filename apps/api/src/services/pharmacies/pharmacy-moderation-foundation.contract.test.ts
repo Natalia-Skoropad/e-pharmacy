@@ -85,11 +85,7 @@ test('approval retains first activation, blocking retains historic approval and 
   ]);
 
   assert.match(admin, /activatedAt: pharmacy\.activatedAt \?\? approvedAt/);
-
-  assert.match(
-    admin,
-    /assertPharmacyHasNoActiveOrders\(pharmacy\._id, session\)/
-  );
+  assert.match(admin, /nextUpdate\.blockSource = 'admin_blocked'/);
 
   assert.match(
     admin,

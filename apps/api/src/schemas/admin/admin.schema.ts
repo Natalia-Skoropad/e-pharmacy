@@ -30,6 +30,7 @@ export const pharmacyModerationDecisionSchema = z
       'request_corrections',
       'block',
       'review_reactivation',
+      'reject_reactivation',
     ]),
 
     reason: pharmacyModerationReason,

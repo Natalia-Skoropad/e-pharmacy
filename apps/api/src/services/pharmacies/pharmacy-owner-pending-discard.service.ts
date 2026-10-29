@@ -11,6 +11,11 @@ import { getPharmacyMembership } from './pharmacy-membership.service';
 import { reconcileAttachedPharmacyDocumentStorage } from './pharmacy-document.service';
 
 import {
+  ensurePharmacyPaymentUniqueIndex,
+  syncPharmacyPaymentIdentifiers,
+} from './pharmacy-payment-uniqueness.service';
+
+import {
   appendPharmacyOwnerMutationAudit,
   serializePharmacyProfile,
   type PharmacyDocument,
@@ -60,6 +65,8 @@ export async function discardOwnedPharmacyPendingSectionService(
 
   requestId: string
 ) {
+  await ensurePharmacyPaymentUniqueIndex();
+
   const session = await mongoose.startSession();
 
   try {
@@ -67,7 +74,7 @@ export async function discardOwnedPharmacyPendingSectionService(
       const { pharmacy, membershipRole } = await getPharmacyMembership(
         userId,
         pharmacyId,
-        { session }
+        { session, allowBlocked: true }
       );
 
       if (membershipRole !== 'owner') {
@@ -80,6 +87,9 @@ export async function discardOwnedPharmacyPendingSectionService(
       const canDiscard =
         pharmacy.status === PHARMACY_STATUSES.ACTIVE ||
         (pharmacy.status === PHARMACY_STATUSES.ON_MODERATION &&
+          pharmacy.reviewState === 'changes_requested') ||
+        pharmacy.status === PHARMACY_STATUSES.BLOCKED ||
+        (pharmacy.status === PHARMACY_STATUSES.ON_REACTIVATION &&
           pharmacy.reviewState === 'changes_requested');
 
       if (!canDiscard) {
@@ -165,6 +175,8 @@ export async function discardOwnedPharmacyPendingSectionService(
           'Pharmacy changed while removing saved changes.'
         );
       }
+
+      await syncPharmacyPaymentIdentifiers(updated, session);
 
       await reconcileAttachedPharmacyDocumentStorage(
         updated._id,

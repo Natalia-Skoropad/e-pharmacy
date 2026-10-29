@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { PHARMACY_STATUSES } from '../../../constants/auth/auth';
 
 import {
@@ -62,6 +63,7 @@ export const adminPharmacyRegistryListQuerySchema = z.preprocess(
           PHARMACY_STATUSES.ON_VERIFICATION,
           PHARMACY_STATUSES.ACTIVE,
           PHARMACY_STATUSES.ON_MODERATION,
+          PHARMACY_STATUSES.ON_REACTIVATION,
           PHARMACY_STATUSES.BLOCKED,
         ])
       ),

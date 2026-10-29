@@ -48,6 +48,7 @@ export const PHARMACY_STATUSES = {
   NEW: 'new',
   ON_VERIFICATION: 'on_verification',
   ON_MODERATION: 'on_moderation',
+  ON_REACTIVATION: 'on_reactivation',
   ACTIVE: 'active',
   BLOCKED: 'blocked',
 } as const;

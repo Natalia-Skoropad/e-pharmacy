@@ -1,11 +1,11 @@
 import { Types, type PipelineStage } from 'mongoose';
 
 import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
-
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
+
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { AdminAuditLog } from '../../models/audit/adminAuditLog.model';
-import { ADMIN_AUDIT_ACTIONS } from '../../constants/admin/audit/admin-audit';
 import { User } from '../../models/accounts/user.model';
 
 import type {
@@ -18,6 +18,7 @@ import type { PharmacyMembershipRole } from '../../types/pharmacies/pharmacy';
 import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 import { httpError } from '../../utils/http/httpError';
 import { createSafeRegExp } from '../../utils/validation/regexp';
+
 import { buildPagedPharmacyItemsPipeline } from './registry/pharmacy-registry-query';
 
 import {
@@ -354,6 +355,7 @@ export async function getOwnedPharmacyStatisticsService(actorUserId: string) {
       onVerification: 0,
       active: 0,
       onModeration: 0,
+      onReactivation: 0,
       blocked: 0,
     }
   );

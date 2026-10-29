@@ -71,8 +71,35 @@ test('owner may edit/resubmit only after a correction decision', () => {
     false
   );
 
+  // An inactive pharmacy is editable so the owner can prepare reactivation.
   assert.equal(
     canPharmacyProfilePerformAction('blocked', 'edit', 'changes_requested'),
+    true
+  );
+
+  assert.equal(canPharmacyProfilePerformAction('blocked', 'edit'), true);
+
+  // A submitted reactivation is frozen until Admin requests corrections.
+  assert.equal(
+    canPharmacyProfilePerformAction('on_reactivation', 'edit', 'pending'),
+    false
+  );
+
+  assert.equal(
+    canPharmacyProfilePerformAction(
+      'on_reactivation',
+      'edit',
+      'changes_requested'
+    ),
+    true
+  );
+
+  assert.equal(
+    canPharmacyProfilePerformAction(
+      'on_reactivation',
+      'submit_for_moderation',
+      'changes_requested'
+    ),
     false
   );
 

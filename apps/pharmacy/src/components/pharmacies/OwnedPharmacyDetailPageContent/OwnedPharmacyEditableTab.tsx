@@ -49,6 +49,7 @@ import type {
 
 import { OwnedPharmacyEditorTabContent } from '../OwnedPharmacyEditor/OwnedPharmacyEditorTabContent';
 import { mergeProposedPharmacyDocuments } from './pharmacy-document-changes';
+import { usePaymentAvailability } from '../OwnedPharmacyEditor/usePaymentAvailability';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
@@ -92,10 +93,35 @@ export function OwnedPharmacyEditableTab({
     documents.map((doc) => doc.id).join(',') !==
       savedDocuments.map((doc) => doc.id).join(',');
 
-  const validation = validatePharmacyEditor(values, documents.length, 'draft');
+  const validationMode =
+    pharmacy.status === 'new' ||
+    pharmacy.status === 'blocked' ||
+    (pharmacy.status === 'on_reactivation' &&
+      pharmacy.reviewState === 'changes_requested') ||
+    (pharmacy.status === 'on_verification' &&
+      pharmacy.reviewState === 'changes_requested')
+      ? 'draft'
+      : 'verification';
+
+  const validation = validatePharmacyEditor(
+    values,
+    documents.length,
+    validationMode
+  );
+
+  const paymentAvailability = usePaymentAvailability(
+    pharmacy.id,
+    values,
+    Boolean(values.taxId || values.iban || values.receiptEmail)
+  );
+
+  const hasValidationErrors =
+    Object.keys(validation).length > 0 || paymentAvailability.blocked;
 
   const fieldError = (name: PharmacyEditorField) =>
-    errors[name] ?? (values[name].trim() ? validation[name] : undefined);
+    errors[name] ??
+    validation[name] ??
+    paymentAvailability.errors[name as 'taxId' | 'iban' | 'receiptEmail'];
 
   const change = (name: PharmacyEditorField, value: string) => {
     setValues((current) => ({ ...current, [name]: value }));
@@ -146,6 +172,7 @@ export function OwnedPharmacyEditableTab({
 
     try {
       const uploaded: PharmacyDocument[] = [];
+
       for (const file of files) {
         const document = normalizePharmacyDocument(file);
         const dataUrl = await readFileAsDataUrl(file);
@@ -169,12 +196,13 @@ export function OwnedPharmacyEditableTab({
   };
 
   const save = async () => {
-    if (readOnly || mutationLock.current || !dirty) return;
+    if (readOnly || mutationLock.current || !dirty || hasValidationErrors)
+      return;
 
     const errorsForSection = validatePharmacyEditor(
       values,
       documents.length,
-      'draft'
+      validationMode
     );
 
     const keys =
@@ -322,7 +350,7 @@ export function OwnedPharmacyEditableTab({
     <div className={css.sectionActions}>
       <Button
         iconLeft={<Save size={17} />}
-        disabled={!dirty || busy !== null}
+        disabled={!dirty || busy !== null || hasValidationErrors}
         isLoading={busy === 'save'}
         onClick={() => void save()}
       >

@@ -493,8 +493,32 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/payment-availability",
+    "backend": "/pharmacies/me/payment-availability",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/pharmacies",
     "backend": "/pharmacies/me/pharmacies",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/:pharmacyId/cancel-review",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/cancel-review",
+    "methods": {
+      "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/:pharmacyId/lifecycle-history",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/lifecycle-history",
     "methods": {
       "GET": "private"
     }
@@ -541,10 +565,26 @@
   },
   {
     "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/draft",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/draft",
+    "methods": {
+      "DELETE": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/pharmacies/me/pharmacies/[pharmacyId]/moderation-submission",
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/moderation-submission",
     "methods": {
       "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/payment-availability",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/payment-availability",
+    "methods": {
+      "GET": "private"
     }
   },
   {
@@ -562,6 +602,14 @@
     "methods": {
       "GET": "private",
       "PATCH": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/request-reactivation",
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/request-reactivation",
+    "methods": {
+      "POST": "private"
     }
   },
   {

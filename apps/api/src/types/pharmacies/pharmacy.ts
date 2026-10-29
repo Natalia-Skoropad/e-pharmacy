@@ -34,6 +34,8 @@ export type PharmacyLocation = Readonly<{
   geo?: PharmacyGeoPoint;
 }>;
 
+//===================================================================
+
 /** Draft persistence may remain incomplete while Pharmacy.status === 'new'. */
 export type PharmacyLocationDraft = Readonly<Partial<PharmacyLocation>>;
 
@@ -97,6 +99,8 @@ export type PharmacyPendingModeration = {
   bankDetails?: EditablePharmacyBankDetailsPatch;
 };
 
+//===================================================================
+
 export type PharmacyPendingModerationResponseDto = Omit<
   PharmacyPendingModeration,
   'documents'
@@ -104,7 +108,12 @@ export type PharmacyPendingModerationResponseDto = Omit<
   documents?: PharmacyProfileVerificationDocumentResponseDto[];
 };
 
+//===================================================================
+
 export type PharmacyModerationReviewState = 'pending' | 'changes_requested';
+export type PharmacyBlockSource = 'owner_deactivated' | 'admin_blocked';
+
+//===================================================================
 
 export type PharmacyEntity = {
   name: string;
@@ -121,6 +130,7 @@ export type PharmacyEntity = {
   description?: string;
   shortDescription?: string;
   statusReason?: string;
+  blockSource?: PharmacyBlockSource;
   reviewState?: PharmacyModerationReviewState;
   reviewFeedback?: string;
   reviewedAt?: Date;
@@ -142,6 +152,8 @@ export type PharmacyEntity = {
   updatedAt: Date;
 };
 
+//===================================================================
+
 export type PharmacyOptionResponseDto = {
   id: string;
   name: string;
@@ -159,6 +171,8 @@ export type PharmacyLocationFilterOptionDto = {
   region?: string;
   label: string;
 };
+
+//===================================================================
 
 export type PharmacyFilterOptionsResponseDto = {
   locations: PharmacyLocationFilterOptionDto[];
@@ -184,6 +198,8 @@ export type PharmacyCardSummaryResponseDto = {
   isFavorite: boolean;
 };
 
+//===================================================================
+
 export type PublicPharmacyResponseDto = {
   id: string;
   name: string;
@@ -202,6 +218,8 @@ export type PublicPharmacyResponseDto = {
   isFavorite: boolean;
   updatedAt: ISODateTimeString;
 };
+
+//===================================================================
 
 export type PharmacyReviewResponseDto = {
   id: string;
@@ -245,6 +263,8 @@ export type PharmacyProfileResponseDto = {
   reviewsCount: number;
   updatedAt: ISODateTimeString;
 };
+
+//===================================================================
 
 export type MyPharmacyProfileResponseDto = PharmacyProfileResponseDto & {
   membershipRole: PharmacyMembershipRole;

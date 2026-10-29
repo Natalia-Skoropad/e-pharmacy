@@ -6,6 +6,12 @@
     }
   },
   {
+    "backend": "/pharmacies/me/payment-availability",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
     "backend": "/pharmacies/me/pharmacies",
     "methods": {
       "GET": "private"
@@ -15,6 +21,12 @@
     "backend": "/pharmacies/me/pharmacies/:pharmacyId",
     "methods": {
       "GET": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/cancel-review",
+    "methods": {
+      "POST": "private"
     }
   },
   {
@@ -30,10 +42,34 @@
     }
   },
   {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/draft",
+    "methods": {
+      "DELETE": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/lifecycle-history",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/payment-availability",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/profile",
     "methods": {
       "GET": "private",
       "PATCH": "private"
+    }
+  },
+  {
+    "backend": "/pharmacies/me/pharmacies/:pharmacyId/request-reactivation",
+    "methods": {
+      "POST": "private"
     }
   },
   {

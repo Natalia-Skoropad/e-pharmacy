@@ -37,6 +37,7 @@ export type OwnedPharmacyStatistics = Readonly<{
   onVerification: number;
   active: number;
   onModeration: number;
+  onReactivation: number;
   blocked: number;
 }>;
 

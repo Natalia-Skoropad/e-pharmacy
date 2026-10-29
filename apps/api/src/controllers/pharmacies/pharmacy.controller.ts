@@ -11,8 +11,12 @@ import type {
   SubmitMyPharmacyModerationInput,
   UpdateMyPharmacyProfileInput,
   ownedPharmacyDeactivateSchema,
+  ownedPharmacyDeleteDraftSchema,
+  ownedPharmacyReactivationSchema,
+  ownedPharmacyCancellationSchema,
   ownedPharmacyDiscardSchema,
   ownedPharmacyModerationSchema,
+  pharmacyPaymentAvailabilityQuerySchema,
 } from '../../schemas/pharmacies/pharmacy.schema';
 
 import type { PharmacyDocumentUploadInput } from '../../schemas/shared/pharmacy-document.schema';
@@ -21,6 +25,7 @@ import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schem
 import type {
   OwnedPharmacyRegistryParams,
   OwnedPharmacyDocumentParams,
+  ownedPharmacyLifecycleHistoryQuerySchema,
 } from '../../schemas/owners/owned-pharmacy-registry.schema';
 
 import {
@@ -41,6 +46,7 @@ import {
 
 import { getOrderSalesStatisticsForPharmacyService } from '../../services/orders/order-sales-statistics.service';
 import { getPharmacyMembership } from '../../services/pharmacies/pharmacy-membership.service';
+import { checkPaymentIdentifierDuplicates } from '../../services/pharmacies/pharmacy-payment-uniqueness.service';
 import { createPharmacyDraftService } from '../../services/pharmacies/pharmacy-create.service';
 
 import {
@@ -49,11 +55,16 @@ import {
 } from '../../services/pharmacies/pharmacy-owner-deactivation.service';
 
 import { discardOwnedPharmacyPendingSectionService } from '../../services/pharmacies/pharmacy-owner-pending-discard.service';
+import { deleteOwnedPharmacyDraftService } from '../../services/pharmacies/pharmacy-owner-delete-draft.service';
+import { listOwnedPharmacyLifecycleHistoryService } from '../../services/pharmacies/pharmacy-lifecycle-history.service';
+import { cancelOwnedPharmacyReviewService } from '../../services/pharmacies/pharmacy-owner-review-cancellation.service';
+import { requestOwnedPharmacyReactivationService } from '../../services/pharmacies/pharmacy-owner-reactivation.service';
 import { listUserPharmacyMemberships } from '../../services/pharmacies/pharmacy-membership.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
 
 import { sendSuccessResponse } from '../../utils/http/apiResponse';
+import { httpError } from '../../utils/http/httpError';
 
 //===============================================================
 
@@ -91,6 +102,152 @@ export async function getOwnedPharmacyProfile(
 
   res.setHeader('Cache-Control', 'private, no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function requestOwnedPharmacyReactivation(
+  req: Request,
+
+  res: ValidatedResponse<
+    z.infer<typeof ownedPharmacyReactivationSchema>,
+    OwnedPharmacyRegistryParams
+  >
+): Promise<void> {
+  const data = await requestOwnedPharmacyReactivationService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getOwnedPharmacyLifecycleHistory(
+  req: Request,
+
+  res: ValidatedResponse<
+    unknown,
+    OwnedPharmacyRegistryParams,
+    z.infer<typeof ownedPharmacyLifecycleHistoryQuerySchema>
+  >
+): Promise<void> {
+  const data = await listOwnedPharmacyLifecycleHistoryService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.query.page
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function cancelOwnedPharmacyReview(
+  req: Request,
+
+  res: ValidatedResponse<
+    z.infer<typeof ownedPharmacyCancellationSchema>,
+    OwnedPharmacyRegistryParams
+  >
+): Promise<void> {
+  const data = await cancelOwnedPharmacyReviewService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body.type,
+    res.locals.validated.body.expectedRevision,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function deleteOwnedPharmacyDraft(
+  req: Request,
+
+  res: ValidatedResponse<
+    z.infer<typeof ownedPharmacyDeleteDraftSchema>,
+    OwnedPharmacyRegistryParams
+  >
+): Promise<void> {
+  const data = await deleteOwnedPharmacyDraftService(
+    req.user?.id ?? '',
+    res.locals.validated.params.pharmacyId,
+    res.locals.validated.body.expectedRevision,
+    res.locals.requestId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getNewPharmacyPaymentAvailability(
+  _req: Request,
+
+  res: ValidatedResponse<
+    unknown,
+    unknown,
+    z.infer<typeof pharmacyPaymentAvailabilityQuerySchema>
+  >
+): Promise<void> {
+  const duplicates = await checkPaymentIdentifierDuplicates(
+    undefined,
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data: { duplicates },
+  });
+}
+
+//===============================================================
+
+export async function getOwnedPharmacyPaymentAvailability(
+  req: Request,
+
+  res: ValidatedResponse<
+    unknown,
+    OwnedPharmacyRegistryParams,
+    z.infer<typeof pharmacyPaymentAvailabilityQuerySchema>
+  >
+): Promise<void> {
+  const pharmacyId = res.locals.validated.params.pharmacyId;
+
+  const { membershipRole } = await getPharmacyMembership(
+    req.user?.id ?? '',
+    pharmacyId
+  );
+
+  if (membershipRole !== 'owner') {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Only the pharmacy owner can check payment data.'
+    );
+  }
+
+  const duplicates = await checkPaymentIdentifierDuplicates(
+    pharmacyId,
+    res.locals.validated.query
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+
+  sendSuccessResponse({
+    res,
+    statusCode: HTTP_STATUS.OK,
+    data: { duplicates },
+  });
 }
 
 //===============================================================

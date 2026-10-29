@@ -297,6 +297,7 @@ const PHARMACY_STATUSES = new Set([
   'new',
   'on_verification',
   'on_moderation',
+  'on_reactivation',
   'active',
   'blocked',
 ]);
@@ -2218,6 +2219,7 @@ function parsePharmacyProfile(
       description: 'string',
       shortDescription: 'string',
       statusReason: 'string',
+      blockSource: 'string',
       reviewState: 'string',
       reviewFeedback: 'string',
       reviewedAt: 'string',
@@ -2242,6 +2244,18 @@ function parsePharmacyProfile(
   }
 
   if (
+    record.blockSource !== undefined &&
+    record.blockSource !== 'owner_deactivated' &&
+    record.blockSource !== 'admin_blocked'
+  ) {
+    throw invalidDto(
+      'pharmacy profile.blockSource is invalid.',
+      record,
+      context
+    );
+  }
+
+  if (
     record.reviewState !== undefined &&
     record.reviewState !== 'pending' &&
     record.reviewState !== 'changes_requested'
@@ -2256,7 +2270,8 @@ function parsePharmacyProfile(
   if (
     record.reviewState !== undefined &&
     record.status !== 'on_verification' &&
-    record.status !== 'on_moderation'
+    record.status !== 'on_moderation' &&
+    record.status !== 'on_reactivation'
   ) {
     throw invalidDto(
       'pharmacy profile.reviewState is incompatible with status.',
@@ -2370,6 +2385,11 @@ function parsePharmacyProfile(
 
     ...(record.statusReason !== undefined
       ? { statusReason: record.statusReason as string }
+      : {}),
+
+    ...(record.blockSource === 'owner_deactivated' ||
+    record.blockSource === 'admin_blocked'
+      ? { blockSource: record.blockSource }
       : {}),
 
     ...(record.reviewState !== undefined

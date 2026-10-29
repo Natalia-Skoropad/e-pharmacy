@@ -11,7 +11,6 @@ import type {
 } from '@e-pharmacy/types/pharmacies';
 
 import type { PharmacyOwnerAccountStatus } from '@e-pharmacy/types/auth';
-
 import type { ISODateTimeString } from '@e-pharmacy/types/primitives';
 
 //===================================================================
@@ -23,11 +22,16 @@ const PHARMACY_STATUSES = new Set([
   'on_verification',
   'active',
   'on_moderation',
+  'on_reactivation',
   'blocked',
 ]);
 
+//===================================================================
+
 const OWNER_STATUSES = new Set(['new', 'active', 'blocked']);
 const REVIEW_STATES = new Set(['pending', 'changes_requested']);
+
+//===================================================================
 
 const BANK_KEYS = [
   'recipientName',
@@ -60,6 +64,7 @@ function text(value: unknown, label: string): string {
 
 function nonempty(value: unknown, label: string): string {
   const result = text(value, label);
+
   if (!result.trim()) throw new TypeError(`Invalid ${label}.`);
 
   return result;
@@ -254,6 +259,7 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
   const owner = row.owner === null ? null : record(row.owner, 'pharmacy owner');
 
   const rating = number(metrics.rating, 'rating');
+
   if (rating > 5) throw new TypeError('Invalid rating.');
 
   return {
@@ -288,6 +294,16 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
       : { pendingChanges: pendingChanges(row.pendingChanges) }),
 
     ...optionalText(row, 'statusReason'),
+
+    ...(row.blockSource === 'owner_deactivated' ||
+    row.blockSource === 'admin_blocked'
+      ? { blockSource: row.blockSource }
+      : {}),
+
+    ...(row.blockSource === 'owner_deactivated' ||
+    row.blockSource === 'admin_blocked'
+      ? { blockSource: row.blockSource }
+      : {}),
 
     ...(row.reviewState === undefined
       ? {}
@@ -328,13 +344,16 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
       : {
           tabCounts: (() => {
             const counts = record(row.tabCounts, 'pharmacy tab counts');
+
             return {
               comments: count(counts.comments, 'comments count'),
               orders: count(counts.orders, 'all orders count'),
+
               productRequests: count(
                 counts.productRequests,
                 'product requests count'
               ),
+
               activity: count(counts.activity, 'activity count'),
             };
           })(),

@@ -8,6 +8,7 @@ export const PHARMACY_STATUSES = [
   'new',
   'on_verification',
   'on_moderation',
+  'on_reactivation',
   'active',
   'blocked',
 ] as const satisfies readonly PharmacyStatus[];

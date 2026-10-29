@@ -702,3 +702,7 @@
     min-height: 340px;
   }
 }
+
+/* Keep the Admin correction state next to its pharmacy status. */
+.statusWithReview { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.needsChanges { color: #a76712; background: #fff5de; border: 1px solid #efdaac; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; }

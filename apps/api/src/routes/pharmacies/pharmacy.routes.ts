@@ -29,6 +29,12 @@ import {
   createPharmacyDraft,
   getOwnedPharmacyProfile,
   updateOwnedPharmacyDraft,
+  getOwnedPharmacyPaymentAvailability,
+  getNewPharmacyPaymentAvailability,
+  deleteOwnedPharmacyDraft,
+  requestOwnedPharmacyReactivation,
+  cancelOwnedPharmacyReview,
+  getOwnedPharmacyLifecycleHistory,
   submitOwnedPharmacyForVerification,
   submitOwnedPharmacyForModeration,
   deactivateOwnedPharmacy,
@@ -73,7 +79,11 @@ import {
   ownedPharmacyModerationSchema,
   ownedPharmacyVerificationSchema,
   ownedPharmacyDeactivateSchema,
+  ownedPharmacyDeleteDraftSchema,
+  ownedPharmacyReactivationSchema,
+  ownedPharmacyCancellationSchema,
   ownedPharmacyDiscardSchema,
+  pharmacyPaymentAvailabilityQuerySchema,
   submitMyPharmacyModerationSchema,
   updateMyPharmacyProfileSchema,
   uploadMyPharmacyDocumentSchema,
@@ -88,6 +98,7 @@ import {
   ownedPharmacyRegistryOptionsQuerySchema,
   ownedPharmacyRegistryParamsSchema,
   ownedPharmacyDocumentParamsSchema,
+  ownedPharmacyLifecycleHistoryQuerySchema,
 } from '../../schemas/owners/owned-pharmacy-registry.schema';
 
 import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
@@ -187,6 +198,91 @@ pharmacyRoutes.patch(
   }),
 
   ctrlWrapper(updateOwnedPharmacyDraft)
+);
+
+//=================================================================================
+
+pharmacyRoutes.post(
+  '/me/pharmacies/:pharmacyId/request-reactivation',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: ownedPharmacyReactivationSchema,
+  }),
+
+  ctrlWrapper(requestOwnedPharmacyReactivation)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/:pharmacyId/lifecycle-history',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    query: ownedPharmacyLifecycleHistoryQuerySchema,
+  }),
+
+  ctrlWrapper(getOwnedPharmacyLifecycleHistory)
+);
+
+//=================================================================================
+
+pharmacyRoutes.post(
+  '/me/pharmacies/:pharmacyId/cancel-review',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: ownedPharmacyCancellationSchema,
+  }),
+
+  ctrlWrapper(cancelOwnedPharmacyReview)
+);
+
+//=================================================================================
+
+pharmacyRoutes.delete(
+  '/me/pharmacies/:pharmacyId/draft',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    body: ownedPharmacyDeleteDraftSchema,
+  }),
+
+  ctrlWrapper(deleteOwnedPharmacyDraft)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/payment-availability',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ query: pharmacyPaymentAvailabilityQuerySchema }),
+  ctrlWrapper(getNewPharmacyPaymentAvailability)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/:pharmacyId/payment-availability',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+
+  validate({
+    params: ownedPharmacyRegistryParamsSchema,
+    query: pharmacyPaymentAvailabilityQuerySchema,
+  }),
+
+  ctrlWrapper(getOwnedPharmacyPaymentAvailability)
 );
 
 //=================================================================================

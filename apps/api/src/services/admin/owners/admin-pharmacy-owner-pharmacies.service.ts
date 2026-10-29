@@ -23,7 +23,15 @@ type OwnerPharmacyAggregateRow = Readonly<{
   location: PharmacyLocationDraft | null;
   imageUrl: string | null;
   createdAt: Date;
-  status: 'new' | 'on_verification' | 'on_moderation' | 'active' | 'blocked';
+
+  status:
+    | 'new'
+    | 'on_verification'
+    | 'on_moderation'
+    | 'on_reactivation'
+    | 'active'
+    | 'blocked';
+
   activeClientsCount: number;
   addedProductsCount: number;
   successfulOrdersCount: number;

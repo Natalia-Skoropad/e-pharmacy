@@ -37,22 +37,29 @@ export function getPharmacyModerationOptions(
       return [];
 
     case 'on_verification':
-    case 'on_moderation': {
+    case 'on_moderation':
+    case 'on_reactivation': {
       const options: PharmacyModerationOption[] = [];
 
       if (reviewState !== 'changes_requested' && ownerCanOperate) {
         options.push({
-          action: 'approve',
+          action: status === 'on_reactivation' ? 'review_reactivation' : 'approve',
 
           label:
-            status === 'on_verification'
+            status === 'on_reactivation' ? 'Approve reactivation' : status === 'on_verification'
               ? 'Approve & activate'
               : 'Approve changes',
 
-          targetStatus: 'active',
+          targetStatus: status === 'on_reactivation' && !pharmacy.dates.activatedAt
+            ? 'on_verification'
+            : 'active',
 
           description:
-            status === 'on_verification'
+            status === 'on_reactivation'
+              ? pharmacy.dates.activatedAt
+                ? 'Approve the frozen submitted reactivation details and restore availability.'
+                : 'Approve the frozen reactivation details and return this never-activated pharmacy to initial verification. It will remain unavailable to customers.'
+              : status === 'on_verification'
               ? 'Approve the registration and activate this pharmacy. The owner will be able to operate it.'
               : 'Publish the pending changes atomically. Until approval, the previously approved pharmacy remains available to customers.',
 
@@ -61,7 +68,7 @@ export function getPharmacyModerationOptions(
         });
       }
 
-      options.push({
+      if (reviewState !== 'changes_requested') options.push({
         action: 'request_corrections',
         label: 'Request corrections',
         targetStatus: status,
@@ -69,19 +76,28 @@ export function getPharmacyModerationOptions(
         description:
           status === 'on_moderation'
             ? 'Keep On moderation and the published pharmacy operational. The owner will see your comments, edit the pending draft and resubmit it.'
-            : 'Keep On verification. The owner will see your comments and may correct and resubmit their registration.',
+            : status === 'on_reactivation'
+              ? 'Keep the pharmacy unavailable. The owner will see your comments, correct the saved draft and resubmit the reactivation request.'
+              : 'Keep On verification. The owner will see your comments and may correct and resubmit their registration.',
 
         feedbackVisibleToOwner: true,
         danger: false,
       });
 
-      options.push({
+      if (status === 'on_reactivation' && reviewState !== 'changes_requested') options.push({
+        action: 'reject_reactivation',
+        label: 'Reject reactivation', targetStatus: 'blocked',
+        description: 'Reject this request with a reason; pharmacy remains unavailable.',
+        feedbackVisibleToOwner: true, danger: true,
+      });
+
+      if (status !== 'on_reactivation') options.push({
         action: 'block',
         label: 'Block pharmacy',
         targetStatus: 'blocked',
 
         description:
-          'Take the pharmacy offline. Blocking is refused while new or in-progress orders exist. The reason will be shown to the owner.',
+          'Take the pharmacy offline. Emergency blocking does not discard unfinished orders. The reason will be shown to the owner.',
 
         feedbackVisibleToOwner: true,
         danger: true,
@@ -97,7 +113,7 @@ export function getPharmacyModerationOptions(
           targetStatus: 'blocked',
 
           description:
-            'Take the pharmacy offline. Blocking is refused while new or in-progress orders exist. The reason will be shown to the owner.',
+            'Take the pharmacy offline. Emergency blocking does not discard unfinished orders. The reason will be shown to the owner.',
 
           feedbackVisibleToOwner: true,
           danger: true,
@@ -105,7 +121,7 @@ export function getPharmacyModerationOptions(
       ];
 
     case 'blocked':
-      if (!ownerCanOperate) return [];
+      if (!ownerCanOperate || pharmacy.blockSource !== 'admin_blocked') return [];
       return [
         {
           action: 'review_reactivation',

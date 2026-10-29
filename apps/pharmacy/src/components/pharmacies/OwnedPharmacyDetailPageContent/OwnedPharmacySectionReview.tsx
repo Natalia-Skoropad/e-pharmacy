@@ -113,6 +113,7 @@ function comparisons(
       });
     }
   }
+
   for (const key of ['address', 'settlement', 'region'] as const) {
     if (pending.location && key in pending.location) {
       fields.push({
@@ -123,6 +124,7 @@ function comparisons(
       });
     }
   }
+
   return fields;
 }
 
@@ -203,7 +205,8 @@ export function OwnedPharmacySectionReview({
 
   const isSubmitted =
     (pharmacy.status === 'on_moderation' ||
-      pharmacy.status === 'on_verification') &&
+      pharmacy.status === 'on_verification' ||
+      pharmacy.status === 'on_reactivation') &&
     pharmacy.reviewState !== 'changes_requested';
 
   const discard = async () => {

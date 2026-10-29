@@ -561,6 +561,41 @@ test('audit change presentation uses CRUD colors and target status colors', () =
       statusBefore: 'active',
       statusAfter: 'blocked',
     }),
-    'Active → Blocked'
+    'Active → Inactive'
+  );
+});
+
+//===================================================================
+
+test('approved pharmacy lifecycle audit actions remain visible to Admin after review withdrawal or reactivation', () => {
+  const events = [
+    ['pharmacy.verification.withdrawn', 'Pharmacy verification cancelled'],
+    ['pharmacy.moderation.withdrawn', 'Pharmacy moderation cancelled'],
+    ['pharmacy.reactivation.withdrawn', 'Pharmacy reactivation cancelled'],
+    ['pharmacy.reactivation.requested', 'Pharmacy reactivation requested'],
+    ['pharmacy.reactivation.rejected', 'Pharmacy reactivation rejected'],
+  ] as const;
+
+  for (const [action, label] of events) {
+    const parsed = parseAdminAuditListResponse({
+      items: [{ ...item, action, statusBefore: 'blocked', statusAfter: 'on_reactivation' }],
+      page: 1,
+      perPage: 20,
+      total: 1,
+      totalPages: 1,
+      earliestCreatedAt: '2026-09-24',
+    });
+
+    assert.equal(parsed.items[0]?.action, action);
+    assert.equal(getAdminAuditActionLabel(action), label);
+    assert.equal(getAdminAuditChangeTone({ action }), 'pending');
+  }
+
+  assert.equal(
+    getAdminAuditStatusTransitionLabel({
+      statusBefore: 'blocked',
+      statusAfter: 'on_reactivation',
+    }),
+    'Inactive → Reactivation requested'
   );
 });

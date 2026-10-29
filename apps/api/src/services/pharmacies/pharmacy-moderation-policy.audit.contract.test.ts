@@ -19,7 +19,7 @@ async function source(path: string): Promise<string> {
 
 //===============================================================
 
-test('pharmacy domain remains five-status and on_moderation operational', async () => {
+test('pharmacy domain includes reactivation and on_moderation remains operational', async () => {
   const [auth, operational, profile] = await Promise.all([
     source('constants/auth/auth.ts'),
     source('constants/pharmacies/pharmacy-status.ts'),
@@ -34,7 +34,14 @@ test('pharmacy domain remains five-status and on_moderation operational', async 
 
   assert.deepEqual(
     [...statuses.matchAll(/^\s*[A-Z_]+:\s*'([^']+)'/gm)].map((item) => item[1]),
-    ['new', 'on_verification', 'on_moderation', 'active', 'blocked']
+    [
+      'new',
+      'on_verification',
+      'on_moderation',
+      'on_reactivation',
+      'active',
+      'blocked',
+    ]
   );
 
   assert.match(
@@ -46,7 +53,7 @@ test('pharmacy domain remains five-status and on_moderation operational', async 
   assert.match(profile, /on_verification:\s*\[\]/);
   assert.match(profile, /on_moderation:\s*\[\]/);
   assert.match(profile, /active:\s*\['edit',\s*'submit_for_moderation'\]/);
-  assert.match(profile, /blocked:\s*\[\]/);
+  assert.match(profile, /blocked:\s*\['edit'\]/);
 });
 
 //===============================================================
