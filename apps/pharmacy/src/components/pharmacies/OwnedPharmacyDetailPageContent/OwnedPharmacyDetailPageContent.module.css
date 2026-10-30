@@ -704,5 +704,84 @@
 }
 
 /* Keep the Admin correction state next to its pharmacy status. */
-.statusWithReview { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 8px; }
-.needsChanges { color: #a76712; background: #fff5de; border: 1px solid #efdaac; border-radius: 999px; padding: 3px 9px; font-size: 12px; font-weight: 600; }
+.statusWithReview {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.needsChanges {
+  color: #a76712;
+  background: #fff5de;
+  border: 1px solid #efdaac;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Activity timeline uses the same compact card language as pharmacy fields. */
+.activityHeading {
+  margin: 0;
+  font-size: var(--fz-18);
+  color: var(--color-text-primary);
+}
+
+.activityList {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.activityItem {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+}
+
+.activityTitle {
+  color: var(--color-text-primary);
+  font-weight: var(--fw-semi-bold);
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+}
+
+.activityTransition {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--color-accent);
+  font-weight: var(--fw-semi-bold);
+  text-transform: capitalize;
+}
+
+.activityMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}
+
+.activityReason {
+  margin: 0;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.activityEmpty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  background: var(--color-background);
+}

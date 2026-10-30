@@ -7,6 +7,7 @@ import {
   Building2,
   ClipboardCheck,
   Clock3,
+  RotateCcw,
   ShieldCheck,
   Store,
 } from 'lucide-react';
@@ -316,6 +317,13 @@ export function PharmaciesPageContent({
         icon: <Clock3 size={26} aria-hidden="true" />,
       },
       {
+        key: 'on_reactivation' as StatusKey,
+        title: 'Reactivation requested',
+        value: statistics?.onReactivation ?? 0,
+        tone: 'mustard' as const,
+        icon: <RotateCcw size={26} aria-hidden="true" />,
+      },
+      {
         key: 'blocked' as StatusKey,
         title: 'Blocked',
         value: statistics?.blocked ?? 0,
@@ -478,16 +486,16 @@ export function PharmaciesPageContent({
                     icon: <Clock3 size={17} aria-hidden="true" />,
                   },
                   {
+                    title: 'Reactivation requested',
+                    description:
+                      'An inactive pharmacy whose owner has requested a new administrative review before reopening.',
+                    icon: <RotateCcw size={17} aria-hidden="true" />,
+                  },
+                  {
                     title: 'Blocked',
                     description:
                       'A pharmacy blocked from operating. Status decisions are managed from its detail view.',
                     icon: <Ban size={17} aria-hidden="true" />,
-                  },
-                  {
-                    title: 'Registry metrics',
-                    description:
-                      'Cards show global pharmacy counts, independent of list filters. Successful orders and revenue in the full registry table count only successfully completed orders.',
-                    icon: <Building2 size={17} aria-hidden="true" />,
                   },
                 ]}
               />
@@ -501,8 +509,8 @@ export function PharmaciesPageContent({
           {statistics ? (
             <StatsGrid
               className={shellCss.statistics}
-              columns={5}
-              tabletColumns={2}
+              columns={3}
+              tabletColumns={3}
               ariaLabel="Pharmacy status statistics"
             >
               {cards.map((card) => {
@@ -545,9 +553,9 @@ export function PharmaciesPageContent({
             </div>
           ) : (
             <StatsLoadingSkeleton
-              count={5}
-              columns={5}
-              tabletColumns={2}
+              count={6}
+              columns={3}
+              tabletColumns={3}
               label="Loading pharmacy status statistics"
             />
           )}

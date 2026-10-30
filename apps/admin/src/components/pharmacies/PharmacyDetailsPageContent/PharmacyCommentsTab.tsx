@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MessageSquareLock, Trash2, X } from 'lucide-react';
+import { MessageSquareText, Trash2, X } from 'lucide-react';
 
 import type { AdminPharmacyComment } from '@e-pharmacy/types/admin';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -100,8 +100,10 @@ export function PharmacyCommentsTab({
   const reloadComments = useCallback(
     async (signal?: AbortSignal) => {
       const response = await getAdminPharmacyComments(pharmacyId, { signal });
+
       if (!signal?.aborted) applyComments(response.comments);
     },
+
     [applyComments, pharmacyId]
   );
 
@@ -111,11 +113,13 @@ export function PharmacyCommentsTab({
     void getAdminPharmacyComments(pharmacyId, { signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
+
         applyComments(response.comments);
       })
 
       .catch(() => {
         if (controller.signal.aborted) return;
+
         setLoadedId(pharmacyId);
         setStatus('error');
 
@@ -147,6 +151,7 @@ export function PharmacyCommentsTab({
 
   const handleCreate = async () => {
     const text = draft.trim();
+
     if (
       !canManage ||
       !text ||
@@ -166,6 +171,7 @@ export function PharmacyCommentsTab({
     requestRef.current = request;
 
     const controller = new AbortController();
+
     createControllerRef.current = controller;
     setIsSaving(true);
 
@@ -205,12 +211,14 @@ export function PharmacyCommentsTab({
 
   const handleDelete = async () => {
     const comment = commentToDelete;
+
     if (!canManage || !comment || isSaving || deletingId) return;
 
     setCommentToDelete(null);
     setDeletingId(comment.id);
 
     const controller = new AbortController();
+
     deleteControllerRef.current = controller;
 
     try {
@@ -252,7 +260,7 @@ export function PharmacyCommentsTab({
         title="Comments"
         titleId="pharmacy-admin-comments-title"
         description="Private working comments about this pharmacy. Pharmacy owners and staff cannot see them."
-        icon={<MessageSquareLock size={22} />}
+        icon={<MessageSquareText size={22} />}
         action={
           effectiveStatus === 'success' ? (
             <CountLabel

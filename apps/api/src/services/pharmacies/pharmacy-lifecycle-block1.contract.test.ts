@@ -27,7 +27,37 @@ const actions = src(
 //===================================================================
 
 test('active saves require completeness in both UI and API', () => {
-  assert.match(editor, /validationMode = pharmacy\.status === 'new'/);
+  // Draft mode also covers blocked pharmacies and correction flows.
+  // Active pharmacies must keep strict verification-level validation.
+  const validationMode = editor.match(
+    /const validationMode\s*=\s*([\s\S]*?)\s*\?\s*'draft'\s*:\s*'verification';/
+  );
+
+  assert.ok(
+    validationMode,
+    'Expected explicit draft/verification mode selection'
+  );
+
+  assert.match(validationMode[1], /pharmacy\.status === 'new'/);
+  assert.match(validationMode[1], /pharmacy\.status === 'blocked'/);
+
+  assert.match(
+    validationMode[1],
+    /pharmacy\.status === 'on_reactivation' &&\s*pharmacy\.reviewState === 'changes_requested'/
+  );
+
+  assert.match(
+    validationMode[1],
+    /pharmacy\.status === 'on_verification' &&\s*pharmacy\.reviewState === 'changes_requested'/
+  );
+
+  assert.doesNotMatch(validationMode[1], /pharmacy\.status === 'active'/);
+
+  assert.match(
+    editor,
+    /validatePharmacyEditor\(\s*values,\s*documents\.length,\s*validationMode\s*\)/
+  );
+
   assert.match(editor, /hasValidationErrors/);
 
   assert.match(

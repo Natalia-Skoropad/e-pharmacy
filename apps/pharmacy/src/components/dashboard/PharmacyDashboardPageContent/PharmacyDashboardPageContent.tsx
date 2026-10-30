@@ -8,8 +8,10 @@ import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
+
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 import type { JsonResponseRequestOptions } from '@e-pharmacy/api-client/transport';
+
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import type {
@@ -50,8 +52,10 @@ import {
 
 import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
+
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
+
 import { DEFAULT_OWN_PRODUCTS_FILTERS } from '@/lib/products/own-products-filters';
 import { buildOrdersPath } from '@/lib/orders/order-paths';
 import { DEFAULT_ORDERS_FILTERS } from '@/lib/orders/orders-filters';
@@ -151,6 +155,7 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
       status: 'on_moderation' as const,
       label: 'On moderation',
       title: 'Your changes are under moderation',
+
       message:
         'Until Admin reviews them, Client pages show the previous approved data.',
     };
@@ -160,11 +165,23 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
     return null;
   }
 
+  if (status === 'on_reactivation') {
+    return {
+      status: 'on_reactivation' as const,
+      label: 'Reactivation requested',
+      title: 'Your pharmacy reactivation is being reviewed',
+
+      message:
+        'Admin is reviewing the request. The pharmacy is unavailable to clients until approval.',
+    };
+  }
+
   if (status === 'blocked') {
     return {
       status: 'blocked' as const,
       label: 'Blocked',
       title: 'Your pharmacy is temporarily blocked',
+
       message:
         'Existing cabinet data remains available for review, but operational actions are disabled until Admin restores access.',
     };
@@ -175,6 +192,7 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
       status: 'on_verification' as const,
       label: 'On verification',
       title: 'Your pharmacy is waiting for Admin review',
+
       message:
         'After Admin review, you will be able to sell products, add products, and create product requests.',
     };
@@ -184,6 +202,7 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
     status: 'new' as const,
     label: 'New',
     title: 'Your pharmacy is not activated yet',
+
     message:
       'After Admin review, you will be able to sell products, add products, and create product requests.',
   };
@@ -202,6 +221,7 @@ async function loadDashboardData(
     selectedYear,
     selectedMonth
   );
+
   const dateRange = { dateFrom, dateTo };
 
   const [
@@ -406,6 +426,10 @@ function PharmacyDashboardPageContent() {
   ]);
 
   useEffect(() => {
+    if (isProfileLoading || !pharmacyId) {
+      return;
+    }
+
     const controller = new AbortController();
 
     async function loadSalesStatistics() {
@@ -439,7 +463,13 @@ function PharmacyDashboardPageContent() {
     return () => {
       controller.abort();
     };
-  }, [salesRetryVersion, selectedSalesMonth, selectedSalesYear]);
+  }, [
+    isProfileLoading,
+    pharmacyId,
+    salesRetryVersion,
+    selectedSalesMonth,
+    selectedSalesYear,
+  ]);
 
   const banner = getPharmacyBanner(dashboardData.pharmacyStatus);
 
@@ -552,6 +582,30 @@ function PharmacyDashboardPageContent() {
           <div className={css.loaderBox}>
             <LoadingSpinner label="Loading dashboard statistics..." />
           </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!isProfileLoading && !pharmacyId) {
+    return (
+      <main className={css.page} aria-labelledby="dashboard-page-title">
+        <section className={css.section}>
+          <PageHeader
+            title="Dashboard"
+            titleId="dashboard-page-title"
+            icon={<LayoutDashboard size={23} aria-hidden="true" />}
+          />
+
+          <EmptyState
+            title="You haven't created a pharmacy yet."
+            message="Create your first pharmacy to start setting up your dashboard."
+            action={
+              <LinkButton href={`${PHARMACY_ROUTES.PHARMACIES}/new`}>
+                Create pharmacy
+              </LinkButton>
+            }
+          />
         </section>
       </main>
     );
@@ -701,6 +755,7 @@ function PharmacyDashboardPageContent() {
                   <h2 className={css.sectionTitle} id="clients-stats-title">
                     Clients statistics
                   </h2>
+
                   <p className={css.sectionDescription}>
                     Clients who created orders in this pharmacy are included,
                     along with the pharmacy&apos;s walk-in client.
@@ -768,6 +823,7 @@ function PharmacyDashboardPageContent() {
                   >
                     Own product statistics
                   </h2>
+
                   <p className={css.sectionDescription}>
                     Analytics includes only products added to the current
                     pharmacy.
@@ -842,6 +898,7 @@ function PharmacyDashboardPageContent() {
                   >
                     All product statistics
                   </h2>
+
                   <p className={css.sectionDescription}>
                     Global catalog analytics shows Admin products and whether
                     they are added to the current pharmacy.
@@ -897,6 +954,7 @@ function PharmacyDashboardPageContent() {
                   <h2 className={css.sectionTitle} id="requests-stats-title">
                     Product request statistics
                   </h2>
+
                   <p className={css.sectionDescription}>
                     Requests created only by the current pharmacy are shown
                     here.

@@ -184,11 +184,25 @@
   background-color: var(--color-error-soft);
 }
 
-.error {
+/* Shared validation notice for every document/file upload surface. */
+.errorNotice {
   margin: 0;
-  font-size: var(--fz-12);
-  line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 14px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
   color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+
+.errorNotice svg {
+  flex: 0 0 auto;
 }
 
 .limit {

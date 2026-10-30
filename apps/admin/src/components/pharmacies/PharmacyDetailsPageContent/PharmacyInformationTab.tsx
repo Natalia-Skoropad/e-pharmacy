@@ -2,15 +2,7 @@
 
 import type { ReactNode } from 'react';
 
-import {
-  Building2,
-  Clock3,
-  ImageOff,
-  Mail,
-  Phone,
-  ShieldCheck,
-  UserRound,
-} from 'lucide-react';
+import { Clock3, Mail, Phone, ShieldCheck, UserRoundCog } from 'lucide-react';
 
 import {
   PHARMACY_STATUS_PRESENTATION,
@@ -19,10 +11,11 @@ import {
 
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { WorkingHours } from '@e-pharmacy/ui/data-display';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
 import { CopyButton, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -125,11 +118,7 @@ function Photo({
           unoptimized
         />
       ) : (
-        <div className={css.photoPlaceholder}>
-          <Building2 size={compact ? 27 : 62} aria-hidden="true" />
-          <ImageOff size={compact ? 15 : 22} aria-hidden="true" />
-          {!compact && <span>No pharmacy photo uploaded</span>}
-        </div>
+        <PharmacyPhotoPlaceholder compact={compact} />
       )}
     </div>
   );
@@ -191,6 +180,7 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
   const copyValue = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value);
+
       toast.success(`${label} copied.`);
     } catch {
       toast.error(`Could not copy ${label.toLowerCase()}.`);
@@ -268,7 +258,7 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
           aria-labelledby="pharmacy-owner-title"
         >
           <div className={css.sectionHeading}>
-            <UserRound size={20} aria-hidden="true" />
+            <UserRoundCog size={20} aria-hidden="true" />
             <h3 id="pharmacy-owner-title">Pharmacy owner</h3>
           </div>
           {owner ? (
@@ -283,7 +273,7 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
                     unoptimized
                   />
                 ) : (
-                  <UserRound size={30} aria-hidden="true" />
+                  <UserRoundCog size={30} aria-hidden="true" />
                 )}
               </div>
               <div className={css.ownerDetails}>

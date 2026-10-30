@@ -47,7 +47,7 @@ export function PharmacyAboutFields({
       label="Description"
       value={value}
       placeholder="Describe pharmacy services, pickup details, and useful information for clients."
-      hint="You can use simple formatting buttons or type plain text."
+      hint="At least 100 characters when filled. You can use simple formatting or type plain text."
       error={error}
       isTouched={isTouched}
       maxLength={TEXT_EDITOR_MAX_LENGTH}

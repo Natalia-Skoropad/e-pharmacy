@@ -87,6 +87,7 @@
 .purple,
 .orange,
 .yellow,
+.mustard,
 .red,
 .gray {
   color: var(--color-white);
@@ -106,7 +107,9 @@
 .orange::before,
 .orange::after,
 .yellow::before,
+.mustard::before,
 .yellow::after,
+.mustard::after,
 .red::before,
 .red::after,
 .gray::before,
@@ -125,6 +128,7 @@
 .purple::before,
 .orange::before,
 .yellow::before,
+.mustard::before,
 .red::before,
 .gray::before {
   right: -66px;
@@ -140,6 +144,7 @@
 .purple::after,
 .orange::after,
 .yellow::after,
+.mustard::after,
 .red::after,
 .gray::after {
   top: 22px;
@@ -161,7 +166,9 @@
 .orange .title,
 .orange .value,
 .yellow .title,
+.mustard .title,
 .yellow .value,
+.mustard .value,
 .red .title,
 .red .value,
 .gray .title,
@@ -176,6 +183,7 @@
 .purple .meta,
 .orange .meta,
 .yellow .meta,
+.mustard .meta,
 .red .meta,
 .gray .meta {
   color: var(--color-white-alpha-88);
@@ -188,6 +196,7 @@
 .purple .icon,
 .orange .icon,
 .yellow .icon,
+.mustard .icon,
 .red .icon,
 .gray .icon {
   color: var(--color-white);
@@ -240,4 +249,9 @@
   .clickable:focus-visible {
     transform: none;
   }
+}
+
+/* Reactivation: a distinct high-contrast mustard, not pale warning yellow. */
+.mustard {
+  background: linear-gradient(125deg, #986209 0%, #b9820f 52%, #d5a123 100%);
 }

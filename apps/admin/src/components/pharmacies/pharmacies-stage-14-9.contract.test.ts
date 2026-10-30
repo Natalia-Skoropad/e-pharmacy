@@ -29,7 +29,7 @@ test('Stage 14.9 registry routes retain permission guards as Stage 14.11 adds de
 
 //===================================================================
 
-test('Stage 14.9 has five shared clickable status cards without an All card', async () => {
+test('Stage 14.9 retains six shared clickable status cards without an All card', async () => {
   const content = await read(
     './PharmaciesPageContent/PharmaciesPageContent.tsx'
   );
@@ -40,7 +40,9 @@ test('Stage 14.9 has five shared clickable status cards without an All card', as
   assert.match(content, /<StatsGrid/);
   assert.match(content, /<StatsCard/);
   assert.match(content, /<StatsLoadingSkeleton/);
-  assert.match(content, /count=\{5\}/);
+  assert.match(content, /count=\{6\}/);
+  assert.match(content, /columns=\{3\}/);
+  assert.match(content, /tabletColumns=\{3\}/);
   assert.match(content, /status: target/);
   assert.match(content, /const target = active \? 'all' : card\.key/);
   assert.match(content, /buildAdminPharmaciesListUrl/);
@@ -54,10 +56,12 @@ test('Stage 14.9 has five shared clickable status cards without an All card', as
     'on_verification',
     'active',
     'on_moderation',
+    'on_reactivation',
     'blocked',
   ]);
 
   assert.doesNotMatch(content, /key: 'all' as StatusKey/);
+  assert.match(content, /tone: 'mustard' as const/);
   assert.match(content, /shellCss\.card/);
   assert.match(content, /shellCss\.statisticsError/);
 });

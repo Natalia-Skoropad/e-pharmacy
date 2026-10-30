@@ -1,6 +1,7 @@
 export type StatusPresentationTone =
   | 'info'
   | 'pending'
+  | 'mustard'
   | 'success'
   | 'warning'
   | 'danger'

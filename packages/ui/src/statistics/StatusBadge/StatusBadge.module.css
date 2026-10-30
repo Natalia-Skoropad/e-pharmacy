@@ -47,3 +47,10 @@
   background-color: var(--color-status-beauty-soft);
   border-color: var(--color-status-beauty-border);
 }
+
+/* Distinct amber for reactivation, with readable text in filters and tables. */
+.mustard {
+  color: #68420a;
+  background-color: #f4dea0;
+  border-color: #b9820f;
+}

@@ -17,6 +17,7 @@ export type StatsCardTone =
   | 'purple'
   | 'orange'
   | 'yellow'
+  | 'mustard'
   | 'red'
   | 'gray';
 
@@ -58,6 +59,7 @@ function StatsCardContent({
       </div>
 
       <p className={css.value}>{value}</p>
+
       {description ? <p className={css.description}>{description}</p> : null}
       {meta ? <span className={css.meta}>{meta}</span> : null}
     </>

@@ -19,8 +19,13 @@ test('dashboard unavailable resources expose explicit retry generations', async 
   assert.match(source, /Retry dashboard statistics/);
   assert.match(source, /Retry sales statistics/);
 
+  // Sales retry remains reactive to selected period, but must also wait
+  // for the authenticated profile and selected pharmacy to become available.
   assert.match(
     source,
-    /\[salesRetryVersion, selectedSalesMonth, selectedSalesYear\]/
+    /\[\s*isProfileLoading,\s*pharmacyId,\s*salesRetryVersion,\s*selectedSalesMonth,\s*selectedSalesYear,?\s*\]/
   );
+
+  assert.match(source, /if \(isProfileLoading \|\| !pharmacyId\)/);
+  assert.match(source, /void loadSalesStatistics\(\)/);
 });

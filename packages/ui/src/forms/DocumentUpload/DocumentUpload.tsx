@@ -14,8 +14,12 @@ import {
 import clsx from 'clsx';
 
 import type { BrowserUploadFile } from '../types';
+
 import ConfirmationModal from '../../overlays/ConfirmationModal/ConfirmationModal';
 import { mergeUploadFileSelection } from './document-upload-selection';
+
+import { DocumentUploadErrorNotice } from './DocumentUploadErrorNotice';
+import { useDocumentUploadFeedback } from './useDocumentUploadFeedback';
 
 import css from './DocumentUpload.module.css';
 
@@ -30,6 +34,8 @@ export type DocumentUploadLabels = {
   removeConfirm?: string;
   removeCancel?: string;
 };
+
+//===================================================================
 
 export type DocumentUploadProps = {
   id: string;
@@ -103,11 +109,15 @@ function DocumentUpload({
     null
   );
 
+  const { selectionError, rejectSelection, clearSelectionError } =
+    useDocumentUploadFeedback(onSelectionError);
+
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const limitId = `${id}-limit`;
-  const hasError = Boolean(isTouched && error);
+  const visibleError = selectionError || (isTouched ? error : '') || '';
+  const hasError = Boolean(visibleError);
 
   const describedBy = useMemo(
     () =>
@@ -128,6 +138,7 @@ function DocumentUpload({
     value.find((file) => file.id === pendingRemoveFileId) ?? null;
 
   const removeFile = (fileId: string) => {
+    clearSelectionError();
     onChange(value.filter((file) => file.id !== fileId));
   };
 
@@ -141,14 +152,14 @@ function DocumentUpload({
     event.target.value = '';
 
     if (typeof maxFiles === 'number' && selection.files.length > maxFiles) {
-      onSelectionError?.(`You can upload up to ${maxFiles} files.`);
+      rejectSelection(`You can upload up to ${maxFiles} files.`);
       return;
     }
 
     const selectionError = validateSelection?.(selection.files) ?? '';
 
     if (selectionError) {
-      onSelectionError?.(selectionError);
+      rejectSelection(selectionError);
       return;
     }
 
@@ -156,10 +167,11 @@ function DocumentUpload({
       selection.duplicateCount > 0 &&
       selection.files.length === value.length
     ) {
-      onSelectionError?.('The selected file is already in the list.');
+      rejectSelection('The selected file is already in the list.');
       return;
     }
 
+    clearSelectionError();
     onChange(selection.files);
   };
 
@@ -272,9 +284,7 @@ function DocumentUpload({
       </label>
 
       {hasError ? (
-        <p className={css.error} id={errorId}>
-          {error}
-        </p>
+        <DocumentUploadErrorNotice id={errorId} message={visibleError} />
       ) : null}
 
       {value.length > 0 ? (

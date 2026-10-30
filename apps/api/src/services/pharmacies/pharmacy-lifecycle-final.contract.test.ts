@@ -82,7 +82,7 @@ test('owner deactivation preserves work restrictions and audit while Admin can e
 test('status log is drawn from canonical audit with member-only read and field projection', () => {
   assert.match(
     ownerHistory,
-    /getPharmacyMembership\(userId, pharmacyId, \{ allowBlocked: true \}\)/
+    /getPharmacyMembership\(\s*userId,\s*pharmacyId,\s*\{\s*allowBlocked:\s*true,?\s*\}\s*\)/
   );
 
   assert.match(ownerHistory, /membershipRole !== 'owner'/);
@@ -92,7 +92,7 @@ test('status log is drawn from canonical audit with member-only read and field p
 
   assert.match(
     ownerHistory,
-    /\.select\('action actorNameSnapshot createdAt reason before\.status after\.status/
+    /\.select\(\s*'action actorNameSnapshot createdAt reason before\.status after\.status before\.reviewState after\.reviewState'\s*\)/
   );
 
   assert.match(

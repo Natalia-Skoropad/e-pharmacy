@@ -66,13 +66,27 @@ export async function deleteOwnedPharmacyDraftService(
       }
 
       // Never delete operational resources, even if a legacy record has status NEW.
-      const [orders, requests, offers, reviews, stock] = await Promise.all([
-        Order.exists({ pharmacyId: pharmacy._id }).session(session),
-        ProductRequest.exists({ pharmacyId: pharmacy._id }).session(session),
-        ProductOffer.exists({ pharmacyId: pharmacy._id }).session(session),
-        PharmacyReview.exists({ pharmacyId: pharmacy._id }).session(session),
-        StockMovement.exists({ pharmacyId: pharmacy._id }).session(session),
-      ]);
+      // MongoDB transactions do not support parallel operations on the
+      // same session. Perform each safety check in sequence.
+      const orders = await Order.exists({ pharmacyId: pharmacy._id }).session(
+        session
+      );
+
+      const requests = await ProductRequest.exists({
+        pharmacyId: pharmacy._id,
+      }).session(session);
+
+      const offers = await ProductOffer.exists({
+        pharmacyId: pharmacy._id,
+      }).session(session);
+
+      const reviews = await PharmacyReview.exists({
+        pharmacyId: pharmacy._id,
+      }).session(session);
+
+      const stock = await StockMovement.exists({
+        pharmacyId: pharmacy._id,
+      }).session(session);
 
       if (orders || requests || offers || reviews || stock) {
         throw httpError(
@@ -95,17 +109,17 @@ export async function deleteOwnedPharmacyDraftService(
         );
       }
 
-      await Promise.all([
-        PharmacyDocumentFile.deleteMany({ pharmacyId: pharmacy._id }).session(
-          session
-        ),
+      await PharmacyDocumentFile.deleteMany({
+        pharmacyId: pharmacy._id,
+      }).session(session);
 
-        PharmacyNote.deleteMany({ pharmacyId: pharmacy._id }).session(session),
+      await PharmacyNote.deleteMany({ pharmacyId: pharmacy._id }).session(
+        session
+      );
 
-        PharmacyPaymentIdentifier.deleteMany({
-          pharmacyId: pharmacy._id,
-        }).session(session),
-      ]);
+      await PharmacyPaymentIdentifier.deleteMany({
+        pharmacyId: pharmacy._id,
+      }).session(session);
 
       await appendAdminAuditLog({
         actorUserId: userId,

@@ -259,8 +259,8 @@ export function OwnedPharmacyEditorTabContent({
           <PharmacyAboutFields
             value={values.description}
             disabled={busy !== null}
-            error={errors.description}
-            isTouched={Boolean(errors.description)}
+            error={fieldError('description')}
+            isTouched={Boolean(fieldError('description'))}
             onChange={(value) => change('description', value)}
           />
         </div>

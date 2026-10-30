@@ -314,7 +314,9 @@ export function normalizePharmacyContactForm(
     }
 
     const previousValue = baselineNormalized[field];
+
     if (nextValue === previousValue) return;
+
     location[field] = nextValue ?? null;
   };
 
@@ -334,6 +336,7 @@ export function normalizePharmacyContactForm(
   }
 
   const result: PharmacyContactPatch = {};
+
   if (normalized.name !== undefined) result.name = normalized.name;
 
   const shortDescription = clearableDraftValue(
@@ -346,6 +349,7 @@ export function normalizePharmacyContactForm(
     normalized.shortDescription !== baselineNormalized?.shortDescription
   )
     result.shortDescription = shortDescription;
+
   if (Object.keys(location).length > 0) result.location = location;
 
   const phone = clearableDraftValue(
@@ -383,6 +387,8 @@ export function validatePharmacyAboutForm(
   });
 
   if (descriptionError) errors.description = descriptionError;
+  else if (values.description.trim() && values.description.trim().length < 100)
+    errors.description = 'Description must be at least 100 characters.';
 
   return errors;
 }
@@ -403,6 +409,7 @@ export function normalizePharmacyAboutForm(
     : undefined;
 
   const nextDescription = clearableDraftValue(description, baselineDescription);
+
   return nextDescription !== undefined ? { description: nextDescription } : {};
 }
 

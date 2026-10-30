@@ -26,7 +26,6 @@ import {
   sharedRequiredPhoneSchema,
   sharedPictureUrlSchema,
   sharedClearableWorkingHoursSchema,
-  sharedClearableTextEditorSchema,
   sharedClearableTaxIdSchema,
   sharedClearableIbanSchema,
   sharedClearablePaymentPurposeSchema,
@@ -174,6 +173,11 @@ export const createPharmacyReviewSchema = z.object({
 
 //===============================================================
 
+const pharmacyDescriptionSchema = sharedTextEditorSchema.min(
+  100,
+  'Description must be at least 100 characters.'
+);
+
 const pharmacyProfileUpdateChangesSchema = z
   .object({
     name: sharedPharmacyNameSchema.optional(),
@@ -183,7 +187,7 @@ const pharmacyProfileUpdateChangesSchema = z
 
     workingHours: sharedClearableWorkingHoursSchema,
     imageUrl: sharedPictureUrlSchema,
-    description: sharedClearableTextEditorSchema,
+    description: clearableSchema(pharmacyDescriptionSchema),
     shortDescription: clearableSchema(z.string().trim().min(10).max(200)),
     documents: pharmacyProfileDocumentSelectionsSchema.optional(),
 
@@ -228,7 +232,7 @@ export const createPharmacyDraftSchema = z
     email: optionalSchema(sharedEmailSchema),
     workingHours: optionalSchema(sharedWorkingHoursSchema),
     imageUrl: optionalSchema(sharedPictureUrlSchema),
-    description: optionalSchema(sharedTextEditorSchema),
+    description: optionalSchema(pharmacyDescriptionSchema),
     shortDescription: optionalSchema(z.string().trim().min(10).max(200)),
 
     bankDetails: z

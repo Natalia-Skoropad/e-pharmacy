@@ -17,7 +17,11 @@ import {
   type DocumentUploadLabels,
 } from '../forms/DocumentUpload/DocumentUpload';
 
+import { DocumentUploadErrorNotice } from '../forms/DocumentUpload/DocumentUploadErrorNotice';
+import { useDocumentUploadFeedback } from '../forms/DocumentUpload/useDocumentUploadFeedback';
+
 import type { BrowserUploadFile } from '../forms/types';
+
 import ConfirmationModal from '../overlays/ConfirmationModal/ConfirmationModal';
 import { Button } from '../primitives/Button/Button';
 import { ProfileSectionHeader } from './ProfileSectionHeader';
@@ -141,6 +145,12 @@ export function DocumentsPanel({
   const [pendingDeleteFile, setPendingDeleteFile] =
     useState<BrowserUploadFile | null>(null);
 
+  const { selectionError, rejectSelection, clearSelectionError } =
+    useDocumentUploadFeedback(onSelectionError);
+
+  const visibleError = selectionError || error || '';
+  const resourceErrorId = `${id}-upload-error`;
+
   const canEdit = editable && Boolean(onChange);
 
   const usesResourceActions = Boolean(
@@ -188,16 +198,18 @@ export function DocumentsPanel({
     const nextFiles = [...value, ...incoming];
 
     if (typeof maxFiles === 'number' && nextFiles.length > maxFiles) {
-      onSelectionError?.(`You can upload up to ${maxFiles} files.`);
+      rejectSelection(`You can upload up to ${maxFiles} files.`);
       return;
     }
 
     const selectionError = validateSelection?.(nextFiles) ?? '';
 
     if (selectionError) {
-      onSelectionError?.(selectionError);
+      rejectSelection(selectionError);
       return;
     }
+
+    clearSelectionError();
 
     await onUploadFiles(selectedFiles);
   };
@@ -221,9 +233,11 @@ export function DocumentsPanel({
     const selectionError = validateSelection?.(nextFiles) ?? '';
 
     if (selectionError) {
-      onSelectionError?.(selectionError);
+      rejectSelection(selectionError);
       return;
     }
+
+    clearSelectionError();
 
     await onReplaceFile(currentFile, replacement);
   };
@@ -273,12 +287,17 @@ export function DocumentsPanel({
                   >
                     <RefreshCw size={16} aria-hidden="true" />
                     <span>{isPending ? 'Replacing...' : 'Replace'}</span>
+
                     <input
                       className={css.documentActionInput}
                       type="file"
                       accept={accept}
                       disabled={disabled || hasPendingResourceMutation}
                       aria-label={`Replace ${file.name}`}
+                      aria-invalid={Boolean(visibleError) || undefined}
+                      aria-errormessage={
+                        visibleError ? resourceErrorId : undefined
+                      }
                       onChange={(event) =>
                         void handleReplaceSelection(file, event)
                       }
@@ -347,6 +366,7 @@ export function DocumentsPanel({
             >
               <UploadCloud size={18} aria-hidden="true" />
               <span>{isUploading ? 'Uploading...' : 'Upload documents'}</span>
+
               <input
                 className={css.documentActionInput}
                 id={id}
@@ -355,17 +375,21 @@ export function DocumentsPanel({
                 accept={accept}
                 multiple
                 disabled={disabled || isUploading || hasReachedLimit}
+                aria-invalid={Boolean(visibleError) || undefined}
+                aria-errormessage={visibleError ? resourceErrorId : undefined}
                 onChange={(event) => void handleUploadSelection(event)}
               />
             </label>
 
             {hint ? <p className={css.documentHint}>{hint}</p> : null}
-            {error ? (
-              <p className={css.formError} role="alert">
-                {error}
-              </p>
-            ) : null}
           </div>
+        ) : null}
+
+        {usesResourceActions && visibleError ? (
+          <DocumentUploadErrorNotice
+            id={resourceErrorId}
+            message={visibleError}
+          />
         ) : null}
 
         {resourceState ? (

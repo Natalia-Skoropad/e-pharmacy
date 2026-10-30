@@ -78,3 +78,27 @@
     display: none;
   }
 }
+
+/* The summary cards are hidden on phones; do not reserve grid rows for them. */
+@media only screen and (max-width: 767px) {
+  .headerStack {
+    gap: 0;
+  }
+
+  .statistics {
+    display: none;
+  }
+
+  .pageHeader {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* A moderation component can return null: its PageHeader wrapper must not
+   reserve an invisible 35px mobile action row. */
+@media only screen and (max-width: 767px) {
+  .pageHeader > :last-child:empty {
+    display: none;
+  }
+}

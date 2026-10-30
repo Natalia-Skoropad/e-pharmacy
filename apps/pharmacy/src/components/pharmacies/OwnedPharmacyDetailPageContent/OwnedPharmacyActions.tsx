@@ -7,6 +7,7 @@ import {
   Ban,
   XCircle,
   Trash2,
+  X,
   ChevronDown,
   ClipboardCheck,
   ClipboardList,
@@ -69,7 +70,11 @@ export function OwnedPharmacyActions({
   const toast = useToast();
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [cancelReview, setCancelReview] = useState<'verification' | 'moderation' | 'reactivation' | null>(null);
+
+  const [cancelReview, setCancelReview] = useState<
+    'verification' | 'moderation' | 'reactivation' | null
+  >(null);
+
   const [action, setAction] = useState<Action | null>(null);
   const [comment, setComment] = useState('');
   const [requestError, setRequestError] = useState('');
@@ -100,9 +105,16 @@ export function OwnedPharmacyActions({
     (pharmacy.status === 'on_moderation' &&
       pharmacy.reviewState === 'changes_requested');
 
-  const canRequestReactivation = (pharmacy.status === 'blocked' && pharmacy.reviewState !== 'pending') || (pharmacy.status === 'on_reactivation' && pharmacy.reviewState === 'changes_requested');
-  const canCancelReview = pharmacy.reviewState === 'changes_requested' &&
-    (pharmacy.status === 'on_verification' || pharmacy.status === 'on_moderation' || pharmacy.status === 'on_reactivation');
+  const canRequestReactivation =
+    (pharmacy.status === 'blocked' && pharmacy.reviewState !== 'pending') ||
+    (pharmacy.status === 'on_reactivation' &&
+      pharmacy.reviewState === 'changes_requested');
+
+  const canCancelReview =
+    pharmacy.reviewState === 'changes_requested' &&
+    (pharmacy.status === 'on_verification' ||
+      pharmacy.status === 'on_moderation' ||
+      pharmacy.status === 'on_reactivation');
 
   const pending = pharmacy.pendingModeration;
   const moderationSummary = getPharmacyModerationSummary(pharmacy);
@@ -152,7 +164,11 @@ export function OwnedPharmacyActions({
     ).length > 0;
 
   useEffect(() => {
-    if (pharmacy.membershipRole !== 'owner' || (!needsVerification && !canRequestReactivation)) return;
+    if (
+      pharmacy.membershipRole !== 'owner' ||
+      (!needsVerification && !canRequestReactivation)
+    )
+      return;
 
     let active = true;
 
@@ -216,14 +232,20 @@ export function OwnedPharmacyActions({
     setBusy(true);
     try {
       await deleteOwnedPharmacyDraft(pharmacy.id, pharmacy.updatedAt);
+
       setDeleteOpen(false);
       dispatchPharmacyCounterRefresh();
       toast.success('Pharmacy draft permanently deleted.');
       router.replace('/pharmacy/pharmacies');
     } catch (error) {
       setDeleteOpen(false);
-      toast.error(getProfileErrorMessage(error, 'Could not delete this pharmacy draft.'));
-    } finally { setBusy(false); }
+
+      toast.error(
+        getProfileErrorMessage(error, 'Could not delete this pharmacy draft.')
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   const open = (next: Action) => {
@@ -234,11 +256,18 @@ export function OwnedPharmacyActions({
   };
 
   const submit = async () => {
-    if (!action || busy || !comment.trim() ||
-        (action === 'moderation' && (!hasChanges || moderationIncomplete)) ||
-        (action === 'verification' && (verificationIncomplete || !ownerHasDocuments)) ||
-        (action === 'deactivate' && !eligibility?.canDeactivate) ||
-        (action === 'reactivate' && (!canRequestReactivation || moderationIncomplete))) return;
+    if (
+      !action ||
+      busy ||
+      !comment.trim() ||
+      (action === 'moderation' && (!hasChanges || moderationIncomplete)) ||
+      (action === 'verification' &&
+        (verificationIncomplete || !ownerHasDocuments)) ||
+      (action === 'deactivate' && !eligibility?.canDeactivate) ||
+      (action === 'reactivate' &&
+        (!canRequestReactivation || moderationIncomplete))
+    )
+      return;
 
     setBusy(true);
     setRequestError('');
@@ -261,6 +290,7 @@ export function OwnedPharmacyActions({
           expectedRevision: pharmacy.updatedAt,
           reason: comment.trim(),
         });
+
         toast.success('Reactivation request sent.');
       } else {
         await deactivateOwnedPharmacy(pharmacy.id, {
@@ -288,16 +318,33 @@ export function OwnedPharmacyActions({
 
   const confirmCancellation = async () => {
     if (!cancelReview || busy) return;
+
     setBusy(true);
+
     try {
-      await cancelOwnedPharmacyReview(pharmacy.id, cancelReview, pharmacy.updatedAt);
-      toast.success(`${cancelReview[0].toUpperCase()}${cancelReview.slice(1)} cancelled.`);
+      await cancelOwnedPharmacyReview(
+        pharmacy.id,
+        cancelReview,
+        pharmacy.updatedAt
+      );
+
+      toast.success(
+        `${cancelReview[0].toUpperCase()}${cancelReview.slice(1)} cancelled.`
+      );
+
       setCancelReview(null);
       dispatchPharmacyCounterRefresh();
       onRefresh();
     } catch (error) {
-      toast.error(getProfileErrorMessage(error, 'Could not cancel review. Refresh and retry.'));
-    } finally { setBusy(false); }
+      toast.error(
+        getProfileErrorMessage(
+          error,
+          'Could not cancel review. Refresh and retry.'
+        )
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   if (pharmacy.membershipRole !== 'owner') return null;
@@ -326,27 +373,57 @@ export function OwnedPharmacyActions({
               aria-label="Available pharmacy actions"
             >
               {canCancelReview ? (
-                <button type="button" role="menuitem" className={css.dangerAction}
-                  onClick={() => { setMenuOpen(false); setCancelReview(
-                    pharmacy.status === 'on_verification' ? 'verification'
-                      : pharmacy.status === 'on_moderation' ? 'moderation' : 'reactivation'
-                  ); }}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={css.dangerAction}
+                  onClick={() => {
+                    setMenuOpen(false);
+
+                    setCancelReview(
+                      pharmacy.status === 'on_verification'
+                        ? 'verification'
+                        : pharmacy.status === 'on_moderation'
+                          ? 'moderation'
+                          : 'reactivation'
+                    );
+                  }}
+                >
                   <XCircle size={17} aria-hidden="true" />
-                  {pharmacy.status === 'on_verification' ? 'Cancel verification'
-                    : pharmacy.status === 'on_moderation' ? 'Cancel moderation' : 'Cancel reactivation'}
+                  {pharmacy.status === 'on_verification'
+                    ? 'Cancel verification'
+                    : pharmacy.status === 'on_moderation'
+                      ? 'Cancel moderation'
+                      : 'Cancel reactivation'}
                 </button>
               ) : null}
               {canRequestReactivation ? (
-                <button type="button" role="menuitem" className={css.approveAction}
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={css.approveAction}
                   disabled={moderationIncomplete || !ownerHasDocuments}
-                  title={moderationIncomplete ? 'Complete required fields before reactivation.' : undefined}
-                  onClick={() => open('reactivate')}>
-                  <RotateCcw size={17} aria-hidden="true" /> Request reactivation
+                  title={
+                    moderationIncomplete
+                      ? 'Complete required fields before reactivation.'
+                      : undefined
+                  }
+                  onClick={() => open('reactivate')}
+                >
+                  <RotateCcw size={17} aria-hidden="true" /> Request
+                  reactivation
                 </button>
               ) : null}
               {pharmacy.status === 'new' ? (
-                <button type="button" role="menuitem" className={css.dangerAction}
-                  onClick={() => { setMenuOpen(false); setDeleteOpen(true); }}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={css.dangerAction}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setDeleteOpen(true);
+                  }}
+                >
                   <Trash2 size={17} aria-hidden="true" /> Delete pharmacy draft
                 </button>
               ) : null}
@@ -421,17 +498,21 @@ export function OwnedPharmacyActions({
         isOpen={cancelReview !== null}
         eyebrow="PHARMACY REVIEW"
         title={`Cancel ${cancelReview ?? 'review'}?`}
-        description={cancelReview === 'moderation'
-          ? 'All proposed changes, including proposed pharmacy documents, will be permanently discarded. Your pharmacy will return to Active with its previously approved data. This cannot be undone.'
-          : cancelReview === 'verification'
-            ? 'The verification review will end and your pharmacy will return to New. Saved information and pharmacy documents will be preserved.'
-            : 'Your reactivation request will close and the pharmacy will return to Inactive. Saved proposed changes will be preserved.'}
+        description={
+          cancelReview === 'moderation'
+            ? 'All proposed changes, including proposed pharmacy documents, will be permanently discarded. Your pharmacy will return to Active with its previously approved data. This cannot be undone.'
+            : cancelReview === 'verification'
+              ? 'The verification review will end and your pharmacy will return to New. Saved information and pharmacy documents will be preserved.'
+              : 'Your reactivation request will close and the pharmacy will return to Inactive. Saved proposed changes will be preserved.'
+        }
         confirmLabel={`Cancel ${cancelReview ?? 'review'}`}
         cancelLabel="Keep request"
         destructive={cancelReview === 'moderation'}
         isLoading={busy}
         onConfirm={() => void confirmCancellation()}
-        onCancel={() => { if (!busy) setCancelReview(null); }}
+        onCancel={() => {
+          if (!busy) setCancelReview(null);
+        }}
       />
       <ConfirmationModal
         isOpen={deleteOpen}
@@ -440,11 +521,14 @@ export function OwnedPharmacyActions({
         description="This New pharmacy and its attached pharmacy documents will be deleted. This cannot be undone. Owner documents remain intact."
         confirmLabel="Delete draft"
         cancelLabel="Keep draft"
+        cancelIconLeft={<X size={17} />}
         destructive
         confirmIconLeft={<Trash2 size={17} />}
         isLoading={busy}
         onConfirm={() => void removeDraft()}
-        onCancel={() => { if (!busy) setDeleteOpen(false); }}
+        onCancel={() => {
+          if (!busy) setDeleteOpen(false);
+        }}
       />
 
       {action ? (
@@ -453,16 +537,18 @@ export function OwnedPharmacyActions({
           title={
             action === 'deactivate'
               ? 'Deactivate pharmacy?'
-              : action === 'reactivate' ? 'Request pharmacy reactivation?'
-              : action === 'verification'
-                ? 'Send pharmacy for verification?'
-                : 'Send changes for moderation?'
+              : action === 'reactivate'
+                ? 'Request pharmacy reactivation?'
+                : action === 'verification'
+                  ? 'Send pharmacy for verification?'
+                  : 'Send changes for moderation?'
           }
           description={
             action === 'deactivate'
               ? 'The pharmacy will become unavailable. All unfinished orders and product requests must be closed first; this action and its reason are recorded in Activity history.'
-              : action === 'reactivate' ? 'Your pharmacy will remain unavailable while the administrator reviews this frozen version. You cannot edit or cancel the request until the administrator responds.'
-              : 'The administrator will review the submitted version. You cannot edit your pharmacy or cancel the request while the review is pending. This may take several days.'
+              : action === 'reactivate'
+                ? 'Your pharmacy will remain unavailable while the administrator reviews this frozen version. You cannot edit or cancel the request until the administrator responds.'
+                : 'The administrator will review the submitted version. You cannot edit your pharmacy or cancel the request while the review is pending. This may take several days.'
           }
           details={
             action === 'moderation' ? (
@@ -501,10 +587,11 @@ export function OwnedPharmacyActions({
           confirmLabel={
             action === 'deactivate'
               ? 'Deactivate pharmacy'
-              : action === 'reactivate' ? 'Request reactivation'
-              : action === 'verification'
-                ? 'Send for verification'
-                : 'Send for moderation'
+              : action === 'reactivate'
+                ? 'Request reactivation'
+                : action === 'verification'
+                  ? 'Send for verification'
+                  : 'Send for moderation'
           }
           cancelLabel="Cancel"
           maxLength={500}

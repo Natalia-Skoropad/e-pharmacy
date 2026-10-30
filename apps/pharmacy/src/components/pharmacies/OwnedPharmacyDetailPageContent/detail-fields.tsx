@@ -1,10 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Building2, ImageOff, Mail, Phone } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
 import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -55,11 +55,7 @@ export function Photo({ url, name }: { url?: string | null; name: string }) {
           unoptimized
         />
       ) : (
-        <div className={css.photoEmpty}>
-          <Building2 size={48} />
-          <ImageOff size={20} />
-          <span>No pharmacy photo uploaded</span>
-        </div>
+        <PharmacyPhotoPlaceholder />
       )}
     </div>
   );

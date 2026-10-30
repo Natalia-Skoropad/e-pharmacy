@@ -10,7 +10,9 @@ import {
 
 import { appendQueryParams } from '@e-pharmacy/api-client/transport';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+
 import type { OrderSalesStatistics } from '@e-pharmacy/types/orders';
+import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
 import {
   getSalesPeriodDateRange,
@@ -48,8 +50,10 @@ async function getOwnedPharmacySales(
 /** Pharmacy-specific sales chart, mounted only on the information tab. */
 export function OwnedPharmacySalesChart({
   pharmacyId,
+  pharmacyStatus,
 }: {
   pharmacyId: string;
+  pharmacyStatus: PharmacyStatus;
 }) {
   const [year, setYear] = useState(() => String(new Date().getFullYear()));
   const [month, setMonth] = useState<SalesPeriodMonth>('all');
@@ -64,7 +68,12 @@ export function OwnedPharmacySalesChart({
   const key = `${pharmacyId}:${year}:${month}:${retry}`;
   const current = snapshot?.key === key ? snapshot : null;
 
+  const hasNeverBeenActive =
+    pharmacyStatus === 'new' || pharmacyStatus === 'on_verification';
+
   useEffect(() => {
+    if (hasNeverBeenActive) return;
+
     const controller = new AbortController();
 
     void getOwnedPharmacySales(
@@ -83,9 +92,9 @@ export function OwnedPharmacySalesChart({
       });
 
     return () => controller.abort();
-  }, [key, pharmacyId, year, month, retry]);
+  }, [hasNeverBeenActive, key, pharmacyId, year, month, retry]);
 
-  const contentState = !current ? (
+  const contentState = hasNeverBeenActive ? null : !current ? (
     <ProfileResourceState
       variant="loading"
       title="Loading pharmacy sales statistics"

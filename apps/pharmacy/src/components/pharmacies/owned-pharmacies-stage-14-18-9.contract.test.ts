@@ -33,13 +33,24 @@ test('empty list offers an owner-only create action with a working route', async
     './OwnedPharmaciesPageContent/OwnedPharmaciesPageContent.tsx'
   );
 
-  assert.match(page, /data\?\.total === 0 && !hasActiveFilters/);
-  assert.match(page, /<ProfileResourceState\s+variant="empty"/);
+  // A new Owner has no memberships yet and can still create the first pharmacy.
+  // Existing members can create only when one membership has the owner role.
+  assert.match(
+    page,
+    /pharmacies\.length === 0 \|\|\s*pharmacies\.some\(\(pharmacy\) => pharmacy\.membershipRole === 'owner'\)/
+  );
+
+  assert.match(page, /disabled=\{membershipReady && !canCreate\}/);
+
+  // The empty state belongs inside the existing table, not a second panel.
+  assert.match(page, /<DataTable[\s\S]*?items=\{data\?\.items \?\? \[\]\}/);
 
   assert.match(
     page,
-    /pharmacies\.some\(\(pharmacy\) => pharmacy\.membershipRole === 'owner'\)/
+    /empty:\s*hasActiveFilters\s*\?\s*'No pharmacies match the selected filters\.'\s*:\s*'You haven’t created any pharmacies yet\.'/
   );
+
+  assert.doesNotMatch(page, /<ProfileResourceState\s+variant="empty"/);
 
   assert.match(page, /Create pharmacy/);
 

@@ -6,6 +6,7 @@ import { PHARMACY_STATUSES } from '../src/pharmacies/index.ts';
 import { PRODUCT_REQUEST_STATUSES } from '../src/product-requests/index.ts';
 import { PRODUCT_STATUSES } from '../src/products/index.ts';
 import { USER_STATUSES } from '../src/users/index.ts';
+
 import * as presentation from '../src/presentation/index.ts';
 
 //===================================================================
@@ -23,6 +24,7 @@ const {
 const ALLOWED_TONES = new Set([
   'info',
   'pending',
+  'mustard',
   'success',
   'warning',
   'danger',
@@ -81,6 +83,7 @@ test('uses only semantic tones and non-empty labels', () => {
 test('keeps shared raw values owned by their domain maps', () => {
   assert.equal(PHARMACY_STATUS_PRESENTATION.active.label, 'Active');
   assert.equal(PHARMACY_STATUS_PRESENTATION.on_verification.tone, 'warning');
+  assert.equal(PHARMACY_STATUS_PRESENTATION.on_reactivation.tone, 'mustard');
   assert.equal(PRODUCT_STATUS_PRESENTATION.active.label, 'Active');
   assert.equal(USER_STATUS_PRESENTATION.active.label, 'Active');
 

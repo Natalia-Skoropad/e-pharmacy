@@ -287,7 +287,7 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
 
   assert.match(
     ownedPharmacyInformation,
-    /<StatusBadge \{\.\.\.PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]\} \/>/
+    /<StatusBadge\s+\{\.\.\.PHARMACY_STATUS_PRESENTATION\[pharmacy\.status\]\}\s*\/>/
   );
 
   assert.match(

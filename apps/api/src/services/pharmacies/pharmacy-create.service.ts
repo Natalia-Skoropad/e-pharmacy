@@ -133,10 +133,14 @@ async function assertCanCreatePharmacy(
 
   // A user who is only a manager is not an owner. A registered owner with
   // zero pharmacies remains eligible to create the first one.
-  const [owns, manages] = await Promise.all([
-    Pharmacy.exists({ ownerId: ownerUserId }).session(session ?? null),
-    Pharmacy.exists({ managerUserIds: ownerUserId }).session(session ?? null),
-  ]);
+  // Queries sharing a MongoDB ClientSession must never execute in parallel.
+  const owns = await Pharmacy.exists({ ownerId: ownerUserId }).session(
+    session ?? null
+  );
+
+  const manages = await Pharmacy.exists({
+    managerUserIds: ownerUserId,
+  }).session(session ?? null);
 
   if (manages && !owns) {
     throw httpError(

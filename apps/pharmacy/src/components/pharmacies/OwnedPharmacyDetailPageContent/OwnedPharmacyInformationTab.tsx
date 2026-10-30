@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
+
+import type {
+  OwnedPharmacyDetailResponse,
+  PharmacyStatus,
+} from '@e-pharmacy/types/pharmacies';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -17,6 +21,29 @@ import { show, DateValue, Field, Photo, Contact } from './detail-fields';
 import { OwnedPharmacySalesChart } from './OwnedPharmacySalesChart';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
+
+//===================================================================
+
+function HistoryStatus({
+  status,
+  fallback,
+}: {
+  status: string | null;
+  fallback: string;
+}) {
+  if (
+    status &&
+    Object.prototype.hasOwnProperty.call(PHARMACY_STATUS_PRESENTATION, status)
+  ) {
+    return (
+      <StatusBadge
+        {...PHARMACY_STATUS_PRESENTATION[status as PharmacyStatus]}
+      />
+    );
+  }
+
+  return <span>{status?.replaceAll('_', ' ') ?? fallback}</span>;
+}
 
 //===================================================================
 
@@ -137,31 +164,42 @@ export function Information({
         className={css.sectionCard}
         aria-label="Pharmacy status activity"
       >
-        <h3>Pharmacy status activity</h3>
-        <p>Visible to the pharmacy owner and administrators.</p>
+        <h3 className={css.activityHeading}>Pharmacy status activity</h3>
         {history.length ? (
-          <ul>
+          <ol className={css.activityList}>
             {history.map((event) => (
-              <li
-                key={event.id}
-                style={{
-                  padding: '8px 0',
-                  borderBottom: '1px solid var(--border-color, #ddd)',
-                }}
-              >
-                <strong>{event.action.replaceAll('.', ' ')}</strong>
-                {' · '}
-                {event.previousStatus ?? '—'} → {event.nextStatus ?? '—'}
-                {' · '}
-                {event.actor}
-                {' · '}
-                {new Date(event.createdAt).toLocaleString('en-GB')}
-                {event.reason ? <div>{event.reason}</div> : null}
+              <li className={css.activityItem} key={event.id}>
+                <div className={css.activityTitle}>
+                  {event.action.replaceAll('.', ' ')}
+                </div>
+
+                <div className={css.activityTransition}>
+                  <HistoryStatus
+                    status={event.previousStatus}
+                    fallback="Created"
+                  />
+                  <span aria-hidden="true">→</span>
+
+                  <HistoryStatus status={event.nextStatus} fallback="Deleted" />
+                </div>
+
+                <div className={css.activityMeta}>
+                  <span>{event.actor}</span>
+
+                  <time dateTime={event.createdAt}>
+                    {new Date(event.createdAt).toLocaleString('en-GB')}
+                  </time>
+                </div>
+                {event.reason ? (
+                  <p className={css.activityReason}>{event.reason}</p>
+                ) : null}
               </li>
             ))}
-          </ul>
+          </ol>
         ) : (
-          <p>No status events to display.</p>
+          <p className={css.activityEmpty}>
+            No pharmacy status changes to display yet.
+          </p>
         )}
         {historyMore ? (
           <Button
@@ -177,7 +215,10 @@ export function Information({
         ) : null}
       </section>
 
-      <OwnedPharmacySalesChart pharmacyId={pharmacy.id} />
+      <OwnedPharmacySalesChart
+        pharmacyId={pharmacy.id}
+        pharmacyStatus={pharmacy.status}
+      />
     </div>
   );
 }

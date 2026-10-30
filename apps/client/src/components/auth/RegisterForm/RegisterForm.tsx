@@ -9,6 +9,7 @@ import { DocumentUpload, RadioOption } from '@e-pharmacy/ui/forms';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
+
 import type { PharmacyRegistrationDocumentClaim } from '@e-pharmacy/types/pharmacies';
 
 import {
@@ -55,6 +56,7 @@ import {
 
 import { ROUTES } from '@/lib/routes';
 import { REGISTER_TITLE } from '@/lib/seo/metadata-copy';
+
 import {
   createPharmacyRegistrationUploadSession,
   uploadPharmacyRegistrationDocument,
@@ -273,10 +275,12 @@ function RegisterForm() {
       });
 
       setErrors(nextErrors);
+
       return;
     }
 
     if (submitInFlightRef.current) return;
+
     submitInFlightRef.current = true;
 
     try {
@@ -308,6 +312,7 @@ function RegisterForm() {
 
       if (destination.startsWith('http')) {
         window.location.assign(destination);
+
         return;
       }
 
@@ -420,12 +425,17 @@ function RegisterForm() {
             accept={PHARMACY_DOCUMENT_ACCEPT}
             hint={`PDF, DOC, DOCX, JPG, PNG, or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each and 30 MB total.`}
             validateSelection={(files) => validatePharmacyDocuments(files)}
-            onSelectionError={(message) =>
+            onSelectionError={(message) => {
+              setTouchedFields((prev) => ({
+                ...prev,
+                pharmacyDocuments: true,
+              }));
+
               setErrors((prev) => ({
                 ...prev,
                 pharmacyDocuments: message,
-              }))
-            }
+              }));
+            }}
             onChange={handleDocumentsChange}
           />
         ) : null}

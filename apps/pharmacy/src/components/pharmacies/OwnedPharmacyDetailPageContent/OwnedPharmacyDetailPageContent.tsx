@@ -8,6 +8,7 @@ import {
   ClipboardList,
   CreditCard,
   FileText,
+  Files,
   History,
   MessageSquareText,
   Package,
@@ -78,7 +79,7 @@ const TABS: TabItem<OwnedPharmacyDetailTab>[] = [
     label: 'Payment details',
     icon: <CreditCard size={17} />,
   },
-  { value: 'documents', label: 'Documents', icon: <FileText size={17} /> },
+  { value: 'documents', label: 'Documents', icon: <Files size={17} /> },
   {
     value: 'comments',
     label: 'Comments',
