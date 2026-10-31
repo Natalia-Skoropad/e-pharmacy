@@ -242,7 +242,7 @@ function parseStringArray(value: unknown, label: string): string[] {
 
 //===================================================================
 
-function parseAuditValue(value: unknown): AdminAuditValue {
+function parseAuditValue(value: unknown, field: string): AdminAuditValue {
   if (
     value === null ||
     typeof value === 'string' ||
@@ -256,6 +256,21 @@ function parseAuditValue(value: unknown): AdminAuditValue {
     return [...value];
   }
 
+  // Pre-field-level legacy records can contain nested data. Preserve a
+  // human-readable JSON representation rather than rejecting the entire log.
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    field !== 'status' &&
+    !field.endsWith('.status')
+  ) {
+    const serialized = JSON.stringify(value);
+
+    return serialized && serialized.length > 1900
+      ? `${serialized.slice(0, 1899)}…`
+      : (serialized ?? null);
+  }
+
   throw new TypeError('Invalid audit snapshot value.');
 }
 
@@ -265,7 +280,10 @@ function parseAuditSnapshot(value: unknown): AdminAuditSnapshot {
   if (!isRecord(value)) throw new TypeError('Invalid audit snapshot.');
 
   return Object.fromEntries(
-    Object.entries(value).map(([key, item]) => [key, parseAuditValue(item)])
+    Object.entries(value).map(([key, item]) => [
+      key,
+      parseAuditValue(item, key),
+    ])
   );
 }
 

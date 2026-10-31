@@ -1,5 +1,7 @@
 'use client';
 
+import type { ReactNode } from 'react';
+
 import { MessageSquarePlus, MessageSquareText, Trash2 } from 'lucide-react';
 import { ProfileResourceState } from '../../profile/ProfileResourceState';
 
@@ -155,6 +157,7 @@ export type CommentsListProps<
   emptyTitle?: string;
   emptyText?: string;
   emptyVariant?: 'default' | 'profile' | 'resource';
+  emptyIcon?: ReactNode;
   error?: string;
   isLoading?: boolean;
   deletingId?: string | null;
@@ -173,6 +176,7 @@ export function CommentsList<
   emptyTitle,
   emptyText = 'No comments yet.',
   emptyVariant = 'default',
+  emptyIcon = <MessageSquareText size={22} />,
   error,
   isLoading = false,
   deletingId,
@@ -192,7 +196,7 @@ export function CommentsList<
             variant="empty"
             title={emptyTitle ?? 'No comments yet.'}
             description={emptyText}
-            icon={<MessageSquareText size={22} />}
+            icon={emptyIcon}
           />
         ) : emptyVariant === 'profile' ? (
           <div className={`${css.empty} ${css.profileEmpty}`}>

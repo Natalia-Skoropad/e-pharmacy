@@ -8,3 +8,4 @@ export * from './ProfilePageLoader';
 export * from './ProfileResourceState';
 export * from './ProfileSectionHeader';
 export * from './PharmacyProfileFields';
+export * from './WorkingHoursInput';

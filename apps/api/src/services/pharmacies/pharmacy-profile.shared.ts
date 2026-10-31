@@ -9,6 +9,7 @@ import {
 import { PHARMACY_PROFILE_CONFLICT_ERROR_CODE } from '../../constants/pharmacies/pharmacy-profile';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
+import { buildPharmacyAuditChanges } from './pharmacy-audit-changes';
 
 import type {
   PharmacyEntity,
@@ -303,8 +304,8 @@ export function assertPharmacyProfileRevision(
 //===============================================================
 
 // Owner and pharmacy employees can mutate a profile: record who actually wrote it.
-// Audit only status/revision and section labels; never document bytes, bank details,
-// personal profile values, or owner-visible text.
+// Normalize section names for event context; actual before/after field values are
+// captured separately without image bytes or document contents.
 export function safePharmacyEditedSections(fields: object): string[] {
   const names: Record<string, string> = {
     bankDetails: 'paymentSettings',
@@ -331,26 +332,15 @@ export async function appendPharmacyOwnerMutationAudit(
   requestId?: string,
   reason?: string
 ): Promise<void> {
-  const beforeSnapshot = {
-    status: before.status,
-    reviewState: before.reviewState ?? 'pending',
-    revision: before.updatedAt.toISOString(),
-    editedSections: [] as string[],
-  };
-
-  const afterSnapshot = {
-    status: after.status,
-    reviewState: after.reviewState ?? 'pending',
-    revision: after.updatedAt.toISOString(),
-    editedSections: sections,
-  };
-
-  const changedFields = ['revision', 'editedSections'];
-
-  if (before.status !== after.status) changedFields.push('status');
-
-  if (beforeSnapshot.reviewState !== afterSnapshot.reviewState)
-    changedFields.push('reviewState');
+  const {
+    before: beforeSnapshot,
+    after: afterSnapshot,
+    changedFields,
+  } = buildPharmacyAuditChanges(
+    before,
+    after,
+    `${action}: ${sections.join(', ')}`
+  );
 
   await appendAdminAuditLog({
     actorUserId: userId,

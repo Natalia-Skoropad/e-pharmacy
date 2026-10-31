@@ -28,6 +28,10 @@ export async function listAdminPharmacyOwnerActivityService(
 
   return listAdminAuditLogsService({
     ...query,
+
+    // Owner activity is only owner-account activity: pharmacy changes
+    // remain in each pharmacy's own Activity history tab.
+    section: 'pharmacyOwners',
     scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
     scopeEntityId: ownerId,
   });

@@ -103,6 +103,13 @@ export async function listAdminAuditLogsService(
 
   if (query.scopeEntityId) scopeFilter.scopeEntityId = query.scopeEntityId;
 
+  if (
+    query.scopeEntityType === 'pharmacyOwner' &&
+    query.section === 'pharmacyOwners'
+  ) {
+    applyAuditSectionFilter(scopeFilter, 'pharmacyOwners');
+  }
+
   const [total, items, earliestLog, storedActions, storedSections] =
     await Promise.all([
       AdminAuditLog.countDocuments(filter),

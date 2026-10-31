@@ -50,6 +50,7 @@ test('Stage 14.12 never invents a pending revision or overwrites published data'
 
   const withPending: AdminPharmacyDetail = {
     ...base,
+
     pendingChanges: {
       name: 'Proposed pharmacy',
       phone: null,
@@ -83,6 +84,7 @@ test('Stage 14.12 never invents a pending revision or overwrites published data'
 test('Stage 14.12 distinguishes unchanged proposals and always flags submitted document sets', () => {
   const rows = buildPharmacyComparisonRows({
     ...base,
+
     pendingChanges: {
       name: 'Published pharmacy',
       documentsCount: 2,
@@ -148,9 +150,15 @@ test('Stage 14.12 shares hours presentation and only mounts information for the 
 
   assert.match(shell, /activeTab === 'information' && detail/);
   assert.match(shell, /<PharmacyInformationTab/);
-  assert.match(content, /detail\.pendingChanges !== undefined/);
-  assert.match(content, /Published data \/ Submitted changes/);
-  assert.match(content, /Submitted changes are awaiting review/);
+  assert.doesNotMatch(content, /Published data \/ Submitted changes/);
+  assert.match(shell, /activeTab === 'data' && detail/);
+  assert.match(shell, /<PharmacyDataTab/);
+
+  assert.match(
+    await read('./PharmacyDetailsPageContent/PharmacyReviewSummary.tsx'),
+    /Verification and administrator feedback/
+  );
+
   assert.match(content, /canViewOwner \?/);
   assert.match(content, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
   assert.match(content, /<DateValue value=\{dates\.updatedAt\}/);

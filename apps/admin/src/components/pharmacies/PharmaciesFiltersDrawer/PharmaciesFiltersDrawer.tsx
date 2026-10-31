@@ -28,6 +28,7 @@ import css from './PharmaciesFiltersDrawer.module.css';
 type PharmaciesFiltersDrawerProps = Readonly<{
   state: AdminPharmacyListUrlState;
   minDate?: string;
+  locationsLoading?: boolean;
 
   locationOptions: Readonly<{
     settlements: readonly string[];
@@ -78,6 +79,7 @@ export function PharmaciesFiltersDrawer({
   state,
   minDate,
   locationOptions,
+  locationsLoading = false,
   hasActiveFilters,
   onChange,
   onReset,
@@ -145,6 +147,7 @@ export function PharmaciesFiltersDrawer({
         <SelectField
           id="pharmacies-filter-region"
           label="Region"
+          isLoading={locationsLoading}
           value={state.region.toLocaleLowerCase()}
           options={[
             { value: '', label: 'All regions' },
@@ -171,6 +174,7 @@ export function PharmaciesFiltersDrawer({
       <SelectField
         id="pharmacies-filter-settlement"
         label="Settlement"
+        isLoading={locationsLoading}
         value={state.region ? state.settlement.toLocaleLowerCase() : ''}
         disabled={!state.region}
         options={[

@@ -39,6 +39,7 @@ export type AdminPharmacySearchParams = Readonly<
 
 export const ADMIN_PHARMACY_DETAIL_TABS = [
   'information',
+  'data',
   'about',
   'payment',
   'documents',
@@ -55,6 +56,8 @@ export const ADMIN_PHARMACY_DETAIL_TABS = [
 
 export type AdminPharmacyDetailTab =
   (typeof ADMIN_PHARMACY_DETAIL_TABS)[number];
+
+//===================================================================
 
 export type AdminPharmacyRouteResolution =
   | Readonly<{ kind: 'list'; filters: readonly string[] }>
@@ -257,9 +260,11 @@ function parseListFilters(
 
   for (const segment of filters) {
     const found = FILTERS.find(([prefix]) => segment.startsWith(prefix));
+
     if (!found) throw new TypeError('Unknown pharmacy filter.');
 
     const [prefix, key] = found;
+
     if (key in raw) throw new TypeError('Duplicate pharmacy filter.');
 
     raw[key] =
@@ -303,6 +308,7 @@ export function resolveAdminPharmaciesRoute(
   }
   try {
     parseListFilters(segments);
+
     return { kind: 'list', filters: [...segments] };
   } catch {
     return { kind: 'invalid' };

@@ -125,6 +125,7 @@ export function getAdminBreadcrumbsByPathname(
       ];
 
       if (parts.length > 1) base.push({ label: ownerTabs[parts[1]] });
+
       return base;
     }
 
@@ -151,6 +152,7 @@ export function getAdminBreadcrumbsByPathname(
       const detailUrl = `${ADMIN_ROUTES.PHARMACIES}/${route.pharmacyId}`;
 
       const tabLabels: Readonly<Record<string, string>> = {
+        data: 'Pharmacy data',
         about: 'About pharmacy',
         payment: 'Payment details',
         documents: 'Documents',

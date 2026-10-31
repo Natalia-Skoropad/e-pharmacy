@@ -72,6 +72,11 @@ import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { getPharmacyLocationFilterOptions } from '@/lib/pharmacies/pharmacy-location-filter-options';
 
+import {
+  loadCompletePharmacyLocations,
+  type PharmacyLocationRow,
+} from '@/lib/pharmacies/load-complete-pharmacy-locations';
+
 // Reuse the Owners registry shell classes: no parallel container CSS.
 import shellCss from '@/components/pharmacy-owners/PharmacyOwnersPageContent/PharmacyOwnersPageContent.module.css';
 import { PharmacyOwnerSearch } from '@/components/pharmacy-owners/PharmacyOwnerSearch/PharmacyOwnerSearch';
@@ -136,6 +141,35 @@ export function PharmaciesPageContent({
   const router = useRouter();
   const state = initialState;
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const [allLocationRows, setAllLocationRows] = useState<
+    readonly PharmacyLocationRow[] | null
+  >(null);
+
+  useEffect(() => {
+    if (allLocationRows !== null) return;
+
+    const controller = new AbortController();
+
+    void loadCompletePharmacyLocations(
+      (page) =>
+        getAdminPharmacies(
+          { page, perPage: 100 },
+          { signal: controller.signal }
+        ),
+
+      controller.signal
+    )
+      .then((rows) => {
+        if (!controller.signal.aborted) setAllLocationRows(rows);
+      })
+
+      .catch(() => {
+        if (!controller.signal.aborted) setAllLocationRows([]);
+      });
+
+    return () => controller.abort();
+  }, [allLocationRows]);
 
   const navigate = useCallback(
     (nextState: AdminPharmacyListUrlState) => {
@@ -655,8 +689,9 @@ export function PharmaciesPageContent({
       {isFiltersOpen ? (
         <PharmaciesFiltersDrawer
           state={state}
+          locationsLoading={allLocationRows === null}
           locationOptions={getPharmacyLocationFilterOptions(
-            data?.items ?? [],
+            allLocationRows?.length ? allLocationRows : (data?.items ?? []),
             state.settlement,
             state.region
           )}

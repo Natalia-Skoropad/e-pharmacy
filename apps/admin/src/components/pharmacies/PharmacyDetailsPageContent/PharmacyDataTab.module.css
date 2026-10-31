@@ -1,0 +1,71 @@
+/* Matches the canonical OwnedPharmacyEditor layout. Form controls are shared. */
+.tabContent {
+  display: grid;
+  gap: 32px;
+  min-width: 0;
+}
+
+.profileBlock {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+
+.profileBlock + .profileBlock {
+  padding-top: 36px;
+  border-top: 1px solid var(--color-border);
+}
+
+.pictureColumn {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  width: min(100%, 680px);
+}
+
+.fieldGroups {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.fieldsGrid {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.nameFields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  min-width: 0;
+}
+
+.fullWidth {
+  min-width: 0;
+}
+
+.required {
+  color: var(--color-error);
+}
+
+@media only screen and (min-width: 768px) {
+  .fieldsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fullWidth {
+    grid-column: 1 / -1;
+  }
+}

@@ -93,10 +93,8 @@ test('14.17.4: published identity, copy controls, owner link, dates and chart ar
   assert.match(info, /className=\{css\.ownerIdRow\}/);
   assert.match(info, /<PharmacySalesChart pharmacyId=\{detail\.id\}/);
 
-  assert.ok(
-    info.indexOf('<PharmacySalesChart') <
-      info.indexOf('Published data / Submitted changes')
-  );
+  assert.doesNotMatch(info, /Published data \/ Submitted changes/);
+  assert.match(info, /<PharmacySalesChart/);
 });
 
 //===================================================================

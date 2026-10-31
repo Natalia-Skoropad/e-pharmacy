@@ -62,7 +62,6 @@ import {
 import {
   getAdminAuditActionLabel,
   getAdminAuditChangeTone,
-  getAdminAuditStatusTransitionLabel,
 } from '@/lib/audit/admin-audit-presentation';
 
 import {
@@ -137,6 +136,7 @@ function getChangeToneClassName(
   if (tone === 'pending') return css.changePending;
   if (tone === 'warning') return css.changeWarning;
   if (tone === 'neutral') return css.changeNeutral;
+
   return css.changeInfo;
 }
 
@@ -274,8 +274,7 @@ export function ActivityHistory({
     const globalUrl = buildAdminActivityUrl({
       ...nextFilters,
 
-      ownerUserId:
-        scopeOwnerId || scopePharmacyId ? '' : nextFilters.ownerUserId,
+      ownerUserId: nextFilters.ownerUserId,
 
       page: nextPage,
       perPage: nextPerPage,
@@ -328,18 +327,21 @@ export function ActivityHistory({
       ...(filters.dateFrom ? { dateFrom: filters.dateFrom } : {}),
       ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
       ...(filters.action ? { action: filters.action } : {}),
-      ...(filters.section ? { section: filters.section } : {}),
+
+      ...(scopeOwnerId
+        ? { section: 'pharmacyOwners' as const }
+        : filters.section
+          ? { section: filters.section }
+          : {}),
+
       ...(filters.actorType ? { actorType: filters.actorType } : {}),
 
-      ...(filters.employeeUserId
-        ? { actorUserId: filters.employeeUserId }
+      ...(filters.employeeUserId || filters.ownerUserId
+        ? { actorUserId: filters.employeeUserId || filters.ownerUserId }
         : {}),
 
-      ...(!scopePharmacyId && (scopeOwnerId || filters.ownerUserId)
-        ? {
-            scopeEntityType: 'pharmacyOwner',
-            scopeEntityId: scopeOwnerId || filters.ownerUserId,
-          }
+      ...(scopeOwnerId
+        ? { scopeEntityType: 'pharmacyOwner', scopeEntityId: scopeOwnerId }
         : {}),
     };
 
@@ -402,6 +404,7 @@ export function ActivityHistory({
 
     // Pharmacy activity reads only its scoped audit endpoints, never owner profile.
     if (scopePharmacyId || !page || page.section !== 'pharmacyOwners') return;
+
     const controller = new AbortController();
 
     void getAdminPharmacyOwnerDetail(page.entityId, {
@@ -419,12 +422,15 @@ export function ActivityHistory({
       .catch(() => {
         // Old/deleted owners still have immutable audit snapshots and a usable link.
       });
+
     return () => controller.abort();
   }, [details, scopePharmacyId]);
 
   useEffect(() => {
     const page = details ? getAdminAuditPageLocation(details) : null;
+
     if (!page || page.section !== 'pharmacies') return;
+
     const controller = new AbortController();
 
     void getAdminPharmacyDetail(page.entityId, { signal: controller.signal })
@@ -454,7 +460,16 @@ export function ActivityHistory({
     [actors]
   );
 
-  const ownerOptions = useMemo(() => createOwnerOptions(actors), [actors]);
+  const ownerOptions = useMemo(
+    () =>
+      createOwnerOptions(
+        scopeOwnerId
+          ? actors.filter((actor) => actor.id === scopeOwnerId)
+          : actors
+      ),
+    [actors, scopeOwnerId]
+  );
+
   const pageLocation = details ? getAdminAuditPageLocation(details) : null;
 
   const matchingOwnerPreview =
@@ -475,7 +490,7 @@ export function ActivityHistory({
     filters.section,
     filters.actorType,
     filters.employeeUserId,
-    scopeOwnerId || scopePharmacyId ? '' : filters.ownerUserId,
+    filters.ownerUserId,
   ].filter(Boolean).length;
 
   const hasFilters = activeFiltersCount > 0;
@@ -605,21 +620,16 @@ export function ActivityHistory({
             />
           </span>
         ),
+
         render: (item) => {
           const tone = getAdminAuditChangeTone(item);
           const toneClassName = getChangeToneClassName(tone);
-          const transition = getAdminAuditStatusTransitionLabel(item);
 
           return (
             <span className={css.changeCell}>
               <strong className={`${css.changeAction} ${toneClassName}`}>
                 {getAdminAuditActionLabel(item.action)}
               </strong>
-              {transition ? (
-                <span className={`${css.changeTransition} ${toneClassName}`}>
-                  {transition}
-                </span>
-              ) : null}
             </span>
           );
         },
@@ -643,6 +653,7 @@ export function ActivityHistory({
                 .map(getAdminAuditFieldLabel)
                 .join(', ') || '—'}
             </span>
+
             {item.changedFields.length > 3 ? (
               <span className={css.moreFields}>
                 +{item.changedFields.length - 3} more changes
@@ -688,6 +699,7 @@ export function ActivityHistory({
       ...filters,
       employeeUserId,
       ownerUserId: '',
+
       actorType:
         employeeUserId && filters.actorType !== 'employee'
           ? ''
@@ -700,6 +712,7 @@ export function ActivityHistory({
       ...filters,
       ownerUserId,
       employeeUserId: '',
+
       actorType:
         ownerUserId && filters.actorType !== 'pharmacyOwner'
           ? ''
@@ -777,9 +790,7 @@ export function ActivityHistory({
           Activity history search
         </h2>
 
-        <div
-          className={`${css.searchGrid} ${scopeOwnerId || scopePharmacyId ? css.ownerSearchGrid : ''}`}
-        >
+        <div className={css.searchGrid}>
           <SearchableSelect
             id="activity-employee-search"
             label="Search by employee"
@@ -807,34 +818,32 @@ export function ActivityHistory({
             onChange={updateEmployee}
           />
 
-          {!scopeOwnerId && !scopePharmacyId ? (
-            <SearchableSelect
-              id="activity-owner-search"
-              label="Search by pharmacy owner"
-              labelAccessory={
-                <InfoTooltip
-                  label="Pharmacy owner search help"
-                  title="Pharmacy owner search"
-                  icon={<UserCog size={20} aria-hidden="true" />}
-                  items={[
-                    {
-                      title: 'Search fields',
-                      description:
-                        'Search by pharmacy owner name, ID, email, or phone number.',
-                      icon: <Search size={17} aria-hidden="true" />,
-                    },
-                  ]}
-                />
-              }
-              value={filters.ownerUserId}
-              options={ownerOptions}
-              placeholder="Name, ID, email, or phone"
-              emptyMessage="No pharmacy owners found"
-              isActive={Boolean(filters.ownerUserId)}
-              isLoading={areActorsLoading}
-              onChange={updateOwner}
-            />
-          ) : null}
+          <SearchableSelect
+            id="activity-owner-search"
+            label="Search by pharmacy owner"
+            labelAccessory={
+              <InfoTooltip
+                label="Pharmacy owner search help"
+                title="Pharmacy owner search"
+                icon={<UserCog size={20} aria-hidden="true" />}
+                items={[
+                  {
+                    title: 'Search fields',
+                    description:
+                      'Search by pharmacy owner name, ID, email, or phone number.',
+                    icon: <Search size={17} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            }
+            value={filters.ownerUserId}
+            options={ownerOptions}
+            placeholder="Name, ID, email, or phone"
+            emptyMessage="No pharmacy owners found"
+            isActive={Boolean(filters.ownerUserId)}
+            isLoading={areActorsLoading}
+            onChange={updateOwner}
+          />
 
           <div className={css.searchAction}>
             <FiltersButton

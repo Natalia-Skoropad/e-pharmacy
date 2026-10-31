@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
 //===================================================================
 
-// The test runner executes with apps/api as cwd, not the monorepo root.
-// Resolve paths relative to this test instead of depending on process.cwd().
-const repositoryRoot = resolve(__dirname, '../../../../..');
+// The API test runner uses apps/api as cwd. Root invocations are also supported.
+// Avoid import.meta so the test still compiles under the API's Node16 tsconfig.
+const repositoryRoot = existsSync(resolve(process.cwd(), 'apps/api/src'))
+  ? process.cwd()
+  : resolve(process.cwd(), '../..');
 
 const src = (path: string) =>
   readFileSync(resolve(repositoryRoot, path), 'utf8');
@@ -26,32 +28,8 @@ const actions = src(
 
 //===================================================================
 
-test('active saves require completeness in both UI and API', () => {
-  // Draft mode also covers blocked pharmacies and correction flows.
-  // Active pharmacies must keep strict verification-level validation.
-  const validationMode = editor.match(
-    /const validationMode\s*=\s*([\s\S]*?)\s*\?\s*'draft'\s*:\s*'verification';/
-  );
-
-  assert.ok(
-    validationMode,
-    'Expected explicit draft/verification mode selection'
-  );
-
-  assert.match(validationMode[1], /pharmacy\.status === 'new'/);
-  assert.match(validationMode[1], /pharmacy\.status === 'blocked'/);
-
-  assert.match(
-    validationMode[1],
-    /pharmacy\.status === 'on_reactivation' &&\s*pharmacy\.reviewState === 'changes_requested'/
-  );
-
-  assert.match(
-    validationMode[1],
-    /pharmacy\.status === 'on_verification' &&\s*pharmacy\.reviewState === 'changes_requested'/
-  );
-
-  assert.doesNotMatch(validationMode[1], /pharmacy\.status === 'active'/);
+test('active pharmacy changes save incrementally while submission still requires completeness', () => {
+  assert.match(editor, /const validationMode = 'draft' as const/);
 
   assert.match(
     editor,
@@ -65,9 +43,14 @@ test('active saves require completeness in both UI and API', () => {
     /disabled=\{!dirty \|\| busy !== null \|\| hasValidationErrors\}/
   );
 
+  const saveService = s('pharmacy-owner-profile.service.ts');
+
+  assert.match(saveService, /buildPendingModerationPayload/);
+  assert.doesNotMatch(saveService, /missingRequiredModerationFields/);
+
   assert.match(
-    s('pharmacy-owner-profile.service.ts'),
-    /missingRequiredModerationFields\(/
+    s('pharmacy-moderation.service.ts'),
+    /missingRequiredModerationFields\(\s*pharmacy,\s*pendingBeforeSubmission\s*\)/
   );
 });
 

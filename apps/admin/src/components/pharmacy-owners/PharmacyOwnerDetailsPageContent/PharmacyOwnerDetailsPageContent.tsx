@@ -112,6 +112,7 @@ type OwnerActionState = Readonly<{
 
 function buildReasonError(value: string): string {
   const reason = value.trim();
+
   if (!reason) return 'Reason is required.';
 
   if (reason.length > OWNER_STATUS_REASON_MAX_LENGTH) {
@@ -184,6 +185,7 @@ function PharmacyOwnerDetailsPageContent({
   const copyContact = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value);
+
       toast.success(`${label} copied.`);
     } catch {
       toast.error(`Could not copy ${label.toLowerCase()}.`);
@@ -222,6 +224,7 @@ function PharmacyOwnerDetailsPageContent({
     async (signal?: AbortSignal): Promise<AdminPharmacyOwnerDetail> => {
       return getAdminPharmacyOwnerDetail(ownerId, { signal });
     },
+
     [ownerId]
   );
 
@@ -262,7 +265,9 @@ function PharmacyOwnerDetailsPageContent({
 
   useEffect(() => {
     if (activeTab !== 'sessions') return;
+
     const controller = new AbortController();
+
     setSessionsStatus('loading');
 
     void getAdminPharmacyOwnerSessions(ownerId, { signal: controller.signal })
@@ -372,6 +377,7 @@ function PharmacyOwnerDetailsPageContent({
     if (!detail || !actionState || isMutating) return;
 
     const reasonError = buildReasonError(actionState.reason);
+
     if (reasonError) return;
 
     setIsMutating(true);
@@ -529,7 +535,7 @@ function PharmacyOwnerDetailsPageContent({
               <StatsGrid
                 className={css.statistics}
                 ariaLabel="Linked pharmacy status statistics"
-                columns={5}
+                columns={3}
                 tabletColumns={3}
               >
                 <StatsCard
@@ -547,6 +553,13 @@ function PharmacyOwnerDetailsPageContent({
                 />
 
                 <StatsCard
+                  title={PHARMACY_STATUS_PRESENTATION.active.label}
+                  value={statistics.active}
+                  tone="green"
+                  icon={<ShieldCheck size={26} aria-hidden="true" />}
+                />
+
+                <StatsCard
                   title={PHARMACY_STATUS_PRESENTATION.on_moderation.label}
                   value={statistics.onModeration}
                   tone="orange"
@@ -554,10 +567,10 @@ function PharmacyOwnerDetailsPageContent({
                 />
 
                 <StatsCard
-                  title={PHARMACY_STATUS_PRESENTATION.active.label}
-                  value={statistics.active}
-                  tone="green"
-                  icon={<ShieldCheck size={26} aria-hidden="true" />}
+                  title={PHARMACY_STATUS_PRESENTATION.on_reactivation.label}
+                  value={statistics.onReactivation}
+                  tone="mustard"
+                  icon={<CircleCheckBig size={26} aria-hidden="true" />}
                 />
 
                 <StatsCard
@@ -569,8 +582,8 @@ function PharmacyOwnerDetailsPageContent({
               </StatsGrid>
             ) : (
               <StatsLoadingSkeleton
-                count={5}
-                columns={5}
+                count={6}
+                columns={3}
                 tabletColumns={3}
                 label="Loading pharmacy statistics"
               />

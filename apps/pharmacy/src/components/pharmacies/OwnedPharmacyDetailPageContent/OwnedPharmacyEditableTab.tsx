@@ -99,15 +99,10 @@ export function OwnedPharmacyEditableTab({
     documents.map((doc) => doc.id).join(',') !==
       savedDocuments.map((doc) => doc.id).join(',');
 
-  const validationMode =
-    pharmacy.status === 'new' ||
-    pharmacy.status === 'blocked' ||
-    (pharmacy.status === 'on_reactivation' &&
-      pharmacy.reviewState === 'changes_requested') ||
-    (pharmacy.status === 'on_verification' &&
-      pharmacy.reviewState === 'changes_requested')
-      ? 'draft'
-      : 'verification';
+  // Saving a draft is incremental even for an already active pharmacy.
+  // Full verification/moderation validation belongs to the submission action,
+  // otherwise a legacy missing field in another tab blocks all edits.
+  const validationMode = 'draft' as const;
 
   const validation = validatePharmacyEditor(
     values,

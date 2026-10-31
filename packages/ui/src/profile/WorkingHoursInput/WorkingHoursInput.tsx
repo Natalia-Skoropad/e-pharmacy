@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CircleAlert } from 'lucide-react';
 
-import { SelectField, type SelectOption } from '@e-pharmacy/ui/forms';
+import { SelectField, type SelectOption } from '../../forms/SelectField';
 
 import {
   WORKING_DAYS,

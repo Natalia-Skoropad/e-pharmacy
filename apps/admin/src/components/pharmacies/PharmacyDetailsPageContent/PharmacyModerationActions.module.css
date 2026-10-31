@@ -101,3 +101,15 @@
     width: 100%;
   }
 }
+
+.savedDraftHint {
+  max-width: 460px;
+  padding: 10px 12px;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+}

@@ -29,6 +29,12 @@ import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-
 
 import { LinkedPharmaciesFiltersDrawer } from './LinkedPharmaciesFiltersDrawer';
 import { getPharmacyLocationFilterOptions } from '@/lib/pharmacies/pharmacy-location-filter-options';
+
+import {
+  loadCompletePharmacyLocations,
+  type PharmacyLocationRow,
+} from '@/lib/pharmacies/load-complete-pharmacy-locations';
+
 import { LinkedPharmaciesTable } from './LinkedPharmaciesTable';
 import { PharmacySearch } from '../../pharmacies/PharmacySearch/PharmacySearch';
 
@@ -107,6 +113,7 @@ export function LinkedPharmaciesTab({
         { ...(query ? { search: query } : {}), page: 1, perPage: 20 },
         { signal }
       );
+
       return result.items;
     },
     [ownerId]
@@ -148,6 +155,38 @@ export function LinkedPharmaciesTab({
   const isLoading = result.requestKey !== requestKey;
   const listError = result.requestKey === requestKey ? result.error : null;
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const [locationsSnapshot, setLocationsSnapshot] = useState<Readonly<{
+    ownerId: string;
+    rows: readonly PharmacyLocationRow[];
+  }> | null>(null);
+
+  useEffect(() => {
+    if (locationsSnapshot?.ownerId === ownerId) return;
+
+    const controller = new AbortController();
+
+    void loadCompletePharmacyLocations(
+      (page) =>
+        getAdminPharmacyOwnerPharmacies(
+          ownerId,
+          { page, perPage: 100 },
+          { signal: controller.signal }
+        ),
+
+      controller.signal
+    )
+      .then((rows) => {
+        if (!controller.signal.aborted) setLocationsSnapshot({ ownerId, rows });
+      })
+
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setLocationsSnapshot({ ownerId, rows: [] });
+      });
+
+    return () => controller.abort();
+  }, [ownerId, locationsSnapshot]);
 
   const navigate = useCallback(
     (nextState: AdminPharmacyOwnerPharmaciesUrlState) => {
@@ -192,8 +231,10 @@ export function LinkedPharmaciesTab({
           error: null,
         });
       })
+
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
+
         setResult({
           requestKey: currentRequestKey,
           data: null,
@@ -335,7 +376,15 @@ export function LinkedPharmaciesTab({
       {isFiltersOpen ? (
         <LinkedPharmaciesFiltersDrawer
           state={state}
-          locationOptions={getPharmacyLocationFilterOptions(data?.items ?? [], state.settlement, state.region)}
+          locationsLoading={locationsSnapshot?.ownerId !== ownerId}
+          locationOptions={getPharmacyLocationFilterOptions(
+            locationsSnapshot?.ownerId === ownerId &&
+              locationsSnapshot.rows.length
+              ? locationsSnapshot.rows
+              : (data?.items ?? []),
+            state.settlement,
+            state.region
+          )}
           hasActiveFilters={hasActiveFilters}
           onChange={navigate}
           onReset={resetFilters}

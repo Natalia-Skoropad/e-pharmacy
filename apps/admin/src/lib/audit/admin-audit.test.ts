@@ -569,16 +569,24 @@ test('audit change presentation uses CRUD colors and target status colors', () =
 
 test('approved pharmacy lifecycle audit actions remain visible to Admin after review withdrawal or reactivation', () => {
   const events = [
-    ['pharmacy.verification.withdrawn', 'Pharmacy verification cancelled'],
-    ['pharmacy.moderation.withdrawn', 'Pharmacy moderation cancelled'],
-    ['pharmacy.reactivation.withdrawn', 'Pharmacy reactivation cancelled'],
-    ['pharmacy.reactivation.requested', 'Pharmacy reactivation requested'],
-    ['pharmacy.reactivation.rejected', 'Pharmacy reactivation rejected'],
+    ['pharmacy.verification.withdrawn', 'Pharmacy status changed'],
+    ['pharmacy.moderation.withdrawn', 'Pharmacy status changed'],
+    ['pharmacy.reactivation.withdrawn', 'Pharmacy status changed'],
+    ['pharmacy.reactivation.requested', 'Pharmacy status changed'],
+    ['pharmacy.reactivation.rejected', 'Pharmacy status changed'],
   ] as const;
 
   for (const [action, label] of events) {
     const parsed = parseAdminAuditListResponse({
-      items: [{ ...item, action, statusBefore: 'blocked', statusAfter: 'on_reactivation' }],
+      items: [
+        {
+          ...item,
+          action,
+          statusBefore: 'blocked',
+          statusAfter: 'on_reactivation',
+        },
+      ],
+
       page: 1,
       perPage: 20,
       total: 1,
@@ -597,5 +605,25 @@ test('approved pharmacy lifecycle audit actions remain visible to Admin after re
       statusAfter: 'on_reactivation',
     }),
     'Inactive → Reactivation requested'
+  );
+});
+
+//===================================================================
+
+test('historic nested pharmacy details display safely without breaking Audit details', () => {
+  const result = parseAdminAuditDetailsResponse({
+    auditLog: {
+      ...item,
+      changedFields: ['bankDetails'],
+      before: { bankDetails: { recipientName: 'Pharmacy Artsyz' } },
+      after: { bankDetails: { recipientName: 'Pharmacy Artsyz Soborna' } },
+    },
+  });
+
+  assert.match(String(result.auditLog.before.bankDetails), /Pharmacy Artsyz/);
+
+  assert.match(
+    String(result.auditLog.after.bankDetails),
+    /Pharmacy Artsyz Soborna/
   );
 });

@@ -187,18 +187,32 @@ export function Information({
             {history.map((event) => (
               <li className={css.activityItem} key={event.id}>
                 <div className={css.activityTitle}>
-                  {event.action.replaceAll('.', ' ')}
+                  {event.action === 'pharmacy.created'
+                    ? 'Pharmacy created'
+                    : event.action === 'pharmacy.deleted'
+                      ? 'Pharmacy draft deleted'
+                      : 'Pharmacy status changed'}
                 </div>
 
-                <div className={css.activityTransition}>
-                  <HistoryStatus
-                    status={event.previousStatus}
-                    fallback="Created"
-                  />
-                  <span aria-hidden="true">→</span>
+                {event.previousStatus !== event.nextStatus &&
+                (event.previousStatus || event.nextStatus) ? (
+                  <div className={css.activityTransition}>
+                    <HistoryStatus
+                      status={event.previousStatus}
+                      fallback="Created"
+                    />
 
-                  <HistoryStatus status={event.nextStatus} fallback="Deleted" />
-                </div>
+                    <span aria-hidden="true">→</span>
+                    <HistoryStatus
+                      status={event.nextStatus}
+                      fallback={
+                        event.action === 'pharmacy.deleted'
+                          ? 'Deleted'
+                          : 'Not recorded'
+                      }
+                    />
+                  </div>
+                ) : null}
 
                 <div className={css.activityMeta}>
                   <span>{event.actor}</span>

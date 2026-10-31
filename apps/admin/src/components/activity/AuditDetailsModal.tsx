@@ -31,7 +31,7 @@ import {
 } from '@/lib/audit/admin-audit-presentation';
 
 import {
-  getAdminAuditFieldLabel,
+  getAdminAuditChangedFieldLabel,
   getAuditColorSwatch,
 } from '@/lib/audit/admin-audit-fields';
 
@@ -61,6 +61,7 @@ type AuditChangeRow = Readonly<{
   label: string;
   before: AdminAuditValue | undefined;
   after: AdminAuditValue | undefined;
+  deletedDraft?: boolean;
 }>;
 
 //===================================================================
@@ -111,23 +112,31 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
     key: 'before',
     title: 'Before',
     width: '25%',
-    render: (item) => (
-      <RenderAuditValue
-        value={item.before}
-        isStatus={item.field === 'status' || item.field.endsWith('.status')}
-      />
-    ),
+
+    render: (item) =>
+      item.deletedDraft ? (
+        <StatusBadge {...getAdminAuditStatusPresentation('new')!} />
+      ) : (
+        <RenderAuditValue
+          value={item.before}
+          isStatus={item.field === 'status' || item.field.endsWith('.status')}
+        />
+      ),
   },
   {
     key: 'after',
     title: 'After',
     width: '25%',
-    render: (item) => (
-      <RenderAuditValue
-        value={item.after}
-        isStatus={item.field === 'status' || item.field.endsWith('.status')}
-      />
-    ),
+
+    render: (item) =>
+      item.deletedDraft ? (
+        <span className={css.changeValue}>Pharmacy delete</span>
+      ) : (
+        <RenderAuditValue
+          value={item.after}
+          isStatus={item.field === 'status' || item.field.endsWith('.status')}
+        />
+      ),
   },
 ];
 
@@ -141,6 +150,7 @@ function getChangeToneClassName(
   if (tone === 'pending') return css.changePending;
   if (tone === 'warning') return css.changeWarning;
   if (tone === 'neutral') return css.changeNeutral;
+
   return css.changeInfo;
 }
 
@@ -164,9 +174,11 @@ export function AuditDetailsModal({
   const changeRows: AuditChangeRow[] = details
     ? details.changedFields.map((field) => ({
         field,
-        label: getAdminAuditFieldLabel(field),
+        label: getAdminAuditChangedFieldLabel(field, details.entityType),
         before: details.before[field],
         after: details.after[field],
+        deletedDraft:
+          details.action === 'pharmacy.deleted' && field === 'exists',
       }))
     : [];
 

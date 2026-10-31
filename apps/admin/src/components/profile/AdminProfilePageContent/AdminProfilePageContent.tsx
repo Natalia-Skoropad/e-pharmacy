@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 import {
-  FileBadge2,
+  Files,
   MessageSquareLock,
   MonitorSmartphone,
   UserRound,
@@ -13,7 +13,9 @@ import {
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { useAuth } from '@e-pharmacy/auth/react';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+
 import type { ActiveSession } from '@e-pharmacy/types/auth';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -117,7 +119,7 @@ export function AdminProfilePageContent() {
     {
       value: DOCUMENTS_TAB,
       label: 'Documents',
-      icon: <FileBadge2 size={17} aria-hidden="true" />,
+      icon: <Files size={17} aria-hidden="true" />,
     },
     {
       value: COMMENTS_TAB,
@@ -133,17 +135,20 @@ export function AdminProfilePageContent() {
 
   useEffect(() => {
     if (activeTab !== SESSIONS_TAB || !user) return;
+
     const controller = new AbortController();
 
     void getActiveSessions({ signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
+
         setSessions([...response.sessions]);
         setSessionsStatus('success');
       })
 
       .catch(() => {
         if (controller.signal.aborted) return;
+
         setSessionsError('Could not load active sessions. Please try again.');
         setSessionsStatus('error');
       });

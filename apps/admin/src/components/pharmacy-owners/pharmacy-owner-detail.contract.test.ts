@@ -58,10 +58,11 @@ test('owner detail presents pharmacy moderation statistics without duplicating o
   assert.match(detail, /Linked pharmacy overview/);
   assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_verification/);
   assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_moderation/);
+  assert.match(detail, /PHARMACY_STATUS_PRESENTATION\.on_reactivation/);
   assert.match(detail, /USER_STATUS_PRESENTATION\[detail\.status\]/);
   assert.match(detail, /These are pharmacy-level values/);
   assert.match(detail, /StatsLoadingSkeleton/);
-  assert.match(detail, /count=\{5\}/);
+  assert.match(detail, /count=\{6\}/);
   assert.match(detail, /tone="purple"/);
   assert.match(detail, /tone="orange"/);
 

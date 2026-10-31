@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 
-import { Clock3, Mail, Phone, ShieldCheck, UserRoundCog } from 'lucide-react';
+import { Clock3, Mail, Phone, UserRoundCog } from 'lucide-react';
 
 import {
   PHARMACY_STATUS_PRESENTATION,
@@ -20,11 +20,6 @@ import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
-
-import {
-  buildPharmacyComparisonRows,
-  type PharmacyComparisonRow,
-} from './pharmacy-information-comparison';
 
 import { PharmacySalesChart } from './PharmacySalesChart';
 
@@ -143,38 +138,9 @@ function DetailField({
 
 //===================================================================
 
-function ComparisonValue({
-  row,
-  value,
-  isSubmitted,
-}: {
-  row: PharmacyComparisonRow;
-  value: string;
-  isSubmitted: boolean;
-}) {
-  if (row.presentation === 'image') {
-    return (
-      <Photo
-        compact
-        url={value === '—' ? undefined : value}
-        name={
-          isSubmitted ? 'Submitted pharmacy photo' : 'Published pharmacy photo'
-        }
-      />
-    );
-  }
-
-  if (row.presentation === 'hours') return <ScheduleValue value={value} />;
-
-  return <span className={css.comparisonText}>{value}</span>;
-}
-
-//===================================================================
-
 /** Uses the existing detail response; opening this tab must not fetch another resource. */
 export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
   const { current, owner, dates } = detail;
-  const comparison = buildPharmacyComparisonRows(detail);
   const toast = useToast();
 
   const copyValue = async (value: string, label: string) => {
@@ -311,74 +277,6 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
       </div>
 
       <PharmacySalesChart pharmacyId={detail.id} />
-
-      {detail.pendingChanges !== undefined && (
-        <section
-          className={css.sectionCard}
-          aria-labelledby="pharmacy-comparison-title"
-        >
-          <div className={css.sectionHeading}>
-            <ShieldCheck size={20} aria-hidden="true" />
-            <h3 id="pharmacy-comparison-title">
-              Published data / Submitted changes
-            </h3>
-          </div>
-
-          <p className={css.muted}>
-            Submitted changes are awaiting review. They are not approved and do
-            not replace the published pharmacy profile.
-          </p>
-
-          {comparison.length ? (
-            <dl className={css.comparisonList}>
-              {comparison.map((row) => (
-                <div
-                  key={row.key}
-                  className={
-                    row.changed
-                      ? css.comparisonChanged
-                      : css.comparisonUnchanged
-                  }
-                >
-                  <dt className={css.comparisonHeading}>
-                    {row.label}
-                    <span className={css.comparisonIndicator}>
-                      {row.verificationRequired
-                        ? 'Submitted · review documents'
-                        : row.changed
-                          ? 'Changed · not approved'
-                          : 'Submitted · unchanged'}
-                    </span>
-                  </dt>
-                  <dd className={css.comparisonColumns}>
-                    <div>
-                      <span className={css.columnLabel}>Published data</span>
-                      <ComparisonValue
-                        row={row}
-                        value={row.published}
-                        isSubmitted={false}
-                      />
-                    </div>
-
-                    <div>
-                      <span className={css.columnLabel}>Submitted changes</span>
-                      <ComparisonValue
-                        row={row}
-                        value={row.submitted}
-                        isSubmitted
-                      />
-                    </div>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          ) : (
-            <p className={css.muted}>
-              There are no submitted profile fields to compare.
-            </p>
-          )}
-        </section>
-      )}
     </div>
   );
 }

@@ -184,6 +184,23 @@ export function OwnedPharmacyDetailPageContent({
   activeTab: OwnedPharmacyDetailTab;
 }>) {
   const router = useRouter();
+
+  // Update the displayed tab immediately on click, but let route props take
+  // precedence once navigation resolves (including browser history changes).
+  // Adjusting state during render *only when the route changes* avoids an
+  // effect-driven cascading render and preserves the already-loaded detail.
+  const [tabSelection, setTabSelection] = useState({
+    routeTab: activeTab,
+    selectedTab: activeTab,
+  });
+
+  if (tabSelection.routeTab !== activeTab) {
+    setTabSelection({ routeTab: activeTab, selectedTab: activeTab });
+  }
+
+  const visibleTab =
+    tabSelection.routeTab === activeTab ? tabSelection.selectedTab : activeTab;
+
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<DetailResult | null>(null);
 
@@ -210,7 +227,7 @@ export function OwnedPharmacyDetailPageContent({
 
   useEffect(() => {
     if (pharmacy?.name) dispatchPharmacyBreadcrumbLabel(pharmacy.name);
-  }, [pharmacy?.name, activeTab]);
+  }, [pharmacy?.name, visibleTab]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -285,8 +302,8 @@ export function OwnedPharmacyDetailPageContent({
       </main>
     );
 
-  const selected = TABS.find((item) => item.value === activeTab) ?? TABS[0]!;
-  const deferred = DEFERRED[activeTab];
+  const selected = TABS.find((item) => item.value === visibleTab) ?? TABS[0]!;
+  const deferred = DEFERRED[visibleTab];
 
   return (
     <main className={css.page} aria-labelledby="owned-pharmacy-title">
@@ -371,14 +388,17 @@ export function OwnedPharmacyDetailPageContent({
             idBase="owned-pharmacy-detail"
             items={TABS}
             ariaLabel="Pharmacy details tabs"
-            activeValue={activeTab}
+            activeValue={visibleTab}
             mobileVisibleCount={1}
             tabletVisibleCount={3}
             onChange={(tab) => {
-              if (tab !== activeTab)
+              if (tab !== visibleTab) {
+                setTabSelection({ routeTab: activeTab, selectedTab: tab });
+
                 router.replace(buildOwnedPharmacyDetailUrl(pharmacyId, tab), {
                   scroll: false,
                 });
+              }
             }}
           />
 
@@ -386,50 +406,54 @@ export function OwnedPharmacyDetailPageContent({
             role="tabpanel"
             tabIndex={0}
             className={css.tabPanel}
-            id={`owned-pharmacy-detail-panel-${activeTab}`}
-            aria-labelledby={`owned-pharmacy-detail-tab-${activeTab}`}
+            id={`owned-pharmacy-detail-panel-${visibleTab}`}
+            aria-labelledby={`owned-pharmacy-detail-tab-${visibleTab}`}
           >
-            {!['data', 'about', 'payment', 'documents', 'comments'].includes(
-              activeTab
-            ) && (
+            {(!['data', 'about', 'payment', 'documents', 'comments'].includes(
+              visibleTab
+            ) ||
+              (loading &&
+                ['data', 'about', 'payment', 'documents'].includes(
+                  visibleTab
+                ))) && (
               <ProfileSectionHeader
                 title={selected.label}
-                description={DESCRIPTIONS[activeTab]}
+                description={DESCRIPTIONS[visibleTab]}
                 icon={selected.icon ?? <Building2 size={21} />}
               />
             )}
-            {loading && activeTab !== 'comments' ? (
+            {loading && visibleTab !== 'comments' ? (
               <ProfileResourceState
                 variant="loading"
                 title="Loading pharmacy details"
                 description="The pharmacy overview is being loaded."
               />
-            ) : detail && pharmacy && activeTab === 'information' ? (
+            ) : detail && pharmacy && visibleTab === 'information' ? (
               <Information detail={detail} />
             ) : pharmacy &&
-              ['data', 'about', 'payment', 'documents'].includes(activeTab) ? (
+              ['data', 'about', 'payment', 'documents'].includes(visibleTab) ? (
               <div className={css.formStack}>
                 {pharmacy.membershipRole === 'owner' ? (
                   <OwnedPharmacySectionReview
                     section={
-                      activeTab as 'data' | 'about' | 'payment' | 'documents'
+                      visibleTab as 'data' | 'about' | 'payment' | 'documents'
                     }
                     pharmacy={pharmacy}
                     onChanged={refresh}
                   />
                 ) : null}
-                {activeTab === 'payment' &&
+                {visibleTab === 'payment' &&
                 pharmacy.membershipRole !== 'owner' ? (
                   <Payment pharmacy={pharmacy} />
-                ) : activeTab === 'documents' &&
+                ) : visibleTab === 'documents' &&
                   pharmacy.membershipRole !== 'owner' ? (
                   <DocumentsResource key={pharmacyId} pharmacyId={pharmacyId} />
                 ) : (
                   <OwnedPharmacyEditableTab
-                    key={`${pharmacy.updatedAt}:${activeTab}`}
+                    key={`${pharmacy.updatedAt}:${visibleTab}`}
                     pharmacy={pharmacy}
                     tab={
-                      activeTab as 'data' | 'about' | 'payment' | 'documents'
+                      visibleTab as 'data' | 'about' | 'payment' | 'documents'
                     }
                     readOnly={
                       pharmacy.membershipRole !== 'owner' ||
@@ -448,7 +472,7 @@ export function OwnedPharmacyDetailPageContent({
                   />
                 )}
               </div>
-            ) : activeTab === 'comments' ? (
+            ) : visibleTab === 'comments' ? (
               <EntityComments
                 entityKey={`pharmacy:${pharmacyId}`}
                 presentation="profile"
@@ -472,7 +496,7 @@ export function OwnedPharmacyDetailPageContent({
                   deletePharmacyNote('pharmacy', pharmacyId, id, options)
                 }
               />
-            ) : pharmacy && activeTab === 'activity' ? (
+            ) : pharmacy && visibleTab === 'activity' ? (
               <OwnedPharmacyActivityTab
                 key={pharmacyId}
                 pharmacyId={pharmacyId}
@@ -482,7 +506,7 @@ export function OwnedPharmacyDetailPageContent({
                 variant="empty"
                 icon={deferred.icon}
                 title={deferred.title}
-                description={DESCRIPTIONS[activeTab]}
+                description={DESCRIPTIONS[visibleTab]}
               />
             ) : null}
           </section>

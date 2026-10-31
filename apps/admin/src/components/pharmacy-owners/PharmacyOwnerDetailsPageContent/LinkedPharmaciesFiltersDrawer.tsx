@@ -26,6 +26,7 @@ import css from '../../pharmacies/PharmaciesFiltersDrawer/PharmaciesFiltersDrawe
 type LinkedPharmaciesFiltersDrawerProps = Readonly<{
   state: AdminPharmacyOwnerPharmaciesUrlState;
   hasActiveFilters: boolean;
+  locationsLoading?: boolean;
 
   locationOptions: Readonly<{
     settlements: readonly string[];
@@ -129,6 +130,7 @@ const PHARMACY_RATING_OPTIONS: Array<
 export function LinkedPharmaciesFiltersDrawer({
   state,
   locationOptions,
+  locationsLoading = false,
   hasActiveFilters,
   onChange,
   onReset,
@@ -198,6 +200,7 @@ export function LinkedPharmaciesFiltersDrawer({
         <SelectField
           id="owner-linked-pharmacies-region-filter"
           label="Region"
+          isLoading={locationsLoading}
           value={state.region.toLocaleLowerCase()}
           options={[
             { value: '', label: 'All regions' },
@@ -224,6 +227,7 @@ export function LinkedPharmaciesFiltersDrawer({
       <SelectField
         id="owner-linked-pharmacies-settlement-filter"
         label="Settlement"
+        isLoading={locationsLoading}
         value={state.region ? state.settlement.toLocaleLowerCase() : ''}
         disabled={!state.region}
         options={[

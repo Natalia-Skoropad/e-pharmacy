@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MessageSquareLock, Trash2, X } from 'lucide-react';
+import { MessageSquareText, Trash2, X } from 'lucide-react';
 
 import type { AdminPharmacyOwnerComment } from '@e-pharmacy/types/admin';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
@@ -101,6 +101,7 @@ export function OwnerCommentsTab({
   const loadComments = useCallback(
     async (signal?: AbortSignal) => {
       const response = await getAdminPharmacyOwnerComments(ownerId, { signal });
+
       applyComments(response.comments);
     },
     [applyComments, ownerId]
@@ -114,6 +115,7 @@ export function OwnerCommentsTab({
         if (controller.signal.aborted) return;
 
         const nextComments = response.comments;
+
         setComments(nextComments);
         setLoadedOwnerId(ownerId);
         onCountChange?.(nextComments.length);
@@ -149,6 +151,7 @@ export function OwnerCommentsTab({
 
   const handleCreate = async () => {
     const text = draft.trim();
+
     if (!canManage || !text || isSaving || deletingId) return;
 
     const existing = createRequestRef.current;
@@ -175,7 +178,9 @@ export function OwnerCommentsTab({
 
       createRequestRef.current = null;
       setDraftState('');
+
       await loadComments(controller.signal);
+
       toast.success('Comment was added.');
     } catch {
       if (!controller.signal.aborted) {
@@ -192,6 +197,7 @@ export function OwnerCommentsTab({
 
   const handleDelete = async () => {
     const comment = commentToDelete;
+
     if (!canManage || !comment || deletingId || isSaving) return;
 
     setCommentToDelete(null);
@@ -199,6 +205,7 @@ export function OwnerCommentsTab({
     deleteControllerRef.current?.abort();
 
     const controller = new AbortController();
+
     deleteControllerRef.current = controller;
 
     try {
@@ -209,6 +216,7 @@ export function OwnerCommentsTab({
       if (controller.signal.aborted) return;
 
       await loadComments(controller.signal);
+
       toast.success('Comment was deleted.');
     } catch {
       if (!controller.signal.aborted) {
@@ -216,6 +224,7 @@ export function OwnerCommentsTab({
       }
     } finally {
       if (!controller.signal.aborted) setDeletingId(null);
+
       if (deleteControllerRef.current === controller) {
         deleteControllerRef.current = null;
       }
@@ -231,7 +240,7 @@ export function OwnerCommentsTab({
         title="Comments"
         titleId="owner-comments-title"
         description="Internal Admin comments about this pharmacy owner. The owner cannot see these notes."
-        icon={<MessageSquareLock size={22} />}
+        icon={<MessageSquareText size={22} />}
         action={
           effectiveStatus === 'success' ? (
             <CountLabel

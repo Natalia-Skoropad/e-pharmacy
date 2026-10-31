@@ -27,10 +27,12 @@ const detail = read(
 
 const sidebar = read('../layout/PharmacySidebar/PharmacySidebar.tsx');
 
-const hours = read('../profile/WorkingHoursInput/WorkingHoursInput.tsx');
+const hours = read(
+  '../../../../../packages/ui/src/profile/WorkingHoursInput/WorkingHoursInput.tsx'
+);
 
 const hourStyles = read(
-  '../profile/WorkingHoursInput/WorkingHoursInput.module.css'
+  '../../../../../packages/ui/src/profile/WorkingHoursInput/WorkingHoursInput.module.css'
 );
 
 const payment = read(

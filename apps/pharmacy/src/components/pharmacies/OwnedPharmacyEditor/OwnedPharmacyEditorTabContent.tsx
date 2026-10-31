@@ -43,7 +43,7 @@ import {
 import { downloadOwnedPharmacyDocument } from '@/lib/api/browser/owned-pharmacy-editor.api';
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 
-import { WorkingHoursInput } from '@/components/profile/WorkingHoursInput';
+import { WorkingHoursInput } from '@e-pharmacy/ui/profile';
 
 import type {
   PharmacyEditorField,

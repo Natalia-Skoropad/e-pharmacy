@@ -22,7 +22,7 @@ test('modal foundation requires a real accessible name', async () => {
 
 test('working hours are exposed as a labelled field group', async () => {
   const source = await readSource(
-    '../../../../apps/pharmacy/src/components/profile/WorkingHoursInput/WorkingHoursInput.tsx'
+    '../profile/WorkingHoursInput/WorkingHoursInput.tsx'
   );
 
   assert.match(source, /<fieldset/);
@@ -209,7 +209,7 @@ test('component names and physical placement describe their actual responsibilit
   const forms = await readSource('../forms/index.ts');
 
   const pharmacyWorkingHours = await readSource(
-    '../../../../apps/pharmacy/src/components/profile/WorkingHoursInput/WorkingHoursInput.tsx'
+    '../profile/WorkingHoursInput/WorkingHoursInput.tsx'
   );
 
   assert.doesNotMatch(primitives, /LinkButton|ButtonLink/);

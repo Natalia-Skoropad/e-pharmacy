@@ -14,9 +14,11 @@ import type {
 } from '@e-pharmacy/types/admin';
 
 import { PHARMACY_OWNER_ACCOUNT_STATUSES } from '@e-pharmacy/config/users';
+
 import type { PharmacyOwnerAccountStatus } from '@e-pharmacy/types/auth';
 import type { PharmacyLocationDraft } from '@e-pharmacy/types/pharmacies';
 import type { ISODateTimeString } from '@e-pharmacy/types/primitives';
+
 import { isISODateTimeString } from '@e-pharmacy/validation/dates';
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 
@@ -34,6 +36,8 @@ export const ADMIN_OWNER_PHARMACY_STATUSES = [
   'active',
   'blocked',
 ] as const;
+
+//===================================================================
 
 export const ADMIN_OWNER_RATING_FILTERS = [
   '0-0.9',
@@ -319,6 +323,11 @@ function parsePharmacyStatistics(value: unknown) {
       'onModeration pharmacies count'
     ),
 
+    onReactivation: requireNonNegativeInteger(
+      record.onReactivation,
+      'onReactivation pharmacies count'
+    ),
+
     active: requireNonNegativeInteger(record.active, 'active pharmacies count'),
     blocked: requireNonNegativeInteger(
       record.blocked,
@@ -331,6 +340,7 @@ function parsePharmacyStatistics(value: unknown) {
     result.new +
       result.onVerification +
       result.onModeration +
+      result.onReactivation +
       result.active +
       result.blocked
   ) {

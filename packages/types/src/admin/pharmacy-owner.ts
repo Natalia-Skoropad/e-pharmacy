@@ -65,6 +65,7 @@ export type AdminPharmacyOwnerDetail = Readonly<{
     new: number;
     onVerification: number;
     onModeration: number;
+    onReactivation: number;
     active: number;
     blocked: number;
   }>;

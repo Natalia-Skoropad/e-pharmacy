@@ -40,7 +40,7 @@ test('owner moderation and verification live in one accessible Admin-style dropd
   assert.match(actions, /pharmacy\.status === 'active'/);
   assert.match(actions, /pharmacy\.status === 'on_verification'/);
   assert.match(actions, /Resend for verification/);
-  assert.match(actions, /Cancel verification request/);
+  assert.match(actions, /Cancel\s+verification request/);
 
   // Both the page heading and disabled status actions reuse the same shared tooltip.
   assert.match(actions, /<InfoTooltip/);
@@ -147,14 +147,14 @@ test('moderation with one saved change uses required-field completeness, not re-
 
   assert.match(
     actions,
-    /disabled=\{!needsModeration \|\| !hasChanges \|\| moderationIncomplete\}/
+    /disabled=\{\s*!needsModeration\s*\|\|\s*!hasChanges\s*\|\|\s*moderationIncomplete\s*\}/
   );
 
   assert.match(actions, /const verificationIncomplete =/);
 
   assert.match(
     actions,
-    /disabled=\{!needsVerification \|\| verificationIncomplete \|\| !ownerHasDocuments\}/
+    /disabled=\{\s*!needsVerification\s*\|\|\s*verificationIncomplete\s*\|\|\s*!ownerHasDocuments\s*\}/
   );
 
   assert.doesNotMatch(actions, /disabled=\{invalid \|\| !hasChanges\}/);
@@ -168,7 +168,10 @@ test('moderation summary uses the same icons as its pharmacy detail tabs', () =>
   assert.match(actions, /'Payment details': CreditCard/);
   assert.match(actions, /Documents: FileText/);
 
-  assert.match(actions, /const Icon = MODERATION_TAB_ICONS\[group\.title\]/);
+  assert.match(
+    actions,
+    /const Icon =\s*MODERATION_TAB_ICONS\[group\.title\]\s*\?\?\s*FileText/
+  );
 
   assert.match(
     actions,

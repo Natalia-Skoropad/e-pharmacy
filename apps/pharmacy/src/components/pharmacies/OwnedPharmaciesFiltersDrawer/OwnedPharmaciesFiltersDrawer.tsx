@@ -28,6 +28,7 @@ type OwnedPharmaciesFiltersDrawerProps = Readonly<{
   state: OwnedPharmacyListUrlState;
   minDate?: string;
 
+  locationsLoading?: boolean;
   locationOptions: Readonly<{
     settlements: readonly string[];
     regions: readonly string[];
@@ -77,6 +78,7 @@ export function OwnedPharmaciesFiltersDrawer({
   state,
   minDate,
   locationOptions,
+  locationsLoading = false,
   hasActiveFilters,
   onChange,
   onReset,
@@ -144,6 +146,7 @@ export function OwnedPharmaciesFiltersDrawer({
         <SelectField
           id="pharmacies-filter-region"
           label="Region"
+          isLoading={locationsLoading}
           value={state.region.toLocaleLowerCase()}
           options={[
             { value: '', label: 'All regions' },
@@ -172,6 +175,7 @@ export function OwnedPharmaciesFiltersDrawer({
       <SelectField
         id="pharmacies-filter-settlement"
         label="Settlement"
+        isLoading={locationsLoading}
         value={state.region ? state.settlement.toLocaleLowerCase() : ''}
         disabled={!state.region}
         options={[

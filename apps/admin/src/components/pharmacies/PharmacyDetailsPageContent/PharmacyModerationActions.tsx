@@ -34,6 +34,8 @@ import {
 import { requestPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
 import { requestPharmacyOwnerNavigationBadgeRefresh } from '@/lib/pharmacy-owners/pharmacy-owner-navigation-badge-refresh';
 
+import { PharmacySubmittedChangesSummary } from './PharmacyReviewSummary';
+
 import css from './PharmacyModerationActions.module.css';
 
 //===================================================================
@@ -138,6 +140,7 @@ export function PharmacyModerationActions({
     detail.owner?.status,
     detail.dates.updatedAt,
   ]);
+
   const menuOpen = options.length > 0 && openMenuKey === menuKey;
 
   useEffect(() => {
@@ -182,10 +185,12 @@ export function PharmacyModerationActions({
 
   const refreshConflict = async () => {
     if (!action || isRefreshing || isSubmitting) return;
+
     setIsRefreshing(true);
 
     try {
       const fresh = await getAdminPharmacyDetail(detail.id);
+
       onDetailRefreshed(fresh);
 
       const option = getPharmacyModerationOptions(fresh).find(
@@ -283,6 +288,14 @@ export function PharmacyModerationActions({
 
   return (
     <>
+      {detail.status === 'active' && detail.pendingChanges ? (
+        <p className={css.savedDraftHint} role="status">
+          Owner changes are saved as a draft, but have not been submitted for
+          moderation. The owner must finish the required fields and select Send
+          for moderation. Approval and correction actions become available after
+          the server confirms the submission.
+        </p>
+      ) : null}
       {options.length > 0 ? (
         <div className={css.menuWrapper} ref={containerRef}>
           <Button
@@ -346,6 +359,7 @@ export function PharmacyModerationActions({
               <span>
                 <strong>{detail.current.name}</strong> (ID: {detail.id})
               </span>
+
               <span className={css.statusTransition}>
                 <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
                 <span aria-hidden="true">→</span>
@@ -356,6 +370,7 @@ export function PharmacyModerationActions({
                   ? ' (status unchanged; a new review decision is audited)'
                   : null}
               </span>
+
               <span>{action.option.description}</span>
               {action.option.feedbackVisibleToOwner ? (
                 <strong>
@@ -366,6 +381,12 @@ export function PharmacyModerationActions({
                 Request ID: {action.clientRequestId}
               </span>
             </span>
+          }
+          details={
+            action.option.action === 'approve' ||
+            action.option.action === 'request_corrections' ? (
+              <PharmacySubmittedChangesSummary detail={detail} />
+            ) : undefined
           }
           value={action.reason}
           fieldName="pharmacyModerationReason"

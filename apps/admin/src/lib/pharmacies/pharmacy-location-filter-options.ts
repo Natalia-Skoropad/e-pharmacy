@@ -1,4 +1,4 @@
-/** Options come only from loaded table rows. Keep the current choice when a dependent filter changes. */
+/** Options are derived from a complete location snapshot, not the currently filtered table page. */
 export type PharmacyLocationOption = Readonly<{
   settlement?: string;
   region?: string;
@@ -19,6 +19,7 @@ function choices(values: string[]): string[] {
 
   values.filter(Boolean).forEach((value) => {
     const key = value.toLocaleLowerCase();
+
     if (!byKey.has(key)) byKey.set(key, value);
   });
 

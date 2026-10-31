@@ -55,6 +55,7 @@ import {
   effectivePharmacyEditorValues,
 } from '../OwnedPharmacyEditor/pharmacy-editor-fields';
 
+import { FIELD_LABELS } from '../OwnedPharmacyEditor/pharmacy-editor-presentation';
 import { getPharmacyModerationSummary } from './pharmacy-moderation-summary';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
@@ -79,12 +80,14 @@ function ActionMenuItem({
   className,
   disabled = false,
   disabledReason,
+  tooltipTitle = 'Action unavailable',
   onClick,
   children,
 }: Readonly<{
   className: string;
   disabled?: boolean;
   disabledReason?: string;
+  tooltipTitle?: string;
   onClick?: () => void;
   children: ReactNode;
 }>) {
@@ -104,12 +107,18 @@ function ActionMenuItem({
         <span className={css.statusActionTooltip}>
           <InfoTooltip
             label="Why this action is unavailable"
-            title="Action unavailable"
+            title={tooltipTitle}
             icon={<SectionActionIcon size={20} aria-hidden="true" />}
             escapeOverflow
-          >
-            <span>{disabledReason}</span>
-          </InfoTooltip>
+            scrollable
+            items={[
+              {
+                title: 'Required action',
+                description: disabledReason,
+                icon: <ShieldCheck size={17} aria-hidden="true" />,
+              },
+            ]}
+          />
         </span>
       ) : null}
     </div>
@@ -210,7 +219,16 @@ export function OwnedPharmacyActions({
   const moderationIncomplete =
     missingModerationFields.length > 0 ||
     !documentsCount ||
-    !pharmacy.location?.countryCode;
+    !(pending?.location?.countryCode ?? pharmacy.location?.countryCode);
+
+  const missingModerationLabels = [
+    ...missingModerationFields.map((field) => FIELD_LABELS[field]),
+    ...(!documentsCount ? ['Pharmacy documents'] : []),
+
+    ...(!(pending?.location?.countryCode ?? pharmacy.location?.countryCode)
+      ? ['Country code']
+      : []),
+  ];
 
   // Initial verification remains stricter than moderation of approved data.
   const verificationIncomplete =
@@ -335,11 +353,20 @@ export function OwnedPharmacyActions({
 
         toast.success('Pharmacy sent for verification.');
       } else if (action === 'moderation') {
-        await submitOwnedPharmacyModeration(pharmacy.id, {
+        const response = await submitOwnedPharmacyModeration(pharmacy.id, {
           changes: {},
           expectedRevision: pharmacy.updatedAt,
           comment: comment.trim(),
         });
+
+        if (
+          response.pharmacy.status !== 'on_moderation' ||
+          response.pharmacy.reviewState !== 'pending'
+        ) {
+          throw new Error(
+            'The pharmacy did not enter On moderation. Refresh and retry the submission.'
+          );
+        }
 
         toast.success('Pharmacy changes sent for moderation.');
       } else if (action === 'reactivate') {
@@ -434,6 +461,7 @@ export function OwnedPharmacyActions({
                 <>
                   <ActionMenuItem
                     className={css.verificationAction}
+                    tooltipTitle="Verification requirements"
                     disabled={
                       !needsVerification ||
                       verificationIncomplete ||
@@ -500,7 +528,7 @@ export function OwnedPharmacyActions({
                         : !hasChanges
                           ? 'Save at least one proposed pharmacy change before you submit for moderation.'
                           : moderationIncomplete
-                            ? 'Complete the required pharmacy details and attach the required documents before you submit for moderation.'
+                            ? `Complete before moderation: ${missingModerationLabels.join(', ')}. Save changes in the relevant tabs first.`
                             : undefined
                     }
                     onClick={() => open('moderation')}

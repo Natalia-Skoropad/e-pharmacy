@@ -70,6 +70,12 @@ import {
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import { getOwnedPharmacyLocationFilterOptions } from '@/lib/pharmacies/owned-pharmacy-location-options';
+
+import {
+  loadCompletePharmacyLocations,
+  type PharmacyLocationRow,
+} from '@/lib/pharmacies/load-complete-pharmacy-locations';
+
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { OwnedPharmacySearch } from '../OwnedPharmacySearch/OwnedPharmacySearch';
@@ -134,6 +140,35 @@ export function OwnedPharmaciesPageContent({
   const [membershipReady, setMembershipReady] = useState(false);
   const state = initialState;
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const [allLocationRows, setAllLocationRows] = useState<
+    readonly PharmacyLocationRow[] | null
+  >(null);
+
+  useEffect(() => {
+    if (allLocationRows !== null) return;
+
+    const controller = new AbortController();
+
+    void loadCompletePharmacyLocations(
+      (page) =>
+        getOwnedPharmacies(
+          { page, perPage: 100 },
+          { signal: controller.signal }
+        ),
+
+      controller.signal
+    )
+      .then((rows) => {
+        if (!controller.signal.aborted) setAllLocationRows(rows);
+      })
+
+      .catch(() => {
+        if (!controller.signal.aborted) setAllLocationRows([]);
+      });
+
+    return () => controller.abort();
+  }, [allLocationRows]);
 
   const navigate = useCallback(
     (nextState: OwnedPharmacyListUrlState) => {
@@ -635,8 +670,9 @@ export function OwnedPharmaciesPageContent({
       {isFiltersOpen ? (
         <OwnedPharmaciesFiltersDrawer
           state={state}
+          locationsLoading={allLocationRows === null}
           locationOptions={getOwnedPharmacyLocationFilterOptions(
-            data?.items ?? [],
+            allLocationRows?.length ? allLocationRows : (data?.items ?? []),
             state.settlement,
             state.region
           )}

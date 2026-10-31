@@ -25,7 +25,7 @@ export function OwnerActivityTab({
       <ProfileSectionHeader
         title="Activity history"
         titleId="owner-activity-history-title"
-        description="Review the immutable history of changes related to this pharmacy owner, including owner, document, comment, and linked-pharmacy events."
+        description="Review the immutable history of changes related to this pharmacy owner, including owner, document, and comment events. Pharmacy-level history is available on each pharmacy page."
         icon={<History size={22} />}
       />
       <ActivityHistory scopeOwnerId={ownerId} initialState={initialState} />

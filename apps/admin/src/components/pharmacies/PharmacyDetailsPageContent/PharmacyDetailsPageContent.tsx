@@ -56,6 +56,7 @@ import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
+import { PharmacyDataTab } from './PharmacyDataTab';
 import { PharmacyAboutTab } from './PharmacyAboutTab';
 import { PharmacyPaymentTab } from './PharmacyPaymentTab';
 import { PharmacyModerationActions } from './PharmacyModerationActions';
@@ -101,6 +102,7 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
     label: 'Pharmacy information',
     icon: <Building2 size={17} />,
   },
+  { value: 'data', label: 'Pharmacy data', icon: <ClipboardList size={17} /> },
   {
     value: 'about',
     label: 'About pharmacy',
@@ -135,6 +137,7 @@ const TAB_ITEMS: TabItem<AdminPharmacyDetailTab>[] = [
 const TAB_DESCRIPTIONS: Record<AdminPharmacyDetailTab, string> = {
   information:
     'Review published pharmacy details separately from submitted changes awaiting moderation.',
+  data: 'Review published pharmacy details and submitted changes without editing.',
 
   about: 'Review the approved pharmacy description and any proposed changes.',
 
@@ -492,7 +495,8 @@ export function PharmacyDetailsPageContent({
           >
             {activeTab !== 'documents' &&
             activeTab !== 'comments' &&
-            activeTab !== 'activity' ? (
+            activeTab !== 'activity' &&
+            (activeTab !== 'data' || isLoading) ? (
               <ProfileSectionHeader
                 title={
                   TAB_ITEMS.find((tab) => tab.value === activeTab)?.label ??
@@ -528,6 +532,8 @@ export function PharmacyDetailsPageContent({
                 detail={detail}
                 canViewOwner={canViewOwner}
               />
+            ) : activeTab === 'data' && detail ? (
+              <PharmacyDataTab detail={detail} />
             ) : activeTab === 'about' && detail ? (
               <PharmacyAboutTab detail={detail} />
             ) : activeTab === 'payment' && detail ? (

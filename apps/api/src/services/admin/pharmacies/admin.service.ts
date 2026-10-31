@@ -27,6 +27,7 @@ import type {
 import { httpError } from '../../../utils/http/httpError';
 
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
+import { buildPharmacyAuditChanges } from '../../pharmacies/pharmacy-audit-changes';
 import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
 import { activateNewPharmacyOwnerForPharmacy } from '../../owners/pharmacy-owner-lifecycle.service';
 
@@ -127,6 +128,8 @@ export type PharmacyModerationDecisionInput = {
   expectedRevision: string;
   clientRequestId?: string;
 };
+
+//===============================================================
 
 type UpdatePharmacyStatusInput = {
   status: PharmacyStatus;
@@ -234,8 +237,10 @@ export async function decidePharmacyModerationByAdminService(
     // Same key with different action/payload is not a retry.
     if (
       audit.actorUserId.toString() !== adminUserId ||
-      audit.before.revision !== input.expectedRevision ||
-      audit.before.moderationAction !== input.action ||
+      (audit.before._moderationExpectedRevision ?? audit.before.revision) !==
+        input.expectedRevision ||
+      (audit.before._moderationAction ?? audit.before.moderationAction) !==
+        input.action ||
       audit.reason !== reason
     ) {
       throw httpError(
@@ -246,7 +251,11 @@ export async function decidePharmacyModerationByAdminService(
 
     const current = await Pharmacy.findById(pharmacyId);
 
-    if (!current || current.updatedAt.toISOString() !== audit.after.revision) {
+    if (
+      !current ||
+      current.updatedAt.toISOString() !==
+        (audit.after._moderationCommittedRevision ?? audit.after.revision)
+    ) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
         'Decision was applied, but the pharmacy has changed since then. Refresh.'
@@ -297,8 +306,6 @@ export async function decidePharmacyModerationByAdminService(
 
       let nextStatus: PharmacyStatus = previousStatus;
       let nextReviewState: string = pharmacy.reviewState ?? 'pending';
-
-      const priorReviewState = nextReviewState;
 
       switch (input.action) {
         case 'request_corrections': {
@@ -595,35 +602,11 @@ export async function decidePharmacyModerationByAdminService(
           );
       }
 
-      const afterReviewState = saved.reviewState ?? 'pending';
-
-      const pendingSectionLabels: Record<string, string> = {
-        bankDetails: 'paymentSettings',
-        documents: 'verificationDocuments',
-        imageUrl: 'profileImage',
-        location: 'location',
-      };
-
-      const publishedSections =
-        input.action === 'approve'
-          ? Object.keys(
-              normalizePendingModeration(pharmacy.pendingModeration) ?? {}
-            )
-              .map((key) => pendingSectionLabels[key] ?? key)
-              .sort()
-          : [];
-
-      const changedFields = ['revision', 'moderationAction'];
-
-      if (saved.status !== previousStatus) changedFields.push('status');
-
-      if (
-        afterReviewState !== priorReviewState ||
-        input.action === 'request_corrections'
-      )
-        changedFields.push('reviewState');
-
-      if (publishedSections.length) changedFields.push('publishedSections');
+      const {
+        before: auditBefore,
+        after: auditAfter,
+        changedFields,
+      } = buildPharmacyAuditChanges(pharmacy, saved, input.action);
 
       await appendAdminAuditLog({
         actorUserId: adminUserId,
@@ -635,22 +618,18 @@ export async function decidePharmacyModerationByAdminService(
         scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY_OWNER,
         scopeEntityId: String(saved.ownerId),
 
+        // Private replay metadata is intentionally *not* listed in changedFields.
+        // Keep retry validation atomic while showing only meaningful changed
+        // pharmacy values in Audit details. Legacy revision records still replay.
         before: {
-          status: previousStatus,
-          reviewState: priorReviewState,
-          blockSource: pharmacy.blockSource ?? null,
-          revision: input.expectedRevision,
-          moderationAction: input.action,
-          publishedSections: [] as string[],
+          ...auditBefore,
+          _moderationExpectedRevision: input.expectedRevision,
+          _moderationAction: input.action,
         },
 
         after: {
-          status: saved.status,
-          reviewState: afterReviewState,
-          blockSource: saved.blockSource ?? null,
-          revision: saved.updatedAt.toISOString(),
-          moderationAction: input.action,
-          publishedSections,
+          ...auditAfter,
+          _moderationCommittedRevision: saved.updatedAt.toISOString(),
         },
 
         changedFields,

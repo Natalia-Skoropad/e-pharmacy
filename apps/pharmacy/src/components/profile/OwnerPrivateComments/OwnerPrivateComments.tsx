@@ -319,6 +319,7 @@ export function OwnerPrivateComments({
           emptyTitle="No private comments yet."
           emptyText="Only you can read the notes you add here."
           emptyVariant="resource"
+          emptyIcon={<MessageSquareLock size={22} />}
           deletingId={deletingId}
           deleteDisabled={isSaving}
           onDelete={setCommentToDelete}

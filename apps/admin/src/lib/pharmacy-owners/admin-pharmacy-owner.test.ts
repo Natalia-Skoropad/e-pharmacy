@@ -28,6 +28,7 @@ test('parses owner list/detail/status network contracts fail-closed', () => {
         nonWorkingPharmaciesCount: 2,
       },
     ],
+
     page: 1,
     perPage: 20,
     total: 1,
@@ -50,6 +51,7 @@ test('parses owner list/detail/status network contracts fail-closed', () => {
       new: 0,
       onVerification: 1,
       onModeration: 0,
+      onReactivation: 0,
       active: 2,
       blocked: 0,
     },
@@ -84,6 +86,7 @@ test('parses owner list/detail/status network contracts fail-closed', () => {
         new: 0,
         onVerification: 1,
         onModeration: 0,
+        onReactivation: 0,
         active: 2,
         blocked: 0,
       },

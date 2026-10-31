@@ -24,8 +24,6 @@ import {
   reconcileAttachedPharmacyDocumentStorage,
 } from './pharmacy-document.service';
 
-import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
-
 import {
   ensurePharmacyPaymentUniqueIndex,
   syncPharmacyPaymentIdentifiers,
@@ -164,8 +162,8 @@ export async function updateMyPharmacyProfileService(
           : {}),
       };
 
-      // Saving an active pharmacy must never stage an incomplete replacement.
       // A new pharmacy can remain a draft, but its name may not be cleared.
+      // Active proposals can also be saved incrementally before submission.
       if (
         pharmacy.status === PHARMACY_STATUSES.NEW ||
         (pharmacy.status === PHARMACY_STATUSES.ON_VERIFICATION &&
@@ -202,19 +200,10 @@ export async function updateMyPharmacyProfileService(
           pharmacy.location
         );
 
-        const missingFields = missingRequiredModerationFields(
-          pharmacy,
-          pendingModeration
-        );
-
-        if (missingFields.length && !isReactivationDraft) {
-          throw httpError(
-            HTTP_STATUS.BAD_REQUEST,
-            'Complete all required pharmacy fields before saving changes.',
-            { missingFields },
-            'PHARMACY_PROFILE_INCOMPLETE'
-          );
-        }
+        // A saved pending proposal is an editable draft, not a submission.
+        // Legacy records may be missing required fields in other tabs; rejecting
+        // every partial save here traps the owner in an unfixable state.
+        // The separate moderation submission endpoint enforces full readiness.
 
         const updatedPharmacy = await Pharmacy.findOneAndUpdate(
           {

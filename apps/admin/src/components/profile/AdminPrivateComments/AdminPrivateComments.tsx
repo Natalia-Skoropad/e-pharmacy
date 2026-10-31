@@ -102,11 +102,13 @@ export function AdminPrivateComments({
 
   useEffect(() => {
     const controller = new AbortController();
+
     activeLoadControllerRef.current = controller;
 
     void getMyAdminPrivateComments(1, { signal: controller.signal })
       .then((response) => {
         if (controller.signal.aborted) return;
+
         applyResponse(response);
       })
 
@@ -204,6 +206,7 @@ export function AdminPrivateComments({
 
       createRequestRef.current = null;
       setDraftState('');
+
       await loadPage(1);
 
       toast.success('Private comment was added.');
@@ -222,6 +225,7 @@ export function AdminPrivateComments({
 
   const handleDelete = async () => {
     const comment = commentToDelete;
+
     if (!comment || deletingId || isSaving) return;
 
     setCommentToDelete(null);
@@ -229,6 +233,7 @@ export function AdminPrivateComments({
     activeDeleteControllerRef.current?.abort();
 
     const controller = new AbortController();
+
     activeDeleteControllerRef.current = controller;
 
     try {
@@ -242,6 +247,7 @@ export function AdminPrivateComments({
         data.items.length === 1 && data.page > 1 ? data.page - 1 : data.page;
 
       await loadPage(nextPage);
+
       toast.success('Private comment was deleted.');
     } catch {
       if (!controller.signal.aborted) {
@@ -312,6 +318,7 @@ export function AdminPrivateComments({
           emptyTitle="No manager comments yet."
           emptyText="The comment drawer is waiting patiently."
           emptyVariant="resource"
+          emptyIcon={<MessageSquareLock size={22} />}
           deletingId={deletingId}
           deleteDisabled={isSaving}
           onDelete={setCommentToDelete}

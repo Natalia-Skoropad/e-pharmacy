@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 
 import {
-  FileBadge2,
+  Files,
   MessageSquareLock,
   MonitorSmartphone,
   Plus,
@@ -15,6 +15,7 @@ import { useAuth } from '@e-pharmacy/auth/react';
 import { getAuthErrorCode } from '@e-pharmacy/auth/errors';
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { ActiveSession } from '@e-pharmacy/types/auth';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -78,7 +79,7 @@ const TABS = [
   {
     value: 'documents',
     label: 'Documents',
-    icon: <FileBadge2 size={17} aria-hidden="true" />,
+    icon: <Files size={17} aria-hidden="true" />,
   },
   {
     value: 'comments',

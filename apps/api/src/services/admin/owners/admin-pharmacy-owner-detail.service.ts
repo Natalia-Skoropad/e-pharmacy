@@ -35,6 +35,7 @@ type OwnerDetailAggregateRow = Readonly<{
     new: number;
     onVerification: number;
     onModeration: number;
+    onReactivation: number;
     active: number;
     blocked: number;
   }>;
@@ -100,6 +101,16 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
                 },
               },
 
+              onReactivation: {
+                $sum: {
+                  $cond: [
+                    { $eq: ['$status', PHARMACY_STATUSES.ON_REACTIVATION] },
+                    1,
+                    0,
+                  ],
+                },
+              },
+
               active: {
                 $sum: {
                   $cond: [{ $eq: ['$status', PHARMACY_STATUSES.ACTIVE] }, 1, 0],
@@ -133,6 +144,7 @@ export async function getAdminPharmacyOwnerDetailService(ownerId: string) {
               new: 0,
               onVerification: 0,
               onModeration: 0,
+              onReactivation: 0,
               active: 0,
               blocked: 0,
             },

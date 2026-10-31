@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FileBadge2 } from 'lucide-react';
+import { Files } from 'lucide-react';
 
 import type { AdminEmployeeDocument } from '@e-pharmacy/types/admin';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
 
@@ -84,7 +85,7 @@ export function AdminDocuments() {
       name="documents"
       title="Employee documents"
       description="Review documents attached to your employee account. Documents are managed from the Employees section."
-      headerIcon={<FileBadge2 size={22} />}
+      headerIcon={<Files size={22} />}
       value={status === 'success' ? documents.map(toBrowserUploadFile) : []}
       editable={false}
       required
