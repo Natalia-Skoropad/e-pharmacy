@@ -46,7 +46,12 @@ import {
 
 import { getOrderSalesStatisticsForPharmacyService } from '../../services/orders/order-sales-statistics.service';
 import { getPharmacyMembership } from '../../services/pharmacies/pharmacy-membership.service';
-import { checkPaymentIdentifierDuplicates } from '../../services/pharmacies/pharmacy-payment-uniqueness.service';
+
+import {
+  checkPaymentIdentifierDuplicates,
+  findOwnPharmacyIdentifierMatches,
+} from '../../services/pharmacies/pharmacy-payment-uniqueness.service';
+
 import { createPharmacyDraftService } from '../../services/pharmacies/pharmacy-create.service';
 
 import {
@@ -199,6 +204,14 @@ export async function getNewPharmacyPaymentAvailability(
 ): Promise<void> {
   const duplicates = await checkPaymentIdentifierDuplicates(
     undefined,
+    res.locals.validated.query,
+    undefined,
+    _req.user?.id
+  );
+
+  const matches = await findOwnPharmacyIdentifierMatches(
+    _req.user?.id ?? '',
+    undefined,
     res.locals.validated.query
   );
 
@@ -207,7 +220,7 @@ export async function getNewPharmacyPaymentAvailability(
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
-    data: { duplicates },
+    data: { duplicates, matches },
   });
 }
 
@@ -241,12 +254,18 @@ export async function getOwnedPharmacyPaymentAvailability(
     res.locals.validated.query
   );
 
+  const matches = await findOwnPharmacyIdentifierMatches(
+    req.user?.id ?? '',
+    pharmacyId,
+    res.locals.validated.query
+  );
+
   res.setHeader('Cache-Control', 'private, no-store');
 
   sendSuccessResponse({
     res,
     statusCode: HTTP_STATUS.OK,
-    data: { duplicates },
+    data: { duplicates, matches },
   });
 }
 

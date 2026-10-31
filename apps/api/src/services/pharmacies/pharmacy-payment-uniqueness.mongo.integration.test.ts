@@ -22,6 +22,7 @@ test(
   { skip: !uri },
   async () => {
     await mongoose.connect(uri!);
+
     const ownerA = new Types.ObjectId();
     const ownerB = new Types.ObjectId();
 
@@ -31,6 +32,8 @@ test(
 
     const iban = `UA${String(Number.parseInt(ownerB.toHexString().slice(-7), 16)).padStart(27, '0')}`;
     const receiptEmail = `pharmacy-${ownerA.toHexString().slice(-12)}@example.com`;
+    const email = `owner-${ownerA.toHexString().slice(-12)}@example.com`;
+    const phone = `+380${String(Number.parseInt(ownerA.toHexString().slice(-9), 16) % 1_000_000_000).padStart(9, '0')}`;
     const ids: Types.ObjectId[] = [];
 
     try {
@@ -54,6 +57,8 @@ test(
         name: 'First test pharmacy',
         status: 'new',
         bankDetails: { taxId, receiptEmail },
+        phone,
+        email,
       });
 
       ids.push(a._id);
@@ -96,12 +101,44 @@ test(
 
       await saveWithReservations(a._id, iban);
 
+      // The same owner may share identifiers across pharmacies. The unique
+      // reservation still excludes a different owner's pharmacy.
+      const sameOwner = await Pharmacy.create({
+        ownerId: ownerA,
+        name: 'Another pharmacy of the same owner',
+        status: 'new',
+        bankDetails: { taxId, receiptEmail },
+        phone,
+        email,
+      });
+
+      ids.push(sameOwner._id);
+
+      await saveWithReservations(sameOwner._id);
+
+      assert.deepEqual(
+        await checkPaymentIdentifierDuplicates(String(sameOwner._id), {
+          taxId,
+          receiptEmail,
+          phone,
+          email,
+        }),
+
+        { taxId: false, receiptEmail: false, phone: false, email: false }
+      );
+
+      assert.deepEqual(
+        await checkPaymentIdentifierDuplicates(String(b._id), { phone, email }),
+        { phone: true, email: true }
+      );
+
       assert.deepEqual(
         await checkPaymentIdentifierDuplicates(String(b._id), {
           taxId,
           iban,
           receiptEmail,
         }),
+
         { taxId: true, iban: true, receiptEmail: true }
       );
 
@@ -111,6 +148,7 @@ test(
           iban,
           receiptEmail,
         }),
+
         { taxId: false, iban: false, receiptEmail: false }
       );
 

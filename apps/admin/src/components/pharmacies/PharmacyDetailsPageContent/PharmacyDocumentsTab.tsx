@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, Files, X } from 'lucide-react';
+import { Files, X } from 'lucide-react';
 
 import type { AdminPharmacyDocument } from '@e-pharmacy/types/admin';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
@@ -9,7 +9,6 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { ModalBase } from '@e-pharmacy/ui/overlays';
 import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { Button } from '@e-pharmacy/ui/primitives';
-import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import {
   PHARMACY_DOCUMENT_ACCEPT,
@@ -79,6 +78,7 @@ export function PharmacyDocumentsTab({
     void getAdminPharmacyDocuments(pharmacyId, { signal: controller.signal })
       .then((result) => {
         if (controller.signal.aborted) return;
+
         setDocuments(result.documents);
         setLoadedId(pharmacyId);
         setStatus('success');
@@ -86,6 +86,7 @@ export function PharmacyDocumentsTab({
 
       .catch(() => {
         if (controller.signal.aborted) return;
+
         setLoadedId(pharmacyId);
         setStatus('error');
       });
@@ -111,6 +112,7 @@ export function PharmacyDocumentsTab({
 
   const loadFile = async (documentId: string): Promise<Blob | null> => {
     const controller = new AbortController();
+
     downloadsRef.current.add(controller);
 
     try {
@@ -132,6 +134,7 @@ export function PharmacyDocumentsTab({
 
   const registerUrl = (blob: Blob): string => {
     const url = URL.createObjectURL(blob);
+
     urlsRef.current.add(url);
 
     return url;
@@ -148,15 +151,18 @@ export function PharmacyDocumentsTab({
     });
   };
 
-  const openPreview = async (file: AdminPharmacyDocument) => {
+  const openPreview = async (file: BrowserUploadFile) => {
     if (previewLoadingId || !PREVIEW_TYPES[file.type.toLowerCase()]) return;
+
     setPreviewLoadingId(file.id);
 
     try {
       const blob = await loadFile(file.id);
+
       if (!blob) return;
 
       const kind = PREVIEW_TYPES[file.type.toLowerCase()];
+
       if (!kind) return;
 
       // Pin the MIME to a safe preview type; never render HTML/SVG uploads.
@@ -173,9 +179,11 @@ export function PharmacyDocumentsTab({
 
   const downloadFile = async (file: BrowserUploadFile): Promise<string> => {
     if (!file.documentId) return '';
+
     const blob = await loadFile(file.documentId);
 
     if (!blob) return '';
+
     const url = registerUrl(blob);
 
     // The shared download control consumes this URL immediately. Retire it
@@ -229,45 +237,8 @@ export function PharmacyDocumentsTab({
             />
           ) : null
         }
-        beforeDocuments={
-          effectiveStatus === 'success' && documents.length ? (
-            <ul
-              className={css.documentDetails}
-              aria-label="Document sources and preview"
-            >
-              {documents.map((file) => (
-                <li key={file.id} className={css.documentDetail}>
-                  <div className={css.documentText}>
-                    <strong>{file.name}</strong>
-                    <span>
-                      {file.source === 'pending'
-                        ? 'Submitted changes'
-                        : 'Published'}
-                      {' · '}
-                      {file.type}
-                      {' · '}
-                      {formatDateTime(file.uploadedAt) ?? '—'}
-                    </span>
-                  </div>
-                  {PREVIEW_TYPES[file.type.toLowerCase()] ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      iconLeft={<Eye size={16} aria-hidden="true" />}
-                      disabled={Boolean(previewLoadingId)}
-                      isLoading={previewLoadingId === file.id}
-                      onClick={() => void openPreview(file)}
-                    >
-                      Preview
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : null
-        }
         onDownloadFile={downloadFile}
+        onPreviewFile={openPreview}
       />
 
       <ModalBase

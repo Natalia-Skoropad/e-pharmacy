@@ -8,6 +8,9 @@ const schema = new Schema(
   {
     key: { type: String, required: true, unique: true },
     pharmacyId: { type: Schema.Types.ObjectId, required: true, index: true },
+
+    // One reservation per value, shared by pharmacies belonging to this owner.
+    ownerId: { type: Schema.Types.ObjectId, index: true },
   },
   { timestamps: true }
 );

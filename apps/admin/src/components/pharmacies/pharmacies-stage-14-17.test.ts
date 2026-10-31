@@ -244,7 +244,8 @@ test('14.17: error, conflict, A11y and mobile styles are available without proxy
       read('./PharmacyDetailsPageContent/PharmacyModerationActions.module.css'),
     ]);
 
-  assert.match(detailUi, /<NotFoundPage/);
+  assert.match(detailUi, /title="Pharmacy not found"/);
+  assert.match(detailUi, /onRetry=\{\(\) => setRetry/);
   assert.match(detailUi, /variant="error"/);
   assert.match(detailUi, /role="tabpanel"/);
   assert.match(detailUi, /aria-labelledby=/);

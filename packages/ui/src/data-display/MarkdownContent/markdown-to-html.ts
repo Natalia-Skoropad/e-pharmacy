@@ -35,6 +35,12 @@ export function markdownToHtml(markdown: string): string {
   while (index < lines.length) {
     const line = lines[index] ?? '';
 
+    if (line.trim() === '&nbsp;') {
+      blocks.push('<p><br></p>');
+      index += 1;
+      continue;
+    }
+
     if (!line.trim()) {
       index += 1;
       continue;
@@ -95,7 +101,7 @@ export function markdownToHtml(markdown: string): string {
 
       if (
         !nextLine.trim() ||
-        /^(#{1,3})\s+/.test(nextLine) ||
+        /^(#{1,6})\s+/.test(nextLine) ||
         /^[-*]\s+/.test(nextLine) ||
         /^\d+\.\s+/.test(nextLine)
       ) {

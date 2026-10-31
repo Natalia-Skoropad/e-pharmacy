@@ -451,7 +451,7 @@
   top: calc(100% + 8px);
   right: 0;
   display: grid;
-  gap: 4px;
+  gap: 6px;
   width: 100%;
   min-width: 100%;
   max-width: 100%;
@@ -460,6 +460,20 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+}
+
+.statusActionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusActionTooltip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
 }
 
 .approveAction,
@@ -496,9 +510,11 @@
   background: #fff0ef;
 }
 
-.statusMenuOptions button:disabled {
+.approveAction:disabled,
+.dangerAction:disabled,
+.verificationAction:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .reviewValues > .field {
@@ -784,4 +800,67 @@
   border-radius: var(--radius-lg);
   color: var(--color-text-secondary);
   background: var(--color-background);
+}
+
+/* Status choices remain visible but disabled when the lifecycle disallows them. */
+.statusMenuOptions {
+  max-height: min(420px, 65vh);
+  overflow-y: auto;
+  min-width: min(290px, calc(100vw - 48px));
+  width: max-content;
+  max-width: min(350px, calc(100vw - 48px));
+}
+
+.verificationAction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  color: #6d28d9;
+  background-color: #f3e8ff;
+  font: inherit;
+  text-align: left;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.verificationAction:hover:not(:disabled),
+.verificationAction:focus-visible:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.reviewJourney {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  font-size: var(--fz-14);
+}
+
+.reviewJourneyTransition {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.reviewJourneyOutcomes {
+  display: grid;
+  gap: 9px;
+  color: var(--color-text-secondary);
+}
+
+.reviewJourneyOutcomes strong {
+  color: var(--color-text-primary);
+}
+.reviewJourneyOutcomes p {
+  margin: 0;
+  line-height: var(--lh-base);
 }

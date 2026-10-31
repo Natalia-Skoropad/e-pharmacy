@@ -62,12 +62,14 @@ export function PharmacyAboutFields({
 export function PharmacyPaymentFields({
   values,
   errors = {},
+  warnings = {},
   touched = {},
   disabled = false,
   onChange,
 }: {
   values: PharmacyPaymentFormValues;
   errors?: Partial<Record<keyof PharmacyPaymentFormValues, string>>;
+  warnings?: Partial<Record<keyof PharmacyPaymentFormValues, string>>;
   touched?: Partial<Record<keyof PharmacyPaymentFormValues, boolean>>;
   disabled?: boolean;
   onChange?: (field: keyof PharmacyPaymentFormValues, value: string) => void;
@@ -99,6 +101,7 @@ export function PharmacyPaymentFields({
             hint="Enter 8–10 digits for the registered taxpayer or company identification number (EDRPOU)."
             value={values.taxId}
             error={errors.taxId}
+            warning={warnings.taxId}
             isTouched={Boolean(touched.taxId)}
             disabled={disabled}
             maxLength={TAX_ID_MAX_LENGTH}
@@ -118,6 +121,7 @@ export function PharmacyPaymentFields({
             className={css.wide}
             value={values.iban}
             error={errors.iban}
+            warning={warnings.iban}
             isTouched={Boolean(touched.iban)}
             disabled={disabled}
             maxLength={IBAN_MAX_LENGTH}
@@ -148,6 +152,7 @@ export function PharmacyPaymentFields({
             hint="Use a valid email address, e.g. payments@example.com."
             value={values.receiptEmail}
             error={errors.receiptEmail}
+            warning={warnings.receiptEmail}
             isTouched={Boolean(touched.receiptEmail)}
             disabled={disabled}
             maxLength={USER_EMAIL_MAX_LENGTH}

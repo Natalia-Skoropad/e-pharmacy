@@ -108,7 +108,7 @@ assert.match(
 
 assert.match(
   member,
-  /requirePharmacyCapability\(userId, capability, \{ session, pharmacyId, allowBlocked: true \}\)/
+  /requirePharmacyCapability\(\s*userId,\s*capability,\s*\{\s*session,\s*pharmacyId,\s*allowBlocked:\s*true,?\s*\}\s*\)/
 );
 
 assert.match(profile, /'submit_profile',\s*session,\s*pharmacyId/);

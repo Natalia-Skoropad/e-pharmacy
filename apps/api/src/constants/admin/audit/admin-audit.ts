@@ -9,6 +9,7 @@ export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_REACTIVATION_REJECTED: 'pharmacy.reactivation.rejected',
   PHARMACY_PROFILE_UPDATED: 'pharmacy.profile.updated',
   PHARMACY_CREATED: 'pharmacy.created',
+  PHARMACY_DELETED: 'pharmacy.deleted',
   PHARMACY_MODERATION_SUBMITTED: 'pharmacy.moderation.submitted',
   PHARMACY_COMMENT_CREATED: 'pharmacy.comment.created',
   PHARMACY_COMMENT_DELETED: 'pharmacy.comment.deleted',

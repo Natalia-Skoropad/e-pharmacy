@@ -61,9 +61,15 @@ import {
 } from './pharmacy-editor-presentation';
 
 import type { EditorErrors, PharmacyDocument } from './pharmacy-editor-types';
+
 import { OwnedPharmacyEditorTabContent } from './OwnedPharmacyEditorTabContent';
 import { useUnsavedPharmacyNavigation } from './useUnsavedPharmacyNavigation';
 import { usePaymentAvailability } from './usePaymentAvailability';
+
+import {
+  DuplicateIdentifierSaveModal,
+  getReusedIdentifierFields,
+} from './DuplicateIdentifierSaveModal';
 
 import css from './OwnedPharmacyEditor.module.css';
 
@@ -95,6 +101,7 @@ export function OwnedPharmacyEditor({
   const [savedDocuments, setSavedDocuments] = useState<PharmacyDocument[]>([]);
   const [revision, setRevision] = useState('');
   const [errors, setErrors] = useState<EditorErrors>({});
+  const [confirmSharedOpen, setConfirmSharedOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState<'save' | 'upload' | null>(null);
@@ -186,11 +193,12 @@ export function OwnedPharmacyEditor({
   }, [pharmacyId, hydrate]);
 
   const change = (name: PharmacyEditorField, value: string) => {
+    setConfirmSharedOpen(false);
     setValues((old) => ({ ...old, [name]: value }));
     setErrors((old) => ({ ...old, [name]: undefined }));
   };
 
-  async function saveDraft(): Promise<string | null> {
+  async function saveDraft(confirmedShared = false): Promise<string | null> {
     if (mutationLock.current || paymentAvailability.blocked) return null;
     if (pharmacyId && !isDirty) return pharmacyId;
 
@@ -216,6 +224,18 @@ export function OwnedPharmacyEditor({
       return null;
     }
 
+    const sharedFields = getReusedIdentifierFields(
+      paymentAvailability.matches,
+      values,
+      savedValues
+    );
+
+    if (sharedFields.length && !confirmedShared) {
+      setConfirmSharedOpen(true);
+      return null;
+    }
+
+    setConfirmSharedOpen(false);
     mutationLock.current = true;
     setBusy('save');
 
@@ -283,6 +303,7 @@ export function OwnedPharmacyEditor({
     }
 
     mutationLock.current = true;
+    setErrors((old) => ({ ...old, documents: undefined }));
     setBusy('upload');
 
     try {
@@ -307,7 +328,31 @@ export function OwnedPharmacyEditor({
         'Documents uploaded. Use Save draft at the top to attach them.'
       );
     } catch (cause) {
-      toast.error(getProfileErrorMessage(cause, 'Could not upload document.'));
+      try {
+        const latest = await getOwnedPharmacyProfile(pharmacyId);
+        const latestDocuments = [...latest.pharmacy.documents];
+
+        if (latestDocuments.length > documents.length) {
+          hydrate(latest.pharmacy);
+          setErrors((old) => ({ ...old, documents: undefined }));
+
+          toast.success(
+            'Documents uploaded. Use Save draft at the top to attach them.'
+          );
+
+          return;
+        }
+      } catch {
+        // Fall through to the canonical error message below.
+      }
+
+      const message = getProfileErrorMessage(
+        cause,
+        'Could not upload document.'
+      );
+
+      setErrors((old) => ({ ...old, documents: message }));
+      toast.error(message);
     } finally {
       setBusy(null);
       mutationLock.current = false;
@@ -333,6 +378,7 @@ export function OwnedPharmacyEditor({
 
       isTouched: Boolean(fieldError(name)),
       error: fieldError(name),
+      warning: fieldWarning(name),
       disabled: busy !== null,
       maxLength: extra?.maxLength,
       hint: FIELD_HINTS[name],
@@ -352,7 +398,14 @@ export function OwnedPharmacyEditor({
   const paymentAvailability = usePaymentAvailability(
     pharmacyId,
     values,
-    Boolean(values.taxId || values.iban || values.receiptEmail)
+
+    Boolean(
+      values.taxId ||
+      values.iban ||
+      values.receiptEmail ||
+      values.phone ||
+      values.email
+    )
   );
 
   if (loading)
@@ -393,7 +446,16 @@ export function OwnedPharmacyEditor({
     (values[name].trim() || name === 'name'
       ? draftFieldErrors[name]
       : undefined) ??
-    paymentAvailability.errors[name as 'taxId' | 'iban' | 'receiptEmail'];
+    paymentAvailability.errors[
+      name as 'taxId' | 'iban' | 'receiptEmail' | 'phone' | 'email'
+    ];
+
+  const fieldWarning = (name: PharmacyEditorField) =>
+    !fieldError(name)
+      ? paymentAvailability.warnings[
+          name as 'taxId' | 'iban' | 'receiptEmail' | 'phone' | 'email'
+        ]
+      : undefined;
 
   const canSaveDraft =
     Object.keys(draftFieldErrors).length === 0 &&
@@ -487,6 +549,7 @@ export function OwnedPharmacyEditor({
               busy={busy}
               errors={errors}
               fieldError={fieldError}
+              fieldWarning={fieldWarning}
               input={input}
               change={change}
               toast={toast}
@@ -499,6 +562,20 @@ export function OwnedPharmacyEditor({
           </section>
         </div>
       </section>
+
+      <DuplicateIdentifierSaveModal
+        open={confirmSharedOpen}
+        fields={getReusedIdentifierFields(
+          paymentAvailability.matches,
+          values,
+          savedValues
+        )}
+        matches={paymentAvailability.matches}
+        values={values}
+        busy={busy === 'save'}
+        onConfirm={() => void saveDraft(true)}
+        onCancel={() => setConfirmSharedOpen(false)}
+      />
 
       <ConfirmationModal
         isOpen={leaveDialogOpen}

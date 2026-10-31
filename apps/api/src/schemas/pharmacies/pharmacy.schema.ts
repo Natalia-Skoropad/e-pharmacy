@@ -123,6 +123,8 @@ export const pharmacyPaymentAvailabilityQuerySchema = z
     taxId: z.string().trim().max(10).optional(),
     iban: z.string().trim().max(34).optional(),
     receiptEmail: z.string().trim().max(254).optional(),
+    phone: z.string().trim().max(24).optional(),
+    email: z.string().trim().max(254).optional(),
   })
 
   .strict();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -15,12 +15,25 @@ import {
   FileText,
   ShieldCheck,
   RotateCcw,
+  ClipboardCheck as SectionActionIcon,
   type LucideIcon,
 } from 'lucide-react';
 
-import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
+import type {
+  MyPharmacyProfile,
+  PharmacyStatus,
+} from '@e-pharmacy/types/pharmacies';
+
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { ReasonModal, ConfirmationModal } from '@e-pharmacy/ui/overlays';
+
+import {
+  ReasonModal,
+  ConfirmationModal,
+  InfoTooltip,
+} from '@e-pharmacy/ui/overlays';
+
 import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
@@ -42,7 +55,6 @@ import {
   effectivePharmacyEditorValues,
 } from '../OwnedPharmacyEditor/pharmacy-editor-fields';
 
-import { FIELD_LABELS } from '../OwnedPharmacyEditor/pharmacy-editor-presentation';
 import { getPharmacyModerationSummary } from './pharmacy-moderation-summary';
 
 import css from './OwnedPharmacyDetailPageContent.module.css';
@@ -60,6 +72,49 @@ const MODERATION_TAB_ICONS: Record<string, LucideIcon> = {
   'Payment details': CreditCard,
   Documents: FileText,
 };
+
+//===================================================================
+
+function ActionMenuItem({
+  className,
+  disabled = false,
+  disabledReason,
+  onClick,
+  children,
+}: Readonly<{
+  className: string;
+  disabled?: boolean;
+  disabledReason?: string;
+  onClick?: () => void;
+  children: ReactNode;
+}>) {
+  return (
+    <div className={css.statusActionRow}>
+      <button
+        type="button"
+        role="menuitem"
+        className={className}
+        disabled={disabled}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+
+      {disabled && disabledReason ? (
+        <span className={css.statusActionTooltip}>
+          <InfoTooltip
+            label="Why this action is unavailable"
+            title="Action unavailable"
+            icon={<SectionActionIcon size={20} aria-hidden="true" />}
+            escapeOverflow
+          >
+            <span>{disabledReason}</span>
+          </InfoTooltip>
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 //===================================================================
 
@@ -229,7 +284,9 @@ export function OwnedPharmacyActions({
 
   const removeDraft = async () => {
     if (busy || pharmacy.status !== 'new') return;
+
     setBusy(true);
+
     try {
       await deleteOwnedPharmacyDraft(pharmacy.id, pharmacy.updatedAt);
 
@@ -372,122 +429,162 @@ export function OwnedPharmacyActions({
               role="menu"
               aria-label="Available pharmacy actions"
             >
-              {canCancelReview ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={css.dangerAction}
-                  onClick={() => {
-                    setMenuOpen(false);
-
-                    setCancelReview(
-                      pharmacy.status === 'on_verification'
-                        ? 'verification'
-                        : pharmacy.status === 'on_moderation'
-                          ? 'moderation'
-                          : 'reactivation'
-                    );
-                  }}
-                >
-                  <XCircle size={17} aria-hidden="true" />
-                  {pharmacy.status === 'on_verification'
-                    ? 'Cancel verification'
-                    : pharmacy.status === 'on_moderation'
-                      ? 'Cancel moderation'
-                      : 'Cancel reactivation'}
-                </button>
+              {pharmacy.status === 'new' ||
+              pharmacy.status === 'on_verification' ? (
+                <>
+                  <ActionMenuItem
+                    className={css.verificationAction}
+                    disabled={
+                      !needsVerification ||
+                      verificationIncomplete ||
+                      !ownerHasDocuments
+                    }
+                    disabledReason={
+                      !needsVerification
+                        ? 'This pharmacy is already being reviewed. You can submit it again after the administrator requests changes.'
+                        : verificationIncomplete || !ownerHasDocuments
+                          ? 'Complete the required pharmacy fields and attach both pharmacy and owner documents before you submit for verification.'
+                          : undefined
+                    }
+                    onClick={() => open('verification')}
+                  >
+                    <ClipboardCheck size={17} aria-hidden="true" />
+                    {pharmacy.status === 'on_verification'
+                      ? 'Resend for verification'
+                      : 'Send for verification'}
+                  </ActionMenuItem>
+                  {pharmacy.status === 'on_verification' ? (
+                    <ActionMenuItem
+                      className={css.dangerAction}
+                      disabled={!canCancelReview}
+                      disabledReason={
+                        !canCancelReview
+                          ? 'You can cancel this request only after the administrator asks for changes.'
+                          : undefined
+                      }
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setCancelReview('verification');
+                      }}
+                    >
+                      <XCircle size={17} aria-hidden="true" /> Cancel
+                      verification request
+                    </ActionMenuItem>
+                  ) : (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={css.dangerAction}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setDeleteOpen(true);
+                      }}
+                    >
+                      <Trash2 size={17} aria-hidden="true" /> Delete pharmacy
+                      draft
+                    </button>
+                  )}
+                </>
               ) : null}
-              {canRequestReactivation ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={css.approveAction}
-                  disabled={moderationIncomplete || !ownerHasDocuments}
-                  title={
-                    moderationIncomplete
-                      ? 'Complete required fields before reactivation.'
-                      : undefined
-                  }
-                  onClick={() => open('reactivate')}
-                >
-                  <RotateCcw size={17} aria-hidden="true" /> Request
-                  reactivation
-                </button>
+              {pharmacy.status === 'active' ||
+              pharmacy.status === 'on_moderation' ? (
+                <>
+                  <ActionMenuItem
+                    className={css.approveAction}
+                    disabled={
+                      !needsModeration || !hasChanges || moderationIncomplete
+                    }
+                    disabledReason={
+                      !needsModeration
+                        ? 'This pharmacy update is already being reviewed. You can submit it again after the administrator requests changes.'
+                        : !hasChanges
+                          ? 'Save at least one proposed pharmacy change before you submit for moderation.'
+                          : moderationIncomplete
+                            ? 'Complete the required pharmacy details and attach the required documents before you submit for moderation.'
+                            : undefined
+                    }
+                    onClick={() => open('moderation')}
+                  >
+                    <ShieldCheck size={17} aria-hidden="true" />
+                    {pharmacy.status === 'on_moderation'
+                      ? 'Resend for moderation'
+                      : 'Send for moderation'}
+                  </ActionMenuItem>
+                  {pharmacy.status === 'on_moderation' ? (
+                    <ActionMenuItem
+                      className={css.dangerAction}
+                      disabled={!canCancelReview}
+                      disabledReason={
+                        !canCancelReview
+                          ? 'You can cancel this request only after the administrator asks for changes.'
+                          : undefined
+                      }
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setCancelReview('moderation');
+                      }}
+                    >
+                      <XCircle size={17} aria-hidden="true" /> Cancel moderation
+                      request
+                    </ActionMenuItem>
+                  ) : (
+                    <ActionMenuItem
+                      className={css.dangerAction}
+                      disabled={!eligibility?.canDeactivate}
+                      disabledReason={
+                        eligibility?.reason ??
+                        'Check unfinished orders and requests before you deactivate this pharmacy.'
+                      }
+                      onClick={() => open('deactivate')}
+                    >
+                      <Ban size={17} aria-hidden="true" /> Deactivate pharmacy
+                    </ActionMenuItem>
+                  )}
+                </>
               ) : null}
-              {pharmacy.status === 'new' ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={css.dangerAction}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setDeleteOpen(true);
-                  }}
-                >
-                  <Trash2 size={17} aria-hidden="true" /> Delete pharmacy draft
-                </button>
-              ) : null}
-              {needsVerification ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={css.approveAction}
-                  disabled={verificationIncomplete || !ownerHasDocuments}
-                  title={
-                    verificationIncomplete || !ownerHasDocuments
-                      ? 'Complete required fields and attach pharmacy and owner documents first.'
-                      : undefined
-                  }
-                  onClick={() => open('verification')}
-                >
-                  <ClipboardCheck size={17} aria-hidden="true" />
-                  Send for verification
-                </button>
-              ) : null}
-              {needsModeration ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={css.approveAction}
-                  disabled={!hasChanges || moderationIncomplete}
-                  title={
-                    !hasChanges
-                      ? 'Save at least one change before sending for moderation.'
-                      : moderationIncomplete
-                        ? `Complete the required fields: ${[
-                            ...missingModerationFields.map(
-                              (field) => FIELD_LABELS[field]
-                            ),
-
-                            ...(!documentsCount ? ['Pharmacy documents'] : []),
-
-                            ...(!pharmacy.location?.countryCode
-                              ? ['Country']
-                              : []),
-                          ].join(', ')}.`
-                        : undefined
-                  }
-                  onClick={() => open('moderation')}
-                >
-                  <ShieldCheck size={17} aria-hidden="true" />
-                  Send for moderation
-                </button>
-              ) : null}
-              {canDeactivate ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={css.dangerAction}
-                  disabled={!eligibility?.canDeactivate}
-                  title={
-                    eligibility?.reason ??
-                    'Checking unfinished orders and product requests'
-                  }
-                  onClick={() => open('deactivate')}
-                >
-                  <Ban size={17} aria-hidden="true" />
-                  Deactivate pharmacy
-                </button>
+              {pharmacy.status === 'blocked' ||
+              pharmacy.status === 'on_reactivation' ? (
+                <>
+                  <ActionMenuItem
+                    className={css.approveAction}
+                    disabled={
+                      !canRequestReactivation ||
+                      moderationIncomplete ||
+                      !ownerHasDocuments
+                    }
+                    disabledReason={
+                      !canRequestReactivation
+                        ? 'This pharmacy is already being reviewed for reactivation. You can submit it again after the administrator requests changes.'
+                        : moderationIncomplete || !ownerHasDocuments
+                          ? 'Complete the required pharmacy details and attach both pharmacy and owner documents before you request reactivation.'
+                          : undefined
+                    }
+                    onClick={() => open('reactivate')}
+                  >
+                    <RotateCcw size={17} aria-hidden="true" />
+                    {pharmacy.status === 'on_reactivation'
+                      ? 'Resend reactivation request'
+                      : 'Request reactivation'}
+                  </ActionMenuItem>
+                  {pharmacy.status === 'on_reactivation' ? (
+                    <ActionMenuItem
+                      className={css.dangerAction}
+                      disabled={!canCancelReview}
+                      disabledReason={
+                        !canCancelReview
+                          ? 'You can cancel this request only after the administrator asks for changes.'
+                          : undefined
+                      }
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setCancelReview('reactivation');
+                      }}
+                    >
+                      <XCircle size={17} aria-hidden="true" /> Cancel
+                      reactivation request
+                    </ActionMenuItem>
+                  ) : null}
+                </>
               ) : null}
             </div>
           ) : null}
@@ -514,6 +611,7 @@ export function OwnedPharmacyActions({
           if (!busy) setCancelReview(null);
         }}
       />
+
       <ConfirmationModal
         isOpen={deleteOpen}
         eyebrow="PHARMACY STATUS"
@@ -551,34 +649,82 @@ export function OwnedPharmacyActions({
                 : 'The administrator will review the submitted version. You cannot edit your pharmacy or cancel the request while the review is pending. This may take several days.'
           }
           details={
-            action === 'moderation' ? (
-              <section
-                className={css.moderationSummary}
-                aria-label="Changes for moderation"
-              >
-                <strong>Changes you are about to send</strong>
-                <ul>
-                  {moderationSummary.map((group) => {
-                    const Icon = MODERATION_TAB_ICONS[group.title] ?? FileText;
+            <div className={css.reviewJourney}>
+              <div className={css.reviewJourneyTransition}>
+                <StatusBadge
+                  {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
+                />
+                <span aria-hidden="true">→</span>
 
-                    return (
-                      <li key={group.title}>
-                        <span
-                          className={css.moderationTabIcon}
-                          aria-hidden="true"
-                        >
-                          <Icon size={18} />
-                        </span>
-                        <div className={css.moderationTabDescription}>
-                          <strong>{group.title}</strong>{' '}
-                          <span>({group.fields.join(', ')})</span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </section>
-            ) : undefined
+                <StatusBadge
+                  {...PHARMACY_STATUS_PRESENTATION[
+                    (action === 'verification'
+                      ? 'on_verification'
+                      : action === 'moderation'
+                        ? 'on_moderation'
+                        : action === 'reactivate'
+                          ? 'on_reactivation'
+                          : 'blocked') as PharmacyStatus
+                  ]}
+                />
+              </div>
+              {action === 'verification' ? (
+                <div className={css.reviewJourneyOutcomes}>
+                  <strong>What happens next?</strong>
+                  <span>Possible decisions:</span>
+
+                  <div className={css.reviewJourneyTransition}>
+                    <StatusBadge {...PHARMACY_STATUS_PRESENTATION.active} />
+                    <span>Approved</span>
+                  </div>
+
+                  <div className={css.reviewJourneyTransition}>
+                    <StatusBadge
+                      {...PHARMACY_STATUS_PRESENTATION.on_verification}
+                    />
+                    <span>
+                      Needs changes — editing reopens after the administrator
+                      requests corrections
+                    </span>
+                  </div>
+
+                  <div className={css.reviewJourneyTransition}>
+                    <StatusBadge {...PHARMACY_STATUS_PRESENTATION.blocked} />
+                    <span>Blocked — if a serious violation is identified</span>
+                  </div>
+                </div>
+              ) : null}
+              {action === 'moderation' ? (
+                <section
+                  className={css.moderationSummary}
+                  aria-label="Changes for moderation"
+                >
+                  <strong>Changes you are about to send</strong>
+                  <ul>
+                    {moderationSummary.map((group) => {
+                      const Icon =
+                        MODERATION_TAB_ICONS[group.title] ?? FileText;
+
+                      return (
+                        <li key={group.title}>
+                          <span
+                            className={css.moderationTabIcon}
+                            aria-hidden="true"
+                          >
+                            <Icon size={18} />
+                          </span>
+
+                          <div className={css.moderationTabDescription}>
+                            <strong>{group.title}</strong>{' '}
+                            <span>({group.fields.join(', ')})</span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              ) : null}
+            </div>
           }
           value={comment}
           fieldName="pharmacyOwnerActionDescription"
@@ -597,7 +743,13 @@ export function OwnedPharmacyActions({
           maxLength={500}
           error={comment.trim() ? '' : 'Short description is required.'}
           requestError={requestError}
-          tone={action === 'deactivate' ? 'danger' : 'accent'}
+          tone={
+            action === 'deactivate'
+              ? 'danger'
+              : action === 'verification'
+                ? 'verification'
+                : 'accent'
+          }
           isLoading={busy}
           onValueChange={setComment}
           onCancel={() => setAction(null)}

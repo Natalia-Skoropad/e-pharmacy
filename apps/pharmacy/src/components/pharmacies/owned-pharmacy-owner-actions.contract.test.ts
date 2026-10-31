@@ -37,7 +37,15 @@ test('owner moderation and verification live in one accessible Admin-style dropd
   assert.match(actions, /Send for verification/);
   assert.match(actions, /Send for moderation/);
   assert.match(actions, /disabled=\{!eligibility\?\.canDeactivate\}/);
-  assert.doesNotMatch(actions, /InfoTooltip/);
+  assert.match(actions, /pharmacy\.status === 'active'/);
+  assert.match(actions, /pharmacy\.status === 'on_verification'/);
+  assert.match(actions, /Resend for verification/);
+  assert.match(actions, /Cancel verification request/);
+
+  // Both the page heading and disabled status actions reuse the same shared tooltip.
+  assert.match(actions, /<InfoTooltip/);
+  assert.match(actions, /escapeOverflow/);
+  assert.match(help, /<InfoTooltip/);
   assert.match(help, /Unfinished orders/);
   assert.match(help, /Unfinished product requests/);
   assert.match(detail, /<OwnedPharmacyHelp/);
@@ -51,8 +59,11 @@ test('editable detail tabs use one Save changes action, without duplicate page h
 
   assert.match(
     detail,
-    /\['data', 'about', 'payment', 'documents', 'comments'\]/
+    /!\['data', 'about', 'payment', 'documents', 'comments'\]\.includes\(/
   );
+
+  // The loading skeleton must not render an extra heading above the editor.
+  assert.doesNotMatch(detail, /loading && activeTab !== 'comments'\) \|\|/);
 
   assert.match(styles, /\.sectionActions > button,\s*\.statusMenu/);
   assert.match(styles, /@media \(min-width: 768px\)/);
@@ -133,12 +144,17 @@ test('moderation with one saved change uses required-field completeness, not re-
   assert.match(actions, /const hasChanges = moderationSummary\.length > 0/);
 
   assert.match(actions, /const moderationIncomplete =/);
-  assert.match(actions, /disabled=\{!hasChanges \|\| moderationIncomplete\}/);
+
+  assert.match(
+    actions,
+    /disabled=\{!needsModeration \|\| !hasChanges \|\| moderationIncomplete\}/
+  );
+
   assert.match(actions, /const verificationIncomplete =/);
 
   assert.match(
     actions,
-    /disabled=\{verificationIncomplete \|\| !ownerHasDocuments\}/
+    /disabled=\{!needsVerification \|\| verificationIncomplete \|\| !ownerHasDocuments\}/
   );
 
   assert.doesNotMatch(actions, /disabled=\{invalid \|\| !hasChanges\}/);

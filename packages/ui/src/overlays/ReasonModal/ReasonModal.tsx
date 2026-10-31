@@ -13,7 +13,7 @@ import css from './ReasonModal.module.css';
 
 //===================================================================
 
-export type ReasonModalTone = 'accent' | 'danger';
+export type ReasonModalTone = 'accent' | 'danger' | 'verification';
 
 //===================================================================
 
@@ -138,7 +138,13 @@ function ReasonModal({
           </Button>
 
           <Button
-            className={tone === 'danger' ? css.dangerButton : undefined}
+            className={
+              tone === 'danger'
+                ? css.dangerButton
+                : tone === 'verification'
+                  ? css.verificationButton
+                  : undefined
+            }
             type="button"
             iconLeft={
               tone === 'danger' ? (

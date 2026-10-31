@@ -55,6 +55,7 @@ import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { EntityComments } from '@/components/comments/EntityComments';
 
 import { Information } from './OwnedPharmacyInformationTab';
+import { OwnedPharmacyActivityTab } from './OwnedPharmacyActivityTab';
 import { Payment } from './OwnedPharmacyAboutPaymentTabs';
 import { DocumentsResource } from './OwnedPharmacyDocumentsTab';
 import { OwnedPharmacyEditableTab } from './OwnedPharmacyEditableTab';
@@ -130,7 +131,7 @@ const DESCRIPTIONS: Record<OwnedPharmacyDetailTab, string> = {
     'Product requests will be available when the request module is connected.',
 
   activity:
-    'Audit events for this pharmacy will be available after the activity resource is connected.',
+    'Review all pharmacy status changes, submitted requests and moderation decisions.',
 };
 
 //===================================================================
@@ -161,11 +162,6 @@ const DEFERRED: Partial<
   'product-requests': {
     title: 'Product requests are not connected yet',
     icon: <PackageSearch size={30} />,
-  },
-
-  activity: {
-    title: 'Pharmacy activity history is not connected yet',
-    icon: <History size={30} />,
   },
 };
 
@@ -393,10 +389,9 @@ export function OwnedPharmacyDetailPageContent({
             id={`owned-pharmacy-detail-panel-${activeTab}`}
             aria-labelledby={`owned-pharmacy-detail-tab-${activeTab}`}
           >
-            {((loading && activeTab !== 'comments') ||
-              !['data', 'about', 'payment', 'documents', 'comments'].includes(
-                activeTab
-              )) && (
+            {!['data', 'about', 'payment', 'documents', 'comments'].includes(
+              activeTab
+            ) && (
               <ProfileSectionHeader
                 title={selected.label}
                 description={DESCRIPTIONS[activeTab]}
@@ -476,6 +471,11 @@ export function OwnedPharmacyDetailPageContent({
                 remove={(id, options) =>
                   deletePharmacyNote('pharmacy', pharmacyId, id, options)
                 }
+              />
+            ) : pharmacy && activeTab === 'activity' ? (
+              <OwnedPharmacyActivityTab
+                key={pharmacyId}
+                pharmacyId={pharmacyId}
               />
             ) : deferred ? (
               <ProfileResourceState

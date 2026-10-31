@@ -38,7 +38,7 @@ import {
   StatsLoadingSkeleton,
 } from '@e-pharmacy/ui/statistics';
 
-import { NotFoundPage, StatusPageLayout } from '@e-pharmacy/ui/status-pages';
+import { StatusPageLayout } from '@e-pharmacy/ui/status-pages';
 
 import { getAdminPharmacyDetail } from '@/lib/api/browser/admin-pharmacy-detail.api';
 import { dispatchAdminBreadcrumbLabel } from '@/lib/layout/breadcrumb-label-event';
@@ -242,7 +242,16 @@ export function PharmacyDetailsPageContent({
   }, [pharmacyName]);
 
   useEffect(() => {
+    const onFocus = () => setRetry((value) => value + 1);
+
+    window.addEventListener('focus', onFocus);
+
+    return () => window.removeEventListener('focus', onFocus);
+  }, [pharmacyId]);
+
+  useEffect(() => {
     const controller = new AbortController();
+
     // Result keys keep previous pharmacy/retry data hidden while loading.
     void getAdminPharmacyDetail(pharmacyId, { signal: controller.signal })
       .then((response) => {
@@ -304,15 +313,15 @@ export function PharmacyDetailsPageContent({
 
   if (error === 'not-found') {
     return (
-      <NotFoundPage
-        title="Pharmacy not found"
-        description="This pharmacy does not exist, was removed, or the link is no longer valid."
-        homeHref={ADMIN_ROUTES.PHARMACIES}
-        homeLabel="Back to pharmacies"
-        variant="brand"
-        landmark="main"
-        image={STATUS_PAGE_IMAGE}
-      />
+      <main className={css.page} aria-label="Pharmacy not found">
+        <section className={css.card}>
+          <ProfileResourceState
+            variant="error"
+            title="Pharmacy not found"
+            description="This pharmacy has been deleted or is no longer available."
+          />
+        </section>
+      </main>
     );
   }
 

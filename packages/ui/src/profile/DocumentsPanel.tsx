@@ -61,6 +61,7 @@ export type DocumentsPanelProps = Readonly<{
   validateSelection?: (files: readonly BrowserUploadFile[]) => string;
   onSelectionError?: (message: string) => void;
   onDownloadFile?: (file: BrowserUploadFile) => Promise<string>;
+  onPreviewFile?: (file: BrowserUploadFile) => Promise<void> | void;
   onSubmit?: () => Promise<void> | void;
 
   canUpload?: boolean;
@@ -132,6 +133,7 @@ export function DocumentsPanel({
   validateSelection,
   onSelectionError,
   onDownloadFile,
+  onPreviewFile,
   onSubmit,
   canUpload = false,
   canReplace = false,
@@ -414,6 +416,7 @@ export function DocumentsPanel({
             validateSelection={validateSelection}
             onSelectionError={onSelectionError}
             onDownloadFile={onDownloadFile}
+            onPreviewFile={onPreviewFile}
             onChange={onChange ?? (() => undefined)}
           />
         ) : (

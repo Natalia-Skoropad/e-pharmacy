@@ -6,6 +6,7 @@ import {
   Download,
   Files,
   FileText,
+  Eye,
   Trash2,
   UploadCloud,
   X,
@@ -58,6 +59,7 @@ export type DocumentUploadProps = {
   validateSelection?: (files: readonly BrowserUploadFile[]) => string;
   onSelectionError?: (message: string) => void;
   onDownloadFile?: (file: BrowserUploadFile) => Promise<string>;
+  onPreviewFile?: (file: BrowserUploadFile) => Promise<void> | void;
 };
 
 //===================================================================
@@ -71,6 +73,15 @@ const DEFAULT_LABELS: Required<DocumentUploadLabels> = {
   removeConfirm: 'Remove document',
   removeCancel: 'Keep document',
 };
+
+//===================================================================
+
+const PREVIEWABLE_DOCUMENT_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
 
 //===================================================================
 
@@ -104,6 +115,7 @@ function DocumentUpload({
   validateSelection,
   onSelectionError,
   onDownloadFile,
+  onPreviewFile,
 }: DocumentUploadProps) {
   const [pendingRemoveFileId, setPendingRemoveFileId] = useState<string | null>(
     null
@@ -128,6 +140,7 @@ function DocumentUpload({
       ]
         .filter(Boolean)
         .join(' '),
+
     [errorId, hasError, hint, hintId, limitId, maxFiles]
   );
 
@@ -271,6 +284,7 @@ function DocumentUpload({
               </strong>{' '}
               files uploaded
             </span>
+
             <span className={css.limitTrack} aria-hidden="true">
               <span
                 className={css.limitProgress}
@@ -318,6 +332,18 @@ function DocumentUpload({
                 )}
                 <p className={css.fileSize}>{formatFileSize(file.size)}</p>
               </div>
+              {onPreviewFile &&
+              PREVIEWABLE_DOCUMENT_TYPES.has(file.type.toLowerCase()) ? (
+                <button
+                  className={css.previewButton}
+                  type="button"
+                  disabled={disabled}
+                  aria-label={`Preview ${file.name}`}
+                  onClick={() => void onPreviewFile(file)}
+                >
+                  <Eye size={16} aria-hidden="true" />
+                </button>
+              ) : null}
               {!readOnly ? (
                 <button
                   className={css.removeButton}

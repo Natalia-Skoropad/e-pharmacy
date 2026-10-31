@@ -269,21 +269,62 @@ export async function downloadOwnedPharmacyDocument(
 
 //===================================================================
 
+export type PharmacyUniqueField =
+  | 'taxId'
+  | 'iban'
+  | 'receiptEmail'
+  | 'phone'
+  | 'email';
+
+//===================================================================
+
 export type PharmacyPaymentDuplicates = Readonly<
-  Partial<Record<'taxId' | 'iban' | 'receiptEmail', boolean>>
+  Partial<Record<PharmacyUniqueField, boolean>>
 >;
+
+//===================================================================
+
+export type PharmacyPaymentMatches = Readonly<
+  Partial<
+    Record<
+      PharmacyUniqueField,
+      ReadonlyArray<Readonly<{ id: string; name: string; imageUrl?: string }>>
+    >
+  >
+>;
+
+//===================================================================
+
+export type PharmacyAvailabilityResult = Readonly<{
+  duplicates: PharmacyPaymentDuplicates;
+  matches: PharmacyPaymentMatches;
+}>;
 
 //===================================================================
 
 /** Preflight only; the transactional API is authoritative for uniqueness. */
 export async function getOwnedPharmacyPaymentAvailability(
   pharmacyId: string | undefined,
-  values: { taxId: string; iban: string; receiptEmail: string },
+
+  values: {
+    taxId: string;
+    iban: string;
+    receiptEmail: string;
+    phone: string;
+    email: string;
+  },
+
   signal?: AbortSignal
-): Promise<PharmacyPaymentDuplicates> {
+): Promise<PharmacyAvailabilityResult> {
   const params = new URLSearchParams();
 
-  for (const field of ['taxId', 'iban', 'receiptEmail'] as const) {
+  for (const field of [
+    'taxId',
+    'iban',
+    'receiptEmail',
+    'phone',
+    'email',
+  ] as const) {
     if (values[field].trim()) params.set(field, values[field].trim());
   }
 
@@ -303,7 +344,13 @@ export async function getOwnedPharmacyPaymentAvailability(
 
   const duplicates = data as Record<string, unknown>;
 
-  for (const field of ['taxId', 'iban', 'receiptEmail'] as const) {
+  for (const field of [
+    'taxId',
+    'iban',
+    'receiptEmail',
+    'phone',
+    'email',
+  ] as const) {
     if (
       duplicates[field] !== undefined &&
       typeof duplicates[field] !== 'boolean'
@@ -312,7 +359,48 @@ export async function getOwnedPharmacyPaymentAvailability(
     }
   }
 
-  return data as PharmacyPaymentDuplicates;
+  const rawMatches = (result as { data?: { matches?: unknown } }).data?.matches;
+
+  if (
+    !rawMatches ||
+    typeof rawMatches !== 'object' ||
+    Array.isArray(rawMatches)
+  )
+    throw new Error('Invalid pharmacy identifier match response.');
+
+  const matches = rawMatches as Record<string, unknown>;
+
+  for (const field of [
+    'taxId',
+    'iban',
+    'receiptEmail',
+    'phone',
+    'email',
+  ] as const) {
+    const rows = matches[field];
+
+    if (rows === undefined) continue;
+
+    if (
+      !Array.isArray(rows) ||
+      rows.some(
+        (row: unknown) =>
+          !row ||
+          typeof row !== 'object' ||
+          typeof (row as { id?: unknown }).id !== 'string' ||
+          !/^[a-f0-9]{24}$/i.test((row as { id: string }).id) ||
+          typeof (row as { name?: unknown }).name !== 'string' ||
+          ('imageUrl' in (row as Record<string, unknown>) &&
+            typeof (row as { imageUrl?: unknown }).imageUrl !== 'string')
+      )
+    )
+      throw new Error('Invalid pharmacy match data.');
+  }
+
+  return {
+    duplicates: data as PharmacyPaymentDuplicates,
+    matches: matches as PharmacyPaymentMatches,
+  };
 }
 
 //===================================================================

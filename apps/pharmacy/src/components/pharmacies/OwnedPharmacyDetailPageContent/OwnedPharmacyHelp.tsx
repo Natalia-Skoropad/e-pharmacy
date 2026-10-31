@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import {
-  CircleHelp,
+  Building2,
   ClipboardCheck,
   FileCheck2,
   ShieldCheck,
@@ -61,7 +61,7 @@ export function OwnedPharmacyHelp({
     <InfoTooltip
       label="How to manage this pharmacy"
       title="Managing your pharmacy"
-      icon={<CircleHelp size={20} aria-hidden="true" />}
+      icon={<Building2 size={20} aria-hidden="true" />}
       escapeOverflow
       scrollable
       items={[

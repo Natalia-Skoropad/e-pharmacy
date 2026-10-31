@@ -10,7 +10,7 @@ import type {
 } from '@e-pharmacy/types/pharmacies';
 
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
-import { Button } from '@e-pharmacy/ui/primitives';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
   getOwnedPharmacyLifecycleHistory,
@@ -53,37 +53,40 @@ export function Information({
   detail: OwnedPharmacyDetailResponse;
 }) {
   const { pharmacy, dates } = detail;
-  const [history, setHistory] = useState<LifecycleEvent[]>([]);
-  const [historyPage, setHistoryPage] = useState(1);
-  const [historyMore, setHistoryMore] = useState(false);
-  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [historyState, setHistoryState] = useState<{
+    key: string;
+    history: LifecycleEvent[];
+    error: boolean;
+  } | null>(null);
+
+  const [historyRetry, setHistoryRetry] = useState(0);
+  const historyKey = `${pharmacy.id}:${dates.updatedAt}:${historyRetry}`;
+  const currentHistory = historyState?.key === historyKey ? historyState : null;
+  const history = currentHistory?.history ?? [];
 
   useEffect(() => {
     let active = true;
 
-    void getOwnedPharmacyLifecycleHistory(pharmacy.id, historyPage)
-      .then(({ items, hasMore }) => {
-        if (!active) return;
-
-        setHistory((previous) =>
-          historyPage === 1 ? items : [...previous, ...items]
-        );
-
-        setHistoryMore(hasMore);
+    void getOwnedPharmacyLifecycleHistory(pharmacy.id, 1)
+      .then(({ items }) => {
+        if (active)
+          setHistoryState({
+            key: historyKey,
+            history: items.slice(0, 1),
+            error: false,
+          });
       })
 
       .catch(() => {
-        if (active) setHistoryMore(false);
-      })
-
-      .finally(() => {
-        if (active) setHistoryLoading(false);
+        if (active)
+          setHistoryState({ key: historyKey, history: [], error: true });
       });
 
     return () => {
       active = false;
     };
-  }, [pharmacy.id, dates.updatedAt, historyPage]);
+  }, [pharmacy.id, dates.updatedAt, historyKey]);
 
   return (
     <div className={css.infoStack}>
@@ -165,7 +168,21 @@ export function Information({
         aria-label="Pharmacy status activity"
       >
         <h3 className={css.activityHeading}>Pharmacy status activity</h3>
-        {history.length ? (
+        {!currentHistory ? (
+          <ProfileResourceState
+            variant="loading"
+            title="Loading pharmacy activity"
+            description="The latest pharmacy status change is being loaded."
+          />
+        ) : currentHistory.error ? (
+          <ProfileResourceState
+            variant="error"
+            title="Pharmacy activity could not be loaded"
+            description="Please try again."
+            retryLabel="Retry activity"
+            onRetry={() => setHistoryRetry((n) => n + 1)}
+          />
+        ) : history.length ? (
           <ol className={css.activityList}>
             {history.map((event) => (
               <li className={css.activityItem} key={event.id}>
@@ -201,18 +218,6 @@ export function Information({
             No pharmacy status changes to display yet.
           </p>
         )}
-        {historyMore ? (
-          <Button
-            variant="secondary"
-            disabled={historyLoading}
-            onClick={() => {
-              setHistoryLoading(true);
-              setHistoryPage((page) => page + 1);
-            }}
-          >
-            {historyLoading ? 'Loading...' : 'Show older status changes'}
-          </Button>
-        ) : null}
       </section>
 
       <OwnedPharmacySalesChart

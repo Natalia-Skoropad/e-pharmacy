@@ -109,3 +109,27 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Match the On verification status badge instead of the generic green action. */
+.verification {
+  color: #6d28d9;
+  background-color: #f3e8ff;
+  border: 1px solid #ddd6fe;
+}
+
+.verification svg {
+  color: #7c3aed;
+}
+
+.verificationButton {
+  color: #fff;
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+}
+
+.verificationButton:hover:not(:disabled),
+.verificationButton:focus-visible:not(:disabled) {
+  color: #fff;
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+}

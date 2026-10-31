@@ -192,3 +192,30 @@
 .error:empty {
   opacity: 0;
 }
+
+/* A soft warning is advisory: another pharmacy of this owner can reuse this value. */
+.warningField input:not([aria-invalid='true']) {
+  border-color: var(--color-warning);
+  box-shadow: 0 0 0 1px var(--color-warning-light);
+}
+
+.warningHint {
+  position: absolute;
+  left: 16px;
+  bottom: -5px;
+  z-index: 2;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding-inline: 8px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-regular);
+  line-height: 18px;
+  color: #946200;
+  white-space: nowrap;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}

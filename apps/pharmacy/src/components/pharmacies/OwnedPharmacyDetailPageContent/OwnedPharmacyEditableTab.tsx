@@ -51,6 +51,11 @@ import { OwnedPharmacyEditorTabContent } from '../OwnedPharmacyEditor/OwnedPharm
 import { mergeProposedPharmacyDocuments } from './pharmacy-document-changes';
 import { usePaymentAvailability } from '../OwnedPharmacyEditor/usePaymentAvailability';
 
+import {
+  DuplicateIdentifierSaveModal,
+  getReusedIdentifierFields,
+} from '../OwnedPharmacyEditor/DuplicateIdentifierSaveModal';
+
 import css from './OwnedPharmacyDetailPageContent.module.css';
 
 //===================================================================
@@ -85,6 +90,7 @@ export function OwnedPharmacyEditableTab({
 
   const [revision, setRevision] = useState(pharmacy.updatedAt);
   const [errors, setErrors] = useState<EditorErrors>({});
+  const [confirmSharedOpen, setConfirmSharedOpen] = useState(false);
   const [busy, setBusy] = useState<'save' | 'upload' | null>(null);
   const mutationLock = useRef(false);
 
@@ -112,7 +118,16 @@ export function OwnedPharmacyEditableTab({
   const paymentAvailability = usePaymentAvailability(
     pharmacy.id,
     values,
-    Boolean(values.taxId || values.iban || values.receiptEmail)
+
+    pharmacy.membershipRole === 'owner' &&
+      !readOnly &&
+      Boolean(
+        values.taxId ||
+        values.iban ||
+        values.receiptEmail ||
+        values.phone ||
+        values.email
+      )
   );
 
   const hasValidationErrors =
@@ -121,9 +136,12 @@ export function OwnedPharmacyEditableTab({
   const fieldError = (name: PharmacyEditorField) =>
     errors[name] ??
     validation[name] ??
-    paymentAvailability.errors[name as 'taxId' | 'iban' | 'receiptEmail'];
+    paymentAvailability.errors[
+      name as 'taxId' | 'iban' | 'receiptEmail' | 'phone' | 'email'
+    ];
 
   const change = (name: PharmacyEditorField, value: string) => {
+    setConfirmSharedOpen(false);
     setValues((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: undefined }));
   };
@@ -139,8 +157,15 @@ export function OwnedPharmacyEditableTab({
       label: FIELD_LABELS[name],
       required: true,
       error: fieldError(name),
+
+      warning: !fieldError(name)
+        ? paymentAvailability.warnings[
+            name as 'phone' | 'email' | 'taxId' | 'iban' | 'receiptEmail'
+          ]
+        : undefined,
+
       isTouched: Boolean(fieldError(name)),
-      disabled: busy !== null,
+      disabled: readOnly || busy !== null,
       maxLength: extra?.maxLength,
       hint: FIELD_HINTS[name],
 
@@ -168,11 +193,10 @@ export function OwnedPharmacyEditableTab({
     }
 
     mutationLock.current = true;
+    setErrors((current) => ({ ...current, documents: undefined }));
     setBusy('upload');
 
     try {
-      const uploaded: PharmacyDocument[] = [];
-
       for (const file of files) {
         const document = normalizePharmacyDocument(file);
         const dataUrl = await readFileAsDataUrl(file);
@@ -182,20 +206,56 @@ export function OwnedPharmacyEditableTab({
           dataUrl,
         });
 
-        uploaded.push(response.document);
+        // Persist each successful response immediately: a later file failure
+        // must not make the already uploaded file disappear on retry.
+        setDocuments((current) =>
+          current.some((entry) => entry.id === response.document.id)
+            ? current
+            : [...current, response.document]
+        );
       }
 
-      setDocuments((current) => [...current, ...uploaded]);
+      setErrors((current) => ({ ...current, documents: undefined }));
       toast.success('Documents uploaded. Save this section to attach them.');
     } catch (cause) {
-      toast.error(getProfileErrorMessage(cause, 'Could not upload documents.'));
+      try {
+        const latest = await getOwnedPharmacyProfile(pharmacy.id);
+        const latestDocuments = [...latest.pharmacy.documents];
+
+        if (latestDocuments.length > documents.length) {
+          setDocuments(latestDocuments);
+
+          setSavedDocuments((current) =>
+            current.length > latestDocuments.length ? current : latestDocuments
+          );
+
+          setRevision(latest.pharmacy.updatedAt);
+          setErrors((current) => ({ ...current, documents: undefined }));
+
+          toast.success(
+            'Documents uploaded. Save this section to attach them.'
+          );
+
+          return;
+        }
+      } catch {
+        // Fall through to the canonical error message below.
+      }
+
+      const message = getProfileErrorMessage(
+        cause,
+        'Could not upload documents.'
+      );
+
+      setErrors((current) => ({ ...current, documents: message }));
+      toast.error(message);
     } finally {
       mutationLock.current = false;
       setBusy(null);
     }
   };
 
-  const save = async () => {
+  const save = async (confirmedShared = false) => {
     if (readOnly || mutationLock.current || !dirty || hasValidationErrors)
       return;
 
@@ -241,6 +301,24 @@ export function OwnedPharmacyEditableTab({
       return;
     }
 
+    const sharedFields = getReusedIdentifierFields(
+      paymentAvailability.matches,
+      values,
+      saved,
+
+      tab === 'data'
+        ? ['phone', 'email']
+        : tab === 'payment'
+          ? ['taxId', 'iban', 'receiptEmail']
+          : []
+    );
+
+    if (sharedFields.length && !confirmedShared) {
+      setConfirmSharedOpen(true);
+      return;
+    }
+
+    setConfirmSharedOpen(false);
     mutationLock.current = true;
     setBusy('save');
 
@@ -359,31 +437,62 @@ export function OwnedPharmacyEditableTab({
     </div>
   ) : undefined;
 
+  const sharedFields = getReusedIdentifierFields(
+    paymentAvailability.matches,
+    values,
+    saved,
+
+    tab === 'data'
+      ? ['phone', 'email']
+      : tab === 'payment'
+        ? ['taxId', 'iban', 'receiptEmail']
+        : []
+  );
+
   return (
-    <div className={css.formStack}>
-      {tab === 'data' && headerAction ? (
-        <div className={css.dataMobileAction}>{headerAction}</div>
-      ) : null}
-      <OwnedPharmacyEditorTabContent
-        tab={tab}
-        headerAction={headerAction}
-        headerActionClassName={
-          tab === 'data' && headerAction ? css.dataDesktopAction : undefined
-        }
+    <>
+      <div className={css.formStack}>
+        {tab === 'data' && headerAction ? (
+          <div className={css.dataMobileAction}>{headerAction}</div>
+        ) : null}
+        <OwnedPharmacyEditorTabContent
+          tab={tab}
+          headerAction={headerAction}
+          headerActionClassName={
+            tab === 'data' && headerAction ? css.dataDesktopAction : undefined
+          }
+          values={values}
+          busy={readOnly ? 'save' : busy}
+          errors={errors}
+          fieldError={fieldError}
+          fieldWarning={(name) =>
+            !fieldError(name)
+              ? paymentAvailability.warnings[
+                  name as 'phone' | 'email' | 'taxId' | 'iban' | 'receiptEmail'
+                ]
+              : undefined
+          }
+          input={input}
+          change={change}
+          toast={toast}
+          setErrors={setErrors}
+          documents={documents}
+          setDocuments={setDocuments}
+          pharmacyId={pharmacy.id}
+          documentsEditable={!readOnly}
+          upload={upload}
+        />
+      </div>
+
+      <DuplicateIdentifierSaveModal
+        open={confirmSharedOpen}
+        fields={sharedFields}
+        matches={paymentAvailability.matches}
         values={values}
-        busy={readOnly ? 'save' : busy}
-        errors={errors}
-        fieldError={fieldError}
-        input={input}
-        change={change}
-        toast={toast}
-        setErrors={setErrors}
-        documents={documents}
-        setDocuments={setDocuments}
-        pharmacyId={pharmacy.id}
-        documentsEditable={!readOnly}
-        upload={upload}
+        busy={busy === 'save'}
+        onConfirm={() => void save(true)}
+        onCancel={() => setConfirmSharedOpen(false)}
       />
-    </div>
+    </>
   );
 }

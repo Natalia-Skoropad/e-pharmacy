@@ -88,6 +88,18 @@ for (const routePath of [
   );
 }
 
+//===================================================================
+
+// The explicit multi-pharmacy upload endpoint is not under
+// /pharmacies/me/documents. Opt this POST into the document budget before
+// the global 1 MB parser or valid Base64 files are rejected with HTTP 413.
+app.post(
+  '/pharmacies/me/pharmacies/:pharmacyId/documents',
+  express.json({ limit: API_JSON_BODY_LIMITS.documentUpload })
+);
+
+//===================================================================
+
 // Profile photo updates are sent as a base64 data URL. A 450 KB image expands
 // to roughly 600 KB in JSON, so the current-user PATCH route needs the normal
 // profile budget before the smaller auth parser runs.
@@ -96,11 +108,15 @@ app.patch(
   express.json({ limit: API_JSON_BODY_LIMITS.profileJson })
 );
 
+//===================================================================
+
 // Auth payloads are intentionally much smaller than general business JSON.
 // The registration document upload route above is parsed first with the
 // document preset, so this middleware does not re-read its already-consumed
 // request body.
 app.use('/auth', express.json({ limit: API_JSON_BODY_LIMITS.smallJson }));
+
+//===================================================================
 
 app.use(express.json({ limit: API_JSON_BODY_LIMITS.standardJson }));
 

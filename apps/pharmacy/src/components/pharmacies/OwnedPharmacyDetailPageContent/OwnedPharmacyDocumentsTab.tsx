@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Eye, Files, X } from 'lucide-react';
+import { Files, X } from 'lucide-react';
 
 import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
@@ -10,8 +10,6 @@ import { useToast } from '@e-pharmacy/ui/feedback';
 import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { ModalBase } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
-
-import { formatDateTime } from '@e-pharmacy/utils/date';
 
 import {
   PHARMACY_DOCUMENT_ACCEPT,
@@ -130,7 +128,7 @@ function Documents({
     });
   };
 
-  const openPreview = async (file: (typeof documents)[number]) => {
+  const openPreview = async (file: BrowserUploadFile) => {
     if (previewLoadingId) return;
 
     const kind = PREVIEW_TYPES[file.type.toLowerCase()];
@@ -187,45 +185,8 @@ function Documents({
         accept={PHARMACY_DOCUMENT_ACCEPT}
         emptyTitle="No pharmacy documents"
         emptyText="No published or submitted documents for this pharmacy."
-        beforeDocuments={
-          documents.length ? (
-            <ul
-              className={css.documentDetails}
-              aria-label="Document sources and preview"
-            >
-              {documents.map((file) => (
-                <li
-                  key={`${file.source}:${file.id}`}
-                  className={css.documentDetail}
-                >
-                  <div className={css.documentText}>
-                    <strong>{file.name}</strong>
-                    <span>
-                      {file.source === 'pending'
-                        ? 'Submitted changes'
-                        : 'Published'}{' '}
-                      · {file.type} · {formatDateTime(file.uploadedAt) ?? '—'}
-                    </span>
-                  </div>
-                  {PREVIEW_TYPES[file.type.toLowerCase()] ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      iconLeft={<Eye size={16} aria-hidden="true" />}
-                      disabled={Boolean(previewLoadingId)}
-                      isLoading={previewLoadingId === file.id}
-                      onClick={() => void openPreview(file)}
-                    >
-                      Preview
-                    </Button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          ) : null
-        }
         onDownloadFile={downloadFile}
+        onPreviewFile={openPreview}
       />
 
       <ModalBase

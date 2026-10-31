@@ -78,6 +78,7 @@ export type OwnedPharmacyEditorTabContentProps = Readonly<{
   busy: 'save' | 'verify' | 'upload' | null;
   errors: EditorErrors;
   fieldError: (name: PharmacyEditorField) => string | undefined;
+  fieldWarning?: (name: PharmacyEditorField) => string | undefined;
 
   input: (
     name: PharmacyEditorField,
@@ -104,6 +105,7 @@ export function OwnedPharmacyEditorTabContent({
   busy,
   errors,
   fieldError,
+  fieldWarning,
   input,
   change,
   toast,
@@ -275,6 +277,11 @@ export function OwnedPharmacyEditorTabContent({
           />
 
           <PharmacyPaymentFields
+            warnings={{
+              taxId: fieldWarning?.('taxId'),
+              iban: fieldWarning?.('iban'),
+              receiptEmail: fieldWarning?.('receiptEmail'),
+            }}
             values={{
               recipientName: values.recipientName,
               taxId: values.taxId,
@@ -319,6 +326,7 @@ export function OwnedPharmacyEditorTabContent({
             accept={PHARMACY_DOCUMENT_ACCEPT}
             hint={`PDF, DOC, DOCX, JPG, PNG or WEBP. Up to ${PHARMACY_DOCUMENT_RULES.maxFiles} files, 10 MB each.`}
             editable={documentsEditable}
+            readOnlyUploadView={!documentsEditable}
             onChange={(selection) => {
               if (!documentsEditable) return;
 

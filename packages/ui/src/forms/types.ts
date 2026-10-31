@@ -25,6 +25,7 @@ export type BaseFieldProps = FieldAriaProps & {
   name: string;
   value: string;
   error?: string;
+  warning?: string;
   isTouched?: boolean;
   required?: boolean;
   disabled?: boolean;
@@ -83,6 +84,7 @@ export type FormFieldLayoutProps = {
   errorClassName?: string;
   renderError?: boolean;
   error?: string;
+  warning?: string;
   isTouched?: boolean;
   hint?: string;
 };

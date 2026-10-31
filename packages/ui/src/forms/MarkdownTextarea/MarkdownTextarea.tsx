@@ -1,7 +1,17 @@
 'use client';
 
 import clsx from 'clsx';
-import { Bold, Italic, Link2, List, ListOrdered, Plus, X } from 'lucide-react';
+
+import {
+  Bold,
+  Italic,
+  Link2,
+  List,
+  ListOrdered,
+  Pilcrow,
+  Plus,
+  X,
+} from 'lucide-react';
 
 import {
   useEffect,
@@ -87,17 +97,12 @@ function serializeInlineNode(node: Node): string {
   switch (element.tagName) {
     case 'BR':
       return '\n';
-
     case 'STRONG':
-
     case 'B':
       return `**${children}**`;
-
     case 'EM':
-
     case 'I':
       return `*${children}*`;
-
     case 'A': {
       const href = element.getAttribute('href')?.trim();
 
@@ -138,6 +143,59 @@ function serializeBlockNode(node: Node): string {
 
   if (element.tagName === 'UL') return `${serializeList(element, false)}\n\n`;
   if (element.tagName === 'OL') return `${serializeList(element, true)}\n\n`;
+
+  // An intentional empty paragraph must survive the round-trip.
+  // Plain blank Markdown lines are paragraph separators, not extra spacing.
+  if (
+    (element.tagName === 'P' || element.tagName === 'DIV') &&
+    !element.textContent?.trim() &&
+    element.querySelector('br')
+  ) {
+    return '&nbsp;\n\n';
+  }
+
+  // Browsers may wrap execCommand lists and headings in DIV/P nodes.
+  // Serializing their children as inline text loses the list markers on Save.
+  if (element.tagName === 'DIV' || element.tagName === 'P') {
+    const children = Array.from(element.childNodes);
+
+    const hasNestedBlocks = children.some(
+      (child) =>
+        child.nodeType === Node.ELEMENT_NODE &&
+        BLOCK_TAGS.has((child as Element).tagName) &&
+        (child as Element).tagName !== 'BR'
+    );
+
+    if (hasNestedBlocks) {
+      const blocks: string[] = [];
+
+      let inline = '';
+
+      const flush = () => {
+        if (inline.trim()) blocks.push(inline.trim());
+
+        inline = '';
+      };
+
+      for (const child of children) {
+        if (
+          child.nodeType === Node.ELEMENT_NODE &&
+          BLOCK_TAGS.has((child as Element).tagName)
+        ) {
+          flush();
+
+          const block = serializeBlockNode(child).trim();
+
+          if (block) blocks.push(block);
+        } else {
+          inline += serializeInlineNode(child);
+        }
+      }
+
+      flush();
+      return blocks.length ? `${blocks.join('\n\n')}\n\n` : '';
+    }
+  }
 
   const content = Array.from(element.childNodes)
     .map(serializeInlineNode)
@@ -284,6 +342,7 @@ function MarkdownTextarea({
     if (typeof maxLength === 'number' && nextValue.length > maxLength) {
       editor.innerHTML = markdownToHtml(value);
       lastEmittedValueRef.current = value;
+
       return;
     }
 
@@ -296,6 +355,15 @@ function MarkdownTextarea({
 
     restoreSelection();
     document.execCommand(command, false, commandValue);
+    saveSelection();
+    emitValue();
+  };
+
+  const addParagraphSpacing = () => {
+    if (disabled) return;
+
+    restoreSelection();
+    document.execCommand('insertHTML', false, '<p><br></p>');
     saveSelection();
     emitValue();
   };
@@ -467,6 +535,18 @@ function MarkdownTextarea({
             className={css.toolButton}
             type="button"
             disabled={disabled}
+            aria-label="Add paragraph spacing"
+            title="Insert space between paragraphs"
+            onMouseDown={saveSelection}
+            onClick={addParagraphSpacing}
+          >
+            <Pilcrow size={17} aria-hidden="true" />
+          </button>
+
+          <button
+            className={css.toolButton}
+            type="button"
+            disabled={disabled}
             aria-label="Add link"
             title="Add link"
             aria-haspopup="dialog"
@@ -527,6 +607,7 @@ function MarkdownTextarea({
                     Add link
                   </h3>
                 </div>
+
                 <CloseIconButton
                   label="Close add link"
                   onClick={closeLinkModal}

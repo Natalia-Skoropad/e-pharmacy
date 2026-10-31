@@ -32,4 +32,11 @@ test('ordinary JSON uses a small global parser while document payloads opt into 
     appSource,
     /express\.json\(\{ limit: API_JSON_BODY_LIMITS\.documentUpload \}\)[\s\S]*app\.patch\([\s\S]*'\/auth\/current'[\s\S]*API_JSON_BODY_LIMITS\.profileJson[\s\S]*app\.use\('\/auth', express\.json\(\{ limit: API_JSON_BODY_LIMITS\.smallJson \}\)\)[\s\S]*express\.json\(\{ limit: API_JSON_BODY_LIMITS\.standardJson \}\)/
   );
+
+  // The multi-pharmacy upload route must opt into this budget independently:
+  // it does not match the legacy /pharmacies/me/documents prefix.
+  assert.match(
+    appSource,
+    /app\.post\(\s*'\/pharmacies\/me\/pharmacies\/:pharmacyId\/documents',\s*express\.json\(\{ limit: API_JSON_BODY_LIMITS\.documentUpload \}\)\s*\)/
+  );
 });

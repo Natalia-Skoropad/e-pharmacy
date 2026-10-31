@@ -8,4 +8,5 @@ export const POST = createPrivateProxyRoute<{ pharmacyId: string }>({
     API_ROUTES.pharmacies.ownedDocuments(pharmacyId),
 
   method: 'POST',
+  bodyPreset: 'documentUpload',
 });

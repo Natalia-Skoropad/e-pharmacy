@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { PharmacyDocumentFile } from '../../models/pharmacies/pharmacyDocumentFile.model';
-import { PharmacyPaymentIdentifier } from '../../models/pharmacies/pharmacyPaymentIdentifier.model';
+import { releasePharmacyIdentifierReservations } from './pharmacy-payment-uniqueness.service';
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 
 import { Order } from '../../models/orders/order.model';
@@ -117,13 +117,17 @@ export async function deleteOwnedPharmacyDraftService(
         session
       );
 
-      await PharmacyPaymentIdentifier.deleteMany({
-        pharmacyId: pharmacy._id,
-      }).session(session);
+      // Preserve a shared identifier reservation if another pharmacy of the
+      // same owner still uses it. Otherwise another owner could claim it.
+      await releasePharmacyIdentifierReservations(
+        pharmacy._id,
+        pharmacy.ownerId,
+        session
+      );
 
       await appendAdminAuditLog({
         actorUserId: userId,
-        action: ADMIN_AUDIT_ACTIONS.PHARMACY_STATUS_CHANGED,
+        action: ADMIN_AUDIT_ACTIONS.PHARMACY_DELETED,
         section: ADMIN_AUDIT_SECTIONS.PHARMACIES,
         entityType: ADMIN_AUDIT_ENTITY_TYPES.PHARMACY,
         entityId: pharmacyId,

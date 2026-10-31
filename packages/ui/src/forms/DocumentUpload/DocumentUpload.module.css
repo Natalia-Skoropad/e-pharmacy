@@ -161,6 +161,33 @@
   color: var(--color-text-secondary);
 }
 
+.previewButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.previewButton:hover:not(:disabled),
+.previewButton:focus-visible:not(:disabled) {
+  background-color: var(--color-surface);
+  border-color: var(--color-accent);
+}
+
+.previewButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .removeButton {
   display: inline-flex;
   align-items: center;

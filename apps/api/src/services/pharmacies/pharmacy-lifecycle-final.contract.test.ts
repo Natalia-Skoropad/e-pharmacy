@@ -32,6 +32,10 @@ const ownerUI = read(
   'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
 );
 
+const activityUI = read(
+  'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActivityTab.tsx'
+);
+
 //===================================================================
 
 // These tests confirm invariant wiring, not a substitute for MongoDB transactions.
@@ -95,8 +99,12 @@ test('status log is drawn from canonical audit with member-only read and field p
     /\.select\(\s*'action actorNameSnapshot createdAt reason before\.status after\.status before\.reviewState after\.reviewState'\s*\)/
   );
 
+  assert.match(ownerUI, /getOwnedPharmacyLifecycleHistory\(pharmacy\.id, 1\)/);
+
   assert.match(
-    ownerUI,
-    /getOwnedPharmacyLifecycleHistory\(pharmacy\.id, historyPage\)/
+    activityUI,
+    /getOwnedPharmacyLifecycleHistory\(pharmacyId, page\)/
   );
+
+  assert.match(activityUI, /setHasMore\(result\.hasMore\)/);
 });

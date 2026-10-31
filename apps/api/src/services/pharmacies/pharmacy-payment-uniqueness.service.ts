@@ -13,69 +13,169 @@ import { httpError } from '../../utils/http/httpError';
 //===================================================================
 
 export const UNIQUE_PAYMENT_FIELDS = ['taxId', 'iban', 'receiptEmail'] as const;
+export const UNIQUE_CONTACT_FIELDS = ['phone', 'email'] as const;
+
+//===================================================================
 
 export type UniquePaymentField = (typeof UNIQUE_PAYMENT_FIELDS)[number];
-export type PaymentValues = Partial<Record<UniquePaymentField, string | null>>;
+
+type UniqueContactField = (typeof UNIQUE_CONTACT_FIELDS)[number];
+type UniqueField = UniquePaymentField | UniqueContactField;
+
+export type PaymentValues = Partial<Record<UniqueField, string | null>>;
 
 //===================================================================
 
-export const normalizePaymentIdentifier = (
-  field: UniquePaymentField,
-  raw: string
-) =>
-  field === 'receiptEmail'
+export const normalizePaymentIdentifier = (field: UniqueField, raw: string) =>
+  field === 'receiptEmail' || field === 'email'
     ? raw.trim().toLowerCase()
-    : raw.trim().toUpperCase();
+    : field === 'phone'
+      ? raw.trim()
+      : raw.trim().toUpperCase();
 
 //===================================================================
 
-const identifierKey = (field: UniquePaymentField, value: string) =>
+const identifierKey = (field: UniqueField, value: string) =>
   `${field}:${normalizePaymentIdentifier(field, value)}`;
 
 //===================================================================
 
-/** Includes published AND proposed values across ALL owners, except the current pharmacy. */
+const fields = [...UNIQUE_PAYMENT_FIELDS, ...UNIQUE_CONTACT_FIELDS] as const;
+
+//===================================================================
+
+function fieldPaths(field: UniqueField): [string, string] {
+  return field === 'phone' || field === 'email'
+    ? [field, `pendingModeration.${field}`]
+    : [`bankDetails.${field}`, `pendingModeration.bankDetails.${field}`];
+}
+
+//===================================================================
+
+// Recover the owner of a reservation created before ownerId was persisted.
+async function getReservationOwner(
+  reservation: { ownerId?: Types.ObjectId; pharmacyId: Types.ObjectId },
+  session?: ClientSession
+): Promise<string | undefined> {
+  if (reservation.ownerId) return String(reservation.ownerId);
+
+  const pharmacy = await Pharmacy.findById(reservation.pharmacyId)
+    .select('ownerId')
+    .session(session ?? null);
+
+  return pharmacy?.ownerId ? String(pharmacy.ownerId) : undefined;
+}
+
+//===================================================================
+
+/** Reject values used by another OWNER; pharmacies of one owner can share them.
+ * Published and pending moderation values participate in the same uniqueness check.
+ * A global unique reservation key serializes concurrent requests by different owners.
+ */
 export async function checkPaymentIdentifierDuplicates(
   pharmacyId: string | undefined,
   values: PaymentValues,
-  session?: ClientSession
-): Promise<Partial<Record<UniquePaymentField, boolean>>> {
-  const duplicates: Partial<Record<UniquePaymentField, boolean>> = {};
+  session?: ClientSession,
+  ownerUserId?: string
+): Promise<Partial<Record<UniqueField, boolean>>> {
+  const duplicates: Partial<Record<UniqueField, boolean>> = {};
 
-  for (const field of UNIQUE_PAYMENT_FIELDS) {
+  let ownerId = ownerUserId;
+
+  if (!ownerId && pharmacyId) {
+    const pharmacy = await Pharmacy.findById(pharmacyId)
+      .select('ownerId')
+      .session(session ?? null);
+
+    ownerId = pharmacy?.ownerId ? String(pharmacy.ownerId) : undefined;
+  }
+
+  for (const field of fields) {
     const raw = values[field];
 
     if (!raw?.trim()) continue;
 
     const value = normalizePaymentIdentifier(field, raw);
-    const key = identifierKey(field, value);
-    // MongoDB does not support parallel queries sharing one transaction
-    // session. Run these checks in order, then let the unique DB index
-    // arbitrate any simultaneous writes from other requests.
+    const [publishedPath, pendingPath] = fieldPaths(field);
 
+    // Queries sharing a Mongo session must run sequentially.
     const existing = await Pharmacy.exists({
-      ...(pharmacyId ? { _id: { $ne: new Types.ObjectId(pharmacyId) } } : {}),
+      ...(ownerId
+        ? { ownerId: { $ne: new Types.ObjectId(ownerId) } }
+        : pharmacyId
+          ? { _id: { $ne: new Types.ObjectId(pharmacyId) } }
+          : {}),
 
-      $or: [
-        { [`bankDetails.${field}`]: value },
-        { [`pendingModeration.bankDetails.${field}`]: value },
-      ],
+      $or: [{ [publishedPath]: value }, { [pendingPath]: value }],
     }).session(session ?? null);
 
     const reservation = existing
       ? null
-      : await PharmacyPaymentIdentifier.exists({
-          key,
+      : await PharmacyPaymentIdentifier.findOne({
+          key: identifierKey(field, value),
+        })
+          .select('ownerId pharmacyId')
+          .session(session ?? null);
 
-          ...(pharmacyId
-            ? { pharmacyId: { $ne: new Types.ObjectId(pharmacyId) } }
-            : {}),
-        }).session(session ?? null);
+    const reservationOwner = reservation
+      ? await getReservationOwner(reservation, session)
+      : undefined;
 
-    duplicates[field] = Boolean(existing || reservation);
+    duplicates[field] = Boolean(
+      existing || (reservation && (!ownerId || reservationOwner !== ownerId))
+    );
   }
 
   return duplicates;
+}
+
+//===================================================================
+
+// Only reveal matches belonging to the authenticated owner. Never return
+// another owner's pharmacy identity from the uniqueness preflight.
+export async function findOwnPharmacyIdentifierMatches(
+  ownerUserId: string,
+  pharmacyId: string | undefined,
+  values: PaymentValues
+): Promise<
+  Partial<
+    Record<UniqueField, { id: string; name: string; imageUrl?: string }[]>
+  >
+> {
+  const matches: Partial<
+    Record<UniqueField, { id: string; name: string; imageUrl?: string }[]>
+  > = {};
+
+  for (const field of fields) {
+    const raw = values[field];
+
+    if (!raw?.trim()) continue;
+
+    const value = normalizePaymentIdentifier(field, raw);
+    const [publishedPath, pendingPath] = fieldPaths(field);
+
+    const pharmacies = await Pharmacy.find({
+      ownerId: new Types.ObjectId(ownerUserId),
+
+      ...(pharmacyId ? { _id: { $ne: new Types.ObjectId(pharmacyId) } } : {}),
+
+      $or: [{ [publishedPath]: value }, { [pendingPath]: value }],
+    })
+      .select('_id name imageUrl')
+      .limit(10)
+      .lean();
+
+    if (pharmacies.length) {
+      matches[field] = pharmacies.map((pharmacy) => ({
+        id: String(pharmacy._id),
+        name: pharmacy.name,
+
+        ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+      }));
+    }
+  }
+
+  return matches;
 }
 
 //===================================================================
@@ -95,6 +195,27 @@ export function paymentIdentifiers(
   }
 
   return values;
+}
+
+//===================================================================
+
+function allPharmacyIdentifiers(
+  pharmacy: Pick<
+    PharmacyEntity,
+    'bankDetails' | 'pendingModeration' | 'phone' | 'email'
+  >
+): Map<string, UniqueField> {
+  const identifiers: Map<string, UniqueField> = new Map(
+    paymentIdentifiers(pharmacy)
+  );
+
+  for (const field of UNIQUE_CONTACT_FIELDS) {
+    for (const raw of [pharmacy[field], pharmacy.pendingModeration?.[field]]) {
+      if (raw?.trim()) identifiers.set(identifierKey(field, raw), field);
+    }
+  }
+
+  return identifiers;
 }
 
 //===================================================================
@@ -153,33 +274,49 @@ export async function ensurePharmacyPaymentUniqueIndex(): Promise<void> {
 
 //===================================================================
 
-/** Atomically reserve all published/pending identifiers, releasing obsolete ones.
- * A unique DB index serializes concurrent requests from different owners.
+/** Reserve all contact/payment identifiers across owners, but allow one
+ * owner's pharmacies to reuse values. Keep reservations when another pharmacy
+ * belonging to the same owner still uses the value.
  */
 export async function syncPharmacyPaymentIdentifiers(
   pharmacy: PharmacyEntity & { _id: Types.ObjectId },
   session: ClientSession
 ) {
   const id = String(pharmacy._id);
-  const keys = paymentIdentifiers(pharmacy);
+  const ownerId = String(pharmacy.ownerId);
+  const keys = allPharmacyIdentifiers(pharmacy);
 
-  // Check every key, not only the most recent proposed value.
   for (const [key, field] of keys) {
     const value = key.slice(field.length + 1);
-    const candidate: PaymentValues = {};
-
-    candidate[field] = value;
+    const candidate: PaymentValues = { [field]: value };
 
     const conflicts = await checkPaymentIdentifierDuplicates(
       id,
       candidate,
-      session
+      session,
+      ownerId
     );
 
     if (conflicts[field]) {
       throw httpError(
         HTTP_STATUS.CONFLICT,
-        `${field} is already used by another pharmacy.`,
+        `${field} is already used by a pharmacy belonging to another owner.`,
+        { missingFields: [field] },
+        'PHARMACY_PAYMENT_IDENTIFIER_DUPLICATE'
+      );
+    }
+
+    const reservation = await PharmacyPaymentIdentifier.findOne({ key })
+      .select('ownerId pharmacyId')
+      .session(session);
+
+    if (reservation) {
+      if ((await getReservationOwner(reservation, session)) === ownerId)
+        continue;
+
+      throw httpError(
+        HTTP_STATUS.CONFLICT,
+        `${field} is reserved by another pharmacy owner.`,
         { missingFields: [field] },
         'PHARMACY_PAYMENT_IDENTIFIER_DUPLICATE'
       );
@@ -187,8 +324,14 @@ export async function syncPharmacyPaymentIdentifiers(
 
     try {
       await PharmacyPaymentIdentifier.updateOne(
-        { key, pharmacyId: pharmacy._id },
-        { $setOnInsert: { key, pharmacyId: pharmacy._id } },
+        { key },
+        {
+          $setOnInsert: {
+            key,
+            ownerId: pharmacy.ownerId,
+            pharmacyId: pharmacy._id,
+          },
+        },
         { upsert: true, session }
       );
     } catch (error) {
@@ -196,15 +339,84 @@ export async function syncPharmacyPaymentIdentifiers(
 
       throw httpError(
         HTTP_STATUS.CONFLICT,
-        `${field} is already used by another pharmacy.`,
+        `${field} is reserved by another pharmacy owner.`,
         { missingFields: [field] },
         'PHARMACY_PAYMENT_IDENTIFIER_DUPLICATE'
       );
     }
   }
 
-  await PharmacyPaymentIdentifier.deleteMany({
+  const obsolete = await PharmacyPaymentIdentifier.find({
     pharmacyId: pharmacy._id,
     key: { $nin: [...keys.keys()] },
   }).session(session);
+
+  for (const reservation of obsolete) {
+    const separator = reservation.key.indexOf(':');
+    const field = reservation.key.slice(0, separator) as UniqueField;
+    const value = reservation.key.slice(separator + 1);
+    const [publishedPath, pendingPath] = fieldPaths(field);
+
+    const other = await Pharmacy.findOne({
+      _id: { $ne: pharmacy._id },
+      ownerId: pharmacy.ownerId,
+      $or: [{ [publishedPath]: value }, { [pendingPath]: value }],
+    })
+      .select('_id')
+      .session(session);
+
+    if (other) {
+      await PharmacyPaymentIdentifier.updateOne(
+        { _id: reservation._id },
+        { $set: { pharmacyId: other._id, ownerId: pharmacy.ownerId } },
+        { session }
+      );
+    } else {
+      await PharmacyPaymentIdentifier.deleteOne({
+        _id: reservation._id,
+      }).session(session);
+    }
+  }
+}
+
+//===================================================================
+
+/** Called after physically deleting a New draft in the same transaction. */
+export async function releasePharmacyIdentifierReservations(
+  pharmacyId: Types.ObjectId,
+  ownerId: Types.ObjectId,
+  session: ClientSession
+): Promise<void> {
+  const reservations = await PharmacyPaymentIdentifier.find({
+    pharmacyId,
+  }).session(session);
+
+  for (const reservation of reservations) {
+    const separator = reservation.key.indexOf(':');
+
+    if (separator < 1) continue;
+
+    const field = reservation.key.slice(0, separator) as UniqueField;
+    const value = reservation.key.slice(separator + 1);
+    const [publishedPath, pendingPath] = fieldPaths(field);
+
+    const sibling = await Pharmacy.findOne({
+      ownerId,
+      $or: [{ [publishedPath]: value }, { [pendingPath]: value }],
+    })
+      .select('_id')
+      .session(session);
+
+    if (sibling) {
+      await PharmacyPaymentIdentifier.updateOne(
+        { _id: reservation._id },
+        { $set: { pharmacyId: sibling._id, ownerId } },
+        { session }
+      );
+    } else {
+      await PharmacyPaymentIdentifier.deleteOne({
+        _id: reservation._id,
+      }).session(session);
+    }
+  }
 }

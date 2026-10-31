@@ -87,6 +87,10 @@ export function getProfileErrorMessage(
 
   if (error.httpStatus === 403) return 'You do not have access to this action.';
 
+  if (error.httpStatus === 413) {
+    return 'The document request is too large. Check the file size and try again.';
+  }
+
   if (error.httpStatus === 429) {
     return 'Too many requests. Please wait and try again.';
   }

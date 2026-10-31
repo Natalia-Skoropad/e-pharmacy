@@ -25,17 +25,20 @@ function getDescribedBy({
   id,
   hint,
   hasError,
+  hasWarning = false,
   ariaDescribedBy,
 }: {
   id: string;
   hint?: string;
   hasError: boolean;
+  hasWarning?: boolean;
   ariaDescribedBy?: string;
 }): string | undefined {
   return (
     [
       hint ? `${id}-hint` : undefined,
       hasError ? `${id}-error` : undefined,
+      hasWarning ? `${id}-warning` : undefined,
       ariaDescribedBy,
     ]
       .filter(Boolean)
@@ -60,6 +63,7 @@ export function TextInputControl({
   name,
   value,
   error,
+  warning,
   isTouched,
   required = true,
   disabled = false,
@@ -75,11 +79,13 @@ export function TextInputControl({
   onChange,
 }: TextInputControlProps) {
   const hasError = Boolean(isTouched && error);
+  const hasWarning = Boolean(warning && !hasError);
 
   const describedBy = getDescribedBy({
     id,
     hint,
     hasError,
+    hasWarning,
     ariaDescribedBy,
   });
 
@@ -88,7 +94,7 @@ export function TextInputControl({
       id={id}
       label={label}
       required={required}
-      className={className}
+      className={clsx(className, hasWarning && css.warningField)}
       error={error}
       isTouched={isTouched}
       hint={hint}
@@ -116,6 +122,12 @@ export function TextInputControl({
           </span>
         ) : null}
       </div>
+
+      {hasWarning ? (
+        <p id={`${id}-warning`} className={css.warningHint} role="status">
+          {warning}
+        </p>
+      ) : null}
     </FormFieldLayout>
   );
 }
