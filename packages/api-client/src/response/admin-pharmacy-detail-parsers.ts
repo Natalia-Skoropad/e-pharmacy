@@ -245,6 +245,14 @@ function pendingChanges(value: unknown): AdminPharmacyPendingChanges {
   if (row.documentsCount !== undefined) {
     result.documentsCount = count(row.documentsCount, 'pending document count');
   }
+  if (row.documentNames !== undefined) {
+    if (!Array.isArray(row.documentNames))
+      throw new TypeError('Invalid pending document names.');
+
+    result.documentNames = row.documentNames.map((item) =>
+      text(item, 'pending document name')
+    );
+  }
 
   return result;
 }
@@ -339,6 +347,20 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
     },
 
     documentCount: count(row.documentCount, 'document count'),
+
+    ...(row.publishedDocumentNames === undefined
+      ? {}
+      : {
+          publishedDocumentNames: (() => {
+            if (!Array.isArray(row.publishedDocumentNames))
+              throw new TypeError('Invalid published document names.');
+
+            return row.publishedDocumentNames.map((name) =>
+              text(name, 'published document name')
+            );
+          })(),
+        }),
+
     ...(row.tabCounts === undefined
       ? {}
       : {

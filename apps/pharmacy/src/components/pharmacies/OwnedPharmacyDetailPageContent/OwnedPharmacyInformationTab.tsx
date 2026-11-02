@@ -194,21 +194,27 @@ export function Information({
                       : 'Pharmacy status changed'}
                 </div>
 
-                {(event.previousStatus !== event.nextStatus ||
+                {(event.action === 'pharmacy.created' ||
+                  event.previousStatus !== event.nextStatus ||
                   event.previousReviewState !== event.nextReviewState ||
                   event.action === 'pharmacy.corrections.requested') &&
                 (event.previousStatus ||
                   event.nextStatus ||
+                  event.action === 'pharmacy.created' ||
                   event.action === 'pharmacy.corrections.requested') ? (
                   <div className={css.activityTransition}>
-                    <HistoryStatus
-                      status={
-                        event.previousStatus ??
-                        event.nextStatus ??
-                        pharmacy.status
-                      }
-                      fallback="Created"
-                    />
+                    {event.action === 'pharmacy.created' ? (
+                      <span className={css.createdStatus}>Created</span>
+                    ) : (
+                      <HistoryStatus
+                        status={
+                          event.previousStatus ??
+                          event.nextStatus ??
+                          pharmacy.status
+                        }
+                        fallback="Unknown"
+                      />
+                    )}
                     {event.previousReviewState === 'changes_requested' ? (
                       <StatusBadge label="Needs changes" tone="neutral" />
                     ) : null}

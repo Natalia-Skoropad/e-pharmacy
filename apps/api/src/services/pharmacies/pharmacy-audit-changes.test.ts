@@ -188,3 +188,34 @@ test('owner resubmission clears old feedback without reporting it as a new chang
   assert.equal(result.before.reviewState, 'changes_requested');
   assert.equal(result.after.reviewState, 'pending');
 });
+
+//===================================================================
+
+test('owner resubmission of corrections for On moderation is one review-state transition', () => {
+  const returned = {
+    ...pharmacy,
+    status: 'on_moderation',
+    reviewState: 'changes_requested',
+    reviewFeedback: 'Replace the incorrect pharmacy documents.',
+    pendingModeration: { name: 'Updated Pharmacy Artsyz' },
+  } as Parameters<typeof buildPharmacyAuditChanges>[0];
+
+  const resubmitted = {
+    ...returned,
+    reviewState: 'pending',
+    reviewFeedback: null,
+  } as Parameters<typeof buildPharmacyAuditChanges>[1];
+
+  const audit = buildPharmacyAuditChanges(
+    returned,
+    resubmitted,
+    'pharmacy.moderation.submitted: name'
+  );
+
+  assert.deepEqual(audit.changedFields, ['reviewState']);
+  assert.equal(audit.before.status, 'on_moderation');
+  assert.equal(audit.after.status, 'on_moderation');
+  assert.equal(audit.before.reviewState, 'changes_requested');
+  assert.equal(audit.after.reviewState, 'pending');
+  assert.ok(!audit.changedFields.includes('reviewFeedback'));
+});

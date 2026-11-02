@@ -10,6 +10,7 @@ import {
   CreditCard,
   FileText,
   Files,
+  ExternalLink,
   MessageSquareText,
   History,
   Package,
@@ -54,6 +55,7 @@ import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 import { ADMIN_ROUTES } from '@/lib/routes';
 import { STATUS_PAGE_IMAGE } from '@/lib/status-pages/status-page-image';
 import type { ActivityUrlState } from '@/lib/audit/admin-activity-url';
+import { getAdminPublicPharmacyUrl } from '@/lib/pharmacies/public-pharmacy-link';
 
 import { PharmacyInformationTab } from './PharmacyInformationTab';
 import { PharmacyDataTab } from './PharmacyDataTab';
@@ -231,6 +233,15 @@ export function PharmacyDetailsPageContent({
 
   const detail = isCurrent ? result?.detail : null;
   const pharmacyName = detail?.current.name;
+
+  const publicPharmacyHref = detail
+    ? getAdminPublicPharmacyUrl({
+        id: detail.id,
+        name: detail.current.name,
+        status: detail.status,
+      })
+    : null;
+
   const error = isCurrent ? result?.error : null;
   const isLoading = !isCurrent || (!detail && !error);
 
@@ -496,10 +507,29 @@ export function PharmacyDetailsPageContent({
                 }
                 description={TAB_DESCRIPTIONS[activeTab]}
                 icon={selectedTab.icon ?? <Building2 size={22} />}
+                action={
+                  activeTab === 'information' && publicPharmacyHref ? (
+                    <LinkButton
+                      href={publicPharmacyHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="primary"
+                      size="sm"
+                      iconLeft={<ExternalLink size={17} aria-hidden="true" />}
+                      className={css.publicPharmacyLink}
+                    >
+                      View pharmacy on website
+                    </LinkButton>
+                  ) : undefined
+                }
               />
             ) : null}
             {activeTab === 'documents' ? (
-              <PharmacyDocumentsTab key={pharmacyId} pharmacyId={pharmacyId} />
+              <PharmacyDocumentsTab
+                key={pharmacyId}
+                pharmacyId={pharmacyId}
+                detail={detail ?? undefined}
+              />
             ) : activeTab === 'comments' ? (
               <PharmacyCommentsTab
                 key={pharmacyId}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import {
   Building2,
+  ExternalLink,
   ClipboardList,
   CreditCard,
   FileText,
@@ -22,7 +23,7 @@ import { isApiError } from '@e-pharmacy/api-client/transport';
 import type { OwnedPharmacyDetailResponse } from '@e-pharmacy/types/pharmacies';
 
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
+import { LinkButton, Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 
 import {
   ProfileResourceState,
@@ -38,6 +39,11 @@ import {
 import { formatMoney } from '@e-pharmacy/utils';
 
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
+
+import {
+  canOpenClientPharmacyPage,
+  getClientPharmacyUrl,
+} from '@/lib/layout/external-links';
 
 import {
   createPharmacyNote,
@@ -218,6 +224,11 @@ export function OwnedPharmacyDetailPageContent({
   const error = isCurrent ? result?.error : null;
   const loading = !detail && !error;
   const pharmacy = detail?.pharmacy;
+
+  const publicPharmacyHref =
+    pharmacy && canOpenClientPharmacyPage(pharmacy.status)
+      ? getClientPharmacyUrl(pharmacy)
+      : undefined;
 
   const isEditTab = ['data', 'about', 'payment', 'documents'].includes(
     visibleTab
@@ -492,7 +503,19 @@ export function OwnedPharmacyDetailPageContent({
                 description={DESCRIPTIONS[visibleTab]}
                 icon={selected.icon ?? <Building2 size={21} />}
                 action={
-                  isEditTab && canEditPharmacy ? (
+                  visibleTab === 'information' && publicPharmacyHref ? (
+                    <LinkButton
+                      href={publicPharmacyHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="primary"
+                      size="sm"
+                      iconLeft={<ExternalLink size={17} aria-hidden="true" />}
+                      className={css.publicPharmacyLink}
+                    >
+                      View pharmacy on website
+                    </LinkButton>
+                  ) : isEditTab && canEditPharmacy ? (
                     <div
                       ref={setHeaderActionTarget}
                       className={css.headerActionTarget}

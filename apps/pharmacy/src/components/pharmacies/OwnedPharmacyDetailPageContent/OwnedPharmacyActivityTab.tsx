@@ -19,7 +19,7 @@ import css from './OwnedPharmacyDetailPageContent.module.css';
 //===================================================================
 
 function LifecycleBadge({ status }: { status: string | null }) {
-  if (!status) return <span>Created</span>;
+  if (!status) return <span>Not recorded</span>;
 
   if (
     Object.prototype.hasOwnProperty.call(PHARMACY_STATUS_PRESENTATION, status)
@@ -119,13 +119,32 @@ export function OwnedPharmacyActivityTab({
           {history.map((entry) => (
             <li className={css.activityItem} key={entry.id}>
               <div className={css.activityTitle}>
-                {entry.action.replaceAll('.', ' ')}
+                {entry.action === 'pharmacy.created'
+                  ? 'Pharmacy created'
+                  : entry.action === 'pharmacy.deleted'
+                    ? 'Pharmacy draft deleted'
+                    : 'Pharmacy status changed'}
               </div>
 
               <div className={css.activityTransition}>
-                <LifecycleBadge status={entry.previousStatus} />
+                {entry.action === 'pharmacy.created' ? (
+                  <span className={css.createdStatus}>Created</span>
+                ) : (
+                  <LifecycleBadge
+                    status={entry.previousStatus ?? entry.nextStatus}
+                  />
+                )}
+                {entry.previousReviewState === 'changes_requested' ? (
+                  <StatusBadge label="Needs changes" tone="neutral" />
+                ) : null}
                 <span aria-hidden="true">→</span>
-                <LifecycleBadge status={entry.nextStatus} />
+                <LifecycleBadge
+                  status={entry.nextStatus ?? entry.previousStatus}
+                />
+                {entry.nextReviewState === 'changes_requested' ||
+                entry.action === 'pharmacy.corrections.requested' ? (
+                  <StatusBadge label="Needs changes" tone="neutral" />
+                ) : null}
               </div>
 
               <div className={css.activityMeta}>

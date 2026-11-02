@@ -140,11 +140,58 @@ export function serializeAuditListItem(
 
 //===============================================================
 
+/** Historical Mixed snapshots are not guaranteed to satisfy AdminAuditValue.
+ * Sanitize only the read DTO; never mutate the immutable audit record. */
+function serializeAuditSnapshot(
+  snapshot: Record<string, AdminAuditValue> | null | undefined
+): Record<string, AdminAuditValue> {
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(snapshot).map(([field, original]) => {
+      const value: unknown = original;
+
+      if (
+        value === null ||
+        typeof value === 'string' ||
+        typeof value === 'boolean' ||
+        (typeof value === 'number' && Number.isFinite(value))
+      ) {
+        return [field, value];
+      }
+
+      if (
+        Array.isArray(value) &&
+        value.every((item) => typeof item === 'string')
+      ) {
+        return [field, value];
+      }
+
+      // Older audit writers could persist nested document metadata or dates.
+      // Express JSON responses must remain parseable by the canonical Admin UI.
+      const json = JSON.stringify(value);
+
+      return [
+        field,
+        typeof json === 'string'
+          ? json.length > 1900
+            ? `${json.slice(0, 1899)}…`
+            : json
+          : null,
+      ];
+    })
+  ) as Record<string, AdminAuditValue>;
+}
+
+//===============================================================
+
 export function serializeAuditDetails(log: LeanAuditLog): AdminAuditDetailsDto {
   return {
     ...serializeAuditListItem(log),
 
-    before: { ...log.before },
-    after: { ...log.after },
+    before: serializeAuditSnapshot(log.before),
+    after: serializeAuditSnapshot(log.after),
   };
 }

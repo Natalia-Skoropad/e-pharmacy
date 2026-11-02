@@ -251,13 +251,6 @@ export function OwnedPharmacySectionReview({
         icon={<ShieldCheck size={21} />}
       />
 
-      {pharmacy.reviewFeedback ? (
-        <div className={css.reviewFeedback}>
-          <strong>Administrator feedback</strong>
-          <p className={css.reviewBody}>{pharmacy.reviewFeedback}</p>
-        </div>
-      ) : null}
-
       <div className={css.reviewGrid}>
         {changed.map((change) => (
           <div className={css.reviewItem} key={change.field}>

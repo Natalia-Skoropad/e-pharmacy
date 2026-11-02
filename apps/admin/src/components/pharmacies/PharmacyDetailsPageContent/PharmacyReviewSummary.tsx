@@ -1,4 +1,10 @@
-import { ShieldCheck } from 'lucide-react';
+import {
+  ClipboardList,
+  CreditCard,
+  FileText,
+  ShieldCheck,
+  type LucideIcon,
+} from 'lucide-react';
 
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { MarkdownContent, WorkingHours } from '@e-pharmacy/ui/data-display';
@@ -11,14 +17,16 @@ import css from './PharmacyReviewSummary.module.css';
 
 //===================================================================
 
-type Section = 'data' | 'about' | 'payment';
+type Section = 'data' | 'about' | 'payment' | 'documents';
+
+//===================================================================
 
 type Change = Readonly<{
   field: string;
   label: string;
   current: string | null | undefined;
   submitted: string | null | undefined;
-  presentation?: 'photo' | 'hours' | 'markdown';
+  presentation?: 'photo' | 'hours' | 'markdown' | 'documents';
 }>;
 
 //===================================================================
@@ -56,6 +64,30 @@ export function getAdminPharmacySectionChanges(
   const pending = detail.pendingChanges;
 
   if (!pending) return [];
+
+  if (section === 'documents') {
+    if (pending.documentsCount === undefined) return [];
+
+    return [
+      {
+        field: 'documents',
+        label: 'Pharmacy documents',
+
+        current:
+          detail.publishedDocumentNames?.join('\n') ??
+          `${detail.documentCount} published file(s)`,
+
+        submitted:
+          pending.documentNames?.join('\n') ??
+          `${pending.documentsCount} proposed file(s)`,
+
+        presentation:
+          pending.documentNames && detail.publishedDocumentNames
+            ? 'documents'
+            : undefined,
+      },
+    ];
+  }
 
   if (section === 'payment') {
     return PAYMENT_FIELDS.filter(
@@ -109,11 +141,33 @@ export function getAdminPharmacySectionChanges(
 function ReviewValue({
   change,
   value,
+  otherValue,
 }: Readonly<{
   change: Change;
   value: string | null | undefined;
+  otherValue: string | null | undefined;
 }>) {
   if (!value?.trim()) return <span>—</span>;
+
+  if (change.presentation === 'documents') {
+    const names = value.split('\n').filter(Boolean);
+    const otherNames = new Set((otherValue ?? '').split('\n').filter(Boolean));
+
+    return (
+      <ul className={css.reviewDocuments}>
+        {names.map((name, index) => (
+          <li key={`${index}:${name}`}>
+            {name}
+            {!otherNames.has(name) ? (
+              <span className={css.reviewDocumentDifference}>
+                {value === change.current ? 'Removed' : 'Added'}
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    );
+  }
 
   if (change.presentation === 'photo') {
     return (
@@ -146,15 +200,17 @@ export function PharmacyReviewSummary({
 }: Readonly<{ detail: AdminPharmacyDetail; section: Section }>) {
   const changed = getAdminPharmacySectionChanges(detail, section);
 
-  if (detail.reviewState === 'changes_requested') return null;
+  // A correction request preserves the proposed fields for read-only review.
+  // Its reason belongs to the status activity log, not every comparison tab.
+  if (!changed.length) return null;
 
-  if (!changed.length && !detail.reviewFeedback) return null;
+  const isCorrectionRequested = detail.reviewState === 'changes_requested';
 
-  const isSubmitted = [
-    'on_verification',
-    'on_moderation',
-    'on_reactivation',
-  ].includes(detail.status);
+  const isSubmitted =
+    !isCorrectionRequested &&
+    ['on_verification', 'on_moderation', 'on_reactivation'].includes(
+      detail.status
+    );
 
   return (
     <section
@@ -164,18 +220,15 @@ export function PharmacyReviewSummary({
       <ProfileSectionHeader
         title="Verification and administrator feedback"
         description={
-          isSubmitted
-            ? 'These changes were submitted for review. Published data is unchanged until approval.'
-            : 'These changes are saved for submission, or were returned to the owner for corrections.'
+          isCorrectionRequested
+            ? 'These changes were returned to the owner for corrections. Published data remains unchanged until approval.'
+            : isSubmitted
+              ? 'These changes were submitted for review. Published data is unchanged until approval.'
+              : 'These changes are saved for submission, or were returned to the owner for corrections.'
         }
         icon={<ShieldCheck size={21} aria-hidden="true" />}
       />
-      {detail.reviewFeedback ? (
-        <div className={css.feedback}>
-          <strong>Administrator feedback</strong>
-          <p>{detail.reviewFeedback}</p>
-        </div>
-      ) : null}
+
       <div className={css.grid}>
         {changed.map((change) => (
           <div className={css.item} key={change.field}>
@@ -184,7 +237,11 @@ export function PharmacyReviewSummary({
               <div className={css.value}>
                 <dt>Saved / published</dt>
                 <dd>
-                  <ReviewValue change={change} value={change.current} />
+                  <ReviewValue
+                    change={change}
+                    value={change.current}
+                    otherValue={change.submitted}
+                  />
                 </dd>
               </div>
 
@@ -195,7 +252,11 @@ export function PharmacyReviewSummary({
                     : 'Saved for submission'}
                 </dt>
                 <dd>
-                  <ReviewValue change={change} value={change.submitted} />
+                  <ReviewValue
+                    change={change}
+                    value={change.submitted}
+                    otherValue={change.current}
+                  />
                 </dd>
               </div>
             </dl>
@@ -205,6 +266,16 @@ export function PharmacyReviewSummary({
     </section>
   );
 }
+
+//===================================================================
+
+// Match the owner's moderation dialog: same grouping, icons and hierarchy.
+const MODERATION_TAB_ICONS: Record<string, LucideIcon> = {
+  'Pharmacy data': ClipboardList,
+  'About pharmacy': FileText,
+  'Payment details': CreditCard,
+  Documents: FileText,
+};
 
 //===================================================================
 
@@ -251,11 +322,21 @@ export function PharmacySubmittedChangesSummary({
       <strong>Changes awaiting administrator approval</strong>
 
       <ul>
-        {changes.map((section) => (
-          <li key={section.title}>
-            <strong>{section.title}</strong> ({section.fields.join(', ')})
-          </li>
-        ))}
+        {changes.map((section) => {
+          const Icon = MODERATION_TAB_ICONS[section.title] ?? FileText;
+
+          return (
+            <li key={section.title}>
+              <span className={css.moderationTabIcon} aria-hidden="true">
+                <Icon size={18} />
+              </span>
+              <div className={css.moderationTabDescription}>
+                <strong>{section.title}</strong>{' '}
+                <span>({section.fields.join(', ')})</span>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

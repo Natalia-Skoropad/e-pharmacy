@@ -306,8 +306,18 @@ export function ActivityHistory({
         if (!controller.signal.aborted) setActors(response.items);
       })
 
-      .catch(() => {
-        if (!controller.signal.aborted) setActors([]);
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Could not load activity actor profiles', {
+            scopePharmacyId,
+            transportCode: isApiError(error) ? error.transportCode : undefined,
+            httpStatus: isApiError(error) ? error.httpStatus : undefined,
+          });
+        }
+
+        setActors([]);
       })
 
       .finally(() => {
@@ -389,7 +399,23 @@ export function ActivityHistory({
       })
 
       .catch((error: unknown) => {
-        if (!controller.signal.aborted) setDetailsError(getErrorMessage(error));
+        if (controller.signal.aborted) return;
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Could not load activity audit details', {
+            scopePharmacyId,
+            auditLogId: selectedAuditId,
+            transportCode: isApiError(error) ? error.transportCode : undefined,
+            httpStatus: isApiError(error) ? error.httpStatus : undefined,
+
+            validationError:
+              isApiError(error) && error.cause instanceof Error
+                ? error.cause.message
+                : undefined,
+          });
+        }
+
+        setDetailsError(getErrorMessage(error));
       })
 
       .finally(() => {

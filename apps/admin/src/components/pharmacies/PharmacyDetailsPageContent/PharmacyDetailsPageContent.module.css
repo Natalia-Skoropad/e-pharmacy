@@ -102,3 +102,17 @@
     display: none;
   }
 }
+
+/* Public storefront link in Pharmacy information only. */
+.publicPharmacyLink {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .publicPharmacyLink {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+  }
+}

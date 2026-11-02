@@ -40,6 +40,7 @@ export type AdminPharmacyCurrentData = Readonly<{
 export type AdminPharmacyPendingChanges = Readonly<
   Omit<PharmacyPendingModeration, 'documents'> & {
     documentsCount?: number;
+    documentNames?: readonly string[];
   }
 >;
 
@@ -66,6 +67,7 @@ export type AdminPharmacyDetail = Readonly<{
   }>;
 
   documentCount: number;
+  publishedDocumentNames?: readonly string[];
   /** Global tab badges; optional for backward-compatible response fixtures. */
   tabCounts?: Readonly<{
     comments: number;

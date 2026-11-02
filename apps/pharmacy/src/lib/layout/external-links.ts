@@ -1,7 +1,10 @@
 import type { PharmacyProfile } from '@e-pharmacy/types/pharmacies';
-import { buildSlugId } from '@e-pharmacy/validation/url';
+import { buildPublicEntitySlugId } from '@e-pharmacy/validation/url';
 
-import { requireClientAppConfiguration } from '@/lib/auth/client-app-config';
+import {
+  getClientAppConfiguration,
+  requireClientAppConfiguration,
+} from '@/lib/auth/client-app-config';
 
 //===================================================================
 
@@ -24,8 +27,14 @@ export function getClientPharmacyUrl(
 ): string | undefined {
   if (!pharmacy?.id) return undefined;
 
-  const clientApp = requireClientAppConfiguration();
-  const pharmacyPath = `${clientApp.basePath}/${buildSlugId(
+  const result = getClientAppConfiguration();
+
+  if (!result.ok) return undefined;
+
+  const clientApp = result.config;
+
+  const pharmacyPath = `${clientApp.basePath}/${buildPublicEntitySlugId(
+    'pharmacy',
     pharmacy.name,
     pharmacy.id
   )}`;

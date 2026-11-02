@@ -172,6 +172,29 @@ export function PharmacyModerationActions({
         hint: '',
       }));
 
+  // Active pharmacies show the future approval action disabled until a
+  // submitted moderation request exists; Admin cannot approve a draft.
+  const visibleMenuEntries =
+    detail.status === 'active'
+      ? [
+          {
+            action: 'approve' as const,
+            label: 'Approve changes',
+            disabled: true as const,
+            hint: 'The owner must submit the saved changes for moderation first.',
+            danger: false,
+          },
+          {
+            action: 'request_corrections' as const,
+            label: 'Request corrections',
+            disabled: true as const,
+            hint: 'The owner has not submitted changes for moderation. Request corrections becomes available after submission.',
+            danger: false,
+          },
+          ...menuEntries,
+        ]
+      : menuEntries;
+
   // A changed pharmacy or revision must never inherit the previous open dropdown.
   // Deriving visibility avoids a synchronous setState in an effect.
   const menuKey = JSON.stringify([
@@ -182,7 +205,7 @@ export function PharmacyModerationActions({
     detail.dates.updatedAt,
   ]);
 
-  const menuOpen = menuEntries.length > 0 && openMenuKey === menuKey;
+  const menuOpen = visibleMenuEntries.length > 0 && openMenuKey === menuKey;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -205,7 +228,7 @@ export function PharmacyModerationActions({
     };
   }, [menuOpen]);
 
-  if (menuEntries.length === 0 && !action) return null;
+  if (visibleMenuEntries.length === 0 && !action) return null;
 
   const reasonError = action
     ? validatePharmacyModerationReason(action.reason)
@@ -385,15 +408,7 @@ export function PharmacyModerationActions({
 
   return (
     <>
-      {detail.status === 'active' && detail.pendingChanges ? (
-        <p className={css.savedDraftHint} role="status">
-          Owner changes are saved as a draft, but have not been submitted for
-          moderation. The owner must finish the required fields and select Send
-          for moderation. Approval and correction actions become available after
-          the server confirms the submission.
-        </p>
-      ) : null}
-      {menuEntries.length > 0 ? (
+      {visibleMenuEntries.length > 0 ? (
         <div className={css.menuWrapper} ref={containerRef}>
           <Button
             type="button"
@@ -418,7 +433,7 @@ export function PharmacyModerationActions({
               role="menu"
               aria-label="Available pharmacy moderation actions"
             >
-              {menuEntries.map((option) => (
+              {visibleMenuEntries.map((option) => (
                 <div
                   key={option.action}
                   className={css.menuActionRow}

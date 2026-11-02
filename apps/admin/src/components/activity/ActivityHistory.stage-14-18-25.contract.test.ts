@@ -64,7 +64,13 @@ test('owner pharmacy detail keeps one persistent heading and separate loader', (
   assert.match(detail, /visibleTab === activeTab/);
   assert.match(detail, /<ProfileSectionHeader/);
   assert.match(detail, /<ProfileResourceState/);
-  assert.doesNotMatch(detail, /StatsLoadingSkeleton/);
+
+  // The header stays mounted while only the statistics content can skeletonize.
+  assert.match(
+    detail,
+    /<StatsLoadingSkeleton[\s\S]*?label="Loading pharmacy performance summary"/
+  );
+
   assert.match(detail, /headerActionTarget=\{headerActionTarget\}/);
   assert.match(editor, /createPortal\(headerAction, headerActionTarget\)/);
   assert.match(editor, /suppressSectionHeading/);
@@ -97,5 +103,9 @@ test('verification transition is beside modal heading, with Needs changes badge'
   assert.match(actions, /headerDetails=/);
   assert.match(actions, /label="Needs changes"/);
   assert.doesNotMatch(actions, /Possible decisions:/);
-  assert.match(reason, /headerDetails \? <div/);
+
+  assert.match(
+    reason,
+    /headerDetails \? \(\s*<div className=\{css\.headerDetails\}>/
+  );
 });

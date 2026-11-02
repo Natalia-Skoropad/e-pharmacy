@@ -14,9 +14,9 @@ export function PharmacyAboutTab({
 
   return (
     <div className={css.stack}>
-      <PharmacyAboutFields value={current.description ?? ''} disabled />
-
       <PharmacyReviewSummary detail={detail} section="about" />
+
+      <PharmacyAboutFields value={current.description ?? ''} disabled />
     </div>
   );
 }

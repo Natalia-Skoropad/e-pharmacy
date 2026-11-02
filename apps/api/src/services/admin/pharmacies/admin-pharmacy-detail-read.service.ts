@@ -205,7 +205,10 @@ function submittedChanges(pending?: PharmacyEntity['pendingModeration']) {
       : {}),
 
     ...(pending.documents !== undefined
-      ? { documentsCount: pending.documents.length }
+      ? {
+          documentsCount: pending.documents.length,
+          documentNames: pending.documents.map((document) => document.name),
+        }
       : {}),
   };
 }
@@ -314,6 +317,10 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
     },
 
     documentCount: pharmacy.documents?.length ?? 0,
+
+    publishedDocumentNames: (pharmacy.documents ?? []).map(
+      (document) => document.name
+    ),
 
     tabCounts: {
       comments: commentsCount,

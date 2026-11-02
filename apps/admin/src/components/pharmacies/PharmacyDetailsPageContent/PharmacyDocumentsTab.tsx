@@ -2,8 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Files } from 'lucide-react';
+import { PharmacyReviewSummary } from './PharmacyReviewSummary';
 
-import type { AdminPharmacyDocument } from '@e-pharmacy/types/admin';
+import type {
+  AdminPharmacyDocument,
+  AdminPharmacyDetail,
+} from '@e-pharmacy/types/admin';
+
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
@@ -36,13 +41,17 @@ function toUploadFile(file: AdminPharmacyDocument): BrowserUploadFile {
 
 //===================================================================
 
-type PharmacyDocumentsTabProps = Readonly<{ pharmacyId: string }>;
+type PharmacyDocumentsTabProps = Readonly<{
+  pharmacyId: string;
+  detail?: AdminPharmacyDetail;
+}>;
 
 //===================================================================
 
 /** Fetches only when its tab is mounted; no pharmacy-owner document API. */
 export function PharmacyDocumentsTab({
   pharmacyId,
+  detail,
 }: PharmacyDocumentsTabProps) {
   const toast = useToast();
 
@@ -145,6 +154,9 @@ export function PharmacyDocumentsTab({
 
   return (
     <>
+      {detail ? (
+        <PharmacyReviewSummary detail={detail} section="documents" />
+      ) : null}
       <DocumentsPanel
         id="admin-pharmacy-documents"
         name="pharmacyDocuments"

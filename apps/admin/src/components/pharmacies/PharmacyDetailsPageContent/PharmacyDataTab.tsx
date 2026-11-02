@@ -31,36 +31,14 @@ import css from './PharmacyDataTab.module.css';
 
 //===================================================================
 
-/** Owner-side Pharmacy data sections, but always read-only in Admin.
- * Render the effective proposed values; the review summary shows the approved
- * values beside them, without publishing or mutating either version. */
+/** The Admin form always reads published values. Pending proposals belong only
+ * in the separate moderation comparison above the form. */
 export function PharmacyDataTab({
   detail,
 }: Readonly<{ detail: AdminPharmacyDetail }>) {
   const current = detail.current;
-  const pending = detail.pendingChanges;
-  const location = pending?.location ?? current.location;
-
-  const effective = {
-    name: pending?.name === undefined ? current.name : (pending.name ?? ''),
-    phone: pending?.phone === undefined ? current.phone : (pending.phone ?? ''),
-    email: pending?.email === undefined ? current.email : (pending.email ?? ''),
-
-    imageUrl:
-      pending?.imageUrl === undefined
-        ? current.imageUrl
-        : (pending.imageUrl ?? ''),
-
-    shortDescription:
-      pending?.shortDescription === undefined
-        ? current.shortDescription
-        : (pending.shortDescription ?? ''),
-
-    workingHours:
-      pending?.workingHours === undefined
-        ? current.workingHours
-        : (pending.workingHours ?? ''),
-  };
+  const location = current.location;
+  const effective = current;
 
   const noop = () => undefined;
 

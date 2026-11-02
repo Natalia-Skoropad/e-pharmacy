@@ -37,10 +37,9 @@ export default async function FilteredPharmaciesPage({
   if (route.kind === 'invalid') return notFound();
 
   if (route.kind === 'detail') {
-    const initialActivityState = {
-      ...parseAdminActivityUrl(route.activitySegments),
-      ownerUserId: '', // Pharmacy audit must not inherit an owner-wide filter.
-    };
+    // The pharmacy scope is enforced by the backend, independently of actor
+    // filters. Preserve an explicitly selected pharmacy-owner actor in the URL.
+    const initialActivityState = parseAdminActivityUrl(route.activitySegments);
 
     const canonicalUrl =
       buildAdminPharmacyDetailUrl(route.pharmacyId, route.tab) +

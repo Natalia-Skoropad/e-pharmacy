@@ -24,6 +24,18 @@ import { buildPharmacyAuditScopeFilter } from './admin-audit-filters';
 export async function listAdminAuditActorsService(
   exactScope?: Readonly<{ pharmacyId: string }>
 ): Promise<AdminAuditActorsResponseDto> {
+  // Derive the allowed IDs from the exact pharmacy scope first. Resolve their
+  // profiles using the same global audit context as /admin/settings/activity,
+  // so role, photo and status don't depend on which action was logged here.
+  const scopedActorIds = exactScope
+    ? await AdminAuditLog.distinct(
+        'actorUserId',
+        buildPharmacyAuditScopeFilter(exactScope.pharmacyId)
+      )
+    : null;
+
+  if (scopedActorIds && scopedActorIds.length === 0) return { items: [] };
+
   const actors = await AdminAuditLog.aggregate<{
     _id: Types.ObjectId;
     actorType: AdminAuditActorType;
@@ -38,8 +50,8 @@ export async function listAdminAuditActorsService(
       status: 'new' | 'active' | 'blocked';
     };
   }>([
-    ...(exactScope
-      ? [{ $match: buildPharmacyAuditScopeFilter(exactScope.pharmacyId) }]
+    ...(scopedActorIds
+      ? [{ $match: { actorUserId: { $in: scopedActorIds } } }]
       : []),
     {
       $group: {

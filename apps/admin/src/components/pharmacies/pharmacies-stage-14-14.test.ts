@@ -28,6 +28,7 @@ function pharmacy(
   return {
     id: '507f1f77bcf86cd799439011',
     status,
+
     ...(blockSource ? { blockSource } : {}),
 
     owner: ownerStatus
@@ -306,7 +307,9 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     /blocked:\s*\{\s*label: 'Inactive',\s*tone: 'danger'\s*\}/
   );
 
-  assert.match(ownedPharmacyReview, /pharmacy\.reviewFeedback/);
+  // Correction reasons remain in the lifecycle history, without repeating
+  // the same text on every pending-field comparison tab.
+  assert.doesNotMatch(ownedPharmacyReview, /pharmacy\.reviewFeedback/);
   assert.match(ownedPharmacyInformation, /<Field label="Status reason">/);
   assert.match(ownedPharmacyInformation, /show\(pharmacy\.statusReason\)/);
 

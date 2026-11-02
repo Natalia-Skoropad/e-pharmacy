@@ -15,6 +15,8 @@ export function PharmacyPaymentTab({
 
   return (
     <div className={css.stack}>
+      <PharmacyReviewSummary detail={detail} section="payment" />
+
       <PharmacyPaymentFields
         disabled
         values={{
@@ -26,8 +28,6 @@ export function PharmacyPaymentTab({
           paymentPurpose: bank?.paymentPurpose ?? '',
         }}
       />
-
-      <PharmacyReviewSummary detail={detail} section="payment" />
     </div>
   );
 }

@@ -518,7 +518,7 @@ export function OwnedPharmacyActions({
               pharmacy.status === 'on_moderation' ? (
                 <>
                   <ActionMenuItem
-                    className={css.approveAction}
+                    className={css.moderationAction}
                     disabled={
                       !needsModeration || !hasChanges || moderationIncomplete
                     }
@@ -681,7 +681,9 @@ export function OwnedPharmacyActions({
           headerDetails={
             <div className={css.reviewJourneyTransition}>
               <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
-              {action === 'verification' &&
+              {(action === 'verification' ||
+                action === 'moderation' ||
+                action === 'reactivate') &&
               pharmacy.reviewState === 'changes_requested' ? (
                 <StatusBadge label="Needs changes" tone="neutral" />
               ) : null}
@@ -700,8 +702,36 @@ export function OwnedPharmacyActions({
             </div>
           }
           details={
-            <div className={css.reviewJourney}>
-              {action === 'verification' ? (
+            action === 'moderation' ? (
+              <section
+                className={css.moderationSummary}
+                aria-label="Changes for moderation"
+              >
+                <strong>Changes you are about to send</strong>
+                <ul>
+                  {moderationSummary.map((group) => {
+                    const Icon = MODERATION_TAB_ICONS[group.title] ?? FileText;
+
+                    return (
+                      <li key={group.title}>
+                        <span
+                          className={css.moderationTabIcon}
+                          aria-hidden="true"
+                        >
+                          <Icon size={18} />
+                        </span>
+
+                        <div className={css.moderationTabDescription}>
+                          <strong>{group.title}</strong>{' '}
+                          <span>({group.fields.join(', ')})</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : action === 'verification' ? (
+              <div className={css.reviewJourney}>
                 <div className={css.reviewJourneyOutcomes}>
                   <strong>What happens next?</strong>
 
@@ -733,38 +763,8 @@ export function OwnedPharmacyActions({
                     </li>
                   </ul>
                 </div>
-              ) : null}
-              {action === 'moderation' ? (
-                <section
-                  className={css.moderationSummary}
-                  aria-label="Changes for moderation"
-                >
-                  <strong>Changes you are about to send</strong>
-                  <ul>
-                    {moderationSummary.map((group) => {
-                      const Icon =
-                        MODERATION_TAB_ICONS[group.title] ?? FileText;
-
-                      return (
-                        <li key={group.title}>
-                          <span
-                            className={css.moderationTabIcon}
-                            aria-hidden="true"
-                          >
-                            <Icon size={18} />
-                          </span>
-
-                          <div className={css.moderationTabDescription}>
-                            <strong>{group.title}</strong>{' '}
-                            <span>({group.fields.join(', ')})</span>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </section>
-              ) : null}
-            </div>
+              </div>
+            ) : undefined
           }
           value={comment}
           fieldName="pharmacyOwnerActionDescription"

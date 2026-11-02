@@ -127,14 +127,14 @@
 /* Disabled moderation choices remain visible with their own accessible explanation. */
 .menuActionRow {
   display: grid;
-  grid-template-columns: max-content auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 4px;
   min-width: 0;
 }
 
 .menuActionRow > button:first-child {
-  width: auto;
+  width: 100%;
   min-width: 0;
   white-space: nowrap;
   flex-wrap: nowrap;
@@ -146,4 +146,17 @@
 
 .menuActionRow > :last-child:not(:first-child) {
   flex-shrink: 0;
+}
+
+/* All choices fill the dropdown, including the lone Block pharmacy option. */
+.menuActionRow {
+  width: 100%;
+}
+
+.menuActionRow:not(:has(> :nth-child(2))) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.menuActionRow > button {
+  justify-content: flex-start;
 }

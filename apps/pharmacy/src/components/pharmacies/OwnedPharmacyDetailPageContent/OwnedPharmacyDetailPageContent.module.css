@@ -513,24 +513,6 @@
   white-space: pre-wrap;
 }
 
-.reviewFeedback {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-background);
-}
-
-.reviewFeedback > strong {
-  font-size: var(--fz-14);
-}
-.reviewFeedback > p {
-  margin: 0;
-  line-height: var(--lh-base);
-}
-
 .reviewItemHeading {
   display: flex;
   flex-direction: column;
@@ -805,6 +787,43 @@
   cursor: pointer;
 }
 
+.moderationAction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  color: #956500;
+  background-color: #fff4d6;
+  font: inherit;
+  text-align: left;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.moderationAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.moderationAction:hover:not(:disabled),
+.moderationAction:focus-visible:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+/* Creation is an event, not a previous New status. */
+.createdStatus {
+  color: #2778c4;
+  background: #eaf4ff;
+  border: 1px solid #c6dfff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-semi-bold);
+}
+
 .verificationAction:hover:not(:disabled),
 .verificationAction:focus-visible:not(:disabled) {
   filter: brightness(0.96);
@@ -941,5 +960,18 @@
 
   .headerActionTarget .sectionActions > button {
     width: auto;
+  }
+}
+
+/* External public link belongs to the information header, never the edit toolbar. */
+.publicPharmacyLink {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .publicPharmacyLink {
+    width: 100%;
+    justify-content: center;
   }
 }
