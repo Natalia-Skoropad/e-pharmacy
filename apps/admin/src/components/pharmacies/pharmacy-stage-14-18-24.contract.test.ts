@@ -126,7 +126,11 @@ test('14.18.24: documents are a distinct, typed section in the moderation summar
 
   assert.match(review, /id: Section \| 'documents';/);
   assert.match(review, /title: string;/);
-  assert.match(review, /changes\.push\(\{ id: 'documents', title: 'Documents'/);
+
+  assert.match(
+    review,
+    /changes\.push\(\{\s*id: 'documents',\s*title: 'Documents'/
+  );
 
   assert.doesNotMatch(
     review,

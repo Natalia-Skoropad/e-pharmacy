@@ -28,6 +28,7 @@ export type AdminPharmacyListItem = Readonly<{
   imageUrl?: string;
   location?: PharmacyLocationDraft;
   status: PharmacyStatus;
+  reviewState?: 'pending' | 'changes_requested';
   createdAt: ISODateTimeString;
   owner: AdminPharmacyOwnerLink | null;
   activeClientsCount: number;

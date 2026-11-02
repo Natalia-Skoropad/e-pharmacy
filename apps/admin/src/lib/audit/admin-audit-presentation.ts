@@ -400,6 +400,17 @@ function isKnownAuditStatus(value: string): value is KnownAuditStatus {
 export function getAdminAuditChangeTone(
   item: Pick<AdminAuditListItem, 'action' | 'statusAfter'>
 ): StatusPresentationTone {
+  // A verification review-state change is still a pharmacy status event,
+  // even when the main status stayed On verification. This also covers
+  // historical submissions without statusBefore/statusAfter in the list DTO.
+  if (
+    (item.action === 'pharmacy.corrections.requested' ||
+      item.action === 'pharmacy.moderation.submitted') &&
+    !item.statusAfter
+  ) {
+    return PHARMACY_STATUS_PRESENTATION.on_verification.tone;
+  }
+
   if (item.statusAfter && isKnownAuditStatus(item.statusAfter)) {
     return STATUS_PRESENTATION_BY_VALUE[item.statusAfter].tone;
   }

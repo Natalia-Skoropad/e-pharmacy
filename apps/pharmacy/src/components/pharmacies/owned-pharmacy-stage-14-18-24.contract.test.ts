@@ -34,10 +34,8 @@ test('14.18.24: tabs respond to the first click and synchronize with URL changes
   assert.doesNotMatch(detail, /useEffect\(\(\) => setVisibleTab/);
   assert.match(detail, /activeValue=\{visibleTab\}/);
 
-  assert.match(
-    detail,
-    /loading && \['data', 'about', 'payment', 'documents'\]/
-  );
+  assert.match(detail, /result\?\.tab === activeTab/);
+  assert.match(detail, /visibleTab === activeTab/);
 
   assert.match(detail, /<ProfileSectionHeader[\s\S]*?<ProfileResourceState/);
 });
@@ -74,6 +72,6 @@ test('14.18.24: created status is human-readable and disabled verification toolt
   assert.match(info, /fallback="Created"/);
   assert.match(info, /event\.action === 'pharmacy\.deleted'/);
   assert.match(actions, /tooltipTitle="Verification requirements"/);
-  assert.match(actions, /items=\{\[\{/);
+  assert.match(actions, /items=\{\[/);
   assert.match(actions, /escapeOverflow/);
 });

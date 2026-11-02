@@ -6,6 +6,7 @@ import {
 } from '../../constants/admin/audit/admin-audit';
 
 import { getPharmacyMembership } from './pharmacy-membership.service';
+import { resolvePharmacyAuditStatusContext } from './pharmacy-audit-status-context';
 
 //===================================================================
 
@@ -70,18 +71,32 @@ export async function listOwnedPharmacyLifecycleHistoryService(
     page,
     hasMore: entries.length > PAGE_SIZE,
 
-    items: entries.slice(0, PAGE_SIZE).map((entry) => ({
-      id: String(entry._id),
-      action: entry.action,
-      actor: entry.actorNameSnapshot,
-      createdAt: entry.createdAt.toISOString(),
+    items: entries.slice(0, PAGE_SIZE).map((entry) => {
+      const statusContext = resolvePharmacyAuditStatusContext({
+        action: entry.action,
+        before: entry.before,
+        after: entry.after,
+      });
 
-      ...(entry.reason ? { reason: entry.reason } : {}),
+      return {
+        id: String(entry._id),
+        action: entry.action,
+        actor: entry.actorNameSnapshot,
+        createdAt: entry.createdAt.toISOString(),
 
-      previousStatus: entry.before?.status ?? null,
-      nextStatus: entry.after?.status ?? null,
-      previousReviewState: entry.before?.reviewState ?? null,
-      nextReviewState: entry.after?.reviewState ?? null,
-    })),
+        ...(entry.reason ? { reason: entry.reason } : {}),
+
+        previousStatus: statusContext.previousStatus,
+        nextStatus: statusContext.nextStatus,
+        previousReviewState: entry.before?.reviewState ?? null,
+
+        // Historical corrections may not have a reviewState after snapshot.
+        nextReviewState:
+          entry.after?.reviewState ??
+          (entry.action === ADMIN_AUDIT_ACTIONS.PHARMACY_CORRECTIONS_REQUESTED
+            ? 'changes_requested'
+            : null),
+      };
+    }),
   };
 }

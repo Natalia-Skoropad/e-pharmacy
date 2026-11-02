@@ -96,6 +96,7 @@ function optionalNonEmptyString(
 
 function requireObjectId(value: unknown, label: string): string {
   const id = requireNonEmptyString(value, label);
+
   if (!isValidObjectId(id)) throw new TypeError(`Invalid ${label}.`);
 
   return id;
@@ -528,6 +529,11 @@ function parseOwnerPharmacy(value: unknown): AdminPharmacyOwnerPharmacySummary {
 
     createdAt: requireIsoDateTime(record.createdAt, 'owner pharmacy createdAt'),
     status: record.status,
+
+    ...(record.reviewState === 'pending' ||
+    record.reviewState === 'changes_requested'
+      ? { reviewState: record.reviewState }
+      : {}),
 
     activeClientsCount: requireNonNegativeInteger(
       record.activeClientsCount,

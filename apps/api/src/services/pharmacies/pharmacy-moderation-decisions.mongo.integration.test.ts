@@ -188,12 +188,58 @@ test(
         `resubmit-${marker}`
       );
 
+      assert.equal(resubmitted.pharmacy.reviewState, 'pending');
+
+      // Regression: requesting corrections for a second time must be a new
+      // pending → changes_requested review decision even when the main
+      // pharmacy status stays On moderation throughout the whole cycle.
+      const secondCorrections = await decidePharmacyModerationByAdminService(
+        pharmacyKey,
+
+        decision(
+          'request_corrections',
+          resubmitted.pharmacy.updatedAt,
+          `corrections-again-${marker}`,
+          'Replace the incorrect documents before resubmitting.'
+        ),
+
+        actorKey
+      );
+
+      assert.equal(secondCorrections.status, 'on_moderation');
+      assert.equal(secondCorrections.reviewState, 'changes_requested');
+
+      const lastCorrectionsAudit = await AdminAuditLog.findOne({
+        mutationKey: `corrections-again-${marker}`,
+      });
+
+      assert.equal(lastCorrectionsAudit?.before?.reviewState, 'pending');
+
+      assert.equal(
+        lastCorrectionsAudit?.after?.reviewState,
+        'changes_requested'
+      );
+
+      assert.equal(lastCorrectionsAudit?.before?.status, 'on_moderation');
+      assert.equal(lastCorrectionsAudit?.after?.status, 'on_moderation');
+
+      const submittedAgain = await submitMyPharmacyModerationService(
+        ownerKey,
+        {
+          changes: {},
+          expectedRevision: secondCorrections.updatedAt,
+        },
+        `resubmit-again-${marker}`
+      );
+
+      assert.equal(submittedAgain.pharmacy.reviewState, 'pending');
+
       const approved = await decidePharmacyModerationByAdminService(
         pharmacyKey,
 
         decision(
           'approve',
-          resubmitted.pharmacy.updatedAt,
+          submittedAgain.pharmacy.updatedAt,
           `approve-${marker}`
         ),
 

@@ -169,7 +169,15 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
         >
           <dl className={`${css.detailsList} ${css.detailsTable}`}>
             <DetailField label="Pharmacy status">
-              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+              <span className={css.statusWithReview}>
+                <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+                {detail.reviewState === 'changes_requested' &&
+                (detail.status === 'on_verification' ||
+                  detail.status === 'on_moderation' ||
+                  detail.status === 'on_reactivation') ? (
+                  <StatusBadge label="Needs changes" tone="neutral" />
+                ) : null}
+              </span>
             </DetailField>
             <DetailField label="Pharmacy ID">{detail.id}</DetailField>
 

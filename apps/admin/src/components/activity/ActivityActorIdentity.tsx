@@ -35,17 +35,17 @@ export function ActivityActorIdentity({
   statusPlacement = 'stacked',
 }: ActivityActorIdentityProps) {
   const href = actor ? getAdminAuditActorHref(actor) : null;
+
   const actorLabel = actor
     ? `${actorNameSnapshot} (${getAdminAuditActorTypeLabel(actor.actorType)})`
     : actorNameSnapshot;
 
-  const status = showStatus ? (
-    actor ? (
+  // When an actor was deleted we retain the immutable name snapshot.
+  // Do not invent a user status ("Historical account" was not a real status).
+  const status =
+    showStatus && actor ? (
       <StatusBadge {...USER_STATUS_PRESENTATION[actor.status]} />
-    ) : (
-      <span className={css.employeeStatusFallback}>Historical account</span>
-    )
-  ) : null;
+    ) : null;
 
   const isInlineStatus = statusPlacement === 'inline';
 

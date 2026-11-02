@@ -258,12 +258,7 @@ function parseAuditValue(value: unknown, field: string): AdminAuditValue {
 
   // Pre-field-level legacy records can contain nested data. Preserve a
   // human-readable JSON representation rather than rejecting the entire log.
-  if (
-    typeof value === 'object' &&
-    value !== null &&
-    field !== 'status' &&
-    !field.endsWith('.status')
-  ) {
+  if (typeof value === 'object' && value !== null) {
     const serialized = JSON.stringify(value);
 
     return serialized && serialized.length > 1900
@@ -271,12 +266,13 @@ function parseAuditValue(value: unknown, field: string): AdminAuditValue {
       : (serialized ?? null);
   }
 
-  throw new TypeError('Invalid audit snapshot value.');
+  throw new TypeError(`Invalid audit snapshot value for ${field}.`);
 }
 
 //===================================================================
 
 function parseAuditSnapshot(value: unknown): AdminAuditSnapshot {
+  if (value == null) return {};
   if (!isRecord(value)) throw new TypeError('Invalid audit snapshot.');
 
   return Object.fromEntries(
@@ -368,10 +364,9 @@ function parseAuditActor(value: unknown): AdminAuditActor {
   if (
     typeof value.id !== 'string' ||
     typeof value.name !== 'string' ||
-    typeof value.email !== 'string' ||
-    typeof value.phone !== 'string' ||
-    value.address !== undefined ||
-    (value.pictureUrl !== undefined && typeof value.pictureUrl !== 'string') ||
+    (value.email != null && typeof value.email !== 'string') ||
+    (value.phone != null && typeof value.phone !== 'string') ||
+    (value.pictureUrl != null && typeof value.pictureUrl !== 'string') ||
     (value.role !== 'admin' && value.role !== 'pharmacy') ||
     !isAdminAuditActorType(value.actorType) ||
     (value.role === 'admin' && value.actorType !== 'employee') ||
@@ -388,8 +383,8 @@ function parseAuditActor(value: unknown): AdminAuditActor {
   return {
     id: value.id,
     name: value.name,
-    email: value.email,
-    phone: value.phone,
+    email: typeof value.email === 'string' ? value.email : '',
+    phone: typeof value.phone === 'string' ? value.phone : '',
 
     ...(typeof value.pictureUrl === 'string'
       ? { pictureUrl: value.pictureUrl }

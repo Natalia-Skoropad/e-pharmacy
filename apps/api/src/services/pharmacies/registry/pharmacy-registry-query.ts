@@ -178,6 +178,7 @@ export function buildPagedPharmacyItemsPipeline(
         imageUrl: { $ifNull: ['$imageUrl', null] },
         createdAt: 1,
         status: 1,
+        reviewState: { $ifNull: ['$reviewState', null] },
 
         ...(includeOwnerId ? { ownerId: 1 } : {}),
 

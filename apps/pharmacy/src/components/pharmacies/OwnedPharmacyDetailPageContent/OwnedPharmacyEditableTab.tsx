@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, type ChangeEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { Save } from 'lucide-react';
 
 import type {
@@ -62,6 +63,7 @@ import css from './OwnedPharmacyDetailPageContent.module.css';
 
 type Props = Readonly<{
   tab: PharmacyEditorTab;
+  headerActionTarget: HTMLDivElement | null;
   pharmacy: MyPharmacyProfile;
   onSaved: () => void;
   readOnly?: boolean;
@@ -72,6 +74,7 @@ type Props = Readonly<{
 /** Reuse Create pharmacy's canonical form fields, validators and documents UI. */
 export function OwnedPharmacyEditableTab({
   tab,
+  headerActionTarget,
   pharmacy,
   onSaved,
   readOnly = false,
@@ -446,16 +449,13 @@ export function OwnedPharmacyEditableTab({
 
   return (
     <>
+      {headerAction && headerActionTarget
+        ? createPortal(headerAction, headerActionTarget)
+        : null}
       <div className={css.formStack}>
-        {tab === 'data' && headerAction ? (
-          <div className={css.dataMobileAction}>{headerAction}</div>
-        ) : null}
         <OwnedPharmacyEditorTabContent
           tab={tab}
-          headerAction={headerAction}
-          headerActionClassName={
-            tab === 'data' && headerAction ? css.dataDesktopAction : undefined
-          }
+          suppressSectionHeading
           values={values}
           busy={readOnly ? 'save' : busy}
           errors={errors}

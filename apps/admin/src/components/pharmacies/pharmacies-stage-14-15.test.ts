@@ -54,7 +54,7 @@ test('14.15: only the selected tab mounts its own lazy private resource', async 
 
 //===================================================================
 
-test('14.15: admin documents are read-only; preview is MIME-restricted and private', async () => {
+test('14.18: admin documents reuse the admin-profile read-only view without preview', async () => {
   const docs = await read(
     './PharmacyDetailsPageContent/PharmacyDocumentsTab.tsx'
   );
@@ -77,9 +77,8 @@ test('14.15: admin documents are read-only; preview is MIME-restricted and priva
   );
 
   assert.match(docs, /downloadAdminPharmacyDocument\(pharmacyId, documentId/);
-  assert.match(docs, /PREVIEW_TYPES/);
-  assert.doesNotMatch(docs, /'image\/svg\+xml'|'text\/html'/);
-  assert.match(docs, /sandbox="allow-scripts"/);
+  assert.match(docs, /required/);
+  assert.doesNotMatch(docs, /onPreviewFile=|PREVIEW_TYPES/);
   assert.match(docs, /URL\.revokeObjectURL/);
   assert.match(browser, /responseType: 'blob'/);
   assert.match(backend, /pharmacyId, \/\/ never trust documentId alone/);
@@ -134,7 +133,7 @@ test('14.15: pharmacy comments reuse shared UI and are scoped, audited, idempote
   assert.match(service, /ADMIN_AUDIT_ACTIONS\.PHARMACY_COMMENT_CREATED/);
   assert.match(service, /ADMIN_AUDIT_ACTIONS\.PHARMACY_COMMENT_DELETED/);
   assert.match(service, /scopeEntityId: pharmacyId/);
-  assert.match(service, /Audit deliberately excludes the private body/);
+  assert.match(service, /text: comment\.text/);
   assert.doesNotMatch(owner, /\/pharmacies\/:pharmacyId\/comments/);
   assert.match(routes, /ADMIN_PERMISSIONS\.pharmacies\.view/);
   assert.match(routes, /ADMIN_PERMISSIONS\.pharmacies\.edit/);

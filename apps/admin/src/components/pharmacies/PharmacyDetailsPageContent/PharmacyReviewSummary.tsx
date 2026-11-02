@@ -12,6 +12,7 @@ import css from './PharmacyReviewSummary.module.css';
 //===================================================================
 
 type Section = 'data' | 'about' | 'payment';
+
 type Change = Readonly<{
   field: string;
   label: string;
@@ -145,12 +146,15 @@ export function PharmacyReviewSummary({
 }: Readonly<{ detail: AdminPharmacyDetail; section: Section }>) {
   const changed = getAdminPharmacySectionChanges(detail, section);
 
+  if (detail.reviewState === 'changes_requested') return null;
+
   if (!changed.length && !detail.reviewFeedback) return null;
 
-  const isSubmitted =
-    ['on_verification', 'on_moderation', 'on_reactivation'].includes(
-      detail.status
-    ) && detail.reviewState !== 'changes_requested';
+  const isSubmitted = [
+    'on_verification',
+    'on_moderation',
+    'on_reactivation',
+  ].includes(detail.status);
 
   return (
     <section
@@ -234,8 +238,10 @@ export function PharmacySubmittedChangesSummary({
     });
   }
 
-  if (!changes.length)
-    return <p>No submitted profile changes are available for this decision.</p>;
+  // A verification decision can have no proposed profile fields (for example,
+  // the pharmacy was first submitted with its already saved data). Do not show
+  // a misleading empty-change message in the moderation dialog.
+  if (!changes.length) return null;
 
   return (
     <section

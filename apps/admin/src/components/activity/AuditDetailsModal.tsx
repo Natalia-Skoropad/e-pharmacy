@@ -1,7 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import {
   CalendarClock,
+  ChevronDown,
+  ChevronUp,
   Fingerprint,
   FilePenLine,
   History,
@@ -12,9 +16,15 @@ import {
   UserRound,
 } from 'lucide-react';
 
-import { DataTable, type DataTableColumn } from '@e-pharmacy/ui/data-display';
+import {
+  DataTable,
+  MarkdownContent,
+  WorkingHours,
+  type DataTableColumn,
+} from '@e-pharmacy/ui/data-display';
+
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
-import { CloseIconButton } from '@e-pharmacy/ui/primitives';
+import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
@@ -36,6 +46,7 @@ import {
 } from '@/lib/audit/admin-audit-fields';
 
 import type { AdminAuditValue } from '@/lib/audit/admin-audit';
+import { getAdminPharmacyComments } from '@/lib/api/browser/admin-pharmacy-detail.api';
 
 import { ActivityActorIdentity } from './ActivityActorIdentity';
 import { ActivityPageLink, ActivitySectionLink } from './ActivitySectionLink';
@@ -62,14 +73,59 @@ type AuditChangeRow = Readonly<{
   before: AdminAuditValue | undefined;
   after: AdminAuditValue | undefined;
   deletedDraft?: boolean;
+  beforeStatus?: string;
+  afterStatus?: string;
 }>;
+
+//===================================================================
+
+function AuditLongText({ value }: Readonly<{ value: string }>) {
+  const [expanded, setExpanded] = useState(false);
+  const canExpand = value.length > 180 || value.split('\n').length > 5;
+
+  return (
+    <div className={css.auditLongText}>
+      <div
+        className={[
+          css.auditTextContent,
+          !expanded && canExpand ? css.auditTextCollapsed : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <MarkdownContent value={value} />
+      </div>
+      {canExpand ? (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          fullWidth
+          className={css.auditExpandButton}
+          iconLeft={
+            expanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />
+          }
+          aria-expanded={expanded}
+          onClick={() => setExpanded((current) => !current)}
+        >
+          {expanded ? 'Show less' : 'Show more'}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
 
 //===================================================================
 
 function RenderAuditValue({
   value,
+  field,
   isStatus = false,
-}: Readonly<{ value: AdminAuditValue | undefined; isStatus?: boolean }>) {
+}: Readonly<{
+  value: AdminAuditValue | undefined;
+  field: string;
+  isStatus?: boolean;
+}>) {
   const color = getAuditColorSwatch(value);
 
   const status =
@@ -78,7 +134,7 @@ function RenderAuditValue({
       : null;
 
   return (
-    <span className={css.changeValue}>
+    <div className={css.changeValue}>
       {color ? (
         <span
           className={css.colorSwatch}
@@ -86,8 +142,19 @@ function RenderAuditValue({
           aria-label={`Color ${color}`}
         />
       ) : null}
-      {status ? <StatusBadge {...status} /> : formatAdminAuditValue(value)}
-    </span>
+      {status ? (
+        <StatusBadge {...status} />
+      ) : field === 'workingHours' &&
+        typeof value === 'string' &&
+        value.trim() ? (
+        <WorkingHours value={value} />
+      ) : ['description', 'shortDescription', 'text'].includes(field) &&
+        typeof value === 'string' ? (
+        <AuditLongText value={value} />
+      ) : (
+        formatAdminAuditValue(value)
+      )}
+    </div>
   );
 }
 
@@ -114,11 +181,19 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
     width: '25%',
 
     render: (item) =>
-      item.deletedDraft ? (
+      item.field === 'reviewState' && item.beforeStatus ? (
+        <div className={css.changeValue}>
+          <RenderAuditValue value={item.beforeStatus} field="status" isStatus />
+          {item.before === 'changes_requested' ? (
+            <StatusBadge label="Needs changes" tone="neutral" />
+          ) : null}
+        </div>
+      ) : item.deletedDraft ? (
         <StatusBadge {...getAdminAuditStatusPresentation('new')!} />
       ) : (
         <RenderAuditValue
           value={item.before}
+          field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
       ),
@@ -129,11 +204,19 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
     width: '25%',
 
     render: (item) =>
-      item.deletedDraft ? (
+      item.field === 'reviewState' && item.afterStatus ? (
+        <div className={css.changeValue}>
+          <RenderAuditValue value={item.afterStatus} field="status" isStatus />
+          {item.after === 'changes_requested' ? (
+            <StatusBadge label="Needs changes" tone="neutral" />
+          ) : null}
+        </div>
+      ) : item.deletedDraft ? (
         <span className={css.changeValue}>Pharmacy delete</span>
       ) : (
         <RenderAuditValue
           value={item.after}
+          field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
       ),
@@ -168,19 +251,149 @@ export function AuditDetailsModal({
   onRetry,
 }: AuditDetailsModalProps) {
   const titleId = 'admin-audit-details-title';
+
+  // For old admin-comment entries the body was never persisted in audit.
+  // Resolve an existing comment through the same protected Admin endpoint
+  // instead of pretending that history contains data it never stored.
+  const [commentText, setCommentText] = useState<{
+    auditId: string;
+    text: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (
+      !isOpen ||
+      !details ||
+      details.action !== 'pharmacy.comment.created' ||
+      typeof details.after.text === 'string'
+    )
+      return;
+
+    const pharmacyId =
+      details.pharmacyId ??
+      (details.scopeEntityType === 'pharmacy'
+        ? details.scopeEntityId
+        : undefined);
+
+    if (!pharmacyId) return;
+
+    const controller = new AbortController();
+
+    void getAdminPharmacyComments(pharmacyId, { signal: controller.signal })
+      .then(({ comments }) => {
+        const comment = comments.find((item) => item.id === details.entityId);
+
+        if (!controller.signal.aborted && comment) {
+          setCommentText({ auditId: details.id, text: comment.text });
+        }
+      })
+      .catch(() => {
+        // Historical or deleted comments may no longer be available.
+      });
+
+    return () => controller.abort();
+  }, [details, isOpen]);
+
   const tone = details ? getAdminAuditChangeTone(details) : 'info';
   const toneClassName = getChangeToneClassName(tone);
 
+  // Older records can contain both the technical status and reviewState
+  // fields, or the previous administrator feedback cleared by an owner.
+  // Display one meaningful lifecycle transition without changing stored logs.
+  const reviewFields = details?.changedFields ?? [];
+
+  const visibleFields = reviewFields.filter((field) => {
+    if (details?.entityType !== 'pharmacy') return true;
+
+    if (field === 'status' && reviewFields.includes('reviewState'))
+      return false;
+
+    // Feedback belongs to the request-corrections decision that created it.
+    // Do not present its later cleanup as a new owner/admin status change.
+    if (
+      field === 'reviewFeedback' &&
+      details?.action !== 'pharmacy.corrections.requested'
+    ) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Older verification resubmissions can have only reviewState in audit
+  // snapshots (changes_requested -> pending), with no unchanged status.
+  // Infer the familiar verification status for those historic entries.
+  const legacyResubmission =
+    details?.entityType === 'pharmacy' &&
+    details.action === 'pharmacy.moderation.submitted' &&
+    details.before.reviewState === 'changes_requested' &&
+    details.after.reviewState === 'pending' &&
+    !details.before.status &&
+    !details.after.status;
+
+  const reviewStatusFallback =
+    legacyResubmission || details?.action === 'pharmacy.corrections.requested'
+      ? 'on_verification'
+      : undefined;
+
+  const canInferSameStatus =
+    legacyResubmission || details?.action === 'pharmacy.corrections.requested';
+
+  const storedBeforeStatus =
+    details && typeof details.before.status === 'string'
+      ? details.before.status
+      : undefined;
+
+  const storedAfterStatus =
+    details && typeof details.after.status === 'string'
+      ? details.after.status
+      : undefined;
+
+  const beforeStatus =
+    storedBeforeStatus ??
+    details?.statusBefore ??
+    (canInferSameStatus
+      ? (storedAfterStatus ?? reviewStatusFallback)
+      : undefined);
+
+  const afterStatus =
+    storedAfterStatus ??
+    details?.statusAfter ??
+    (canInferSameStatus
+      ? (storedBeforeStatus ?? reviewStatusFallback)
+      : undefined);
+
   const changeRows: AuditChangeRow[] = details
-    ? details.changedFields.map((field) => ({
+    ? visibleFields.map((field) => ({
         field,
-        label: getAdminAuditChangedFieldLabel(field, details.entityType),
+
+        label:
+          field === 'reviewState' && details.entityType === 'pharmacy'
+            ? 'Pharmacy status'
+            : getAdminAuditChangedFieldLabel(field, details.entityType),
+
+        beforeStatus,
+        afterStatus,
         before: details.before[field],
         after: details.after[field],
+
         deletedDraft:
           details.action === 'pharmacy.deleted' && field === 'exists',
       }))
     : [];
+
+  if (
+    details?.action === 'pharmacy.comment.created' &&
+    !details.changedFields.includes('text') &&
+    commentText?.auditId === details.id
+  ) {
+    changeRows.push({
+      field: 'text',
+      label: 'Comment text',
+      before: null,
+      after: commentText.text,
+    });
+  }
 
   return (
     <ModalRoot>
@@ -322,7 +535,9 @@ export function AuditDetailsModal({
                 </span>
                 <span className={css.detailsReasonCopy}>
                   <strong>Reason / description</strong>
-                  {details.reason ? <span>{details.reason}</span> : null}
+                  {details.reason ? (
+                    <AuditLongText value={details.reason} />
+                  ) : null}
                 </span>
               </section>
             ) : null}

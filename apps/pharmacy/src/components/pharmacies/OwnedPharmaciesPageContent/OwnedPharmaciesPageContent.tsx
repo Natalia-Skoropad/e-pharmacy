@@ -456,7 +456,15 @@ export function OwnedPharmaciesPageContent({
         title: <TableHeaderTitle parts={['Pharmacy', 'status']} />,
 
         render: (pharmacy) => (
-          <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+          <div style={{ display: 'grid', justifyItems: 'start', gap: 5 }}>
+            <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+            {pharmacy.reviewState === 'changes_requested' &&
+            ['on_verification', 'on_moderation', 'on_reactivation'].includes(
+              pharmacy.status
+            ) ? (
+              <StatusBadge label="Needs changes" tone="neutral" />
+            ) : null}
+          </div>
         ),
       },
     ],

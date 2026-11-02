@@ -632,6 +632,8 @@ export function OwnedPharmacyActions({
         }
         confirmLabel={`Cancel ${cancelReview ?? 'review'}`}
         cancelLabel="Keep request"
+        confirmIconLeft={<XCircle size={17} />}
+        cancelIconLeft={<ShieldCheck size={17} />}
         destructive={cancelReview === 'moderation'}
         isLoading={busy}
         onConfirm={() => void confirmCancellation()}
@@ -676,50 +678,60 @@ export function OwnedPharmacyActions({
                 ? 'Your pharmacy will remain unavailable while the administrator reviews this frozen version. You cannot edit or cancel the request until the administrator responds.'
                 : 'The administrator will review the submitted version. You cannot edit your pharmacy or cancel the request while the review is pending. This may take several days.'
           }
+          headerDetails={
+            <div className={css.reviewJourneyTransition}>
+              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+              {action === 'verification' &&
+              pharmacy.reviewState === 'changes_requested' ? (
+                <StatusBadge label="Needs changes" tone="neutral" />
+              ) : null}
+              <span aria-hidden="true">→</span>
+              <StatusBadge
+                {...PHARMACY_STATUS_PRESENTATION[
+                  (action === 'verification'
+                    ? 'on_verification'
+                    : action === 'moderation'
+                      ? 'on_moderation'
+                      : action === 'reactivate'
+                        ? 'on_reactivation'
+                        : 'blocked') as PharmacyStatus
+                ]}
+              />
+            </div>
+          }
           details={
             <div className={css.reviewJourney}>
-              <div className={css.reviewJourneyTransition}>
-                <StatusBadge
-                  {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
-                />
-                <span aria-hidden="true">→</span>
-
-                <StatusBadge
-                  {...PHARMACY_STATUS_PRESENTATION[
-                    (action === 'verification'
-                      ? 'on_verification'
-                      : action === 'moderation'
-                        ? 'on_moderation'
-                        : action === 'reactivate'
-                          ? 'on_reactivation'
-                          : 'blocked') as PharmacyStatus
-                  ]}
-                />
-              </div>
               {action === 'verification' ? (
                 <div className={css.reviewJourneyOutcomes}>
                   <strong>What happens next?</strong>
-                  <span>Possible decisions:</span>
 
-                  <div className={css.reviewJourneyTransition}>
-                    <StatusBadge {...PHARMACY_STATUS_PRESENTATION.active} />
-                    <span>Approved</span>
-                  </div>
+                  <ul className={css.reviewJourneyList}>
+                    <li className={css.reviewJourneyItem}>
+                      <div className={css.reviewJourneyBadges}>
+                        <StatusBadge {...PHARMACY_STATUS_PRESENTATION.active} />
+                      </div>
+                      <span>Approved</span>
+                    </li>
 
-                  <div className={css.reviewJourneyTransition}>
-                    <StatusBadge
-                      {...PHARMACY_STATUS_PRESENTATION.on_verification}
-                    />
-                    <span>
-                      Needs changes — editing reopens after the administrator
-                      requests corrections
-                    </span>
-                  </div>
+                    <li className={css.reviewJourneyItem}>
+                      <div className={css.reviewJourneyBadges}>
+                        <StatusBadge
+                          {...PHARMACY_STATUS_PRESENTATION.on_verification}
+                        />
+                        <StatusBadge label="Needs changes" tone="neutral" />
+                      </div>
+                      <span>The pharmacy requires corrections.</span>
+                    </li>
 
-                  <div className={css.reviewJourneyTransition}>
-                    <StatusBadge {...PHARMACY_STATUS_PRESENTATION.blocked} />
-                    <span>Blocked — if a serious violation is identified</span>
-                  </div>
+                    <li className={css.reviewJourneyItem}>
+                      <div className={css.reviewJourneyBadges}>
+                        <StatusBadge
+                          {...PHARMACY_STATUS_PRESENTATION.blocked}
+                        />
+                      </div>
+                      <span>If a serious violation is identified</span>
+                    </li>
+                  </ul>
                 </div>
               ) : null}
               {action === 'moderation' ? (

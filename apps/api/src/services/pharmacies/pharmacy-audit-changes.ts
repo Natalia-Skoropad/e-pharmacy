@@ -1,29 +1,48 @@
 import { createHash } from 'node:crypto';
 
-import type { AdminAuditValue } from '../../types/admin/audit/admin-audit';
+import type {
+  AdminAuditSnapshot,
+  AdminAuditValue,
+} from '../../types/admin/audit/admin-audit';
+
 import type { PharmacyEntity } from '../../types/pharmacies/pharmacy';
 
 //===============================================================
 
-type PharmacySnapshot = Pick<
-  PharmacyEntity,
-  | 'name'
-  | 'phone'
-  | 'email'
-  | 'location'
-  | 'imageUrl'
-  | 'description'
-  | 'shortDescription'
-  | 'workingHours'
-  | 'bankDetails'
-  | 'documents'
-  | 'status'
-  | 'reviewState'
-  | 'reviewFeedback'
-  | 'blockSource'
-  | 'statusReason'
-  | 'pendingModeration'
->;
+type PharmacySnapshot = Omit<
+  Pick<
+    PharmacyEntity,
+    | 'name'
+    | 'phone'
+    | 'email'
+    | 'location'
+    | 'imageUrl'
+    | 'description'
+    | 'shortDescription'
+    | 'workingHours'
+    | 'bankDetails'
+    | 'documents'
+    | 'status'
+    | 'reviewState'
+    | 'reviewFeedback'
+    | 'blockSource'
+    | 'statusReason'
+    | 'pendingModeration'
+  >,
+  'reviewState' | 'reviewFeedback'
+> & {
+  // MongoDB snapshots can contain null for these optional review fields.
+  reviewState?: PharmacyEntity['reviewState'] | null;
+  reviewFeedback?: PharmacyEntity['reviewFeedback'] | null;
+};
+
+//===================================================================
+
+type PharmacyAuditChanges = Readonly<{
+  before: AdminAuditSnapshot;
+  after: AdminAuditSnapshot;
+  changedFields: string[];
+}>;
 
 //===============================================================
 
@@ -115,13 +134,29 @@ export function buildPharmacyAuditChanges(
   before: PharmacySnapshot,
   after: PharmacySnapshot,
   actionDescription: string
-) {
+): PharmacyAuditChanges {
   const oldValues = snapshot(before);
   const newValues = snapshot(after);
 
+  // Review feedback belongs to the administrator's corrections event.
+  // Clearing that old message when the owner cancels/resubmits is not a
+  // new administrator decision and must not appear in its audit Changes.
+  const isCorrectionsDecision = actionDescription === 'request_corrections';
+
   const changedFields = Object.keys(newValues).filter(
-    (field) => oldValues[field] !== newValues[field]
+    (field) =>
+      oldValues[field] !== newValues[field] &&
+      (field !== 'reviewFeedback' || isCorrectionsDecision)
   );
+
+  // A single lifecycle transition has one status row. The underlying status
+  // and reviewState must both remain available as context for that row.
+  if (
+    changedFields.includes('reviewState') &&
+    changedFields.includes('status')
+  ) {
+    changedFields.splice(changedFields.indexOf('status'), 1);
+  }
 
   if (!changedFields.length) {
     // Some valid review actions don't change a profile field. Preserve the
@@ -133,15 +168,21 @@ export function buildPharmacyAuditChanges(
     };
   }
 
-  return {
-    before: Object.fromEntries(
-      changedFields.map((field) => [field, oldValues[field]])
-    ),
+  const hasReviewTransition = changedFields.includes('reviewState');
+  const auditBefore: Record<string, AdminAuditValue> = {};
+  const auditAfter: Record<string, AdminAuditValue> = {};
 
-    after: Object.fromEntries(
-      changedFields.map((field) => [field, newValues[field]])
-    ),
+  for (const field of changedFields) {
+    auditBefore[field] = oldValues[field] ?? null;
+    auditAfter[field] = newValues[field] ?? null;
+  }
 
-    changedFields,
-  };
+  if (hasReviewTransition) {
+    // Preserve unchanged status as context for the status badges.
+    // It is not a second entry in changedFields.
+    auditBefore.status = oldValues.status ?? null;
+    auditAfter.status = newValues.status ?? null;
+  }
+
+  return { before: auditBefore, after: auditAfter, changedFields };
 }

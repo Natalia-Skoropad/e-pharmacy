@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Files, X } from 'lucide-react';
+import { Files } from 'lucide-react';
 
 import type { AdminPharmacyDocument } from '@e-pharmacy/types/admin';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { ModalBase } from '@e-pharmacy/ui/overlays';
 import { DocumentsPanel, ProfileResourceState } from '@e-pharmacy/ui/profile';
-import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
   PHARMACY_DOCUMENT_ACCEPT,
@@ -20,21 +18,9 @@ import {
   getAdminPharmacyDocuments,
 } from '@/lib/api/browser/admin-pharmacy-detail.api';
 
-import css from './PharmacyResourceTabs.module.css';
-
 //===================================================================
 
 type ResourceStatus = 'loading' | 'success' | 'error';
-type Preview = Readonly<{ url: string; name: string; kind: 'image' | 'pdf' }>;
-
-//===================================================================
-
-const PREVIEW_TYPES: Readonly<Record<string, Preview['kind']>> = {
-  'application/pdf': 'pdf',
-  'image/jpeg': 'image',
-  'image/png': 'image',
-  'image/webp': 'image',
-};
 
 //===================================================================
 
@@ -67,8 +53,6 @@ export function PharmacyDocumentsTab({
   const [loadedId, setLoadedId] = useState<string | null>(null);
   const [status, setStatus] = useState<ResourceStatus>('loading');
   const [reloadVersion, setReloadVersion] = useState(0);
-  const [preview, setPreview] = useState<Preview | null>(null);
-  const [previewLoadingId, setPreviewLoadingId] = useState<string | null>(null);
   const downloadsRef = useRef(new Set<AbortController>());
   const urlsRef = useRef(new Set<string>());
 
@@ -140,43 +124,6 @@ export function PharmacyDocumentsTab({
     return url;
   };
 
-  const closePreview = () => {
-    setPreview((current) => {
-      if (current) {
-        URL.revokeObjectURL(current.url);
-        urlsRef.current.delete(current.url);
-      }
-
-      return null;
-    });
-  };
-
-  const openPreview = async (file: BrowserUploadFile) => {
-    if (previewLoadingId || !PREVIEW_TYPES[file.type.toLowerCase()]) return;
-
-    setPreviewLoadingId(file.id);
-
-    try {
-      const blob = await loadFile(file.id);
-
-      if (!blob) return;
-
-      const kind = PREVIEW_TYPES[file.type.toLowerCase()];
-
-      if (!kind) return;
-
-      // Pin the MIME to a safe preview type; never render HTML/SVG uploads.
-      const url = registerUrl(
-        new Blob([blob], { type: file.type.toLowerCase() })
-      );
-
-      closePreview();
-      setPreview({ url, name: file.name, kind });
-    } finally {
-      setPreviewLoadingId(null);
-    }
-  };
-
   const downloadFile = async (file: BrowserUploadFile): Promise<string> => {
     if (!file.documentId) return '';
 
@@ -206,6 +153,7 @@ export function PharmacyDocumentsTab({
         headerIcon={<Files size={22} />}
         value={effectiveStatus === 'success' ? files : []}
         editable={false}
+        required
         readOnlyUploadView={effectiveStatus === 'success'}
         disabled={effectiveStatus !== 'success'}
         maxFiles={PHARMACY_DOCUMENT_RULES.maxFiles}
@@ -238,47 +186,7 @@ export function PharmacyDocumentsTab({
           ) : null
         }
         onDownloadFile={downloadFile}
-        onPreviewFile={openPreview}
       />
-
-      <ModalBase
-        isOpen={Boolean(preview)}
-        ariaLabel={preview ? `Preview ${preview.name}` : 'Document preview'}
-        onClose={closePreview}
-        dialogClassName={css.previewDialog}
-      >
-        {preview ? (
-          <div className={css.previewContent}>
-            <div className={css.previewHeader}>
-              <strong>{preview.name}</strong>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={closePreview}
-              >
-                <X size={18} aria-hidden="true" /> Close
-              </Button>
-            </div>
-            {preview.kind === 'image' ? (
-              // Blob URLs are local, created only from privately fetched safe image files.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={preview.url}
-                alt={preview.name}
-                className={css.previewImage}
-              />
-            ) : (
-              <iframe
-                title={`PDF preview of ${preview.name}`}
-                src={preview.url}
-                sandbox="allow-scripts"
-                className={css.previewFrame}
-              />
-            )}
-          </div>
-        ) : null}
-      </ModalBase>
     </>
   );
 }

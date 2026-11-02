@@ -184,7 +184,7 @@ test('14.17: only the active resource tab loads; future tabs remain informationa
 
 //===================================================================
 
-test('14.17: document UI is read-only, aborts requests and revokes private preview URLs', async () => {
+test('14.17: document UI is read-only, aborts requests and revokes private download URLs', async () => {
   const docs = await read(
     './PharmacyDetailsPageContent/PharmacyDocumentsTab.tsx'
   );
@@ -193,8 +193,8 @@ test('14.17: document UI is read-only, aborts requests and revokes private previ
   assert.match(docs, /new AbortController\(\)/);
   assert.match(docs, /controller\.abort\(\)/);
   assert.match(docs, /URL\.revokeObjectURL\(/);
-  assert.match(docs, /<ModalBase/);
-  assert.match(docs, /title=\{`PDF preview of \$\{preview\.name\}`\}/);
+  assert.match(docs, /<DocumentsPanel/);
+  assert.match(docs, /onDownloadFile=/);
 
   assert.doesNotMatch(
     docs,

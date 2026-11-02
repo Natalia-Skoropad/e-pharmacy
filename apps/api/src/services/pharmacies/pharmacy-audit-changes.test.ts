@@ -72,7 +72,7 @@ test('proposed payment changes include the exact field values before and after',
 
 //===============================================================
 
-test('status submission contains status and reviewState changes instead of a revision', () => {
+test('status submission has one reviewState transition with status context', () => {
   const after = {
     ...pharmacy,
     status: 'on_moderation',
@@ -81,7 +81,7 @@ test('status submission contains status and reviewState changes instead of a rev
 
   const result = buildPharmacyAuditChanges(pharmacy, after, 'Submitted');
 
-  assert.deepEqual(result.changedFields, ['status', 'reviewState']);
+  assert.deepEqual(result.changedFields, ['reviewState']);
   assert.equal(result.before.status, 'active');
   assert.equal(result.after.status, 'on_moderation');
 });
@@ -93,4 +93,98 @@ test('unchanged moderation actions keep a neutral event instead of a fabricated 
 
   assert.deepEqual(result.changedFields, ['event']);
   assert.equal(result.before.event, 'Reviewed');
+});
+
+//===============================================================
+
+test('owner cancellation shows On verification + Needs changes → New once', () => {
+  const before = {
+    ...pharmacy,
+    status: 'on_verification',
+    reviewState: 'changes_requested',
+    reviewFeedback: 'Previous administrator feedback',
+  } as Parameters<typeof buildPharmacyAuditChanges>[0];
+
+  const after = {
+    ...before,
+    status: 'new',
+    reviewState: null,
+    reviewFeedback: null,
+  } as Parameters<typeof buildPharmacyAuditChanges>[1];
+
+  const result = buildPharmacyAuditChanges(
+    before,
+    after,
+    'pharmacy.verification.withdrawn: status, reviewState'
+  );
+
+  assert.deepEqual(result.changedFields, ['reviewState']);
+  assert.equal(result.before.status, 'on_verification');
+  assert.equal(result.after.status, 'new');
+  assert.equal(result.before.reviewState, 'changes_requested');
+  assert.equal(result.after.reviewState, null);
+  assert.ok(!result.changedFields.includes('reviewFeedback'));
+});
+
+//===================================================================
+
+test('second corrections request is a same-status transition and records new feedback', () => {
+  const submitted = {
+    ...pharmacy,
+    status: 'on_verification',
+    reviewState: 'pending',
+    reviewFeedback: null,
+  } as Parameters<typeof buildPharmacyAuditChanges>[0];
+
+  const corrected = {
+    ...submitted,
+    reviewState: 'changes_requested',
+    reviewFeedback: 'Please replace the pharmacy documents.',
+  } as Parameters<typeof buildPharmacyAuditChanges>[1];
+
+  const result = buildPharmacyAuditChanges(
+    submitted,
+    corrected,
+    'request_corrections'
+  );
+
+  assert.deepEqual(result.changedFields, ['reviewState', 'reviewFeedback']);
+  assert.equal(result.before.status, 'on_verification');
+  assert.equal(result.after.status, 'on_verification');
+  assert.equal(result.before.reviewState, 'pending');
+  assert.equal(result.after.reviewState, 'changes_requested');
+
+  assert.equal(
+    result.after.reviewFeedback,
+    'Please replace the pharmacy documents.'
+  );
+});
+
+//===================================================================
+
+test('owner resubmission clears old feedback without reporting it as a new change', () => {
+  const before = {
+    ...pharmacy,
+    status: 'on_verification',
+    reviewState: 'changes_requested',
+    reviewFeedback: 'Please replace the pharmacy documents.',
+  } as Parameters<typeof buildPharmacyAuditChanges>[0];
+
+  const after = {
+    ...before,
+    reviewState: 'pending',
+    reviewFeedback: null,
+  } as Parameters<typeof buildPharmacyAuditChanges>[1];
+
+  const result = buildPharmacyAuditChanges(
+    before,
+    after,
+    'pharmacy.moderation.submitted: verificationSubmission'
+  );
+
+  assert.deepEqual(result.changedFields, ['reviewState']);
+  assert.equal(result.before.status, 'on_verification');
+  assert.equal(result.after.status, 'on_verification');
+  assert.equal(result.before.reviewState, 'changes_requested');
+  assert.equal(result.after.reviewState, 'pending');
 });

@@ -74,6 +74,7 @@ export type OwnedPharmacyEditorTabContentProps = Readonly<{
   tab: PharmacyEditorTab;
   headerAction?: ReactNode;
   headerActionClassName?: string;
+  suppressSectionHeading?: boolean;
   values: PharmacyEditorValues;
   busy: 'save' | 'verify' | 'upload' | null;
   errors: EditorErrors;
@@ -101,6 +102,7 @@ export function OwnedPharmacyEditorTabContent({
   tab,
   headerAction,
   headerActionClassName,
+  suppressSectionHeading = false,
   values,
   busy,
   errors,
@@ -123,17 +125,19 @@ export function OwnedPharmacyEditorTabContent({
       {tab === 'data' ? (
         <div className={css.tabContent}>
           <section className={css.profileBlock} aria-label="Pharmacy photo">
-            <ProfileSectionHeader
-              title={
-                <>
-                  Pharmacy photo <span className={css.required}>*</span>
-                </>
-              }
-              description="Clients see this photo on your pharmacy page and next to your pharmacy in search results and listings."
-              icon={<Camera size={22} aria-hidden="true" />}
-              action={headerAction}
-              actionClassName={headerActionClassName}
-            />
+            {!suppressSectionHeading ? (
+              <ProfileSectionHeader
+                title={
+                  <>
+                    Pharmacy photo <span className={css.required}>*</span>
+                  </>
+                }
+                description="Clients see this photo on your pharmacy page and next to your pharmacy in search results and listings."
+                icon={<Camera size={22} aria-hidden="true" />}
+                action={headerAction}
+                actionClassName={headerActionClassName}
+              />
+            ) : null}
 
             <div className={css.pictureColumn}>
               <PictureCard
@@ -251,12 +255,14 @@ export function OwnedPharmacyEditorTabContent({
       ) : null}
       {tab === 'about' ? (
         <div className={css.tabContent}>
-          <ProfileSectionHeader
-            title="About pharmacy"
-            description="Tell clients about the pharmacy, services and pickup information."
-            icon={<FileText size={22} aria-hidden="true" />}
-            action={headerAction}
-          />
+          {!suppressSectionHeading ? (
+            <ProfileSectionHeader
+              title="About pharmacy"
+              description="Tell clients about the pharmacy, services and pickup information."
+              icon={<FileText size={22} aria-hidden="true" />}
+              action={headerAction}
+            />
+          ) : null}
 
           <PharmacyAboutFields
             value={values.description}
@@ -269,12 +275,14 @@ export function OwnedPharmacyEditorTabContent({
       ) : null}
       {tab === 'payment' ? (
         <div className={css.tabContent}>
-          <ProfileSectionHeader
-            title="Payment details"
-            description="Payment information used for pharmacy orders."
-            icon={<CreditCard size={22} aria-hidden="true" />}
-            action={headerAction}
-          />
+          {!suppressSectionHeading ? (
+            <ProfileSectionHeader
+              title="Payment details"
+              description="Payment information used for pharmacy orders."
+              icon={<CreditCard size={22} aria-hidden="true" />}
+              action={headerAction}
+            />
+          ) : null}
 
           <PharmacyPaymentFields
             warnings={{
@@ -319,6 +327,7 @@ export function OwnedPharmacyEditorTabContent({
             title="Pharmacy documents"
             description="Upload the pharmacy documents needed for verification."
             headerIcon={<Files size={22} aria-hidden="true" />}
+            hideHeader={suppressSectionHeading}
             headerAction={headerAction}
             required
             value={documents.map(asBrowserFile)}

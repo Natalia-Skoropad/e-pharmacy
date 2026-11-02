@@ -7,6 +7,8 @@ import test from 'node:test';
 const read = (file: string) =>
   readFileSync(new URL(file, import.meta.url), 'utf8');
 
+//===================================================================
+
 const actions = read(
   './OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
 );
@@ -57,10 +59,7 @@ test('owner moderation and verification live in one accessible Admin-style dropd
 test('editable detail tabs use one Save changes action, without duplicate page headings', () => {
   assert.match(editor, /Save changes/);
 
-  assert.match(
-    detail,
-    /!\['data', 'about', 'payment', 'documents', 'comments'\]\.includes\(/
-  );
+  assert.match(detail, /visibleTab !== 'comments'/);
 
   // The loading skeleton must not render an extra heading above the editor.
   assert.doesNotMatch(detail, /loading && activeTab !== 'comments'\) \|\|/);
@@ -124,9 +123,9 @@ test('Save changes uses the shared header action on all editable tabs', () => {
     '../../../../../packages/ui/src/profile/DocumentsPanel.tsx'
   );
 
-  assert.match(editor, /headerAction=\{/);
-  assert.match(presentation, /action=\{headerAction\}/);
-  assert.match(presentation, /headerAction=\{headerAction\}/);
+  assert.match(editor, /createPortal\(headerAction, headerActionTarget\)/);
+  assert.match(detail, /ref=\{setHeaderActionTarget\}/);
+  assert.match(presentation, /suppressSectionHeading/);
   assert.match(documentPanel, /action=\{headerAction\}/);
   assert.doesNotMatch(styles, /\.sectionActions\s*\{[^}]*margin-top:/);
 

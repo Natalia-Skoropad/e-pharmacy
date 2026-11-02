@@ -623,12 +623,24 @@ export async function decidePharmacyModerationByAdminService(
         // pharmacy values in Audit details. Legacy revision records still replay.
         before: {
           ...auditBefore,
+
+          // Preserve unchanged status as context for same-status corrections.
+          // It is not included in changedFields, only in audit snapshots.
+          ...(input.action === 'request_corrections'
+            ? { status: previousStatus }
+            : {}),
+
           _moderationExpectedRevision: input.expectedRevision,
           _moderationAction: input.action,
         },
 
         after: {
           ...auditAfter,
+
+          ...(input.action === 'request_corrections'
+            ? { status: nextStatus }
+            : {}),
+
           _moderationCommittedRevision: saved.updatedAt.toISOString(),
         },
 

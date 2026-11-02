@@ -169,6 +169,7 @@ const DEFERRED: Partial<
 
 type DetailResult = Readonly<{
   pharmacyId: string;
+  tab: OwnedPharmacyDetailTab;
   retry: number;
   detail: OwnedPharmacyDetailResponse | null;
   error: 'not-found' | 'forbidden' | 'error' | null;
@@ -201,16 +202,38 @@ export function OwnedPharmacyDetailPageContent({
   const visibleTab =
     tabSelection.routeTab === activeTab ? tabSelection.selectedTab : activeTab;
 
+  const [headerActionTarget, setHeaderActionTarget] =
+    useState<HTMLDivElement | null>(null);
+
   const [retry, setRetry] = useState(0);
   const [result, setResult] = useState<DetailResult | null>(null);
 
   const isCurrent =
-    result?.pharmacyId === pharmacyId && result?.retry === retry;
+    result?.pharmacyId === pharmacyId &&
+    result?.tab === activeTab &&
+    result?.retry === retry &&
+    visibleTab === activeTab;
 
   const detail = isCurrent ? result?.detail : null;
   const error = isCurrent ? result?.error : null;
   const loading = !detail && !error;
   const pharmacy = detail?.pharmacy;
+
+  const isEditTab = ['data', 'about', 'payment', 'documents'].includes(
+    visibleTab
+  );
+
+  const canEditPharmacy = Boolean(
+    pharmacy &&
+    pharmacy.membershipRole === 'owner' &&
+    (pharmacy.status === 'new' ||
+      pharmacy.status === 'active' ||
+      (pharmacy.status === 'blocked' && pharmacy.reviewState !== 'pending') ||
+      (['on_verification', 'on_moderation', 'on_reactivation'].includes(
+        pharmacy.status
+      ) &&
+        pharmacy.reviewState === 'changes_requested'))
+  );
 
   // Keep the information icon beside the last word instead of leaving
   // it alone on a new line when a long pharmacy name wraps on mobile.
@@ -235,7 +258,13 @@ export function OwnedPharmacyDetailPageContent({
     void getOwnedPharmacyDetail(pharmacyId, { signal: controller.signal })
       .then((value) => {
         if (!controller.signal.aborted)
-          setResult({ pharmacyId, retry, detail: value, error: null });
+          setResult({
+            pharmacyId,
+            tab: activeTab,
+            retry,
+            detail: value,
+            error: null,
+          });
       })
 
       .catch((cause: unknown) => {
@@ -257,6 +286,7 @@ export function OwnedPharmacyDetailPageContent({
 
         setResult({
           pharmacyId,
+          tab: activeTab,
           retry,
           detail: null,
 
@@ -270,7 +300,54 @@ export function OwnedPharmacyDetailPageContent({
       });
 
     return () => controller.abort();
-  }, [pharmacyId, retry]);
+  }, [pharmacyId, activeTab, retry]);
+
+  // An admin can request corrections in a different browser tab. Refresh the
+  // read-only information tab when its window becomes visible again, without
+  // clearing its content or resetting a form with unsaved changes on another tab.
+  useEffect(() => {
+    if (activeTab !== 'information') return;
+
+    let controller = new AbortController();
+
+    const refreshVisibleInformation = () => {
+      if (document.visibilityState !== 'visible') return;
+
+      controller.abort();
+      controller = new AbortController();
+
+      const signal = controller.signal;
+
+      void getOwnedPharmacyDetail(pharmacyId, { signal })
+        .then((value) => {
+          if (!signal.aborted) {
+            setResult({
+              pharmacyId,
+              tab: activeTab,
+              retry,
+              detail: value,
+              error: null,
+            });
+          }
+        })
+        .catch(() => {
+          // Keep the last verified view; normal navigation/retry surfaces errors.
+        });
+    };
+
+    window.addEventListener('focus', refreshVisibleInformation);
+    document.addEventListener('visibilitychange', refreshVisibleInformation);
+
+    return () => {
+      controller.abort();
+      window.removeEventListener('focus', refreshVisibleInformation);
+
+      document.removeEventListener(
+        'visibilitychange',
+        refreshVisibleInformation
+      );
+    };
+  }, [pharmacyId, activeTab, retry]);
 
   const refresh = useCallback(() => setRetry((n) => n + 1), []);
 
@@ -409,19 +486,21 @@ export function OwnedPharmacyDetailPageContent({
             id={`owned-pharmacy-detail-panel-${visibleTab}`}
             aria-labelledby={`owned-pharmacy-detail-tab-${visibleTab}`}
           >
-            {(!['data', 'about', 'payment', 'documents', 'comments'].includes(
-              visibleTab
-            ) ||
-              (loading &&
-                ['data', 'about', 'payment', 'documents'].includes(
-                  visibleTab
-                ))) && (
+            {visibleTab !== 'comments' ? (
               <ProfileSectionHeader
                 title={selected.label}
                 description={DESCRIPTIONS[visibleTab]}
                 icon={selected.icon ?? <Building2 size={21} />}
+                action={
+                  isEditTab && canEditPharmacy ? (
+                    <div
+                      ref={setHeaderActionTarget}
+                      className={css.headerActionTarget}
+                    />
+                  ) : undefined
+                }
               />
-            )}
+            ) : null}
             {loading && visibleTab !== 'comments' ? (
               <ProfileResourceState
                 variant="loading"
@@ -451,23 +530,12 @@ export function OwnedPharmacyDetailPageContent({
                 ) : (
                   <OwnedPharmacyEditableTab
                     key={`${pharmacy.updatedAt}:${visibleTab}`}
+                    headerActionTarget={headerActionTarget}
                     pharmacy={pharmacy}
                     tab={
                       visibleTab as 'data' | 'about' | 'payment' | 'documents'
                     }
-                    readOnly={
-                      pharmacy.membershipRole !== 'owner' ||
-                      !(
-                        pharmacy.status === 'new' ||
-                        pharmacy.status === 'active' ||
-                        (pharmacy.status === 'blocked' &&
-                          pharmacy.reviewState !== 'pending') ||
-                        ((pharmacy.status === 'on_verification' ||
-                          pharmacy.status === 'on_moderation' ||
-                          pharmacy.status === 'on_reactivation') &&
-                          pharmacy.reviewState === 'changes_requested')
-                      )
-                    }
+                    readOnly={!canEditPharmacy}
                     onSaved={refresh}
                   />
                 )}

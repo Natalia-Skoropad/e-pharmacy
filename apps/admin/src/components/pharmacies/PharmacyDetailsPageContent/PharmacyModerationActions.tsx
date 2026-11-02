@@ -9,13 +9,14 @@ import {
   RefreshCw,
   ClipboardEdit,
   CheckCircle2,
+  Info,
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { ReasonModal } from '@e-pharmacy/ui/overlays';
+import { ReasonModal, InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
@@ -131,6 +132,46 @@ export function PharmacyModerationActions({
 
   const options = getPharmacyModerationOptions(detail);
 
+  const correctionsAwaitingOwner =
+    detail.reviewState === 'changes_requested' &&
+    (detail.status === 'on_verification' || detail.status === 'on_moderation');
+
+  // Preserve the full action menu after requesting corrections. Only the owner
+  // can submit a corrected pharmacy again; Admin cannot bypass this lock.
+  const menuEntries = correctionsAwaitingOwner
+    ? [
+        {
+          action: 'approve' as const,
+
+          label:
+            detail.status === 'on_verification'
+              ? 'Approve & activate'
+              : 'Approve changes',
+
+          disabled: true as const,
+          hint: 'Awaiting the owner’s corrected submission.',
+          danger: false,
+        },
+        {
+          action: 'request_corrections' as const,
+          label: 'Request re-verification',
+          disabled: true as const,
+          hint: 'Only the pharmacy owner can resubmit after corrections.',
+          danger: false,
+        },
+
+        ...options.map((option) => ({
+          ...option,
+          disabled: false as const,
+          hint: '',
+        })),
+      ]
+    : options.map((option) => ({
+        ...option,
+        disabled: false as const,
+        hint: '',
+      }));
+
   // A changed pharmacy or revision must never inherit the previous open dropdown.
   // Deriving visibility avoids a synchronous setState in an effect.
   const menuKey = JSON.stringify([
@@ -141,7 +182,7 @@ export function PharmacyModerationActions({
     detail.dates.updatedAt,
   ]);
 
-  const menuOpen = options.length > 0 && openMenuKey === menuKey;
+  const menuOpen = menuEntries.length > 0 && openMenuKey === menuKey;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -164,7 +205,7 @@ export function PharmacyModerationActions({
     };
   }, [menuOpen]);
 
-  if (options.length === 0 && !action) return null;
+  if (menuEntries.length === 0 && !action) return null;
 
   const reasonError = action
     ? validatePharmacyModerationReason(action.reason)
@@ -257,19 +298,75 @@ export function PharmacyModerationActions({
         clientRequestId: action.clientRequestId,
       });
 
-      // Mutations already record an audit event transactionally in the API.
+      // The API has already committed the audit and review state.
+      // Do not consider a secondary refresh failure a failed mutation.
       setAction(null);
       setOpenMenuKey(null);
-      onRefresh();
+
+      // Use the committed state as the immediate source of truth. A follow-up
+      // GET failure must not turn a successfully committed decision into an
+      // error or leave the moderation menu showing stale actions.
+      try {
+        const fresh = await getAdminPharmacyDetail(detail.id);
+
+        onDetailRefreshed(fresh);
+      } catch {
+        onRefresh();
+      }
+
       requestPharmacyModerationRefresh();
       requestPharmacyOwnerNavigationBadgeRefresh();
 
       toast.success(
         action.option.action === 'request_corrections'
-          ? 'Corrections were requested. The owner can view the feedback.'
+          ? 'Corrections requested successfully. Feedback is available in the owner’s pharmacy profile.'
           : `${action.option.label} completed successfully.`
       );
     } catch (error: unknown) {
+      // A timeout or response-decoding failure can occur after a committed
+      // decision. Verify the persisted result before reporting failure.
+      const mayHaveCommitted =
+        !isApiError(error) ||
+        error.transportCode === 'INVALID_RESPONSE' ||
+        error.transportCode === 'NETWORK_ERROR' ||
+        error.transportCode === 'TIMEOUT' ||
+        (error.httpStatus !== undefined && error.httpStatus >= 500);
+
+      if (mayHaveCommitted) {
+        try {
+          const fresh = await getAdminPharmacyDetail(detail.id);
+
+          const isNewRevision =
+            fresh.dates.updatedAt !== action.expectedRevision;
+
+          const confirmed =
+            isNewRevision &&
+            (action.option.action === 'request_corrections'
+              ? fresh.status === detail.status &&
+                fresh.reviewState === 'changes_requested' &&
+                fresh.reviewFeedback === action.reason.trim()
+              : fresh.status === action.option.targetStatus);
+
+          if (confirmed) {
+            onDetailRefreshed(fresh);
+            setAction(null);
+            setOpenMenuKey(null);
+            requestPharmacyModerationRefresh();
+            requestPharmacyOwnerNavigationBadgeRefresh();
+
+            toast.success(
+              action.option.action === 'request_corrections'
+                ? 'Corrections requested successfully. Feedback is available in the owner’s pharmacy profile.'
+                : `${action.option.label} completed successfully.`
+            );
+            return;
+          }
+        } catch {
+          // Persisted state could not be verified. Keep the original request
+          // ID so that a retry remains idempotent.
+        }
+      }
+
       const result = getMutationError(error);
 
       setAction(
@@ -296,7 +393,7 @@ export function PharmacyModerationActions({
           the server confirms the submission.
         </p>
       ) : null}
-      {options.length > 0 ? (
+      {menuEntries.length > 0 ? (
         <div className={css.menuWrapper} ref={containerRef}>
           <Button
             type="button"
@@ -321,29 +418,60 @@ export function PharmacyModerationActions({
               role="menu"
               aria-label="Available pharmacy moderation actions"
             >
-              {options.map((option) => (
-                <button
+              {menuEntries.map((option) => (
+                <div
                   key={option.action}
-                  type="button"
-                  role="menuitem"
-                  className={
-                    option.danger
-                      ? css.dangerAction
-                      : option.action === 'request_corrections'
-                        ? css.correctionsAction
-                        : css.approveAction
-                  }
-                  onClick={() => selectAction(option)}
+                  className={css.menuActionRow}
+                  role="none"
                 >
-                  {option.danger ? (
-                    <Ban size={17} aria-hidden="true" />
-                  ) : option.action === 'request_corrections' ? (
-                    <ClipboardEdit size={17} aria-hidden="true" />
-                  ) : (
-                    <CheckCircle2 size={17} aria-hidden="true" />
-                  )}
-                  {option.label}
-                </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className={
+                      option.danger
+                        ? css.dangerAction
+                        : option.action === 'request_corrections'
+                          ? css.correctionsAction
+                          : css.approveAction
+                    }
+                    disabled={option.disabled}
+                    title={option.disabled ? option.hint : undefined}
+                    aria-label={
+                      option.disabled
+                        ? `${option.label}. ${option.hint}`
+                        : option.label
+                    }
+                    onClick={() => {
+                      if (!option.disabled) selectAction(option);
+                    }}
+                  >
+                    {option.danger ? (
+                      <Ban size={17} aria-hidden="true" />
+                    ) : option.action === 'request_corrections' ? (
+                      <ClipboardEdit size={17} aria-hidden="true" />
+                    ) : (
+                      <CheckCircle2 size={17} aria-hidden="true" />
+                    )}
+                    {option.label}
+                  </button>
+                  {option.disabled ? (
+                    <InfoTooltip
+                      label={`Why ${option.label} is unavailable`}
+                      title={option.label}
+                      icon={<Info size={17} aria-hidden="true" />}
+                      escapeOverflow
+                      preferTopLayer
+                      items={[
+                        {
+                          title: 'Action unavailable',
+                          description:
+                            option.hint ||
+                            'This action is unavailable for the current pharmacy review state.',
+                        },
+                      ]}
+                    />
+                  ) : null}
+                </div>
               ))}
             </div>
           ) : null}
@@ -354,21 +482,22 @@ export function PharmacyModerationActions({
           isOpen
           eyebrow="Pharmacy moderation"
           title={action.option.label}
+          headerDetails={
+            <div className={css.statusTransition}>
+              <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+              <span aria-hidden="true">→</span>
+              <StatusBadge
+                {...PHARMACY_STATUS_PRESENTATION[action.option.targetStatus]}
+              />
+              {action.option.action === 'request_corrections' ? (
+                <StatusBadge label="Needs changes" tone="neutral" />
+              ) : null}
+            </div>
+          }
           description={
             <span className={css.modalDescription}>
               <span>
                 <strong>{detail.current.name}</strong> (ID: {detail.id})
-              </span>
-
-              <span className={css.statusTransition}>
-                <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
-                <span aria-hidden="true">→</span>
-                <StatusBadge
-                  {...PHARMACY_STATUS_PRESENTATION[action.option.targetStatus]}
-                />
-                {action.option.action === 'request_corrections'
-                  ? ' (status unchanged; a new review decision is audited)'
-                  : null}
               </span>
 
               <span>{action.option.description}</span>

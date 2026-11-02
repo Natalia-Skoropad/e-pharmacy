@@ -32,6 +32,8 @@ type OwnerPharmacyAggregateRow = Readonly<{
     | 'active'
     | 'blocked';
 
+  reviewState: 'pending' | 'changes_requested' | null;
+
   activeClientsCount: number;
   addedProductsCount: number;
   successfulOrdersCount: number;
@@ -96,6 +98,9 @@ export async function listAdminPharmacyOwnerPharmaciesService(
 
       createdAt: pharmacy.createdAt.toISOString(),
       status: pharmacy.status,
+
+      ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
+
       activeClientsCount: pharmacy.activeClientsCount,
       addedProductsCount: pharmacy.addedProductsCount,
       successfulOrdersCount: pharmacy.successfulOrdersCount,

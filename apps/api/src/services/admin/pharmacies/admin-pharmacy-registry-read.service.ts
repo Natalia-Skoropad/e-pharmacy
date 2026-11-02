@@ -29,6 +29,7 @@ type RegistryAggregateRow = {
   imageUrl: string | null;
   location: Record<string, unknown> | null;
   status: string;
+  reviewState: string | null;
   createdAt: Date;
   owner: Array<{ id: string; name: string; pictureUrl: string | null }>;
   activeClientsCount: number;
@@ -258,6 +259,9 @@ export async function listAdminPharmaciesService(
         ...(item.location ? { location: item.location } : {}),
 
         status: item.status,
+
+        ...(item.reviewState ? { reviewState: item.reviewState } : {}),
+
         createdAt: item.createdAt.toISOString(),
 
         owner: owner

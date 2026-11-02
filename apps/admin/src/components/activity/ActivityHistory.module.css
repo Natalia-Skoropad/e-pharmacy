@@ -567,3 +567,70 @@
   height: 16px;
   stroke-width: 1.8;
 }
+
+/* Shared MarkdownContent and WorkingHours within the audit comparison table. */
+/* Small, consistent audit text in Before / After and Comment text cells. */
+.auditLongText {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.auditLongText .auditTextContent > div {
+  color: var(--color-text-secondary);
+  font-size: var(--fz-13);
+  line-height: 1.45;
+}
+
+/* Preserve paragraphs and lists, but drop the oversized editor heading styles. */
+.auditLongText .auditTextContent :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0 0 4px;
+  color: inherit;
+  font-size: inherit;
+  font-weight: var(--fw-regular);
+  line-height: inherit;
+}
+
+.auditLongText .auditTextContent :is(p, ul, ol, blockquote, pre) {
+  margin: 0 0 5px;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.auditLongText .auditTextContent :is(ul, ol) {
+  gap: 2px;
+  padding-inline-start: 18px;
+}
+
+.auditLongText .auditTextContent :is(em, i, strong, b) {
+  color: inherit;
+}
+
+.auditTextCollapsed {
+  max-height: 7em;
+  overflow: hidden;
+}
+
+.auditLongText > .auditExpandButton {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text-secondary);
+  font-size: var(--fz-12);
+}
+
+.auditLongText > .auditExpandButton:hover:not(:disabled),
+.auditLongText > .auditExpandButton:focus-visible:not(:disabled) {
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.changeValue {
+  width: 100%;
+  white-space: normal;
+}

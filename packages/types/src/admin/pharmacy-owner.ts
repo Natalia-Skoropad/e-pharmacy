@@ -88,6 +88,7 @@ export type AdminPharmacyOwnerPharmacySummary = Readonly<{
   imageUrl?: string;
   createdAt: ISODateTimeString;
   status: PharmacyStatus;
+  reviewState?: 'pending' | 'changes_requested';
   activeClientsCount: number;
   addedProductsCount: number;
   successfulOrdersCount: number;

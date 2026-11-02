@@ -55,14 +55,15 @@ function serialize(
 
 //===================================================================
 
-// Audit deliberately excludes the private body; snapshots must not form a
-// second, less restricted comment datastore.
+// This admin-only audit stores the comment text alongside its author and date.
+// It must remain restricted to Admin audit permissions and never enter public APIs.
 function auditMetadata(comment: CommentRecord) {
   return {
     exists: true,
     pharmacyId: String(comment.pharmacyId),
     createdByAdminUserId: String(comment.createdByAdminUserId),
     authorName: comment.authorNameSnapshot,
+    text: comment.text,
     createdAt: comment.createdAt.toISOString(),
   };
 }
@@ -74,6 +75,7 @@ const auditFields = [
   'pharmacyId',
   'createdByAdminUserId',
   'authorName',
+  'text',
   'createdAt',
 ] as const;
 

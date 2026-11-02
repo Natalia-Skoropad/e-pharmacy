@@ -8,7 +8,6 @@ import {
   parseAdminPharmacyDocumentsResponse,
   parseAdminPharmacyCommentsResponse,
   parseAdminPharmacyCommentResponse,
-  parsePharmacyProfileResponse,
 } from '@e-pharmacy/api-client/response';
 
 import { appendQueryParams } from '@e-pharmacy/api-client/transport';
@@ -25,10 +24,9 @@ import type {
   AdminPharmacyCorrectionsPayload,
 } from '@e-pharmacy/types/admin';
 
-import type { PharmacyProfileResponse } from '@e-pharmacy/types/pharmacies';
-
 import { adminApiRoutes as ROUTES } from '@/lib/api/routes/admin-api-routes';
 import { assertAdminPharmacyId } from '@/lib/pharmacies/admin-pharmacy';
+import { parseAdminPharmacyModerationResponse } from '@/lib/pharmacies/admin-pharmacy-moderation-response';
 
 import {
   parseAdminAuditActorsResponse,
@@ -274,7 +272,7 @@ async function moderationMutation(
     | AdminPharmacyCorrectionsPayload,
 
   options?: Options
-): Promise<PharmacyProfileResponse> {
+): Promise<ReturnType<typeof parseAdminPharmacyModerationResponse>> {
   checkedMutationKey(body.clientRequestId);
   const id = pharmacyId(rawPharmacyId);
   const path = ROUTES.pharmacyDetail[resource](id);
@@ -283,7 +281,7 @@ async function moderationMutation(
   return parseApiResponseData(
     await localApiRequest(path, { method, body, signal: options?.signal }),
 
-    parsePharmacyProfileResponse,
+    parseAdminPharmacyModerationResponse,
     { url: path, method }
   );
 }

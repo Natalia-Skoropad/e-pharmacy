@@ -45,13 +45,14 @@ test('audit modal separates section and page and has accessible change values', 
   assert.match(modal, /Link to page/);
   assert.match(modal, /<ActivitySectionLink item=\{details\} \/>/);
   assert.match(modal, /<ActivityPageLink/);
-  assert.match(modal, /getAdminAuditFieldLabel/);
+  assert.match(modal, /getAdminAuditChangedFieldLabel/);
   assert.match(modal, /getAuditColorSwatch/);
   assert.match(modal, /<StatusBadge/);
   assert.match(modal, /Reason \/ description/);
   assert.match(presentation, /getAdminAuditPageLocation/);
 
   const sectionLink = await source('./ActivitySectionLink.tsx');
+
   assert.match(sectionLink, /className=\{css\.actorIdentityNameLink\}/);
 
   assert.match(

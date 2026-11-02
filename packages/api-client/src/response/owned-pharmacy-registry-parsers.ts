@@ -90,10 +90,22 @@ function metrics(row: Record<string, unknown>) {
 
 //=============================================================================
 
+function parseListReviewState(
+  value: unknown
+): 'pending' | 'changes_requested' | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (value === 'pending' || value === 'changes_requested') return value;
+
+  throw new TypeError('Invalid owned pharmacy review state.');
+}
+
+//=============================================================================
+
 function parseOwnedPharmacyListItem(value: unknown): OwnedPharmacyListItem {
   const row = record(value);
   const base = parseAdminPharmacyOption(value);
   const role = membership(row.membershipRole);
+  const rowReviewState = parseListReviewState(row.reviewState);
   const rating = nonnegative(row.rating);
 
   if (rating > 5) throw new TypeError('Invalid pharmacy rating.');
@@ -126,6 +138,9 @@ function parseOwnedPharmacyListItem(value: unknown): OwnedPharmacyListItem {
     ...base,
 
     status: status(row.status),
+
+    ...(rowReviewState ? { reviewState: rowReviewState } : {}),
+
     membershipRole: role,
     createdAt: createdAt as ISODateTimeString,
 

@@ -43,6 +43,7 @@ type RegistryRow = {
   imageUrl: string | null;
   location: Record<string, unknown> | null;
   status: string;
+  reviewState: string | null;
   createdAt: Date;
   membershipRole: PharmacyMembershipRole;
   activeClientsCount: number;
@@ -297,6 +298,9 @@ export async function listOwnedPharmaciesService(
       ...(item.location ? { location: item.location } : {}),
 
       status: item.status,
+
+      ...(item.reviewState ? { reviewState: item.reviewState } : {}),
+
       membershipRole: item.membershipRole,
       createdAt: item.createdAt.toISOString(),
 

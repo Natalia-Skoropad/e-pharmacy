@@ -15,6 +15,7 @@ export type OwnedPharmacyListItem = Readonly<{
   imageUrl?: string;
   location?: PharmacyLocationDraft;
   status: PharmacyStatus;
+  reviewState?: 'pending' | 'changes_requested';
   membershipRole: 'owner' | 'manager';
   createdAt: ISODateTimeString;
   addedProductsCount?: number;
@@ -49,6 +50,7 @@ export type OwnedPharmacyOption = Readonly<{
   phone?: string;
   location?: PharmacyLocationDraft;
   status: PharmacyStatus;
+  reviewState?: 'pending' | 'changes_requested';
   membershipRole: 'owner' | 'manager';
 }>;
 

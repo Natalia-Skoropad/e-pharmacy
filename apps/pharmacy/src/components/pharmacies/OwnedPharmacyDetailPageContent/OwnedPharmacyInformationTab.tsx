@@ -119,7 +119,7 @@ export function Information({
                 (pharmacy.status === 'on_verification' ||
                   pharmacy.status === 'on_moderation' ||
                   pharmacy.status === 'on_reactivation') ? (
-                  <span className={css.needsChanges}>Needs changes</span>
+                  <StatusBadge label="Needs changes" tone="neutral" />
                 ) : null}
               </span>
             </Field>
@@ -194,23 +194,37 @@ export function Information({
                       : 'Pharmacy status changed'}
                 </div>
 
-                {event.previousStatus !== event.nextStatus &&
-                (event.previousStatus || event.nextStatus) ? (
+                {(event.previousStatus !== event.nextStatus ||
+                  event.previousReviewState !== event.nextReviewState ||
+                  event.action === 'pharmacy.corrections.requested') &&
+                (event.previousStatus ||
+                  event.nextStatus ||
+                  event.action === 'pharmacy.corrections.requested') ? (
                   <div className={css.activityTransition}>
                     <HistoryStatus
-                      status={event.previousStatus}
+                      status={
+                        event.previousStatus ??
+                        event.nextStatus ??
+                        pharmacy.status
+                      }
                       fallback="Created"
                     />
-
+                    {event.previousReviewState === 'changes_requested' ? (
+                      <StatusBadge label="Needs changes" tone="neutral" />
+                    ) : null}
                     <span aria-hidden="true">→</span>
                     <HistoryStatus
-                      status={event.nextStatus}
-                      fallback={
-                        event.action === 'pharmacy.deleted'
-                          ? 'Deleted'
-                          : 'Not recorded'
+                      status={
+                        event.nextStatus ??
+                        event.previousStatus ??
+                        pharmacy.status
                       }
+                      fallback="Not recorded"
                     />
+                    {event.nextReviewState === 'changes_requested' ||
+                    event.action === 'pharmacy.corrections.requested' ? (
+                      <StatusBadge label="Needs changes" tone="neutral" />
+                    ) : null}
                   </div>
                 ) : null}
 

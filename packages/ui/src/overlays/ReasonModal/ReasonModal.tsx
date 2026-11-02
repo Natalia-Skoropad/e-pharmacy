@@ -26,6 +26,9 @@ export type ReasonModalProps = Readonly<{
   /** Optional review content between the explanation and the reason field. */
   details?: ReactNode;
 
+  /** Optional status transition directly below the modal heading. */
+  headerDetails?: ReactNode;
+
   value: string;
   fieldName: string;
   fieldLabel: string;
@@ -50,6 +53,7 @@ function ReasonModal({
   title,
   description,
   details,
+  headerDetails,
   value,
   fieldName,
   fieldLabel,
@@ -96,6 +100,10 @@ function ReasonModal({
 
           <CloseIconButton disabled={isLoading} onClick={handleCancel} />
         </div>
+
+        {headerDetails ? (
+          <div className={css.headerDetails}>{headerDetails}</div>
+        ) : null}
 
         <div className={clsx(css.notice, css[tone])}>
           <MessageSquareText size={20} aria-hidden="true" />

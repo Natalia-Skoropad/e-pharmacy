@@ -17,9 +17,10 @@
   right: 0;
   display: grid;
   gap: 4px;
-  width: 100%;
+  /* The menu must fit both disabled actions and their help icons. */
+  width: max-content;
   min-width: 100%;
-  max-width: 100%;
+  max-width: min(350px, calc(100vw - 32px));
   padding: 6px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -98,7 +99,7 @@
   .menu {
     left: 0;
     right: auto;
-    width: 100%;
+    width: min(350px, calc(100vw - 32px));
   }
 }
 
@@ -112,4 +113,37 @@
   color: var(--color-text-secondary);
   font-size: var(--fz-12);
   line-height: var(--lh-base);
+}
+
+/* Keep ineligible decisions visible after Admin requests owner corrections. */
+.approveAction:disabled,
+.correctionsAction:disabled,
+.dangerAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  filter: none;
+}
+
+/* Disabled moderation choices remain visible with their own accessible explanation. */
+.menuActionRow {
+  display: grid;
+  grid-template-columns: max-content auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.menuActionRow > button:first-child {
+  width: auto;
+  min-width: 0;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+
+.menuActionRow > button:first-child svg {
+  flex-shrink: 0;
+}
+
+.menuActionRow > :last-child:not(:first-child) {
+  flex-shrink: 0;
 }

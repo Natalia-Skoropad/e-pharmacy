@@ -53,7 +53,9 @@ test('14.17.4: moderation dropdown is color-coded and transitions display canoni
   assert.match(actions, /css\.approveAction/);
   assert.match(actions, /css\.correctionsAction/);
   assert.match(actions, /css\.dangerAction/);
-  assert.equal((actions.match(/<StatusBadge/g) ?? []).length, 2);
+  assert.equal((actions.match(/<StatusBadge/g) ?? []).length, 3);
+  assert.match(actions, /headerDetails=\{/);
+  assert.match(actions, /label="Needs changes" tone="neutral"/);
 
   assert.match(
     actions,

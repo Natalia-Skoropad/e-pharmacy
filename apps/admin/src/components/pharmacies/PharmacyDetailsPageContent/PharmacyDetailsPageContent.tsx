@@ -245,14 +245,6 @@ export function PharmacyDetailsPageContent({
   }, [pharmacyName]);
 
   useEffect(() => {
-    const onFocus = () => setRetry((value) => value + 1);
-
-    window.addEventListener('focus', onFocus);
-
-    return () => window.removeEventListener('focus', onFocus);
-  }, [pharmacyId]);
-
-  useEffect(() => {
     const controller = new AbortController();
 
     // Result keys keep previous pharmacy/retry data hidden while loading.

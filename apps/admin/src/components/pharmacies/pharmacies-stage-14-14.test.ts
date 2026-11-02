@@ -273,7 +273,10 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
     /action\.option\.action === 'request_corrections'/
   );
 
-  assert.match(
+  assert.match(actionsSource, /headerDetails=\{/);
+  assert.match(actionsSource, /label="Needs changes" tone="neutral"/);
+
+  assert.doesNotMatch(
     actionsSource,
     /status unchanged; a new review decision is audited/
   );
@@ -346,7 +349,7 @@ test('14.14: dropdown closes on pharmacy/revision changes without setting state 
 
   assert.match(
     actionsSource,
-    /const menuOpen = options\.length > 0 && openMenuKey === menuKey/
+    /const menuOpen = menuEntries\.length > 0 && openMenuKey === menuKey/
   );
 
   assert.match(actionsSource, /detail\.id/);

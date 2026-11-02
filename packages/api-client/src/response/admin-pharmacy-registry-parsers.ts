@@ -218,6 +218,17 @@ export function parseAdminPharmacyRegistryOwnerOptionsResponse(
 
 //===================================================================
 
+function reviewState(
+  value: unknown
+): 'pending' | 'changes_requested' | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (value === 'pending' || value === 'changes_requested') return value;
+
+  throw new TypeError('Invalid pharmacy review state.');
+}
+
+//===================================================================
+
 export function parseAdminPharmacyListItem(
   value: unknown
 ): AdminPharmacyListItem {
@@ -227,12 +238,16 @@ export function parseAdminPharmacyListItem(
     item.owner === null ? null : record(item.owner, 'pharmacy owner link');
 
   const rating = amount(item.rating, 'pharmacy rating');
+  const pharmacyReviewState = reviewState(item.reviewState);
 
   if (rating > 5) throw new TypeError('Invalid pharmacy rating.');
 
   return {
     ...base(item),
     status: status(item.status),
+
+    ...(pharmacyReviewState ? { reviewState: pharmacyReviewState } : {}),
+
     createdAt: dateTime(item.createdAt),
 
     owner: owner

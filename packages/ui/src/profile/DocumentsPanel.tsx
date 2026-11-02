@@ -37,6 +37,7 @@ export type DocumentsPanelProps = Readonly<{
   description?: ReactNode;
   headerIcon?: ReactNode;
   headerAction?: ReactNode;
+  hideHeader?: boolean;
   value: BrowserUploadFile[];
   editable?: boolean;
   readOnlyUploadView?: boolean;
@@ -109,6 +110,7 @@ export function DocumentsPanel({
   description,
   headerIcon = <Files size={22} />,
   headerAction,
+  hideHeader = false,
   value,
   editable = true,
   readOnlyUploadView = false,
@@ -332,16 +334,28 @@ export function DocumentsPanel({
     );
 
   return (
-    <section className={css.panel} aria-labelledby={`${id}-title`}>
-      <div className={css.panelHeader}>
-        <ProfileSectionHeader
-          title={title}
-          description={description}
-          titleId={`${id}-title`}
-          icon={headerIcon}
-          action={headerAction}
-        />
-      </div>
+    <section
+      className={css.panel}
+      aria-labelledby={hideHeader ? undefined : `${id}-title`}
+      aria-label={
+        hideHeader
+          ? typeof title === 'string'
+            ? title
+            : 'Documents'
+          : undefined
+      }
+    >
+      {!hideHeader ? (
+        <div className={css.panelHeader}>
+          <ProfileSectionHeader
+            title={title}
+            description={description}
+            titleId={`${id}-title`}
+            icon={headerIcon}
+            action={headerAction}
+          />
+        </div>
+      ) : null}
 
       {canEdit && onSubmit ? (
         <Button

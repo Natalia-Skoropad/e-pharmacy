@@ -13,7 +13,6 @@ import {
   History,
   Star,
   UserRound,
-  Store,
   UserRoundCog,
 } from 'lucide-react';
 
@@ -85,7 +84,7 @@ function sectionIcon(section: AdminAuditSection) {
 
   switch (section) {
     case 'pharmacyOwners':
-      return <UsersRound size={size} />;
+      return <UserCog size={size} />;
     case 'pharmacies':
       return <Building2 size={size} />;
     case 'products':
@@ -175,7 +174,7 @@ const ACTOR_TYPE_OPTIONS: Array<
           {actorType === 'employee' ? (
             <UserRound size={16} />
           ) : actorType === 'pharmacyOwner' ? (
-            <Store size={16} />
+            <UserCog size={16} />
           ) : (
             <UserRoundCog size={16} />
           )}

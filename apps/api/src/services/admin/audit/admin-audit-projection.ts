@@ -1,5 +1,7 @@
 import { Types } from 'mongoose';
 
+import { resolvePharmacyAuditStatusContext } from '../../pharmacies/pharmacy-audit-status-context';
+
 import {
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_SECTIONS,
@@ -78,17 +80,29 @@ export function serializeAuditListItem(
       ? ADMIN_AUDIT_SECTIONS.EMPLOYEES
       : storedSection;
 
-  const hasStatusChange = log.changedFields.includes('status');
+  const hasStatusChange =
+    log.changedFields.includes('status') ||
+    (log.entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY &&
+      log.changedFields.includes('reviewState'));
 
-  const statusBefore =
-    hasStatusChange && typeof log.before.status === 'string'
-      ? log.before.status
-      : undefined;
+  const reviewContext =
+    hasStatusChange && log.entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY
+      ? resolvePharmacyAuditStatusContext({
+          action,
+          before: log.before,
+          after: log.after,
+        })
+      : null;
 
-  const statusAfter =
-    hasStatusChange && typeof log.after.status === 'string'
-      ? log.after.status
-      : undefined;
+  const statusBefore = hasStatusChange
+    ? (reviewContext?.previousStatus ??
+      (typeof log.before.status === 'string' ? log.before.status : undefined))
+    : undefined;
+
+  const statusAfter = hasStatusChange
+    ? (reviewContext?.nextStatus ??
+      (typeof log.after.status === 'string' ? log.after.status : undefined))
+    : undefined;
 
   if (!isAdminAuditSection(section)) {
     throw new TypeError('Stored admin audit section is invalid.');
