@@ -71,9 +71,9 @@ test('owners table links ids and names to owner detail and uses canonical status
   assert.match(table, /parts=\{\['Reg\.', 'date'\]\}/);
   assert.match(table, /Owner's[\s\S]*?photo/);
   assert.match(table, /parts=\{\['Active', 'pharms'\]\}/);
-  assert.match(table, /Active and inactive pharmacies/);
+  assert.match(table, /Operating and not operating pharmacies/);
   assert.match(table, /InfoTooltip/);
-  assert.match(table, /parts=\{\['Inactive', 'pharms'\]\}/);
+  assert.match(table, /parts=\{\['Not operating', 'pharms'\]\}/);
   assert.match(table, /buildAdminPharmacyOwnerDetailUrl\(owner\.id\)/);
   assert.match(table, /USER_STATUS_PRESENTATION\[owner\.status\]/);
 

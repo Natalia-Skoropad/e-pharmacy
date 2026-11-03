@@ -182,3 +182,24 @@
     gap: 0;
   }
 }
+
+/* Long pharmacy names must not displace profile actions or the menu toggle.
+   The full label remains in the accessible breadcrumb item; only its visible
+   presentation is ellipsized. */
+@media (min-width: 768px) {
+  .pathItem:not(:first-child) {
+    max-width: min(25ch, 38vw);
+  }
+
+  .pathItem:last-child {
+    flex: 0 1 auto;
+  }
+
+  .pathItem .link,
+  .pathItem .current,
+  .pathItem .text {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+

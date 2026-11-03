@@ -10,5 +10,5 @@ export const PHARMACY_STATUS_PRESENTATION = {
   on_moderation: { label: 'On moderation', tone: 'pending' },
   on_reactivation: { label: 'Reactivation requested', tone: 'mustard' },
   active: { label: 'Active', tone: 'success' },
-  blocked: { label: 'Inactive', tone: 'danger' },
+  blocked: { label: 'Blocked', tone: 'danger' },
 } as const satisfies Readonly<Record<PharmacyStatus, StatusPresentation>>;

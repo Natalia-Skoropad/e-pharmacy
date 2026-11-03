@@ -124,10 +124,6 @@ export function Information({
               </span>
             </Field>
 
-            {pharmacy.status === 'blocked' && pharmacy.statusReason ? (
-              <Field label="Status reason">{show(pharmacy.statusReason)}</Field>
-            ) : null}
-
             <Field label="Pharmacy ID">{pharmacy.id}</Field>
 
             <Field label="Phone">

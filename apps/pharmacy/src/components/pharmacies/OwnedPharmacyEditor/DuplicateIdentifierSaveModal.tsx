@@ -76,6 +76,7 @@ export function DuplicateIdentifierSaveModal({
   return (
     <ConfirmationModal
       isOpen={open}
+      dialogClassName={css.scrollableDialog}
       eyebrow="SHARED PHARMACY DETAILS"
       title="Save details used by another of your pharmacies?"
       description={

@@ -25,6 +25,7 @@ export type ConfirmationModalProps = {
   isLoading?: boolean;
   confirmButtonClassName?: string;
   cancelButtonClassName?: string;
+  dialogClassName?: string;
   confirmButtonVariant?: ButtonVariant;
   destructive?: boolean;
   cancelButtonVariant?: ButtonVariant;
@@ -50,6 +51,7 @@ function ConfirmationModal({
   isLoading = false,
   confirmButtonClassName,
   cancelButtonClassName,
+  dialogClassName,
   confirmButtonVariant = 'primary',
   destructive = false,
   cancelButtonVariant = 'secondary',
@@ -72,6 +74,7 @@ function ConfirmationModal({
     <ModalRoot>
       <ModalBase
         isOpen={isOpen}
+        dialogClassName={dialogClassName}
         labelledBy={titleId}
         describedBy={modalDescription ? descriptionId : undefined}
         initialFocusRef={cancelButtonRef}

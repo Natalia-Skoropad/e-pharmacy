@@ -109,3 +109,11 @@
   color: var(--color-accent);
   flex-shrink: 0;
 }
+
+/* Preserve access to the confirmation actions when many pharmacies share
+   identifiers, including on short tablet/mobile viewports. */
+.scrollableDialog {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}

@@ -180,7 +180,7 @@ function getPharmacyBanner(status: PharmacyStatus | null) {
     return {
       status: 'blocked' as const,
       label: 'Blocked',
-      title: 'Your pharmacy is temporarily blocked',
+      title: 'Your pharmacy is blocked',
 
       message:
         'Existing cabinet data remains available for review, but operational actions are disabled until Admin restores access.',

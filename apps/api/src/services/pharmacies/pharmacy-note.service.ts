@@ -1,11 +1,13 @@
 import { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
+
 import { Order } from '../../models/orders/order.model';
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 import { User } from '../../models/accounts/user.model';
+
 import { httpError } from '../../utils/http/httpError';
 
 import type { CreatePharmacyNoteInput } from '../../schemas/pharmacies/pharmacy-note.schema';
@@ -181,7 +183,9 @@ export async function getPharmacyNotesService(
 ) {
   const { pharmacy } = await findPharmacyForInternalNotesAccess(
     actor,
-    'read_internal_notes'
+    'read_internal_notes',
+    undefined,
+    entityType === 'pharmacy' ? entityId : undefined
   );
 
   const pharmacyId = pharmacy._id;
@@ -236,7 +240,9 @@ export async function createPharmacyNoteService(
 ) {
   const { pharmacy } = await findPharmacyForInternalNotesAccess(
     actor,
-    'manage_internal_notes'
+    'manage_internal_notes',
+    undefined,
+    entityType === 'pharmacy' ? entityId : undefined
   );
 
   const pharmacyId = pharmacy._id;
@@ -305,7 +311,9 @@ export async function deletePharmacyNoteService(
 ) {
   const { pharmacy } = await findPharmacyForInternalNotesAccess(
     actor,
-    'manage_internal_notes'
+    'manage_internal_notes',
+    undefined,
+    entityType === 'pharmacy' ? entityId : undefined
   );
 
   const pharmacyId = pharmacy._id;

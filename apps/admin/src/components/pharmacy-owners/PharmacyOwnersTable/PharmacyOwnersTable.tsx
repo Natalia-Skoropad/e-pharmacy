@@ -48,6 +48,7 @@ export function PharmacyOwnersTable({
       {
         key: 'photo',
         title: <TableHeaderTitle parts={["Owner's", 'photo']} />,
+
         render: (owner) => (
           <TableImagePreview
             src={owner.pictureUrl}
@@ -59,6 +60,7 @@ export function PharmacyOwnersTable({
       {
         key: 'id',
         title: <TableHeaderTitle parts={['Owner', 'ID']} />,
+
         render: (owner) => (
           <TextActionButton
             className={css.breakableLink}
@@ -71,6 +73,7 @@ export function PharmacyOwnersTable({
       {
         key: 'name',
         title: <TableHeaderTitle parts={["Owner's", 'name']} />,
+
         render: (owner) => (
           <TextActionButton href={buildAdminPharmacyOwnerDetailUrl(owner.id)}>
             {owner.name}
@@ -80,6 +83,7 @@ export function PharmacyOwnersTable({
       {
         key: 'email',
         title: 'Email',
+
         render: (owner) => (
           <span className={css.breakableText}>{owner.email}</span>
         ),
@@ -91,12 +95,13 @@ export function PharmacyOwnersTable({
       },
       {
         key: 'operatingPharmaciesCount',
+
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Active', 'pharms']} />
             <InfoTooltip
-              label="What do active and inactive pharmacies mean?"
-              title="Active and inactive pharmacies"
+              label="What do operating and not operating pharmacies mean?"
+              title="Operating and not operating pharmacies"
               icon={<Building2 size={20} aria-hidden="true" />}
               escapeOverflow
               items={[
@@ -107,9 +112,9 @@ export function PharmacyOwnersTable({
                   icon: <CircleCheckBig size={17} aria-hidden="true" />,
                 },
                 {
-                  title: 'Inactive pharmacies',
+                  title: 'Not operating pharmacies',
                   description:
-                    'Number of linked pharmacies with New or Blocked status.',
+                    'Number of linked pharmacies with New, On verification, or Blocked status.',
                   icon: <Ban size={17} aria-hidden="true" />,
                 },
               ]}
@@ -120,12 +125,13 @@ export function PharmacyOwnersTable({
       },
       {
         key: 'nonWorkingPharmaciesCount',
-        title: <TableHeaderTitle parts={['Inactive', 'pharms']} />,
+        title: <TableHeaderTitle parts={['Not operating', 'pharms']} />,
         render: (owner) => owner.nonWorkingPharmaciesCount,
       },
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Account', 'status']} />,
+
         render: (owner) => (
           <StatusBadge {...USER_STATUS_PRESENTATION[owner.status]} />
         ),

@@ -367,13 +367,21 @@ export async function findPharmacyForProfileAccess(
 export async function findPharmacyForInternalNotesAccess(
   actor: PharmacyInternalNotesActor,
   capability: PharmacyInternalNotesCapability,
-  session?: ClientSession
+  session?: ClientSession,
+  pharmacyId?: string
 ): Promise<PharmacyMembership> {
   if (actor.role !== USER_ROLES.PHARMACY) {
     throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access is forbidden.');
   }
 
-  return requirePharmacyCapability(actor.id, capability, { session });
+  return requirePharmacyCapability(actor.id, capability, {
+    session,
+    pharmacyId,
+
+    // A blocked pharmacy remains readable to its authorized staff. Mutations
+    // still pass through the normal blocked-status guard.
+    allowBlocked: capability === 'read_internal_notes',
+  });
 }
 
 //===============================================================

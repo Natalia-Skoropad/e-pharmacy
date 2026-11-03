@@ -127,7 +127,7 @@ test('pharmacy notes reuse centralized membership and blocked-pharmacy access', 
 
   assert.match(
     membershipSource,
-    /findPharmacyForInternalNotesAccess[\s\S]*?requirePharmacyCapability\(actor\.id, capability, \{ session \}\)/
+    /findPharmacyForInternalNotesAccess[\s\S]*?requirePharmacyCapability\(actor\.id, capability, \{[\s\S]*?pharmacyId,[\s\S]*?allowBlocked: capability === 'read_internal_notes'/
   );
 
   assert.match(

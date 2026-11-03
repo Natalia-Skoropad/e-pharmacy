@@ -561,7 +561,7 @@ test('audit change presentation uses CRUD colors and target status colors', () =
       statusBefore: 'active',
       statusAfter: 'blocked',
     }),
-    'Active → Inactive'
+    'Active → Blocked'
   );
 });
 
@@ -604,7 +604,7 @@ test('approved pharmacy lifecycle audit actions remain visible to Admin after re
       statusBefore: 'blocked',
       statusAfter: 'on_reactivation',
     }),
-    'Inactive → Reactivation requested'
+    'Blocked → Reactivation requested'
   );
 });
 

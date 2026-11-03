@@ -975,3 +975,55 @@
     justify-content: center;
   }
 }
+
+/* Reactivation request shares the mustard palette with Reactivation requested. */
+.reactivationAction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 12px;
+  color: #68420a;
+  background-color: #f4dea0;
+  font: inherit;
+  text-align: left;
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.reactivationAction:hover:not(:disabled),
+.reactivationAction:focus-visible:not(:disabled) {
+  filter: brightness(0.96);
+}
+
+.reactivationAction:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Long names wrap inside their own column; keep the status action anchored.
+   Scope to this detail page so other PageHeader layouts are unaffected. */
+@media (min-width: 768px) {
+  .pageHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: start;
+    gap: 12px;
+  }
+
+  .pageHeader > :first-child {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .pageHeader > :nth-child(2) {
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    align-self: start;
+    justify-self: end;
+  }
+}

@@ -500,6 +500,12 @@ export function PharmacyModerationActions({
           headerDetails={
             <div className={css.statusTransition}>
               <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+              {detail.reviewState === 'changes_requested' &&
+              (detail.status === 'on_verification' ||
+                detail.status === 'on_moderation' ||
+                detail.status === 'on_reactivation') ? (
+                <StatusBadge label="Needs changes" tone="neutral" />
+              ) : null}
               <span aria-hidden="true">→</span>
               <StatusBadge
                 {...PHARMACY_STATUS_PRESENTATION[action.option.targetStatus]}

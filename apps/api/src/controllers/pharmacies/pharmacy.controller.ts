@@ -239,7 +239,8 @@ export async function getOwnedPharmacyPaymentAvailability(
 
   const { membershipRole } = await getPharmacyMembership(
     req.user?.id ?? '',
-    pharmacyId
+    pharmacyId,
+    { allowBlocked: true }
   );
 
   if (membershipRole !== 'owner') {
@@ -396,7 +397,9 @@ export async function getOwnedPharmacySalesStatistics(
 ): Promise<void> {
   const pharmacyId = res.locals.validated.params.pharmacyId;
 
-  await getPharmacyMembership(req.user?.id ?? '', pharmacyId);
+  await getPharmacyMembership(req.user?.id ?? '', pharmacyId, {
+    allowBlocked: true,
+  });
 
   const data = await getOrderSalesStatisticsForPharmacyService(
     pharmacyId,

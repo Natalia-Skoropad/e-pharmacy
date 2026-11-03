@@ -574,7 +574,7 @@ export function OwnedPharmacyActions({
               pharmacy.status === 'on_reactivation' ? (
                 <>
                   <ActionMenuItem
-                    className={css.approveAction}
+                    className={css.reactivationAction}
                     disabled={
                       !canRequestReactivation ||
                       moderationIncomplete ||
@@ -628,7 +628,7 @@ export function OwnedPharmacyActions({
             ? 'All proposed changes, including proposed pharmacy documents, will be permanently discarded. Your pharmacy will return to Active with its previously approved data. This cannot be undone.'
             : cancelReview === 'verification'
               ? 'The verification review will end and your pharmacy will return to New. Saved information and pharmacy documents will be preserved.'
-              : 'Your reactivation request will close and the pharmacy will return to Inactive. Saved proposed changes will be preserved.'
+              : 'Your reactivation request will close and the pharmacy will return to Blocked. Saved proposed changes will be preserved.'
         }
         confirmLabel={`Cancel ${cancelReview ?? 'review'}`}
         cancelLabel="Keep request"

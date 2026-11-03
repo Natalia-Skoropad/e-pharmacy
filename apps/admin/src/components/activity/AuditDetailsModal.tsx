@@ -308,6 +308,15 @@ export function AuditDetailsModal({
     if (field === 'status' && reviewFields.includes('reviewState'))
       return false;
 
+    // The blocking reason is already shown in Reason / description.
+    if (
+      field === 'statusReason' &&
+      typeof details.reason === 'string' &&
+      typeof details.after.statusReason === 'string' &&
+      details.after.statusReason.trim() === details.reason.trim()
+    )
+      return false;
+
     // The admin's decision reason is already displayed once above Changes.
     // Preserve a distinct feedback edit, but do not repeat identical content.
     if (

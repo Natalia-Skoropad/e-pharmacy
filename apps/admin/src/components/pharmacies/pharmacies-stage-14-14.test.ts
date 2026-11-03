@@ -304,14 +304,17 @@ test('14.14: permission, idempotency, CAS, owner feedback, refresh, audit and sh
 
   assert.match(
     pharmacyStatusPresentation,
-    /blocked:\s*\{\s*label: 'Inactive',\s*tone: 'danger'\s*\}/
+    /blocked:\s*\{\s*label: 'Blocked',\s*tone: 'danger'\s*\}/
   );
 
   // Correction reasons remain in the lifecycle history, without repeating
   // the same text on every pending-field comparison tab.
   assert.doesNotMatch(ownedPharmacyReview, /pharmacy\.reviewFeedback/);
-  assert.match(ownedPharmacyInformation, /<Field label="Status reason">/);
-  assert.match(ownedPharmacyInformation, /show\(pharmacy\.statusReason\)/);
+
+  assert.doesNotMatch(
+    ownedPharmacyInformation,
+    /<Field label="Status reason">/
+  );
 
   // Owner actions moved into their own component. Pending reviews do not
   // offer Cancel; the Needs changes state restores owner actions.

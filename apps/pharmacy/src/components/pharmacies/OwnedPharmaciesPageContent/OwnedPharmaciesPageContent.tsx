@@ -509,13 +509,13 @@ export function OwnedPharmaciesPageContent({
                   {
                     title: 'Reactivation requested',
                     description:
-                      'An inactive pharmacy whose owner has requested a new administrative review before reopening.',
+                      'A blocked pharmacy whose owner has requested a new administrative review before reopening.',
                     icon: <RotateCcw size={17} aria-hidden="true" />,
                   },
                   {
                     title: 'Blocked',
                     description:
-                      'A pharmacy blocked from operating. Status decisions are managed from its detail view.',
+                      'A blocked pharmacy not currently available to clients. Status decisions are managed from its detail view.',
                     icon: <Ban size={17} aria-hidden="true" />,
                   },
                 ]}

@@ -567,6 +567,7 @@ export function OwnedPharmacyDetailPageContent({
               <EntityComments
                 entityKey={`pharmacy:${pharmacyId}`}
                 presentation="profile"
+                isEditable={Boolean(pharmacy && pharmacy.status !== 'blocked')}
                 title="Comments"
                 description={DESCRIPTIONS.comments}
                 emptyTitle="No internal comments yet"
