@@ -33,6 +33,10 @@
   background-color: var(--color-warning);
 }
 
+.reactivation {
+  background-color: var(--color-status-mustard, #986209);
+}
+
 .collapsedBadges {
   position: absolute;
   top: 6px;

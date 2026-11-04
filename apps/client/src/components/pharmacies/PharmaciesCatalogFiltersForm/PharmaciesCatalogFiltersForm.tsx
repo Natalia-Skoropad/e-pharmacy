@@ -50,6 +50,7 @@ type PharmaciesCatalogFiltersFormProps = Readonly<{
   pharmacyOptions: readonly PharmacyOption[];
   visiblePharmaciesCount: number;
   pharmaciesCount: number;
+  catalogUnavailable?: boolean;
 }>;
 
 type PharmaciesHrefFilters = Omit<PharmacyFilters, 'page'> & {
@@ -91,6 +92,7 @@ function PharmaciesCatalogFiltersForm({
   pharmacyOptions,
   visiblePharmaciesCount,
   pharmaciesCount,
+  catalogUnavailable = false,
 }: PharmaciesCatalogFiltersFormProps) {
   const { isPending, navigate } = useCatalogNavigation();
 
@@ -114,22 +116,45 @@ function PharmaciesCatalogFiltersForm({
     pharmacyId: filters.pharmacyId,
   });
 
+  // A match already present in this page's cards should be selectable
+  // immediately. The remote autocomplete still supplies all other results.
+  const localPharmacyMatches = useMemo(() => {
+    const query = pharmacySearch.isOpen
+      ? pharmacySearch.query.trim().toLocaleLowerCase()
+      : '';
+
+    return pharmacyOptions.filter((item) => {
+      if (!query) return item.id === filters.pharmacyId;
+
+      return [
+        item.name,
+        item.phone,
+        item.email,
+        item.location?.address,
+        item.location?.settlement,
+        item.location?.region,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLocaleLowerCase()
+        .includes(query);
+    });
+  }, [
+    filters.pharmacyId,
+    pharmacyOptions,
+    pharmacySearch.isOpen,
+    pharmacySearch.query,
+  ]);
+
   const availablePharmacyOptions = useMemo(
     () => [
       ...pharmacySearch.items,
 
-      ...pharmacyOptions.filter(
-        (item) =>
-          (!pharmacySearch.isOpen || !pharmacySearch.query.trim()) &&
-          !pharmacySearch.items.some((loaded) => loaded.id === item.id)
+      ...localPharmacyMatches.filter(
+        (item) => !pharmacySearch.items.some((loaded) => loaded.id === item.id)
       ),
     ],
-    [
-      pharmacySearch.items,
-      pharmacySearch.isOpen,
-      pharmacySearch.query,
-      pharmacyOptions,
-    ]
+    [pharmacySearch.items, localPharmacyMatches]
   );
 
   const availableLocationOptions = useMemo(
@@ -299,6 +324,7 @@ function PharmaciesCatalogFiltersForm({
       hasMoreOptions={locationSearch.hasMore}
       isLoadingMore={locationSearch.isLoadingMore}
       loadMoreError={locationSearch.error}
+      loadMoreErrorVariant="notice"
       onLoadMore={locationSearch.loadMore}
       placeholder="All locations"
       emptyMessage="No locations found"
@@ -402,10 +428,13 @@ function PharmaciesCatalogFiltersForm({
           filterOptions={false}
           onOpenChange={pharmacySearch.setIsOpen}
           onQueryChange={pharmacySearch.setQuery}
-          isOptionsLoading={pharmacySearch.isOptionsLoading}
+          isOptionsLoading={
+            pharmacySearch.isOptionsLoading && localPharmacyMatches.length === 0
+          }
           hasMoreOptions={pharmacySearch.hasMore}
           isLoadingMore={pharmacySearch.isLoadingMore}
           loadMoreError={pharmacySearch.error}
+          loadMoreErrorVariant="notice"
           onLoadMore={pharmacySearch.loadMore}
           placeholder="Name, phone, email, or address"
           emptyMessage="No pharmacies found"
@@ -434,12 +463,14 @@ function PharmaciesCatalogFiltersForm({
         ) : null
       }
       countLabel={
-        <CountLabel
-          shown={visiblePharmaciesCount}
-          total={pharmaciesCount}
-          label="pharmacies"
-          fullWidthOnMobile
-        />
+        catalogUnavailable ? null : (
+          <CountLabel
+            shown={visiblePharmaciesCount}
+            total={pharmaciesCount}
+            label="pharmacies"
+            fullWidthOnMobile
+          />
+        )
       }
       filterButton={null}
       desktopSort={sortControl('pharmacies-sort-desktop')}

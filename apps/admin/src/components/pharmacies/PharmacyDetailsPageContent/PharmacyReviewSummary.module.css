@@ -127,6 +127,16 @@
 }
 
 /* Document comparison mirrors the owner-side presentation in read-only mode. */
+/* Match the compact working-hours presentation in the owner cabinet. */
+.reviewWorkingHours {
+  justify-content: flex-start;
+  font-size: var(--fz-12);
+}
+
+.reviewWorkingHours :is(span, time, strong) {
+  font-size: inherit;
+}
+
 .reviewDocuments {
   display: grid;
   gap: 7px;

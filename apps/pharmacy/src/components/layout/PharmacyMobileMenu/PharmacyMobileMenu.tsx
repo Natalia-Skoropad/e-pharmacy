@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Globe2, Store } from 'lucide-react';
 
 import { CloseIconButton, LogoutButton } from '@e-pharmacy/ui/primitives';
@@ -16,6 +16,8 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getClientAppUrl } from '@/lib/layout/external-links';
 import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
+import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
+import { subscribeToPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { shouldCloseMobileMenuForPathnameChange } from './mobile-menu-route-lifecycle';
@@ -42,6 +44,45 @@ export function PharmacyMobileMenu({
   onLogout,
 }: PharmacyMobileMenuProps) {
   const pathname = usePathname();
+
+  const [pharmacyCounts, setPharmacyCounts] = useState<{
+    new: number;
+    onVerification: number;
+    onModeration: number;
+    onReactivation: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const controller = new AbortController();
+
+    const refresh = () => {
+      void getOwnedPharmacyStatistics({ signal: controller.signal })
+        .then((counts) => {
+          if (!controller.signal.aborted)
+            setPharmacyCounts({
+              new: counts.new,
+              onVerification: counts.onVerification,
+              onModeration: counts.onModeration,
+              onReactivation: counts.onReactivation,
+            });
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setPharmacyCounts(null);
+        });
+    };
+
+    refresh();
+
+    const unsubscribe = subscribeToPharmacyCounterRefresh(refresh);
+
+    return () => {
+      controller.abort();
+      unsubscribe();
+    };
+  }, [isOpen]);
+
   const previousPathnameRef = useRef(pathname);
   const { user } = useAuth();
 
@@ -117,6 +158,44 @@ export function PharmacyMobileMenu({
         ariaLabel="Mobile pharmacy navigation"
         showChevron={false}
         onNavigate={onClose}
+        renderLink={({ item, href, className, children, ...props }) => (
+          <Link href={href} className={className} {...props}>
+            {children}
+            {item.href === PHARMACY_ROUTES.PHARMACIES && pharmacyCounts ? (
+              <span
+                className={css.pharmacyCounters}
+                aria-label="Pharmacy status totals"
+              >
+                {(
+                  [
+                    ['new', 'new', css.newCounter],
+                    [
+                      'onVerification',
+                      'on verification',
+                      css.verificationCounter,
+                    ],
+                    ['onModeration', 'on moderation', css.moderationCounter],
+                    [
+                      'onReactivation',
+                      'awaiting reactivation',
+                      css.reactivationCounter,
+                    ],
+                  ] as const
+                ).map(([key, label, badgeClass]) =>
+                  pharmacyCounts[key] > 0 ? (
+                    <span
+                      key={key}
+                      className={`${css.pharmacyCounter} ${badgeClass}`}
+                      aria-label={`${pharmacyCounts[key]} pharmacies ${label}`}
+                    >
+                      {pharmacyCounts[key] > 99 ? '99+' : pharmacyCounts[key]}
+                    </span>
+                  ) : null
+                )}
+              </span>
+            ) : null}
+          </Link>
+        )}
       />
 
       <div className={css.quickLinks} aria-label="Website quick links">

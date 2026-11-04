@@ -61,7 +61,10 @@ export async function getOwnedPharmacies(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await localApiRequest(path, {
+      ...sanitizeBrowserReadRequestOptions(options),
+      timeoutMs: options?.timeoutMs ?? 30_000,
+    }),
 
     parseOwnedPharmacyListResponse,
 
@@ -81,6 +84,67 @@ export async function getOwnedPharmacyStatistics(
 
     parseOwnedPharmacyStatistics,
 
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+type OwnedPharmacyLocationRow = Readonly<{
+  location: Readonly<{ region?: string; settlement?: string }>;
+}>;
+
+//===================================================================
+
+/** Fast filters endpoint; never loads expensive order/product KPI lookups. */
+export async function getOwnedPharmacyLocationRows(
+  options?: BrowserReadRequestOptions
+): Promise<readonly OwnedPharmacyLocationRow[]> {
+  const path = pharmacyApiRoutes.pharmacies.ownedRegistryLocations;
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
+    (value: unknown) => {
+      if (
+        !value ||
+        typeof value !== 'object' ||
+        !('items' in value) ||
+        !Array.isArray(value.items)
+      ) {
+        throw new TypeError('Invalid pharmacy location filters response.');
+      }
+
+      return value.items.map((row: unknown) => {
+        if (
+          !row ||
+          typeof row !== 'object' ||
+          !('location' in row) ||
+          !row.location ||
+          typeof row.location !== 'object'
+        ) {
+          throw new TypeError('Invalid pharmacy location row.');
+        }
+
+        const location = row.location as Record<string, unknown>;
+        const region = location.region;
+
+        const settlement = location.settlement;
+        if (
+          (region !== undefined && typeof region !== 'string') ||
+          (settlement !== undefined && typeof settlement !== 'string')
+        ) {
+          throw new TypeError('Invalid pharmacy location values.');
+        }
+
+        return {
+          location: {
+            ...(typeof region === 'string' ? { region } : {}),
+            ...(typeof settlement === 'string' ? { settlement } : {}),
+          },
+        };
+      });
+    },
     { url: path, method: 'GET' }
   );
 }

@@ -58,6 +58,7 @@ import { formatAmount } from '@e-pharmacy/utils/money';
 import {
   getAdminPharmacies,
   getAdminPharmacySummary,
+  getAdminPharmacyLocationRows,
   getAdminPharmacyRegistryOwnerOptions,
 } from '@/lib/api/browser/admin-pharmacy-registry.api';
 
@@ -72,10 +73,7 @@ import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-
 import { buildAdminPharmacyOwnerDetailUrl } from '@/lib/pharmacy-owners/admin-pharmacy-owner-url';
 import { getPharmacyLocationFilterOptions } from '@/lib/pharmacies/pharmacy-location-filter-options';
 
-import {
-  loadCompletePharmacyLocations,
-  type PharmacyLocationRow,
-} from '@/lib/pharmacies/load-complete-pharmacy-locations';
+import type { PharmacyLocationRow } from '@/lib/pharmacies/load-complete-pharmacy-locations';
 
 // Reuse the Owners registry shell classes: no parallel container CSS.
 import shellCss from '@/components/pharmacy-owners/PharmacyOwnersPageContent/PharmacyOwnersPageContent.module.css';
@@ -147,19 +145,11 @@ export function PharmaciesPageContent({
   >(null);
 
   useEffect(() => {
-    if (allLocationRows !== null) return;
+    if (!isFiltersOpen || allLocationRows !== null) return;
 
     const controller = new AbortController();
 
-    void loadCompletePharmacyLocations(
-      (page) =>
-        getAdminPharmacies(
-          { page, perPage: 100 },
-          { signal: controller.signal }
-        ),
-
-      controller.signal
-    )
+    void getAdminPharmacyLocationRows({ signal: controller.signal })
       .then((rows) => {
         if (!controller.signal.aborted) setAllLocationRows(rows);
       })
@@ -169,7 +159,7 @@ export function PharmaciesPageContent({
       });
 
     return () => controller.abort();
-  }, [allLocationRows]);
+  }, [isFiltersOpen, allLocationRows]);
 
   const navigate = useCallback(
     (nextState: AdminPharmacyListUrlState) => {
@@ -237,8 +227,20 @@ export function PharmaciesPageContent({
       })
 
       .catch((error: unknown) => {
-        if (!controller.signal.aborted)
+        if (!controller.signal.aborted) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.warn('Admin pharmacies registry request failed', {
+              transportCode: isApiError(error)
+                ? error.transportCode
+                : undefined,
+
+              httpStatus: isApiError(error) ? error.httpStatus : undefined,
+              message: error instanceof Error ? error.message : undefined,
+            });
+          }
+
           setListResult({ key, data: null, error: getListErrorMessage(error) });
+        }
       });
 
     return () => controller.abort();

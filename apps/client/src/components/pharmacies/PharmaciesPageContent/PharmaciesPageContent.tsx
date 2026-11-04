@@ -58,7 +58,9 @@ function PharmaciesPageContent({
   resourceState,
 }: PharmaciesPageContentProps) {
   const selectedPharmacyName = filters.pharmacyId
-    ? pharmacyOptions.find((option) => option.id === filters.pharmacyId)?.name
+    ? (pharmacyOptions.find((option) => option.id === filters.pharmacyId)
+        ?.name ??
+      pharmacies.find((item) => item.id === filters.pharmacyId)?.name)
     : undefined;
 
   const pageTitle = getPharmacyTitle(filters, selectedPharmacyName);
@@ -96,6 +98,7 @@ function PharmaciesPageContent({
           ? [
               {
                 label: selectedLocationLabel,
+
                 ...(filters.pharmacyId
                   ? {
                       href: buildPharmacyPath({
@@ -119,6 +122,7 @@ function PharmaciesPageContent({
           pharmacyOptions={pharmacyOptions}
           visiblePharmaciesCount={pharmacies.length}
           pharmaciesCount={total}
+          catalogUnavailable={resourceState.status === 'unavailable'}
         />
       }
       notices={undefined}
@@ -136,7 +140,8 @@ function PharmaciesPageContent({
                 'Try changing or resetting the filters.'
               : 'No pharmacies are available in the catalog yet.'
           }
-          unavailableMessage="Pharmacies are loading."
+          unavailableMessage="We couldn't load the pharmacies right now. Please try again."
+          unavailableRecoveryHref={buildPharmacyPath(filters)}
           recoveryLabel="pharmacies"
           skeletonVariant="pharmacy"
           emptyVariant="resource"

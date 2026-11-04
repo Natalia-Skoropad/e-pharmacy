@@ -11,7 +11,15 @@ import {
 } from 'react';
 
 import clsx from 'clsx';
-import { Check, ChevronDown, LoaderCircle, Search } from 'lucide-react';
+
+import {
+  Check,
+  ChevronDown,
+  Info,
+  LoaderCircle,
+  RotateCcw,
+  Search,
+} from 'lucide-react';
 
 import { useOutsidePointerDown } from '@e-pharmacy/hooks/dom';
 
@@ -53,6 +61,7 @@ export type SearchableSelectProps<TValue extends string = string> = Readonly<{
   hasMoreOptions?: boolean;
   isLoadingMore?: boolean;
   loadMoreError?: string;
+  loadMoreErrorVariant?: 'default' | 'notice';
   onLoadMore?: () => void;
   pageSize?: number;
   onChange: (value: TValue) => void;
@@ -84,6 +93,7 @@ function SearchableSelect<TValue extends string = string>({
   hasMoreOptions = false,
   isLoadingMore = false,
   loadMoreError,
+  loadMoreErrorVariant = 'default',
   onLoadMore,
   pageSize = 50,
   onChange,
@@ -431,7 +441,7 @@ function SearchableSelect<TValue extends string = string>({
                   </li>
                 );
               })
-            ) : (
+            ) : loadMoreError ? null : (
               <li className={css.empty} role="status">
                 {emptyMessage}
               </li>
@@ -446,13 +456,30 @@ function SearchableSelect<TValue extends string = string>({
                 Loading more…
               </li>
             ) : loadMoreError ? (
-              <li className={css.loadMore}>
+              <li
+                className={clsx(
+                  css.loadMore,
+                  loadMoreErrorVariant === 'notice' && css.loadMoreErrorNotice
+                )}
+                role="presentation"
+              >
+                {loadMoreErrorVariant === 'notice' ? (
+                  <Info
+                    size={17}
+                    className={css.loadMoreErrorIcon}
+                    aria-hidden="true"
+                  />
+                ) : null}
+                <span className={css.loadMoreErrorText} role="alert">
+                  {loadMoreError}
+                </span>
                 <button
                   type="button"
                   className={css.retryButton}
                   onClick={onLoadMore}
                 >
-                  {loadMoreError} — Retry
+                  <RotateCcw size={16} aria-hidden="true" />
+                  <span>Retry</span>
                 </button>
               </li>
             ) : null}

@@ -32,6 +32,7 @@ import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 import {
   buildPharmacyEditorPayload,
   validatePharmacyEditor,
+  tabHasErrors,
   valuesFromPharmacy,
   effectivePharmacyEditorValues,
   type PharmacyEditorField,
@@ -102,10 +103,15 @@ export function OwnedPharmacyEditableTab({
     documents.map((doc) => doc.id).join(',') !==
       savedDocuments.map((doc) => doc.id).join(',');
 
-  // Saving a draft is incremental even for an already active pharmacy.
-  // Full verification/moderation validation belongs to the submission action,
-  // otherwise a legacy missing field in another tab blocks all edits.
-  const validationMode = 'draft' as const;
+  // Blocked/reactivation corrections require completion of the edited tab.
+  // Full cross-tab validation still belongs to Request reactivation, so the
+  // owner can complete an incomplete historical pharmacy one tab at a time.
+  const isReactivationDraft =
+    pharmacy.status === 'blocked' ||
+    (pharmacy.status === 'on_reactivation' &&
+      pharmacy.reviewState === 'changes_requested');
+
+  const validationMode = isReactivationDraft ? 'verification' : 'draft';
 
   const validation = validatePharmacyEditor(
     values,
@@ -113,23 +119,30 @@ export function OwnedPharmacyEditableTab({
     validationMode
   );
 
+  // Only changed identifiers in the current tab need an asynchronous
+  // preflight. An unrelated Working hours/About/Payment purpose edit must not
+  // be blocked by a timeout checking five unchanged identifiers. The API
+  // still enforces global uniqueness for every persisted mutation.
+  const uniqueFields = (
+    tab === 'data'
+      ? (['phone', 'email'] as const)
+      : tab === 'payment'
+        ? (['taxId', 'iban', 'receiptEmail'] as const)
+        : ([] as const)
+  ).filter(
+    (field) =>
+      values[field].trim().toLowerCase() !== saved[field].trim().toLowerCase()
+  );
+
   const paymentAvailability = usePaymentAvailability(
     pharmacy.id,
     values,
-
-    pharmacy.membershipRole === 'owner' &&
-      !readOnly &&
-      Boolean(
-        values.taxId ||
-        values.iban ||
-        values.receiptEmail ||
-        values.phone ||
-        values.email
-      )
+    pharmacy.membershipRole === 'owner' && !readOnly && uniqueFields.length > 0,
+    uniqueFields
   );
 
   const hasValidationErrors =
-    Object.keys(validation).length > 0 || paymentAvailability.blocked;
+    tabHasErrors(tab, validation) || paymentAvailability.blocked;
 
   const fieldError = (name: PharmacyEditorField) =>
     errors[name] ??

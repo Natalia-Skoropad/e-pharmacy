@@ -71,14 +71,10 @@ export async function listAdminPharmacyOwnersService(
     {
       $lookup: {
         from: Pharmacy.collection.name,
-        let: { ownerId: '$_id' },
+        localField: '_id',
+        foreignField: 'ownerId',
 
         pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ['$ownerId', '$$ownerId'] },
-            },
-          },
           {
             $group: {
               _id: null,

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
@@ -55,11 +56,13 @@ export function PharmacySidebar({
     new: number;
     onVerification: number;
     onModeration: number;
+    onReactivation: number;
   }>(null);
 
   useEffect(() => {
     let requestVersion = 0;
     let activeController: AbortController | null = null;
+    let needsPharmacySelection = false;
 
     const loadOrderCounts = async () => {
       requestVersion += 1;
@@ -97,22 +100,37 @@ export function PharmacySidebar({
             inProgress: inProgressOrders.total,
           })
         );
-      } catch {
+      } catch (error) {
         if (controller.signal.aborted || currentVersion !== requestVersion) {
           return;
         }
 
+        // A multi-pharmacy owner must explicitly select a pharmacy for the
+        // legacy /orders endpoint. Repeating its 409 on every focus only adds
+        // auth and database traffic without ever producing badge counts.
+        needsPharmacySelection = Boolean(
+          isApiError(error) &&
+          error.httpStatus === 409 &&
+          error.code === 'PHARMACY_SELECTION_REQUIRED'
+        );
+
         setOrderCounterState(createUnavailableOrderCounterState());
+      } finally {
+        if (activeController === controller) activeController = null;
       }
     };
 
     const handleFocus = () => {
+      if (needsPharmacySelection || activeController) return;
+
       void loadOrderCounts();
     };
 
     void loadOrderCounts();
 
     const unsubscribeRefresh = subscribeToOrderCounterRefresh(() => {
+      needsPharmacySelection = false;
+
       void loadOrderCounts();
     });
 
@@ -150,15 +168,22 @@ export function PharmacySidebar({
           new: stats.new,
           onVerification: stats.onVerification,
           onModeration: stats.onModeration,
+          onReactivation: stats.onReactivation,
         });
       } catch {
         if (!controller.signal.aborted && generation === version) {
           setPharmacyCounts(null);
         }
+      } finally {
+        if (activeController === controller) activeController = null;
       }
     };
 
-    const onFocus = () => void refresh();
+    const onFocus = () => {
+      if (activeController) return;
+
+      void refresh();
+    };
 
     void refresh();
 
@@ -201,7 +226,8 @@ export function PharmacySidebar({
           pharmacyCounts &&
           (pharmacyCounts.new ||
             pharmacyCounts.onVerification ||
-            pharmacyCounts.onModeration)
+            pharmacyCounts.onModeration ||
+            pharmacyCounts.onReactivation)
         );
 
         const hasNotifications = Boolean(
@@ -274,12 +300,20 @@ export function PharmacySidebar({
                     {formatVisibleOrderCount(pharmacyCounts.onModeration)}
                   </span>
                 ) : null}
+                {pharmacyCounts.onReactivation > 0 ? (
+                  <span
+                    className={css.reactivationCounter}
+                    aria-label={`${pharmacyCounts.onReactivation} pharmacies awaiting reactivation`}
+                  >
+                    {formatVisibleOrderCount(pharmacyCounts.onReactivation)}
+                  </span>
+                ) : null}
               </span>
             ) : null}
             {isCollapsed && showPharmacyCounters && pharmacyCounts ? (
               <span
                 className={css.collapsedCounter}
-                aria-label={`${pharmacyCounts.new} new, ${pharmacyCounts.onVerification} on verification, ${pharmacyCounts.onModeration} on moderation`}
+                aria-label={`${pharmacyCounts.new} new, ${pharmacyCounts.onVerification} on verification, ${pharmacyCounts.onModeration} on moderation, ${pharmacyCounts.onReactivation} awaiting reactivation`}
               />
             ) : null}
 

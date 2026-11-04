@@ -205,6 +205,20 @@ export function getAdminAuditActionLabel(action: AdminAuditAction): string {
 
 //===================================================================
 
+/** Pharmacy changes have exactly two filter/display categories. The stored
+ * action remains precise in the audit database and API for traceability. */
+export function getAdminAuditDisplayType(action: AdminAuditAction): string {
+  if (action.startsWith('pharmacy.')) {
+    return getAdminAuditActionLabel(action) === 'Pharmacy status changed'
+      ? 'Pharmacy status changed'
+      : 'Pharmacy data changed';
+  }
+
+  return getAdminAuditActionLabel(action);
+}
+
+//===================================================================
+
 export function getAdminAuditActorTypeLabel(
   actorType: AdminAuditActorType
 ): string {
@@ -413,6 +427,17 @@ export function getAdminAuditChangeTone(
 
   if (item.statusAfter && isKnownAuditStatus(item.statusAfter)) {
     return STATUS_PRESENTATION_BY_VALUE[item.statusAfter].tone;
+  }
+
+  if (item.action.startsWith('pharmacy.reactivation.')) {
+    return PHARMACY_STATUS_PRESENTATION.on_reactivation.tone;
+  }
+
+  if (
+    item.action === 'pharmacy.corrections.requested' &&
+    item.statusAfter === 'on_reactivation'
+  ) {
+    return PHARMACY_STATUS_PRESENTATION.on_reactivation.tone;
   }
 
   if (CREATE_ACTIONS.has(item.action)) return 'success';

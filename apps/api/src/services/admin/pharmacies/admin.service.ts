@@ -293,7 +293,6 @@ export async function decidePharmacyModerationByAdminService(
         previousStatus === PHARMACY_STATUSES.ON_VERIFICATION;
 
       const isModeration = previousStatus === PHARMACY_STATUSES.ON_MODERATION;
-      const isBlocked = previousStatus === PHARMACY_STATUSES.BLOCKED;
 
       const isReactivation =
         previousStatus === PHARMACY_STATUSES.ON_REACTIVATION;
@@ -390,7 +389,6 @@ export async function decidePharmacyModerationByAdminService(
           if (
             !isVerification &&
             !isModeration &&
-            !isReactivation &&
             previousStatus !== PHARMACY_STATUSES.ACTIVE
           ) {
             throw httpError(
@@ -416,34 +414,19 @@ export async function decidePharmacyModerationByAdminService(
         }
 
         case 'reject_reactivation': {
-          if (!isReactivation || pharmacy.reviewState !== 'pending') {
-            throw httpError(
-              HTTP_STATUS.CONFLICT,
-              'No pending reactivation request to reject.'
-            );
-          }
-
-          nextStatus = PHARMACY_STATUSES.BLOCKED;
-          nextUpdate.status = nextStatus;
-          nextUpdate.statusReason = reason;
-          nextReviewState = 'pending';
-          unsetFields.reviewState = '';
-          unsetFields.reviewFeedback = '';
-          unsetFields.reviewedAt = '';
-          unsetFields.reviewedBy = '';
-          action = ADMIN_AUDIT_ACTIONS.PHARMACY_REACTIVATION_REJECTED;
-
-          break;
+          // The agreed reactivation workflow has two administrator decisions:
+          // approve or request corrections. Legacy clients cannot bypass it.
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Reject reactivation is no longer available. Request corrections instead.'
+          );
         }
 
         case 'review_reactivation': {
-          if (
-            !(isReactivation && pharmacy.reviewState === 'pending') &&
-            !(isBlocked && pharmacy.blockSource === 'admin_blocked')
-          ) {
+          if (!(isReactivation && pharmacy.reviewState === 'pending')) {
             throw httpError(
               HTTP_STATUS.CONFLICT,
-              'Reactivation requires a pending request or an administrator-issued block.'
+              'Reactivation requires a submitted owner request.'
             );
           }
 
@@ -471,45 +454,41 @@ export async function decidePharmacyModerationByAdminService(
               'Pharmacy owner documents are required for reactivation.'
             );
 
-          nextStatus = pharmacy.activatedAt
-            ? PHARMACY_STATUSES.ACTIVE
-            : PHARMACY_STATUSES.ON_VERIFICATION;
-
+          // Approval of reactivation IS approval of the frozen submitted
+          // version, including for never-before-activated pharmacies.
+          nextStatus = PHARMACY_STATUSES.ACTIVE;
           nextUpdate.status = nextStatus;
 
-          if (isReactivation) {
-            // Apply the exact frozen proposed version reviewed by Admin, never a later edit.
-            const pending =
-              normalizePendingModeration(pharmacy.pendingModeration) ?? {};
+          const pending =
+            normalizePendingModeration(pharmacy.pendingModeration) ?? {};
 
-            const { location, bankDetails, ...rootFields } = pending;
+          const { location, bankDetails, ...rootFields } = pending;
 
-            for (const [key, value] of Object.entries(rootFields)) {
-              if (value === null) unsetFields[key] = '';
-              else if (value !== undefined) nextUpdate[key] = value;
-            }
-
-            if (location !== undefined)
-              nextUpdate.location = clonePharmacyLocation(location);
-
-            if (bankDetails) {
-              for (const [key, value] of Object.entries(bankDetails)) {
-                const path = `bankDetails.${key}`;
-                if (value === null) unsetFields[path] = '';
-                else if (value !== undefined) nextUpdate[path] = value;
-              }
-            }
-
-            unsetFields.pendingModeration = '';
+          for (const [key, value] of Object.entries(rootFields)) {
+            if (value === null) unsetFields[key] = '';
+            else if (value !== undefined) nextUpdate[key] = value;
           }
 
-          if (nextStatus === PHARMACY_STATUSES.ON_VERIFICATION) {
-            nextUpdate.reviewState = 'pending';
-            nextReviewState = 'pending';
-          } else {
-            unsetFields.reviewState = '';
-            nextReviewState = 'pending';
+          if (location !== undefined)
+            nextUpdate.location = clonePharmacyLocation(location);
+
+          if (bankDetails) {
+            for (const [key, value] of Object.entries(bankDetails)) {
+              const path = `bankDetails.${key}`;
+
+              if (value === null) unsetFields[path] = '';
+              else if (value !== undefined) nextUpdate[path] = value;
+            }
           }
+
+          const approvedAt = new Date();
+
+          nextUpdate.approvedBy = adminUserId;
+          nextUpdate.approvedAt = approvedAt;
+          nextUpdate.activatedAt = pharmacy.activatedAt ?? approvedAt;
+          unsetFields.pendingModeration = '';
+          unsetFields.reviewState = '';
+          nextReviewState = 'pending';
 
           unsetFields.statusReason = '';
           unsetFields.blockSource = '';
@@ -547,7 +526,7 @@ export async function decidePharmacyModerationByAdminService(
 
       if (
         input.action === 'approve' ||
-        (input.action === 'review_reactivation' && isReactivation)
+        input.action === 'review_reactivation'
       ) {
         await syncPharmacyPaymentIdentifiers(saved, session);
 
@@ -588,8 +567,8 @@ export async function decidePharmacyModerationByAdminService(
         input.action === 'review_reactivation' &&
         nextStatus === PHARMACY_STATUSES.ACTIVE
       ) {
-        // Defensive check for legacy clients without a default account.
-        // No owner auto-activation or approval of a pending draft occurs here.
+        // Resolve the default client for every approved reactivation.
+        // New pharmacies have just been activated with their verified draft.
         const defaultClient = await ensureDefaultPharmacyClient(
           saved._id,
           adminUserId,

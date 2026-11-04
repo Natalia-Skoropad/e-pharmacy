@@ -647,16 +647,30 @@ pharmacySchema.index({ status: 1, rating: -1 });
 
 //===============================================================
 
+// Public autocomplete sorts by name regardless of the current visibility
+// status. Keep status last so the index can provide global name/_id order
+// even when the public status filter contains multiple values.
+pharmacySchema.index(
+  { name: 1, _id: 1, status: 1 },
+  { name: 'public_pharmacy_name_order' }
+);
+
+//===============================================================
+
 // Admin registry: deterministic createdAt + _id pagination, both directions.
 pharmacySchema.index(
   { createdAt: -1, _id: -1 },
   { name: 'admin_pharmacy_created_order' }
 );
 
+//===============================================================
+
 pharmacySchema.index(
   { status: 1, createdAt: -1, _id: -1 },
   { name: 'admin_pharmacy_status_order' }
 );
+
+//===============================================================
 
 pharmacySchema.index(
   { ownerId: 1, createdAt: -1, _id: -1 },

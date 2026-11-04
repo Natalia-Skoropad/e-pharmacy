@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 import {
   getStoredAdminAuditActionValues,
+  ADMIN_AUDIT_ACTION_VALUES,
   isAdminAuditSection,
   normalizeStoredAdminAuditAction,
   type AdminAuditAction,
@@ -51,7 +52,30 @@ export async function listAdminAuditLogsService(
     filter.action = { $in: getStoredAdminAuditActionValues(query.action) };
   }
 
+  // One user-facing status category encompasses all lifecycle audit actions.
+  // Keep the filtering on MongoDB to preserve accurate pagination and totals.
+  if (query.changeType) {
+    const statusActions = ADMIN_AUDIT_ACTION_VALUES.filter(
+      (action) =>
+        action === 'pharmacy.status.changed' ||
+        action === 'pharmacy.moderation.submitted' ||
+        action === 'pharmacy.corrections.requested' ||
+        action.startsWith('pharmacy.reactivation.') ||
+        action === 'pharmacy.verification.withdrawn' ||
+        action === 'pharmacy.moderation.withdrawn'
+    );
+
+    filter.action =
+      query.changeType === 'status'
+        ? { $in: statusActions }
+        : { $nin: statusActions };
+  }
+
   if (query.section) applyAuditSectionFilter(filter, query.section);
+  else if (query.changeType && !exactScope) {
+    applyAuditSectionFilter(filter, 'pharmacies');
+  }
+
   if (query.entityType) filter.entityType = query.entityType;
   if (query.entityId) filter.entityId = query.entityId;
   if (query.scopeEntityType) filter.scopeEntityType = query.scopeEntityType;

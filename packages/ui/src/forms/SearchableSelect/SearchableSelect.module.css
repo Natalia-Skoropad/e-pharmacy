@@ -294,8 +294,63 @@
   color: var(--color-text-secondary);
 }
 
+/* Matches the shared soft-error notice used for document uploads.
+   The notice variant is opt-in for remote pharmacy/location selectors. */
+.loadMoreErrorNotice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: var(--fz-14);
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-radius: var(--radius-md);
+}
+
+.loadMoreErrorIcon {
+  flex: 0 0 auto;
+}
+
+.loadMoreErrorText {
+  min-width: 0;
+  flex: 1 1 auto;
+  line-height: var(--lh-base);
+  overflow-wrap: anywhere;
+}
+
+.loadMoreErrorNotice .retryButton {
+  align-self: center;
+  white-space: nowrap;
+}
+
 .retryButton {
-  color: var(--color-accent);
-  text-decoration: underline;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 14px;
+  font: inherit;
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-pill);
   cursor: pointer;
+  text-decoration: none;
+  transition: filter var(--transition-base);
+}
+
+.retryButton:hover,
+.retryButton:focus-visible {
+  color: var(--color-white);
+  filter: brightness(0.94);
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }

@@ -12,6 +12,7 @@ import type {
 
 import { getEndOfDay, getStartOfDay } from '../../../utils/dates/date-range';
 import { createSafeRegExp } from '../../../utils/validation/regexp';
+
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
 
 import {
@@ -135,11 +136,11 @@ function ownerSearchStages(search?: string): PipelineStage[] {
     {
       $lookup: {
         from: User.collection.name,
-        let: { ownerId: '$ownerId' },
+        localField: 'ownerId',
+        foreignField: '_id',
 
         pipeline: [
           { $match: { role: USER_ROLES.PHARMACY } },
-          { $match: { $expr: { $eq: ['$_id', '$$ownerId'] } } },
           {
             $match: { $or: identitySearch(search, ['name', 'email', 'phone']) },
           },
@@ -319,6 +320,7 @@ export async function getAdminPharmacyStatisticsService() {
       onVerification: 0,
       active: 0,
       onModeration: 0,
+      onReactivation: 0,
       blocked: 0,
     }
   );
@@ -371,6 +373,42 @@ export async function listAdminPharmacyOptionsService(
       ...(item.phone ? { phone: item.phone } : {}),
       ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
       ...(item.location ? { location: item.location } : {}),
+    })),
+  };
+}
+
+//===============================================================
+
+/** Location facets are independent of the heavy registry KPI projection.
+ * Never enumerate all registry pages just to populate a filter drawer. */
+export async function listAdminPharmacyLocationsService() {
+  const rows = await Pharmacy.aggregate<{
+    region?: string;
+    settlement?: string;
+  }>([
+    {
+      $group: {
+        _id: {
+          region: '$location.region',
+          settlement: '$location.settlement',
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        region: '$_id.region',
+        settlement: '$_id.settlement',
+      },
+    },
+  ]);
+
+  return {
+    items: rows.map(({ region, settlement }) => ({
+      location: {
+        ...(typeof region === 'string' ? { region } : {}),
+        ...(typeof settlement === 'string' ? { settlement } : {}),
+      },
     })),
   };
 }

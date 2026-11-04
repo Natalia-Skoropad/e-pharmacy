@@ -64,3 +64,12 @@ test('audit modal separates section and page and has accessible change values', 
   assert.match(styles, /\.actorIdentityNameLink \{/);
   assert.doesNotMatch(styles, /\.sectionLink:hover \.sectionLinkLabel/);
 });
+
+//===================================================================
+
+test('audit photo fingerprint preview checks digest presence before reading its fields', async () => {
+  const modal = await source('./AuditDetailsModal.tsx');
+
+  assert.match(modal, /photoDigest && photoDigest\.url === pagePhotoUrl/);
+  assert.doesNotMatch(modal, /photoDigest\?\.url === pagePhotoUrl/);
+});

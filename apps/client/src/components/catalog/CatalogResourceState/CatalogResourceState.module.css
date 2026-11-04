@@ -30,3 +30,31 @@
     padding: 48px 32px;
   }
 }
+
+/* Reuse the shared ProfileResourceState error card; only its retry action
+   needs the catalog link treatment. A full navigation avoids stale RSC data. */
+.retryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 18px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  color: var(--color-white);
+  background-color: var(--color-accent);
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+}
+
+.retryLink:hover,
+.retryLink:focus-visible {
+  color: var(--color-white);
+  filter: brightness(0.94);
+}
+
+.retryLink:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}

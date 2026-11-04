@@ -61,15 +61,20 @@ test('reactivation submits the frozen revision only after completeness and owner
 
 //===================================================================
 
-test('admin reacts to reactivation with approval, corrections or rejection and always audits', () => {
-  assert.match(admin, /case 'reject_reactivation'/);
+test('admin only approves a submitted reactivation or requests corrections', () => {
+  const reactivate = admin
+    .split("case 'review_reactivation':")[1]
+    .split('// Strict CAS')[0];
+
   assert.match(admin, /case 'request_corrections'/);
-  assert.match(admin, /case 'review_reactivation'/);
-  assert.match(admin, /PHARMACY_REACTIVATION_REJECTED/);
+  assert.match(reactivate, /pharmacy\.reviewState === 'pending'/);
+  assert.match(reactivate, /PHARMACY_STATUSES\.ACTIVE/);
+  assert.match(reactivate, /unsetFields\.pendingModeration = ''/);
+  assert.match(reactivate, /missingRequiredModerationFields/);
   assert.match(admin, /PHARMACY_REACTIVATION_REVIEWED/);
   assert.match(admin, /appendAdminAuditLog/);
-  assert.match(admin, /missingRequiredModerationFields/);
-  assert.match(admin, /blockSource === 'admin_blocked'/);
+  assert.doesNotMatch(reactivate, /blockSource === 'admin_blocked'/);
+  assert.match(admin, /Reject reactivation is no longer available/);
 });
 
 //===================================================================

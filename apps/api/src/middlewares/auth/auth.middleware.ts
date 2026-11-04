@@ -141,57 +141,91 @@ async function authenticateToken(req: Request): Promise<void> {
       HTTP_STATUS.UNAUTHORIZED,
       API_MESSAGES.AUTH_REQUIRED,
       undefined,
-
       AUTH_ERROR_CODES.SESSION_INVALID
     );
   }
 
   let lastCandidateError: unknown;
 
-  for (const candidate of tokens) {
-    try {
-      const payload = verifyToken(candidate.token);
+  const authStartedAt = Date.now();
 
-      if (!payload.sessionId) continue;
+  let sessionLookupMs = 0;
+  let userLookupMs = 0;
+  let candidatesChecked = 0;
 
-      await assertActiveSessionService(payload.sessionId, payload.userId);
+  try {
+    for (const candidate of tokens) {
+      candidatesChecked += 1;
 
-      const user = await getUserByIdService(payload.userId);
+      try {
+        const payload = verifyToken(candidate.token);
 
-      req.authSessionId = payload.sessionId;
-      req.user = user;
+        if (!payload.sessionId) continue;
 
-      if (candidate.source === 'legacy_cookie') {
-        logger.security({
-          type: 'legacy_auth_cookie_used',
-          method: req.method,
-          path: req.path,
+        const sessionStartedAt = Date.now();
+
+        try {
+          await assertActiveSessionService(payload.sessionId, payload.userId);
+        } finally {
+          sessionLookupMs += Date.now() - sessionStartedAt;
+        }
+
+        const userStartedAt = Date.now();
+
+        const user = await getUserByIdService(payload.userId, {
+          // The current-user route is the canonical source for the avatar.
+          // Other private endpoints need identity/role/status, not its bytes.
+          includePictureUrl: req.path === '/current',
+        }).finally(() => {
+          userLookupMs += Date.now() - userStartedAt;
         });
+
+        req.authSessionId = payload.sessionId;
+        req.user = user;
+
+        if (candidate.source === 'legacy_cookie') {
+          logger.security({
+            type: 'legacy_auth_cookie_used',
+            method: req.method,
+            path: req.path,
+          });
+        }
+
+        return;
+      } catch (error) {
+        if (!isAuthenticationCandidateError(error)) throw error;
+
+        lastCandidateError = error;
+        // Keep checking the remaining cookie candidates. Browsers can send
+        // duplicate auth cookies; an earlier one can be stale.
       }
+    }
 
-      return;
-    } catch (error) {
-      if (!isAuthenticationCandidateError(error)) throw error;
+    if (hasPreservedAuthLifecycleCode(lastCandidateError)) {
+      throw lastCandidateError;
+    }
 
-      lastCandidateError = error;
+    throw httpError(
+      HTTP_STATUS.UNAUTHORIZED,
+      API_MESSAGES.INVALID_TOKEN,
+      undefined,
+      AUTH_ERROR_CODES.SESSION_INVALID
+    );
+  } finally {
+    const durationMs = Date.now() - authStartedAt;
 
-      // Keep checking the remaining cookie candidates. Browsers can send
-      // duplicate auth cookies after deployments or domain/path changes, and
-      // the first one can be stale while a later one is valid.
+    if (durationMs >= 1_000) {
+      // Only in development: help distinguish slow database lookups from
+      // repeated stale-cookie candidates. Do not log tokens or user details.
+      logger.info('[auth] slow authentication lookup', {
+        path: req.path,
+        durationMs,
+        sessionLookupMs,
+        userLookupMs,
+        candidatesChecked,
+      });
     }
   }
-
-  if (hasPreservedAuthLifecycleCode(lastCandidateError)) {
-    throw lastCandidateError;
-  }
-
-  throw httpError(
-    HTTP_STATUS.UNAUTHORIZED,
-    API_MESSAGES.INVALID_TOKEN,
-    undefined,
-
-    AUTH_ERROR_CODES.SESSION_INVALID
-  );
 }
 
 //===============================================================

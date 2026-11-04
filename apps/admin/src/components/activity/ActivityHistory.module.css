@@ -198,6 +198,10 @@
   color: var(--color-error);
 }
 
+.changeMustard {
+  color: var(--color-status-mustard, #986209);
+}
+
 .changePending,
 .legendPending {
   color: var(--color-warning);
@@ -213,6 +217,25 @@
 
 .changeNeutral {
   color: var(--color-text-secondary);
+}
+
+.auditPhotoPreview {
+  display: inline-block;
+  width: 100px;
+  height: 76px;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.auditPhotoPreview img {
+  object-fit: cover;
+}
+
+.auditPhotoUnavailable {
+  color: var(--color-text-muted);
+  font-size: var(--fz-12);
 }
 
 .detailsButton.detailsButton {

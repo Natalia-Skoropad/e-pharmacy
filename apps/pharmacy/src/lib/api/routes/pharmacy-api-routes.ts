@@ -90,6 +90,7 @@ export const pharmacyApiRoutes = {
     ownedRegistry: '/api/pharmacies/me/pharmacies',
     ownedRegistrySummary: '/api/pharmacies/me/pharmacies/summary',
     ownedRegistryOptions: '/api/pharmacies/me/pharmacies/options',
+    ownedRegistryLocations: '/api/pharmacies/me/pharmacies/locations',
 
     createDraft: '/api/pharmacies',
 

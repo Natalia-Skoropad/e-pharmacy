@@ -13,6 +13,7 @@ import {
   getOwnedPharmacyStatisticsService,
   listOwnedPharmaciesService,
   listOwnedPharmacyOptionsService,
+  listOwnedPharmacyLocationsService,
 } from '../../services/pharmacies/owned-pharmacy-registry-read.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
@@ -57,6 +58,18 @@ export async function listOwnedPharmacyOptions(
     req.user?.id ?? '',
     res.locals.validated.query
   );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function listOwnedPharmacyLocations(
+  req: Request,
+  res: ValidatedResponse
+): Promise<void> {
+  const data = await listOwnedPharmacyLocationsService(req.user?.id ?? '');
 
   res.setHeader('Cache-Control', 'private, no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

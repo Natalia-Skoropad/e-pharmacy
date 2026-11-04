@@ -18,6 +18,12 @@
     }
   },
   {
+    "backend": "/pharmacies/:pharmacyId/photo-source",
+    "methods": {
+      "GET": "public"
+    }
+  },
+  {
     "backend": "/pharmacies/me/pharmacies/:pharmacyId",
     "methods": {
       "GET": "private"

@@ -20,6 +20,11 @@ import { moderationReadyPharmacyFields } from '../__tests__/fixtures/pharmacy-mo
 
 import { updateMyPharmacyProfileService } from './pharmacy-owner-profile.service';
 import { submitMyPharmacyModerationService } from './pharmacy-moderation.service';
+import { requestOwnedPharmacyReactivationService } from './pharmacy-owner-reactivation.service';
+import {
+  getPharmaciesService,
+  getPharmacyDetailsService,
+} from './pharmacy-public-catalog.service';
 
 //===============================================================
 
@@ -50,6 +55,7 @@ test(
     let ownerId: Types.ObjectId | undefined;
     let adminId: Types.ObjectId | undefined;
     let pharmacyId: Types.ObjectId | undefined;
+    let neverActivatedPharmacyId: Types.ObjectId | undefined;
 
     try {
       const owner = await User.create({
@@ -271,32 +277,107 @@ test(
       assert.ok(await Order.exists({ _id: orderId, pharmacyId }));
 
       await Order.collection.deleteOne({ _id: orderId });
-      await User.updateOne({ _id: ownerId }, { $set: { status: 'blocked' } });
 
+      // A direct Admin approval without an Owner-submitted snapshot is forbidden.
       await assert.rejects(
         () =>
           decidePharmacyModerationByAdminService(
             pharmacyKey,
-
             decision(
               'review_reactivation',
               blocked.updatedAt,
-              `blocked-owner-${marker}`
+              `direct-${marker}`
             ),
-
             actorKey
           ),
-        /blocked or missing pharmacy owner/i
+        /submitted owner request/i
+      );
+
+      await User.updateOne({ _id: ownerId }, { $set: { status: 'blocked' } });
+
+      await assert.rejects(
+        () =>
+          requestOwnedPharmacyReactivationService(
+            ownerKey,
+            pharmacyKey,
+            {
+              reason: 'Owner cannot send while account blocked.',
+              expectedRevision: blocked.updatedAt,
+            },
+            `blocked-owner-${marker}`
+          ),
+        /blocked or unavailable/i
       );
 
       await User.updateOne({ _id: ownerId }, { $set: { status: 'active' } });
+
+      const requested = await requestOwnedPharmacyReactivationService(
+        ownerKey,
+        pharmacyKey,
+        {
+          reason: 'All pharmacy data is ready for reactivation.',
+          expectedRevision: blocked.updatedAt,
+        },
+        `request-reactivate-${marker}`
+      );
+
+      assert.equal(requested.pharmacy.status, 'on_reactivation');
+      assert.equal(requested.pharmacy.reviewState, 'pending');
+
+      const needsChanges = await decidePharmacyModerationByAdminService(
+        pharmacyKey,
+
+        decision(
+          'request_corrections',
+          requested.pharmacy.updatedAt,
+          `reactivate-corrections-${marker}`
+        ),
+
+        actorKey
+      );
+
+      assert.equal(needsChanges.status, 'on_reactivation');
+      assert.equal(needsChanges.reviewState, 'changes_requested');
+
+      // The owner can edit the unpublished draft again only after corrections.
+      const corrected = await updateMyPharmacyProfileService(
+        ownerKey,
+        {
+          name: 'Reviewed Reactivated Pharmacy',
+          expectedRevision: needsChanges.updatedAt,
+        },
+        `reactivation-draft-${marker}`,
+        pharmacyKey
+      );
+
+      const unchangedPublished = await Pharmacy.findById(pharmacyId);
+
+      assert.equal(unchangedPublished?.name, 'Updated Moderation Pharmacy');
+
+      assert.equal(
+        corrected.pharmacy.pendingModeration?.name,
+        'Reviewed Reactivated Pharmacy'
+      );
+
+      const resent = await requestOwnedPharmacyReactivationService(
+        ownerKey,
+        pharmacyKey,
+        {
+          reason: 'Corrected pharmacy information.',
+          expectedRevision: corrected.pharmacy.updatedAt,
+        },
+        `reactivation-resubmit-${marker}`
+      );
+
+      assert.equal(resent.pharmacy.status, 'on_reactivation');
+      assert.equal(resent.pharmacy.reviewState, 'pending');
 
       const reactivated = await decidePharmacyModerationByAdminService(
         pharmacyKey,
 
         decision(
           'review_reactivation',
-          blocked.updatedAt,
+          resent.pharmacy.updatedAt,
           `reactivate-${marker}`
         ),
 
@@ -304,13 +385,95 @@ test(
       );
 
       assert.equal(reactivated.status, 'active');
+      assert.equal(reactivated.name, 'Reviewed Reactivated Pharmacy');
+      assert.equal(reactivated.pendingModeration, undefined);
+
+      // Reactivation must clear block/review markers in the persisted record,
+      // not merely display an Active badge in the Owner/Admin UI.
+      const publishedAfterReactivation = await Pharmacy.findById(pharmacyId);
+
+      assert.equal(publishedAfterReactivation?.status, 'active');
+      assert.equal(publishedAfterReactivation?.reviewState, undefined);
+      assert.equal(publishedAfterReactivation?.pendingModeration, undefined);
+      assert.equal(publishedAfterReactivation?.blockSource, undefined);
+      assert.equal(publishedAfterReactivation?.statusReason, undefined);
+      assert.ok(publishedAfterReactivation?.activatedAt);
+      assert.ok(publishedAfterReactivation?.approvedAt);
+
+      // Public list and public detail use the same record immediately after
+      // transaction commit. A pharmacy with no offers must still be visible.
+      const publicList = await getPharmaciesService({
+        page: 1,
+        perPage: 24,
+        pharmacyId: pharmacyKey,
+        sort: 'newest',
+      });
+
+      assert.equal(publicList.total, 1);
+      assert.equal(publicList.items[0]?.id, pharmacyKey);
+
+      const publicDetail = await getPharmacyDetailsService(pharmacyKey);
+
+      assert.equal(publicDetail.pharmacy.id, pharmacyKey);
+
+      // A never-activated blocked pharmacy is independently reviewed and
+      // becomes Active only after its owner submits a complete application.
+      const firstPharmacy = await Pharmacy.create({
+        ...moderationReadyPharmacyFields({
+          email: `first-reactivation-${marker}@example.com`,
+          phone: `+38063${digits}`,
+        }),
+
+        ownerId,
+        name: 'First Reactivation Pharmacy',
+        status: 'blocked',
+        blockSource: 'admin_blocked',
+      });
+
+      neverActivatedPharmacyId = firstPharmacy._id;
+
+      const firstKey = String(firstPharmacy._id);
+
+      const firstRequest = await requestOwnedPharmacyReactivationService(
+        ownerKey,
+        firstKey,
+        {
+          reason: 'Complete pharmacy and owner documents attached.',
+          expectedRevision: firstPharmacy.updatedAt.toISOString(),
+        },
+        `first-request-${marker}`
+      );
+
+      assert.equal(firstRequest.pharmacy.status, 'on_reactivation');
+
+      const firstApproval = await decidePharmacyModerationByAdminService(
+        firstKey,
+
+        decision(
+          'review_reactivation',
+          firstRequest.pharmacy.updatedAt,
+          `first-approve-${marker}`
+        ),
+
+        actorKey
+      );
+
+      assert.equal(firstApproval.status, 'active');
+
+      const firstActiveRecord = await Pharmacy.findById(firstPharmacy._id);
+
+      assert.ok(firstActiveRecord?.activatedAt);
+
+      assert.ok(
+        await User.exists({ defaultClientPharmacyId: firstPharmacy._id })
+      );
 
       assert.equal(
         await AdminAuditLog.countDocuments({
           entityId: pharmacyKey,
           action: ADMIN_AUDIT_ACTIONS.PHARMACY_PROFILE_UPDATED,
         }),
-        1
+        2
       );
 
       assert.equal(
@@ -321,6 +484,18 @@ test(
         2
       );
     } finally {
+      if (neverActivatedPharmacyId) {
+        await PharmacyPaymentIdentifier.deleteMany({
+          pharmacyId: neverActivatedPharmacyId,
+        });
+
+        await User.deleteMany({
+          defaultClientPharmacyId: neverActivatedPharmacyId,
+        });
+
+        await Pharmacy.deleteOne({ _id: neverActivatedPharmacyId });
+      }
+
       if (pharmacyId) {
         await Order.deleteMany({ pharmacyId });
 

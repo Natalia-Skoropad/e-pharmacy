@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 
 import { getPharmacySearchOptionsService } from '../../services/pharmacies/pharmacy-search-options.service';
+import { getPublicPharmacyPhotoSource } from '../../services/pharmacies/pharmacy-public-image';
 
 import { USER_ROLES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
@@ -134,6 +135,8 @@ export async function setFavoritePharmacy(
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
 
+//===============================================================
+
 // Bounded, server-filtered options for public search comboboxes.
 export async function getPharmacySearchOptions(
   _req: Request,
@@ -144,4 +147,20 @@ export async function getPharmacySearchOptions(
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+// The binary payload is fetched only by the same-origin public image proxy.
+export async function getPharmacyPhotoSource(
+  _req: Request,
+  res: ValidatedResponse<unknown, PharmacyIdParams>
+): Promise<void> {
+  const { pharmacyId } = res.locals.validated.params;
+  const { mimeType, bytes } = await getPublicPharmacyPhotoSource(pharmacyId);
+
+  res.setHeader('Content-Type', mimeType);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'no-store');
+  res.status(HTTP_STATUS.OK).send(bytes);
 }

@@ -50,7 +50,22 @@ const publicPharmaciesReader = createPublicPharmaciesReader<ReadRequestOptions>(
 
 export const getPharmacies = publicPharmaciesReader.getPharmacies;
 export const getPharmacyOptions = publicPharmaciesReader.getOptions;
-export const getPharmacySearchOptions = publicPharmaciesReader.getSearchOptions;
+
+//===================================================================
+
+// Keep the browser's timeout beyond the BFF's scoped search-options budget.
+// Abort signals from the dropdown still cancel obsolete queries immediately.
+export const getPharmacySearchOptions = (
+  params: Parameters<typeof publicPharmaciesReader.getSearchOptions>[0],
+  options?: ReadRequestOptions
+) =>
+  publicPharmaciesReader.getSearchOptions(params, {
+    ...options,
+    timeoutMs: 20_000,
+  });
+
+//===================================================================
+
 export const getPharmacyFilters = publicPharmaciesReader.getFilters;
 export const getPharmacyDetails = publicPharmaciesReader.getDetails;
 export const getPharmacyReviews = publicPharmaciesReader.getReviews;

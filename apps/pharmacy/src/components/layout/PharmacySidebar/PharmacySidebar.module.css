@@ -16,13 +16,16 @@
 .newCounter,
 .progressCounter,
 .verificationCounter,
-.moderationCounter {
+.moderationCounter,
+.reactivationCounter {
   display: inline-grid;
+  flex: 0 0 auto;
   place-items: center;
   min-width: 25px;
   height: 25px;
   padding-inline: 8px;
   font-size: 14px;
+  line-height: 1;
   color: var(--color-white);
   border-radius: var(--radius-pill);
 }
@@ -34,6 +37,10 @@
 
 .verificationCounter {
   background: var(--gradient-stat-purple);
+}
+
+.reactivationCounter {
+  background-color: var(--color-status-mustard, #986209);
 }
 
 .moderationCounter {

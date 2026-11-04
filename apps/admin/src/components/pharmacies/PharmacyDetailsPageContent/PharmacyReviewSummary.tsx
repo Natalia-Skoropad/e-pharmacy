@@ -183,7 +183,8 @@ function ReviewValue({
     );
   }
 
-  if (change.presentation === 'hours') return <WorkingHours value={value} />;
+  if (change.presentation === 'hours')
+    return <WorkingHours value={value} className={css.reviewWorkingHours} />;
 
   if (change.presentation === 'markdown')
     return <MarkdownContent value={value} />;

@@ -36,7 +36,8 @@ const FIELD_WARNING_MESSAGES: Record<PharmacyUniqueField, string> = {
 export function usePaymentAvailability(
   pharmacyId: string | undefined,
   values: PharmacyEditorValues,
-  enabled: boolean
+  enabled: boolean,
+  checkedFields?: readonly PharmacyUniqueField[]
 ) {
   const taxId = values.taxId.trim();
   const iban = values.iban.trim().toUpperCase();
@@ -102,6 +103,8 @@ export function usePaymentAvailability(
       'phone',
       'email',
     ] as const) {
+      if (checkedFields && !checkedFields.includes(field)) continue;
+
       if (checked.result.duplicates[field])
         errors[field] = 'This value is already used by another pharmacy owner.';
       else if (checked.unavailable && values[field].trim())
@@ -116,7 +119,11 @@ export function usePaymentAvailability(
     'phone',
     'email',
   ] as const) {
-    if (!errors[field] && matches[field]?.length)
+    if (
+      (!checkedFields || checkedFields.includes(field)) &&
+      !errors[field] &&
+      matches[field]?.length
+    )
       warnings[field] = FIELD_WARNING_MESSAGES[field];
   }
 

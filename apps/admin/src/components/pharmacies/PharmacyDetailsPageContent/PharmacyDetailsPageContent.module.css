@@ -46,6 +46,12 @@
   overflow-wrap: anywhere;
 }
 
+.titleWithHelp > :last-child {
+  display: inline-flex;
+  margin-inline-start: 8px;
+  vertical-align: middle;
+}
+
 .tabPanel {
   padding-top: 4px;
 }

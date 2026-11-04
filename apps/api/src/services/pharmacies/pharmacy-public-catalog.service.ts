@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import { Types, type PipelineStage } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
@@ -17,6 +17,7 @@ import type {
 } from '../../types/pharmacies/pharmacy';
 
 import { httpError } from '../../utils/http/httpError';
+import { logger } from '../../utils/logging/logger';
 
 import {
   createCanonicalLocationRegExp,
@@ -32,6 +33,7 @@ import { hasCompleteBankDetails } from './bank-details';
 import type { PharmacyDocument } from './pharmacy-profile.shared';
 
 import { PUBLIC_PHARMACY_STATUS_FILTER } from './pharmacy-public-status';
+import { PUBLIC_PHARMACY_IMAGE_PROJECTION } from './pharmacy-public-image';
 
 //===============================================================
 
@@ -61,6 +63,9 @@ async function getFavoritePharmacyIds(userId?: string): Promise<Set<string>> {
 //===============================================================
 
 async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
+  // A page with no pharmacies must not run a cross-collection aggregation.
+  if (pharmacyIds.length === 0) return new Map<string, number>();
+
   const rows = await ProductOffer.aggregate<{
     _id: Types.ObjectId;
     count: number;
@@ -72,18 +77,32 @@ async function getAvailableProductsCountMap(pharmacyIds: Types.ObjectId[]) {
       },
     },
 
+    // Many pharmacies carry the same products. Resolve each product's active
+    // status just once instead of performing a Product lookup for every offer.
+    // (productId, pharmacyId) is unique in ProductOffer.
+    {
+      $group: {
+        _id: '$productId',
+        pharmacyIds: { $push: '$pharmacyId' },
+      },
+    },
+
     {
       $lookup: {
         from: Product.collection.name,
-        localField: 'productId',
+        localField: '_id',
         foreignField: '_id',
+
+        // Product documents can contain large images/descriptions. Only their
+        // active status matters to the count of public, available offers.
+        pipeline: [{ $match: { status: 'active' } }, { $project: { _id: 1 } }],
         as: 'product',
       },
     },
 
-    { $unwind: '$product' },
-    { $match: { 'product.status': 'active' } },
-    { $group: { _id: '$pharmacyId', count: { $sum: 1 } } },
+    { $match: { 'product.0': { $exists: true } } },
+    { $unwind: '$pharmacyIds' },
+    { $group: { _id: '$pharmacyIds', count: { $sum: 1 } } },
   ]);
 
   return new Map(rows.map((row) => [String(row._id), row.count]));
@@ -207,6 +226,22 @@ function serializePublicPharmacy(
 
 //===============================================================
 
+// Keep images out of public JSON response reads. MongoDB projects the URL
+// on the server; image bytes are loaded separately through the client BFF.
+const PHARMACY_CARD_PROJECTION = {
+  _id: 1,
+  name: 1,
+  location: 1,
+  email: 1,
+  phone: 1,
+  rating: 1,
+  reviewsCount: 1,
+  createdAt: 1,
+  imageUrl: PUBLIC_PHARMACY_IMAGE_PROJECTION,
+} as const;
+
+//===============================================================
+
 export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptionsResponseDto> {
   const pharmacies = await Pharmacy.find({
     status: PHARMACY_STATUSES.ACTIVE,
@@ -272,20 +307,20 @@ export async function getPharmacyFiltersService(): Promise<PharmacyFilterOptions
 //===============================================================
 
 export async function getPharmacyOptionsService() {
-  const pharmacies = await Pharmacy.find({
-    status: PUBLIC_PHARMACY_STATUS_FILTER,
-  })
-    .select('_id name imageUrl email phone location')
-    .sort({ name: 1 })
-
-    .lean<
-      Array<
-        Pick<
-          PharmacyDocument,
-          '_id' | 'name' | 'imageUrl' | 'email' | 'phone' | 'location'
-        >
-      >
-    >();
+  const pharmacies = await Pharmacy.aggregate<PharmacyDocument>([
+    { $match: { status: PUBLIC_PHARMACY_STATUS_FILTER } },
+    { $sort: { name: 1, _id: 1 } },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        email: 1,
+        phone: 1,
+        location: 1,
+        imageUrl: PUBLIC_PHARMACY_IMAGE_PROJECTION,
+      },
+    },
+  ]);
 
   return {
     items: pharmacies.map((pharmacy) => ({
@@ -339,7 +374,14 @@ export async function getFavoritePharmaciesService(
   const skip = (query.page - 1) * query.perPage;
 
   const [pharmacies, total] = await Promise.all([
-    Pharmacy.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+    Pharmacy.aggregate<PharmacyDocument>([
+      { $match: filter },
+      { $sort: { ...sort, _id: 1 } },
+      { $skip: skip },
+      { $limit: query.perPage },
+      { $project: PHARMACY_CARD_PROJECTION },
+    ]),
+
     Pharmacy.countDocuments(filter),
   ]);
 
@@ -374,7 +416,7 @@ export async function getPharmaciesService(
   };
 
   if (query.pharmacyId) {
-    filter._id = query.pharmacyId;
+    filter._id = new Types.ObjectId(query.pharmacyId);
   }
 
   if (query.keyword) {
@@ -438,16 +480,61 @@ export async function getPharmaciesService(
             : { createdAt: -1 };
 
   const skip = (query.page - 1) * query.perPage;
+  const startedAt = Date.now();
+
+  let listReadMs = 0;
+  let totalReadMs = 0;
+
+  const pipeline: PipelineStage[] = [{ $match: filter }];
+
+  if (!query.pharmacyId) pipeline.push({ $sort: { ...sort, _id: 1 } });
+
+  pipeline.push(
+    { $skip: skip },
+    { $limit: query.perPage },
+    { $project: PHARMACY_CARD_PROJECTION }
+  );
+
+  const readPharmacies = () => Pharmacy.aggregate<PharmacyDocument>(pipeline);
 
   const [pharmacies, total, favoriteIds] = await Promise.all([
-    Pharmacy.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
-    Pharmacy.countDocuments(filter),
+    readPharmacies().then((rows) => {
+      listReadMs = Date.now() - startedAt;
+
+      return rows;
+    }),
+
+    Pharmacy.countDocuments(filter).then((count) => {
+      totalReadMs = Date.now() - startedAt;
+
+      return count;
+    }),
+
     getFavoritePharmacyIds(userId),
   ]);
+
+  const offersStartedAt = Date.now();
 
   const countMap = await getAvailableProductsCountMap(
     pharmacies.map((pharmacy) => pharmacy._id)
   );
+
+  const durationMs = Date.now() - startedAt;
+
+  // Diagnose slow page-1 reads separately from the product-count aggregation.
+  // No client identifiers or user-entered search terms are logged.
+  if (durationMs >= 1_500) {
+    logger.info('[pharmacies] slow public catalog listing', {
+      page: query.page,
+      perPage: query.perPage,
+      sort: query.sort ?? 'newest',
+      filtered: Object.keys(filter).length > 1,
+      listReadMs,
+      totalReadMs,
+      availableProductsCountMs: Date.now() - offersStartedAt,
+      durationMs,
+    });
+  }
 
   return {
     items: pharmacies.map((pharmacy) =>
@@ -471,18 +558,57 @@ export async function getPharmacyDetailsService(
   pharmacyId: string,
   userId?: string
 ) {
-  const pharmacy = await Pharmacy.findOne({
-    _id: pharmacyId,
-    status: PUBLIC_PHARMACY_STATUS_FILTER,
-  }).lean();
+  const startedAt = Date.now();
+
+  const [pharmacy] = await Pharmacy.aggregate<PharmacyDocument>([
+    {
+      $match: {
+        _id: new Types.ObjectId(pharmacyId),
+        status: PUBLIC_PHARMACY_STATUS_FILTER,
+      },
+    },
+    { $limit: 1 },
+
+    // Public reads never load private owner, moderation or document fields,
+    // and no longer transfer large base64 photos to the SSR JSON payload.
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        location: 1,
+        phone: 1,
+        email: 1,
+        workingHours: 1,
+        bankDetails: 1,
+        rating: 1,
+        description: 1,
+        shortDescription: 1,
+        reviewsCount: 1,
+        updatedAt: 1,
+        imageUrl: PUBLIC_PHARMACY_IMAGE_PROJECTION,
+      },
+    },
+  ]);
 
   if (!pharmacy)
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PHARMACY_NOT_FOUND);
+
+  const pharmacyReadMs = Date.now() - startedAt;
 
   const [favoriteIds, countMap] = await Promise.all([
     getFavoritePharmacyIds(userId),
     getAvailableProductsCountMap([pharmacy._id]),
   ]);
+
+  const durationMs = Date.now() - startedAt;
+
+  if (durationMs >= 1_500) {
+    logger.info('[pharmacies] slow public pharmacy detail', {
+      pharmacyReadMs,
+      relatedDataMs: durationMs - pharmacyReadMs,
+      durationMs,
+    });
+  }
 
   return {
     pharmacy: serializePublicPharmacy(

@@ -18,11 +18,15 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { User } from '../../models/accounts/user.model';
 
-import type { AuthUserResponse, UpdateProfileInput } from '../../types/auth/auth';
+import type {
+  AuthUserResponse,
+  UpdateProfileInput,
+} from '../../types/auth/auth';
 
 import { httpError } from '../../utils/http/httpError';
 import { isDuplicatePhoneError } from '../../utils/database/mongoError';
 import { toAuthUserResponse } from '../../utils/accounts/userResponse';
+
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
 
 import {
@@ -33,9 +37,17 @@ import {
 //===============================================================
 
 export async function getUserByIdService(
-  userId: string
+  userId: string,
+  options: Readonly<{ includePictureUrl?: boolean }> = {}
 ): Promise<AuthUserResponse> {
-  const user = await User.findById(userId);
+  // Authentication runs on every private request. Profile pictures may be
+  // large data URLs, but only /auth/current needs one in its response.
+  // Preserve all authorization-relevant and ordinary account fields.
+  const user = await User.findById(userId).select(
+    options.includePictureUrl === false
+      ? '_id name email phone address role status updatedAt'
+      : '_id name email phone address pictureUrl role status updatedAt'
+  );
 
   if (!user) {
     throw httpError(

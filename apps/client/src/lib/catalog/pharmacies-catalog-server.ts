@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { unstable_noStore as noStore } from 'next/cache';
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 
 import {
@@ -32,8 +33,28 @@ import {
 
 //===================================================================
 
-// Only resolve matching location candidates when the URL contains a location.
-// The unfiltered page no longer materializes the location dictionary.
+// Share the same public catalogue read between metadata and the page within a
+// server render. Selected pharmacy names are already in the page response; a
+// second /search-options?selectedId call can time out for a large document.
+const readCatalogState = cache((paramsKey: string) =>
+  resolveServerDataState(
+    getPharmacies(
+      JSON.parse(paramsKey) as ReturnType<typeof buildPharmacyApiParams>,
+      PUBLIC_COMMERCE_CACHE_OPTIONS
+    )
+  )
+);
+
+//===================================================================
+
+function readCatalogForFilters(filters: PharmacyFilters) {
+  return readCatalogState(JSON.stringify(buildPharmacyApiParams(filters)));
+}
+
+//===================================================================
+
+// Resolve the URL's location BEFORE reading the catalogue. Canonicalization
+// (strumok -> Strumok) must not trigger a second identical MongoDB read.
 export async function resolvePharmaciesCatalogFilters(
   parsedFilters: PharmacyFilters
 ) {
@@ -76,47 +97,10 @@ export async function loadPharmaciesCatalogPageData(
 ): Promise<
   PharmaciesCatalogPageData & { pharmacyOptions: readonly PharmacyOption[] }
 > {
-  const [filterResolution, initialPharmaciesState, selectedPharmacyState] =
-    await Promise.all([
-      resolvePharmaciesCatalogFilters(parsedFilters),
+  const { filters, filterState } =
+    await resolvePharmaciesCatalogFilters(parsedFilters);
 
-      resolveServerDataState(
-        getPharmacies(
-          buildPharmacyApiParams(parsedFilters),
-          PUBLIC_COMMERCE_CACHE_OPTIONS
-        )
-      ),
-
-      parsedFilters.pharmacyId
-        ? resolveServerDataState(
-            getPharmacySearchOptions(
-              {
-                kind: 'pharmacy',
-                selectedId: parsedFilters.pharmacyId,
-                page: 1,
-                perPage: 1,
-              },
-
-              PUBLIC_DICTIONARY_CACHE_OPTIONS
-            )
-          )
-        : Promise.resolve(null),
-    ]);
-
-  const { filters, filterState } = filterResolution;
-
-  const changed =
-    filters.settlement !== parsedFilters.settlement ||
-    filters.region !== parsedFilters.region;
-
-  const pharmaciesState = changed
-    ? await resolveServerDataState(
-        getPharmacies(
-          buildPharmacyApiParams(filters),
-          PUBLIC_COMMERCE_CACHE_OPTIONS
-        )
-      )
-    : initialPharmaciesState;
+  const pharmaciesState = await readCatalogForFilters(filters);
 
   const pageData = createPharmaciesCatalogPageData({
     filters,
@@ -135,33 +119,36 @@ export async function loadPharmaciesCatalogPageData(
   if (redirectPage !== null)
     redirect(buildPharmacyPath({ ...filters, page: redirectPage }));
 
-  return {
-    ...pageData,
+  // Reuse the visible cards as lightweight local search suggestions. This
+  // includes the selected pharmacy and lets a user select it immediately while
+  // the remote, full-catalog autocomplete is still loading.
+  const pharmacyOptions: readonly PharmacyOption[] = pageData.pharmacies.map(
+    (item) => ({
+      id: item.id,
+      name: item.name,
 
-    // Selected entry only. Options for opening/scrolling are loaded by the browser.
-    pharmacyOptions:
-      selectedPharmacyState?.status === 'success' &&
-      selectedPharmacyState.data.kind === 'pharmacy'
-        ? selectedPharmacyState.data.items
-        : [],
-  };
+      ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
+      ...(item.email ? { email: item.email } : {}),
+      ...(item.phone ? { phone: item.phone } : {}),
+      ...(item.location ? { location: item.location } : {}),
+    })
+  );
+
+  return { ...pageData, pharmacyOptions };
 }
 
 //===================================================================
 
 export async function getSelectedPharmacySeoName(
-  pharmacyId?: string
+  filters: PharmacyFilters
 ): Promise<string | undefined> {
-  if (!pharmacyId) return undefined;
+  if (!filters.pharmacyId) return undefined;
 
-  const state = await resolveServerDataState(
-    getPharmacySearchOptions(
-      { kind: 'pharmacy', selectedId: pharmacyId, page: 1, perPage: 1 },
-      PUBLIC_DICTIONARY_CACHE_OPTIONS
-    )
-  );
+  // Same request as the listing, cached during the render; using a separate
+  // 6-second search-options request used to erase the pharmacy's SEO title.
+  const state = await readCatalogForFilters(filters);
 
-  return state.status === 'success' && state.data.kind === 'pharmacy'
-    ? state.data.items[0]?.name
+  return state.status === 'success'
+    ? state.data.items.find((item) => item.id === filters.pharmacyId)?.name
     : undefined;
 }

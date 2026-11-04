@@ -19,6 +19,11 @@ const STATUSES = [
     className: css.verification,
   },
   { key: 'onModeration', label: 'On moderation', className: css.moderation },
+  {
+    key: 'onReactivation',
+    label: 'Reactivation requested',
+    className: css.reactivation,
+  },
 ] as const;
 
 //===================================================================

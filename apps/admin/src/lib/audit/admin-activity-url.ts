@@ -18,6 +18,7 @@ export type ActivityUrlState = Readonly<{
   dateFrom: string;
   dateTo: string;
   action: '' | AdminAuditAction;
+  changeType: '' | 'status' | 'data';
   actorType: '' | AdminAuditActorType;
   section: '' | AdminAuditSection;
   employeeUserId: string;
@@ -32,6 +33,7 @@ export const DEFAULT_ACTIVITY_URL_STATE: ActivityUrlState = {
   dateFrom: '',
   dateTo: '',
   action: '',
+  changeType: '',
   actorType: '',
   section: '',
   employeeUserId: '',
@@ -48,9 +50,13 @@ const actionSlug = (value: string) =>
     .replaceAll('.', '-')
     .toLowerCase();
 
+//===================================================================
+
 const actionSlugs = new Map(
   ADMIN_AUDIT_ACTIONS.map((value) => [actionSlug(value), value])
 );
+
+//===================================================================
 
 const sectionSlugs = new Map(
   ADMIN_AUDIT_SECTIONS.map((value) => [
@@ -58,6 +64,8 @@ const sectionSlugs = new Map(
     value,
   ])
 );
+
+//===================================================================
 
 const actorSlugs = new Map(
   ADMIN_AUDIT_ACTOR_TYPES.map((value) => [
@@ -84,6 +92,10 @@ export function parseAdminActivityUrl(
       if (isCalendarDateString(date)) next.dateTo = date;
     } else if (segment.startsWith('change-type-')) {
       next.action = actionSlugs.get(segment.slice('change-type-'.length)) ?? '';
+    } else if (segment === 'change-group-status') {
+      next.changeType = 'status';
+    } else if (segment === 'change-group-data') {
+      next.changeType = 'data';
     } else if (segment.startsWith('changed-by-')) {
       next.actorType =
         actorSlugs.get(segment.slice('changed-by-'.length)) ?? '';
@@ -126,6 +138,8 @@ export function buildAdminActivityUrl(state: ActivityUrlState): string {
 
   if (state.action && ADMIN_AUDIT_ACTIONS.includes(state.action))
     segments.push(`change-type-${actionSlug(state.action)}`);
+
+  if (state.changeType) segments.push(`change-group-${state.changeType}`);
 
   if (state.actorType && ADMIN_AUDIT_ACTOR_TYPES.includes(state.actorType))
     segments.push(

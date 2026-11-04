@@ -262,6 +262,14 @@
   },
   {
     "app": "client",
+    "route": "/pharmacies/[pharmacyId]/photo",
+    "backend": "/pharmacies/:pharmacyId/photo-source",
+    "methods": {
+      "GET": "public"
+    }
+  },
+  {
+    "app": "client",
     "route": "/pharmacies/search-options",
     "backend": "/pharmacies/search-options",
     "methods": {

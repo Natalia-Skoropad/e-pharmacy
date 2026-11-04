@@ -8,8 +8,12 @@ import {
   createFlexibleSearchRegExp,
 } from '../../utils/validation/regexp';
 
+import { logger } from '../../utils/logging/logger';
+
 import { clonePharmacyLocation } from './pharmacy-location';
 import { PUBLIC_PHARMACY_STATUS_FILTER } from './pharmacy-public-status';
+import { PUBLIC_PHARMACY_IMAGE_PROJECTION } from './pharmacy-public-image';
+import type { PharmacyDocument } from './pharmacy-profile.shared';
 
 import type { PharmacySearchOptionsQuery } from '../../schemas/pharmacies/pharmacy-search-options.schema';
 
@@ -58,16 +62,142 @@ export async function getPharmacySearchOptionsService({
       ];
     }
 
-    const [rows, total] = await Promise.all([
+    // A selected ID is a single-item lookup, not an alphabetic page.
+    // Use the _id index explicitly so MongoDB cannot choose the broad status/
+    // name sorting plan. This also avoids a second countDocuments query.
+    if (selectedId) {
+      const [selected] = await Pharmacy.aggregate<PharmacyDocument>([
+        { $match: filter },
+        { $limit: 1 },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            email: 1,
+            phone: 1,
+            location: 1,
+            imageUrl: PUBLIC_PHARMACY_IMAGE_PROJECTION,
+          },
+        },
+      ]).hint({ _id: 1 });
+
+      const items = selected
+        ? [
+            {
+              id: String(selected._id),
+              name: selected.name,
+
+              ...(selected.imageUrl ? { imageUrl: selected.imageUrl } : {}),
+              ...(selected.email ? { email: selected.email } : {}),
+              ...(selected.phone ? { phone: selected.phone } : {}),
+
+              ...(selected.location
+                ? { location: clonePharmacyLocation(selected.location) }
+                : {}),
+            },
+          ]
+        : [];
+
+      return {
+        kind,
+        items,
+        page,
+        perPage,
+        total: items.length,
+        totalPages: items.length,
+      };
+    }
+
+    const startedAt = Date.now();
+
+    let idsReadMs = 0;
+    let detailsReadMs = 0;
+    let countReadMs = 0;
+
+    // Paginate a lightweight, deterministically sorted ID set first. Large
+    // imageUrl data URLs must not be part of MongoDB's sort/pagination result.
+    // Hydrate only the IDs on the requested page, preserving their order.
+    const [pageIds, total] = await Promise.all([
       Pharmacy.find(filter)
-        .select('_id name imageUrl email phone location')
+        .select('_id')
         .sort({ name: 1, _id: 1 })
         .skip(skip)
         .limit(perPage)
-        .lean(),
+        .lean()
 
-      Pharmacy.countDocuments(filter),
+        .then((items) => {
+          idsReadMs = Date.now() - startedAt;
+
+          return items.map((item) => item._id);
+        }),
+
+      Pharmacy.countDocuments(filter).then((count) => {
+        countReadMs = Date.now() - startedAt;
+
+        return count;
+      }),
     ]);
+
+    const detailsStartedAt = Date.now();
+
+    const fetched = pageIds.length
+      ? await Pharmacy.aggregate<PharmacyDocument>([
+          {
+            $match: {
+              _id: { $in: pageIds },
+              status: PUBLIC_PHARMACY_STATUS_FILTER,
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              email: 1,
+              phone: 1,
+              location: 1,
+              imageUrl: PUBLIC_PHARMACY_IMAGE_PROJECTION,
+            },
+          },
+        ])
+      : [];
+
+    detailsReadMs = Date.now() - detailsStartedAt;
+
+    const detailsById = new Map(
+      fetched.map((item) => [String(item._id), item])
+    );
+
+    const rows = pageIds.flatMap((id) => {
+      const item = detailsById.get(String(id));
+
+      return item ? [item] : [];
+    });
+
+    const rowsReadMs = Date.now() - startedAt;
+    const durationMs = rowsReadMs;
+
+    if (durationMs >= 1_500) {
+      // Sizes and phase times only: never log the user's search, photos,
+      // contact information, or any private pharmacy metadata.
+      logger.info('[pharmacies] slow public pharmacy search options', {
+        page,
+        perPage,
+        hasQuery: Boolean(search),
+        hasLocationFilter: Boolean(settlement || region),
+        hasSelectedId: false,
+        rowsReadMs,
+        idsReadMs,
+        detailsReadMs,
+        countReadMs,
+
+        imageChars: rows.reduce(
+          (sum, item) => sum + (item.imageUrl?.length ?? 0),
+          0
+        ),
+
+        durationMs,
+      });
+    }
 
     return {
       kind,

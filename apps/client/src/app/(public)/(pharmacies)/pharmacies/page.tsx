@@ -33,7 +33,7 @@ export async function generateMetadata({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
   const { filters } = await resolvePharmaciesCatalogFilters(parsedFilters);
 
-  const pharmacyName = await getSelectedPharmacySeoName(filters.pharmacyId);
+  const pharmacyName = await getSelectedPharmacySeoName(filters);
 
   return createPageMetadata({
     title: getPharmacyTitle(filters, pharmacyName),

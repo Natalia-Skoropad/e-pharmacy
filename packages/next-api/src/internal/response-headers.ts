@@ -7,6 +7,7 @@ import { REQUEST_ID_HEADER_NAME } from './bff-contract';
 // browser, so the upstream byte count is not a safe downstream framing value.
 const FORWARDED_RESPONSE_HEADERS = [
   'content-type',
+  'x-content-type-options',
   'retry-after',
   'www-authenticate',
   'etag',

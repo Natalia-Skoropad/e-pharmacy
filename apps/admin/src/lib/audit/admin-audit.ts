@@ -178,6 +178,7 @@ export type AdminAuditQueryParams = Readonly<{
   dateFrom?: string;
   dateTo?: string;
   action?: AdminAuditAction;
+  changeType?: 'status' | 'data';
   entityType?: AdminAuditEntityType;
   section?: AdminAuditSection;
   entityId?: string;

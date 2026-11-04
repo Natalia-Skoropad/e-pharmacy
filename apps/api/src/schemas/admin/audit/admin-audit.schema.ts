@@ -69,6 +69,7 @@ export const adminAuditListQuerySchema = z
     dateFrom: calendarDateSchema.optional(),
     dateTo: calendarDateSchema.optional(),
     action: auditActionSchema.optional(),
+    changeType: z.enum(['status', 'data']).optional(),
     entityType: auditEntityTypeSchema.optional(),
     section: auditSectionSchema.optional(),
 

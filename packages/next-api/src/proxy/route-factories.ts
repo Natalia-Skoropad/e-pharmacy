@@ -91,6 +91,7 @@ async function resolveBackendPath<TParams extends RouteParams>(
   if (typeof backendPath === 'string') return backendPath;
 
   const params = parseRouteParams(await context.params, enumParams);
+
   return backendPath(params);
 }
 
@@ -118,12 +119,14 @@ export function createPrivateProxyRoute<
   clearAuthCookiesOnSuccess = false,
   bodyPreset = 'standardJson',
   enumParams,
+  timeoutMs,
 }: {
   backendPath: BackendPath<TParams>;
   method?: HttpMethod;
   clearAuthCookiesOnSuccess?: boolean;
   bodyPreset?: ProxyRequestBodyPreset;
   enumParams?: EnumParamValues<TParams>;
+  timeoutMs?: number;
 }): ProxyRouteHandler<TParams> {
   return async (request, context) => {
     const requestId = createRequestId();
@@ -138,6 +141,7 @@ export function createPrivateProxyRoute<
         method,
         clearAuthCookiesOnSuccess,
         bodyPreset,
+        timeoutMs,
       });
     } catch (error) {
       return handleRouteFactoryError(error, request, requestId);
@@ -180,11 +184,15 @@ export function createPublicGetProxyRoute<
   revalidate,
   staleWhileRevalidate,
   enumParams,
+  timeoutMs,
+  responseType = 'json',
 }: {
   backendPath: BackendPath<TParams>;
   revalidate?: number | false;
   staleWhileRevalidate?: number;
   enumParams?: EnumParamValues<TParams>;
+  timeoutMs?: number;
+  responseType?: 'json' | 'image';
 }): ProxyRouteHandler<TParams> {
   return async (request, context) => {
     const requestId = createRequestId();
@@ -196,6 +204,8 @@ export function createPublicGetProxyRoute<
         backendPath: await resolveBackendPath(backendPath, context, enumParams),
         revalidate,
         staleWhileRevalidate,
+        timeoutMs,
+        responseType,
       });
     } catch (error) {
       return handleRouteFactoryError(error, request, requestId);

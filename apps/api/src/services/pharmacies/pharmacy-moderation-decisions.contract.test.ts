@@ -78,8 +78,8 @@ test('all legacy routes delegate to the canonical decision service', async () =>
   );
 
   assert.match(
-    service,
-    /nextStatus\s*=\s*pharmacy\.activatedAt\s*\?\s*PHARMACY_STATUSES\.ACTIVE\s*:\s*PHARMACY_STATUSES\.ON_VERIFICATION/
+    service.split("case 'review_reactivation':")[1].split('// Strict CAS')[0],
+    /nextStatus = PHARMACY_STATUSES\.ACTIVE/
   );
 
   assert.doesNotMatch(

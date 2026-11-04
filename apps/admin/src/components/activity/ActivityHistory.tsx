@@ -60,7 +60,7 @@ import {
 } from '@/lib/audit/admin-audit';
 
 import {
-  getAdminAuditActionLabel,
+  getAdminAuditDisplayType,
   getAdminAuditChangeTone,
 } from '@/lib/audit/admin-audit-presentation';
 
@@ -91,6 +91,7 @@ import {
 } from '@/lib/audit/admin-activity-url';
 
 import { AuditDetailsModal } from './AuditDetailsModal';
+import { AuditDetailsRenderBoundary } from './AuditDetailsRenderBoundary';
 import { ActivityActorIdentity } from './ActivityActorIdentity';
 import { ActivitySectionLink } from './ActivitySectionLink';
 
@@ -133,6 +134,7 @@ function getChangeToneClassName(
 ): string {
   if (tone === 'success') return css.changeSuccess;
   if (tone === 'danger') return css.changeDanger;
+  if (tone === 'mustard') return css.changeMustard;
   if (tone === 'pending') return css.changePending;
   if (tone === 'warning') return css.changeWarning;
   if (tone === 'neutral') return css.changeNeutral;
@@ -338,6 +340,11 @@ export function ActivityHistory({
       ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
       ...(filters.action ? { action: filters.action } : {}),
 
+      ...((scopePharmacyId || filters.section === 'pharmacies') &&
+      filters.changeType
+        ? { changeType: filters.changeType }
+        : {}),
+
       ...(scopeOwnerId
         ? { section: 'pharmacyOwners' as const }
         : filters.section
@@ -364,12 +371,14 @@ export function ActivityHistory({
     )
       .then((response) => {
         if (controller.signal.aborted) return;
+
         setData(response);
         setListError(null);
       })
 
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
+
         setListError(getErrorMessage(error));
       })
 
@@ -513,6 +522,7 @@ export function ActivityHistory({
   const activeFiltersCount = [
     filters.dateFrom || filters.dateTo,
     filters.action,
+    filters.changeType,
     filters.section,
     filters.actorType,
     filters.employeeUserId,
@@ -654,7 +664,7 @@ export function ActivityHistory({
           return (
             <span className={css.changeCell}>
               <strong className={`${css.changeAction} ${toneClassName}`}>
-                {getAdminAuditActionLabel(item.action)}
+                {getAdminAuditDisplayType(item.action)}
               </strong>
             </span>
           );
@@ -965,6 +975,7 @@ export function ActivityHistory({
       {isFiltersOpen ? (
         <ActivityFiltersDrawer
           filters={filters}
+          pharmacyScoped={Boolean(scopePharmacyId)}
           hasActiveFilters={hasFilters}
           minDate={data?.earliestCreatedAt ?? undefined}
           availableActions={
@@ -983,31 +994,37 @@ export function ActivityHistory({
         />
       ) : null}
 
-      <AuditDetailsModal
-        isOpen={selectedAuditId !== null}
-        details={details}
-        actor={details ? (actorById.get(details.actorUserId) ?? null) : null}
-        pagePhotoUrl={
-          pageLocation
-            ? (matchingPharmacyPreview?.pictureUrl ??
-              matchingOwnerPreview?.pictureUrl ??
-              (pageLocation.section === 'employees'
-                ? actorById.get(pageLocation.entityId)?.pictureUrl
-                : undefined))
-            : undefined
-        }
-        pageName={
-          matchingPharmacyPreview?.name ??
-          matchingOwnerPreview?.name ??
-          (pageLocation?.section === 'employees'
-            ? actorById.get(pageLocation.entityId)?.name
-            : undefined)
-        }
-        isLoading={isDetailsLoading}
-        error={detailsError}
+      <AuditDetailsRenderBoundary
+        key={`${selectedAuditId ?? 'none'}:${detailsReloadVersion}`}
         onClose={closeDetails}
         onRetry={retryDetails}
-      />
+      >
+        <AuditDetailsModal
+          isOpen={selectedAuditId !== null}
+          details={details}
+          actor={details ? (actorById.get(details.actorUserId) ?? null) : null}
+          pagePhotoUrl={
+            pageLocation
+              ? (matchingPharmacyPreview?.pictureUrl ??
+                matchingOwnerPreview?.pictureUrl ??
+                (pageLocation.section === 'employees'
+                  ? actorById.get(pageLocation.entityId)?.pictureUrl
+                  : undefined))
+              : undefined
+          }
+          pageName={
+            matchingPharmacyPreview?.name ??
+            matchingOwnerPreview?.name ??
+            (pageLocation?.section === 'employees'
+              ? actorById.get(pageLocation.entityId)?.name
+              : undefined)
+          }
+          isLoading={isDetailsLoading}
+          error={detailsError}
+          onClose={closeDetails}
+          onRetry={retryDetails}
+        />
+      </AuditDetailsRenderBoundary>
     </Container>
   );
 }

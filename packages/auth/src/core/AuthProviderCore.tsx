@@ -52,7 +52,11 @@ import type {
 //===================================================================
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const DEFAULT_AUTH_BOOTSTRAP_TIMEOUT_MS = 4_000;
+
+// Backend authentication is a private BFF request with a 12s transport budget.
+// The bootstrap must not abort it at 4s (a healthy but busy API can respond
+// after 5s); give the BFF time to return a definitive session result.
+const DEFAULT_AUTH_BOOTSTRAP_TIMEOUT_MS = 14_000;
 
 //===================================================================
 
@@ -88,12 +92,14 @@ type ErrorLike = {
 
 function getErrorStatus(error: unknown): number | null {
   if (!error || typeof error !== 'object') return null;
+
   const value = error as ErrorLike;
 
   if (typeof value.status === 'number') return value.status;
 
   if (value.response && typeof value.response === 'object') {
     const responseStatus = (value.response as ErrorLike).status;
+
     if (typeof responseStatus === 'number') return responseStatus;
   }
 
@@ -104,7 +110,9 @@ function getErrorStatus(error: unknown): number | null {
 
 function readCode(value: unknown): string | null {
   if (!value || typeof value !== 'object') return null;
+
   const code = (value as ErrorLike).code;
+
   return typeof code === 'string' ? code : null;
 }
 
@@ -112,20 +120,24 @@ function readCode(value: unknown): string | null {
 
 function getAuthBusinessCode(error: unknown): string | null {
   if (!error || typeof error !== 'object') return null;
+
   const value = error as ErrorLike;
 
   for (const candidate of [value.payload, value.data, value.response]) {
     const directCode = readCode(candidate);
+
     if (directCode) return directCode;
 
     if (candidate && typeof candidate === 'object') {
       const nestedData = (candidate as ErrorLike).data;
       const nestedCode = readCode(nestedData);
+
       if (nestedCode) return nestedCode;
     }
   }
 
   const directCode = readCode(error);
+
   return directCode && directCode.startsWith('AUTH_') ? directCode : null;
 }
 
@@ -181,6 +193,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
   const transition = useCallback((nextState: AuthState) => {
     stateRef.current = nextState;
+
     if (mountedRef.current) setState(nextState);
   }, []);
 
@@ -248,18 +261,21 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
       if (outcome.type === 'response') {
         applyAuthenticatedUser(outcome.response.user, false);
+
         return outcome.response.user;
       }
 
       if (isAbortError(outcome.error)) return null;
 
       const invalidReason = getInvalidSessionReason(outcome.error);
+
       if (invalidReason) {
         clearAuthState(invalidReason, mode !== 'bootstrap');
         return null;
       }
 
       markUnavailable(outcome.error, preservedUser);
+
       return null;
     },
     [
@@ -283,6 +299,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       if (bootstrapMode === 'session-hint' && !sessionHintStorage?.hasHint()) {
         requestManagerRef.current.advanceLifecycle();
         clearAuthState('no_session_hint', false);
+
         return Promise.resolve(null);
       }
 
@@ -299,6 +316,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       });
 
       bootstrapPromiseRef.current = promise;
+
       return promise;
     },
     [
@@ -320,6 +338,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     const nextUser = await executeCurrentUserAttempt('reload');
 
     if (nextUser) publishSessionEvent('revalidate');
+
     return nextUser;
   }, [executeCurrentUserAttempt, publishSessionEvent]);
 
@@ -347,8 +366,10 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
       interactiveSingleFlightRef.current.run(
         'login',
         createAuthInteractiveRequestKey(payload),
+
         async () => {
           const manager = requestManagerRef.current;
+
           manager.advanceLifecycle();
 
           const attempt = manager.start('login', (signal) =>
@@ -357,7 +378,9 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
           try {
             const response = await attempt.promise;
+
             if (!manager.isCurrent(attempt)) return null;
+
             applyAuthenticatedUser(response.user);
 
             return response.user;
@@ -378,6 +401,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
         createAuthInteractiveRequestKey(payload),
         async () => {
           const manager = requestManagerRef.current;
+
           manager.advanceLifecycle();
 
           const attempt = manager.start('register', (signal) =>
@@ -386,8 +410,11 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
           try {
             const response = await attempt.promise;
+
             if (!manager.isCurrent(attempt)) return null;
+
             applyAuthenticatedUser(response.user);
+
             return response.user;
           } catch (error) {
             if (!manager.isCurrent(attempt) || isAbortError(error)) return null;
@@ -409,6 +436,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
   const logout = useCallback(async () => {
     const manager = requestManagerRef.current;
+
     manager.advanceLifecycle();
     interactiveSingleFlightRef.current.clear();
     bootstrapPromiseRef.current = null;
@@ -430,6 +458,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
     return async () => {
       const manager = requestManagerRef.current;
+
       manager.advanceLifecycle();
       interactiveSingleFlightRef.current.clear();
       bootstrapPromiseRef.current = null;
@@ -452,6 +481,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     const interactiveSingleFlight = interactiveSingleFlightRef.current;
 
     mountedRef.current = true;
+
     return () => {
       mountedRef.current = false;
       requestManager.advanceLifecycle();
@@ -462,6 +492,7 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
 
   useEffect(() => {
     const sync = createBrowserAuthSessionSync();
+
     sessionSyncRef.current = sync;
 
     const unsubscribe = sync.subscribe((event) => {
@@ -485,7 +516,8 @@ export function AuthProviderCore(props: AuthProviderCoreProps) {
     const handleFocusRevalidation = () => {
       if (
         document.visibilityState !== 'visible' ||
-        stateRef.current.status === 'bootstrapping'
+        (stateRef.current.status !== 'authenticated' &&
+          stateRef.current.status !== 'unauthenticated')
       ) {
         return;
       }

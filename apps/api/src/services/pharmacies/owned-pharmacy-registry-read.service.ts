@@ -118,13 +118,16 @@ function membershipStages(userId: Types.ObjectId): PipelineStage[] {
         let: { ownerId: '$ownerId' },
 
         pipeline: [
+          // Match by the owner's indexed _id first. A role/status-only
+          // prefilter can needlessly inspect unrelated user accounts for
+          // every pharmacy in a tenant-scoped registry aggregation.
+          { $match: { $expr: { $eq: ['$_id', '$$ownerId'] } } },
           {
             $match: {
               role: USER_ROLES.PHARMACY,
               status: { $ne: USER_STATUSES.BLOCKED },
             },
           },
-          { $match: { $expr: { $eq: ['$_id', '$$ownerId'] } } },
           { $project: { _id: 1 } },
         ],
 
@@ -363,6 +366,46 @@ export async function getOwnedPharmacyStatisticsService(actorUserId: string) {
       blocked: 0,
     }
   );
+}
+
+//===============================================================
+
+// Use a small tenant-scoped projection instead of the expensive KPI pipeline.
+// Region/settlement filters must include all of the owner's pharmacies,
+// not just the first page, and must not compete with the visible table.
+export async function listOwnedPharmacyLocationsService(actorUserId: string) {
+  const userId = await assertRegistryUser(actorUserId);
+
+  const locations = await Pharmacy.aggregate<{
+    region?: string;
+    settlement?: string;
+  }>([
+    ...membershipStages(userId),
+    {
+      $group: {
+        _id: {
+          region: '$location.region',
+          settlement: '$location.settlement',
+        },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        region: '$_id.region',
+        settlement: '$_id.settlement',
+      },
+    },
+  ]);
+
+  return {
+    items: locations.map(({ region, settlement }) => ({
+      location: {
+        ...(typeof region === 'string' ? { region } : {}),
+        ...(typeof settlement === 'string' ? { settlement } : {}),
+      },
+    })),
+  };
 }
 
 //===============================================================

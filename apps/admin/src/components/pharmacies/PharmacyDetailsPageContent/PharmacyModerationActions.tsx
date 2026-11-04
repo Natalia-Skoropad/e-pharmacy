@@ -134,7 +134,9 @@ export function PharmacyModerationActions({
 
   const correctionsAwaitingOwner =
     detail.reviewState === 'changes_requested' &&
-    (detail.status === 'on_verification' || detail.status === 'on_moderation');
+    (detail.status === 'on_verification' ||
+      detail.status === 'on_moderation' ||
+      detail.status === 'on_reactivation');
 
   // Preserve the full action menu after requesting corrections. Only the owner
   // can submit a corrected pharmacy again; Admin cannot bypass this lock.
@@ -146,7 +148,9 @@ export function PharmacyModerationActions({
           label:
             detail.status === 'on_verification'
               ? 'Approve & activate'
-              : 'Approve changes',
+              : detail.status === 'on_reactivation'
+                ? 'Approve reactivation'
+                : 'Approve changes',
 
           disabled: true as const,
           hint: 'Awaiting the owner’s corrected submission.',
@@ -154,7 +158,12 @@ export function PharmacyModerationActions({
         },
         {
           action: 'request_corrections' as const,
-          label: 'Request re-verification',
+
+          label:
+            detail.status === 'on_reactivation'
+              ? 'Request corrections'
+              : 'Request re-verification',
+
           disabled: true as const,
           hint: 'Only the pharmacy owner can resubmit after corrections.',
           danger: false,
@@ -534,7 +543,9 @@ export function PharmacyModerationActions({
           }
           details={
             action.option.action === 'approve' ||
-            action.option.action === 'request_corrections' ? (
+            action.option.action === 'review_reactivation' ||
+            (action.option.action === 'request_corrections' &&
+              detail.status !== 'on_reactivation') ? (
               <PharmacySubmittedChangesSummary detail={detail} />
             ) : undefined
           }

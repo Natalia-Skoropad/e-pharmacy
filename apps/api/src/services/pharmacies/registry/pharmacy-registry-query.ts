@@ -1,6 +1,7 @@
 import type { PipelineStage } from 'mongoose';
 
 import { USER_STATUSES } from '../../../constants/auth/auth';
+
 import { Order } from '../../../models/orders/order.model';
 import { ProductOffer } from '../../../models/inventory/productOffer.model';
 import { User } from '../../../models/accounts/user.model';
@@ -23,12 +24,13 @@ export function buildPagedPharmacyItemsPipeline(
     {
       $lookup: {
         from: ProductOffer.collection.name,
-        let: { pharmacyId: '$_id' },
 
-        pipeline: [
-          { $match: { $expr: { $eq: ['$pharmacyId', '$$pharmacyId'] } } },
-          { $count: 'count' },
-        ],
+        // Equality joins use the indexed pharmacyId path rather than a
+        // correlated $expr, so each row does not scan unrelated offers.
+        localField: '_id',
+        foreignField: 'pharmacyId',
+
+        pipeline: [{ $count: 'count' }],
 
         as: '_productCount',
       },
@@ -36,14 +38,12 @@ export function buildPagedPharmacyItemsPipeline(
     {
       $lookup: {
         from: Order.collection.name,
-        let: { pharmacyId: '$_id' },
+
+        // Use Order.pharmacyId index for the equality join before grouping.
+        localField: '_id',
+        foreignField: 'pharmacyId',
 
         pipeline: [
-          {
-            $match: {
-              $expr: { $eq: ['$pharmacyId', '$$pharmacyId'] },
-            },
-          },
           // The parent pharmacy list already uses $facet for items and total.
           // MongoDB forbids a second $facet nested through this $lookup, so
           // calculate order metrics and unique clients in one $group instead.
@@ -109,17 +109,13 @@ export function buildPagedPharmacyItemsPipeline(
     {
       $lookup: {
         from: User.collection.name,
-        let: { pharmacyId: '$_id' },
+
+        // Compound unique index: defaultClientPharmacyId + default flag.
+        localField: '_id',
+        foreignField: 'defaultClientPharmacyId',
 
         pipeline: [
-          {
-            $match: {
-              isDefaultPharmacyClient: true,
-              $expr: {
-                $eq: ['$defaultClientPharmacyId', '$$pharmacyId'],
-              },
-            },
-          },
+          { $match: { isDefaultPharmacyClient: true } },
           { $project: { _id: 1 } },
           { $limit: 1 },
         ],

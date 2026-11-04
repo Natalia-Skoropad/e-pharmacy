@@ -340,7 +340,10 @@ export function OwnedPharmacyActions({
         (verificationIncomplete || !ownerHasDocuments)) ||
       (action === 'deactivate' && !eligibility?.canDeactivate) ||
       (action === 'reactivate' &&
-        (!canRequestReactivation || moderationIncomplete))
+        (!canRequestReactivation ||
+          moderationIncomplete ||
+          verificationIncomplete ||
+          !ownerHasDocuments))
     )
       return;
 
@@ -578,12 +581,15 @@ export function OwnedPharmacyActions({
                     disabled={
                       !canRequestReactivation ||
                       moderationIncomplete ||
+                      verificationIncomplete ||
                       !ownerHasDocuments
                     }
                     disabledReason={
                       !canRequestReactivation
                         ? 'This pharmacy is already being reviewed for reactivation. You can submit it again after the administrator requests changes.'
-                        : moderationIncomplete || !ownerHasDocuments
+                        : moderationIncomplete ||
+                            verificationIncomplete ||
+                            !ownerHasDocuments
                           ? 'Complete the required pharmacy details and attach both pharmacy and owner documents before you request reactivation.'
                           : undefined
                     }
@@ -730,7 +736,7 @@ export function OwnedPharmacyActions({
                   })}
                 </ul>
               </section>
-            ) : action === 'verification' ? (
+            ) : action === 'verification' || action === 'reactivate' ? (
               <div className={css.reviewJourney}>
                 <div className={css.reviewJourneyOutcomes}>
                   <strong>What happens next?</strong>
@@ -746,21 +752,27 @@ export function OwnedPharmacyActions({
                     <li className={css.reviewJourneyItem}>
                       <div className={css.reviewJourneyBadges}>
                         <StatusBadge
-                          {...PHARMACY_STATUS_PRESENTATION.on_verification}
+                          {...PHARMACY_STATUS_PRESENTATION[
+                            action === 'reactivate'
+                              ? 'on_reactivation'
+                              : 'on_verification'
+                          ]}
                         />
                         <StatusBadge label="Needs changes" tone="neutral" />
                       </div>
                       <span>The pharmacy requires corrections.</span>
                     </li>
 
-                    <li className={css.reviewJourneyItem}>
-                      <div className={css.reviewJourneyBadges}>
-                        <StatusBadge
-                          {...PHARMACY_STATUS_PRESENTATION.blocked}
-                        />
-                      </div>
-                      <span>If a serious violation is identified</span>
-                    </li>
+                    {action === 'verification' ? (
+                      <li className={css.reviewJourneyItem}>
+                        <div className={css.reviewJourneyBadges}>
+                          <StatusBadge
+                            {...PHARMACY_STATUS_PRESENTATION.blocked}
+                          />
+                        </div>
+                        <span>If a serious violation is identified</span>
+                      </li>
+                    ) : null}
                   </ul>
                 </div>
               </div>

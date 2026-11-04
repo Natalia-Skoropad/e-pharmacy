@@ -60,6 +60,7 @@ import {
   getOwnedPharmacies,
   getOwnedPharmacyStatistics,
   getOwnedPharmacyMemberships,
+  getOwnedPharmacyLocationRows,
 } from '@/lib/api/browser/owned-pharmacy-registry.api';
 
 import {
@@ -70,12 +71,7 @@ import {
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import { getOwnedPharmacyLocationFilterOptions } from '@/lib/pharmacies/owned-pharmacy-location-options';
-
-import {
-  loadCompletePharmacyLocations,
-  type PharmacyLocationRow,
-} from '@/lib/pharmacies/load-complete-pharmacy-locations';
-
+import type { PharmacyLocationRow } from '@/lib/pharmacies/load-complete-pharmacy-locations';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
 import { OwnedPharmacySearch } from '../OwnedPharmacySearch/OwnedPharmacySearch';
@@ -145,20 +141,14 @@ export function OwnedPharmaciesPageContent({
     readonly PharmacyLocationRow[] | null
   >(null);
 
+  // Load filter facets only when the drawer is opened. This avoids fetching
+  // every pharmacy (and its KPI lookups) alongside the visible first page.
   useEffect(() => {
-    if (allLocationRows !== null) return;
+    if (!isFiltersOpen || allLocationRows !== null) return;
 
     const controller = new AbortController();
 
-    void loadCompletePharmacyLocations(
-      (page) =>
-        getOwnedPharmacies(
-          { page, perPage: 100 },
-          { signal: controller.signal }
-        ),
-
-      controller.signal
-    )
+    void getOwnedPharmacyLocationRows({ signal: controller.signal })
       .then((rows) => {
         if (!controller.signal.aborted) setAllLocationRows(rows);
       })
@@ -168,7 +158,7 @@ export function OwnedPharmaciesPageContent({
       });
 
     return () => controller.abort();
-  }, [allLocationRows]);
+  }, [isFiltersOpen, allLocationRows]);
 
   const navigate = useCallback(
     (nextState: OwnedPharmacyListUrlState) => {

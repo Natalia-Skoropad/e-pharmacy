@@ -5,6 +5,7 @@ import {
   getOwnedPharmacyStatistics,
   listOwnedPharmacies,
   listOwnedPharmacyOptions,
+  listOwnedPharmacyLocations,
 } from '../../controllers/pharmacies/pharmacy-registry.controller';
 
 import {
@@ -14,6 +15,8 @@ import {
   getPharmacyDetails,
   getPharmacyFilters,
   getPharmacyOptions,
+  getPharmacyPhotoSource,
+  getPharmacySearchOptions,
   getPharmacies,
   setFavoritePharmacy,
 } from '../../controllers/pharmacies/pharmacy-public.controller';
@@ -52,8 +55,6 @@ import {
   updateMyPharmacyProfile,
   uploadMyPharmacyDocument,
 } from '../../controllers/pharmacies/pharmacy.controller';
-
-import { getPharmacySearchOptions } from '../../controllers/pharmacies/pharmacy-public.controller';
 
 import { USER_ROLES } from '../../constants/auth/auth';
 
@@ -167,6 +168,16 @@ pharmacyRoutes.get(
   authorizeRoles(USER_ROLES.PHARMACY),
   validate({ query: ownedPharmacyRegistryOptionsQuerySchema }),
   ctrlWrapper(listOwnedPharmacyOptions)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/me/pharmacies/locations',
+  authenticate,
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ query: emptyQuerySchema }),
+  ctrlWrapper(listOwnedPharmacyLocations)
 );
 
 //=================================================================================
@@ -544,6 +555,14 @@ pharmacyRoutes.get(
   }),
 
   ctrlWrapper(getPendingPharmacyReviews)
+);
+
+//=================================================================================
+
+pharmacyRoutes.get(
+  '/:pharmacyId/photo-source',
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(getPharmacyPhotoSource)
 );
 
 //=================================================================================

@@ -65,6 +65,21 @@ export async function listAdminAuditActorsService(
         from: User.collection.name,
         localField: '_id',
         foreignField: '_id',
+
+        pipeline: [
+          // Do not materialize unrelated user profile/documents for each
+          // actor. The avatar is the only additional profile field needed.
+          {
+            $project: {
+              name: 1,
+              email: 1,
+              phone: 1,
+              pictureUrl: 1,
+              role: 1,
+              status: 1,
+            },
+          },
+        ],
         as: 'users',
       },
     },
@@ -74,17 +89,14 @@ export async function listAdminAuditActorsService(
         from: Pharmacy.collection.name,
         localField: '_id',
         foreignField: 'ownerId',
+
+        // Presence is enough to determine the owner role; never transfer
+        // the entire set of owned pharmacies into the audit actor pipeline.
+        pipeline: [{ $limit: 1 }, { $project: { _id: 1 } }],
         as: 'ownedPharmacies',
       },
     },
-    {
-      $lookup: {
-        from: Pharmacy.collection.name,
-        localField: '_id',
-        foreignField: 'managerUserIds',
-        as: 'managedPharmacies',
-      },
-    },
+
     // A pharmacy owner may have audit entries before the first pharmacy is linked
     // (registration documents, for example). Do not hide this actor from history.
     {

@@ -26,6 +26,7 @@ import {
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import type {
@@ -35,7 +36,7 @@ import type {
 
 import {
   formatAdminAuditValue,
-  getAdminAuditActionLabel,
+  getAdminAuditDisplayType,
   getAdminAuditChangeTone,
   getAdminAuditStatusPresentation,
 } from '@/lib/audit/admin-audit-presentation';
@@ -75,6 +76,10 @@ type AuditChangeRow = Readonly<{
   deletedDraft?: boolean;
   beforeStatus?: string;
   afterStatus?: string;
+  beforePhotoUrl?: string | null;
+  afterPhotoUrl?: string | null;
+  photoUrl?: string;
+  photoFingerprint?: string | null;
 }>;
 
 //===================================================================
@@ -121,10 +126,14 @@ function RenderAuditValue({
   value,
   field,
   isStatus = false,
+  photoUrl,
+  photoFingerprint,
 }: Readonly<{
   value: AdminAuditValue | undefined;
   field: string;
   isStatus?: boolean;
+  photoUrl?: string;
+  photoFingerprint?: string | null;
 }>) {
   const color = getAuditColorSwatch(value);
 
@@ -142,7 +151,24 @@ function RenderAuditValue({
           aria-label={`Color ${color}`}
         />
       ) : null}
-      {status ? (
+      {field === 'photoFingerprint' ? (
+        photoUrl && photoFingerprint && value === photoFingerprint ? (
+          <span className={css.auditPhotoPreview}>
+            <ShimmerImage
+              src={photoUrl}
+              alt="Pharmacy photo at this change"
+              sizes="110px"
+              unoptimized
+            />
+          </span>
+        ) : (
+          <span className={css.auditPhotoUnavailable}>
+            {value === null
+              ? 'No pharmacy photo'
+              : 'Historical photo preview unavailable'}
+          </span>
+        )
+      ) : status ? (
         <StatusBadge {...status} />
       ) : field === 'workingHours' &&
         typeof value === 'string' &&
@@ -193,6 +219,12 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
       ) : (
         <RenderAuditValue
           value={item.before}
+          photoUrl={item.beforePhotoUrl ?? item.photoUrl}
+          photoFingerprint={
+            item.beforePhotoUrl && typeof item.before === 'string'
+              ? item.before
+              : item.photoFingerprint
+          }
           field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
@@ -216,6 +248,12 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
       ) : (
         <RenderAuditValue
           value={item.after}
+          photoUrl={item.afterPhotoUrl ?? item.photoUrl}
+          photoFingerprint={
+            item.afterPhotoUrl && typeof item.after === 'string'
+              ? item.after
+              : item.photoFingerprint
+          }
           field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
@@ -230,6 +268,7 @@ function getChangeToneClassName(
 ): string {
   if (tone === 'success') return css.changeSuccess;
   if (tone === 'danger') return css.changeDanger;
+  if (tone === 'mustard') return css.changeMustard;
   if (tone === 'pending') return css.changePending;
   if (tone === 'warning') return css.changeWarning;
   if (tone === 'neutral') return css.changeNeutral;
@@ -251,6 +290,37 @@ export function AuditDetailsModal({
   onRetry,
 }: AuditDetailsModalProps) {
   const titleId = 'admin-audit-details-title';
+
+  const [photoDigest, setPhotoDigest] = useState<{
+    url: string;
+    digest: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!pagePhotoUrl || !globalThis.crypto?.subtle) return;
+
+    let active = true;
+
+    void crypto.subtle
+      .digest('SHA-256', new TextEncoder().encode(pagePhotoUrl))
+
+      .then((bytes) => {
+        const digest = [...new Uint8Array(bytes)]
+          .map((byte) => byte.toString(16).padStart(2, '0'))
+          .join('')
+          .slice(0, 16);
+
+        if (active) setPhotoDigest({ url: pagePhotoUrl, digest });
+      })
+
+      .catch(() => {
+        /* A missing crypto provider must not expose hashes. */
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [pagePhotoUrl]);
 
   // For old admin-comment entries the body was never persisted in audit.
   // Resolve an existing comment through the same protected Admin endpoint
@@ -306,6 +376,16 @@ export function AuditDetailsModal({
     if (details?.entityType !== 'pharmacy') return true;
 
     if (field === 'status' && reviewFields.includes('reviewState'))
+      return false;
+
+    // Approval and blocking clear internal request metadata. These are not
+    // separate user-facing changes; the transition and reason are shown once.
+    if (
+      (reviewFields.includes('status') ||
+        reviewFields.includes('reviewState')) &&
+      (field === 'blockSource' ||
+        (field === 'statusReason' && details.after.statusReason === null))
+    )
       return false;
 
     // The blocking reason is already shown in Reason / description.
@@ -395,6 +475,27 @@ export function AuditDetailsModal({
         afterStatus,
         before: details.before[field],
         after: details.after[field],
+
+        ...(field === 'photoFingerprint'
+          ? {
+              beforePhotoUrl:
+                typeof details.before.photoPreviewUrl === 'string'
+                  ? details.before.photoPreviewUrl
+                  : null,
+
+              afterPhotoUrl:
+                typeof details.after.photoPreviewUrl === 'string'
+                  ? details.after.photoPreviewUrl
+                  : null,
+
+              ...(photoDigest && photoDigest.url === pagePhotoUrl
+                ? {
+                    photoUrl: photoDigest.url,
+                    photoFingerprint: photoDigest.digest,
+                  }
+                : {}),
+            }
+          : {}),
 
         deletedDraft:
           details.action === 'pharmacy.deleted' && field === 'exists',
@@ -496,7 +597,7 @@ export function AuditDetailsModal({
                   <strong
                     className={`${css.detailsActionPill} ${toneClassName}`}
                   >
-                    {getAdminAuditActionLabel(details.action)}
+                    {getAdminAuditDisplayType(details.action)}
                   </strong>
                 </dd>
               </div>

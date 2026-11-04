@@ -596,7 +596,11 @@ test('approved pharmacy lifecycle audit actions remain visible to Admin after re
 
     assert.equal(parsed.items[0]?.action, action);
     assert.equal(getAdminAuditActionLabel(action), label);
-    assert.equal(getAdminAuditChangeTone({ action }), 'pending');
+
+    assert.equal(
+      getAdminAuditChangeTone({ action }),
+      action.startsWith('pharmacy.reactivation.') ? 'mustard' : 'pending'
+    );
   }
 
   assert.equal(

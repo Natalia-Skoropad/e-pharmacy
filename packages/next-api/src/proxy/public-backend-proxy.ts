@@ -7,7 +7,10 @@ import {
   resolvePublicRevalidate,
 } from '../internal/cache-policy';
 
-import { validateBackendApiEnvelopeResponse } from '../internal/backend-response';
+import {
+  InvalidBackendResponseError,
+  validateBackendApiEnvelopeResponse,
+} from '../internal/backend-response';
 import { createProxyResponse } from '../internal/proxy-response';
 
 import {
@@ -30,6 +33,8 @@ type PublicBackendProxyOptions = Readonly<{
   requestId: string;
   revalidate?: number | false;
   staleWhileRevalidate?: number;
+  timeoutMs?: number;
+  responseType?: 'json' | 'image';
 }>;
 
 //===================================================================
@@ -40,6 +45,8 @@ export async function proxyPublicBackendRequest({
   requestId,
   revalidate,
   staleWhileRevalidate,
+  timeoutMs = NEXT_API_TIMEOUTS_MS.publicRead,
+  responseType = 'json',
 }: PublicBackendProxyOptions) {
   const startedAt = Date.now();
   const resolvedRevalidate = resolvePublicRevalidate(revalidate);
@@ -51,7 +58,7 @@ export async function proxyPublicBackendRequest({
       backendPath,
       method: 'GET',
       requestId,
-      timeoutMs: NEXT_API_TIMEOUTS_MS.publicRead,
+      timeoutMs,
       authCookieMode: 'none',
       forwardAccept: true,
       retry: PUBLIC_READ_RETRY_POLICY,
@@ -63,7 +70,16 @@ export async function proxyPublicBackendRequest({
       // Retry ownership stays status-based. A syntactically valid but malformed
       // 2xx API envelope is a contract failure, not a transient read failure,
       // so validate it once after retries and before assigning cache headers.
-      await validateBackendApiEnvelopeResponse(execution.response);
+      if (responseType === 'image' && execution.response.ok) {
+        const mime = execution.response.headers.get('content-type')
+          ?.split(';', 1)[0]?.trim().toLowerCase();
+
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime ?? '')) {
+          throw new InvalidBackendResponseError('Invalid public image response.');
+        }
+      } else {
+        await validateBackendApiEnvelopeResponse(execution.response);
+      }
 
       const cacheControl = execution.response.ok
         ? createPublicCacheControl(resolvedRevalidate, staleWhileRevalidate)

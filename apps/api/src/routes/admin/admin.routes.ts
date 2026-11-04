@@ -7,6 +7,7 @@ import {
   listPharmaciesByAdmin,
   getPharmacyRegistryStatisticsByAdmin,
   listPharmacyRegistryOptionsByAdmin,
+  listPharmacyRegistryLocationsByAdmin,
   listPharmacyRegistryOwnerOptionsByAdmin,
   getPharmacyDetailByAdmin,
   getPharmacySalesStatisticsByAdmin,
@@ -397,6 +398,14 @@ adminRoutes.get(
 
 // Stage 14.10: pharmacy-scoped owner suggestions need pharmacies.view,
 // not an additional, unrelated pharmacyOwners.view permission.
+adminRoutes.get(
+  '/pharmacies/locations',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  ctrlWrapper(listPharmacyRegistryLocationsByAdmin)
+);
+
+//=================================================================================
+
 adminRoutes.get(
   '/pharmacies/owner-options',
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),

@@ -16,6 +16,7 @@ import { getAdminPharmacySummary } from '@/lib/api/browser/admin-pharmacy-regist
 import { subscribeToPharmacyModerationRefresh } from '@/lib/pharmacies/pharmacy-moderation-refresh';
 import { ADMIN_PERMISSIONS } from '@/lib/permissions/admin-permissions';
 import { canAdmin } from '@/lib/permissions/can-admin';
+
 import { useAdminAuthorization } from '@/providers/AdminAuthorizationProvider';
 
 //===================================================================
@@ -24,6 +25,7 @@ export type PharmacyNavigationCounts = Readonly<{
   new: number;
   onVerification: number;
   onModeration: number;
+  onReactivation: number;
 }>;
 
 type PharmacyNavigationBadgeState = Readonly<{
@@ -45,6 +47,7 @@ function toNavigationCounts(
     new: summary.new,
     onVerification: summary.onVerification,
     onModeration: summary.onModeration,
+    onReactivation: summary.onReactivation,
   };
 }
 

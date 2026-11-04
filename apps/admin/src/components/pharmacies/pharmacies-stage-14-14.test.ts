@@ -14,6 +14,9 @@ import {
 //===================================================================
 
 const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
+
+//===================================================================
+
 const REV = '2026-10-12T09:10:00.000Z' as ISODateTimeString;
 
 //===================================================================
@@ -96,12 +99,8 @@ test('14.14: canonical transition matrix gates review decisions and emergency bl
         review === 'changes_requested'
           ? [] // Admin awaits the owner's corrected resubmission.
           : ownerCanOperate
-            ? [
-                'review_reactivation',
-                'request_corrections',
-                'reject_reactivation',
-              ]
-            : ['request_corrections', 'reject_reactivation']
+            ? ['review_reactivation', 'request_corrections']
+            : ['request_corrections']
       );
 
       // An Owner-initiated deactivation must not be overridden by Admin.
@@ -114,7 +113,7 @@ test('14.14: canonical transition matrix gates review decisions and emergency bl
 
       assert.deepEqual(
         actions(pharmacy('blocked', owner, review, true, 'admin_blocked')),
-        ownerCanOperate ? ['review_reactivation'] : []
+        []
       );
     }
   }
@@ -147,42 +146,38 @@ test('14.14: corrections are explicit audited same-status decisions, not status 
 
 //===================================================================
 
-test('14.14: reactivation never silently enters operational moderation or publishes pending drafts', () => {
-  const previouslyActive = getPharmacyModerationOptions(
-    pharmacy('blocked', 'active', 'pending', true, 'admin_blocked')
-  );
+test('14.43: reactivation is owner-submitted and always activates after approval', () => {
+  for (const activeBeforeBlock of [false, true]) {
+    assert.deepEqual(
+      getPharmacyModerationOptions(
+        pharmacy(
+          'blocked',
+          'active',
+          'pending',
+          activeBeforeBlock,
+          'admin_blocked'
+        )
+      ),
+      []
+    );
 
-  assert.equal(previouslyActive[0]?.targetStatus, 'active');
+    const submitted = getPharmacyModerationOptions(
+      pharmacy('on_reactivation', 'active', 'pending', activeBeforeBlock)
+    );
 
-  assert.match(
-    previouslyActive[0]?.description ?? '',
-    /pending drafts are not published/
-  );
+    assert.equal(submitted[0]?.action, 'review_reactivation');
+    assert.equal(submitted[0]?.targetStatus, 'active');
 
-  const neverActivated = getPharmacyModerationOptions(
-    pharmacy('blocked', 'active', 'pending', false, 'admin_blocked')
-  );
-
-  assert.equal(neverActivated[0]?.targetStatus, 'on_verification');
-
-  assert.ok(
-    !neverActivated.some((action) => action.targetStatus === 'on_moderation')
-  );
-
-  const submittedReactivation = getPharmacyModerationOptions(
-    pharmacy('on_reactivation', 'active', 'pending', false)
-  );
-
-  assert.equal(submittedReactivation[0]?.action, 'review_reactivation');
-  assert.equal(submittedReactivation[0]?.targetStatus, 'on_verification');
-
-  assert.deepEqual(
-    submittedReactivation.map(({ action }) => action),
-    ['review_reactivation', 'request_corrections', 'reject_reactivation']
-  );
+    assert.deepEqual(
+      submitted.map(({ action }) => action),
+      ['review_reactivation', 'request_corrections']
+    );
+  }
 
   assert.deepEqual(
-    actions(pharmacy('on_reactivation', 'active', 'changes_requested')),
+    getPharmacyModerationOptions(
+      pharmacy('on_reactivation', 'active', 'changes_requested')
+    ),
     []
   );
 });

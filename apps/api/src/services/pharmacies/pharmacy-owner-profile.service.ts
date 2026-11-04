@@ -10,6 +10,7 @@ import {
 } from '../../constants/pharmacies/pharmacy-profile';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
 
 import type {
   CurrentPharmacySummaryResponseDto,
@@ -200,10 +201,63 @@ export async function updateMyPharmacyProfileService(
           pharmacy.location
         );
 
-        // A saved pending proposal is an editable draft, not a submission.
-        // Legacy records may be missing required fields in other tabs; rejecting
-        // every partial save here traps the owner in an unfixable state.
-        // The separate moderation submission endpoint enforces full readiness.
+        // Reactivation drafts must never save a newly blank required field.
+        // Enforce the edited fields now, but allow completing incomplete old
+        // pharmacies one tab at a time. Submission checks the entire profile.
+        if (isReactivationDraft) {
+          const missing = missingRequiredModerationFields(
+            pharmacy,
+            pendingModeration
+          );
+
+          const changed = new Set<string>();
+
+          for (const key of [
+            'name',
+            'phone',
+            'email',
+            'workingHours',
+            'imageUrl',
+            'description',
+            'shortDescription',
+          ]) {
+            if (key in resolvedInput) changed.add(key);
+          }
+
+          if (resolvedInput.location) {
+            for (const key of ['address', 'settlement', 'region']) {
+              if (key in resolvedInput.location) changed.add(key);
+            }
+          }
+
+          if (resolvedInput.bankDetails) {
+            for (const key of [
+              'recipientName',
+              'taxId',
+              'iban',
+              'bankName',
+              'receiptEmail',
+              'paymentPurpose',
+            ]) {
+              if (key in resolvedInput.bankDetails) changed.add(key);
+            }
+          }
+
+          if (resolvedInput.documents !== undefined) changed.add('documents');
+
+          const invalidEdited = missing.filter((key) => changed.has(key));
+
+          if (invalidEdited.length)
+            throw httpError(
+              HTTP_STATUS.BAD_REQUEST,
+              'Fill all required fields in the edited section before saving.',
+              { missingFields: invalidEdited },
+              'PHARMACY_PROFILE_INCOMPLETE'
+            );
+        }
+
+        // Active and correction drafts may be saved incrementally; final
+        // submission always rechecks the complete effective pharmacy profile.
 
         const updatedPharmacy = await Pharmacy.findOneAndUpdate(
           {
@@ -258,6 +312,15 @@ export async function updateMyPharmacyProfileService(
         };
 
         return;
+      }
+
+      // Never fall through to direct publication for a blocked or
+      // correction-stage reactivation pharmacy, even for unexpected payloads.
+      if (isReactivationDraft) {
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          'Save at least one valid pharmacy change before continuing.'
+        );
       }
 
       const update: Record<string, unknown> = { updatedBy: userId };

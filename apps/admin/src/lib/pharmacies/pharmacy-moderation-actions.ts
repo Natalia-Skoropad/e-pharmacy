@@ -8,6 +8,8 @@ import type {
 export type PharmacyModerationAction =
   AdminPharmacyModerationDecisionPayload['action'];
 
+//===============================================================
+
 export type PharmacyModerationOption = Readonly<{
   action: PharmacyModerationAction;
   label: string;
@@ -16,6 +18,8 @@ export type PharmacyModerationOption = Readonly<{
   feedbackVisibleToOwner: boolean;
   danger: boolean;
 }>;
+
+//===============================================================
 
 export const PHARMACY_MODERATION_REASON_MAX_LENGTH = 1000;
 
@@ -39,69 +43,81 @@ export function getPharmacyModerationOptions(
     case 'on_verification':
     case 'on_moderation':
     case 'on_reactivation': {
+      if (reviewState === 'changes_requested') {
+        // The owner must resubmit first; disabled explanations are rendered
+        // by PharmacyModerationActions for this state.
+        return status === 'on_reactivation'
+          ? []
+          : [
+              {
+                action: 'block',
+                label: 'Block pharmacy',
+                targetStatus: 'blocked',
+                description:
+                  'Take the pharmacy offline. The reason is recorded in the audit.',
+                feedbackVisibleToOwner: true,
+                danger: true,
+              },
+            ];
+      }
+
       const options: PharmacyModerationOption[] = [];
 
-      if (reviewState !== 'changes_requested' && ownerCanOperate) {
+      if (ownerCanOperate) {
         options.push({
-          action: status === 'on_reactivation' ? 'review_reactivation' : 'approve',
+          action:
+            status === 'on_reactivation' ? 'review_reactivation' : 'approve',
 
           label:
-            status === 'on_reactivation' ? 'Approve reactivation' : status === 'on_verification'
-              ? 'Approve & activate'
-              : 'Approve changes',
+            status === 'on_reactivation'
+              ? 'Approve reactivation'
+              : status === 'on_verification'
+                ? 'Approve & activate'
+                : 'Approve changes',
 
-          targetStatus: status === 'on_reactivation' && !pharmacy.dates.activatedAt
-            ? 'on_verification'
-            : 'active',
+          targetStatus: 'active',
 
           description:
             status === 'on_reactivation'
-              ? pharmacy.dates.activatedAt
-                ? 'Approve the frozen submitted reactivation details and restore availability.'
-                : 'Approve the frozen reactivation details and return this never-activated pharmacy to initial verification. It will remain unavailable to customers.'
+              ? 'Verify and publish only the frozen reactivation submission, then activate the pharmacy.'
               : status === 'on_verification'
-              ? 'Approve the registration and activate this pharmacy. The owner will be able to operate it.'
-              : 'Publish the pending changes atomically. Until approval, the previously approved pharmacy remains available to customers.',
+                ? 'Approve the verified pharmacy and activate it.'
+                : 'Publish the pending changes atomically after review.',
 
           feedbackVisibleToOwner: false,
           danger: false,
         });
       }
 
-      if (reviewState !== 'changes_requested') options.push({
+      options.push({
         action: 'request_corrections',
         label: 'Request corrections',
         targetStatus: status,
 
         description:
-          status === 'on_moderation'
-            ? 'Keep On moderation and the published pharmacy operational. The owner will see your comments, edit the pending draft and resubmit it.'
-            : status === 'on_reactivation'
-              ? 'Keep the pharmacy unavailable. The owner will see your comments, correct the saved draft and resubmit the reactivation request.'
-              : 'Keep On verification. The owner will see your comments and may correct and resubmit their registration.',
+          status === 'on_reactivation'
+            ? 'Keep the pharmacy unavailable. The owner can correct the draft and resubmit reactivation.'
+            : status === 'on_moderation'
+              ? 'Keep published data live and return the draft to the owner for corrections.'
+              : 'Keep verification pending and request corrections from the owner.',
 
         feedbackVisibleToOwner: true,
         danger: false,
       });
 
-      if (status === 'on_reactivation' && reviewState !== 'changes_requested') options.push({
-        action: 'reject_reactivation',
-        label: 'Reject reactivation', targetStatus: 'blocked',
-        description: 'Reject this request with a reason; pharmacy remains unavailable.',
-        feedbackVisibleToOwner: true, danger: true,
-      });
+      if (status !== 'on_reactivation')
+        options.push({
+          action: 'block',
+          label: 'Block pharmacy',
+          targetStatus: 'blocked',
 
-      if (status !== 'on_reactivation') options.push({
-        action: 'block',
-        label: 'Block pharmacy',
-        targetStatus: 'blocked',
+          description:
+            'Take the pharmacy offline. The reason is recorded in the audit.',
 
-        description:
-          'Take the pharmacy offline. Emergency blocking does not discard unfinished orders. The reason will be shown to the owner.',
+          feedbackVisibleToOwner: true,
+          danger: true,
+        });
 
-        feedbackVisibleToOwner: true,
-        danger: true,
-      });
       return options;
     }
 
@@ -121,27 +137,10 @@ export function getPharmacyModerationOptions(
       ];
 
     case 'blocked':
-      if (!ownerCanOperate || pharmacy.blockSource !== 'admin_blocked') return [];
-      return [
-        {
-          action: 'review_reactivation',
-          label: 'Review reactivation',
-
-          targetStatus: pharmacy.dates.activatedAt
-            ? 'active'
-            : 'on_verification',
-
-          description: pharmacy.dates.activatedAt
-            ? 'Explicitly reactivate the previously approved pharmacy. It will become operational again; pending drafts are not published.'
-            : 'Send this never-activated pharmacy back for initial verification. It will not start selling products.',
-
-          feedbackVisibleToOwner: false,
-          danger: false,
-        },
-      ];
+      // Reactivation must be submitted by the owner before any Admin review.
+      return [];
   }
 }
-
 //===================================================================
 
 export function validatePharmacyModerationReason(reason: string): string {
@@ -151,5 +150,6 @@ export function validatePharmacyModerationReason(reason: string): string {
 
   if (trimmed.length > PHARMACY_MODERATION_REASON_MAX_LENGTH)
     return `Reason must be at most ${PHARMACY_MODERATION_REASON_MAX_LENGTH} characters.`;
+
   return '';
 }

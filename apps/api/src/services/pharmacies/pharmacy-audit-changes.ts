@@ -69,6 +69,7 @@ function snapshot(pharmacy: PharmacySnapshot): Record<string, AdminAuditValue> {
         .update(value)
         .digest('hex')
         .slice(0, 16);
+
       values[field] =
         `${value.slice(0, 1840)}… [truncated; SHA-256 ${fingerprint}]`;
     } else values[field] = value ?? null;
@@ -182,6 +183,31 @@ export function buildPharmacyAuditChanges(
     // It is not a second entry in changedFields.
     auditBefore.status = oldValues.status ?? null;
     auditAfter.status = newValues.status ?? null;
+  }
+
+  // Preserve safe image references in this Admin-only audit record when the
+  // pharmacy photo changes. No image bytes or document contents are logged.
+  // These metadata fields are intentionally NOT separate change rows.
+  if (changedFields.includes('photoFingerprint')) {
+    const beforePhoto =
+      before.pendingModeration?.imageUrl === undefined
+        ? before.imageUrl
+        : before.pendingModeration.imageUrl;
+
+    const afterPhoto =
+      after.pendingModeration?.imageUrl === undefined
+        ? after.imageUrl
+        : after.pendingModeration.imageUrl;
+
+    const safeReference = (value: string | undefined | null) =>
+      value &&
+      value.length <= 1024 &&
+      (/^https?:\/\//i.test(value) || value.startsWith('/'))
+        ? value
+        : null;
+
+    auditBefore.photoPreviewUrl = safeReference(beforePhoto);
+    auditAfter.photoPreviewUrl = safeReference(afterPhoto);
   }
 
   return { before: auditBefore, after: auditAfter, changedFields };

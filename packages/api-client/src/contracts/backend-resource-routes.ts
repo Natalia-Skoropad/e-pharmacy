@@ -76,6 +76,7 @@ export const backendRoutes = {
       list: '/admin/pharmacies',
       summary: '/admin/pharmacies/summary',
       options: '/admin/pharmacies/options',
+      locations: '/admin/pharmacies/locations',
       ownerOptions: '/admin/pharmacies/owner-options',
     },
 
@@ -175,10 +176,14 @@ export const backendRoutes = {
 
     details: (pharmacyId: EntityId) => `/pharmacies/${segment(pharmacyId)}`,
 
+    photoSource: (pharmacyId: EntityId) =>
+      `/pharmacies/${segment(pharmacyId)}/photo-source`,
+
     myMemberships: '/pharmacies/me/memberships',
     ownedRegistry: '/pharmacies/me/pharmacies',
     ownedRegistrySummary: '/pharmacies/me/pharmacies/summary',
     ownedRegistryOptions: '/pharmacies/me/pharmacies/options',
+    ownedRegistryLocations: '/pharmacies/me/pharmacies/locations',
 
     createDraft: '/pharmacies',
 

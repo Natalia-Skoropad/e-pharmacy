@@ -109,12 +109,6 @@ export function Information({
                   {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
                 />
 
-                {pharmacy.status === 'on_reactivation' &&
-                pharmacy.reviewState === 'pending' ? (
-                  <span className={css.needsChanges}>
-                    Reactivation requested
-                  </span>
-                ) : null}
                 {pharmacy.reviewState === 'changes_requested' &&
                 (pharmacy.status === 'on_verification' ||
                   pharmacy.status === 'on_moderation' ||

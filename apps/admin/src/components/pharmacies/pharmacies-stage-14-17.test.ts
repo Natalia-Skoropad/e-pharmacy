@@ -10,6 +10,9 @@ import { getPharmacyModerationOptions } from '../../lib/pharmacies/pharmacy-mode
 //===================================================================
 
 const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8');
+
+//===================================================================
+
 const REV = '2026-10-13T00:00:00.000Z' as ISODateTimeString;
 
 //===================================================================
@@ -86,17 +89,23 @@ test('14.17: resubmission and blocked transitions retain canonical UI matrix', (
     );
   }
 
-  assert.equal(
+  assert.deepEqual(
     getPharmacyModerationOptions(
       detail('blocked', 'new', false, 'pending', 'admin_blocked')
-    )[0]?.targetStatus,
-    'on_verification'
+    ),
+    []
+  );
+
+  assert.deepEqual(
+    getPharmacyModerationOptions(
+      detail('blocked', 'active', true, 'pending', 'admin_blocked')
+    ),
+    []
   );
 
   assert.equal(
-    getPharmacyModerationOptions(
-      detail('blocked', 'active', true, 'pending', 'admin_blocked')
-    )[0]?.targetStatus,
+    getPharmacyModerationOptions(detail('on_reactivation', 'active', false))[0]
+      ?.targetStatus,
     'active'
   );
 

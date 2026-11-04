@@ -58,9 +58,11 @@ const resolvePharmacy = cache(lookupPharmacyBySlugId);
 
 function getDetailSlugId(params?: PharmacyRouteParams): string | null {
   const segments = params?.segments;
+
   if (!segments || segments.length !== 1) return null;
 
   const [segment] = segments;
+
   if (getPharmacyIdFromPublicSlugId(segment)) return segment;
   if (isPharmacyCatalogSegment(segment)) return null;
 
@@ -107,7 +109,7 @@ export async function generateMetadata({
     mergePharmacyCatalogFilters(routeFilters, queryFilters)
   );
 
-  const pharmacyName = await getSelectedPharmacySeoName(filters.pharmacyId);
+  const pharmacyName = await getSelectedPharmacySeoName(filters);
 
   return createPageMetadata({
     title: getPharmacyTitle(filters, pharmacyName),

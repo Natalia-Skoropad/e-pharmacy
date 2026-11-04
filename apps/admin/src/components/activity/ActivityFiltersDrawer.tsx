@@ -46,6 +46,7 @@ export type ActivityHistoryFilters = Readonly<{
   dateFrom: string;
   dateTo: string;
   action: '' | AdminAuditAction;
+  changeType: '' | 'status' | 'data';
   section: '' | AdminAuditSection;
   actorType: '' | AdminAuditActorType;
   employeeUserId: string;
@@ -58,6 +59,7 @@ export const DEFAULT_ACTIVITY_HISTORY_FILTERS: ActivityHistoryFilters = {
   dateFrom: '',
   dateTo: '',
   action: '',
+  changeType: '',
   section: '',
   actorType: '',
   employeeUserId: '',
@@ -137,6 +139,18 @@ const ACTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['action']>> = [
   })),
 ];
 
+//===================================================================
+
+const PHARMACY_CHANGE_TYPE_OPTIONS: Array<
+  SelectOption<ActivityHistoryFilters['changeType']>
+> = [
+  { value: '', label: 'All changes' },
+  { value: 'status', label: 'Pharmacy status changed' },
+  { value: 'data', label: 'Pharmacy data changed' },
+];
+
+//===================================================================
+
 const SECTION_OPTIONS: Array<SelectOption<ActivityHistoryFilters['section']>> =
   [
     { value: '', label: 'All sections' },
@@ -168,6 +182,7 @@ const ACTOR_TYPE_OPTIONS: Array<
   ...ADMIN_AUDIT_ACTOR_TYPES.map((actorType) => ({
     value: actorType,
     label: ACTOR_TYPE_LABELS[actorType],
+
     content: (
       <span className={css.option}>
         <span className={css.optionIcon}>
@@ -193,6 +208,7 @@ type ActivityFiltersDrawerProps = Readonly<{
   minDate?: string;
   availableActions?: readonly AdminAuditAction[];
   availableSections?: readonly AdminAuditSection[];
+  pharmacyScoped?: boolean;
   onChange: (filters: ActivityHistoryFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -206,6 +222,7 @@ export function ActivityFiltersDrawer({
   minDate,
   availableActions,
   availableSections,
+  pharmacyScoped = false,
   onChange,
   onClose,
   onReset,
@@ -282,25 +299,42 @@ export function ActivityFiltersDrawer({
               : SECTION_OPTIONS
           }
           isActive={Boolean(filters.section)}
-          onChange={(section) => onChange({ ...filters, section, action: '' })}
+          onChange={(section) =>
+            onChange({ ...filters, section, action: '', changeType: '' })
+          }
         />
       </div>
 
-      <SelectField
-        id="admin-audit-action-filter"
-        label="Change type"
-        value={filters.action}
-        disabled={!filters.section}
-        options={ACTION_OPTIONS.filter(
-          (option) =>
-            !option.value ||
-            (filters.section &&
-              getActionSection(option.value) === filters.section &&
-              (!availableActions || availableActions.includes(option.value)))
-        )}
-        isActive={Boolean(filters.action)}
-        onChange={(action) => onChange({ ...filters, action })}
-      />
+      {pharmacyScoped || filters.section === 'pharmacies' ? (
+        <SelectField
+          id="admin-audit-action-filter"
+          label="Change type"
+          value={filters.changeType}
+          options={PHARMACY_CHANGE_TYPE_OPTIONS}
+          isActive={Boolean(filters.changeType)}
+          onChange={(changeType) =>
+            onChange({ ...filters, changeType, action: '' })
+          }
+        />
+      ) : (
+        <SelectField
+          id="admin-audit-action-filter"
+          label="Change type"
+          value={filters.action}
+          disabled={!filters.section}
+          options={ACTION_OPTIONS.filter(
+            (option) =>
+              !option.value ||
+              (filters.section &&
+                getActionSection(option.value) === filters.section &&
+                (!availableActions || availableActions.includes(option.value)))
+          )}
+          isActive={Boolean(filters.action)}
+          onChange={(action) =>
+            onChange({ ...filters, action, changeType: '' })
+          }
+        />
+      )}
 
       <SelectField
         id="admin-audit-actor-type-filter"

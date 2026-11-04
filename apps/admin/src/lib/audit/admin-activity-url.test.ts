@@ -80,3 +80,21 @@ test('pharmacy-owner search has its own link without the employee filter', () =>
     state
   );
 });
+
+//===================================================================
+
+test('pharmacy audit change categories are URL-safe and persist across paging', () => {
+  for (const changeType of ['status', 'data'] as const) {
+    const state = {
+      ...DEFAULT_ACTIVITY_URL_STATE,
+      section: 'pharmacies' as const,
+      changeType,
+      page: 2,
+    };
+
+    const url = buildAdminActivityUrl(state);
+
+    assert.ok(url.includes(`/change-group-${changeType}`));
+    assert.deepEqual(parseAdminActivityUrl(url.split('/').slice(4)), state);
+  }
+});
