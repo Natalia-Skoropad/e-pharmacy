@@ -28,8 +28,17 @@ const actions = src(
 
 //===================================================================
 
-test('active pharmacy changes save incrementally while submission still requires completeness', () => {
-  assert.match(editor, /const validationMode = 'draft' as const/);
+test('active edits remain incremental; blocked/reactivation edits require verification completeness', () => {
+  // Blocked and corrections-requested reactivation drafts use the complete
+  // verification rules, unlike ordinary Active pharmacy draft edits.
+  assert.match(editor, /pharmacy\.status === 'blocked'/);
+  assert.match(editor, /pharmacy\.status === 'on_reactivation'/);
+  assert.match(editor, /pharmacy\.reviewState === 'changes_requested'/);
+
+  assert.match(
+    editor,
+    /const validationMode = isReactivationDraft \? 'verification' : 'draft'/
+  );
 
   assert.match(
     editor,
@@ -46,7 +55,25 @@ test('active pharmacy changes save incrementally while submission still requires
   const saveService = s('pharmacy-owner-profile.service.ts');
 
   assert.match(saveService, /buildPendingModerationPayload/);
-  assert.doesNotMatch(saveService, /missingRequiredModerationFields/);
+
+  // Full readiness is mandatory at submission. On blocked/reactivation edits,
+  // the save service checks only the required fields actually edited so
+  // incomplete legacy pharmacies can be completed one tab at a time.
+  const reactivationSaveGuard =
+    saveService
+      .split('if (isReactivationDraft) {')[1]
+      ?.split(
+        '// Active and correction drafts may be saved incrementally'
+      )[0] ?? '';
+
+  assert.match(reactivationSaveGuard, /missingRequiredModerationFields\(/);
+
+  assert.match(
+    reactivationSaveGuard,
+    /missing\.filter\(\(key\) => changed\.has\(key\)\)/
+  );
+
+  assert.match(reactivationSaveGuard, /if \(invalidEdited\.length\)/);
 
   assert.match(
     s('pharmacy-moderation.service.ts'),

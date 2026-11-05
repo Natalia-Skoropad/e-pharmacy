@@ -1,30 +1,44 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 //===================================================================
 
-const root = process.cwd().endsWith('apps/pharmacy')
-  ? path.resolve(process.cwd(), '../..')
-  : process.cwd();
+// Resolve the monorepo root independent of pnpm/turbo's package cwd.
+const root = fileURLToPath(new URL('../../../../../', import.meta.url));
+
+//===================================================================
 
 const read = (file: string) => readFileSync(path.join(root, file), 'utf8');
 
 //===================================================================
 
-test('owner action menu preserves no-wrap status buttons beside disabled action tooltip', () => {
+test('owner action menu constrains dropdown width and leaves no phantom tooltip gap', () => {
   const css = read(
     'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.module.css'
   );
 
-  assert.match(
-    css,
-    /\.statusActionRow > button\s*\{[^}]*white-space:\s*nowrap/
+  const actions = read(
+    'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
   );
 
-  assert.match(css, /\.statusMenuOptions\s*\{[^}]*width:\s*max-content/);
-  assert.match(css, /\.statusActionTooltip\s*\{[^}]*flex-shrink:\s*0/);
+  assert.match(css, /\.statusMenuOptions\s*\{[^}]*width:\s*100%/);
+  assert.match(css, /\.statusMenuOptions\s*\{[^}]*max-width:\s*100%/);
+
+  assert.match(
+    css,
+    /\.statusActionRow\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto/
+  );
+
+  assert.match(
+    css,
+    /\.statusActionRow:not\(:has\(\.statusActionTooltip\)\)\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/
+  );
+
+  assert.match(css, /\.statusActionTooltip\s*\{[^}]*display:\s*inline-flex/);
+  assert.match(actions, /disabled && disabledReason \? \(/);
 });
 
 //===================================================================

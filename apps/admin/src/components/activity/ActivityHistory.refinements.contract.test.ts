@@ -67,9 +67,14 @@ test('audit modal separates section and page and has accessible change values', 
 
 //===================================================================
 
-test('audit photo fingerprint preview checks digest presence before reading its fields', async () => {
+test('audit photo previews use an explicit historical before URL and shimmer while loading', async () => {
   const modal = await source('./AuditDetailsModal.tsx');
 
-  assert.match(modal, /photoDigest && photoDigest\.url === pagePhotoUrl/);
+  assert.match(modal, /<ShimmerImage/);
+  assert.match(modal, /photoUrl=\{item\.beforePhotoUrl\}/);
+  assert.match(modal, /photoUrl=\{item\.afterPhotoUrl\}/);
+  assert.match(modal, /Historical photo preview unavailable/);
   assert.doesNotMatch(modal, /photoDigest\?\.url === pagePhotoUrl/);
+  assert.doesNotMatch(modal, /item\.photoUrl/);
+  assert.match(modal, /beforePhotoUrl/);
 });

@@ -75,9 +75,21 @@ test('sidebar hides counters after a current-generation request failure', async 
 
   assert.match(sidebar, /createUnavailableOrderCounterState/);
 
+  // Ignore unrelated catch blocks and guard only the order-counter request.
+  const orderCounterFailure = sidebar.match(
+    /catch \(error\) \{([\s\S]*?)\n      \} finally/
+  );
+
+  assert.ok(orderCounterFailure, 'Order-counter errors must be handled');
+
   assert.match(
-    sidebar,
-    /catch \{[\s\S]*?controller\.signal\.aborted[\s\S]*?currentVersion !== requestVersion[\s\S]*?setOrderCounterState\(createUnavailableOrderCounterState\(\)\)/
+    orderCounterFailure[1] ?? '',
+    /controller\.signal\.aborted \|\| currentVersion !== requestVersion/
+  );
+
+  assert.match(
+    orderCounterFailure[1] ?? '',
+    /setOrderCounterState\(createUnavailableOrderCounterState\(\)\)/
   );
 
   assert.match(sidebar, /const orderCounts = getVisibleOrderCounts/);

@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 //===================================================================
 
-const root = process.cwd().endsWith('apps/pharmacy')
-  ? path.resolve(process.cwd(), '../..')
-  : process.cwd();
+// Tests run with apps/pharmacy as cwd under pnpm/turbo, but can also run
+// directly from the monorepo root. Resolve source paths from this test file.
+const root = fileURLToPath(new URL('../../../../../', import.meta.url));
+
+//===================================================================
 
 const read = (relativePath: string) =>
   readFileSync(path.join(root, relativePath), 'utf8');

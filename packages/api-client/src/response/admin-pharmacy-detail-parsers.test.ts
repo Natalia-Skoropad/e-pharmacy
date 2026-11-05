@@ -9,6 +9,8 @@ const ID = '507f1f77bcf86cd799439011';
 const OWNER_ID = '507f1f77bcf86cd799439012';
 const DATE = '2026-10-12T08:30:00.000Z';
 
+//===================================================================
+
 const onboarding = {
   id: ID,
   status: 'new',
@@ -43,6 +45,7 @@ test('Stage 14.5 accepts incomplete/onboarding and legacy unlinked pharmacy', ()
         bankTransferAvailable: false,
       },
     }).current.location,
+
     { settlement: 'Odesa' }
   );
 });
@@ -131,6 +134,7 @@ test('Stage 14.5 rejects invalid entity IDs, timestamps, statuses and metrics', 
 test('Stage 14.5 parser strictly selects safe fields, never returns raw document metadata', () => {
   const detail = parseAdminPharmacyDetail({
     ...onboarding,
+
     secretServerToken: 'secret',
     documents: [{ sha256: 'secret' }],
 
@@ -156,4 +160,46 @@ test('Stage 14.5 parser strictly selects safe fields, never returns raw document
 
   assert.equal(detail.documentCount, 0);
   assert.equal(detail.pendingChanges?.documentsCount, 1);
+});
+
+//===================================================================
+
+test('shared pharmacy identifiers preserve photo references without leaking raw metadata', () => {
+  const pharmacyId = '507f1f77bcf86cd799439013';
+  const src = `/api/admin/pharmacies/${pharmacyId}/photo`;
+
+  const detail = parseAdminPharmacyDetail({
+    ...onboarding,
+
+    sharedIdentifiers: {
+      phone: [
+        {
+          id: pharmacyId,
+          name: 'Pharmacy Berezine',
+          imageUrl: src,
+          secret: 'private',
+        },
+      ],
+      email: [{ id: pharmacyId, name: 'Pharmacy Reni' }],
+    },
+  });
+
+  assert.deepEqual(detail.sharedIdentifiers?.phone, [
+    { id: pharmacyId, name: 'Pharmacy Berezine', imageUrl: src },
+  ]);
+
+  assert.deepEqual(detail.sharedIdentifiers?.email, [
+    { id: pharmacyId, name: 'Pharmacy Reni' },
+  ]);
+
+  assert.doesNotMatch(JSON.stringify(detail), /private/);
+
+  assert.throws(() =>
+    parseAdminPharmacyDetail({
+      ...onboarding,
+      sharedIdentifiers: {
+        phone: [{ id: pharmacyId, name: 'X', imageUrl: 123 }],
+      },
+    })
+  );
 });

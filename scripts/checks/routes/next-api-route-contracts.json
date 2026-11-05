@@ -517,7 +517,7 @@
   },
   {
     "app": "pharmacy",
-    "route": "/pharmacies/me/pharmacies/:pharmacyId/cancel-review",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/cancel-review",
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/cancel-review",
     "methods": {
       "POST": "private"
@@ -525,7 +525,7 @@
   },
   {
     "app": "pharmacy",
-    "route": "/pharmacies/me/pharmacies/:pharmacyId/lifecycle-history",
+    "route": "/pharmacies/me/pharmacies/[pharmacyId]/lifecycle-history",
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/lifecycle-history",
     "methods": {
       "GET": "private"
@@ -634,6 +634,14 @@
     "backend": "/pharmacies/me/pharmacies/:pharmacyId/send-for-verification",
     "methods": {
       "POST": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/pharmacies/me/pharmacies/locations",
+    "backend": "/pharmacies/me/pharmacies/locations",
+    "methods": {
+      "GET": "private"
     }
   },
   {

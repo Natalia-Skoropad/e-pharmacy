@@ -122,7 +122,7 @@ test('Stage 14.18.36: Admin detail exposes only document filenames for approved 
 
   assert.match(
     api,
-    /publishedDocumentNames:\s*\(pharmacy\.documents \?\? \[\]\)\.map\(\(document\) => document\.name\)/
+    /publishedDocumentNames:\s*\(pharmacy\.documents \?\? \[\]\)\.map\(\s*\(document\) => document\.name\s*\)/
   );
 
   assert.match(

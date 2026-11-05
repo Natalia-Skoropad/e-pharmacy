@@ -21,6 +21,7 @@ import { moderationReadyPharmacyFields } from '../__tests__/fixtures/pharmacy-mo
 import { updateMyPharmacyProfileService } from './pharmacy-owner-profile.service';
 import { submitMyPharmacyModerationService } from './pharmacy-moderation.service';
 import { requestOwnedPharmacyReactivationService } from './pharmacy-owner-reactivation.service';
+
 import {
   getPharmaciesService,
   getPharmacyDetailsService,
@@ -481,7 +482,7 @@ test(
           entityId: pharmacyKey,
           action: ADMIN_AUDIT_ACTIONS.PHARMACY_MODERATION_SUBMITTED,
         }),
-        2
+        3 // Initial submission and two resubmissions after corrections.
       );
     } finally {
       if (neverActivatedPharmacyId) {

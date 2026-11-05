@@ -116,7 +116,13 @@ export async function listAdminPharmacyOwnersService(
         name: 1,
         email: 1,
         phone: 1,
-        pictureUrl: { $ifNull: ['$pictureUrl', null] },
+        pictureUrl: {
+          $cond: [
+            { $lte: [{ $strLenCP: { $ifNull: ['$pictureUrl', ''] } }, 4096] },
+            '$pictureUrl',
+            null,
+          ],
+        },
         status: 1,
         registeredAt: '$createdAt',
 
@@ -233,6 +239,7 @@ export async function listAdminPharmacyOwnerOptionsService(
   const items = await User.aggregate<OwnerOptionAggregateRow>([
     { $match: match },
     { $sort: { name: 1, _id: 1 } },
+    { $skip: (query.page - 1) * query.limit },
     { $limit: query.limit },
     {
       $project: {
@@ -241,7 +248,13 @@ export async function listAdminPharmacyOwnerOptionsService(
         name: 1,
         email: 1,
         phone: 1,
-        pictureUrl: { $ifNull: ['$pictureUrl', null] },
+        pictureUrl: {
+          $cond: [
+            { $lte: [{ $strLenCP: { $ifNull: ['$pictureUrl', ''] } }, 4096] },
+            '$pictureUrl',
+            null,
+          ],
+        },
       },
     },
   ]);

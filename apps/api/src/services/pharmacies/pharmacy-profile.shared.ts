@@ -9,7 +9,11 @@ import {
 import { PHARMACY_PROFILE_CONFLICT_ERROR_CODE } from '../../constants/pharmacies/pharmacy-profile';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { appendAdminAuditLog } from '../admin/audit/admin-audit-write.service';
-import { buildPharmacyAuditChanges } from './pharmacy-audit-changes';
+
+import {
+  buildPharmacyAuditChanges,
+  getPharmacyAuditPhotoSource,
+} from './pharmacy-audit-changes';
 
 import type {
   PharmacyEntity,
@@ -357,6 +361,15 @@ export async function appendPharmacyOwnerMutationAudit(
     before: beforeSnapshot,
     after: afterSnapshot,
     changedFields,
+
+    ...(changedFields.includes('photoFingerprint')
+      ? {
+          pharmacyPhotoSnapshots: {
+            before: getPharmacyAuditPhotoSource(before),
+            after: getPharmacyAuditPhotoSource(after),
+          },
+        }
+      : {}),
 
     ...(reason ? { reason: reason.trim().slice(0, 500) } : {}),
 

@@ -107,10 +107,10 @@ export function LinkedPharmaciesTab({
   const initialStateKey = getStateKey(initialState);
 
   const loadOwnerPharmacyOptions = useCallback(
-    async (query: string, signal: AbortSignal) => {
+    async (query: string, signal: AbortSignal, page = 1) => {
       const result = await getAdminPharmacyOwnerPharmacies(
         ownerId,
-        { ...(query ? { search: query } : {}), page: 1, perPage: 20 },
+        { ...(query ? { search: query } : {}), page, perPage: 20 },
         { signal }
       );
 

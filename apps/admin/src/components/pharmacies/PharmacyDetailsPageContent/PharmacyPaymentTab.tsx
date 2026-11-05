@@ -2,6 +2,7 @@ import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { PharmacyPaymentFields } from '@e-pharmacy/ui/profile';
 
 import { PharmacyReviewSummary } from './PharmacyReviewSummary';
+import { SharedPharmacyIdentifiersNotice } from './SharedPharmacyIdentifiersNotice';
 
 import css from './PharmacyDetailSections.module.css';
 
@@ -16,6 +17,11 @@ export function PharmacyPaymentTab({
   return (
     <div className={css.stack}>
       <PharmacyReviewSummary detail={detail} section="payment" />
+
+      <SharedPharmacyIdentifiersNotice
+        detail={detail}
+        fields={['taxId', 'iban', 'receiptEmail']}
+      />
 
       <PharmacyPaymentFields
         disabled

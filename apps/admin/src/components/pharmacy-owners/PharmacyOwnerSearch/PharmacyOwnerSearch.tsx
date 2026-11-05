@@ -25,10 +25,14 @@ type OwnerSuggestion = Pick<
 > &
   Partial<Pick<AdminPharmacyOwnerOption, 'email' | 'phone'>>;
 
+//===================================================================
+
 type OwnerOptionsLoader = (
-  params: Readonly<{ search?: string; limit?: number }>,
+  params: Readonly<{ search?: string; limit?: number; page?: number }>,
   options?: Readonly<{ signal?: AbortSignal }>
 ) => Promise<Readonly<{ items: readonly OwnerSuggestion[] }>>;
+
+//===================================================================
 
 type PharmacyOwnerSearchProps = Readonly<{
   value: string;
@@ -51,6 +55,7 @@ function toSearchableOption(
   return {
     value: owner.id,
     label: owner.name,
+
     leading: (
       <TableImagePreview
         src={owner.pictureUrl}
@@ -59,6 +64,7 @@ function toSearchableOption(
         size={30}
       />
     ),
+
     searchText: [owner.id, owner.email, owner.phone].join(' '),
   };
 }
@@ -73,6 +79,10 @@ export function PharmacyOwnerSearch({
 }: PharmacyOwnerSearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
+  const [page, setPage] = useState(1);
+  const [reloadPage, setReloadPage] = useState(0);
+  const [loadingPage, setLoadingPage] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const [selectedOwnerResult, setSelectedOwnerResult] = useState<Readonly<{
     value: string;
@@ -83,6 +93,7 @@ export function PharmacyOwnerSearch({
     query: string;
     items: readonly OwnerSuggestion[];
     unavailable: boolean;
+    hasMore: boolean;
   }> | null>(null);
 
   useEffect(() => {
@@ -93,31 +104,53 @@ export function PharmacyOwnerSearch({
       {
         ...(requestQuery ? { search: requestQuery } : {}),
         limit: 20,
+        page,
       },
       { signal: controller.signal }
     )
       .then((response) => {
         if (controller.signal.aborted) return;
 
-        setSuggestionsResult({
+        setSuggestionsResult((previous) => ({
           query: requestQuery,
-          items: response.items,
+
+          items:
+            page > 1 && previous?.query === requestQuery
+              ? [
+                  ...previous.items,
+                  ...response.items.filter(
+                    (item) =>
+                      !previous.items.some(
+                        (existing) => existing.id === item.id
+                      )
+                  ),
+                ]
+              : response.items,
+
           unavailable: false,
-        });
+          hasMore: response.items.length === 20,
+        }));
       })
 
       .catch(() => {
         if (controller.signal.aborted) return;
 
-        setSuggestionsResult({
-          query: requestQuery,
-          items: [],
-          unavailable: true,
-        });
+        if (page > 1) setLoadMoreError('Could not load more pharmacy owners.');
+        else
+          setSuggestionsResult({
+            query: requestQuery,
+            items: [],
+            unavailable: true,
+            hasMore: false,
+          });
+      })
+
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingPage(false);
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, loadOptions]);
+  }, [debouncedQuery, loadOptions, page, reloadPage]);
 
   useEffect(() => {
     if (!value || selectedOwnerResult?.value === value) return;
@@ -221,7 +254,25 @@ export function PharmacyOwnerSearch({
       disabled={disabled}
       maxLength={120}
       sanitizeQuery={sanitizeSearch}
-      onQueryChange={setQuery}
+      hasMoreOptions={Boolean(
+        hasCurrentSuggestions && suggestionsResult?.hasMore
+      )}
+      isLoadingMore={page > 1 && loadingPage}
+      loadMoreError={loadMoreError ?? undefined}
+      loadMoreErrorVariant="notice"
+      onLoadMore={() => {
+        if (loadingPage) return;
+        setLoadingPage(true);
+        setLoadMoreError(null);
+        if (loadMoreError) setReloadPage((count) => count + 1);
+        else setPage((current) => current + 1);
+      }}
+      onQueryChange={(next) => {
+        setQuery(next);
+        setPage(1);
+        setLoadingPage(false);
+        setLoadMoreError(null);
+      }}
       onChange={(nextValue) => {
         if (!nextValue) {
           setSelectedOwnerResult(null);

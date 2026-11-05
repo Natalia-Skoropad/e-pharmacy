@@ -145,8 +145,16 @@ const PHARMACY_CHANGE_TYPE_OPTIONS: Array<
   SelectOption<ActivityHistoryFilters['changeType']>
 > = [
   { value: '', label: 'All changes' },
-  { value: 'status', label: 'Pharmacy status changed' },
-  { value: 'data', label: 'Pharmacy data changed' },
+  {
+    value: 'status',
+    label: 'Pharmacy status changed',
+    content: withIcon('pharmacies', 'Pharmacy status changed'),
+  },
+  {
+    value: 'data',
+    label: 'Pharmacy data changed',
+    content: withIcon('pharmacies', 'Pharmacy data changed'),
+  },
 ];
 
 //===================================================================

@@ -25,7 +25,7 @@ test('14.15: only the selected tab mounts its own lazy private resource', async 
 
   assert.match(
     page,
-    /<PharmacyDocumentsTab key=\{pharmacyId\} pharmacyId=\{pharmacyId\}/
+    /<PharmacyDocumentsTab\s+key=\{pharmacyId\}\s+pharmacyId=\{pharmacyId\}\s+detail=\{detail \?\? undefined\}/
   );
 
   assert.match(page, /activeTab === 'comments' \?/);

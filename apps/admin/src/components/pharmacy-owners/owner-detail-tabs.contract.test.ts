@@ -87,7 +87,12 @@ test('owner activity reuses global audit UI and fetches only the selected owner 
 
   assert.match(
     history,
-    /scopeEntityId:\s*scopeOwnerId \|\| filters\.ownerUserId/
+    /scopeEntityType: 'pharmacyOwner', scopeEntityId: scopeOwnerId/
+  );
+
+  assert.match(
+    history,
+    /actorUserId: filters\.employeeUserId \|\| filters\.ownerUserId/
   );
 
   assert.match(history, /<ActivityFiltersDrawer/);

@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPharmacyAuditChanges } from './pharmacy-audit-changes';
+
+import {
+  buildPharmacyAuditChanges,
+  getPharmacyAuditPhotoSource,
+} from './pharmacy-audit-changes';
 
 //===================================================================
 
@@ -218,4 +222,32 @@ test('owner resubmission of corrections for On moderation is one review-state tr
   assert.equal(audit.before.reviewState, 'changes_requested');
   assert.equal(audit.after.reviewState, 'pending');
   assert.ok(!audit.changedFields.includes('reviewFeedback'));
+});
+
+//===============================================================
+
+test('photo audit captures the pre-change and submitted images without copying bytes into the audit log', () => {
+  const before = {
+    ...pharmacy,
+    imageUrl: 'data:image/png;base64,QUJD',
+  } as Parameters<typeof buildPharmacyAuditChanges>[0];
+
+  const after = {
+    ...before,
+    pendingModeration: { imageUrl: 'data:image/png;base64,REVG' },
+  } as Parameters<typeof buildPharmacyAuditChanges>[1];
+
+  const audit = buildPharmacyAuditChanges(before, after, 'Profile updated');
+
+  assert.ok(audit.changedFields.includes('photoFingerprint'));
+  assert.equal(audit.before.photoPreviewUrl, null);
+  assert.equal(audit.after.photoPreviewUrl, null);
+  assert.equal(getPharmacyAuditPhotoSource(before), before.imageUrl);
+
+  assert.equal(
+    getPharmacyAuditPhotoSource(after),
+    after.pendingModeration?.imageUrl
+  );
+
+  assert.ok(!JSON.stringify(audit).includes('base64'));
 });

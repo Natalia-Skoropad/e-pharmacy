@@ -63,13 +63,30 @@ test('Status dropdown stays beside a long title on desktop and tablet', async ()
 
 //===================================================================
 
-test('Duplicate identifier confirmation can scroll to its action buttons', async () => {
+test('Duplicate identifier confirmation scrolls the full dialog and shows at most two matches per field', async () => {
   const [modal, styles] = await Promise.all([
     read('./OwnedPharmacyEditor/DuplicateIdentifierSaveModal.tsx'),
     read('./OwnedPharmacyEditor/DuplicateIdentifierSaveModal.module.css'),
   ]);
 
   assert.match(modal, /dialogClassName=\{css\.scrollableDialog\}/);
-  assert.match(styles, /max-height: calc\(100dvh - 32px\)/);
-  assert.match(styles, /overflow-y: auto/);
+  assert.match(modal, /className=\{css\.matchesList\}/);
+
+  // A field shows two complete 54px cards separated by an 8px gap.
+  assert.match(
+    styles,
+    /\.matchesList\s*\{[^}]*max-height:\s*116px;[^}]*overflow-y:\s*auto;/
+  );
+
+  // The whole dialog (including its action buttons) must scroll on short viewports.
+  // Merely finding overflow-y:auto on a nested match list is insufficient.
+  assert.match(
+    styles,
+    /\.scrollableDialog\s*\{[^}]*max-height:\s*calc\(100dvh - 40px\);[^}]*overflow-y:\s*auto;/
+  );
+
+  assert.doesNotMatch(
+    styles,
+    /\.scrollableDialog\s*\{[^}]*overflow:\s*hidden;/
+  );
 });

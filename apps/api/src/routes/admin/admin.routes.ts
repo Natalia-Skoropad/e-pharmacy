@@ -10,6 +10,7 @@ import {
   listPharmacyRegistryLocationsByAdmin,
   listPharmacyRegistryOwnerOptionsByAdmin,
   getPharmacyDetailByAdmin,
+  getPharmacyPhotoSourceByAdmin,
   getPharmacySalesStatisticsByAdmin,
   listPharmacyDocumentsByAdmin,
   getAdminPharmacyDocument,
@@ -84,6 +85,8 @@ import {
 import {
   getAdminAuditActors,
   getAdminAuditLogDetails,
+  getAdminAuditPhoto,
+  getAdminScopedPharmacyAuditPhoto,
   getAdminAuditLogs,
 } from '../../controllers/admin/admin-audit.controller';
 
@@ -156,6 +159,8 @@ import {
 import {
   adminAuditListQuerySchema,
   adminAuditLogParamsSchema,
+  adminAuditPhotoParamsSchema,
+  adminPharmacyAuditPhotoParamsSchema,
   adminPharmacyAuditLogParamsSchema,
 } from '../../schemas/admin/audit/admin-audit.schema';
 
@@ -361,6 +366,15 @@ adminRoutes.get(
 //=================================================================================
 
 adminRoutes.get(
+  '/audit/:auditLogId/photos/:side',
+  requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
+  validate({ params: adminAuditPhotoParamsSchema }),
+  ctrlWrapper(getAdminAuditPhoto)
+);
+
+//===================================================================
+
+adminRoutes.get(
   '/audit/:auditLogId',
   requireAdminPermission(ADMIN_PERMISSIONS.audit.view),
   validate({ params: adminAuditLogParamsSchema }),
@@ -429,12 +443,25 @@ adminRoutes.get(
   ctrlWrapper(listPharmacyActivityByAdmin)
 );
 
+//===================================================================
+
 adminRoutes.get(
   '/pharmacies/:pharmacyId/activity/actors',
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
   validate({ params: pharmacyIdParamsSchema }),
   ctrlWrapper(listPharmacyActivityActorsByAdmin)
 );
+
+//===================================================================
+
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/activity/:auditLogId/photos/:side',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: adminPharmacyAuditPhotoParamsSchema }),
+  ctrlWrapper(getAdminScopedPharmacyAuditPhoto)
+);
+
+//===================================================================
 
 adminRoutes.get(
   '/pharmacies/:pharmacyId/activity/:auditLogId',
@@ -446,6 +473,16 @@ adminRoutes.get(
 //=================================================================================
 
 // Stage 14.5: exact pharmacy detail, before documents and status mutations.
+// Read-only lazy image source: same pharmacy permission as the detail page.
+adminRoutes.get(
+  '/pharmacies/:pharmacyId/photo-source',
+  requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),
+  validate({ params: pharmacyIdParamsSchema }),
+  ctrlWrapper(getPharmacyPhotoSourceByAdmin)
+);
+
+//===================================================================
+
 adminRoutes.get(
   '/pharmacies/:pharmacyId/sales-statistics',
   requireAdminPermission(ADMIN_PERMISSIONS.pharmacies.view),

@@ -123,7 +123,9 @@ test('creation date, status and no-gap ratings use existing URL-backed registry 
 //===================================================================
 
 test('owner autocomplete uses pharmacies.view and exposes only minimal linked owner identity', async () => {
-  const backend = await read('../../../../api/src/routes/admin/admin.routes.ts');
+  const backend = await read(
+    '../../../../api/src/routes/admin/admin.routes.ts'
+  );
 
   const service = await read(
     '../../../../api/src/services/admin/pharmacies/admin-pharmacy-registry-read.service.ts'
@@ -152,7 +154,11 @@ test('owner autocomplete uses pharmacies.view and exposes only minimal linked ow
 
   assert.match(service, /listAdminPharmacyRegistryOwnerOptionsService/);
   assert.match(service, /'_linkedPharmacies\.0'/);
-  assert.match(service, /pictureUrl: \{ \$ifNull/);
+
+  // Oversized embedded avatars must not make the owner filter unusably slow.
+  assert.match(service, /pictureUrl:\s*\{\s*\$cond:/);
+  assert.match(service, /\$strLenCP: \{ \$ifNull: \[\$?['"]?\$pictureUrl/);
+  assert.match(service, /4096/);
 
   const projection = service
     .split('listAdminPharmacyRegistryOwnerOptionsService')[1]

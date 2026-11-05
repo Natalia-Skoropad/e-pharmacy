@@ -124,6 +124,16 @@ export const adminAuditLogParamsSchema = z.object({
   auditLogId: mongoIdSchema,
 });
 
+export const adminAuditPhotoParamsSchema = adminAuditLogParamsSchema.extend({
+  side: z.enum(['before', 'after']),
+});
+
+export const adminPharmacyAuditPhotoParamsSchema = z.object({
+  pharmacyId: mongoIdSchema,
+  auditLogId: mongoIdSchema,
+  side: z.enum(['before', 'after']),
+});
+
 export const adminPharmacyAuditLogParamsSchema = z.object({
   pharmacyId: mongoIdSchema,
   auditLogId: mongoIdSchema,
@@ -133,3 +143,8 @@ export const adminPharmacyAuditLogParamsSchema = z.object({
 
 export type AdminAuditListQuery = z.infer<typeof adminAuditListQuerySchema>;
 export type AdminAuditLogParams = z.infer<typeof adminAuditLogParamsSchema>;
+export type AdminAuditPhotoParams = z.infer<typeof adminAuditPhotoParamsSchema>;
+
+export type AdminPharmacyAuditPhotoParams = z.infer<
+  typeof adminPharmacyAuditPhotoParamsSchema
+>;

@@ -27,7 +27,12 @@ import type {
 import { httpError } from '../../../utils/http/httpError';
 
 import { appendAdminAuditLog } from '../audit/admin-audit-write.service';
-import { buildPharmacyAuditChanges } from '../../pharmacies/pharmacy-audit-changes';
+
+import {
+  buildPharmacyAuditChanges,
+  getPharmacyAuditPhotoSource,
+} from '../../pharmacies/pharmacy-audit-changes';
+
 import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
 import { activateNewPharmacyOwnerForPharmacy } from '../../owners/pharmacy-owner-lifecycle.service';
 
@@ -624,6 +629,16 @@ export async function decidePharmacyModerationByAdminService(
         },
 
         changedFields,
+
+        ...(changedFields.includes('photoFingerprint')
+          ? {
+              pharmacyPhotoSnapshots: {
+                before: getPharmacyAuditPhotoSource(pharmacy),
+                after: getPharmacyAuditPhotoSource(saved),
+              },
+            }
+          : {}),
+
         reason,
 
         requestId:

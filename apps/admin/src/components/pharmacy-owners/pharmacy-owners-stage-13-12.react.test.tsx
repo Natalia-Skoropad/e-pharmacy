@@ -100,9 +100,19 @@ test('Stage 13.12 keeps owner lifecycle modal and resource tabs connected withou
     /<ActivityHistory\s+scopeOwnerId=\{ownerId\}\s+initialState=\{initialState\}\s*\/>/
   );
 
-  assert.match(sharedActivitySource, /scopeEntityType:\s*'pharmacyOwner'/);
+  // An owner-scoped Activity view must always use the selected owner ID.
+  // The actor filter is independent and cannot broaden the entity scope.
+  assert.match(
+    sharedActivitySource,
+    /\.\.\.\(scopeOwnerId\s*\?\s*\{\s*scopeEntityType:\s*'pharmacyOwner',\s*scopeEntityId:\s*scopeOwnerId\s*\}/
+  );
 
   assert.match(
+    sharedActivitySource,
+    /filters\.employeeUserId\s*\|\|\s*filters\.ownerUserId\s*\?\s*\{\s*actorUserId:\s*filters\.employeeUserId\s*\|\|\s*filters\.ownerUserId/
+  );
+
+  assert.doesNotMatch(
     sharedActivitySource,
     /scopeEntityId:\s*scopeOwnerId\s*\|\|\s*filters\.ownerUserId/
   );

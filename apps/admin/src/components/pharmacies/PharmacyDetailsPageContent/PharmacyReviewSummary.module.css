@@ -130,7 +130,7 @@
 /* Match the compact working-hours presentation in the owner cabinet. */
 .reviewWorkingHours {
   justify-content: flex-start;
-  font-size: var(--fz-12);
+  font-size: var(--fz-14);
 }
 
 .reviewWorkingHours :is(span, time, strong) {

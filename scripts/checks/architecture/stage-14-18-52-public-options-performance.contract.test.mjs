@@ -88,7 +88,7 @@ test('new index supports public autocomplete name sorting across active statuses
 test('read-only diagnostic measures photo payload size, index and query plan without leaking PII', () => {
   assert.match(diagnostic, /autoIndex: false/);
   assert.match(diagnostic, /autoCreate: false/);
-  assert.match(diagnostic, /\.explain\('executionStats'\)/);
+  assert.match(diagnostic, /\.explain\(\s*'executionStats'/);
   assert.match(diagnostic, /imageChars:/);
   assert.match(diagnostic, /imageIsDataUrl:/);
   assert.doesNotMatch(diagnostic, /console\.log\(.*?\.name/);

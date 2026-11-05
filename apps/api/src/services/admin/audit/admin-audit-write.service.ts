@@ -13,6 +13,7 @@ import {
 
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';
+import { appendAuditPharmacyPhotos } from './admin-audit-photo.service';
 
 import type { AdminAuditSnapshot } from '../../../types/admin/audit/admin-audit';
 
@@ -41,6 +42,11 @@ type AppendAdminAuditLogInput = Readonly<{
   requestId: string;
   mutationKey?: string;
   session: ClientSession;
+
+  pharmacyPhotoSnapshots?: Readonly<{
+    before?: string | null;
+    after?: string | null;
+  }>;
 }>;
 
 //===============================================================
@@ -62,6 +68,7 @@ export async function appendAdminAuditLog({
   requestId,
   mutationKey,
   session,
+  pharmacyPhotoSnapshots,
 }: AppendAdminAuditLogInput): Promise<void> {
   if (!Types.ObjectId.isValid(actorUserId)) {
     throw new TypeError('Audit actorUserId is invalid.');
@@ -125,7 +132,7 @@ export async function appendAdminAuditLog({
 
   const normalizedReason = reason?.trim();
 
-  await AdminAuditLog.create(
+  const [auditLog] = await AdminAuditLog.create(
     [
       {
         actorUserId: actor._id,
@@ -199,4 +206,16 @@ export async function appendAdminAuditLog({
     ],
     { session }
   );
+
+  if (
+    entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY &&
+    changedFields.includes('photoFingerprint') &&
+    pharmacyPhotoSnapshots
+  ) {
+    await appendAuditPharmacyPhotos({
+      auditLogId: auditLog._id,
+      ...pharmacyPhotoSnapshots,
+      session,
+    });
+  }
 }

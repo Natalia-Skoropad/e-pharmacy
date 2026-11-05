@@ -56,7 +56,7 @@ test('backfilled pharmacy-created audit entries remain parseable in all Activity
 
   assert.equal(
     getAdminAuditActionLabel(parsed.items[0]!.action),
-    'Pharmacy created'
+    'Pharmacy status changed'
   );
 
   assert.equal(getAdminAuditChangeTone(parsed.items[0]!), 'success');

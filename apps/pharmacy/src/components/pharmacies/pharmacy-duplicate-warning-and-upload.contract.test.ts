@@ -27,8 +27,13 @@ const proxy = read(
 test('owner identifier collisions warn and request explicit save confirmation', () => {
   assert.match(availability, /warnings\[field\]/);
   assert.match(availability, /matches\[field\]/);
+
   assert.match(modal, /getReusedIdentifierFields/);
-  assert.match(modal, /getOwnedPharmacyPath\(pharmacy\.id\)/);
+  assert.match(
+    modal,
+    /href=\{`\/pharmacy\/pharmacies\/\$\{encodeURIComponent\(pharmacy\.id\)\}`\}/
+  );
+
   assert.match(modal, /Save shared details/);
   assert.match(edit, /setConfirmSharedOpen\(true\)/);
   assert.match(create, /setConfirmSharedOpen\(true\)/);

@@ -28,7 +28,7 @@ test('14.18.24: tabs respond to the first click and synchronize with URL changes
 
   assert.match(
     detail,
-    /setTabSelection\(\{ routeTab: activeTab, selectedTab: tab \}\);\s*router.replace\(buildOwnedPharmacyDetailUrl/
+    /if \(!window\.dispatchEvent\(navigation\)\) return;\s*setTabSelection\(\{ routeTab: activeTab, selectedTab: tab \}\);\s*router\.replace\(href, \{ scroll: false \}\)/
   );
 
   assert.doesNotMatch(detail, /useEffect\(\(\) => setVisibleTab/);
@@ -69,7 +69,7 @@ test('14.18.24: created status is human-readable and disabled verification toolt
     './OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
   );
 
-  assert.match(info, /fallback="Created"/);
+  assert.match(info, /<span className=\{css\.createdStatus\}>Created<\/span>/);
   assert.match(info, /event\.action === 'pharmacy\.deleted'/);
   assert.match(actions, /tooltipTitle="Verification requirements"/);
   assert.match(actions, /items=\{\[/);

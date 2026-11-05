@@ -51,6 +51,15 @@ export type AdminPharmacyDetail = Readonly<{
   status: PharmacyStatus;
   owner: AdminPharmacyDetailOwner | null;
   current: AdminPharmacyCurrentData;
+
+  /** Read-only notices for published identifiers shared by this owner's pharmacies. */
+  sharedIdentifiers?: Partial<
+    Record<
+      'phone' | 'email' | 'taxId' | 'iban' | 'receiptEmail',
+      readonly Readonly<{ id: EntityId; name: string; imageUrl?: string }>[]
+    >
+  >;
+
   pendingChanges?: AdminPharmacyPendingChanges;
   statusReason?: string;
   reviewState?: 'pending' | 'changes_requested';

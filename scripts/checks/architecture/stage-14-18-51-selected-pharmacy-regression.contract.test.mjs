@@ -67,7 +67,7 @@ test('selected title, combobox and SEO derive from the actual public listing, no
 test('location canonicalization no longer launches a second catalogue query', () => {
   assert.match(
     server,
-    /const \{ filters, filterState \} = await resolvePharmaciesCatalogFilters/
+    /const \{ filters, filterState \} =\s*await resolvePharmaciesCatalogFilters/
   );
 
   assert.match(

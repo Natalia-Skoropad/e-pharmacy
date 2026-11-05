@@ -151,15 +151,27 @@ test('14.13 pharmacy description and bank details render in independent read-onl
   assert.match(shell, /<PharmacyPaymentTab detail=\{detail\}/);
   assert.doesNotMatch(shell, /about-payment/);
   assert.match(about, /current\.description/);
-  assert.match(about, /pending\?\.description !== undefined/);
+
+  // Published values remain read-only. Pending descriptions are displayed
+  // exclusively by the canonical Admin review panel, not as a second editor.
+  assert.match(
+    about,
+    /<PharmacyReviewSummary detail=\{detail\} section="about"/
+  );
 
   assert.match(
     about,
     /<PharmacyAboutFields value=\{current\.description \?\? ''\} disabled/
   );
 
-  assert.match(about, /<MarkdownContent value=\{pending\.description\}/);
-  assert.match(about, /<MarkdownContent value=\{pending\.description\}/);
+  const review = await read(
+    './PharmacyDetailsPageContent/PharmacyReviewSummary.tsx'
+  );
+
+  assert.match(review, /pending\.description === undefined/);
+  assert.match(review, /current: detail\.current\.description/);
+  assert.match(review, /submitted: pending\.description/);
+  assert.match(review, /<MarkdownContent value=\{value\}/);
 
   const renderer = await read(
     '../../../../../packages/ui/src/data-display/MarkdownContent/markdown-to-html.ts'
@@ -178,12 +190,17 @@ test('14.13 pharmacy description and bank details render in independent read-onl
   assert.match(payment, /<PharmacyPaymentFields/);
   assert.match(payment, /disabled/);
 
+  // The published payment form is read-only; comparison of a proposed
+  // bank record happens in the shared review panel instead.
   assert.match(
     payment,
-    /buildAdminPaymentRows\(bank, pending\?\.bankDetails\)/
+    /<PharmacyReviewSummary detail=\{detail\} section="payment"/
   );
 
-  assert.match(payment, /pending\?\.bankDetails !== undefined/);
+  assert.match(payment, /<PharmacyPaymentFields\s+disabled/);
+  assert.match(payment, /iban: bank\?\.iban \?\? ''/);
+  assert.match(review, /pending\.bankDetails &&/);
+  assert.match(review, /detail\.current\.bankDetails\?\.\[field\]/);
 });
 
 //===================================================================

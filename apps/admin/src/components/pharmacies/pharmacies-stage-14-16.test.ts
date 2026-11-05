@@ -14,7 +14,10 @@ test('14.16: Activity is mounted only on the pharmacy tab with exact pharmacy-sc
     read('./PharmacyDetailsPageContent/PharmacyActivityTab.tsx'),
     read('../activity/ActivityHistory.tsx'),
     read('../../lib/api/browser/admin-pharmacy-detail.api.ts'),
-    read('../../../../api/src/services/admin/audit/admin-pharmacy-activity.service.ts'),
+
+    read(
+      '../../../../api/src/services/admin/audit/admin-pharmacy-activity.service.ts'
+    ),
   ]);
 
   assert.match(shell, /activeTab === 'activity' \?/);
@@ -78,7 +81,18 @@ test('14.16: pharmacy deep-links reuse the canonical activity filters without ex
 
   assert.match(activity, /router\.replace\(/);
   assert.match(activity, /getAdminAuditLogs\(listParams/);
-  assert.match(activity, /scopeOwnerId \|\| filters\.ownerUserId/);
+
+  // The scoped owner is an entity filter; the selected owner search remains
+  // an actor filter and must not change the entity scope of the audit query.
+  assert.match(
+    activity,
+    /scopeEntityType: 'pharmacyOwner', scopeEntityId: scopeOwnerId/
+  );
+
+  assert.match(
+    activity,
+    /actorUserId: filters\.employeeUserId \|\| filters\.ownerUserId/
+  );
 });
 
 //===================================================================

@@ -11,6 +11,7 @@ import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { User } from '../../../models/accounts/user.model';
 
 import { buildPharmacyAuditScopeFilter } from '../audit/admin-audit-filters';
+import { decodeAuditPharmacyPhoto } from '../audit/admin-audit-photo.service';
 
 import type {
   EditablePharmacyBankDetails,
@@ -243,6 +244,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
     ordersCount,
     productRequestsCount,
     activityCount,
+    relatedPharmacies,
   ] = await Promise.all([
     User.findOne({ _id: pharmacy.ownerId, role: USER_ROLES.PHARMACY })
       .select('_id name email phone pictureUrl status')
@@ -257,7 +259,100 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
     Order.countDocuments({ pharmacyId: _id }),
     ProductRequest.countDocuments({ pharmacyId: _id }),
     AdminAuditLog.countDocuments(buildPharmacyAuditScopeFilter(pharmacyId)),
+
+    // Project image references in MongoDB, not the full base64 photo bytes.
+    // Only same-owner pharmacies may appear in the shared-details notice.
+    Pharmacy.aggregate<{
+      _id: Types.ObjectId;
+      name: string;
+      phone?: string;
+      email?: string;
+      bankDetails?: { taxId?: string; iban?: string; receiptEmail?: string };
+      imageUrl?: string | null;
+    }>([
+      { $match: { ownerId: pharmacy.ownerId, _id: { $ne: _id } } },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          email: 1,
+          'bankDetails.taxId': 1,
+          'bankDetails.iban': 1,
+          'bankDetails.receiptEmail': 1,
+          imageUrl: {
+            $let: {
+              vars: { photo: { $ifNull: ['$imageUrl', ''] } },
+              in: {
+                $cond: [
+                  {
+                    $regexMatch: {
+                      input: '$$photo',
+                      regex: /^data:image\/(?:jpeg|png|webp);base64,/i,
+                    },
+                  },
+                  {
+                    $concat: [
+                      '/api/admin/pharmacies/',
+                      { $toString: '$_id' },
+                      '/photo',
+                    ],
+                  },
+                  {
+                    $cond: [
+                      { $lte: [{ $strLenCP: '$$photo' }, 4096] },
+                      '$$photo',
+                      null,
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]),
   ]);
+
+  const fields = ['phone', 'email', 'taxId', 'iban', 'receiptEmail'] as const;
+
+  const currentIdentifiers: Record<(typeof fields)[number], string> = {
+    phone: pharmacy.phone ?? '',
+    email: pharmacy.email ?? '',
+    taxId: pharmacy.bankDetails?.taxId ?? '',
+    iban: pharmacy.bankDetails?.iban ?? '',
+    receiptEmail: pharmacy.bankDetails?.receiptEmail ?? '',
+  };
+
+  const normalizeIdentifier = (value: string) => value.trim().toLowerCase();
+
+  const sharedIdentifiers = Object.fromEntries(
+    fields.map((field) => [
+      field,
+      currentIdentifiers[field].trim()
+        ? relatedPharmacies
+            .filter((other) => {
+              const otherValue =
+                field === 'phone' || field === 'email'
+                  ? other[field]
+                  : other.bankDetails?.[field];
+
+              return Boolean(
+                otherValue &&
+                normalizeIdentifier(otherValue) ===
+                  normalizeIdentifier(currentIdentifiers[field])
+              );
+            })
+
+            .map((other) => ({
+              id: String(other._id),
+              name: other.name,
+
+              ...(other.imageUrl ? { imageUrl: other.imageUrl } : {}),
+            }))
+        : [],
+    ])
+  );
 
   const metrics = metricRows[0];
 
@@ -282,6 +377,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
       : null,
 
     current: publishedData(pharmacy),
+    sharedIdentifiers,
 
     ...(pharmacy.pendingModeration
       ? { pendingChanges: submittedChanges(pharmacy.pendingModeration) }
@@ -358,4 +454,28 @@ export async function getAdminPharmacySalesStatisticsService(
   }
 
   return getOrderSalesStatisticsForPharmacyService(pharmacyId, query);
+}
+
+//===============================================================
+
+/** Image bytes are fetched lazily by the private Admin BFF, never embedded in
+ * the detail JSON. Unlike the public photo route this includes blocked drafts,
+ * but only the pharmacies.view permission allows access to this endpoint.
+ */
+export async function getAdminPharmacyPhotoSourceService(pharmacyId: string) {
+  if (!/^[0-9a-f]{24}$/i.test(pharmacyId)) {
+    throw httpError(HTTP_STATUS.BAD_REQUEST, 'Invalid pharmacy ID.');
+  }
+
+  const pharmacy = await Pharmacy.findById(new Types.ObjectId(pharmacyId))
+    .select('imageUrl')
+    .lean<{ imageUrl?: string | null } | null>();
+
+  const photo = decodeAuditPharmacyPhoto(pharmacy?.imageUrl);
+
+  if (!photo) {
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy photo was not found.');
+  }
+
+  return photo;
 }

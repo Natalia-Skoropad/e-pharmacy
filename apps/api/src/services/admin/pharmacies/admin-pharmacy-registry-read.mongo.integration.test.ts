@@ -172,6 +172,7 @@ test(
           await listAdminPharmacyOptionsService({
             search: String(pharmacyId),
             limit: 10,
+            page: 1,
           })
         ).items[0]?.id,
 

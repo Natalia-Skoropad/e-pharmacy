@@ -39,10 +39,7 @@ test('public card directory projects fields and counts active products without f
     /from:\s*Product\.collection\.name,[\s\S]*?\$project:\s*\{\s*_id:\s*1\s*\}/
   );
 
-  assert.match(
-    code,
-    /\.select\('_id name location email phone imageUrl rating reviewsCount createdAt'\)/
-  );
+  assert.match(code, /PUBLIC_PHARMACY_IMAGE_PROJECTION/);
 });
 
 //===================================================================
@@ -100,7 +97,7 @@ test('activity actors read minimal profile fields and do not expand all owned ph
 
 //===================================================================
 
-test('owner editor checks only changed unique fields in current tab', () => {
+test('owner editor checks changed unique fields for blocking and all fields for warnings', () => {
   const editor = source(
     'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyEditableTab.tsx'
   );
@@ -109,7 +106,7 @@ test('owner editor checks only changed unique fields in current tab', () => {
     'apps/pharmacy/src/components/pharmacies/OwnedPharmacyEditor/usePaymentAvailability.ts'
   );
 
-  assert.match(editor, /uniqueFields\.length\s*>\s*0/);
+  assert.match(editor, /tab === 'data' \|\| tab === 'payment'/);
   assert.match(editor, /usePaymentAvailability\([\s\S]*?uniqueFields\s*\)/);
 
   assert.match(

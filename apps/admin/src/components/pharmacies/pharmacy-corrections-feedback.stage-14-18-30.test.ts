@@ -24,7 +24,9 @@ test('Corrections stay visible as disabled actions, emergency block stays enable
   );
 
   assert.match(actions, /detail\.reviewState === 'changes_requested'/);
-  assert.match(actions, /label: 'Request re-verification'/);
+  assert.match(actions, /'Request re-verification'/);
+  assert.match(actions, /'Request corrections'/);
+  assert.match(actions, /disabled: true as const/);
   assert.match(actions, /disabled=\{option\.disabled\}/);
   assert.match(actions, /if \(!option\.disabled\) selectAction\(option\)/);
   assert.match(actions, /\.\.\.options\.map\(\(option\) =>/);

@@ -68,7 +68,7 @@ test('Audit details uses the same compact expand control for descriptions and co
   assert.match(modal, /<AuditLongText value=\{details\.reason\} \/>/);
   assert.match(modal, /<MarkdownContent value=\{value\} \/>/);
   assert.match(modal, /className=\{css\.auditExpandButton\}/);
-  assert.match(modal, /iconLeft=\{expanded \? <ChevronUp/);
+  assert.match(modal, /iconLeft=\{\s*expanded \? <ChevronUp/);
   assert.match(modal, /fullWidth/);
 
   assert.match(

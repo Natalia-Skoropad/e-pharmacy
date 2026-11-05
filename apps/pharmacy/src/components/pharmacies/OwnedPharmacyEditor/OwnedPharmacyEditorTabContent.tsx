@@ -144,6 +144,7 @@ export function OwnedPharmacyEditorTabContent({
                 compactLayout
                 name={values.name || 'Pharmacy'}
                 pictureUrl={values.imageUrl || null}
+                error={errors.imageUrl}
                 accept={PICTURE_ACCEPT}
                 disabled={busy !== null}
                 validateFile={(file) => buildPictureFileError(file) || null}
@@ -165,11 +166,6 @@ export function OwnedPharmacyEditorTabContent({
                   hint: 'Upload a lightweight JPG, PNG, or WEBP photo up to 450 KB. Clients will see it in the pharmacy profile and search results. It will be saved with your draft.',
                 }}
               />
-              {errors.imageUrl ? (
-                <p className={css.error} role="alert">
-                  {errors.imageUrl}
-                </p>
-              ) : null}
             </div>
           </section>
 

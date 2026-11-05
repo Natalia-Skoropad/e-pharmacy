@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
+import { ADMIN_AUDIT_ACTIONS } from '../../../constants/admin/audit/admin-audit';
+
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
 import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
 import { PharmacyAdminComment } from '../../../models/admin/comments/pharmacyAdminComment.model';
@@ -27,7 +29,7 @@ const uri = process.env.E_PHARMACY_TEST_MONGODB_URI;
 //===================================================================
 
 test(
-  'Stage 14.6 Mongo: pharmacy-only documents and idempotent private comments with body-free audit',
+  'Stage 14.6 Mongo: pharmacy-only documents and idempotent private comments with admin-only text audit',
   { skip: !uri },
 
   async () => {
@@ -255,17 +257,38 @@ test(
 
       assert.equal(audit.length, 2); // Replay must not create another audit record.
 
-      for (const record of audit) {
-        assert.equal(
-          JSON.stringify(record.before).includes(payload.text),
-          false
-        );
+      // Comment text is intentionally retained inside the permission-gated
+      // Admin audit. The creation and deletion snapshots must agree without
+      // exposing the text through public pharmacy responses.
+      const creation = audit.find(
+        (record) =>
+          record.action === ADMIN_AUDIT_ACTIONS.PHARMACY_COMMENT_CREATED
+      );
 
-        assert.equal(
-          JSON.stringify(record.after).includes(payload.text),
-          false
-        );
-      }
+      const deletion = audit.find(
+        (record) =>
+          record.action === ADMIN_AUDIT_ACTIONS.PHARMACY_COMMENT_DELETED
+      );
+
+      assert.ok(creation);
+      assert.ok(deletion);
+
+      assert.equal(
+        JSON.stringify(creation.before).includes(payload.text),
+        false
+      );
+
+      assert.equal(JSON.stringify(creation.after).includes(payload.text), true);
+
+      assert.equal(
+        JSON.stringify(deletion.before).includes(payload.text),
+        true
+      );
+
+      assert.equal(
+        JSON.stringify(deletion.after).includes(payload.text),
+        false
+      );
     } finally {
       await Promise.all([
         PharmacyAdminComment.deleteMany({

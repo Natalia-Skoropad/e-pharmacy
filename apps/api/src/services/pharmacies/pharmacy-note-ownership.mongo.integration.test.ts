@@ -131,7 +131,9 @@ test(
           noteInput('Foreign pharmacy note')
         ),
 
-        (error: unknown) => (error as HttpError).status === 404
+        // A real pharmacy with no membership returns 403; an unknown ID
+        // returns 404. Neither grants cross-pharmacy note access.
+        (error: unknown) => (error as HttpError).status === 403
       );
 
       await assert.rejects(
@@ -463,7 +465,7 @@ test(
           10
         ),
 
-        (error: unknown) => (error as HttpError).status === 409
+        (error: unknown) => (error as HttpError).status === 403
       );
 
       await assert.rejects(
@@ -474,7 +476,7 @@ test(
           created.note.id
         ),
 
-        (error: unknown) => (error as HttpError).status === 409
+        (error: unknown) => (error as HttpError).status === 403
       );
 
       await deletePharmacyNoteService(

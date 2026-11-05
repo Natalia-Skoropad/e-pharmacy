@@ -75,6 +75,30 @@
   border-color: var(--color-error);
 }
 
+.error {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 11px;
+  color: var(--color-error);
+  background: var(--color-error-soft, #fff0f0);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  font-size: var(--fz-12);
+  line-height: var(--lh-base);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.error svg {
+  flex-shrink: 0;
+}
+
 @media only screen and (min-width: 768px) {
   .card {
     grid-template-rows: auto auto;

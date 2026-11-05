@@ -53,7 +53,10 @@ test('14.17.4: moderation dropdown is color-coded and transitions display canoni
   assert.match(actions, /css\.approveAction/);
   assert.match(actions, /css\.correctionsAction/);
   assert.match(actions, /css\.dangerAction/);
-  assert.equal((actions.match(/<StatusBadge/g) ?? []).length, 3);
+
+  // The extra badge shows Needs changes on the previous side of a returned
+  // request; it must not be dropped when a new decision is being reviewed.
+  assert.equal((actions.match(/<StatusBadge/g) ?? []).length, 4);
   assert.match(actions, /headerDetails=\{/);
   assert.match(actions, /label="Needs changes" tone="neutral"/);
 

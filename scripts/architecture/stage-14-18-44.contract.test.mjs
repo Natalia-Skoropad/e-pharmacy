@@ -5,7 +5,7 @@ import test from 'node:test';
 
 //===================================================================
 
-const root = resolve(import.meta.dirname, '../../..');
+const root = resolve(import.meta.dirname, '../..');
 
 //===================================================================
 

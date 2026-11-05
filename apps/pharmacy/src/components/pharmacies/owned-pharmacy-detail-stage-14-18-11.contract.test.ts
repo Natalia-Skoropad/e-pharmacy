@@ -117,8 +117,16 @@ test('detail tabs follow the admin URL and resource-mounting model', () => {
 
   assert.match(
     detail,
-    /router\.replace\(buildOwnedPharmacyDetailUrl\(pharmacyId, tab\)/
+    /const href = buildOwnedPharmacyDetailUrl\(pharmacyId, tab\)/
   );
+
+  assert.match(
+    detail,
+    /new CustomEvent\('e-pharmacy:owned-pharmacy-tab-navigation'/
+  );
+
+  assert.match(detail, /if \(!window\.dispatchEvent\(navigation\)\) return/);
+  assert.match(detail, /router\.replace\(href, \{ scroll: false \}\)/);
 
   assert.match(aboutPayment, /<PharmacyAboutFields/);
   assert.match(aboutPayment, /<PharmacyPaymentFields/);

@@ -48,7 +48,11 @@ test('Stage 14.18.39: Admin renders comparison only when the section contains ch
 
   assert.match(summary, /current: detail\.current\.description/);
   assert.match(summary, /submitted: pending\.description/);
-  assert.match(summary, /presentation: pending\.documentNames/);
+
+  assert.match(
+    summary,
+    /presentation:\s*pending\.documentNames && detail\.publishedDocumentNames/
+  );
 
   for (const [file, section] of [
     ['PharmacyDataTab.tsx', 'data'],

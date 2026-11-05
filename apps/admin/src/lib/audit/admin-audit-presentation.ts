@@ -192,7 +192,8 @@ export type AdminAuditLocation = Readonly<{
 export function getAdminAuditActionLabel(action: AdminAuditAction): string {
   if (
     action.startsWith('pharmacy.') &&
-    (action === 'pharmacy.status.changed' ||
+    (action === 'pharmacy.created' ||
+      action === 'pharmacy.status.changed' ||
       action === 'pharmacy.moderation.submitted' ||
       action === 'pharmacy.corrections.requested' ||
       action.startsWith('pharmacy.reactivation.') ||

@@ -481,11 +481,20 @@ export function OwnedPharmacyDetailPageContent({
             tabletVisibleCount={3}
             onChange={(tab) => {
               if (tab !== visibleTab) {
-                setTabSelection({ routeTab: activeTab, selectedTab: tab });
+                const href = buildOwnedPharmacyDetailUrl(pharmacyId, tab);
 
-                router.replace(buildOwnedPharmacyDetailUrl(pharmacyId, tab), {
-                  scroll: false,
-                });
+                const navigation = new CustomEvent(
+                  'e-pharmacy:owned-pharmacy-tab-navigation',
+                  {
+                    cancelable: true,
+                    detail: { href },
+                  }
+                );
+
+                if (!window.dispatchEvent(navigation)) return;
+
+                setTabSelection({ routeTab: activeTab, selectedTab: tab });
+                router.replace(href, { scroll: false });
               }
             }}
           />

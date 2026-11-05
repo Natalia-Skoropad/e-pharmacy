@@ -78,8 +78,6 @@ type AuditChangeRow = Readonly<{
   afterStatus?: string;
   beforePhotoUrl?: string | null;
   afterPhotoUrl?: string | null;
-  photoUrl?: string;
-  photoFingerprint?: string | null;
 }>;
 
 //===================================================================
@@ -127,13 +125,11 @@ function RenderAuditValue({
   field,
   isStatus = false,
   photoUrl,
-  photoFingerprint,
 }: Readonly<{
   value: AdminAuditValue | undefined;
   field: string;
   isStatus?: boolean;
-  photoUrl?: string;
-  photoFingerprint?: string | null;
+  photoUrl?: string | null;
 }>) {
   const color = getAuditColorSwatch(value);
 
@@ -152,7 +148,7 @@ function RenderAuditValue({
         />
       ) : null}
       {field === 'photoFingerprint' ? (
-        photoUrl && photoFingerprint && value === photoFingerprint ? (
+        photoUrl ? (
           <span className={css.auditPhotoPreview}>
             <ShimmerImage
               src={photoUrl}
@@ -219,12 +215,7 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
       ) : (
         <RenderAuditValue
           value={item.before}
-          photoUrl={item.beforePhotoUrl ?? item.photoUrl}
-          photoFingerprint={
-            item.beforePhotoUrl && typeof item.before === 'string'
-              ? item.before
-              : item.photoFingerprint
-          }
+          photoUrl={item.beforePhotoUrl}
           field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
@@ -248,12 +239,7 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
       ) : (
         <RenderAuditValue
           value={item.after}
-          photoUrl={item.afterPhotoUrl ?? item.photoUrl}
-          photoFingerprint={
-            item.afterPhotoUrl && typeof item.after === 'string'
-              ? item.after
-              : item.photoFingerprint
-          }
+          photoUrl={item.afterPhotoUrl}
           field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
@@ -290,37 +276,6 @@ export function AuditDetailsModal({
   onRetry,
 }: AuditDetailsModalProps) {
   const titleId = 'admin-audit-details-title';
-
-  const [photoDigest, setPhotoDigest] = useState<{
-    url: string;
-    digest: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!pagePhotoUrl || !globalThis.crypto?.subtle) return;
-
-    let active = true;
-
-    void crypto.subtle
-      .digest('SHA-256', new TextEncoder().encode(pagePhotoUrl))
-
-      .then((bytes) => {
-        const digest = [...new Uint8Array(bytes)]
-          .map((byte) => byte.toString(16).padStart(2, '0'))
-          .join('')
-          .slice(0, 16);
-
-        if (active) setPhotoDigest({ url: pagePhotoUrl, digest });
-      })
-
-      .catch(() => {
-        /* A missing crypto provider must not expose hashes. */
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [pagePhotoUrl]);
 
   // For old admin-comment entries the body was never persisted in audit.
   // Resolve an existing comment through the same protected Admin endpoint
@@ -374,6 +329,11 @@ export function AuditDetailsModal({
 
   const visibleFields = reviewFields.filter((field) => {
     if (details?.entityType !== 'pharmacy') return true;
+
+    // Creation is a lifecycle event. 'exists: No -> Yes' is internal metadata,
+    // not a second data change in the user-facing Changes table.
+    if (details.action === 'pharmacy.created' && field === 'exists')
+      return false;
 
     if (field === 'status' && reviewFields.includes('reviewState'))
       return false;
@@ -487,13 +447,6 @@ export function AuditDetailsModal({
                 typeof details.after.photoPreviewUrl === 'string'
                   ? details.after.photoPreviewUrl
                   : null,
-
-              ...(photoDigest && photoDigest.url === pagePhotoUrl
-                ? {
-                    photoUrl: photoDigest.url,
-                    photoFingerprint: photoDigest.digest,
-                  }
-                : {}),
             }
           : {}),
 
@@ -501,6 +454,19 @@ export function AuditDetailsModal({
           details.action === 'pharmacy.deleted' && field === 'exists',
       }))
     : [];
+
+  if (
+    details?.entityType === 'pharmacy' &&
+    details.action === 'pharmacy.created' &&
+    !changeRows.some((row) => row.field === 'status')
+  ) {
+    changeRows.unshift({
+      field: 'status',
+      label: 'Pharmacy status',
+      before: null,
+      after: 'new',
+    });
+  }
 
   if (
     details?.action === 'pharmacy.comment.created' &&

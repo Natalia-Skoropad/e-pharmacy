@@ -53,11 +53,21 @@ export const backendRoutes = {
 
       details: (pharmacyId: EntityId, auditLogId: EntityId) =>
         `/admin/pharmacies/${segment(pharmacyId)}/activity/${segment(auditLogId)}`,
+
+      photo: (
+        pharmacyId: EntityId,
+        auditLogId: EntityId,
+        side: 'before' | 'after'
+      ) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/activity/${segment(auditLogId)}/photos/${side}`,
     },
 
     pharmacyDetail: {
       details: (pharmacyId: EntityId) =>
         `/admin/pharmacies/${segment(pharmacyId)}`,
+
+      photoSource: (pharmacyId: EntityId) =>
+        `/admin/pharmacies/${segment(pharmacyId)}/photo-source`,
 
       salesStatistics: (pharmacyId: EntityId) =>
         `/admin/pharmacies/${segment(pharmacyId)}/sales-statistics`,
@@ -120,6 +130,9 @@ export const backendRoutes = {
       list: '/admin/audit',
       actors: '/admin/audit/actors',
       details: (auditLogId: EntityId) => `/admin/audit/${segment(auditLogId)}`,
+
+      photo: (auditLogId: EntityId, side: 'before' | 'after') =>
+        `/admin/audit/${segment(auditLogId)}/photos/${side}`,
     },
 
     productCategories: {

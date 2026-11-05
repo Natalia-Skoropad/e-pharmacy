@@ -1512,13 +1512,45 @@ test(
         await PharmacyDocumentFile.exists({ _id: secondPending.document.id })
       );
 
-      // An active pharmacy cannot propose an empty verification-document set.
-      // The rejected edit must leave both published and pending files intact.
+      // An active pharmacy may save an incomplete unpublished document draft.
+      // It cannot be submitted for moderation until required documents exist.
+      // Clearing pending files must never delete the approved binary.
+      const clearedPendingUpdate = await updateMyPharmacyProfileService(
+        String(user._id),
+        {
+          documents: [],
+          expectedRevision: secondPendingUpdate.pharmacy.updatedAt,
+        }
+      );
+
+      assert.deepEqual(
+        clearedPendingUpdate.pharmacy.pendingModeration?.documents,
+        []
+      );
+
+      assert.deepEqual(
+        (await Pharmacy.findById(pharmacy._id))?.documents?.map(
+          (document: PharmacyVerificationDocumentMetadata) => document.id
+        ),
+        [approved.document.id]
+      );
+
+      assert.ok(
+        await PharmacyDocumentFile.exists({ _id: approved.document.id })
+      );
+
+      assert.equal(
+        await PharmacyDocumentFile.exists({ _id: secondPending.document.id }),
+        null
+      );
+
+      // Saving an incomplete draft is allowed, but sending that draft for
+      // approval must reject it before any published data can be affected.
       await assert.rejects(
         () =>
-          updateMyPharmacyProfileService(String(user._id), {
-            documents: [],
-            expectedRevision: secondPendingUpdate.pharmacy.updatedAt,
+          submitMyPharmacyModerationService(String(user._id), {
+            changes: {},
+            expectedRevision: clearedPendingUpdate.pharmacy.updatedAt,
           }),
 
         (error: unknown) =>
@@ -1527,16 +1559,11 @@ test(
           error.code === 'PHARMACY_PROFILE_INCOMPLETE'
       );
 
-      assert.ok(
-        await PharmacyDocumentFile.exists({ _id: secondPending.document.id })
-      );
-
-      // Reverting the proposal to the approved document is valid and must
-      // delete the now-unreferenced pending upload without deleting the
-      // published binary.
+      // Reverting the proposal to the approved document is valid, with the
+      // latest revision, and does not remove the published binary.
       await updateMyPharmacyProfileService(String(user._id), {
         documents: [{ documentId: approved.document.id }],
-        expectedRevision: secondPendingUpdate.pharmacy.updatedAt,
+        expectedRevision: clearedPendingUpdate.pharmacy.updatedAt,
       });
 
       assert.ok(

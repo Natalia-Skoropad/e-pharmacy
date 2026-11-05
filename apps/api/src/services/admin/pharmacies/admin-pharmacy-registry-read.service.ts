@@ -187,7 +187,18 @@ function pagedItems(
               _id: 0,
               id: { $toString: '$_id' },
               name: 1,
-              pictureUrl: { $ifNull: ['$pictureUrl', null] },
+              pictureUrl: {
+                $cond: [
+                  {
+                    $lte: [
+                      { $strLenCP: { $ifNull: ['$pictureUrl', ''] } },
+                      4096,
+                    ],
+                  },
+                  '$pictureUrl',
+                  null,
+                ],
+              },
             },
           },
         ],
@@ -350,6 +361,7 @@ export async function listAdminPharmacyOptionsService(
   const items = await Pharmacy.aggregate<RegistryOption>([
     { $match: match },
     { $sort: { name: 1, _id: 1 } },
+    { $skip: (query.page - 1) * query.limit },
     { $limit: query.limit },
     {
       $project: {
@@ -358,7 +370,13 @@ export async function listAdminPharmacyOptionsService(
         name: 1,
         email: { $ifNull: ['$email', null] },
         phone: { $ifNull: ['$phone', null] },
-        imageUrl: { $ifNull: ['$imageUrl', null] },
+        imageUrl: {
+          $cond: [
+            { $lte: [{ $strLenCP: { $ifNull: ['$imageUrl', ''] } }, 4096] },
+            '$imageUrl',
+            null,
+          ],
+        },
         location: { $ifNull: ['$location', null] },
       },
     },
@@ -452,13 +470,20 @@ export async function listAdminPharmacyRegistryOwnerOptionsService(
     },
     { $match: { '_linkedPharmacies.0': { $exists: true } } },
     { $sort: { name: 1, _id: 1 } },
+    { $skip: (query.page - 1) * query.limit },
     { $limit: query.limit },
     {
       $project: {
         _id: 0,
         id: { $toString: '$_id' },
         name: 1,
-        pictureUrl: { $ifNull: ['$pictureUrl', null] },
+        pictureUrl: {
+          $cond: [
+            { $lte: [{ $strLenCP: { $ifNull: ['$pictureUrl', ''] } }, 4096] },
+            '$pictureUrl',
+            null,
+          ],
+        },
       },
     },
   ]);

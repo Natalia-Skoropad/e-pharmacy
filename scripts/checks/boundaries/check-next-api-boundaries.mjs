@@ -129,9 +129,16 @@ for (const file of tsFiles) {
     );
   }
 
+  // Read-only contract tests deliberately inspect proxy source via text assertions.
+  // They do not call or import internal proxy APIs, so they must not be reported
+  // as production boundary violations for containing an expected function name.
+  const isStaticContractTest =
+    rel.startsWith('scripts/checks/') && /\.contract\.test\.mjs$/.test(rel);
+
   if (
     /proxy(Auth|Backend|OptionalAuth|PublicBackend)Request/.test(source) &&
-    !rel.startsWith('packages/next-api/')
+    !rel.startsWith('packages/next-api/') &&
+    !isStaticContractTest
   ) {
     violations.push(`${rel}: low-level proxy implementation is internal`);
   }

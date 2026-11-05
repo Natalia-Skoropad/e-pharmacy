@@ -28,7 +28,8 @@ type PharmacySearchProps = Readonly<{
 
   loadOptions?: (
     query: string,
-    signal: AbortSignal
+    signal: AbortSignal,
+    page?: number
   ) => Promise<readonly AdminPharmacyOption[]>;
 
   id?: string;
@@ -83,11 +84,16 @@ export function PharmacySearch({
 }: PharmacySearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
+  const [page, setPage] = useState(1);
+  const [reloadPage, setReloadPage] = useState(0);
+  const [loadingPage, setLoadingPage] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const [suggestions, setSuggestions] = useState<Readonly<{
     query: string;
     items: readonly AdminPharmacyOption[];
     unavailable: boolean;
+    hasMore: boolean;
   }> | null>(null);
 
   const [selected, setSelected] = useState<Readonly<{
@@ -101,7 +107,7 @@ export function PharmacySearch({
 
     void (
       loadOptions
-        ? loadOptions(requestQuery, controller.signal).then((items) => ({
+        ? loadOptions(requestQuery, controller.signal, page).then((items) => ({
             items,
           }))
         : getAdminPharmacyOptions(
@@ -109,26 +115,53 @@ export function PharmacySearch({
               ...(requestQuery ? { search: requestQuery } : {}),
               ...(ownerId ? { ownerId } : {}),
               limit: 20,
+              page,
             },
             { signal: controller.signal }
           )
     )
       .then((result) => {
         if (!controller.signal.aborted)
-          setSuggestions({
+          setSuggestions((previous) => ({
             query: requestQuery,
-            items: result.items,
+
+            items:
+              page > 1 && previous?.query === requestQuery
+                ? [
+                    ...previous.items,
+
+                    ...result.items.filter(
+                      (item) =>
+                        !previous.items.some(
+                          (existing) => existing.id === item.id
+                        )
+                    ),
+                  ]
+                : result.items,
+
             unavailable: false,
-          });
+            hasMore: result.items.length === 20,
+          }));
       })
 
       .catch(() => {
-        if (!controller.signal.aborted)
-          setSuggestions({ query: requestQuery, items: [], unavailable: true });
+        if (!controller.signal.aborted) {
+          if (page > 1) setLoadMoreError('Could not load more pharmacies.');
+          else
+            setSuggestions({
+              query: requestQuery,
+              items: [],
+              unavailable: true,
+              hasMore: false,
+            });
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingPage(false);
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, loadOptions, ownerId]);
+  }, [debouncedQuery, loadOptions, ownerId, page, reloadPage]);
 
   // A deep link can select a pharmacy outside the first 20 suggestions.
   useEffect(() => {
@@ -181,6 +214,7 @@ export function PharmacySearch({
     }
 
     if (!query.trim()) result.unshift({ value: '', label: 'All pharmacies' });
+
     return result;
   }, [items, query, selected, value]);
 
@@ -220,15 +254,36 @@ export function PharmacySearch({
       disabled={disabled}
       maxLength={120}
       sanitizeQuery={sanitizeSearch}
-      onQueryChange={setQuery}
+      hasMoreOptions={Boolean(currentSuggestions && suggestions?.hasMore)}
+      isLoadingMore={page > 1 && loadingPage}
+      loadMoreError={loadMoreError ?? undefined}
+      loadMoreErrorVariant="notice"
+      onLoadMore={() => {
+        if (loadingPage) return;
+
+        setLoadingPage(true);
+        setLoadMoreError(null);
+
+        if (loadMoreError) setReloadPage((count) => count + 1);
+        else setPage((current) => current + 1);
+      }}
+      onQueryChange={(next) => {
+        setQuery(next);
+        setPage(1);
+        setLoadingPage(false);
+        setLoadMoreError(null);
+      }}
       onChange={(nextValue) => {
         if (!nextValue) {
           setSelected(null);
           onChange('');
           return;
         }
+
         const pharmacy = items.find((item) => item.id === nextValue);
+
         if (pharmacy) setSelected({ value: nextValue, pharmacy });
+
         onChange(nextValue);
       }}
     />

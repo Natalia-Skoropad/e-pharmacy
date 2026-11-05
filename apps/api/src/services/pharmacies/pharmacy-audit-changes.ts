@@ -131,6 +131,16 @@ function snapshot(pharmacy: PharmacySnapshot): Record<string, AdminAuditValue> {
 
 //===============================================================
 
+export function getPharmacyAuditPhotoSource(
+  pharmacy: PharmacySnapshot
+): string | null {
+  const proposed = pharmacy.pendingModeration?.imageUrl;
+
+  return (proposed === undefined ? pharmacy.imageUrl : proposed) ?? null;
+}
+
+//===============================================================
+
 export function buildPharmacyAuditChanges(
   before: PharmacySnapshot,
   after: PharmacySnapshot,
@@ -189,15 +199,8 @@ export function buildPharmacyAuditChanges(
   // pharmacy photo changes. No image bytes or document contents are logged.
   // These metadata fields are intentionally NOT separate change rows.
   if (changedFields.includes('photoFingerprint')) {
-    const beforePhoto =
-      before.pendingModeration?.imageUrl === undefined
-        ? before.imageUrl
-        : before.pendingModeration.imageUrl;
-
-    const afterPhoto =
-      after.pendingModeration?.imageUrl === undefined
-        ? after.imageUrl
-        : after.pendingModeration.imageUrl;
+    const beforePhoto = getPharmacyAuditPhotoSource(before);
+    const afterPhoto = getPharmacyAuditPhotoSource(after);
 
     const safeReference = (value: string | undefined | null) =>
       value &&

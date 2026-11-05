@@ -23,6 +23,7 @@ import {
 
 import {
   getAdminPharmacyDetailService,
+  getAdminPharmacyPhotoSourceService,
   getAdminPharmacySalesStatisticsService,
 } from '../../services/admin/pharmacies/admin-pharmacy-detail-read.service';
 
@@ -174,4 +175,22 @@ export async function getPharmacyDetailByAdmin(
 
   res.setHeader('Cache-Control', 'no-store');
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getPharmacyPhotoSourceByAdmin(
+  _req: Request,
+  res: ValidatedResponse<unknown, AdminPharmacyParams>
+): Promise<void> {
+  const photo = await getAdminPharmacyPhotoSourceService(
+    res.locals.validated.params.pharmacyId
+  );
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('Content-Type', photo.mimeType);
+  res.setHeader('Content-Length', String(photo.content.byteLength));
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Content-Disposition', 'inline');
+  res.status(HTTP_STATUS.OK).send(photo.content);
 }

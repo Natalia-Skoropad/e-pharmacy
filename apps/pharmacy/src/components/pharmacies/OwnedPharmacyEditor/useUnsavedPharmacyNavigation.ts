@@ -80,12 +80,29 @@ export function useUnsavedPharmacyNavigation(isDirty: boolean) {
       setLeaveDialogOpen(true);
     };
 
+    // The shared Tabs component uses buttons, not anchor links. Intercept
+    // its programmatic route changes through a cancellable navigation event.
+    const onTabNavigation = (event: Event) => {
+      if (!isDirty || allowNavigateRef.current) return;
+      const navigation = event as CustomEvent<{ href: string }>;
+      const href = navigation.detail?.href;
+      if (!href) return;
+      event.preventDefault();
+      pendingNavigationRef.current = () => {
+        allowNavigateRef.current = true;
+        router.push(href);
+      };
+      setLeaveDialogOpen(true);
+    };
+
     document.addEventListener('click', interceptLink, true);
     window.addEventListener('popstate', onPopState, true);
+    window.addEventListener('e-pharmacy:owned-pharmacy-tab-navigation', onTabNavigation);
 
     return () => {
       document.removeEventListener('click', interceptLink, true);
       window.removeEventListener('popstate', onPopState, true);
+      window.removeEventListener('e-pharmacy:owned-pharmacy-tab-navigation', onTabNavigation);
     };
   }, [isDirty, router]);
 

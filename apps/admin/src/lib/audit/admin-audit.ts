@@ -257,6 +257,13 @@ function parseAuditValue(value: unknown, field: string): AdminAuditValue {
     return [...value];
   }
 
+  // A lifecycle state is always scalar: do not stringify malformed status
+  // objects into a plausible user-facing status. Other historical fields (for
+  // example location and bank details) can legitimately contain nested data.
+  if (field === 'status' || field === 'reviewState') {
+    throw new TypeError(`Invalid audit snapshot value for ${field}.`);
+  }
+
   // Pre-field-level legacy records can contain nested data. Preserve a
   // human-readable JSON representation rather than rejecting the entire log.
   if (typeof value === 'object' && value !== null) {
@@ -368,6 +375,8 @@ function parseAuditActor(value: unknown): AdminAuditActor {
     (value.email != null && typeof value.email !== 'string') ||
     (value.phone != null && typeof value.phone !== 'string') ||
     (value.pictureUrl != null && typeof value.pictureUrl !== 'string') ||
+    // Actor options must never accept or retain private address data.
+    Object.hasOwn(value, 'address') ||
     (value.role !== 'admin' && value.role !== 'pharmacy') ||
     !isAdminAuditActorType(value.actorType) ||
     (value.role === 'admin' && value.actorType !== 'employee') ||

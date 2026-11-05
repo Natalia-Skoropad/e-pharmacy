@@ -270,7 +270,7 @@ export function PharmaciesPageContent({
 
   const loadScopedOwnerOptions = useCallback(
     (
-      params: Readonly<{ search?: string; limit?: number }>,
+      params: Readonly<{ search?: string; limit?: number; page?: number }>,
       options?: Readonly<{ signal?: AbortSignal }>
     ) =>
       getAdminPharmacyRegistryOwnerOptions(

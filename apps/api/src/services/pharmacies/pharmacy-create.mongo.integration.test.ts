@@ -125,6 +125,10 @@ test(
         (error) => hasStatus(error, 409)
       );
 
+      // Use a fixture-specific value: contact identifiers are globally
+      // reserved across different owners and integration runs.
+      const thirdPharmacyEmail = `draft-${owner}@example.com`;
+
       const third = await createPharmacyDraftService(
         owner,
 
@@ -132,7 +136,7 @@ test(
           clientRequestId: randomUUID(),
           name: 'New Pharmacy C',
           location: { settlement: 'Odesa' },
-          email: 'TEST@example.com',
+          email: thirdPharmacyEmail.toUpperCase(),
         },
 
         randomUUID()
@@ -143,7 +147,7 @@ test(
       assert.notEqual(third.pharmacy.id, first.pharmacy.id);
       assert.equal(third.pharmacy.location?.settlement, 'Odesa');
       assert.equal(third.pharmacy.location?.region, undefined);
-      assert.equal(third.pharmacy.email, 'test@example.com');
+      assert.equal(third.pharmacy.email, thirdPharmacyEmail);
 
       assert.equal(
         (await Pharmacy.findById(oldPharmacy._id))?.name,

@@ -60,10 +60,15 @@ export type AdminPharmacyOwnerListQueryParams = Readonly<{
   perPage?: 20 | 50 | 100;
 }>;
 
+//===================================================================
+
 export type AdminPharmacyOwnerOptionsQueryParams = Readonly<{
+  page?: number;
   search?: string;
   limit?: number;
 }>;
+
+//===================================================================
 
 export type AdminPharmacyOwnerPharmaciesQueryParams = Readonly<{
   search?: string;
@@ -74,6 +79,8 @@ export type AdminPharmacyOwnerPharmaciesQueryParams = Readonly<{
   page?: number;
   perPage?: 20 | 50 | 100;
 }>;
+
+//===================================================================
 
 export type AdminPharmacyOwnerActivityQueryParams = Readonly<
   Pick<
@@ -111,6 +118,7 @@ export async function getAdminPharmacyOwners(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminPharmacyOwnerListResponse,
     { url: path, method: 'GET' }
   );
@@ -125,6 +133,7 @@ export async function getAdminPharmacyOwnerSummary(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminPharmacyOwnerStatistics,
     { url: path, method: 'GET' }
   );
@@ -143,6 +152,7 @@ export async function getAdminPharmacyOwnerOptions(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminPharmacyOwnerOptionsResponse,
     { url: path, method: 'GET' }
   );
@@ -158,6 +168,7 @@ export async function getAdminPharmacyOwnerDetail(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminPharmacyOwnerDetail,
     { url: path, method: 'GET' }
   );
@@ -178,6 +189,7 @@ export async function updateAdminPharmacyOwnerStatus(
       body: payload,
       signal: options?.signal,
     }),
+
     parseAdminPharmacyOwnerStatusMutationResponse,
     { url: path, method: 'PATCH' }
   );
@@ -195,6 +207,7 @@ export async function getAdminPharmacyOwnerPharmacies(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminPharmacyOwnerPharmaciesResponse,
     { url: path, method: 'GET' }
   );
@@ -210,6 +223,7 @@ export async function getAdminPharmacyOwnerDocuments(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parsePharmacyOwnerDocumentsResponse,
     { url: path, method: 'GET' }
   );
@@ -243,6 +257,7 @@ export async function getAdminPharmacyOwnerComments(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminPharmacyOwnerCommentsResponse,
     { url: path, method: 'GET' }
   );
@@ -300,6 +315,7 @@ export async function getAdminPharmacyOwnerActivity(
 
   return parseApiResponseData(
     await localApiRequest(path, { signal: options?.signal }),
+
     parseAdminAuditListResponse,
     { url: path, method: 'GET' }
   );

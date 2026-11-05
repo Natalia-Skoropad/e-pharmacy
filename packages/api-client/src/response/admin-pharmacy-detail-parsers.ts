@@ -295,7 +295,50 @@ export function parseAdminPharmacyDetail(value: unknown): AdminPharmacyDetail {
           ...optionalText(owner, 'pictureUrl'),
         }
       : null,
+
     current: currentData(row.current),
+
+    ...(row.sharedIdentifiers === undefined
+      ? {}
+      : {
+          sharedIdentifiers: (() => {
+            const matches = record(row.sharedIdentifiers, 'shared identifiers');
+
+            const parsed: Partial<
+              Record<
+                'phone' | 'email' | 'taxId' | 'iban' | 'receiptEmail',
+                readonly { id: string; name: string; imageUrl?: string }[]
+              >
+            > = {};
+
+            for (const field of [
+              'phone',
+              'email',
+              'taxId',
+              'iban',
+              'receiptEmail',
+            ] as const) {
+              const items = matches[field];
+
+              if (items === undefined) continue;
+
+              if (!Array.isArray(items))
+                throw new TypeError(`Invalid shared ${field} matches.`);
+
+              parsed[field] = items.map((item: unknown) => {
+                const candidate = record(item, 'shared pharmacy');
+
+                return {
+                  id: id(candidate.id, 'shared pharmacy id'),
+                  name: text(candidate.name, 'shared pharmacy name'),
+                  ...optionalText(candidate, 'imageUrl'),
+                };
+              });
+            }
+
+            return parsed;
+          })(),
+        }),
 
     ...(row.pendingChanges === undefined
       ? {}

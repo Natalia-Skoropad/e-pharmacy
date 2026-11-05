@@ -26,6 +26,7 @@ import {
 } from '@e-pharmacy/validation/pharmacy';
 
 import { PharmacyReviewSummary } from './PharmacyReviewSummary';
+import { SharedPharmacyIdentifiersNotice } from './SharedPharmacyIdentifiersNotice';
 
 import css from './PharmacyDataTab.module.css';
 
@@ -45,6 +46,11 @@ export function PharmacyDataTab({
   return (
     <div className={css.tabContent}>
       <PharmacyReviewSummary detail={detail} section="data" />
+
+      <SharedPharmacyIdentifiersNotice
+        detail={detail}
+        fields={['phone', 'email']}
+      />
 
       <section className={css.profileBlock} aria-label="Pharmacy photo">
         <ProfileSectionHeader

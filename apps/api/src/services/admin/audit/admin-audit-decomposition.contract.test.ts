@@ -8,6 +8,8 @@ import test from 'node:test';
 const SRC = resolve(process.cwd(), 'src');
 const AUDIT_DIR = resolve(SRC, 'services/admin/audit');
 
+//===================================================================
+
 const CANONICAL = [
   'admin-audit-normalization.ts',
   'admin-audit-write.service.ts',
@@ -16,6 +18,8 @@ const CANONICAL = [
   'admin-audit-actors.service.ts',
   'admin-audit-read.service.ts',
 ] as const;
+
+//===================================================================
 
 const read = (file: string) => readFileSync(resolve(AUDIT_DIR, file), 'utf8');
 
@@ -198,8 +202,21 @@ test('S10.9 preserves legacy audit projection, filtering and paging metadata', (
   assert.match(projection, /normalizeStoredAdminAuditAction\(log\.action\)/);
   assert.match(projection, /getLegacyAuditSection\(log\.entityType\)/);
   assert.match(projection, /hasStatusChange/);
-  assert.match(projection, /before: \{ \.\.\.log\.before \}/);
-  assert.match(projection, /after: \{ \.\.\.log\.after \}/);
+
+  // Historical Mixed snapshots may contain nested metadata or dates. Keep the
+  // audit record immutable and expose only sanitized, parseable read DTOs.
+  assert.match(projection, /before: serializeAuditSnapshot\(log\.before\)/);
+  assert.match(projection, /after: serializeAuditSnapshot\(log\.after\)/);
+  assert.match(projection, /Object\.entries\(snapshot\)\.map/);
+  assert.match(projection, /Number\.isFinite\(value\)/);
+
+  assert.match(
+    projection,
+    /value\.every\(\(item\) => typeof item === 'string'\)/
+  );
+
+  assert.doesNotMatch(projection, /before: \{ \.\.\.log\.before \}/);
+  assert.doesNotMatch(projection, /after: \{ \.\.\.log\.after \}/);
   assert.match(filters, /T00:00:00\.000Z/);
   assert.match(filters, /T23:59:59\.999Z/);
   assert.match(filters, /section: \{ \$exists: false \}/);

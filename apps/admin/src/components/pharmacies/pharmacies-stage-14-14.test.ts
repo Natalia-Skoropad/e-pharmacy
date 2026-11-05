@@ -350,7 +350,7 @@ test('14.14: dropdown closes on pharmacy/revision changes without setting state 
 
   assert.match(
     actionsSource,
-    /const menuOpen = menuEntries\.length > 0 && openMenuKey === menuKey/
+    /const menuOpen = visibleMenuEntries\.length > 0 && openMenuKey === menuKey/
   );
 
   assert.match(actionsSource, /detail\.id/);

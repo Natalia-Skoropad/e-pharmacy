@@ -14,7 +14,10 @@ test('public product endpoints are active-only while blocked lifecycle access is
     pharmacyService,
     publicCatalogService,
   ] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/routes/catalog/product.routes.ts'), 'utf8'),
+    readFile(
+      resolve(process.cwd(), 'src/routes/catalog/product.routes.ts'),
+      'utf8'
+    ),
 
     readFile(
       resolve(process.cwd(), 'src/services/catalog/product-shared.ts'),
@@ -109,8 +112,27 @@ test('public product endpoints are active-only while blocked lifecycle access is
     /visibility\.mode === 'public'[\s\S]*?pharmacyFilter\.status = \{ \$in: PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES \}/
   );
 
+  // Public pharmacy product counts query the offers once per product, and
+  // join only active product IDs. The filtered lookup must never count
+  // blocked products or materialize large product images/descriptions.
+  const availableProductsCount =
+    publicCatalogService
+      .split('async function getAvailableProductsCountMap(')[1]
+      ?.split('function serializePharmacyCardSummary(')[0] ?? '';
+
+  assert.match(availableProductsCount, /ProductOffer\.aggregate/);
+  assert.match(availableProductsCount, /availableQuantity: \{ \$gt: 0 \}/);
+  assert.match(availableProductsCount, /\$group:\s*\{\s*_id: '\$productId'/);
+
   assert.match(
-    publicCatalogService,
-    /\$lookup:[\s\S]*?from:\s*Product\.collection\.name[\s\S]*?\$match:\s*\{ 'product\.status': 'active' \}/
+    availableProductsCount,
+    /\$lookup:\s*\{[\s\S]*?from: Product\.collection\.name[\s\S]*?pipeline:\s*\[\{ \$match: \{ status: 'active' \} \}, \{ \$project: \{ _id: 1 \} \}\]/
   );
+
+  assert.match(
+    availableProductsCount,
+    /\$match: \{ 'product\.0': \{ \$exists: true \} \}/
+  );
+
+  assert.match(availableProductsCount, /\$unwind: '\$pharmacyIds'/);
 });

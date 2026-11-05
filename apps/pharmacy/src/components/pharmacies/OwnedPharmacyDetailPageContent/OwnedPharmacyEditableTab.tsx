@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { Save } from 'lucide-react';
+import { Save, LogOut, X } from 'lucide-react';
 
 import type {
   MyPharmacyProfile,
@@ -15,6 +15,7 @@ import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { EmailInput, NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 import { Button } from '@e-pharmacy/ui/primitives';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 
 import {
   normalizePharmacyDocument,
@@ -52,6 +53,7 @@ import type {
 import { OwnedPharmacyEditorTabContent } from '../OwnedPharmacyEditor/OwnedPharmacyEditorTabContent';
 import { mergeProposedPharmacyDocuments } from './pharmacy-document-changes';
 import { usePaymentAvailability } from '../OwnedPharmacyEditor/usePaymentAvailability';
+import { useUnsavedPharmacyNavigation } from '../OwnedPharmacyEditor/useUnsavedPharmacyNavigation';
 
 import {
   DuplicateIdentifierSaveModal,
@@ -103,6 +105,9 @@ export function OwnedPharmacyEditableTab({
     documents.map((doc) => doc.id).join(',') !==
       savedDocuments.map((doc) => doc.id).join(',');
 
+  const { pendingNavigationRef, leaveDialogOpen, setLeaveDialogOpen } =
+    useUnsavedPharmacyNavigation(dirty && !readOnly);
+
   // Blocked/reactivation corrections require completion of the edited tab.
   // Full cross-tab validation still belongs to Request reactivation, so the
   // owner can complete an incomplete historical pharmacy one tab at a time.
@@ -137,7 +142,10 @@ export function OwnedPharmacyEditableTab({
   const paymentAvailability = usePaymentAvailability(
     pharmacy.id,
     values,
-    pharmacy.membershipRole === 'owner' && !readOnly && uniqueFields.length > 0,
+
+    pharmacy.membershipRole === 'owner' &&
+      (tab === 'data' || tab === 'payment'),
+
     uniqueFields
   );
 
@@ -500,6 +508,28 @@ export function OwnedPharmacyEditableTab({
         busy={busy === 'save'}
         onConfirm={() => void save(true)}
         onCancel={() => setConfirmSharedOpen(false)}
+      />
+
+      <ConfirmationModal
+        isOpen={leaveDialogOpen}
+        eyebrow="UNSAVED CHANGES"
+        title="Leave pharmacy editor?"
+        description="Your unsaved pharmacy changes will be lost. Save them before navigating away if you want to keep them."
+        confirmLabel="Leave page"
+        cancelLabel="Keep editing"
+        confirmIconLeft={<LogOut size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        destructive
+        onCancel={() => {
+          pendingNavigationRef.current = null;
+          setLeaveDialogOpen(false);
+        }}
+        onConfirm={() => {
+          setLeaveDialogOpen(false);
+          const navigate = pendingNavigationRef.current;
+          pendingNavigationRef.current = null;
+          navigate?.();
+        }}
       />
     </>
   );

@@ -65,16 +65,31 @@ test('commerce, review, and dictionary readers select their domain cache presets
     /getPharmacies[\s\S]*PUBLIC_COMMERCE_CACHE_OPTIONS/
   );
 
-  // Pharmacy and location dictionaries are now fetched in bounded pages.
-  // Both search readers must retain the dictionary cache preset.
+  // Only selected-location canonicalization needs the dictionary reader.
+  // Its bounded request must continue to use the dictionary cache preset.
   assert.match(
     pharmacyCatalog,
     /getPharmacySearchOptions\(\s*\{\s*kind:\s*'location'[\s\S]*?PUBLIC_DICTIONARY_CACHE_OPTIONS/
   );
 
+  // Stage 14.18.50+ reuses the cached commerce listing for selected pharmacy
+  // identity and local suggestions. A second "kind: pharmacy" lookup made
+  // page metadata wait on the slow search-options endpoint.
+  assert.doesNotMatch(
+    pharmacyCatalog,
+    /getPharmacySearchOptions\(\s*\{\s*kind:\s*'pharmacy'/
+  );
+
+  assert.match(pharmacyCatalog, /const readCatalogState = cache\(/);
+
   assert.match(
     pharmacyCatalog,
-    /getPharmacySearchOptions\(\s*\{\s*kind:\s*'pharmacy'[\s\S]*?PUBLIC_DICTIONARY_CACHE_OPTIONS/
+    /getSelectedPharmacySeoName\([\s\S]*?readCatalogForFilters\(filters\)/
+  );
+
+  assert.match(
+    pharmacyCatalog,
+    /pharmacyOptions:[\s\S]*?pageData\.pharmacies\.map\(/
   );
 
   // Prevent regressions to eagerly materializing the full dictionaries.

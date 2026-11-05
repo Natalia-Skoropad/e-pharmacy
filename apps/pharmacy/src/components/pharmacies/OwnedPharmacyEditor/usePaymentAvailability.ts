@@ -88,7 +88,8 @@ export function usePaymentAvailability(
     };
   }, [enabled, pharmacyId, taxId, iban, receiptEmail, phone, email, key]);
 
-  const waiting = enabled && checked?.key !== key;
+  const waiting = enabled && checked?.key !== key &&
+    (!checkedFields || checkedFields.length > 0);
   const errors: Partial<Record<PharmacyUniqueField, string>> = {};
   const warnings: Partial<Record<PharmacyUniqueField, string>> = {};
 
@@ -120,7 +121,6 @@ export function usePaymentAvailability(
     'email',
   ] as const) {
     if (
-      (!checkedFields || checkedFields.includes(field)) &&
       !errors[field] &&
       matches[field]?.length
     )

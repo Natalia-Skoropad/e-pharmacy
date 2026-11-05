@@ -24,6 +24,11 @@ import { httpError } from '../../../utils/http/httpError';
 import { getAuditActorIdsByType } from './admin-audit-actors.service';
 
 import {
+  getAdminAuditPhotoSides,
+  getRecoverableLegacyAuditPhotoSides,
+} from './admin-audit-photo.service';
+
+import {
   applyAuditSectionFilter,
   buildPharmacyAuditScopeFilter,
   endOfUtcDay,
@@ -57,6 +62,7 @@ export async function listAdminAuditLogsService(
   if (query.changeType) {
     const statusActions = ADMIN_AUDIT_ACTION_VALUES.filter(
       (action) =>
+        action === 'pharmacy.created' ||
         action === 'pharmacy.status.changed' ||
         action === 'pharmacy.moderation.submitted' ||
         action === 'pharmacy.corrections.requested' ||
@@ -194,5 +200,56 @@ export async function getAdminAuditLogService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Audit record was not found.');
   }
 
-  return serializeAuditDetails(auditLog);
+  const details = serializeAuditDetails(auditLog);
+
+  if (
+    auditLog.entityType !== 'pharmacy' ||
+    !auditLog.changedFields.includes('photoFingerprint')
+  ) {
+    return details;
+  }
+
+  const archivedSides = await getAdminAuditPhotoSides(auditLog._id);
+
+  const legacySides = await getRecoverableLegacyAuditPhotoSides(
+    auditLog.entityId,
+    {
+      before: auditLog.before?.photoFingerprint,
+      after: auditLog.after?.photoFingerprint,
+    },
+    archivedSides
+  );
+
+  const sides = [...new Set([...archivedSides, ...legacySides])];
+
+  if (!sides.length) return details;
+
+  // These same-origin, permission-gated URLs return the frozen photo bytes,
+  // never the current image of a pharmacy. This also works when a scoped
+  // pharmacy activity viewer does not have the global audit.view permission.
+  const photoBase = exactScope
+    ? `/api/admin/pharmacies/${exactScope.pharmacyId}/activity/${auditLogId}/photos`
+    : `/api/admin/audit/${auditLogId}/photos`;
+
+  const photoUrl = (side: 'before' | 'after') => `${photoBase}/${side}`;
+
+  return {
+    ...details,
+
+    before: {
+      ...details.before,
+
+      ...(sides.includes('before')
+        ? { photoPreviewUrl: photoUrl('before') }
+        : {}),
+    },
+
+    after: {
+      ...details.after,
+
+      ...(sides.includes('after')
+        ? { photoPreviewUrl: photoUrl('after') }
+        : {}),
+    },
+  };
 }

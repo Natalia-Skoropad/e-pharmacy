@@ -227,15 +227,22 @@ test('14.17: view permission is read-only for moderation even through direct API
 
 //===================================================================
 
-test('14.17: document ownership and Admin comments are isolated from Owner/Pharmacy notes', async () => {
-  const [documents, comments, commentModel, pharmacyRoutes, ownerRoutes] =
-    await Promise.all([
-      read('services/pharmacies/pharmacy-document.service.ts'),
-      read('services/admin/pharmacies/pharmacy-admin-comment.service.ts'),
-      read('models/admin/comments/pharmacyAdminComment.model.ts'),
-      read('routes/pharmacies/pharmacy.routes.ts'),
-      read('routes/owners/pharmacy-owner.routes.ts'),
-    ]);
+test('14.17: documents and private Admin comments are scoped and guarded from owner routes', async () => {
+  const [
+    documents,
+    comments,
+    commentModel,
+    pharmacyRoutes,
+    ownerRoutes,
+    adminRoutes,
+  ] = await Promise.all([
+    read('services/pharmacies/pharmacy-document.service.ts'),
+    read('services/admin/pharmacies/pharmacy-admin-comment.service.ts'),
+    read('models/admin/comments/pharmacyAdminComment.model.ts'),
+    read('routes/pharmacies/pharmacy.routes.ts'),
+    read('routes/owners/pharmacy-owner.routes.ts'),
+    read('routes/admin/admin.routes.ts'),
+  ]);
 
   assert.match(documents, /getPharmacyDocumentReferences\(pharmacyId\)/);
   assert.match(documents, /attachedAt:\s*\{\s*\$exists:\s*true\s*\}/);
@@ -243,11 +250,31 @@ test('14.17: document ownership and Admin comments are isolated from Owner/Pharm
   assert.match(comments, /assertReplayMatches\(existing, pharmacyId, text\)/);
   assert.match(comments, /scopeEntityId: pharmacyId/);
 
-  assert.doesNotMatch(
+  // The text is deliberately preserved in the private Admin audit, so
+  // authorized administrators can inspect old comment history. It must never
+  // be exposed by the Owner or Pharmacy routes.
+  const auditMetadata =
     comments
       .split('function auditMetadata(')[1]
-      ?.split('const auditFields')[0] ?? '',
-    /text: comment\.text/
+      ?.split('const auditFields')[0] ?? '';
+
+  assert.match(auditMetadata, /text: comment\.text/);
+  assert.match(comments, /scopeEntityType: ADMIN_AUDIT_ENTITY_TYPES\.PHARMACY/);
+  assert.match(comments, /scopeEntityId: pharmacyId/);
+
+  assert.match(
+    adminRoutes,
+    /'\/audit\/:auditLogId',[\s\S]*?requireAdminPermission\(ADMIN_PERMISSIONS\.audit\.view\)/
+  );
+
+  assert.match(
+    adminRoutes,
+    /'\/pharmacies\/:pharmacyId\/comments',[\s\S]*?requireAdminPermission\(ADMIN_PERMISSIONS\.pharmacies\.view\)/
+  );
+
+  assert.match(
+    adminRoutes,
+    /adminRoutes\.post\([\s\S]*?'\/pharmacies\/:pharmacyId\/comments',[\s\S]*?ADMIN_PERMISSIONS\.pharmacies\.edit/
   );
 
   assert.match(

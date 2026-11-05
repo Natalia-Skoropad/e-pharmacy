@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import clsx from 'clsx';
-import { ImageOff, Upload, Trash2, X } from 'lucide-react';
+import { CircleAlert, ImageOff, Upload, Trash2, X } from 'lucide-react';
 
 import { ImagePreview, readFileAsDataUrl } from '../../media';
 import Button from '../../primitives/Button/Button';
@@ -36,6 +36,7 @@ export type PictureCardLabels = {
 export type PictureCardProps = {
   name: string;
   pictureUrl: string | null;
+  error?: string | null;
   isSaving?: boolean;
   disabled?: boolean;
   compactLayout?: boolean;
@@ -69,6 +70,7 @@ const DEFAULT_LABELS: Required<PictureCardLabels> = {
 function PictureCard({
   name,
   pictureUrl,
+  error,
   isSaving = false,
   disabled = false,
   compactLayout = false,
@@ -82,7 +84,14 @@ function PictureCard({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const readControllerRef = useRef<AbortController | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   const mergedLabels = { ...DEFAULT_LABELS, ...labels };
+  const visibleError = error || localError;
+
+  const reportError = (message: string) => {
+    setLocalError(message);
+    onError?.(message);
+  };
 
   useEffect(() => () => readControllerRef.current?.abort(), []);
 
@@ -94,15 +103,19 @@ function PictureCard({
 
     if (!file) return;
 
+    setLocalError(null);
+
     const fileError = validateFile?.(file);
 
     if (fileError) {
-      onError?.(fileError);
+      reportError(fileError);
       return;
     }
 
     readControllerRef.current?.abort();
+
     const controller = new AbortController();
+
     readControllerRef.current = controller;
 
     try {
@@ -110,14 +123,16 @@ function PictureCard({
       const pictureUrlError = validatePictureUrl?.(dataUrl);
 
       if (pictureUrlError) {
-        onError?.(pictureUrlError);
+        reportError(pictureUrlError);
         return;
       }
 
       await onChange(dataUrl);
+
+      setLocalError(null);
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        onError?.(mergedLabels.uploadError);
+        reportError(mergedLabels.uploadError);
       }
     } finally {
       if (readControllerRef.current === controller) {
@@ -130,7 +145,10 @@ function PictureCard({
     if (disabled || isSaving) return;
 
     setIsConfirmOpen(false);
+
     await onChange(null);
+
+    setLocalError(null);
   };
 
   return (
@@ -151,6 +169,7 @@ function PictureCard({
         aria-label={mergedLabels.uploadAriaLabel}
         disabled={disabled || isSaving}
         onChange={(event) => void handleFileChange(event)}
+        aria-invalid={Boolean(visibleError) || undefined}
       />
 
       {mergedLabels.hint ? (
@@ -183,6 +202,13 @@ function PictureCard({
           {mergedLabels.removeButton}
         </Button>
       </div>
+
+      {visibleError ? (
+        <p className={css.error} role="alert">
+          <CircleAlert size={16} aria-hidden="true" />
+          {visibleError}
+        </p>
+      ) : null}
 
       {isConfirmOpen ? (
         <ConfirmationModal
