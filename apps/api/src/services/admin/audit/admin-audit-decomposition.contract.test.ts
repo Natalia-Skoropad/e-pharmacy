@@ -117,7 +117,7 @@ test('S10.9 audit modules have resolved local imports and no circular dependenci
 
 //===============================================================
 
-test('S10.9 normalization rejects sensitive values and writes audit in the caller transaction', () => {
+test('S10.9 normalization rejects sensitive values and preserves the caller session when supplied', () => {
   const normalization = read('admin-audit-normalization.ts');
   const write = read('admin-audit-write.service.ts');
 
@@ -129,11 +129,11 @@ test('S10.9 normalization rejects sensitive values and writes audit in the calle
   assert.match(normalization, /normalized\.length === 0/);
   assert.match(normalization, /\!\(field in before\) && \!\(field in after\)/);
 
-  assert.match(write, /session: ClientSession/);
+  assert.match(write, /session\?: ClientSession/);
 
   assert.match(
     write,
-    /User\.findById\(actorUserId\)[\s\S]*?\.session\(session\)/
+    /User\.findById\(actorUserId\)[\s\S]*?\.session\(session \?\? null\)/
   );
 
   assert.match(write, /AdminAuditLog\.create\([\s\S]*?\{ session \}/);
@@ -231,4 +231,32 @@ test('S10.9 preserves legacy audit projection, filtering and paging metadata', (
 
   assert.match(history, /AdminAuditLog\.distinct\('action', scopeFilter\)/);
   assert.match(history, /AdminAuditLog\.distinct\('section', scopeFilter\)/);
+});
+
+//===============================================================
+
+test('S14.18.94 audit writer handles legacy actors without name, without trusting request data', () => {
+  const write = read('admin-audit-write.service.ts');
+
+  assert.match(write, /\.select\('_id name email'\)/);
+
+  assert.match(
+    write,
+    /typeof actor\.name === 'string' \? actor\.name\.trim\(\) : ''/
+  );
+
+  assert.match(
+    write,
+    /typeof actor\.email === 'string' \? actor\.email\.trim\(\) : ''/
+  );
+
+  assert.match(write, /actorEmail\.length <= ADMIN_AUDIT_LIMITS\.actorName/);
+  assert.match(write, /`Account \$\{String\(actor\._id\)\.slice\(-8\)\}`/);
+
+  assert.match(
+    write,
+    /actorNameSnapshot: normalizeAuditString\(\s*auditActorName,/
+  );
+
+  assert.doesNotMatch(write, /normalizeAuditString\(\s*actor\.name,/);
 });

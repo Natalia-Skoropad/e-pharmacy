@@ -217,7 +217,8 @@ export async function getOrderSalesStatisticsForPharmacyService(
 
 export async function getOrderSalesStatisticsForPharmaciesService(
   pharmacyIds: readonly string[],
-  query: OrderSalesStatisticsQuery
+  query: OrderSalesStatisticsQuery,
+  clientId?: string
 ): Promise<OrderSalesStatisticsDto> {
   const { dateFrom, dateTo } = getDefaultSalesDateRange(query);
   const groupBy = query.groupBy;
@@ -246,6 +247,9 @@ export async function getOrderSalesStatisticsForPharmaciesService(
   const matchFilter: Record<string, unknown> = {
     pharmacyId: { $in: pharmacyIds.map((id) => new Types.ObjectId(id)) },
     status: 'successful',
+
+    ...(clientId ? { userId: new Types.ObjectId(clientId) } : {}),
+
     $or: [{ successfulAt: successfulAtRange }, { successfulAt: null }],
   };
 

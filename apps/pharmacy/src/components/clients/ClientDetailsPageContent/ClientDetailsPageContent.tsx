@@ -4,88 +4,30 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
-  Mail,
-  MapPin,
+  Building2,
+  MessageSquareText,
   PackageCheck,
-  Phone,
+  ShoppingBag,
   UserRound,
   Users,
 } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
-import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 import { isApiError } from '@e-pharmacy/api-client/transport';
-
-import {
-  ORDER_CREATED_BY_TYPES,
-  ORDER_STATUSES,
-} from '@e-pharmacy/config/orders';
-
-import {
-  PRODUCT_STATUS_PRESENTATION,
-  USER_STATUS_PRESENTATION,
-} from '@e-pharmacy/config/presentation';
-
-import {
-  ORDER_CREATED_BY_LABELS,
-  ORDER_STATUS_PRESENTATION,
-  PAYMENT_METHOD_LABELS,
-  DELIVERY_METHOD_LABELS,
-} from '@e-pharmacy/config/presentation';
-
-import {
-  Button,
-  FiltersButton,
-  LoadingSpinner,
-  TextActionButton,
-} from '@e-pharmacy/ui/primitives';
-
-import {
-  CountLabel,
-  DataTable,
-  formatInitials,
-  TableDateTime,
-  TableHeaderTitle,
-  type DataTableColumn,
-} from '@e-pharmacy/ui/data-display';
-
-import {
-  DateFilter,
-  RowsPerPageSelect,
-  SearchInput,
-  SelectField,
-  type DateFilterValue,
-  type RowsPerPageValue,
-  type SelectOption,
-} from '@e-pharmacy/ui/forms';
-
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
+import { type RowsPerPageValue, type SelectOption } from '@e-pharmacy/ui/forms';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
-import type { OrderStatisticsCounts } from '@e-pharmacy/types/orders';
+import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
 
-import type {
-  DeliveryMethod,
-  OrderStatus,
-  PaymentMethod,
-} from '@e-pharmacy/types/orders';
-
-import type { ProductStatus } from '@e-pharmacy/types/products';
-import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import { formatAmount } from '@e-pharmacy/utils/money';
-import { formatShortDate } from '@e-pharmacy/utils/date';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-  getPharmacyProductPath,
-} from '@/lib/routes';
+import { getPharmacyClientPath } from '@/lib/routes';
+import { type OwnedPharmacyListUrlState } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import {
   createPharmacyNote,
@@ -105,20 +47,32 @@ import type {
   PharmacyClientRow,
 } from '@/lib/clients/clients';
 
-import { getProductImageSrc } from '@/lib/products/product-images';
-import { type PharmacyOrderRow } from '@/lib/orders/orders';
+import type { PharmacyOrderRow } from '@/lib/orders/orders';
+import { getClientDisplayName } from '@/lib/clients/client-display-name';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import { EntityComments } from '@/components/comments/EntityComments';
-import { OrderStatistics } from '@/components/statistics';
-import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
 import { ClientPharmaciesTab } from '@/components/clients/ClientPharmaciesTab/ClientPharmaciesTab';
 
 import {
   shouldLoadClientProducts,
   type ClientDetailTab,
 } from '@/components/clients/client-detail-resource-policy';
+
+import {
+  ClientOrdersFiltersDrawer,
+  ClientProductsFiltersDrawer,
+  DEFAULT_ORDER_FILTERS,
+  DEFAULT_PRODUCT_FILTERS,
+  type ClientOrderFilters,
+  type ClientProductFilters,
+} from './ClientDetailFilters';
+
+import { ClientInformationTab } from './ClientInformationTab';
+import { ClientOrderStatistics } from './ClientOrderStatistics';
+import { ClientOrdersTab } from './ClientOrdersTab';
+import { ClientProductsTab } from './ClientProductsTab';
 
 import css from './ClientDetailsPageContent.module.css';
 
@@ -127,6 +81,7 @@ import css from './ClientDetailsPageContent.module.css';
 type ClientDetailsPageContentProps = Readonly<{
   clientId: string;
   initialTab?: ClientDetailTab;
+  initialPharmacyFilters?: OwnedPharmacyListUrlState;
 }>;
 
 //===================================================================
@@ -142,302 +97,21 @@ type ClientDetailsError = Readonly<{
 
 //===================================================================
 
-type ClientProductFilters = Readonly<{
-  date: DateFilterValue;
-  category: 'all' | ProductCategorySlug;
-  status: 'all' | ProductStatus;
-}>;
-
-type ClientOrderFilters = Readonly<{
-  date: DateFilterValue;
-  status: 'all' | OrderStatus;
-  deliveryMethod: 'all' | DeliveryMethod;
-  paymentMethod: 'all' | PaymentMethod;
-  clientCommentPresence: 'all' | 'with' | 'without';
-  createdByType: 'all' | OrderCreatedByType;
-}>;
-
-//===================================================================
-
 const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
-  { value: 'details', label: 'Details' },
-  { value: 'orders', label: 'Client orders' },
-  { value: 'pharmacies', label: 'Pharmacies' },
-  { value: 'products', label: 'Purchased products' },
-  { value: 'comments', label: 'Comments' },
+  { value: 'details', label: 'Details', icon: <UserRound size={17} /> },
+  { value: 'orders', label: 'Client orders', icon: <ShoppingBag size={17} /> },
+  { value: 'pharmacies', label: 'Pharmacies', icon: <Building2 size={17} /> },
+  {
+    value: 'products',
+    label: 'Purchased products',
+    icon: <PackageCheck size={17} />,
+  },
+  {
+    value: 'comments',
+    label: 'Comments',
+    icon: <MessageSquareText size={17} />,
+  },
 ];
-
-//===================================================================
-
-const PRODUCT_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
-
-//===================================================================
-
-const DEFAULT_PRODUCT_FILTERS: ClientProductFilters = {
-  date: { from: '', to: '' },
-  category: 'all',
-  status: 'all',
-};
-
-//===================================================================
-
-const DEFAULT_ORDER_FILTERS: ClientOrderFilters = {
-  date: { from: '', to: '' },
-  status: 'all',
-  deliveryMethod: 'all',
-  paymentMethod: 'all',
-  clientCommentPresence: 'all',
-  createdByType: 'all',
-};
-
-//===================================================================
-
-const ORDER_STATUS_OPTIONS: Array<SelectOption<ClientOrderFilters['status']>> =
-  [
-    { value: 'all', label: 'All' },
-
-    ...ORDER_STATUSES.map((status) => ({
-      value: status,
-      label: ORDER_STATUS_PRESENTATION[status].label,
-    })),
-  ];
-
-//===================================================================
-
-const DELIVERY_METHOD_OPTIONS: Array<
-  SelectOption<ClientOrderFilters['deliveryMethod']>
-> = [
-  { value: 'all', label: 'All' },
-  { value: 'pickup', label: DELIVERY_METHOD_LABELS.pickup },
-  { value: 'postal_delivery', label: DELIVERY_METHOD_LABELS.postal_delivery },
-];
-
-//===================================================================
-
-const PAYMENT_METHOD_OPTIONS: Array<
-  SelectOption<ClientOrderFilters['paymentMethod']>
-> = [
-  { value: 'all', label: 'All' },
-  { value: 'cash', label: PAYMENT_METHOD_LABELS.cash },
-  { value: 'bank_transfer', label: PAYMENT_METHOD_LABELS.bank_transfer },
-];
-
-//===================================================================
-
-const CLIENT_COMMENT_OPTIONS: Array<
-  SelectOption<ClientOrderFilters['clientCommentPresence']>
-> = [
-  { value: 'all', label: 'All' },
-  { value: 'with', label: 'With client comment' },
-  { value: 'without', label: 'Without client comment' },
-];
-
-//===================================================================
-
-const ORDER_CREATED_BY_OPTIONS: Array<
-  SelectOption<ClientOrderFilters['createdByType']>
-> = [
-  { value: 'all', label: 'All' },
-
-  ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
-    value: createdByType,
-    label: ORDER_CREATED_BY_LABELS[createdByType],
-  })),
-];
-
-//===================================================================
-
-const PRODUCT_STATUS_OPTIONS: Array<
-  SelectOption<ClientProductFilters['status']>
-> = [
-  { value: 'all', label: 'All' },
-
-  ...(Object.keys(PRODUCT_STATUS_PRESENTATION) as ProductStatus[]).map(
-    (status) => ({
-      value: status,
-      label: PRODUCT_STATUS_PRESENTATION[status].label,
-    })
-  ),
-];
-
-//===================================================================
-
-function formatClientDate(value: string): string {
-  return formatShortDate(value) ?? 'Not specified';
-}
-
-//===================================================================
-
-function formatAmountValue(value: number): string {
-  return formatAmount(value) ?? '—';
-}
-
-//===================================================================
-
-type ClientOrdersFiltersDrawerProps = Readonly<{
-  filters: ClientOrderFilters;
-  hasActiveFilters: boolean;
-  minDate?: string;
-  resetHref: string;
-  onChange: (filters: ClientOrderFilters) => void;
-  onClose: () => void;
-  onReset: () => void;
-}>;
-
-//===================================================================
-
-function ClientOrdersFiltersDrawer({
-  filters,
-  hasActiveFilters,
-  minDate,
-  resetHref,
-  onChange,
-  onClose,
-  onReset,
-}: ClientOrdersFiltersDrawerProps) {
-  return (
-    <FilterDrawer
-      id="client-orders-filters-panel"
-      eyebrow="Client orders"
-      hasActiveFilters={hasActiveFilters}
-      resetHref={resetHref}
-      onClose={onClose}
-      onReset={() => {
-        onReset();
-        onClose();
-      }}
-    >
-      <DateFilter
-        id="client-orders-date"
-        minDate={minDate}
-        disabled={!minDate}
-        label="Order date"
-        value={filters.date}
-        isActive={Boolean(filters.date.from || filters.date.to)}
-        applyOnSubmit
-        applyLabel="Apply"
-        onChange={(date) => onChange({ ...filters, date })}
-      />
-
-      <SelectField
-        id="client-orders-status"
-        label="Order status"
-        value={filters.status}
-        options={ORDER_STATUS_OPTIONS}
-        isActive={filters.status !== 'all'}
-        onChange={(status) => onChange({ ...filters, status })}
-      />
-
-      <SelectField
-        id="client-orders-delivery"
-        label="Delivery method"
-        value={filters.deliveryMethod}
-        options={DELIVERY_METHOD_OPTIONS}
-        isActive={filters.deliveryMethod !== 'all'}
-        onChange={(deliveryMethod) => onChange({ ...filters, deliveryMethod })}
-      />
-
-      <SelectField
-        id="client-orders-payment"
-        label="Payment method"
-        value={filters.paymentMethod}
-        options={PAYMENT_METHOD_OPTIONS}
-        isActive={filters.paymentMethod !== 'all'}
-        onChange={(paymentMethod) => onChange({ ...filters, paymentMethod })}
-      />
-
-      <SelectField
-        id="client-orders-comment-presence"
-        label="Client comment"
-        value={filters.clientCommentPresence}
-        options={CLIENT_COMMENT_OPTIONS}
-        isActive={filters.clientCommentPresence !== 'all'}
-        onChange={(clientCommentPresence) =>
-          onChange({ ...filters, clientCommentPresence })
-        }
-      />
-
-      <SelectField
-        id="client-orders-created-by"
-        label="Created by"
-        value={filters.createdByType}
-        options={ORDER_CREATED_BY_OPTIONS}
-        isActive={filters.createdByType !== 'all'}
-        onChange={(createdByType) => onChange({ ...filters, createdByType })}
-      />
-    </FilterDrawer>
-  );
-}
-
-//===================================================================
-
-type ClientProductsFiltersDrawerProps = Readonly<{
-  filters: ClientProductFilters;
-  hasActiveFilters: boolean;
-  minDate?: string;
-  resetHref: string;
-  categoryOptions: readonly SelectOption<ClientProductFilters['category']>[];
-  onChange: (filters: ClientProductFilters) => void;
-  onClose: () => void;
-  onReset: () => void;
-}>;
-
-//===================================================================
-
-function ClientProductsFiltersDrawer({
-  filters,
-  hasActiveFilters,
-  minDate,
-  resetHref,
-  categoryOptions,
-  onChange,
-  onClose,
-  onReset,
-}: ClientProductsFiltersDrawerProps) {
-  return (
-    <FilterDrawer
-      id="client-products-filters-panel"
-      eyebrow="Client products"
-      hasActiveFilters={hasActiveFilters}
-      resetHref={resetHref}
-      onClose={onClose}
-      onReset={() => {
-        onReset();
-        onClose();
-      }}
-    >
-      <DateFilter
-        id="client-products-order-date"
-        minDate={minDate}
-        disabled={!minDate}
-        label="First order date"
-        value={filters.date}
-        isActive={Boolean(filters.date.from || filters.date.to)}
-        applyOnSubmit
-        applyLabel="Apply"
-        onChange={(date) => onChange({ ...filters, date })}
-      />
-
-      <SelectField
-        id="client-products-category"
-        label="Product category"
-        value={filters.category}
-        options={categoryOptions}
-        isActive={filters.category !== 'all'}
-        onChange={(category) => onChange({ ...filters, category })}
-      />
-
-      <SelectField
-        id="client-products-status"
-        label="Product status"
-        value={filters.status}
-        options={PRODUCT_STATUS_OPTIONS}
-        isActive={filters.status !== 'all'}
-        onChange={(status) => onChange({ ...filters, status })}
-      />
-    </FilterDrawer>
-  );
-}
 
 //===================================================================
 
@@ -470,6 +144,7 @@ function getClientDetailsError(error: unknown): ClientDetailsError {
 function ClientDetailsPageContentState({
   clientId,
   initialTab = 'details',
+  initialPharmacyFilters,
 }: ClientDetailsPageContentProps) {
   const router = useRouter();
   const [client, setClient] = useState<PharmacyClientRow | null>(null);
@@ -517,15 +192,6 @@ function ClientDetailsPageContentState({
   const [ordersRetryVersion, setOrdersRetryVersion] = useState(0);
   const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
 
-  const {
-    data: orderStatistics,
-    status: orderStatisticsStatus,
-    startLoading: startOrderStatisticsLoading,
-    setSuccess: setOrderStatisticsSuccess,
-    setFailure: setOrderStatisticsFailure,
-  } = useLastKnownStatistics<OrderStatisticsCounts>();
-
-  const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<ClientDetailTab>(initialTab);
   const [clientStatus, setClientStatus] = useState<ResourceStatus>('loading');
   const [clientRetryVersion, setClientRetryVersion] = useState(0);
@@ -667,22 +333,24 @@ function ClientDetailsPageContentState({
     dispatchPharmacyBreadcrumbLabel(`Client #${clientId}`);
   }, [clientId]);
 
-  useEffect(() => {
-    if (!client?.name) return;
-
-    dispatchPharmacyBreadcrumbLabel(client.name);
-  }, [client?.name]);
+  const clientDisplayName = client ? getClientDisplayName(client) : null;
 
   useEffect(() => {
-    // Pharmacy history is owner-scoped; it must never start a selected-pharmacy order request.
-    if (clientStatus !== 'success' || activeTab === 'pharmacies') return;
+    if (!clientDisplayName) return;
+
+    dispatchPharmacyBreadcrumbLabel(clientDisplayName);
+  }, [clientDisplayName]);
+
+  useEffect(() => {
+    // Orders use the selected operational pharmacy. Owner-wide counters are
+    // fetched independently, so the overview must not trigger this request.
+    if (clientStatus !== 'success' || activeTab !== 'orders') return;
 
     const controller = new AbortController();
 
     async function loadOrders() {
       setOrdersStatus('loading');
       setOrdersError('');
-      startOrderStatisticsLoading();
 
       try {
         const response = await getPharmacyOrders(
@@ -750,7 +418,6 @@ function ClientDetailsPageContentState({
           setOrdersOverallTotal(response.total);
         }
 
-        setOrderStatisticsSuccess(response.statistics);
         setOrdersStatus('success');
       } catch (loadOrdersError) {
         if (controller.signal.aborted) return;
@@ -762,7 +429,6 @@ function ClientDetailsPageContentState({
           )
         );
 
-        setOrderStatisticsFailure();
         setOrdersStatus('error');
       }
     }
@@ -783,9 +449,6 @@ function ClientDetailsPageContentState({
     ordersPage,
     ordersRetryVersion,
     ordersRowsPerPage,
-    setOrderStatisticsFailure,
-    setOrderStatisticsSuccess,
-    startOrderStatisticsLoading,
   ]);
 
   useEffect(() => {
@@ -914,19 +577,9 @@ function ClientDetailsPageContentState({
           };
         }
 
-        if (tab.value === 'comments') {
-          return {
-            ...tab,
-            label:
-              commentsTotal === null
-                ? 'Comments'
-                : `Comments (${commentsTotal})`,
-          };
-        }
-
         return tab;
       }),
-    [commentsTotal, ordersOverallTotal, productsOverallTotal]
+    [ordersOverallTotal, productsOverallTotal]
   );
 
   const orderFiltersCount = countTrueConditions(
@@ -948,232 +601,30 @@ function ClientDetailsPageContentState({
 
   const hasProductFilters = productFiltersCount > 0;
 
-  const orderColumns = useMemo<Array<DataTableColumn<PharmacyOrderRow>>>(
-    () => [
-      {
-        key: 'date',
-        title: <TableHeaderTitle parts={['Order', 'date']} />,
-        render: (order) => <TableDateTime value={order.orderDate} />,
-      },
-      {
-        key: 'number',
-        title: <TableHeaderTitle parts={['Order', 'number']} />,
-
-        render: (order) => (
-          <TextActionButton href={getPharmacyOrderPath(order.id)}>
-            {order.orderNumber}
-          </TextActionButton>
-        ),
-      },
-      {
-        key: 'delivery',
-        title: <TableHeaderTitle parts={['Delivery', 'method']} />,
-        render: (order) => DELIVERY_METHOD_LABELS[order.deliveryMethod],
-      },
-      {
-        key: 'payment',
-        title: <TableHeaderTitle parts={['Payment', 'method']} />,
-        render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
-      },
-      {
-        key: 'comment',
-        title: <TableHeaderTitle parts={['Client', 'comment']} />,
-        render: (order) => order.clientComment || '—',
-      },
-      {
-        key: 'quantity',
-        title: <TableHeaderTitle parts={['Order', 'quantity']} />,
-        render: (order) => order.totalQuantity,
-      },
-      {
-        key: 'amount',
-        title: <TableHeaderTitle parts={['Order', ' amount, ₴']} />,
-        render: (order) => formatAmountValue(order.totalAmount),
-      },
-      {
-        key: 'createdByType',
-        title: <TableHeaderTitle parts={['Created', 'by']} />,
-        render: (order) => ORDER_CREATED_BY_LABELS[order.createdByType],
-      },
-      {
-        key: 'status',
-        title: <TableHeaderTitle parts={['Order', 'status']} />,
-
-        render: (order) => (
-          <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
-        ),
-      },
-    ],
-    []
-  );
-
-  const productColumns = useMemo<
-    Array<DataTableColumn<PharmacyClientPurchasedProduct>>
-  >(
-    () => [
-      {
-        key: 'firstOrderDate',
-        title: <TableHeaderTitle parts={['First order', 'date']} />,
-        render: (item) => <TableDateTime value={item.firstOrderDate} />,
-      },
-      {
-        key: 'photo',
-        title: <TableHeaderTitle parts={['Product', 'photo']} />,
-
-        render: (item) => (
-          <TableImagePreview
-            src={getProductImageSrc(item.photoUrl ?? undefined)}
-            alt={`${item.name} photo`}
-            fallback={formatInitials(item.name, 'P')}
-          />
-        ),
-      },
-      {
-        key: 'article',
-        title: <TableHeaderTitle parts={['Product', 'article']} />,
-
-        render: (item) =>
-          item.currentProductExists ? (
-            <TextActionButton href={getPharmacyProductPath(item.productId)}>
-              {item.article}
-            </TextActionButton>
-          ) : (
-            item.article
-          ),
-      },
-      {
-        key: 'name',
-        title: <TableHeaderTitle parts={['Product', 'name']} />,
-
-        render: (item) =>
-          item.currentProductExists ? (
-            <TextActionButton href={getPharmacyProductPath(item.productId)}>
-              {item.name}
-            </TextActionButton>
-          ) : (
-            item.name
-          ),
-      },
-      {
-        key: 'category',
-        title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (item) => item.category?.name ?? '—',
-      },
-      {
-        key: 'quantity',
-        title: <TableHeaderTitle parts={['Purchased', 'quantity']} />,
-        render: (item) => item.quantity,
-      },
-      {
-        key: 'amount',
-        title: <TableHeaderTitle parts={['Purchased ', 'amount, ₴']} />,
-        render: (item) => formatAmountValue(item.totalAmount),
-      },
-      {
-        key: 'ordersCount',
-        title: <TableHeaderTitle parts={['Orders', 'count']} />,
-        render: (item) => item.ordersCount,
-      },
-      {
-        key: 'status',
-        title: <TableHeaderTitle parts={['Product', 'status']} />,
-
-        render: (item) =>
-          item.currentStatus ? (
-            <StatusBadge {...PRODUCT_STATUS_PRESENTATION[item.currentStatus]} />
-          ) : (
-            'Unavailable'
-          ),
-      },
-    ],
-    []
-  );
-
-  if (clientStatus === 'idle' || clientStatus === 'loading') {
-    return (
-      <main className={css.page} aria-label="Loading client">
-        <section className={css.contentCard}>
-          <div className={css.loaderBox}>
-            <LoadingSpinner label="Loading client..." />
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  if (clientStatus === 'error' || !client) {
-    const clientError = error ?? {
-      title: 'Client not found',
-      message: 'This client does not exist or the link is invalid.',
-    };
-
-    return (
-      <main className={css.page} aria-labelledby="client-details-error-title">
-        <section className={css.contentCard}>
-          <div className={css.headerStack}>
-            <PageHeader
-              title={clientError.title}
-              titleId="client-details-error-title"
-              icon={<Users size={23} aria-hidden="true" />}
-            />
-
-            <StatusBanner
-              tone="danger"
-              label="Error"
-              title={clientError.title}
-              message={clientError.message}
-            />
-
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setClientRetryVersion((version) => version + 1)}
-            >
-              Retry client details
-            </Button>
-          </div>
-        </section>
-      </main>
-    );
-  }
-
-  const clientImageSrc = getProductImageSrc(client.photoUrl ?? undefined);
-
   return (
     <main className={css.page} aria-labelledby="client-details-page-title">
       <section className={css.contentCard}>
         <div className={css.headerStack}>
           <PageHeader
-            title={client.name}
+            title={clientDisplayName ?? 'Client details'}
             titleId="client-details-page-title"
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          {activeTab === 'pharmacies' ? null : orderStatistics ? (
-            <OrderStatistics
-              counts={orderStatistics}
-              className={css.orderStatistics}
-            />
-          ) : orderStatisticsStatus === 'error' ? (
-            <div role="alert">
-              <p className={css.statisticsState}>
-                Order statistics are temporarily unavailable.
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => setOrdersRetryVersion((version) => version + 1)}
-              >
-                Retry order statistics
-              </Button>
-            </div>
-          ) : (
-            <p className={css.statisticsState} role="status">
-              Loading order statistics...
-            </p>
-          )}
+          <div className={css.statisticsBlock}>
+            {clientStatus === 'error' ? null : clientStatus === 'success' &&
+              client ? (
+              <ClientOrderStatistics clientId={clientId} />
+            ) : (
+              <StatsLoadingSkeleton
+                className={css.orderStatistics}
+                count={4}
+                columns={4}
+                tabletColumns={2}
+                label="Loading client order statistics"
+              />
+            )}
+          </div>
         </div>
       </section>
 
@@ -1184,7 +635,7 @@ function ClientDetailsPageContentState({
             activeValue={activeTab}
             ariaLabel="Client details tabs"
             mobileVisibleCount={1}
-            tabletVisibleCount={3}
+            tabletVisibleCount={5}
             onChange={(tab) => {
               setActiveTab(tab);
               const base = getPharmacyClientPath(clientId);
@@ -1195,360 +646,121 @@ function ClientDetailsPageContentState({
           />
 
           {activeTab === 'details' ? (
-            <div className={css.detailsGrid}>
-              <section className={css.visualCard} aria-label="Client photo">
-                {clientImageSrc ? (
-                  <span className={css.imageFrame}>
-                    <ShimmerImage
-                      src={clientImageSrc}
-                      alt={client.name}
-                      className={css.clientImage}
-                      sizes="(max-width: 767px) calc(100vw - 72px), (max-width: 1439px) 360px, 44vw"
-                      unoptimized
-                    />
-                  </span>
-                ) : (
-                  <div className={css.imagePlaceholder} aria-hidden="true">
-                    <UserRound size={72} />
-                  </div>
-                )}
-              </section>
-
-              <section className={css.detailsCard}>
-                <h2>Client information</h2>
-
-                <dl className={css.detailsList}>
-                  <div>
-                    <dt>Status</dt>
-                    <dd>
-                      <StatusBadge
-                        {...USER_STATUS_PRESENTATION[client.status]}
-                      />
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Client ID</dt>
-                    <dd>{client.id}</dd>
-                  </div>
-                  <div>
-                    <dt>Email</dt>
-                    <dd>
-                      {client.email ? (
-                        <a href={`mailto:${client.email}`}>
-                          <Mail size={17} aria-hidden="true" />
-                          {client.email}
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Phone</dt>
-                    <dd>
-                      {client.phone ? (
-                        <a href={`tel:${client.phone}`}>
-                          <Phone size={17} aria-hidden="true" />
-                          {client.phone}
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Address</dt>
-                    <dd>
-                      {client.address ? (
-                        <span className={css.detailValueWithIcon}>
-                          <MapPin size={17} aria-hidden="true" />
-                          {client.address}
-                        </span>
-                      ) : (
-                        '—'
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>First order</dt>
-                    <dd>{formatClientDate(client.firstOrderAt)}</dd>
-                  </div>
-                </dl>
-
-                {client.status === 'blocked' && client.statusReason ? (
-                  <div className={css.statusReason}>
-                    <strong>Inactive reason</strong>
-                    <p>{client.statusReason}</p>
-                  </div>
-                ) : client.status === 'active' ? (
-                  <div
-                    className={`${css.statusReason} ${css.statusReasonActive}`}
-                  >
-                    <strong>Active client</strong>
-                    <p>
-                      The client account is active and can place orders without
-                      additional account restrictions.
-                    </p>
-                  </div>
-                ) : null}
-              </section>
+            <div className={css.sectionStack}>
+              <ProfileSectionHeader
+                title="Client information"
+                description="Review the client profile and purchasing history."
+                icon={<UserRound size={21} />}
+              />
+              {clientStatus === 'loading' || clientStatus === 'idle' ? (
+                <ProfileResourceState
+                  variant="loading"
+                  title="Loading client details"
+                  description="The client information is being loaded."
+                />
+              ) : clientStatus === 'error' || !client ? (
+                <ProfileResourceState
+                  variant="error"
+                  title={error?.title ?? 'Client not found'}
+                  description={
+                    error?.message ?? 'The client could not be loaded.'
+                  }
+                  retryLabel="Try again"
+                  sideActionOnDesktop
+                  onRetry={() => setClientRetryVersion((n) => n + 1)}
+                />
+              ) : (
+                <ClientInformationTab client={client} />
+              )}
             </div>
+          ) : null}
+
+          {activeTab !== 'details' &&
+          activeTab !== 'pharmacies' &&
+          activeTab !== 'comments' &&
+          clientStatus !== 'success' ? (
+            <ProfileResourceState
+              variant={clientStatus === 'error' ? 'error' : 'loading'}
+              title={
+                clientStatus === 'error'
+                  ? (error?.title ?? 'Client unavailable')
+                  : 'Loading client details'
+              }
+              description={
+                clientStatus === 'error'
+                  ? (error?.message ?? 'Please try again.')
+                  : 'The client information is being loaded.'
+              }
+              {...(clientStatus === 'error'
+                ? {
+                    retryLabel: 'Try again',
+                    onRetry: () => setClientRetryVersion((n) => n + 1),
+                  }
+                : {})}
+            />
           ) : null}
 
           {activeTab === 'pharmacies' ? (
-            <ClientPharmaciesTab clientId={clientId} />
+            <ClientPharmaciesTab
+              clientId={clientId}
+              initialState={initialPharmacyFilters}
+            />
           ) : null}
 
-          {activeTab === 'orders' ? (
-            <div className={css.sectionStack}>
-              <section className={css.sectionCard}>
-                <h2>Client orders</h2>
-
-                <div className={css.searchGrid}>
-                  <SearchInput
-                    id="client-order-number-search"
-                    label="Order number search"
-                    value={orderNumberSearch}
-                    placeholder="Order number"
-                    isActive={Boolean(orderNumberSearch)}
-                    onChange={setOrderNumberSearch}
-                  />
-
-                  <SearchInput
-                    id="client-order-comment-search"
-                    label="Client comment search"
-                    value={orderCommentSearch}
-                    placeholder="Client comment"
-                    isActive={Boolean(orderCommentSearch)}
-                    onChange={setOrderCommentSearch}
-                  />
-
-                  <div className={css.searchAction}>
-                    <FiltersButton
-                      activeCount={orderFiltersCount}
-                      controlsId="client-orders-filters-panel"
-                      isExpanded={isOrdersFiltersOpen}
-                      className={css.filterButton}
-                      onClick={() => setIsOrdersFiltersOpen(true)}
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section className={css.sectionCard}>
-                <div className={css.tableStack}>
-                  <div className={css.tableToolbar}>
-                    <div className={css.rowsControl}>
-                      <RowsPerPageSelect
-                        id="client-orders-rows-per-page"
-                        value={ordersRowsPerPage}
-                        options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
-                        onChange={(value) => {
-                          setOrdersRowsPerPage(value);
-                          setOrdersPageState({
-                            searchKey: orderSearchKey,
-                            page: 1,
-                          });
-                        }}
-                      />
-                    </div>
-
-                    {ordersStatus === 'success' ? (
-                      <CountLabel
-                        className={css.countLabel}
-                        shown={orders.length}
-                        total={ordersTotal}
-                        label="orders"
-                      />
-                    ) : null}
-                  </div>
-
-                  {ordersStatus === 'error' ? (
-                    <div role="alert">
-                      <p className={css.errorText}>{ordersError}</p>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          setOrdersRetryVersion((version) => version + 1)
-                        }
-                      >
-                        Retry orders
-                      </Button>
-                    </div>
-                  ) : (
-                    <DataTable
-                      columns={orderColumns}
-                      items={orders}
-                      getItemKey={(order) => String(order.id)}
-                      isLoading={
-                        ordersStatus === 'idle' || ordersStatus === 'loading'
-                      }
-                      minWidth={0}
-                      labels={{
-                        loading: 'Loading client orders...',
-                        empty: 'No orders match the selected filters.',
-                      }}
-                    />
-                  )}
-
-                  {ordersStatus === 'success' ? (
-                    <PaginationView
-                      currentPage={ordersPage}
-                      totalPages={ordersTotalPages}
-                      ariaLabel="Client orders pagination"
-                      onPageChange={(page) =>
-                        setOrdersPageState({ searchKey: orderSearchKey, page })
-                      }
-                    />
-                  ) : null}
-                </div>
-              </section>
-            </div>
+          {clientStatus === 'success' && activeTab === 'orders' ? (
+            <ClientOrdersTab
+              orderNumberSearch={orderNumberSearch}
+              setOrderNumberSearch={setOrderNumberSearch}
+              orderCommentSearch={orderCommentSearch}
+              setOrderCommentSearch={setOrderCommentSearch}
+              orderFiltersCount={orderFiltersCount}
+              isOrdersFiltersOpen={isOrdersFiltersOpen}
+              setIsOrdersFiltersOpen={setIsOrdersFiltersOpen}
+              ordersRowsPerPage={ordersRowsPerPage}
+              setOrdersRowsPerPage={setOrdersRowsPerPage}
+              orderSearchKey={orderSearchKey}
+              setOrdersPageState={setOrdersPageState}
+              ordersStatus={ordersStatus}
+              orders={orders}
+              ordersTotal={ordersTotal}
+              ordersError={ordersError}
+              setOrdersRetryVersion={setOrdersRetryVersion}
+              ordersPage={ordersPage}
+              ordersTotalPages={ordersTotalPages}
+            />
           ) : null}
 
-          {activeTab === 'products' ? (
-            <div className={css.sectionStack}>
-              <section className={css.sectionCard}>
-                <div className={css.titleWithTooltip}>
-                  <h2>Purchased products</h2>
-                  <InfoTooltip
-                    label="About purchased products"
-                    title="Successful purchases"
-                    icon={<PackageCheck size={20} aria-hidden="true" />}
-                    escapeOverflow
-                    items={[
-                      {
-                        title: 'Purchased quantity and amount',
-                        description:
-                          'Totals across all successful orders containing the product.',
-                      },
-                      {
-                        title: 'First order date',
-                        description:
-                          'The earliest successful order in which this product appeared.',
-                      },
-                      {
-                        title: 'Orders count',
-                        description:
-                          'How many successful orders included this product. Each product appears only once in this table.',
-                      },
-                    ]}
-                  />
-                </div>
-
-                <div className={css.searchGrid}>
-                  <SearchInput
-                    id="client-product-article-search"
-                    label="Product article search"
-                    value={productArticleSearch}
-                    placeholder="Product article"
-                    isActive={Boolean(productArticleSearch)}
-                    onChange={setProductArticleSearch}
-                  />
-
-                  <SearchInput
-                    id="client-product-name-search"
-                    label="Product name search"
-                    value={productNameSearch}
-                    placeholder="Product name"
-                    isActive={Boolean(productNameSearch)}
-                    onChange={setProductNameSearch}
-                  />
-
-                  <div className={css.searchAction}>
-                    <FiltersButton
-                      activeCount={productFiltersCount}
-                      controlsId="client-products-filters-panel"
-                      isExpanded={isProductsFiltersOpen}
-                      className={css.filterButton}
-                      onClick={() => setIsProductsFiltersOpen(true)}
-                    />
-                  </div>
-                </div>
-              </section>
-
-              <section className={css.sectionCard}>
-                <div className={css.tableStack}>
-                  <div className={css.tableToolbar}>
-                    <div className={css.rowsControl}>
-                      <RowsPerPageSelect
-                        id="client-products-rows-per-page"
-                        value={productsRowsPerPage}
-                        options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
-                        onChange={(value) => {
-                          setProductsRowsPerPage(value);
-                          setProductsPageState({
-                            searchKey: productSearchKey,
-                            page: 1,
-                          });
-                        }}
-                      />
-                    </div>
-                    {productsStatus === 'success' ? (
-                      <CountLabel
-                        className={css.countLabel}
-                        shown={products.length}
-                        total={productsTotal}
-                        label="products"
-                      />
-                    ) : null}
-                  </div>
-
-                  {productsStatus === 'error' ? (
-                    <div role="alert">
-                      <p className={css.errorText}>{productsError}</p>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          setProductsRetryVersion((version) => version + 1)
-                        }
-                      >
-                        Retry purchased products
-                      </Button>
-                    </div>
-                  ) : (
-                    <DataTable
-                      columns={productColumns}
-                      items={products}
-                      getItemKey={(item) => item.id}
-                      isLoading={
-                        productsStatus === 'idle' ||
-                        productsStatus === 'loading'
-                      }
-                      minWidth={0}
-                      labels={{
-                        loading: 'Loading purchased products...',
-                        empty:
-                          'No successful-order products match the filters.',
-                      }}
-                    />
-                  )}
-
-                  {productsStatus === 'success' ? (
-                    <PaginationView
-                      currentPage={productsPage}
-                      totalPages={productsTotalPages}
-                      onPageChange={(page) =>
-                        setProductsPageState({
-                          searchKey: productSearchKey,
-                          page,
-                        })
-                      }
-                    />
-                  ) : null}
-                </div>
-              </section>
-            </div>
+          {clientStatus === 'success' && activeTab === 'products' ? (
+            <ClientProductsTab
+              productArticleSearch={productArticleSearch}
+              setProductArticleSearch={setProductArticleSearch}
+              productNameSearch={productNameSearch}
+              setProductNameSearch={setProductNameSearch}
+              productFiltersCount={productFiltersCount}
+              isProductsFiltersOpen={isProductsFiltersOpen}
+              setIsProductsFiltersOpen={setIsProductsFiltersOpen}
+              productsRowsPerPage={productsRowsPerPage}
+              setProductsRowsPerPage={setProductsRowsPerPage}
+              productSearchKey={productSearchKey}
+              setProductsPageState={setProductsPageState}
+              productsStatus={productsStatus}
+              products={products}
+              productsTotal={productsTotal}
+              productsError={productsError}
+              setProductsRetryVersion={setProductsRetryVersion}
+              productsPage={productsPage}
+              productsTotalPages={productsTotalPages}
+            />
           ) : null}
 
           {activeTab === 'comments' ? (
             <EntityComments
               entityKey={`client:${clientId}`}
-              initialTotal={commentsTotal ?? undefined}
+              presentation="profile"
+              title="Comments"
+              description="Private working notes about this client, visible to authorized pharmacy staff."
+              emptyTitle="No internal comments yet"
+              emptyText="Internal client comments will appear here."
               load={(page, options) =>
                 getPharmacyNotes('client', clientId, page, options)
               }
@@ -1564,7 +776,6 @@ function ClientDetailsPageContentState({
               remove={(id, options) =>
                 deletePharmacyNote('client', clientId, id, options)
               }
-              onTotalChange={setCommentsTotal}
             />
           ) : null}
         </div>
@@ -1578,6 +789,7 @@ function ClientDetailsPageContentState({
           resetHref={getPharmacyClientPath(clientId)}
           onChange={(filters) => {
             setOrderFilters(filters);
+
             setOrdersPageState({
               searchKey: orderSearchKey,
               page: 1,

@@ -280,11 +280,39 @@ export function getPharmacyBreadcrumbsByPathname(
       return getClientsBreadcrumbs();
     }
 
-    const clientId = getSingleEntityId(route.segments);
+    const [clientId, tab] = route.segments;
 
-    return clientId
-      ? getClientDetailsBreadcrumbs(clientId, currentDetailLabel)
-      : getClientsBreadcrumbs();
+    const clientTabLabels: Record<string, string> = {
+      orders: 'Orders',
+      pharmacies: 'Pharmacies',
+      products: 'Purchased products',
+      comments: 'Comments',
+    };
+
+    if (clientId && isValidObjectId(clientId)) {
+      // Pharmacies also has canonical nested filter/page URL segments. Keep
+      // the client detail breadcrumb while moving through those URLs.
+      if (
+        tab &&
+        clientTabLabels[tab] &&
+        (route.segments.length === 2 || tab === 'pharmacies')
+      ) {
+        return [
+          { label: 'Clients', href: PHARMACY_ROUTES.CLIENTS },
+          {
+            label: currentDetailLabel ?? `Client #${clientId}`,
+            href: `${PHARMACY_ROUTES.CLIENTS}/${clientId}`,
+          },
+          { label: clientTabLabels[tab] },
+        ];
+      }
+
+      return route.segments.length === 1
+        ? getClientDetailsBreadcrumbs(clientId, currentDetailLabel)
+        : getClientsBreadcrumbs();
+    }
+
+    return getClientsBreadcrumbs();
   }
 
   if (route.family === 'products') {

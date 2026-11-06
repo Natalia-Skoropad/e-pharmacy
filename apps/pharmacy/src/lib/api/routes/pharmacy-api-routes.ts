@@ -50,6 +50,12 @@ export const pharmacyApiRoutes = {
 
     products: (clientId: string) =>
       `/api/clients/${segment(clientId)}/products`,
+
+    orderStatistics: (clientId: string) =>
+      `/api/clients/${segment(clientId)}/order-statistics`,
+
+    salesStatistics: (clientId: string) =>
+      `/api/clients/${segment(clientId)}/sales-statistics`,
   },
 
   productRequests: {

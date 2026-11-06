@@ -54,6 +54,7 @@ function normalizeComment(value: unknown): PharmacyNote | null {
         author: {
           userId: authorUserId,
           displayName: authorDisplayName,
+
           ...(getTrimmedString(author?.pictureUrl)
             ? { pictureUrl: getTrimmedString(author?.pictureUrl) }
             : {}),
@@ -93,7 +94,7 @@ export async function getPharmacyNotes(
 ): Promise<PharmacyNotesResponse> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId),
-    { page, perPage: 10 }
+    { page, perPage: 10, ...(type === 'client' ? { scope: 'client' } : {}) }
   );
 
   return parseApiResponseData(
@@ -106,6 +107,7 @@ export async function getPharmacyNotes(
         }),
         { label: 'pharmacy notes response', url: path, method: 'GET' }
       ),
+
     { url: path, method: 'GET' }
   );
 }
@@ -119,7 +121,10 @@ export async function createPharmacyNote(
   clientRequestId: string,
   options?: BrowserMutationRequestOptions
 ): Promise<void> {
-  const path = PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId);
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId),
+    type === 'client' ? { scope: 'client' } : {}
+  );
 
   parseApiResponseData(
     await localApiRequest(path, {
@@ -129,6 +134,7 @@ export async function createPharmacyNote(
     }),
 
     parseCreatedNote,
+
     { url: path, method: 'POST' }
   );
 }
@@ -141,10 +147,9 @@ export async function deletePharmacyNote(
   noteId: string,
   options?: BrowserMutationRequestOptions
 ): Promise<void> {
-  const path = PHARMACY_API_ROUTES.pharmacyNotes.details(
-    type,
-    entityId,
-    noteId
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.pharmacyNotes.details(type, entityId, noteId),
+    type === 'client' ? { scope: 'client' } : {}
   );
 
   parseApiResponseData(
@@ -154,6 +159,7 @@ export async function deletePharmacyNote(
     }),
 
     parseMessageResponse,
+
     { url: path, method: 'DELETE' }
   );
 }

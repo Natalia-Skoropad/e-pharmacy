@@ -71,6 +71,8 @@ test('owner-wide client detail and pharmacies tab are owner-authorized and indep
   );
 
   assert.match(pharmacies, /getOwnedClientPharmacyIds\(userId\)/);
-  assert.match(pharmacies, /pharmacyId: \{ \$in: pharmacyIds \}/);
+  assert.match(pharmacies, /pharmacyId: \{ \$in: ownedIds \}/);
+  assert.match(pharmacies, /_id: \{ \$in: candidateIds \}/);
+  assert.match(pharmacies, /ownerId: new Types\.ObjectId\(userId\)/);
   assert.match(pharmacies, /Order\.aggregate/);
 });

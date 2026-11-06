@@ -6,6 +6,11 @@ import {
   ADMIN_AUDIT_ACTOR_TYPES,
   ADMIN_AUDIT_ENTITY_TYPES,
   ADMIN_AUDIT_RETENTION_SECONDS,
+  ADMIN_AUDIT_SECTIONS,
+  CLIENT_COMMENT_AUDIT_EVENTS,
+  isAdminAuditAction,
+  isAdminAuditSection,
+  isAdminAuditEntityType,
   getStoredAdminAuditActionValues,
   isAdminAuditActorType,
   normalizeStoredAdminAuditAction,
@@ -95,4 +100,33 @@ test('Stage 13.4 reserves owner audit entities, actions, and actor types', () =>
   assert.equal(isAdminAuditActorType('pharmacyManager'), false);
 
   assert.equal(ADMIN_AUDIT_RETENTION_SECONDS, 94_608_000);
+});
+
+//===============================================================
+
+test('S14.18.95 client comments have registered action/section/entity triples at runtime', () => {
+  for (const event of [
+    CLIENT_COMMENT_AUDIT_EVENTS.CREATED,
+    CLIENT_COMMENT_AUDIT_EVENTS.DELETED,
+  ]) {
+    assert.equal(isAdminAuditAction(event.action), true);
+    assert.equal(isAdminAuditSection(event.section), true);
+    assert.equal(isAdminAuditEntityType(event.entityType), true);
+    assert.equal(event.section, ADMIN_AUDIT_SECTIONS.CLIENTS);
+    assert.equal(event.entityType, ADMIN_AUDIT_ENTITY_TYPES.CLIENT_COMMENT);
+  }
+
+  assert.equal(
+    CLIENT_COMMENT_AUDIT_EVENTS.CREATED.action,
+    'client.comment.created'
+  );
+
+  assert.equal(
+    CLIENT_COMMENT_AUDIT_EVENTS.DELETED.action,
+    'client.comment.deleted'
+  );
+
+  assert.equal(CLIENT_COMMENT_AUDIT_EVENTS.CREATED.section, 'clients');
+  assert.equal(CLIENT_COMMENT_AUDIT_EVENTS.DELETED.section, 'clients');
+  assert.equal(Object.isFrozen(CLIENT_COMMENT_AUDIT_EVENTS), true);
 });

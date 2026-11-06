@@ -1,0 +1,80 @@
+.page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.searchGrid,
+.toolbar {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.searchAction {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.filterButton {
+  width: 100%;
+  min-height: 48px;
+}
+
+.countLabel {
+  justify-self: start;
+  width: 100%;
+}
+
+.headerWithHelp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.headerWithHelp button {
+  width: 24px;
+  height: 24px;
+}
+
+.breakableLink {
+  overflow-wrap: anywhere;
+}
+
+.statusCell {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .searchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, max-content);
+    align-items: end;
+  }
+
+  .toolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .countLabel {
+    justify-self: end;
+    width: auto;
+  }
+}

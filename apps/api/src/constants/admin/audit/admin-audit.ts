@@ -13,6 +13,8 @@ export const ADMIN_AUDIT_ACTIONS = {
   PHARMACY_MODERATION_SUBMITTED: 'pharmacy.moderation.submitted',
   PHARMACY_COMMENT_CREATED: 'pharmacy.comment.created',
   PHARMACY_COMMENT_DELETED: 'pharmacy.comment.deleted',
+  CLIENT_COMMENT_CREATED: 'client.comment.created',
+  CLIENT_COMMENT_DELETED: 'client.comment.deleted',
 
   PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED:
     'pharmacy.registrationDocuments.attached',
@@ -50,8 +52,12 @@ export const ADMIN_AUDIT_ACTIONS = {
 export type AdminAuditAction =
   (typeof ADMIN_AUDIT_ACTIONS)[keyof typeof ADMIN_AUDIT_ACTIONS];
 
+//===============================================================
+
 export const ADMIN_AUDIT_ACTION_VALUES = Object.freeze(
   Object.values(ADMIN_AUDIT_ACTIONS) as AdminAuditAction[]
+
+  //===============================================================
 );
 
 const ADMIN_AUDIT_ACTION_SET = new Set<string>(ADMIN_AUDIT_ACTION_VALUES);
@@ -105,6 +111,7 @@ export function getStoredAdminAuditActionValues(
 export const ADMIN_AUDIT_ENTITY_TYPES = {
   PHARMACY: 'pharmacy',
   PHARMACY_COMMENT: 'pharmacyAdminComment',
+  CLIENT_COMMENT: 'clientComment',
   PHARMACY_OWNER: 'pharmacyOwner',
   PHARMACY_OWNER_DOCUMENT: 'pharmacyOwnerDocument',
   PHARMACY_OWNER_COMMENT: 'pharmacyOwnerComment',
@@ -121,9 +128,13 @@ export const ADMIN_AUDIT_ENTITY_TYPES = {
 export type AdminAuditEntityType =
   (typeof ADMIN_AUDIT_ENTITY_TYPES)[keyof typeof ADMIN_AUDIT_ENTITY_TYPES];
 
+//===============================================================
+
 export const ADMIN_AUDIT_ENTITY_TYPE_VALUES = Object.freeze(
   Object.values(ADMIN_AUDIT_ENTITY_TYPES) as AdminAuditEntityType[]
 );
+
+//===============================================================
 
 const ADMIN_AUDIT_ENTITY_TYPE_SET = new Set<string>(
   ADMIN_AUDIT_ENTITY_TYPE_VALUES
@@ -150,9 +161,13 @@ export const ADMIN_AUDIT_ACTOR_TYPES = {
 export type AdminAuditActorType =
   (typeof ADMIN_AUDIT_ACTOR_TYPES)[keyof typeof ADMIN_AUDIT_ACTOR_TYPES];
 
+//===============================================================
+
 export const ADMIN_AUDIT_ACTOR_TYPE_VALUES = Object.freeze(
   Object.values(ADMIN_AUDIT_ACTOR_TYPES) as AdminAuditActorType[]
 );
+
+//===============================================================
 
 const ADMIN_AUDIT_ACTOR_TYPE_SET = new Set<string>(
   ADMIN_AUDIT_ACTOR_TYPE_VALUES
@@ -189,9 +204,13 @@ export const ADMIN_AUDIT_SECTIONS = {
 export type AdminAuditSection =
   (typeof ADMIN_AUDIT_SECTIONS)[keyof typeof ADMIN_AUDIT_SECTIONS];
 
+//===============================================================
+
 export const ADMIN_AUDIT_SECTION_VALUES = Object.freeze(
   Object.values(ADMIN_AUDIT_SECTIONS) as AdminAuditSection[]
 );
+
+//===============================================================
 
 const ADMIN_AUDIT_SECTION_SET = new Set<string>(ADMIN_AUDIT_SECTION_VALUES);
 
@@ -202,6 +221,28 @@ export function isAdminAuditSection(
 ): value is AdminAuditSection {
   return typeof value === 'string' && ADMIN_AUDIT_SECTION_SET.has(value);
 }
+
+//===============================================================
+
+/**
+ * Canonical, owner-scoped client comment events. Register all three fields
+ * together so the writer, runtime validators and the MongoDB enum schema
+ * agree even before the Owner Activity History UI has been implemented.
+ * Client comments are a Clients activity, not a pharmacy-specific note.
+ */
+export const CLIENT_COMMENT_AUDIT_EVENTS = Object.freeze({
+  CREATED: Object.freeze({
+    action: ADMIN_AUDIT_ACTIONS.CLIENT_COMMENT_CREATED,
+    section: ADMIN_AUDIT_SECTIONS.CLIENTS,
+    entityType: ADMIN_AUDIT_ENTITY_TYPES.CLIENT_COMMENT,
+  }),
+
+  DELETED: Object.freeze({
+    action: ADMIN_AUDIT_ACTIONS.CLIENT_COMMENT_DELETED,
+    section: ADMIN_AUDIT_SECTIONS.CLIENTS,
+    entityType: ADMIN_AUDIT_ENTITY_TYPES.CLIENT_COMMENT,
+  }),
+});
 
 //===============================================================
 

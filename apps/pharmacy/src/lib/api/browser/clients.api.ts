@@ -3,7 +3,23 @@ import 'client-only';
 import { ApiError, appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
+  normalizeOrderSalesStatistics,
+  type OrderSalesStatisticsQueryParams,
+} from '@e-pharmacy/api-client/response';
+
+import type {
+  OrderSalesStatistics,
+  OrderStatisticsCounts,
+} from '@e-pharmacy/types/orders';
+
+import type {
+  OwnedPharmacyListItem,
+  OwnedPharmacyListResponse,
+} from '@e-pharmacy/types/pharmacies';
+
+import {
   parseApiResponseData,
+  parseOwnedPharmacyListResponse,
   type ApiResponseContext,
 } from '@e-pharmacy/api-client/response';
 
@@ -29,6 +45,7 @@ import {
 } from '@/lib/clients/clients';
 
 import { operationalLocalApiRequest } from './operational-request';
+import type { OwnedPharmacyRegistryQuery } from './owned-pharmacy-registry.api';
 
 //===================================================================
 
@@ -117,67 +134,184 @@ export async function getPharmacyClientProducts(
 
 //===============================================================
 
-export type ClientPharmacyOrderSummary = Readonly<{
-  pharmacyId: string;
-  pharmacyName: string;
-  firstOrderAt: string;
-  lastOrderAt: string;
-  ordersCount: number;
-  successfulOrdersCount: number;
-  successfulOrdersAmount: number;
-}>;
+export type ClientPharmacyOrderSummary = Readonly<
+  OwnedPharmacyListItem & {
+    pharmacyId: string;
+    pharmacyName: string;
+    firstOrderAt: string | null;
+    lastOrderAt: string | null;
+    ordersCount: number;
+    successfulOrdersAmount: number;
+  }
+>;
+
+//===============================================================
+
+export type ClientPharmaciesResponse = Readonly<
+  Omit<OwnedPharmacyListResponse, 'items'> & {
+    items: readonly ClientPharmacyOrderSummary[];
+  }
+>;
 
 //===================================================================
 
+/** Client-specific registry with server-side filtering and pagination. */
 export async function getClientPharmacies(
   clientId: string,
+  params: OwnedPharmacyRegistryQuery = {},
   options?: BrowserReadRequestOptions
-): Promise<readonly ClientPharmacyOrderSummary[]> {
-  const path = PHARMACY_API_ROUTES.clients.pharmacies(clientId);
+): Promise<ClientPharmaciesResponse> {
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.clients.pharmacies(clientId),
+    params
+  );
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
 
-    (payload: unknown): readonly ClientPharmacyOrderSummary[] => {
+    (payload: unknown): ClientPharmaciesResponse => {
       if (!isRecord(payload) || !Array.isArray(payload.items)) {
         throw new ApiError('Invalid client pharmacies response.', {
           transportCode: 'INVALID_RESPONSE',
         });
       }
 
-      return payload.items.map((item: unknown) => {
+      const rawItems = payload.items as unknown[];
+
+      const normalized = parseOwnedPharmacyListResponse({
+        ...payload,
+
+        items: rawItems.map((row: unknown) => {
+          if (!isRecord(row)) {
+            throw new TypeError('Invalid client pharmacy row.');
+          }
+
+          return {
+            ...row,
+            id: row.pharmacyId,
+            name: row.pharmacyName,
+            membershipRole: 'owner',
+            addedProductsCount: 0,
+            activeClientsCount: 0,
+            successfulRevenue: row.successfulOrdersAmount,
+          };
+        }),
+      });
+
+      return {
+        ...normalized,
+
+        items: normalized.items.map((item, index) => {
+          const row = rawItems[index];
+
+          if (!isRecord(row)) {
+            throw new TypeError('Invalid client pharmacy row.');
+          }
+
+          if (
+            !Number.isSafeInteger(row.ordersCount) ||
+            Number(row.ordersCount) < 0 ||
+            (row.firstOrderAt !== null &&
+              (typeof row.firstOrderAt !== 'string' ||
+                !Number.isFinite(Date.parse(row.firstOrderAt)))) ||
+            (row.lastOrderAt !== null &&
+              (typeof row.lastOrderAt !== 'string' ||
+                !Number.isFinite(Date.parse(row.lastOrderAt))))
+          ) {
+            throw new TypeError('Invalid client pharmacy order metrics.');
+          }
+
+          return {
+            ...item,
+            pharmacyId: item.id,
+            pharmacyName: item.name,
+            firstOrderAt: row.firstOrderAt as string | null,
+            lastOrderAt: row.lastOrderAt as string | null,
+            ordersCount: row.ordersCount as number,
+            successfulOrdersAmount: item.successfulRevenue ?? 0,
+          };
+        }),
+      };
+    },
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+/** Owner-authorized counters across every accessible pharmacy for this client. */
+export async function getPharmacyClientOrderStatistics(
+  clientId: string,
+  options?: BrowserReadRequestOptions
+): Promise<OrderStatisticsCounts> {
+  const path = PHARMACY_API_ROUTES.clients.orderStatistics(clientId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
+    (value: unknown): OrderStatisticsCounts => {
+      if (!isRecord(value)) {
+        throw new ApiError('Invalid client order statistics.', {
+          transportCode: 'INVALID_RESPONSE',
+        });
+      }
+
+      const statuses = [
+        'new',
+        'in_progress',
+        'successful',
+        'rejected',
+      ] as const;
+
+      const counts = {} as Record<
+        (typeof statuses)[number],
+        { count: number; amount: number }
+      >;
+
+      for (const status of statuses) {
+        const item = value[status];
+
         if (
           !isRecord(item) ||
-          typeof item.pharmacyId !== 'string' ||
-          !/^[a-f\d]{24}$/i.test(item.pharmacyId) ||
-          typeof item.pharmacyName !== 'string' ||
-          !item.pharmacyName.trim() ||
-          typeof item.firstOrderAt !== 'string' ||
-          typeof item.lastOrderAt !== 'string' ||
-          !Number.isSafeInteger(item.ordersCount) ||
-          Number(item.ordersCount) < 0 ||
-          !Number.isSafeInteger(item.successfulOrdersCount) ||
-          Number(item.successfulOrdersCount) < 0 ||
-          typeof item.successfulOrdersAmount !== 'number' ||
-          !Number.isFinite(item.successfulOrdersAmount) ||
-          item.successfulOrdersAmount < 0
+          typeof item.count !== 'number' ||
+          !Number.isSafeInteger(item.count) ||
+          item.count < 0 ||
+          typeof item.amount !== 'number' ||
+          !Number.isFinite(item.amount) ||
+          item.amount < 0
         ) {
-          throw new ApiError('Invalid client pharmacy row.', {
+          throw new ApiError('Invalid client order statistics.', {
             transportCode: 'INVALID_RESPONSE',
           });
         }
 
-        return {
-          pharmacyId: item.pharmacyId as string,
-          pharmacyName: item.pharmacyName as string,
-          firstOrderAt: item.firstOrderAt as string,
-          lastOrderAt: item.lastOrderAt as string,
-          ordersCount: item.ordersCount as number,
-          successfulOrdersCount: item.successfulOrdersCount as number,
-          successfulOrdersAmount: item.successfulOrdersAmount as number,
-        };
-      });
+        counts[status] = { count: item.count, amount: item.amount };
+      }
+
+      return counts;
     },
+
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+/** Sales categories are calculated for this client, never for unrelated customers. */
+export async function getPharmacyClientSalesStatistics(
+  clientId: string,
+  params: OrderSalesStatisticsQueryParams = {},
+  options?: BrowserReadRequestOptions
+): Promise<OrderSalesStatistics> {
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.clients.salesStatistics(clientId),
+    params
+  );
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
+    normalizeOrderSalesStatistics,
 
     { url: path, method: 'GET' }
   );

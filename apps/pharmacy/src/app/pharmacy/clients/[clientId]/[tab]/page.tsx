@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
 import { isValidObjectId } from '@e-pharmacy/validation/url';
+
 import {
   buildClientsPath,
   parseClientsSegments,

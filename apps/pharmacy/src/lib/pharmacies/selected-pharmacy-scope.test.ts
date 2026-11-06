@@ -5,6 +5,7 @@ import {
   getPharmacyIdFromDetailPath,
   isLegacyOperationalPharmacyPath,
   isOwnerClientsListPath,
+  isOwnerClientDetailPath,
   isOperationalPharmacyPath,
   readExplicitPharmacySelection,
   setAuthorizedPharmacySelection,
@@ -199,4 +200,34 @@ test('owner Clients list is not a selected-pharmacy operational route', () => {
 
   assert.equal(isOwnerClientsListPath(`/pharmacy/clients/${A}`), false);
   assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/clients/${A}`), true);
+});
+
+//===================================================================
+
+test('client pharmacy path filters remain account-wide and do not trigger pharmacy selection', () => {
+  const base = `/pharmacy/clients/${A}/pharmacies`;
+
+  for (const path of [
+    base,
+    `${base}/pharmacy-id-${B}`,
+    `${base}/status-new`,
+    `${base}/per-page-50`,
+    `${base}/page-2`,
+    `${base}/date-from-2026-11-03/date-to-2026-11-06`,
+    `${base}/region-odesa/status-active/per-page-50`,
+  ]) {
+    assert.equal(isOwnerClientDetailPath(path), true, path);
+    assert.equal(isLegacyOperationalPharmacyPath(path), false, path);
+    assert.equal(isOperationalPharmacyPath(path), false, path);
+  }
+
+  for (const path of [
+    `${base}/unknown-path`,
+    `${base}/status-new/status-active`,
+    `${base}/pharmacy-id-not-an-id`,
+    `/pharmacy/clients/not-a-client/pharmacies/status-new`,
+  ]) {
+    assert.equal(isOwnerClientDetailPath(path), false, path);
+    assert.equal(isLegacyOperationalPharmacyPath(path), true, path);
+  }
 });

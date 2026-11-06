@@ -25,18 +25,6 @@
   box-shadow: var(--shadow-card);
 }
 
-.loaderBox {
-  display: grid;
-  gap: 16px;
-  place-items: center;
-  min-height: 280px;
-  padding: 32px 20px;
-  text-align: center;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
 .headerStack,
 .tabsSection,
 .sectionStack,
@@ -46,8 +34,19 @@
   min-width: 0;
 }
 
+.statisticsBlock {
+  display: none;
+  min-width: 0;
+}
+
 .orderStatistics {
   display: grid;
+  min-width: 0;
+}
+
+.informationStack {
+  display: grid;
+  gap: 20px;
   min-width: 0;
 }
 
@@ -263,6 +262,10 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .statisticsBlock {
+    display: grid;
+  }
+
   .orderStatistics {
     display: grid;
   }
@@ -295,6 +298,12 @@
 }
 
 @media only screen and (min-width: 1440px) {
+  .informationStack {
+    display: grid;
+    gap: 20px;
+    min-width: 0;
+  }
+
   .detailsGrid {
     grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
     align-items: stretch;

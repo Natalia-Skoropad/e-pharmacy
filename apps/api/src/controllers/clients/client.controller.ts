@@ -17,6 +17,14 @@ import {
 import { getClientPharmaciesService } from '../../services/clients/client-pharmacies.service';
 import { getClientPurchasedProductsService } from '../../services/clients/client-purchases.service';
 
+import {
+  getClientOrderStatisticsService,
+  getClientSalesStatisticsService,
+} from '../../services/clients/client-analytics.service';
+
+import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schema';
+import type { OwnedPharmacyRegistryListQuery } from '../../schemas/owners/owned-pharmacy-registry.schema';
+
 import type { ValidatedResponse } from '../../types/http/validated-request';
 import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
@@ -70,11 +78,41 @@ export async function getClientPurchasedProducts(
 
 export async function getClientPharmacies(
   req: Request,
-  res: ValidatedResponse<unknown, ClientParams>
+  res: ValidatedResponse<unknown, ClientParams, OwnedPharmacyRegistryListQuery>
 ): Promise<void> {
   const data = await getClientPharmaciesService(
     req.user?.id ?? '',
+    res.locals.validated.params.clientId,
+    res.locals.validated.query
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getClientOrderStatistics(
+  req: Request,
+  res: ValidatedResponse<unknown, ClientParams>
+): Promise<void> {
+  const data = await getClientOrderStatisticsService(
+    req.user?.id ?? '',
     res.locals.validated.params.clientId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getClientSalesStatistics(
+  req: Request,
+  res: ValidatedResponse<unknown, ClientParams, OrderSalesStatisticsQuery>
+): Promise<void> {
+  const data = await getClientSalesStatisticsService(
+    req.user?.id ?? '',
+    res.locals.validated.params.clientId,
+    res.locals.validated.query
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

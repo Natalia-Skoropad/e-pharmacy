@@ -41,7 +41,7 @@ type AppendAdminAuditLogInput = Readonly<{
   reason?: string;
   requestId: string;
   mutationKey?: string;
-  session: ClientSession;
+  session?: ClientSession;
 
   pharmacyPhotoSnapshots?: Readonly<{
     before?: string | null;
@@ -74,12 +74,19 @@ export async function appendAdminAuditLog({
     throw new TypeError('Audit actorUserId is invalid.');
   }
 
-  if (
-    !isAdminAuditAction(action) ||
-    !isAdminAuditSection(section) ||
-    !isAdminAuditEntityType(entityType)
-  ) {
-    throw new TypeError('Audit action, section, or entity type is invalid.');
+  // Identify the invalid contract field without logging private values.
+  // These are the same runtime validators used for API audit filters; do not
+  // bypass them for client comments or future audit UI work.
+  if (!isAdminAuditAction(action)) {
+    throw new TypeError('Audit action is invalid.');
+  }
+
+  if (!isAdminAuditSection(section)) {
+    throw new TypeError('Audit section is invalid.');
+  }
+
+  if (!isAdminAuditEntityType(entityType)) {
+    throw new TypeError('Audit entity type is invalid.');
   }
 
   if (Boolean(scopeEntityType) !== Boolean(scopeEntityId)) {
@@ -121,14 +128,40 @@ export async function appendAdminAuditLog({
   const after = normalizeAdminAuditSnapshot(rawAfter, 'Audit after snapshot');
   const changedFields = normalizeChangedFields(rawChangedFields, before, after);
 
+  // Never persist a photo change without its companion photo audit snapshot.
+  if (
+    !session &&
+    entityType === ADMIN_AUDIT_ENTITY_TYPES.PHARMACY &&
+    changedFields.includes('photoFingerprint') &&
+    pharmacyPhotoSnapshots
+  ) {
+    throw new TypeError('Photo auditing requires a transaction session.');
+  }
+
   const actor = await User.findById(actorUserId)
-    .select('_id name')
-    .session(session)
-    .lean<{ _id: Types.ObjectId; name: string } | null>();
+    .select('_id name email')
+    .session(session ?? null)
+    .lean<{ _id: Types.ObjectId; name?: string; email?: string } | null>();
 
   if (!actor) {
     throw new Error('Audit actor could not be resolved.');
   }
+
+  // Older/imported pharmacy accounts may lack a name even though the current
+  // User schema requires it. Auditing must not turn a valid comment mutation
+  // into a 500 by calling `.trim()` on an undefined legacy value. Resolve the
+  // snapshot from persisted identity only; never trust a name from the request.
+  const actorName = typeof actor.name === 'string' ? actor.name.trim() : '';
+  const actorEmail = typeof actor.email === 'string' ? actor.email.trim() : '';
+
+  const auditActorName =
+    (actorName.length > 0 && actorName.length <= ADMIN_AUDIT_LIMITS.actorName
+      ? actorName
+      : '') ||
+    (actorEmail.length > 0 && actorEmail.length <= ADMIN_AUDIT_LIMITS.actorName
+      ? actorEmail
+      : '') ||
+    `Account ${String(actor._id).slice(-8)}`;
 
   const normalizedReason = reason?.trim();
 
@@ -138,7 +171,7 @@ export async function appendAdminAuditLog({
         actorUserId: actor._id,
 
         actorNameSnapshot: normalizeAuditString(
-          actor.name,
+          auditActorName,
           'Audit actor name',
           ADMIN_AUDIT_LIMITS.actorName
         ),
@@ -204,7 +237,7 @@ export async function appendAdminAuditLog({
         ),
       },
     ],
-    { session }
+    session ? { session } : {}
   );
 
   if (
@@ -212,6 +245,9 @@ export async function appendAdminAuditLog({
     changedFields.includes('photoFingerprint') &&
     pharmacyPhotoSnapshots
   ) {
+    if (!session)
+      throw new TypeError('Photo auditing requires a transaction session.');
+
     await appendAuditPharmacyPhotos({
       auditLogId: auditLog._id,
       ...pharmacyPhotoSnapshots,

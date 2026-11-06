@@ -174,3 +174,29 @@ test('unknown routes and unsupported request edit paths never invent detail brea
     { label: 'Dashboard' },
   ]);
 });
+
+//===================================================================
+
+test('client detail sub-tabs use the owner client as a clickable parent', () => {
+  for (const [tab, title] of [
+    ['orders', 'Orders'],
+    ['pharmacies', 'Pharmacies'],
+    ['products', 'Purchased products'],
+    ['comments', 'Comments'],
+  ]) {
+    assert.deepEqual(
+      getPharmacyBreadcrumbsByPathname(
+        `/pharmacy/clients/${ENTITY_ID}/${tab}`,
+        'Walk-in client (Care Pharmacy)'
+      ),
+      [
+        { label: 'Clients', href: '/pharmacy/clients' },
+        {
+          label: 'Walk-in client (Care Pharmacy)',
+          href: `/pharmacy/clients/${ENTITY_ID}`,
+        },
+        { label: title },
+      ]
+    );
+  }
+});

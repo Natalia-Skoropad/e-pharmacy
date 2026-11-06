@@ -1,0 +1,242 @@
+export const ADMIN_AUDIT_ACTIONS = {
+  PHARMACY_STATUS_CHANGED: 'pharmacy.status.changed',
+  PHARMACY_CORRECTIONS_REQUESTED: 'pharmacy.corrections.requested',
+  PHARMACY_REACTIVATION_REVIEWED: 'pharmacy.reactivation.reviewed',
+  PHARMACY_VERIFICATION_WITHDRAWN: 'pharmacy.verification.withdrawn',
+  PHARMACY_MODERATION_WITHDRAWN: 'pharmacy.moderation.withdrawn',
+  PHARMACY_REACTIVATION_WITHDRAWN: 'pharmacy.reactivation.withdrawn',
+  PHARMACY_REACTIVATION_REQUESTED: 'pharmacy.reactivation.requested',
+  PHARMACY_REACTIVATION_REJECTED: 'pharmacy.reactivation.rejected',
+  PHARMACY_PROFILE_UPDATED: 'pharmacy.profile.updated',
+  PHARMACY_CREATED: 'pharmacy.created',
+  PHARMACY_DELETED: 'pharmacy.deleted',
+  PHARMACY_MODERATION_SUBMITTED: 'pharmacy.moderation.submitted',
+  PHARMACY_COMMENT_CREATED: 'pharmacy.comment.created',
+  PHARMACY_COMMENT_DELETED: 'pharmacy.comment.deleted',
+  CLIENT_COMMENT_CREATED: 'client.comment.created',
+  CLIENT_COMMENT_DELETED: 'client.comment.deleted',
+
+  PHARMACY_REGISTRATION_DOCUMENTS_ATTACHED:
+    'pharmacy.registrationDocuments.attached',
+
+  PHARMACY_OWNER_ACCOUNT_CREATED: 'pharmacyOwner.account.created',
+
+  PHARMACY_OWNER_REGISTRATION_DOCUMENTS_ATTACHED:
+    'pharmacyOwner.registrationDocuments.attached',
+
+  PHARMACY_OWNER_PROFILE_UPDATED: 'pharmacyOwner.profile.updated',
+  PHARMACY_OWNER_PHOTO_UPDATED: 'pharmacyOwner.photo.updated',
+  PHARMACY_OWNER_STATUS_CHANGED: 'pharmacyOwner.status.changed',
+  PHARMACY_OWNER_DOCUMENT_UPLOADED: 'pharmacyOwner.document.uploaded',
+  PHARMACY_OWNER_DOCUMENT_REPLACED: 'pharmacyOwner.document.replaced',
+  PHARMACY_OWNER_DOCUMENT_DELETED: 'pharmacyOwner.document.deleted',
+  PHARMACY_OWNER_COMMENT_CREATED: 'pharmacyOwner.comment.created',
+  PHARMACY_OWNER_COMMENT_DELETED: 'pharmacyOwner.comment.deleted',
+  PRODUCT_REQUEST_STATUS_CHANGED: 'productRequest.status.changed',
+  PLATFORM_OWNER_GRANTED: 'admin.platformOwner.granted',
+  PLATFORM_OWNER_REVOKED: 'admin.platformOwner.revoked',
+  ADMIN_EMPLOYEE_PROFILE_UPDATED: 'adminEmployee.profile.updated',
+  ADMIN_EMPLOYEE_DOCUMENT_UPLOADED: 'adminEmployee.document.uploaded',
+  ADMIN_EMPLOYEE_DOCUMENT_REPLACED: 'adminEmployee.document.replaced',
+  ADMIN_EMPLOYEE_DOCUMENT_DELETED: 'adminEmployee.document.deleted',
+  PRODUCT_CATEGORY_CREATED: 'productCategory.created',
+  PRODUCT_CATEGORY_UPDATED: 'productCategory.updated',
+  PRODUCT_CATEGORY_DELETED: 'productCategory.deleted',
+  POSITION_CREATED: 'position.created',
+  POSITION_UPDATED: 'position.updated',
+  POSITION_DELETED: 'position.deleted',
+} as const;
+
+//===============================================================
+
+export type AdminAuditAction =
+  (typeof ADMIN_AUDIT_ACTIONS)[keyof typeof ADMIN_AUDIT_ACTIONS];
+
+//===============================================================
+
+export const ADMIN_AUDIT_ACTION_VALUES = Object.freeze(
+  Object.values(ADMIN_AUDIT_ACTIONS) as AdminAuditAction[]
+);
+
+//===============================================================
+
+const ADMIN_AUDIT_ACTION_SET = new Set<string>(ADMIN_AUDIT_ACTION_VALUES);
+
+//===============================================================
+
+export function isAdminAuditAction(value: unknown): value is AdminAuditAction {
+  return typeof value === 'string' && ADMIN_AUDIT_ACTION_SET.has(value);
+}
+
+//===============================================================
+
+const LEGACY_ADMIN_AUDIT_ACTION_ALIASES: Readonly<
+  Record<string, AdminAuditAction>
+> = {
+  'admin.employeeDocument.uploaded':
+    ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_UPLOADED,
+
+  'admin.employeeDocument.replaced':
+    ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_REPLACED,
+
+  'admin.employeeDocument.deleted':
+    ADMIN_AUDIT_ACTIONS.ADMIN_EMPLOYEE_DOCUMENT_DELETED,
+};
+
+//===============================================================
+
+export function normalizeStoredAdminAuditAction(
+  value: unknown
+): AdminAuditAction | null {
+  if (isAdminAuditAction(value)) return value;
+  if (typeof value !== 'string') return null;
+
+  return LEGACY_ADMIN_AUDIT_ACTION_ALIASES[value] ?? null;
+}
+
+//===============================================================
+
+export function getStoredAdminAuditActionValues(
+  action: AdminAuditAction
+): readonly string[] {
+  const legacyAliases = Object.entries(LEGACY_ADMIN_AUDIT_ACTION_ALIASES)
+    .filter(([, canonicalAction]) => canonicalAction === action)
+    .map(([legacyAction]) => legacyAction);
+
+  return [action, ...legacyAliases];
+}
+
+//===============================================================
+
+export const ADMIN_AUDIT_ENTITY_TYPES = {
+  PHARMACY: 'pharmacy',
+  PHARMACY_COMMENT: 'pharmacyAdminComment',
+  CLIENT_COMMENT: 'clientComment',
+  PHARMACY_OWNER: 'pharmacyOwner',
+  PHARMACY_OWNER_DOCUMENT: 'pharmacyOwnerDocument',
+  PHARMACY_OWNER_COMMENT: 'pharmacyOwnerComment',
+  PRODUCT_REQUEST: 'productRequest',
+  ADMIN_ACCESS: 'adminAccess',
+  ADMIN_EMPLOYEE: 'adminEmployee',
+  ADMIN_EMPLOYEE_DOCUMENT: 'adminEmployeeDocument',
+  PRODUCT_CATEGORY: 'productCategory',
+  POSITION: 'position',
+} as const;
+
+//===============================================================
+
+export type AdminAuditEntityType =
+  (typeof ADMIN_AUDIT_ENTITY_TYPES)[keyof typeof ADMIN_AUDIT_ENTITY_TYPES];
+
+//===============================================================
+
+export const ADMIN_AUDIT_ENTITY_TYPE_VALUES = Object.freeze(
+  Object.values(ADMIN_AUDIT_ENTITY_TYPES) as AdminAuditEntityType[]
+);
+
+//===============================================================
+
+const ADMIN_AUDIT_ENTITY_TYPE_SET = new Set<string>(
+  ADMIN_AUDIT_ENTITY_TYPE_VALUES
+);
+
+//===============================================================
+
+export function isAdminAuditEntityType(
+  value: unknown
+): value is AdminAuditEntityType {
+  return typeof value === 'string' && ADMIN_AUDIT_ENTITY_TYPE_SET.has(value);
+}
+
+//===============================================================
+
+export const ADMIN_AUDIT_ACTOR_TYPES = {
+  EMPLOYEE: 'employee',
+  PHARMACY_OWNER: 'pharmacyOwner',
+  PHARMACY_EMPLOYEE: 'pharmacyEmployee',
+} as const;
+
+//===============================================================
+
+export type AdminAuditActorType =
+  (typeof ADMIN_AUDIT_ACTOR_TYPES)[keyof typeof ADMIN_AUDIT_ACTOR_TYPES];
+
+//===============================================================
+
+export const ADMIN_AUDIT_ACTOR_TYPE_VALUES = Object.freeze(
+  Object.values(ADMIN_AUDIT_ACTOR_TYPES) as AdminAuditActorType[]
+);
+
+//===============================================================
+
+const ADMIN_AUDIT_ACTOR_TYPE_SET = new Set<string>(
+  ADMIN_AUDIT_ACTOR_TYPE_VALUES
+);
+
+//===============================================================
+
+export function isAdminAuditActorType(
+  value: unknown
+): value is AdminAuditActorType {
+  return typeof value === 'string' && ADMIN_AUDIT_ACTOR_TYPE_SET.has(value);
+}
+
+//===============================================================
+
+export const ADMIN_AUDIT_SECTIONS = {
+  PROFILE: 'profile',
+  PHARMACY_OWNERS: 'pharmacyOwners',
+  PHARMACIES: 'pharmacies',
+  PRODUCTS: 'products',
+  PRODUCT_REQUESTS: 'productRequests',
+  CLIENTS: 'clients',
+  ORDERS: 'orders',
+  PRODUCT_REVIEWS: 'productReviews',
+  PHARMACY_REVIEWS: 'pharmacyReviews',
+  EMPLOYEES: 'employees',
+  POSITIONS: 'positions',
+  SITE_PAGES: 'sitePages',
+  CATEGORIES: 'categories',
+} as const;
+
+//===============================================================
+
+export type AdminAuditSection =
+  (typeof ADMIN_AUDIT_SECTIONS)[keyof typeof ADMIN_AUDIT_SECTIONS];
+
+//===============================================================
+
+export const ADMIN_AUDIT_SECTION_VALUES = Object.freeze(
+  Object.values(ADMIN_AUDIT_SECTIONS) as AdminAuditSection[]
+);
+
+//===============================================================
+
+const ADMIN_AUDIT_SECTION_SET = new Set<string>(ADMIN_AUDIT_SECTION_VALUES);
+
+//===============================================================
+
+export function isAdminAuditSection(
+  value: unknown
+): value is AdminAuditSection {
+  return typeof value === 'string' && ADMIN_AUDIT_SECTION_SET.has(value);
+}
+
+//===============================================================
+
+export const ADMIN_AUDIT_LIMITS = {
+  actorName: 160,
+  entityId: 256,
+  entityLabel: 240,
+  reason: 1000,
+  requestId: 128,
+  changedFields: 50,
+  fieldName: 100,
+  stringValue: 2000,
+  stringArray: 100,
+} as const;
+
+//===============================================================
+
+/** MongoDB TTL retention for Activity history: at most three 365-day years. */
+export const ADMIN_AUDIT_RETENTION_SECONDS = 60 * 60 * 24 * 365 * 3;

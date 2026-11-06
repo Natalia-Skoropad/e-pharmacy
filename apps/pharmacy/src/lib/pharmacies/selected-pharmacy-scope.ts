@@ -1,3 +1,10 @@
+import {
+  buildClientPharmaciesPath,
+  parseClientPharmaciesSegments,
+} from '../clients/client-pharmacies-path';
+
+//===================================================================
+
 /** Canonical browser selection contract. Server membership is always authoritative. */
 const ID = /^[0-9a-f]{24}$/i;
 
@@ -30,9 +37,30 @@ export function isOwnerClientsListPath(pathname: string): boolean {
 
 /** Only known client detail tabs are account-wide; invalid paths remain closed. */
 export function isOwnerClientDetailPath(pathname: string): boolean {
-  return /^\/pharmacy\/clients\/[0-9a-f]{24}(?:\/(?:pharmacies|orders|products|comments))?\/?$/i.test(
+  if (
+    /^\/pharmacy\/clients\/[0-9a-f]{24}(?:\/(?:pharmacies|orders|products|comments))?\/?$/i.test(
+      pathname
+    )
+  ) {
+    return true;
+  }
+
+  // Canonical pharmacy filters are still part of the owner-wide client card.
+  // Validate the filter grammar instead of treating arbitrary nested paths as
+  // selection-free operational routes.
+  const match = /^\/pharmacy\/clients\/([0-9a-f]{24})\/pharmacies\/(.+)$/i.exec(
     pathname
   );
+
+  if (!match) return false;
+
+  try {
+    const state = parseClientPharmaciesSegments(match[2]!.split('/'));
+
+    return buildClientPharmaciesPath(match[1]!, state) === pathname;
+  } catch {
+    return false;
+  }
 }
 
 //===================================================================

@@ -32,6 +32,8 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   'pharmacy.moderation.submitted': 'Pharmacy submitted for moderation',
   'pharmacy.comment.created': 'Pharmacy admin comment created',
   'pharmacy.comment.deleted': 'Pharmacy admin comment deleted',
+  'client.comment.created': 'Client comment created',
+  'client.comment.deleted': 'Client comment deleted',
   'pharmacy.corrections.requested': 'Pharmacy corrections requested',
   'pharmacy.registrationDocuments.attached': 'Registration documents attached',
   'pharmacyOwner.account.created': 'Pharmacy owner account created',
@@ -93,6 +95,7 @@ const CREATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacyOwner.document.uploaded',
   'pharmacyOwner.comment.created',
   'pharmacy.comment.created',
+  'client.comment.created',
   'productCategory.created',
   'position.created',
 ]);
@@ -104,6 +107,7 @@ const DELETE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
   'pharmacyOwner.document.deleted',
   'pharmacyOwner.comment.deleted',
   'pharmacy.comment.deleted',
+  'client.comment.deleted',
   'productCategory.deleted',
   'position.deleted',
 ]);
@@ -132,6 +136,7 @@ const UPDATE_ACTIONS: ReadonlySet<AdminAuditAction> = new Set([
 const ENTITY_LABELS: Record<AdminAuditEntityType, string> = {
   pharmacy: 'Pharmacy',
   pharmacyAdminComment: 'Pharmacy admin comment',
+  clientComment: 'Client comment',
   pharmacyOwner: 'Pharmacy owner',
   pharmacyOwnerDocument: 'Pharmacy owner document',
   pharmacyOwnerComment: 'Pharmacy owner comment',

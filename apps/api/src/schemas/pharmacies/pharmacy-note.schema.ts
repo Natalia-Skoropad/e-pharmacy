@@ -25,6 +25,16 @@ export const pharmacyNotesQuerySchema = z
   .object({
     page: positivePageSchema,
     perPage: createPerPageSchema({ defaultValue: 10, max: 100 }),
+    scope: z.literal('client').optional(),
+  })
+
+  .strict();
+
+//===============================================================
+
+export const clientNoteScopeQuerySchema = z
+  .object({
+    scope: z.literal('client').optional(),
   })
 
   .strict();
@@ -38,12 +48,16 @@ export const createPharmacyNoteSchema = z.object({
 
 //===============================================================
 
+export type ClientNoteScopeQuery = z.infer<typeof clientNoteScopeQuerySchema>;
 export type PharmacyNoteParams = z.infer<typeof pharmacyNoteParamsSchema>;
+
+//===============================================================
 
 export type PharmacyNoteDeleteParams = z.infer<
   typeof pharmacyNoteDeleteParamsSchema
 >;
 
-export type PharmacyNotesQuery = z.infer<typeof pharmacyNotesQuerySchema>;
+//===============================================================
 
+export type PharmacyNotesQuery = z.infer<typeof pharmacyNotesQuerySchema>;
 export type CreatePharmacyNoteInput = z.infer<typeof createPharmacyNoteSchema>;

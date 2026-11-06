@@ -410,6 +410,22 @@
   },
   {
     "app": "pharmacy",
+    "route": "/clients/[clientId]/order-statistics",
+    "backend": "/clients/:clientId/order-statistics",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
+    "route": "/clients/[clientId]/sales-statistics",
+    "backend": "/clients/:clientId/sales-statistics",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/clients/[clientId]/products",
     "backend": "/clients/:clientId/products",
     "methods": {

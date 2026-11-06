@@ -16,6 +16,8 @@ export const ADMIN_AUDIT_ACTIONS = [
   'pharmacy.moderation.submitted',
   'pharmacy.comment.created',
   'pharmacy.comment.deleted',
+  'client.comment.created',
+  'client.comment.deleted',
   'pharmacy.corrections.requested',
   'pharmacy.registrationDocuments.attached',
   'pharmacyOwner.account.created',
@@ -52,6 +54,7 @@ export type AdminAuditAction = (typeof ADMIN_AUDIT_ACTIONS)[number];
 export const ADMIN_AUDIT_ENTITY_TYPES = [
   'pharmacy',
   'pharmacyAdminComment',
+  'clientComment',
   'pharmacyOwner',
   'pharmacyOwnerDocument',
   'pharmacyOwnerComment',

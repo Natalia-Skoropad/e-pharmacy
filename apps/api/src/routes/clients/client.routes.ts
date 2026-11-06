@@ -4,6 +4,8 @@ import {
   getClientById,
   getClientPurchasedProducts,
   getClientPharmacies,
+  getClientOrderStatistics,
+  getClientSalesStatistics,
   getClients,
 } from '../../controllers/clients/client.controller';
 
@@ -18,6 +20,9 @@ import {
 } from '../../schemas/clients/client.schema';
 
 import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
+
+import { orderSalesStatisticsQuerySchema } from '../../schemas/orders/order.schema';
+import { ownedPharmacyRegistryListQuerySchema } from '../../schemas/owners/owned-pharmacy-registry.schema';
 
 //===============================================================
 
@@ -39,8 +44,34 @@ clientRoutes.get(
 
 clientRoutes.get(
   '/:clientId/pharmacies',
-  validate({ params: clientParamsSchema }),
+
+  validate({
+    params: clientParamsSchema,
+    query: ownedPharmacyRegistryListQuerySchema,
+  }),
+
   ctrlWrapper(getClientPharmacies)
+);
+
+//===============================================================
+
+clientRoutes.get(
+  '/:clientId/order-statistics',
+  validate({ params: clientParamsSchema }),
+  ctrlWrapper(getClientOrderStatistics)
+);
+
+//===============================================================
+
+clientRoutes.get(
+  '/:clientId/sales-statistics',
+
+  validate({
+    params: clientParamsSchema,
+    query: orderSalesStatisticsQuerySchema,
+  }),
+
+  ctrlWrapper(getClientSalesStatistics)
 );
 
 //===============================================================

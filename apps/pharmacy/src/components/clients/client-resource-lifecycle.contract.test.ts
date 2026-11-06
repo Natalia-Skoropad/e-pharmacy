@@ -57,8 +57,10 @@ test('client details keep the primary request independent and lazily activate pr
   assert.match(source, /activeTab === 'comments' \? \(/);
   assert.doesNotMatch(source, /hidden=\{activeTab !== 'comments'\}/);
   assert.match(source, /getPharmacyNotes\('client', clientId, page, options\)/);
-  assert.match(source, /commentsTotal === null\s*\? 'Comments'/);
-  assert.match(source, /initialTotal=\{commentsTotal \?\? undefined\}/);
+  assert.match(source, /label: 'Comments'/);
+  assert.doesNotMatch(source, /commentsTotal/);
+  assert.match(source, /mobileVisibleCount=\{1\}/);
+  assert.match(source, /tabletVisibleCount=\{5\}/);
 });
 
 //===================================================================
@@ -84,7 +86,7 @@ test('clientId is a generation boundary that remounts all client-detail local re
 
 test('deleted purchased products are rendered as history without a broken Product Details link', async () => {
   const source = await read(
-    './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
+    './ClientDetailsPageContent/ClientDetailTableColumns.tsx'
   );
 
   assert.match(source, /item\.currentProductExists \? \(/);
@@ -102,7 +104,7 @@ test('clients list persists selected ID filters in the URL while search text sta
   const search = await read('./OwnerClientSearch/OwnerClientSearch.tsx');
 
   assert.match(search, /useDebouncedValue\(query\.trim\(\), 250\)/);
-  assert.match(source, /getClientsQueryParams\(filters/);
+  assert.match(source, /getClientsQueryParams\(\s*filters/);
   assert.match(source, /const routeFilters = useMemo<ClientsFilterState>/);
   assert.match(source, /const canonicalInitialPath = buildClientsPath\(/);
   assert.match(source, /router.push\(nextPath, \{ scroll: false \}\)/);
@@ -136,9 +138,16 @@ test('client resources keep unavailable state separate from successful empty dat
   assert.match(clientsSource, /useLastKnownStatistics<ClientStatisticsCounts>/);
   assert.doesNotMatch(clientsSource, /DEFAULT_CLIENT_STATISTICS/);
   assert.doesNotMatch(clientsSource, /catch[\s\S]{0,220}setClients\(\[\]\)/);
-
   assert.match(detailsSource, /const \[ordersStatus, setOrdersStatus\]/);
-  assert.match(detailsSource, /useLastKnownStatistics<OrderStatisticsCounts>/);
+
+  const orderStatisticsSource = await read(
+    './ClientDetailsPageContent/ClientOrderStatistics.tsx'
+  );
+
+  assert.match(detailsSource, /<ClientOrderStatistics clientId=\{clientId\}/);
+  assert.match(orderStatisticsSource, /getPharmacyClientOrderStatistics\(/);
+  assert.match(orderStatisticsSource, /variant="error"/);
+  assert.match(orderStatisticsSource, /StatsLoadingSkeleton/);
   assert.doesNotMatch(detailsSource, /DEFAULT_ORDER_STATISTICS/);
   assert.match(detailsSource, /const \[productsStatus, setProductsStatus\]/);
   assert.match(detailsSource, /getClientDetailsError\(loadError\)/);
@@ -164,7 +173,7 @@ test('client resources keep unavailable state separate from successful empty dat
 
 //===================================================================
 
-test('client detail pagination accepts canonical backend pages and order statistics follow each successful filtered response', async () => {
+test('client pagination uses canonical backend pages while order statistics have independent owner scope', async () => {
   const source = await read(
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
@@ -179,12 +188,13 @@ test('client detail pagination accepts canonical backend pages and order statist
     /setProductsPageState\(\{[\s\S]*?searchKey: productSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
   );
 
-  assert.match(source, /setOrderStatisticsSuccess\(response\.statistics\)/);
-
-  assert.match(
+  assert.doesNotMatch(
     source,
-    /if \(!hasSearchOrFilters\) \{\s*setOrdersOverallTotal\(response\.total\);\s*\}\s*setOrderStatisticsSuccess\(response\.statistics\)/
+    /setOrderStatisticsSuccess\(response\.statistics\)/
   );
+
+  assert.match(source, /setOrdersOverallTotal\(response\.total\)/);
+  assert.match(source, /<ClientOrderStatistics clientId=\{clientId\}/);
 });
 
 //===================================================================
@@ -271,10 +281,15 @@ test('client detail text searches debounce network work and reset pagination by 
   assert.match(source, /const productSearchKey =/);
   assert.match(source, /productsPageState\.searchKey === productSearchKey/);
 
-  assert.match(source, /onChange=\{setOrderNumberSearch\}/);
-  assert.match(source, /onChange=\{setOrderCommentSearch\}/);
-  assert.match(source, /onChange=\{setProductArticleSearch\}/);
-  assert.match(source, /onChange=\{setProductNameSearch\}/);
+  const [ordersTab, productsTab] = await Promise.all([
+    read('./ClientDetailsPageContent/ClientOrdersTab.tsx'),
+    read('./ClientDetailsPageContent/ClientProductsTab.tsx'),
+  ]);
+
+  assert.match(ordersTab, /onChange=\{setOrderNumberSearch\}/);
+  assert.match(ordersTab, /onChange=\{setOrderCommentSearch\}/);
+  assert.match(productsTab, /onChange=\{setProductArticleSearch\}/);
+  assert.match(productsTab, /onChange=\{setProductNameSearch\}/);
 });
 
 //===================================================================
@@ -289,9 +304,16 @@ test('client resources expose explicit local retry controls without clearing las
   assert.match(listSource, /Retry clients/);
   assert.match(listSource, /retryVersion/);
 
-  assert.match(detailsSource, /Retry client details/);
-  assert.match(detailsSource, /Retry order statistics/);
-  assert.match(detailsSource, /Retry purchased products/);
+  const [orderStats, productTab] = await Promise.all([
+    read('./ClientDetailsPageContent/ClientOrderStatistics.tsx'),
+    read('./ClientDetailsPageContent/ClientProductsTab.tsx'),
+  ]);
+
+  assert.match(detailsSource, /Loading client details/);
+  assert.match(detailsSource, /retryLabel="Try again"/);
+  assert.match(orderStats, /Client order statistics could not be loaded/);
+  assert.match(orderStats, /onRetry/);
+  assert.match(productTab, /Retry purchased products/);
   assert.match(detailsSource, /ordersRetryVersion/);
   assert.match(detailsSource, /productsRetryVersion/);
 });

@@ -315,6 +315,12 @@ export const backendRoutes = {
       `/clients/${segment(clientId)}/pharmacies`,
 
     products: (clientId: EntityId) => `/clients/${segment(clientId)}/products`,
+
+    orderStatistics: (clientId: EntityId) =>
+      `/clients/${segment(clientId)}/order-statistics`,
+
+    salesStatistics: (clientId: EntityId) =>
+      `/clients/${segment(clientId)}/sales-statistics`,
   },
 
   productRequests: {

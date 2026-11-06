@@ -238,7 +238,11 @@ test(
         defaultA.toString()
       );
 
-      assert.deepEqual(walkInPharmacies.items, []);
+      assert.equal(walkInPharmacies.items.length, 1);
+      assert.equal(walkInPharmacies.items[0]?.pharmacyId, a.toString());
+      assert.equal(walkInPharmacies.items[0]?.successfulOrdersCount, 0);
+      assert.equal(walkInPharmacies.items[0]?.successfulOrdersAmount, 0);
+      assert.equal(walkInPharmacies.items[0]?.firstOrderAt, null);
 
       assert.ok(
         result.items.some(

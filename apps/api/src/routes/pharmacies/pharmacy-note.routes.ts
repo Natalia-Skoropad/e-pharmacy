@@ -17,6 +17,7 @@ import {
   pharmacyNoteDeleteParamsSchema,
   pharmacyNoteParamsSchema,
   pharmacyNotesQuerySchema,
+  clientNoteScopeQuerySchema,
 } from '../../schemas/pharmacies/pharmacy-note.schema';
 
 import { ctrlWrapper } from '../../utils/http/ctrlWrapper';
@@ -50,6 +51,7 @@ pharmacyNoteRoutes.post(
   validate({
     params: pharmacyNoteParamsSchema,
     body: createPharmacyNoteSchema,
+    query: clientNoteScopeQuerySchema,
   }),
 
   ctrlWrapper(createPharmacyNote)
@@ -59,6 +61,11 @@ pharmacyNoteRoutes.post(
 
 pharmacyNoteRoutes.delete(
   '/:entityType/:entityId/:noteId',
-  validate({ params: pharmacyNoteDeleteParamsSchema }),
+
+  validate({
+    params: pharmacyNoteDeleteParamsSchema,
+    query: clientNoteScopeQuerySchema,
+  }),
+
   ctrlWrapper(deletePharmacyNote)
 );
