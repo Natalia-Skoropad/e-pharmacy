@@ -402,6 +402,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/clients/[clientId]/pharmacies",
+    "backend": "/clients/:clientId/pharmacies",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/clients/[clientId]/products",
     "backend": "/clients/:clientId/products",
     "methods": {

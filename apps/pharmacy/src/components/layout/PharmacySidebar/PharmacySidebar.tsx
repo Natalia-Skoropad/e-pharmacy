@@ -12,6 +12,12 @@ import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
 import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { subscribeToPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
+
+import {
+  isLegacyOperationalPharmacyPath,
+  withSelectedPharmacyQuery,
+} from '@/lib/pharmacies/selected-pharmacy-scope';
+
 import { subscribeToOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 
 import {
@@ -21,6 +27,8 @@ import {
   getVisibleOrderCounts,
   type OrderCounterState,
 } from '@/lib/orders/order-counter-state';
+
+import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import {
   formatVisibleOrderCount,
@@ -45,12 +53,25 @@ export function PharmacySidebar({
   onToggleCollapsed,
 }: PharmacySidebarProps) {
   const pathname = usePathname();
+  const { selectedId } = usePharmacySelection();
 
-  const [orderCounterState, setOrderCounterState] = useState<OrderCounterState>(
-    INITIAL_ORDER_COUNTER_STATE
+  const scopedHref = (href: string) =>
+    selectedId && isLegacyOperationalPharmacyPath(href)
+      ? withSelectedPharmacyQuery(href, '', selectedId)
+      : href;
+
+  // Keep counts tied to the pharmacy that produced them. Changing the selected
+  // pharmacy (or clearing the selection) must never show another pharmacy's badges.
+  const [orderCounterState, setOrderCounterState] = useState<{
+    pharmacyId: string;
+    value: OrderCounterState;
+  } | null>(null);
+
+  const orderCounts = getVisibleOrderCounts(
+    selectedId && orderCounterState?.pharmacyId === selectedId
+      ? orderCounterState.value
+      : INITIAL_ORDER_COUNTER_STATE
   );
-
-  const orderCounts = getVisibleOrderCounts(orderCounterState);
 
   const [pharmacyCounts, setPharmacyCounts] = useState<null | {
     new: number;
@@ -65,6 +86,8 @@ export function PharmacySidebar({
     let needsPharmacySelection = false;
 
     const loadOrderCounts = async () => {
+      if (!selectedId) return;
+
       requestVersion += 1;
 
       const currentVersion = requestVersion;
@@ -94,12 +117,14 @@ export function PharmacySidebar({
           return;
         }
 
-        setOrderCounterState(
-          createReadyOrderCounterState({
+        setOrderCounterState({
+          pharmacyId: selectedId,
+
+          value: createReadyOrderCounterState({
             new: newOrders.total,
             inProgress: inProgressOrders.total,
-          })
-        );
+          }),
+        });
       } catch (error) {
         if (controller.signal.aborted || currentVersion !== requestVersion) {
           return;
@@ -114,21 +139,26 @@ export function PharmacySidebar({
           error.code === 'PHARMACY_SELECTION_REQUIRED'
         );
 
-        setOrderCounterState(createUnavailableOrderCounterState());
+        setOrderCounterState({
+          pharmacyId: selectedId,
+          value: createUnavailableOrderCounterState(),
+        });
       } finally {
         if (activeController === controller) activeController = null;
       }
     };
 
     const handleFocus = () => {
-      if (needsPharmacySelection || activeController) return;
+      if (!selectedId || needsPharmacySelection || activeController) return;
 
       void loadOrderCounts();
     };
 
-    void loadOrderCounts();
+    if (selectedId) void loadOrderCounts();
 
     const unsubscribeRefresh = subscribeToOrderCounterRefresh(() => {
+      if (!selectedId) return;
+
       needsPharmacySelection = false;
 
       void loadOrderCounts();
@@ -142,7 +172,7 @@ export function PharmacySidebar({
       unsubscribeRefresh();
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [selectedId]);
 
   useEffect(() => {
     let generation = 0;
@@ -213,7 +243,7 @@ export function PharmacySidebar({
       expandLabel="Expand pharmacy menu"
       onToggleCollapsed={onToggleCollapsed}
       renderLogoLink={({ href, className, children, ...props }) => (
-        <Link href={href} className={className} {...props}>
+        <Link href={scopedHref(href)} className={className} {...props}>
           {children}
         </Link>
       )}
@@ -236,7 +266,7 @@ export function PharmacySidebar({
 
         return (
           <Link
-            href={href}
+            href={scopedHref(href)}
             className={
               isOrdersLink || isPharmaciesLink
                 ? `${className} ${css.ordersLink}`

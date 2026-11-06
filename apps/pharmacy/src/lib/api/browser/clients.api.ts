@@ -28,6 +28,8 @@ import {
   type PharmacyClientsResponse,
 } from '@/lib/clients/clients';
 
+import { operationalLocalApiRequest } from './operational-request';
+
 //===================================================================
 
 function parseClientDetailsData(
@@ -54,11 +56,16 @@ export async function getPharmacyClientDetails(
   clientId: string,
   options?: BrowserReadRequestOptions
 ): Promise<PharmacyClientRow> {
-  const path = PHARMACY_API_ROUTES.clients.details(clientId);
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.clients.details(clientId),
+    { scope: 'owner' }
+  );
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parseClientDetailsData,
+
     { url: path, method: 'GET' }
   );
 }
@@ -71,11 +78,17 @@ export async function getPharmacyClients(
 ): Promise<PharmacyClientsResponse> {
   const path = appendQueryParams(PHARMACY_API_ROUTES.clients.list, params);
 
-  return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+  const response = parseApiResponseData(
+    await (
+      params.scope === 'owner' ? localApiRequest : operationalLocalApiRequest
+    )(path, sanitizeBrowserReadRequestOptions(options)),
+
     normalizePharmacyClientsResponse,
+
     { url: path, method: 'GET' }
   );
+
+  return response;
 }
 
 //===================================================================
@@ -91,8 +104,81 @@ export async function getPharmacyClientProducts(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await operationalLocalApiRequest(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
+
     normalizePharmacyClientProductsResponse,
+
+    { url: path, method: 'GET' }
+  );
+}
+
+//===============================================================
+
+export type ClientPharmacyOrderSummary = Readonly<{
+  pharmacyId: string;
+  pharmacyName: string;
+  firstOrderAt: string;
+  lastOrderAt: string;
+  ordersCount: number;
+  successfulOrdersCount: number;
+  successfulOrdersAmount: number;
+}>;
+
+//===================================================================
+
+export async function getClientPharmacies(
+  clientId: string,
+  options?: BrowserReadRequestOptions
+): Promise<readonly ClientPharmacyOrderSummary[]> {
+  const path = PHARMACY_API_ROUTES.clients.pharmacies(clientId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
+    (payload: unknown): readonly ClientPharmacyOrderSummary[] => {
+      if (!isRecord(payload) || !Array.isArray(payload.items)) {
+        throw new ApiError('Invalid client pharmacies response.', {
+          transportCode: 'INVALID_RESPONSE',
+        });
+      }
+
+      return payload.items.map((item: unknown) => {
+        if (
+          !isRecord(item) ||
+          typeof item.pharmacyId !== 'string' ||
+          !/^[a-f\d]{24}$/i.test(item.pharmacyId) ||
+          typeof item.pharmacyName !== 'string' ||
+          !item.pharmacyName.trim() ||
+          typeof item.firstOrderAt !== 'string' ||
+          typeof item.lastOrderAt !== 'string' ||
+          !Number.isSafeInteger(item.ordersCount) ||
+          Number(item.ordersCount) < 0 ||
+          !Number.isSafeInteger(item.successfulOrdersCount) ||
+          Number(item.successfulOrdersCount) < 0 ||
+          typeof item.successfulOrdersAmount !== 'number' ||
+          !Number.isFinite(item.successfulOrdersAmount) ||
+          item.successfulOrdersAmount < 0
+        ) {
+          throw new ApiError('Invalid client pharmacy row.', {
+            transportCode: 'INVALID_RESPONSE',
+          });
+        }
+
+        return {
+          pharmacyId: item.pharmacyId as string,
+          pharmacyName: item.pharmacyName as string,
+          firstOrderAt: item.firstOrderAt as string,
+          lastOrderAt: item.lastOrderAt as string,
+          ordersCount: item.ordersCount as number,
+          successfulOrdersCount: item.successfulOrdersCount as number,
+          successfulOrdersAmount: item.successfulOrdersAmount as number,
+        };
+      });
+    },
+
     { url: path, method: 'GET' }
   );
 }

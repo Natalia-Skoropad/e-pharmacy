@@ -13,7 +13,6 @@ import {
   History,
   MessageSquareText,
   Package,
-  PackageSearch,
   ShoppingBag,
   Star,
   UsersRound,
@@ -58,7 +57,19 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
+import {
+  DEFAULT_CLIENTS_FILTERS,
+  buildClientsPath,
+  type ClientsFilterState,
+  type ClientsPaginationState,
+} from '@/lib/clients/client-paths';
+
 import { EntityComments } from '@/components/comments/EntityComments';
+import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
+import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
+import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
+import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
+import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import { Information } from './OwnedPharmacyInformationTab';
 import { OwnedPharmacyActivityTab } from './OwnedPharmacyActivityTab';
@@ -96,11 +107,6 @@ const TABS: TabItem<OwnedPharmacyDetailTab>[] = [
   { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'clients', label: 'Clients', icon: <UsersRound size={17} /> },
   { value: 'products', label: 'Products', icon: <Package size={17} /> },
-  {
-    value: 'product-requests',
-    label: 'Product requests',
-    icon: <PackageSearch size={17} />,
-  },
   { value: 'activity', label: 'Activity history', icon: <History size={17} /> },
 ];
 
@@ -125,16 +131,9 @@ const DESCRIPTIONS: Record<OwnedPharmacyDetailTab, string> = {
   reviews:
     'Pharmacy reviews will be available when the Reviews module is connected.',
 
-  orders:
-    'Pharmacy orders will be available when the Orders module is connected.',
-
-  clients:
-    'Pharmacy clients will be available when the Clients module is connected.',
-
-  products:
-    'Products will be available when the pharmacy product module is connected.',
-  'product-requests':
-    'Product requests will be available when the request module is connected.',
+  orders: 'View and process orders belonging to this pharmacy only.',
+  clients: 'View clients and order history for this pharmacy only.',
+  products: 'Manage this pharmacy’s offers, stock and product availability.',
 
   activity:
     'Review all pharmacy status changes, submitted requests and moderation decisions.',
@@ -148,26 +147,6 @@ const DEFERRED: Partial<
   reviews: {
     title: 'Pharmacy reviews are not connected yet',
     icon: <Star size={30} />,
-  },
-
-  orders: {
-    title: 'Pharmacy orders are not connected yet',
-    icon: <ShoppingBag size={30} />,
-  },
-
-  clients: {
-    title: 'Pharmacy clients are not connected yet',
-    icon: <UsersRound size={30} />,
-  },
-
-  products: {
-    title: 'Pharmacy products are not connected yet',
-    icon: <Package size={30} />,
-  },
-
-  'product-requests': {
-    title: 'Product requests are not connected yet',
-    icon: <PackageSearch size={30} />,
   },
 };
 
@@ -186,11 +165,21 @@ type DetailResult = Readonly<{
 export function OwnedPharmacyDetailPageContent({
   pharmacyId,
   activeTab,
+  initialClientFilters,
+  initialClientPagination,
 }: Readonly<{
   pharmacyId: string;
   activeTab: OwnedPharmacyDetailTab;
+  initialClientFilters?: ClientsFilterState;
+  initialClientPagination?: ClientsPaginationState;
 }>) {
   const router = useRouter();
+
+  const {
+    selectedId,
+    isLoading: selectionLoading,
+    isInvalid: selectionInvalid,
+  } = usePharmacySelection();
 
   // Update the displayed tab immediately on click, but let route props take
   // precedence once navigation resolves (including browser history changes).
@@ -506,7 +495,8 @@ export function OwnedPharmacyDetailPageContent({
             id={`owned-pharmacy-detail-panel-${visibleTab}`}
             aria-labelledby={`owned-pharmacy-detail-tab-${visibleTab}`}
           >
-            {visibleTab !== 'comments' ? (
+            {visibleTab !== 'comments' &&
+            !['orders', 'products'].includes(visibleTab) ? (
               <ProfileSectionHeader
                 title={selected.label}
                 description={DESCRIPTIONS[visibleTab]}
@@ -533,7 +523,7 @@ export function OwnedPharmacyDetailPageContent({
                 }
               />
             ) : null}
-            {loading && visibleTab !== 'comments' ? (
+            {loading && !['comments', 'clients'].includes(visibleTab) ? (
               <ProfileResourceState
                 variant="loading"
                 title="Loading pharmacy details"
@@ -602,6 +592,60 @@ export function OwnedPharmacyDetailPageContent({
                 key={pharmacyId}
                 pharmacyId={pharmacyId}
               />
+            ) : visibleTab === 'clients' ? (
+              selectionInvalid ? (
+                <ProfileResourceState
+                  variant="error"
+                  title="Pharmacy access unavailable"
+                  description="The Clients tab requires access to this pharmacy."
+                />
+              ) : selectionLoading || selectedId !== pharmacyId ? (
+                <div className={css.clientsLoadingPreview}>
+                  <div className={css.clientsLoadingStatistics}>
+                    <StatsLoadingSkeleton
+                      count={3}
+                      columns={3}
+                      tabletColumns={2}
+                      label="Loading pharmacy client statistics"
+                    />
+                  </div>
+                  <ClientsTable clients={[]} isLoading emptyMessage="" />
+                </div>
+              ) : (
+                <ClientsPageContent
+                  key={buildClientsPath(
+                    initialClientFilters ?? DEFAULT_CLIENTS_FILTERS,
+                    buildOwnedPharmacyDetailUrl(pharmacyId, 'clients'),
+                    initialClientPagination
+                  )}
+                  embedded
+                  basePath={buildOwnedPharmacyDetailUrl(pharmacyId, 'clients')}
+                  initialFilters={initialClientFilters}
+                  initialPage={initialClientPagination?.page}
+                  initialPerPage={initialClientPagination?.perPage}
+                />
+              )
+            ) : pharmacy && ['orders', 'products'].includes(visibleTab) ? (
+              selectionLoading ||
+              selectedId !== pharmacyId ||
+              selectionInvalid ? (
+                <ProfileResourceState
+                  variant={selectionInvalid ? 'error' : 'loading'}
+                  title={
+                    selectionInvalid
+                      ? 'Pharmacy access unavailable'
+                      : 'Selecting pharmacy'
+                  }
+                  description="The operational tab requires verified access to this pharmacy."
+                />
+              ) : visibleTab === 'orders' ? (
+                <OrdersPageContent key={`${pharmacyId}:orders`} embedded />
+              ) : (
+                <OwnProductsPageContent
+                  key={`${pharmacyId}:products`}
+                  embedded
+                />
+              )
             ) : deferred ? (
               <ProfileResourceState
                 variant="empty"

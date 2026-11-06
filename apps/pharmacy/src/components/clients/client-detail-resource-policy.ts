@@ -1,4 +1,9 @@
-export type ClientDetailTab = 'details' | 'orders' | 'products' | 'comments';
+export type ClientDetailTab =
+  | 'details'
+  | 'orders'
+  | 'products'
+  | 'comments'
+  | 'pharmacies';
 
 //===================================================================
 

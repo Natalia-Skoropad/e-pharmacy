@@ -41,6 +41,7 @@ async function getOwnedPharmacySales(
     await localApiRequest(url, { signal }),
 
     normalizeOrderSalesStatistics,
+
     { url, method: 'GET' }
   );
 }
@@ -105,7 +106,8 @@ export function OwnedPharmacySalesChart({
       variant="error"
       title="Sales statistics could not be loaded"
       description="The chart is temporarily unavailable. Please try again."
-      retryLabel="Retry sales statistics"
+      retryLabel="Try again"
+      sideActionOnDesktop
       onRetry={() => setRetry((n) => n + 1)}
     />
   ) : null;

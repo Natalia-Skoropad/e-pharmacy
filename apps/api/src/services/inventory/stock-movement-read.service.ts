@@ -18,6 +18,7 @@ import {
 
 import type { OrderStatus } from '../../types/orders/order';
 import { httpError } from '../../utils/http/httpError';
+
 import { getMovementValueQuantity } from './stock-movement-balance';
 import { backfillLegacyStockHistory } from './stock-movement-legacy.service';
 import { reconcileOfferReservationBalance } from './stock-movement-reconcile.service';
@@ -101,7 +102,13 @@ export async function getProductStockMovementsService(
   const ordersById = new Map<string, CurrentOrderSnapshot>();
 
   if (orderIds.length > 0) {
-    const orders = await Order.find({ _id: { $in: orderIds } })
+    // Only enrich a selected pharmacy's stock history with its own orders.
+    // A stale or incorrectly linked legacy movement must not expose details
+    // of an order belonging to another pharmacy.
+    const orders = await Order.find({
+      _id: { $in: orderIds },
+      pharmacyId: currentOffer.pharmacyId,
+    })
       .select(
         '_id status orderNumber items.productOfferId items.quantity items.unitPrice statusHistory createdAt updatedAt'
       )

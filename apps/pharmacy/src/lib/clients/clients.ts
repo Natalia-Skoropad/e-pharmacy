@@ -38,6 +38,8 @@ export type ClientStatus = ClientAccountStatus;
 
 export type PharmacyClientRow = Readonly<{
   id: EntityId;
+  pharmacyId?: EntityId;
+  pharmacyName?: string;
   photoUrl: string | null;
   firstOrderAt: string;
   name: string;
@@ -51,13 +53,18 @@ export type PharmacyClientRow = Readonly<{
   isDefault: boolean;
 }>;
 
+//===================================================================
+
 export type PharmacyClientsQueryParams = Readonly<{
   page?: number;
   perPage?: number;
+  scope?: 'owner';
+  pharmacyId?: string;
   firstOrderFrom?: string;
   firstOrderTo?: string;
   name?: string;
   clientId?: string;
+  search?: string;
   contact?: string;
   email?: string;
   phone?: string;
@@ -66,12 +73,16 @@ export type PharmacyClientsQueryParams = Readonly<{
   successfulOrders?: import('./client-filter-contracts').ClientSuccessfulOrdersFilter;
 }>;
 
+//===================================================================
+
 export type PharmacyClientsResponse = Readonly<
   ApiPaginationResponse<PharmacyClientRow> & {
     earliestCreatedAt: string | null;
     statistics: ClientStatisticsCounts;
   }
 >;
+
+//===================================================================
 
 export type PharmacyClientPurchasedProduct = Readonly<{
   id: string;
@@ -88,6 +99,8 @@ export type PharmacyClientPurchasedProduct = Readonly<{
   currentStatus: ProductStatus | null;
 }>;
 
+//===================================================================
+
 export type PharmacyClientProductsQueryParams = Readonly<{
   page?: number;
   perPage?: number;
@@ -98,6 +111,8 @@ export type PharmacyClientProductsQueryParams = Readonly<{
   category?: ProductCategorySlug;
   status?: ProductStatus;
 }>;
+
+//===================================================================
 
 export type PharmacyClientProductsResponse = Readonly<
   ApiPaginationResponse<PharmacyClientPurchasedProduct> & {
@@ -176,6 +191,7 @@ function requireNullableString(
   payload: unknown
 ): string | null {
   if (value === null) return null;
+
   if (typeof value !== 'string') {
     invalidClientContract(`${label} must be a string or null.`, payload);
   }
@@ -343,8 +359,35 @@ export function normalizePharmacyClient(rawClient: unknown): PharmacyClientRow {
           rawClient
         );
 
+  const pharmacyId =
+    rawClient.pharmacyId === undefined
+      ? undefined
+      : requireObjectId(
+          rawClient.pharmacyId,
+          'pharmacy client.pharmacyId',
+          rawClient
+        );
+
+  const pharmacyName =
+    rawClient.pharmacyName === undefined
+      ? undefined
+      : requireText(
+          rawClient.pharmacyName,
+          'pharmacy client.pharmacyName',
+          rawClient
+        );
+
+  if (Boolean(pharmacyId) !== Boolean(pharmacyName)) {
+    invalidClientContract(
+      'pharmacy metadata must have both ID and name.',
+      rawClient
+    );
+  }
+
   return {
     id,
+    ...(pharmacyId && pharmacyName ? { pharmacyId, pharmacyName } : {}),
+
     photoUrl: requireNullableString(
       rawClient.photoUrl,
       'pharmacy client.photoUrl',
@@ -462,6 +505,7 @@ function normalizePharmacyClientPurchasedProduct(
     ),
 
     firstOrderDate,
+
     productId: requireObjectId(
       payload.productId,
       'pharmacy client purchased product.productId',
@@ -487,6 +531,7 @@ function normalizePharmacyClientPurchasedProduct(
     ),
 
     category,
+
     quantity: requirePositiveInteger(
       payload.quantity,
       'pharmacy client purchased product.quantity',
@@ -526,6 +571,7 @@ export function normalizePharmacyClientProductsResponse(
 
   return {
     ...response,
+
     earliestCreatedAt: parseEarliestCreatedAt(
       payload,
       'pharmacy client products response'

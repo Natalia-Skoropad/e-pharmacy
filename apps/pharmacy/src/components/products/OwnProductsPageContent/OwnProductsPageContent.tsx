@@ -55,6 +55,7 @@ import { DEFAULT_OWN_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
 import { applyRemovedOwnProductStatistics } from '@/lib/statistics/product-statistics-mutations';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 import { clampProductListPage } from '@/lib/products/product-pagination';
+
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { OwnProductStatistics } from '@/components/statistics/OwnProductStatistics/OwnProductStatistics';
@@ -95,10 +96,13 @@ function getRemoveProductErrorMessage(error: unknown): string {
       backendMessages: {
         [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND]:
           'Pharmacy profile is unavailable for this account.',
+
         [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED]:
           'Product management is unavailable until Admin verifies the pharmacy.',
+
         [PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED]:
           'This product is no longer added to your pharmacy.',
+
         [PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS]:
           'This product cannot be removed because it has related orders.',
       },
@@ -109,6 +113,7 @@ function getRemoveProductErrorMessage(error: unknown): string {
 //===================================================================
 
 type OwnProductsPageContentProps = Readonly<{
+  embedded?: boolean;
   initialFilters?: OwnProductsFilterState;
 }>;
 
@@ -149,13 +154,16 @@ function getOwnProductStatisticHref(key: OwnProductStatisticsKey) {
 //===================================================================
 
 function OwnProductsPageContent({
+  embedded = false,
   initialFilters = DEFAULT_OWN_PRODUCTS_FILTERS,
 }: OwnProductsPageContentProps) {
   const router = useRouter();
   const toast = useToast();
   const pathname = usePathname();
+
   const { profile: pharmacyProfile, isLoading: isProfileLoading } =
     usePharmacyProfile();
+
   const pharmacyId = pharmacyProfile?.id ?? null;
   const pharmacyStatus = pharmacyProfile?.status ?? null;
   const isProfileLoaded = !isProfileLoading;
@@ -172,12 +180,14 @@ function OwnProductsPageContent({
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
   );
 
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
+
   const [isProductStatisticsUnavailable, setIsProductStatisticsUnavailable] =
     useState(false);
 
@@ -196,6 +206,7 @@ function OwnProductsPageContent({
 
   useEffect(() => {
     if (!pharmacyId) return;
+
     const currentPharmacyId = pharmacyId;
 
     const controller = new AbortController();
@@ -206,6 +217,7 @@ function OwnProductsPageContent({
           { pharmacyId: currentPharmacyId },
           { signal: controller.signal }
         );
+
         if (!controller.signal.aborted) setCategoryOptions(options.categories);
       } catch {
         // Keep the neutral fallback; product data has its own resource state.
@@ -213,6 +225,7 @@ function OwnProductsPageContent({
     }
 
     void loadCategoryOptions();
+
     return () => controller.abort();
   }, [pharmacyId]);
 
@@ -264,6 +277,7 @@ function OwnProductsPageContent({
         const response = await getPharmacyProducts(params, {
           signal: controller.signal,
         });
+
         if (controller.signal.aborted) return;
 
         const normalizedPage = clampProductListPage(
@@ -289,6 +303,7 @@ function OwnProductsPageContent({
         setLoadError(
           'Own products could not be loaded. Please try again in a moment.'
         );
+
         setIsProductStatisticsUnavailable(true);
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
@@ -308,6 +323,7 @@ function OwnProductsPageContent({
     if (debouncedFilters !== filters) return;
 
     const nextPath = buildOwnProductsPath(debouncedFilters);
+
     if (pathname === nextPath) return;
 
     router.replace(nextPath, { scroll: false });
@@ -321,6 +337,7 @@ function OwnProductsPageContent({
     filters.status !== 'all',
     filters.stock !== 'all'
   );
+
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: OwnProductsFilterState) => {
@@ -349,8 +366,8 @@ function OwnProductsPageContent({
 
     try {
       const response = await removeProductFromMyPharmacy(productToRemove.id);
-
       const nextTotalProducts = Math.max(0, totalProducts - 1);
+
       const nextPage = clampProductListPage(
         currentPage,
         nextTotalProducts,
@@ -360,11 +377,14 @@ function OwnProductsPageContent({
       setProducts((current) =>
         current.filter((product) => product.id !== productToRemove.id)
       );
+
       setTotalProducts(nextTotalProducts);
       setCurrentPage(nextPage);
+
       setProductStatistics((current) =>
         applyRemovedOwnProductStatistics(current, productToRemove)
       );
+
       setProductToRemove(null);
       toast.success(response.message || 'Product was removed.');
     } catch (error) {
@@ -375,9 +395,10 @@ function OwnProductsPageContent({
   };
 
   const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
+  const RootElement = embedded ? 'section' : 'main';
 
   return (
-    <main className={css.page} aria-labelledby="own-products-page-title">
+    <RootElement className={css.page} aria-labelledby="own-products-page-title">
       <section className={css.card} aria-labelledby="own-products-page-title">
         <PageHeader
           title={
@@ -559,7 +580,7 @@ function OwnProductsPageContent({
           onReset={resetFilters}
         />
       ) : null}
-    </main>
+    </RootElement>
   );
 }
 

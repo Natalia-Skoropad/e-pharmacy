@@ -1027,3 +1027,18 @@
     justify-self: end;
   }
 }
+
+/* The Clients tab loads its statistics and table independently of the overview. */
+.clientsLoadingPreview {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* On phones the pharmacy Clients tab shows only search and table while
+   access is being resolved, matching its loaded mobile layout. */
+@media only screen and (max-width: 767px) {
+  .clientsLoadingStatistics {
+    display: none;
+  }
+}

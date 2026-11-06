@@ -15,14 +15,20 @@ async function readClientFile(fileName: string): Promise<string> {
 //===================================================================
 
 async function readOrderModel(): Promise<string> {
-  return readFile(resolve(process.cwd(), 'src/models/orders/order.model.ts'), 'utf8');
+  return readFile(
+    resolve(process.cwd(), 'src/models/orders/order.model.ts'),
+    'utf8'
+  );
 }
 
 //===================================================================
 
 test('client list derives canonical metrics before applying first-order filters', async () => {
   const source = await readClientFile('client-registry-aggregation.ts');
-  const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
+
+  const rowsStart = source.indexOf(
+    'async function getClientRowsForPharmacies('
+  );
 
   const rowsEnd = source.indexOf(
     '//===============================================================',
@@ -48,7 +54,10 @@ test('client list derives canonical metrics before applying first-order filters'
 
 test('client list pagination and statistics stay inside one Mongo aggregation', async () => {
   const source = await readClientFile('client-registry-aggregation.ts');
-  const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
+
+  const rowsStart = source.indexOf(
+    'async function getClientRowsForPharmacies('
+  );
 
   const rowsEnd = source.indexOf(
     '//===============================================================',
@@ -194,11 +203,7 @@ test('client and purchased-product pagination clamp stale requested pages before
   );
 
   assert.match(clientsSource, /if \(page !== query\.page\)/);
-
-  assert.match(
-    clientsSource,
-    /getClientRowsForPharmacy\(pharmacyId, \{ \.\.\.query, page \}\)/
-  );
+  assert.match(clientsSource, /loadRows\(\{ \.\.\.query, page \}\)/);
 
   const productsSource = await readClientFile('client-purchases.service.ts');
 
@@ -231,7 +236,10 @@ test('client purchase history has a compound order index for scoped pagination',
 
 test('default client projection suppresses synthetic contact fields and stays active', async () => {
   const source = await readClientFile('client-registry-aggregation.ts');
-  const rowsStart = source.indexOf('async function getClientRowsForPharmacy(');
+
+  const rowsStart = source.indexOf(
+    'async function getClientRowsForPharmacies('
+  );
 
   const rowsEnd = source.indexOf(
     '//===============================================================',

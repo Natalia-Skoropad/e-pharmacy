@@ -69,11 +69,15 @@ function getOrdersQueryParams(
     dateTo: filters.date.to || undefined,
     client: filters.client.trim() || undefined,
     orderNumber: filters.orderNumber.trim() || undefined,
+
     deliveryMethod:
       filters.deliveryMethod === 'all' ? undefined : filters.deliveryMethod,
+
     paymentMethod:
       filters.paymentMethod === 'all' ? undefined : filters.paymentMethod,
+
     status: filters.status === 'all' ? undefined : filters.status,
+
     createdByType:
       filters.createdByType === 'all' ? undefined : filters.createdByType,
   };
@@ -82,12 +86,14 @@ function getOrdersQueryParams(
 //===================================================================
 
 type OrdersPageContentProps = Readonly<{
+  embedded?: boolean;
   initialFilters?: OrdersFilterState;
 }>;
 
 //===================================================================
 
 function OrdersPageContent({
+  embedded = false,
   initialFilters = DEFAULT_ORDERS_FILTERS,
 }: OrdersPageContentProps) {
   const router = useRouter();
@@ -140,6 +146,7 @@ function OrdersPageContent({
         from: filters.date.from,
         to: filters.date.to,
       },
+
       client: '',
       orderNumber: '',
       deliveryMethod: filters.deliveryMethod,
@@ -178,9 +185,11 @@ function OrdersPageContent({
 
     internalRoutePathsRef.current.clear();
     setRouteTextOverride(getOrdersTextFilterState(initialFilters));
+
     setFilters((currentFilters) =>
       syncOrdersFiltersFromRoute(currentFilters, initialFilters)
     );
+
     setCurrentPage(1);
   }, [initialFilters, initialFiltersPath, routeFiltersChanged]);
 
@@ -218,6 +227,7 @@ function OrdersPageContent({
         const response = await getPharmacyOrders(queryParams, {
           signal: controller.signal,
         });
+
         if (controller.signal.aborted) return;
 
         setOrdersResource(completeOrdersLoad(response));
@@ -252,6 +262,7 @@ function OrdersPageContent({
     if (routeFiltersChanged) return;
 
     const nextPath = buildOrdersPath(requestFilters);
+
     if (pathname === nextPath) return;
 
     internalRoutePathsRef.current.add(nextPath);
@@ -267,6 +278,7 @@ function OrdersPageContent({
     filters.status !== 'all',
     filters.createdByType !== 'all'
   );
+
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: OrdersFilterState) => {
@@ -293,9 +305,10 @@ function OrdersPageContent({
 
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+  const RootElement = embedded ? 'section' : 'main';
 
   return (
-    <main className={css.page} aria-labelledby="orders-page-title">
+    <RootElement className={css.page} aria-labelledby="orders-page-title">
       <section className={css.card} aria-labelledby="orders-page-title">
         <PageHeader
           title="Orders"
@@ -458,7 +471,7 @@ function OrdersPageContent({
           onReset={resetFilters}
         />
       ) : null}
-    </main>
+    </RootElement>
   );
 }
 

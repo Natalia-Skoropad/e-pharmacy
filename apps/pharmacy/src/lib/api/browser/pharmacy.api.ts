@@ -36,6 +36,8 @@ import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
 
+import { operationalLocalApiRequest } from './operational-request';
+
 import {
   sanitizeBrowserReadRequestOptions,
   type BrowserReadRequestOptions,
@@ -50,7 +52,9 @@ export async function uploadMyPharmacyDocument(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'POST', body: payload }),
+
     parsePharmacyProfileDocumentUploadResponse,
+
     { url: path, method: 'POST' }
   );
 }
@@ -64,6 +68,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
     reader.addEventListener('load', () => {
       if (typeof reader.result === 'string') {
         resolve(reader.result);
+
         return;
       }
 
@@ -106,7 +111,9 @@ export async function getPharmacyCheckoutDetails(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parsePharmacyCheckoutDetailsResponse,
+
     { url: path, method: 'GET' }
   );
 }
@@ -119,8 +126,13 @@ export async function getCurrentPharmacySummary(
   const path = PHARMACY_API_ROUTES.pharmacies.mySummary;
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await operationalLocalApiRequest(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
+
     parseCurrentPharmacySummaryResponse,
+
     { url: path, method: 'GET' }
   );
 }
@@ -134,7 +146,9 @@ export async function getMyPharmacyProfile(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parsePharmacyProfileResponse,
+
     { url: path, method: 'GET' }
   );
 }
@@ -148,7 +162,9 @@ export async function updateMyPharmacyProfile(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'PATCH', body: payload }),
+
     parsePharmacyProfileResponse,
+
     { url: path, method: 'PATCH' }
   );
 }
@@ -162,7 +178,9 @@ export async function submitMyPharmacyModeration(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'POST', body: payload }),
+
     parseSendPharmacyForVerificationResponse,
+
     { url: path, method: 'POST' }
   );
 }
@@ -174,7 +192,9 @@ export async function sendMyPharmacyForVerification(): Promise<SendPharmacyForVe
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'POST', body: {} }),
+
     parseSendPharmacyForVerificationResponse,
+
     { url: path, method: 'POST' }
   );
 }
@@ -188,7 +208,9 @@ export async function updateCurrentUser(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'PATCH', body: payload }),
+
     parseAuthResponse,
+
     { url: path, method: 'PATCH' }
   );
 }
@@ -202,6 +224,7 @@ export async function updateCurrentUserPassword(
 
   parseApiEmptyResponse(
     await localApiRequest(path, { method: 'PATCH', body: payload }),
+
     { url: path, method: 'PATCH' }
   );
 }
@@ -215,7 +238,9 @@ export async function getActiveSessions(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parseActiveSessionsResponse,
+
     { url: path, method: 'GET' }
   );
 }

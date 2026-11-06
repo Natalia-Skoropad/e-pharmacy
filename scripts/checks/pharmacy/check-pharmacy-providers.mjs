@@ -44,7 +44,7 @@ assert.match(
 
 assert.match(
   pharmacyShell,
-  /<PharmacyProtectedRoute>[\s\S]*<PharmacyProfileProvider>[\s\S]*\{children\}[\s\S]*<\/PharmacyProfileProvider>[\s\S]*<\/PharmacyProtectedRoute>/
+  /<PharmacyProtectedRoute>[\s\S]*<PharmacyProfileProvider\b[^>]*>[\s\S]*\{children\}[\s\S]*<\/PharmacyProfileProvider>[\s\S]*<\/PharmacyProtectedRoute>/
 );
 
 assert.match(authProvider, /from '@e-pharmacy\/auth\/react'/);

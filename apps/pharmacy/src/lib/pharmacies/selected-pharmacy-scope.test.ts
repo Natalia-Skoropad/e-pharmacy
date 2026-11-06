@@ -1,0 +1,202 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import {
+  getPharmacyIdFromDetailPath,
+  isLegacyOperationalPharmacyPath,
+  isOwnerClientsListPath,
+  isOperationalPharmacyPath,
+  readExplicitPharmacySelection,
+  setAuthorizedPharmacySelection,
+  getAuthorizedPharmacySelection,
+  withSelectedPharmacyQuery,
+  resolveSelectedPharmacyId,
+} from './selected-pharmacy-scope';
+
+//===================================================================
+
+const A = '507f1f77bcf86cd799439011';
+const B = '507f191e810c19729de860ea';
+
+//===================================================================
+
+// An exact pharmacy ID in the detail URL is authoritative even when another
+// pharmacy is selected in a stale legacy query string.
+test('detail tabs use the exact pharmacy from their canonical URL', () => {
+  const pathname = `/pharmacy/pharmacies/${B}/orders`;
+
+  assert.equal(getPharmacyIdFromDetailPath(pathname), B);
+
+  assert.deepEqual(readExplicitPharmacySelection(pathname, `pharmacyId=${A}`), {
+    id: B,
+    invalid: false,
+  });
+
+  for (const tab of ['orders', 'clients', 'products']) {
+    assert.equal(
+      isOperationalPharmacyPath(`/pharmacy/pharmacies/${B}/${tab}`),
+      true
+    );
+  }
+
+  assert.equal(
+    isOperationalPharmacyPath(`/pharmacy/pharmacies/${B}/payment`),
+    false
+  );
+
+  assert.equal(
+    isOperationalPharmacyPath(`/pharmacy/pharmacies/${B}/product-requests`),
+    false
+  );
+});
+
+//===================================================================
+
+test('legacy operational routes retain explicit pharmacy selection in the query', () => {
+  for (const page of [
+    'dashboard',
+    'orders',
+    'products',
+    'all-products',
+    'product-requests',
+  ]) {
+    assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/${page}`), true);
+  }
+
+  assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/profile'), false);
+  assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/pharmacies'), false);
+
+  assert.equal(
+    withSelectedPharmacyQuery('/pharmacy/orders', 'page=2&status=new', B),
+    `/pharmacy/orders?page=2&status=new&pharmacyId=${B}`
+  );
+});
+
+//===================================================================
+
+test('invalid, duplicate and missing URL selections are distinct', () => {
+  assert.deepEqual(readExplicitPharmacySelection('/pharmacy/orders', ''), {
+    id: null,
+    invalid: false,
+  });
+
+  assert.deepEqual(
+    readExplicitPharmacySelection('/pharmacy/orders', `pharmacyId=${A}`),
+    {
+      id: A,
+      invalid: false,
+    }
+  );
+
+  assert.deepEqual(
+    readExplicitPharmacySelection('/pharmacy/orders', 'pharmacyId=bad'),
+    {
+      id: null,
+      invalid: true,
+    }
+  );
+
+  assert.deepEqual(
+    readExplicitPharmacySelection(
+      '/pharmacy/orders',
+      `pharmacyId=${A}&pharmacyId=${B}`
+    ),
+    {
+      id: null,
+      invalid: true,
+    }
+  );
+
+  assert.throws(() => withSelectedPharmacyQuery('/pharmacy/orders', '', 'bad'));
+});
+
+//===================================================================
+
+test('operational header selection is normalized and cannot retain an invalid ID', () => {
+  setAuthorizedPharmacySelection(A.toUpperCase());
+  assert.equal(getAuthorizedPharmacySelection(), A);
+  setAuthorizedPharmacySelection('not-an-object-id');
+  assert.equal(getAuthorizedPharmacySelection(), null);
+  setAuthorizedPharmacySelection(B);
+  assert.equal(getAuthorizedPharmacySelection(), B);
+  setAuthorizedPharmacySelection(null);
+  assert.equal(getAuthorizedPharmacySelection(), null);
+});
+
+//===================================================================
+
+test('one membership defaults safely, two require a choice, and an explicit denial cannot fall back', () => {
+  const members = [{ id: A }, { id: B }];
+  const absent = { id: null, invalid: false };
+
+  assert.equal(
+    resolveSelectedPharmacyId({
+      explicit: absent,
+      preferredId: null,
+      memberships: [members[0]!],
+    }),
+    A
+  );
+
+  assert.equal(
+    resolveSelectedPharmacyId({
+      explicit: absent,
+      preferredId: null,
+      memberships: members,
+    }),
+    null
+  );
+
+  assert.equal(
+    resolveSelectedPharmacyId({
+      explicit: absent,
+      preferredId: B,
+      memberships: members,
+    }),
+    B
+  );
+
+  assert.equal(
+    resolveSelectedPharmacyId({
+      explicit: { id: A, invalid: false },
+      preferredId: B,
+      memberships: members,
+    }),
+    A
+  );
+
+  assert.equal(
+    resolveSelectedPharmacyId({
+      explicit: { id: 'aaaaaaaaaaaaaaaaaaaaaaaa', invalid: false },
+      preferredId: B,
+      memberships: members,
+    }),
+    null
+  );
+
+  assert.equal(
+    resolveSelectedPharmacyId({
+      explicit: { id: null, invalid: true },
+      preferredId: B,
+      memberships: members,
+    }),
+    null
+  );
+});
+
+//===================================================================
+
+// Owner registry URLs do not carry the selected pharmacy; detail URLs do.
+test('owner Clients list is not a selected-pharmacy operational route', () => {
+  assert.equal(isOwnerClientsListPath('/pharmacy/clients'), true);
+  assert.equal(isOwnerClientsListPath(`/pharmacy/clients/pharmacy-${A}`), true);
+  assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/clients'), false);
+
+  assert.equal(
+    isOperationalPharmacyPath(`/pharmacy/clients/pharmacy-${A}`),
+    false
+  );
+
+  assert.equal(isOwnerClientsListPath(`/pharmacy/clients/${A}`), false);
+  assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/clients/${A}`), true);
+});

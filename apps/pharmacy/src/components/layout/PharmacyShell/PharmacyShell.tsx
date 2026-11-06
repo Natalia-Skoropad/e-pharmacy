@@ -9,12 +9,24 @@ import { PageLoader } from '@e-pharmacy/ui/status-pages';
 
 import { getPharmacyBreadcrumbsByPathname } from '@/lib/layout/breadcrumbs';
 import { subscribeToPharmacyBreadcrumbLabels } from '@/lib/layout/breadcrumb-label-event';
+
 import { PharmacyProfileProvider } from '@/providers/PharmacyProfileProvider';
+
+import {
+  PharmacySelectionProvider,
+  usePharmacySelection,
+} from '@/providers/PharmacySelectionProvider';
 
 import { PharmacyProtectedRoute } from '@/components/auth/PharmacyProtectedRoute';
 import { PharmacyHeader } from '@/components/layout/PharmacyHeader';
 import { PharmacySidebar } from '@/components/layout/PharmacySidebar';
+
 import { PharmacyCabinetBoundary } from './PharmacyCabinetBoundary';
+
+import {
+  PharmacyOperationalScope,
+  PharmacySelectionControls,
+} from './PharmacySelectionControls';
 
 import {
   getServerSidebarCollapsedSnapshot,
@@ -41,6 +53,17 @@ type PharmacyShellProps = Readonly<{
 //===================================================================
 
 function PharmacyShellContent({ children }: PharmacyShellProps) {
+  return (
+    <PharmacySelectionProvider>
+      <PharmacyShellWorkspace>{children}</PharmacyShellWorkspace>
+    </PharmacySelectionProvider>
+  );
+}
+
+//===================================================================
+
+function PharmacyShellWorkspace({ children }: PharmacyShellProps) {
+  const { selectedId } = usePharmacySelection();
   const pathname = usePathname();
 
   const [breadcrumbOverride, setBreadcrumbOverride] =
@@ -77,29 +100,34 @@ function PharmacyShellContent({ children }: PharmacyShellProps) {
 
   return (
     <PharmacyProtectedRoute>
-      <PharmacyProfileProvider>
-        <PharmacyCabinetBoundary>
-          <div className={css.shell}>
-            <Container className={css.container}>
-              <div
-                className={clsx(
-                  css.layout,
-                  isSidebarCollapsed && css.layoutCollapsed
-                )}
-              >
-                <PharmacySidebar
-                  isCollapsed={isSidebarCollapsed}
-                  onToggleCollapsed={toggleSidebar}
-                />
+      <PharmacyProfileProvider key={selectedId ?? 'unselected'}>
+        <div className={css.shell}>
+          <Container className={css.container}>
+            <div
+              className={clsx(
+                css.layout,
+                isSidebarCollapsed && css.layoutCollapsed
+              )}
+            >
+              <PharmacySidebar
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapsed={toggleSidebar}
+              />
 
-                <div className={css.workspace}>
-                  <PharmacyHeader breadcrumbs={breadcrumbs} />
-                  <div className={css.content}>{children}</div>
+              <div className={css.workspace}>
+                <PharmacyHeader breadcrumbs={breadcrumbs} />
+                <div className={css.content}>
+                  <PharmacySelectionControls />
+                  <PharmacyOperationalScope>
+                    <PharmacyCabinetBoundary>
+                      {children}
+                    </PharmacyCabinetBoundary>
+                  </PharmacyOperationalScope>
                 </div>
               </div>
-            </Container>
-          </div>
-        </PharmacyCabinetBoundary>
+            </div>
+          </Container>
+        </div>
       </PharmacyProfileProvider>
     </PharmacyProtectedRoute>
   );

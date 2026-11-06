@@ -5,14 +5,16 @@ import {
   DEFAULT_CLIENTS_FILTERS,
   buildClientsPath,
   parseClientsSegments,
+  parseClientsPaginationSegments,
   resolveClientsRoute,
 } from './client-paths';
 
 //===================================================================
 
-test('client route keeps non-PII filters but never persists private search values', () => {
+test('client route preserves selected IDs but never persists private text searches', () => {
   const path = buildClientsPath({
     ...DEFAULT_CLIENTS_FILTERS,
+
     name: 'Natalia Example',
     clientId: '507f1f77bcf86cd799439011',
     contact: 'user@example.com',
@@ -22,15 +24,15 @@ test('client route keeps non-PII filters but never persists private search value
 
   assert.equal(
     path,
-    '/pharmacy/clients/status-blocked/successful-orders-repeat'
+    '/pharmacy/clients/client-id-507f1f77bcf86cd799439011/status-blocked/successful-orders-repeat'
   );
 
-  assert.doesNotMatch(path, /Natalia|507f1f77bcf86cd799439011|example/);
+  assert.doesNotMatch(path, /Natalia|example/);
 });
 
 //===================================================================
 
-test('legacy PII-bearing client URL is recognized but its values are not restored', () => {
+test('legacy PII-bearing client URL is discarded while an exact selected ID is restored', () => {
   const filters = parseClientsSegments({
     filters: [
       'search-name-natalia-example',
@@ -41,10 +43,14 @@ test('legacy PII-bearing client URL is recognized but its values are not restore
   });
 
   assert.equal(filters.name, '');
-  assert.equal(filters.clientId, '');
+  assert.equal(filters.clientId, '507f1f77bcf86cd799439011');
   assert.equal(filters.contact, '');
   assert.equal(filters.status, 'active');
-  assert.equal(buildClientsPath(filters), '/pharmacy/clients/status-active');
+
+  assert.equal(
+    buildClientsPath(filters),
+    '/pharmacy/clients/client-id-507f1f77bcf86cd799439011/status-active'
+  );
 });
 
 //===================================================================
@@ -112,5 +118,92 @@ test('duplicate and invalid client filters canonicalize deterministically', () =
   });
 
   const normalized = parseClientsSegments({ filters: invalidKnownSegments });
+
   assert.equal(buildClientsPath(normalized), '/pharmacy/clients');
+});
+
+//===================================================================
+
+test('legacy pharmacy URL segment canonicalizes away in the owner-wide client registry', () => {
+  const id = '507f1f77bcf86cd799439011';
+
+  assert.equal(
+    buildClientsPath({ ...DEFAULT_CLIENTS_FILTERS, pharmacyId: id }),
+    '/pharmacy/clients'
+  );
+
+  assert.equal(
+    buildClientsPath(parseClientsSegments({ filters: [`pharmacy-${id}`] })),
+    '/pharmacy/clients'
+  );
+});
+
+//===================================================================
+
+test('embedded pharmacy Clients route preserves filters, pagination and leaves PII out of URL', () => {
+  const base = '/pharmacy/pharmacies/507f1f77bcf86cd799439011/clients';
+
+  const filters = {
+    ...DEFAULT_CLIENTS_FILTERS,
+
+    clientId: '507f1f77bcf86cd799439012',
+    name: 'Sensitive Name',
+    contact: 'secret@example.com',
+    status: 'active' as const,
+  };
+
+  const url = buildClientsPath(filters, base, { page: 3, perPage: 50 });
+
+  assert.equal(
+    url,
+    `${base}/client-id-507f1f77bcf86cd799439012/status-active/per-page-50/page-3`
+  );
+
+  assert.doesNotMatch(url, /Sensitive|example|secret/);
+
+  const segments = url.slice(base.length + 1).split('/');
+  const roundTrip = parseClientsSegments({ filters: segments });
+
+  assert.equal(
+    buildClientsPath(roundTrip, base, parseClientsPaginationSegments(segments)),
+    url
+  );
+
+  assert.deepEqual(parseClientsPaginationSegments(['per-page-100', 'page-2']), {
+    page: 2,
+    perPage: 100,
+  });
+
+  assert.equal(
+    buildClientsPath(DEFAULT_CLIENTS_FILTERS, base, { page: 1, perPage: 20 }),
+    base
+  );
+});
+
+//===================================================================
+
+test('both client statuses combine with every successful orders option in the owner registry', () => {
+  for (const status of ['active', 'blocked'] as const) {
+    for (const successfulOrders of ['repeat', 'successful', 'other'] as const) {
+      const segments = [
+        `status-${status}`,
+        `successful-orders-${successfulOrders}`,
+      ];
+
+      assert.deepEqual(resolveClientsRoute(segments), {
+        kind: 'filters',
+        filters: segments,
+      });
+
+      const filters = parseClientsSegments({ filters: segments });
+
+      assert.equal(filters.status, status);
+      assert.equal(filters.successfulOrders, successfulOrders);
+
+      assert.equal(
+        buildClientsPath(filters),
+        `/pharmacy/clients/${segments.join('/')}`
+      );
+    }
+  }
 });

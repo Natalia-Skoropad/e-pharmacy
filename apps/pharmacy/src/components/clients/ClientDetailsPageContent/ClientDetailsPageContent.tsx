@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import {
   Mail,
@@ -112,6 +113,7 @@ import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message'
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderStatistics } from '@/components/statistics';
 import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
+import { ClientPharmaciesTab } from '@/components/clients/ClientPharmaciesTab/ClientPharmaciesTab';
 
 import {
   shouldLoadClientProducts,
@@ -122,7 +124,10 @@ import css from './ClientDetailsPageContent.module.css';
 
 //===================================================================
 
-type ClientDetailsPageContentProps = Readonly<{ clientId: string }>;
+type ClientDetailsPageContentProps = Readonly<{
+  clientId: string;
+  initialTab?: ClientDetailTab;
+}>;
 
 //===================================================================
 
@@ -157,6 +162,7 @@ type ClientOrderFilters = Readonly<{
 const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
   { value: 'details', label: 'Details' },
   { value: 'orders', label: 'Client orders' },
+  { value: 'pharmacies', label: 'Pharmacies' },
   { value: 'products', label: 'Purchased products' },
   { value: 'comments', label: 'Comments' },
 ];
@@ -173,6 +179,8 @@ const DEFAULT_PRODUCT_FILTERS: ClientProductFilters = {
   status: 'all',
 };
 
+//===================================================================
+
 const DEFAULT_ORDER_FILTERS: ClientOrderFilters = {
   date: { from: '', to: '' },
   status: 'all',
@@ -182,14 +190,19 @@ const DEFAULT_ORDER_FILTERS: ClientOrderFilters = {
   createdByType: 'all',
 };
 
+//===================================================================
+
 const ORDER_STATUS_OPTIONS: Array<SelectOption<ClientOrderFilters['status']>> =
   [
     { value: 'all', label: 'All' },
+
     ...ORDER_STATUSES.map((status) => ({
       value: status,
       label: ORDER_STATUS_PRESENTATION[status].label,
     })),
   ];
+
+//===================================================================
 
 const DELIVERY_METHOD_OPTIONS: Array<
   SelectOption<ClientOrderFilters['deliveryMethod']>
@@ -199,6 +212,8 @@ const DELIVERY_METHOD_OPTIONS: Array<
   { value: 'postal_delivery', label: DELIVERY_METHOD_LABELS.postal_delivery },
 ];
 
+//===================================================================
+
 const PAYMENT_METHOD_OPTIONS: Array<
   SelectOption<ClientOrderFilters['paymentMethod']>
 > = [
@@ -206,6 +221,8 @@ const PAYMENT_METHOD_OPTIONS: Array<
   { value: 'cash', label: PAYMENT_METHOD_LABELS.cash },
   { value: 'bank_transfer', label: PAYMENT_METHOD_LABELS.bank_transfer },
 ];
+
+//===================================================================
 
 const CLIENT_COMMENT_OPTIONS: Array<
   SelectOption<ClientOrderFilters['clientCommentPresence']>
@@ -215,20 +232,26 @@ const CLIENT_COMMENT_OPTIONS: Array<
   { value: 'without', label: 'Without client comment' },
 ];
 
+//===================================================================
+
 const ORDER_CREATED_BY_OPTIONS: Array<
   SelectOption<ClientOrderFilters['createdByType']>
 > = [
   { value: 'all', label: 'All' },
+
   ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
     value: createdByType,
     label: ORDER_CREATED_BY_LABELS[createdByType],
   })),
 ];
 
+//===================================================================
+
 const PRODUCT_STATUS_OPTIONS: Array<
   SelectOption<ClientProductFilters['status']>
 > = [
   { value: 'all', label: 'All' },
+
   ...(Object.keys(PRODUCT_STATUS_PRESENTATION) as ProductStatus[]).map(
     (status) => ({
       value: status,
@@ -359,6 +382,8 @@ type ClientProductsFiltersDrawerProps = Readonly<{
   onReset: () => void;
 }>;
 
+//===================================================================
+
 function ClientProductsFiltersDrawer({
   filters,
   hasActiveFilters,
@@ -444,7 +469,9 @@ function getClientDetailsError(error: unknown): ClientDetailsError {
 
 function ClientDetailsPageContentState({
   clientId,
+  initialTab = 'details',
 }: ClientDetailsPageContentProps) {
+  const router = useRouter();
   const [client, setClient] = useState<PharmacyClientRow | null>(null);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [ordersTotal, setOrdersTotal] = useState(0);
@@ -499,7 +526,7 @@ function ClientDetailsPageContentState({
   } = useLastKnownStatistics<OrderStatisticsCounts>();
 
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<ClientDetailTab>('details');
+  const [activeTab, setActiveTab] = useState<ClientDetailTab>(initialTab);
   const [clientStatus, setClientStatus] = useState<ResourceStatus>('loading');
   const [clientRetryVersion, setClientRetryVersion] = useState(0);
   const [error, setError] = useState<ClientDetailsError | null>(null);
@@ -525,13 +552,16 @@ function ClientDetailsPageContentState({
 
   const [productArticleSearch, setProductArticleSearch] = useState('');
   const [productNameSearch, setProductNameSearch] = useState('');
+
   const debouncedProductArticleSearch = useDebouncedValue(
     productArticleSearch,
     450
   );
+
   const debouncedProductNameSearch = useDebouncedValue(productNameSearch, 450);
 
   const productSearchKey = `${debouncedProductArticleSearch}\u0000${debouncedProductNameSearch}`;
+
   const [productsPageState, setProductsPageState] = useState(() => ({
     searchKey: productSearchKey,
     page: 1,
@@ -553,9 +583,11 @@ function ClientDetailsPageContentState({
   const [productsStatus, setProductsStatus] = useState<ResourceStatus>('idle');
   const [productsError, setProductsError] = useState('');
   const [productsRetryVersion, setProductsRetryVersion] = useState(0);
+
   const [loadedProductsRequestKey, setLoadedProductsRequestKey] = useState<
     string | null
   >(null);
+
   const [isProductsFiltersOpen, setIsProductsFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -566,9 +598,11 @@ function ClientDetailsPageContentState({
         const categories = await getProductCategories({
           signal: controller.signal,
         });
+
         if (!controller.signal.aborted) {
           setProductCategoryOptions([
             { value: 'all', label: 'All categories' },
+
             ...categories.map((category) => ({
               value: category.slug,
               label: category.name,
@@ -581,6 +615,7 @@ function ClientDetailsPageContentState({
     }
 
     void loadProductCategoryOptions();
+
     return () => controller.abort();
   }, []);
 
@@ -609,6 +644,7 @@ function ClientDetailsPageContentState({
         });
 
         if (controller.signal.aborted) return;
+
         setClient(loadedClient);
         setClientStatus('success');
       } catch (loadError) {
@@ -638,7 +674,8 @@ function ClientDetailsPageContentState({
   }, [client?.name]);
 
   useEffect(() => {
-    if (clientStatus !== 'success') return;
+    // Pharmacy history is owner-scoped; it must never start a selected-pharmacy order request.
+    if (clientStatus !== 'success' || activeTab === 'pharmacies') return;
 
     const controller = new AbortController();
 
@@ -657,20 +694,25 @@ function ClientDetailsPageContentState({
             clientComment: debouncedOrderCommentSearch.trim() || undefined,
             dateFrom: orderFilters.date.from || undefined,
             dateTo: orderFilters.date.to || undefined,
+
             status:
               orderFilters.status === 'all' ? undefined : orderFilters.status,
+
             deliveryMethod:
               orderFilters.deliveryMethod === 'all'
                 ? undefined
                 : orderFilters.deliveryMethod,
+
             paymentMethod:
               orderFilters.paymentMethod === 'all'
                 ? undefined
                 : orderFilters.paymentMethod,
+
             clientCommentPresence:
               orderFilters.clientCommentPresence === 'all'
                 ? undefined
                 : orderFilters.clientCommentPresence,
+
             createdByType:
               orderFilters.createdByType === 'all'
                 ? undefined
@@ -684,10 +726,12 @@ function ClientDetailsPageContentState({
         setOrders([...response.items]);
         setOrdersTotal(response.total);
         setOrdersTotalPages(response.totalPages);
+
         setOrdersPageState({
           searchKey: orderSearchKey,
           page: response.page,
         });
+
         setOrdersEarliestCreatedAt(response.earliestCreatedAt);
 
         const hasSearchOrFilters = Boolean(
@@ -717,6 +761,7 @@ function ClientDetailsPageContentState({
             'Could not load client orders. Please try again.'
           )
         );
+
         setOrderStatisticsFailure();
         setOrdersStatus('error');
       }
@@ -728,6 +773,7 @@ function ClientDetailsPageContentState({
       controller.abort();
     };
   }, [
+    activeTab,
     clientId,
     clientStatus,
     debouncedOrderCommentSearch,
@@ -744,6 +790,7 @@ function ClientDetailsPageContentState({
 
   useEffect(() => {
     if (clientStatus !== 'success') return;
+
     if (
       !shouldLoadClientProducts(
         activeTab,
@@ -770,10 +817,12 @@ function ClientDetailsPageContentState({
             name: debouncedProductNameSearch.trim() || undefined,
             dateFrom: productFilters.date.from || undefined,
             dateTo: productFilters.date.to || undefined,
+
             category:
               productFilters.category === 'all'
                 ? undefined
                 : productFilters.category,
+
             status:
               productFilters.status === 'all'
                 ? undefined
@@ -788,6 +837,7 @@ function ClientDetailsPageContentState({
         setProductsTotal(response.total);
         setProductsEarliestCreatedAt(response.earliestCreatedAt);
         setProductsTotalPages(response.totalPages);
+
         setProductsPageState({
           searchKey: productSearchKey,
           page: response.page,
@@ -817,6 +867,7 @@ function ClientDetailsPageContentState({
             'Could not load purchased products. Please try again.'
           )
         );
+
         setProductsStatus('error');
       }
     }
@@ -907,6 +958,7 @@ function ClientDetailsPageContentState({
       {
         key: 'number',
         title: <TableHeaderTitle parts={['Order', 'number']} />,
+
         render: (order) => (
           <TextActionButton href={getPharmacyOrderPath(order.id)}>
             {order.orderNumber}
@@ -946,6 +998,7 @@ function ClientDetailsPageContentState({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Order', 'status']} />,
+
         render: (order) => (
           <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
         ),
@@ -966,6 +1019,7 @@ function ClientDetailsPageContentState({
       {
         key: 'photo',
         title: <TableHeaderTitle parts={['Product', 'photo']} />,
+
         render: (item) => (
           <TableImagePreview
             src={getProductImageSrc(item.photoUrl ?? undefined)}
@@ -977,6 +1031,7 @@ function ClientDetailsPageContentState({
       {
         key: 'article',
         title: <TableHeaderTitle parts={['Product', 'article']} />,
+
         render: (item) =>
           item.currentProductExists ? (
             <TextActionButton href={getPharmacyProductPath(item.productId)}>
@@ -989,6 +1044,7 @@ function ClientDetailsPageContentState({
       {
         key: 'name',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
+
         render: (item) =>
           item.currentProductExists ? (
             <TextActionButton href={getPharmacyProductPath(item.productId)}>
@@ -1021,6 +1077,7 @@ function ClientDetailsPageContentState({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Product', 'status']} />,
+
         render: (item) =>
           item.currentStatus ? (
             <StatusBadge {...PRODUCT_STATUS_PRESENTATION[item.currentStatus]} />
@@ -1093,7 +1150,7 @@ function ClientDetailsPageContentState({
             icon={<Users size={23} aria-hidden="true" />}
           />
 
-          {orderStatistics ? (
+          {activeTab === 'pharmacies' ? null : orderStatistics ? (
             <OrderStatistics
               counts={orderStatistics}
               className={css.orderStatistics}
@@ -1128,7 +1185,13 @@ function ClientDetailsPageContentState({
             ariaLabel="Client details tabs"
             mobileVisibleCount={1}
             tabletVisibleCount={3}
-            onChange={setActiveTab}
+            onChange={(tab) => {
+              setActiveTab(tab);
+              const base = getPharmacyClientPath(clientId);
+              router.push(tab === 'details' ? base : `${base}/${tab}`, {
+                scroll: false,
+              });
+            }}
           />
 
           {activeTab === 'details' ? (
@@ -1230,6 +1293,10 @@ function ClientDetailsPageContentState({
                 ) : null}
               </section>
             </div>
+          ) : null}
+
+          {activeTab === 'pharmacies' ? (
+            <ClientPharmaciesTab clientId={clientId} />
           ) : null}
 
           {activeTab === 'orders' ? (
@@ -1519,6 +1586,7 @@ function ClientDetailsPageContentState({
           onClose={() => setIsOrdersFiltersOpen(false)}
           onReset={() => {
             setOrderFilters(DEFAULT_ORDER_FILTERS);
+
             setOrdersPageState({
               searchKey: orderSearchKey,
               page: 1,
@@ -1552,7 +1620,12 @@ function ClientDetailsPageContentState({
 //===================================================================
 
 function ClientDetailsPageContent(props: ClientDetailsPageContentProps) {
-  return <ClientDetailsPageContentState key={props.clientId} {...props} />;
+  return (
+    <ClientDetailsPageContentState
+      key={`${props.clientId}:${props.initialTab ?? 'details'}`}
+      {...props}
+    />
+  );
 }
 
 //===================================================================

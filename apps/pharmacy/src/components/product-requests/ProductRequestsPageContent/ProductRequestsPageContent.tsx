@@ -41,6 +41,7 @@ import { buildProductRequestsPath } from '@/lib/product-requests/product-request
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+
 import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { ProductRequestStatistics } from '@/components/statistics';
@@ -59,24 +60,29 @@ function getProductRequestsQueryParams(
   return {
     page,
     perPage: rowsPerPage,
+
     dateFrom: isCalendarDateString(filters.date.from)
       ? filters.date.from
       : undefined,
+
     dateTo: isCalendarDateString(filters.date.to) ? filters.date.to : undefined,
     requestNumber: filters.requestNumber.trim() || undefined,
     productName: filters.productName.trim() || undefined,
     productArticle: filters.productArticle.trim() || undefined,
+
     category:
       filters.category === 'all' ||
       filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER
         ? undefined
         : filters.category,
+
     categoryMode:
       filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER
         ? 'custom'
         : filters.category === 'all'
           ? undefined
           : 'catalog',
+
     status: filters.status === 'all' ? undefined : filters.status,
   };
 }
@@ -84,12 +90,14 @@ function getProductRequestsQueryParams(
 //===================================================================
 
 type ProductRequestsPageContentProps = Readonly<{
+  embedded?: boolean;
   initialFilters?: ProductRequestsFilterState;
 }>;
 
 //===================================================================
 
 function ProductRequestsPageContent({
+  embedded = false,
   initialFilters = DEFAULT_PRODUCT_REQUESTS_FILTERS,
 }: ProductRequestsPageContentProps) {
   const router = useRouter();
@@ -107,6 +115,7 @@ function ProductRequestsPageContent({
   const [requests, setRequests] = useState<ProductRequestRowViewModel[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
   );
@@ -115,6 +124,7 @@ function ProductRequestsPageContent({
     useState<ProductRequestStatisticsCounts>(
       DEFAULT_PRODUCT_REQUEST_STATISTICS
     );
+
   const [isRequestStatisticsUnavailable, setIsRequestStatisticsUnavailable] =
     useState(false);
 
@@ -131,9 +141,11 @@ function ProductRequestsPageContent({
         const categories = await getProductCategories({
           signal: controller.signal,
         });
+
         if (!controller.signal.aborted) {
           setCategoryOptions([
             { value: 'all', label: 'All categories' },
+
             ...categories.map((category) => ({
               value: category.slug,
               label: category.name,
@@ -150,10 +162,12 @@ function ProductRequestsPageContent({
     }
 
     void loadCategoryOptions();
+
     return () => controller.abort();
   }, []);
 
   const debouncedRequestNumber = useDebouncedValue(filters.requestNumber, 450);
+
   const debouncedProductArticle = useDebouncedValue(
     filters.productArticle,
     450
@@ -194,6 +208,7 @@ function ProductRequestsPageContent({
         const statistics = await getPharmacyProductRequestStatistics({
           signal: controller.signal,
         });
+
         if (!controller.signal.aborted) {
           setRequestStatistics(statistics);
           setIsRequestStatisticsUnavailable(false);
@@ -223,6 +238,7 @@ function ProductRequestsPageContent({
         const response = await getPharmacyProductRequests(queryParams, {
           signal: controller.signal,
         });
+
         if (controller.signal.aborted) return;
 
         setRequests([...response.items]);
@@ -253,6 +269,7 @@ function ProductRequestsPageContent({
     if (debouncedFilters !== filters) return;
 
     const nextPath = buildProductRequestsPath(debouncedFilters);
+
     if (pathname === nextPath) return;
 
     router.replace(nextPath, { scroll: false });
@@ -266,6 +283,7 @@ function ProductRequestsPageContent({
     filters.category !== 'all',
     filters.status !== 'all'
   );
+
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: ProductRequestsFilterState) => {
@@ -286,9 +304,13 @@ function ProductRequestsPageContent({
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
   const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
   const isCreateRequestLocked = Boolean(bannerStatus);
+  const RootElement = embedded ? 'section' : 'main';
 
   return (
-    <main className={css.page} aria-labelledby="product-requests-page-title">
+    <RootElement
+      className={css.page}
+      aria-labelledby="product-requests-page-title"
+    >
       <section
         className={css.tableCard}
         aria-labelledby="product-requests-page-title"
@@ -488,7 +510,7 @@ function ProductRequestsPageContent({
           onReset={resetFilters}
         />
       ) : null}
-    </main>
+    </RootElement>
   );
 }
 

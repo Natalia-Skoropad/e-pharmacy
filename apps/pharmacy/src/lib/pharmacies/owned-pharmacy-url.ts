@@ -2,6 +2,7 @@ import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
+import { isClientsFilterSegment } from '@/lib/clients/client-paths';
 
 //===================================================================
 
@@ -13,6 +14,8 @@ export const OWNED_PHARMACY_STATUSES = [
   'on_reactivation',
   'blocked',
 ] as const;
+
+//===================================================================
 
 export const OWNED_PHARMACY_RATINGS = [
   '0-0.9',
@@ -63,7 +66,6 @@ export const OWNED_PHARMACY_DETAIL_TABS = [
   'orders',
   'clients',
   'products',
-  'product-requests',
   'activity',
 ] as const;
 
@@ -78,6 +80,7 @@ export type OwnedPharmacyRouteResolution =
       kind: 'detail';
       pharmacyId: string;
       tab: OwnedPharmacyDetailTab;
+      clientSegments: readonly string[];
     }>
   | Readonly<{ kind: 'invalid' }>;
 
@@ -128,6 +131,7 @@ function id(value: string | undefined): string {
 
 function page(value: string | undefined): number {
   if (!value || !/^[1-9]\d*$/.test(value)) return 1;
+
   const number = Number(value);
 
   return Number.isSafeInteger(number) ? number : 1;
@@ -301,7 +305,18 @@ export function resolveOwnedPharmaciesRoute(
       return { kind: 'invalid' };
     }
 
-    if (segments.length > 2) {
+    const clientSegments = segments.slice(2);
+
+    if (
+      clientSegments.length > 0 &&
+      (tab !== 'clients' ||
+        !clientSegments.every(
+          (segment) =>
+            isClientsFilterSegment(segment) ||
+            /^page-[1-9]\d*$/.test(segment) ||
+            /^per-page-(20|50|100)$/.test(segment)
+        ))
+    ) {
       return { kind: 'invalid' };
     }
 
@@ -309,6 +324,7 @@ export function resolveOwnedPharmaciesRoute(
       kind: 'detail',
       pharmacyId: segments[0].toLowerCase(),
       tab: tab as OwnedPharmacyDetailTab,
+      clientSegments,
     };
   }
 

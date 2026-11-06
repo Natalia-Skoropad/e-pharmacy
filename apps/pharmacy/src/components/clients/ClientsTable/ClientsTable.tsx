@@ -17,6 +17,7 @@ import { formatAmount } from '@e-pharmacy/utils/money';
 
 import { getPharmacyClientPath } from '@/lib/routes';
 import type { PharmacyClientRow } from '@/lib/clients/clients';
+import { getClientDisplayName } from '@/lib/clients/client-display-name';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './ClientsTable.module.css';
@@ -44,8 +45,11 @@ function ClientsTable({
   emptyMessage,
   isLoading = false,
 }: ClientsTableProps) {
-  const columns = useMemo<Array<DataTableColumn<PharmacyClientRow>>>(
-    () => [
+  const columns = useMemo<Array<DataTableColumn<PharmacyClientRow>>>(() => {
+    const clientHref = (client: PharmacyClientRow) =>
+      getPharmacyClientPath(client.id);
+
+    return [
       {
         key: 'firstOrderAt',
         title: <TableHeaderTitle parts={['Client', 'added']} />,
@@ -54,6 +58,7 @@ function ClientsTable({
       {
         key: 'photo',
         title: <TableHeaderTitle parts={['Client', 'photo']} />,
+
         render: (client) => (
           <TableImagePreview
             src={getProductImageSrc(client.photoUrl ?? undefined)}
@@ -65,10 +70,11 @@ function ClientsTable({
       {
         key: 'clientId',
         title: <TableHeaderTitle parts={['Client', 'ID']} />,
+
         render: (client) => (
           <TextActionButton
             className={css.breakableLink}
-            href={getPharmacyClientPath(client.id)}
+            href={clientHref(client)}
           >
             {client.id}
           </TextActionButton>
@@ -77,15 +83,17 @@ function ClientsTable({
       {
         key: 'name',
         title: <TableHeaderTitle parts={['Client', 'name']} />,
+
         render: (client) => (
-          <TextActionButton href={getPharmacyClientPath(client.id)}>
-            {client.name}
+          <TextActionButton href={clientHref(client)}>
+            {getClientDisplayName(client)}
           </TextActionButton>
         ),
       },
       {
         key: 'email',
         title: <TableHeaderTitle parts={['Client', 'email']} />,
+
         render: (client) => (
           <span className={css.breakableText}>{client.email || '—'}</span>
         ),
@@ -102,12 +110,14 @@ function ClientsTable({
       },
       {
         key: 'successfulOrdersCount',
+
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
             <OrderMetricsTooltip scope="client" />
           </span>
         ),
+
         render: (client) => client.successfulOrdersCount,
       },
       {
@@ -118,19 +128,19 @@ function ClientsTable({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Client', 'status']} />,
+
         render: (client) => (
           <StatusBadge {...USER_STATUS_PRESENTATION[client.status]} />
         ),
       },
-    ],
-    []
-  );
+    ];
+  }, []);
 
   return (
     <DataTable
       columns={columns}
       items={clients}
-      getItemKey={(client) => String(client.id)}
+      getItemKey={(client) => client.id}
       isLoading={isLoading}
       minWidth={0}
       labels={{

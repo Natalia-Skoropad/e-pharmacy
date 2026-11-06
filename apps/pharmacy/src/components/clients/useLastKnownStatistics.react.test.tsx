@@ -42,12 +42,16 @@ type FakeWindow = Readonly<{
 class FakeElement {
   readonly nodeType = 1;
   readonly ownerDocument: FakeDocument;
+
   parentNode: FakeElement | null = null;
+
   readonly childNodes: FakeElement[] = [];
   tagName = 'DIV';
   nodeName = 'DIV';
   namespaceURI = 'http://www.w3.org/1999/xhtml';
+
   readonly style: Record<string, string> = {};
+
   textContent = '';
 
   constructor(ownerDocument: FakeDocument) {
@@ -72,22 +76,30 @@ class FakeElement {
 
   appendChild(node: FakeElement): FakeElement {
     node.parentNode = this;
+
     this.childNodes.push(node);
+
     return node;
   }
 
   insertBefore(node: FakeElement, before: FakeElement): FakeElement {
     node.parentNode = this;
+
     const index = this.childNodes.indexOf(before);
+
     if (index < 0) this.childNodes.push(node);
     else this.childNodes.splice(index, 0, node);
+
     return node;
   }
 
   removeChild(node: FakeElement): FakeElement {
     const index = this.childNodes.indexOf(node);
+
     if (index >= 0) this.childNodes.splice(index, 1);
+
     node.parentNode = null;
+
     return node;
   }
 }
@@ -112,13 +124,16 @@ function installMinimalDom(): FakeDocument {
 
     createElement(tagName: string) {
       const element = new FakeElement(mutableDocument as FakeDocument);
+
       element.tagName = tagName.toUpperCase();
       element.nodeName = element.tagName;
+
       return element;
     },
   };
 
   const document = mutableDocument as FakeDocument;
+
   mutableDocument.documentElement = new FakeElement(document);
   mutableDocument.body = new FakeElement(document);
 
@@ -149,6 +164,7 @@ const fakeDocument = installMinimalDom();
 
 function createTestRoot(): Readonly<{ root: Root; container: FakeElement }> {
   const container = new FakeElement(fakeDocument);
+
   return { root: createRoot(container as unknown as Element), container };
 }
 

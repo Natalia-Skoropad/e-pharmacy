@@ -2,6 +2,7 @@ import type { PipelineStage } from 'mongoose';
 
 import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 import { createSafeRegExp } from '../../utils/validation/regexp';
+
 import type { ClientsQuery } from '../../schemas/clients/client.schema';
 
 //===============================================================
@@ -23,6 +24,20 @@ export function buildClientFilterStages(
 
   if (query.clientId?.trim()) {
     match.id = createSafeRegExp(query.clientId.trim());
+  }
+
+  // A single owner-level search matches only fields already exposed in the
+  // authorized client registry; input is escaped before entering MongoDB.
+  if (query.search?.trim()) {
+    const search = createSafeRegExp(query.search.trim());
+
+    match.$or = [
+      { id: search },
+      { name: search },
+      { email: search },
+      { phone: search },
+      { address: search },
+    ];
   }
 
   if (query.name?.trim()) {

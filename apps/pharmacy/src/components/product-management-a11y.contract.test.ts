@@ -29,9 +29,13 @@ test('product list landmarks use human-readable labels and valid page title refe
   assert.match(allProducts, /aria-label="Search and filter all products"/);
   assert.match(ownProducts, /aria-label="Search and filter own products"/);
 
+  // Standalone routes keep <main>; the same component is embedded as a
+  // <section> in the exact pharmacy tab, avoiding nested main landmarks.
+  assert.match(productRequests, /embedded \? 'section' : 'main'/);
+
   assert.match(
     productRequests,
-    /<main[^>]+aria-labelledby="product-requests-page-title"/
+    /<RootElement[^>]+aria-labelledby="product-requests-page-title"/
   );
 
   assert.match(

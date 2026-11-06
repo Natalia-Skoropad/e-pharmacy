@@ -35,6 +35,7 @@ export type ClientsFilterState = Readonly<{
   name: string;
   clientId: string;
   contact: string;
+  pharmacyId: string;
   status: ClientStatusFilter;
   successfulOrders: ClientSuccessfulOrdersRouteFilter;
 }>;
@@ -50,6 +51,7 @@ export const DEFAULT_CLIENTS_FILTERS: ClientsFilterState = {
   name: '',
   clientId: '',
   contact: '',
+  pharmacyId: '',
   status: 'all',
   successfulOrders: 'all',
 };
@@ -65,6 +67,7 @@ type ClientsFilterDraft = {
   name: string;
   clientId: string;
   contact: string;
+  pharmacyId: string;
   status: ClientsFilterState['status'];
   successfulOrders: ClientsFilterState['successfulOrders'];
 };
@@ -92,6 +95,7 @@ export type ClientsRouteResolution =
 
 export function isClientsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('pharmacy-') ||
     segment.startsWith('search-name-') ||
     segment.startsWith('client-id-') ||
     segment.startsWith('contact-') ||
@@ -142,9 +146,17 @@ export function parseClientsSegments(
   };
 
   for (const segment of params.filters ?? []) {
+    if (segment.startsWith('pharmacy-')) {
+      const pharmacyId = segment.slice('pharmacy-'.length);
+
+      if (isValidObjectId(pharmacyId))
+        filters.pharmacyId = pharmacyId.toLowerCase();
+
+      continue;
+    }
+
     if (
       segment.startsWith('search-name-') ||
-      segment.startsWith('client-id-') ||
       segment.startsWith('contact-') ||
       segment.startsWith('email-') ||
       segment.startsWith('phone-') ||
@@ -152,6 +164,14 @@ export function parseClientsSegments(
     ) {
       // Legacy PII-bearing URLs are recognized so the page can canonicalize
       // them, but their values are intentionally not restored into state.
+      continue;
+    }
+
+    if (segment.startsWith('client-id-')) {
+      const clientId = segment.slice('client-id-'.length);
+
+      if (isValidObjectId(clientId)) filters.clientId = clientId.toLowerCase();
+
       continue;
     }
 
@@ -214,9 +234,50 @@ export function parseClientsSegments(
 
 //===================================================================
 
-export function buildClientsPath(filters: ClientsFilterState): string {
+export type ClientsPaginationState = Readonly<{
+  page: number;
+  perPage: 20 | 50 | 100;
+}>;
+
+//===================================================================
+
+/** Path-only paging for pharmacy-detail Clients. No personal search text in URLs. */
+export function parseClientsPaginationSegments(
+  segments: readonly string[]
+): ClientsPaginationState {
+  let page = 1;
+  let perPage: 20 | 50 | 100 = 20;
+
+  for (const segment of segments) {
+    if (/^page-[1-9]\d*$/.test(segment)) {
+      const value = Number(segment.slice(5));
+
+      if (Number.isSafeInteger(value)) page = value;
+    }
+
+    if (/^per-page-(20|50|100)$/.test(segment)) {
+      perPage = Number(segment.slice(9)) as 20 | 50 | 100;
+    }
+  }
+
+  return { page, perPage };
+}
+
+//===================================================================
+
+export function buildClientsPath(
+  filters: ClientsFilterState,
+  basePath: string = PHARMACY_ROUTES.CLIENTS,
+  pagination?: ClientsPaginationState
+): string {
   const segments: string[] = [];
   const dateRangeIsValid = isDateRangeValid(filters.firstOrderDate);
+
+  // Only the opaque entity ID is persisted; never include names, contact
+  // details or free-text search terms in a sharable URL.
+  if (isValidObjectId(filters.clientId)) {
+    segments.push(`client-id-${filters.clientId.toLowerCase()}`);
+  }
 
   if (filters.status !== 'all') {
     segments.push(`status-${slugifyStatus(filters.status)}`);
@@ -234,7 +295,13 @@ export function buildClientsPath(filters: ClientsFilterState): string {
     segments.push(`date-to-${filters.firstOrderDate.to}`);
   }
 
-  return segments.length
-    ? `${PHARMACY_ROUTES.CLIENTS}/${segments.join('/')}`
-    : PHARMACY_ROUTES.CLIENTS;
+  if (pagination?.perPage && pagination.perPage !== 20) {
+    segments.push(`per-page-${pagination.perPage}`);
+  }
+
+  if (pagination?.page && pagination.page > 1) {
+    segments.push(`page-${pagination.page}`);
+  }
+
+  return segments.length ? `${basePath}/${segments.join('/')}` : basePath;
 }

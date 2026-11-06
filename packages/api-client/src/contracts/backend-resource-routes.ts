@@ -310,6 +310,10 @@ export const backendRoutes = {
   clients: {
     list: '/clients',
     details: (clientId: EntityId) => `/clients/${segment(clientId)}`,
+
+    pharmacies: (clientId: EntityId) =>
+      `/clients/${segment(clientId)}/pharmacies`,
+
     products: (clientId: EntityId) => `/clients/${segment(clientId)}/products`,
   },
 

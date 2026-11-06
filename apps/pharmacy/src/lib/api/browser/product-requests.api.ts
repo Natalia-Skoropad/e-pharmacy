@@ -8,7 +8,6 @@ import {
   type ApiResponseContext,
 } from '@e-pharmacy/api-client/response';
 
-import { localApiRequest } from '@e-pharmacy/next-api/browser';
 import { isRecord } from '@e-pharmacy/utils/guards';
 import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
 
@@ -29,6 +28,8 @@ import {
   sanitizeBrowserReadRequestOptions,
   type BrowserReadRequestOptions,
 } from './request-options';
+
+import { operationalLocalApiRequest as localApiRequest } from './operational-request';
 
 //===================================================================
 
@@ -84,6 +85,7 @@ function parseProductRequestRow(
       }
     );
   }
+
   return request;
 }
 
@@ -106,6 +108,7 @@ function parseProductRequestDetails(
       }
     );
   }
+
   return request;
 }
 
@@ -118,7 +121,9 @@ export async function createPharmacyProductRequest(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'POST', body: payload }),
+
     parseProductRequestRow,
+
     { url: path, method: 'POST' }
   );
 }
@@ -137,7 +142,9 @@ export async function checkPharmacyProductRequestArticle(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parseArticleAvailabilityResponse,
+
     { url: path, method: 'GET' }
   );
 }
@@ -151,7 +158,9 @@ export async function getPharmacyProductRequestStatistics(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     normalizeProductRequestStatisticsResponse,
+
     { url: path, method: 'GET' }
   );
 }
@@ -169,7 +178,9 @@ export async function getPharmacyProductRequests(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     normalizeProductRequestsResponse,
+
     { url: path, method: 'GET' }
   );
 }
@@ -184,7 +195,9 @@ export async function getPharmacyProductRequest(
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
     parseProductRequestDetails,
+
     { url: path, method: 'GET' }
   );
 }
@@ -199,7 +212,9 @@ export async function updatePharmacyProductRequest(
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'PATCH', body: payload }),
+
     parseProductRequestDetails,
+
     { url: path, method: 'PATCH' }
   );
 }
@@ -213,7 +228,9 @@ export async function deletePharmacyProductRequest(
 
   parseApiResponseData(
     await localApiRequest(path, { method: 'DELETE' }),
+
     parseMessageResponse,
+
     { url: path, method: 'DELETE' }
   );
 }

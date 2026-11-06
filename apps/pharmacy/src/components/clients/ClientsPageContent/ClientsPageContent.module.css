@@ -35,6 +35,12 @@
   gap: 12px;
 }
 
+.ownerSearchGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
 .searchAction {
   display: flex;
   align-items: flex-end;
@@ -63,7 +69,7 @@
 }
 
 .clientStatistics {
-  display: none;
+  display: grid;
 }
 
 .errorText,
@@ -80,6 +86,11 @@
 }
 
 @media only screen and (min-width: 768px) {
+  .ownerSearchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, max-content);
+    align-items: end;
+  }
+
   .searchGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(140px, max-content);
     align-items: end;
@@ -113,6 +124,20 @@
 @media only screen and (min-width: 1440px) {
   .clientStatistics {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Shared skeleton owns its internal responsive grid; never grid the wrapper. */
+.statisticsSkeleton {
+  min-width: 0;
+  width: 100%;
+}
+
+/* The account-wide page keeps its statistics on phones. Only the embedded
+   Clients tab hides its stats; table, search and pagination stay available. */
+@media only screen and (max-width: 767px) {
+  .embeddedStatisticsCard {
+    display: none;
   }
 }

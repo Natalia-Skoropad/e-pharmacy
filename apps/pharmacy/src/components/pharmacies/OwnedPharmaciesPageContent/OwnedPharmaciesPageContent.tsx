@@ -551,17 +551,14 @@ export function OwnedPharmaciesPageContent({
               })}
             </StatsGrid>
           ) : statsError ? (
-            <div className={css.statisticsError} role="alert">
-              <p>{statsError}</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() => setStatsRetry((retry) => retry + 1)}
-              >
-                Retry statistics
-              </Button>
-            </div>
+            <ProfileResourceState
+              variant="error"
+              title="Pharmacy statistics could not be loaded"
+              description={statsError}
+              retryLabel="Try again"
+              sideActionOnDesktop
+              onRetry={() => setStatsRetry((retry) => retry + 1)}
+            />
           ) : (
             <StatsLoadingSkeleton
               count={6}

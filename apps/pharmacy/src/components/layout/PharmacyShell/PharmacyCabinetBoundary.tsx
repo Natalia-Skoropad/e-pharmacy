@@ -10,6 +10,12 @@ import type { CurrentPharmacySummary } from '@e-pharmacy/types/pharmacies';
 import { ErrorPage, PageLoader } from '@e-pharmacy/ui/status-pages';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
+
+import {
+  isOwnerClientDetailPath,
+  isOwnerClientsListPath,
+} from '@/lib/pharmacies/selected-pharmacy-scope';
+
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 //===================================================================
@@ -48,6 +54,9 @@ export function PharmacyCabinetBoundaryRuntime({
   // /me/summary may legitimately be null or fail with SELECTION_REQUIRED.
   // They load and authorize their own resources independently.
   if (
+    (pathname &&
+      (isOwnerClientsListPath(pathname) ||
+        isOwnerClientDetailPath(pathname))) ||
     pathname === PHARMACY_ROUTES.PROFILE ||
     pathname?.startsWith(`${PHARMACY_ROUTES.PROFILE}/`) ||
     pathname === PHARMACY_ROUTES.PHARMACIES ||

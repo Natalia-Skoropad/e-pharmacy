@@ -59,12 +59,14 @@ test('Pharmacy registry disambiguates ObjectId detail routes from filters', () =
     kind: 'detail',
     pharmacyId: ID,
     tab: 'information',
+    clientSegments: [],
   });
 
   assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'orders']), {
     kind: 'detail',
     pharmacyId: ID,
     tab: 'orders',
+    clientSegments: [],
   });
 
   assert.equal(
@@ -86,4 +88,45 @@ test('Pharmacy registry disambiguates ObjectId detail routes from filters', () =
   });
 
   assert.throws(() => buildOwnedPharmacyDetailUrl('bad-id'), TypeError);
+});
+
+//===================================================================
+
+// Stage 14.18.85: only Clients has nested URL-driven filters.
+test('pharmacy Clients accepts nested filters and paging; product requests tab is removed', () => {
+  assert.deepEqual(
+    resolveOwnedPharmaciesRoute([
+      ID,
+      'clients',
+      'client-id-507f1f77bcf86cd799439012',
+      'status-active',
+      'successful-orders-repeat',
+      'per-page-50',
+      'page-2',
+    ]),
+    {
+      kind: 'detail',
+      pharmacyId: ID,
+      tab: 'clients',
+      clientSegments: [
+        'client-id-507f1f77bcf86cd799439012',
+        'status-active',
+        'successful-orders-repeat',
+        'per-page-50',
+        'page-2',
+      ],
+    }
+  );
+
+  assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'product-requests']), {
+    kind: 'invalid',
+  });
+
+  assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'orders', 'page-2']), {
+    kind: 'invalid',
+  });
+
+  assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'clients', 'unknown-2']), {
+    kind: 'invalid',
+  });
 });

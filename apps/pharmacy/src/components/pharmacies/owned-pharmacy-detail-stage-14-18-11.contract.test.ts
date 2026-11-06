@@ -7,6 +7,8 @@ import test from 'node:test';
 const source = (file: string) =>
   readFileSync(new URL(file, import.meta.url), 'utf8');
 
+//===================================================================
+
 const detail = source(
   './OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.tsx'
 );
@@ -108,7 +110,6 @@ test('detail tabs follow the admin URL and resource-mounting model', () => {
     'orders',
     'clients',
     'products',
-    'product-requests',
     'activity',
   ]) {
     assert.match(route, new RegExp(`'${tab}'`));
@@ -122,7 +123,7 @@ test('detail tabs follow the admin URL and resource-mounting model', () => {
 
   assert.match(
     detail,
-    /new CustomEvent\('e-pharmacy:owned-pharmacy-tab-navigation'/
+    /new\s+CustomEvent\(\s*'e-pharmacy:owned-pharmacy-tab-navigation'/
   );
 
   assert.match(detail, /if \(!window\.dispatchEvent\(navigation\)\) return/);

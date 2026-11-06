@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   getClientById,
   getClientPurchasedProducts,
+  getClientPharmacies,
   getClients,
 } from '../../controllers/clients/client.controller';
 
@@ -11,6 +12,7 @@ import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   clientParamsSchema,
+  clientDetailQuerySchema,
   clientProductsQuerySchema,
   clientsQuerySchema,
 } from '../../schemas/clients/client.schema';
@@ -36,6 +38,14 @@ clientRoutes.get(
 //===============================================================
 
 clientRoutes.get(
+  '/:clientId/pharmacies',
+  validate({ params: clientParamsSchema }),
+  ctrlWrapper(getClientPharmacies)
+);
+
+//===============================================================
+
+clientRoutes.get(
   '/:clientId/products',
   validate({ params: clientParamsSchema, query: clientProductsQuerySchema }),
   ctrlWrapper(getClientPurchasedProducts)
@@ -45,6 +55,6 @@ clientRoutes.get(
 
 clientRoutes.get(
   '/:clientId',
-  validate({ params: clientParamsSchema }),
+  validate({ params: clientParamsSchema, query: clientDetailQuerySchema }),
   ctrlWrapper(getClientById)
 );

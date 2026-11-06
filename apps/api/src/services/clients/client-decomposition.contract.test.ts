@@ -8,12 +8,15 @@ import test from 'node:test';
 const ROOT = resolve(process.cwd(), 'src');
 const CLIENTS_DIR = resolve(ROOT, 'services/clients');
 
+//===============================================================
+
 const CANONICAL = [
   'client-types.ts',
   'client-access.ts',
   'client-registry-filters.ts',
   'client-registry-aggregation.ts',
   'client-registry.service.ts',
+  'client-owner-scope.ts',
   'client-purchases-aggregation.ts',
   'client-purchases.service.ts',
 ] as const;
@@ -132,7 +135,10 @@ test('S10.8 registry retains per-pharmacy Mongo facet and true Walk-in identity'
   const aggregation = read('client-registry-aggregation.ts');
   const registry = read('client-registry.service.ts');
 
-  assert.match(aggregation, /\{ \$match: \{ pharmacyId \} \}/);
+  assert.match(
+    aggregation,
+    /\{ \$match: \{ pharmacyId: \{ \$in: pharmacyIds \} \} \}/
+  );
 
   assert.match(
     aggregation,

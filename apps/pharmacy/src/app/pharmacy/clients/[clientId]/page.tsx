@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import {
+  buildClientsPath,
   parseClientsSegments,
   resolveClientsRoute,
 } from '@/lib/clients/client-paths';
@@ -33,11 +34,12 @@ async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
   }
 
   if (route.kind === 'filters') {
-    return (
-      <ClientsPageContent
-        initialFilters={parseClientsSegments({ filters: route.filters })}
-      />
-    );
+    const filters = parseClientsSegments({ filters: route.filters });
+    const canonical = buildClientsPath(filters);
+
+    if (`/pharmacy/clients/${clientId}` !== canonical) redirect(canonical);
+
+    return <ClientsPageContent initialFilters={filters} />;
   }
 
   return <ClientDetailsPageContent clientId={route.clientId} />;

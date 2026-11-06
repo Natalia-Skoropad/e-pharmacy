@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import type {
   ClientParams,
+  ClientDetailQuery,
   ClientProductsQuery,
   ClientsQuery,
 } from '../../schemas/clients/client.schema';
@@ -13,6 +14,7 @@ import {
   getClientsService,
 } from '../../services/clients/client-registry.service';
 
+import { getClientPharmaciesService } from '../../services/clients/client-pharmacies.service';
 import { getClientPurchasedProductsService } from '../../services/clients/client-purchases.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
@@ -34,10 +36,15 @@ export async function getClients(
 
 export async function getClientById(
   req: Request,
-  res: ValidatedResponse<unknown, ClientParams>
+  res: ValidatedResponse<unknown, ClientParams, ClientDetailQuery>
 ): Promise<void> {
   const { clientId } = res.locals.validated.params;
-  const data = await getClientByIdService(req.user?.id ?? '', clientId);
+
+  const data = await getClientByIdService(
+    req.user?.id ?? '',
+    clientId,
+    res.locals.validated.query.scope === 'owner'
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -54,6 +61,20 @@ export async function getClientPurchasedProducts(
     req.user?.id ?? '',
     params.clientId,
     query
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function getClientPharmacies(
+  req: Request,
+  res: ValidatedResponse<unknown, ClientParams>
+): Promise<void> {
+  const data = await getClientPharmaciesService(
+    req.user?.id ?? '',
+    res.locals.validated.params.clientId
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

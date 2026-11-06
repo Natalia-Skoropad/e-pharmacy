@@ -9,7 +9,6 @@ import type { ClientsQuery } from '../../schemas/clients/client.schema';
 import { buildClientFilterStages } from './client-registry-filters';
 
 import type {
-  PharmacyDocument,
   ClientRow,
   ClientStatistics,
   ClientAggregationResult,
@@ -20,21 +19,23 @@ import type {
 export async function getClientRowsForPharmacy(
   pharmacyId: Types.ObjectId,
   query: ClientsQuery
+) {
+  return getClientRowsForPharmacies([pharmacyId], query);
+}
+
+//===============================================================
+
+/** One database aggregation and one pagination across authorized pharmacies. */
+export async function getClientRowsForPharmacies(
+  pharmacyIds: readonly Types.ObjectId[],
+  query: ClientsQuery
 ): Promise<{
   items: ClientRow[];
   total: number;
   statistics: ClientStatistics;
   earliestCreatedAt: string | null;
 }> {
-  const pharmacy = await Pharmacy.findById(pharmacyId)
-    .select('imageUrl activatedAt approvedAt createdAt')
-
-    .lean<Pick<
-      PharmacyDocument,
-      '_id' | 'imageUrl' | 'activatedAt' | 'approvedAt' | 'createdAt'
-    > | null>();
-
-  if (!pharmacy) {
+  if (pharmacyIds.length === 0) {
     return {
       items: [],
       total: 0,
@@ -42,9 +43,6 @@ export async function getClientRowsForPharmacy(
       earliestCreatedAt: null,
     };
   }
-
-  const fallbackDate =
-    pharmacy.activatedAt ?? pharmacy.approvedAt ?? pharmacy.createdAt;
 
   const filterStages = buildClientFilterStages(query);
   const skip = (query.page - 1) * query.perPage;
@@ -83,7 +81,10 @@ export async function getClientRowsForPharmacy(
           $sum: { $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0] },
         },
 
-        earliestOrderCandidates: { $push: '$earliestOrderAt' },
+        // Walk-in clients have no orders before their first counter sale,
+        // but they do have a creation/activation date and must enable the
+        // Client added date filter in both owner and pharmacy views.
+        earliestOrderAt: { $min: '$firstOrderAt' },
       },
     },
     {
@@ -94,21 +95,13 @@ export async function getClientRowsForPharmacy(
         active: 1,
         blocked: 1,
 
-        earliestOrderAt: {
-          $min: {
-            $filter: {
-              input: '$earliestOrderCandidates',
-              as: 'orderDate',
-              cond: { $ne: ['$$orderDate', null] },
-            },
-          },
-        },
+        earliestOrderAt: 1,
       },
     },
   ];
 
   const pipeline: PipelineStage[] = [
-    { $match: { pharmacyId } },
+    { $match: { pharmacyId: { $in: pharmacyIds } } },
 
     {
       $set: {
@@ -161,6 +154,7 @@ export async function getClientRowsForPharmacy(
     {
       $sort: {
         userId: 1,
+        pharmacyId: 1,
         hasDeliveryAddressCandidate: -1,
         createdAt: -1,
       },
@@ -168,7 +162,9 @@ export async function getClientRowsForPharmacy(
 
     {
       $group: {
+        // One client per owner regardless of how many pharmacies served them.
         _id: '$userId',
+        pharmacyId: { $first: '$pharmacyId' },
         firstOrderAt: { $min: '$createdAt' },
         earliestOrderAt: { $min: '$createdAt' },
 
@@ -205,13 +201,14 @@ export async function getClientRowsForPharmacy(
           {
             $match: {
               isDefaultPharmacyClient: true,
-              defaultClientPharmacyId: pharmacyId,
+              defaultClientPharmacyId: { $in: pharmacyIds },
             },
           },
 
           {
             $project: {
-              _id: 1,
+              _id: '$_id',
+              pharmacyId: '$defaultClientPharmacyId',
               firstOrderAt: { $literal: null },
               earliestOrderAt: { $literal: null },
               successfulOrdersCount: { $literal: 0 },
@@ -246,6 +243,15 @@ export async function getClientRowsForPharmacy(
     },
 
     { $replaceRoot: { newRoot: '$row' } },
+    {
+      $lookup: {
+        from: Pharmacy.collection.name,
+        localField: 'pharmacyId',
+        foreignField: '_id',
+        as: 'pharmacy',
+      },
+    },
+    { $unwind: '$pharmacy' },
 
     {
       $set: {
@@ -257,17 +263,28 @@ export async function getClientRowsForPharmacy(
       $project: {
         _id: 0,
         id: { $toString: '$_id' },
+        pharmacyId: { $toString: '$pharmacyId' },
+        pharmacyName: '$pharmacy.name',
 
         photoUrl: {
           $cond: [
             '$isDefault',
-            pharmacy.imageUrl ?? null,
+            { $ifNull: ['$pharmacy.imageUrl', null] },
             { $ifNull: ['$user.pictureUrl', null] },
           ],
         },
 
         firstOrderAt: {
-          $cond: ['$isDefault', fallbackDate, '$firstOrderAt'],
+          $cond: [
+            '$isDefault',
+            {
+              $ifNull: [
+                '$pharmacy.activatedAt',
+                { $ifNull: ['$pharmacy.approvedAt', '$pharmacy.createdAt'] },
+              ],
+            },
+            '$firstOrderAt',
+          ],
         },
 
         earliestOrderAt: 1,
@@ -341,6 +358,8 @@ export async function getClientRowsForPharmacy(
   return {
     items: (result?.items ?? []).map((client) => ({
       id: client.id,
+      pharmacyId: client.pharmacyId,
+      pharmacyName: client.pharmacyName,
       photoUrl: client.photoUrl,
       firstOrderAt: client.firstOrderAt.toISOString(),
 

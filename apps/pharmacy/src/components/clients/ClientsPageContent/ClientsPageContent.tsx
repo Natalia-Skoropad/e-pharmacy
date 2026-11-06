@@ -1,25 +1,20 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-
-import {
-  RowsPerPageSelect,
-  SearchInput,
-  type RowsPerPageValue,
-} from '@e-pharmacy/ui/forms';
-
+import { StatsLoadingSkeleton, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   type ClientStatisticsCounts,
@@ -34,6 +29,7 @@ import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message'
 import {
   DEFAULT_CLIENTS_FILTERS,
   buildClientsPath,
+  type ClientsPaginationState,
   type ClientsFilterState,
 } from '@/lib/clients/client-paths';
 
@@ -47,6 +43,7 @@ import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 import { ClientStatistics } from '@/components/statistics';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
+import { OwnerClientSearch } from '@/components/clients/OwnerClientSearch/OwnerClientSearch';
 import { useLastKnownStatistics } from '@/components/clients/useLastKnownStatistics';
 
 import css from './ClientsPageContent.module.css';
@@ -56,17 +53,22 @@ import css from './ClientsPageContent.module.css';
 function getClientsQueryParams(
   filters: ClientsFilterState,
   rowsPerPage: RowsPerPageValue,
-  page: number
+  page: number,
+  ownerScope: boolean
 ): PharmacyClientsQueryParams {
   return {
     page,
     perPage: rowsPerPage,
+
+    ...(ownerScope ? { scope: 'owner' as const } : {}),
+
     firstOrderFrom: filters.firstOrderDate.from || undefined,
     firstOrderTo: filters.firstOrderDate.to || undefined,
     name: filters.name.trim() || undefined,
     clientId: filters.clientId.trim() || undefined,
     contact: filters.contact.trim() || undefined,
     status: filters.status === 'all' ? undefined : filters.status,
+
     successfulOrders:
       filters.successfulOrders === 'all' ? undefined : filters.successfulOrders,
   };
@@ -79,28 +81,32 @@ type ResourceStatus = 'idle' | 'loading' | 'success' | 'error';
 //===================================================================
 
 type ClientsPageContentProps = Readonly<{
+  embedded?: boolean;
   initialFilters?: ClientsFilterState;
+  basePath?: string;
+  initialPage?: number;
+  initialPerPage?: RowsPerPageValue;
 }>;
 
 //===================================================================
 
 function ClientsPageContent({
+  embedded = false,
   initialFilters = DEFAULT_CLIENTS_FILTERS,
+  basePath = PHARMACY_ROUTES.CLIENTS,
+  initialPage = 1,
+  initialPerPage = 20,
 }: ClientsPageContentProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const pendingRoutePathRef = useRef<string | null>(null);
+  const ownerScope = !embedded;
 
-  const [searchFilters, setSearchFilters] = useState(() => ({
-    name: initialFilters.name,
-    clientId: initialFilters.clientId,
-    contact: initialFilters.contact,
-  }));
+  const [rowsPerPage, setRowsPerPage] =
+    useState<RowsPerPageValue>(initialPerPage);
 
-  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
   );
@@ -119,74 +125,66 @@ function ClientsPageContent({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const routeFilters = useMemo<ClientsFilterState>(
-    () => ({
-      ...DEFAULT_CLIENTS_FILTERS,
-      firstOrderDate: {
-        from: initialFilters.firstOrderDate.from,
-        to: initialFilters.firstOrderDate.to,
-      },
-      status: initialFilters.status,
-      successfulOrders: initialFilters.successfulOrders,
-    }),
-    [
-      initialFilters.firstOrderDate.from,
-      initialFilters.firstOrderDate.to,
-      initialFilters.status,
-      initialFilters.successfulOrders,
-    ]
+    () =>
+      embedded
+        ? initialFilters
+        : {
+            ...DEFAULT_CLIENTS_FILTERS,
+
+            firstOrderDate: {
+              from: initialFilters.firstOrderDate.from,
+              to: initialFilters.firstOrderDate.to,
+            },
+
+            status: initialFilters.status,
+            clientId: ownerScope ? initialFilters.clientId : '',
+            successfulOrders: initialFilters.successfulOrders,
+          },
+    [embedded, initialFilters, ownerScope]
   );
 
-  const filters = useMemo<ClientsFilterState>(
-    () => ({
-      ...routeFilters,
-      name: searchFilters.name,
-      clientId: searchFilters.clientId,
-      contact: searchFilters.contact,
-    }),
-    [
-      routeFilters,
-      searchFilters.clientId,
-      searchFilters.contact,
-      searchFilters.name,
-    ]
+  // Both the owner registry and the embedded tab use URL-backed selected IDs.
+  // Free text is handled inside OwnerClientSearch and never persisted in URLs.
+  const filters = routeFilters;
+
+  const pagination: ClientsPaginationState = {
+    page: embedded ? initialPage : 1,
+    perPage: embedded ? initialPerPage : 20,
+  };
+
+  const canonicalInitialPath = buildClientsPath(
+    routeFilters,
+    basePath,
+    embedded ? pagination : undefined
   );
 
-  const debouncedSearchFilters = useDebouncedValue(searchFilters, 450);
-
-  const requestFilters = useMemo<ClientsFilterState>(
-    () => ({
-      ...routeFilters,
-      name: debouncedSearchFilters.name,
-      clientId: debouncedSearchFilters.clientId,
-      contact: debouncedSearchFilters.contact,
-    }),
-    [
-      debouncedSearchFilters.clientId,
-      debouncedSearchFilters.contact,
-      debouncedSearchFilters.name,
-      routeFilters,
-    ]
-  );
-
-  const canonicalInitialPath = buildClientsPath(routeFilters);
   const [pageState, setPageState] = useState(() => ({
     routeKey: canonicalInitialPath,
-    page: 1,
+    page: initialPage,
   }));
 
-  const currentPage =
-    pageState.routeKey === canonicalInitialPath ? pageState.page : 1;
+  const currentPage = embedded
+    ? initialPage
+    : pageState.routeKey === canonicalInitialPath
+      ? pageState.page
+      : 1;
 
   const queryParams = useMemo(
-    () => getClientsQueryParams(requestFilters, rowsPerPage, currentPage),
-    [currentPage, requestFilters, rowsPerPage]
+    () =>
+      getClientsQueryParams(
+        filters,
+        embedded ? initialPerPage : rowsPerPage,
+        currentPage,
+        ownerScope
+      ),
+    [currentPage, filters, rowsPerPage, ownerScope, embedded, initialPerPage]
   );
 
   const activeFiltersCount = countTrueConditions(
-    Boolean(filters.firstOrderDate.from || filters.firstOrderDate.to),
-    Boolean(filters.name.trim()),
     Boolean(filters.clientId.trim()),
+    Boolean(filters.name.trim()),
     Boolean(filters.contact.trim()),
+    Boolean(filters.firstOrderDate.from || filters.firstOrderDate.to),
     filters.status !== 'all',
     filters.successfulOrders !== 'all'
   );
@@ -203,6 +201,7 @@ function ClientsPageContent({
         const response = await getPharmacyClients(queryParams, {
           signal: controller.signal,
         });
+
         if (controller.signal.aborted) return;
 
         setClients([...response.items]);
@@ -221,6 +220,7 @@ function ClientsPageContent({
             'Could not load clients. Please try again.'
           )
         );
+
         setClientStatisticsFailure();
         setClientsStatus('error');
       }
@@ -240,116 +240,135 @@ function ClientsPageContent({
     retryVersion,
   ]);
 
-  useEffect(() => {
-    const pendingPath = pendingRoutePathRef.current;
-
-    if (pendingPath) {
-      if (pathname === pendingPath && canonicalInitialPath === pendingPath) {
-        pendingRoutePathRef.current = null;
-      }
-
-      return;
-    }
-
-    if (pathname !== canonicalInitialPath) {
-      router.replace(canonicalInitialPath, { scroll: false });
-    }
-  }, [canonicalInitialPath, pathname, router]);
+  // Route pages canonicalize legacy URLs on the server. Do not replace a
+  // browser Back/Forward destination with stale client-side route props.
 
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: ClientsFilterState) => {
-    if (
-      nextFilters.name !== searchFilters.name ||
-      nextFilters.clientId !== searchFilters.clientId ||
-      nextFilters.contact !== searchFilters.contact
-    ) {
-      setSearchFilters({
-        name: nextFilters.name,
-        clientId: nextFilters.clientId,
-        contact: nextFilters.contact,
-      });
-    }
-
-    const nextPath = buildClientsPath(nextFilters);
+    const nextPath = buildClientsPath(
+      nextFilters,
+      basePath,
+      embedded ? { page: 1, perPage: initialPerPage } : undefined
+    );
 
     if (nextPath !== canonicalInitialPath) {
-      pendingRoutePathRef.current = nextPath;
-      router.replace(nextPath, { scroll: false });
+      router.push(nextPath, { scroll: false });
     }
 
     setPageState({ routeKey: nextPath, page: 1 });
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
+    if (embedded) {
+      router.replace(
+        buildClientsPath(routeFilters, basePath, {
+          page: 1,
+          perPage: nextRowsPerPage,
+        }),
+
+        { scroll: false }
+      );
+
+      return;
+    }
+
     setRowsPerPage(nextRowsPerPage);
     setPageState({ routeKey: canonicalInitialPath, page: 1 });
   };
 
   const resetFilters = () => {
-    setSearchFilters({ name: '', clientId: '', contact: '' });
+    if (embedded) {
+      router.replace(
+        buildClientsPath(DEFAULT_CLIENTS_FILTERS, basePath, {
+          page: 1,
+          perPage: initialPerPage,
+        }),
+
+        { scroll: false }
+      );
+
+      return;
+    }
 
     if (canonicalInitialPath !== PHARMACY_ROUTES.CLIENTS) {
-      pendingRoutePathRef.current = PHARMACY_ROUTES.CLIENTS;
-      router.replace(PHARMACY_ROUTES.CLIENTS, { scroll: false });
+      router.push(PHARMACY_ROUTES.CLIENTS, { scroll: false });
     }
 
     setPageState({ routeKey: PHARMACY_ROUTES.CLIENTS, page: 1 });
   };
 
+  // Client status and Successful orders are independent filter dimensions.
+  // Statistic cards change only the status dimension; the order filter is
+  // retained, including when the user clears an active status card.
   const getClientStatisticHref = (key: ClientStatisticsKey) => {
+    const link = (status: ClientsFilterState['status']) =>
+      buildClientsPath(
+        { ...routeFilters, status },
+        basePath,
+        embedded ? { page: 1, perPage: initialPerPage } : undefined
+      );
+
     if (key === 'active') {
-      return buildClientsPath({ ...DEFAULT_CLIENTS_FILTERS, status: 'active' });
+      return link(filters.status === 'active' ? 'all' : 'active');
     }
 
     if (key === 'blocked') {
-      return buildClientsPath({
-        ...DEFAULT_CLIENTS_FILTERS,
-        status: 'blocked',
-      });
+      return link(filters.status === 'blocked' ? 'all' : 'blocked');
     }
 
-    if (key === 'repeat') {
-      return buildClientsPath({
-        ...DEFAULT_CLIENTS_FILTERS,
-        successfulOrders: 'repeat',
-      });
-    }
-
-    return PHARMACY_ROUTES.CLIENTS;
+    return link('all');
   };
 
   const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
-  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
+
+  const bannerStatus = ownerScope
+    ? null
+    : getLockedFeatureBannerStatus(currentPharmacyStatus);
+
+  const RootElement = embedded ? 'section' : 'main';
 
   return (
-    <main className={css.page} aria-labelledby="clients-page-title">
-      <section className={css.card} aria-labelledby="clients-page-title">
-        <PageHeader
-          title={
-            <span className={css.titleWithHelp}>
-              Clients
-              <InfoTooltip
-                label="About client types"
-                title="Client types"
-                items={[
-                  {
-                    title: 'Repeat clients',
-                    description:
-                      'Clients who have completed two or more successful orders in this pharmacy.',
-                  },
-                  {
-                    title: 'Walk-in client',
-                    description:
-                      'The default active client created when the pharmacy first becomes Active. Use it for counter sales when a visitor has no personal account. Its photo comes from the pharmacy profile, and its purchase statistics are tracked like any other client.',
-                  },
-                ]}
-              />
-            </span>
-          }
-          titleId="clients-page-title"
-          icon={<Users size={23} aria-hidden="true" />}
-        />
+    <RootElement
+      className={css.page}
+      aria-label={embedded ? 'Pharmacy clients' : undefined}
+      aria-labelledby={embedded ? undefined : 'clients-page-title'}
+    >
+      <section
+        className={
+          embedded ? `${css.card} ${css.embeddedStatisticsCard}` : css.card
+        }
+        aria-label={embedded ? 'Client statistics' : undefined}
+        aria-labelledby={embedded ? undefined : 'clients-page-title'}
+      >
+        {!embedded ? (
+          <PageHeader
+            title={
+              <span className={css.titleWithHelp}>
+                Clients
+                <InfoTooltip
+                  label="About client types"
+                  title="Client types"
+                  items={[
+                    {
+                      title: 'Repeat clients',
+                      description: ownerScope
+                        ? 'Clients who have completed two or more successful orders across your pharmacies.'
+                        : 'Clients who have completed two or more successful orders in this pharmacy.',
+                    },
+                    {
+                      title: 'Walk-in client',
+                      description:
+                        'The default active client created when each pharmacy first becomes Active. Use it for counter sales when a visitor has no personal account. Its photo comes from the pharmacy profile, and its purchase statistics are tracked like any other client.',
+                    },
+                  ]}
+                />
+              </span>
+            }
+            titleId="clients-page-title"
+            icon={<Users size={23} aria-hidden="true" />}
+          />
+        ) : null}
 
         {bannerStatus ? (
           <StatusBanner
@@ -369,20 +388,34 @@ function ClientsPageContent({
           />
         ) : null}
 
-        {clientStatistics ? (
+        {clientStatisticsStatus === 'error' ? (
+          <ProfileResourceState
+            variant="error"
+            title="Client statistics could not be loaded"
+            description="Client statistics are temporarily unavailable. Please try again."
+            retryLabel="Try again"
+            sideActionOnDesktop
+            onRetry={() => setRetryVersion((version) => version + 1)}
+          />
+        ) : clientStatistics ? (
           <ClientStatistics
             counts={clientStatistics}
             getStatisticHref={getClientStatisticHref}
+            activeKey={
+              filters.status === 'active' || filters.status === 'blocked'
+                ? filters.status
+                : null
+            }
             className={css.clientStatistics}
           />
-        ) : clientStatisticsStatus === 'error' ? (
-          <p className={css.statisticsState} role="alert">
-            Client statistics are temporarily unavailable.
-          </p>
         ) : (
-          <p className={css.statisticsState} role="status">
-            Loading client statistics...
-          </p>
+          <StatsLoadingSkeleton
+            className={css.statisticsSkeleton}
+            count={3}
+            columns={3}
+            tabletColumns={2}
+            label="Loading client statistics"
+          />
         )}
       </section>
 
@@ -391,34 +424,13 @@ function ClientsPageContent({
           Clients search
         </h2>
 
-        <div className={css.searchGrid}>
-          <SearchInput
-            id="clients-id-search"
-            label="Client ID search"
+        <div className={css.ownerSearchGrid}>
+          <OwnerClientSearch
+            embedded={embedded}
             value={filters.clientId}
-            placeholder="Client ID"
-            isActive={Boolean(filters.clientId)}
             onChange={(clientId) =>
               handleFiltersChange({ ...filters, clientId })
             }
-          />
-
-          <SearchInput
-            id="clients-name-search"
-            label="Client name search"
-            value={filters.name}
-            placeholder="Client name"
-            isActive={Boolean(filters.name)}
-            onChange={(name) => handleFiltersChange({ ...filters, name })}
-          />
-
-          <SearchInput
-            id="clients-contact-search"
-            label="Client contact search"
-            value={filters.contact}
-            placeholder="Email, phone, or address"
-            isActive={Boolean(filters.contact)}
-            onChange={(contact) => handleFiltersChange({ ...filters, contact })}
           />
 
           <div className={css.searchAction}>
@@ -438,7 +450,7 @@ function ClientsPageContent({
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="clients-rows-per-page"
-              value={rowsPerPage}
+              value={embedded ? initialPerPage : rowsPerPage}
               onChange={handleRowsPerPageChange}
             />
           </div>
@@ -449,6 +461,7 @@ function ClientsPageContent({
               shown={clients.length}
               total={totalClients}
               label="clients"
+              fullWidthOnMobile
             />
           ) : null}
         </div>
@@ -472,7 +485,9 @@ function ClientsPageContent({
             emptyMessage={
               hasActiveFilters
                 ? 'No clients found for the selected filters.'
-                : 'Your pharmacy has no clients yet.'
+                : ownerScope
+                  ? 'Your pharmacies have no clients yet.'
+                  : 'Your pharmacy has no clients yet.'
             }
           />
         )}
@@ -481,9 +496,19 @@ function ClientsPageContent({
           <PaginationView
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={(page) =>
-              setPageState({ routeKey: canonicalInitialPath, page })
-            }
+            onPageChange={(page) => {
+              if (embedded) {
+                router.replace(
+                  buildClientsPath(routeFilters, basePath, {
+                    page,
+                    perPage: initialPerPage,
+                  }),
+                  { scroll: false }
+                );
+              } else {
+                setPageState({ routeKey: canonicalInitialPath, page });
+              }
+            }}
           />
         ) : null}
       </section>
@@ -496,9 +521,10 @@ function ClientsPageContent({
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}
+          resetHref={basePath}
         />
       ) : null}
-    </main>
+    </RootElement>
   );
 }
 

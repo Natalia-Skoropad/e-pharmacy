@@ -5,6 +5,9 @@ import path from 'node:path';
 //===================================================================
 
 const root = process.cwd();
+
+//===================================================================
+
 const pharmacyLib = path.join(root, 'apps/pharmacy/src/lib');
 const browserApiDirectory = path.join(pharmacyLib, 'api/browser');
 
@@ -111,9 +114,16 @@ for (const file of browserApiFiles) {
     );
   }
 
-  if (!/from ['"]@e-pharmacy\/next-api\/browser['"]/.test(source)) {
+  const usesCanonicalTransport =
+    /from ['"]@e-pharmacy\/next-api\/browser['"]/.test(source);
+
+  const usesScopedTransport = /from ['"]\.\/operational-request['"]/.test(
+    source
+  );
+
+  if (!usesCanonicalTransport && !usesScopedTransport) {
     violations.push(
-      `${relative}: browser API must use the shared same-origin browser transport`
+      `${relative}: browser API must use the shared same-origin transport or the verified operational adapter`
     );
   }
 
@@ -146,6 +156,30 @@ if (await exists(path.join(pharmacyLib, 'layout/routes.ts'))) {
   violations.push(
     'apps/pharmacy/src/lib/layout/routes.ts: duplicate generic filter-route layer must stay removed'
   );
+}
+
+//===================================================================
+
+// Operational adapter must itself delegate to the existing same-origin BFF
+// transport, not introduce direct browser fetch or a backend origin.
+const operationalAdapterPath = path.join(
+  browserApiDirectory,
+  'operational-request.ts'
+);
+
+if (await exists(operationalAdapterPath)) {
+  const adapter = await readFile(operationalAdapterPath, 'utf8');
+
+  if (
+    !adapter.startsWith("import 'client-only';") ||
+    !/from ['"]@e-pharmacy\/next-api\/browser['"]/.test(adapter) ||
+    !/localApiRequest\(path,/.test(adapter) ||
+    /\bfetch\s*\(/.test(adapter)
+  ) {
+    violations.push(
+      'Operational transport must delegate to the private same-origin BFF.'
+    );
+  }
 }
 
 //===================================================================

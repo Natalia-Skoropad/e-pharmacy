@@ -16,9 +16,17 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getClientAppUrl } from '@/lib/layout/external-links';
 import { getPublicPharmacyLinkState } from '@/lib/layout/public-pharmacy-link-state';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
+
+import {
+  isLegacyOperationalPharmacyPath,
+  withSelectedPharmacyQuery,
+} from '@/lib/pharmacies/selected-pharmacy-scope';
+
 import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { subscribeToPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
+
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
+import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import { shouldCloseMobileMenuForPathnameChange } from './mobile-menu-route-lifecycle';
 
@@ -44,6 +52,12 @@ export function PharmacyMobileMenu({
   onLogout,
 }: PharmacyMobileMenuProps) {
   const pathname = usePathname();
+  const { selectedId } = usePharmacySelection();
+
+  const scopedHref = (href: string) =>
+    selectedId && isLegacyOperationalPharmacyPath(href)
+      ? withSelectedPharmacyQuery(href, '', selectedId)
+      : href;
 
   const [pharmacyCounts, setPharmacyCounts] = useState<{
     new: number;
@@ -129,7 +143,7 @@ export function PharmacyMobileMenu({
       <div className={css.head}>
         <Logo
           variant="white"
-          href={PHARMACY_ROUTES.DASHBOARD}
+          href={scopedHref(PHARMACY_ROUTES.DASHBOARD)}
           ariaLabel="E-PHARMACY pharmacy dashboard"
           renderLink={({ href, className, children, ...props }) => (
             <Link
@@ -159,7 +173,7 @@ export function PharmacyMobileMenu({
         showChevron={false}
         onNavigate={onClose}
         renderLink={({ item, href, className, children, ...props }) => (
-          <Link href={href} className={className} {...props}>
+          <Link href={scopedHref(href)} className={className} {...props}>
             {children}
             {item.href === PHARMACY_ROUTES.PHARMACIES && pharmacyCounts ? (
               <span

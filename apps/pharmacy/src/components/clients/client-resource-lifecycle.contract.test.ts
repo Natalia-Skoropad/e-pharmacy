@@ -23,7 +23,12 @@ test('clients list uses one canonical request for rows and statistics without a 
   assert.doesNotMatch(source, /name:\s*['"]Walk-in client['"]/);
   assert.doesNotMatch(source, /putDefaultClientFirst/);
   assert.doesNotMatch(source, /getPharmacyClientStatistics/);
-  assert.match(source, /Loading client statistics/);
+
+  assert.match(
+    source,
+    /<StatsLoadingSkeleton[\s\S]*?label="Loading client statistics"/
+  );
+
   assert.match(source, /Client statistics are temporarily unavailable/);
   assert.match(source, /counts=\{clientStatistics\}/);
 });
@@ -65,10 +70,10 @@ test('clientId is a generation boundary that remounts all client-detail local re
 
   assert.match(
     source,
-    /<ClientDetailsPageContentState key=\{props\.clientId\} \{\.\.\.props\} \/>/
+    /<ClientDetailsPageContentState\s+key=\{`\$\{props\.clientId\}:\$\{props\.initialTab/
   );
 
-  assert.match(source, /useState<ClientDetailTab>\('details'\)/);
+  assert.match(source, /useState<ClientDetailTab>\(initialTab\)/);
   assert.match(source, /page:\s*1/);
   assert.match(source, /useState\(''\)/);
   assert.match(source, /const controller = new AbortController\(\)/);
@@ -92,16 +97,17 @@ test('deleted purchased products are rendered as history without a broken Produc
 
 //===================================================================
 
-test('clients list debounces PII search requests while route-owned filters resync from navigation', async () => {
+test('clients list persists selected ID filters in the URL while search text stays local to the searchable select', async () => {
   const source = await read('./ClientsPageContent/ClientsPageContent.tsx');
+  const search = await read('./OwnerClientSearch/OwnerClientSearch.tsx');
 
-  assert.match(source, /const \[searchFilters, setSearchFilters\] = useState/);
-  assert.match(source, /useDebouncedValue\(searchFilters, 450\)/);
-  assert.match(source, /getClientsQueryParams\(requestFilters/);
+  assert.match(search, /useDebouncedValue\(query\.trim\(\), 250\)/);
+  assert.match(source, /getClientsQueryParams\(filters/);
   assert.match(source, /const routeFilters = useMemo<ClientsFilterState>/);
-  assert.match(source, /buildClientsPath\(routeFilters\)/);
-  assert.match(source, /pendingRoutePathRef/);
-  assert.match(source, /pathname !== canonicalInitialPath/);
+  assert.match(source, /const canonicalInitialPath = buildClientsPath\(/);
+  assert.match(source, /router.push\(nextPath, \{ scroll: false \}\)/);
+  assert.doesNotMatch(source, /pendingRoutePathRef/);
+  assert.doesNotMatch(source, /pathname !== canonicalInitialPath/);
   assert.match(source, /from: initialFilters\.firstOrderDate\.from/);
   assert.match(source, /to: initialFilters\.firstOrderDate\.to/);
   assert.match(source, /status: initialFilters\.status/);
@@ -216,6 +222,7 @@ test('client route pages fail closed for malformed entity ids before rendering d
   }
 
   const pathsSource = await read('../../lib/clients/client-paths.ts');
+
   assert.match(
     pathsSource,
     /segments\.length === 1 && isValidObjectId\(segments\[0\]\)/

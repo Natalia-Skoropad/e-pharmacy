@@ -1,6 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
 
 import {
+  buildClientsPath,
+  parseClientsSegments,
+  parseClientsPaginationSegments,
+} from '@/lib/clients/client-paths';
+
+import {
   buildOwnedPharmaciesListUrl,
   buildOwnedPharmacyDetailUrl,
   parseOwnedPharmaciesListSegments,
@@ -21,7 +27,22 @@ export default async function OwnedPharmaciesRoute({
   if (route.kind === 'invalid') notFound();
 
   if (route.kind === 'detail') {
-    const canonical = buildOwnedPharmacyDetailUrl(route.pharmacyId, route.tab);
+    const base = buildOwnedPharmacyDetailUrl(route.pharmacyId, route.tab);
+
+    const clientFilters =
+      route.tab === 'clients'
+        ? parseClientsSegments({ filters: [...route.clientSegments] })
+        : undefined;
+
+    const pagination =
+      route.tab === 'clients'
+        ? parseClientsPaginationSegments(route.clientSegments)
+        : undefined;
+
+    const canonical =
+      clientFilters && pagination
+        ? buildClientsPath(clientFilters, base, pagination)
+        : base;
 
     if (`/pharmacy/pharmacies/${filters.join('/')}` !== canonical)
       redirect(canonical);
@@ -30,6 +51,8 @@ export default async function OwnedPharmaciesRoute({
       <OwnedPharmacyDetailPageContent
         pharmacyId={route.pharmacyId}
         activeTab={route.tab}
+        initialClientFilters={clientFilters}
+        initialClientPagination={pagination}
       />
     );
   }

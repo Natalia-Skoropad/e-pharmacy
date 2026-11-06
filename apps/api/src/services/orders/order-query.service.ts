@@ -2,8 +2,10 @@ import { Types } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
+
 import { Order } from '../../models/orders/order.model';
 import { User } from '../../models/accounts/user.model';
+
 import { httpError } from '../../utils/http/httpError';
 import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 import { createSafeRegExp } from '../../utils/validation/regexp';
@@ -185,9 +187,32 @@ export async function getOrdersService(
       };
     }
 
+    // A supplied pharmacy filter must agree with the selected membership.
+    // Silently ignoring a foreign pharmacyId hides a broken caller and makes
+    // multi-pharmacy operations appear to succeed against the wrong tenant.
+    if (
+      query.pharmacyId &&
+      query.pharmacyId.toLowerCase() !== String(pharmacyId)
+    ) {
+      throw httpError(
+        HTTP_STATUS.FORBIDDEN,
+        'Selected pharmacy does not match the requested pharmacy.'
+      );
+    }
+
     filter.pharmacyId = pharmacyId;
   } else {
     filter.userId = userId;
+  }
+
+  // The clientId filter is for pharmacy operators. It must never replace the
+  // authenticated customer's userId (including for other non-pharmacy roles).
+  if (
+    query.clientId &&
+    role !== USER_ROLES.PHARMACY &&
+    query.clientId.toLowerCase() !== userId.toLowerCase()
+  ) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Client access is forbidden.');
   }
 
   const earliestDateFilter: Record<string, unknown> = { ...filter };
@@ -226,12 +251,13 @@ export async function getOrdersService(
     ];
   }
 
-  // Never let a user-supplied pharmacy ID override the authenticated pharmacy's tenant boundary.
+  // A customer's pharmacy filter may narrow their own orders, never expand
+  // the authenticated user scope.
   if (query.pharmacyId && role !== USER_ROLES.PHARMACY) {
     filter.pharmacyId = new Types.ObjectId(query.pharmacyId);
   }
 
-  if (query.clientId) {
+  if (query.clientId && role === USER_ROLES.PHARMACY) {
     const clientObjectId = new Types.ObjectId(query.clientId);
 
     filter.userId = clientObjectId;

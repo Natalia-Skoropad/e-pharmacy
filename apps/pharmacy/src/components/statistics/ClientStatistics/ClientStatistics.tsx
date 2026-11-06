@@ -1,12 +1,4 @@
-import {
-  Ban,
-  RefreshCw,
-  ShieldCheck,
-  UsersRound,
-  type LucideIcon,
-} from 'lucide-react';
-
-import { CLIENT_STATISTICS_LABELS } from '@/lib/statistics/config';
+import { Ban, ShieldCheck, UsersRound, type LucideIcon } from 'lucide-react';
 
 import type {
   ClientStatisticsCounts,
@@ -18,6 +10,10 @@ import {
   StatsGrid,
   type StatsCardTone,
 } from '@e-pharmacy/ui/statistics';
+
+import { CLIENT_STATISTICS_LABELS } from '@/lib/statistics/config';
+
+import css from './ClientStatistics.module.css';
 
 //===================================================================
 
@@ -31,13 +27,13 @@ type ClientStatisticsProps = Readonly<{
   counts: ClientStatisticsCounts;
   className?: string;
   getStatisticHref?: (key: ClientStatisticsKey) => string | undefined;
+  activeKey?: ClientStatisticsKey | null;
 }>;
 
 //===================================================================
 
 const CLIENT_STATISTICS_CONFIG: readonly ClientStatisticConfig[] = [
-  { key: 'total', tone: 'accent', icon: UsersRound },
-  { key: 'repeat', tone: 'blue', icon: RefreshCw },
+  { key: 'total', tone: 'purple', icon: UsersRound },
   { key: 'active', tone: 'green', icon: ShieldCheck },
   { key: 'blocked', tone: 'red', icon: Ban },
 ];
@@ -48,11 +44,12 @@ function ClientStatistics({
   counts,
   className,
   getStatisticHref,
+  activeKey = null,
 }: ClientStatisticsProps) {
   return (
     <StatsGrid
       className={className}
-      columns={4}
+      columns={3}
       tabletColumns={2}
       ariaLabel="Client statistics"
     >
@@ -67,7 +64,12 @@ function ClientStatistics({
             tone={tone}
             icon={<Icon size={26} aria-hidden="true" />}
             href={getStatisticHref?.(key)}
-            ariaLabel={`${title} statistics`}
+            className={activeKey === key ? css.activeCard : undefined}
+            ariaLabel={
+              activeKey === key
+                ? `Clear ${title.toLowerCase()} filter`
+                : `${title} statistics`
+            }
           />
         );
       })}
