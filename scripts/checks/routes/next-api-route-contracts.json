@@ -840,6 +840,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/products/[productId]/owner-reviews",
+    "backend": "/products/management/:productId/reviews",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/products/[productId]/reviews",
     "backend": "/products/management/:productId/reviews",
     "methods": {

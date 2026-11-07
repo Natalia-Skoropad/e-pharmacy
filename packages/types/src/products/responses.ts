@@ -53,6 +53,7 @@ export type PharmacyProductsQueryParams = BaseProductsQueryParams &
     addedToPharmacyId?: EntityId;
     addedToMyPharmacy?: boolean;
     ownerCatalog?: boolean;
+    ownerProducts?: boolean;
     productId?: EntityId;
     inStock?: boolean;
     stock?: ProductStockFilter;

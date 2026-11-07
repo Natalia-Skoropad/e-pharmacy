@@ -57,12 +57,23 @@ test('legacy operational routes retain explicit pharmacy selection in the query'
   for (const page of [
     'dashboard',
     'orders',
-    'products',
     'all-products',
     'product-requests',
   ]) {
     assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/${page}`), true);
   }
+
+  assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/products'), false);
+
+  assert.equal(
+    isLegacyOperationalPharmacyPath('/pharmacy/products/per-page-50'),
+    false
+  );
+
+  assert.equal(
+    isLegacyOperationalPharmacyPath('/pharmacy/products/page-2'),
+    false
+  );
 
   assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/profile'), false);
   assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/pharmacies'), false);

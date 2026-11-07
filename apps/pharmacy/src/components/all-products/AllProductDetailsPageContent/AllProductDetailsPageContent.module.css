@@ -499,3 +499,75 @@
     align-items: center;
   }
 }
+
+/* All products presents the canonical Admin attributes like client profile
+   information: two columns with a stable row-major reading order. */
+.adminMetadata {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 18px 0 0;
+}
+
+.adminMetadataItem {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.adminMetadataItem dt {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.adminMetadataItem dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--fz-14);
+}
+
+.ownerActions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 20px;
+}
+
+.ownerActions .actionButton {
+  width: 100%;
+}
+
+@media only screen and (min-width: 600px) {
+  .adminMetadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Match the single-column client information cards on phone-sized screens.
+   Do not change the existing tablet/desktop two-column Admin layout. */
+@media only screen and (max-width: 767px) {
+  .adminMetadata {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .adminMetadataItem {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .adminMetadataItem dd {
+    font-weight: var(--fw-medium);
+    line-height: var(--lh-base);
+    text-align: left;
+  }
+}

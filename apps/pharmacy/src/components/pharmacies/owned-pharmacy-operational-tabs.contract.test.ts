@@ -31,7 +31,7 @@ test('all operational browser APIs use the selected pharmacy through the private
 
   assert.match(
     clientsApi,
-    /await operationalLocalApiRequest\(path, sanitizeBrowserReadRequestOptions\(options\)\)/
+    /await operationalLocalApiRequest\(\s*path,\s*sanitizeBrowserReadRequestOptions\(options\)\s*\)/
   );
 
   const scoped = pharmacy('lib/api/browser/operational-request.ts');

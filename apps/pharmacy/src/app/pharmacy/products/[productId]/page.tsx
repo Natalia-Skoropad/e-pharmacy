@@ -6,10 +6,11 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import {
   isOwnProductsFilterSegment,
   parseOwnProductsSegments,
+  parseOwnProductsPaginationSegments,
 } from '@/lib/products/own-product-paths';
 
 import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
-import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
+import { OwnerOwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
 
 //===================================================================
 
@@ -30,12 +31,15 @@ async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { productId } = await params;
 
   if (isOwnProductsFilterSegment(productId)) {
-    const initialFilters = parseOwnProductsSegments({ filters: [productId] });
+    const params = { filters: [productId] };
+    const initialFilters = parseOwnProductsSegments(params);
+    const initialPagination = parseOwnProductsPaginationSegments(params);
 
     return (
-      <OwnProductsPageContent
-        key={JSON.stringify(initialFilters)}
+      <OwnerOwnProductsPageContent
+        key={JSON.stringify({ initialFilters, initialPagination })}
         initialFilters={initialFilters}
+        initialPagination={initialPagination}
       />
     );
   }

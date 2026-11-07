@@ -8,11 +8,13 @@ import {
   parseProductDetailsResponse,
   parseProductsWithOffersResponse,
   parsePharmacyProductMutationResponse,
+  parseReviewsResponse,
 } from '@e-pharmacy/api-client/response';
 
 import type { PharmacyProductsQueryParams } from '@e-pharmacy/types/products';
 
 import { normalizeAllProductStatisticsResponse } from '@/lib/products/products';
+import { pharmacyApiRoutes } from '@/lib/api/routes/pharmacy-api-routes';
 
 import type { BrowserReadRequestOptions } from './request-options';
 import { sanitizeBrowserReadRequestOptions } from './request-options';
@@ -23,7 +25,7 @@ export async function getOwnerCatalogProducts(
   params: PharmacyProductsQueryParams,
   options?: BrowserReadRequestOptions
 ) {
-  const path = appendQueryParams('/api/products', {
+  const path = appendQueryParams(pharmacyApiRoutes.products.list, {
     ...params,
     ownerCatalog: true,
   });
@@ -42,7 +44,9 @@ export async function getOwnerCatalogProducts(
 export async function getOwnerCatalogStatistics(
   options?: BrowserReadRequestOptions
 ) {
-  const path = '/api/products/statistics?ownerCatalog=true';
+  const path = appendQueryParams(pharmacyApiRoutes.products.statistics, {
+    ownerCatalog: true,
+  });
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
@@ -56,7 +60,10 @@ export async function getOwnerCatalogStatistics(
 //===================================================================
 
 export async function addOwnerCatalogProduct(productId: string) {
-  const path = `/api/products/${encodeURIComponent(productId)}/my-pharmacy?ownerCatalog=true`;
+  const path = appendQueryParams(
+    pharmacyApiRoutes.products.myPharmacy(productId),
+    { ownerCatalog: true }
+  );
 
   return parseApiResponseData(
     await localApiRequest(path, { method: 'POST' }),
@@ -73,12 +80,35 @@ export async function getOwnerCatalogProductDetails(
   productId: string,
   options?: BrowserReadRequestOptions
 ) {
-  const path = `/api/products/${encodeURIComponent(productId)}?ownerCatalog=true`;
+  const path = appendQueryParams(
+    pharmacyApiRoutes.products.details(productId),
+    {
+      ownerCatalog: true,
+    }
+  );
 
   return parseApiResponseData(
     await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
 
     parseProductDetailsResponse,
+
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
+/** Approved reviews in the owner-wide Admin catalog (no selected pharmacy). */
+export async function getOwnerCatalogProductReviews(
+  productId: string,
+  options?: BrowserReadRequestOptions
+) {
+  const path = pharmacyApiRoutes.products.ownerReviews(productId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+
+    parseReviewsResponse,
 
     { url: path, method: 'GET' }
   );

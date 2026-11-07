@@ -31,6 +31,8 @@ type OwnedPharmacySearchProps = Readonly<{
   ) => Promise<readonly OwnedPharmacyOption[]>;
 
   id?: string;
+  label?: string;
+  explainStatistics?: boolean;
 }>;
 
 //===================================================================
@@ -78,6 +80,8 @@ export function OwnedPharmacySearch({
   onChange,
   loadOptions,
   id = 'owned-pharmacy-registry-search',
+  label = 'Pharmacy search',
+  explainStatistics = false,
 }: OwnedPharmacySearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
@@ -183,7 +187,7 @@ export function OwnedPharmacySearch({
   return (
     <SearchableSelect
       id={id}
-      label="Pharmacy search"
+      label={label}
       labelAccessory={
         <InfoTooltip
           label="Pharmacy search help"
@@ -196,6 +200,17 @@ export function OwnedPharmacySearch({
                 'Find a pharmacy by ID, name, email, phone, street address, settlement, or region.',
               icon: <Search size={17} aria-hidden="true" />,
             },
+
+            ...(explainStatistics
+              ? [
+                  {
+                    title: 'Statistics and products',
+                    description:
+                      'All pharmacies combines the stock, reservations and products of every pharmacy you own. Select a specific pharmacy to see statistics and inventory for that pharmacy only.',
+                    icon: <Building2 size={17} aria-hidden="true" />,
+                  },
+                ]
+              : []),
           ]}
         />
       }

@@ -21,6 +21,8 @@ import {
 
 import { formatMoney } from '@e-pharmacy/utils/money';
 
+import css from './OwnProductStatistics.module.css';
+
 //===================================================================
 
 type OwnProductStatisticConfig = Readonly<{
@@ -33,6 +35,7 @@ type OwnProductStatisticsProps = Readonly<{
   counts: OwnProductStatisticsCounts;
   className?: string;
   visibleKeys?: readonly OwnProductStatisticsKey[];
+  activeKeys?: readonly OwnProductStatisticsKey[];
   getStatisticHref?: (key: OwnProductStatisticsKey) => string | undefined;
 }>;
 
@@ -51,6 +54,7 @@ function OwnProductStatistics({
   counts,
   className,
   visibleKeys,
+  activeKeys = [],
   getStatisticHref,
 }: OwnProductStatisticsProps) {
   const cards = visibleKeys?.length
@@ -83,6 +87,7 @@ function OwnProductStatistics({
             tone={tone}
             icon={<Icon size={26} aria-hidden="true" />}
             href={getStatisticHref?.(key)}
+            className={activeKeys.includes(key) ? css.activeCard : undefined}
             ariaLabel={`${title} statistics`}
           />
         );

@@ -1,12 +1,16 @@
+import { Archive, PackageX, ShoppingBag, Warehouse } from 'lucide-react';
+
 import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
+  CategoryIcon,
   DateFilter,
   SelectField,
   type SelectOption,
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 
@@ -18,13 +22,19 @@ import {
 
 import type { OwnProductsFilterState } from '@/lib/products/own-products-filters';
 
+import css from './OwnProductsFiltersDrawer.module.css';
+
 //===================================================================
 
 type OwnProductsFiltersDrawerProps = Readonly<{
   filters: OwnProductsFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
-  categoryOptions: readonly SelectOption<OwnProductsFilterState['category']>[];
+
+  categoryOptions: readonly (SelectOption<
+    OwnProductsFilterState['category']
+  > & { icon?: string })[];
+
   onChange: (filters: OwnProductsFilterState) => void;
   onClose: () => void;
   onReset: () => void;
@@ -33,19 +43,46 @@ type OwnProductsFiltersDrawerProps = Readonly<{
 //===================================================================
 
 const STATUS_OPTIONS: Array<SelectOption<OwnProductsFilterState['status']>> = [
-  { value: 'all', label: 'All' },
+  { value: 'all', label: 'All statuses' },
+
   ...OWN_PRODUCT_STATUSES.map((status) => ({
     value: status,
     label: PRODUCT_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...PRODUCT_STATUS_PRESENTATION[status]} />,
   })),
 ];
 
+//===================================================================
+
+const STOCK_ICONS = {
+  'in-stock': Warehouse,
+  available: Archive,
+  reserved: ShoppingBag,
+  empty: PackageX,
+} as const;
+
+//===================================================================
+
 const STOCK_OPTIONS: Array<SelectOption<OwnProductsFilterState['stock']>> = [
   { value: 'all', label: 'All' },
-  ...STOCK_AVAILABILITY_FILTERS.map((stock) => ({
-    value: stock,
-    label: STOCK_AVAILABILITY_LABELS[stock],
-  })),
+
+  ...STOCK_AVAILABILITY_FILTERS.map((stock) => {
+    const Icon = STOCK_ICONS[stock];
+
+    return {
+      value: stock,
+      label: STOCK_AVAILABILITY_LABELS[stock],
+
+      content: (
+        <span className={css.optionWithIcon}>
+          <span className={css.optionIcon}>
+            <Icon size={16} aria-hidden="true" />
+          </span>
+          <span>{STOCK_AVAILABILITY_LABELS[stock]}</span>
+        </span>
+      ),
+    };
+  }),
 ];
 
 //===================================================================
@@ -87,7 +124,19 @@ function OwnProductsFiltersDrawer({
         id="own-products-category"
         label="Product category"
         value={filters.category}
-        options={categoryOptions}
+        options={categoryOptions.map((option) => ({
+          ...option,
+
+          content:
+            option.value === 'all' ? undefined : (
+              <span className={css.optionWithIcon}>
+                <span className={css.optionIcon}>
+                  <CategoryIcon name={option.icon} size={16} />
+                </span>
+                <span>{option.label}</span>
+              </span>
+            ),
+        }))}
         isActive={filters.category !== 'all'}
         onChange={(category) => onChange({ ...filters, category })}
       />

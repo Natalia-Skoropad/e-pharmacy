@@ -89,6 +89,7 @@ export const managedProductsQuerySchema = z.preprocess(
       addedToPharmacyId: mongoIdSchema.optional(),
       addedToMyPharmacy: booleanQuerySchema.optional(),
       ownerCatalog: booleanQuerySchema.optional(),
+      ownerProducts: booleanQuerySchema.optional(),
       productId: mongoIdSchema.optional(),
       stock: z.enum(PRODUCT_STOCK_FILTER_OPTIONS).optional(),
       addedFrom: dateQuerySchema,
@@ -166,6 +167,8 @@ export type ProductFiltersQuery = z.infer<typeof productFiltersQuerySchema>;
 export type ProductIdParams = z.infer<typeof productIdParamsSchema>;
 export type ProductReviewParams = z.infer<typeof productReviewParamsSchema>;
 export type ProductPharmacyParams = z.infer<typeof productPharmacyParamsSchema>;
+
+//===================================================================
 
 export type PendingProductReviewsQuery = z.infer<
   typeof pendingProductReviewsQuerySchema

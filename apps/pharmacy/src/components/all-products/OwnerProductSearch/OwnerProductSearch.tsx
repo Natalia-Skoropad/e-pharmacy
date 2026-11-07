@@ -59,9 +59,17 @@ const toOption = (product: ProductDetails): SearchableSelectOption<string> => ({
 export function OwnerProductSearch({
   value,
   onChange,
+  pharmacyId,
+  loadProducts = getOwnerCatalogProducts,
+  id = 'all-products-product-search',
+  description = 'Find an Admin product by article, name or product ID.',
 }: {
   value: string;
   onChange: (id: string) => void;
+  pharmacyId?: string;
+  loadProducts?: typeof getOwnerCatalogProducts;
+  id?: string;
+  description?: string;
 }) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
@@ -75,9 +83,10 @@ export function OwnerProductSearch({
     const controller = new AbortController();
     const requestQuery = debouncedQuery;
 
-    void getOwnerCatalogProducts(
+    void loadProducts(
       {
         keyword: requestQuery || undefined,
+        pharmacyId: pharmacyId || undefined,
         page: 1,
         perPage: SUGGESTIONS_PAGE_SIZE,
         includeBlocked: true,
@@ -108,16 +117,17 @@ export function OwnerProductSearch({
       });
 
     return () => controller.abort();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, loadProducts, pharmacyId]);
 
   useEffect(() => {
     if (!value || selected?.id === value) return;
 
     const controller = new AbortController();
 
-    void getOwnerCatalogProducts(
+    void loadProducts(
       {
         productId: value,
+        pharmacyId: pharmacyId || undefined,
         page: 1,
         perPage: 1,
         includeBlocked: true,
@@ -132,7 +142,7 @@ export function OwnerProductSearch({
       });
 
     return () => controller.abort();
-  }, [selected?.id, value]);
+  }, [selected?.id, value, loadProducts, pharmacyId]);
 
   // Keep outdated suggestions hidden during the debounce without triggering
   // synchronous state updates in the request effect.
@@ -168,9 +178,10 @@ export function OwnerProductSearch({
     setIsLoadingMore(true);
     setLoadMoreError(null);
 
-    void getOwnerCatalogProducts(
+    void loadProducts(
       {
         keyword: debouncedQuery || undefined,
+        pharmacyId: pharmacyId || undefined,
         page: nextPage,
         perPage: SUGGESTIONS_PAGE_SIZE,
         includeBlocked: true,
@@ -202,7 +213,7 @@ export function OwnerProductSearch({
 
   return (
     <SearchableSelect
-      id="all-products-product-search"
+      id={id}
       label="Product search"
       labelAccessory={
         <InfoTooltip
@@ -212,8 +223,7 @@ export function OwnerProductSearch({
           items={[
             {
               title: 'Search fields',
-              description:
-                'Find an Admin product by article, name or product ID.',
+              description,
               icon: <Search size={17} />,
             },
           ]}

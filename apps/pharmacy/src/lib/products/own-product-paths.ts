@@ -1,4 +1,5 @@
 import { isProductCategorySlug } from '@e-pharmacy/validation/reference-data';
+import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import {
   deslugifyArticleSegment,
@@ -28,6 +29,8 @@ type OwnProductsFilterDraft = {
     to: string;
   };
 
+  productId: string;
+  pharmacyId: string;
   name: string;
   article: string;
   category: OwnProductsFilterState['category'];
@@ -40,6 +43,38 @@ type OwnProductsFilterDraft = {
 export type OwnProductsRouteParams = Readonly<{
   filters?: string[];
 }>;
+
+export type OwnProductsPagination = Readonly<{
+  page: number;
+  perPage: 20 | 50 | 100;
+}>;
+
+export const DEFAULT_OWN_PRODUCTS_PAGINATION: OwnProductsPagination = {
+  page: 1,
+  perPage: 20,
+};
+
+//===================================================================
+
+export function parseOwnProductsPaginationSegments(
+  params: OwnProductsRouteParams = {}
+): OwnProductsPagination {
+  let page = 1;
+  let perPage: OwnProductsPagination['perPage'] = 20;
+
+  for (const segment of params.filters ?? []) {
+    const pageMatch = /^page-([1-9]\d*)$/.exec(segment);
+    const sizeMatch = /^per-page-(20|50|100)$/.exec(segment);
+
+    if (pageMatch && Number.isSafeInteger(Number(pageMatch[1])))
+      page = Number(pageMatch[1]);
+
+    if (sizeMatch)
+      perPage = Number(sizeMatch[1]) as OwnProductsPagination['perPage'];
+  }
+
+  return { page, perPage };
+}
 
 //===================================================================
 
@@ -55,6 +90,10 @@ function normalizeStockSegment(
 
 export function isOwnProductsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('product-id-') ||
+    segment.startsWith('pharmacy-id-') ||
+    /^page-[1-9]\d*$/.test(segment) ||
+    /^per-page-(20|50|100)$/.test(segment) ||
     segment.startsWith('product-name-') ||
     segment.startsWith('product-article-') ||
     segment.startsWith('search-name-') ||
@@ -86,6 +125,22 @@ export function parseOwnProductsSegments(
   };
 
   for (const segment of params.filters ?? []) {
+    if (segment.startsWith('product-id-')) {
+      const id = segment.slice('product-id-'.length);
+
+      if (isValidObjectId(id)) filters.productId = id;
+
+      continue;
+    }
+
+    if (segment.startsWith('pharmacy-id-')) {
+      const id = segment.slice('pharmacy-id-'.length);
+
+      if (isValidObjectId(id)) filters.pharmacyId = id;
+
+      continue;
+    }
+
     if (segment.startsWith('product-name-')) {
       filters.name = deslugifyNameSegment(segment.replace('product-name-', ''));
       continue;
@@ -100,6 +155,7 @@ export function parseOwnProductsSegments(
       filters.article = deslugifyArticleSegment(
         segment.replace('product-article-', '')
       );
+
       continue;
     }
 
@@ -107,11 +163,13 @@ export function parseOwnProductsSegments(
       filters.article = deslugifyArticleSegment(
         segment.replace('article-', '')
       );
+
       continue;
     }
 
     if (segment.startsWith('category-')) {
       const rawCategory = segment.slice('category-'.length);
+
       const category = rawCategory.includes('-')
         ? rawCategory.replace(/-/g, '_')
         : rawCategory;
@@ -180,11 +238,20 @@ export function parseOwnProductsSegments(
 
 //===================================================================
 
-export function buildOwnProductsPath(filters: OwnProductsFilterState): string {
+export function buildOwnProductsPath(
+  filters: OwnProductsFilterState,
+  pagination: OwnProductsPagination = DEFAULT_OWN_PRODUCTS_PAGINATION
+): string {
   const segments: string[] = [];
   const dateRangeIsValid = isDateRangeValid(filters.createdDate);
   const name = filters.name.trim();
   const article = filters.article.trim();
+
+  if (filters.pharmacyId && isValidObjectId(filters.pharmacyId))
+    segments.push(`pharmacy-id-${filters.pharmacyId}`);
+
+  if (filters.productId && isValidObjectId(filters.productId))
+    segments.push(`product-id-${filters.productId}`);
 
   if (name) {
     segments.push(`product-name-${slugifySegment(name)}`);
@@ -213,6 +280,12 @@ export function buildOwnProductsPath(filters: OwnProductsFilterState): string {
   if (dateRangeIsValid && filters.createdDate.to) {
     segments.push(`date-to-${filters.createdDate.to}`);
   }
+
+  if (pagination.perPage !== 20)
+    segments.push(`per-page-${pagination.perPage}`);
+
+  if (pagination.page > 1 && Number.isSafeInteger(pagination.page))
+    segments.push(`page-${pagination.page}`);
 
   return segments.length
     ? `${PHARMACY_ROUTES.PRODUCTS}/${segments.join('/')}`

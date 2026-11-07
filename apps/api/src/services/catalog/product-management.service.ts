@@ -148,6 +148,35 @@ export async function getManagedProductsService(
   actor: ProductManagementActor,
   options: Readonly<{ includeOffers?: boolean }> = {}
 ) {
+  // Inventory across the authenticated owner's pharmacies, never public offers.
+  if (query.ownerProducts) {
+    if (actor.role !== USER_ROLES.PHARMACY || query.ownerCatalog)
+      throw httpError(HTTP_STATUS.FORBIDDEN, 'Access denied.');
+
+    await assertOwnerCatalogAccess(actor.userId);
+
+    const pharmacyIds = (
+      await Pharmacy.distinct('_id', { ownerId: actor.userId })
+    ).map(String);
+
+    if (query.pharmacyId && !pharmacyIds.includes(query.pharmacyId))
+      throw httpError(
+        HTTP_STATUS.FORBIDDEN,
+        'You do not have access to this pharmacy.'
+      );
+
+    return getProductsByScope(query, 'management', undefined, {
+      ...options,
+
+      ownedPharmacyIds: pharmacyIds,
+
+      offerVisibility: {
+        mode: 'owner-management',
+        pharmacyIds: query.pharmacyId ? [query.pharmacyId] : pharmacyIds,
+      },
+    });
+  }
+
   if (query.ownerCatalog && actor.role === USER_ROLES.PHARMACY) {
     await assertOwnerCatalogAccess(actor.userId);
 

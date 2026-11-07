@@ -9,8 +9,12 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
+import { PaginationView } from '@e-pharmacy/ui/navigation';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+import { useToast } from '@e-pharmacy/ui/feedback';
+import { PageHeader } from '@e-pharmacy/ui/layout';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
+import type { EntityId } from '@e-pharmacy/types/primitives';
 
 import {
   RowsPerPageSelect,
@@ -18,12 +22,9 @@ import {
   type RowsPerPageValue,
 } from '@e-pharmacy/ui/forms';
 
-import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
-import { useToast } from '@e-pharmacy/ui/feedback';
-import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
-import type { EntityId } from '@e-pharmacy/types/primitives';
+import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
+
 import type { ProductFilterOptionsResponse } from '@e-pharmacy/types/products';
 
 import type {
@@ -235,6 +236,8 @@ function OwnProductsPageContent({
   const requestFilters = useMemo<OwnProductsFilterState>(
     () => ({
       createdDate: filters.createdDate,
+      productId: filters.productId,
+      pharmacyId: filters.pharmacyId,
       name: debouncedName,
       article: debouncedArticle,
       category: filters.category,
@@ -246,6 +249,8 @@ function OwnProductsPageContent({
       debouncedName,
       filters.category,
       filters.createdDate,
+      filters.productId,
+      filters.pharmacyId,
       filters.status,
       filters.stock,
     ]
@@ -320,14 +325,16 @@ function OwnProductsPageContent({
   const debouncedFilters = useDebouncedValue(filters, 450);
 
   useEffect(() => {
-    if (debouncedFilters !== filters) return;
+    // Embedded pharmacy Products must keep its own detail route rather than
+    // redirecting to the owner-wide /pharmacy/products registry.
+    if (embedded || debouncedFilters !== filters) return;
 
     const nextPath = buildOwnProductsPath(debouncedFilters);
 
     if (pathname === nextPath) return;
 
     router.replace(nextPath, { scroll: false });
-  }, [debouncedFilters, filters, pathname, router]);
+  }, [debouncedFilters, embedded, filters, pathname, router]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.createdDate.from || filters.createdDate.to),

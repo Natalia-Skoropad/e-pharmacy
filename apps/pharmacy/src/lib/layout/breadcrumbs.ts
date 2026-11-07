@@ -5,6 +5,7 @@ import { isOrdersFilterRoute } from '@/lib/orders/order-paths';
 
 import { isProductRequestsFilterRoute } from '@/lib/product-requests/product-request-paths';
 import { isAllProductsFilterRoute } from '@/lib/products/all-product-paths';
+import { isAllProductDetailTab } from '@/lib/products/all-product-detail-tabs';
 import { isOwnProductsFilterRoute } from '@/lib/products/own-product-paths';
 
 import {
@@ -332,11 +333,34 @@ export function getPharmacyBreadcrumbsByPathname(
       return getAllProductsBreadcrumbs();
     }
 
-    const productId = getSingleEntityId(route.segments);
+    const [productId, tab] = route.segments;
 
-    return productId
-      ? getAllProductDetailsBreadcrumbs(productId, currentDetailLabel)
-      : getAllProductsBreadcrumbs();
+    if (productId && isValidObjectId(productId)) {
+      if (route.segments.length === 2 && tab && isAllProductDetailTab(tab)) {
+        const detailHref = getPharmacyAllProductPath(productId);
+
+        const tabLabels = {
+          details: 'Details',
+          characteristics: 'Characteristics',
+          reviews: 'Reviews',
+        } as const;
+
+        return [
+          { label: 'All products', href: PHARMACY_ROUTES.ALL_PRODUCTS },
+          {
+            label: currentDetailLabel ?? `Global product ${productId}`,
+            href: detailHref,
+          },
+          { label: tabLabels[tab] },
+        ];
+      }
+
+      if (route.segments.length === 1) {
+        return getAllProductDetailsBreadcrumbs(productId, currentDetailLabel);
+      }
+    }
+
+    return getAllProductsBreadcrumbs();
   }
 
   if (route.family === 'product-requests') {

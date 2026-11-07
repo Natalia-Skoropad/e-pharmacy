@@ -1,3 +1,5 @@
+import { isOwnProductsFilterSegment } from '../products/own-product-paths';
+
 import {
   buildClientPharmaciesPath,
   parseClientPharmaciesSegments,
@@ -94,6 +96,21 @@ export function isOwnerClientDetailPath(pathname: string): boolean {
 
 //===================================================================
 
+/** Own products list/filter pages belong to the owner, not one selected pharmacy. */
+export function isOwnerProductsListPath(pathname: string): boolean {
+  const base = '/pharmacy/products';
+
+  if (pathname === base) return true;
+  if (!pathname.startsWith(`${base}/`)) return false;
+
+  return pathname
+    .slice(base.length + 1)
+    .split('/')
+    .every(isOwnProductsFilterSegment);
+}
+
+//===================================================================
+
 let authorizedPharmacyId: string | null = null;
 
 //===================================================================
@@ -102,7 +119,8 @@ export function isOperationalPharmacyPath(pathname: string): boolean {
   return (
     (LEGACY_OPERATION.test(pathname) &&
       !isOwnerClientsListPath(pathname) &&
-      !isOwnerClientDetailPath(pathname)) ||
+      !isOwnerClientDetailPath(pathname) &&
+      !isOwnerProductsListPath(pathname)) ||
     DETAIL_OPERATION.test(pathname)
   );
 }
@@ -113,7 +131,8 @@ export function isLegacyOperationalPharmacyPath(pathname: string): boolean {
   return (
     LEGACY_OPERATION.test(pathname) &&
     !isOwnerClientsListPath(pathname) &&
-    !isOwnerClientDetailPath(pathname)
+    !isOwnerClientDetailPath(pathname) &&
+    !isOwnerProductsListPath(pathname)
   );
 }
 

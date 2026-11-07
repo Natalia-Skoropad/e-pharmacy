@@ -14,10 +14,17 @@ import { TableImagePreview } from '@e-pharmacy/ui/media';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import { formatAmount } from '@e-pharmacy/utils/money';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
+
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import { type PharmacyProductRow } from '@/lib/products/products';
 import { getProductImageSrc } from '@/lib/products/product-images';
-import { getPharmacyProductPath } from '@/lib/routes';
+
+import {
+  getPharmacyProductPath,
+  getPharmacyAllProductPath,
+} from '@/lib/routes';
 
 import css from './OwnProductsTable.module.css';
 
@@ -29,6 +36,8 @@ type OwnProductsTableProps = Readonly<{
   isLoading?: boolean;
   removingProductId?: EntityId | null;
   onRemoveProduct?: (product: PharmacyProductRow) => void;
+  isAllPharmacies?: boolean;
+  categoryReference?: ReadonlyMap<string, ProductCategoryReference>;
 }>;
 
 //===================================================================
@@ -39,6 +48,8 @@ function OwnProductsTable({
   isLoading = false,
   removingProductId = null,
   onRemoveProduct,
+  isAllPharmacies = false,
+  categoryReference,
 }: OwnProductsTableProps) {
   const columns = useMemo<Array<DataTableColumn<PharmacyProductRow>>>(
     () => [
@@ -62,21 +73,50 @@ function OwnProductsTable({
         ),
       },
       {
+        key: 'productId',
+        width: '150px',
+        title: <TableHeaderTitle parts={['Product', 'ID']} />,
+        render: (product) => (
+          <TextActionButton
+            className={css.breakableLink}
+            href={
+              isAllPharmacies
+                ? getPharmacyAllProductPath(product.id)
+                : getPharmacyProductPath(product.id)
+            }
+          >
+            {product.id}
+          </TextActionButton>
+        ),
+      },
+      {
         key: 'article',
-        width: '110px',
+        width: '120px',
         title: <TableHeaderTitle parts={['Product', 'article']} />,
         render: (product) => (
-          <TextActionButton href={getPharmacyProductPath(product.id)}>
+          <TextActionButton
+            href={
+              isAllPharmacies
+                ? getPharmacyAllProductPath(product.id)
+                : getPharmacyProductPath(product.id)
+            }
+          >
             {product.article}
           </TextActionButton>
         ),
       },
       {
         key: 'name',
-        width: '250px',
+        width: '100px',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
         render: (product) => (
-          <TextActionButton href={getPharmacyProductPath(product.id)}>
+          <TextActionButton
+            href={
+              isAllPharmacies
+                ? getPharmacyAllProductPath(product.id)
+                : getPharmacyProductPath(product.id)
+            }
+          >
             {product.name}
           </TextActionButton>
         ),
@@ -85,7 +125,21 @@ function OwnProductsTable({
         key: 'category',
         width: '110px',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (product) => product.category.name,
+        render: (product) => {
+          const category =
+            categoryReference?.get(product.category.id) ??
+            categoryReference?.get(product.category.slug) ??
+            product.category;
+
+          return (
+            <span className={css.categoryCell}>
+              <span className={css.categoryIconWrap}>
+                <CategoryIcon name={category.icon} size={16} />
+              </span>
+              <span>{category.name}</span>
+            </span>
+          );
+        },
       },
       {
         key: 'stockQuantity',
@@ -107,8 +161,12 @@ function OwnProductsTable({
       },
       {
         key: 'currentPrice',
-        width: '50px',
-        title: <TableHeaderTitle parts={['Current', ' price, ₴']} />,
+        width: isAllPharmacies ? '100px' : '50px',
+        title: isAllPharmacies ? (
+          <TableHeaderTitle parts={['Average', 'price, ₴']} />
+        ) : (
+          <TableHeaderTitle parts={['Current', 'price, ₴']} />
+        ),
         render: (product) => formatAmount(product.currentPrice) ?? '—',
       },
       {
@@ -130,6 +188,7 @@ function OwnProductsTable({
             variant="secondary"
             size="sm"
             disabled={
+              isAllPharmacies ||
               !onRemoveProduct ||
               product.hasRelatedOrders ||
               removingProductId === product.id
@@ -143,7 +202,7 @@ function OwnProductsTable({
         ),
       },
     ],
-    [onRemoveProduct, removingProductId]
+    [onRemoveProduct, removingProductId, isAllPharmacies, categoryReference]
   );
 
   return (

@@ -28,6 +28,9 @@ export const pharmacyApiRoutes = {
 
     reviews: (productId: string) =>
       `/api/products/${segment(productId)}/reviews`,
+
+    ownerReviews: (productId: string) =>
+      `/api/products/${segment(productId)}/owner-reviews`,
   },
 
   orders: {

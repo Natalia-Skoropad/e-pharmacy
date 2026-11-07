@@ -80,9 +80,10 @@ export async function getProductReviewsService(productId: string) {
 
 export async function getManagedProductReviewsService(
   productId: string,
-  actor: ProductManagementActor
+  actor: ProductManagementActor,
+  ownerCatalog = false
 ) {
-  await getManagedProductDetailsService(productId, actor);
+  await getManagedProductDetailsService(productId, actor, ownerCatalog);
 
   return getApprovedProductReviews(productId);
 }

@@ -157,10 +157,11 @@ test('add mutation commits its response before supporting-resource refresh and r
 
   assert.match(
     addSource,
-    /const response = await addProductToMyPharmacy\(product\.id\)/
+    /mode === 'all'[\s\S]{0,80}addOwnerCatalogProduct\(product\.id\)/
   );
 
-  assert.match(addSource, /setProduct\(response\.product\)/);
+  assert.match(addSource, /addProductToMyPharmacy\(product\.id\)/);
+  assert.match(addSource, /setProduct\([\s\S]{0,130}response\.product/);
   assert.doesNotMatch(addSource, /getProductStockMovements/);
 
   assert.match(addSource, /shouldReconcileProductMutation\(addError, 'add'\)/);

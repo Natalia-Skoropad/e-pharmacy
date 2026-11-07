@@ -16,6 +16,8 @@ export type OwnProductsFilterState = Readonly<{
     to: string;
   };
 
+  productId: string;
+  pharmacyId: string;
   name: string;
   article: string;
   category: OwnProductsCategoryFilter;
@@ -31,6 +33,8 @@ export const DEFAULT_OWN_PRODUCTS_FILTERS: OwnProductsFilterState = {
     to: '',
   },
 
+  productId: '',
+  pharmacyId: '',
   name: '',
   article: '',
   category: 'all',

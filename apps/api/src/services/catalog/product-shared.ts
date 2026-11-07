@@ -105,7 +105,7 @@ function createEmptyOwnProductStatistics() {
 
 //===============================================================
 
-async function getOwnProductStatistics(pharmacyId: string) {
+async function getOwnProductStatistics(pharmacyIds: readonly string[]) {
   const [row] = await ProductOffer.aggregate<{
     stockQuantity: number;
     stockValue: number;
@@ -115,7 +115,11 @@ async function getOwnProductStatistics(pharmacyId: string) {
     availableValue: number;
     outOfStockProducts: number;
   }>([
-    { $match: { pharmacyId: new Types.ObjectId(pharmacyId) } },
+    {
+      $match: {
+        pharmacyId: { $in: pharmacyIds.map((id) => new Types.ObjectId(id)) },
+      },
+    },
 
     {
       $lookup: {
@@ -179,6 +183,7 @@ export async function getProductsByScope(
     includeOffers?: boolean;
     offerVisibility?: ProductOfferVisibility;
     ownerSelectedProductIds?: Types.ObjectId[];
+    ownedPharmacyIds?: string[];
   }> = {}
 ) {
   const filter: Record<string, unknown> = {};
@@ -186,7 +191,7 @@ export async function getProductsByScope(
   const tableStatusFilter =
     scope === 'public'
       ? 'active'
-      : query.pharmacyId || query.includeBlocked
+      : query.pharmacyId || query.includeBlocked || query.ownerProducts
         ? { $in: ['active', 'blocked'] }
         : 'active';
 
@@ -227,7 +232,11 @@ export async function getProductsByScope(
     filter.categoryId = category?._id ?? null;
   }
 
-  if (!query.pharmacyId && (query.addedFrom || query.addedTo)) {
+  if (
+    !query.pharmacyId &&
+    !options.ownedPharmacyIds &&
+    (query.addedFrom || query.addedTo)
+  ) {
     filter.createdAt = {
       ...(query.addedFrom ? { $gte: getStartOfDay(query.addedFrom) } : {}),
       ...(query.addedTo ? { $lte: getEndOfDay(query.addedTo) } : {}),
@@ -238,9 +247,25 @@ export async function getProductsByScope(
 
   const offerFilter: Record<string, unknown> = {};
 
-  if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+  if (options.ownedPharmacyIds) {
+    // This ownership allow-list is mandatory, including for stock/date filters.
+    const ids = query.pharmacyId
+      ? [query.pharmacyId]
+      : options.ownedPharmacyIds;
 
-  if (query.pharmacyId && (query.addedFrom || query.addedTo)) {
+    offerFilter.pharmacyId = { $in: ids.map((id) => new Types.ObjectId(id)) };
+
+    const ownedProductIds = await ProductOffer.distinct('productId', {
+      pharmacyId: offerFilter.pharmacyId,
+    });
+
+    applyProductIdIncludeFilter(filter, ownedProductIds);
+  } else if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
+
+  if (
+    (query.pharmacyId || options.ownedPharmacyIds) &&
+    (query.addedFrom || query.addedTo)
+  ) {
     offerFilter.createdAt = {
       ...(query.addedFrom ? { $gte: getStartOfDay(query.addedFrom) } : {}),
       ...(query.addedTo ? { $lte: getEndOfDay(query.addedTo) } : {}),
@@ -341,15 +366,20 @@ export async function getProductsByScope(
 
   const skip = (query.page - 1) * query.perPage;
 
-  const earliestCreatedAtQuery = query.pharmacyId
-    ? ProductOffer.findOne({ pharmacyId: query.pharmacyId })
+  const earliestCreatedAtQuery = options.ownedPharmacyIds
+    ? ProductOffer.findOne({ pharmacyId: { $in: options.ownedPharmacyIds } })
         .sort({ createdAt: 1 })
         .select('createdAt')
         .lean<{ createdAt: Date } | null>()
-    : Product.findOne(productTableScopeFilter)
-        .sort({ createdAt: 1 })
-        .select('createdAt')
-        .lean<{ createdAt: Date } | null>();
+    : query.pharmacyId
+      ? ProductOffer.findOne({ pharmacyId: query.pharmacyId })
+          .sort({ createdAt: 1 })
+          .select('createdAt')
+          .lean<{ createdAt: Date } | null>()
+      : Product.findOne(productTableScopeFilter)
+          .sort({ createdAt: 1 })
+          .select('createdAt')
+          .lean<{ createdAt: Date } | null>();
 
   const [
     products,
@@ -362,9 +392,13 @@ export async function getProductsByScope(
     Product.countDocuments(filter),
     getClientFavorites(userId),
 
-    query.pharmacyId
-      ? getOwnProductStatistics(query.pharmacyId)
-      : Promise.resolve(undefined),
+    options.ownedPharmacyIds
+      ? getOwnProductStatistics(
+          query.pharmacyId ? [query.pharmacyId] : options.ownedPharmacyIds
+        )
+      : query.pharmacyId
+        ? getOwnProductStatistics([query.pharmacyId])
+        : Promise.resolve(undefined),
 
     earliestCreatedAtQuery,
   ]);

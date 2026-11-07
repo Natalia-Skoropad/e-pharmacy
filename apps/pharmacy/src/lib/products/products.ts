@@ -22,6 +22,7 @@ import {
 import { isRecord } from '@e-pharmacy/utils/guards';
 import { getFiniteNumber } from '@e-pharmacy/utils/numbers';
 import { getTrimmedString } from '@e-pharmacy/utils/strings';
+
 import type { ApiPaginationResponse } from '@e-pharmacy/types/api';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 import type { ProductDetails } from '@e-pharmacy/types/products';
@@ -73,6 +74,8 @@ export type PharmacyProductsQueryParams = Readonly<{
   page?: number;
   perPage?: number;
   pharmacyId?: EntityId;
+  productId?: EntityId;
+  keyword?: string;
   addedFrom?: string;
   addedTo?: string;
   name?: string;
@@ -253,14 +256,17 @@ function projectPharmacyProduct(
     stockQuantity,
     reservedQuantity,
     availableQuantity,
+
     currentPrice: requireNonNegativeNumber(
       offer.price,
       'pharmacy product offer.price',
       product
     ),
+
     ...(getTrimmedString(product.imageUrl)
       ? { imageUrl: getTrimmedString(product.imageUrl) }
       : {}),
+
     status: product.status,
     hasRelatedOrders: offer.hasRelatedOrders === true,
   };
@@ -273,6 +279,50 @@ export function normalizePharmacyProduct(
   pharmacyId?: EntityId
 ): PharmacyProductRow {
   return projectPharmacyProduct(parseProductDetails(rawProduct), pharmacyId);
+}
+
+//===================================================================
+
+/** One product row from all pharmacies owned by the authorized account. */
+export function projectOwnerProduct(
+  product: ProductDetails
+): PharmacyProductRow {
+  if (!product.offers.length)
+    invalidProductContract(
+      'Owner product must have at least one offer.',
+      product
+    );
+
+  const rows = product.offers.map((offer) =>
+    projectPharmacyProduct({ ...product, offers: [offer] }, offer.pharmacyId)
+  );
+
+  return {
+    ...rows[0]!,
+
+    addedAt: rows.reduce(
+      (earliest, row) => (row.addedAt < earliest ? row.addedAt : earliest),
+      rows[0]!.addedAt
+    ),
+
+    stockQuantity: rows.reduce((total, row) => total + row.stockQuantity, 0),
+
+    reservedQuantity: rows.reduce(
+      (total, row) => total + row.reservedQuantity,
+      0
+    ),
+
+    availableQuantity: rows.reduce(
+      (total, row) => total + row.availableQuantity,
+      0
+    ),
+
+    // Arithmetic mean across pharmacies which list this product.
+    currentPrice:
+      rows.reduce((total, row) => total + row.currentPrice, 0) / rows.length,
+
+    hasRelatedOrders: rows.some((row) => row.hasRelatedOrders),
+  };
 }
 
 //===================================================================
@@ -336,12 +386,14 @@ export function normalizeAllProductStatisticsResponse(
 
   for (const key of keys) {
     const count = getFiniteNumber(value[key]);
+
     if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
       invalidProductContract(
         `all product statistics response.${key} must be a non-negative integer.`,
         value
       );
     }
+
     statistics[key] = count;
   }
 
@@ -384,7 +436,8 @@ function normalizeOwnProductStatistics(
 
 export function normalizePharmacyProductsResponse(
   payload: unknown,
-  pharmacyId?: EntityId
+  pharmacyId?: EntityId,
+  aggregateOwnerOffers = false
 ): PharmacyProductsResponse {
   const response = parseProductsWithOffersResponse(payload);
 
@@ -407,9 +460,13 @@ export function normalizePharmacyProductsResponse(
 
   return {
     ...response,
+
     items: response.items.map((product) =>
-      projectPharmacyProduct(product, pharmacyId)
+      aggregateOwnerOffers && !pharmacyId
+        ? projectOwnerProduct(product)
+        : projectPharmacyProduct(product, pharmacyId)
     ),
+
     statistics: normalizeOwnProductStatistics(payload.ownProductStatistics),
     earliestCreatedAt: response.earliestCreatedAt,
   };

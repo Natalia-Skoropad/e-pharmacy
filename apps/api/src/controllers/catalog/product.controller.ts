@@ -137,10 +137,11 @@ export async function getManagedProductReviews(
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
 
-  const data = await getManagedProductReviewsService(productId, {
-    userId: req.user?.id ?? '',
-    role: req.user?.role,
-  });
+  const data = await getManagedProductReviewsService(
+    productId,
+    { userId: req.user?.id ?? '', role: req.user?.role },
+    req.query.ownerCatalog === 'true'
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

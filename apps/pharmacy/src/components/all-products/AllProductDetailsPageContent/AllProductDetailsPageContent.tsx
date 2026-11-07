@@ -1,10 +1,34 @@
 'use client';
 
 import Link from 'next/link';
-import { BarChart3, History, PackageSearch, UsersRound } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+
+import {
+  BarChart3,
+  ClipboardList,
+  History,
+  PackageSearch,
+  UsersRound,
+  ListChecks,
+  SlidersHorizontal,
+  MessageSquareText,
+  Plus,
+} from 'lucide-react';
+
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
+
+import {
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
+
+import {
+  getAllProductDetailTabPath,
+  parseAllProductDetailTabPath,
+} from '@/lib/products/all-product-detail-tabs';
+
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
 import { ORDER_CREATED_BY_TYPES } from '@e-pharmacy/config/orders';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
@@ -124,6 +148,7 @@ import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-reg
 import {
   addOwnerCatalogProduct,
   getOwnerCatalogProductDetails,
+  getOwnerCatalogProductReviews,
 } from '@/lib/api/browser/owner-all-products.api';
 
 import { OrderStatistics, OwnProductStatistics } from '@/components/statistics';
@@ -241,12 +266,42 @@ type RelatedOrderRow = Readonly<{
 //===================================================================
 
 const PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
-  { value: 'details', label: 'Details' },
-  { value: 'stock-movement', label: 'Stock movement' },
-  { value: 'related-orders', label: 'Related orders' },
-  { value: 'characteristics', label: 'Characteristics' },
-  { value: 'reviews', label: 'Reviews' },
-  { value: 'comments', label: 'Comments' },
+  { value: 'details', label: 'Details', icon: <ListChecks size={17} /> },
+  {
+    value: 'stock-movement',
+    label: 'Stock movement',
+    icon: <History size={17} />,
+  },
+  {
+    value: 'related-orders',
+    label: 'Related orders',
+    icon: <BarChart3 size={17} />,
+  },
+  {
+    value: 'characteristics',
+    label: 'Characteristics',
+    icon: <SlidersHorizontal size={17} />,
+  },
+  { value: 'reviews', label: 'Reviews', icon: <MessageSquareText size={17} /> },
+  {
+    value: 'comments',
+    label: 'Comments',
+    icon: <MessageSquareText size={17} />,
+  },
+];
+
+//===================================================================
+
+// The owner-wide Admin catalog uses its own presentation; pharmacy-owned
+// product tabs retain the existing management icons.
+const ALL_PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
+  { value: 'details', label: 'Details', icon: <PackageSearch size={17} /> },
+  {
+    value: 'characteristics',
+    label: 'Characteristics',
+    icon: <ClipboardList size={17} />,
+  },
+  { value: 'reviews', label: 'Reviews', icon: <MessageSquareText size={17} /> },
 ];
 
 //===================================================================
@@ -738,6 +793,43 @@ function EmptyPanel({ children }: Readonly<{ children: string }>) {
 
 //===================================================================
 
+function ProductTabHeading({ tab }: Readonly<{ tab: ProductDetailsTab }>) {
+  const presentation = {
+    details: {
+      title: 'Product details',
+
+      description:
+        'Review the Admin catalog details and product availability for your pharmacies.',
+
+      icon: <PackageSearch size={21} />,
+    },
+
+    characteristics: {
+      title: 'Characteristics',
+
+      description:
+        'Review the main product properties supplied in the Admin catalog.',
+
+      icon: <ClipboardList size={21} />,
+    },
+
+    reviews: {
+      title: 'Reviews',
+      description: 'Read approved client reviews for this product.',
+      icon: <MessageSquareText size={21} />,
+    },
+  } as const;
+
+  if (tab !== 'details' && tab !== 'characteristics' && tab !== 'reviews')
+    return null;
+
+  const selected = presentation[tab];
+
+  return <ProfileSectionHeader {...selected} />;
+}
+
+//===================================================================
+
 function AllProductDetailsPageContent({
   productId,
   mode,
@@ -750,6 +842,8 @@ function AllProductDetailsPageContent({
     showAddAction,
     showRemoveAction,
   } = PRODUCT_DETAILS_MODE_CONFIG[mode];
+  const pathname = usePathname();
+  const router = useRouter();
   const { profile: pharmacyProfile } = usePharmacyProfile();
   const currentPharmacyId = pharmacyProfile?.id ?? null;
   const pharmacyStatus = pharmacyProfile?.status ?? null;
@@ -772,6 +866,7 @@ function AllProductDetailsPageContent({
       .catch(() => {
         if (!controller.signal.aborted) setOwnerHasEligiblePharmacies(false);
       });
+
     return () => controller.abort();
   }, [mode]);
 
@@ -824,7 +919,16 @@ function AllProductDetailsPageContent({
     null
   );
 
-  const [activeTab, setActiveTab] = useState<ProductDetailsTab>('details');
+  const [localActiveTab, setLocalActiveTab] =
+    useState<ProductDetailsTab>('details');
+
+  const activeTab: ProductDetailsTab =
+    mode === 'all'
+      ? (parseAllProductDetailTabPath(pathname, productId) ?? 'details')
+      : localActiveTab;
+
+  const [productRetry, setProductRetry] = useState(0);
+  const [reviewsRetry, setReviewsRetry] = useState(0);
   const [stockOrderNumberSearch, setStockOrderNumberSearch] = useState('');
   const [stockCommentSearch, setStockCommentSearch] = useState('');
 
@@ -867,7 +971,7 @@ function AllProductDetailsPageContent({
       setIsLoading(true);
       setError(null);
       setProduct(null);
-      setActiveTab('details');
+      setLocalActiveTab('details');
 
       setReviews([]);
       setReviewsTotal(null);
@@ -927,13 +1031,13 @@ function AllProductDetailsPageContent({
     return () => {
       controller.abort();
     };
-  }, [productId, mode]);
+  }, [productId, mode, productRetry]);
 
   useEffect(() => {
     if (!product?.name) return;
 
     dispatchPharmacyBreadcrumbLabel(product.name);
-  }, [product?.name]);
+  }, [product?.name, pathname]);
 
   const currentOffer = product
     ? getProductOffer(product, currentPharmacyId)
@@ -963,9 +1067,11 @@ function AllProductDetailsPageContent({
 
     async function loadReviews() {
       try {
-        const response = await getProductReviews(productId, {
-          signal: controller.signal,
-        });
+        const response = await (mode === 'all'
+          ? getOwnerCatalogProductReviews(productId, {
+              signal: controller.signal,
+            })
+          : getProductReviews(productId, { signal: controller.signal }));
 
         if (controller.signal.aborted) return;
 
@@ -985,7 +1091,7 @@ function AllProductDetailsPageContent({
     return () => {
       controller.abort();
     };
-  }, [activeTab, product, productId]);
+  }, [activeTab, mode, product, productId, reviewsRetry]);
 
   useEffect(() => {
     if (activeTab !== 'stock-movement' || !product || !isAddedToPharmacy) {
@@ -1110,7 +1216,7 @@ function AllProductDetailsPageContent({
   ]);
 
   useEffect(() => {
-    if (activeTab !== 'details' || !isAddedToPharmacy) return;
+    if (mode === 'all' || activeTab !== 'details' || !isAddedToPharmacy) return;
 
     const controller = new AbortController();
 
@@ -1150,6 +1256,7 @@ function AllProductDetailsPageContent({
   }, [
     activeTab,
     isAddedToPharmacy,
+    mode,
     productId,
     productSalesMonth,
     productSalesYear,
@@ -1181,12 +1288,14 @@ function AllProductDetailsPageContent({
       ? reviewsTotal
       : (product?.reviewsCount ?? null);
 
-  const tabs = PRODUCT_DETAILS_TABS.filter(
-    (tab) =>
-      mode !== 'all' ||
-      ['details', 'characteristics', 'reviews'].includes(tab.value)
+  const tabs = (
+    mode === 'all' ? ALL_PRODUCT_DETAILS_TABS : PRODUCT_DETAILS_TABS
   ).map((tab) => {
-    if (tab.value === 'reviews' && displayedReviewsTotal !== null) {
+    if (
+      mode !== 'all' &&
+      tab.value === 'reviews' &&
+      displayedReviewsTotal !== null
+    ) {
       return { ...tab, label: `Reviews (${displayedReviewsTotal})` };
     }
 
@@ -1557,9 +1666,9 @@ function AllProductDetailsPageContent({
     }
   };
 
-  if (isLoading) {
+  if (mode !== 'all' && isLoading) {
     return (
-      <main className={css.page} aria-label="Loading global product">
+      <main className={css.page} aria-label="Loading product">
         <div className={css.contentCard}>
           <div className={css.loaderBox}>
             <LoadingSpinner label="Loading product data..." />
@@ -1591,7 +1700,7 @@ function AllProductDetailsPageContent({
             ) : null}
           </div>
 
-          {error ? (
+          {error && mode !== 'all' ? (
             <StatusBanner
               tone="danger"
               label="Error"
@@ -1612,6 +1721,43 @@ function AllProductDetailsPageContent({
         </div>
       </section>
 
+      {mode === 'all' && (isLoading || error || !product) ? (
+        <section className={css.contentCard} aria-label="Product details">
+          <div className={css.tabsSection}>
+            <Tabs
+              items={tabs}
+              activeValue={activeTab}
+              ariaLabel="Product details sections"
+              mobileVisibleCount={1}
+              tabletVisibleCount={3}
+              onChange={(tab) => {
+                if (
+                  tab === 'details' ||
+                  tab === 'characteristics' ||
+                  tab === 'reviews'
+                ) {
+                  router.push(getAllProductDetailTabPath(productId, tab), {
+                    scroll: false,
+                  });
+                }
+              }}
+            />
+            <ProductTabHeading tab={activeTab} />
+            <ProfileResourceState
+              variant={error ? 'error' : 'loading'}
+              title={error?.title ?? 'Loading product details'}
+              description={
+                error?.message ??
+                'The Admin product information is being loaded.'
+              }
+              retryLabel="Try again"
+              sideActionOnDesktop
+              onRetry={() => setProductRetry((value) => value + 1)}
+            />
+          </div>
+        </section>
+      ) : null}
+
       {product ? (
         <section className={css.contentCard} aria-label="Product details">
           <div className={css.tabsSection}>
@@ -1621,8 +1767,23 @@ function AllProductDetailsPageContent({
               ariaLabel="Product details sections"
               mobileVisibleCount={1}
               tabletVisibleCount={3}
-              onChange={setActiveTab}
+              onChange={(tab) => {
+                if (
+                  mode === 'all' &&
+                  (tab === 'details' ||
+                    tab === 'characteristics' ||
+                    tab === 'reviews')
+                ) {
+                  router.push(getAllProductDetailTabPath(productId, tab), {
+                    scroll: false,
+                  });
+                } else {
+                  setLocalActiveTab(tab);
+                }
+              }}
             />
+
+            {mode === 'all' ? <ProductTabHeading tab={activeTab} /> : null}
 
             {activeTab === 'details' ? (
               <div className={css.detailsTab}>
@@ -1677,25 +1838,62 @@ function AllProductDetailsPageContent({
                           : 'This product is not added to your pharmacy yet'}
                     </p>
 
-                    <div className={css.detailsColumns}>
-                      {[summaryItems.slice(0, 3), summaryItems.slice(3)]
-                        .filter((items) => items.length > 0)
-                        .map((items, columnIndex) => (
-                          <dl
-                            className={css.detailsList}
-                            key={`summary-column-${columnIndex}`}
-                          >
-                            {items.map((item) => (
-                              <div key={item.label}>
-                                <dt>{item.label}</dt>
-                                <dd>{item.value}</dd>
-                              </div>
-                            ))}
-                          </dl>
-                        ))}
-                    </div>
+                    {mode === 'all' ? (
+                      <dl className={css.adminMetadata}>
+                        <div className={css.adminMetadataItem}>
+                          <dt>Status</dt>
+                          <dd>
+                            <StatusBadge
+                              {...PRODUCT_STATUS_PRESENTATION[product.status]}
+                            />
+                          </dd>
+                        </div>
+                        <div className={css.adminMetadataItem}>
+                          <dt>Category</dt>
+                          <dd>{product.category.name}</dd>
+                        </div>
+                        <div className={css.adminMetadataItem}>
+                          <dt>Article</dt>
+                          <dd>{product.article}</dd>
+                        </div>
+                        <div className={css.adminMetadataItem}>
+                          <dt>Product ID</dt>
+                          <dd>{product.id}</dd>
+                        </div>
+                        <div className={css.adminMetadataItem}>
+                          <dt>Admin creation date</dt>
+                          <dd>{formatShortDate(product.createdAt) ?? '—'}</dd>
+                        </div>
+                        <div className={css.adminMetadataItem}>
+                          <dt>Admin last update date</dt>
+                          <dd>{formatShortDate(product.updatedAt) ?? '—'}</dd>
+                        </div>
+                      </dl>
+                    ) : (
+                      <div className={css.detailsColumns}>
+                        {[summaryItems.slice(0, 3), summaryItems.slice(3)]
+                          .filter((items) => items.length > 0)
+                          .map((items, columnIndex) => (
+                            <dl
+                              className={css.detailsList}
+                              key={`summary-column-${columnIndex}`}
+                            >
+                              {items.map((item) => (
+                                <div key={item.label}>
+                                  <dt>{item.label}</dt>
+                                  <dd>{item.value}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          ))}
+                      </div>
+                    )}
 
-                    <div className={css.actions}>
+                    <div
+                      className={
+                        mode === 'all' ? css.ownerActions : css.actions
+                      }
+                    >
                       {showAddAction ? (
                         <Button
                           className={css.actionButton}
@@ -1704,6 +1902,13 @@ function AllProductDetailsPageContent({
                           disabled={!canAddToPharmacy}
                           isLoading={isAddingProduct}
                           loadingLabel="Adding product..."
+                          iconLeft={
+                            mode === 'all' &&
+                            product.status === 'active' &&
+                            !isAddedToPharmacy ? (
+                              <Plus size={17} aria-hidden="true" />
+                            ) : undefined
+                          }
                           onClick={() => setIsAddModalOpen(true)}
                         >
                           {product.status === 'blocked'
@@ -1733,29 +1938,31 @@ function AllProductDetailsPageContent({
                         </Button>
                       ) : null}
 
-                      <LinkButton
-                        className={css.actionButton}
-                        href={backHref}
-                        variant="secondary"
-                        size="sm"
-                        renderLink={({
-                          href,
-                          className,
-                          children,
-                          ...props
-                        }) => (
-                          <Link href={href} className={className} {...props}>
-                            {children}
-                          </Link>
-                        )}
-                      >
-                        {backLabel}
-                      </LinkButton>
+                      {mode !== 'all' ? (
+                        <LinkButton
+                          className={css.actionButton}
+                          href={backHref}
+                          variant="secondary"
+                          size="sm"
+                          renderLink={({
+                            href,
+                            className,
+                            children,
+                            ...props
+                          }) => (
+                            <Link href={href} className={className} {...props}>
+                              {children}
+                            </Link>
+                          )}
+                        >
+                          {backLabel}
+                        </LinkButton>
+                      ) : null}
                     </div>
                   </div>
                 </section>
 
-                {isAddedToPharmacy ? (
+                {mode !== 'all' && isAddedToPharmacy ? (
                   <section
                     className={css.productSalesSection}
                     aria-label="Product sales value"
@@ -2099,7 +2306,9 @@ function AllProductDetailsPageContent({
 
                 {activeTab === 'characteristics' ? (
                   <>
-                    <h3 className={css.panelTitle}>Characteristics</h3>
+                    {mode !== 'all' ? (
+                      <h3 className={css.panelTitle}>Characteristics</h3>
+                    ) : null}
 
                     {characteristics.length > 0 ? (
                       <dl className={css.characteristicsList}>
@@ -2138,17 +2347,27 @@ function AllProductDetailsPageContent({
 
                 {activeTab === 'reviews' ? (
                   reviewsStatus === 'error' ? (
-                    <StatusBanner
-                      tone="danger"
+                    <ProfileResourceState
+                      variant="error"
                       title="Reviews are temporarily unavailable"
-                      message="Could not load product reviews. Please try again later."
+                      description="Could not load product reviews. Please try again later."
+                      sideActionOnDesktop
+                      retryLabel="Try again"
+                      onRetry={() => setReviewsRetry((value) => value + 1)}
                     />
                   ) : reviewsStatus === 'success' ? (
                     <ReviewsList
                       reviews={reviewItems}
-                      title="Reviews"
+                      title={mode === 'all' ? null : 'Reviews'}
+                      emptyVariant={mode === 'all' ? 'resource' : 'default'}
                       emptyTitle="This product has no reviews yet."
                       emptyText="Product reviews will appear here after clients share their feedback."
+                    />
+                  ) : mode === 'all' ? (
+                    <ProfileResourceState
+                      variant="loading"
+                      title="Loading product reviews"
+                      description="Approved client reviews for this product are being loaded."
                     />
                   ) : (
                     <LoadingSpinner label="Loading product reviews..." />

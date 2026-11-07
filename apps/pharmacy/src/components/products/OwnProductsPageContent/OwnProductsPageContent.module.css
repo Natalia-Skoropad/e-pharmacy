@@ -89,3 +89,32 @@
     gap: 14px;
   }
 }
+
+/* Owner-wide registry: reuse the same responsive search and selector dimensions. */
+.pharmacySelector {
+  min-width: 0;
+}
+
+.ownerSearchGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .ownerSearchGrid {
+    grid-template-columns: minmax(0, 1fr) 140px;
+    align-items: end;
+  }
+}
+
+.ownerStatsArea {
+  display: none;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .ownerStatsArea {
+    display: block;
+  }
+}
