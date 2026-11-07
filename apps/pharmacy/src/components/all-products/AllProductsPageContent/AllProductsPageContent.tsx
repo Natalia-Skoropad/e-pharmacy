@@ -2,33 +2,31 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { PackageSearch } from 'lucide-react';
+import { PackagePlus, PackageSearch, X } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
-import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
-import {
-  RowsPerPageSelect,
-  SearchInput,
-  type RowsPerPageValue,
-} from '@e-pharmacy/ui/forms';
-
+import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
+import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
+
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
+
 import type { EntityId } from '@e-pharmacy/types/primitives';
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import type {
   PharmacyProductsQueryParams,
   ProductDetails,
-  ProductFilterOptionsResponse,
 } from '@e-pharmacy/types/products';
 
 import type {
@@ -36,13 +34,16 @@ import type {
   AllProductStatisticsKey,
 } from '@e-pharmacy/types/products';
 
-import {
-  addProductToMyPharmacy,
-  getProductFilters,
-  getProducts,
-} from '@/lib/api/browser';
+import { getProductCategories } from '@/lib/api/browser';
 
-import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
+
+import {
+  getOwnerCatalogProducts,
+  getOwnerCatalogStatistics,
+  addOwnerCatalogProduct,
+} from '@/lib/api/browser/owner-all-products.api';
+
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import {
@@ -51,15 +52,19 @@ import {
 } from '@/lib/products/all-products-filters';
 
 import { DEFAULT_ALL_PRODUCT_STATISTICS } from '@/lib/statistics/defaults';
-import { applyAddedProductStatistics } from '@/lib/statistics/product-statistics-mutations';
-import { buildAllProductsPath } from '@/lib/products/all-product-paths';
+
+import {
+  buildAllProductsPath,
+  DEFAULT_ALL_PRODUCTS_PAGINATION,
+  type AllProductsPagination,
+} from '@/lib/products/all-product-paths';
+
 import { clampProductListPage } from '@/lib/products/product-pagination';
-import { getPharmacyAllProductStatistics } from '@/lib/products/product-statistics';
-import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { AllProductStatistics } from '@/components/statistics';
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
+import { OwnerProductSearch } from '@/components/all-products/OwnerProductSearch/OwnerProductSearch';
 
 import css from './AllProductsPageContent.module.css';
 
@@ -68,8 +73,7 @@ import css from './AllProductsPageContent.module.css';
 function getProductsQueryParams(
   filters: AllProductsFilterState,
   rowsPerPage: RowsPerPageValue,
-  page: number,
-  currentPharmacyId: EntityId | null
+  page: number
 ): PharmacyProductsQueryParams {
   const isAddedToMyPharmacyFilterActive = filters.addedToMyPharmacy !== 'all';
 
@@ -77,23 +81,26 @@ function getProductsQueryParams(
     page,
     perPage: rowsPerPage,
     includeBlocked: true,
+
     addedFrom: isCalendarDateString(filters.createdDate.from)
       ? filters.createdDate.from
       : undefined,
+
     addedTo: isCalendarDateString(filters.createdDate.to)
       ? filters.createdDate.to
       : undefined,
+
+    productId: filters.productId || undefined,
     nameKeyword: filters.name.trim() || undefined,
     articleKeyword: filters.article.trim() || undefined,
+    ownerCatalog: true,
     category: filters.category === 'all' ? undefined : filters.category,
     status: filters.status === 'all' ? undefined : filters.status,
+
     addedToMyPharmacy: isAddedToMyPharmacyFilterActive
       ? filters.addedToMyPharmacy === 'yes'
       : undefined,
-    addedToPharmacyId:
-      isAddedToMyPharmacyFilterActive && currentPharmacyId
-        ? currentPharmacyId
-        : undefined,
+
     sort: 'newest' as const,
   };
 }
@@ -108,10 +115,13 @@ function getAddProductErrorMessage(error: unknown): string {
       backendMessages: {
         [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_NOT_FOUND]:
           'Pharmacy profile is unavailable for this account.',
+
         [PRODUCT_MANAGEMENT_ERROR_CODES.PHARMACY_LOCKED]:
           'Adding products is unavailable until Admin verifies the pharmacy.',
+
         [PRODUCT_MANAGEMENT_ERROR_CODES.PRODUCT_BLOCKED]:
           'Blocked products cannot be added to your pharmacy.',
+
         [PRODUCT_MANAGEMENT_ERROR_CODES.ALREADY_ADDED]:
           'This product is already added to your pharmacy.',
       },
@@ -123,78 +133,126 @@ function getAddProductErrorMessage(error: unknown): string {
 
 type AllProductsPageContentProps = Readonly<{
   initialFilters?: AllProductsFilterState;
+  initialPagination?: AllProductsPagination;
 }>;
 
 //===================================================================
 
 function AllProductsPageContent({
   initialFilters = DEFAULT_ALL_PRODUCTS_FILTERS,
+  initialPagination = DEFAULT_ALL_PRODUCTS_PAGINATION,
 }: AllProductsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
-  const { profile: pharmacyProfile, isLoading: isProfileLoading } =
-    usePharmacyProfile();
-  const currentPharmacyId = pharmacyProfile?.id ?? null;
-  const pharmacyStatus = pharmacyProfile?.status ?? null;
-  const isProfileLoaded = !isProfileLoading;
 
   const [filters, setFilters] =
     useState<AllProductsFilterState>(initialFilters);
 
-  const [categoryOptions, setCategoryOptions] = useState<
-    ProductFilterOptionsResponse['categories']
-  >([{ value: 'all', label: 'All categories' }]);
+  // The current Admin-managed category directory is the presentation source
+  // for both the product table and the category filter.
+  const [categoryDirectory, setCategoryDirectory] = useState<
+    readonly ProductCategoryReference[]
+  >([]);
 
-  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
-  const [currentPage, setCurrentPage] = useState(1);
+  const categoryOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All categories' },
+
+      ...categoryDirectory.map((category) => ({
+        value: category.slug,
+        label: category.name,
+        icon: category.icon,
+      })),
+    ],
+    [categoryDirectory]
+  );
+
+  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(
+    initialPagination.perPage
+  );
+
+  const [currentPage, setCurrentPage] = useState(initialPagination.page);
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
+
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
   );
+
   const [totalPages, setTotalPages] = useState(1);
 
   const [productStatistics, setProductStatistics] =
     useState<AllProductStatisticsCounts>(DEFAULT_ALL_PRODUCT_STATISTICS);
+
   const [isProductStatisticsUnavailable, setIsProductStatisticsUnavailable] =
     useState(false);
+
+  const [isProductStatisticsLoading, setIsProductStatisticsLoading] =
+    useState(true);
 
   const [productToAdd, setProductToAdd] = useState<ProductDetails | null>(null);
   const [addingProductId, setAddingProductId] = useState<EntityId | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
 
+  // Fail closed until the real owner-wide pharmacy status summary is available.
+  const [hasEligiblePharmacy, setHasEligiblePharmacy] = useState(false);
+  const [isCheckingEligibility, setIsCheckingEligibility] = useState(true);
+
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+
+  const reloadStatistics = () => {
+    setIsProductStatisticsLoading(true);
+    setRefreshVersion((version) => version + 1);
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getOwnedPharmacyStatistics({ signal: controller.signal })
+      .then((summary) => {
+        if (!controller.signal.aborted) {
+          setHasEligiblePharmacy(summary.active + summary.onModeration > 0);
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setHasEligiblePharmacy(false);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsCheckingEligibility(false);
+      });
+
+    return () => controller.abort();
+  }, [refreshVersion]);
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadCategoryOptions() {
       try {
-        const options = await getProductFilters(
-          {},
-          { signal: controller.signal }
-        );
-        if (!controller.signal.aborted) setCategoryOptions(options.categories);
+        const options = await getProductCategories({
+          signal: controller.signal,
+        });
+
+        if (!controller.signal.aborted) setCategoryDirectory(options);
       } catch {
         // Keep the neutral fallback; product data has its own resource state.
       }
     }
 
     void loadCategoryOptions();
+
     return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    if (!currentPharmacyId) return;
-
     const controller = new AbortController();
 
     async function loadProductStatistics() {
       try {
-        const nextStatistics = await getPharmacyAllProductStatistics({
+        const nextStatistics = await getOwnerCatalogStatistics({
           signal: controller.signal,
         });
 
@@ -206,6 +264,8 @@ function AllProductsPageContent({
         if (!controller.signal.aborted) {
           setIsProductStatisticsUnavailable(true);
         }
+      } finally {
+        if (!controller.signal.aborted) setIsProductStatisticsLoading(false);
       }
     }
 
@@ -214,7 +274,7 @@ function AllProductsPageContent({
     return () => {
       controller.abort();
     };
-  }, [currentPharmacyId, refreshVersion]);
+  }, [refreshVersion]);
 
   const debouncedName = useDebouncedValue(filters.name, 450);
   const debouncedArticle = useDebouncedValue(filters.article, 450);
@@ -222,6 +282,7 @@ function AllProductsPageContent({
   const requestFilters = useMemo<AllProductsFilterState>(
     () => ({
       createdDate: filters.createdDate,
+      productId: filters.productId,
       name: debouncedName,
       article: debouncedArticle,
       category: filters.category,
@@ -232,6 +293,7 @@ function AllProductsPageContent({
       debouncedArticle,
       debouncedName,
       filters.addedToMyPharmacy,
+      filters.productId,
       filters.category,
       filters.createdDate,
       filters.status,
@@ -239,19 +301,11 @@ function AllProductsPageContent({
   );
 
   const queryParams = useMemo(
-    () =>
-      getProductsQueryParams(
-        requestFilters,
-        rowsPerPage,
-        currentPage,
-        currentPharmacyId
-      ),
-    [currentPage, currentPharmacyId, requestFilters, rowsPerPage]
+    () => getProductsQueryParams(requestFilters, rowsPerPage, currentPage),
+    [currentPage, requestFilters, rowsPerPage]
   );
 
   useEffect(() => {
-    if (!isProfileLoaded) return;
-
     const controller = new AbortController();
 
     async function loadProducts() {
@@ -259,12 +313,14 @@ function AllProductsPageContent({
       setLoadError(null);
 
       try {
-        const response = await getProducts(queryParams, {
+        const response = await getOwnerCatalogProducts(queryParams, {
           signal: controller.signal,
         });
+
         if (controller.signal.aborted) return;
 
         const normalizedTotalPages = Math.max(1, response.totalPages);
+
         const normalizedPage = clampProductListPage(
           currentPage,
           response.total,
@@ -296,27 +352,33 @@ function AllProductsPageContent({
     return () => {
       controller.abort();
     };
-  }, [currentPage, isProfileLoaded, queryParams, refreshVersion, rowsPerPage]);
+  }, [currentPage, queryParams, refreshVersion, rowsPerPage]);
 
   const debouncedFilters = useDebouncedValue(filters, 450);
 
   useEffect(() => {
     if (debouncedFilters !== filters) return;
 
-    const nextPath = buildAllProductsPath(debouncedFilters);
+    const nextPath = buildAllProductsPath(debouncedFilters, {
+      page: currentPage,
+      perPage: rowsPerPage,
+    });
+
     if (pathname === nextPath) return;
 
     router.replace(nextPath, { scroll: false });
-  }, [debouncedFilters, filters, pathname, router]);
+  }, [currentPage, debouncedFilters, filters, pathname, router, rowsPerPage]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.createdDate.from || filters.createdDate.to),
+    Boolean(filters.productId),
     Boolean(filters.name.trim()),
     Boolean(filters.article.trim()),
     filters.category !== 'all',
     filters.status !== 'all',
     filters.addedToMyPharmacy !== 'all'
   );
+
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: AllProductsFilterState) => {
@@ -334,20 +396,20 @@ function AllProductsPageContent({
     setFilters(DEFAULT_ALL_PRODUCTS_FILTERS);
   };
 
-  const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
-
   const handleConfirmAddProduct = async () => {
-    if (!productToAdd) return;
+    if (!productToAdd || isCheckingEligibility || !hasEligiblePharmacy) return;
 
     setAddingProductId(productToAdd.id);
 
     try {
-      const response = await addProductToMyPharmacy(productToAdd.id);
+      const response = await addOwnerCatalogProduct(productToAdd.id);
 
       const leavesCurrentResultSet = filters.addedToMyPharmacy === 'no';
+
       const nextTotalProducts = leavesCurrentResultSet
         ? Math.max(0, totalProducts - 1)
         : totalProducts;
+
       const nextPage = clampProductListPage(
         currentPage,
         nextTotalProducts,
@@ -360,15 +422,19 @@ function AllProductsPageContent({
               (product) => product.id !== response.product.id
             )
           : currentProducts.map((product) =>
-              product.id === response.product.id ? response.product : product
+              product.id === response.product.id
+                ? { ...response.product, isAddedToOwner: true }
+                : product
             )
       );
+
       setTotalProducts(nextTotalProducts);
       setCurrentPage(nextPage);
-      setProductStatistics((current) => applyAddedProductStatistics(current));
       setProductToAdd(null);
+      reloadStatistics();
+
       toast.success(
-        response.message || 'ProductDetails added to your pharmacy.'
+        response.message || 'Product added to your active pharmacies.'
       );
     } catch (addError) {
       toast.error(getAddProductErrorMessage(addError));
@@ -377,36 +443,41 @@ function AllProductsPageContent({
     }
   };
 
+  const activeStatisticKeys: AllProductStatisticsKey[] = [];
+
+  if (filters.status === 'active') activeStatisticKeys.push('active');
+  if (filters.status === 'blocked') activeStatisticKeys.push('blocked');
+
+  if (filters.addedToMyPharmacy === 'yes') {
+    activeStatisticKeys.push('addedToPharmacy');
+  }
+
+  if (filters.addedToMyPharmacy === 'no') {
+    activeStatisticKeys.push('notAddedToPharmacy');
+  }
+
   const getProductStatisticHref = (key: AllProductStatisticsKey) => {
-    if (key === 'active') {
-      return buildAllProductsPath({
-        ...DEFAULT_ALL_PRODUCTS_FILTERS,
-        status: 'active',
-      });
-    }
+    const nextFilters: AllProductsFilterState =
+      key === 'active' || key === 'blocked'
+        ? {
+            ...filters,
+            status: filters.status === key ? 'all' : key,
+          }
+        : {
+            ...filters,
+            addedToMyPharmacy:
+              filters.addedToMyPharmacy ===
+              (key === 'addedToPharmacy' ? 'yes' : 'no')
+                ? 'all'
+                : key === 'addedToPharmacy'
+                  ? 'yes'
+                  : 'no',
+          };
 
-    if (key === 'blocked') {
-      return buildAllProductsPath({
-        ...DEFAULT_ALL_PRODUCTS_FILTERS,
-        status: 'blocked',
-      });
-    }
-
-    if (key === 'addedToPharmacy') {
-      return buildAllProductsPath({
-        ...DEFAULT_ALL_PRODUCTS_FILTERS,
-        addedToMyPharmacy: 'yes',
-      });
-    }
-
-    if (key === 'notAddedToPharmacy') {
-      return buildAllProductsPath({
-        ...DEFAULT_ALL_PRODUCTS_FILTERS,
-        addedToMyPharmacy: 'no',
-      });
-    }
-
-    return buildAllProductsPath(DEFAULT_ALL_PRODUCTS_FILTERS);
+    return buildAllProductsPath(nextFilters, {
+      page: 1,
+      perPage: rowsPerPage,
+    });
   };
 
   return (
@@ -421,37 +492,31 @@ function AllProductsPageContent({
           icon={<PackageSearch size={23} aria-hidden="true" />}
         />
 
-        {bannerStatus ? (
-          <StatusBanner
-            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title="Catalog is available in read-only mode"
-            message={
-              bannerStatus === 'blocked'
-                ? 'Your pharmacy is temporarily blocked. You can review Admin products, but adding products to your pharmacy is disabled until Admin restores access.'
-                : 'Active and blocked Admin products are shown here. Adding products to your pharmacy becomes available after Admin verifies your pharmacy profile.'
-            }
-          />
-        ) : null}
-
-        {isProductStatisticsUnavailable ? (
-          <div>
-            <p role="status">Product statistics are temporarily unavailable.</p>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setRefreshVersion((version) => version + 1)}
-            >
-              Retry product statistics
-            </Button>
-          </div>
-        ) : (
-          <AllProductStatistics
-            counts={productStatistics}
-            getStatisticHref={getProductStatisticHref}
-            className={css.productStatistics}
-          />
-        )}
+        <div className={css.productStatistics}>
+          {isProductStatisticsLoading ? (
+            <StatsLoadingSkeleton
+              count={4}
+              columns={4}
+              tabletColumns={2}
+              label="Loading all product statistics"
+            />
+          ) : isProductStatisticsUnavailable ? (
+            <ProfileResourceState
+              variant="error"
+              title="Product statistics could not be loaded"
+              description="The product statistics are temporarily unavailable."
+              retryLabel="Try again"
+              sideActionOnDesktop
+              onRetry={reloadStatistics}
+            />
+          ) : (
+            <AllProductStatistics
+              counts={productStatistics}
+              activeKeys={activeStatisticKeys}
+              getStatisticHref={getProductStatisticHref}
+            />
+          )}
+        </div>
       </section>
 
       <section
@@ -459,30 +524,14 @@ function AllProductsPageContent({
         aria-label="Search and filter all products"
       >
         <div className={css.searchGrid}>
-          <SearchInput
-            id="all-products-product-article-search"
-            label="Product article search"
-            value={filters.article}
-            placeholder="Product article"
-            isActive={Boolean(filters.article)}
-            onChange={(article) =>
+          <OwnerProductSearch
+            value={filters.productId}
+            onChange={(productId) =>
               handleFiltersChange({
                 ...filters,
-                article,
-              })
-            }
-          />
-
-          <SearchInput
-            id="all-products-product-name-search"
-            label="Product name search"
-            value={filters.name}
-            placeholder="Product name"
-            isActive={Boolean(filters.name)}
-            onChange={(name) =>
-              handleFiltersChange({
-                ...filters,
-                name,
+                productId,
+                name: '',
+                article: '',
               })
             }
           />
@@ -514,6 +563,7 @@ function AllProductsPageContent({
             shown={products.length}
             total={totalProducts}
             label="products"
+            fullWidthOnMobile
           />
         </div>
 
@@ -535,11 +585,18 @@ function AllProductsPageContent({
           </div>
         ) : null}
 
+        {!isCheckingEligibility && !hasEligiblePharmacy ? (
+          <p role="note" className={css.addEligibilityNotice}>
+            To add products, at least one of your pharmacies must be Active or
+            On moderation.
+          </p>
+        ) : null}
+
         <AllProductsTable
-          currentPharmacyId={currentPharmacyId}
           products={products}
-          isLoading={!isProfileLoaded || isLoading}
-          isAddActionDisabled={Boolean(bannerStatus) || !currentPharmacyId}
+          categoryDirectory={categoryDirectory}
+          isLoading={isLoading}
+          isAddActionDisabled={isCheckingEligibility || !hasEligiblePharmacy}
           addingProductId={addingProductId}
           onAddProduct={setProductToAdd}
           emptyMessage={
@@ -560,11 +617,31 @@ function AllProductsPageContent({
       </section>
 
       <ConfirmationModal
-        isOpen={Boolean(productToAdd)}
-        title="Add product to pharmacy?"
-        description="Are you sure you want to add this product to your pharmacy?"
+        isOpen={Boolean(productToAdd) && hasEligiblePharmacy}
+        eyebrow="ALL PRODUCTS"
+        title="Add product to eligible pharmacies?"
+        description={
+          <div className={css.addProductConfirmationCopy}>
+            {productToAdd ? (
+              <p>
+                <strong>{productToAdd.name}</strong> will be added to all your
+                Active and On moderation pharmacies.
+              </p>
+            ) : null}
+            <p>
+              When another pharmacy becomes Active, missing selected products
+              will be added automatically. Existing products, prices and stock
+              will not be duplicated or overwritten.
+            </p>
+          </div>
+        }
         confirmLabel="Add to pharmacy"
+        cancelLabel="Cancel"
+        confirmIconLeft={<PackagePlus size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         isLoading={Boolean(addingProductId)}
+        closeOnBackdrop={!addingProductId}
+        closeOnEscape={!addingProductId}
         onConfirm={() => void handleConfirmAddProduct()}
         onCancel={() => {
           if (!addingProductId) setProductToAdd(null);

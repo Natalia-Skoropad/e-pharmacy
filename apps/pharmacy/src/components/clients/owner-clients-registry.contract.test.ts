@@ -188,7 +188,7 @@ test('client pharmacy detail has a bookmarkable owner-scoped tab without exposin
   const browser = read('lib/api/browser/clients.api.ts');
 
   assert.match(detail, /value: 'pharmacies'/);
-  assert.match(detail, /<ClientPharmaciesTab clientId=\{clientId\}/);
+  assert.match(detail, /<ClientPharmaciesTab[\s\S]*?clientId=\{clientId\}/);
   assert.match(page, /isValidObjectId\(clientId\)/);
   assert.match(page, /initialTab="pharmacies"/);
 

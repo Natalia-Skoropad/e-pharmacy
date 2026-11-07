@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Building2, ListOrdered, ShoppingBag, Wallet } from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
@@ -51,7 +51,11 @@ import {
 } from '@/lib/pharmacies/load-complete-pharmacy-locations';
 
 import { getOwnedPharmacyPath } from '@/lib/routes';
-import { buildClientPharmaciesPath } from '@/lib/clients/client-pharmacies-path';
+
+import {
+  buildClientPharmaciesPath,
+  parseClientPharmaciesSegments,
+} from '@/lib/clients/client-pharmacies-path';
 
 import { OwnedPharmacySearch } from '@/components/pharmacies/OwnedPharmacySearch/OwnedPharmacySearch';
 import { OwnedPharmaciesFiltersDrawer } from '@/components/pharmacies/OwnedPharmaciesFiltersDrawer/OwnedPharmaciesFiltersDrawer';
@@ -69,7 +73,26 @@ export function ClientPharmaciesTab({
   initialState = OWNED_PHARMACIES_LIST_URL_DEFAULTS,
 }: Readonly<{ clientId: string; initialState?: OwnedPharmacyListUrlState }>) {
   const router = useRouter();
-  const state = initialState;
+  const pathname = usePathname();
+
+  // Next App Router can preserve the client tab across sibling filter routes.
+  // Resolve the state from the *current URL*, not the first mounted props.
+  // useMemo also keeps API request dependencies stable while client details load.
+  const state = useMemo(() => {
+    const base = `/pharmacy/clients/${clientId}/pharmacies`;
+
+    if (pathname === base) {
+      return parseClientPharmaciesSegments();
+    }
+
+    if (pathname.startsWith(`${base}/`)) {
+      return parseClientPharmaciesSegments(
+        pathname.slice(base.length + 1).split('/')
+      );
+    }
+
+    return initialState;
+  }, [clientId, initialState, pathname]);
 
   const navigate = useCallback(
     (value: OwnedPharmacyListUrlState) => {

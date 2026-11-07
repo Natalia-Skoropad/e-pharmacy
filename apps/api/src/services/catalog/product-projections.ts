@@ -35,7 +35,8 @@ const PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES = [
 export type ProductOfferVisibility =
   | Readonly<{ mode: 'public' }>
   | Readonly<{ mode: 'pharmacy-management'; pharmacyId: string }>
-  | Readonly<{ mode: 'admin-management' }>;
+  | Readonly<{ mode: 'admin-management' }>
+  | Readonly<{ mode: 'owner-management'; pharmacyIds: readonly string[] }>;
 
 //===============================================================
 
@@ -69,8 +70,10 @@ export async function getOffersByProductIds(
     if (visibility.mode === 'admin-management') return true;
 
     return (
-      visibility.mode === 'pharmacy-management' &&
-      String(offer.pharmacyId) === visibility.pharmacyId
+      (visibility.mode === 'pharmacy-management' &&
+        String(offer.pharmacyId) === visibility.pharmacyId) ||
+      (visibility.mode === 'owner-management' &&
+        visibility.pharmacyIds.includes(String(offer.pharmacyId)))
     );
   });
 
@@ -95,6 +98,8 @@ export async function getOffersByProductIds(
 
   if (visibility.mode === 'public') {
     pharmacyFilter.status = { $in: PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES };
+  } else if (visibility.mode === 'owner-management') {
+    pharmacyFilter._id = { $in: visibility.pharmacyIds };
   } else if (visibility.mode === 'pharmacy-management') {
     pharmacyFilter.$or = [
       { status: { $in: PUBLIC_PRODUCT_OFFER_PHARMACY_STATUSES } },
@@ -117,6 +122,7 @@ export async function getOffersByProductIds(
 
     const canSeeOperationalFields =
       visibility.mode === 'admin-management' ||
+      visibility.mode === 'owner-management' ||
       (visibility.mode === 'pharmacy-management' &&
         String(offer.pharmacyId) === visibility.pharmacyId);
 

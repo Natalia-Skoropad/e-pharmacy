@@ -1,6 +1,7 @@
 import type { ApiPaginationResponse } from '../api';
 import type { CalendarDateString, EntityId } from '../primitives';
 import type { ProductCategorySlug } from '../reference-data';
+
 import type { ProductCardSummary } from './product-card-summary';
 import type { ProductDetails } from './product-details';
 import type { ProductStatus } from './product-summary';
@@ -51,6 +52,8 @@ export type PharmacyProductsQueryParams = BaseProductsQueryParams &
     includeBlocked?: boolean;
     addedToPharmacyId?: EntityId;
     addedToMyPharmacy?: boolean;
+    ownerCatalog?: boolean;
+    productId?: EntityId;
     inStock?: boolean;
     stock?: ProductStockFilter;
     addedFrom?: CalendarDateString;
@@ -68,9 +71,11 @@ type ProductFilterOption<TValue extends string = string> = Readonly<{
 
 export type ProductFilterOptionsResponse = Readonly<{
   categories: readonly ProductFilterOption<'all' | ProductCategorySlug>[];
+
   availability: readonly ProductFilterOption<
     'all' | 'in-stock' | 'out-of-stock'
   >[];
+
   sort: readonly ProductFilterOption<ProductsSortOption>[];
 }>;
 

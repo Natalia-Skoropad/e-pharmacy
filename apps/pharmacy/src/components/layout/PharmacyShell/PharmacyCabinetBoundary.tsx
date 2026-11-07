@@ -49,14 +49,16 @@ export function PharmacyCabinetBoundaryRuntime({
   children,
   pathname,
 }: PharmacyCabinetBoundaryRuntimeProps) {
-  // Owner profile and the owned-pharmacies registry/editor are account-scoped.
-  // They must remain accessible when an owner has zero or multiple pharmacies:
-  // /me/summary may legitimately be null or fail with SELECTION_REQUIRED.
-  // They load and authorize their own resources independently.
+  // Owner account pages (including the global Admin product catalog) are
+  // independent of the selected pharmacy. /me/summary may legitimately fail
+  // with SELECTION_REQUIRED for owners with multiple pharmacies, but their
+  // resources authorize independently. Only operational pages require it.
   if (
     (pathname &&
       (isOwnerClientsListPath(pathname) ||
         isOwnerClientDetailPath(pathname))) ||
+    pathname === PHARMACY_ROUTES.ALL_PRODUCTS ||
+    pathname?.startsWith(`${PHARMACY_ROUTES.ALL_PRODUCTS}/`) ||
     pathname === PHARMACY_ROUTES.PROFILE ||
     pathname?.startsWith(`${PHARMACY_ROUTES.PROFILE}/`) ||
     pathname === PHARMACY_ROUTES.PHARMACIES ||

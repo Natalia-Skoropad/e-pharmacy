@@ -6,6 +6,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import {
   isAllProductsFilterSegment,
   parseAllProductsSegments,
+  parseAllProductsPaginationSegments,
 } from '@/lib/products/all-product-paths';
 
 import { AllProductDetailsPageContent } from '@/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent';
@@ -15,7 +16,9 @@ import { AllProductsPageContent } from '@/components/all-products/AllProductsPag
 
 export const metadata: Metadata = {
   title: 'Global product details',
-  description: 'View global product data and add it to the current pharmacy.',
+
+  description:
+    'View global product data and add it to eligible pharmacies owned by this account.',
 };
 
 //===================================================================
@@ -30,12 +33,15 @@ async function AllProductDetailsPage({ params }: AllProductDetailsPageProps) {
   const { productId } = await params;
 
   if (isAllProductsFilterSegment(productId)) {
-    const initialFilters = parseAllProductsSegments({ filters: [productId] });
+    const routeParams = { filters: [productId] };
+    const initialFilters = parseAllProductsSegments(routeParams);
+    const initialPagination = parseAllProductsPaginationSegments(routeParams);
 
     return (
       <AllProductsPageContent
-        key={JSON.stringify(initialFilters)}
+        key={JSON.stringify([initialFilters, initialPagination])}
         initialFilters={initialFilters}
+        initialPagination={initialPagination}
       />
     );
   }

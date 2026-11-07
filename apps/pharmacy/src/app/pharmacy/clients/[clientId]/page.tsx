@@ -5,6 +5,7 @@ import {
   buildClientsPath,
   parseClientsSegments,
   resolveClientsRoute,
+  parseClientsPaginationSegments,
 } from '@/lib/clients/client-paths';
 
 import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
@@ -35,11 +36,18 @@ async function ClientDetailsPage({ params }: ClientDetailsPageProps) {
 
   if (route.kind === 'filters') {
     const filters = parseClientsSegments({ filters: route.filters });
-    const canonical = buildClientsPath(filters);
+    const pagination = parseClientsPaginationSegments(route.filters);
+    const canonical = buildClientsPath(filters, undefined, pagination);
 
     if (`/pharmacy/clients/${clientId}` !== canonical) redirect(canonical);
 
-    return <ClientsPageContent initialFilters={filters} />;
+    return (
+      <ClientsPageContent
+        initialFilters={filters}
+        initialPage={pagination.page}
+        initialPerPage={pagination.perPage}
+      />
+    );
   }
 
   return <ClientDetailsPageContent clientId={route.clientId} />;

@@ -76,7 +76,7 @@ test('clientId is a generation boundary that remounts all client-detail local re
   );
 
   assert.match(source, /useState<ClientDetailTab>\(initialTab\)/);
-  assert.match(source, /page:\s*1/);
+  assert.match(source, /parseClientDetailPaginationPath\(pathname, clientId/);
   assert.match(source, /useState\(''\)/);
   assert.match(source, /const controller = new AbortController\(\)/);
   assert.match(source, /controller\.abort\(\)/);
@@ -178,14 +178,18 @@ test('client pagination uses canonical backend pages while order statistics have
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
 
-  assert.match(
-    source,
-    /setOrdersPageState\(\{[\s\S]*?searchKey: orderSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
-  );
+  assert.match(source, /response\.page !== ordersPage/);
 
   assert.match(
     source,
-    /setProductsPageState\(\{[\s\S]*?searchKey: productSearchKey,[\s\S]*?page: response\.page,[\s\S]*?\}\)/
+    /navigateTable\('orders', response\.page, ordersRowsPerPage, true\)/
+  );
+
+  assert.match(source, /response\.page !== productsPage/);
+
+  assert.match(
+    source,
+    /navigateTable\('products', response\.page, productsRowsPerPage, true\)/
   );
 
   assert.doesNotMatch(
@@ -277,9 +281,9 @@ test('client detail text searches debounce network work and reset pagination by 
   );
 
   assert.match(source, /const orderSearchKey =/);
-  assert.match(source, /ordersPageState\.searchKey === orderSearchKey/);
+  assert.match(source, /const ordersPage = ordersPagination\.page/);
   assert.match(source, /const productSearchKey =/);
-  assert.match(source, /productsPageState\.searchKey === productSearchKey/);
+  assert.match(source, /const productsPage = productsPagination\.page/);
 
   const [ordersTab, productsTab] = await Promise.all([
     read('./ClientDetailsPageContent/ClientOrdersTab.tsx'),

@@ -52,11 +52,12 @@
 
 .productStatistics {
   display: none;
+  min-width: 0;
 }
 
 @media only screen and (min-width: 768px) {
   .searchGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, 80px);
+    grid-template-columns: minmax(0, 1fr) 140px;
     align-items: end;
   }
 
@@ -82,4 +83,25 @@
     display: grid;
     gap: 14px;
   }
+}
+
+.addEligibilityNotice {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.addProductConfirmationCopy {
+  display: grid;
+  gap: 12px;
+}
+
+.addProductConfirmationCopy p {
+  margin: 0;
+}
+
+.addProductConfirmationCopy strong {
+  color: var(--color-text-primary);
+  font-weight: var(--fw-semi-bold);
 }

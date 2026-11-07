@@ -28,10 +28,14 @@ export type ProductCategoryReferenceDto = Readonly<{
   id: string;
   name: string;
   slug: string;
+  color?: string;
+  icon?: string;
 }>;
 
 export type ProductCategorySnapshotDto = Readonly<{
   id?: string;
   name: string;
   slug: string;
+  color?: string;
+  icon?: string;
 }>;

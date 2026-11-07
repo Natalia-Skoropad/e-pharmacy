@@ -60,6 +60,7 @@ import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { isApiError } from '@e-pharmacy/api-client/transport';
+
 import type { OwnProductStatisticsCounts } from '@e-pharmacy/types/products';
 import type { OrderStatus } from '@e-pharmacy/types/orders';
 
@@ -74,6 +75,7 @@ import type {
 
 import type { Review } from '@e-pharmacy/types/reviews';
 import type { EntityId } from '@e-pharmacy/types/primitives';
+
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
 import { formatShortDate } from '@e-pharmacy/utils/date';
@@ -117,6 +119,12 @@ import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
+import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
+
+import {
+  addOwnerCatalogProduct,
+  getOwnerCatalogProductDetails,
+} from '@/lib/api/browser/owner-all-products.api';
 
 import { OrderStatistics, OwnProductStatistics } from '@/components/statistics';
 import { EntityComments } from '@/components/comments/EntityComments';
@@ -208,6 +216,8 @@ type StockMovementRow = Readonly<{
   sourceValue: StockMovementSource;
   comment: string;
 }>;
+
+//===================================================================
 
 type RelatedOrderRow = Readonly<{
   id: string;
@@ -744,6 +754,27 @@ function AllProductDetailsPageContent({
   const currentPharmacyId = pharmacyProfile?.id ?? null;
   const pharmacyStatus = pharmacyProfile?.status ?? null;
 
+  const [ownerHasEligiblePharmacies, setOwnerHasEligiblePharmacies] =
+    useState(false);
+
+  useEffect(() => {
+    if (mode !== 'all') return;
+
+    const controller = new AbortController();
+
+    void getOwnedPharmacyStatistics({ signal: controller.signal })
+      .then((summary) => {
+        if (!controller.signal.aborted)
+          setOwnerHasEligiblePharmacies(
+            summary.active + summary.onModeration > 0
+          );
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setOwnerHasEligiblePharmacies(false);
+      });
+    return () => controller.abort();
+  }, [mode]);
+
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState<number | null>(null);
@@ -779,6 +810,7 @@ function AllProductDetailsPageContent({
   const [stockMovements, setStockMovements] = useState<ProductStockMovement[]>(
     []
   );
+
   const [stockStatus, setStockStatus] = useState<ResourceStatus>('idle');
 
   const [stockEarliestCreatedAt, setStockEarliestCreatedAt] = useState<
@@ -873,9 +905,12 @@ function AllProductDetailsPageContent({
       setProductSalesStatus('idle');
 
       try {
-        const response = await getProductDetails(productId, {
-          signal: controller.signal,
-        });
+        const response =
+          mode === 'all'
+            ? await getOwnerCatalogProductDetails(productId, {
+                signal: controller.signal,
+              })
+            : await getProductDetails(productId, { signal: controller.signal });
 
         if (!controller.signal.aborted) setProduct(response.product);
       } catch (loadError) {
@@ -892,7 +927,7 @@ function AllProductDetailsPageContent({
     return () => {
       controller.abort();
     };
-  }, [productId]);
+  }, [productId, mode]);
 
   useEffect(() => {
     if (!product?.name) return;
@@ -904,7 +939,8 @@ function AllProductDetailsPageContent({
     ? getProductOffer(product, currentPharmacyId)
     : null;
 
-  const isAddedToPharmacy = Boolean(currentOffer);
+  const isAddedToPharmacy =
+    mode === 'all' ? Boolean(product?.isAddedToOwner) : Boolean(currentOffer);
 
   const debouncedRelatedOrderNumberSearch = useDebouncedValue(
     relatedOrderNumberSearch,
@@ -1120,14 +1156,16 @@ function AllProductDetailsPageContent({
   ]);
 
   const productImageSrc = getProductImageSrc(product?.imageUrl);
-  const bannerStatus = getLockedFeatureBannerStatus(pharmacyStatus);
+
+  const bannerStatus =
+    mode === 'all' ? null : getLockedFeatureBannerStatus(pharmacyStatus);
 
   const canAddToPharmacy = Boolean(
     product &&
     product.status === 'active' &&
-    currentPharmacyId &&
-    !currentOffer &&
-    !bannerStatus
+    (mode === 'all'
+      ? ownerHasEligiblePharmacies && !product.isAddedToOwner
+      : currentPharmacyId && !currentOffer && !bannerStatus)
   );
 
   const canRemoveFromPharmacy = Boolean(
@@ -1143,7 +1181,11 @@ function AllProductDetailsPageContent({
       ? reviewsTotal
       : (product?.reviewsCount ?? null);
 
-  const tabs = PRODUCT_DETAILS_TABS.map((tab) => {
+  const tabs = PRODUCT_DETAILS_TABS.filter(
+    (tab) =>
+      mode !== 'all' ||
+      ['details', 'characteristics', 'reviews'].includes(tab.value)
+  ).map((tab) => {
     if (tab.value === 'reviews' && displayedReviewsTotal !== null) {
       return { ...tab, label: `Reviews (${displayedReviewsTotal})` };
     }
@@ -1397,9 +1439,17 @@ function AllProductDetailsPageContent({
     setIsAddingProduct(true);
 
     try {
-      const response = await addProductToMyPharmacy(product.id);
+      const response =
+        mode === 'all'
+          ? await addOwnerCatalogProduct(product.id)
+          : await addProductToMyPharmacy(product.id);
 
-      setProduct(response.product);
+      setProduct(
+        mode === 'all'
+          ? { ...response.product, isAddedToOwner: true }
+          : response.product
+      );
+
       setStockMovements([]);
       setStockEarliestCreatedAt(null);
       setStockBalance(null);
@@ -1412,11 +1462,13 @@ function AllProductDetailsPageContent({
       toast.success(response.message || 'Product added to your pharmacy.');
     } catch (addError) {
       if (
+        mode !== 'all' &&
         currentPharmacyId &&
         shouldReconcileProductMutation(addError, 'add')
       ) {
         try {
           const latest = await getProductDetails(product.id);
+
           if (getProductOffer(latest.product, currentPharmacyId)) {
             setProduct(latest.product);
             setStockMovements([]);
@@ -1437,6 +1489,7 @@ function AllProductDetailsPageContent({
       }
 
       const message = getProductActionErrorMessage(addError);
+
       if (message) toast.error(message);
     } finally {
       setIsAddingProduct(false);
@@ -1474,6 +1527,7 @@ function AllProductDetailsPageContent({
       ) {
         try {
           const latest = await getProductDetails(product.id);
+
           if (!getProductOffer(latest.product, currentPharmacyId)) {
             setProduct(latest.product);
             setStockMovements([]);
@@ -1496,6 +1550,7 @@ function AllProductDetailsPageContent({
       }
 
       const message = getProductActionErrorMessage(removeError);
+
       if (message) toast.error(message);
     } finally {
       setIsRemovingProduct(false);
@@ -1545,13 +1600,13 @@ function AllProductDetailsPageContent({
             />
           ) : null}
 
-          {product && singleProductStatistics ? (
+          {mode !== 'all' && product && singleProductStatistics ? (
             <OwnProductStatistics
               counts={singleProductStatistics}
               visibleKeys={['inStock', 'reserved', 'available']}
               className={css.singleProductStatistics}
             />
-          ) : product && isAddedToPharmacy ? (
+          ) : mode !== 'all' && product && isAddedToPharmacy ? (
             <p role="status">Stock summary is temporarily unavailable.</p>
           ) : null}
         </div>
@@ -1617,7 +1672,9 @@ function AllProductDetailsPageContent({
                     >
                       {isAddedToPharmacy
                         ? getProductPriceLabel(product, currentOffer)
-                        : 'This product is not added to your pharmacy yet'}
+                        : mode === 'all'
+                          ? 'This product has not been selected for your pharmacies yet'
+                          : 'This product is not added to your pharmacy yet'}
                     </p>
 
                     <div className={css.detailsColumns}>
@@ -1652,8 +1709,12 @@ function AllProductDetailsPageContent({
                           {product.status === 'blocked'
                             ? 'Unavailable'
                             : isAddedToPharmacy
-                              ? 'Added to your pharmacy'
-                              : 'Add to my pharmacy'}
+                              ? mode === 'all'
+                                ? 'Added to your pharmacies'
+                                : 'Added to your pharmacy'
+                              : mode === 'all'
+                                ? 'Add to pharmacies'
+                                : 'Add to my pharmacy'}
                         </Button>
                       ) : null}
 

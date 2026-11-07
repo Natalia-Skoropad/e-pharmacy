@@ -54,6 +54,7 @@ import { getPharmacyClientStatistics } from '@/lib/clients/client-statistics';
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 
 import { buildAllProductsPath } from '@/lib/products/all-product-paths';
+import { DEFAULT_ALL_PRODUCTS_FILTERS } from '@/lib/products/all-products-filters';
 import { buildOwnProductsPath } from '@/lib/products/own-product-paths';
 
 import { DEFAULT_OWN_PRODUCTS_FILTERS } from '@/lib/products/own-products-filters';
@@ -530,10 +531,7 @@ function PharmacyDashboardPageContent() {
   const getAllProductStatisticHref = (key: AllProductStatisticsKey) => {
     if (key === 'active') {
       return buildAllProductsPath({
-        createdDate: { from: '', to: '' },
-        name: '',
-        article: '',
-        category: 'all',
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
         status: 'active',
         addedToMyPharmacy: 'all',
       });
@@ -541,10 +539,7 @@ function PharmacyDashboardPageContent() {
 
     if (key === 'blocked') {
       return buildAllProductsPath({
-        createdDate: { from: '', to: '' },
-        name: '',
-        article: '',
-        category: 'all',
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
         status: 'blocked',
         addedToMyPharmacy: 'all',
       });
@@ -552,22 +547,14 @@ function PharmacyDashboardPageContent() {
 
     if (key === 'addedToPharmacy') {
       return buildAllProductsPath({
-        createdDate: { from: '', to: '' },
-        name: '',
-        article: '',
-        category: 'all',
-        status: 'all',
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
         addedToMyPharmacy: 'yes',
       });
     }
 
     if (key === 'notAddedToPharmacy') {
       return buildAllProductsPath({
-        createdDate: { from: '', to: '' },
-        name: '',
-        article: '',
-        category: 'all',
-        status: 'all',
+        ...DEFAULT_ALL_PRODUCTS_FILTERS,
         addedToMyPharmacy: 'no',
       });
     }

@@ -22,7 +22,7 @@ test('all products remounts from canonical server filters like the other list ro
 
     assert.match(
       route,
-      /<AllProductsPageContent[\s\S]*?key=\{JSON\.stringify\(initialFilters\)\}[\s\S]*?initialFilters=\{initialFilters\}/
+      /<AllProductsPageContent[\s\S]*?key=\{JSON\.stringify\(\[initialFilters, initialPagination\]\)\}[\s\S]*?initialFilters=\{initialFilters\}[\s\S]*?initialPagination=\{initialPagination\}/
     );
   }
 });
@@ -189,7 +189,8 @@ test('product management list failures expose explicit retry generations', async
     ),
   ]);
 
-  assert.match(allProducts, /Retry product statistics/);
+  assert.match(allProducts, /title="Product statistics could not be loaded"/);
+  assert.match(allProducts, /onRetry=\{reloadStatistics\}/);
   assert.match(allProducts, /Retry products/);
   assert.match(allProducts, /setRefreshVersion/);
 
@@ -203,7 +204,7 @@ test('product management list failures expose explicit retry generations', async
 
 //===================================================================
 
-test('successful product mutations apply canonical local state without an unconditional follow-up list GET', async () => {
+test('successful product mutations update local rows and retain the current refresh policy', async () => {
   const [allProducts, ownProducts] = await Promise.all([
     read(
       'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
@@ -226,8 +227,9 @@ test('successful product mutations apply canonical local state without an uncond
   assert.ok(ownProductsMutation);
 
   assert.match(allProductsMutation, /response\.product/);
-  assert.match(allProductsMutation, /applyAddedProductStatistics/);
-  assert.doesNotMatch(allProductsMutation, /setRefreshVersion/);
+  assert.match(allProductsMutation, /setProducts/);
+  assert.match(allProductsMutation, /reloadStatistics\(\)/);
+  assert.doesNotMatch(allProductsMutation, /getOwnerCatalogProducts\(/);
 
   assert.match(ownProductsMutation, /applyRemovedOwnProductStatistics/);
   assert.doesNotMatch(ownProductsMutation, /setRefreshVersion/);

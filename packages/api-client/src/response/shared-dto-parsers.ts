@@ -307,6 +307,8 @@ const PHARMACY_STATUSES = new Set([
 const USER_ROLES = new Set(['client', 'pharmacy', 'admin']);
 const PHARMACY_MEMBERSHIP_ROLES = new Set(['owner', 'manager']);
 
+//===================================================================
+
 // Mirrors the shared pharmacy verification-document contract. The config parity
 // checks protect the source-of-truth value without coupling api-client to config.
 const PHARMACY_DOCUMENT_MAX_SIZE_BYTES = 10 * 1024 * 1024;
@@ -403,6 +405,13 @@ export function parseProductCategoryReference(
       context
     );
   }
+
+  requireOptionalFields(
+    record,
+    'product category',
+    { color: 'string', icon: 'string' },
+    context
+  );
 
   return checked<ProductCategoryReference>(record);
 }
@@ -813,6 +822,7 @@ export function parseProductDetails(
       description: 'string',
       pharmacyId: 'string',
       pharmacyName: 'string',
+      isAddedToOwner: 'boolean',
     },
     context
   );

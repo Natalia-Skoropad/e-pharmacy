@@ -6,6 +6,14 @@ import { PRODUCT_MANAGEMENT_ERROR_CODES } from '../../constants/catalog/product-
 import { API_MESSAGES } from '../../constants/shared/messages';
 
 import { Product } from '../../models/catalog/product.model';
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+
+import {
+  assertOwnerCatalogAccess,
+  getOwnerSelectedProductIds,
+  addOwnerCatalogProduct,
+} from './owner-product-catalog.service';
+
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { Order } from '../../models/orders/order.model';
 
@@ -30,10 +38,34 @@ import {
 //===============================================================
 
 export async function getManagedProductStatisticsService(
-  actor: ProductManagementActor
+  actor: ProductManagementActor,
+  ownerCatalog = false
 ) {
   if (actor.role !== USER_ROLES.PHARMACY) {
     throw httpError(HTTP_STATUS.FORBIDDEN, 'Access denied.');
+  }
+
+  if (ownerCatalog) {
+    await assertOwnerCatalogAccess(actor.userId);
+
+    const ids = await getOwnerSelectedProductIds(actor.userId);
+
+    const [active, blocked] = await Promise.all([
+      Product.countDocuments({ status: 'active' }),
+      Product.countDocuments({ status: 'blocked' }),
+    ]);
+
+    const addedToPharmacy = await Product.countDocuments({
+      _id: { $in: ids },
+      status: { $in: ['active', 'blocked'] },
+    });
+
+    return {
+      active,
+      blocked,
+      addedToPharmacy,
+      notAddedToPharmacy: active + blocked - addedToPharmacy,
+    };
   }
 
   const pharmacy = await getCurrentUserPharmacyForManagedProductRead(
@@ -116,6 +148,33 @@ export async function getManagedProductsService(
   actor: ProductManagementActor,
   options: Readonly<{ includeOffers?: boolean }> = {}
 ) {
+  if (query.ownerCatalog && actor.role === USER_ROLES.PHARMACY) {
+    await assertOwnerCatalogAccess(actor.userId);
+
+    const productIds = await getOwnerSelectedProductIds(actor.userId);
+
+    const pharmacyIds = (
+      await Pharmacy.distinct('_id', { ownerId: actor.userId })
+    ).map(String);
+
+    const result = await getProductsByScope(query, 'management', undefined, {
+      ...options,
+      ownerSelectedProductIds: productIds,
+      offerVisibility: { mode: 'owner-management', pharmacyIds },
+    });
+
+    const selected = new Set(productIds.map(String));
+
+    return {
+      ...result,
+
+      items: result.items.map((product) => ({
+        ...product,
+        isAddedToOwner: selected.has(product.id),
+      })),
+    };
+  }
+
   const access = await resolveManagedProductsAccess(query, actor);
 
   return getProductsByScope(access.query, 'management', undefined, {
@@ -128,8 +187,29 @@ export async function getManagedProductsService(
 
 export async function getManagedProductDetailsService(
   productId: string,
-  actor: ProductManagementActor
+  actor: ProductManagementActor,
+  ownerCatalog = false
 ) {
+  if (ownerCatalog && actor.role === USER_ROLES.PHARMACY) {
+    await assertOwnerCatalogAccess(actor.userId);
+
+    const [selectedIds, ownerPharmacyIds] = await Promise.all([
+      getOwnerSelectedProductIds(actor.userId),
+      Pharmacy.distinct('_id', { ownerId: actor.userId }),
+    ]);
+
+    const result = await getProductDetailsByScope(
+      productId,
+      undefined,
+      'management',
+      { mode: 'owner-management', pharmacyIds: ownerPharmacyIds.map(String) }
+    );
+
+    const isAddedToOwner = selectedIds.some((id) => String(id) === productId);
+
+    return { ...result, product: { ...result.product, isAddedToOwner } };
+  }
+
   const offerVisibility = await getManagedProductOfferVisibility(actor);
 
   return getProductDetailsByScope(
@@ -153,8 +233,26 @@ function createInitialOfferStockQuantity(productId: Types.ObjectId): number {
 
 export async function addProductToMyPharmacyService(
   productId: string,
-  userId: string
+  userId: string,
+  ownerCatalog = false
 ) {
+  if (ownerCatalog) {
+    const added = await addOwnerCatalogProduct(productId, userId);
+
+    const pharmacyIds = (
+      await Pharmacy.distinct('_id', { ownerId: userId })
+    ).map(String);
+
+    const details = await getProductDetailsByScope(
+      productId,
+      undefined,
+      'management',
+      { mode: 'owner-management', pharmacyIds }
+    );
+
+    return { ...details, message: added.message };
+  }
+
   const [pharmacy, product] = await Promise.all([
     getCurrentUserPharmacyForProductManagement(userId),
     Product.findById(productId).lean(),

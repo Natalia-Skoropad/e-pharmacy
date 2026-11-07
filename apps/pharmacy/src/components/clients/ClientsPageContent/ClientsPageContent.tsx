@@ -100,9 +100,6 @@ function ClientsPageContent({
   const router = useRouter();
   const ownerScope = !embedded;
 
-  const [rowsPerPage, setRowsPerPage] =
-    useState<RowsPerPageValue>(initialPerPage);
-
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
   const [totalClients, setTotalClients] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -147,37 +144,25 @@ function ClientsPageContent({
   // Free text is handled inside OwnerClientSearch and never persisted in URLs.
   const filters = routeFilters;
 
+  // Both registry variants use the canonical URL as their paging source.
+  // This survives refresh and browser Back/Forward without stale component state.
   const pagination: ClientsPaginationState = {
-    page: embedded ? initialPage : 1,
-    perPage: embedded ? initialPerPage : 20,
+    page: initialPage,
+    perPage: initialPerPage,
   };
 
   const canonicalInitialPath = buildClientsPath(
     routeFilters,
     basePath,
-    embedded ? pagination : undefined
+    pagination
   );
 
-  const [pageState, setPageState] = useState(() => ({
-    routeKey: canonicalInitialPath,
-    page: initialPage,
-  }));
-
-  const currentPage = embedded
-    ? initialPage
-    : pageState.routeKey === canonicalInitialPath
-      ? pageState.page
-      : 1;
+  const currentPage = pagination.page;
+  const rowsPerPage = pagination.perPage;
 
   const queryParams = useMemo(
-    () =>
-      getClientsQueryParams(
-        filters,
-        embedded ? initialPerPage : rowsPerPage,
-        currentPage,
-        ownerScope
-      ),
-    [currentPage, filters, rowsPerPage, ownerScope, embedded, initialPerPage]
+    () => getClientsQueryParams(filters, rowsPerPage, currentPage, ownerScope),
+    [currentPage, filters, rowsPerPage, ownerScope]
   );
 
   const activeFiltersCount = countTrueConditions(
@@ -207,7 +192,17 @@ function ClientsPageContent({
         setClients([...response.items]);
         setTotalClients(response.total);
         setTotalPages(response.totalPages);
-        setPageState({ routeKey: canonicalInitialPath, page: response.page });
+
+        if (response.page !== currentPage) {
+          router.replace(
+            buildClientsPath(routeFilters, basePath, {
+              page: response.page,
+              perPage: rowsPerPage,
+            }),
+            { scroll: false }
+          );
+        }
+
         setEarliestCreatedAt(response.earliestCreatedAt);
         setClientStatisticsSuccess(response.statistics);
         setClientsStatus('success');
@@ -232,8 +227,12 @@ function ClientsPageContent({
       controller.abort();
     };
   }, [
-    canonicalInitialPath,
+    basePath,
+    currentPage,
     queryParams,
+    routeFilters,
+    router,
+    rowsPerPage,
     setClientStatisticsFailure,
     setClientStatisticsSuccess,
     startClientStatisticsLoading,
@@ -246,56 +245,36 @@ function ClientsPageContent({
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: ClientsFilterState) => {
-    const nextPath = buildClientsPath(
-      nextFilters,
-      basePath,
-      embedded ? { page: 1, perPage: initialPerPage } : undefined
-    );
+    const nextPath = buildClientsPath(nextFilters, basePath, {
+      page: 1,
+      perPage: rowsPerPage,
+    });
 
     if (nextPath !== canonicalInitialPath) {
       router.push(nextPath, { scroll: false });
     }
-
-    setPageState({ routeKey: nextPath, page: 1 });
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
-    if (embedded) {
-      router.replace(
-        buildClientsPath(routeFilters, basePath, {
-          page: 1,
-          perPage: nextRowsPerPage,
-        }),
+    const nextPath = buildClientsPath(routeFilters, basePath, {
+      page: 1,
+      perPage: nextRowsPerPage,
+    });
 
-        { scroll: false }
-      );
-
-      return;
+    if (nextPath !== canonicalInitialPath) {
+      router.push(nextPath, { scroll: false });
     }
-
-    setRowsPerPage(nextRowsPerPage);
-    setPageState({ routeKey: canonicalInitialPath, page: 1 });
   };
 
   const resetFilters = () => {
-    if (embedded) {
-      router.replace(
-        buildClientsPath(DEFAULT_CLIENTS_FILTERS, basePath, {
-          page: 1,
-          perPage: initialPerPage,
-        }),
+    const nextPath = buildClientsPath(DEFAULT_CLIENTS_FILTERS, basePath, {
+      page: 1,
+      perPage: rowsPerPage,
+    });
 
-        { scroll: false }
-      );
-
-      return;
+    if (nextPath !== canonicalInitialPath) {
+      router.push(nextPath, { scroll: false });
     }
-
-    if (canonicalInitialPath !== PHARMACY_ROUTES.CLIENTS) {
-      router.push(PHARMACY_ROUTES.CLIENTS, { scroll: false });
-    }
-
-    setPageState({ routeKey: PHARMACY_ROUTES.CLIENTS, page: 1 });
   };
 
   // Client status and Successful orders are independent filter dimensions.
@@ -303,11 +282,10 @@ function ClientsPageContent({
   // retained, including when the user clears an active status card.
   const getClientStatisticHref = (key: ClientStatisticsKey) => {
     const link = (status: ClientsFilterState['status']) =>
-      buildClientsPath(
-        { ...routeFilters, status },
-        basePath,
-        embedded ? { page: 1, perPage: initialPerPage } : undefined
-      );
+      buildClientsPath({ ...routeFilters, status }, basePath, {
+        page: 1,
+        perPage: rowsPerPage,
+      });
 
     if (key === 'active') {
       return link(filters.status === 'active' ? 'all' : 'active');
@@ -450,7 +428,7 @@ function ClientsPageContent({
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="clients-rows-per-page"
-              value={embedded ? initialPerPage : rowsPerPage}
+              value={rowsPerPage}
               onChange={handleRowsPerPageChange}
             />
           </div>
@@ -497,16 +475,13 @@ function ClientsPageContent({
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={(page) => {
-              if (embedded) {
-                router.replace(
-                  buildClientsPath(routeFilters, basePath, {
-                    page,
-                    perPage: initialPerPage,
-                  }),
-                  { scroll: false }
-                );
-              } else {
-                setPageState({ routeKey: canonicalInitialPath, page });
+              const nextPath = buildClientsPath(routeFilters, basePath, {
+                page,
+                perPage: rowsPerPage,
+              });
+
+              if (nextPath !== canonicalInitialPath) {
+                router.push(nextPath, { scroll: false });
               }
             }}
           />

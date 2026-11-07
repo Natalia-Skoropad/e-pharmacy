@@ -37,6 +37,7 @@ type AllProductsFilterDraft = {
     to: string;
   };
 
+  productId: string;
   name: string;
   article: string;
   category: AllProductsFilterState['category'];
@@ -52,6 +53,47 @@ export type AllProductsRouteParams = Readonly<{
 
 //===================================================================
 
+export type AllProductsPagination = Readonly<{
+  page: number;
+  perPage: 20 | 50 | 100;
+}>;
+
+export const DEFAULT_ALL_PRODUCTS_PAGINATION: AllProductsPagination = {
+  page: 1,
+  perPage: 20,
+};
+
+//===================================================================
+
+/** Query-free canonical pagination, matching the owner Pharmacies registry. */
+export function parseAllProductsPaginationSegments(
+  params: AllProductsRouteParams = {}
+): AllProductsPagination {
+  let page = DEFAULT_ALL_PRODUCTS_PAGINATION.page;
+  let perPage = DEFAULT_ALL_PRODUCTS_PAGINATION.perPage;
+
+  for (const segment of params.filters ?? []) {
+    if (segment.startsWith('page-')) {
+      const raw = segment.slice('page-'.length);
+      const value = Number(raw);
+
+      if (/^[1-9]\d*$/.test(raw) && Number.isSafeInteger(value)) {
+        page = value;
+      }
+    } else if (segment.startsWith('per-page-')) {
+      const raw = segment.slice('per-page-'.length);
+
+      if (raw === '20' || raw === '50' || raw === '100') {
+        perPage = Number(raw) as AllProductsPagination['perPage'];
+      }
+    }
+  }
+
+  return { page, perPage };
+}
+
+//===================================================================
+
 function normalizeAddedToMyPharmacySegment(
   value: string
 ): Exclude<AllProductsAddedToMyPharmacyFilter, 'all'> | null {
@@ -62,6 +104,7 @@ function normalizeAddedToMyPharmacySegment(
 
 export function isAllProductsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('product-id-') ||
     segment.startsWith('product-name-') ||
     segment.startsWith('product-article-') ||
     segment.startsWith('search-name-') ||
@@ -70,7 +113,9 @@ export function isAllProductsFilterSegment(segment: string): boolean {
     segment.startsWith('status-') ||
     segment.startsWith('added-to-my-pharmacy-') ||
     segment.startsWith('date-from-') ||
-    segment.startsWith('date-to-')
+    segment.startsWith('date-to-') ||
+    segment.startsWith('page-') ||
+    segment.startsWith('per-page-')
   );
 }
 
@@ -93,6 +138,15 @@ export function parseAllProductsSegments(
   };
 
   for (const segment of params.filters ?? []) {
+    if (segment.startsWith('product-id-')) {
+      const productId = segment.slice('product-id-'.length);
+
+      if (/^[0-9a-f]{24}$/i.test(productId))
+        filters.productId = productId.toLowerCase();
+
+      continue;
+    }
+
     if (segment.startsWith('product-name-')) {
       filters.name = deslugifyNameSegment(segment.replace('product-name-', ''));
       continue;
@@ -119,6 +173,7 @@ export function parseAllProductsSegments(
 
     if (segment.startsWith('category-')) {
       const rawCategory = segment.slice('category-'.length);
+
       const category = rawCategory.includes('-')
         ? rawCategory.replace(/-/g, '_')
         : rawCategory;
@@ -189,11 +244,16 @@ export function parseAllProductsSegments(
 
 //===================================================================
 
-export function buildAllProductsPath(filters: AllProductsFilterState): string {
+export function buildAllProductsPath(
+  filters: AllProductsFilterState,
+  pagination: AllProductsPagination = DEFAULT_ALL_PRODUCTS_PAGINATION
+): string {
   const segments: string[] = [];
   const dateRangeIsValid = isDateRangeValid(filters.createdDate);
   const name = filters.name.trim();
   const article = filters.article.trim();
+
+  if (filters.productId) segments.push(`product-id-${filters.productId}`);
 
   if (article) {
     segments.push(`product-article-${slugifySegment(article)}`);
@@ -221,6 +281,14 @@ export function buildAllProductsPath(filters: AllProductsFilterState): string {
 
   if (dateRangeIsValid && filters.createdDate.to) {
     segments.push(`date-to-${filters.createdDate.to}`);
+  }
+
+  if (Number.isSafeInteger(pagination.page) && pagination.page > 1) {
+    segments.push(`page-${pagination.page}`);
+  }
+
+  if (pagination.perPage === 50 || pagination.perPage === 100) {
+    segments.push(`per-page-${pagination.perPage}`);
   }
 
   return segments.length

@@ -34,6 +34,7 @@ import {
 } from '../../pharmacies/pharmacy-audit-changes';
 
 import { ensureDefaultPharmacyClient } from '../../clients/default-pharmacy-client.service';
+import { ensureOwnerProductOffers } from '../../catalog/owner-product-catalog.service';
 import { activateNewPharmacyOwnerForPharmacy } from '../../owners/pharmacy-owner-lifecycle.service';
 
 import { reconcileAttachedPharmacyDocumentStorage } from '../../pharmacies/pharmacy-document.service';
@@ -566,6 +567,17 @@ export async function decidePharmacyModerationByAdminService(
             session
           );
         }
+      }
+
+      if (
+        nextStatus === PHARMACY_STATUSES.ACTIVE &&
+        previousStatus !== PHARMACY_STATUSES.ACTIVE
+      ) {
+        await ensureOwnerProductOffers(
+          String(saved.ownerId),
+          saved._id,
+          session
+        );
       }
 
       if (

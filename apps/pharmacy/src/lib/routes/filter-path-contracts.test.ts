@@ -18,6 +18,8 @@ import { DEFAULT_ORDERS_FILTERS } from '@/lib/orders/orders-filters';
 import {
   buildAllProductsPath,
   parseAllProductsSegments,
+  parseAllProductsPaginationSegments,
+  isAllProductsFilterSegment,
 } from '@/lib/products/all-product-paths';
 
 import {
@@ -175,8 +177,77 @@ test('all-products filters roundtrip through the canonical domain builder', () =
 
 //===================================================================
 
+test('all-products pagination and page size use the same URL segments as the pharmacy registry', () => {
+  const filters = {
+    ...DEFAULT_ALL_PRODUCTS_FILTERS,
+    status: 'active' as const,
+    addedToMyPharmacy: 'yes' as const,
+  };
+
+  const path = buildAllProductsPath(filters, { page: 3, perPage: 50 });
+
+  assert.equal(
+    path,
+    '/pharmacy/all-products/status-active/added-to-my-pharmacy-yes/page-3/per-page-50'
+  );
+
+  const route = { filters: segments(path) };
+
+  assert.deepEqual(parseAllProductsSegments(route), filters);
+
+  assert.deepEqual(parseAllProductsPaginationSegments(route), {
+    page: 3,
+    perPage: 50,
+  });
+
+  assert.equal(
+    buildAllProductsPath(DEFAULT_ALL_PRODUCTS_FILTERS, {
+      page: 1,
+      perPage: 50,
+    }),
+    '/pharmacy/all-products/per-page-50'
+  );
+
+  assert.equal(
+    buildAllProductsPath(DEFAULT_ALL_PRODUCTS_FILTERS, {
+      page: 4,
+      perPage: 20,
+    }),
+    '/pharmacy/all-products/page-4'
+  );
+
+  assert.equal(isAllProductsFilterSegment('per-page-50'), true);
+  assert.equal(isAllProductsFilterSegment('page-4'), true);
+  assert.equal(isAllProductsFilterSegment('507f1f77bcf86cd799439011'), false);
+});
+
+//===================================================================
+
+test('invalid all-products pagination values normalize to safe canonical defaults', () => {
+  const invalid = parseAllProductsPaginationSegments({
+    filters: ['page-0', 'per-page-999'],
+  });
+
+  assert.deepEqual(invalid, { page: 1, perPage: 20 });
+
+  assert.deepEqual(
+    parseAllProductsPaginationSegments({
+      filters: ['page-99999999999999999999'],
+    }),
+    { page: 1, perPage: 20 }
+  );
+
+  assert.deepEqual(
+    parseAllProductsPaginationSegments({ filters: ['page-2', 'per-page-100'] }),
+    { page: 2, perPage: 100 }
+  );
+});
+
+//===================================================================
+
 test('invalid known enum segments normalize to canonical defaults', () => {
   const orders = parseOrdersSegments({ filters: ['status-impossible'] });
+
   assert.equal(orders.status, DEFAULT_ORDERS_FILTERS.status);
   assert.equal(buildOrdersPath(orders), '/pharmacy/orders');
 
@@ -211,6 +282,7 @@ test('unknown filter segments normalize deterministically to canonical base rout
     {
       parse: () =>
         parseOwnProductsSegments({ filters: ['random-filter-value'] }),
+
       build: buildOwnProductsPath,
       expectedState: DEFAULT_OWN_PRODUCTS_FILTERS,
       expectedPath: '/pharmacy/products',
@@ -218,6 +290,7 @@ test('unknown filter segments normalize deterministically to canonical base rout
     {
       parse: () =>
         parseAllProductsSegments({ filters: ['random-filter-value'] }),
+
       build: buildAllProductsPath,
       expectedState: DEFAULT_ALL_PRODUCTS_FILTERS,
       expectedPath: '/pharmacy/all-products',
@@ -225,6 +298,7 @@ test('unknown filter segments normalize deterministically to canonical base rout
     {
       parse: () =>
         parseProductRequestsSegments({ filters: ['random-filter-value'] }),
+
       build: buildProductRequestsPath,
       expectedState: DEFAULT_PRODUCT_REQUESTS_FILTERS,
       expectedPath: '/pharmacy/product-requests',
@@ -233,6 +307,7 @@ test('unknown filter segments normalize deterministically to canonical base rout
 
   for (const { parse, build, expectedState, expectedPath } of cases) {
     const state = parse();
+
     assert.deepEqual(state, expectedState);
     assert.equal(build(state as never), expectedPath);
   }

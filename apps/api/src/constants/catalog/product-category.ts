@@ -21,6 +21,8 @@ export const PRODUCT_CATEGORY_DEFAULT_COLOR = '#64748B';
 export const PRODUCT_CATEGORY_STATUSES = ['active', 'hidden'] as const;
 export const PRODUCT_CATEGORY_KINDS = ['standard'] as const;
 
+//===================================================================
+
 export type ProductCategoryStatus = (typeof PRODUCT_CATEGORY_STATUSES)[number];
 export type ProductCategoryKind = (typeof PRODUCT_CATEGORY_KINDS)[number];
 
@@ -81,6 +83,30 @@ export const PRODUCT_CATEGORY_SEED_DEFINITIONS = [
   color: string;
   icon: string;
 }[];
+
+//===============================================================
+
+/**
+ * Canonical category icon for Admin and catalog projections.
+ *
+ * Legacy ProductCategory documents can lack `icon`: Admin has historically
+ * displayed their seed icon, while public catalog DTOs omitted it. Keep
+ * both projections consistent without overwriting a persisted Admin choice.
+ */
+export function resolveProductCategoryIcon(category: {
+  slug: string;
+  icon?: string | null;
+}): string {
+  const configuredIcon = category.icon?.trim();
+
+  if (configuredIcon) return configuredIcon;
+
+  return (
+    PRODUCT_CATEGORY_SEED_DEFINITIONS.find(
+      (definition) => definition.slug === category.slug
+    )?.icon ?? 'pill'
+  );
+}
 
 //===============================================================
 

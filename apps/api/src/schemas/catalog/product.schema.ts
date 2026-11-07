@@ -88,6 +88,8 @@ export const managedProductsQuerySchema = z.preprocess(
       includeBlocked: booleanQuerySchema.optional(),
       addedToPharmacyId: mongoIdSchema.optional(),
       addedToMyPharmacy: booleanQuerySchema.optional(),
+      ownerCatalog: booleanQuerySchema.optional(),
+      productId: mongoIdSchema.optional(),
       stock: z.enum(PRODUCT_STOCK_FILTER_OPTIONS).optional(),
       addedFrom: dateQuerySchema,
       addedTo: dateQuerySchema,

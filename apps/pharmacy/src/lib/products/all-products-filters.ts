@@ -15,6 +15,8 @@ export type AllProductsFilterState = Readonly<{
     from: string;
     to: string;
   };
+
+  productId: string;
   name: string;
   article: string;
   category: AllProductsCategoryFilter;
@@ -30,6 +32,7 @@ export const DEFAULT_ALL_PRODUCTS_FILTERS: AllProductsFilterState = {
     to: '',
   },
 
+  productId: '',
   name: '',
   article: '',
   category: 'all',

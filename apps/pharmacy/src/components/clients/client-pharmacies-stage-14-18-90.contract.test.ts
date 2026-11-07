@@ -49,7 +49,7 @@ test('client pharmacies use canonical server-side filter routes with browser his
     /router\.push\(buildClientPharmaciesPath\(clientId, value\)/
   );
 
-  assert.match(tab, /router\.replace\(buildClientPharmaciesPath\(clientId/);
+  assert.match(tab, /router\.replace\(\s*buildClientPharmaciesPath\(clientId/);
   assert.doesNotMatch(tab, /const \[state, setState\]/);
   assert.match(parent, /initialState=\{initialPharmacyFilters\}/);
 
@@ -67,7 +67,7 @@ test('table help floats outside scrolling container with the order icon', () => 
   );
 
   const help = tab.slice(
-    tab.indexOf('title="Successful orders — this client"')
+    tab.indexOf('title="Successful orders – this client"')
   );
 
   assert.match(help, /icon=\{<ShoppingBag/);
@@ -86,7 +86,7 @@ test('comments display the shared pharmacy form without blocking client loader',
 
   assert.match(
     parent,
-    /activeTab !== 'comments' && clientStatus !== 'success'/
+    /activeTab !== 'comments'[\s\S]*?clientStatus !== 'success'/
   );
 
   assert.match(parent, /\{activeTab === 'comments' \? \(/);

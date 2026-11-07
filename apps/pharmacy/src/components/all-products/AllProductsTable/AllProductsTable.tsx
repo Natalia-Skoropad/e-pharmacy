@@ -1,6 +1,13 @@
 import { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 
-import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+
+import type { EntityId } from '@e-pharmacy/types/primitives';
+import type { ProductDetails } from '@e-pharmacy/types/products';
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
+
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
 
 import {
   DataTable,
@@ -9,20 +16,22 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
-import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
-import type { EntityId } from '@e-pharmacy/types/primitives';
-import type { ProductDetails } from '@e-pharmacy/types/products';
+import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import { getPharmacyAllProductPath } from '@/lib/routes';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { resolveOwnerCatalogCategory } from '@/lib/products/owner-catalog-category';
+import { getPharmacyAllProductPath } from '@/lib/routes';
+
+import css from './AllProductsTable.module.css';
 
 //===================================================================
 
 type AllProductsTableProps = Readonly<{
-  currentPharmacyId: EntityId | null;
+  currentPharmacyId?: EntityId | null;
   products: ProductDetails[];
+  categoryDirectory: readonly ProductCategoryReference[];
   emptyMessage: string;
   isLoading?: boolean;
   isAddActionDisabled?: boolean;
@@ -34,8 +43,10 @@ type AllProductsTableProps = Readonly<{
 
 function isProductAddedToCurrentPharmacy(
   product: ProductDetails,
-  currentPharmacyId: EntityId | null
+  currentPharmacyId: EntityId | null | undefined
 ): boolean {
+  if (typeof product.isAddedToOwner === 'boolean')
+    return product.isAddedToOwner;
   if (!currentPharmacyId) return false;
 
   return product.offers.some(
@@ -50,9 +61,30 @@ function getActionLabel(
   isAddedToCurrentPharmacy: boolean
 ) {
   if (product.status === 'blocked') return 'Unavailable';
-  if (isAddedToCurrentPharmacy) return 'Added to your pharmacy';
+  if (isAddedToCurrentPharmacy) return 'Added to your pharmacies';
 
   return 'Add to pharmacy';
+}
+
+//===================================================================
+
+function renderCategory(
+  product: ProductDetails,
+  categoryDirectory: readonly ProductCategoryReference[]
+) {
+  const category = resolveOwnerCatalogCategory(
+    product.category,
+    categoryDirectory
+  );
+
+  return (
+    <span className={css.categoryCell}>
+      <span className={css.categoryIconWrap}>
+        <CategoryIcon name={category.icon} size={16} />
+      </span>
+      <span className={css.categoryText}>{category.name}</span>
+    </span>
+  );
 }
 
 //===================================================================
@@ -60,6 +92,7 @@ function getActionLabel(
 function AllProductsTable({
   currentPharmacyId,
   products,
+  categoryDirectory,
   emptyMessage,
   isLoading = false,
   isAddActionDisabled = false,
@@ -71,12 +104,14 @@ function AllProductsTable({
       {
         key: 'createdAt',
         title: <TableHeaderTitle parts={['Created', 'date']} />,
+
         render: (product) =>
           product.createdAt ? <TableDateTime value={product.createdAt} /> : '—',
       },
       {
         key: 'productPhoto',
         title: <TableHeaderTitle parts={['Product', 'photo']} />,
+
         render: (product) => (
           <TableImagePreview
             src={getProductImageSrc(product.imageUrl)}
@@ -86,8 +121,23 @@ function AllProductsTable({
         ),
       },
       {
+        key: 'productId',
+        title: <TableHeaderTitle parts={['Product', 'ID']} />,
+        width: '126px',
+
+        render: (product) => (
+          <TextActionButton
+            className={css.breakableLink}
+            href={getPharmacyAllProductPath(product.id)}
+          >
+            {product.id}
+          </TextActionButton>
+        ),
+      },
+      {
         key: 'article',
         title: <TableHeaderTitle parts={['Product', 'article']} />,
+
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.article}
@@ -97,6 +147,7 @@ function AllProductsTable({
       {
         key: 'name',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
+
         render: (product) => (
           <TextActionButton href={getPharmacyAllProductPath(product.id)}>
             {product.name}
@@ -106,7 +157,7 @@ function AllProductsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-        render: (product) => product.category.name,
+        render: (product) => renderCategory(product, categoryDirectory),
       },
       {
         key: 'status',
@@ -118,6 +169,7 @@ function AllProductsTable({
       {
         key: 'addedToMyPharmacy',
         title: <TableHeaderTitle parts={['Added to', 'pharmacy']} />,
+
         render: (product) =>
           isProductAddedToCurrentPharmacy(product, currentPharmacyId)
             ? 'Yes'
@@ -126,6 +178,7 @@ function AllProductsTable({
       {
         key: 'action',
         title: 'Action',
+
         render: (product) => {
           const isAddedToCurrentPharmacy = isProductAddedToCurrentPharmacy(
             product,
@@ -143,9 +196,15 @@ function AllProductsTable({
               type="button"
               size="sm"
               variant="secondary"
+              className={css.addButton}
               disabled={!canAddProduct}
               isLoading={addingProductId === product.id}
               loadingLabel="Adding..."
+              iconLeft={
+                canAddProduct ? (
+                  <Plus size={15} aria-hidden="true" />
+                ) : undefined
+              }
               onClick={() => onAddProduct?.(product)}
             >
               {getActionLabel(product, isAddedToCurrentPharmacy)}
@@ -154,7 +213,13 @@ function AllProductsTable({
         },
       },
     ],
-    [addingProductId, currentPharmacyId, isAddActionDisabled, onAddProduct]
+    [
+      addingProductId,
+      categoryDirectory,
+      currentPharmacyId,
+      isAddActionDisabled,
+      onAddProduct,
+    ]
   );
 
   return (

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   Building2,
@@ -27,6 +27,13 @@ import {
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
 import { getPharmacyClientPath } from '@/lib/routes';
+
+import {
+  buildClientDetailPaginationPath,
+  parseClientDetailPaginationPath,
+  type ClientDetailListTab,
+} from '@/lib/clients/client-detail-pagination';
+
 import { type OwnedPharmacyListUrlState } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import {
@@ -147,6 +154,40 @@ function ClientDetailsPageContentState({
   initialPharmacyFilters,
 }: ClientDetailsPageContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const ordersPagination = parseClientDetailPaginationPath(
+    pathname,
+    clientId,
+    'orders'
+  );
+
+  const productsPagination = parseClientDetailPaginationPath(
+    pathname,
+    clientId,
+    'products'
+  );
+
+  const navigateTable = useCallback(
+    (
+      tab: ClientDetailListTab,
+      page: number,
+      perPage: RowsPerPageValue,
+      replace = false
+    ) => {
+      const nextPath = buildClientDetailPaginationPath(clientId, tab, {
+        page,
+        perPage,
+      });
+
+      if (nextPath === pathname) return;
+
+      if (replace) router.replace(nextPath, { scroll: false });
+      else router.push(nextPath, { scroll: false });
+    },
+    [clientId, pathname, router]
+  );
+
   const [client, setClient] = useState<PharmacyClientRow | null>(null);
   const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
   const [ordersTotal, setOrdersTotal] = useState(0);
@@ -156,9 +197,7 @@ function ClientDetailsPageContentState({
   );
 
   const [ordersTotalPages, setOrdersTotalPages] = useState(0);
-
-  const [ordersRowsPerPage, setOrdersRowsPerPage] =
-    useState<RowsPerPageValue>(20);
+  const ordersRowsPerPage = ordersPagination.perPage;
 
   const [ordersEarliestCreatedAt, setOrdersEarliestCreatedAt] = useState<
     string | null
@@ -174,14 +213,7 @@ function ClientDetailsPageContentState({
   );
 
   const orderSearchKey = `${debouncedOrderNumberSearch}\u0000${debouncedOrderCommentSearch}`;
-
-  const [ordersPageState, setOrdersPageState] = useState(() => ({
-    searchKey: orderSearchKey,
-    page: 1,
-  }));
-
-  const ordersPage =
-    ordersPageState.searchKey === orderSearchKey ? ordersPageState.page : 1;
+  const ordersPage = ordersPagination.page;
 
   const [orderFilters, setOrderFilters] = useState<ClientOrderFilters>(
     DEFAULT_ORDER_FILTERS
@@ -212,10 +244,7 @@ function ClientDetailsPageContentState({
   >(null);
 
   const [productsTotalPages, setProductsTotalPages] = useState(0);
-
-  const [productsRowsPerPage, setProductsRowsPerPage] =
-    useState<RowsPerPageValue>(20);
-
+  const productsRowsPerPage = productsPagination.perPage;
   const [productArticleSearch, setProductArticleSearch] = useState('');
   const [productNameSearch, setProductNameSearch] = useState('');
 
@@ -225,18 +254,8 @@ function ClientDetailsPageContentState({
   );
 
   const debouncedProductNameSearch = useDebouncedValue(productNameSearch, 450);
-
   const productSearchKey = `${debouncedProductArticleSearch}\u0000${debouncedProductNameSearch}`;
-
-  const [productsPageState, setProductsPageState] = useState(() => ({
-    searchKey: productSearchKey,
-    page: 1,
-  }));
-
-  const productsPage =
-    productsPageState.searchKey === productSearchKey
-      ? productsPageState.page
-      : 1;
+  const productsPage = productsPagination.page;
 
   const [productFilters, setProductFilters] = useState<ClientProductFilters>(
     DEFAULT_PRODUCT_FILTERS
@@ -395,10 +414,9 @@ function ClientDetailsPageContentState({
         setOrdersTotal(response.total);
         setOrdersTotalPages(response.totalPages);
 
-        setOrdersPageState({
-          searchKey: orderSearchKey,
-          page: response.page,
-        });
+        if (response.page !== ordersPage) {
+          navigateTable('orders', response.page, ordersRowsPerPage, true);
+        }
 
         setOrdersEarliestCreatedAt(response.earliestCreatedAt);
 
@@ -449,6 +467,7 @@ function ClientDetailsPageContentState({
     ordersPage,
     ordersRetryVersion,
     ordersRowsPerPage,
+    navigateTable,
   ]);
 
   useEffect(() => {
@@ -501,10 +520,9 @@ function ClientDetailsPageContentState({
         setProductsEarliestCreatedAt(response.earliestCreatedAt);
         setProductsTotalPages(response.totalPages);
 
-        setProductsPageState({
-          searchKey: productSearchKey,
-          page: response.page,
-        });
+        if (response.page !== productsPage) {
+          navigateTable('products', response.page, productsRowsPerPage, true);
+        }
 
         const hasSearchOrFilters = Boolean(
           debouncedProductArticleSearch.trim() ||
@@ -552,6 +570,7 @@ function ClientDetailsPageContentState({
     productsPage,
     productsRequestKey,
     productsRowsPerPage,
+    navigateTable,
   ]);
 
   const tabs = useMemo(
@@ -710,16 +729,29 @@ function ClientDetailsPageContentState({
           {clientStatus === 'success' && activeTab === 'orders' ? (
             <ClientOrdersTab
               orderNumberSearch={orderNumberSearch}
-              setOrderNumberSearch={setOrderNumberSearch}
+              setOrderNumberSearch={(value) => {
+                setOrderNumberSearch(value);
+
+                if (ordersPage !== 1)
+                  navigateTable('orders', 1, ordersRowsPerPage, true);
+              }}
               orderCommentSearch={orderCommentSearch}
-              setOrderCommentSearch={setOrderCommentSearch}
+              setOrderCommentSearch={(value) => {
+                setOrderCommentSearch(value);
+
+                if (ordersPage !== 1)
+                  navigateTable('orders', 1, ordersRowsPerPage, true);
+              }}
               orderFiltersCount={orderFiltersCount}
               isOrdersFiltersOpen={isOrdersFiltersOpen}
               setIsOrdersFiltersOpen={setIsOrdersFiltersOpen}
               ordersRowsPerPage={ordersRowsPerPage}
-              setOrdersRowsPerPage={setOrdersRowsPerPage}
-              orderSearchKey={orderSearchKey}
-              setOrdersPageState={setOrdersPageState}
+              onRowsPerPageChange={(perPage) =>
+                navigateTable('orders', 1, perPage)
+              }
+              onPageChange={(page) =>
+                navigateTable('orders', page, ordersRowsPerPage)
+              }
               ordersStatus={ordersStatus}
               orders={orders}
               ordersTotal={ordersTotal}
@@ -733,16 +765,29 @@ function ClientDetailsPageContentState({
           {clientStatus === 'success' && activeTab === 'products' ? (
             <ClientProductsTab
               productArticleSearch={productArticleSearch}
-              setProductArticleSearch={setProductArticleSearch}
+              setProductArticleSearch={(value) => {
+                setProductArticleSearch(value);
+
+                if (productsPage !== 1)
+                  navigateTable('products', 1, productsRowsPerPage, true);
+              }}
               productNameSearch={productNameSearch}
-              setProductNameSearch={setProductNameSearch}
+              setProductNameSearch={(value) => {
+                setProductNameSearch(value);
+
+                if (productsPage !== 1)
+                  navigateTable('products', 1, productsRowsPerPage, true);
+              }}
               productFiltersCount={productFiltersCount}
               isProductsFiltersOpen={isProductsFiltersOpen}
               setIsProductsFiltersOpen={setIsProductsFiltersOpen}
               productsRowsPerPage={productsRowsPerPage}
-              setProductsRowsPerPage={setProductsRowsPerPage}
-              productSearchKey={productSearchKey}
-              setProductsPageState={setProductsPageState}
+              onRowsPerPageChange={(perPage) =>
+                navigateTable('products', 1, perPage)
+              }
+              onPageChange={(page) =>
+                navigateTable('products', page, productsRowsPerPage)
+              }
               productsStatus={productsStatus}
               products={products}
               productsTotal={productsTotal}
@@ -790,19 +835,15 @@ function ClientDetailsPageContentState({
           onChange={(filters) => {
             setOrderFilters(filters);
 
-            setOrdersPageState({
-              searchKey: orderSearchKey,
-              page: 1,
-            });
+            if (ordersPage !== 1)
+              navigateTable('orders', 1, ordersRowsPerPage, true);
           }}
           onClose={() => setIsOrdersFiltersOpen(false)}
           onReset={() => {
             setOrderFilters(DEFAULT_ORDER_FILTERS);
 
-            setOrdersPageState({
-              searchKey: orderSearchKey,
-              page: 1,
-            });
+            if (ordersPage !== 1)
+              navigateTable('orders', 1, ordersRowsPerPage, true);
           }}
         />
       ) : null}
@@ -816,12 +857,16 @@ function ClientDetailsPageContentState({
           categoryOptions={productCategoryOptions}
           onChange={(filters) => {
             setProductFilters(filters);
-            setProductsPageState({ searchKey: productSearchKey, page: 1 });
+
+            if (productsPage !== 1)
+              navigateTable('products', 1, productsRowsPerPage, true);
           }}
           onClose={() => setIsProductsFiltersOpen(false)}
           onReset={() => {
             setProductFilters(DEFAULT_PRODUCT_FILTERS);
-            setProductsPageState({ searchKey: productSearchKey, page: 1 });
+
+            if (productsPage !== 1)
+              navigateTable('products', 1, productsRowsPerPage, true);
           }}
         />
       ) : null}

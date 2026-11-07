@@ -29,12 +29,8 @@ type OrderTabProps = Readonly<{
   isOrdersFiltersOpen: boolean;
   setIsOrdersFiltersOpen: (value: boolean) => void;
   ordersRowsPerPage: RowsPerPageValue;
-  setOrdersRowsPerPage: (value: RowsPerPageValue) => void;
-  orderSearchKey: string;
-
-  setOrdersPageState: Dispatch<
-    SetStateAction<{ searchKey: string; page: number }>
-  >;
+  onRowsPerPageChange: (value: RowsPerPageValue) => void;
+  onPageChange: (page: number) => void;
 
   ordersStatus: 'idle' | 'loading' | 'success' | 'error';
   orders: readonly PharmacyOrderRow[];
@@ -56,9 +52,8 @@ export function ClientOrdersTab({
   isOrdersFiltersOpen,
   setIsOrdersFiltersOpen,
   ordersRowsPerPage,
-  setOrdersRowsPerPage,
-  orderSearchKey,
-  setOrdersPageState,
+  onRowsPerPageChange,
+  onPageChange,
   ordersStatus,
   orders,
   ordersTotal,
@@ -111,13 +106,7 @@ export function ClientOrdersTab({
                 id="client-orders-rows-per-page"
                 value={ordersRowsPerPage}
                 options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
-                onChange={(value) => {
-                  setOrdersRowsPerPage(value);
-                  setOrdersPageState({
-                    searchKey: orderSearchKey,
-                    page: 1,
-                  });
-                }}
+                onChange={onRowsPerPageChange}
               />
             </div>
 
@@ -162,9 +151,7 @@ export function ClientOrdersTab({
               currentPage={ordersPage}
               totalPages={ordersTotalPages}
               ariaLabel="Client orders pagination"
-              onPageChange={(page) =>
-                setOrdersPageState({ searchKey: orderSearchKey, page })
-              }
+              onPageChange={onPageChange}
             />
           ) : null}
         </div>

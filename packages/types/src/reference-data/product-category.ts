@@ -41,10 +41,17 @@ export type ProductCategoryEntity = Readonly<{
   updatedBy: EntityId | null;
 }>;
 
+//===================================================================
+
 /** Lightweight relation returned with products and product requests. */
 export type ProductCategoryReference = Readonly<
-  Pick<ProductCategoryEntity, 'id' | 'name' | 'slug'> & { color?: string }
+  Pick<ProductCategoryEntity, 'id' | 'name' | 'slug'> & {
+    color?: string;
+    icon?: string;
+  }
 >;
+
+//===================================================================
 
 /** Historical order snapshots may predate the persisted category id. */
 export type ProductCategorySnapshot = Readonly<{
@@ -60,6 +67,8 @@ export type ProductCategoryUsage = Readonly<{
   productRequestsCount: number;
   total: number;
 }>;
+
+//===================================================================
 
 export type ProductCategoryListItem = Readonly<
   Pick<
@@ -77,6 +86,8 @@ export type ProductCategoryListItem = Readonly<
     usage: ProductCategoryUsage;
   }
 >;
+
+//===================================================================
 
 export type ProductCategoryListQueryParams = ReferenceDataListQueryParams;
 

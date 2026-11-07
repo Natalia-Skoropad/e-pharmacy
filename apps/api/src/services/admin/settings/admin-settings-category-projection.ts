@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 
 import {
   PRODUCT_CATEGORY_DEFAULT_COLOR,
-  PRODUCT_CATEGORY_SEED_DEFINITIONS,
+  resolveProductCategoryIcon,
   type ProductCategoryKind,
   type ProductCategoryStatus,
 } from '../../../constants/catalog/product-category';
@@ -35,12 +35,7 @@ export function serializeCategory(
     sortOrder: category.sortOrder,
     color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
 
-    icon:
-      category.icon ??
-      PRODUCT_CATEGORY_SEED_DEFINITIONS.find(
-        (item) => item.slug === category.slug
-      )?.icon ??
-      'pill',
+    icon: resolveProductCategoryIcon(category),
 
     usage,
     createdAt: category.createdAt.toISOString(),
@@ -67,11 +62,6 @@ export function buildCategoryAuditSnapshot(category: {
     sortOrder: category.sortOrder,
     color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
 
-    icon:
-      category.icon ??
-      PRODUCT_CATEGORY_SEED_DEFINITIONS.find(
-        (item) => item.slug === category.slug
-      )?.icon ??
-      'pill',
+    icon: resolveProductCategoryIcon(category),
   };
 }

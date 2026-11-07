@@ -105,7 +105,9 @@ export function isClientsFilterSegment(segment: string): boolean {
     segment.startsWith('status-') ||
     segment.startsWith('successful-orders-') ||
     segment.startsWith('date-from-') ||
-    segment.startsWith('date-to-')
+    segment.startsWith('date-to-') ||
+    /^page-[1-9]\d*$/.test(segment) ||
+    /^per-page-(20|50|100)$/.test(segment)
   );
 }
 

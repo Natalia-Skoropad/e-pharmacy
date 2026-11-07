@@ -31,12 +31,8 @@ type ProductsTabProps = Readonly<{
   isProductsFiltersOpen: boolean;
   setIsProductsFiltersOpen: (value: boolean) => void;
   productsRowsPerPage: RowsPerPageValue;
-  setProductsRowsPerPage: (value: RowsPerPageValue) => void;
-  productSearchKey: string;
-
-  setProductsPageState: Dispatch<
-    SetStateAction<{ searchKey: string; page: number }>
-  >;
+  onRowsPerPageChange: (value: RowsPerPageValue) => void;
+  onPageChange: (page: number) => void;
 
   productsStatus: 'idle' | 'loading' | 'success' | 'error';
   products: readonly PharmacyClientPurchasedProduct[];
@@ -58,9 +54,8 @@ export function ClientProductsTab({
   isProductsFiltersOpen,
   setIsProductsFiltersOpen,
   productsRowsPerPage,
-  setProductsRowsPerPage,
-  productSearchKey,
-  setProductsPageState,
+  onRowsPerPageChange,
+  onPageChange,
   productsStatus,
   products,
   productsTotal,
@@ -139,13 +134,7 @@ export function ClientProductsTab({
                 id="client-products-rows-per-page"
                 value={productsRowsPerPage}
                 options={PRODUCT_ROWS_PER_PAGE_OPTIONS}
-                onChange={(value) => {
-                  setProductsRowsPerPage(value);
-                  setProductsPageState({
-                    searchKey: productSearchKey,
-                    page: 1,
-                  });
-                }}
+                onChange={onRowsPerPageChange}
               />
             </div>
             {productsStatus === 'success' ? (
@@ -192,12 +181,7 @@ export function ClientProductsTab({
             <PaginationView
               currentPage={productsPage}
               totalPages={productsTotalPages}
-              onPageChange={(page) =>
-                setProductsPageState({
-                  searchKey: productSearchKey,
-                  page,
-                })
-              }
+              onPageChange={onPageChange}
             />
           ) : null}
         </div>

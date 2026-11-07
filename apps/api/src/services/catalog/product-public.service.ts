@@ -72,8 +72,16 @@ async function getAvailableFilterCategories(
     ...(categoryIds ? { _id: { $in: categoryIds } } : {}),
   })
     .sort({ sortOrder: 1, name: 1, _id: 1 })
-    .select('_id name slug')
-    .lean<Array<{ _id: Types.ObjectId; name: string; slug: string }>>();
+    .select('_id name slug color icon')
+    .lean<
+      Array<{
+        _id: Types.ObjectId;
+        name: string;
+        slug: string;
+        color?: string;
+        icon?: string;
+      }>
+    >();
 
   return categories.map(serializeProductCategoryReference);
 }

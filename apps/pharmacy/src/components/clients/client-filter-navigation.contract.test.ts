@@ -13,7 +13,7 @@ const read = (path: string) =>
 test('two-segment owner Clients filter routes cannot be swallowed by client detail tabs', () => {
   const tab = read('app/pharmacy/clients/[clientId]/[tab]/page.tsx');
   const branch = tab.indexOf("if (route.kind === 'filters')");
-  const invalidGuard = tab.indexOf('if (!isValidObjectId(clientId)');
+  const invalidGuard = tab.indexOf('!isValidObjectId(clientId)');
 
   assert.match(tab, /resolveClientsRoute\(\[clientId, tab\]\)/);
 
@@ -22,11 +22,11 @@ test('two-segment owner Clients filter routes cannot be swallowed by client deta
     'filter routing must run before detail ID validation'
   );
 
-  assert.match(tab, /<ClientsPageContent initialFilters=\{filters\}/);
+  assert.match(tab, /<ClientsPageContent[\s\S]*?initialFilters=\{filters\}/);
 
   assert.match(
     tab,
-    /if \(`\/pharmacy\/clients\/\$\{clientId\}\/\$\{tab\}` !== canonical\) redirect\(canonical\)/
+    /if \(`\/pharmacy\/clients\/\$\{clientId\}\/\$\{tab\}` !== canonical\)\s*redirect\(canonical\)/
   );
 
   assert.match(tab, /SUPPORTED_TABS = \['orders', 'products', 'comments'\]/);
@@ -39,9 +39,13 @@ test('single and catch-all owner Clients filter URLs are canonicalized on the se
   const catchAll = read('app/pharmacy/clients/[[...filters]]/page.tsx');
 
   for (const source of [single, catchAll]) {
-    assert.match(source, /buildClientsPath\(filters\)/);
+    assert.match(source, /buildClientsPath\(filters, undefined, pagination\)/);
     assert.match(source, /redirect\(canonical\)/);
-    assert.match(source, /<ClientsPageContent initialFilters=\{filters\}/);
+
+    assert.match(
+      source,
+      /<ClientsPageContent[\s\S]*?initialFilters=\{filters\}/
+    );
   }
 });
 
@@ -65,12 +69,9 @@ test('owner Clients filter navigation creates history entries and preserves phar
   assert.match(change, /router.push\(nextPath, \{ scroll: false \}\)/);
   assert.doesNotMatch(change, /router.replace/);
 
-  assert.match(
-    reset,
-    /router.push\(PHARMACY_ROUTES.CLIENTS, \{ scroll: false \}\)/
-  );
-
-  assert.match(reset, /if \(embedded\) \{[\s\S]*?router.replace\(/);
+  assert.match(reset, /buildClientsPath\(DEFAULT_CLIENTS_FILTERS, basePath/);
+  assert.match(reset, /router.push\(nextPath, \{ scroll: false \}\)/);
+  assert.match(page, /perPage: rowsPerPage/);
   assert.doesNotMatch(page, /usePathname|pendingRoutePathRef/);
 });
 

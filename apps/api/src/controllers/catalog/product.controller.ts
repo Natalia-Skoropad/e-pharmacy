@@ -78,10 +78,13 @@ export async function getManagedProductStatistics(
   req: Request,
   res: ValidatedResponse
 ): Promise<void> {
-  const data = await getManagedProductStatisticsService({
-    userId: req.user?.id ?? '',
-    role: req.user?.role,
-  });
+  const data = await getManagedProductStatisticsService(
+    {
+      userId: req.user?.id ?? '',
+      role: req.user?.role,
+    },
+    req.query.ownerCatalog === 'true'
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -114,10 +117,14 @@ export async function getManagedProductDetails(
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
 
-  const data = await getManagedProductDetailsService(productId, {
-    userId: req.user?.id ?? '',
-    role: req.user?.role,
-  });
+  const data = await getManagedProductDetailsService(
+    productId,
+    {
+      userId: req.user?.id ?? '',
+      role: req.user?.role,
+    },
+    req.query.ownerCatalog === 'true'
+  );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -203,7 +210,8 @@ export async function addProductToMyPharmacy(
 
   const data = await addProductToMyPharmacyService(
     productId,
-    req.user?.id ?? ''
+    req.user?.id ?? '',
+    req.query.ownerCatalog === 'true'
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });

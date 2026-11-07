@@ -6,8 +6,6 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-import { ALL_PRODUCT_STATISTICS_LABELS } from '@/lib/statistics/config';
-
 import type {
   AllProductStatisticsCounts,
   AllProductStatisticsKey,
@@ -18,6 +16,10 @@ import {
   StatsGrid,
   type StatsCardTone,
 } from '@e-pharmacy/ui/statistics';
+
+import { ALL_PRODUCT_STATISTICS_LABELS } from '@/lib/statistics/config';
+
+import css from './AllProductStatistics.module.css';
 
 //===================================================================
 
@@ -30,6 +32,7 @@ type AllProductStatisticConfig = Readonly<{
 type AllProductStatisticsProps = Readonly<{
   counts: AllProductStatisticsCounts;
   className?: string;
+  activeKeys?: readonly AllProductStatisticsKey[];
   getStatisticHref?: (key: AllProductStatisticsKey) => string | undefined;
 }>;
 
@@ -47,6 +50,7 @@ const ALL_PRODUCT_STATISTICS_CONFIG: readonly AllProductStatisticConfig[] = [
 function AllProductStatistics({
   counts,
   className,
+  activeKeys = [],
   getStatisticHref,
 }: AllProductStatisticsProps) {
   return (
@@ -58,6 +62,7 @@ function AllProductStatistics({
     >
       {ALL_PRODUCT_STATISTICS_CONFIG.map(({ key, tone, icon: Icon }) => {
         const title = ALL_PRODUCT_STATISTICS_LABELS[key];
+        const active = activeKeys.includes(key);
 
         return (
           <StatsCard
@@ -67,7 +72,12 @@ function AllProductStatistics({
             tone={tone}
             icon={<Icon size={26} aria-hidden="true" />}
             href={getStatisticHref?.(key)}
-            ariaLabel={`${title} statistics`}
+            className={active ? css.activeCard : undefined}
+            ariaLabel={
+              active
+                ? `Clear ${title.toLowerCase()} product filter`
+                : `Filter products by ${title.toLowerCase()}`
+            }
           />
         );
       })}

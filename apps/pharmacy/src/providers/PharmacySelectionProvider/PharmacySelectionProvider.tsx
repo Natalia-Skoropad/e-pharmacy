@@ -193,7 +193,11 @@ export function PharmacySelectionProvider({
   // Stage 14.18.16: old selected-pharmacy bookmarks for the owner Clients
   // registry canonicalize to the account-wide URL without discarding filters.
   useEffect(() => {
-    if (!isOwnerClientsListPath(pathname) && !isOwnerClientDetailPath(pathname))
+    if (
+      !pathname.startsWith('/pharmacy/all-products') &&
+      !isOwnerClientsListPath(pathname) &&
+      !isOwnerClientDetailPath(pathname)
+    )
       return;
 
     const query = new URLSearchParams(search);

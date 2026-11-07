@@ -1,5 +1,10 @@
 import type { ClientSession, Types } from 'mongoose';
 
+import {
+  PRODUCT_CATEGORY_DEFAULT_COLOR,
+  resolveProductCategoryIcon,
+} from '../../constants/catalog/product-category';
+
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { ProductCategory } from '../../models/catalog/productCategory.model';
 import type { ProductCategoryPersistenceEntity } from '../../types/catalog/product-category';
@@ -20,12 +25,15 @@ type ProductCategoryLookupOptions = Readonly<{
 //===============================================================
 
 export function serializeProductCategoryReference(
-  category: Pick<ProductCategoryDocument, '_id' | 'name' | 'slug'>
+  category: Pick<ProductCategoryDocument, '_id' | 'name' | 'slug'> &
+    Partial<Pick<ProductCategoryDocument, 'color' | 'icon'>>
 ): ProductCategoryReferenceDto {
   return {
     id: String(category._id),
     name: category.name,
     slug: category.slug,
+    color: category.color ?? PRODUCT_CATEGORY_DEFAULT_COLOR,
+    icon: resolveProductCategoryIcon(category),
   };
 }
 
@@ -94,7 +102,7 @@ export async function getProductCategoryReferenceMap(
   if (!uniqueIds.length) return new Map();
 
   const query = ProductCategory.find({ _id: { $in: uniqueIds } })
-    .select('_id name slug')
+    .select('_id name slug color icon')
     .lean<ProductCategoryDocument[]>();
 
   if (session) query.session(session);
@@ -134,7 +142,7 @@ export async function getPublicProductCategoriesService(): Promise<
 > {
   const categories = await ProductCategory.find({ status: 'active' })
     .sort({ sortOrder: 1, name: 1, _id: 1 })
-    .select('_id name slug')
+    .select('_id name slug color icon')
     .lean<ProductCategoryDocument[]>();
 
   return categories.map(serializeProductCategoryReference);

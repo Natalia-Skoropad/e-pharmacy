@@ -121,6 +121,10 @@ test('owner with no pharmacies can open personal profile but not unloaded operat
 test('owner account pages and pharmacy creation bypass ambiguous summary bootstrap', () => {
   for (const pathname of [
     '/pharmacy/profile',
+    '/pharmacy/all-products',
+    `/pharmacy/all-products/${blockedSummary.id}`,
+    `/pharmacy/all-products/product-id-${blockedSummary.id}`,
+    '/pharmacy/all-products/status-active/category-vitamins',
     '/pharmacy/pharmacies',
     '/pharmacy/pharmacies/new',
     '/pharmacy/pharmacies/507f1f77bcf86cd799439011',
@@ -136,4 +140,45 @@ test('owner account pages and pharmacy creation bypass ambiguous summary bootstr
 
     assert.equal(content, 'account-scoped-content');
   }
+});
+
+//===================================================================
+
+test('All products bypasses selected-pharmacy summary during loading, failure and empty ownership', () => {
+  for (const pathname of [
+    '/pharmacy/all-products',
+    `/pharmacy/all-products/${blockedSummary.id}`,
+    `/pharmacy/all-products/product-id-${blockedSummary.id}`,
+    '/pharmacy/all-products/date-from-2026-11-01/status-active',
+  ]) {
+    for (const state of [
+      { isLoading: true, error: null },
+      { isLoading: false, error: new Error('PHARMACY_SELECTION_REQUIRED') },
+      { isLoading: false, error: null },
+    ]) {
+      assert.equal(
+        PharmacyCabinetBoundaryRuntime({
+          profile: null,
+          ...state,
+          pathname,
+          onRetry: () => undefined,
+          children: 'global-admin-catalog',
+        }),
+
+        'global-admin-catalog',
+        `${pathname} should not depend on selected-pharmacy summary`
+      );
+    }
+  }
+
+  const operationalError = PharmacyCabinetBoundaryRuntime({
+    profile: null,
+    isLoading: false,
+    error: new Error('PHARMACY_SELECTION_REQUIRED'),
+    pathname: '/pharmacy/orders',
+    onRetry: () => undefined,
+    children: 'orders',
+  });
+
+  assert.equal(requireElement(operationalError).type, ErrorPage);
 });

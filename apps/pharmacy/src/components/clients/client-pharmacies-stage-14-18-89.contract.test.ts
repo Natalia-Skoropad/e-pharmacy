@@ -83,7 +83,7 @@ test('client-specific tooltip and comments use shared presentation', () => {
 
   const browser = read('lib/api/browser/clients.api.ts');
 
-  assert.match(tab, /title="Successful orders — this client"/);
+  assert.match(tab, /title="Successful orders [–—] this client"/);
   assert.match(tab, /this specific client placed at this pharmacy/);
   assert.match(tab, /this specific client’s Successful orders/);
 

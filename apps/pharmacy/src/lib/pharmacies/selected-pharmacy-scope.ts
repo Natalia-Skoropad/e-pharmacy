@@ -3,6 +3,11 @@ import {
   parseClientPharmaciesSegments,
 } from '../clients/client-pharmacies-path';
 
+import {
+  buildClientDetailPaginationPath,
+  parseClientDetailPaginationSegments,
+} from '../clients/client-detail-pagination';
+
 //===================================================================
 
 /** Canonical browser selection contract. Server membership is always authoritative. */
@@ -12,7 +17,7 @@ const DETAIL_OPERATION =
   /^\/pharmacy\/pharmacies\/([0-9a-f]{24})\/(orders|clients|products)(?:\/|$)/i;
 
 const LEGACY_OPERATION =
-  /^\/pharmacy\/(dashboard|orders|clients|products|all-products|product-requests)(?:\/|$)/;
+  /^\/pharmacy\/(dashboard|orders|clients|products|product-requests)(?:\/|$)/;
 
 //===================================================================
 
@@ -27,7 +32,7 @@ export function isOwnerClientsListPath(pathname: string): boolean {
     .slice(base.length + 1)
     .split('/')
     .every((segment) =>
-      /^(?:pharmacy-|status-|successful-orders-|date-from-|date-to-|search-name-|client-id-|contact-|email-|phone-|address-).+/.test(
+      /^(?:pharmacy-|status-|successful-orders-|date-from-|date-to-|search-name-|client-id-|contact-|email-|phone-|address-).+|^(?:page-[1-9]\d*|per-page-(?:20|50|100))$/.test(
         segment
       )
     );
@@ -43,6 +48,30 @@ export function isOwnerClientDetailPath(pathname: string): boolean {
     )
   ) {
     return true;
+  }
+
+  // Nested Orders/Products pagination belongs to the owner client card too.
+  const detailPaging =
+    /^\/pharmacy\/clients\/([0-9a-f]{24})\/(orders|products)\/(.+)$/i.exec(
+      pathname
+    );
+
+  if (detailPaging) {
+    try {
+      const pagination = parseClientDetailPaginationSegments(
+        detailPaging[3]!.split('/')
+      );
+
+      return (
+        buildClientDetailPaginationPath(
+          detailPaging[1]!,
+          detailPaging[2] as 'orders' | 'products',
+          pagination
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
   }
 
   // Canonical pharmacy filters are still part of the owner-wide client card.

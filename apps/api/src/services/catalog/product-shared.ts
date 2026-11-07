@@ -178,6 +178,7 @@ export async function getProductsByScope(
   options: Readonly<{
     includeOffers?: boolean;
     offerVisibility?: ProductOfferVisibility;
+    ownerSelectedProductIds?: Types.ObjectId[];
   }> = {}
 ) {
   const filter: Record<string, unknown> = {};
@@ -200,6 +201,10 @@ export async function getProductsByScope(
 
   if (keyword) {
     filter.$or = [
+      ...(Types.ObjectId.isValid(keyword)
+        ? [{ _id: new Types.ObjectId(keyword) }]
+        : []),
+
       { name: createFlexibleSearchRegExp(keyword) },
       { article: createSafeRegExp(keyword) },
       { description: createFlexibleSearchRegExp(keyword) },
@@ -289,7 +294,20 @@ export async function getProductsByScope(
     }
   }
 
-  if (query.addedToPharmacyId && typeof query.addedToMyPharmacy === 'boolean') {
+  if (
+    options.ownerSelectedProductIds &&
+    typeof query.addedToMyPharmacy === 'boolean'
+  ) {
+    if (query.addedToMyPharmacy)
+      applyProductIdIncludeFilter(filter, options.ownerSelectedProductIds);
+    else applyProductIdExcludeFilter(filter, options.ownerSelectedProductIds);
+  }
+
+  if (
+    !options.ownerSelectedProductIds &&
+    query.addedToPharmacyId &&
+    typeof query.addedToMyPharmacy === 'boolean'
+  ) {
     const pharmacyProductIds = await ProductOffer.distinct('productId', {
       pharmacyId: query.addedToPharmacyId,
     });
@@ -299,6 +317,15 @@ export async function getProductsByScope(
     } else {
       applyProductIdExcludeFilter(filter, pharmacyProductIds);
     }
+  }
+
+  if (query.productId) {
+    const existing = filter._id as Record<string, unknown> | undefined;
+
+    filter._id = {
+      ...(existing ?? {}),
+      $eq: new Types.ObjectId(query.productId),
+    };
   }
 
   const sort: Record<string, 1 | -1> =
