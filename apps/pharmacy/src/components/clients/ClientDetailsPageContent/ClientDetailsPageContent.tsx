@@ -29,6 +29,11 @@ import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { getPharmacyClientPath } from '@/lib/routes';
 
 import {
+  buildClientPurchasedProductsPath,
+  parseClientPurchasedProductsPath,
+} from '@/lib/clients/client-purchased-products-paths';
+
+import {
   buildClientDetailPaginationPath,
   parseClientDetailPaginationPath,
   type ClientDetailListTab,
@@ -110,7 +115,7 @@ const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
   { value: 'pharmacies', label: 'Pharmacies', icon: <Building2 size={17} /> },
   {
     value: 'products',
-    label: 'Purchased products',
+    label: 'Products',
     icon: <PackageCheck size={17} />,
   },
   {
@@ -162,11 +167,8 @@ function ClientDetailsPageContentState({
     'orders'
   );
 
-  const productsPagination = parseClientDetailPaginationPath(
-    pathname,
-    clientId,
-    'products'
-  );
+  const productsRoute = parseClientPurchasedProductsPath(pathname, clientId);
+  const productsPagination = productsRoute.pagination;
 
   const navigateTable = useCallback(
     (
@@ -175,10 +177,14 @@ function ClientDetailsPageContentState({
       perPage: RowsPerPageValue,
       replace = false
     ) => {
-      const nextPath = buildClientDetailPaginationPath(clientId, tab, {
-        page,
-        perPage,
-      });
+      const nextPath =
+        tab === 'products'
+          ? buildClientPurchasedProductsPath(
+              clientId,
+              parseClientPurchasedProductsPath(pathname, clientId).filters,
+              { page, perPage }
+            )
+          : buildClientDetailPaginationPath(clientId, tab, { page, perPage });
 
       if (nextPath === pathname) return;
 
@@ -235,34 +241,31 @@ function ClientDetailsPageContentState({
 
   const [productsTotal, setProductsTotal] = useState(0);
 
-  const [productsEarliestCreatedAt, setProductsEarliestCreatedAt] = useState<
-    string | null
-  >(null);
-
-  const [productsOverallTotal, setProductsOverallTotal] = useState<
-    number | null
-  >(null);
+  const [
+    productsAvailableFirstOrderDates,
+    setProductsAvailableFirstOrderDates,
+  ] = useState<readonly string[]>([]);
 
   const [productsTotalPages, setProductsTotalPages] = useState(0);
   const productsRowsPerPage = productsPagination.perPage;
-  const [productArticleSearch, setProductArticleSearch] = useState('');
-  const [productNameSearch, setProductNameSearch] = useState('');
-
-  const debouncedProductArticleSearch = useDebouncedValue(
-    productArticleSearch,
-    450
-  );
-
-  const debouncedProductNameSearch = useDebouncedValue(productNameSearch, 450);
-  const productSearchKey = `${debouncedProductArticleSearch}\u0000${debouncedProductNameSearch}`;
   const productsPage = productsPagination.page;
 
-  const [productFilters, setProductFilters] = useState<ClientProductFilters>(
-    DEFAULT_PRODUCT_FILTERS
-  );
+  const productFilters = productsRoute.filters;
+
+  const changeProductFilters = (nextFilters: ClientProductFilters) => {
+    const nextPath = buildClientPurchasedProductsPath(clientId, nextFilters, {
+      page: 1,
+      perPage: productsRowsPerPage,
+    });
+
+    if (nextPath !== pathname) router.push(nextPath, { scroll: false });
+  };
 
   const [productCategoryOptions, setProductCategoryOptions] = useState<
-    readonly SelectOption<ClientProductFilters['category']>[]
+    readonly (SelectOption<ClientProductFilters['category']> & {
+      icon?: string;
+      categoryId?: string;
+    })[]
   >([{ value: 'all', label: 'All categories' }]);
 
   const [productsStatus, setProductsStatus] = useState<ResourceStatus>('idle');
@@ -291,6 +294,8 @@ function ClientDetailsPageContentState({
             ...categories.map((category) => ({
               value: category.slug,
               label: category.name,
+              icon: category.icon,
+              categoryId: category.id,
             })),
           ]);
         }
@@ -306,7 +311,7 @@ function ClientDetailsPageContentState({
 
   const productsRequestKey = JSON.stringify({
     clientId,
-    searchKey: productSearchKey,
+    productId: productFilters.productId,
     page: productsPage,
     perPage: productsRowsPerPage,
     dateFrom: productFilters.date.from,
@@ -495,8 +500,8 @@ function ClientDetailsPageContentState({
           {
             page: productsPage,
             perPage: productsRowsPerPage,
-            article: debouncedProductArticleSearch.trim() || undefined,
-            name: debouncedProductNameSearch.trim() || undefined,
+            scope: 'owner',
+            productId: productFilters.productId || undefined,
             dateFrom: productFilters.date.from || undefined,
             dateTo: productFilters.date.to || undefined,
 
@@ -517,24 +522,11 @@ function ClientDetailsPageContentState({
 
         setProducts([...response.items]);
         setProductsTotal(response.total);
-        setProductsEarliestCreatedAt(response.earliestCreatedAt);
+        setProductsAvailableFirstOrderDates(response.availableFirstOrderDates);
         setProductsTotalPages(response.totalPages);
 
         if (response.page !== productsPage) {
           navigateTable('products', response.page, productsRowsPerPage, true);
-        }
-
-        const hasSearchOrFilters = Boolean(
-          debouncedProductArticleSearch.trim() ||
-          debouncedProductNameSearch.trim() ||
-          productFilters.date.from ||
-          productFilters.date.to ||
-          productFilters.category !== 'all' ||
-          productFilters.status !== 'all'
-        );
-
-        if (!hasSearchOrFilters) {
-          setProductsOverallTotal(response.total);
         }
 
         setLoadedProductsRequestKey(productsRequestKey);
@@ -549,6 +541,8 @@ function ClientDetailsPageContentState({
           )
         );
 
+        // Keep error distinct from an unresolved request after a filter change.
+        setLoadedProductsRequestKey(productsRequestKey);
         setProductsStatus('error');
       }
     }
@@ -562,11 +556,8 @@ function ClientDetailsPageContentState({
     activeTab,
     clientId,
     clientStatus,
-    debouncedProductArticleSearch,
-    debouncedProductNameSearch,
     loadedProductsRequestKey,
     productFilters,
-    productSearchKey,
     productsPage,
     productsRequestKey,
     productsRowsPerPage,
@@ -586,19 +577,9 @@ function ClientDetailsPageContentState({
           };
         }
 
-        if (tab.value === 'products') {
-          return {
-            ...tab,
-            label:
-              productsOverallTotal === null
-                ? 'Products'
-                : `Products (${productsOverallTotal})`,
-          };
-        }
-
         return tab;
       }),
-    [ordersOverallTotal, productsOverallTotal]
+    [ordersOverallTotal]
   );
 
   const orderFiltersCount = countTrueConditions(
@@ -613,6 +594,7 @@ function ClientDetailsPageContentState({
   const hasOrderFilters = orderFiltersCount > 0;
 
   const productFiltersCount = countTrueConditions(
+    Boolean(productFilters.productId),
     Boolean(productFilters.date.from || productFilters.date.to),
     productFilters.category !== 'all',
     productFilters.status !== 'all'
@@ -696,6 +678,7 @@ function ClientDetailsPageContentState({
 
           {activeTab !== 'details' &&
           activeTab !== 'pharmacies' &&
+          activeTab !== 'products' &&
           activeTab !== 'comments' &&
           clientStatus !== 'success' ? (
             <ProfileResourceState
@@ -762,22 +745,32 @@ function ClientDetailsPageContentState({
             />
           ) : null}
 
-          {clientStatus === 'success' && activeTab === 'products' ? (
+          {activeTab === 'products' && clientStatus === 'error' ? (
+            <div className={css.sectionStack}>
+              <ProfileSectionHeader
+                title="Purchased products"
+                description="Products in this client's successful orders across your pharmacies."
+                icon={<PackageCheck size={21} aria-hidden="true" />}
+              />
+
+              <ProfileResourceState
+                variant="error"
+                title={error?.title ?? 'Client unavailable'}
+                description={error?.message ?? 'Please try again.'}
+                retryLabel="Try again"
+                onRetry={() => setClientRetryVersion((version) => version + 1)}
+              />
+            </div>
+          ) : null}
+
+          {activeTab === 'products' && clientStatus !== 'error' ? (
             <ClientProductsTab
-              productArticleSearch={productArticleSearch}
-              setProductArticleSearch={(value) => {
-                setProductArticleSearch(value);
-
-                if (productsPage !== 1)
-                  navigateTable('products', 1, productsRowsPerPage, true);
-              }}
-              productNameSearch={productNameSearch}
-              setProductNameSearch={(value) => {
-                setProductNameSearch(value);
-
-                if (productsPage !== 1)
-                  navigateTable('products', 1, productsRowsPerPage, true);
-              }}
+              clientId={clientId}
+              categoryOptions={productCategoryOptions}
+              productId={productFilters.productId}
+              onProductIdChange={(productId) =>
+                changeProductFilters({ ...productFilters, productId })
+              }
               productFiltersCount={productFiltersCount}
               isProductsFiltersOpen={isProductsFiltersOpen}
               setIsProductsFiltersOpen={setIsProductsFiltersOpen}
@@ -788,7 +781,11 @@ function ClientDetailsPageContentState({
               onPageChange={(page) =>
                 navigateTable('products', page, productsRowsPerPage)
               }
-              productsStatus={productsStatus}
+              productsStatus={
+                loadedProductsRequestKey === productsRequestKey
+                  ? productsStatus
+                  : 'loading'
+              }
               products={products}
               productsTotal={productsTotal}
               productsError={productsError}
@@ -852,21 +849,14 @@ function ClientDetailsPageContentState({
         <ClientProductsFiltersDrawer
           filters={productFilters}
           hasActiveFilters={hasProductFilters}
-          minDate={productsEarliestCreatedAt ?? undefined}
-          resetHref={getPharmacyClientPath(clientId)}
+          availableDates={productsAvailableFirstOrderDates}
           categoryOptions={productCategoryOptions}
           onChange={(filters) => {
-            setProductFilters(filters);
-
-            if (productsPage !== 1)
-              navigateTable('products', 1, productsRowsPerPage, true);
+            changeProductFilters(filters);
           }}
           onClose={() => setIsProductsFiltersOpen(false)}
           onReset={() => {
-            setProductFilters(DEFAULT_PRODUCT_FILTERS);
-
-            if (productsPage !== 1)
-              navigateTable('products', 1, productsRowsPerPage, true);
+            changeProductFilters(DEFAULT_PRODUCT_FILTERS);
           }}
         />
       ) : null}

@@ -118,3 +118,17 @@
     display: block;
   }
 }
+
+/* In the pharmacy detail the tabs/title are shared, but statistics, search
+   and the table remain distinct sections like the Clients tab. */
+.embeddedPage {
+  gap: 20px;
+}
+
+.embeddedCard {
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}

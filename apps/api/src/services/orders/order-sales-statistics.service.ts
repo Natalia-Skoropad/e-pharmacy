@@ -16,7 +16,7 @@ import type { ProductCategoryReferenceDto } from '../../types/catalog/product-ca
 import type { UserRole } from '../../types/accounts/user';
 
 import { padDatePart } from './order-shared';
-import { getCurrentPharmacyId } from './order-access';
+import { getCurrentPharmacyId, getOwnerOrderPharmacyIds } from './order-access';
 
 //===============================================================
 
@@ -192,6 +192,15 @@ export async function getOrderSalesStatisticsService(
   query: OrderSalesStatisticsQuery,
   role?: UserRole
 ): Promise<OrderSalesStatisticsDto> {
+  if (role === USER_ROLES.PHARMACY && query.scope === 'owner') {
+    const pharmacyIds = await getOwnerOrderPharmacyIds(userId);
+
+    return getOrderSalesStatisticsForPharmaciesService(
+      pharmacyIds.map(String),
+      query
+    );
+  }
+
   const pharmacyId =
     role === USER_ROLES.PHARMACY ? await getCurrentPharmacyId(userId) : null;
 

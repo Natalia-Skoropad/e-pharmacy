@@ -3,7 +3,6 @@ import { type PipelineStage, type Types } from 'mongoose';
 import { Product } from '../../models/catalog/product.model';
 
 import type { ClientProductsQuery } from '../../schemas/clients/client.schema';
-import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 import { createSafeRegExp } from '../../utils/validation/regexp';
 
 //===============================================================
@@ -12,6 +11,15 @@ function buildClientProductFilterStages(
   query: ClientProductsQuery
 ): PipelineStage.FacetPipelineStage[] {
   const match: Record<string, unknown> = {};
+
+  if (query.productId) {
+    match.id = query.productId;
+  }
+
+  if (query.keyword?.trim()) {
+    const keyword = createSafeRegExp(query.keyword.trim());
+    match.$or = [{ id: keyword }, { name: keyword }, { article: keyword }];
+  }
 
   if (query.article?.trim()) {
     match.article = createSafeRegExp(query.article.trim());
@@ -30,9 +38,11 @@ function buildClientProductFilterStages(
   }
 
   if (query.dateFrom || query.dateTo) {
-    match.firstOrderDate = {
-      ...(query.dateFrom ? { $gte: getStartOfDay(query.dateFrom) } : {}),
-      ...(query.dateTo ? { $lte: getEndOfDay(query.dateTo) } : {}),
+    // Calendar dates in the table use Europe/Kyiv. Compare that same day key
+    // rather than UTC midnight, which can exclude orders near local midnight.
+    match.firstOrderCalendarDate = {
+      ...(query.dateFrom ? { $gte: query.dateFrom } : {}),
+      ...(query.dateTo ? { $lte: query.dateTo } : {}),
     };
   }
 
@@ -42,7 +52,7 @@ function buildClientProductFilterStages(
 //===============================================================
 
 export function buildClientProductsAggregationPipeline(
-  pharmacyId: Types.ObjectId,
+  pharmacyIds: Types.ObjectId | Types.ObjectId[],
   clientObjectId: Types.ObjectId,
   query: ClientProductsQuery,
   skip: number
@@ -55,6 +65,7 @@ export function buildClientProductsAggregationPipeline(
     { $sort: { firstOrderDate: -1, productId: 1 } },
     { $skip: skip },
     { $limit: query.perPage },
+    { $unset: 'firstOrderCalendarDate' },
   ];
 
   const totalFacet: PipelineStage.FacetPipelineStage[] = [
@@ -67,15 +78,19 @@ export function buildClientProductsAggregationPipeline(
       $group: {
         _id: null,
         earliestCreatedAt: { $min: '$firstOrderDate' },
+        availableFirstOrderDates: { $addToSet: '$firstOrderCalendarDate' },
       },
     },
-    { $project: { _id: 0, earliestCreatedAt: 1 } },
+    { $project: { _id: 0, earliestCreatedAt: 1, availableFirstOrderDates: 1 } },
   ];
 
   return [
     {
       $match: {
-        pharmacyId,
+        pharmacyId: Array.isArray(pharmacyIds)
+          ? { $in: pharmacyIds }
+          : pharmacyIds,
+
         userId: clientObjectId,
         status: 'successful',
       },
@@ -168,6 +183,14 @@ export function buildClientProductsAggregationPipeline(
         },
 
         currentStatus: { $ifNull: ['$currentProduct.status', null] },
+
+        firstOrderCalendarDate: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: '$firstOrderDate',
+            timezone: 'Europe/Kyiv',
+          },
+        },
       },
     },
     {

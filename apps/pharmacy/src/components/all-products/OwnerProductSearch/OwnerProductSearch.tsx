@@ -12,8 +12,9 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-import type { ProductDetails } from '@e-pharmacy/types/products';
+import type { PharmacyProductsQueryParams } from '@e-pharmacy/types/products';
 
+import type { BrowserReadRequestOptions } from '@/lib/api/browser/request-options';
 import { getOwnerCatalogProducts } from '@/lib/api/browser/owner-all-products.api';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
@@ -23,10 +24,31 @@ const SUGGESTIONS_PAGE_SIZE = 20;
 
 //===================================================================
 
+export type ProductSearchItem = Readonly<{
+  id: string;
+  article: string;
+  name: string;
+  imageUrl?: string | null;
+  photoUrl?: string | null;
+}>;
+
+//===================================================================
+
+export type ProductSuggestionsLoader = (
+  params: PharmacyProductsQueryParams,
+  options?: BrowserReadRequestOptions
+) => Promise<{
+  items: readonly ProductSearchItem[];
+  page: number;
+  totalPages: number;
+}>;
+
+//===================================================================
+
 type SuggestionsState = Readonly<{
   query: string;
   page: number;
-  items: readonly ProductDetails[];
+  items: readonly ProductSearchItem[];
   hasMore: boolean;
   unavailable: boolean;
 }>;
@@ -39,14 +61,18 @@ function sanitizeSearch(value: string): string {
 
 //===================================================================
 
-const toOption = (product: ProductDetails): SearchableSelectOption<string> => ({
+const toOption = (
+  product: ProductSearchItem
+): SearchableSelectOption<string> => ({
   value: product.id,
   label: product.name,
   searchText: `${product.article} ${product.id}`,
 
   leading: (
     <TableImagePreview
-      src={getProductImageSrc(product.imageUrl)}
+      src={getProductImageSrc(
+        product.imageUrl ?? product.photoUrl ?? undefined
+      )}
       alt={`${product.name} photo`}
       fallback={product.name.charAt(0)}
       size={30}
@@ -67,7 +93,7 @@ export function OwnerProductSearch({
   value: string;
   onChange: (id: string) => void;
   pharmacyId?: string;
-  loadProducts?: typeof getOwnerCatalogProducts;
+  loadProducts?: ProductSuggestionsLoader;
   id?: string;
   description?: string;
 }) {
@@ -77,7 +103,7 @@ export function OwnerProductSearch({
   const [suggestions, setSuggestions] = useState<SuggestionsState | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<ProductDetails | null>(null);
+  const [selected, setSelected] = useState<ProductSearchItem | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();

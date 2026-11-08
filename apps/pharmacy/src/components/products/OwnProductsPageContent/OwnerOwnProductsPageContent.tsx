@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Boxes, PackageCheck } from 'lucide-react';
+import { Boxes, PackageCheck, Trash2 } from 'lucide-react';
 
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
 
@@ -46,7 +45,10 @@ import {
 
 import {
   DEFAULT_OWN_PRODUCTS_PAGINATION,
+  parseOwnProductsSegments,
+  parseOwnProductsPaginationSegments,
   buildOwnProductsPath,
+  buildEmbeddedOwnProductsPath,
   type OwnProductsPagination,
 } from '@/lib/products/own-product-paths';
 
@@ -63,6 +65,7 @@ import css from './OwnProductsPageContent.module.css';
 type OwnerOwnProductsPageContentProps = Readonly<{
   initialFilters?: OwnProductsFilterState;
   initialPagination?: OwnProductsPagination;
+  embeddedPharmacyId?: string;
 }>;
 
 //===================================================================
@@ -70,19 +73,62 @@ type OwnerOwnProductsPageContentProps = Readonly<{
 function OwnerOwnProductsPageContent({
   initialFilters = DEFAULT_OWN_PRODUCTS_FILTERS,
   initialPagination = DEFAULT_OWN_PRODUCTS_PAGINATION,
+  embeddedPharmacyId,
 }: OwnerOwnProductsPageContentProps) {
   const pathname = usePathname();
   const router = useRouter();
   const toast = useToast();
 
-  const [filters, setFilters] =
-    useState<OwnProductsFilterState>(initialFilters);
+  // Derive the registry state from the current route. Next.js can preserve
+  // this component between filter routes, including reset and Back/Forward.
+  const routeState = useMemo(() => {
+    const base = embeddedPharmacyId
+      ? `/pharmacy/pharmacies/${embeddedPharmacyId}/products`
+      : '/pharmacy/products';
 
-  const [page, setPage] = useState(initialPagination.page);
+    if (pathname === base || pathname.startsWith(`${base}/`)) {
+      const segments =
+        pathname === base ? [] : pathname.slice(base.length + 1).split('/');
 
-  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(
-    initialPagination.perPage
-  );
+      return {
+        filters: {
+          ...parseOwnProductsSegments({ filters: segments }),
+          ...(embeddedPharmacyId ? { pharmacyId: embeddedPharmacyId } : {}),
+        },
+
+        pagination: parseOwnProductsPaginationSegments({ filters: segments }),
+      };
+    }
+
+    return {
+      filters: {
+        ...initialFilters,
+        pharmacyId: embeddedPharmacyId ?? initialFilters.pharmacyId,
+      },
+      pagination: initialPagination,
+    };
+  }, [embeddedPharmacyId, initialFilters, initialPagination, pathname]);
+
+  const filters = routeState.filters;
+  const page = routeState.pagination.page;
+  const rowsPerPage: RowsPerPageValue = routeState.pagination.perPage;
+
+  const navigate = (
+    next: OwnProductsFilterState,
+    nextPage = 1,
+    nextPerPage: RowsPerPageValue = rowsPerPage
+  ) => {
+    const nextPath = embeddedPharmacyId
+      ? buildEmbeddedOwnProductsPath(embeddedPharmacyId, next, {
+          page: nextPage,
+          perPage: nextPerPage,
+        })
+      : buildOwnProductsPath(next, { page: nextPage, perPage: nextPerPage });
+
+    if (nextPath === pathname) return;
+
+    router.push(nextPath, { scroll: false });
+  };
 
   const [products, setProducts] = useState<PharmacyProductRow[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -154,17 +200,14 @@ function OwnerOwnProductsPageContent({
     [categoryReference]
   );
 
-  const debouncedName = useDebouncedValue(filters.name, 350);
-  const debouncedArticle = useDebouncedValue(filters.article, 350);
-
   const queryParams = useMemo(
     () => ({
       page,
       perPage: rowsPerPage,
       pharmacyId: filters.pharmacyId || undefined,
       productId: filters.productId || undefined,
-      nameKeyword: debouncedName || undefined,
-      articleKeyword: debouncedArticle || undefined,
+      name: filters.name || undefined,
+      article: filters.article || undefined,
 
       addedFrom: isCalendarDateString(filters.createdDate.from)
         ? filters.createdDate.from
@@ -180,7 +223,7 @@ function OwnerOwnProductsPageContent({
       sort: 'newest' as const,
     }),
 
-    [page, rowsPerPage, filters, debouncedName, debouncedArticle]
+    [page, rowsPerPage, filters]
   );
 
   const requestKey = useMemo(
@@ -205,7 +248,18 @@ function OwnerOwnProductsPageContent({
         );
 
         if (normalizedPage !== page) {
-          setPage(normalizedPage);
+          router.replace(
+            embeddedPharmacyId
+              ? buildEmbeddedOwnProductsPath(embeddedPharmacyId, filters, {
+                  page: normalizedPage,
+                  perPage: rowsPerPage,
+                })
+              : buildOwnProductsPath(filters, {
+                  page: normalizedPage,
+                  perPage: rowsPerPage,
+                }),
+            { scroll: false }
+          );
           return;
         }
 
@@ -221,6 +275,9 @@ function OwnerOwnProductsPageContent({
         if (controller.signal.aborted) return;
 
         setStatisticsUnavailable(true);
+        setProducts([]);
+        setTotalProducts(0);
+        setTotalPages(1);
 
         setLoadError(
           getSafeApiErrorMessage(
@@ -236,20 +293,16 @@ function OwnerOwnProductsPageContent({
       });
 
     return () => controller.abort();
-  }, [queryParams, page, rowsPerPage, requestKey, refreshVersion]);
-
-  const debouncedFilters = useDebouncedValue(filters, 350);
-
-  useEffect(() => {
-    if (debouncedFilters !== filters) return;
-
-    const nextPath = buildOwnProductsPath(debouncedFilters, {
-      page,
-      perPage: rowsPerPage,
-    });
-
-    if (pathname !== nextPath) router.replace(nextPath, { scroll: false });
-  }, [debouncedFilters, filters, page, pathname, router, rowsPerPage]);
+  }, [
+    queryParams,
+    page,
+    rowsPerPage,
+    requestKey,
+    refreshVersion,
+    embeddedPharmacyId,
+    filters,
+    router,
+  ]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.productId),
@@ -264,27 +317,32 @@ function OwnerOwnProductsPageContent({
   const hasActiveFilters = activeFiltersCount > 0;
 
   const changeFilters = (next: OwnProductsFilterState) => {
-    setFilters(next);
-    setPage(1);
+    navigate(
+      embeddedPharmacyId ? { ...next, pharmacyId: embeddedPharmacyId } : next
+    );
   };
 
   const resetFilters = () =>
-    changeFilters({
+    navigate({
       ...DEFAULT_OWN_PRODUCTS_FILTERS,
       pharmacyId: filters.pharmacyId,
     });
 
   const statisticHref = (key: OwnProductStatisticsKey) => {
-    const stock =
+    const stock: OwnProductsFilterState['stock'] =
       key === 'outOfStock' ? 'empty' : key === 'inStock' ? 'in-stock' : key;
 
-    return buildOwnProductsPath(
-      {
-        ...filters,
-        stock: filters.stock === stock ? 'all' : stock,
-      },
-      { page: 1, perPage: rowsPerPage }
-    );
+    const nextFilters = {
+      ...filters,
+      stock: filters.stock === stock ? ('all' as const) : stock,
+    };
+
+    return embeddedPharmacyId
+      ? buildEmbeddedOwnProductsPath(embeddedPharmacyId, nextFilters, {
+          page: 1,
+          perPage: rowsPerPage,
+        })
+      : buildOwnProductsPath(nextFilters, { page: 1, perPage: rowsPerPage });
   };
 
   const refresh = () => {
@@ -312,44 +370,55 @@ function OwnerOwnProductsPageContent({
   };
 
   return (
-    <main className={css.page} aria-labelledby="own-products-page-title">
-      <section className={css.card}>
-        <PageHeader
-          title={
-            <span className={css.titleWithHelp}>
-              Own products
-              <InfoTooltip
-                label="How do reserved and available products work?"
-                title="Reserved and available products"
-                icon={<PackageCheck size={20} />}
-                items={[
-                  {
-                    title: 'Reserved products',
-                    description:
-                      'Units held for New or In progress orders. They are in stock but not available for another order.',
-                  },
-                  {
-                    title: 'Available products',
-                    description:
-                      'Units that can be sold now: stock minus reservations.',
-                  },
-                ]}
-              />
-            </span>
-          }
-          titleId="own-products-page-title"
-          icon={<Boxes size={23} aria-hidden="true" />}
-        />
-
-        <div className={css.pharmacySelector}>
-          <OwnedPharmacySearch
-            id="own-products-pharmacy-search"
-            label="Select pharmacy"
-            value={filters.pharmacyId}
-            explainStatistics
-            onChange={(pharmacyId) => changeFilters({ ...filters, pharmacyId })}
+    <section
+      className={`${css.page} ${embeddedPharmacyId ? css.embeddedPage : ''}`}
+      aria-label="Own products"
+    >
+      <section
+        className={`${css.card} ${embeddedPharmacyId ? css.embeddedCard : ''}`}
+      >
+        {!embeddedPharmacyId ? (
+          <PageHeader
+            title={
+              <span className={css.titleWithHelp}>
+                Own products
+                <InfoTooltip
+                  label="How do reserved and available products work?"
+                  title="Reserved and available products"
+                  icon={<PackageCheck size={20} />}
+                  items={[
+                    {
+                      title: 'Reserved products',
+                      description:
+                        'Units held for New or In progress orders. They are in stock but not available for another order.',
+                    },
+                    {
+                      title: 'Available products',
+                      description:
+                        'Units that can be sold now: stock minus reservations.',
+                    },
+                  ]}
+                />
+              </span>
+            }
+            titleId="own-products-page-title"
+            icon={<Boxes size={23} aria-hidden="true" />}
           />
-        </div>
+        ) : null}
+
+        {!embeddedPharmacyId ? (
+          <div className={css.pharmacySelector}>
+            <OwnedPharmacySearch
+              id="own-products-pharmacy-search"
+              label="Select pharmacy"
+              value={filters.pharmacyId}
+              explainStatistics
+              onChange={(pharmacyId) =>
+                changeFilters({ ...filters, pharmacyId })
+              }
+            />
+          </div>
+        ) : null}
 
         <div className={css.ownerStatsArea}>
           {statisticsLoading ? (
@@ -389,7 +458,10 @@ function OwnerOwnProductsPageContent({
         </div>
       </section>
 
-      <section className={css.card} aria-label="Search and filter own products">
+      <section
+        className={`${css.card} ${embeddedPharmacyId ? css.embeddedCard : ''}`}
+        aria-label="Search and filter own products"
+      >
         <div className={css.ownerSearchGrid}>
           <OwnerProductSearch
             id="own-products-product-search"
@@ -413,25 +485,29 @@ function OwnerOwnProductsPageContent({
         </div>
       </section>
 
-      <section className={css.card} aria-label="Own products table">
+      <section
+        className={`${css.card} ${embeddedPharmacyId ? css.embeddedCard : ''}`}
+        aria-label="Own products table"
+      >
         <div className={css.toolbar}>
           <div className={css.rowsControl}>
             <RowsPerPageSelect
               id="own-products-rows-per-page"
               value={rowsPerPage}
-              onChange={(perPage: RowsPerPageValue) => {
-                setRowsPerPage(perPage);
-                setPage(1);
-              }}
+              onChange={(perPage: RowsPerPageValue) =>
+                navigate(filters, 1, perPage)
+              }
             />
           </div>
-          <CountLabel
-            className={css.countLabel}
-            shown={products.length}
-            total={totalProducts}
-            label="products"
-            fullWidthOnMobile
-          />
+          {!isLoading && !loadError ? (
+            <CountLabel
+              className={css.countLabel}
+              shown={products.length}
+              total={totalProducts}
+              label="products"
+              fullWidthOnMobile
+            />
+          ) : null}
         </div>
 
         {loadError && (
@@ -466,7 +542,7 @@ function OwnerOwnProductsPageContent({
           currentPage={page}
           totalPages={totalPages}
           ariaLabel="Own products pagination"
-          onPageChange={setPage}
+          onPageChange={(nextPage) => navigate(filters, nextPage)}
         />
       </section>
 
@@ -479,6 +555,7 @@ function OwnerOwnProductsPageContent({
             : undefined
         }
         confirmLabel="Remove product"
+        confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
         isLoading={Boolean(removingProductId)}
         onConfirm={() => void removeProduct()}
         onCancel={() => {
@@ -497,7 +574,7 @@ function OwnerOwnProductsPageContent({
           onReset={resetFilters}
         />
       )}
-    </main>
+    </section>
   );
 }
 

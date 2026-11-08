@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import {
   BarChart3,
+  Building2,
+  ChartNoAxesCombined,
   ClipboardList,
   History,
   PackageSearch,
@@ -27,6 +29,7 @@ import {
 import {
   getAllProductDetailTabPath,
   parseAllProductDetailTabPath,
+  isAllProductDetailTab,
 } from '@/lib/products/all-product-detail-tabs';
 
 import type { OrderCreatedByType } from '@e-pharmacy/types/orders';
@@ -68,6 +71,7 @@ import {
 import {
   DateFilter,
   RowsPerPageSelect,
+  CategoryIcon,
   SearchInput,
   SelectField,
   type DateFilterValue,
@@ -99,6 +103,7 @@ import type {
 
 import type { Review } from '@e-pharmacy/types/reviews';
 import type { EntityId } from '@e-pharmacy/types/primitives';
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { formatAmount, formatMoney } from '@e-pharmacy/utils/money';
@@ -142,6 +147,8 @@ import { type PharmacyOrderRow } from '@/lib/orders/orders';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { resolveOwnerCatalogCategory } from '@/lib/products/owner-catalog-category';
+import { getProductCategories } from '@/lib/api/browser';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
 
@@ -151,8 +158,14 @@ import {
   getOwnerCatalogProductReviews,
 } from '@/lib/api/browser/owner-all-products.api';
 
+import { getPharmacyClients } from '@/lib/api/browser/clients.api';
+import type { PharmacyClientRow } from '@/lib/clients/clients';
+import { getOwnedPharmacyPath } from '@/lib/routes';
+
 import { OrderStatistics, OwnProductStatistics } from '@/components/statistics';
 import { EntityComments } from '@/components/comments/EntityComments';
+import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
+import { OwnerAddProductConfirmation } from '@/components/all-products/OwnerAddProductConfirmation/OwnerAddProductConfirmation';
 
 import css from './AllProductDetailsPageContent.module.css';
 
@@ -164,7 +177,10 @@ type ProductDetailsTab =
   | 'related-orders'
   | 'characteristics'
   | 'reviews'
-  | 'comments';
+  | 'comments'
+  | 'pharmacies'
+  | 'clients'
+  | 'statistics';
 
 //===================================================================
 
@@ -302,6 +318,23 @@ const ALL_PRODUCT_DETAILS_TABS: Array<TabItem<ProductDetailsTab>> = [
     icon: <ClipboardList size={17} />,
   },
   { value: 'reviews', label: 'Reviews', icon: <MessageSquareText size={17} /> },
+];
+
+//===================================================================
+
+const OWNER_PRODUCT_OPERATIONAL_TABS: Array<TabItem<ProductDetailsTab>> = [
+  { value: 'pharmacies', label: 'Pharmacies', icon: <Building2 size={17} /> },
+  {
+    value: 'related-orders',
+    label: 'Orders',
+    icon: <ClipboardList size={17} />,
+  },
+  { value: 'clients', label: 'Clients', icon: <UsersRound size={17} /> },
+  {
+    value: 'statistics',
+    label: 'Statistics',
+    icon: <ChartNoAxesCombined size={17} />,
+  },
 ];
 
 //===================================================================
@@ -818,12 +851,37 @@ function ProductTabHeading({ tab }: Readonly<{ tab: ProductDetailsTab }>) {
       description: 'Read approved client reviews for this product.',
       icon: <MessageSquareText size={21} />,
     },
+
+    pharmacies: {
+      title: 'Pharmacies',
+      description:
+        'Review the pharmacies in your account that carry this product.',
+      icon: <Building2 size={21} />,
+    },
+
+    'related-orders': {
+      title: 'Orders',
+      description: 'See orders containing this product across your pharmacies.',
+      icon: <ClipboardList size={21} />,
+    },
+
+    clients: {
+      title: 'Clients',
+      description: 'See your clients who have ordered this product.',
+      icon: <UsersRound size={21} />,
+    },
+
+    statistics: {
+      title: 'Statistics',
+      description:
+        'Review product stock and successful sales across your pharmacies.',
+      icon: <ChartNoAxesCombined size={21} />,
+    },
   } as const;
 
-  if (tab !== 'details' && tab !== 'characteristics' && tab !== 'reviews')
-    return null;
+  if (!(tab in presentation)) return null;
 
-  const selected = presentation[tab];
+  const selected = presentation[tab as keyof typeof presentation];
 
   return <ProfileSectionHeader {...selected} />;
 }
@@ -870,6 +928,26 @@ function AllProductDetailsPageContent({
     return () => controller.abort();
   }, [mode]);
 
+  const [categoryDirectory, setCategoryDirectory] = useState<
+    readonly ProductCategoryReference[]
+  >([]);
+
+  useEffect(() => {
+    if (mode !== 'all') return;
+
+    const controller = new AbortController();
+
+    void getProductCategories({ signal: controller.signal })
+      .then((items) => {
+        if (!controller.signal.aborted) setCategoryDirectory(items);
+      })
+      .catch(() => {
+        // Keep the product's own category label when reference data is unavailable.
+      });
+
+    return () => controller.abort();
+  }, [mode]);
+
   const [product, setProduct] = useState<ProductDetails | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsTotal, setReviewsTotal] = useState<number | null>(null);
@@ -888,6 +966,16 @@ function AllProductDetailsPageContent({
 
   const [relatedOrderStatistics, setRelatedOrderStatistics] =
     useState<OrderStatisticsCounts>(DEFAULT_ORDER_STATISTICS);
+
+  const [productClients, setProductClients] = useState<PharmacyClientRow[]>([]);
+  const [productClientsPage, setProductClientsPage] = useState(1);
+  const [productClientsTotalPages, setProductClientsTotalPages] = useState(1);
+  const [productClientsTotal, setProductClientsTotal] = useState(0);
+
+  const [productClientsStatus, setProductClientsStatus] =
+    useState<ResourceStatus>('idle');
+
+  const [productClientsRetry, setProductClientsRetry] = useState(0);
 
   const [productSalesYear, setProductSalesYear] = useState(
     String(CURRENT_YEAR)
@@ -983,6 +1071,11 @@ function AllProductDetailsPageContent({
       setRelatedOrdersTotal(0);
       setRelatedOrdersTotalPages(1);
       setRelatedOrderStatistics(DEFAULT_ORDER_STATISTICS);
+      setProductClients([]);
+      setProductClientsPage(1);
+      setProductClientsTotalPages(1);
+      setProductClientsTotal(0);
+      setProductClientsStatus('idle');
       setRelatedOrdersEarliestCreatedAt(null);
       setRelatedOrdersStatus('idle');
       setRelatedOrderNumberSearch('');
@@ -1137,7 +1230,7 @@ function AllProductDetailsPageContent({
     if (
       activeTab !== 'related-orders' ||
       !product ||
-      !currentPharmacyId ||
+      (mode !== 'all' && !currentPharmacyId) ||
       !isAddedToPharmacy
     ) {
       return;
@@ -1156,6 +1249,7 @@ function AllProductDetailsPageContent({
             page: relatedCurrentPage,
             perPage: relatedRowsPerPage,
             productId,
+            ...(mode === 'all' ? { scope: 'owner' as const } : {}),
             orderNumber: debouncedRelatedOrderNumberSearch.trim() || undefined,
             client: debouncedRelatedClientSearch.trim() || undefined,
 
@@ -1205,6 +1299,7 @@ function AllProductDetailsPageContent({
   }, [
     activeTab,
     currentPharmacyId,
+    mode,
     debouncedRelatedClientSearch,
     debouncedRelatedOrderNumberSearch,
     isAddedToPharmacy,
@@ -1216,7 +1311,53 @@ function AllProductDetailsPageContent({
   ]);
 
   useEffect(() => {
-    if (mode === 'all' || activeTab !== 'details' || !isAddedToPharmacy) return;
+    if (mode !== 'all' || activeTab !== 'clients' || !isAddedToPharmacy) return;
+
+    const controller = new AbortController();
+
+    queueMicrotask(() => {
+      if (!controller.signal.aborted) setProductClientsStatus('loading');
+    });
+
+    void getPharmacyClients(
+      { scope: 'owner', productId, page: productClientsPage, perPage: 20 },
+      { signal: controller.signal }
+    )
+      .then((response) => {
+        if (controller.signal.aborted) return;
+
+        const nextTotalPages = Math.max(1, response.totalPages);
+
+        if (productClientsPage > nextTotalPages) {
+          setProductClientsPage(nextTotalPages);
+          return;
+        }
+
+        setProductClients([...response.items]);
+        setProductClientsTotal(response.total);
+        setProductClientsTotalPages(nextTotalPages);
+        setProductClientsStatus('success');
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setProductClientsStatus('error');
+      });
+
+    return () => controller.abort();
+  }, [
+    mode,
+    activeTab,
+    isAddedToPharmacy,
+    productId,
+    productClientsPage,
+    productClientsRetry,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isAddedToPharmacy ||
+      (mode === 'all' ? activeTab !== 'statistics' : activeTab !== 'details')
+    )
+      return;
 
     const controller = new AbortController();
 
@@ -1235,6 +1376,7 @@ function AllProductDetailsPageContent({
           {
             ...period,
             productId,
+            ...(mode === 'all' ? { scope: 'owner' as const } : {}),
           },
           { signal: controller.signal }
         );
@@ -1289,7 +1431,11 @@ function AllProductDetailsPageContent({
       : (product?.reviewsCount ?? null);
 
   const tabs = (
-    mode === 'all' ? ALL_PRODUCT_DETAILS_TABS : PRODUCT_DETAILS_TABS
+    mode === 'all'
+      ? isAddedToPharmacy
+        ? [...ALL_PRODUCT_DETAILS_TABS, ...OWNER_PRODUCT_OPERATIONAL_TABS]
+        : ALL_PRODUCT_DETAILS_TABS
+      : PRODUCT_DETAILS_TABS
   ).map((tab) => {
     if (
       mode !== 'all' &&
@@ -1325,6 +1471,44 @@ function AllProductDetailsPageContent({
     currentOffer,
     stockBalance
   );
+
+  const ownerProductStatistics: OwnProductStatisticsCounts | null =
+    mode === 'all' && product && isAddedToPharmacy
+      ? product.offers.reduce<OwnProductStatisticsCounts>(
+          (acc, offer) => ({
+            inStock: {
+              quantity: acc.inStock.quantity + (offer.totalQuantity ?? 0),
+              amount:
+                (acc.inStock.amount ?? 0) +
+                (offer.totalQuantity ?? 0) * offer.price,
+            },
+
+            reserved: {
+              quantity: acc.reserved.quantity + (offer.reservedQuantity ?? 0),
+              amount:
+                (acc.reserved.amount ?? 0) +
+                (offer.reservedQuantity ?? 0) * offer.price,
+            },
+
+            available: {
+              quantity: acc.available.quantity + offer.availableQuantity,
+              amount:
+                (acc.available.amount ?? 0) +
+                offer.availableQuantity * offer.price,
+            },
+
+            outOfStock: {
+              quantity: acc.outOfStock.quantity + (offer.inStock ? 0 : 1),
+            },
+          }),
+          {
+            inStock: { quantity: 0, amount: 0 },
+            reserved: { quantity: 0, amount: 0 },
+            available: { quantity: 0, amount: 0 },
+            outOfStock: { quantity: 0 },
+          }
+        )
+      : null;
 
   const stockMovementRows = getStockMovementRows(
     stockMovements,
@@ -1479,15 +1663,20 @@ function AllProductDetailsPageContent({
       {
         key: 'orderNumber',
         title: <TableHeaderTitle parts={['Order', 'number']} />,
-        render: (row: RelatedOrderRow) => (
-          <TextActionButton href={getPharmacyOrderPath(row.orderId)}>
-            {row.orderNumber}
-          </TextActionButton>
-        ),
+
+        render: (row: RelatedOrderRow) =>
+          mode === 'all' ? (
+            row.orderNumber
+          ) : (
+            <TextActionButton href={getPharmacyOrderPath(row.orderId)}>
+              {row.orderNumber}
+            </TextActionButton>
+          ),
       },
       {
         key: 'clientPhoto',
         title: <TableHeaderTitle parts={['Client', 'photo']} />,
+
         render: (row: RelatedOrderRow) => (
           <TableImagePreview
             src={
@@ -1501,6 +1690,7 @@ function AllProductDetailsPageContent({
       {
         key: 'client',
         title: <TableHeaderTitle parts={['Client', 'name']} />,
+
         render: (row: RelatedOrderRow) =>
           row.clientId ? (
             <TextActionButton href={getPharmacyClientPath(row.clientId)}>
@@ -1539,7 +1729,7 @@ function AllProductDetailsPageContent({
         ),
       },
     ],
-    []
+    [mode]
   );
 
   const handleAddProductConfirm = async () => {
@@ -1590,6 +1780,7 @@ function AllProductDetailsPageContent({
             setRelatedOrdersStatus('idle');
             setIsAddModalOpen(false);
             toast.success('Product is already added to your pharmacy.');
+
             return;
           }
         } catch {
@@ -1732,9 +1923,8 @@ function AllProductDetailsPageContent({
               tabletVisibleCount={3}
               onChange={(tab) => {
                 if (
-                  tab === 'details' ||
-                  tab === 'characteristics' ||
-                  tab === 'reviews'
+                  isAllProductDetailTab(tab) &&
+                  tabs.some((item) => item.value === tab)
                 ) {
                   router.push(getAllProductDetailTabPath(productId, tab), {
                     scroll: false,
@@ -1742,7 +1932,9 @@ function AllProductDetailsPageContent({
                 }
               }}
             />
+
             <ProductTabHeading tab={activeTab} />
+
             <ProfileResourceState
               variant={error ? 'error' : 'loading'}
               title={error?.title ?? 'Loading product details'}
@@ -1770,9 +1962,8 @@ function AllProductDetailsPageContent({
               onChange={(tab) => {
                 if (
                   mode === 'all' &&
-                  (tab === 'details' ||
-                    tab === 'characteristics' ||
-                    tab === 'reviews')
+                  isAllProductDetailTab(tab) &&
+                  tabs.some((item) => item.value === tab)
                 ) {
                   router.push(getAllProductDetailTabPath(productId, tab), {
                     scroll: false,
@@ -1850,7 +2041,22 @@ function AllProductDetailsPageContent({
                         </div>
                         <div className={css.adminMetadataItem}>
                           <dt>Category</dt>
-                          <dd>{product.category.name}</dd>
+                          <dd>
+                            <span className={css.productCategoryDisplay}>
+                              <span className={css.productCategoryIcon}>
+                                <CategoryIcon
+                                  name={
+                                    resolveOwnerCatalogCategory(
+                                      product.category,
+                                      categoryDirectory
+                                    ).icon
+                                  }
+                                  size={16}
+                                />
+                              </span>
+                              <span>{product.category.name}</span>
+                            </span>
+                          </dd>
                         </div>
                         <div className={css.adminMetadataItem}>
                           <dt>Article</dt>
@@ -2015,6 +2221,148 @@ function AllProductDetailsPageContent({
               </div>
             ) : (
               <div>
+                {mode === 'all' && activeTab === 'pharmacies' ? (
+                  <section
+                    className={css.sectionCard}
+                    aria-label="Pharmacies carrying this product"
+                  >
+                    <DataTable
+                      columns={[
+                        {
+                          key: 'name',
+                          title: 'Pharmacy',
+                          render: (offer: ProductOffer) => (
+                            <TextActionButton
+                              href={getOwnedPharmacyPath(offer.pharmacyId)}
+                            >
+                              {offer.pharmacyName}
+                            </TextActionButton>
+                          ),
+                        },
+                        {
+                          key: 'id',
+                          title: 'Pharmacy ID',
+                          render: (offer: ProductOffer) => offer.pharmacyId,
+                        },
+                        {
+                          key: 'price',
+                          title: 'Current price, ₴',
+                          render: (offer: ProductOffer) =>
+                            formatMoney(offer.price) ?? '—',
+                        },
+                        {
+                          key: 'available',
+                          title: 'Available quantity',
+                          render: (offer: ProductOffer) =>
+                            offer.availableQuantity,
+                        },
+                      ]}
+                      items={product.offers}
+                      getItemKey={(offer) => offer.id}
+                      labels={{
+                        empty:
+                          'No pharmacy offers are available for this product.',
+                      }}
+                    />
+                  </section>
+                ) : null}
+
+                {mode === 'all' && activeTab === 'clients' ? (
+                  productClientsStatus === 'error' ? (
+                    <ProfileResourceState
+                      variant="error"
+                      title="Clients are temporarily unavailable"
+                      description="Could not load clients who purchased this product."
+                      retryLabel="Try again"
+                      onRetry={() =>
+                        setProductClientsRetry((value) => value + 1)
+                      }
+                    />
+                  ) : productClientsStatus !== 'success' ? (
+                    <ProfileResourceState
+                      variant="loading"
+                      title="Loading product clients"
+                      description="Finding your clients who ordered this product."
+                    />
+                  ) : (
+                    <section
+                      className={css.sectionCard}
+                      aria-label="Product clients"
+                    >
+                      <CountLabel
+                        shown={productClients.length}
+                        total={productClientsTotal}
+                        label="clients"
+                      />
+                      <ClientsTable
+                        clients={productClients}
+                        emptyMessage="No clients have ordered this product from your pharmacies."
+                      />
+                      <PaginationView
+                        currentPage={productClientsPage}
+                        totalPages={productClientsTotalPages}
+                        onPageChange={setProductClientsPage}
+                      />
+                    </section>
+                  )
+                ) : null}
+
+                {mode === 'all' && activeTab === 'statistics' ? (
+                  <div className={css.sectionStack}>
+                    {ownerProductStatistics ? (
+                      <OwnProductStatistics counts={ownerProductStatistics} />
+                    ) : null}
+                    <section
+                      className={css.productSalesSection}
+                      aria-label="Sales across your pharmacies"
+                    >
+                      <div className={css.productSalesToolbar}>
+                        <div className={css.productSalesHeading}>
+                          <BarChart3 size={22} aria-hidden="true" />
+                          <div className={css.productSalesHeadingContent}>
+                            <h3>Product sales across your pharmacies</h3>
+                            <p>
+                              Successful sales, including historic orders in
+                              inactive pharmacies.
+                            </p>
+                            <SalesPeriodFilters
+                              idPrefix={`product-${productId}-owner-sales`}
+                              year={productSalesYear}
+                              month={productSalesMonth}
+                              onYearChange={setProductSalesYear}
+                              onMonthChange={setProductSalesMonth}
+                              className={css.productSalesFilters}
+                              showAppliedPeriod
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      {productSalesStatus === 'error' ? (
+                        <ProfileResourceState
+                          variant="error"
+                          title="Sales analytics are temporarily unavailable"
+                          description="Could not load sales for your pharmacies."
+                        />
+                      ) : productSalesStatus === 'success' ? (
+                        <SalesValueChart
+                          key={`${productSalesYear}-${productSalesMonth}`}
+                          data={productSalesData}
+                          kicker="Product sales"
+                          title="Sales value by product"
+                          description="Successful sales of this product across your pharmacies."
+                          categoryControlsLabel="Product category shown on the chart"
+                        />
+                      ) : (
+                        <ProfileResourceState
+                          variant="loading"
+                          title="Loading product sales"
+                          description="Sales figures are being loaded from your pharmacies."
+                        />
+                      )}
+                    </section>
+                  </div>
+                ) : null}
+
                 {activeTab === 'stock-movement' ? (
                   <>
                     {isAddedToPharmacy ? (
@@ -2554,17 +2902,29 @@ function AllProductDetailsPageContent({
         </FilterDrawer>
       ) : null}
 
-      <ConfirmationModal
-        isOpen={isAddModalOpen}
-        title="Add product to pharmacy?"
-        description="Are you sure you want to add this product to your pharmacy?"
-        confirmLabel="Add to pharmacy"
-        isLoading={isAddingProduct}
-        onConfirm={() => void handleAddProductConfirm()}
-        onCancel={() => {
-          if (!isAddingProduct) setIsAddModalOpen(false);
-        }}
-      />
+      {mode === 'all' ? (
+        <OwnerAddProductConfirmation
+          isOpen={isAddModalOpen}
+          productName={product?.name}
+          isLoading={isAddingProduct}
+          onConfirm={() => void handleAddProductConfirm()}
+          onCancel={() => {
+            if (!isAddingProduct) setIsAddModalOpen(false);
+          }}
+        />
+      ) : (
+        <ConfirmationModal
+          isOpen={isAddModalOpen}
+          title="Add product to pharmacy?"
+          description="Are you sure you want to add this product to your pharmacy?"
+          confirmLabel="Add to pharmacy"
+          isLoading={isAddingProduct}
+          onConfirm={() => void handleAddProductConfirm()}
+          onCancel={() => {
+            if (!isAddingProduct) setIsAddModalOpen(false);
+          }}
+        />
+      )}
 
       <ConfirmationModal
         isOpen={isRemoveModalOpen}

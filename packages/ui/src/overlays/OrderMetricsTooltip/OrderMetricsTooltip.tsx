@@ -27,6 +27,7 @@ export function OrderMetricsTooltip({
       icon={<ShoppingBag size={20} aria-hidden="true" />}
       escapeOverflow
       preferTopLayer={preferTopLayer}
+      scrollable
       items={[
         {
           title: 'Orders count',

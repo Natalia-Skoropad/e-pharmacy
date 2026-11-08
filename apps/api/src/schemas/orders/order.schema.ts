@@ -52,6 +52,7 @@ export const ordersQuerySchema = z.preprocess(
       client: orderClientSearchSchema,
       pharmacy: sharedSearchSchema,
       pharmacyId: mongoIdSchema.optional(),
+      scope: z.enum(['owner']).optional(),
       clientId: mongoIdSchema.optional(),
       orderNumber: sharedSearchSchema,
       deliveryMethod: z.enum(['pickup', 'postal_delivery']).optional(),
@@ -113,6 +114,7 @@ export const orderSalesStatisticsQuerySchema = z
     dateTo: dateQuerySchema,
     groupBy: z.enum(['day', 'month']).default('month'),
     productId: mongoIdSchema.optional(),
+    scope: z.enum(['owner']).optional(),
   })
 
   .strict()

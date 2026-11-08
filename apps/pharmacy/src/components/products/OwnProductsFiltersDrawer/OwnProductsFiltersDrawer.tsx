@@ -12,8 +12,6 @@ import {
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
-import { PHARMACY_ROUTES } from '@/lib/routes';
-
 import {
   OWN_PRODUCT_STATUSES,
   STOCK_AVAILABILITY_FILTERS,
@@ -101,7 +99,6 @@ function OwnProductsFiltersDrawer({
       id="own-products-filters-panel"
       eyebrow="Own products"
       hasActiveFilters={hasActiveFilters}
-      resetHref={PHARMACY_ROUTES.PRODUCTS}
       onClose={onClose}
       onReset={() => {
         onReset();

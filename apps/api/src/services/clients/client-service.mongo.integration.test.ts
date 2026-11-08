@@ -514,6 +514,41 @@ test(
       assert.equal(item.quantity, 12);
       assert.equal(item.totalAmount, 1270);
       assert.equal(response.earliestCreatedAt, '2026-09-15');
+      assert.deepEqual(response.availableFirstOrderDates, ['2026-09-15']);
+
+      // The date filter applies to the first purchase of each product,
+      // not the date of every later order of the same product.
+      const noMatchingFirstOrders = await getClientPurchasedProductsService(
+        ownerId.toString(),
+
+        clientId.toString(),
+        {
+          page: 1,
+          perPage: 20,
+          dateFrom: '2026-09-16',
+          dateTo: '2026-09-16',
+        }
+      );
+
+      assert.equal(noMatchingFirstOrders.total, 0);
+
+      assert.deepEqual(noMatchingFirstOrders.availableFirstOrderDates, [
+        '2026-09-15',
+      ]);
+
+      const matchingFirstOrder = await getClientPurchasedProductsService(
+        ownerId.toString(),
+        clientId.toString(),
+
+        {
+          page: 1,
+          perPage: 20,
+          dateFrom: '2026-09-15',
+          dateTo: '2026-09-15',
+        }
+      );
+
+      assert.equal(matchingFirstOrder.total, 1);
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId }),

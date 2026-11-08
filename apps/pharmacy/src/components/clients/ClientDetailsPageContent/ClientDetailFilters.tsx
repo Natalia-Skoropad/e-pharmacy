@@ -18,10 +18,8 @@ import type {
   PaymentMethod,
 } from '@e-pharmacy/types/orders';
 
-import type { ProductStatus } from '@e-pharmacy/types/products';
-import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
-
 import {
+  CategoryIcon,
   DateFilter,
   SelectField,
   type DateFilterValue,
@@ -30,14 +28,14 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+export type { ClientProductFilters } from '@/lib/clients/client-purchased-products-paths';
+import type { ClientProductFilters } from '@/lib/clients/client-purchased-products-paths';
+
+import css from './ClientDetailFilters.module.css';
 
 //===================================================================
-
-export type ClientProductFilters = Readonly<{
-  date: DateFilterValue;
-  category: 'all' | ProductCategorySlug;
-  status: 'all' | ProductStatus;
-}>;
 
 export type ClientOrderFilters = Readonly<{
   date: DateFilterValue;
@@ -56,6 +54,7 @@ export const PRODUCT_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [20, 50, 100];
 
 export const DEFAULT_PRODUCT_FILTERS: ClientProductFilters = {
   date: { from: '', to: '' },
+  productId: '',
   category: 'all',
   status: 'all',
 };
@@ -133,12 +132,11 @@ const PRODUCT_STATUS_OPTIONS: Array<
 > = [
   { value: 'all', label: 'All' },
 
-  ...(Object.keys(PRODUCT_STATUS_PRESENTATION) as ProductStatus[]).map(
-    (status) => ({
-      value: status,
-      label: PRODUCT_STATUS_PRESENTATION[status].label,
-    })
-  ),
+  ...(['active', 'blocked'] as const).map((status) => ({
+    value: status,
+    label: PRODUCT_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...PRODUCT_STATUS_PRESENTATION[status]} />,
+  })),
 ];
 
 //===================================================================
@@ -243,9 +241,12 @@ export function ClientOrdersFiltersDrawer({
 type ClientProductsFiltersDrawerProps = Readonly<{
   filters: ClientProductFilters;
   hasActiveFilters: boolean;
-  minDate?: string;
-  resetHref: string;
-  categoryOptions: readonly SelectOption<ClientProductFilters['category']>[];
+  availableDates: readonly string[];
+
+  categoryOptions: readonly (SelectOption<ClientProductFilters['category']> & {
+    icon?: string;
+  })[];
+
   onChange: (filters: ClientProductFilters) => void;
   onClose: () => void;
   onReset: () => void;
@@ -256,8 +257,7 @@ type ClientProductsFiltersDrawerProps = Readonly<{
 export function ClientProductsFiltersDrawer({
   filters,
   hasActiveFilters,
-  minDate,
-  resetHref,
+  availableDates,
   categoryOptions,
   onChange,
   onClose,
@@ -268,7 +268,6 @@ export function ClientProductsFiltersDrawer({
       id="client-products-filters-panel"
       eyebrow="Client products"
       hasActiveFilters={hasActiveFilters}
-      resetHref={resetHref}
       onClose={onClose}
       onReset={() => {
         onReset();
@@ -277,8 +276,10 @@ export function ClientProductsFiltersDrawer({
     >
       <DateFilter
         id="client-products-order-date"
-        minDate={minDate}
-        disabled={!minDate}
+        minDate={availableDates[0]}
+        maxDate={availableDates[availableDates.length - 1]}
+        availableDates={availableDates}
+        disabled={availableDates.length === 0}
         label="First order date"
         value={filters.date}
         isActive={Boolean(filters.date.from || filters.date.to)}
@@ -291,7 +292,19 @@ export function ClientProductsFiltersDrawer({
         id="client-products-category"
         label="Product category"
         value={filters.category}
-        options={categoryOptions}
+        options={categoryOptions.map((option) => ({
+          ...option,
+
+          content:
+            option.value === 'all' ? undefined : (
+              <span className={css.optionWithIcon}>
+                <span className={css.optionIcon}>
+                  <CategoryIcon name={option.icon} size={16} />
+                </span>
+                <span>{option.label}</span>
+              </span>
+            ),
+        }))}
         isActive={filters.category !== 'all'}
         onChange={(category) => onChange({ ...filters, category })}
       />

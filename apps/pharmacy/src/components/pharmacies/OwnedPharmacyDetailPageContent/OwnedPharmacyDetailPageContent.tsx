@@ -55,6 +55,17 @@ import {
   type OwnedPharmacyDetailTab,
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
+import {
+  buildEmbeddedOwnProductsPath,
+  DEFAULT_OWN_PRODUCTS_PAGINATION,
+  type OwnProductsPagination,
+} from '@/lib/products/own-product-paths';
+
+import {
+  DEFAULT_OWN_PRODUCTS_FILTERS,
+  type OwnProductsFilterState,
+} from '@/lib/products/own-products-filters';
+
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
 import {
@@ -68,7 +79,7 @@ import { EntityComments } from '@/components/comments/EntityComments';
 import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
 import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
-import { OwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
+import { OwnerOwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
 import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import { Information } from './OwnedPharmacyInformationTab';
@@ -167,11 +178,15 @@ export function OwnedPharmacyDetailPageContent({
   activeTab,
   initialClientFilters,
   initialClientPagination,
+  initialProductFilters,
+  initialProductPagination,
 }: Readonly<{
   pharmacyId: string;
   activeTab: OwnedPharmacyDetailTab;
   initialClientFilters?: ClientsFilterState;
   initialClientPagination?: ClientsPaginationState;
+  initialProductFilters?: OwnProductsFilterState;
+  initialProductPagination?: OwnProductsPagination;
 }>) {
   const router = useRouter();
 
@@ -495,8 +510,7 @@ export function OwnedPharmacyDetailPageContent({
             id={`owned-pharmacy-detail-panel-${visibleTab}`}
             aria-labelledby={`owned-pharmacy-detail-tab-${visibleTab}`}
           >
-            {visibleTab !== 'comments' &&
-            !['orders', 'products'].includes(visibleTab) ? (
+            {visibleTab !== 'comments' && visibleTab !== 'orders' ? (
               <ProfileSectionHeader
                 title={selected.label}
                 description={DESCRIPTIONS[visibleTab]}
@@ -523,7 +537,8 @@ export function OwnedPharmacyDetailPageContent({
                 }
               />
             ) : null}
-            {loading && !['comments', 'clients'].includes(visibleTab) ? (
+            {loading &&
+            !['comments', 'clients', 'products'].includes(visibleTab) ? (
               <ProfileResourceState
                 variant="loading"
                 title="Loading pharmacy details"
@@ -625,7 +640,20 @@ export function OwnedPharmacyDetailPageContent({
                   initialPerPage={initialClientPagination?.perPage}
                 />
               )
-            ) : pharmacy && ['orders', 'products'].includes(visibleTab) ? (
+            ) : visibleTab === 'products' ? (
+              loading || pharmacy ? (
+                <OwnerOwnProductsPageContent
+                  key={buildEmbeddedOwnProductsPath(
+                    pharmacyId,
+                    initialProductFilters ?? DEFAULT_OWN_PRODUCTS_FILTERS,
+                    initialProductPagination ?? DEFAULT_OWN_PRODUCTS_PAGINATION
+                  )}
+                  embeddedPharmacyId={pharmacyId}
+                  initialFilters={initialProductFilters}
+                  initialPagination={initialProductPagination}
+                />
+              ) : null
+            ) : pharmacy && visibleTab === 'orders' ? (
               selectionLoading ||
               selectedId !== pharmacyId ||
               selectionInvalid ? (
@@ -638,13 +666,8 @@ export function OwnedPharmacyDetailPageContent({
                   }
                   description="The operational tab requires verified access to this pharmacy."
                 />
-              ) : visibleTab === 'orders' ? (
-                <OrdersPageContent key={`${pharmacyId}:orders`} embedded />
               ) : (
-                <OwnProductsPageContent
-                  key={`${pharmacyId}:products`}
-                  embedded
-                />
+                <OrdersPageContent key={`${pharmacyId}:orders`} embedded />
               )
             ) : deferred ? (
               <ProfileResourceState

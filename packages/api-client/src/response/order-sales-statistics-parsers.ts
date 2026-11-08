@@ -1,6 +1,3 @@
-import { ApiError } from '../transport/api-error';
-import { parseProductCategoryReferencesResponse } from './shared-dto-parsers';
-
 import type {
   OrderSalesStatistics,
   OrderSalesStatisticsGroupBy,
@@ -10,6 +7,9 @@ import type {
 
 import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
+import { ApiError } from '../transport/api-error';
+import { parseProductCategoryReferencesResponse } from './shared-dto-parsers';
+
 //===================================================================
 
 export type OrderSalesStatisticsQueryParams = Readonly<{
@@ -17,6 +17,7 @@ export type OrderSalesStatisticsQueryParams = Readonly<{
   dateTo?: string;
   groupBy?: OrderSalesStatisticsGroupBy;
   productId?: string;
+  scope?: 'owner';
 }>;
 
 //===================================================================
@@ -42,6 +43,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   }
 
   const prototype: unknown = Object.getPrototypeOf(value);
+
   return prototype === Object.prototype || prototype === null;
 }
 
@@ -51,6 +53,7 @@ function getTrimmedString(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
 
   const trimmedValue = value.trim();
+
   return trimmedValue || undefined;
 }
 

@@ -343,6 +343,10 @@ export function getPharmacyBreadcrumbsByPathname(
           details: 'Details',
           characteristics: 'Characteristics',
           reviews: 'Reviews',
+          pharmacies: 'Pharmacies',
+          'related-orders': 'Orders',
+          clients: 'Clients',
+          statistics: 'Statistics',
         } as const;
 
         return [

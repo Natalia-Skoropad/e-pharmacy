@@ -73,6 +73,7 @@ test('pharmacy clients response rejects malformed rows and earliest date', () =>
         ...response,
         items: [{ ...validClient(), status: undefined }],
       }),
+
     isInvalidResponse
   );
 
@@ -82,6 +83,7 @@ test('pharmacy clients response rejects malformed rows and earliest date', () =>
         ...response,
         earliestCreatedAt: '12/08/2026',
       }),
+
     isInvalidResponse
   );
 
@@ -91,6 +93,7 @@ test('pharmacy clients response rejects malformed rows and earliest date', () =>
         ...response,
         statistics: { ...response.statistics, repeat: -1 },
       }),
+
     isInvalidResponse
   );
 });
@@ -126,9 +129,34 @@ test('purchased product response rejects invalid quantities and dates', () => {
     total: 1,
     totalPages: 1,
     earliestCreatedAt: '2026-08-12',
+    availableFirstOrderDates: ['2026-08-12'],
   };
 
   assert.equal(normalizePharmacyClientProductsResponse(response).total, 1);
+
+  assert.deepEqual(
+    normalizePharmacyClientProductsResponse({
+      ...response,
+      availableFirstOrderDates: ['2026-08-12', '2026-08-10', '2026-08-12'],
+    }).availableFirstOrderDates,
+    ['2026-08-10', '2026-08-12']
+  );
+
+  for (const availableFirstOrderDates of [
+    undefined,
+    ['2026-08-12', 'not-a-calendar-date'],
+    ['2026-02-31'],
+  ]) {
+    assert.throws(
+      () =>
+        normalizePharmacyClientProductsResponse({
+          ...response,
+          availableFirstOrderDates,
+        }),
+
+      isInvalidResponse
+    );
+  }
 
   assert.throws(
     () =>
@@ -136,6 +164,7 @@ test('purchased product response rejects invalid quantities and dates', () => {
         ...response,
         items: [{ ...item, quantity: 0 }],
       }),
+
     isInvalidResponse
   );
 
@@ -145,6 +174,7 @@ test('purchased product response rejects invalid quantities and dates', () => {
         ...response,
         items: [{ ...item, ordersCount: 0 }],
       }),
+
     isInvalidResponse
   );
 
@@ -154,6 +184,7 @@ test('purchased product response rejects invalid quantities and dates', () => {
         ...response,
         items: [{ ...item, firstOrderDate: '2026-08-12' }],
       }),
+
     isInvalidResponse
   );
 
@@ -177,6 +208,7 @@ test('purchased product response rejects invalid quantities and dates', () => {
         ...response,
         items: [{ ...item, currentProductExists: false }],
       }),
+
     isInvalidResponse
   );
 });

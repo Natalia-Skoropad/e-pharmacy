@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 
 import { Button, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
@@ -57,6 +58,7 @@ function OwnProductsTable({
         key: 'addedAt',
         width: '100px',
         title: <TableHeaderTitle parts={['Added', 'date']} />,
+
         render: (product) =>
           product.addedAt ? <TableDateTime value={product.addedAt} /> : '—',
       },
@@ -64,6 +66,7 @@ function OwnProductsTable({
         key: 'productPhoto',
         width: '80px',
         title: <TableHeaderTitle parts={['Product', 'photo']} />,
+
         render: (product) => (
           <TableImagePreview
             src={getProductImageSrc(product.imageUrl)}
@@ -76,6 +79,7 @@ function OwnProductsTable({
         key: 'productId',
         width: '150px',
         title: <TableHeaderTitle parts={['Product', 'ID']} />,
+
         render: (product) => (
           <TextActionButton
             className={css.breakableLink}
@@ -93,6 +97,7 @@ function OwnProductsTable({
         key: 'article',
         width: '120px',
         title: <TableHeaderTitle parts={['Product', 'article']} />,
+
         render: (product) => (
           <TextActionButton
             href={
@@ -109,6 +114,7 @@ function OwnProductsTable({
         key: 'name',
         width: '100px',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
+
         render: (product) => (
           <TextActionButton
             href={
@@ -125,6 +131,7 @@ function OwnProductsTable({
         key: 'category',
         width: '110px',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
+
         render: (product) => {
           const category =
             categoryReference?.get(product.category.id) ??
@@ -162,17 +169,20 @@ function OwnProductsTable({
       {
         key: 'currentPrice',
         width: isAllPharmacies ? '100px' : '50px',
+
         title: isAllPharmacies ? (
           <TableHeaderTitle parts={['Average', 'price, ₴']} />
         ) : (
           <TableHeaderTitle parts={['Current', 'price, ₴']} />
         ),
+
         render: (product) => formatAmount(product.currentPrice) ?? '—',
       },
       {
         key: 'status',
         width: '100px',
         title: <TableHeaderTitle parts={['Product', 'status']} />,
+
         render: (product) => (
           <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />
         ),
@@ -181,6 +191,7 @@ function OwnProductsTable({
         key: 'action',
         width: '130px',
         title: 'Action',
+
         render: (product) => (
           <Button
             className={css.removeButton}
@@ -195,6 +206,7 @@ function OwnProductsTable({
             }
             isLoading={removingProductId === product.id}
             loadingLabel="Removing..."
+            iconLeft={<Trash2 size={16} aria-hidden="true" />}
             onClick={() => onRemoveProduct?.(product)}
           >
             Remove

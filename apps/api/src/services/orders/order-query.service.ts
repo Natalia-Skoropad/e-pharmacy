@@ -32,7 +32,7 @@ import {
   getOrderOfferFallbacks,
 } from './order-shared';
 
-import { getCurrentPharmacyId } from './order-access';
+import { getCurrentPharmacyId, getOwnerOrderPharmacyIds } from './order-access';
 
 //===============================================================
 
@@ -172,7 +172,23 @@ export async function getOrdersService(
 ): Promise<OrdersResponseDto> {
   const filter: Record<string, unknown> = {};
 
-  if (role === USER_ROLES.PHARMACY) {
+  if (role === USER_ROLES.PHARMACY && query.scope === 'owner') {
+    const ownerIds = await getOwnerOrderPharmacyIds(userId);
+
+    if (
+      query.pharmacyId &&
+      !ownerIds.some((id) => String(id) === query.pharmacyId)
+    ) {
+      throw httpError(
+        HTTP_STATUS.FORBIDDEN,
+        'Pharmacy does not belong to this owner.'
+      );
+    }
+
+    filter.pharmacyId = query.pharmacyId
+      ? new Types.ObjectId(query.pharmacyId)
+      : { $in: ownerIds };
+  } else if (role === USER_ROLES.PHARMACY) {
     const pharmacyId = await getCurrentPharmacyId(userId);
 
     if (!pharmacyId) {

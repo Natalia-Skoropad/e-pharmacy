@@ -1,4 +1,4 @@
-import { type PipelineStage, type Types } from 'mongoose';
+import { Types, type PipelineStage } from 'mongoose';
 
 import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
@@ -101,7 +101,14 @@ export async function getClientRowsForPharmacies(
   ];
 
   const pipeline: PipelineStage[] = [
-    { $match: { pharmacyId: { $in: pharmacyIds } } },
+    {
+      $match: {
+        pharmacyId: { $in: pharmacyIds },
+        ...(query.productId
+          ? { 'items.productId': new Types.ObjectId(query.productId) }
+          : {}),
+      },
+    },
 
     {
       $set: {
@@ -232,6 +239,12 @@ export async function getClientRowsForPharmacies(
         ],
       },
     },
+
+    // A product-specific buyer search must not include walk-in accounts
+    // without a matching order (added via the default-client union).
+    ...(query.productId
+      ? [{ $match: { sourcePriority: 1 } } as PipelineStage]
+      : []),
 
     { $sort: { _id: 1, sourcePriority: -1 } },
 

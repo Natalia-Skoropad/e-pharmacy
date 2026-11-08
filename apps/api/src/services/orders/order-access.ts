@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { User } from '../../models/accounts/user.model';
+
 import { USER_ROLES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
@@ -84,4 +87,27 @@ export async function getCurrentPharmacyId(userId: string) {
 
     throw error;
   }
+}
+
+//===============================================================
+
+/** Owner-wide read scope, including deactivated/blocked pharmacies so past
+ * orders are not lost from historical product reporting. Not for mutations. */
+export async function getOwnerOrderPharmacyIds(userId: string) {
+  if (!mongoose.isValidObjectId(userId))
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Owner access is forbidden.');
+
+  const owner = await User.findById(userId).select('role status').lean();
+
+  if (
+    !owner ||
+    owner.role !== USER_ROLES.PHARMACY ||
+    owner.status === 'blocked'
+  ) {
+    throw httpError(HTTP_STATUS.FORBIDDEN, 'Owner access is forbidden.');
+  }
+
+  return Pharmacy.distinct('_id', {
+    ownerId: new mongoose.Types.ObjectId(userId),
+  });
 }

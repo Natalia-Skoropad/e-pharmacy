@@ -6,6 +6,10 @@ export const ALL_PRODUCT_DETAIL_TABS = [
   'details',
   'characteristics',
   'reviews',
+  'pharmacies',
+  'related-orders',
+  'clients',
+  'statistics',
 ] as const;
 
 //===================================================================

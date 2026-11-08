@@ -571,3 +571,26 @@
     text-align: left;
   }
 }
+
+.productCategoryDisplay {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.productCategoryIcon {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
+}
+
+.productCategoryIcon svg {
+  flex-shrink: 0;
+}

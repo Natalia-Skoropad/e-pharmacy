@@ -291,3 +291,25 @@ export function buildOwnProductsPath(
     ? `${PHARMACY_ROUTES.PRODUCTS}/${segments.join('/')}`
     : PHARMACY_ROUTES.PRODUCTS;
 }
+
+//===================================================================
+
+/** Filter URLs for the Products tab of a particular pharmacy.
+ * The pharmacy is encoded in the parent route, not repeated as a filter.
+ */
+export function buildEmbeddedOwnProductsPath(
+  pharmacyId: string,
+  filters: OwnProductsFilterState,
+  pagination: OwnProductsPagination = DEFAULT_OWN_PRODUCTS_PAGINATION
+): string {
+  if (!isValidObjectId(pharmacyId)) throw new TypeError('Invalid pharmacy ID.');
+
+  const ownerPath = buildOwnProductsPath(
+    { ...filters, pharmacyId: '' },
+    pagination
+  );
+
+  const base = `${PHARMACY_ROUTES.PHARMACIES}/${pharmacyId}/products`;
+
+  return `${base}${ownerPath.slice(PHARMACY_ROUTES.PRODUCTS.length)}`;
+}

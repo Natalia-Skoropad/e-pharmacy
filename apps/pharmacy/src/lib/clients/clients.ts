@@ -64,6 +64,7 @@ export type PharmacyClientsQueryParams = Readonly<{
   firstOrderTo?: string;
   name?: string;
   clientId?: string;
+  productId?: string;
   search?: string;
   contact?: string;
   email?: string;
@@ -108,6 +109,9 @@ export type PharmacyClientProductsQueryParams = Readonly<{
   dateTo?: string;
   article?: string;
   name?: string;
+  keyword?: string;
+  productId?: string;
+  scope?: 'owner';
   category?: ProductCategorySlug;
   status?: ProductStatus;
 }>;
@@ -117,6 +121,7 @@ export type PharmacyClientProductsQueryParams = Readonly<{
 export type PharmacyClientProductsResponse = Readonly<
   ApiPaginationResponse<PharmacyClientPurchasedProduct> & {
     earliestCreatedAt: string | null;
+    availableFirstOrderDates: readonly string[];
   }
 >;
 
@@ -557,6 +562,28 @@ function normalizePharmacyClientPurchasedProduct(
 
 //===================================================================
 
+function parseAvailableFirstOrderDates(payload: unknown): string[] {
+  if (!isRecord(payload) || !Array.isArray(payload.availableFirstOrderDates)) {
+    invalidClientContract(
+      'pharmacy client products response.availableFirstOrderDates must be an array.',
+      payload
+    );
+  }
+
+  const dates: string[] = payload.availableFirstOrderDates;
+
+  if (!dates.every((date) => isCalendarDateString(date))) {
+    invalidClientContract(
+      'pharmacy client products response.availableFirstOrderDates must contain calendar dates.',
+      payload
+    );
+  }
+
+  return [...new Set(dates)].sort();
+}
+
+//===================================================================
+
 export function normalizePharmacyClientProductsResponse(
   payload: unknown
 ): PharmacyClientProductsResponse {
@@ -576,5 +603,7 @@ export function normalizePharmacyClientProductsResponse(
       payload,
       'pharmacy client products response'
     ),
+
+    availableFirstOrderDates: parseAvailableFirstOrderDates(payload),
   };
 }

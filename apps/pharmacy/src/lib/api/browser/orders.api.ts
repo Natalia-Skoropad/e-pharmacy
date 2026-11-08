@@ -11,6 +11,7 @@ import {
 } from '@e-pharmacy/api-client/response';
 
 import { isRecord } from '@e-pharmacy/utils/guards';
+import { localApiRequest as ownerLocalApiRequest } from '@e-pharmacy/next-api/browser';
 
 import type {
   CreateOrderManagerCommentPayload,
@@ -128,7 +129,10 @@ export async function getPharmacyOrders(
   const path = appendQueryParams(PHARMACY_API_ROUTES.orders.list, params);
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await (params.scope === 'owner' ? ownerLocalApiRequest : localApiRequest)(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
 
     normalizePharmacyOrdersResponse,
 
@@ -277,7 +281,10 @@ export async function getPharmacyOrderSalesStatistics(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await (params.scope === 'owner' ? ownerLocalApiRequest : localApiRequest)(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
 
     normalizeOrderSalesStatistics,
 

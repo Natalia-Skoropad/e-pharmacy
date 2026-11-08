@@ -3,6 +3,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { isClientsFilterSegment } from '@/lib/clients/client-paths';
+import { isOwnProductsFilterSegment } from '@/lib/products/own-product-paths';
 
 //===================================================================
 
@@ -81,6 +82,7 @@ export type OwnedPharmacyRouteResolution =
       pharmacyId: string;
       tab: OwnedPharmacyDetailTab;
       clientSegments: readonly string[];
+      productSegments: readonly string[];
     }>
   | Readonly<{ kind: 'invalid' }>;
 
@@ -309,13 +311,21 @@ export function resolveOwnedPharmaciesRoute(
 
     if (
       clientSegments.length > 0 &&
-      (tab !== 'clients' ||
-        !clientSegments.every(
-          (segment) =>
-            isClientsFilterSegment(segment) ||
-            /^page-[1-9]\d*$/.test(segment) ||
-            /^per-page-(20|50|100)$/.test(segment)
-        ))
+      !(
+        (tab === 'clients' &&
+          clientSegments.every(
+            (segment) =>
+              isClientsFilterSegment(segment) ||
+              /^page-[1-9]\d*$/.test(segment) ||
+              /^per-page-(20|50|100)$/.test(segment)
+          )) ||
+        (tab === 'products' &&
+          clientSegments.every(
+            (segment) =>
+              !segment.startsWith('pharmacy-id-') &&
+              isOwnProductsFilterSegment(segment)
+          ))
+      )
     ) {
       return { kind: 'invalid' };
     }
@@ -324,7 +334,8 @@ export function resolveOwnedPharmaciesRoute(
       kind: 'detail',
       pharmacyId: segments[0].toLowerCase(),
       tab: tab as OwnedPharmacyDetailTab,
-      clientSegments,
+      clientSegments: tab === 'clients' ? clientSegments : [],
+      productSegments: tab === 'products' ? clientSegments : [],
     };
   }
 

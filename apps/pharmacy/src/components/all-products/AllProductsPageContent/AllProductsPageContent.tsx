@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { PackagePlus, PackageSearch, X } from 'lucide-react';
+import { PackageSearch } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
@@ -13,7 +13,7 @@ import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
@@ -35,7 +35,6 @@ import type {
 } from '@e-pharmacy/types/products';
 
 import { getProductCategories } from '@/lib/api/browser';
-
 import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
 
 import {
@@ -65,6 +64,7 @@ import { AllProductStatistics } from '@/components/statistics';
 import { AllProductsFiltersDrawer } from '@/components/all-products/AllProductsFiltersDrawer';
 import { AllProductsTable } from '@/components/all-products/AllProductsTable';
 import { OwnerProductSearch } from '@/components/all-products/OwnerProductSearch/OwnerProductSearch';
+import { OwnerAddProductConfirmation } from '@/components/all-products/OwnerAddProductConfirmation/OwnerAddProductConfirmation';
 
 import css from './AllProductsPageContent.module.css';
 
@@ -616,32 +616,10 @@ function AllProductsPageContent({
         />
       </section>
 
-      <ConfirmationModal
+      <OwnerAddProductConfirmation
         isOpen={Boolean(productToAdd) && hasEligiblePharmacy}
-        eyebrow="ALL PRODUCTS"
-        title="Add product to eligible pharmacies?"
-        description={
-          <div className={css.addProductConfirmationCopy}>
-            {productToAdd ? (
-              <p>
-                <strong>{productToAdd.name}</strong> will be added to all your
-                Active and On moderation pharmacies.
-              </p>
-            ) : null}
-            <p>
-              When another pharmacy becomes Active, missing selected products
-              will be added automatically. Existing products, prices and stock
-              will not be duplicated or overwritten.
-            </p>
-          </div>
-        }
-        confirmLabel="Add to pharmacy"
-        cancelLabel="Cancel"
-        confirmIconLeft={<PackagePlus size={17} aria-hidden="true" />}
-        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        productName={productToAdd?.name}
         isLoading={Boolean(addingProductId)}
-        closeOnBackdrop={!addingProductId}
-        closeOnEscape={!addingProductId}
         onConfirm={() => void handleConfirmAddProduct()}
         onCancel={() => {
           if (!addingProductId) setProductToAdd(null);

@@ -1,6 +1,11 @@
 import { isOwnProductsFilterSegment } from '../products/own-product-paths';
 
 import {
+  buildClientPurchasedProductsPath,
+  parseClientPurchasedProductsSegments,
+} from '../clients/client-purchased-products-paths';
+
+import {
   buildClientPharmaciesPath,
   parseClientPharmaciesSegments,
 } from '../clients/client-pharmacies-path';
@@ -52,22 +57,43 @@ export function isOwnerClientDetailPath(pathname: string): boolean {
     return true;
   }
 
-  // Nested Orders/Products pagination belongs to the owner client card too.
+  // Purchased-products filters are owner-scoped, including nested category,
+  // date and product ID routes; they must never inherit a selected pharmacy.
+  const purchased =
+    /^\/pharmacy\/clients\/([0-9a-f]{24})\/products\/(.+)$/i.exec(pathname);
+
+  if (purchased) {
+    try {
+      const parsed = parseClientPurchasedProductsSegments(
+        purchased[2]!.split('/')
+      );
+
+      return (
+        buildClientPurchasedProductsPath(
+          purchased[1]!,
+          parsed.filters,
+          parsed.pagination
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  // Nested Orders pagination belongs to the owner client card too.
   const detailPaging =
-    /^\/pharmacy\/clients\/([0-9a-f]{24})\/(orders|products)\/(.+)$/i.exec(
-      pathname
-    );
+    /^\/pharmacy\/clients\/([0-9a-f]{24})\/orders\/(.+)$/i.exec(pathname);
 
   if (detailPaging) {
     try {
       const pagination = parseClientDetailPaginationSegments(
-        detailPaging[3]!.split('/')
+        detailPaging[2]!.split('/')
       );
 
       return (
         buildClientDetailPaginationPath(
           detailPaging[1]!,
-          detailPaging[2] as 'orders' | 'products',
+          'orders',
           pagination
         ) === pathname
       );

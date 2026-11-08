@@ -16,6 +16,11 @@ import {
   type ClientDetailPagination,
 } from '@/lib/clients/client-detail-pagination';
 
+import {
+  parseClientPurchasedProductsSegments,
+  buildClientPurchasedProductsPath,
+} from '@/lib/clients/client-purchased-products-paths';
+
 import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
 import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
 
@@ -53,19 +58,30 @@ export default async function ClientDetailPaginatedTab({
     notFound();
   }
 
-  let pagination: ClientDetailPagination;
+  let canonical: string;
 
   try {
-    pagination = parseClientDetailPaginationSegments(filters);
+    if (tab === 'products') {
+      const state = parseClientPurchasedProductsSegments(filters);
+
+      canonical = buildClientPurchasedProductsPath(
+        clientId,
+        state.filters,
+        state.pagination
+      );
+    } else {
+      const pagination: ClientDetailPagination =
+        parseClientDetailPaginationSegments(filters);
+
+      canonical = buildClientDetailPaginationPath(
+        clientId,
+        tab as ClientDetailListTab,
+        pagination
+      );
+    }
   } catch {
     notFound();
   }
-
-  const canonical = buildClientDetailPaginationPath(
-    clientId,
-    tab as ClientDetailListTab,
-    pagination
-  );
 
   if (requestedPath !== canonical) redirect(canonical);
 

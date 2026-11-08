@@ -314,3 +314,44 @@
     min-height: 420px;
   }
 }
+
+/* Shared Product search layout follows the owner registries. */
+.ownerSearchGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .ownerSearchGrid {
+    grid-template-columns: minmax(0, 1fr) 140px;
+    align-items: end;
+  }
+}
+
+.breakableLink {
+  overflow-wrap: anywhere;
+}
+
+.categoryDisplay {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.categoryIcon {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.categoryIcon svg {
+  flex-shrink: 0;
+}

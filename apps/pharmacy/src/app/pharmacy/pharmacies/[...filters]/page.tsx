@@ -13,6 +13,12 @@ import {
   resolveOwnedPharmaciesRoute,
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
+import {
+  parseOwnProductsSegments,
+  parseOwnProductsPaginationSegments,
+  buildEmbeddedOwnProductsPath,
+} from '@/lib/products/own-product-paths';
+
 import { OwnedPharmaciesPageContent } from '@/components/pharmacies/OwnedPharmaciesPageContent/OwnedPharmaciesPageContent';
 import { OwnedPharmacyDetailPageContent } from '@/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent';
 
@@ -39,10 +45,28 @@ export default async function OwnedPharmaciesRoute({
         ? parseClientsPaginationSegments(route.clientSegments)
         : undefined;
 
+    const productFilters =
+      route.tab === 'products'
+        ? parseOwnProductsSegments({ filters: [...route.productSegments] })
+        : undefined;
+
+    const productPagination =
+      route.tab === 'products'
+        ? parseOwnProductsPaginationSegments({
+            filters: [...route.productSegments],
+          })
+        : undefined;
+
     const canonical =
       clientFilters && pagination
         ? buildClientsPath(clientFilters, base, pagination)
-        : base;
+        : productFilters && productPagination
+          ? buildEmbeddedOwnProductsPath(
+              route.pharmacyId,
+              productFilters,
+              productPagination
+            )
+          : base;
 
     if (`/pharmacy/pharmacies/${filters.join('/')}` !== canonical)
       redirect(canonical);
@@ -53,6 +77,8 @@ export default async function OwnedPharmaciesRoute({
         activeTab={route.tab}
         initialClientFilters={clientFilters}
         initialClientPagination={pagination}
+        initialProductFilters={productFilters}
+        initialProductPagination={productPagination}
       />
     );
   }

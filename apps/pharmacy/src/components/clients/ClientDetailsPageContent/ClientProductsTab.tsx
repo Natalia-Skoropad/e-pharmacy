@@ -1,32 +1,53 @@
-import type { Dispatch, SetStateAction } from 'react';
+import {
+  useCallback,
+  useMemo,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
+
 import { PackageCheck } from 'lucide-react';
 
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { CountLabel, DataTable } from '@e-pharmacy/ui/data-display';
 
 import {
-  SearchInput,
+  ProfileResourceState,
+  ProfileSectionHeader,
+} from '@e-pharmacy/ui/profile';
+
+import {
   RowsPerPageSelect,
   type RowsPerPageValue,
+  type SelectOption,
 } from '@e-pharmacy/ui/forms';
 
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 
 import type { PharmacyClientPurchasedProduct } from '@/lib/clients/clients';
+import { getPharmacyClientProducts } from '@/lib/api/browser/clients.api';
+
+import {
+  OwnerProductSearch,
+  type ProductSuggestionsLoader,
+} from '@/components/all-products/OwnerProductSearch/OwnerProductSearch';
 
 import { PRODUCT_ROWS_PER_PAGE_OPTIONS } from './ClientDetailFilters';
-import { PRODUCT_COLUMNS } from './ClientDetailTableColumns';
+import { buildClientProductColumns } from './ClientDetailTableColumns';
 
 import css from './ClientDetailsPageContent.module.css';
 
 //===================================================================
 
 type ProductsTabProps = Readonly<{
-  productArticleSearch: string;
-  setProductArticleSearch: (value: string) => void;
-  productNameSearch: string;
-  setProductNameSearch: (value: string) => void;
+  clientId: string;
+
+  categoryOptions: readonly (SelectOption<string> & {
+    icon?: string;
+    categoryId?: string;
+  })[];
+
+  productId: string;
+  onProductIdChange: (id: string) => void;
   productFiltersCount: number;
   isProductsFiltersOpen: boolean;
   setIsProductsFiltersOpen: (value: boolean) => void;
@@ -46,10 +67,10 @@ type ProductsTabProps = Readonly<{
 //===================================================================
 
 export function ClientProductsTab({
-  productArticleSearch,
-  setProductArticleSearch,
-  productNameSearch,
-  setProductNameSearch,
+  clientId,
+  categoryOptions,
+  productId,
+  onProductIdChange,
   productFiltersCount,
   isProductsFiltersOpen,
   setIsProductsFiltersOpen,
@@ -64,54 +85,66 @@ export function ClientProductsTab({
   productsPage,
   productsTotalPages,
 }: ProductsTabProps) {
+  const loadPurchasedProducts = useCallback<ProductSuggestionsLoader>(
+    async (params, options) => {
+      const result = await getPharmacyClientProducts(
+        clientId,
+        {
+          scope: 'owner',
+          keyword: params.keyword,
+          productId: params.productId,
+          page: params.page,
+          perPage: params.perPage,
+        },
+        options
+      );
+
+      return {
+        page: result.page,
+        totalPages: result.totalPages,
+        items: result.items.map((product) => ({
+          id: product.productId,
+          article: product.article,
+          name: product.name,
+          photoUrl: product.photoUrl,
+        })),
+      };
+    },
+    [clientId]
+  );
+
+  const columns = useMemo(
+    () =>
+      buildClientProductColumns(
+        new Map<string, string | undefined>(
+          categoryOptions.flatMap((item) => {
+            const pairs: Array<readonly [string, string | undefined]> = [
+              [item.value, item.icon],
+            ];
+            if (item.categoryId) pairs.push([item.categoryId, item.icon]);
+            return pairs;
+          })
+        )
+      ),
+    [categoryOptions]
+  );
+
   return (
     <div className={css.sectionStack}>
+      <ProfileSectionHeader
+        title="Purchased products"
+        description="Products in this client's successful orders across your pharmacies."
+        icon={<PackageCheck size={21} aria-hidden="true" />}
+      />
+
       <section className={css.sectionCard}>
-        <div className={css.titleWithTooltip}>
-          <h2>Purchased products</h2>
-
-          <InfoTooltip
-            label="About purchased products"
-            title="Successful purchases"
-            icon={<PackageCheck size={20} aria-hidden="true" />}
-            escapeOverflow
-            items={[
-              {
-                title: 'Purchased quantity and amount',
-                description:
-                  'Totals across all successful orders containing the product.',
-              },
-              {
-                title: 'First order date',
-                description:
-                  'The earliest successful order in which this product appeared.',
-              },
-              {
-                title: 'Orders count',
-                description:
-                  'How many successful orders included this product. Each product appears only once in this table.',
-              },
-            ]}
-          />
-        </div>
-
-        <div className={css.searchGrid}>
-          <SearchInput
-            id="client-product-article-search"
-            label="Product article search"
-            value={productArticleSearch}
-            placeholder="Product article"
-            isActive={Boolean(productArticleSearch)}
-            onChange={setProductArticleSearch}
-          />
-
-          <SearchInput
-            id="client-product-name-search"
-            label="Product name search"
-            value={productNameSearch}
-            placeholder="Product name"
-            isActive={Boolean(productNameSearch)}
-            onChange={setProductNameSearch}
+        <div className={css.ownerSearchGrid}>
+          <OwnerProductSearch
+            id="client-purchased-products-search"
+            value={productId}
+            loadProducts={loadPurchasedProducts}
+            description="Find a product by ID, article or name. Suggestions load progressively; only this client's purchased products appear in the results."
+            onChange={onProductIdChange}
           />
 
           <div className={css.searchAction}>
@@ -143,27 +176,23 @@ export function ClientProductsTab({
                 shown={products.length}
                 total={productsTotal}
                 label="products"
+                fullWidthOnMobile
               />
             ) : null}
           </div>
 
           {productsStatus === 'error' ? (
-            <div role="alert">
-              <p className={css.errorText}>{productsError}</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={() =>
-                  setProductsRetryVersion((version) => version + 1)
-                }
-              >
-                Retry purchased products
-              </Button>
-            </div>
+            <ProfileResourceState
+              variant="error"
+              title="Purchased products could not be loaded"
+              description={productsError}
+              retryLabel="Try again"
+              sideActionOnDesktop
+              onRetry={() => setProductsRetryVersion((version) => version + 1)}
+            />
           ) : (
             <DataTable
-              columns={PRODUCT_COLUMNS}
+              columns={columns}
               items={products}
               getItemKey={(item) => item.id}
               isLoading={

@@ -32,8 +32,10 @@ type InfoTooltipProps = Readonly<{
   className?: string;
   icon?: ReactNode;
   escapeOverflow?: boolean;
+
   /** Use the browser top layer for tooltips inside clipped or stacked layouts. */
   preferTopLayer?: boolean;
+
   /** Allow visitors to scroll a long tooltip without losing hover focus. */
   scrollable?: boolean;
 }>;
@@ -196,6 +198,7 @@ function InfoTooltip({
         escapeOverflow && preferTopLayer && css.floatingTooltipTopLayer,
         escapeOverflow && css.floatingTooltip,
         scrollable && css.scrollableTooltip,
+
         escapeOverflow &&
           floatingPosition?.openAbove &&
           css.floatingTooltipAbove
@@ -212,7 +215,7 @@ function InfoTooltip({
               bottom: floatingPosition.bottom,
               left: floatingPosition.left,
               width: floatingPosition.width,
-              ...(scrollable ? { maxHeight: floatingPosition.maxHeight } : {}),
+              maxHeight: floatingPosition.maxHeight,
               '--info-tooltip-arrow-left': `${floatingPosition.arrowLeft}px`,
             } as CSSProperties)
           : undefined

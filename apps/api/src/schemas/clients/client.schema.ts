@@ -49,6 +49,7 @@ export const clientsQuerySchema = z.preprocess(
       firstOrderTo: dateQuerySchema,
       name: sharedSearchSchema,
       clientId: sharedSearchSchema,
+      productId: mongoIdSchema.optional(),
 
       // Email and international phone queries contain @ and +, which the
       // generic display-name search pattern intentionally rejects.
@@ -84,8 +85,11 @@ export const clientProductsQuerySchema = z.preprocess(
       dateTo: dateQuerySchema,
       article: sharedSearchSchema,
       name: sharedSearchSchema,
+      keyword: sharedSearchSchema,
+      productId: mongoIdSchema.optional(),
+      scope: z.enum(['owner']).optional(),
       category: productCategorySlugSchema.optional(),
-      status: z.enum(['new', 'active', 'blocked']).optional(),
+      status: z.enum(['active', 'blocked']).optional(),
     })
 
     .strict()

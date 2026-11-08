@@ -90,5 +90,9 @@ export type AggregatedClientPurchasedProductRow = Omit<
 export type ClientPurchasedProductsAggregationResult = Readonly<{
   items: AggregatedClientPurchasedProductRow[];
   total: Array<{ count: number }>;
-  metadata: Array<{ earliestCreatedAt: Date }>;
+
+  metadata: Array<{
+    earliestCreatedAt: Date;
+    availableFirstOrderDates: string[];
+  }>;
 }>;

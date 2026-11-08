@@ -60,6 +60,8 @@ export type PharmacyOrderItem = Readonly<{
   currentPrice?: number;
 }>;
 
+//===================================================================
+
 export type PharmacyOrderRow = Readonly<{
   id: EntityId;
   orderNumber: string;
@@ -78,12 +80,16 @@ export type PharmacyOrderRow = Readonly<{
   items: PharmacyOrderItem[];
 }>;
 
+//===================================================================
+
 export type PharmacyOrderStatusHistoryItem = Readonly<{
   status: OrderStatus;
   changedAt: string;
   changedBy: EntityId;
   comment?: string;
 }>;
+
+//===================================================================
 
 export type PharmacyOrderActivityHistoryItem = Readonly<{
   type: OrderActivityType;
@@ -99,16 +105,21 @@ export type PharmacyOrderActivityHistoryItem = Readonly<{
   unitPrice: number;
 }>;
 
+//===================================================================
+
 export type PharmacyOrderManagerComment = Readonly<{
   id: EntityId;
   text: string;
   createdAt: ISODateTimeString;
   createdBy: EntityId;
+
   author: Readonly<{
     userId: EntityId;
     displayName: string;
   }>;
 }>;
+
+//===================================================================
 
 export type PharmacyOrderDetails = PharmacyOrderRow &
   Readonly<{
@@ -132,9 +143,13 @@ export type PharmacyOrderDetails = PharmacyOrderRow &
     managerCommentsCount: number;
   }>;
 
+//===================================================================
+
 export type PharmacyOrderManagerCommentsResponse = Readonly<
   ApiPaginationResponse<PharmacyOrderManagerComment>
 >;
+
+//===================================================================
 
 export type PharmacyOrdersQueryParams = Readonly<{
   page?: number;
@@ -149,10 +164,13 @@ export type PharmacyOrdersQueryParams = Readonly<{
   status?: OrderStatus;
   createdByType?: OrderCreatedByType;
   productId?: EntityId;
+  scope?: 'owner';
   comment?: string;
   clientComment?: string;
   clientCommentPresence?: 'with' | 'without';
 }>;
+
+//===================================================================
 
 export type PharmacyOrdersResponse = Readonly<
   ApiPaginationResponse<PharmacyOrderRow> & {
@@ -289,8 +307,10 @@ function requireIsoDateTime(
 
 function requireText(value: unknown, label: string, payload: unknown): string {
   const text = getTrimmedString(value);
+
   if (!text)
     invalidOrderContract(`${label} must be a non-empty string.`, payload);
+
   return text;
 }
 
@@ -413,6 +433,7 @@ function getDeliveryMethod(order: Record<string, unknown>): DeliveryMethod {
   if (isDeliveryMethod(order.deliveryMethod)) return order.deliveryMethod;
 
   const delivery = order.delivery;
+
   if (isRecord(delivery) && isDeliveryMethod(delivery.method)) {
     return delivery.method;
   }
@@ -424,20 +445,26 @@ function getDeliveryMethod(order: Record<string, unknown>): DeliveryMethod {
 
 function getClientName(order: Record<string, unknown>): string {
   const directClientName = getTrimmedString(order.clientName);
+
   if (directClientName) return directClientName;
 
   const directClient = getTrimmedString(order.client);
+
   if (directClient) return directClient;
 
   const client = order.client;
+
   if (isRecord(client)) {
     const fullName = getTrimmedString(client.name);
+
     if (fullName) return fullName;
   }
 
   const delivery = order.delivery;
+
   if (isRecord(delivery) && isRecord(delivery.details)) {
     const recipientName = getTrimmedString(delivery.details.recipientName);
+
     if (recipientName) return recipientName;
   }
 
@@ -538,15 +565,20 @@ function normalizePharmacyOrderItem(rawItem: unknown): PharmacyOrderItem {
     productOfferId,
     name,
     article,
+
     ...(category !== undefined ? { category } : {}),
+
     ...(getTrimmedString(rawItem.imageUrl)
       ? { imageUrl: getTrimmedString(rawItem.imageUrl) }
       : {}),
+
     ...(rating !== undefined ? { rating } : {}),
     ...(reviewsCount !== undefined ? { reviewsCount } : {}),
+
     quantity,
     unitPrice,
     totalPrice,
+
     ...(availableQuantity !== undefined ? { availableQuantity } : {}),
     ...(currentPrice !== undefined ? { currentPrice } : {}),
   };
@@ -576,17 +608,21 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
   if (!isPaymentMethod(rawOrder.paymentMethod)) {
     invalidOrderContract('order.paymentMethod is invalid.', rawOrder);
   }
+
   if (!isOrderStatus(rawOrder.status)) {
     invalidOrderContract('order.status is invalid.', rawOrder);
   }
+
   if (!isOrderCreatedByType(rawOrder.createdByType)) {
     invalidOrderContract('order.createdByType is invalid.', rawOrder);
   }
+
   if (!Array.isArray(rawOrder.items)) {
     invalidOrderContract('order.items must be an array.', rawOrder);
   }
 
   const items = rawOrder.items.map(normalizePharmacyOrderItem);
+
   const totalQuantity = requireNonNegativeInteger(
     rawOrder.totalItems,
     'order.totalItems',
@@ -612,6 +648,7 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
   assertMoneyEqual(totalAmount, expectedAmount, 'order.totalPrice', rawOrder);
 
   const clientId = getClientId(rawOrder);
+
   if (clientId && !isValidObjectId(clientId)) {
     invalidOrderContract('order.clientId is invalid.', rawOrder);
   }
@@ -620,11 +657,13 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
     id,
     orderNumber,
     orderDate,
+
     pharmacyName: requireText(
       rawOrder.pharmacyName,
       'order.pharmacyName',
       rawOrder
     ),
+
     client: getClientName(rawOrder),
     clientId,
     clientPhotoUrl: getClientPhotoUrl(rawOrder),
@@ -666,6 +705,7 @@ function normalizeStatusHistory(
 
     return {
       status: entry.status,
+
       changedAt: requireIsoDateTime(
         entry.changedAt,
         'order.statusHistory.changedAt',
@@ -677,6 +717,7 @@ function normalizeStatusHistory(
         'order.statusHistory.changedBy',
         entry
       ),
+
       ...(getTrimmedString(entry.comment)
         ? { comment: getTrimmedString(entry.comment) }
         : {}),
@@ -838,6 +879,7 @@ function normalizeBankDetails(
   payload: unknown
 ): CompletePharmacyBankDetails | null {
   if (payload === undefined || payload === null) return null;
+
   if (!isRecord(payload)) {
     return invalidOrderContract(
       'order.bankDetails must be an object.',
@@ -853,8 +895,8 @@ function normalizeBankDetails(
     ),
 
     taxId: requireText(payload.taxId, 'order.bankDetails.taxId', payload),
-
     iban: requireText(payload.iban, 'order.bankDetails.iban', payload),
+
     bankName: requireText(
       payload.bankName,
       'order.bankDetails.bankName',
@@ -883,6 +925,7 @@ export function normalizePharmacyOrderDetails(
   if (!isRecord(payload)) return null;
 
   const row = normalizePharmacyOrder(payload);
+
   if (!row) return null;
 
   const delivery = isRecord(payload.delivery) ? payload.delivery : undefined;
@@ -896,6 +939,7 @@ export function normalizePharmacyOrderDetails(
   return {
     ...row,
     currency: '₴',
+
     pharmacyId: requireObjectId(
       payload.pharmacyId,
       'order.pharmacyId',
@@ -904,45 +948,59 @@ export function normalizePharmacyOrderDetails(
 
     statusHistory: normalizeStatusHistory(payload.statusHistory),
     activityHistory: normalizeActivityHistory(payload.activityHistory),
+
     managerCommentsCount: requireNonNegativeInteger(
       payload.managerCommentsCount,
       'order.managerCommentsCount',
       payload
     ),
+
     ...(getTrimmedString(payload.clientPhone)
       ? { clientPhone: getTrimmedString(payload.clientPhone) }
       : {}),
+
     ...(getTrimmedString(payload.clientAddress)
       ? { clientAddress: getTrimmedString(payload.clientAddress) }
       : {}),
+
     ...(getTrimmedString(payload.pharmacyPhone)
       ? { pharmacyPhone: getTrimmedString(payload.pharmacyPhone) }
       : {}),
+
     ...(pharmacyLocation ? { pharmacyLocation } : {}),
+
     ...(getTrimmedString(payload.pharmacyWorkingHours)
       ? {
           pharmacyWorkingHours: getTrimmedString(payload.pharmacyWorkingHours),
         }
       : {}),
+
     ...(getTrimmedString(payload.pharmacyEmail)
       ? { pharmacyEmail: getTrimmedString(payload.pharmacyEmail) }
       : {}),
+
     ...(bankDetails ? { bankDetails } : {}),
+
     ...(getTrimmedString(deliveryDetails?.address)
       ? { deliveryAddress: getTrimmedString(deliveryDetails?.address) }
       : {}),
+
     ...(getTrimmedString(deliveryDetails?.recipientName)
       ? { recipientName: getTrimmedString(deliveryDetails?.recipientName) }
       : {}),
+
     ...(getTrimmedString(deliveryDetails?.recipientPhone)
       ? { recipientPhone: getTrimmedString(deliveryDetails?.recipientPhone) }
       : {}),
+
     ...(getTrimmedString(payload.pharmacyComment)
       ? { pharmacyComment: getTrimmedString(payload.pharmacyComment) }
       : {}),
+
     ...(getTrimmedString(payload.managerComment)
       ? { managerComment: getTrimmedString(payload.managerComment) }
       : {}),
+
     ...(getTrimmedString(payload.rejectionReason)
       ? { rejectionReason: getTrimmedString(payload.rejectionReason) }
       : {}),
@@ -974,6 +1032,7 @@ function normalizeOrderStatistics(payload: unknown): OrderStatisticsCounts {
           `order statistics.${status}.count`,
           value
         ),
+
         amount: requireNonNegativeNumber(
           value.amount,
           `order statistics.${status}.amount`,
@@ -998,12 +1057,14 @@ export function normalizePharmacyOrdersResponse(
 
   return {
     ...response,
+
     statistics: isRecord(payload)
       ? normalizeOrderStatistics(payload.statistics)
       : invalidOrderContract(
           'pharmacy orders response must be an object.',
           payload
         ),
+
     earliestCreatedAt: parseEarliestCreatedAt(payload),
   };
 }

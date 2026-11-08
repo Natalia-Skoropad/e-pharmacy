@@ -121,10 +121,9 @@ export async function getPharmacyClientProducts(
   );
 
   return parseApiResponseData(
-    await operationalLocalApiRequest(
-      path,
-      sanitizeBrowserReadRequestOptions(options)
-    ),
+    await (
+      params.scope === 'owner' ? localApiRequest : operationalLocalApiRequest
+    )(path, sanitizeBrowserReadRequestOptions(options)),
 
     normalizePharmacyClientProductsResponse,
 

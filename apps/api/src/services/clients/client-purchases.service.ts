@@ -10,6 +10,8 @@ import type { ClientProductsQuery } from '../../schemas/clients/client.schema';
 import { httpError } from '../../utils/http/httpError';
 
 import { getCurrentPharmacyId } from './client-access';
+import { getOwnedClientPharmacyIds } from './client-owner-scope';
+import { getClientByIdService } from './client-registry.service';
 import { buildClientProductsAggregationPipeline } from './client-purchases-aggregation';
 import type { ClientPurchasedProductsAggregationResult } from './client-types';
 
@@ -20,9 +22,18 @@ export async function getClientPurchasedProductsService(
   clientId: string,
   query: ClientProductsQuery
 ) {
-  const pharmacyId = await getCurrentPharmacyId(userId);
+  const ownerScoped = query.scope === 'owner';
 
-  if (!pharmacyId || !Types.ObjectId.isValid(clientId)) {
+  // The owner-wide client detail never relies on a selected pharmacy header.
+  // Authorization also verifies the client belongs to at least one of this
+  // owner's pharmacies, including a walk-in client without any orders.
+  if (ownerScoped) await getClientByIdService(userId, clientId, true);
+
+  const pharmacyIds = ownerScoped
+    ? await getOwnedClientPharmacyIds(userId)
+    : await getCurrentPharmacyId(userId);
+
+  if ((!ownerScoped && !pharmacyIds) || !Types.ObjectId.isValid(clientId)) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Client was not found');
   }
 
@@ -32,7 +43,7 @@ export async function getClientPurchasedProductsService(
   let [result] =
     await Order.aggregate<ClientPurchasedProductsAggregationResult>(
       buildClientProductsAggregationPipeline(
-        pharmacyId,
+        pharmacyIds!,
         clientObjectId,
         query,
         requestedSkip
@@ -46,7 +57,7 @@ export async function getClientPurchasedProductsService(
   if (page !== query.page) {
     [result] = await Order.aggregate<ClientPurchasedProductsAggregationResult>(
       buildClientProductsAggregationPipeline(
-        pharmacyId,
+        pharmacyIds!,
         clientObjectId,
         query,
         (page - 1) * query.perPage
@@ -56,17 +67,17 @@ export async function getClientPurchasedProductsService(
 
   const earliestCreatedAt = result?.metadata[0]?.earliestCreatedAt ?? null;
 
-  if (!earliestCreatedAt) {
+  if (!earliestCreatedAt && !ownerScoped) {
     const [clientHasOrders, defaultClientExists] = await Promise.all([
       Order.exists({
-        pharmacyId,
+        pharmacyId: pharmacyIds,
         userId: clientObjectId,
       }),
 
       User.exists({
         _id: clientObjectId,
         isDefaultPharmacyClient: true,
-        defaultClientPharmacyId: pharmacyId,
+        defaultClientPharmacyId: pharmacyIds,
       }),
     ]);
 
@@ -103,5 +114,11 @@ export async function getClientPurchasedProductsService(
     earliestCreatedAt: earliestCreatedAt
       ? earliestCreatedAt.toISOString().slice(0, 10)
       : null,
+
+    // Unfiltered metadata: the calendar must reflect all purchased product
+    // first-order dates, even if the current table page/filter is empty.
+    availableFirstOrderDates: [
+      ...new Set(result?.metadata[0]?.availableFirstOrderDates ?? []),
+    ].sort(),
   };
 }

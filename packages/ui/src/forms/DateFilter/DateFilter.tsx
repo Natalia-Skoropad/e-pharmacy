@@ -38,13 +38,18 @@ export type DateFilterProps = Readonly<{
   className?: string;
   minDate?: string;
   maxDate?: string;
+  availableDates?: readonly string[];
   applyOnSubmit?: boolean;
   applyLabel?: string;
   rangeMode?: 'partial' | 'full';
   onChange: (value: DateFilterValue) => void;
 }>;
 
+//===================================================================
+
 type CalendarField = 'from' | 'to';
+
+//===================================================================
 
 type CalendarDateParts = Readonly<{
   year: number;
@@ -55,6 +60,8 @@ type CalendarDateParts = Readonly<{
 //===================================================================
 
 const WEEKDAY_LABELS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] as const;
+
+//===================================================================
 
 const MONTH_FORMATTER = new Intl.DateTimeFormat('en-US', {
   month: 'long',
@@ -266,11 +273,17 @@ export function DateFilter({
   className,
   minDate,
   maxDate = getBusinessCalendarDate() ?? undefined,
+  availableDates,
   applyOnSubmit = false,
   applyLabel = 'Apply',
   rangeMode = 'partial',
   onChange,
 }: DateFilterProps) {
+  const availableDayKeys = useMemo(
+    () => (availableDates ? new Set(availableDates) : null),
+    [availableDates]
+  );
+
   const rootRef = useRef<HTMLFieldSetElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const generatedErrorId = useId();
@@ -353,7 +366,11 @@ export function DateFilter({
     disabled ||
     !hasRequiredDates ||
     Boolean(rangeError) ||
-    areDatesEqual(currentValue, value);
+    areDatesEqual(currentValue, value) ||
+    (availableDayKeys !== null &&
+      [currentValue.from, currentValue.to].some(
+        (date) => date !== '' && !availableDayKeys.has(date)
+      ));
 
   const activeBounds = openField
     ? getFieldBounds(openField, currentValue, minDate, maxDate)
@@ -392,7 +409,8 @@ export function DateFilter({
   const selectDate = (date: string) => {
     if (
       !openField ||
-      !isDateAllowed(date, activeBounds.min, activeBounds.max)
+      !isDateAllowed(date, activeBounds.min, activeBounds.max) ||
+      (availableDayKeys !== null && !availableDayKeys.has(date))
     ) {
       return;
     }
@@ -430,7 +448,9 @@ export function DateFilter({
       activeBounds.max.slice(0, 7);
 
   const canSelectToday =
-    Boolean(today) && isDateAllowed(today, activeBounds.min, activeBounds.max);
+    Boolean(today) &&
+    isDateAllowed(today, activeBounds.min, activeBounds.max) &&
+    (availableDayKeys === null || availableDayKeys.has(today));
 
   return (
     <fieldset
@@ -546,11 +566,14 @@ export function DateFilter({
                         const isOutsideMonth =
                           parts.month !== visibleMonth.month;
 
-                        const isDisabled = !isDateAllowed(
-                          date,
-                          activeBounds.min,
-                          activeBounds.max
-                        );
+                        const isDisabled =
+                          !isDateAllowed(
+                            date,
+                            activeBounds.min,
+                            activeBounds.max
+                          ) ||
+                          (availableDayKeys !== null &&
+                            !availableDayKeys.has(date));
 
                         return (
                           <button

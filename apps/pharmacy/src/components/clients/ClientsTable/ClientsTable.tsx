@@ -114,7 +114,7 @@ function ClientsTable({
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
-            <OrderMetricsTooltip scope="client" />
+            <OrderMetricsTooltip scope="client" preferTopLayer />
           </span>
         ),
 

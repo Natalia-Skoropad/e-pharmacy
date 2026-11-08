@@ -1,0 +1,8 @@
+.copy {
+  display: grid;
+  gap: 10px;
+}
+
+.copy p {
+  margin: 0;
+}
