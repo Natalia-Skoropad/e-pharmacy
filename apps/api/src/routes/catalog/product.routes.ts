@@ -37,6 +37,7 @@ import {
   pendingProductReviewsQuerySchema,
   productFiltersQuerySchema,
   productIdParamsSchema,
+  productStockMovementsQuerySchema,
   productReviewParamsSchema,
   managedProductsQuerySchema,
   publicProductsQuerySchema,
@@ -182,6 +183,7 @@ productRoutes.get(
 
   validate({
     params: productIdParamsSchema,
+    query: productStockMovementsQuerySchema,
   }),
 
   ctrlWrapper(getProductStockMovements)

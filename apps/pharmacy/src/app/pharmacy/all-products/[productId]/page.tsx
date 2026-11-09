@@ -50,7 +50,7 @@ async function AllProductDetailsPage({ params }: AllProductDetailsPageProps) {
     notFound();
   }
 
-  return <AllProductDetailsPageContent productId={productId} mode="all" />;
+  return <AllProductDetailsPageContent productId={productId} />;
 }
 
 export default AllProductDetailsPage;

@@ -5,77 +5,73 @@ import test from 'node:test';
 
 //===================================================================
 
-async function read(relativePath: string): Promise<string> {
-  return readFile(resolve(process.cwd(), relativePath), 'utf8');
-}
+const read = (path: string) => readFile(resolve(process.cwd(), path), 'utf8');
 
 //===================================================================
 
-test('product details route semantics are represented by one all/own mode contract', async () => {
-  const [details, ownWrapper] = await Promise.all([
-    read(
-      'src/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx'
-    ),
+const globalCard =
+  'src/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx';
 
-    read(
-      'src/components/products/OwnProductDetailsPageContent/OwnProductDetailsPageContent.tsx'
-    ),
+const ownCard =
+  'src/components/products/OwnProductDetailsPageContent/OwnProductDetailsPageContent.tsx';
+
+//===================================================================
+
+test('global and own product cards have independent implementations and routes', async () => {
+  const [global, own, globalPage, ownPage] = await Promise.all([
+    read(globalCard),
+    read(ownCard),
+    read('src/app/pharmacy/all-products/[productId]/page.tsx'),
+    read('src/app/pharmacy/products/[productId]/page.tsx'),
   ]);
 
-  assert.match(details, /type ProductDetailsMode = 'all' \| 'own'/);
-  assert.match(details, /mode: ProductDetailsMode/);
-  assert.match(details, /\n  mode,\n/);
-  assert.match(details, /PRODUCT_DETAILS_MODE_CONFIG\[mode\]/);
-
-  assert.match(
-    details,
-    /all:[\s\S]*showAddAction: true[\s\S]*showRemoveAction: false/
-  );
-
-  assert.match(
-    details,
-    /own:[\s\S]*showAddAction: false[\s\S]*showRemoveAction: true/
+  assert.doesNotMatch(
+    global,
+    /ProductDetailsMode|mode === 'own'|OwnProductStatistics|scope: 'owner'/
   );
 
   assert.doesNotMatch(
-    details,
-    /showAddAction\?:|showRemoveAction\?:|backHref\?:|backLabel\?:|bannerTitle\?:|bannerMessage\?:/
+    own,
+    /AllProductDetailsPageContent|mode="own"|OwnerAddProductConfirmation/
   );
 
   assert.match(
-    ownWrapper,
-    /<AllProductDetailsPageContent productId=\{productId\} mode="own" \/>/
+    globalPage,
+    /<AllProductDetailsPageContent productId=\{productId\}/
   );
+
+  assert.match(
+    ownPage,
+    /<OwnProductDetailsPageContent productId=\{productId\}/
+  );
+
+  assert.match(global, /<OwnerAddProductConfirmation/);
+  assert.match(own, /Remove product from pharmacy\?/);
 });
 
 //===================================================================
 
-test('product stock summary never turns a missing or locked offer into believable zero values', async () => {
-  const details = await read(
-    'src/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx'
-  );
+test('stock analytics read actual per-pharmacy offers, not invented zero stock', async () => {
+  const [owner, detail, statistics] = await Promise.all([
+    read(ownCard),
 
-  const helperStart = details.indexOf(
-    'function getSingleProductStatisticsCounts('
-  );
+    read(
+      'src/components/products/OwnProductDetailsPageContent/OwnProductDetailsTab.tsx'
+    ),
 
-  const helperEnd = details.indexOf(
-    '//===================================================================',
-    helperStart + 10
-  );
+    read(
+      'src/components/products/OwnProductDetailsPageContent/OwnProductStatisticsTab.tsx'
+    ),
+  ]);
 
-  const helper = details.slice(helperStart, helperEnd);
-
-  assert.match(helper, /if \(!offer\) return null/);
-  assert.doesNotMatch(helper, /inStock:\s*\{\s*quantity:\s*0/);
+  assert.match(owner, /getProductOffer\(product, currentPharmacyId\)/);
+  assert.match(owner, /!selectedOffer\.hasRelatedOrders/);
+  assert.match(detail, /formatShortDate\(dateAdded/);
 
   assert.match(
-    details,
-    /getSingleProductStatisticsCounts\(\s*currentOffer,\s*stockBalance\s*\)/
+    statistics,
+    /product\.offers\.reduce<OwnProductStatisticsCounts>/
   );
 
-  assert.doesNotMatch(
-    details,
-    /getSingleProductStatisticsCounts\(\s*bannerStatus \? null/
-  );
+  assert.match(statistics, /offer\.availableQuantity/);
 });

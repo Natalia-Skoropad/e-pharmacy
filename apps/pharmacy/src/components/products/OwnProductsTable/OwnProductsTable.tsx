@@ -22,10 +22,7 @@ import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data'
 import { type PharmacyProductRow } from '@/lib/products/products';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
-import {
-  getPharmacyProductPath,
-  getPharmacyAllProductPath,
-} from '@/lib/routes';
+import { getPharmacyProductPath } from '@/lib/routes';
 
 import css from './OwnProductsTable.module.css';
 
@@ -83,11 +80,7 @@ function OwnProductsTable({
         render: (product) => (
           <TextActionButton
             className={css.breakableLink}
-            href={
-              isAllPharmacies
-                ? getPharmacyAllProductPath(product.id)
-                : getPharmacyProductPath(product.id)
-            }
+            href={getPharmacyProductPath(product.id)}
           >
             {product.id}
           </TextActionButton>
@@ -99,13 +92,7 @@ function OwnProductsTable({
         title: <TableHeaderTitle parts={['Product', 'article']} />,
 
         render: (product) => (
-          <TextActionButton
-            href={
-              isAllPharmacies
-                ? getPharmacyAllProductPath(product.id)
-                : getPharmacyProductPath(product.id)
-            }
-          >
+          <TextActionButton href={getPharmacyProductPath(product.id)}>
             {product.article}
           </TextActionButton>
         ),
@@ -116,13 +103,7 @@ function OwnProductsTable({
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (product) => (
-          <TextActionButton
-            href={
-              isAllPharmacies
-                ? getPharmacyAllProductPath(product.id)
-                : getPharmacyProductPath(product.id)
-            }
-          >
+          <TextActionButton href={getPharmacyProductPath(product.id)}>
             {product.name}
           </TextActionButton>
         ),

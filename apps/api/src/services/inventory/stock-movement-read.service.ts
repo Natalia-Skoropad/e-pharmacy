@@ -34,7 +34,8 @@ import type {
 
 export async function getProductStockMovementsService(
   productId: string,
-  userId: string
+  userId: string,
+  pharmacyId?: string
 ) {
   const session = await mongoose.startSession();
 
@@ -47,6 +48,7 @@ export async function getProductStockMovementsService(
       try {
         ({ pharmacy } = await requirePharmacyCapability(userId, 'read_stock', {
           session,
+          ...(pharmacyId ? { pharmacyId } : {}),
         }));
       } catch (error) {
         if (isPharmacyMembershipMissing(error)) {

@@ -1,9 +1,13 @@
 import { Types } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth/auth';
+import { HTTP_STATUS } from '../../constants/http/httpStatus';
+
+import { httpError } from '../../utils/http/httpError';
+import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+
 import { Order } from '../../models/orders/order.model';
 import { ProductCategory } from '../../models/catalog/productCategory.model';
-import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 
 import type { OrderSalesStatisticsQuery } from '../../schemas/orders/order.schema';
 
@@ -193,11 +197,24 @@ export async function getOrderSalesStatisticsService(
   role?: UserRole
 ): Promise<OrderSalesStatisticsDto> {
   if (role === USER_ROLES.PHARMACY && query.scope === 'owner') {
-    const pharmacyIds = await getOwnerOrderPharmacyIds(userId);
+    const pharmacyIds = (await getOwnerOrderPharmacyIds(userId)).map(String);
+
+    // An owner-wide read may be narrowed only to a pharmacy owned by this user.
+    // Never accept an arbitrary pharmacy ID from a browser filter.
+    if (query.pharmacyId && !pharmacyIds.includes(query.pharmacyId)) {
+      throw httpError(HTTP_STATUS.FORBIDDEN, 'Pharmacy access is forbidden.');
+    }
 
     return getOrderSalesStatisticsForPharmaciesService(
-      pharmacyIds.map(String),
+      query.pharmacyId ? [query.pharmacyId] : pharmacyIds,
       query
+    );
+  }
+
+  if (query.pharmacyId) {
+    throw httpError(
+      HTTP_STATUS.FORBIDDEN,
+      'Owner pharmacy filter is unavailable.'
     );
   }
 

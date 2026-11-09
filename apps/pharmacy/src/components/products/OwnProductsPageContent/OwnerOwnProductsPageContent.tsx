@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Boxes, PackageCheck, Trash2 } from 'lucide-react';
+import { Archive, Boxes, ShoppingBag, Trash2 } from 'lucide-react';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
@@ -385,15 +385,19 @@ function OwnerOwnProductsPageContent({
                 <InfoTooltip
                   label="How do reserved and available products work?"
                   title="Reserved and available products"
-                  icon={<PackageCheck size={20} />}
+                  icon={<Boxes size={20} />}
                   items={[
                     {
                       title: 'Reserved products',
+                      icon: <ShoppingBag size={17} aria-hidden="true" />,
+
                       description:
                         'Units held for New or In progress orders. They are in stock but not available for another order.',
                     },
                     {
                       title: 'Available products',
+                      icon: <Archive size={17} aria-hidden="true" />,
+
                       description:
                         'Units that can be sold now: stock minus reservations.',
                     },
@@ -469,6 +473,8 @@ function OwnerOwnProductsPageContent({
             pharmacyId={filters.pharmacyId}
             loadProducts={getOwnerOwnProductSuggestions}
             description="Find a product already added to your pharmacies by article, name or product ID. Suggestions are loaded progressively."
+            tooltipTitle="Product search"
+            tooltipIcon={<Boxes size={20} aria-hidden="true" />}
             onChange={(productId) =>
               changeFilters({ ...filters, productId, name: '', article: '' })
             }

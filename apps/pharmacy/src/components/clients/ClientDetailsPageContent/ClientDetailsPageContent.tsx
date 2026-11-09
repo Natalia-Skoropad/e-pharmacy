@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Building2,
   MessageSquareText,
-  PackageCheck,
+  Boxes,
   ShoppingBag,
   UserRound,
   Users,
@@ -116,7 +116,7 @@ const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
   {
     value: 'products',
     label: 'Products',
-    icon: <PackageCheck size={17} />,
+    icon: <Boxes size={17} />,
   },
   {
     value: 'comments',
@@ -750,7 +750,7 @@ function ClientDetailsPageContentState({
               <ProfileSectionHeader
                 title="Purchased products"
                 description="Products in this client's successful orders across your pharmacies."
-                icon={<PackageCheck size={21} aria-hidden="true" />}
+                icon={<Boxes size={21} aria-hidden="true" />}
               />
 
               <ProfileResourceState

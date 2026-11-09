@@ -1,0 +1,439 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+  margin-inline: 0;
+}
+
+.titleBlock {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.titleRating {
+  width: fit-content;
+}
+
+.contentCard {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 16px;
+  overflow: visible;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.stack {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.detailsTab {
+  min-width: 0;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  overflow: hidden;
+}
+
+.detailsGrid {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.card,
+.visualCard {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+/* Card-specific responsive actions must follow the actual product summary
+   width, not the viewport (the cabinet/sidebar can leave a narrow card). */
+.card {
+  container-type: inline-size;
+}
+
+.visualCard {
+  display: grid;
+  align-self: stretch;
+  place-items: center;
+  min-height: 320px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.imageFrame {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  display: grid;
+  place-items: center;
+  width: 180px;
+  height: 180px;
+  font-size: var(--fz-64);
+  font-weight: var(--fw-bold);
+  color: var(--color-accent);
+  background-color: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-xl);
+}
+
+.actions {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.actionButton {
+  width: 100%;
+}
+
+.tabsSection {
+  min-width: 0;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.panelTitle {
+  margin-bottom: 16px;
+  font-size: var(--fz-24);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.panelTitleWithHelp {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  width: fit-content;
+}
+
+.emptyPanel {
+  padding: 24px 16px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
+  text-align: center;
+  background-color: var(--color-background);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.removeButton {
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-color: var(--color-error-soft);
+}
+
+.removeButton:hover:not(:disabled),
+.removeButton:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.tableStack {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.searchGrid {
+  display: grid;
+  gap: 12px;
+  align-items: end;
+}
+
+.searchAction {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.tableToolbar {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.relatedStatistics {
+  display: none;
+  min-width: 0;
+}
+
+.valueIn,
+.valueOut,
+.valueReserve,
+.valueRelease {
+  font-weight: var(--fw-bold);
+}
+
+.valueIn {
+  color: var(--color-success);
+}
+
+.valueOut {
+  color: var(--color-error);
+}
+
+.valueReserve {
+  color: var(--color-warning);
+}
+
+.valueRelease {
+  color: var(--color-text-secondary);
+}
+
+.sectionStack {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* Reuse the full-width owner registry pharmacy selector within each tab. */
+.pharmacySelector {
+  min-width: 0;
+}
+
+.sectionCard {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.filterButton {
+  width: 100%;
+  min-height: 48px;
+}
+
+.countLabel {
+  justify-self: start;
+  width: 100%;
+}
+
+.rowsControl {
+  width: 100%;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .contentCard,
+  .card,
+  .sectionCard {
+    padding: 20px;
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, auto);
+    align-items: center;
+  }
+
+  .searchGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(150px, auto);
+  }
+
+  .relatedStatistics {
+    display: grid;
+  }
+
+  .tableToolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .countLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: unset;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .detailsGrid {
+    grid-template-columns: minmax(280px, 0.44fr) minmax(0, 0.56fr);
+    align-items: start;
+  }
+
+  .visualCard {
+    height: auto;
+    min-height: 250px;
+  }
+
+  .imageFrame {
+    min-height: 250px;
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, auto);
+    align-items: center;
+  }
+}
+
+/* All products presents the canonical Admin attributes like client profile
+   information: two columns with a stable row-major reading order. */
+.adminMetadata {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  min-width: 0;
+  margin: 18px 0 0;
+}
+
+.adminMetadataItem {
+  min-width: 0;
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.adminMetadataItem dt {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.adminMetadataItem dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--fz-14);
+}
+
+.ownerActions .actionButton {
+  width: 100%;
+}
+
+@media only screen and (min-width: 600px) {
+  .adminMetadata {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Match the single-column client information cards on phone-sized screens.
+   Do not change the existing tablet/desktop two-column Admin layout. */
+@media only screen and (max-width: 767px) {
+  .adminMetadata {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .adminMetadataItem {
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .adminMetadataItem dd {
+    font-weight: var(--fw-medium);
+    line-height: var(--lh-base);
+    text-align: left;
+  }
+}
+
+.productCategoryDisplay {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.productCategoryIcon {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  place-items: center;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
+}
+
+.productCategoryIcon svg {
+  flex-shrink: 0;
+}
+
+/* The own-product card starts with metadata; the global catalog card
+   keeps its introductory notice above that metadata. */
+.card > .adminMetadata:first-child {
+  margin-top: 0;
+}
+
+/* Catalog cards link to the owner-managed version instead of showing a
+   pharmacy-specific price or an inactive Add button. */
+
+.ownProductLink {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Keep the existing two-column tablet/desktop appearance only when the
+   summary card itself has enough space. A narrow card always stacks the CTA. */
+@container (min-width: 400px) {
+  .ownProductLink {
+    justify-self: stretch;
+  }
+}
+
+/* Two equally sized actions within the own-product card, matching the
+   metadata columns when the actual card is wide enough. */
+.ownProductActions {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container (min-width: 400px) {
+  .actions.ownProductActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+  }
+}

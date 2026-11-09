@@ -6,6 +6,7 @@ import {
   isLegacyOperationalPharmacyPath,
   isOwnerClientsListPath,
   isOwnerClientDetailPath,
+  isOwnerProductDetailPath,
   isOperationalPharmacyPath,
   readExplicitPharmacySelection,
   setAuthorizedPharmacySelection,
@@ -241,4 +242,26 @@ test('client pharmacy path filters remain account-wide and do not trigger pharma
     assert.equal(isOwnerClientDetailPath(path), false, path);
     assert.equal(isLegacyOperationalPharmacyPath(path), true, path);
   }
+});
+
+//===================================================================
+
+test('sales chart filters remain owner-scoped without selected pharmacy', () => {
+  const client =
+    '/pharmacy/clients/6a311d5386d9f5e0be7d19ba/details/year-2026/month-06';
+
+  const product =
+    '/pharmacy/products/6ac75e1417684f6f914a4d59/statistics/pharmacy-id-6ac75e170642845c5d27fd6c/year-2026/month-06';
+
+  assert.equal(isOwnerClientDetailPath(client), true);
+  assert.equal(isLegacyOperationalPharmacyPath(client), false);
+  assert.equal(isOwnerProductDetailPath(product), true);
+  assert.equal(isLegacyOperationalPharmacyPath(product), false);
+
+  assert.equal(
+    isOwnerClientDetailPath(client.replace('month-06', 'month-99')),
+    false
+  );
+
+  assert.equal(isOwnerProductDetailPath(`${product}/unknown-filter`), false);
 });

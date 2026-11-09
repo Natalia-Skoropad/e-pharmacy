@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users } from 'lucide-react';
+import { Repeat2, Store, Users, UsersRound } from 'lucide-react';
 
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
@@ -327,15 +327,18 @@ function ClientsPageContent({
                 <InfoTooltip
                   label="About client types"
                   title="Client types"
+                  icon={<UsersRound size={20} aria-hidden="true" />}
                   items={[
                     {
                       title: 'Repeat clients',
+                      icon: <Repeat2 size={17} aria-hidden="true" />,
                       description: ownerScope
                         ? 'Clients who have completed two or more successful orders across your pharmacies.'
                         : 'Clients who have completed two or more successful orders in this pharmacy.',
                     },
                     {
                       title: 'Walk-in client',
+                      icon: <Store size={17} aria-hidden="true" />,
                       description:
                         'The default active client created when each pharmacy first becomes Active. Use it for counter sales when a visitor has no personal account. Its photo comes from the pharmacy profile, and its purchase statistics are tracked like any other client.',
                     },

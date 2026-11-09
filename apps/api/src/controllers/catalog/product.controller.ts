@@ -9,6 +9,7 @@ import type {
   PendingProductReviewsQuery,
   ProductFiltersQuery,
   ProductIdParams,
+  ProductStockMovementsQuery,
   ProductReviewParams,
   ManagedProductsQuery,
   PublicProductsQuery,
@@ -189,13 +190,15 @@ export async function getProductDetails(
 
 export async function getProductStockMovements(
   req: Request,
-  res: ValidatedResponse<unknown, ProductIdParams>
+  res: ValidatedResponse<unknown, ProductIdParams, ProductStockMovementsQuery>
 ): Promise<void> {
   const { productId } = res.locals.validated.params;
+  const { pharmacyId } = res.locals.validated.query;
 
   const data = await getProductStockMovementsService(
     productId,
-    req.user?.id ?? ''
+    req.user?.id ?? '',
+    pharmacyId
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

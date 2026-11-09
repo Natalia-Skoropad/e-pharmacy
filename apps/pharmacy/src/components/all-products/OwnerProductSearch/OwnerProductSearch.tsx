@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { PackageSearch, Search } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
@@ -89,6 +89,8 @@ export function OwnerProductSearch({
   loadProducts = getOwnerCatalogProducts,
   id = 'all-products-product-search',
   description = 'Find an Admin product by article, name or product ID.',
+  tooltipTitle = 'Product search',
+  tooltipIcon = <PackageSearch size={20} />,
 }: {
   value: string;
   onChange: (id: string) => void;
@@ -96,6 +98,8 @@ export function OwnerProductSearch({
   loadProducts?: ProductSuggestionsLoader;
   id?: string;
   description?: string;
+  tooltipTitle?: string;
+  tooltipIcon?: ReactNode;
 }) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
@@ -244,8 +248,8 @@ export function OwnerProductSearch({
       labelAccessory={
         <InfoTooltip
           label="Product search help"
-          title="Product search"
-          icon={<PackageSearch size={20} />}
+          title={tooltipTitle}
+          icon={tooltipIcon}
           items={[
             {
               title: 'Search fields',

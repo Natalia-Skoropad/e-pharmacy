@@ -1,6 +1,11 @@
 import { isOwnProductsFilterSegment } from '../products/own-product-paths';
 
 import {
+  buildSalesChartPath,
+  parseSalesChartSegments,
+} from '../statistics/sales-chart-paths';
+
+import {
   buildClientPurchasedProductsPath,
   parseClientPurchasedProductsSegments,
 } from '../clients/client-purchased-products-paths';
@@ -55,6 +60,25 @@ export function isOwnerClientDetailPath(pathname: string): boolean {
     )
   ) {
     return true;
+  }
+
+  // Client sales chart filters belong to the client card even when no
+  // pharmacy is selected in the cabinet.
+  const clientSales =
+    /^\/pharmacy\/clients\/([0-9a-f]{24})\/details\/(.+)$/i.exec(pathname);
+  if (clientSales) {
+    try {
+      const base = `/pharmacy/clients/${clientSales[1]}/details`;
+
+      return (
+        buildSalesChartPath(
+          base,
+          parseSalesChartSegments(clientSales[2]!.split('/'))
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
   }
 
   // Purchased-products filters are owner-scoped, including nested category,
@@ -137,6 +161,37 @@ export function isOwnerProductsListPath(pathname: string): boolean {
 
 //===================================================================
 
+/** Owner product cards are owner-wide, like the Own products registry. */
+export function isOwnerProductDetailPath(pathname: string): boolean {
+  if (
+    /^\/pharmacy\/products\/[0-9a-f]{24}(?:\/(?:details|statistics|related-orders|stock-movement|clients|pharmacies|comments))?\/?$/i.test(
+      pathname
+    )
+  ) {
+    return true;
+  }
+
+  const sales =
+    /^\/pharmacy\/products\/([0-9a-f]{24})\/statistics\/(.+)$/i.exec(pathname);
+  if (!sales) return false;
+
+  try {
+    const base = `/pharmacy/products/${sales[1]}/statistics`;
+
+    return (
+      buildSalesChartPath(
+        base,
+        parseSalesChartSegments(sales[2]!.split('/'), { allowPharmacy: true }),
+        { allowPharmacy: true }
+      ) === pathname
+    );
+  } catch {
+    return false;
+  }
+}
+
+//===================================================================
+
 let authorizedPharmacyId: string | null = null;
 
 //===================================================================
@@ -146,7 +201,8 @@ export function isOperationalPharmacyPath(pathname: string): boolean {
     (LEGACY_OPERATION.test(pathname) &&
       !isOwnerClientsListPath(pathname) &&
       !isOwnerClientDetailPath(pathname) &&
-      !isOwnerProductsListPath(pathname)) ||
+      !isOwnerProductsListPath(pathname) &&
+      !isOwnerProductDetailPath(pathname)) ||
     DETAIL_OPERATION.test(pathname)
   );
 }
@@ -158,7 +214,8 @@ export function isLegacyOperationalPharmacyPath(pathname: string): boolean {
     LEGACY_OPERATION.test(pathname) &&
     !isOwnerClientsListPath(pathname) &&
     !isOwnerClientDetailPath(pathname) &&
-    !isOwnerProductsListPath(pathname)
+    !isOwnerProductsListPath(pathname) &&
+    !isOwnerProductDetailPath(pathname)
   );
 }
 

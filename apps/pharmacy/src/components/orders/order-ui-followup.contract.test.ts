@@ -30,7 +30,7 @@ const ORDERS_SOURCE = path.join(
 
 const PRODUCT_SOURCE = path.resolve(
   CURRENT_DIR,
-  '../all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx'
+  '../products/OwnProductDetailsPageContent/OwnProductRelatedOrdersTab.tsx'
 );
 
 const PICKER_SOURCE = path.join(

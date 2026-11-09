@@ -23,7 +23,7 @@ test('Own products displays Product ID before Product article, like All products
 
   assert.match(
     table,
-    /key: 'productId',[\s\S]*?width: '126px',[\s\S]*?\['Product', 'ID'\]/
+    /key: 'productId',[\s\S]*?width: '150px',[\s\S]*?\['Product', 'ID'\]/
   );
 
   assert.match(
@@ -34,7 +34,7 @@ test('Own products displays Product ID before Product article, like All products
 
 //===================================================================
 
-test('Product ID link follows the same all-pharmacies / selected-pharmacy routing as article', async () => {
+test('Product ID, article and name always link to Own products even without a selected pharmacy', async () => {
   const table = await read(
     'src/components/products/OwnProductsTable/OwnProductsTable.tsx'
   );
@@ -44,12 +44,14 @@ test('Product ID link follows the same all-pharmacies / selected-pharmacy routin
     table.indexOf("key: 'article'")
   );
 
-  assert.match(
-    idColumn,
-    /isAllPharmacies\s*\? getPharmacyAllProductPath\(product\.id\)/
-  );
+  assert.match(idColumn, /href=\{getPharmacyProductPath\(product\.id\)\}/);
+  assert.doesNotMatch(table, /getPharmacyAllProductPath/);
 
-  assert.match(idColumn, /: getPharmacyProductPath\(product\.id\)/);
+  assert.equal(
+    (table.match(/href=\{getPharmacyProductPath\(product\.id\)\}/g) ?? [])
+      .length,
+    3
+  );
 
   const css = await read(
     'src/components/products/OwnProductsTable/OwnProductsTable.module.css'

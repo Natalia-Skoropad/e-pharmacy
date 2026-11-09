@@ -11,6 +11,16 @@ import {
   type OwnProductsRouteParams,
 } from '@/lib/products/own-product-paths';
 
+import {
+  getOwnProductDetailTabPath,
+  isOwnProductDetailTab,
+} from '@/lib/products/own-product-detail-tabs';
+
+import {
+  parseSalesChartSegments,
+  buildSalesChartPath,
+} from '@/lib/statistics/sales-chart-paths';
+
 import { OwnProductDetailsPageContent } from '@/components/products/OwnProductDetailsPageContent';
 import { OwnerOwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
 
@@ -35,13 +45,47 @@ async function ProductsPage({ params, searchParams }: ProductsPageProps) {
   const segments = resolvedParams?.filters;
 
   if (!isOwnProductsFilterRoute(segments)) {
-    const productId = segments?.length === 1 ? segments[0] : null;
+    const productId = segments?.[0];
+    const tab = segments?.[1];
 
-    if (!productId || !isValidObjectId(productId)) {
-      notFound();
+    if (!productId || !isValidObjectId(productId)) notFound();
+
+    // Defensive fallback for the optional catch-all matcher. A stale Next.js
+    // dev route manifest may resolve new /products/:id/:tab URLs here rather
+    // than in /[productId]/[tab] until the development server is restarted.
+    // Never interpret an unknown tab (or extra segments) as a product page.
+    if (segments?.length === 2 && tab && isOwnProductDetailTab(tab)) {
+      if (tab === 'details') {
+        redirect(getOwnProductDetailTabPath(productId, tab));
+      }
+
+      return <OwnProductDetailsPageContent productId={productId} />;
     }
 
-    return <OwnProductDetailsPageContent productId={productId} />;
+    if (segments && segments.length > 2 && tab === 'statistics') {
+      let canonical: string;
+
+      try {
+        canonical = buildSalesChartPath(
+          getOwnProductDetailTabPath(productId, 'statistics'),
+          parseSalesChartSegments(segments.slice(2), { allowPharmacy: true }),
+          { allowPharmacy: true }
+        );
+      } catch {
+        notFound();
+      }
+
+      if (`/pharmacy/products/${segments.join('/')}` !== canonical)
+        redirect(canonical);
+
+      return <OwnProductDetailsPageContent productId={productId} />;
+    }
+
+    if (segments?.length === 1) {
+      return <OwnProductDetailsPageContent productId={productId} />;
+    }
+
+    notFound();
   }
 
   const initialFilters = parseOwnProductsSegments(resolvedParams);

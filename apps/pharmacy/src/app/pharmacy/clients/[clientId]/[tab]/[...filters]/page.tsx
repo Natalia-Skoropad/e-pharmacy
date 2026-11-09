@@ -21,7 +21,15 @@ import {
   buildClientPurchasedProductsPath,
 } from '@/lib/clients/client-purchased-products-paths';
 
+import {
+  parseSalesChartSegments,
+  buildSalesChartPath,
+} from '@/lib/statistics/sales-chart-paths';
+
+import { getPharmacyClientPath } from '@/lib/routes';
+
 import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
+import type { ClientDetailTab } from '@/components/clients/client-detail-resource-policy';
 import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
 
 //===================================================================
@@ -54,14 +62,27 @@ export default async function ClientDetailPaginatedTab({
     );
   }
 
-  if (!isValidObjectId(clientId) || (tab !== 'orders' && tab !== 'products')) {
+  if (
+    !isValidObjectId(clientId) ||
+    (tab !== 'orders' && tab !== 'products' && tab !== 'details')
+  ) {
     notFound();
   }
 
   let canonical: string;
 
   try {
-    if (tab === 'products') {
+    if (tab === 'details') {
+      const filtersState = parseSalesChartSegments(filters);
+
+      canonical = buildSalesChartPath(
+        `${getPharmacyClientPath(clientId)}/details`,
+        filtersState
+      );
+
+      if (canonical === `${getPharmacyClientPath(clientId)}/details`)
+        canonical = getPharmacyClientPath(clientId);
+    } else if (tab === 'products') {
       const state = parseClientPurchasedProductsSegments(filters);
 
       canonical = buildClientPurchasedProductsPath(
@@ -88,7 +109,7 @@ export default async function ClientDetailPaginatedTab({
   return (
     <ClientDetailsPageContent
       clientId={clientId}
-      initialTab={tab as ClientDetailListTab}
+      initialTab={tab as ClientDetailTab}
     />
   );
 }

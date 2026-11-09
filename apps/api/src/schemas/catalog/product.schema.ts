@@ -116,6 +116,15 @@ export const productFiltersQuerySchema = z
 
 //===============================================================
 
+export const productStockMovementsQuerySchema = z
+  .object({
+    pharmacyId: mongoIdSchema.optional(),
+  })
+
+  .strict();
+
+//===============================================================
+
 export const productIdParamsSchema = z.object({
   productId: mongoIdSchema,
 });
@@ -180,4 +189,8 @@ export type CreateProductReviewInput = z.infer<
 
 export type ModerateProductReviewInput = z.infer<
   typeof moderateProductReviewSchema
+>;
+
+export type ProductStockMovementsQuery = z.infer<
+  typeof productStockMovementsQuerySchema
 >;

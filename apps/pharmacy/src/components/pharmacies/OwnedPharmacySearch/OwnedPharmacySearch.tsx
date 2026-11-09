@@ -5,15 +5,16 @@ import { Building2, Search } from 'lucide-react';
 
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import type { OwnedPharmacyOption } from '@e-pharmacy/types/pharmacies';
+
 import { formatInitials } from '@e-pharmacy/ui/data-display';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import {
   SearchableSelect,
   type SearchableSelectOption,
 } from '@e-pharmacy/ui/forms';
 
-import { TableImagePreview } from '@e-pharmacy/ui/media';
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { formatPharmacyLocation } from '@e-pharmacy/utils';
 
 import { getOwnedPharmacyOptions } from '@/lib/api/browser/owned-pharmacy-registry.api';
@@ -193,6 +194,9 @@ export function OwnedPharmacySearch({
           label="Pharmacy search help"
           title="Pharmacy search"
           icon={<Building2 size={20} aria-hidden="true" />}
+          escapeOverflow
+          preferTopLayer
+          scrollable
           items={[
             {
               title: 'Search fields',

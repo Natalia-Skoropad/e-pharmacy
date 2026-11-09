@@ -19,6 +19,11 @@ import {
   buildEmbeddedOwnProductsPath,
 } from '@/lib/products/own-product-paths';
 
+import {
+  parseSalesChartSegments,
+  buildSalesChartPath,
+} from '@/lib/statistics/sales-chart-paths';
+
 import { OwnedPharmaciesPageContent } from '@/components/pharmacies/OwnedPharmaciesPageContent/OwnedPharmaciesPageContent';
 import { OwnedPharmacyDetailPageContent } from '@/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent';
 
@@ -58,15 +63,20 @@ export default async function OwnedPharmaciesRoute({
         : undefined;
 
     const canonical =
-      clientFilters && pagination
-        ? buildClientsPath(clientFilters, base, pagination)
-        : productFilters && productPagination
-          ? buildEmbeddedOwnProductsPath(
-              route.pharmacyId,
-              productFilters,
-              productPagination
-            )
-          : base;
+      route.tab === 'information' && route.salesSegments.length
+        ? buildSalesChartPath(
+            base,
+            parseSalesChartSegments(route.salesSegments)
+          )
+        : clientFilters && pagination
+          ? buildClientsPath(clientFilters, base, pagination)
+          : productFilters && productPagination
+            ? buildEmbeddedOwnProductsPath(
+                route.pharmacyId,
+                productFilters,
+                productPagination
+              )
+            : base;
 
     if (`/pharmacy/pharmacies/${filters.join('/')}` !== canonical)
       redirect(canonical);

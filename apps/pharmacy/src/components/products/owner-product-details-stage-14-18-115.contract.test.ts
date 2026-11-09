@@ -63,10 +63,14 @@ test('client purchased products use owner scoped data and URL filters', async ()
 
 //===================================================================
 
-test('owner added products expose owner-only operational sections and shared add modal', async () => {
-  const [detail, tabs, list] = await Promise.all([
+test('operational product tabs live in OwnProductDetailsPageContent, not in global catalog', async () => {
+  const [globalCard, ownCard, tabRoutes, list] = await Promise.all([
     read(
       'components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx'
+    ),
+
+    read(
+      'components/products/OwnProductDetailsPageContent/OwnProductDetailsPageContent.tsx'
     ),
 
     read('lib/products/all-product-detail-tabs.ts'),
@@ -77,17 +81,21 @@ test('owner added products expose owner-only operational sections and shared add
   ]);
 
   for (const tab of ['pharmacies', 'related-orders', 'clients', 'statistics']) {
-    assert.ok(tabs.includes(`'${tab}'`), `Missing canonical tab ${tab}`);
-    assert.ok(detail.includes(`'${tab}'`), `Missing UI tab ${tab}`);
+    assert.ok(
+      !tabRoutes.includes(`'${tab}'`),
+      `Global catalog must not expose ${tab}`
+    );
+
+    assert.ok(ownCard.includes(`'${tab}'`), `Own product missing ${tab}`);
   }
 
-  assert.match(
-    detail,
-    /isAddedToPharmacy\s*\? \[\.\.\.ALL_PRODUCT_DETAILS_TABS, \.\.\.OWNER_PRODUCT_OPERATIONAL_TABS\]/
+  assert.doesNotMatch(
+    globalCard,
+    /<OwnProductStatisticsTab|<OwnProductClientsTab/
   );
 
-  assert.match(detail, /scope: 'owner' as const/);
-  assert.match(detail, /<OwnerAddProductConfirmation/);
+  assert.match(ownCard, /<OwnProductStatisticsTab/);
+  assert.match(globalCard, /<OwnerAddProductConfirmation/);
   assert.match(list, /<OwnerAddProductConfirmation/);
 });
 

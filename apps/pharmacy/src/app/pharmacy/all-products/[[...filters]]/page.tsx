@@ -39,7 +39,7 @@ async function AllProductsPage({ params }: AllProductsPageProps) {
       notFound();
     }
 
-    return <AllProductDetailsPageContent productId={productId} mode="all" />;
+    return <AllProductDetailsPageContent productId={productId} />;
   }
 
   const initialFilters = parseAllProductsSegments(resolvedParams);

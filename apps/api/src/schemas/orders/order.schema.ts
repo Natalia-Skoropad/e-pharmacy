@@ -114,6 +114,7 @@ export const orderSalesStatisticsQuerySchema = z
     dateTo: dateQuerySchema,
     groupBy: z.enum(['day', 'month']).default('month'),
     productId: mongoIdSchema.optional(),
+    pharmacyId: mongoIdSchema.optional(),
     scope: z.enum(['owner']).optional(),
   })
 

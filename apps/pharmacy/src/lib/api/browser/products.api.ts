@@ -1,5 +1,7 @@
 import 'client-only';
 
+import { localApiRequest as ownerLocalApiRequest } from '@e-pharmacy/next-api/browser';
+
 import { appendQueryParams } from '@e-pharmacy/api-client/transport';
 
 import {
@@ -164,12 +166,21 @@ export async function removeProductFromMyPharmacy(
 
 export async function getProductStockMovements(
   productId: ProductDetails['id'],
-  options?: BrowserReadRequestOptions
+  options?: BrowserReadRequestOptions,
+  pharmacyId?: string
 ): Promise<ProductStockMovementsResponse> {
-  const path = PHARMACY_API_ROUTES.products.stockMovements(productId);
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.products.stockMovements(productId),
+    {
+      pharmacyId: pharmacyId || undefined,
+    }
+  );
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await (pharmacyId ? ownerLocalApiRequest : localApiRequest)(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
 
     parseProductStockMovementsResponse,
 

@@ -4,6 +4,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { isClientsFilterSegment } from '@/lib/clients/client-paths';
 import { isOwnProductsFilterSegment } from '@/lib/products/own-product-paths';
+import { parseSalesChartSegments } from '@/lib/statistics/sales-chart-paths';
 
 //===================================================================
 
@@ -83,6 +84,7 @@ export type OwnedPharmacyRouteResolution =
       tab: OwnedPharmacyDetailTab;
       clientSegments: readonly string[];
       productSegments: readonly string[];
+      salesSegments: readonly string[];
     }>
   | Readonly<{ kind: 'invalid' }>;
 
@@ -301,26 +303,37 @@ export function resolveOwnedPharmaciesRoute(
   if (!segments?.length) return { kind: 'list', filters: [] };
 
   if (isValidObjectId(segments[0])) {
-    const tab = segments[1] ?? 'information';
+    // The information tab is the default route; chart filters follow the ID
+    // directly rather than introducing a redundant /information segment.
+    const inlineSales =
+      segments[1]?.startsWith('year-') || segments[1]?.startsWith('month-');
+
+    const tab = inlineSales ? 'information' : (segments[1] ?? 'information');
 
     if (!OWNED_PHARMACY_DETAIL_TABS.includes(tab as OwnedPharmacyDetailTab)) {
       return { kind: 'invalid' };
     }
 
-    const clientSegments = segments.slice(2);
+    const tail = segments.slice(inlineSales ? 1 : 2);
 
-    if (
-      clientSegments.length > 0 &&
+    if (tab === 'information' && tail.length) {
+      try {
+        parseSalesChartSegments(tail);
+      } catch {
+        return { kind: 'invalid' };
+      }
+    } else if (
+      tail.length > 0 &&
       !(
         (tab === 'clients' &&
-          clientSegments.every(
+          tail.every(
             (segment) =>
               isClientsFilterSegment(segment) ||
               /^page-[1-9]\d*$/.test(segment) ||
               /^per-page-(20|50|100)$/.test(segment)
           )) ||
         (tab === 'products' &&
-          clientSegments.every(
+          tail.every(
             (segment) =>
               !segment.startsWith('pharmacy-id-') &&
               isOwnProductsFilterSegment(segment)
@@ -334,8 +347,9 @@ export function resolveOwnedPharmaciesRoute(
       kind: 'detail',
       pharmacyId: segments[0].toLowerCase(),
       tab: tab as OwnedPharmacyDetailTab,
-      clientSegments: tab === 'clients' ? clientSegments : [],
-      productSegments: tab === 'products' ? clientSegments : [],
+      clientSegments: tab === 'clients' ? tail : [],
+      productSegments: tab === 'products' ? tail : [],
+      salesSegments: tab === 'information' ? tail : [],
     };
   }
 

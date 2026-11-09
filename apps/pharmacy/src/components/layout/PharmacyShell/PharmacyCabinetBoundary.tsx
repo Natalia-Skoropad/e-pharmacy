@@ -15,6 +15,7 @@ import {
   isOwnerClientDetailPath,
   isOwnerClientsListPath,
   isOwnerProductsListPath,
+  isOwnerProductDetailPath,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
@@ -58,7 +59,8 @@ export function PharmacyCabinetBoundaryRuntime({
     (pathname &&
       (isOwnerClientsListPath(pathname) ||
         isOwnerClientDetailPath(pathname) ||
-        isOwnerProductsListPath(pathname))) ||
+        isOwnerProductsListPath(pathname) ||
+        isOwnerProductDetailPath(pathname))) ||
     pathname === PHARMACY_ROUTES.ALL_PRODUCTS ||
     pathname?.startsWith(`${PHARMACY_ROUTES.ALL_PRODUCTS}/`) ||
     pathname === PHARMACY_ROUTES.PROFILE ||

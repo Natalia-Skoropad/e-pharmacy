@@ -47,6 +47,7 @@ function isProductAddedToCurrentPharmacy(
 ): boolean {
   if (typeof product.isAddedToOwner === 'boolean')
     return product.isAddedToOwner;
+
   if (!currentPharmacyId) return false;
 
   return product.offers.some(
@@ -60,8 +61,8 @@ function getActionLabel(
   product: ProductDetails,
   isAddedToCurrentPharmacy: boolean
 ) {
-  if (product.status === 'blocked') return 'Unavailable';
   if (isAddedToCurrentPharmacy) return 'Added to your pharmacies';
+  if (product.status === 'blocked') return 'Unavailable';
 
   return 'Add to pharmacy';
 }

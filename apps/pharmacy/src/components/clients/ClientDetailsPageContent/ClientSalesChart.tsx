@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import type { OrderSalesStatistics } from '@e-pharmacy/types/orders';
 
@@ -14,13 +15,36 @@ import {
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { getPharmacyClientSalesStatistics } from '@/lib/api/browser/clients.api';
+import { getPharmacyClientPath } from '@/lib/routes';
+
+import {
+  buildSalesChartPath,
+  getSalesChartYear,
+  parseSalesChartSegments,
+} from '@/lib/statistics/sales-chart-paths';
 
 //===================================================================
 
 /** Owner-wide for ordinary clients, restricted to the default pharmacy for walk-ins. */
 export function ClientSalesChart({ clientId }: Readonly<{ clientId: string }>) {
-  const [year, setYear] = useState(() => String(new Date().getFullYear()));
-  const [month, setMonth] = useState<SalesPeriodMonth>('all');
+  const pathname = usePathname();
+  const router = useRouter();
+  const base = `${getPharmacyClientPath(clientId)}/details`;
+
+  const segments = pathname.startsWith(`${base}/`)
+    ? pathname.slice(base.length + 1).split('/')
+    : [];
+
+  const period = parseSalesChartSegments(segments);
+  const year = getSalesChartYear(period);
+  const month = period.month;
+
+  const updatePeriod = (next: { year: string; month: SalesPeriodMonth }) => {
+    router.push(buildSalesChartPath(base, { ...period, ...next }), {
+      scroll: false,
+    });
+  };
+
   const [retry, setRetry] = useState(0);
 
   const [snapshot, setSnapshot] = useState<Readonly<{
@@ -85,8 +109,8 @@ export function ClientSalesChart({ clientId }: Readonly<{ clientId: string }>) {
           idPrefix="client-sales"
           year={year}
           month={month}
-          onYearChange={setYear}
-          onMonthChange={setMonth}
+          onYearChange={(value) => updatePeriod({ year: value, month })}
+          onMonthChange={(value) => updatePeriod({ year, month: value })}
         />
       }
     />

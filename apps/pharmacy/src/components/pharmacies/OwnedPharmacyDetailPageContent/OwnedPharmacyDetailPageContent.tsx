@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
+  Boxes,
   Building2,
   ExternalLink,
   ClipboardList,
@@ -12,7 +13,6 @@ import {
   Files,
   History,
   MessageSquareText,
-  Package,
   ShoppingBag,
   Star,
   UsersRound,
@@ -75,12 +75,13 @@ import {
   type ClientsPaginationState,
 } from '@/lib/clients/client-paths';
 
+import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
+
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
 import { ClientsPageContent } from '@/components/clients/ClientsPageContent/ClientsPageContent';
 import { ClientsTable } from '@/components/clients/ClientsTable/ClientsTable';
 import { OwnerOwnProductsPageContent } from '@/components/products/OwnProductsPageContent';
-import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import { Information } from './OwnedPharmacyInformationTab';
 import { OwnedPharmacyActivityTab } from './OwnedPharmacyActivityTab';
@@ -117,7 +118,7 @@ const TABS: TabItem<OwnedPharmacyDetailTab>[] = [
   { value: 'reviews', label: 'Reviews', icon: <Star size={17} /> },
   { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'clients', label: 'Clients', icon: <UsersRound size={17} /> },
-  { value: 'products', label: 'Products', icon: <Package size={17} /> },
+  { value: 'products', label: 'Products', icon: <Boxes size={17} /> },
   { value: 'activity', label: 'Activity history', icon: <History size={17} /> },
 ];
 
@@ -446,7 +447,7 @@ export function OwnedPharmacyDetailPageContent({
                 title="Added products"
                 value={detail.metrics.addedProductsCount}
                 tone="purple"
-                icon={<Package size={26} />}
+                icon={<Boxes size={26} />}
               />
 
               <StatsCard

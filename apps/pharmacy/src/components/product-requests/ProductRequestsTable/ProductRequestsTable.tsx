@@ -9,17 +9,13 @@ import {
 
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
-import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import type { ProductRequestRowViewModel } from '@/lib/product-requests/product-requests';
-
-import {
-  getPharmacyAllProductPath,
-  getPharmacyRequestPath,
-} from '@/lib/routes';
-
-import { getProductImageSrc } from '@/lib/products/product-images';
-
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+
+import type { ProductRequestRowViewModel } from '@/lib/product-requests/product-requests';
+import { getPharmacyProductPath, getPharmacyRequestPath } from '@/lib/routes';
+import { getProductImageSrc } from '@/lib/products/product-images';
 
 import css from './ProductRequestsTable.module.css';
 
@@ -35,7 +31,7 @@ type ProductRequestsTableProps = Readonly<{
 
 function getProductHref(request: ProductRequestRowViewModel) {
   return request.status === 'approved' && request.productId
-    ? getPharmacyAllProductPath(request.productId)
+    ? getPharmacyProductPath(request.productId)
     : null;
 }
 
@@ -56,6 +52,7 @@ function ProductRequestsTable({
       {
         key: 'requestNumber',
         title: <TableHeaderTitle parts={['Request', 'number']} />,
+
         render: (request) => (
           <TextActionButton href={getPharmacyRequestPath(request.id)}>
             {request.requestNumber}
@@ -65,6 +62,7 @@ function ProductRequestsTable({
       {
         key: 'productPhoto',
         title: <TableHeaderTitle parts={['Product', 'photo']} />,
+
         render: (request) => (
           <TableImagePreview
             src={getProductImageSrc(request.productImageUrl)}
@@ -76,6 +74,7 @@ function ProductRequestsTable({
       {
         key: 'productArticle',
         title: <TableHeaderTitle parts={['Product', 'article']} />,
+
         render: (request) => {
           const productHref = getProductHref(request);
 
@@ -93,6 +92,7 @@ function ProductRequestsTable({
       {
         key: 'productName',
         title: <TableHeaderTitle parts={['Product', 'name']} />,
+
         render: (request) => {
           const productHref = getProductHref(request);
 
@@ -110,6 +110,7 @@ function ProductRequestsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
+
         render: (request) =>
           request.categoryMode === 'custom'
             ? (request.customCategory ?? '—')
@@ -118,6 +119,7 @@ function ProductRequestsTable({
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Request', 'status']} />,
+
         render: (request) => (
           <StatusBadge
             {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}

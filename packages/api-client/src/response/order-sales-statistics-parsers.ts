@@ -17,6 +17,7 @@ export type OrderSalesStatisticsQueryParams = Readonly<{
   dateTo?: string;
   groupBy?: OrderSalesStatisticsGroupBy;
   productId?: string;
+  pharmacyId?: string;
   scope?: 'owner';
 }>;
 

@@ -58,5 +58,5 @@ export default async function AllProductDetailTabPage({
   if (!isValidObjectId(productId) || !isAllProductDetailTab(tab)) notFound();
   if (tab === 'details') redirect(getAllProductDetailTabPath(productId, tab));
 
-  return <AllProductDetailsPageContent productId={productId} mode="all" />;
+  return <AllProductDetailsPageContent productId={productId} />;
 }

@@ -6,6 +6,7 @@ import { isOrdersFilterRoute } from '@/lib/orders/order-paths';
 import { isProductRequestsFilterRoute } from '@/lib/product-requests/product-request-paths';
 import { isAllProductsFilterRoute } from '@/lib/products/all-product-paths';
 import { isAllProductDetailTab } from '@/lib/products/all-product-detail-tabs';
+import { isOwnProductDetailTab } from '@/lib/products/own-product-detail-tabs';
 import { isOwnProductsFilterRoute } from '@/lib/products/own-product-paths';
 
 import {
@@ -284,6 +285,7 @@ export function getPharmacyBreadcrumbsByPathname(
     const [clientId, tab] = route.segments;
 
     const clientTabLabels: Record<string, string> = {
+      details: 'Client information',
       orders: 'Orders',
       pharmacies: 'Pharmacies',
       products: 'Purchased products',
@@ -296,7 +298,9 @@ export function getPharmacyBreadcrumbsByPathname(
       if (
         tab &&
         clientTabLabels[tab] &&
-        (route.segments.length === 2 || tab === 'pharmacies')
+        (route.segments.length === 2 ||
+          tab === 'pharmacies' ||
+          tab === 'details')
       ) {
         return [
           { label: 'Clients', href: PHARMACY_ROUTES.CLIENTS },
@@ -321,11 +325,41 @@ export function getPharmacyBreadcrumbsByPathname(
       return getProductsBreadcrumbs();
     }
 
-    const productId = getSingleEntityId(route.segments);
+    const [productId, tab] = route.segments;
 
-    return productId
-      ? getProductDetailsBreadcrumbs(productId, currentDetailLabel)
-      : getProductsBreadcrumbs();
+    if (productId && isValidObjectId(productId)) {
+      if (
+        route.segments.length >= 2 &&
+        tab &&
+        isOwnProductDetailTab(tab) &&
+        (route.segments.length === 2 || tab === 'statistics')
+      ) {
+        const tabLabels = {
+          details: 'Details',
+          statistics: 'Statistics',
+          'related-orders': 'Related orders',
+          'stock-movement': 'Stock movement',
+          clients: 'Clients',
+          pharmacies: 'Pharmacies',
+          comments: 'Comments',
+        } as const;
+
+        return [
+          { label: 'Own products', href: PHARMACY_ROUTES.PRODUCTS },
+          {
+            label: currentDetailLabel ?? `Product ${productId}`,
+            href: getPharmacyProductPath(productId),
+          },
+          { label: tabLabels[tab] },
+        ];
+      }
+
+      if (route.segments.length === 1) {
+        return getProductDetailsBreadcrumbs(productId, currentDetailLabel);
+      }
+    }
+
+    return getProductsBreadcrumbs();
   }
 
   if (route.family === 'all-products') {
@@ -343,10 +377,6 @@ export function getPharmacyBreadcrumbsByPathname(
           details: 'Details',
           characteristics: 'Characteristics',
           reviews: 'Reviews',
-          pharmacies: 'Pharmacies',
-          'related-orders': 'Orders',
-          clients: 'Clients',
-          statistics: 'Statistics',
         } as const;
 
         return [

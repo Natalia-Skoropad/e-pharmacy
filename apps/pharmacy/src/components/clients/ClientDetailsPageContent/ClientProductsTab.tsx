@@ -5,7 +5,7 @@ import {
   type SetStateAction,
 } from 'react';
 
-import { PackageCheck } from 'lucide-react';
+import { Boxes } from 'lucide-react';
 
 import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { CountLabel, DataTable } from '@e-pharmacy/ui/data-display';
@@ -96,12 +96,14 @@ export function ClientProductsTab({
           page: params.page,
           perPage: params.perPage,
         },
+
         options
       );
 
       return {
         page: result.page,
         totalPages: result.totalPages,
+
         items: result.items.map((product) => ({
           id: product.productId,
           article: product.article,
@@ -121,7 +123,9 @@ export function ClientProductsTab({
             const pairs: Array<readonly [string, string | undefined]> = [
               [item.value, item.icon],
             ];
+
             if (item.categoryId) pairs.push([item.categoryId, item.icon]);
+
             return pairs;
           })
         )
@@ -134,7 +138,7 @@ export function ClientProductsTab({
       <ProfileSectionHeader
         title="Purchased products"
         description="Products in this client's successful orders across your pharmacies."
-        icon={<PackageCheck size={21} aria-hidden="true" />}
+        icon={<Boxes size={21} aria-hidden="true" />}
       />
 
       <section className={css.sectionCard}>

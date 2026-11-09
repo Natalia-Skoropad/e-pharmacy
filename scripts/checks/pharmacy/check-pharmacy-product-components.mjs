@@ -167,23 +167,54 @@ const detailsPath = path.join(
 
 const detailsSource = await readFile(detailsPath, 'utf8');
 
-assert.match(
-  detailsSource,
-  /type ProductDetailsMode = 'all' \| 'own'/,
-  'Product Details must expose one explicit all/own mode contract'
-);
-
-assert.match(
-  detailsSource,
-  /PRODUCT_DETAILS_MODE_CONFIG[\s\S]*showAddAction: true[\s\S]*showRemoveAction: false[\s\S]*showAddAction: false[\s\S]*showRemoveAction: true/,
-  'Product Details mode config must prevent add/remove action combinations that are impossible for the route mode'
+const ownDetailsSource = await readFile(
+  path.join(
+    root,
+    'apps/pharmacy/src/components/products/OwnProductDetailsPageContent/OwnProductDetailsPageContent.tsx'
+  ),
+  'utf8'
 );
 
 assert.doesNotMatch(
   detailsSource,
-  /showAddAction\?:|showRemoveAction\?:|backHref\?:|backLabel\?:|bannerTitle\?:|bannerMessage\?:/,
-  'Product Details route semantics must not be configurable through independent boolean/string props'
+  /ProductDetailsMode|mode=["']own["']|mode === ['"]own['"]|OwnProductStatistics|relatedOrdersStatus/,
+  'All product details must contain only the informational global catalog card'
 );
+
+assert.doesNotMatch(
+  ownDetailsSource,
+  /AllProductDetailsPageContent|mode=["']all["']|mode === ['"]all['"]|OwnerAddProductConfirmation/,
+  'Own product details must not render the global product details component'
+);
+
+for (const name of [
+  'OwnProductDetailsTab',
+  'OwnProductStatisticsTab',
+  'OwnProductRelatedOrdersTab',
+  'OwnProductStockMovementTab',
+  'OwnProductClientsTab',
+  'OwnProductPharmaciesTab',
+  'OwnProductCommentsTab',
+]) {
+  const source = await readFile(
+    path.join(
+      root,
+      `apps/pharmacy/src/components/products/OwnProductDetailsPageContent/${name}.tsx`
+    ),
+    'utf8'
+  );
+
+  assert.match(
+    ownDetailsSource,
+    new RegExp(`<${name}\\b`),
+    `Own product card must render ${name}`
+  );
+
+  assert.ok(source.length > 100, `${name} must be independently implemented`);
+}
+
+assert.match(detailsSource, /<OwnerAddProductConfirmation/);
+assert.match(ownDetailsSource, /Remove product from pharmacy\?/);
 
 const productsIndex = await readFile(
   path.join(root, 'apps/pharmacy/src/components/products/index.ts'),

@@ -20,7 +20,7 @@ import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
-import { getPharmacyOrderPath, getPharmacyAllProductPath } from '@/lib/routes';
+import { getPharmacyOrderPath, getPharmacyProductPath } from '@/lib/routes';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import type { PharmacyOrderRow } from '@/lib/orders/orders';
 import type { PharmacyClientPurchasedProduct } from '@/lib/clients/clients';
@@ -120,7 +120,7 @@ export const PRODUCT_COLUMNS: Array<
       item.currentProductExists ? (
         <TextActionButton
           className={css.breakableLink}
-          href={getPharmacyAllProductPath(item.productId)}
+          href={getPharmacyProductPath(item.productId)}
         >
           {item.productId}
         </TextActionButton>
@@ -134,7 +134,7 @@ export const PRODUCT_COLUMNS: Array<
 
     render: (item) =>
       item.currentProductExists ? (
-        <TextActionButton href={getPharmacyAllProductPath(item.productId)}>
+        <TextActionButton href={getPharmacyProductPath(item.productId)}>
           {item.article}
         </TextActionButton>
       ) : (
@@ -147,7 +147,7 @@ export const PRODUCT_COLUMNS: Array<
 
     render: (item) =>
       item.currentProductExists ? (
-        <TextActionButton href={getPharmacyAllProductPath(item.productId)}>
+        <TextActionButton href={getPharmacyProductPath(item.productId)}>
           {item.name}
         </TextActionButton>
       ) : (

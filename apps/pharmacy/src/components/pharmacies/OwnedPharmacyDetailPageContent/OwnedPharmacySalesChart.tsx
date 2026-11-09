@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 import {
   normalizeOrderSalesStatistics,
@@ -24,6 +25,13 @@ import {
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { pharmacyApiRoutes } from '@/lib/api/routes/pharmacy-api-routes';
+import { buildOwnedPharmacyDetailUrl } from '@/lib/pharmacies/owned-pharmacy-url';
+
+import {
+  buildSalesChartPath,
+  getSalesChartYear,
+  parseSalesChartSegments,
+} from '@/lib/statistics/sales-chart-paths';
 
 //===================================================================
 
@@ -56,8 +64,27 @@ export function OwnedPharmacySalesChart({
   pharmacyId: string;
   pharmacyStatus: PharmacyStatus;
 }) {
-  const [year, setYear] = useState(() => String(new Date().getFullYear()));
-  const [month, setMonth] = useState<SalesPeriodMonth>('all');
+  const pathname = usePathname();
+  const router = useRouter();
+  const base = buildOwnedPharmacyDetailUrl(pharmacyId);
+
+  const segments = pathname.startsWith(`${base}/`)
+    ? pathname
+        .slice(base.length + 1)
+        .split('/')
+        .filter((item) => item !== 'information')
+    : [];
+
+  const period = parseSalesChartSegments(segments);
+  const year = getSalesChartYear(period);
+  const month = period.month;
+
+  const updatePeriod = (next: { year: string; month: SalesPeriodMonth }) => {
+    router.push(buildSalesChartPath(base, { ...period, ...next }), {
+      scroll: false,
+    });
+  };
+
   const [retry, setRetry] = useState(0);
 
   const [snapshot, setSnapshot] = useState<Readonly<{
@@ -128,8 +155,8 @@ export function OwnedPharmacySalesChart({
           idPrefix="owned-pharmacy-sales"
           year={year}
           month={month}
-          onYearChange={setYear}
-          onMonthChange={setMonth}
+          onYearChange={(value) => updatePeriod({ year: value, month })}
+          onMonthChange={(value) => updatePeriod({ year, month: value })}
         />
       }
     />
