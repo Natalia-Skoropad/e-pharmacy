@@ -26,10 +26,13 @@ type ClientsFiltersDrawerProps = Readonly<{
   filters: ClientsFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
+  maxDate?: string;
+  availableDates?: readonly string[];
   onChange: (filters: ClientsFilterState) => void;
   onClose: () => void;
   onReset: () => void;
   resetHref?: string;
+  includeSuccessfulOrders?: boolean;
 }>;
 
 //===================================================================
@@ -82,10 +85,13 @@ function ClientsFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
+  maxDate,
+  availableDates,
   onChange,
   onClose,
   onReset,
   resetHref = PHARMACY_ROUTES.CLIENTS,
+  includeSuccessfulOrders = true,
 }: ClientsFiltersDrawerProps) {
   return (
     <FilterDrawer
@@ -102,7 +108,8 @@ function ClientsFiltersDrawer({
       <DateFilter
         id="clients-first-order-date-filter"
         minDate={minDate}
-        maxDate={getBusinessCalendarDate() ?? undefined}
+        maxDate={maxDate ?? getBusinessCalendarDate() ?? undefined}
+        availableDates={availableDates}
         disabled={!minDate}
         label="Client added"
         value={filters.firstOrderDate}
@@ -123,16 +130,18 @@ function ClientsFiltersDrawer({
         onChange={(status) => onChange({ ...filters, status })}
       />
 
-      <SelectField
-        id="clients-successful-orders"
-        label="Successful orders"
-        value={filters.successfulOrders}
-        options={SUCCESSFUL_ORDERS_OPTIONS}
-        isActive={filters.successfulOrders !== 'all'}
-        onChange={(successfulOrders) =>
-          onChange({ ...filters, successfulOrders })
-        }
-      />
+      {includeSuccessfulOrders ? (
+        <SelectField
+          id="clients-successful-orders"
+          label="Successful orders"
+          value={filters.successfulOrders}
+          options={SUCCESSFUL_ORDERS_OPTIONS}
+          isActive={filters.successfulOrders !== 'all'}
+          onChange={(successfulOrders) =>
+            onChange({ ...filters, successfulOrders })
+          }
+        />
+      ) : null}
     </FilterDrawer>
   );
 }

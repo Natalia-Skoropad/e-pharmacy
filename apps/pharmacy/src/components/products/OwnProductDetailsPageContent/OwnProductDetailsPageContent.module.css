@@ -437,3 +437,79 @@
     align-items: center;
   }
 }
+
+/* Stock movement uses the same contained statistics and resource states as
+   the pharmacy Clients tab, while the selector can open above this card. */
+.stockStatisticsCard {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.titleWithHelp {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.orderSearchIcon,
+.stockFilterOptionIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+}
+
+.stockFilterOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Stock movement has one searchable order field, then the filter button. */
+.stockSearchGrid {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-items: end;
+}
+
+@media only screen and (max-width: 767px) {
+  .countLabel {
+    justify-self: center;
+    width: 100%;
+    text-align: center;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .stockStatisticsCard {
+    padding: 20px;
+  }
+
+  .stockSearchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+  }
+}
+
+/* Match embedded pharmacy Clients: hide its statistics on mobile only. */
+@media only screen and (max-width: 767px) {
+  .productClientsStatisticsCard {
+    display: none;
+  }
+}

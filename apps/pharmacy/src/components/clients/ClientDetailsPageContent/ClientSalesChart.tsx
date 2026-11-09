@@ -23,13 +23,16 @@ import {
   parseSalesChartSegments,
 } from '@/lib/statistics/sales-chart-paths';
 
+import { SalesChartFilterToolbar } from '@/components/statistics/SalesChartFilterToolbar';
+
 //===================================================================
 
 /** Owner-wide for ordinary clients, restricted to the default pharmacy for walk-ins. */
 export function ClientSalesChart({ clientId }: Readonly<{ clientId: string }>) {
   const pathname = usePathname();
   const router = useRouter();
-  const base = `${getPharmacyClientPath(clientId)}/details`;
+  const clientBase = getPharmacyClientPath(clientId);
+  const base = `${clientBase}/details`;
 
   const segments = pathname.startsWith(`${base}/`)
     ? pathname.slice(base.length + 1).split('/')
@@ -105,13 +108,18 @@ export function ClientSalesChart({ clientId }: Readonly<{ clientId: string }>) {
       }
       contentState={contentState}
       headerContent={
-        <SalesPeriodFilters
-          idPrefix="client-sales"
-          year={year}
-          month={month}
-          onYearChange={(value) => updatePeriod({ year: value, month })}
-          onMonthChange={(value) => updatePeriod({ year, month: value })}
-        />
+        <SalesChartFilterToolbar
+          hasFilters={Boolean(period.year || period.month !== 'all')}
+          onReset={() => router.push(clientBase, { scroll: false })}
+        >
+          <SalesPeriodFilters
+            idPrefix="client-sales"
+            year={year}
+            month={month}
+            onYearChange={(value) => updatePeriod({ year: value, month })}
+            onMonthChange={(value) => updatePeriod({ year, month: value })}
+          />
+        </SalesChartFilterToolbar>
       }
     />
   );

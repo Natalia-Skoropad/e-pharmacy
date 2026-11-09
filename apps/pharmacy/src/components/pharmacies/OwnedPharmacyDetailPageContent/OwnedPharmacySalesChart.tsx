@@ -33,6 +33,8 @@ import {
   parseSalesChartSegments,
 } from '@/lib/statistics/sales-chart-paths';
 
+import { SalesChartFilterToolbar } from '@/components/statistics/SalesChartFilterToolbar';
+
 //===================================================================
 
 async function getOwnedPharmacySales(
@@ -151,13 +153,18 @@ export function OwnedPharmacySalesChart({
       }
       contentState={contentState}
       headerContent={
-        <SalesPeriodFilters
-          idPrefix="owned-pharmacy-sales"
-          year={year}
-          month={month}
-          onYearChange={(value) => updatePeriod({ year: value, month })}
-          onMonthChange={(value) => updatePeriod({ year, month: value })}
-        />
+        <SalesChartFilterToolbar
+          hasFilters={Boolean(period.year || period.month !== 'all')}
+          onReset={() => router.push(base, { scroll: false })}
+        >
+          <SalesPeriodFilters
+            idPrefix="owned-pharmacy-sales"
+            year={year}
+            month={month}
+            onYearChange={(value) => updatePeriod({ year: value, month })}
+            onMonthChange={(value) => updatePeriod({ year, month: value })}
+          />
+        </SalesChartFilterToolbar>
       }
     />
   );

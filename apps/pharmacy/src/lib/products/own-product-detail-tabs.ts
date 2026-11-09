@@ -50,11 +50,15 @@ export function parseOwnProductDetailTabPath(
 
   const [segment, ...extra] = pathname.slice(base.length + 1).split('/');
 
-  // Statistics has its own URL-backed pharmacy and period filters. Other
-  // tabs retain their existing single-segment canonical routes.
+  // Statistics, stock movement and clients have URL-backed filters;
+  // remaining tabs keep their existing single-segment canonical routes.
   return isOwnProductDetailTab(segment) &&
     segment !== 'details' &&
-    (extra.length === 0 || segment === 'statistics')
+    (extra.length === 0 ||
+      segment === 'statistics' ||
+      segment === 'stock-movement' ||
+      segment === 'clients' ||
+      segment === 'pharmacies')
     ? segment
     : null;
 }

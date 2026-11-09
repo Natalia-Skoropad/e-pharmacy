@@ -182,6 +182,7 @@ test(
         productId,
         createdAt: new Date('2026-09-10T10:00:00.000Z'),
         totalPrice: 200,
+        quantity: 2,
         orderNumber: `JAN-2-${suffix}`,
         snapshot,
       }),
@@ -236,6 +237,75 @@ test(
       assert.equal(januaryClient.successfulOrdersAmount, 300);
       assert.equal(unfiltered.statistics.repeat, 2);
       assert.equal(unfiltered.earliestCreatedAt, '2026-01-10');
+
+      // The product's buyers have one row each: orders, units and revenue
+      // are three independent metrics based only on successful orders.
+      const productBuyers = await getClientsService(ownerId.toString(), {
+        page: 1,
+        perPage: 20,
+        scope: 'owner',
+        productId: productId.toString(),
+      });
+
+      assert.equal(productBuyers.total, 2);
+
+      assert.deepEqual(productBuyers.availableClientAddedDates, [
+        '2026-01-10',
+        '2026-09-05',
+      ]);
+
+      // Available date choices are not limited by the current page or date
+      // range: the calendar must still show real buyer dates after filtering.
+      const noBuyersInPeriod = await getClientsService(ownerId.toString(), {
+        page: 1,
+        perPage: 1,
+        scope: 'owner',
+        productId: productId.toString(),
+        firstOrderFrom: '2026-11-01',
+      });
+
+      assert.equal(noBuyersInPeriod.total, 0);
+
+      assert.deepEqual(noBuyersInPeriod.availableClientAddedDates, [
+        '2026-01-10',
+        '2026-09-05',
+      ]);
+
+      const firstBuyer = productBuyers.items.find(
+        (client) => client.id === januaryClientId.toString()
+      );
+
+      assert.equal(firstBuyer?.successfulOrdersCount, 2);
+      assert.equal(firstBuyer?.productQuantity, 3);
+      assert.equal(firstBuyer?.successfulOrdersAmount, 300);
+
+      await createSuccessfulOrder({
+        pharmacyId,
+        userId: januaryClientId,
+        productId,
+        createdAt: new Date('2026-11-10T10:00:00.000Z'),
+        quantity: 4,
+        totalPrice: 400,
+        orderNumber: `JAN-3-${suffix}`,
+        snapshot,
+      });
+
+      const updatedBuyers = await getClientsService(ownerId.toString(), {
+        page: 1,
+        perPage: 20,
+        scope: 'owner',
+        productId: productId.toString(),
+      });
+
+      assert.equal(updatedBuyers.total, 2);
+
+      const updatedBuyer = updatedBuyers.items.find(
+        (client) => client.id === januaryClientId.toString()
+      );
+
+      assert.equal(updatedBuyer?.successfulOrdersCount, 3);
+      assert.equal(updatedBuyer?.productQuantity, 7);
+      assert.equal(updatedBuyer?.successfulOrdersAmount, 700);
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId }),

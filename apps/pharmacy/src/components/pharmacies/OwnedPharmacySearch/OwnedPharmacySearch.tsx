@@ -34,6 +34,7 @@ type OwnedPharmacySearchProps = Readonly<{
   id?: string;
   label?: string;
   explainStatistics?: boolean;
+  isOptionsLoading?: boolean;
 }>;
 
 //===================================================================
@@ -83,6 +84,7 @@ export function OwnedPharmacySearch({
   id = 'owned-pharmacy-registry-search',
   label = 'Pharmacy search',
   explainStatistics = false,
+  isOptionsLoading = false,
 }: OwnedPharmacySearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
@@ -229,7 +231,9 @@ export function OwnedPharmacySearch({
       loadingMessage="Loading pharmacies..."
       isActive={Boolean(value)}
       isOptionsLoading={
-        !currentSuggestions || Boolean(value && selected?.value !== value)
+        isOptionsLoading ||
+        !currentSuggestions ||
+        Boolean(value && selected?.value !== value)
       }
       filterOptions={false}
       disabled={disabled}

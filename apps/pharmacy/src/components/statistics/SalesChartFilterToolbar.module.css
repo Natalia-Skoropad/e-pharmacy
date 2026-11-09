@@ -1,0 +1,30 @@
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.resetButton {
+  width: 100%;
+  min-height: 48px;
+  height: 48px;
+  white-space: nowrap;
+}
+
+@media only screen and (min-width: 768px) {
+  .toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: end;
+    column-gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .resetButton {
+    width: auto;
+  }
+}

@@ -124,29 +124,6 @@ export const ORDER_CREATED_BY_OPTIONS: Array<
 
 //===================================================================
 
-export const STOCK_EVENT_TYPE_OPTIONS: Array<
-  SelectOption<'all' | StockMovementEventType>
-> = [
-  { value: 'all', label: 'All' },
-  { value: 'arrival', label: 'Stock arrival' },
-  { value: 'reserve', label: 'Reserved in order' },
-  { value: 'write_off', label: 'Stock write-off' },
-  { value: 'release', label: 'Reserve released' },
-  { value: 'adjustment', label: 'Stock adjustment' },
-];
-
-//===================================================================
-
-export const STOCK_SOURCE_OPTIONS: Array<
-  SelectOption<'all' | StockMovementSource>
-> = [
-  { value: 'all', label: 'All' },
-  { value: 'pharmacy_stock', label: 'Pharmacy stock' },
-  { value: 'client_order', label: 'Client order' },
-];
-
-//===================================================================
-
 export const PRODUCT_TAB_ROWS_PER_PAGE_OPTIONS: RowsPerPageValue[] = [
   20, 50, 100,
 ];
@@ -170,13 +147,8 @@ const STOCK_SOURCE_LABELS: Record<StockMovementSource, string> = {
 
 export function getStockMovementRows(
   movements: ProductStockMovement[],
-  filters: StockMovementFilters,
-  orderNumberSearch: string,
-  commentSearch: string
+  filters: StockMovementFilters
 ): StockMovementRow[] {
-  const normalizedOrderNumber = orderNumberSearch.trim().toLowerCase();
-  const normalizedComment = commentSearch.trim().toLowerCase();
-
   return movements
     .map((movement): StockMovementRow => {
       const quantityValue = ['release', 'write_off'].includes(
@@ -225,18 +197,6 @@ export function getStockMovementRows(
       if (filters.date.from && row.dateValue < filters.date.from) return false;
 
       if (filters.date.to && row.dateValue > `${filters.date.to}T23:59:59.999Z`)
-        return false;
-
-      if (
-        normalizedOrderNumber &&
-        !row.orderNumber.toLowerCase().includes(normalizedOrderNumber)
-      )
-        return false;
-
-      if (
-        normalizedComment &&
-        !row.comment.toLowerCase().includes(normalizedComment)
-      )
         return false;
 
       return true;

@@ -1,6 +1,21 @@
 import { isOwnProductsFilterSegment } from '../products/own-product-paths';
 
 import {
+  buildStockMovementPath,
+  parseStockMovementSegments,
+} from '../products/stock-movement-paths';
+
+import {
+  buildOwnProductClientsPath,
+  parseOwnProductClientsSegments,
+} from '../products/own-product-clients-paths';
+
+import {
+  buildOwnProductPharmaciesPath,
+  parseOwnProductPharmaciesSegments,
+} from '../products/own-product-pharmacies-paths';
+
+import {
   buildSalesChartPath,
   parseSalesChartSegments,
 } from '../statistics/sales-chart-paths';
@@ -173,16 +188,72 @@ export function isOwnerProductDetailPath(pathname: string): boolean {
 
   const sales =
     /^\/pharmacy\/products\/([0-9a-f]{24})\/statistics\/(.+)$/i.exec(pathname);
-  if (!sales) return false;
+  if (sales) {
+    try {
+      const base = `/pharmacy/products/${sales[1]}/statistics`;
+
+      return (
+        buildSalesChartPath(
+          base,
+          parseSalesChartSegments(sales[2]!.split('/'), {
+            allowPharmacy: true,
+          }),
+          { allowPharmacy: true }
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  // Owner product pharmacy filters do not require a globally selected pharmacy.
+  // Backend membership checks remain authoritative for data returned by the API.
+  const pharmacies =
+    /^\/pharmacy\/products\/([0-9a-f]{24})\/pharmacies\/(.+)$/i.exec(pathname);
+  if (pharmacies) {
+    try {
+      return (
+        buildOwnProductPharmaciesPath(
+          pharmacies[1]!,
+          parseOwnProductPharmaciesSegments(pharmacies[2]!.split('/'))
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  // Owner-wide stock movement belongs to the product card even without a
+  // globally selected pharmacy. The route is only syntactic authorization:
+  // backend endpoints must still verify access to the pharmacy in the URL.
+  const stock =
+    /^\/pharmacy\/products\/([0-9a-f]{24})\/stock-movement\/(.+)$/i.exec(
+      pathname
+    );
+
+  if (!stock) {
+    const buyers =
+      /^\/pharmacy\/products\/([0-9a-f]{24})\/clients\/(.+)$/i.exec(pathname);
+
+    if (!buyers) return false;
+
+    try {
+      return (
+        buildOwnProductClientsPath(
+          buyers[1]!,
+          parseOwnProductClientsSegments(buyers[2]!.split('/'))
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
+  }
 
   try {
-    const base = `/pharmacy/products/${sales[1]}/statistics`;
-
     return (
-      buildSalesChartPath(
-        base,
-        parseSalesChartSegments(sales[2]!.split('/'), { allowPharmacy: true }),
-        { allowPharmacy: true }
+      buildStockMovementPath(
+        stock[1]!,
+        parseStockMovementSegments(stock[2]!.split('/'))
       ) === pathname
     );
   } catch {

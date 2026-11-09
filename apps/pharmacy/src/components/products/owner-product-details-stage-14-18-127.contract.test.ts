@@ -38,8 +38,8 @@ test('Stock movement shows owner-scoped pharmacy chooser, local stock cards, and
   const stock = await read(own + 'OwnProductStockMovementTab.tsx');
 
   assert.match(stock, /<OwnedPharmacySearch/);
-  assert.match(stock, /!pharmacyId \? \(/);
-  assert.match(stock, /Select a specific pharmacy/);
+  assert.match(stock, /!hasSelectedPharmacy \? \(/);
+  assert.match(stock, /Select a pharmacy to view stock movement/);
 
   assert.match(
     stock,
@@ -48,7 +48,7 @@ test('Stock movement shows owner-scoped pharmacy chooser, local stock cards, and
 
   assert.match(
     stock,
-    /getProductStockMovements\(productId, \{ signal: controller\.signal \}, pharmacyId\)/
+    /getProductStockMovements\(\s*productId,\s*\{ signal: controller\.signal \},\s*pharmacyId\s*\)/
   );
 
   assert.match(stock, /currentStockStatus === 'error'/);

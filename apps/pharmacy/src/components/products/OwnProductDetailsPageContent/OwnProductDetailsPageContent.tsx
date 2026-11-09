@@ -156,7 +156,6 @@ function OwnProductDetailsPageContent({
   >([]);
 
   const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
-  const [selectedPharmacyId, setSelectedPharmacyId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   const [error, setError] = useState<ReturnType<typeof getProductError> | null>(
@@ -346,12 +345,20 @@ function OwnProductDetailsPageContent({
           <OwnProductTabHeading tab={activeTab} />
           {activeTab === 'statistics' ? (
             <OwnProductStatisticsTab productId={productId} />
+          ) : activeTab === 'clients' ? (
+            <OwnProductClientsTab key={productId} productId={productId} />
           ) : activeTab === 'stock-movement' ? (
             <OwnProductStockMovementTab
               productId={productId}
               product={product}
-              pharmacyId={selectedPharmacyId}
-              onPharmacyChange={setSelectedPharmacyId}
+              productLoading={isLoading}
+              productError={error?.message ?? null}
+              onRetryProduct={() => setRetry((value) => value + 1)}
+            />
+          ) : activeTab === 'pharmacies' ? (
+            <OwnProductPharmaciesTab
+              productId={productId}
+              product={product}
               productLoading={isLoading}
               productError={error?.message ?? null}
               onRetryProduct={() => setRetry((value) => value + 1)}
@@ -383,10 +390,6 @@ function OwnProductDetailsPageContent({
               key={product.id}
               productId={product.id}
             />
-          ) : activeTab === 'clients' ? (
-            <OwnProductClientsTab key={product.id} productId={product.id} />
-          ) : activeTab === 'pharmacies' ? (
-            <OwnProductPharmaciesTab product={product} />
           ) : (
             <OwnProductCommentsTab
               key={product.id}

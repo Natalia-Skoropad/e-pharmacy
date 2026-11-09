@@ -5,6 +5,21 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { getOwnProductDetailTabPath } from '@/lib/products/own-product-detail-tabs';
 
 import {
+  buildStockMovementPath,
+  parseStockMovementSegments,
+} from '@/lib/products/stock-movement-paths';
+
+import {
+  buildOwnProductClientsPath,
+  parseOwnProductClientsSegments,
+} from '@/lib/products/own-product-clients-paths';
+
+import {
+  buildOwnProductPharmaciesPath,
+  parseOwnProductPharmaciesSegments,
+} from '@/lib/products/own-product-pharmacies-paths';
+
+import {
   parseSalesChartSegments,
   buildSalesChartPath,
 } from '@/lib/statistics/sales-chart-paths';
@@ -51,18 +66,39 @@ export default async function OwnProductStatisticsFiltersRoute({
     );
   }
 
-  if (!isValidObjectId(productId) || tab !== 'statistics') notFound();
+  if (
+    !isValidObjectId(productId) ||
+    !['statistics', 'stock-movement', 'clients', 'pharmacies'].includes(tab)
+  )
+    notFound();
 
   let canonical: string;
 
   try {
-    const state = parseSalesChartSegments(filters, { allowPharmacy: true });
+    if (tab === 'stock-movement') {
+      canonical = buildStockMovementPath(
+        productId,
+        parseStockMovementSegments(filters)
+      );
+    } else if (tab === 'clients') {
+      canonical = buildOwnProductClientsPath(
+        productId,
+        parseOwnProductClientsSegments(filters)
+      );
+    } else if (tab === 'pharmacies') {
+      canonical = buildOwnProductPharmaciesPath(
+        productId,
+        parseOwnProductPharmaciesSegments(filters)
+      );
+    } else {
+      const state = parseSalesChartSegments(filters, { allowPharmacy: true });
 
-    canonical = buildSalesChartPath(
-      getOwnProductDetailTabPath(productId, 'statistics'),
-      state,
-      { allowPharmacy: true }
-    );
+      canonical = buildSalesChartPath(
+        getOwnProductDetailTabPath(productId, 'statistics'),
+        state,
+        { allowPharmacy: true }
+      );
+    }
   } catch {
     notFound();
   }

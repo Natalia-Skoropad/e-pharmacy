@@ -15,7 +15,6 @@ import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { getPharmacyOrderSalesStatistics } from '@/lib/api/browser';
 import { DEFAULT_ORDER_SALES_STATISTICS } from '@/lib/statistics/defaults';
-
 import { getOwnProductDetailTabPath } from '@/lib/products/own-product-detail-tabs';
 
 import {
@@ -25,6 +24,7 @@ import {
 } from '@/lib/statistics/sales-chart-paths';
 
 import { OwnedPharmacySearch } from '@/components/pharmacies/OwnedPharmacySearch/OwnedPharmacySearch';
+import { SalesChartFilterToolbar } from '@/components/statistics/SalesChartFilterToolbar';
 
 import css from './OwnProductDetailsPageContent.module.css';
 
@@ -135,13 +135,20 @@ export function OwnProductStatisticsTab({
         description="Successful sales of this product for the selected pharmacies and period, including historical orders."
         contentState={contentState}
         headerContent={
-          <SalesPeriodFilters
-            idPrefix={`product-${productId}-sales`}
-            year={year}
-            month={month}
-            onYearChange={(value) => updateFilters({ year: value })}
-            onMonthChange={(value) => updateFilters({ year, month: value })}
-          />
+          <SalesChartFilterToolbar
+            hasFilters={Boolean(
+              filters.year || filters.month !== 'all' || filters.pharmacyId
+            )}
+            onReset={() => router.push(base, { scroll: false })}
+          >
+            <SalesPeriodFilters
+              idPrefix={`product-${productId}-sales`}
+              year={year}
+              month={month}
+              onYearChange={(value) => updateFilters({ year: value })}
+              onMonthChange={(value) => updateFilters({ year, month: value })}
+            />
+          </SalesChartFilterToolbar>
         }
       />
     </div>

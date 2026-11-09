@@ -1,0 +1,188 @@
+.stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+
+.card {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card-soft);
+}
+
+.searchGrid {
+  display: grid;
+  align-items: end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.searchAction {
+  display: flex;
+  align-items: end;
+  min-width: 0;
+}
+
+.filterButton {
+  min-height: 48px;
+  width: 100%;
+}
+
+.tableStack {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+
+.tableToolbar {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.rowsControl {
+  min-width: 0;
+  width: 100%;
+}
+
+.countLabel {
+  justify-self: start;
+  width: 100%;
+}
+
+.tableActions {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.tableActions > * {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.availability {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  white-space: nowrap;
+}
+
+.available {
+  color: var(--color-success);
+}
+
+.reserved {
+  color: var(--color-warning);
+}
+
+.outofstock,
+.unavailable {
+  color: var(--color-text-secondary);
+}
+
+.filterOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.filterNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-13);
+  line-height: var(--lh-base);
+}
+
+.filterNote svg {
+  flex: 0 0 auto;
+}
+
+@media only screen and (max-width: 767px) {
+  .countLabel {
+    justify-self: center;
+    width: 100%;
+    text-align: center;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-light);
+    color: var(--color-accent);
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .searchGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, max-content);
+  }
+
+  .tableToolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+
+  .countLabel {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    width: unset;
+  }
+}
+
+/* The table has ten columns; keep identifiers compact and wrap safely. */
+.pharmacyIdLink {
+  display: inline-block;
+  width: 116px;
+  max-width: 116px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+.locationOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.locationIcon {
+  display: inline-grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
+}
+
+.regionFilter {
+  position: relative;
+  min-width: 0;
+}
+
+.regionHelp {
+  position: absolute;
+  z-index: 2;
+  left: 55px;
+  top: -3px;
+}

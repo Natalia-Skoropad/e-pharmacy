@@ -98,7 +98,12 @@ test('owner Clients search reuses searchable select and searches all five author
   assert.match(search, /<SearchableSelect/);
   assert.match(search, /label="Client search"/);
   assert.match(search, /by ID, name, email, phone number, or address/);
-  assert.match(search, /scope: embedded \? undefined : 'owner'/);
+
+  assert.match(
+    search,
+    /scope: productId \|\| !embedded \? 'owner' : undefined/
+  );
+
   assert.match(search, /uniqueClients\(result\.items\)/);
 
   for (const key of ['id', 'name', 'email', 'phone', 'address']) {

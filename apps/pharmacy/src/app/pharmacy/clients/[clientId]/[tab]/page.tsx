@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 
 import { isValidObjectId } from '@e-pharmacy/validation/url';
+import { getPharmacyClientPath } from '@/lib/routes';
 
 import {
   buildClientsPath,
@@ -49,6 +50,12 @@ export default async function ClientDetailTabPage({
         initialPerPage={pagination.perPage}
       />
     );
+  }
+
+  // Details has no tab segment in the canonical client-card URL.
+  // Redirect legacy /details links instead of showing the cabinet's 404/guard.
+  if (isValidObjectId(clientId) && tab === 'details') {
+    redirect(getPharmacyClientPath(clientId));
   }
 
   if (

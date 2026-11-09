@@ -48,6 +48,7 @@ export type PharmacyClientRow = Readonly<{
   address: string;
   successfulOrdersCount: number;
   successfulOrdersAmount: number;
+  productQuantity?: number;
   status: ClientStatus;
   statusReason?: string;
   isDefault: boolean;
@@ -79,6 +80,7 @@ export type PharmacyClientsQueryParams = Readonly<{
 export type PharmacyClientsResponse = Readonly<
   ApiPaginationResponse<PharmacyClientRow> & {
     earliestCreatedAt: string | null;
+    availableClientAddedDates?: readonly string[];
     statistics: ClientStatisticsCounts;
   }
 >;
@@ -422,10 +424,44 @@ export function normalizePharmacyClient(rawClient: unknown): PharmacyClientRow {
       rawClient
     ),
 
+    ...(rawClient.productQuantity === undefined
+      ? {}
+      : {
+          productQuantity: requireNonNegativeInteger(
+            rawClient.productQuantity,
+            'pharmacy client.productQuantity',
+            rawClient
+          ),
+        }),
+
     status,
+
     ...(statusReason ? { statusReason } : {}),
+
     isDefault: rawClient.isDefault,
   };
+}
+
+//===================================================================
+
+function parseAvailableClientAddedDates(
+  payload: unknown
+): string[] | undefined {
+  if (!isRecord(payload) || payload.availableClientAddedDates === undefined) {
+    return undefined;
+  }
+
+  if (
+    !Array.isArray(payload.availableClientAddedDates) ||
+    !payload.availableClientAddedDates.every(isCalendarDateString)
+  ) {
+    invalidClientContract(
+      'pharmacy clients response.availableClientAddedDates must contain calendar dates.',
+      payload
+    );
+  }
+
+  return [...new Set<string>(payload.availableClientAddedDates)].sort();
 }
 
 //===================================================================
@@ -441,13 +477,21 @@ export function normalizePharmacyClientsResponse(
     { label: 'pharmacy clients response' }
   );
 
+  const availableClientAddedDates = parseAvailableClientAddedDates(payload);
+
   return {
     ...response,
+
     earliestCreatedAt: parseEarliestCreatedAt(
       payload,
       'pharmacy clients response'
     ),
+
     statistics: parseClientStatistics(payload, 'pharmacy clients response'),
+
+    ...(availableClientAddedDates !== undefined
+      ? { availableClientAddedDates }
+      : {}),
   };
 }
 

@@ -332,7 +332,11 @@ export function getPharmacyBreadcrumbsByPathname(
         route.segments.length >= 2 &&
         tab &&
         isOwnProductDetailTab(tab) &&
-        (route.segments.length === 2 || tab === 'statistics')
+        (route.segments.length === 2 ||
+          tab === 'statistics' ||
+          tab === 'stock-movement' ||
+          tab === 'clients' ||
+          tab === 'pharmacies')
       ) {
         const tabLabels = {
           details: 'Details',

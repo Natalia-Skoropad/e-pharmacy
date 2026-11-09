@@ -22,6 +22,7 @@ export type ClientRow = Readonly<{
   address: string;
   successfulOrdersCount: number;
   successfulOrdersAmount: number;
+  productQuantity?: number;
   status: 'active' | 'blocked';
   statusReason?: string;
   isDefault: boolean;
@@ -54,6 +55,7 @@ export type ClientAggregationResult = Readonly<{
       earliestOrderAt: Date | null;
     }
   >;
+  clientAddedDates?: Array<{ days: string[] }>;
 }>;
 
 //===================================================================

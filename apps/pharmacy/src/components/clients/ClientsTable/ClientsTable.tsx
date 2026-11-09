@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { ShoppingBag, Boxes, Wallet } from 'lucide-react';
 
 import {
   DataTable,
@@ -9,7 +10,8 @@ import {
 } from '@e-pharmacy/ui/data-display';
 
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { OrderMetricsTooltip } from '@e-pharmacy/ui/overlays';
+import { InfoTooltip, OrderMetricsTooltip } from '@e-pharmacy/ui/overlays';
+
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
@@ -28,6 +30,7 @@ type ClientsTableProps = Readonly<{
   clients: PharmacyClientRow[];
   emptyMessage: string;
   isLoading?: boolean;
+  showProductQuantity?: boolean;
 }>;
 
 //===================================================================
@@ -44,6 +47,7 @@ function ClientsTable({
   clients,
   emptyMessage,
   isLoading = false,
+  showProductQuantity = false,
 }: ClientsTableProps) {
   const columns = useMemo<Array<DataTableColumn<PharmacyClientRow>>>(() => {
     const clientHref = (client: PharmacyClientRow) =>
@@ -114,12 +118,52 @@ function ClientsTable({
         title: (
           <span className={css.headerWithHelp}>
             <TableHeaderTitle parts={['Orders', 'count']} />
-            <OrderMetricsTooltip scope="client" preferTopLayer />
+            {showProductQuantity ? (
+              <InfoTooltip
+                label="Product orders count explanation"
+                title="Product purchase metrics"
+                icon={<ShoppingBag size={20} aria-hidden="true" />}
+                escapeOverflow
+                preferTopLayer
+                items={[
+                  {
+                    title: 'Successful orders',
+                    description:
+                      'Number of completed orders containing this product. Each order counts once, regardless of quantity.',
+                    icon: <ShoppingBag size={17} aria-hidden="true" />,
+                  },
+                  {
+                    title: 'Products quantity',
+                    description:
+                      'Total units of this product across the client’s successful orders, not the number of orders.',
+                    icon: <Boxes size={17} aria-hidden="true" />,
+                  },
+                  {
+                    title: 'Orders amount, ₴',
+                    description:
+                      'Sum of this product’s line totals in completed orders, excluding other products in those orders.',
+                    icon: <Wallet size={17} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            ) : (
+              <OrderMetricsTooltip scope="client" preferTopLayer />
+            )}
           </span>
         ),
 
         render: (client) => client.successfulOrdersCount,
       },
+      ...(showProductQuantity
+        ? [
+            {
+              key: 'productQuantity',
+              title: <TableHeaderTitle parts={['Products', 'quantity']} />,
+              render: (client: PharmacyClientRow) =>
+                client.productQuantity ?? 0,
+            } satisfies DataTableColumn<PharmacyClientRow>,
+          ]
+        : []),
       {
         key: 'successfulOrdersAmount',
         title: <TableHeaderTitle parts={['Orders', 'amount, ₴']} />,
@@ -134,7 +178,7 @@ function ClientsTable({
         ),
       },
     ];
-  }, []);
+  }, [showProductQuantity]);
 
   return (
     <DataTable

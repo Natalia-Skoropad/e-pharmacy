@@ -265,3 +265,35 @@ test('sales chart filters remain owner-scoped without selected pharmacy', () => 
 
   assert.equal(isOwnerProductDetailPath(`${product}/unknown-filter`), false);
 });
+
+//===================================================================
+
+test('canonical stock-movement URL filters remain owner-scoped without global pharmacy selection', () => {
+  const product = '6ac75e1417684f6f914a4d59';
+  const pharmacy = '6ac75e170642845c5d27fd6c';
+  const base = `/pharmacy/products/${product}/stock-movement`;
+
+  for (const path of [
+    base,
+    `${base}/pharmacy-id-${pharmacy}`,
+    `${base}/pharmacy-id-${pharmacy}/order-id-${A}`,
+    `${base}/pharmacy-id-${pharmacy}/event-reserve/status-successful/per-page-50/page-2`,
+    `${base}/pharmacy-id-${pharmacy}/date-from-2026-11-01/date-to-2026-11-09`,
+  ]) {
+    assert.equal(isOwnerProductDetailPath(path), true, path);
+    assert.equal(isLegacyOperationalPharmacyPath(path), false, path);
+    assert.equal(isOperationalPharmacyPath(path), false, path);
+  }
+
+  for (const path of [
+    `${base}/event-reserve`, // Filters require the pharmacy segment.
+    `${base}/pharmacy-id-${pharmacy}/event-invalid`,
+    `${base}/pharmacy-id-${pharmacy}/event-reserve/event-release`,
+    `${base}/pharmacy-id-${pharmacy}/page-0`,
+    `${base}/pharmacy-id-${pharmacy}/unknown-filter`,
+    `${base}/per-page-50/pharmacy-id-${pharmacy}`, // Wrong canonical order.
+  ]) {
+    assert.equal(isOwnerProductDetailPath(path), false, path);
+    assert.equal(isLegacyOperationalPharmacyPath(path), true, path);
+  }
+});

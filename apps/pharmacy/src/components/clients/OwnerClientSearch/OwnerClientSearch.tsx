@@ -26,12 +26,17 @@ type OwnerClientSearchProps = Readonly<{
   value: string;
   onChange: (clientId: string) => void;
   embedded?: boolean;
+  productId?: string;
+  pharmacyId?: string;
+  id?: string;
 }>;
 
 type Suggestions = Readonly<{
   query: string;
   items: readonly PharmacyClientRow[];
   unavailable: boolean;
+  page: number;
+  hasMore: boolean;
 }>;
 
 //===================================================================
@@ -88,10 +93,15 @@ export function OwnerClientSearch({
   value,
   onChange,
   embedded = false,
+  productId,
+  pharmacyId,
+  id,
 }: OwnerClientSearchProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
   const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Readonly<{
     id: string;
@@ -104,9 +114,11 @@ export function OwnerClientSearch({
 
     void getPharmacyClients(
       {
-        scope: embedded ? undefined : 'owner',
+        scope: productId || !embedded ? 'owner' : undefined,
+        productId,
+        pharmacyId: pharmacyId || undefined,
         page: 1,
-        perPage: SEARCH_LIMIT,
+        perPage: productId ? 50 : SEARCH_LIMIT,
         search: currentQuery || undefined,
       },
       { signal: controller.signal }
@@ -117,17 +129,25 @@ export function OwnerClientSearch({
             query: currentQuery,
             items: uniqueClients(result.items),
             unavailable: false,
+            page: 1,
+            hasMore: Boolean(productId && result.page < result.totalPages),
           });
         }
       })
       .catch(() => {
         if (!controller.signal.aborted) {
-          setSuggestions({ query: currentQuery, items: [], unavailable: true });
+          setSuggestions({
+            query: currentQuery,
+            items: [],
+            unavailable: true,
+            page: 1,
+            hasMore: false,
+          });
         }
       });
 
     return () => controller.abort();
-  }, [debouncedQuery, embedded]);
+  }, [debouncedQuery, embedded, productId, pharmacyId]);
 
   // A direct URL can reference a client outside the first page of suggestions.
   useEffect(() => {
@@ -137,7 +157,9 @@ export function OwnerClientSearch({
 
     void getPharmacyClients(
       {
-        scope: embedded ? undefined : 'owner',
+        scope: productId || !embedded ? 'owner' : undefined,
+        productId,
+        pharmacyId: pharmacyId || undefined,
         page: 1,
         perPage: 1,
         clientId: value,
@@ -155,9 +177,10 @@ export function OwnerClientSearch({
       });
 
     return () => controller.abort();
-  }, [selected?.id, value, embedded]);
+  }, [selected?.id, value, embedded, productId, pharmacyId]);
 
-  const suggestionsReady = suggestions?.query === debouncedQuery;
+  const suggestionsReady =
+    suggestions?.query === debouncedQuery && debouncedQuery === query.trim();
 
   const items = useMemo(
     () => (suggestionsReady ? (suggestions?.items ?? []) : []),
@@ -184,9 +207,45 @@ export function OwnerClientSearch({
     return result;
   }, [items, query, selected, value]);
 
+  // The product-buyer registry pages suggestions (50 at a time); the
+  // ordinary Clients search keeps its existing behavior.
+  const loadMore = () => {
+    if (!productId || !suggestionsReady || !suggestions?.hasMore || loadingMore)
+      return;
+
+    const page = suggestions.page + 1;
+    const requestQuery = debouncedQuery;
+
+    setLoadingMore(true);
+    setLoadMoreError(null);
+
+    void getPharmacyClients({
+      scope: 'owner',
+      productId,
+      pharmacyId: pharmacyId || undefined,
+      search: requestQuery || undefined,
+      page,
+      perPage: 50,
+    })
+      .then((result) => {
+        setSuggestions((current) =>
+          current?.query === requestQuery && current.page === page - 1
+            ? {
+                ...current,
+                page,
+                items: uniqueClients([...current.items, ...result.items]),
+                hasMore: result.page < result.totalPages,
+              }
+            : current
+        );
+      })
+      .catch(() => setLoadMoreError('Could not load more clients.'))
+      .finally(() => setLoadingMore(false));
+  };
+
   return (
     <SearchableSelect
-      id={embedded ? 'pharmacy-clients-search' : 'owner-clients-search'}
+      id={id ?? (embedded ? 'pharmacy-clients-search' : 'owner-clients-search')}
       label="Client search"
       labelAccessory={
         <InfoTooltip
@@ -216,11 +275,20 @@ export function OwnerClientSearch({
       isOptionsLoading={
         !suggestionsReady || Boolean(value && selected?.id !== value)
       }
+      hasMoreOptions={Boolean(
+        productId && suggestionsReady && suggestions?.hasMore
+      )}
+      onLoadMore={productId ? loadMore : undefined}
+      isLoadingMore={loadingMore}
+      loadMoreError={loadMoreError ?? undefined}
       selectedFallbackLabel={value}
       filterOptions={false}
       maxLength={80}
       sanitizeQuery={sanitizeSearch}
-      onQueryChange={setQuery}
+      onQueryChange={(value) => {
+        setQuery(value);
+        setLoadMoreError(null);
+      }}
       onChange={(nextValue) => {
         if (!nextValue) {
           setSelected(null);

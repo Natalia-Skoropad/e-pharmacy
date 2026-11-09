@@ -34,6 +34,7 @@ export async function getClientRowsForPharmacies(
   total: number;
   statistics: ClientStatistics;
   earliestCreatedAt: string | null;
+  availableClientAddedDates?: string[];
 }> {
   if (pharmacyIds.length === 0) {
     return {
@@ -41,11 +42,38 @@ export async function getClientRowsForPharmacies(
       total: 0,
       statistics: { total: 0, repeat: 0, active: 0, blocked: 0 },
       earliestCreatedAt: null,
+      ...(query.productId ? { availableClientAddedDates: [] } : {}),
     };
   }
 
   const filterStages = buildClientFilterStages(query);
   const skip = (query.page - 1) * query.perPage;
+
+  // Available days must be computed from every eligible buyer, not just the
+  // current page, and must remain selectable when the date range changes.
+  const clientAddedDatesFacet: PipelineStage.FacetPipelineStage[] = [
+    ...buildClientFilterStages({
+      ...query,
+      firstOrderFrom: undefined,
+      firstOrderTo: undefined,
+    }),
+    { $match: { firstOrderAt: { $type: 'date' } } },
+    {
+      $group: {
+        _id: null,
+        days: {
+          $addToSet: {
+            $dateToString: {
+              format: '%Y-%m-%d',
+              date: '$firstOrderAt',
+              timezone: 'UTC',
+            },
+          },
+        },
+      },
+    },
+    { $project: { _id: 0, days: 1 } },
+  ];
 
   const itemsFacet: PipelineStage.FacetPipelineStage[] = [
     ...filterStages,
@@ -104,8 +132,12 @@ export async function getClientRowsForPharmacies(
     {
       $match: {
         pharmacyId: { $in: pharmacyIds },
+
         ...(query.productId
-          ? { 'items.productId': new Types.ObjectId(query.productId) }
+          ? {
+              status: 'successful',
+              'items.productId': new Types.ObjectId(query.productId),
+            }
           : {}),
       },
     },
@@ -158,6 +190,30 @@ export async function getClientRowsForPharmacies(
       },
     },
 
+    // Product-specific clients are actual buyers only. Each matching
+    // successful order contributes one order, but only this product's
+    // line items contribute quantity and revenue (not the order total).
+    ...(query.productId
+      ? [
+          {
+            $set: {
+              matchingProductItems: {
+                $filter: {
+                  input: '$items',
+                  as: 'item',
+                  cond: {
+                    $eq: [
+                      '$$item.productId',
+                      new Types.ObjectId(query.productId),
+                    ],
+                  },
+                },
+              },
+            },
+          } as PipelineStage,
+        ]
+      : []),
+
     {
       $sort: {
         userId: 1,
@@ -180,9 +236,32 @@ export async function getClientRowsForPharmacies(
         },
 
         successfulOrdersAmount: {
-          $sum: {
-            $cond: [{ $eq: ['$status', 'successful'] }, '$totalPrice', 0],
-          },
+          $sum: query.productId
+            ? {
+                $sum: {
+                  $map: {
+                    input: '$matchingProductItems',
+                    as: 'item',
+                    in: '$$item.totalPrice',
+                  },
+                },
+              }
+            : { $cond: [{ $eq: ['$status', 'successful'] }, '$totalPrice', 0] },
+        },
+
+        // Total units sold, regardless of how many orders the client placed.
+        productQuantity: {
+          $sum: query.productId
+            ? {
+                $sum: {
+                  $map: {
+                    input: '$matchingProductItems',
+                    as: 'item',
+                    in: '$$item.quantity',
+                  },
+                },
+              }
+            : 0,
         },
 
         latestDeliveryAddress: { $first: '$latestDeliveryAddressCandidate' },
@@ -220,6 +299,7 @@ export async function getClientRowsForPharmacies(
               earliestOrderAt: { $literal: null },
               successfulOrdersCount: { $literal: 0 },
               successfulOrdersAmount: { $literal: 0 },
+              productQuantity: { $literal: 0 },
               latestDeliveryAddress: { $literal: null },
               sourcePriority: { $literal: 0 },
 
@@ -321,6 +401,7 @@ export async function getClientRowsForPharmacies(
 
         successfulOrdersCount: 1,
         successfulOrdersAmount: 1,
+        productQuantity: 1,
 
         status: {
           $cond: [
@@ -353,6 +434,7 @@ export async function getClientRowsForPharmacies(
         items: itemsFacet,
         total: totalFacet,
         statistics: statisticsFacet,
+        ...(query.productId ? { clientAddedDates: clientAddedDatesFacet } : {}),
       },
     },
   ];
@@ -383,6 +465,9 @@ export async function getClientRowsForPharmacies(
 
       successfulOrdersCount: client.successfulOrdersCount,
       successfulOrdersAmount: client.successfulOrdersAmount,
+
+      ...(query.productId ? { productQuantity: client.productQuantity } : {}),
+
       status: client.status,
 
       ...(client.statusReason ? { statusReason: client.statusReason } : {}),
@@ -402,5 +487,13 @@ export async function getClientRowsForPharmacies(
     earliestCreatedAt: statistics.earliestOrderAt
       ? statistics.earliestOrderAt.toISOString().slice(0, 10)
       : null,
+
+    ...(query.productId
+      ? {
+          availableClientAddedDates: [
+            ...(result?.clientAddedDates?.[0]?.days ?? []),
+          ].sort(),
+        }
+      : {}),
   };
 }
