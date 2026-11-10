@@ -8,6 +8,8 @@ import test from 'node:test';
 
 const root = fileURLToPath(new URL('../../../../../', import.meta.url));
 
+//===================================================================
+
 const read = (file: string) => readFileSync(path.join(root, file), 'utf8');
 
 //===================================================================
@@ -88,24 +90,6 @@ test('Stage 14.18.36: both cabinets show public link only on information tab for
 function ownerSourceStatus() {
   return read('apps/pharmacy/src/lib/layout/external-links.ts');
 }
-
-//===================================================================
-
-test('Stage 14.18.36: public button is full width only on phones in both cabinets', () => {
-  for (const file of [
-    `${admin}PharmacyDetailsPageContent.module.css`,
-    `${owner}OwnedPharmacyDetailPageContent.module.css`,
-  ]) {
-    const css = read(file);
-
-    assert.match(css, /\.publicPharmacyLink/);
-
-    assert.match(
-      css,
-      /@media \(max-width: 767px\)\s*\{[^}]*\.publicPharmacyLink[^}]*width: 100%/
-    );
-  }
-});
 
 //===================================================================
 

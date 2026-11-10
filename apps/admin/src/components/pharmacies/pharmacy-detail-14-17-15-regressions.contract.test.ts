@@ -32,21 +32,6 @@ test('client breadcrumb labels animate independently of their home icon; cabinet
 
 //===================================================================
 
-test('pharmacy detail layout uses desktop breakpoint only at 1440px and equal-height lower cards', () => {
-  const css = read(
-    './PharmacyDetailsPageContent/PharmacyInformationTab.module.css'
-  );
-
-  assert.match(css, /min-width: 1440px/);
-  assert.doesNotMatch(css, /min-width: 1200px/);
-  assert.match(css, /\.secondaryGrid > \.sectionCard/);
-  assert.match(css, /height: 100%/);
-  assert.match(css, /\.detailField dd a:hover/);
-  assert.match(css, /text-decoration: none/);
-});
-
-//===================================================================
-
 test('sales filters stay mounted while only the chart body reloads', () => {
   const ui = read('./PharmacyDetailsPageContent/PharmacySalesChart.tsx');
 

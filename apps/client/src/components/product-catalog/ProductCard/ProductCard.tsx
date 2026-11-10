@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { Hash, Building2, Eye, ShoppingCart } from 'lucide-react';
 
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { formatMoneyRange } from '@e-pharmacy/utils/money';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
 
 import { useClientAuthCapabilities, useFavoriteActions } from '@/hooks';
+
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 
@@ -65,6 +67,7 @@ function ProductCard({
       id: product.id,
       notifier: toast,
       ...favoriteCopy,
+
       onFavoriteChange: (productId, nextIsFavorite) => {
         onFavoriteChange?.(productId, nextIsFavorite);
       },
@@ -99,6 +102,11 @@ function ProductCard({
       ? (formatMoneyRange({ min: product.minPrice, max: product.maxPrice }) ??
         '—')
       : 'No pharmacy prices yet';
+
+  const hasPriceRange =
+    product.minPrice !== null &&
+    product.maxPrice !== null &&
+    product.minPrice !== product.maxPrice;
 
   const handleAddToCart = async (): Promise<void> => {
     if (!pharmacyId || !canAddToCart) return;
@@ -169,7 +177,10 @@ function ProductCard({
           ) : undefined
         }
         metaStart={
-          <span className={css.category}>{product.category.name}</span>
+          <span className={css.category}>
+            <CategoryIcon name={product.category.icon} size={16} />
+            <span>{product.category.name}</span>
+          </span>
         }
         metaEnd={
           <RatingSummary
@@ -182,7 +193,9 @@ function ProductCard({
         summaryItems={
           <>
             <div>
-              <dt>Article</dt>
+              <dt className={css.metaLabel}>
+                <Hash size={14} aria-hidden="true" /> Article
+              </dt>
               <dd>{product.article}</dd>
             </div>
 
@@ -193,8 +206,10 @@ function ProductCard({
               </div>
             ) : isAvailable ? (
               <div>
-                <dt>Found in pharmacies</dt>
-                <dd>
+                <dt className={css.metaLabel}>
+                  <Building2 size={14} aria-hidden="true" /> In pharmacies
+                </dt>
+                <dd className={css.pharmaciesCount}>
                   {formatPharmaciesCount(product.foundInPharmaciesCount) ?? '—'}
                 </dd>
               </div>
@@ -205,7 +220,23 @@ function ProductCard({
         footer={
           <>
             {isAvailable ? (
-              <p className={css.price}>{priceRangeLabel}</p>
+              <p className={css.price}>
+                {product.minPrice !== null && product.maxPrice !== null
+                  ? priceRangeLabel.split(' – ').map((price, index) => (
+                      <span className={css.pricePart} key={index}>
+                        {index > 0 ? (
+                          <span className={css.priceSeparator}> – </span>
+                        ) : null}
+                        {hasPriceRange ? (
+                          <span className={css.priceBoundary}>
+                            {index === 0 ? 'from' : 'to'}{' '}
+                          </span>
+                        ) : null}
+                        {price}
+                      </span>
+                    ))
+                  : priceRangeLabel}
+              </p>
             ) : (
               <p className={css.unavailableStatus}>
                 {isPharmacyScoped
@@ -241,7 +272,7 @@ function ProductCard({
                 href={productHref}
                 size="sm"
               >
-                Details
+                <Eye size={16} aria-hidden="true" /> Details
               </LinkButton>
             </div>
           </>

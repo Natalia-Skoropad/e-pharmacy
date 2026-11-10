@@ -1,0 +1,16 @@
+.category {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: 1.3;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+.category svg {
+  flex-shrink: 0;
+}

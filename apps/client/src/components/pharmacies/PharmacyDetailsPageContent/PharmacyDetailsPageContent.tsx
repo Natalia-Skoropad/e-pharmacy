@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs, TabPanel } from '@e-pharmacy/ui/navigation';
+
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 import type { Review } from '@e-pharmacy/types/reviews';
 
@@ -92,13 +93,13 @@ function PharmacyDetailsPageContent({
   const currentTab: PharmacyTab =
     initialTab === 'payment' && !canShowBankDetails ? 'details' : initialTab;
 
-  const productsHref = buildProductCatalogPath(
-    { pharmacyId: pharmacy.id, availability: 'in-stock' },
-    [pharmacy]
-  );
+  const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
+    pharmacy,
+  ]);
 
   const handleTabChange = (nextTab: PharmacyTab) => {
     if (nextTab === 'payment' && !canShowBankDetails) return;
+
     const base = `/${pharmacy.publicSlugId}`;
 
     const path =

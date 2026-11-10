@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-
 import clsx from 'clsx';
 
 import CatalogCardSkeleton from '@/components/catalog/CatalogCardSkeleton/CatalogCardSkeleton';
@@ -11,7 +10,7 @@ import css from './CatalogFiltersShell.module.css';
 export type CatalogFiltersShellProps = Readonly<{
   headingId: string;
   heading: string;
-  layout: 'compact' | 'wide' | 'pharmacy';
+  layout: 'compact' | 'wide' | 'pharmacy' | 'product';
   searchFields: ReactNode;
   desktopFilterFields: ReactNode;
   resetAction: ReactNode;
@@ -20,6 +19,8 @@ export type CatalogFiltersShellProps = Readonly<{
   desktopSort: ReactNode;
   drawer: ReactNode;
   isPending: boolean;
+  pendingContent?: ReactNode;
+  stackOnTablet?: boolean;
 }>;
 
 //===================================================================
@@ -36,14 +37,23 @@ function CatalogFiltersShell({
   desktopSort,
   drawer,
   isPending,
+  pendingContent,
+  stackOnTablet = false,
 }: CatalogFiltersShellProps) {
+  const isPublicSearchLayout = layout === 'pharmacy' || layout === 'product';
+
   return (
     <section
-      className={clsx(css.region, layout === 'pharmacy' && css.pharmacyLayout)}
+      className={clsx(
+        css.region,
+        isPublicSearchLayout && css.pharmacyLayout,
+        layout === 'product' && css.productLayout,
+        stackOnTablet && css.stackOnTablet
+      )}
       aria-labelledby={headingId}
       aria-busy={isPending || undefined}
       data-pharmacy-pending={
-        layout === 'pharmacy' && isPending ? 'true' : undefined
+        isPublicSearchLayout && isPending ? 'true' : undefined
       }
     >
       <h2 className="visually-hidden" id={headingId}>
@@ -57,10 +67,15 @@ function CatalogFiltersShell({
 
             layout === 'wide'
               ? css.searchGridWide
-              : layout === 'pharmacy'
+              : isPublicSearchLayout
                 ? clsx(
-                    css.searchGridPharmacy,
-                    resetAction && css.searchGridPharmacyWithReset
+                    layout === 'product'
+                      ? css.searchGridProduct
+                      : css.searchGridPharmacy,
+                    resetAction &&
+                      (layout === 'product'
+                        ? css.searchGridProductWithReset
+                        : css.searchGridPharmacyWithReset)
                   )
                 : css.searchGridCompact
           )}
@@ -68,7 +83,7 @@ function CatalogFiltersShell({
           {searchFields}
           <div className={css.desktopFilters}>{desktopFilterFields}</div>
 
-          {layout !== 'pharmacy' || resetAction ? (
+          {!isPublicSearchLayout || resetAction ? (
             <div className={css.desktopResetSlot}>{resetAction}</div>
           ) : null}
           <div className={css.mobileFilterSlot}>{filterButton}</div>
@@ -82,12 +97,18 @@ function CatalogFiltersShell({
       </div>
 
       {isPending ? (
-        layout === 'pharmacy' ? (
-          <CatalogCardSkeleton
-            count={3}
-            variant="pharmacy"
-            label="Updating pharmacy results"
-          />
+        isPublicSearchLayout ? (
+          (pendingContent ?? (
+            <CatalogCardSkeleton
+              count={3}
+              variant={layout === 'product' ? 'product' : 'pharmacy'}
+              label={
+                layout === 'product'
+                  ? 'Updating product results'
+                  : 'Updating pharmacy results'
+              }
+            />
+          ))
         ) : (
           <p className={css.pendingStatus} role="status" aria-live="polite">
             <span className={css.pendingSpinner} aria-hidden="true" />

@@ -27,6 +27,7 @@ type BaseProductsQueryParams = Readonly<{
   page?: number;
   perPage?: number;
   keyword?: string;
+  catalogSearch?: string;
   nameKeyword?: string;
   articleKeyword?: string;
   category?: ProductCategorySlug;
@@ -40,6 +41,7 @@ type BaseProductsQueryParams = Readonly<{
 export type CatalogProductsQueryParams = BaseProductsQueryParams &
   Readonly<{
     pharmacyId?: EntityId;
+    productId?: EntityId;
     inStock?: boolean;
   }>;
 
@@ -66,6 +68,7 @@ export type PharmacyProductsQueryParams = BaseProductsQueryParams &
 type ProductFilterOption<TValue extends string = string> = Readonly<{
   value: TValue;
   label: string;
+  icon?: string;
 }>;
 
 //===================================================================

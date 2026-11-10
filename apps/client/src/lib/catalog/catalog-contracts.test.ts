@@ -36,7 +36,12 @@ import {
 } from './product-catalog-paths';
 
 import { getPharmaciesSeoContent } from './pharmacies-catalog-seo';
-import { getProductCatalogSeoContent } from './product-catalog-seo';
+
+import {
+  getProductCatalogSeoContent,
+  getProductCatalogSeoParts,
+  getProductCatalogTitle,
+} from './product-catalog-seo';
 
 //===================================================================
 
@@ -244,35 +249,138 @@ test('builds typed canonical pharmacy filter paths and recognizes legacy product
 
 //===================================================================
 
-test('keeps availability independent from the selected pharmacy', () => {
-  const pharmacyId = '6a5f5244a3defb1d037f06e7';
+//===================================================================
 
-  const baseFilters = {
-    name: '',
-    article: '',
-    category: 'all',
-    availability: 'all',
-    sort: 'newest',
-    page: 1,
-    pharmacyId,
-  } as const;
+test('product catalog keeps selected product, category and pharmacy in one canonical URL', () => {
+  const productId = '6ac75e1417684f6f914a4d59';
+  const pharmacyId = '6ac75e170642845c5d27fd6c';
+  const pharmacies = [{ id: pharmacyId, name: 'Care Pharmacy Lviv' }];
 
-  assert.equal(buildProductCatalogApiParams(baseFilters).inStock, undefined);
+  const href = buildProductCatalogPath(
+    {
+      productId,
+      pharmacyId,
+      category: 'medicine',
+      sort: 'rating-desc',
+      page: 2,
+    },
+    pharmacies
+  );
 
-  assert.equal(
-    buildProductCatalogApiParams({
-      ...baseFilters,
-      availability: 'in-stock',
-    }).inStock,
-    true
+  const segments = href.split('/').slice(2);
+  const parsed = parseProductCatalogSegments({ segments });
+
+  assert.equal(parsed.isCanonical, true);
+  assert.equal(parsed.filters.productId, productId);
+  assert.equal(parsed.filters.pharmacyId, pharmacyId);
+  assert.equal(parsed.filters.category, 'medicine');
+  assert.equal(parsed.filters.sort, 'rating-desc');
+  assert.equal(parsed.filters.page, 2);
+  assert.equal(buildProductCatalogPath(parsed.filters, pharmacies), href);
+
+  const apiParams = buildProductCatalogApiParams(parsed.filters);
+
+  assert.equal(apiParams.productId, productId);
+  assert.equal(apiParams.pharmacyId, pharmacyId);
+  assert.equal(apiParams.category, 'medicine');
+  assert.equal(apiParams.inStock, undefined);
+});
+
+//===================================================================
+
+test('product catalog rejects malformed IDs and removes legacy availability filters', () => {
+  const invalidId = parseProductCatalogSegments({
+    segments: ['product-id-invalid'],
+  });
+
+  assert.deepEqual(
+    invalidId.issues.map((issue) => issue.code),
+    ['malformed']
+  );
+
+  const legacyAvailability = parseProductCatalogSegments({
+    segments: ['availability-in-stock'],
+  });
+
+  assert.deepEqual(
+    legacyAvailability.issues.map((issue) => issue.code),
+    ['unknown']
   );
 
   assert.equal(
-    buildProductCatalogApiParams({
-      ...baseFilters,
-      availability: 'out-of-stock',
-    }).inStock,
-    false
+    buildProductCatalogPath(legacyAvailability.filters),
+    '/product-catalog'
+  );
+
+  const duplicate = parseProductCatalogSegments({
+    segments: [
+      'product-id-6ac75e1417684f6f914a4d59',
+      'product-id-6ac75e1417684f6f914a4d59',
+    ],
+  });
+
+  assert.deepEqual(
+    duplicate.issues.map((issue) => issue.code),
+    ['duplicate']
+  );
+});
+
+//===================================================================
+
+test('product catalog SEO highlights selected entities for combined filters and uses an en dash', () => {
+  const filters = {
+    productId: '6ac75e1417684f6f914a4db5',
+    category: 'medicine',
+    pharmacyId: '6ac75e0f17684f6f914a4579',
+    name: '',
+    article: '',
+    sort: 'newest',
+    page: 1,
+  } as const;
+
+  const context = {
+    productName: 'Ramipril 5 mg Square',
+    categoryLabel: 'Medicine',
+    pharmacyName: 'Apteka Zdorovia Dnipro 18',
+  };
+
+  const title = getProductCatalogTitle(filters, context);
+
+  assert.match(title, /Ramipril 5 mg Square – Medicine/);
+  assert.doesNotMatch(title, /—/);
+
+  const intro = getProductCatalogSeoContent(filters, context).intro;
+
+  assert.deepEqual(
+    getProductCatalogSeoParts(intro, filters, context)
+      .filter((part) => part.highlighted)
+      .map((part) => part.text),
+    ['Ramipril 5 mg Square', 'Medicine', 'Apteka Zdorovia Dnipro 18']
+  );
+
+  assert.equal(
+    getProductCatalogSeoParts(
+      'Browse medicine from Apteka Zdorovia Dnipro 18.',
+      { ...filters, productId: undefined },
+      context
+    ).filter((part) => part.highlighted).length,
+    2
+  );
+
+  assert.deepEqual(
+    getProductCatalogSeoParts(
+      'An (Aspirin 500 mg) offer',
+      {
+        ...filters,
+        productId: '6ac75e1417684f6f914a4db5',
+        category: 'all',
+        pharmacyId: undefined,
+      },
+      { productName: '(Aspirin 500 mg)' }
+    )
+      .filter((part) => part.highlighted)
+      .map((part) => part.text),
+    ['(Aspirin 500 mg)']
   );
 });
 
@@ -299,7 +407,6 @@ test('uses semantic, neutral catalog SEO content', () => {
     name: '',
     article: '',
     category: 'all',
-    availability: 'all',
     sort: 'newest',
     page: 1,
   });

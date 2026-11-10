@@ -26,7 +26,7 @@ import type { ApiReaderRequester } from './types';
 
 type ProductFiltersQueryParams = Pick<
   CatalogProductsQueryParams,
-  'pharmacyId' | 'inStock'
+  'pharmacyId' | 'productId' | 'inStock'
 >;
 
 //===================================================================

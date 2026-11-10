@@ -1,5 +1,7 @@
-import { LinkPagination } from '@e-pharmacy/ui/navigation';
+import type { ReactNode } from 'react';
+
 import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
+import { LinkPagination } from '@e-pharmacy/ui/navigation';
 
 import type {
   ProductCardSummary,
@@ -12,6 +14,7 @@ import type { CatalogResourceState } from '@/lib/catalog/catalog-resource-state'
 import {
   buildProductCatalogPath,
   getProductCatalogSeoContent,
+  getProductCatalogSeoParts,
   getProductCatalogTitle,
   shouldShowProductCatalogSeoText,
   type ProductCatalogFilters,
@@ -32,9 +35,12 @@ export type ProductCatalogPageContentProps = Readonly<{
   products: readonly ProductCardSummary[];
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
+  availableCategories: ProductFilterOptionsResponse['categories'];
   total: number;
   totalPages: number;
   filters: ProductCatalogFilters;
+  selectedProductName?: string;
+  selectedProductImageUrl?: string;
   resourceState: CatalogResourceState;
   pharmacyOptionsState: ResourceState;
   filtersState: ResourceState;
@@ -55,19 +61,35 @@ function buildProductsPageHref(
 function createSeoContext(
   filters: ProductCatalogFilters,
   pharmacies: PharmacyOption[],
-  filterOptions: ProductFilterOptionsResponse
+  filterOptions: ProductFilterOptionsResponse,
+  selectedProductName?: string
 ): ProductCatalogSeoContext {
   const selectedPharmacy = filters.pharmacyId
     ? pharmacies.find((pharmacy) => pharmacy.id === filters.pharmacyId)
     : undefined;
+
   const selectedCategory = filterOptions.categories.find(
     (option) => option.value === filters.category
   );
 
   return {
     ...(selectedPharmacy ? { pharmacyName: selectedPharmacy.name } : {}),
+    ...(selectedProductName ? { productName: selectedProductName } : {}),
     ...(selectedCategory ? { categoryLabel: selectedCategory.label } : {}),
   };
+}
+
+//===================================================================
+
+/** Highlight the named product, pharmacy and category in user-visible SEO text. */
+function highlightSeoEntities(
+  text: string,
+  filters: ProductCatalogFilters,
+  context: ProductCatalogSeoContext
+): ReactNode {
+  return getProductCatalogSeoParts(text, filters, context).map((part, index) =>
+    part.highlighted ? <strong key={index}>{part.text}</strong> : part.text
+  );
 }
 
 //===================================================================
@@ -76,14 +98,27 @@ function ProductCatalogPageContent({
   products,
   pharmacies,
   filterOptions,
+  availableCategories,
   total,
   totalPages,
   filters,
   resourceState,
+  selectedProductName,
+  selectedProductImageUrl,
 }: ProductCatalogPageContentProps) {
-  const seoContext = createSeoContext(filters, pharmacies, filterOptions);
+  const seoContext = createSeoContext(
+    filters,
+    pharmacies,
+    filterOptions,
+    selectedProductName
+  );
+
   const pageTitle = getProductCatalogTitle(filters, seoContext);
-  const showSeoText = total > 0 && shouldShowProductCatalogSeoText(filters);
+
+  const showSeoText =
+    (total > 0 || Boolean(filters.productId && selectedProductName)) &&
+    shouldShowProductCatalogSeoText(filters);
+
   const seoContent = getProductCatalogSeoContent(filters, seoContext);
 
   const emptyIsFiltered =
@@ -98,11 +133,43 @@ function ProductCatalogPageContent({
       breadcrumbs={[
         { label: 'Home', href: ROUTES.HOME },
         { label: 'Product catalog', href: ROUTES.PRODUCTS_CATALOG },
+
         ...(filters.category !== 'all' && seoContext.categoryLabel
-          ? [{ label: seoContext.categoryLabel }]
+          ? [
+              {
+                label: seoContext.categoryLabel,
+                ...(filters.pharmacyId || filters.productId
+                  ? {
+                      href: buildProductCatalogPath({
+                        category: filters.category,
+                      }),
+                    }
+                  : {}),
+              },
+            ]
           : []),
+
         ...(filters.pharmacyId && seoContext.pharmacyName
-          ? [{ label: seoContext.pharmacyName }]
+          ? [
+              {
+                label: seoContext.pharmacyName,
+                ...(filters.productId
+                  ? {
+                      href: buildProductCatalogPath(
+                        {
+                          category: filters.category,
+                          pharmacyId: filters.pharmacyId,
+                        },
+                        pharmacies
+                      ),
+                    }
+                  : {}),
+              },
+            ]
+          : []),
+
+        ...(filters.productId && seoContext.productName
+          ? [{ label: seoContext.productName }]
           : []),
       ]}
       filters={
@@ -110,6 +177,9 @@ function ProductCatalogPageContent({
           filters={filters}
           pharmacies={pharmacies}
           filterOptions={filterOptions}
+          availableCategories={availableCategories}
+          selectedProductName={selectedProductName}
+          selectedProductImageUrl={selectedProductImageUrl}
           visibleProductsCount={products.length}
           productsCount={total}
         />
@@ -129,6 +199,7 @@ function ProductCatalogPageContent({
           unavailableMessage="Products are loading."
           recoveryLabel="products"
           skeletonVariant="product"
+          emptyVariant="resource"
         >
           <ProductsList
             products={products}
@@ -155,23 +226,13 @@ function ProductCatalogPageContent({
             title="Compare pharmacy offers in one place"
             titleId="catalog-seo-title"
           >
+            <p>{highlightSeoEntities(seoContent.intro, filters, seoContext)}</p>
             <p>
-              Browse{' '}
-              {filters.category !== 'all' && seoContext.categoryLabel ? (
-                <strong>{seoContext.categoryLabel.toLowerCase()}</strong>
-              ) : (
-                'products'
-              )}{' '}
-              available from{' '}
-              {seoContext.pharmacyName ? (
-                <strong>{seoContext.pharmacyName}</strong>
-              ) : (
-                'active pharmacies'
-              )}
-              .
+              {highlightSeoEntities(seoContent.comparison, filters, seoContext)}
             </p>
-            <p>{seoContent.comparison}</p>
-            <p>{seoContent.ordering}</p>
+            <p>
+              {highlightSeoEntities(seoContent.ordering, filters, seoContext)}
+            </p>
           </CatalogSeoCard>
         ) : undefined
       }

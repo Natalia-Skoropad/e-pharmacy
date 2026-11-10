@@ -22,7 +22,10 @@ const QUERY_DEBOUNCE_MS = 300;
 //===================================================================
 
 type Relationships = Readonly<
-  Pick<PharmacySearchOptionsParams, 'pharmacyId' | 'settlement' | 'region'>
+  Pick<
+    PharmacySearchOptionsParams,
+    'pharmacyId' | 'settlement' | 'region' | 'productId' | 'category'
+  >
 >;
 
 //===================================================================
@@ -50,6 +53,12 @@ function makePageParams(
 
     ...(kind === 'pharmacy' && relationships.region
       ? { region: relationships.region }
+      : {}),
+
+    ...(relationships.productId ? { productId: relationships.productId } : {}),
+
+    ...(kind === 'pharmacy' && relationships.category
+      ? { category: relationships.category }
       : {}),
   };
 }
@@ -108,7 +117,7 @@ export function useRemotePharmacyOptions<TKind extends 'pharmacy' | 'location'>(
   const generation = useRef(0);
   const pending = useRef(false);
   const pageController = useRef<AbortController | null>(null);
-  const { pharmacyId, settlement, region } = relationships;
+  const { pharmacyId, settlement, region, productId, category } = relationships;
 
   const perPage = Number.isFinite(requestedPageSize)
     ? Math.max(
@@ -144,7 +153,7 @@ export function useRemotePharmacyOptions<TKind extends 'pharmacy' | 'location'>(
       kind,
       query,
       1,
-      { pharmacyId, settlement, region },
+      { pharmacyId, settlement, region, productId, category },
       perPage
     );
 
@@ -199,7 +208,18 @@ export function useRemotePharmacyOptions<TKind extends 'pharmacy' | 'location'>(
       pageController.current = null;
       generation.current = token + 1;
     };
-  }, [isOpen, query, kind, pharmacyId, settlement, region, perPage, retryKey]);
+  }, [
+    isOpen,
+    query,
+    kind,
+    pharmacyId,
+    settlement,
+    region,
+    productId,
+    category,
+    perPage,
+    retryKey,
+  ]);
 
   const loadMore = useCallback(async () => {
     if (!isOpen || pending.current || isOptionsLoading) return;
@@ -225,7 +245,7 @@ export function useRemotePharmacyOptions<TKind extends 'pharmacy' | 'location'>(
       kind,
       query,
       nextPage,
-      { pharmacyId, settlement, region },
+      { pharmacyId, settlement, region, productId, category },
       perPage
     );
 
@@ -265,6 +285,8 @@ export function useRemotePharmacyOptions<TKind extends 'pharmacy' | 'location'>(
     kind,
     page,
     pharmacyId,
+    productId,
+    category,
     query,
     region,
     settlement,

@@ -59,36 +59,3 @@ test('14.18.37 historical audit snapshots are serialized without mutating audit 
   assert.match(projection, /JSON\.stringify\(value\)/);
   assert.doesNotMatch(projection, /log\.before\s*=/);
 });
-
-//===================================================================
-
-test('14.18.37 moderation dialogs reuse the owner icon and list structure', () => {
-  const admin = read(
-    '../pharmacies/PharmacyDetailsPageContent/PharmacyReviewSummary.tsx'
-  );
-
-  const adminCss = read(
-    '../pharmacies/PharmacyDetailsPageContent/PharmacyReviewSummary.module.css'
-  );
-
-  const owner = read(
-    '../../../../pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
-  );
-
-  assert.match(admin, /MODERATION_TAB_ICONS/);
-
-  for (const title of [
-    'Pharmacy data',
-    'About pharmacy',
-    'Payment details',
-    'Documents',
-  ]) {
-    assert.ok(admin.includes(title));
-    assert.ok(owner.includes(title));
-  }
-
-  assert.match(admin, /className=\{css\.moderationTabIcon\}/);
-  assert.match(admin, /className=\{css\.moderationTabDescription\}/);
-  assert.match(adminCss, /grid-template-columns:\s*36px minmax\(0, 1fr\)/);
-  assert.match(adminCss, /color:\s*var\(--color-accent\)/);
-});

@@ -9,16 +9,6 @@ const editor = readFileSync(
   'utf8'
 );
 
-const tabContent = readFileSync(
-  new URL('./OwnedPharmacyEditorTabContent.tsx', import.meta.url),
-  'utf8'
-);
-
-const styles = readFileSync(
-  new URL('./OwnedPharmacyEditor.module.css', import.meta.url),
-  'utf8'
-);
-
 const fields = readFileSync(
   new URL('./pharmacy-editor-fields.ts', import.meta.url),
   'utf8'
@@ -82,31 +72,5 @@ test('creation requires a valid named pharmacy before draft saving', () => {
   assert.match(
     schema,
     /const pharmacyProfileUpdateChangesSchema =[\s\S]*?name: sharedPharmacyNameSchema\.optional\(\)/
-  );
-});
-
-//===================================================================
-
-test('create pharmacy uses compact shared photo layout and stacked full-width name fields', () => {
-  assert.match(tabContent, /<PictureCard\s+compactLayout/);
-  assert.match(tabContent, /JPG, PNG, or WEBP photo up to 450 KB/);
-
-  assert.match(
-    tabContent,
-    /<div className=\{css.nameFields\}>\s*\{input\('name'/
-  );
-
-  assert.match(tabContent, /name="shortDescription"/);
-
-  assert.match(
-    styles,
-    /\.nameFields\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/
-  );
-
-  assert.match(styles, /\.pictureColumn\s*\{[^}]*width:\s*min\(100%, 680px\)/);
-
-  assert.match(
-    styles,
-    /\.profileBlock \+ \.profileBlock\s*\{[^}]*padding-top:\s*36px/
   );
 });

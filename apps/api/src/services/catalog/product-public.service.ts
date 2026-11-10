@@ -38,7 +38,26 @@ async function getAvailableFilterCategories(
 ): Promise<ProductCategoryReferenceDto[]> {
   let categoryIds: Types.ObjectId[] | undefined;
 
-  if (query.pharmacyId || typeof query.inStock === 'boolean') {
+  if (query.productId) {
+    const product = await Product.findOne({
+      _id: query.productId,
+      status: 'active',
+    })
+      .select('categoryId')
+      .lean<{ categoryId: Types.ObjectId } | null>();
+
+    const hasOffer =
+      !query.pharmacyId ||
+      Boolean(
+        product &&
+        (await ProductOffer.exists({
+          productId: query.productId,
+          pharmacyId: query.pharmacyId,
+        }))
+      );
+
+    categoryIds = product && hasOffer ? [product.categoryId] : [];
+  } else if (query.pharmacyId || typeof query.inStock === 'boolean') {
     const offerFilter: Record<string, unknown> = {};
 
     if (query.pharmacyId) offerFilter.pharmacyId = query.pharmacyId;
@@ -100,6 +119,7 @@ export async function getProductFiltersService(
       ...categories.map((category) => ({
         value: category.slug,
         label: category.name,
+        ...(category.icon ? { icon: category.icon } : {}),
       })),
     ],
 

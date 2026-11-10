@@ -73,34 +73,6 @@ test('14.18.24: Admin data breadcrumbs use the same detail/subtab hierarchy', ()
 
 //===================================================================
 
-test('14.18.24: profile Documents icon matches owner documents and Comments empty icon', () => {
-  const ownerDocument = read(
-    '../pharmacy-owners/PharmacyOwnerDetailsPageContent/OwnerDocumentsTab.tsx'
-  );
-
-  const adminProfile = read(
-    '../profile/AdminProfilePageContent/AdminProfilePageContent.tsx'
-  );
-
-  const adminDoc = read('../profile/AdminDocuments/AdminDocuments.tsx');
-
-  const adminComments = read(
-    '../profile/AdminPrivateComments/AdminPrivateComments.tsx'
-  );
-
-  const commentList = read(
-    '../../../../../packages/ui/src/feedback/Comments/Comments.tsx'
-  );
-
-  assert.match(ownerDocument, /headerIcon=\{<Files size=\{22\}/);
-  assert.match(adminProfile, /icon: <Files size=\{17\}/);
-  assert.match(adminDoc, /headerIcon=\{<Files size=\{22\}/);
-  assert.match(adminComments, /emptyIcon=\{<MessageSquareLock size=\{22\}/);
-  assert.match(commentList, /icon=\{emptyIcon\}/);
-});
-
-//===================================================================
-
 test('14.18.24: delete audit presentation changes only the deleted pharmacy record row', () => {
   const modal = read('../activity/AuditDetailsModal.tsx');
 

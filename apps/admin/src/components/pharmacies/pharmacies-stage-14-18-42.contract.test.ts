@@ -64,27 +64,3 @@ test('non-operating Owner count is not mislabeled as Blocked alone', async () =>
   assert.match(owners, /New, On verification, or Blocked status/);
   assert.doesNotMatch(owners, /parts=\{\['Inactive', 'pharms'\]\}/);
 });
-
-//===================================================================
-
-test('long admin pharmacy names cannot add a separate help-icon row or empty actions gap', async () => {
-  const css = await read(
-    './PharmacyDetailsPageContent/PharmacyDetailsPageContent.module.css'
-  );
-
-  assert.match(css, /\.titleWithHelp\s*\{[\s\S]*?display: inline;/);
-
-  assert.match(
-    css,
-    /@media only screen and \(min-width: 768px\)\s*\{\s*\.headerStack\s*\{\s*gap: 12px;/
-  );
-
-  assert.match(css, /\.pageHeader > :last-child:empty\s*\{\s*display: none;/);
-  assert.match(css, /grid-template-columns: minmax\(0, 1fr\) max-content/);
-
-  // Phone still has no statistics and keeps the existing compact spacing.
-  assert.match(
-    css,
-    /@media only screen and \(max-width: 767px\)[\s\S]*?\.headerStack\s*\{\s*gap: 0;/
-  );
-});

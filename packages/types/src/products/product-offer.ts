@@ -9,6 +9,7 @@ export type ProductOffer = Readonly<{
   pharmacyName: string;
   pharmacyLocation?: PharmacyLocationDraft;
   pharmacyPhone?: string;
+  pharmacyEmail?: string;
   pharmacyImageUrl?: string;
   pharmacyRating: number;
   pharmacyReviewsCount: number;

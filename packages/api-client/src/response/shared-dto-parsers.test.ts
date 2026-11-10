@@ -195,7 +195,11 @@ test('accepts dynamic category filter options and still rejects malformed slugs'
   const response = {
     categories: [
       { value: 'all', label: 'All categories' },
-      { value: 'veterinary_care', label: 'Veterinary care' },
+      {
+        value: 'veterinary_care',
+        label: 'Veterinary care',
+        icon: 'heart-pulse',
+      },
     ],
 
     availability: [{ value: 'all', label: 'All products' }],
@@ -203,6 +207,17 @@ test('accepts dynamic category filter options and still rejects malformed slugs'
   } as const;
 
   assert.deepEqual(parseProductFilterOptionsResponse(response), response);
+
+  assert.throws(
+    () =>
+      parseProductFilterOptionsResponse({
+        ...response,
+        categories: [
+          { value: 'veterinary_care', label: 'Veterinary care', icon: 42 },
+        ],
+      }),
+    ApiError
+  );
 
   assert.throws(
     () =>

@@ -57,10 +57,9 @@ function PharmacyCard({
       },
     });
 
-  const productsHref = buildProductCatalogPath(
-    { pharmacyId: pharmacy.id, availability: 'in-stock' },
-    [pharmacy]
-  );
+  const productsHref = buildProductCatalogPath({ pharmacyId: pharmacy.id }, [
+    pharmacy,
+  ]);
 
   const locationLabel = formatPharmacyLocation({
     settlement: pharmacy.location?.settlement,

@@ -12,10 +12,11 @@ const productFilters = {
   name: '',
   article: '',
   category: 'all',
-  availability: 'all',
   sort: 'newest',
   page: 1,
 } as const;
+
+//===================================================================
 
 const emptyProducts = {
   items: [],
@@ -129,4 +130,45 @@ test('classifies filtered empty results separately from an empty catalog', () =>
     status: 'empty',
     reason: 'no-matches',
   });
+});
+
+//===================================================================
+
+test('keeps canonical category labels while narrowing the available category facet', () => {
+  const allCategories = [
+    { value: 'all' as const, label: 'All categories' },
+    { value: 'medicine', label: 'Medicine' },
+    { value: 'hygiene', label: 'Hygiene' },
+  ];
+
+  const page = createProductCatalogPageData({
+    filters: { ...productFilters, pharmacyId: '6ac75e0f17684f6f914a4579' },
+    productsState: { status: 'success', data: emptyProducts },
+    pharmaciesState: { status: 'success', data: { items: [] } },
+
+    filterOptionsState: {
+      status: 'success',
+      data: { categories: allCategories, availability: [], sort: [] },
+    },
+
+    scopedCategoryState: {
+      status: 'success',
+
+      data: {
+        categories: [allCategories[0]!, allCategories[1]!],
+        availability: [],
+        sort: [],
+      },
+    },
+  });
+
+  assert.deepEqual(
+    page.availableCategories.map((category) => category.value),
+    ['all', 'medicine']
+  );
+
+  assert.deepEqual(
+    page.filterOptions.categories.map((category) => category.value),
+    ['all', 'medicine', 'hygiene']
+  );
 });

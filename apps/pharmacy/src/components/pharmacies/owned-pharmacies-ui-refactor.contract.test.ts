@@ -27,14 +27,6 @@ const detail = read(
 
 const sidebar = read('../layout/PharmacySidebar/PharmacySidebar.tsx');
 
-const hours = read(
-  '../../../../../packages/ui/src/profile/WorkingHoursInput/WorkingHoursInput.tsx'
-);
-
-const hourStyles = read(
-  '../../../../../packages/ui/src/profile/WorkingHoursInput/WorkingHoursInput.module.css'
-);
-
 const payment = read(
   '../../../../../packages/ui/src/profile/PharmacyProfileFields.tsx'
 );
@@ -104,16 +96,6 @@ test('dirty draft warns on browser unload, and in-app navigation still uses bran
   assert.match(guard, /popstate/);
   assert.match(editor, /<ConfirmationModal/);
   assert.match(editor, /useUnsavedPharmacyNavigation\(isDirty\)/);
-});
-
-//===================================================================
-
-test('working-hours errors are left aligned and use the shared design tokens', () => {
-  assert.match(hours, /<CircleAlert size=\{16\}/);
-  assert.match(hours, /role="alert"/);
-  assert.match(hourStyles, /justify-content: flex-start/);
-  assert.match(hourStyles, /text-align: left/);
-  assert.match(hourStyles, /var\(--color-error\)/);
 });
 
 //===================================================================

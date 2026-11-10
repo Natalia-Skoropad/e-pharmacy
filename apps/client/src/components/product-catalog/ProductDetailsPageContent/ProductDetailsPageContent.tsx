@@ -1,14 +1,22 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useId } from 'react';
+import { Package } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Container } from '@e-pharmacy/ui/layout';
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { Breadcrumbs, TabPanel } from '@e-pharmacy/ui/navigation';
 
 import type { ProductDetails } from '@e-pharmacy/types/products';
 import type { Review } from '@e-pharmacy/types/reviews';
 
-import { ROUTES } from '@/lib/routes';
+import {
+  buildProductDetailTabPath,
+  getProductDetailsBreadcrumbs,
+} from '@/lib/routes/product-detail-tabs';
+
+import { buildProductPath } from '@/lib/routes';
 
 import { ProductCharacteristicsPanel } from './ProductCharacteristicsPanel';
 import { ProductDetailsHero } from './ProductDetailsHero';
@@ -16,7 +24,10 @@ import { ProductDetailsTabs, type ProductTab } from './ProductDetailsTabs';
 import { ProductOffersPanel } from './ProductOffersPanel';
 import { ProductReviewsPanel } from './ProductReviewsPanel';
 
-import css from '@/components/catalog/detail-page.module.css';
+// Reuse the established public pharmacy detail shell without changing it.
+import shellCss from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsPageContent.module.css';
+
+import css from './ProductDetailsPageContent.module.css';
 
 //===================================================================
 
@@ -26,6 +37,7 @@ export type ProductDetailsPageContentProps = Readonly<{
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
   contextPharmacyId?: string;
+  initialTab?: ProductTab;
 }>;
 
 //===================================================================
@@ -36,82 +48,124 @@ function ProductDetailsPageContent({
   reviewsTotal,
   areReviewsUnavailable = false,
   contextPharmacyId,
+  initialTab = 'details',
 }: ProductDetailsPageContentProps) {
-  const [activeTab, setActiveTab] = useState<ProductTab>('about');
+  const router = useRouter();
   const generatedTabsId = useId();
   const tabsIdBase = `product-details-${generatedTabsId.replace(/:/g, '')}`;
 
-  const availableOffersCount = useMemo(
-    () => product.offers.filter((offer) => offer.inStock).length,
-    [product.offers]
+  const productHref = buildProductPath(
+    product.name,
+    product.id,
+    product.publicSlugId
   );
 
+  const shortDescription =
+    'Compare pharmacy prices and availability for this product.';
+
+  const goToTab = (tab: ProductTab) => {
+    router.push(
+      buildProductDetailTabPath(productHref, tab, contextPharmacyId),
+      {
+        scroll: false,
+      }
+    );
+  };
+
   return (
-    <main className={css.page}>
-      <section className={css.hero}>
-        <Container>
+    <main className={shellCss.page}>
+      <Container>
+        <div className={shellCss.breadcrumbs}>
           <Breadcrumbs
-            items={[
-              { label: 'Home', href: ROUTES.HOME },
-              { label: 'Product catalog', href: ROUTES.PRODUCTS_CATALOG },
-              { label: product.name },
-            ]}
+            items={getProductDetailsBreadcrumbs(
+              product.name,
+              buildProductDetailTabPath(
+                productHref,
+                'details',
+                contextPharmacyId
+              ),
+              initialTab
+            )}
             includeStructuredData
           />
+        </div>
 
+        <div className={shellCss.tabsCard}>
           <ProductDetailsTabs
             idBase={tabsIdBase}
-            activeValue={activeTab}
-            offersCount={availableOffersCount}
-            reviewsTotal={reviewsTotal}
-            onChange={setActiveTab}
+            activeValue={initialTab}
+            onChange={goToTab}
           />
 
-          <TabPanel idBase={tabsIdBase} value="about" activeValue={activeTab}>
+          <TabPanel
+            className={shellCss.tabPanel}
+            idBase={tabsIdBase}
+            value="details"
+            activeValue={initialTab}
+          >
+            <header className={shellCss.detailsHeader}>
+              <span className={shellCss.detailsHeaderIcon} aria-hidden="true">
+                <Package size={22} />
+              </span>
+              <div className={shellCss.detailsHeaderContent}>
+                <div className={shellCss.detailsHeaderTitleRow}>
+                  <h1 className={shellCss.detailsHeaderTitle}>
+                    {product.name}
+                  </h1>
+                  <span className={css.category}>
+                    <CategoryIcon name={product.category.icon} size={16} />
+                    {product.category.name}
+                  </span>
+                </div>
+                {shortDescription ? (
+                  <p className={shellCss.detailsHeaderDescription}>
+                    {shortDescription}
+                  </p>
+                ) : null}
+              </div>
+            </header>
             <ProductDetailsHero
               product={product}
               reviewsTotal={reviewsTotal}
-              onOpenOffers={() => setActiveTab('prices')}
+              onOpenOffers={() => goToTab('pharmacies')}
             />
           </TabPanel>
-        </Container>
-      </section>
 
-      <Container>
-        <TabPanel
-          className={css.tabSection}
-          idBase={tabsIdBase}
-          value="prices"
-          activeValue={activeTab}
-        >
-          <ProductOffersPanel
-            product={product}
-            contextPharmacyId={contextPharmacyId}
-          />
-        </TabPanel>
+          <TabPanel
+            className={shellCss.tabPanel}
+            idBase={tabsIdBase}
+            value="pharmacies"
+            activeValue={initialTab}
+          >
+            <ProductOffersPanel
+              product={product}
+              contextPharmacyId={contextPharmacyId}
+            />
+          </TabPanel>
 
-        <TabPanel
-          className={css.tabSection}
-          idBase={tabsIdBase}
-          value="characteristics"
-          activeValue={activeTab}
-        >
-          <ProductCharacteristicsPanel product={product} />
-        </TabPanel>
+          <TabPanel
+            className={shellCss.tabPanel}
+            idBase={tabsIdBase}
+            value="characteristics"
+            activeValue={initialTab}
+          >
+            <ProductCharacteristicsPanel product={product} />
+          </TabPanel>
 
-        <TabPanel
-          className={css.tabSection}
-          idBase={tabsIdBase}
-          value="reviews"
-          activeValue={activeTab}
-        >
-          <ProductReviewsPanel
-            productId={product.id}
-            reviews={reviews}
-            reviewsTotal={reviewsTotal}
-            areReviewsUnavailable={areReviewsUnavailable}
-          />
-        </TabPanel>
+          <TabPanel
+            className={shellCss.tabPanel}
+            idBase={tabsIdBase}
+            value="reviews"
+            activeValue={initialTab}
+          >
+            <ProductReviewsPanel
+              productId={product.id}
+              reviews={reviews}
+              reviewsTotal={reviewsTotal}
+              areReviewsUnavailable={areReviewsUnavailable}
+            />
+          </TabPanel>
+        </div>
       </Container>
     </main>
   );

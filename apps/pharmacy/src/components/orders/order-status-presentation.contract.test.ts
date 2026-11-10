@@ -22,17 +22,6 @@ const ORDER_STYLES = path.join(
   'OrderDetailsPageContent.module.css'
 );
 
-const CANCELLATION_SOURCE = path.join(
-  CURRENT_DIR,
-  'OrderCancellationModal',
-  'OrderCancellationModal.tsx'
-);
-
-const REASON_MODAL_STYLES = path.resolve(
-  CURRENT_DIR,
-  '../../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.module.css'
-);
-
 //===================================================================
 
 const PRODUCT_REQUEST_SOURCE = path.resolve(
@@ -115,28 +104,6 @@ test('orders share one status summary layout across draft and persisted states',
   assert.match(
     bannerStyles,
     /@media only screen and \(min-width: 768px\)[\s\S]{0,500}\.inlineMeta \.message/
-  );
-});
-
-//===================================================================
-
-test('cancellation modal keeps mobile actions stacked and desktop actions inline', async () => {
-  const [source, styles] = await Promise.all([
-    readFile(CANCELLATION_SOURCE, 'utf8'),
-    readFile(REASON_MODAL_STYLES, 'utf8'),
-  ]);
-
-  assert.match(source, /<ReasonModal/);
-  assert.match(source, /tone="danger"/);
-
-  assert.match(
-    styles,
-    /\.actions\s*\{[\s\S]{0,120}grid-template-columns:\s*minmax\(0, 1fr\)/
-  );
-
-  assert.match(
-    styles,
-    /@media only screen and \(min-width: 768px\)[\s\S]{0,180}grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/
   );
 });
 

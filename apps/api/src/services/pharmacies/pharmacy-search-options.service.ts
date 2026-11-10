@@ -2,6 +2,9 @@ import { Types } from 'mongoose';
 
 import { PHARMACY_STATUSES } from '../../constants/auth/auth';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
+import { Product } from '../../models/catalog/product.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
+import { ProductOffer } from '../../models/inventory/productOffer.model';
 
 import {
   createCanonicalLocationRegExp,
@@ -30,6 +33,8 @@ export async function getPharmacySearchOptionsService({
   region,
   pharmacyId,
   selectedId,
+  productId,
+  category,
 }: PharmacySearchOptionsQuery) {
   const skip = (page - 1) * perPage;
   const search = query?.trim();
@@ -47,7 +52,62 @@ export async function getPharmacySearchOptionsService({
       filter['location.region'] = createCanonicalLocationRegExp(region);
     }
 
-    if (selectedId) filter._id = new Types.ObjectId(selectedId);
+    // A product/category relation is applied BEFORE page/count queries,
+    // not to the first 50 options in the client. Only active products can
+    // contribute a pharmacy to the public catalog.
+    if (productId || category) {
+      const categoryRecord = category
+        ? await ProductCategory.findOne({ slug: category, status: 'active' })
+            .select('_id')
+            .lean<{ _id: Types.ObjectId } | null>()
+        : null;
+
+      const productIds: Types.ObjectId[] = [];
+
+      if (productId) {
+        const product = await Product.findOne({
+          _id: productId,
+          status: 'active',
+        })
+          .select('_id categoryId')
+          .lean<{ _id: Types.ObjectId; categoryId: Types.ObjectId } | null>();
+
+        if (
+          product &&
+          (!category ||
+            String(product.categoryId) === String(categoryRecord?._id))
+        ) {
+          productIds.push(product._id);
+        }
+      } else if (categoryRecord) {
+        const categoryProductIds = (await Product.distinct('_id', {
+          status: 'active',
+          categoryId: categoryRecord._id,
+        })) as Types.ObjectId[];
+
+        productIds.push(...categoryProductIds);
+      }
+
+      const relatedPharmacyIds = productIds.length
+        ? await ProductOffer.distinct('pharmacyId', {
+            productId: { $in: productIds },
+            availableQuantity: { $gt: 0 },
+          })
+        : [];
+
+      filter._id = { $in: relatedPharmacyIds };
+    }
+
+    if (selectedId) {
+      // Selected-ID lookups still honor active status and any relationship.
+      filter._id =
+        productId || category
+          ? {
+              $eq: new Types.ObjectId(selectedId),
+              $in: (filter._id as { $in: Types.ObjectId[] }).$in,
+            }
+          : new Types.ObjectId(selectedId);
+    }
 
     if (search) {
       const pattern = createFlexibleSearchRegExp(search);
@@ -244,6 +304,28 @@ export async function getPharmacySearchOptionsService({
 
   if (region && !pharmacyId) {
     filter['location.region'] = createCanonicalLocationRegExp(region);
+  }
+
+  // Product detail Location options must only include settlements of
+  // pharmacies actually offering the selected active product. Apply the
+  // relationship before the aggregate $facet so paging and counts match.
+  if (productId) {
+    const activeProduct = await Product.findOne({
+      _id: productId,
+      status: 'active',
+    })
+      .select('_id')
+      .lean<{ _id: Types.ObjectId } | null>();
+
+    const relatedIds = activeProduct
+      ? await ProductOffer.distinct('pharmacyId', {
+          productId: activeProduct._id,
+          availableQuantity: { $gt: 0 },
+        })
+      : [];
+
+    filter._id = { $in: relatedIds };
+    filter.status = PUBLIC_PHARMACY_STATUS_FILTER;
   }
 
   if (pharmacyId) {

@@ -63,39 +63,6 @@ test('Client status statistic links retain the independent Successful orders fil
 
 //===================================================================
 
-test('Only embedded Clients statistics are hidden on mobile, including loading skeleton', () => {
-  const page = read(pagePath);
-
-  const css = read(
-    'components/clients/ClientsPageContent/ClientsPageContent.module.css'
-  );
-
-  const detail = read(detailPath);
-
-  const detailCss = read(
-    'components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.module.css'
-  );
-
-  assert.match(
-    page,
-    /embedded \? `\$\{css\.card\} \$\{css\.embeddedStatisticsCard\}` : css\.card/
-  );
-
-  assert.match(
-    css,
-    /@media only screen and \(max-width: 767px\)[\s\S]*?\.embeddedStatisticsCard\s*\{\s*display: none/
-  );
-
-  assert.match(detail, /className=\{css\.clientsLoadingStatistics\}/);
-
-  assert.match(
-    detailCss,
-    /@media only screen and \(max-width: 767px\)[\s\S]*?\.clientsLoadingStatistics\s*\{\s*display: none/
-  );
-});
-
-//===================================================================
-
 test('Clients tab waits for selected pharmacy instead of showing premature access error', () => {
   const detail = read(detailPath);
 

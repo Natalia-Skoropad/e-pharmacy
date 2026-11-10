@@ -60,6 +60,8 @@ const baseProductsQueryShape = {
   page: positivePageSchema,
   perPage: productsPerPageSchema,
   keyword: sharedSearchSchema,
+  catalogSearch: sharedSearchSchema,
+  productId: mongoIdSchema.optional(),
   nameKeyword: sharedSearchSchema,
   articleKeyword: sharedSearchSchema,
   category: productCategorySlugSchema.optional(),
@@ -108,6 +110,7 @@ export const managedProductsQuerySchema = z.preprocess(
 
 export const productFiltersQuerySchema = z
   .object({
+    productId: mongoIdSchema.optional(),
     pharmacyId: mongoIdSchema.optional(),
     inStock: booleanQuerySchema.optional(),
   })

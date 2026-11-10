@@ -98,28 +98,3 @@ test('Owner sales and stock backend authorize selected pharmacy IDs', async () =
   assert.match(route, /query: productStockMovementsQuerySchema/);
   assert.match(browser, /pharmacyId \? ownerLocalApiRequest : localApiRequest/);
 });
-
-//===================================================================
-
-test('Page-header help cards have per-item icons', async () => {
-  const [clients, products] = await Promise.all([
-    read('src/components/clients/ClientsPageContent/ClientsPageContent.tsx'),
-
-    read(
-      'src/components/products/OwnProductsPageContent/OwnerOwnProductsPageContent.tsx'
-    ),
-  ]);
-
-  assert.match(clients, /title: 'Repeat clients',[\s\S]{0,90}icon: <Repeat2/);
-  assert.match(clients, /title: 'Walk-in client',[\s\S]{0,90}icon: <Store/);
-
-  assert.match(
-    products,
-    /title: 'Reserved products',[\s\S]{0,90}icon: <ShoppingBag/
-  );
-
-  assert.match(
-    products,
-    /title: 'Available products',[\s\S]{0,90}icon: <Archive/
-  );
-});

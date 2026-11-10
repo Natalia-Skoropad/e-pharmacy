@@ -1,66 +1,42 @@
-.toggle {
-  display: flex;
-  gap: 12px;
+/* Match the shared pharmacy catalog's rich options and sort selector. */
+.sortOption {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 48px;
-  padding: 12px 16px;
-  margin-bottom: 18px;
-  font: inherit;
-  font-size: var(--fz-14);
-  font-weight: var(--fw-medium);
-  line-height: 1.2;
-  color: var(--color-accent);
-  cursor: pointer;
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  outline: none;
-  transition:
-    color var(--transition-base),
-    border-color var(--transition-base),
-    background-color var(--transition-base);
+  gap: 10px;
+  min-width: 0;
+  min-height: 26px;
+  line-height: var(--lh-base);
 }
 
-.toggle:hover,
-.toggle:focus-visible {
+.sortIcon,
+.ratingIcon,
+.locationIcon {
+  display: inline-grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid;
+  border-radius: 50%;
+}
+
+.sortIcon,
+.locationIcon {
   color: var(--color-accent);
   background-color: var(--color-accent-light);
   border-color: var(--color-accent);
 }
 
-.toggleText {
-  display: inline-flex;
-  gap: 8px;
+.ratingIcon {
+  color: var(--color-warning);
+  background-color: var(--color-warning-light);
+  border-color: var(--color-warning);
+}
+
+.sortField :global(button[role='combobox'] > span:first-child) {
+  display: flex;
   align-items: center;
-}
-
-.controls {
-  display: none;
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.controlsOpen {
-  display: grid;
-}
-
-@media only screen and (min-width: 768px) {
-  .controlsOpen {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: end;
-  }
-}
-
-@media only screen and (min-width: 1440px) {
-  .toggle {
-    display: none;
-  }
-
-  .controls {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: end;
-  }
+  align-self: stretch;
+  min-width: 0;
+  white-space: nowrap;
 }

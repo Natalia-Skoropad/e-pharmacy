@@ -1,12 +1,14 @@
 'use client';
 
 import { useMemo } from 'react';
+import { Building2, Hash, PackageX, Wallet } from 'lucide-react';
 
 import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
+
 import { formatMoneyRange, getNumericRange } from '@e-pharmacy/utils/money';
 import type { ProductDetails } from '@e-pharmacy/types/products';
 
@@ -18,6 +20,7 @@ import {
 } from '@/lib/favorites/favorite-presentation';
 
 import { FavoriteToggleButton } from '@/components/common';
+
 import { ProductOrderInformationPanel } from './ProductOrderInformationPanel';
 
 import css from './ProductDetailsHero.module.css';
@@ -86,7 +89,11 @@ export function ProductDetailsHero({
 
       <div className={css.content}>
         <div className={css.topLine}>
-          <p className={css.category}>{product.category.name}</p>
+          <RatingSummary
+            className={css.ratingRow}
+            rating={product.rating}
+            reviewsCount={reviewsTotal}
+          />
 
           {shouldRenderFavoriteControl({
             isAuthenticated,
@@ -104,35 +111,39 @@ export function ProductDetailsHero({
           ) : null}
         </div>
 
-        <h1 className={css.title}>{product.name}</h1>
-
-        <RatingSummary
-          className={css.ratingRow}
-          rating={product.rating}
-          reviewsCount={reviewsTotal}
-        />
-
         <dl className={css.summaryList}>
           <div className={css.summaryItem}>
-            <dt>Article</dt>
+            <dt>
+              <Hash size={18} aria-hidden="true" />
+              Article
+            </dt>
             <dd>{product.article}</dd>
           </div>
 
           {availableOffers.length > 0 ? (
             <>
               <div className={css.summaryItem}>
-                <dt>Found in pharmacies</dt>
+                <dt>
+                  <Building2 size={18} aria-hidden="true" />
+                  In pharmacies
+                </dt>
                 <dd>{pharmaciesCountLabel}</dd>
               </div>
 
               <div className={css.summaryItem}>
-                <dt>Price</dt>
+                <dt>
+                  <Wallet size={18} aria-hidden="true" />
+                  Price
+                </dt>
                 <dd>{priceRangeLabel}</dd>
               </div>
             </>
           ) : (
             <div className={css.summaryItem}>
-              <dt>Availability</dt>
+              <dt>
+                <PackageX size={18} aria-hidden="true" />
+                Availability
+              </dt>
               <dd>Not available in pharmacies</dd>
             </div>
           )}
@@ -140,7 +151,12 @@ export function ProductDetailsHero({
 
         <ProductOrderInformationPanel />
 
-        <Button className={css.action} type="button" onClick={onOpenOffers}>
+        <Button
+          className={css.action}
+          type="button"
+          iconLeft={<Building2 size={18} aria-hidden="true" />}
+          onClick={onOpenOffers}
+        >
           Find pharmacy offers
         </Button>
       </div>

@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { Building2, Info } from 'lucide-react';
 
-import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { LazyLoadButton } from '@e-pharmacy/ui/primitives';
+import { LinkPagination } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import type { ProductDetails, ProductOffer } from '@e-pharmacy/types/products';
 
 import { useClientAuthCapabilities } from '@/hooks';
 import { useFavorites } from '@/providers/FavoritesProvider';
+import { buildProductPath } from '@/lib/routes';
+import { buildProductOffersPath } from '@/lib/catalog/product-offers-paths';
 
 import { CartOrderLimitModal } from '@/components/common';
 
@@ -38,12 +40,12 @@ export function ProductOffersPanel({
     isActivePharmacyUser,
     isActiveAdminUser,
   } = useClientAuthCapabilities();
-
   const { getCollectionStatus, isFavorite, loadCollection } = useFavorites();
   const favoriteCollectionStatus = getCollectionStatus('pharmacy');
 
   useEffect(() => {
     if (!canUseClientFeatures) return;
+
     void loadCollection('pharmacy').catch(() => undefined);
   }, [canUseClientFeatures, loadCollection]);
 
@@ -69,17 +71,11 @@ export function ProductOffersPanel({
 
   const cart = useProductOfferCart(product.id, canUseClientFeatures);
 
-  const isProductAvailable = view.availableOffers.length > 0;
-
-  const emptyTitle = isProductAvailable
-    ? 'No pharmacies found'
-    : 'This product is currently unavailable in pharmacies.';
-
-  const emptyText = isProductAvailable
-    ? view.hasActiveFilters
-      ? 'Try changing the pharmacy name, location, or address search.'
-      : 'No pharmacies match the current offers list.'
-    : 'There are no pharmacies where this product is currently available.';
+  const productHref = buildProductPath(
+    product.name,
+    product.id,
+    product.publicSlugId
+  );
 
   const getOfferState = (offer: ProductOffer) => {
     const cartItem = cart.getCartItem(offer.id);
@@ -100,39 +96,35 @@ export function ProductOffersPanel({
 
   return (
     <div className={css.panel}>
-      <div className={css.header}>
-        <div className={css.headerMain}>
+      <header className={css.header}>
+        <span className={css.headerIcon} aria-hidden="true">
+          <Building2 size={22} />
+        </span>
+
+        <div className={css.headerText}>
           <h2 className={css.title}>Pharmacies</h2>
-
-          {!isBootstrapping && !canUseClientFeatures ? (
-            <p className={css.authNote}>
-              {isActivePharmacyUser || isActiveAdminUser
-                ? 'Ordering is available only for client accounts.'
-                : 'Only logged-in clients can add products to an order.'}
-            </p>
-          ) : null}
+          <p className={css.subtitle}>
+            Compare pharmacies, availability and prices for this product.
+          </p>
         </div>
-
-        <CountLabel
-          shown={view.visibleOffers.length}
-          total={view.filteredOffers.length}
-          label="pharmacies"
-        />
-      </div>
+        {!isBootstrapping && !canUseClientFeatures ? (
+          <p className={css.authNote} role="note">
+            <Info size={17} aria-hidden="true" />
+            {isActivePharmacyUser || isActiveAdminUser
+              ? 'Ordering is available only for client accounts.'
+              : 'Only logged-in clients can add products to an order.'}
+          </p>
+        ) : null}
+      </header>
 
       <ProductOffersToolbar
-        isOpen={view.areFiltersOpen}
-        pharmacyNameQuery={view.pharmacyNameQuery}
-        pharmacyAddressQuery={view.pharmacyAddressQuery}
-        locationFilter={view.locationFilter}
-        locationOptions={view.locationOptions}
-        offerSort={view.offerSort}
-        sanitizeSearchValue={view.sanitizeSearchValue}
-        onToggle={view.toggleFilters}
-        onPharmacyNameChange={view.setPharmacyNameQuery}
-        onPharmacyAddressChange={view.setPharmacyAddressQuery}
-        onLocationChange={view.setLocationFilter}
-        onSortChange={view.setOfferSort}
+        offers={view.availableOffers}
+        productId={product.id}
+        baseProductPath={productHref}
+        contextPharmacyId={contextPharmacyId}
+        filters={view.filters}
+        shown={view.visibleOffers.length}
+        total={view.filteredOffers.length}
       />
 
       {view.visibleOffers.length > 0 ? (
@@ -142,22 +134,40 @@ export function ProductOffersPanel({
         />
       ) : (
         <div className={css.emptyPanel}>
-          <h3 className={css.emptyTitle}>{emptyTitle}</h3>
-          <p className={css.emptyText}>{emptyText}</p>
+          <Building2 size={28} aria-hidden="true" />
+          <h3 className={css.emptyTitle}>
+            {view.hasActiveFilters
+              ? 'No matching pharmacies'
+              : 'No pharmacies available'}
+          </h3>
+          <p className={css.emptyText}>
+            {view.hasActiveFilters
+              ? 'No pharmacy offers match the selected search or location. Change or reset the filters.'
+              : 'This product is currently unavailable in pharmacies.'}
+          </p>
         </div>
       )}
 
-      <LazyLoadButton
-        visibleCount={view.visibleOffers.length}
-        totalCount={view.filteredOffers.length}
-        label="Show more pharmacies"
-        onLoadMore={view.showMore}
-      />
+      {view.totalPages > 1 ? (
+        <div className={css.pagination}>
+          <LinkPagination
+            currentPage={view.filters.page}
+            totalPages={view.totalPages}
+            getPageHref={(page) =>
+              buildProductOffersPath(
+                productHref,
+                { ...view.filters, page },
+                contextPharmacyId
+              )
+            }
+            ariaLabel="Product pharmacy offers pagination"
+          />
+        </div>
+      ) : null}
 
       {cart.isOrderLimitOpen ? (
         <CartOrderLimitModal onClose={cart.closeOrderLimit} />
       ) : null}
-
       {cart.pendingRemoveOffer ? (
         <ConfirmationModal
           title="Remove product from order?"

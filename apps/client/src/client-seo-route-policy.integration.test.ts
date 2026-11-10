@@ -95,7 +95,6 @@ test('product SEO canonical keeps indexed dimensions and removes noindex noise',
     name: 'aspirin',
     article: '',
     category: 'medicine',
-    availability: 'in-stock',
     sort: 'rating-desc',
     page: 4,
   };

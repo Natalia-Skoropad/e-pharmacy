@@ -109,6 +109,8 @@ export type PharmacySearchOptionsParams = Readonly<{
   perPage?: number;
   query?: string;
   pharmacyId?: string;
+  productId?: string;
+  category?: string;
   settlement?: string;
   region?: string;
   selectedId?: string;

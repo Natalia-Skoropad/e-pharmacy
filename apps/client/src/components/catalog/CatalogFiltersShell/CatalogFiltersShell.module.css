@@ -154,6 +154,28 @@
   }
 }
 
+@media only screen and (min-width: 768px) and (max-width: 1439px) {
+  .stackOnTablet.searchCard,
+  .stackOnTablet .searchCard {
+    container-type: inline-size;
+  }
+
+  .stackOnTablet .searchGridPharmacy,
+  .stackOnTablet .searchGridPharmacyWithReset {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .stackOnTablet .desktopResetSlot {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .stackOnTablet .desktopResetSlot > * {
+    width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pendingSpinner {
     animation: none;
@@ -225,5 +247,97 @@
 
   .searchGridPharmacy .desktopResetSlot {
     justify-content: flex-end;
+  }
+}
+
+/* Product catalog: mobile and tablet use a comfortable single-column
+   stack; the three-column arrangement is reserved for wide desktops. */
+.productLayout .desktopFilters {
+  display: contents;
+}
+
+.productLayout .desktopResetSlot > * {
+  width: 100%;
+}
+
+.productLayout .catalogToolbar {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.productLayout .catalogToolbar > :first-child {
+  width: 100%;
+  text-align: center;
+}
+
+.productLayout .desktopSort {
+  order: -1;
+  width: 100%;
+}
+
+@media only screen and (min-width: 768px) {
+  .productLayout .searchGridProduct,
+  .productLayout .searchGridProductWithReset {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .productLayout .searchGridProduct {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(160px, 220px);
+    align-items: end;
+  }
+
+  .productLayout .searchGridProductWithReset {
+    grid-template-columns:
+      minmax(0, 1fr) minmax(0, 1fr) minmax(160px, 220px)
+      auto;
+    align-items: end;
+  }
+
+  .productLayout .desktopResetSlot > * {
+    width: auto;
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .productLayout .catalogToolbar {
+    flex-direction: row;
+    align-items: end;
+  }
+
+  .productLayout .catalogToolbar > :first-child {
+    width: fit-content;
+    text-align: left;
+  }
+
+  .productLayout .desktopSort {
+    order: 0;
+    width: 292px;
+  }
+}
+
+/* Product search must use the *available card width*, not viewport width.
+   Sidebars and tablet split-screen layouts can make a desktop viewport narrow. */
+.productLayout .searchCard {
+  container-type: inline-size;
+}
+
+@container (max-width: 1120px) {
+  .productLayout .searchGridProduct,
+  .productLayout .searchGridProductWithReset {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .productLayout .searchGridProduct .desktopResetSlot,
+  .productLayout .searchGridProductWithReset .desktopResetSlot {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .productLayout .searchGridProduct .desktopResetSlot > *,
+  .productLayout .searchGridProductWithReset .desktopResetSlot > * {
+    width: 100%;
   }
 }

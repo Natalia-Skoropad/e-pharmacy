@@ -1,4 +1,16 @@
+import {
+  Building2,
+  FileText,
+  FlaskConical,
+  Package2,
+  Tags,
+} from 'lucide-react';
+
+import { MarkdownContent } from '@e-pharmacy/ui/data-display';
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import type { ProductDetails } from '@e-pharmacy/types/products';
+
+import aboutCss from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacyAboutPanel.module.css';
 
 import css from './ProductCharacteristicsPanel.module.css';
 
@@ -16,40 +28,75 @@ export function ProductCharacteristicsPanel({
   const description = product.description?.trim();
 
   return (
-    <div className={css.panel}>
-      <h2 className={css.title}>Characteristics</h2>
-
-      <dl className={css.details}>
-        {product.manufacturer ? (
-          <div className={css.item}>
-            <dt>Manufacturer</dt>
-            <dd>{product.manufacturer}</dd>
-          </div>
-        ) : null}
-
-        {product.dosage ? (
-          <div className={css.item}>
-            <dt>Dosage</dt>
-            <dd>{product.dosage}</dd>
-          </div>
-        ) : null}
-
-        {product.packageQuantity ? (
-          <div className={css.item}>
-            <dt>Package</dt>
-            <dd>{product.packageQuantity}</dd>
-          </div>
-        ) : null}
-
-        <div className={css.item}>
-          <dt>Category</dt>
-          <dd>{product.category.name}</dd>
+    <>
+      <header className={aboutCss.header}>
+        <span className={aboutCss.headerIcon} aria-hidden="true">
+          <FileText size={22} />
+        </span>
+        <div>
+          <h2 className={aboutCss.title}>Characteristics</h2>
+          <p className={aboutCss.subtitle}>
+            Manufacturer, dosage, packaging and description of this product.
+          </p>
         </div>
-      </dl>
+      </header>
 
-      <div className={css.description}>
-        <p>{description ?? 'Detailed description is not available yet.'}</p>
+      <div className={aboutCss.description}>
+        <dl className={css.details}>
+          {product.manufacturer ? (
+            <div className={css.item}>
+              <dt>
+                <span className={css.termIcon} aria-hidden="true">
+                  <Building2 size={16} />
+                </span>
+                Manufacturer
+              </dt>
+              <dd>{product.manufacturer}</dd>
+            </div>
+          ) : null}
+          {product.dosage ? (
+            <div className={css.item}>
+              <dt>
+                <span className={css.termIcon} aria-hidden="true">
+                  <FlaskConical size={16} />
+                </span>
+                Dosage
+              </dt>
+              <dd>{product.dosage}</dd>
+            </div>
+          ) : null}
+          {product.packageQuantity ? (
+            <div className={css.item}>
+              <dt>
+                <span className={css.termIcon} aria-hidden="true">
+                  <Package2 size={16} />
+                </span>
+                Package
+              </dt>
+              <dd>{product.packageQuantity}</dd>
+            </div>
+          ) : null}
+          <div className={css.item}>
+            <dt>
+              <span className={css.termIcon} aria-hidden="true">
+                <Tags size={16} />
+              </span>
+              Category
+            </dt>
+            <dd>
+              <span className={css.categoryValue}>
+                <span className={css.categoryIcon} aria-hidden="true">
+                  <CategoryIcon name={product.category.icon} size={16} />
+                </span>
+                {product.category.name}
+              </span>
+            </dd>
+          </div>
+        </dl>
+        <MarkdownContent
+          value={description || 'Detailed description is not available yet.'}
+        />
       </div>
-    </div>
+    </>
   );
 }

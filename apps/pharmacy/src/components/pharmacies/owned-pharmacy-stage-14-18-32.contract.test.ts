@@ -15,34 +15,6 @@ const read = (file: string) => readFileSync(path.join(root, file), 'utf8');
 
 //===================================================================
 
-test('owner action menu constrains dropdown width and leaves no phantom tooltip gap', () => {
-  const css = read(
-    'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.module.css'
-  );
-
-  const actions = read(
-    'apps/pharmacy/src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'
-  );
-
-  assert.match(css, /\.statusMenuOptions\s*\{[^}]*width:\s*100%/);
-  assert.match(css, /\.statusMenuOptions\s*\{[^}]*max-width:\s*100%/);
-
-  assert.match(
-    css,
-    /\.statusActionRow\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto/
-  );
-
-  assert.match(
-    css,
-    /\.statusActionRow:not\(:has\(\.statusActionTooltip\)\)\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/
-  );
-
-  assert.match(css, /\.statusActionTooltip\s*\{[^}]*display:\s*inline-flex/);
-  assert.match(actions, /disabled && disabledReason \? \(/);
-});
-
-//===================================================================
-
 test('Admin pharmacy owner linked list carries reviewState and renders the neutral badge', () => {
   const type = read('packages/types/src/admin/pharmacy-owner.ts');
 

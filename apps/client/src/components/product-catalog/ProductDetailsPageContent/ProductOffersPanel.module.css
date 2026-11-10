@@ -1,71 +1,116 @@
+/* The public detail tab already owns the white surface and page padding. */
 .panel {
-  padding: 20px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  min-width: 0;
 }
 
 .header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+  margin-bottom: 24px;
 }
 
-.headerMain {
+.headerIcon {
+  display: inline-flex;
+  flex: 0 0 44px;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border-radius: 50%;
+}
+
+.headerText {
+  flex: 1 1 200px;
   min-width: 0;
 }
 
 .title {
-  font-size: var(--fz-28);
-  font-weight: var(--fw-bold);
-  line-height: var(--lh-heading);
-  color: var(--color-text-primary);
-  letter-spacing: var(--ls-tight);
-}
-
-.authNote {
-  margin-top: 8px;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-error);
-}
-
-.emptyPanel {
-  padding: 24px;
-  text-align: center;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-xl);
-}
-
-.emptyTitle {
-  font-size: var(--fz-20);
+  font-size: var(--fz-24);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
   color: var(--color-text-primary);
 }
 
-.emptyText {
-  margin-top: 8px;
+.subtitle {
+  margin-top: 4px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
 }
 
+.authNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-radius: var(--radius-md);
+}
+
+.authNote svg {
+  flex-shrink: 0;
+}
+
 @media only screen and (min-width: 768px) {
-  .panel {
-    padding: 24px;
-  }
-
   .header {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 24px;
+    flex-wrap: nowrap;
   }
 
-  .title {
-    font-size: var(--fz-32);
+  .authNote {
+    flex: 0 1 auto;
+    width: fit-content;
+    max-width: 55%;
+    margin-left: auto;
   }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 1439px) {
+  .headerText {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+
+  .authNote {
+    flex: 0 1 220px;
+    width: 220px;
+    max-width: 35%;
+    min-width: 0;
+    font-size: var(--fz-13);
+  }
+}
+
+.emptyPanel {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px;
+  text-align: center;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-text-secondary);
+}
+
+.emptyTitle {
+  font-size: var(--fz-20);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.emptyText {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
 }

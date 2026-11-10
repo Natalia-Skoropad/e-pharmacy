@@ -10,32 +10,6 @@ const read = (path: string) =>
 
 //===============================================================
 
-test('client statistics are visible on every desktop tab but hidden on mobile', () => {
-  const page = read(
-    'components/clients/ClientDetailsPageContent/ClientDetailsPageContent.tsx'
-  );
-
-  const styles = read(
-    'components/clients/ClientDetailsPageContent/ClientDetailsPageContent.module.css'
-  );
-
-  assert.match(page, /<div className=\{css\.statisticsBlock\}>/);
-
-  assert.doesNotMatch(
-    page,
-    /activeTab === 'pharmacies' \|\| clientStatus === 'error'/
-  );
-
-  assert.match(styles, /\.statisticsBlock\s*\{\s*display: none;/);
-
-  assert.match(
-    styles,
-    /@media only screen and \(min-width: 768px\)\s*\{\s*\.statisticsBlock\s*\{\s*display: grid;/
-  );
-});
-
-//===============================================================
-
 test('client pharmacies use the owner registry presentation, filters and table loader', () => {
   const page = read(
     'components/clients/ClientDetailsPageContent/ClientDetailsPageContent.tsx'

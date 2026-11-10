@@ -554,6 +554,7 @@ function parseProductOffer(
     {
       pharmacyLocation: 'record',
       pharmacyPhone: 'string',
+      pharmacyEmail: 'string',
       pharmacyImageUrl: 'string',
       totalQuantity: 'number',
       reservedQuantity: 'number',
@@ -956,7 +957,17 @@ function parseProductCategoryFilterOption(
     );
   }
 
-  return option;
+  const record = requireRecord(value, 'category filter option', context);
+  requireOptionalFields(
+    record,
+    'category filter option',
+    { icon: 'string' },
+    context
+  );
+  return {
+    ...option,
+    ...(typeof record.icon === 'string' ? { icon: record.icon } : {}),
+  };
 }
 
 //===================================================================

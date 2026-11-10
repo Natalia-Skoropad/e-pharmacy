@@ -21,6 +21,7 @@ import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
 import {
   getPharmacySearchOptions,
   getProductFilters,
+  getProductDetails,
   PUBLIC_DICTIONARY_CACHE_OPTIONS,
 } from '@/lib/api/server';
 
@@ -87,8 +88,24 @@ export async function generateMetadata({
     ? pharmacies.find((pharmacy) => pharmacy.id === filters.pharmacyId)
     : undefined;
 
+  let productName: string | undefined;
+
+  if (filters.productId) {
+    try {
+      const product = await getProductDetails(
+        filters.productId,
+        PUBLIC_DICTIONARY_CACHE_OPTIONS
+      );
+
+      productName = product.product.name;
+    } catch {
+      productName = undefined;
+    }
+  }
+
   const seoContext = {
     ...(categoryLabel ? { categoryLabel } : {}),
+    ...(productName ? { productName } : {}),
     ...(selectedPharmacy ? { pharmacyName: selectedPharmacy.name } : {}),
   };
 

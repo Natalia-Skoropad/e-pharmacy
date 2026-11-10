@@ -6,18 +6,30 @@ import { parsePublicEntitySlugId } from '@e-pharmacy/validation/url';
 
 import {
   createPharmacyDetailMetadata,
+  createProductDetailMetadata,
   lookupPharmacyBySlugId,
+  lookupProductBySlugId,
 } from '@/lib/details';
 
-import { buildPharmacyPath } from '@/lib/routes';
+import {
+  buildPharmacyPath,
+  buildProductPath,
+  buildProductContextQueryString,
+} from '@/lib/routes';
+
+import { getProductTabFromSegment } from '@/lib/routes/product-detail-tabs';
 
 import { DetailsUnavailablePage } from '@/components/common/DetailsUnavailablePage';
 import type { PharmacyTab } from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacyDetailsTabs';
 import { PharmacyDetailPage } from '@/components/pharmacies/server/PharmacyDetailPage';
+import { ProductDetailPage } from '@/components/product-catalog/server/ProductDetailPage';
 
 //===================================================================
 
 const resolvePharmacy = cache(lookupPharmacyBySlugId);
+const resolveProduct = cache(lookupProductBySlugId);
+
+//===================================================================
 
 const pharmacyTabs: Readonly<Record<string, PharmacyTab>> = {
   about: 'about',
@@ -25,45 +37,95 @@ const pharmacyTabs: Readonly<Record<string, PharmacyTab>> = {
   'bank-details': 'payment',
 };
 
+//===================================================================
+
 type Props = Readonly<{
   params: Promise<{ slugId: string; tab: string }>;
+  searchParams?: Promise<{ pharmacyId?: string }>;
 }>;
 
 //===================================================================
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slugId, tab } = await params;
+  const parsed = parsePublicEntitySlugId(slugId);
 
-  if (
-    !pharmacyTabs[tab] ||
-    parsePublicEntitySlugId(slugId)?.entityType !== 'pharmacy'
-  ) {
-    return {};
+  if (parsed?.entityType === 'product' && getProductTabFromSegment(tab)) {
+    const result = await resolveProduct(slugId);
+
+    return result.status === 'found'
+      ? createProductDetailMetadata(result.product)
+      : {};
   }
 
-  const result = await resolvePharmacy(slugId);
-  return result.status === 'found'
-    ? createPharmacyDetailMetadata(result.pharmacy)
-    : {};
+  if (parsed?.entityType === 'pharmacy' && pharmacyTabs[tab]) {
+    const result = await resolvePharmacy(slugId);
+
+    return result.status === 'found'
+      ? createPharmacyDetailMetadata(result.pharmacy)
+      : {};
+  }
+
+  return {};
 }
 
 //===================================================================
 
-export default async function PharmacyTabPage({ params }: Props) {
+export default async function PublicDetailTabPage({
+  params,
+  searchParams,
+}: Props) {
   const { slugId, tab } = await params;
-  const activeTab = pharmacyTabs[tab];
+  const parsed = parsePublicEntitySlugId(slugId);
 
-  if (
-    !activeTab ||
-    parsePublicEntitySlugId(slugId)?.entityType !== 'pharmacy'
-  ) {
-    notFound();
+  if (parsed?.entityType === 'product') {
+    const activeProductTab = getProductTabFromSegment(tab);
+
+    if (!activeProductTab) notFound();
+
+    const result = await resolveProduct(slugId);
+
+    if (result.status === 'unavailable') {
+      return <DetailsUnavailablePage entityLabel="product" error={result} />;
+    }
+
+    if (result.status === 'not_found') notFound();
+
+    const canonical = buildProductPath(
+      result.product.name,
+      result.product.id,
+      result.product.publicSlugId
+    );
+
+    const resolvedSearchParams = await searchParams;
+
+    if (canonical !== `/${slugId}`) {
+      permanentRedirect(
+        `${canonical}/${tab}${buildProductContextQueryString(resolvedSearchParams?.pharmacyId)}`
+      );
+    }
+
+    return (
+      <ProductDetailPage
+        product={result.product}
+        pharmacyId={resolvedSearchParams?.pharmacyId}
+        initialTab={activeProductTab}
+      />
+    );
   }
 
+  if (parsed?.entityType !== 'pharmacy') notFound();
+
+  const activeTab = pharmacyTabs[tab];
+
+  if (!activeTab) notFound();
+
   const result = await resolvePharmacy(slugId);
+
   if (result.status === 'unavailable') {
     return <DetailsUnavailablePage entityLabel="pharmacy" error={result} />;
   }
+
   if (result.status === 'not_found') notFound();
 
   const canonical = buildPharmacyPath(
@@ -71,6 +133,7 @@ export default async function PharmacyTabPage({ params }: Props) {
     result.pharmacy.id,
     result.pharmacy.publicSlugId
   );
+
   if (canonical !== `/${slugId}`) {
     permanentRedirect(`${canonical}/${tab}`);
   }

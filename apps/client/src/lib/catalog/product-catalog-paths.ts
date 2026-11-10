@@ -16,7 +16,6 @@ import {
 } from './catalog-param-utils';
 
 import {
-  isProductAvailabilityFilter,
   isProductCatalogNoIndex,
   isProductCategoryFilter,
   isProductSortFilter,
@@ -63,7 +62,6 @@ export function parseProductCatalogSegments(
     name: '',
     article: '',
     category: 'all',
-    availability: 'all',
     sort: 'newest',
     page: 1,
   };
@@ -106,20 +104,25 @@ export function parseProductCatalogSegments(
     if (segment.startsWith('category-')) {
       apply('category', segment, index, () => {
         const value = segment.slice('category-'.length);
+
         if (!isProductCategoryFilter(value) || value === 'all') return false;
+
         filters.category = value;
+
         return true;
       });
 
       continue;
     }
 
-    if (segment.startsWith('availability-')) {
-      apply('availability', segment, index, () => {
-        const value = segment.slice('availability-'.length);
-        if (!isProductAvailabilityFilter(value) || value === 'all')
-          return false;
-        filters.availability = value;
+    if (segment.startsWith('product-id-')) {
+      apply('product', segment, index, () => {
+        const value = segment.slice('product-id-'.length);
+
+        if (!isValidObjectId(value)) return false;
+
+        filters.productId = value;
+
         return true;
       });
 
@@ -129,8 +132,11 @@ export function parseProductCatalogSegments(
     if (segment.startsWith('sort-')) {
       apply('sort', segment, index, () => {
         const value = segment.slice('sort-'.length);
+
         if (!isProductSortFilter(value) || value === 'newest') return false;
+
         filters.sort = value;
+
         return true;
       });
 
@@ -140,8 +146,11 @@ export function parseProductCatalogSegments(
     if (segment.startsWith('page-')) {
       apply('page', segment, index, () => {
         const value = segment.slice('page-'.length);
+
         if (!isCanonicalPositivePageParam(value) || value === '1') return false;
+
         filters.page = parsePositivePageParam(value);
+
         return true;
       });
 
@@ -155,7 +164,9 @@ export function parseProductCatalogSegments(
         );
 
         if (!value) return false;
+
         filters.name = value;
+
         return true;
       });
 
@@ -165,8 +176,11 @@ export function parseProductCatalogSegments(
     if (segment.startsWith('article-')) {
       apply('article', segment, index, () => {
         const value = deslugifyArticleSegment(segment.slice('article-'.length));
+
         if (!value) return false;
+
         filters.article = value;
+
         return true;
       });
 
@@ -217,6 +231,10 @@ export function buildProductCatalogIndexedPath(
 ): string {
   const segments: string[] = [];
 
+  if (filters.productId && isValidObjectId(filters.productId)) {
+    segments.push(`product-id-${filters.productId}`);
+  }
+
   if (
     filters.category &&
     filters.category !== 'all' &&
@@ -227,6 +245,7 @@ export function buildProductCatalogIndexedPath(
 
   if (filters.pharmacyId) {
     const pharmacySegment = getPharmacySegment(filters.pharmacyId, pharmacies);
+
     if (pharmacySegment) segments.push(pharmacySegment);
   }
 
@@ -243,13 +262,19 @@ export function buildProductCatalogPath(
 ): string {
   const segments: string[] = [];
 
+  if (filters.productId && isValidObjectId(filters.productId)) {
+    segments.push(`product-id-${filters.productId}`);
+  }
+
   if (filters.name) {
     const value = slugifySegment(filters.name);
+
     if (value) segments.push(`search-name-${value}`);
   }
 
   if (filters.article) {
     const value = slugifySegment(filters.article);
+
     if (value) segments.push(`article-${value}`);
   }
 
@@ -261,16 +286,9 @@ export function buildProductCatalogPath(
     segments.push(`category-${filters.category}`);
   }
 
-  if (
-    filters.availability &&
-    filters.availability !== 'all' &&
-    isProductAvailabilityFilter(filters.availability)
-  ) {
-    segments.push(`availability-${filters.availability}`);
-  }
-
   if (filters.pharmacyId) {
     const pharmacySegment = getPharmacySegment(filters.pharmacyId, pharmacies);
+
     if (pharmacySegment) segments.push(pharmacySegment);
   }
 

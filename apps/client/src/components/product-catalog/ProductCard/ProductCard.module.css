@@ -1,9 +1,11 @@
 .category {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
   font-size: var(--fz-12);
   font-weight: var(--fw-medium);
-  line-height: 1.3;
+  line-height: 16px;
   color: var(--color-accent);
   text-transform: uppercase;
   letter-spacing: var(--ls-wide);
@@ -68,4 +70,60 @@
   .footer {
     gap: 16px;
   }
+}
+
+.detailsLink,
+.metaLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metaLabel svg {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+}
+
+/* Keep the category symbol and its label optically centered. */
+.category > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 16px;
+  transform: translateY(1px);
+}
+
+.category svg {
+  flex-shrink: 0;
+}
+
+.pricePart {
+  white-space: nowrap;
+}
+
+.priceBoundary {
+  display: none;
+  margin-right: 4px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+}
+@media only screen and (max-width: 1439px) {
+  .price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .priceSeparator {
+    display: none;
+  }
+
+  .priceBoundary {
+    display: inline;
+  }
+}
+
+.pharmaciesCount {
+  white-space: nowrap;
 }

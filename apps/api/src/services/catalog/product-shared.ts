@@ -216,6 +216,13 @@ export async function getProductsByScope(
     ];
   }
 
+  if (query.catalogSearch) {
+    filter.$or = [
+      { name: createFlexibleSearchRegExp(query.catalogSearch) },
+      { article: createSafeRegExp(query.catalogSearch) },
+    ];
+  }
+
   if (query.nameKeyword) {
     filter.name = createFlexibleSearchRegExp(query.nameKeyword);
   }

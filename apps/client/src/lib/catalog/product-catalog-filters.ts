@@ -24,12 +24,6 @@ import {
 
 //===================================================================
 
-const PRODUCT_AVAILABILITY_VALUES = [
-  'all',
-  'in-stock',
-  'out-of-stock',
-] as const;
-
 const PRODUCT_SORT_VALUES = [
   'newest',
   'rating-desc',
@@ -68,11 +62,6 @@ export type ProductCategoryFilter = 'all' | ProductCategorySlug;
 
 //===================================================================
 
-export type ProductAvailabilityFilter =
-  (typeof PRODUCT_AVAILABILITY_VALUES)[number];
-
-//===================================================================
-
 export type ProductSortFilter = (typeof PRODUCT_SORT_VALUES)[number];
 
 //===================================================================
@@ -80,7 +69,10 @@ export type ProductSortFilter = (typeof PRODUCT_SORT_VALUES)[number];
 export type ProductCatalogSeoContext = {
   categoryLabel?: string;
   pharmacyName?: string;
+  productName?: string;
 };
+
+//===================================================================
 
 export type ProductCatalogSearchParams = Record<
   string,
@@ -89,11 +81,13 @@ export type ProductCatalogSearchParams = Record<
   name?: CatalogSearchParamValue;
   article?: CatalogSearchParamValue;
   category?: CatalogSearchParamValue;
-  availability?: CatalogSearchParamValue;
   sort?: CatalogSearchParamValue;
   page?: CatalogSearchParamValue;
   pharmacyId?: CatalogSearchParamValue;
+  productId?: CatalogSearchParamValue;
 };
+
+//===================================================================
 
 export type ProductCatalogRouteParams = {
   segments?: string[];
@@ -103,10 +97,10 @@ export type ProductCatalogFilters = {
   name: string;
   article: string;
   category: ProductCategoryFilter;
-  availability: ProductAvailabilityFilter;
   sort: ProductSortFilter;
   page: number;
   pharmacyId?: string;
+  productId?: string;
 };
 
 //===================================================================
@@ -115,14 +109,6 @@ export function isProductCategoryFilter(
   value?: string
 ): value is ProductCategoryFilter {
   return value === 'all' || isProductCategorySlug(value);
-}
-
-//===================================================================
-
-export function isProductAvailabilityFilter(
-  value?: string
-): value is ProductAvailabilityFilter {
-  return PRODUCT_AVAILABILITY_VALUES.some((item) => item === value);
 }
 
 //===================================================================
@@ -158,21 +144,20 @@ export function parseProductCatalogSearchParams(
   const name = getSingleSearchParam(params.name);
   const article = getSingleSearchParam(params.article);
   const category = getSingleSearchParam(params.category);
-  const availability = getSingleSearchParam(params.availability);
   const sort = getSingleSearchParam(params.sort);
   const page = getSingleSearchParam(params.page);
   const pharmacyId = getSingleSearchParam(params.pharmacyId);
+  const productId = getSingleSearchParam(params.productId);
 
   return {
     name: sanitizeTextParam(name),
     article: sanitizeArticleParam(article),
     category: isProductCategoryFilter(category) ? category : 'all',
-    availability: isProductAvailabilityFilter(availability)
-      ? availability
-      : 'all',
     sort: isProductSortFilter(sort) ? sort : 'newest',
     page: parsePositivePageParam(page),
+
     ...(isValidObjectId(pharmacyId) ? { pharmacyId } : {}),
+    ...(isValidObjectId(productId) ? { productId } : {}),
   };
 }
 
@@ -185,19 +170,23 @@ export function mergeProductCatalogFilters(
   return {
     name: routeFilters.name || queryFilters.name,
     article: routeFilters.article || queryFilters.article,
+
     category:
       routeFilters.category !== 'all'
         ? routeFilters.category
         : queryFilters.category,
-    availability:
-      routeFilters.availability !== 'all'
-        ? routeFilters.availability
-        : queryFilters.availability,
+
     sort:
       routeFilters.sort !== 'newest' ? routeFilters.sort : queryFilters.sort,
+
     page: routeFilters.page > 1 ? routeFilters.page : queryFilters.page,
+
     ...(routeFilters.pharmacyId || queryFilters.pharmacyId
       ? { pharmacyId: routeFilters.pharmacyId ?? queryFilters.pharmacyId }
+      : {}),
+
+    ...(routeFilters.productId || queryFilters.productId
+      ? { productId: routeFilters.productId ?? queryFilters.productId }
       : {}),
   };
 }
@@ -211,15 +200,9 @@ export function buildProductCatalogApiParams(
     page: filters.page,
     perPage: PRODUCTS_CATALOG_PER_PAGE,
     nameKeyword: filters.name || undefined,
+    productId: filters.productId,
     articleKeyword: filters.article || undefined,
-
     category: filters.category === 'all' ? undefined : filters.category,
-
-    inStock:
-      filters.availability === 'all'
-        ? undefined
-        : filters.availability === 'in-stock',
-
     sort: filters.sort,
     pharmacyId: filters.pharmacyId,
   };
@@ -234,8 +217,8 @@ export function getProductCatalogActiveFiltersCount(
     Boolean(filters.name),
     Boolean(filters.article),
     filters.category !== 'all',
-    filters.availability !== 'all',
-    Boolean(filters.pharmacyId)
+    Boolean(filters.pharmacyId),
+    Boolean(filters.productId)
   );
 }
 
@@ -249,6 +232,6 @@ export function isProductCatalogNoIndex(
     filters.sort !== 'newest' ||
     Boolean(filters.name) ||
     Boolean(filters.article) ||
-    filters.availability !== 'all'
+    Boolean(filters.productId)
   );
 }

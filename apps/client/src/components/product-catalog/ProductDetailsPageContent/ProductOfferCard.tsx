@@ -1,15 +1,18 @@
 'use client';
 
-import { Heart } from 'lucide-react';
+import { Building2, Heart, Mail, MapPin, Phone } from 'lucide-react';
 
 import { CART_ITEM_TTL_DAYS } from '@e-pharmacy/config/cart';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
+
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { SvgIcon } from '@e-pharmacy/ui/primitives';
+
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
+
 import type { CartItem } from '@e-pharmacy/types/cart';
 import type { ProductOffer } from '@e-pharmacy/types/products';
 
@@ -59,7 +62,13 @@ export function ProductOfferCard({
 }: ProductOfferCardProps) {
   const quantity = cartItem?.quantity ?? pendingQuantity ?? 0;
   const phoneHref = getTelephoneHref(offer.pharmacyPhone);
-  const pharmacyLocation = formatPharmacyLocation(offer.pharmacyLocation);
+
+  const pharmacyLocation = formatPharmacyLocation({
+    settlement: offer.pharmacyLocation?.settlement,
+    region: offer.pharmacyLocation?.region,
+  });
+
+  const pharmacyAddress = offer.pharmacyLocation?.address?.trim();
 
   return (
     <article className={css.card}>
@@ -91,32 +100,59 @@ export function ProductOfferCard({
         </div>
 
         <div className={css.info}>
-          <h3 className={css.title}>{offer.pharmacyName}</h3>
-
-          {pharmacyLocation ? (
-            <p className={css.address}>{pharmacyLocation}</p>
-          ) : null}
-
-          {offer.pharmacyPhone ? (
-            phoneHref ? (
-              <a
-                className={css.phone}
-                href={phoneHref}
-                aria-label={`Call ${offer.pharmacyName}: ${offer.pharmacyPhone}`}
-              >
-                {offer.pharmacyPhone}
-              </a>
-            ) : (
-              <p className={css.phone}>{offer.pharmacyPhone}</p>
-            )
-          ) : null}
-
-          <RatingSummary
-            className={css.rating}
-            rating={offer.pharmacyRating ?? 0}
-            reviewsCount={offer.pharmacyReviewsCount ?? 0}
-            size="sm"
-          />
+          <div className={css.identity}>
+            {pharmacyLocation ? (
+              <p className={css.location}>{pharmacyLocation}</p>
+            ) : null}
+            <h3 className={css.title}>{offer.pharmacyName}</h3>
+            <RatingSummary
+              className={css.rating}
+              rating={offer.pharmacyRating ?? 0}
+              reviewsCount={offer.pharmacyReviewsCount ?? 0}
+              size="sm"
+            />
+          </div>
+          <dl className={css.contacts}>
+            {offer.pharmacyPhone ? (
+              <div className={css.contactRow}>
+                <dt>
+                  <Phone size={16} aria-hidden="true" /> Phone
+                </dt>
+                <dd>
+                  {phoneHref ? (
+                    <a
+                      href={phoneHref}
+                      aria-label={`Call ${offer.pharmacyName}: ${offer.pharmacyPhone}`}
+                    >
+                      {offer.pharmacyPhone}
+                    </a>
+                  ) : (
+                    offer.pharmacyPhone
+                  )}
+                </dd>
+              </div>
+            ) : null}
+            {pharmacyAddress ? (
+              <div className={css.contactRow}>
+                <dt>
+                  <MapPin size={16} aria-hidden="true" /> Address
+                </dt>
+                <dd>{pharmacyAddress}</dd>
+              </div>
+            ) : null}
+            {offer.pharmacyEmail ? (
+              <div className={css.contactRow}>
+                <dt>
+                  <Mail size={16} aria-hidden="true" /> Email
+                </dt>
+                <dd>
+                  <a href={`mailto:${offer.pharmacyEmail}`}>
+                    {offer.pharmacyEmail}
+                  </a>
+                </dd>
+              </div>
+            ) : null}
+          </dl>
         </div>
       </div>
 
@@ -163,7 +199,7 @@ export function ProductOfferCard({
           href={buildPharmacyPath(offer.pharmacyName, offer.pharmacyId)}
           variant="secondary"
         >
-          View pharmacy
+          <Building2 size={17} aria-hidden="true" /> View pharmacy
         </LinkButton>
       </div>
     </article>

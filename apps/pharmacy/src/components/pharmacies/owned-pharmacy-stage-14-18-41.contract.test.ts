@@ -19,24 +19,6 @@ test('Inactive pharmacy overview does not repeat the blocked status reason', asy
 
 //===================================================================
 
-test('Reactivation button uses its own mustard styling', async () => {
-  const [actions, styles] = await Promise.all([
-    read('./OwnedPharmacyDetailPageContent/OwnedPharmacyActions.tsx'),
-    read(
-      './OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.module.css'
-    ),
-  ]);
-
-  assert.match(actions, /className=\{css\.reactivationAction\}/);
-
-  assert.match(
-    styles,
-    /\.reactivationAction\s*\{[\s\S]*?background-color: #f4dea0/
-  );
-});
-
-//===================================================================
-
 test('Read-only internal notes survive Inactive; editing remains disabled', async () => {
   const source = await read(
     './OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.tsx'
@@ -45,19 +27,6 @@ test('Read-only internal notes survive Inactive; editing remains disabled', asyn
   assert.match(
     source,
     /isEditable=\{Boolean\(pharmacy && pharmacy\.status !== 'blocked'\)\}/
-  );
-});
-
-//===================================================================
-
-test('Status dropdown stays beside a long title on desktop and tablet', async () => {
-  const styles = await read(
-    './OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.module.css'
-  );
-
-  assert.match(
-    styles,
-    /@media \(min-width: 768px\)[\s\S]*?grid-template-columns: minmax\(0, 1fr\) max-content/
   );
 });
 

@@ -1,69 +1,80 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-//===================================================================
+import {
+  buildProductCatalogPath,
+  parseProductCatalogSegments,
+} from '../../lib/catalog/product-catalog-paths';
 
-async function readSource(relativePath: string): Promise<string> {
-  return readFile(new URL(relativePath, import.meta.url), 'utf8');
-}
-
-//===================================================================
-
-test('pharmacy reset clears the selected pharmacy, location and sorting together', async () => {
-  const source = await readSource(
-    '../pharmacies/PharmaciesCatalogFiltersForm/PharmaciesCatalogFiltersForm.tsx'
-  );
-
-  assert.match(
-    source,
-    /createPharmaciesResetFiltersHref[\s\S]*?name:\s*''[\s\S]*?address:\s*''[\s\S]*?pharmacyId:\s*''[\s\S]*?settlement:\s*''[\s\S]*?region:\s*''[\s\S]*?sort:\s*'newest'/
-  );
-
-  assert.match(source, /hasActiveFilters \? \(\s*<ResetFiltersButton/);
-  assert.match(source, /onClick=\{\(\) => navigate\(resetHref\)\}/);
-  assert.doesNotMatch(source, /<FilterDrawer/);
-});
+import {
+  buildPharmacyPath,
+  parsePharmacySegments,
+} from '../../lib/catalog/pharmacies-catalog-paths';
 
 //===================================================================
 
-test('product reset clears every catalog filter together', async () => {
-  const source = await readSource(
-    '../product-catalog/ProductCatalogFiltersForm/ProductCatalogFiltersForm.tsx'
-  );
-
-  assert.match(
-    source,
-    /createProductsResetFiltersHref[\s\S]*?name:\s*''[\s\S]*?article:\s*''[\s\S]*?category:\s*'all'[\s\S]*?availability:\s*'all'[\s\S]*?pharmacyId:\s*undefined[\s\S]*?sort:\s*'newest'/
-  );
-
-  assert.match(source, /resetDraft\(\{ name: '', article: '' \}\)/);
-});
+const PRODUCT_ID = '507f1f77bcf86cd799439011';
+const PHARMACY_ID = '507f1f77bcf86cd799439012';
 
 //===================================================================
 
-test('pharmacy loading shows two 48px controls, and reset matches their height', async () => {
-  const [loading, loadingStyles, shellStyles] = await Promise.all([
-    readSource('./CatalogPageLoading/CatalogPageLoading.tsx'),
-    readSource('./CatalogPageLoading/CatalogPageLoading.module.css'),
-    readSource('./CatalogFiltersShell/CatalogFiltersShell.module.css'),
-  ]);
+test('catalog reset URLs clear selected entities, categories, sorting and pagination', () => {
+  const productHref = buildProductCatalogPath({
+    productId: PRODUCT_ID,
+    pharmacyId: PHARMACY_ID,
+    category: 'medicine',
+    sort: 'rating-desc',
+    page: 3,
+  });
 
-  assert.match(loading, /filterCount = variant === 'product' \? 5 : 2/);
-  assert.match(loading, /css\.filtersPharmacy/);
+  const productSelection = parseProductCatalogSegments({
+    segments: productHref.split('/').slice(2),
+  });
 
-  assert.match(
-    loadingStyles,
-    /\.filtersPharmacy \.filterControl \{\s*height: 48px;/
-  );
+  assert.equal(productSelection.filters.productId, PRODUCT_ID);
+  assert.equal(productSelection.filters.pharmacyId, PHARMACY_ID);
+  assert.equal(productSelection.filters.category, 'medicine');
+  assert.equal(productSelection.filters.page, 3);
 
-  assert.match(
-    loadingStyles,
-    /\.filtersPharmacy \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/
-  );
+  const productResetPath = buildProductCatalogPath({
+    category: 'all',
+    sort: 'newest',
+  });
 
-  assert.match(
-    shellStyles,
-    /\.pharmacyLayout \.desktopResetSlot > \* \{[^}]*height: 48px;/
+  assert.equal(productResetPath, '/product-catalog');
+
+  const productReset = parseProductCatalogSegments();
+
+  assert.equal(productReset.filters.productId, undefined);
+  assert.equal(productReset.filters.pharmacyId, undefined);
+  assert.equal(productReset.filters.category, 'all');
+  assert.equal(productReset.filters.sort, 'newest');
+  assert.equal(productReset.filters.page, 1);
+  assert.equal('availability' in productReset.filters, false);
+
+  const pharmacyHref = buildPharmacyPath({
+    pharmacyId: PHARMACY_ID,
+    settlement: 'Kyiv',
+    region: 'Kyiv City',
+    sort: 'rating-desc',
+    page: 2,
+  });
+
+  const pharmacySelection = parsePharmacySegments({
+    segments: pharmacyHref.split('/').slice(2),
+  });
+
+  assert.equal(pharmacySelection.filters.pharmacyId, PHARMACY_ID);
+  assert.equal(pharmacySelection.filters.page, 2);
+  assert.equal(pharmacySelection.filters.sort, 'rating-desc');
+
+  assert.equal(
+    buildPharmacyPath({
+      pharmacyId: '',
+      settlement: '',
+      region: '',
+      sort: 'newest',
+    }),
+    '/pharmacies'
   );
 });

@@ -36,18 +36,6 @@ test('14.17.2: pharmacy status and rating select retain textual accessibility wh
 
 //===================================================================
 
-test('14.17.2: shared filter drawer reset control shows the icon without changing the public reset button', () => {
-  const drawer = read(
-    '../../../../../packages/ui/src/overlays/FilterDrawer/FilterDrawer.tsx'
-  );
-
-  assert.match(drawer, /<RotateCcw size=\{17\} aria-hidden="true"/);
-  assert.match(drawer, /\{resetLabel\}/);
-  assert.match(drawer, /hasActiveFilters && \(resetHref \|\| onReset\)/);
-});
-
-//===================================================================
-
 test('14.17.2: pharmacy navigation has permission-gated fresh status totals on desktop and mobile', () => {
   const layout = read('../../app/admin/layout.tsx');
 

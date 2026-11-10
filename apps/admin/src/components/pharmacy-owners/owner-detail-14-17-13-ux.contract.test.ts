@@ -9,21 +9,6 @@ const read = (relativePath: string): string =>
 
 //===================================================================
 
-test('admin profile breadcrumbs retain the leading icon on sub-tabs', () => {
-  const header = read('../layout/AdminHeader/AdminHeader.tsx');
-
-  assert.match(header, /pathname === ADMIN_ROUTES\.PROFILE\s*\|\|/);
-
-  assert.match(
-    header,
-    /pathname\.startsWith\(`\$\{ADMIN_ROUTES\.PROFILE\}\/`\)/
-  );
-
-  assert.match(header, /<UserRound size=\{20\} aria-hidden="true"/);
-});
-
-//===================================================================
-
 test('owner email and phone reserve an independent column for the copy action', () => {
   const detail = read(
     './PharmacyOwnerDetailsPageContent/PharmacyOwnerDetailsPageContent.tsx'

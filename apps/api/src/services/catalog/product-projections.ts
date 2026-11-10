@@ -154,6 +154,7 @@ export async function getOffersByProductIds(
         : {}),
 
       ...(pharmacy.phone ? { pharmacyPhone: pharmacy.phone } : {}),
+      ...(pharmacy.email ? { pharmacyEmail: pharmacy.email } : {}),
       ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),
 
       pharmacyRating: pharmacy.rating ?? 0,

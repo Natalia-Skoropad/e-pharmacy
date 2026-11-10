@@ -39,6 +39,10 @@
   min-width: 0;
 }
 
+.identity {
+  min-width: 0;
+}
+
 .favoriteBadge {
   position: absolute;
   top: 12px;
@@ -74,19 +78,56 @@
   word-break: normal;
 }
 
-.address,
-.phone {
-  display: block;
-  margin-top: 4px;
-  overflow-wrap: break-word;
-  word-break: normal;
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-  color: var(--color-text-secondary);
+.location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: 1.3;
+  letter-spacing: var(--ls-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
 }
 
-.phone:hover,
-.phone:focus-visible {
+.contacts {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin-top: 14px;
+}
+
+.contactRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 120px) minmax(0, 1fr);
+  gap: 8px;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  padding-block: 6px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.contactRow dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-muted);
+}
+
+.contactRow dt svg {
+  flex-shrink: 0;
+}
+
+.contactRow dd {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: right;
+  color: var(--color-text-primary);
+}
+
+.contactRow dd a:hover,
+.contactRow dd a:focus-visible {
   color: var(--color-accent);
 }
 
@@ -106,7 +147,7 @@
   font-size: var(--fz-32);
   font-weight: var(--fw-bold);
   line-height: var(--lh-heading);
-  color: var(--color-text-primary);
+  color: var(--color-accent);
 }
 
 .quantityBlock {
@@ -205,5 +246,61 @@
 
   .aside {
     gap: 12px;
+  }
+}
+
+/* Tablet only: the identity spans the full card. Contacts and photo remain
+   entirely in the LEFT column; price, quantity and actions start at the same
+   vertical position as the contacts in the RIGHT column. */
+@media only screen and (min-width: 768px) and (max-width: 1439px) {
+  .card {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.95fr);
+    column-gap: 22px;
+    row-gap: 14px;
+    align-items: start;
+  }
+
+  .main,
+  .info {
+    display: contents;
+  }
+
+  .identity {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-width: 0;
+  }
+
+  .contacts {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    margin-top: 0;
+  }
+
+  .contactRow {
+    grid-template-columns: minmax(78px, 100px) minmax(0, 1fr);
+  }
+
+  .contactRow dt,
+  .contactRow dd {
+    min-width: 0;
+  }
+
+  .imageWrap {
+    grid-column: 1;
+    grid-row: 3;
+    order: initial;
+    min-height: 180px;
+    aspect-ratio: 4 / 3;
+    align-self: start;
+  }
+
+  .aside {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: start;
+    align-content: start;
+    gap: 14px;
   }
 }

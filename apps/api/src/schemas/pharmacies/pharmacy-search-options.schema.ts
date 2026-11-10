@@ -8,6 +8,7 @@ import {
 } from '../shared/index';
 
 import { sharedSearchSchema } from '../shared/shared-validation.schema';
+import { productCategorySlugSchema } from '../catalog/product-category.schema';
 
 //===============================================================
 
@@ -22,6 +23,8 @@ export const pharmacySearchOptionsQuerySchema = z.preprocess(
       perPage: createPerPageSchema({ defaultValue: 50, max: 50 }),
       query: sharedSearchSchema,
       pharmacyId: mongoIdSchema.optional(),
+      productId: mongoIdSchema.optional(),
+      category: productCategorySlugSchema.optional(),
       settlement: sharedSearchSchema,
       region: sharedSearchSchema,
       selectedId: mongoIdSchema.optional(),

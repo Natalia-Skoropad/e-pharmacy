@@ -31,6 +31,8 @@ function cacheKey(params: PharmacySearchOptionsParams): string {
     normalize(params.settlement),
     normalize(params.region),
     params.pharmacyId ?? '',
+    params.productId ?? '',
+    normalize(params.category),
     params.selectedId ?? '',
     params.page ?? 1,
     params.perPage ?? PHARMACY_SELECT_PAGE_SIZE,

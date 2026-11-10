@@ -39,8 +39,11 @@ import type { CatalogResourceState } from './catalog-resource-state';
 
 export type ProductCatalogPageData = Readonly<{
   products: readonly ProductCardSummary[];
+  selectedProductName?: string;
+  selectedProductImageUrl?: string;
   pharmacies: PharmacyOption[];
   filterOptions: ProductFilterOptionsResponse;
+  availableCategories: ProductFilterOptionsResponse['categories'];
   total: number;
   totalPages: number;
   filters: ProductCatalogFilters;
@@ -56,8 +59,13 @@ export function createProductCatalogPageData({
   productsState,
   pharmaciesState,
   filterOptionsState,
+  scopedCategoryState,
+  selectedProductName,
+  selectedProductImageUrl,
 }: Readonly<{
   filters: ProductCatalogFilters;
+  selectedProductName?: string;
+  selectedProductImageUrl?: string;
   productsState: ResolvedDataState<ProductsResponse>;
 
   pharmaciesState: ResolvedDataState<
@@ -65,12 +73,16 @@ export function createProductCatalogPageData({
   >;
 
   filterOptionsState: ResolvedDataState<ProductFilterOptionsResponse>;
+  scopedCategoryState?: ResolvedDataState<ProductFilterOptionsResponse> | null;
 }>): ProductCatalogPageData {
   const productsData =
     productsState.status === 'success' ? productsState.data : null;
 
   return {
     products: [...(productsData?.items ?? [])],
+
+    ...(selectedProductName ? { selectedProductName } : {}),
+    ...(selectedProductImageUrl ? { selectedProductImageUrl } : {}),
 
     pharmacies: sortPharmaciesByName(
       pharmaciesState.status === 'success' ? pharmaciesState.data.items : []
@@ -80,6 +92,13 @@ export function createProductCatalogPageData({
       filterOptionsState.status === 'success'
         ? filterOptionsState.data
         : FALLBACK_PRODUCT_FILTER_OPTIONS,
+
+    availableCategories:
+      scopedCategoryState?.status === 'success'
+        ? scopedCategoryState.data.categories
+        : filterOptionsState.status === 'success'
+          ? filterOptionsState.data.categories
+          : FALLBACK_PRODUCT_FILTER_OPTIONS.categories,
 
     total: productsData?.total ?? 0,
     totalPages: productsData?.totalPages ?? 0,

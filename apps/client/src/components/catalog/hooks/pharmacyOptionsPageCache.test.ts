@@ -75,3 +75,33 @@ test('evicts least recently used pages to bound memory usage', () => {
   assert.strictEqual(cache.get(first, 3), response);
   assert.strictEqual(cache.get(third, 3), response);
 });
+
+//===================================================================
+
+test('keeps dependent catalog searches separate for product and category', () => {
+  const cache = createPharmacyOptionsPageCache(1000, 10);
+
+  const context = {
+    kind: 'pharmacy' as const,
+    query: '',
+    page: 1,
+    perPage: 50,
+  };
+
+  const productId = '6ac75e1417684f6f914a4db5';
+
+  cache.set({ ...context, productId, category: 'medicine' }, response, 0);
+
+  assert.strictEqual(
+    cache.get({ ...context, productId, category: 'medicine' }, 1),
+    response
+  );
+
+  assert.equal(
+    cache.get({ ...context, productId, category: 'hygiene' }, 1),
+    null
+  );
+
+  assert.equal(cache.get({ ...context, category: 'medicine' }, 1), null);
+  assert.equal(cache.get({ ...context, productId }, 1), null);
+});

@@ -33,7 +33,7 @@ export default function CatalogPageLoading({
   variant,
 }: CatalogPageLoadingProps) {
   // Pharmacies have only two searchable selectors; Reset filters is conditional.
-  const filterCount = variant === 'product' ? 5 : 2;
+  const filterCount = variant === 'product' ? 3 : 2;
 
   return (
     <main className={css.page} aria-busy="true">
@@ -50,7 +50,7 @@ export default function CatalogPageLoading({
             <div
               className={clsx(
                 css.filters,
-                variant === 'product' ? css.filtersWide : css.filtersPharmacy
+                variant === 'product' ? css.filtersProduct : css.filtersPharmacy
               )}
             >
               {Array.from({ length: filterCount }, (_, index) => (

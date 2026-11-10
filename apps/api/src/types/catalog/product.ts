@@ -34,6 +34,8 @@ export type ProductEntity = {
   updatedAt: Date;
 };
 
+//===============================================================
+
 export type ProductOfferEntity = {
   _id: Types.ObjectId;
   productId: Types.ObjectId;
@@ -46,12 +48,15 @@ export type ProductOfferEntity = {
   updatedAt: Date;
 };
 
+//===============================================================
+
 export type ProductOfferResponseDto = {
   id: string;
   pharmacyId: string;
   pharmacyName: string;
   pharmacyLocation?: PharmacyLocationDraft;
   pharmacyPhone?: string;
+  pharmacyEmail?: string;
   pharmacyImageUrl?: string;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
@@ -65,6 +70,8 @@ export type ProductOfferResponseDto = {
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
 };
+
+//===============================================================
 
 export type ProductCardSummaryResponseDto = {
   id: string;
@@ -87,6 +94,8 @@ export type ProductCardSummaryResponseDto = {
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
 };
+
+//===============================================================
 
 export type ProductResponseDto = {
   id: string;
@@ -115,9 +124,12 @@ export type ProductResponseDto = {
   updatedAt: ISODateTimeString;
 };
 
+//===============================================================
+
 export type ProductFilterOptionDto<TValue extends string = string> = {
   value: TValue;
   label: string;
+  icon?: string;
 };
 
 //===============================================================

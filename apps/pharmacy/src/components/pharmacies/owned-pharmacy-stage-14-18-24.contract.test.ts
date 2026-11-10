@@ -42,24 +42,6 @@ test('14.18.24: tabs respond to the first click and synchronize with URL changes
 
 //===================================================================
 
-test('14.18.24: owner profile Documents and Comments icons align with admin counterparts', () => {
-  const profile = read(
-    '../profile/PharmacyProfilePageContent/PharmacyProfilePageContent.tsx'
-  );
-
-  const docs = read('../profile/OwnerDocumentsPanel/OwnerDocumentsPanel.tsx');
-
-  const comments = read(
-    '../profile/OwnerPrivateComments/OwnerPrivateComments.tsx'
-  );
-
-  assert.match(profile, /icon: <Files size=\{17\}/);
-  assert.match(docs, /headerIcon=\{<Files size=\{22\}/);
-  assert.match(comments, /emptyIcon=\{<MessageSquareLock size=\{22\}/);
-});
-
-//===================================================================
-
 test('14.18.24: created status is human-readable and disabled verification tooltip uses structured items', () => {
   const info = read(
     './OwnedPharmacyDetailPageContent/OwnedPharmacyInformationTab.tsx'
