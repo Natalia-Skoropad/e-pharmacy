@@ -84,7 +84,7 @@ test('commerce, review, and dictionary readers select their domain cache presets
 
   assert.match(
     pharmacyCatalog,
-    /getSelectedPharmacySeoName\([\s\S]*?readCatalogForFilters\(filters\)/
+    /getSelectedPharmacySeoDetails\([\s\S]*?readCatalogForFilters\(filters\)/
   );
 
   assert.match(

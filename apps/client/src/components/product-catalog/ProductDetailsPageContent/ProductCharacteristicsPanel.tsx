@@ -18,12 +18,14 @@ import css from './ProductCharacteristicsPanel.module.css';
 
 export type ProductCharacteristicsPanelProps = Readonly<{
   product: ProductDetails;
+  isPageHeading?: boolean;
 }>;
 
 //===================================================================
 
 export function ProductCharacteristicsPanel({
   product,
+  isPageHeading = false,
 }: ProductCharacteristicsPanelProps) {
   const description = product.description?.trim();
 
@@ -34,7 +36,11 @@ export function ProductCharacteristicsPanel({
           <FileText size={22} />
         </span>
         <div>
-          <h2 className={aboutCss.title}>Characteristics</h2>
+          {isPageHeading ? (
+            <h1 className={aboutCss.title}>Characteristics</h1>
+          ) : (
+            <h2 className={aboutCss.title}>Characteristics</h2>
+          )}
           <p className={aboutCss.subtitle}>
             Manufacturer, dosage, packaging and description of this product.
           </p>
@@ -94,7 +100,9 @@ export function ProductCharacteristicsPanel({
           </div>
         </dl>
         <MarkdownContent
-          value={description || 'Detailed description is not available yet.'}
+          value={(
+            description || 'Detailed description is not available yet.'
+          ).replace(/^#(?=\s+\S)/gm, '##')}
         />
       </div>
     </>

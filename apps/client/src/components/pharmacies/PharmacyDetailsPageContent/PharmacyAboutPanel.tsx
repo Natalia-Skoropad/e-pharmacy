@@ -9,11 +9,15 @@ import css from './PharmacyAboutPanel.module.css';
 
 export type PharmacyAboutPanelProps = Readonly<{
   pharmacy: PublicPharmacy;
+  isPageHeading?: boolean;
 }>;
 
 //===================================================================
 
-export function PharmacyAboutPanel({ pharmacy }: PharmacyAboutPanelProps) {
+export function PharmacyAboutPanel({
+  pharmacy,
+  isPageHeading = false,
+}: PharmacyAboutPanelProps) {
   return (
     <>
       <div className={css.header}>
@@ -21,7 +25,11 @@ export function PharmacyAboutPanel({ pharmacy }: PharmacyAboutPanelProps) {
           <FileText size={22} aria-hidden="true" />
         </span>
         <div>
-          <h2 className={css.title}>About pharmacy</h2>
+          {isPageHeading ? (
+            <h1 className={css.title}>About pharmacy</h1>
+          ) : (
+            <h2 className={css.title}>About pharmacy</h2>
+          )}
           <p className={css.subtitle}>
             Learn more about {pharmacy.name} and the services it offers.
           </p>
@@ -30,10 +38,10 @@ export function PharmacyAboutPanel({ pharmacy }: PharmacyAboutPanelProps) {
 
       <div className={css.description}>
         <MarkdownContent
-          value={
+          value={(
             pharmacy.description?.trim() ||
             'The pharmacy has not added a public description yet.'
-          }
+          ).replace(/^#(?=\s+\S)/gm, '##')}
         />
       </div>
     </>

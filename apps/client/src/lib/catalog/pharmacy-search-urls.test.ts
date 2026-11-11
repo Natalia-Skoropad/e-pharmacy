@@ -18,10 +18,11 @@ const id = '507f1f77bcf86cd799439011';
 
 test('selected pharmacy has canonical catalog URL and exact API filter', () => {
   const filters = parsePharmacySearchParams({ pharmacyId: id });
+
   assert.equal(buildPharmacyPath(filters), `/pharmacies/pharmacy-id-${id}`);
   assert.equal(buildPharmacyApiParams(filters).pharmacyId, id);
   assert.equal(getPharmacyActiveFiltersCount(filters), 1);
-  assert.equal(isPharmacyNoIndex(filters), true);
+  assert.equal(isPharmacyNoIndex(filters), false);
 
   assert.equal(
     parsePharmacySegments({ segments: [`pharmacy-id-${id}`] }).filters

@@ -35,6 +35,8 @@ export const PHARMACIES_SORT_OPTIONS = [
   label: string;
 }>[];
 
+//===================================================================
+
 const PHARMACIES_PER_PAGE = 24;
 
 //===================================================================
@@ -109,6 +111,7 @@ export function formatPharmacyLocationLabel(
   region?: string
 ): string {
   const sanitizedSettlement = sanitizeTextParam(settlement);
+
   if (!sanitizedSettlement) return '';
 
   const sanitizedRegion = sanitizeTextParam(region);
@@ -126,6 +129,7 @@ export function resolvePharmacyLocation(
   locations: readonly PharmacyLocationFilterOption[]
 ): Readonly<{ settlement: string; region: string }> {
   const sanitizedSettlement = sanitizeTextParam(settlement);
+
   if (!sanitizedSettlement) return { settlement: '', region: '' };
 
   const sanitizedRegion = sanitizeTextParam(region);
@@ -137,6 +141,7 @@ export function resolvePharmacyLocation(
 
   if (sanitizedRegion) {
     const regionKey = normalizeLocationKey(sanitizedRegion);
+
     const exactMatch = matchingSettlements.find(
       (location) => normalizeLocationKey(location.region ?? '') === regionKey
     );
@@ -197,9 +202,7 @@ export function parsePharmacySearchParams(
   const name = getSingleSearchParam(params.name);
   const address = getSingleSearchParam(params.address);
   const pharmacyId = getSingleSearchParam(params.pharmacyId);
-
   const settlement = getSingleSearchParam(params.settlement);
-
   const region = getSingleSearchParam(params.region);
   const sort = getSingleSearchParam(params.sort);
   const page = getSingleSearchParam(params.page);
@@ -279,7 +282,6 @@ export function isPharmacyNoIndex(filters: PharmacyFilters): boolean {
     filters.page > 1 ||
     filters.sort !== 'newest' ||
     Boolean(filters.name) ||
-    Boolean(filters.address) ||
-    Boolean(filters.pharmacyId)
+    Boolean(filters.address)
   );
 }

@@ -4,6 +4,7 @@
 }
 
 .section {
+  min-height: 100svh;
   padding-block: 20px 60px;
 }
 

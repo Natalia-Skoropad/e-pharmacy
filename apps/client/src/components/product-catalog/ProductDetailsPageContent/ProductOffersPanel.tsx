@@ -25,6 +25,7 @@ import css from './ProductOffersPanel.module.css';
 
 export type ProductOffersPanelProps = Readonly<{
   product: ProductDetails;
+  isPageHeading?: boolean;
   contextPharmacyId?: string;
 }>;
 
@@ -32,6 +33,7 @@ export type ProductOffersPanelProps = Readonly<{
 
 export function ProductOffersPanel({
   product,
+  isPageHeading = false,
   contextPharmacyId,
 }: ProductOffersPanelProps) {
   const {
@@ -40,6 +42,7 @@ export function ProductOffersPanel({
     isActivePharmacyUser,
     isActiveAdminUser,
   } = useClientAuthCapabilities();
+
   const { getCollectionStatus, isFavorite, loadCollection } = useFavorites();
   const favoriteCollectionStatus = getCollectionStatus('pharmacy');
 
@@ -102,7 +105,11 @@ export function ProductOffersPanel({
         </span>
 
         <div className={css.headerText}>
-          <h2 className={css.title}>Pharmacies</h2>
+          {isPageHeading ? (
+            <h1 className={css.title}>Pharmacies</h1>
+          ) : (
+            <h2 className={css.title}>Pharmacies</h2>
+          )}
           <p className={css.subtitle}>
             Compare pharmacies, availability and prices for this product.
           </p>

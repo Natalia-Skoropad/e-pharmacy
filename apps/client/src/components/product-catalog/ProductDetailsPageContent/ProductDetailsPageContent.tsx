@@ -109,9 +109,15 @@ function ProductDetailsPageContent({
               </span>
               <div className={shellCss.detailsHeaderContent}>
                 <div className={shellCss.detailsHeaderTitleRow}>
-                  <h1 className={shellCss.detailsHeaderTitle}>
-                    {product.name}
-                  </h1>
+                  {initialTab === 'details' ? (
+                    <h1 className={shellCss.detailsHeaderTitle}>
+                      {product.name}
+                    </h1>
+                  ) : (
+                    <h2 className={shellCss.detailsHeaderTitle}>
+                      {product.name}
+                    </h2>
+                  )}
                   <span className={css.category}>
                     <CategoryIcon name={product.category.icon} size={16} />
                     {product.category.name}
@@ -138,6 +144,7 @@ function ProductDetailsPageContent({
             activeValue={initialTab}
           >
             <ProductOffersPanel
+              isPageHeading={initialTab === 'pharmacies'}
               product={product}
               contextPharmacyId={contextPharmacyId}
             />
@@ -149,7 +156,10 @@ function ProductDetailsPageContent({
             value="characteristics"
             activeValue={initialTab}
           >
-            <ProductCharacteristicsPanel product={product} />
+            <ProductCharacteristicsPanel
+              product={product}
+              isPageHeading={initialTab === 'characteristics'}
+            />
           </TabPanel>
 
           <TabPanel
@@ -159,6 +169,7 @@ function ProductDetailsPageContent({
             activeValue={initialTab}
           >
             <ProductReviewsPanel
+              isPageHeading={initialTab === 'reviews'}
               productId={product.id}
               reviews={reviews}
               reviewsTotal={reviewsTotal}

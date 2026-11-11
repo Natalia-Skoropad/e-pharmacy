@@ -32,6 +32,7 @@ import css from './PharmacyCard.module.css';
 export type PharmacyCardProps = Readonly<{
   pharmacy: PharmacyCardSummary;
   headingLevel?: CatalogCardHeadingLevel;
+  priorityImage?: boolean;
   onFavoriteChange?: (pharmacyId: string, isFavorite: boolean) => void;
 }>;
 
@@ -40,6 +41,7 @@ export type PharmacyCardProps = Readonly<{
 function PharmacyCard({
   pharmacy,
   headingLevel = 2,
+  priorityImage = false,
   onFavoriteChange,
 }: PharmacyCardProps) {
   const authCapabilities = useClientAuthCapabilities();
@@ -83,6 +85,7 @@ function PharmacyCard({
         alt: `${pharmacy.name} image`,
         fallbackIcon: 'icon-map-pin',
         fit: 'cover',
+        priority: priorityImage,
         sizes: '(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw',
       }}
       favoriteAction={

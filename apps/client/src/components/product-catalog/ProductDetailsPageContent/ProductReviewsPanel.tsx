@@ -23,6 +23,7 @@ import css from '@/components/pharmacies/PharmacyDetailsPageContent/PharmacyRevi
 
 export type ProductReviewsPanelProps = Readonly<{
   productId: string;
+  isPageHeading?: boolean;
   reviews: readonly Review[];
   reviewsTotal: number;
   areReviewsUnavailable?: boolean;
@@ -32,6 +33,7 @@ export type ProductReviewsPanelProps = Readonly<{
 
 export function ProductReviewsPanel({
   productId,
+  isPageHeading = false,
   reviews,
   reviewsTotal,
   areReviewsUnavailable = false,
@@ -81,7 +83,11 @@ export function ProductReviewsPanel({
             <Star size={22} />
           </span>
           <div>
-            <h2 className={css.title}>Reviews</h2>
+            {isPageHeading ? (
+              <h1 className={css.title}>Reviews</h1>
+            ) : (
+              <h2 className={css.title}>Reviews</h2>
+            )}
             <p className={css.subtitle}>
               Read feedback from clients who have ordered this product.
             </p>

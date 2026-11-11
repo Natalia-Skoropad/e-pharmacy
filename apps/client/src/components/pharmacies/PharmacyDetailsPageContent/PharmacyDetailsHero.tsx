@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
@@ -16,6 +18,7 @@ import {
 import { FavoriteToggleButton } from '@/components/common';
 
 import { PharmacyContactPanel } from './PharmacyContactPanel';
+
 import css from './PharmacyDetailsHero.module.css';
 
 //===================================================================
@@ -36,6 +39,8 @@ export function PharmacyDetailsHero({
   onCopy,
 }: PharmacyDetailsHeroProps) {
   const toast = useToast();
+  const [useDirectImage, setUseDirectImage] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
 
   const { isAuthenticated, isBootstrapping, canUseClientFeatures } =
     useClientAuthCapabilities();
@@ -51,13 +56,18 @@ export function PharmacyDetailsHero({
   return (
     <div className={css.grid}>
       <div className={css.imageCard}>
-        {pharmacy.imageUrl ? (
+        {pharmacy.imageUrl && !hasImageError ? (
           <ShimmerImage
             className={css.image}
             src={pharmacy.imageUrl}
             alt={`${pharmacy.name} image`}
             priority
             fetchPriority="high"
+            unoptimized={useDirectImage}
+            onError={() => {
+              if (!useDirectImage) setUseDirectImage(true);
+              else setHasImageError(true);
+            }}
             sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
           />
         ) : (

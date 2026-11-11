@@ -3,7 +3,7 @@ import { permanentRedirect } from 'next/navigation';
 import {
   buildPharmacyCanonicalPath,
   buildPharmacyPath,
-  getPharmacyDescription,
+  getPharmacySocialDescription,
   getPharmacyTitle,
   isPharmacyNoIndex,
   parsePharmacySearchParams,
@@ -13,7 +13,7 @@ import {
 import {
   loadPharmaciesCatalogPageData,
   resolvePharmaciesCatalogFilters,
-  getSelectedPharmacySeoName,
+  getSelectedPharmacySeoDetails,
 } from '@/lib/catalog/pharmacies-catalog-server';
 
 import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
@@ -33,13 +33,25 @@ export async function generateMetadata({ searchParams }: PharmaciesPageProps) {
   const parsedFilters = parsePharmacySearchParams(await searchParams);
   const { filters } = await resolvePharmaciesCatalogFilters(parsedFilters);
 
-  const pharmacyName = await getSelectedPharmacySeoName(filters);
+  const selectedPharmacy = await getSelectedPharmacySeoDetails(filters);
+  const pharmacyName = selectedPharmacy?.name;
 
   return createPageMetadata({
     title: getPharmacyTitle(filters, pharmacyName),
-    description: getPharmacyDescription(filters, pharmacyName),
+    description: getPharmacySocialDescription(filters, pharmacyName),
+
+    ...(selectedPharmacy?.imageUrl
+      ? {
+          image: selectedPharmacy.imageUrl,
+          imageAlt: `${selectedPharmacy.name} pharmacy photo`,
+        }
+      : {}),
+
     path: buildPharmacyCanonicalPath(filters),
-    noIndex: isPharmacyNoIndex(filters),
+
+    noIndex:
+      isPharmacyNoIndex(filters) ||
+      Boolean(filters.pharmacyId && !selectedPharmacy),
   });
 }
 

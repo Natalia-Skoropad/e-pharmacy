@@ -150,7 +150,11 @@ function PharmacyDetailsPageContent({
 
               <div className={css.detailsHeaderContent}>
                 <div className={css.detailsHeaderTitleRow}>
-                  <h1 className={css.detailsHeaderTitle}>{pharmacy.name}</h1>
+                  {currentTab === 'details' ? (
+                    <h1 className={css.detailsHeaderTitle}>{pharmacy.name}</h1>
+                  ) : (
+                    <h2 className={css.detailsHeaderTitle}>{pharmacy.name}</h2>
+                  )}
                   {pharmacy.location?.settlement ? (
                     <span className={css.detailsHeaderSettlement}>
                       {formatPharmacyLocationLabel(
@@ -186,6 +190,7 @@ function PharmacyDetailsPageContent({
             >
               <PharmacyBankDetailsPanel
                 state={bankDetailsState}
+                isPageHeading={currentTab === 'payment'}
                 onRetry={() => void retryBankDetails()}
                 onCopy={clipboard.copy}
               />
@@ -198,7 +203,10 @@ function PharmacyDetailsPageContent({
             value="about"
             activeValue={currentTab}
           >
-            <PharmacyAboutPanel pharmacy={pharmacy} />
+            <PharmacyAboutPanel
+              pharmacy={pharmacy}
+              isPageHeading={currentTab === 'about'}
+            />
           </TabPanel>
 
           <TabPanel
@@ -209,6 +217,7 @@ function PharmacyDetailsPageContent({
           >
             <PharmacyReviewsPanel
               pharmacyId={pharmacy.id}
+              isPageHeading={currentTab === 'reviews'}
               reviews={reviews}
               reviewsTotal={reviewsTotal}
               areReviewsUnavailable={areReviewsUnavailable}

@@ -14,9 +14,9 @@ export type PharmaciesListProps = Readonly<{
 function PharmaciesList({ pharmacies }: PharmaciesListProps) {
   return (
     <CatalogGrid ariaLabel="Pharmacies">
-      {pharmacies.map((pharmacy) => (
+      {pharmacies.map((pharmacy, index) => (
         <CatalogGrid.Item key={pharmacy.id}>
-          <PharmacyCard pharmacy={pharmacy} />
+          <PharmacyCard pharmacy={pharmacy} priorityImage={index === 0} />
         </CatalogGrid.Item>
       ))}
     </CatalogGrid>

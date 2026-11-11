@@ -69,6 +69,7 @@ export function parsePharmacySegments(
   if (segments.length > MAX_CATALOG_SEGMENTS) {
     return {
       filters,
+
       issues: [
         {
           code: 'too_many',
@@ -90,10 +91,12 @@ export function parsePharmacySegments(
   ) => {
     if (seen.has(key)) {
       issues.push({ code: 'duplicate', segment, index });
+
       return;
     }
 
     seen.add(key);
+
     if (!update()) issues.push({ code: 'malformed', segment, index });
   };
 
@@ -103,6 +106,7 @@ export function parsePharmacySegments(
         const value = segment.slice('pharmacy-id-'.length);
 
         if (!/^[a-f\d]{24}$/i.test(value)) return false;
+
         filters.pharmacyId = value.toLowerCase();
 
         return true;
@@ -131,6 +135,7 @@ export function parsePharmacySegments(
         const value = deslugifyNameSegment(segment.slice('address-'.length));
 
         if (!value) return false;
+
         filters.address = value;
 
         return true;
@@ -144,6 +149,7 @@ export function parsePharmacySegments(
         const value = deslugifyNameSegment(segment.slice('location-'.length));
 
         if (!value) return false;
+
         filters.settlement = value;
 
         return true;
@@ -157,6 +163,7 @@ export function parsePharmacySegments(
         const value = deslugifyNameSegment(segment.slice('region-'.length));
 
         if (!value) return false;
+
         filters.region = value;
 
         return true;
@@ -170,10 +177,12 @@ export function parsePharmacySegments(
         const value = segment.slice('sort-'.length);
 
         if (!isPharmacySortFilter(value) || value === 'newest') return false;
+
         filters.sort = value;
 
         return true;
       });
+
       continue;
     }
 
@@ -182,6 +191,7 @@ export function parsePharmacySegments(
         const value = segment.slice('page-'.length);
 
         if (!isCanonicalPositivePageParam(value) || value === '1') return false;
+
         filters.page = parsePositivePageParam(value);
 
         return true;
@@ -223,20 +233,24 @@ export function buildPharmacyPath(filters: Partial<PharmacyFilters>): string {
 
   if (filters.name) {
     const value = slugifySegment(filters.name);
+
     if (value) segments.push(`search-name-${value}`);
   }
 
   if (filters.address) {
     const value = slugifySegment(filters.address);
+
     if (value) segments.push(`address-${value}`);
   }
 
   if (filters.settlement) {
     const settlement = slugifySegment(filters.settlement);
+
     if (settlement) segments.push(`location-${settlement}`);
 
     if (filters.region) {
       const region = slugifySegment(filters.region);
+
       if (region) segments.push(`region-${region}`);
     }
   }
@@ -264,6 +278,7 @@ export function buildPharmacyIndexedPath(
   filters: Partial<PharmacyFilters>
 ): string {
   return buildPharmacyPath({
+    pharmacyId: filters.pharmacyId,
     settlement: filters.settlement,
     region: filters.region,
   });

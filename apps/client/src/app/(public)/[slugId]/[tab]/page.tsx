@@ -62,8 +62,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const result = await resolvePharmacy(slugId);
 
     return result.status === 'found'
-      ? createPharmacyDetailMetadata(result.pharmacy)
-      : {};
+      ? createPharmacyDetailMetadata(result.pharmacy, pharmacyTabs[tab])
+      : pharmacyTabs[tab] === 'payment'
+        ? { robots: { index: false, follow: false, nocache: true } }
+        : {};
   }
 
   return {};

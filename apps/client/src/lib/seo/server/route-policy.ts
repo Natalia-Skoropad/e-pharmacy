@@ -37,15 +37,19 @@ export function createApprovedInfoSitemapEntries(
 const ROBOTS_PRIVATE_ROUTE_ROOTS = [
   '/api',
   ...CLIENT_PRIVATE_ROUTE_PREFIXES,
+
   ROUTES.LOGIN,
   ROUTES.REGISTER,
   ROUTES.PASSWORD_RECOVERY,
   ROUTES.RESET_PASSWORD,
+
   ...CLIENT_RESERVED_APP_PREFIXES.map((segment) => `/${segment}`),
 ] as const;
 
 //===================================================================
 
 export const ROBOTS_DISALLOW_ROUTES = ROBOTS_PRIVATE_ROUTE_ROOTS.flatMap(
-  (route) => [route, `${route}/`]
+  // Anchor the root explicitly: "/pharmacy" as a bare prefix blocks every
+  // public "/pharmacy-<slug>-ph<id>" detail URL in robots.txt.
+  (route) => [`${route}$`, `${route}/`]
 );

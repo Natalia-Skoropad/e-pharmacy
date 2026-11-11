@@ -30,6 +30,7 @@ export function getPharmacyTitle(
 
   if (filters.pharmacyId) {
     const name = pharmacyName?.trim() || 'Selected pharmacy';
+
     return locationLabel ? `${name} in ${locationLabel}` : name;
   }
 
@@ -114,4 +115,18 @@ export function getPharmaciesSeoContent(
 
 export function shouldShowPharmaciesSeoText(filters: PharmacyFilters): boolean {
   return Boolean(filters.pharmacyId) || !isPharmacyNoIndex(filters);
+}
+
+//===================================================================
+
+/** Use the actual visible pharmacy SEO copy for social previews. */
+export function getPharmacySocialDescription(
+  filters: PharmacyFilters,
+  pharmacyName?: string
+): string {
+  if (!filters.pharmacyId) return getPharmacyDescription(filters, pharmacyName);
+
+  const content = getPharmaciesSeoContent(filters, pharmacyName);
+
+  return [content.intro, content.comparison, content.ordering].join(' ');
 }

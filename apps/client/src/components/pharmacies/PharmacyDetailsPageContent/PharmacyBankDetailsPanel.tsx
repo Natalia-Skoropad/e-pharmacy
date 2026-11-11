@@ -13,6 +13,7 @@ import css from './PharmacyBankDetailsPanel.module.css';
 
 export type PharmacyBankDetailsPanelProps = Readonly<{
   state: PharmacyBankDetailsState;
+  isPageHeading?: boolean;
   onRetry: () => void;
   onCopy: (value: string, label: string) => Promise<boolean>;
 }>;
@@ -21,6 +22,7 @@ export type PharmacyBankDetailsPanelProps = Readonly<{
 
 export function PharmacyBankDetailsPanel({
   state,
+  isPageHeading = false,
   onRetry,
   onCopy,
 }: PharmacyBankDetailsPanelProps) {
@@ -32,7 +34,11 @@ export function PharmacyBankDetailsPanel({
         </span>
 
         <div>
-          <h2 className={css.title}>Bank details</h2>
+          {isPageHeading ? (
+            <h1 className={css.title}>Bank details</h1>
+          ) : (
+            <h2 className={css.title}>Bank details</h2>
+          )}
           <p className={css.subtitle}>
             Payment details provided by the pharmacy for bank transfer orders.
           </p>

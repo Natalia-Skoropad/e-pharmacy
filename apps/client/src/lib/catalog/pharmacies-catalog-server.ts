@@ -139,16 +139,26 @@ export async function loadPharmaciesCatalogPageData(
 
 //===================================================================
 
-export async function getSelectedPharmacySeoName(
+/** Reuse the same cached catalogue response for social metadata and the page. */
+export async function getSelectedPharmacySeoDetails(
   filters: PharmacyFilters
-): Promise<string | undefined> {
+): Promise<{ name: string; imageUrl?: string } | undefined> {
   if (!filters.pharmacyId) return undefined;
 
-  // Same request as the listing, cached during the render; using a separate
-  // 6-second search-options request used to erase the pharmacy's SEO title.
+  // No extra /search-options request: the selected pharmacy is part of the
+  // filtered catalogue response. Its public photo is safe for OG/Twitter.
   const state = await readCatalogForFilters(filters);
 
-  return state.status === 'success'
-    ? state.data.items.find((item) => item.id === filters.pharmacyId)?.name
+  if (state.status !== 'success') return undefined;
+
+  const pharmacy = state.data.items.find(
+    (item) => item.id === filters.pharmacyId
+  );
+
+  return pharmacy
+    ? {
+        name: pharmacy.name,
+        ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
+      }
     : undefined;
 }

@@ -44,7 +44,14 @@ export function createPageMetadata({
       title,
       description,
       url: absoluteUrl,
-      images: [{ url: image, width: 1200, height: 630, alt: imageAlt }],
+
+      images: [
+        {
+          url: image,
+          ...(image === DEFAULT_OG_IMAGE ? { width: 1200, height: 630 } : {}),
+          alt: imageAlt,
+        },
+      ],
     },
 
     twitter: {

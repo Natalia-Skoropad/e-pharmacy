@@ -187,6 +187,7 @@ function Tabs<TValue extends string = string>({
   useOutsidePointerDown({
     refs: [tabsRef, moreMenuRef],
     enabled: isMoreOpen,
+
     onOutside: () => {
       setMoreMenuMode(null);
       setMoreMenuPosition(null);
@@ -212,6 +213,7 @@ function Tabs<TValue extends string = string>({
       if (!button || button.offsetParent === null) {
         setMoreMenuMode(null);
         setMoreMenuPosition(null);
+
         return;
       }
 
@@ -251,6 +253,7 @@ function Tabs<TValue extends string = string>({
 
     focusTimerRef.current = window.setTimeout(() => {
       focusTimerRef.current = null;
+
       const tabButton = tabButtonRefs.current.get(value);
 
       if (isElementVisible(tabButton ?? null)) {
@@ -282,6 +285,7 @@ function Tabs<TValue extends string = string>({
     if (moreMenuMode === mode) {
       setMoreMenuMode(null);
       setMoreMenuPosition(null);
+
       return;
     }
 
@@ -294,6 +298,7 @@ function Tabs<TValue extends string = string>({
     currentIndex: number
   ) => {
     const lastIndex = items.length - 1;
+
     let nextIndex: number | null = null;
 
     switch (event.key) {
@@ -374,50 +379,47 @@ function Tabs<TValue extends string = string>({
   };
 
   return (
-    <div
-      className={css.tabs}
-      role="tablist"
-      aria-label={ariaLabel}
-      ref={tabsRef}
-    >
-      {items.map((item, index) => {
-        const isActive = item.value === activeValue;
-        const isHiddenOnMobile = index >= normalizedMobileVisibleCount;
-        const isHiddenOnTablet = index >= normalizedTabletVisibleCount;
+    <div className={css.tabs} ref={tabsRef}>
+      <div className={css.tabItems} role="tablist" aria-label={ariaLabel}>
+        {items.map((item, index) => {
+          const isActive = item.value === activeValue;
+          const isHiddenOnMobile = index >= normalizedMobileVisibleCount;
+          const isHiddenOnTablet = index >= normalizedTabletVisibleCount;
 
-        return (
-          <button
-            className={clsx(
-              isActive ? css.tabActive : css.tab,
-              isHiddenOnMobile && css.tabHiddenOnMobile,
-              isHiddenOnTablet && css.tabHiddenOnTablet
-            )}
-            key={item.value}
-            ref={(node) => {
-              if (node) {
-                tabButtonRefs.current.set(item.value, node);
-              } else {
-                tabButtonRefs.current.delete(item.value);
-              }
-            }}
-            type="button"
-            role="tab"
-            id={getTabId(resolvedIdBase, item.value)}
-            aria-controls={getTabPanelId(resolvedIdBase, item.value)}
-            aria-selected={isActive}
-            tabIndex={isActive ? 0 : -1}
-            onClick={() => handleTabClick(item.value)}
-            onKeyDown={(event) => handleTabKeyDown(event, index)}
-          >
-            {item.icon ? (
-              <span className={css.tabIcon} aria-hidden="true">
-                {item.icon}
-              </span>
-            ) : null}
-            <span>{item.label}</span>
-          </button>
-        );
-      })}
+          return (
+            <button
+              className={clsx(
+                isActive ? css.tabActive : css.tab,
+                isHiddenOnMobile && css.tabHiddenOnMobile,
+                isHiddenOnTablet && css.tabHiddenOnTablet
+              )}
+              key={item.value}
+              ref={(node) => {
+                if (node) {
+                  tabButtonRefs.current.set(item.value, node);
+                } else {
+                  tabButtonRefs.current.delete(item.value);
+                }
+              }}
+              type="button"
+              role="tab"
+              id={getTabId(resolvedIdBase, item.value)}
+              aria-controls={getTabPanelId(resolvedIdBase, item.value)}
+              aria-selected={isActive}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => handleTabClick(item.value)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+            >
+              {item.icon ? (
+                <span className={css.tabIcon} aria-hidden="true">
+                  {item.icon}
+                </span>
+              ) : null}
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {hasMoreItems ? (
         <>

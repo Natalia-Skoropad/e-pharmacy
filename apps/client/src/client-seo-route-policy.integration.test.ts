@@ -83,9 +83,27 @@ test('private, auth and token routes stay out of the static sitemap and remain r
     ...CLIENT_TOKEN_ACCESS_ROUTES,
   ]) {
     assert.equal(staticPaths.has(route), false);
-    assert.equal(ROBOTS_DISALLOW_ROUTES.includes(route), true);
+    assert.equal(ROBOTS_DISALLOW_ROUTES.includes(`${route}$`), true);
     assert.equal(ROBOTS_DISALLOW_ROUTES.includes(`${route}/`), true);
   }
+});
+
+//===================================================================
+
+test('robots policy does not block public pharmacy slugs while keeping the owner cabinet private', () => {
+  const pathMatches = (path: string, rule: string) =>
+    rule.endsWith('$') ? path === rule.slice(0, -1) : path.startsWith(rule);
+
+  const blocked = (path: string) =>
+    ROBOTS_DISALLOW_ROUTES.some((rule) => pathMatches(path, rule));
+
+  assert.equal(blocked('/pharmacy'), true);
+  assert.equal(blocked('/pharmacy/pharmacies'), true);
+  assert.equal(blocked('/admin'), true);
+  assert.equal(blocked('/api/public/products'), true);
+  assert.equal(blocked(`/pharmacy-berezine-ph${ID}`), false);
+  assert.equal(blocked(`/pharmacy-berezine-ph${ID}/reviews`), false);
+  assert.equal(blocked(`/pharmacy-near-you-poltava-64-ph${ID}/about`), false);
 });
 
 //===================================================================

@@ -26,6 +26,7 @@ type CatalogCardImage = Readonly<{
   fallbackIcon: string;
   fit: 'contain' | 'cover';
   sizes: string;
+  priority?: boolean;
 }>;
 
 //===================================================================
@@ -46,6 +47,7 @@ export type CatalogEntityCardProps = Readonly<{
 
 function CatalogEntityImage({ image }: Readonly<{ image: CatalogCardImage }>) {
   const [hasImageError, setHasImageError] = useState(false);
+  const [useDirectImage, setUseDirectImage] = useState(false);
 
   if (!image.src || hasImageError) {
     return (
@@ -64,7 +66,15 @@ function CatalogEntityImage({ image }: Readonly<{ image: CatalogCardImage }>) {
       src={image.src}
       alt={image.alt}
       sizes={image.sizes}
-      onError={() => setHasImageError(true)}
+      priority={image.priority}
+      fetchPriority={image.priority ? 'high' : undefined}
+      unoptimized={useDirectImage}
+      onError={() => {
+        // Some Vercel deployments return 400 from /_next/image even when the
+        // underlying pharmacy photo is available. Retry the original URL once.
+        if (!useDirectImage) setUseDirectImage(true);
+        else setHasImageError(true);
+      }}
     />
   );
 }

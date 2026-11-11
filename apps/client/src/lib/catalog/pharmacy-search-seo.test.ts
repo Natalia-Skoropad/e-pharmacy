@@ -6,6 +6,7 @@ import {
   buildPharmacyPath,
   getPharmaciesSeoContent,
   getPharmacyDescription,
+  getPharmacySocialDescription,
   getPharmacyTitle,
   isPharmacyNoIndex,
   parsePharmacySegments,
@@ -28,8 +29,12 @@ test('selected pharmacy generates its name in the page title and SEO copy', () =
   assert.match(getPharmacyDescription(filters, name), /Care Pharmacy/);
   assert.match(getPharmaciesSeoContent(filters, name).intro, /Care Pharmacy/);
   assert.equal(shouldShowPharmaciesSeoText(filters), true);
-  assert.equal(isPharmacyNoIndex(filters), true);
-  assert.equal(buildPharmacyCanonicalPath(filters), '/pharmacies');
+  assert.equal(isPharmacyNoIndex(filters), false);
+
+  assert.equal(
+    buildPharmacyCanonicalPath(filters),
+    `/pharmacies/pharmacy-id-${pharmacyId}`
+  );
 });
 
 //===================================================================
@@ -49,6 +54,8 @@ test('pharmacy and location filters combine without dropping either segment', ()
   assert.match(getPharmacyDescription(filters, name), /Care Pharmacy/);
   assert.match(getPharmaciesSeoContent(filters, name).intro, /[Ll]viv/);
   assert.equal(shouldShowPharmaciesSeoText(filters), true);
+  assert.equal(isPharmacyNoIndex(filters), false);
+  assert.equal(buildPharmacyCanonicalPath(filters), url);
 });
 
 //===================================================================
@@ -60,4 +67,49 @@ test('a missing public pharmacy name never exposes its internal ID as a title', 
 
   assert.equal(getPharmacyTitle(filters), 'Selected pharmacy');
   assert.doesNotMatch(getPharmacyDescription(filters), /507f1f77/);
+});
+
+//===================================================================
+
+test('selected pharmacy social copy matches all visible SEO paragraphs and location', () => {
+  const filters = parsePharmacySegments({
+    segments: [
+      `pharmacy-id-${pharmacyId}`,
+      'location-dnipro',
+      'region-dnipropetrovsk-region',
+    ],
+  }).filters;
+
+  const content = getPharmaciesSeoContent(filters, name);
+  const preview = getPharmacySocialDescription(filters, name);
+
+  assert.equal(
+    preview,
+    [content.intro, content.comparison, content.ordering].join(' ')
+  );
+
+  assert.match(preview, /Care Pharmacy in Dnipro/);
+  assert.match(getPharmacyTitle(filters, name), /Care Pharmacy in Dnipro/);
+  assert.doesNotMatch(preview, /507f1f77/);
+});
+
+//===================================================================
+
+test('sort and paginated selected pharmacy pages stay non-indexed and canonicalize to the primary selection', () => {
+  const selected = parsePharmacySegments({
+    segments: [
+      `pharmacy-id-${pharmacyId}`,
+      'location-dnipro',
+      'region-dnipropetrovsk-region',
+      'sort-rating-desc',
+      'page-2',
+    ],
+  }).filters;
+
+  assert.equal(isPharmacyNoIndex(selected), true);
+
+  assert.equal(
+    buildPharmacyCanonicalPath(selected),
+    `/pharmacies/pharmacy-id-${pharmacyId}/location-dnipro/region-dnipropetrovsk-region`
+  );
 });

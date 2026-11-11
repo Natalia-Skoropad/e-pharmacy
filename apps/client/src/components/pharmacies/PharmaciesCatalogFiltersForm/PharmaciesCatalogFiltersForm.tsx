@@ -296,6 +296,9 @@ function PharmaciesCatalogFiltersForm({
         <InfoTooltip
           label="Location search help"
           title="Location"
+          escapeOverflow
+          preferTopLayer
+          scrollable
           icon={<Map size={20} aria-hidden="true" />}
           items={[
             {
