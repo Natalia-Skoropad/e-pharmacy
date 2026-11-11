@@ -57,7 +57,9 @@ test('renders catalog collections with list semantics', () => {
     </CatalogGrid>
   );
 
-  assert.match(markup, /^<ul/);
+  assert.match(markup, /^<div/);
+  assert.match(markup, /role="list"/);
   assert.match(markup, /aria-label="Products"/);
-  assert.match(markup, /<li/);
+  assert.match(markup, /role="listitem"/);
+  assert.doesNotMatch(markup, /<li/);
 });

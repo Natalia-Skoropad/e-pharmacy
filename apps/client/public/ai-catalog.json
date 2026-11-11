@@ -1,0 +1,16 @@
+{
+  "name": "E-PHARMACY",
+  "description": "Public catalog of pharmacies and products in Ukraine.",
+  "url": "https://e-pharmacy-client-ten.vercel.app",
+  "catalogs": [
+    {
+      "name": "Pharmacies",
+      "url": "https://e-pharmacy-client-ten.vercel.app/pharmacies"
+    },
+    {
+      "name": "Products",
+      "url": "https://e-pharmacy-client-ten.vercel.app/product-catalog"
+    }
+  ],
+  "notes": "Product availability and order conditions must be confirmed by the selected pharmacy. Private bank details are not public."
+}

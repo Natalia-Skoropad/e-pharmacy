@@ -40,7 +40,7 @@ function SkeletonCard({
   const isPharmacy = variant === 'pharmacy';
 
   return (
-    <article className={css.card} aria-hidden="true">
+    <div className={css.card} aria-hidden="true">
       <div className={clsx(css.block, css.image)} />
 
       <div className={css.content}>
@@ -72,7 +72,7 @@ function SkeletonCard({
           )}
         </div>
       </div>
-    </article>
+    </div>
   );
 }
 

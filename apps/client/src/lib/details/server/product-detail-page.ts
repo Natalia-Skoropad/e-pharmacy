@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import type { Metadata } from 'next';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
@@ -17,6 +18,16 @@ import {
 } from '@/lib/api/server';
 
 import { buildProductPath } from '@/lib/routes';
+import type { ProductTab } from '@/lib/routes/product-detail-tabs';
+
+import {
+  DEFAULT_PRODUCT_OFFERS_FILTERS,
+  buildProductOffersPath,
+  getProductOffersDescription,
+  getProductOffersHeading,
+  type ProductOffersFilters,
+} from '@/lib/catalog/product-offers-paths';
+
 import { createPageMetadata } from '@/lib/seo/server';
 
 //===================================================================
@@ -33,6 +44,7 @@ export async function lookupProductBySlugId(
 ): Promise<ProductDetailLookupResult> {
   const productId =
     getProductIdFromPublicSlugId(slugId) ?? getIdFromSlugId(slugId);
+
   if (!productId) return { status: 'not_found' };
 
   try {
@@ -55,17 +67,85 @@ export async function lookupProductBySlugId(
 
 //===================================================================
 
-export function createProductDetailMetadata(product: ProductDetails): Metadata {
+// Reuse one server lookup for metadata and the page within the same request.
+export const resolveProductBySlugId = cache(lookupProductBySlugId);
+
+//===================================================================
+
+export function createProductDetailMetadata(
+  product: ProductDetails,
+  tab: ProductTab = 'details',
+  offerFilters?: ProductOffersFilters
+): Metadata {
+  const basePath = buildProductPath(
+    product.name,
+    product.id,
+    product.publicSlugId
+  );
+
+  const selectedPharmacy = offerFilters?.pharmacyId
+    ? product.offers.find(
+        (offer) => offer.pharmacyId === offerFilters.pharmacyId
+      )
+    : undefined;
+
+  const title =
+    tab === 'pharmacies'
+      ? getProductOffersHeading(
+          product.name,
+          offerFilters ?? DEFAULT_PRODUCT_OFFERS_FILTERS,
+          selectedPharmacy?.pharmacyName
+        )
+      : tab === 'characteristics'
+        ? `${product.name} characteristics`
+        : tab === 'reviews'
+          ? `${product.name} reviews`
+          : product.name;
+
+  const description =
+    tab === 'pharmacies'
+      ? getProductOffersDescription(
+          product.name,
+          offerFilters ?? DEFAULT_PRODUCT_OFFERS_FILTERS,
+          selectedPharmacy?.pharmacyName
+        )
+      : tab === 'characteristics'
+        ? `Explore ${product.name} characteristics, including its manufacturer, dosage, packaging and product information.`
+        : tab === 'reviews'
+          ? `Read client reviews of ${product.name} on E-PHARMACY and learn about other customers' experiences with this product.`
+          : `Explore ${product.name} on E-PHARMACY. Compare pharmacy prices, availability, characteristics and client reviews before choosing a pharmacy.`;
+
+  const tabPath =
+    tab === 'details'
+      ? basePath
+      : tab === 'pharmacies'
+        ? buildProductOffersPath(basePath, offerFilters)
+        : `${basePath}/${tab}`;
+
+  const isNonIndexableOfferPage =
+    tab === 'pharmacies' &&
+    Boolean(
+      (offerFilters?.sort && offerFilters.sort !== 'newest') ||
+      (offerFilters?.page && offerFilters.page > 1) ||
+      (offerFilters?.pharmacyId && !selectedPharmacy)
+    );
+
+  const canonicalPath = isNonIndexableOfferPage
+    ? buildProductOffersPath(basePath, {
+        pharmacyId: offerFilters?.pharmacyId ?? '',
+        settlement: offerFilters?.settlement ?? '',
+        region: offerFilters?.region ?? '',
+        sort: 'newest',
+        page: 1,
+      })
+    : tabPath;
+
   return createPageMetadata({
-    title: product.name,
-
-    description:
-      product.description ??
-      `Buy ${product.name} online from E-PHARMACY. Check pharmacy prices, availability, dosage, manufacturer, and product details.`,
-
-    path: buildProductPath(product.name, product.id, product.publicSlugId),
-
+    title,
+    description,
+    path: canonicalPath,
     image: product.imageUrl,
-    imageAlt: product.name,
+    imageAlt: `${product.name} product photo`,
+    noIndex: isNonIndexableOfferPage,
   });
 }

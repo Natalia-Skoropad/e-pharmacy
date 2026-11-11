@@ -2,12 +2,12 @@
 
 import { useId, useState } from 'react';
 import { Star, ChevronDown } from 'lucide-react';
-import { ProfileResourceState } from '../../profile/ProfileResourceState';
 
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
 import CountLabel from '../CountLabel/CountLabel';
 import LazyLoadButton from '../../primitives/LazyLoadButton/LazyLoadButton';
+import { ProfileResourceState } from '../../profile/ProfileResourceState';
 
 import css from './ReviewsList.module.css';
 
@@ -27,6 +27,7 @@ export type ReviewsListProps = Readonly<{
   emptyTitle?: string;
   emptyText?: string;
   emptyVariant?: 'default' | 'profile' | 'resource';
+  emptyHeadingLevel?: 2 | 3;
   initialVisibleCount?: number;
   visibleCount?: number;
   step?: number;
@@ -46,6 +47,7 @@ function ReviewsList({
   emptyTitle = 'This pharmacy has no reviews yet.',
   emptyText = 'Client feedback will appear here after orders are completed.',
   emptyVariant = 'default',
+  emptyHeadingLevel = 3,
   initialVisibleCount = DEFAULT_VISIBLE_REVIEWS_COUNT,
   visibleCount,
   step = DEFAULT_VISIBLE_REVIEWS_COUNT,
@@ -74,8 +76,10 @@ function ReviewsList({
     setInternalVisibleCount(nextVisibleCount);
   };
 
+  const RootElement = title ? 'section' : 'div';
+
   return (
-    <section
+    <RootElement
       className={css.section}
       aria-labelledby={title ? titleId : undefined}
     >
@@ -99,6 +103,7 @@ function ReviewsList({
         emptyVariant === 'resource' ? (
           <ProfileResourceState
             variant="empty"
+            headingLevel={emptyHeadingLevel}
             title={emptyTitle}
             description={emptyText}
             icon={<Star size={22} />}
@@ -109,7 +114,11 @@ function ReviewsList({
               emptyVariant === 'profile' ? css.profileEmpty : ''
             }`}
           >
-            <h3 className={css.emptyTitle}>{emptyTitle}</h3>
+            {emptyHeadingLevel === 2 ? (
+              <h2 className={css.emptyTitle}>{emptyTitle}</h2>
+            ) : (
+              <h3 className={css.emptyTitle}>{emptyTitle}</h3>
+            )}
             <p className={css.emptyText}>{emptyText}</p>
           </div>
         )
@@ -121,7 +130,11 @@ function ReviewsList({
                 <article className={css.card}>
                   <div className={css.cardHeader}>
                     <div>
-                      <h3 className={css.author}>{review.userName}</h3>
+                      {emptyHeadingLevel === 2 ? (
+                        <h2 className={css.author}>{review.userName}</h2>
+                      ) : (
+                        <h3 className={css.author}>{review.userName}</h3>
+                      )}
 
                       <time className={css.date} dateTime={review.createdAt}>
                         {formatShortDate(review.createdAt) ?? '—'}
@@ -149,7 +162,7 @@ function ReviewsList({
           />
         </>
       )}
-    </section>
+    </RootElement>
   );
 }
 

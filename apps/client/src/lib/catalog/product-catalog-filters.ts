@@ -231,7 +231,6 @@ export function isProductCatalogNoIndex(
     filters.page > 1 ||
     filters.sort !== 'newest' ||
     Boolean(filters.name) ||
-    Boolean(filters.article) ||
-    Boolean(filters.productId)
+    Boolean(filters.article)
   );
 }

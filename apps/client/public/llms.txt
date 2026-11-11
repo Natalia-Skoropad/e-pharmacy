@@ -1,0 +1,11 @@
+# E-PHARMACY
+
+E-PHARMACY helps visitors find public pharmacies and products in Ukraine.
+Availability, pickup, delivery and final sale conditions are confirmed by the selected pharmacy.
+
+## Public catalogs
+
+- [Pharmacies](https://e-pharmacy-client-ten.vercel.app/pharmacies): Browse pharmacies, locations and public contact details.
+- [Product catalog](https://e-pharmacy-client-ten.vercel.app/product-catalog): Browse products and compare pharmacy offers.
+
+Private account pages and bank details are not part of the public catalog.

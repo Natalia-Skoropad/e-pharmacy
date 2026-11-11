@@ -1,13 +1,7 @@
 import { permanentRedirect } from 'next/navigation';
 
-import type { PharmacyOption } from '@e-pharmacy/types/pharmacies';
-
 import {
-  buildProductCatalogCanonicalPath,
   buildProductCatalogPath,
-  getProductCatalogDescription,
-  getProductCatalogTitle,
-  isProductCatalogNoIndex,
   parseProductCatalogSearchParams,
   type ProductCatalogSearchParams,
 } from '@/lib/catalog/product-catalog';
@@ -15,14 +9,7 @@ import {
 import { loadProductCatalogPageData } from '@/lib/catalog/product-catalog-server';
 import { hasCatalogSearchParams } from '@/lib/catalog/catalog-param-utils';
 
-import {
-  getPharmacySearchOptions,
-  getProductFilters,
-  getProductDetails,
-  PUBLIC_DICTIONARY_CACHE_OPTIONS,
-} from '@/lib/api/server';
-
-import { createPageMetadata } from '@/lib/seo/server';
+import { getProductCatalogMetadata } from '@/lib/catalog/product-catalog-metadata';
 
 import { ProductCatalogPageContent } from '@/components/product-catalog';
 
@@ -37,80 +24,9 @@ type ProductCatalogPageProps = {
 export async function generateMetadata({
   searchParams,
 }: ProductCatalogPageProps) {
-  const filters = parseProductCatalogSearchParams(await searchParams);
-
-  let categoryLabel: string | undefined;
-
-  if (filters.category !== 'all') {
-    try {
-      const filterOptions = await getProductFilters(
-        {},
-        PUBLIC_DICTIONARY_CACHE_OPTIONS
-      );
-
-      categoryLabel = filterOptions.categories.find(
-        (option) => option.value === filters.category
-      )?.label;
-    } catch {
-      categoryLabel = undefined;
-    }
-  }
-
-  let pharmacies: readonly PharmacyOption[] = [];
-
-  if (filters.pharmacyId) {
-    try {
-      const response = await getPharmacySearchOptions(
-        {
-          kind: 'pharmacy',
-          selectedId: filters.pharmacyId,
-          page: 1,
-          perPage: 1,
-        },
-
-        PUBLIC_DICTIONARY_CACHE_OPTIONS
-      );
-
-      pharmacies = response.kind === 'pharmacy' ? response.items : [];
-    } catch {
-      pharmacies = [];
-    }
-  }
-
-  const selectedPharmacy = filters.pharmacyId
-    ? pharmacies.find((pharmacy) => pharmacy.id === filters.pharmacyId)
-    : undefined;
-
-  let productName: string | undefined;
-
-  if (filters.productId) {
-    try {
-      const product = await getProductDetails(
-        filters.productId,
-        PUBLIC_DICTIONARY_CACHE_OPTIONS
-      );
-
-      productName = product.product.name;
-    } catch {
-      productName = undefined;
-    }
-  }
-
-  const seoContext = {
-    ...(categoryLabel ? { categoryLabel } : {}),
-    ...(productName ? { productName } : {}),
-    ...(selectedPharmacy ? { pharmacyName: selectedPharmacy.name } : {}),
-  };
-
-  return createPageMetadata({
-    title: getProductCatalogTitle(filters, seoContext),
-    description: getProductCatalogDescription(filters, seoContext),
-    path: buildProductCatalogCanonicalPath(filters, pharmacies),
-
-    noIndex:
-      isProductCatalogNoIndex(filters) ||
-      (filters.category !== 'all' && !categoryLabel),
-  });
+  return getProductCatalogMetadata(
+    parseProductCatalogSearchParams(await searchParams)
+  );
 }
 
 //===================================================================

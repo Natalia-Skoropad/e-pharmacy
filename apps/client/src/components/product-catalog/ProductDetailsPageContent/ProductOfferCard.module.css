@@ -100,7 +100,7 @@
 
 .contactRow {
   display: grid;
-  grid-template-columns: minmax(96px, 120px) minmax(0, 1fr);
+  grid-template-columns: minmax(90px, 80px) minmax(0, 1fr);
   gap: 8px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
@@ -124,6 +124,7 @@
   overflow-wrap: anywhere;
   text-align: right;
   color: var(--color-text-primary);
+  margin: 0;
 }
 
 .contactRow dd a:hover,

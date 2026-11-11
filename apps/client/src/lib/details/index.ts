@@ -3,6 +3,7 @@ import 'server-only';
 export {
   createProductDetailMetadata,
   lookupProductBySlugId,
+  resolveProductBySlugId,
   type ProductDetailLookupResult,
 } from './server/product-detail-page';
 

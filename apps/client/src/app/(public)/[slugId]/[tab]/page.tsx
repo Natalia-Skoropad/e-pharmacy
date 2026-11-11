@@ -8,7 +8,7 @@ import {
   createPharmacyDetailMetadata,
   createProductDetailMetadata,
   lookupPharmacyBySlugId,
-  lookupProductBySlugId,
+  resolveProductBySlugId,
 } from '@/lib/details';
 
 import {
@@ -27,7 +27,7 @@ import { ProductDetailPage } from '@/components/product-catalog/server/ProductDe
 //===================================================================
 
 const resolvePharmacy = cache(lookupPharmacyBySlugId);
-const resolveProduct = cache(lookupProductBySlugId);
+const resolveProduct = resolveProductBySlugId;
 
 //===================================================================
 
@@ -49,12 +49,13 @@ type Props = Readonly<{
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slugId, tab } = await params;
   const parsed = parsePublicEntitySlugId(slugId);
+  const productTab = getProductTabFromSegment(tab);
 
-  if (parsed?.entityType === 'product' && getProductTabFromSegment(tab)) {
+  if (parsed?.entityType === 'product' && productTab) {
     const result = await resolveProduct(slugId);
 
     return result.status === 'found'
-      ? createProductDetailMetadata(result.product)
+      ? createProductDetailMetadata(result.product, productTab)
       : {};
   }
 

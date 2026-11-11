@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { CircleAlert, LoaderCircle, RotateCcw } from 'lucide-react';
 
 import { Button } from '../primitives/Button/Button';
+
 import css from './Profile.module.css';
 
 //===================================================================
@@ -19,6 +20,7 @@ export type ProfileResourceStateProps = Readonly<{
   retryLabel?: string;
   onRetry?: () => Promise<unknown> | void;
   sideActionOnDesktop?: boolean;
+  headingLevel?: 2 | 3;
 }>;
 
 //===================================================================
@@ -32,6 +34,7 @@ export function ProfileResourceState({
   retryLabel = 'Retry',
   onRetry,
   sideActionOnDesktop = false,
+  headingLevel = 3,
 }: ProfileResourceStateProps) {
   const resolvedIcon =
     icon ??
@@ -88,7 +91,7 @@ export function ProfileResourceState({
       ) : null}
 
       <div className={css.resourceStateCopy}>
-        <h3>{title}</h3>
+        {headingLevel === 2 ? <h2>{title}</h2> : <h3>{title}</h3>}
         <p>{description}</p>
       </div>
 

@@ -26,16 +26,24 @@ import {
 
 import {
   buildProductCatalogApiParams,
+  isProductCatalogNoIndex,
   mergeProductCatalogFilters,
   parseProductCatalogSearchParams,
 } from './product-catalog-filters';
 
 import {
+  buildProductCatalogCanonicalPath,
   buildProductCatalogPath,
   parseProductCatalogSegments,
 } from './product-catalog-paths';
 
 import { getPharmaciesSeoContent } from './pharmacies-catalog-seo';
+
+import {
+  getProductOffersHeading,
+  getProductOffersDescription,
+  parseProductOffersSegments,
+} from './product-offers-paths';
 
 import {
   getProductCatalogSeoContent,
@@ -525,5 +533,66 @@ test('pharmacy noindex canonical keeps only the indexed location dimension', () 
       page: 3,
     }),
     '/pharmacies/location-nova-ivanivka/region-odesa-region'
+  );
+});
+
+//===================================================================
+
+test('selected product catalog URLs can be indexed but sort and pagination cannot', () => {
+  const filters = parseProductCatalogSegments({
+    segments: ['product-id-6ac75e1417684f6f914a4db5', 'category-medicine'],
+  }).filters;
+
+  assert.equal(isProductCatalogNoIndex(filters), false);
+
+  assert.equal(
+    buildProductCatalogCanonicalPath(filters),
+    '/product-catalog/product-id-6ac75e1417684f6f914a4db5/category-medicine'
+  );
+
+  assert.equal(isProductCatalogNoIndex({ ...filters, page: 2 }), true);
+
+  assert.equal(
+    isProductCatalogNoIndex({ ...filters, sort: 'rating-desc' }),
+    true
+  );
+
+  assert.equal(isProductCatalogNoIndex({ ...filters, name: 'search' }), true);
+});
+
+//===================================================================
+
+test('product offer headings and social text incorporate selected pharmacy and location', () => {
+  const base = parseProductOffersSegments([])!;
+
+  assert.equal(
+    getProductOffersHeading('Ramipril 5 mg Square', base),
+    'Ramipril 5 mg Square in the Pharmacies'
+  );
+
+  const selected = parseProductOffersSegments([
+    'pharmacy-id-6ac75e0f17684f6f914a4569',
+    'location-lviv',
+    'region-lviv-region',
+  ])!;
+
+  const heading = getProductOffersHeading(
+    'Ramipril 5 mg Square',
+    selected,
+    'Apteka Zdorovia Lviv 2'
+  );
+
+  assert.equal(
+    heading,
+    'Ramipril 5 mg Square at Apteka Zdorovia Lviv 2 in Lviv (Lviv region)'
+  );
+
+  assert.match(
+    getProductOffersDescription(
+      'Ramipril 5 mg Square',
+      selected,
+      'Apteka Zdorovia Lviv 2'
+    ),
+    /Apteka Zdorovia Lviv 2 in Lviv/
   );
 });

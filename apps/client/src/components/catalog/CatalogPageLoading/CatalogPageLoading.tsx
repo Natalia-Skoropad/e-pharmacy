@@ -36,8 +36,8 @@ export default function CatalogPageLoading({
   const filterCount = variant === 'product' ? 3 : 2;
 
   return (
-    <main className={css.page} aria-busy="true">
-      <section className={css.section}>
+    <div className={css.page} aria-busy="true">
+      <div className={css.section}>
         <Container>
           <div className={css.breadcrumbs} aria-hidden="true">
             <span className={clsx(css.block, css.breadcrumbHome)} />
@@ -69,7 +69,7 @@ export default function CatalogPageLoading({
 
           <CatalogCardSkeleton count={6} label={label} variant={variant} />
         </Container>
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }

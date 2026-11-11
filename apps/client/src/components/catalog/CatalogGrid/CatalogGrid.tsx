@@ -17,16 +17,20 @@ export type CatalogGridItemProps = Readonly<{ children: ReactNode }>;
 
 function CatalogGridRoot({ children, ariaLabel }: CatalogGridProps) {
   return (
-    <ul className={css.list} aria-label={ariaLabel}>
+    <div className={css.list} role="list" aria-label={ariaLabel}>
       {children}
-    </ul>
+    </div>
   );
 }
 
 //===================================================================
 
 function CatalogGridItem({ children }: CatalogGridItemProps) {
-  return <li className={css.item}>{children}</li>;
+  return (
+    <div className={css.item} role="listitem">
+      {children}
+    </div>
+  );
 }
 
 //===================================================================

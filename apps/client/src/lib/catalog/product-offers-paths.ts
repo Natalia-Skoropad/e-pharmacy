@@ -7,7 +7,10 @@ import type { ProductOffer } from '@e-pharmacy/types/products';
 
 import type { ProductOfferSort } from '@/components/product-catalog/config/product-offers';
 
-import { normalizeLocationKey } from './pharmacies-catalog-filters';
+import {
+  normalizeLocationKey,
+  formatPharmacyLocationLabel,
+} from './pharmacies-catalog-filters';
 
 //===================================================================
 
@@ -82,12 +85,15 @@ export function parseProductOffersSegments(
 
     if (prefix === 'pharmacy-id-') {
       if (!/^[a-f\d]{24}$/i.test(raw)) return null;
+
       result.pharmacyId = raw.toLowerCase();
     } else if (prefix === 'location-') {
       result.settlement = deslugifyNameSegment(raw);
+
       if (!result.settlement) return null;
     } else if (prefix === 'region-') {
       result.region = deslugifyNameSegment(raw);
+
       if (!result.region) return null;
     } else if (prefix === 'sort-') {
       if (!SORT_VALUES.includes(raw as ProductOfferSort) || raw === 'newest')
@@ -99,6 +105,7 @@ export function parseProductOffersSegments(
 
       if (!/^[1-9]\d*$/.test(raw) || !Number.isSafeInteger(page) || page < 2)
         return null;
+
       result.page = page;
     }
   }
@@ -219,4 +226,52 @@ export function filterProductOffers(
       }
     })
     .map(({ offer }) => offer);
+}
+
+//===================================================================
+
+function readablePlace(value: string): string {
+  return value
+    .normalize('NFKC')
+    .trim()
+    .replace(/(^|[\s-])\p{L}/gu, (part) => part.toLocaleUpperCase('uk-UA'))
+    .replace(/\bRegion\b/g, 'region');
+}
+
+//===================================================================
+
+/** Shared by the visible H1 and the server-generated social metadata. */
+export function getProductOffersHeading(
+  productName: string,
+  filters: ProductOffersFilters,
+  pharmacyName?: string
+): string {
+  const location = filters.settlement
+    ? formatPharmacyLocationLabel(
+        readablePlace(filters.settlement),
+        filters.region ? readablePlace(filters.region) : undefined
+      )
+    : '';
+
+  const pharmacy = pharmacyName?.trim();
+
+  if (pharmacy) {
+    return `${productName} at ${pharmacy}${location ? ` in ${location}` : ''}`;
+  }
+
+  return location
+    ? `${productName} in pharmacies in ${location}`
+    : `${productName} in the Pharmacies`;
+}
+
+//===================================================================
+
+export function getProductOffersDescription(
+  productName: string,
+  filters: ProductOffersFilters,
+  pharmacyName?: string
+): string {
+  const title = getProductOffersHeading(productName, filters, pharmacyName);
+
+  return `Explore ${title} on E-PHARMACY. Compare prices, availability, pharmacy ratings and contact details before preparing an order. Availability and final sale conditions are confirmed by the pharmacy.`;
 }

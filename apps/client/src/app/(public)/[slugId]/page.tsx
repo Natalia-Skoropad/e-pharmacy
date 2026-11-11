@@ -8,7 +8,7 @@ import {
   createPharmacyDetailMetadata,
   createProductDetailMetadata,
   lookupPharmacyBySlugId,
-  lookupProductBySlugId,
+  resolveProductBySlugId,
 } from '@/lib/details';
 
 import {
@@ -34,7 +34,7 @@ type PublicDetailsPageProps = Readonly<{
 
 //===================================================================
 
-const resolveProduct = cache(lookupProductBySlugId);
+const resolveProduct = resolveProductBySlugId;
 const resolvePharmacy = cache(lookupPharmacyBySlugId);
 
 //===================================================================

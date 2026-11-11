@@ -29,6 +29,7 @@ export type ReviewsSectionProps = Readonly<{
   emptyTitle?: string;
   emptyText?: string;
   emptyVariant?: 'default' | 'profile' | 'resource';
+  emptyHeadingLevel?: 2 | 3;
   textareaId: string;
   maxLength: number;
   onReviewTextChange: (value: string) => void;
@@ -57,6 +58,7 @@ function ReviewsSection({
   isUnavailable = false,
   emptyTitle = 'No reviews yet',
   emptyVariant = 'default',
+  emptyHeadingLevel = 3,
   emptyText = 'Reviews will appear here after clients share their feedback.',
   textareaId,
   maxLength,
@@ -91,6 +93,7 @@ function ReviewsSection({
       {isUnavailable ? (
         <ProfileResourceState
           variant="error"
+          headingLevel={emptyHeadingLevel}
           title="Reviews could not be loaded"
           description="Reviews are temporarily unavailable. Please try again later."
         />
@@ -101,6 +104,7 @@ function ReviewsSection({
           emptyTitle={emptyTitle}
           emptyText={emptyText}
           emptyVariant={emptyVariant}
+          emptyHeadingLevel={emptyHeadingLevel}
           initialVisibleCount={initialVisibleCount}
           visibleCount={visibleCount}
           step={step}

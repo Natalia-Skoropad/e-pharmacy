@@ -20,10 +20,11 @@ function ProductsList({
 }: ProductsListProps) {
   return (
     <CatalogGrid ariaLabel="Products">
-      {products.map((product) => (
+      {products.map((product, index) => (
         <CatalogGrid.Item key={product.id}>
           <ProductCard
             product={product}
+            priorityImage={index === 0}
             pharmacyId={pharmacyId}
             pharmacyName={pharmacyName}
           />

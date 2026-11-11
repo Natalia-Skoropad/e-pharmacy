@@ -9,8 +9,13 @@ import type { ProductDetails, ProductOffer } from '@e-pharmacy/types/products';
 
 import { useClientAuthCapabilities } from '@/hooks';
 import { useFavorites } from '@/providers/FavoritesProvider';
+
 import { buildProductPath } from '@/lib/routes';
-import { buildProductOffersPath } from '@/lib/catalog/product-offers-paths';
+
+import {
+  buildProductOffersPath,
+  getProductOffersHeading,
+} from '@/lib/catalog/product-offers-paths';
 
 import { CartOrderLimitModal } from '@/components/common';
 
@@ -72,6 +77,13 @@ export function ProductOffersPanel({
     favoritePharmacyIds
   );
 
+  const heading = getProductOffersHeading(
+    product.name,
+    view.filters,
+    product.offers.find((offer) => offer.pharmacyId === view.filters.pharmacyId)
+      ?.pharmacyName
+  );
+
   const cart = useProductOfferCart(product.id, canUseClientFeatures);
 
   const productHref = buildProductPath(
@@ -106,9 +118,9 @@ export function ProductOffersPanel({
 
         <div className={css.headerText}>
           {isPageHeading ? (
-            <h1 className={css.title}>Pharmacies</h1>
+            <h1 className={css.title}>{heading}</h1>
           ) : (
-            <h2 className={css.title}>Pharmacies</h2>
+            <h2 className={css.title}>{heading}</h2>
           )}
           <p className={css.subtitle}>
             Compare pharmacies, availability and prices for this product.

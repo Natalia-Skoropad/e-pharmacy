@@ -19,7 +19,7 @@ export function PharmacyDetailsLoading({
   tab = 'details',
 }: Readonly<{ tab?: PharmacyLoadingTab }>) {
   return (
-    <main className={css.page} aria-busy="true">
+    <div className={css.page} aria-busy="true">
       <Container>
         <span className="visually-hidden" role="status">
           Loading pharmacy {tab === 'payment' ? 'bank details' : tab}…
@@ -90,6 +90,6 @@ export function PharmacyDetailsLoading({
           </div>
         </div>
       </Container>
-    </main>
+    </div>
   );
 }

@@ -40,6 +40,7 @@ export type ProductCardProps = Readonly<{
   pharmacyId?: string;
   pharmacyName?: string;
   headingLevel?: CatalogCardHeadingLevel;
+  priorityImage?: boolean;
   onFavoriteChange?: (productId: string, isFavorite: boolean) => void;
 }>;
 
@@ -50,6 +51,7 @@ function ProductCard({
   pharmacyId,
   pharmacyName,
   headingLevel = 2,
+  priorityImage = false,
   onFavoriteChange,
 }: ProductCardProps) {
   const authCapabilities = useClientAuthCapabilities();
@@ -162,6 +164,7 @@ function ProductCard({
           alt: product.name,
           fallbackIcon: 'icon-shopping-cart',
           fit: 'cover',
+          priority: priorityImage,
           sizes: '(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw',
         }}
         favoriteAction={
@@ -263,7 +266,7 @@ function ProductCard({
                   }
                   onClick={() => void handleAddToCart()}
                 >
-                  {isAlreadyInCart ? 'In cart' : 'To cart'}
+                  {isAlreadyInCart ? 'In cart' : 'Cart'}
                 </Button>
               ) : null}
 

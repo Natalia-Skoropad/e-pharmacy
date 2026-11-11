@@ -1,0 +1,298 @@
+/* Mirrors the public product details shell without decorative HTML landmarks. */
+.page {
+  min-height: 100svh;
+  padding-bottom: 72px;
+  background: var(--color-background);
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 24px;
+}
+
+.crumb {
+  width: 72px;
+  height: 15px;
+}
+
+.crumbWide {
+  width: min(200px, 38vw);
+  height: 15px;
+}
+
+.shimmer {
+  position: relative;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--color-background-soft);
+  border-radius: var(--radius-md);
+}
+
+.shimmer::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-shimmer-highlight),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: product-detail-shimmer 1.4s ease-in-out infinite;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: calc(var(--radius-xl) + 4px);
+  box-shadow: var(--shadow-card);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.tab {
+  width: 112px;
+  max-width: calc(50% - 5px);
+  height: 36px;
+  border-radius: var(--radius-pill);
+}
+
+.header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 24px 10px;
+}
+
+.headerIcon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+.headerText {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+}
+
+.heading {
+  width: min(310px, 75%);
+  height: 28px;
+}
+
+.description {
+  width: min(490px, 90%);
+  height: 16px;
+}
+
+.details {
+  display: grid;
+  gap: 28px;
+  padding: 0 10px 10px;
+}
+
+.image {
+  min-height: 300px;
+  background: var(--color-accent-light);
+  border-radius: var(--radius-xl);
+}
+
+.information {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.rating {
+  width: 142px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.label {
+  width: min(170px, 45%);
+  height: 16px;
+}
+
+.value {
+  width: min(140px, 38%);
+  height: 16px;
+}
+
+.payment {
+  display: grid;
+  gap: 14px;
+}
+
+.paymentCard {
+  min-height: 156px;
+  border-radius: var(--radius-xl);
+}
+
+.action {
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  border-radius: var(--radius-pill);
+}
+
+.filters {
+  display: grid;
+  gap: 16px;
+  margin: 0 10px 28px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.filter {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-pill);
+}
+
+.offerCards {
+  display: grid;
+  gap: 18px;
+  padding: 0 10px 10px;
+}
+
+.offerCard {
+  display: grid;
+  gap: 20px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.offerPhoto {
+  min-height: 180px;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-light);
+}
+
+.offerInfo,
+.offerPrice {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+}
+
+.offerLine {
+  width: 90%;
+  height: 16px;
+}
+
+.sectionCard {
+  display: grid;
+  gap: 16px;
+  margin: 0 10px 10px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.reviewField {
+  width: 100%;
+  height: 120px;
+}
+
+@media only screen and (min-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .header {
+    padding: 32px 10px 24px;
+  }
+
+  .details {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 36px;
+  }
+
+  .image {
+    min-height: 420px;
+  }
+
+  .payment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action {
+    width: min(290px, 100%);
+    justify-self: end;
+  }
+
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .offerCard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .offerPhoto {
+    min-height: 260px;
+  }
+}
+
+@media only screen and (min-width: 1440px) {
+  .details {
+    grid-template-columns: minmax(360px, 520px) minmax(0, 1fr);
+    gap: 40px;
+  }
+
+  .image {
+    min-height: 430px;
+  }
+
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .offerCard {
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(
+        260px,
+        300px
+      );
+  }
+}
+
+@keyframes product-detail-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer::after {
+    animation: none;
+  }
+}

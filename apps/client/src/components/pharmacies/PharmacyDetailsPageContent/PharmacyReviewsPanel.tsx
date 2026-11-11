@@ -118,6 +118,7 @@ export function PharmacyReviewsPanel({
         isAuthUnavailable={isAuthUnavailable}
         isUnavailable={areReviewsUnavailable}
         emptyVariant="resource"
+        emptyHeadingLevel={2}
         emptyTitle="This pharmacy has no reviews yet."
         emptyText="Reviews appear here after real client orders are completed and approved."
         textareaId="pharmacy-review"
