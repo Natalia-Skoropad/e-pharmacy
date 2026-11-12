@@ -66,6 +66,9 @@ type OwnerOwnProductsPageContentProps = Readonly<{
   initialFilters?: OwnProductsFilterState;
   initialPagination?: OwnProductsPagination;
   embeddedPharmacyId?: string;
+
+  /** Minimum width for this pharmacy's embedded products table only. */
+  minWidth?: number;
 }>;
 
 //===================================================================
@@ -74,6 +77,7 @@ function OwnerOwnProductsPageContent({
   initialFilters = DEFAULT_OWN_PRODUCTS_FILTERS,
   initialPagination = DEFAULT_OWN_PRODUCTS_PAGINATION,
   embeddedPharmacyId,
+  minWidth,
 }: OwnerOwnProductsPageContentProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -134,9 +138,10 @@ function OwnerOwnProductsPageContent({
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
-    null
-  );
+  // Available days are scoped to this pharmacy, not to the owner's entire catalog.
+  const [availableAddedDates, setAvailableAddedDates] = useState<
+    readonly string[]
+  >([]);
 
   const [statistics, setStatistics] = useState<OwnProductStatisticsCounts>(
     DEFAULT_OWN_PRODUCT_STATISTICS
@@ -266,7 +271,7 @@ function OwnerOwnProductsPageContent({
         setProducts([...response.items]);
         setTotalProducts(response.total);
         setTotalPages(Math.max(1, response.totalPages));
-        setEarliestCreatedAt(response.earliestCreatedAt);
+        setAvailableAddedDates(response.availableAddedDates ?? []);
         setStatistics(response.statistics);
         setStatisticsUnavailable(false);
         setLoadError(null);
@@ -275,6 +280,7 @@ function OwnerOwnProductsPageContent({
         if (controller.signal.aborted) return;
 
         setStatisticsUnavailable(true);
+        setAvailableAddedDates([]);
         setProducts([]);
         setTotalProducts(0);
         setTotalPages(1);
@@ -530,6 +536,9 @@ function OwnerOwnProductsPageContent({
         )}
 
         <OwnProductsTable
+          // Only the embedded /pharmacy/pharmacies/:id/products table.
+          // The global /pharmacy/products table retains its own default.
+          minWidth={embeddedPharmacyId ? (minWidth ?? 960) : undefined}
           products={products}
           isLoading={isLoading}
           emptyMessage={
@@ -573,7 +582,8 @@ function OwnerOwnProductsPageContent({
         <OwnProductsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
-          minDate={earliestCreatedAt ?? undefined}
+          minDate={availableAddedDates[0]}
+          availableDates={availableAddedDates}
           categoryOptions={categoryOptions}
           onChange={changeFilters}
           onClose={() => setFiltersOpen(false)}

@@ -597,7 +597,11 @@ export function ActivityHistory({
       {
         key: 'entity',
         title: 'Entity',
-        render: (item) => <span>{item.entityLabelSnapshot}</span>,
+        render: (item) => (
+          <span className={css.breakableEntity}>
+            {item.entityLabelSnapshot}
+          </span>
+        ),
       },
       {
         key: 'action',
@@ -681,22 +685,31 @@ export function ActivityHistory({
       {
         key: 'fields',
         title: <TableHeaderTitle parts={['Changed', 'fields']} />,
-        render: (item) => (
-          <span className={css.changedFields}>
-            <span className={css.changedFieldsPreview}>
-              {item.changedFields
-                .slice(0, 3)
-                .map(getAdminAuditFieldLabel)
-                .join(', ') || '—'}
-            </span>
 
-            {item.changedFields.length > 3 ? (
-              <span className={css.moreFields}>
-                +{item.changedFields.length - 3} more changes
+        render: (item) => {
+          const changedFields = item.changedFields.filter(
+            (field) =>
+              item.entityType !== 'pharmacy' ||
+              (field !== 'revision' && field !== 'editedSections')
+          );
+
+          return (
+            <span className={css.changedFields}>
+              <span className={css.changedFieldsPreview}>
+                {changedFields
+                  .slice(0, 3)
+                  .map(getAdminAuditFieldLabel)
+                  .join(', ') || '—'}
               </span>
-            ) : null}
-          </span>
-        ),
+
+              {changedFields.length > 3 ? (
+                <span className={css.moreFields}>
+                  +{changedFields.length - 3} more changes
+                </span>
+              ) : null}
+            </span>
+          );
+        },
       },
       {
         key: 'details',

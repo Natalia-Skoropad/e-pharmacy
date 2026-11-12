@@ -159,7 +159,13 @@ function ReviewValue({
           <li key={`${index}:${name}`}>
             {name}
             {!otherNames.has(name) ? (
-              <span className={css.reviewDocumentDifference}>
+              <span
+                className={
+                  value === change.current
+                    ? css.reviewDocumentDifference
+                    : css.reviewDocumentAdded
+                }
+              >
                 {value === change.current ? 'Removed' : 'Added'}
               </span>
             ) : null}

@@ -214,6 +214,8 @@ export type LifecycleEvent = Readonly<{
   nextStatus: string | null;
   previousReviewState: string | null;
   nextReviewState: string | null;
+  previousBlockSource?: 'owner_deactivated' | 'admin_blocked' | null;
+  nextBlockSource?: 'owner_deactivated' | 'admin_blocked' | null;
 }>;
 
 //===================================================================

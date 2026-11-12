@@ -28,6 +28,7 @@ type OwnProductsFiltersDrawerProps = Readonly<{
   filters: OwnProductsFilterState;
   hasActiveFilters: boolean;
   minDate?: string;
+  availableDates?: readonly string[];
 
   categoryOptions: readonly (SelectOption<
     OwnProductsFilterState['category']
@@ -89,6 +90,7 @@ function OwnProductsFiltersDrawer({
   filters,
   hasActiveFilters,
   minDate,
+  availableDates,
   categoryOptions,
   onChange,
   onClose,
@@ -108,6 +110,8 @@ function OwnProductsFiltersDrawer({
       <DateFilter
         id="own-products-added-date-filter"
         minDate={minDate}
+        maxDate={availableDates?.at(-1)}
+        availableDates={availableDates}
         disabled={!minDate}
         label="Added date"
         value={filters.createdDate}

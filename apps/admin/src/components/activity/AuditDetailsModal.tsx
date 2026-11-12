@@ -25,7 +25,12 @@ import {
 
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  PharmacyBlockSourceBadge,
+  StatusBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { ShimmerImage } from '@e-pharmacy/ui/media';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
@@ -76,6 +81,8 @@ type AuditChangeRow = Readonly<{
   deletedDraft?: boolean;
   beforeStatus?: string;
   afterStatus?: string;
+  beforeBlockSource?: 'owner_deactivated' | 'admin_blocked';
+  afterBlockSource?: 'owner_deactivated' | 'admin_blocked';
   beforePhotoUrl?: string | null;
   afterPhotoUrl?: string | null;
 }>;
@@ -125,11 +132,13 @@ function RenderAuditValue({
   field,
   isStatus = false,
   photoUrl,
+  blockSource,
 }: Readonly<{
   value: AdminAuditValue | undefined;
   field: string;
   isStatus?: boolean;
   photoUrl?: string | null;
+  blockSource?: 'owner_deactivated' | 'admin_blocked';
 }>) {
   const color = getAuditColorSwatch(value);
 
@@ -165,7 +174,13 @@ function RenderAuditValue({
           </span>
         )
       ) : status ? (
-        <StatusBadge {...status} />
+        <>
+          <StatusBadge {...status} />
+          <PharmacyBlockSourceBadge
+            status={typeof value === 'string' ? value : ''}
+            blockSource={blockSource}
+          />
+        </>
       ) : field === 'workingHours' &&
         typeof value === 'string' &&
         value.trim() ? (
@@ -205,7 +220,12 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
     render: (item) =>
       item.field === 'reviewState' && item.beforeStatus ? (
         <div className={css.changeValue}>
-          <RenderAuditValue value={item.beforeStatus} field="status" isStatus />
+          <RenderAuditValue
+            value={item.beforeStatus}
+            field="status"
+            isStatus
+            blockSource={item.beforeBlockSource}
+          />
           {item.before === 'changes_requested' ? (
             <StatusBadge label="Needs changes" tone="neutral" />
           ) : null}
@@ -216,6 +236,7 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
         <RenderAuditValue
           value={item.before}
           photoUrl={item.beforePhotoUrl}
+          blockSource={item.beforeBlockSource}
           field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
@@ -229,7 +250,12 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
     render: (item) =>
       item.field === 'reviewState' && item.afterStatus ? (
         <div className={css.changeValue}>
-          <RenderAuditValue value={item.afterStatus} field="status" isStatus />
+          <RenderAuditValue
+            value={item.afterStatus}
+            field="status"
+            isStatus
+            blockSource={item.afterBlockSource}
+          />
           {item.after === 'changes_requested' ? (
             <StatusBadge label="Needs changes" tone="neutral" />
           ) : null}
@@ -240,6 +266,7 @@ const CHANGE_COLUMNS: readonly DataTableColumn<AuditChangeRow>[] = [
         <RenderAuditValue
           value={item.after}
           photoUrl={item.afterPhotoUrl}
+          blockSource={item.afterBlockSource}
           field={item.field}
           isStatus={item.field === 'status' || item.field.endsWith('.status')}
         />
@@ -329,6 +356,10 @@ export function AuditDetailsModal({
 
   const visibleFields = reviewFields.filter((field) => {
     if (details?.entityType !== 'pharmacy') return true;
+
+    // Legacy revision tokens and section bookkeeping are internal audit
+    // metadata, never a user-visible field change.
+    if (field === 'revision' || field === 'editedSections') return false;
 
     // Creation is a lifecycle event. 'exists: No -> Yes' is internal metadata,
     // not a second data change in the user-facing Changes table.
@@ -422,6 +453,17 @@ export function AuditDetailsModal({
       ? (storedBeforeStatus ?? reviewStatusFallback)
       : undefined);
 
+  const inferredAfterBlockSource =
+    details?.entityType === 'pharmacy' &&
+    details.action === 'pharmacy.status.changed' &&
+    (details.after.status === 'blocked' || details.statusAfter === 'blocked')
+      ? actor?.actorType === 'pharmacyOwner'
+        ? 'owner_deactivated'
+        : actor?.actorType === 'employee'
+          ? 'admin_blocked'
+          : undefined
+      : undefined;
+
   const changeRows: AuditChangeRow[] = details
     ? visibleFields.map((field) => ({
         field,
@@ -433,6 +475,21 @@ export function AuditDetailsModal({
 
         beforeStatus,
         afterStatus,
+
+        ...(details.entityType === 'pharmacy' &&
+        (details.before.blockSource === 'owner_deactivated' ||
+          details.before.blockSource === 'admin_blocked')
+          ? { beforeBlockSource: details.before.blockSource }
+          : {}),
+
+        ...(details.entityType === 'pharmacy' &&
+        (details.after.blockSource === 'owner_deactivated' ||
+          details.after.blockSource === 'admin_blocked')
+          ? { afterBlockSource: details.after.blockSource }
+          : inferredAfterBlockSource
+            ? { afterBlockSource: inferredAfterBlockSource }
+            : {}),
+
         before: details.before[field],
         after: details.after[field],
 

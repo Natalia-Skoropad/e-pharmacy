@@ -156,6 +156,14 @@
   font-size: var(--fz-12);
 }
 
+.breakableEntity {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
 .breakableLink,
 .changedFields {
   overflow-wrap: anywhere;
@@ -503,6 +511,16 @@
   min-width: 0;
   max-width: 100%;
   vertical-align: middle;
+}
+
+.sectionLink .actorIdentityNameLink {
+  display: inline-block;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .pageLinkEmpty {

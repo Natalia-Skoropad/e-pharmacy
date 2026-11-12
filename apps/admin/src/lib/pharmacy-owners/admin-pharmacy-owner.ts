@@ -530,6 +530,11 @@ function parseOwnerPharmacy(value: unknown): AdminPharmacyOwnerPharmacySummary {
     createdAt: requireIsoDateTime(record.createdAt, 'owner pharmacy createdAt'),
     status: record.status,
 
+    ...(record.blockSource === 'owner_deactivated' ||
+    record.blockSource === 'admin_blocked'
+      ? { blockSource: record.blockSource }
+      : {}),
+
     ...(record.reviewState === 'pending' ||
     record.reviewState === 'changes_requested'
       ? { reviewState: record.reviewState }

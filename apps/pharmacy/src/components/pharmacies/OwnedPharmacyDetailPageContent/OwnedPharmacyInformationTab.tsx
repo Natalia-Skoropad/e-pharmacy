@@ -9,7 +9,11 @@ import type {
   PharmacyStatus,
 } from '@e-pharmacy/types/pharmacies';
 
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+import {
+  StatusBadge,
+  PharmacyBlockSourceBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -108,6 +112,10 @@ export function Information({
                 <StatusBadge
                   {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]}
                 />
+                <PharmacyBlockSourceBadge
+                  status={pharmacy.status}
+                  blockSource={pharmacy.blockSource}
+                />
 
                 {pharmacy.reviewState === 'changes_requested' &&
                 (pharmacy.status === 'on_verification' ||
@@ -205,6 +213,10 @@ export function Information({
                         fallback="Unknown"
                       />
                     )}
+                    <PharmacyBlockSourceBadge
+                      status={event.previousStatus ?? event.nextStatus ?? ''}
+                      blockSource={event.previousBlockSource}
+                    />
                     {event.previousReviewState === 'changes_requested' ? (
                       <StatusBadge label="Needs changes" tone="neutral" />
                     ) : null}
@@ -216,6 +228,10 @@ export function Information({
                         pharmacy.status
                       }
                       fallback="Not recorded"
+                    />
+                    <PharmacyBlockSourceBadge
+                      status={event.nextStatus ?? event.previousStatus ?? ''}
+                      blockSource={event.nextBlockSource}
                     />
                     {event.nextReviewState === 'changes_requested' ||
                     event.action === 'pharmacy.corrections.requested' ? (

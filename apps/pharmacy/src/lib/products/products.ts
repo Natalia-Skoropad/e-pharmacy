@@ -89,6 +89,7 @@ export type PharmacyProductsResponse = Readonly<
   ApiPaginationResponse<PharmacyProductRow> & {
     statistics: OwnProductStatisticsCounts;
     earliestCreatedAt: string | null;
+    availableAddedDates?: readonly string[];
   }
 >;
 
@@ -469,6 +470,7 @@ export function normalizePharmacyProductsResponse(
 
     statistics: normalizeOwnProductStatistics(payload.ownProductStatistics),
     earliestCreatedAt: response.earliestCreatedAt,
+    availableAddedDates: response.availableAddedDates ?? [],
   };
 }
 

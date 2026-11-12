@@ -21,15 +21,17 @@ test('activity list and filters use the same section and change names', async ()
   assert.match(filters, /label="Section name"/);
   assert.match(filters, /section !== 'profile'/);
   assert.match(history, /\.slice\(0, 3\)\s*\.map\(getAdminAuditFieldLabel\)/);
-  assert.match(history, /item\.changedFields\.length > 3/);
-  assert.match(history, /\+\{item\.changedFields\.length - 3\} more changes/);
+  assert.match(history, /changedFields\.length > 3/);
+  assert.match(history, /\+\{changedFields\.length - 3\} more changes/);
 
   assert.match(
     history,
-    /render: \(item\) => <span>\{item\.entityLabelSnapshot\}<\/span>/
+    /className=\{css\.breakableEntity\}>\{item\.entityLabelSnapshot\}<\/span>/
   );
 
   assert.match(history, /buildAdminActivityUrl/);
+  assert.match(history, /field !== 'revision'/);
+  assert.match(history, /field !== 'editedSections'/);
 });
 
 //===================================================================

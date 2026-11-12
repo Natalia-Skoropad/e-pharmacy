@@ -71,3 +71,38 @@
     align-self: start;
   }
 }
+
+/* Match the Admin navigation badges: only statuses with items appear. */
+.collapsedPharmacyCounters {
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+}
+
+.collapsedPharmacyCounters > span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.collapsedNewDot {
+  background-color: var(--color-info);
+}
+
+.collapsedVerificationDot {
+  background-color: var(--color-status-beauty);
+}
+
+.collapsedModerationDot {
+  background-color: var(--color-warning);
+}
+
+.collapsedReactivationDot {
+  background-color: var(--color-status-mustard, #986209);
+}

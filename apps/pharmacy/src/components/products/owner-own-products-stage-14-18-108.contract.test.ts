@@ -78,7 +78,7 @@ test('table uses individual category icons and owner average price for all pharm
 
   assert.match(page, /getProductCategories/);
   assert.match(table, /CategoryIcon name=\{category.icon\}/);
-  assert.match(table, /Average price/);
+  assert.match(table, /TableHeaderTitle parts=\{\['Average', 'price, ₴'\]\}/);
   assert.match(table, /isAllPharmacies \|\|/);
   assert.match(parser, /projectOwnerProduct/);
 
@@ -140,6 +140,27 @@ test('pharmacy detail keeps its embedded own products component alongside the ow
   assert.match(embedded, /embedded\s*\|\|\s*debouncedFilters\s*!==\s*filters/);
   assert.match(embedded, /productId:\s*filters\.productId/);
   assert.match(embedded, /pharmacyId:\s*filters\.pharmacyId/);
-  assert.match(pharmacyDetail, /<OwnProductsPageContent[\s\S]*?embedded/);
+
+  assert.match(
+    pharmacyDetail,
+    /<OwnerOwnProductsPageContent[\s\S]*?embeddedPharmacyId/
+  );
+
+  assert.match(pharmacyDetail, /minWidth=\{960\}/);
   assert.match(ownerRegistry, /export \{ OwnerOwnProductsPageContent \}/);
+
+  // The detail page's width is forwarded only to its embedded table.
+  assert.match(ownerRegistry, /minWidth\?: number/);
+
+  assert.match(
+    ownerRegistry,
+    /minWidth=\{embeddedPharmacyId \? \(minWidth \?\? 960\) : undefined\}/
+  );
+
+  assert.match(
+    ownerRegistry,
+    /setAvailableAddedDates\(response\.availableAddedDates/
+  );
+
+  assert.match(ownerRegistry, /availableDates=\{availableAddedDates\}/);
 });

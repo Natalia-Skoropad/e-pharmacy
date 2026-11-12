@@ -14,7 +14,11 @@ import { WorkingHours } from '@e-pharmacy/ui/data-display';
 import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
 import { CopyButton, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  StatusBadge,
+  PharmacyBlockSourceBadge,
+} from '@e-pharmacy/ui/statistics';
 
 import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -171,6 +175,10 @@ export function PharmacyInformationTab({ detail, canViewOwner }: Props) {
             <DetailField label="Pharmacy status">
               <span className={css.statusWithReview}>
                 <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+                <PharmacyBlockSourceBadge
+                  status={detail.status}
+                  blockSource={detail.blockSource}
+                />
                 {detail.reviewState === 'changes_requested' &&
                 (detail.status === 'on_verification' ||
                   detail.status === 'on_moderation' ||

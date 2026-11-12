@@ -650,6 +650,8 @@ export function OwnedPharmacyDetailPageContent({
                     initialProductPagination ?? DEFAULT_OWN_PRODUCTS_PAGINATION
                   )}
                   embeddedPharmacyId={pharmacyId}
+                  // Only /pharmacy/pharmacies/:id/products; independent of /pharmacy/products.
+                  minWidth={960}
                   initialFilters={initialProductFilters}
                   initialPagination={initialProductPagination}
                 />

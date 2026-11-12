@@ -18,7 +18,11 @@ import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { ReasonModal, InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  StatusBadge,
+  PharmacyBlockSourceBadge,
+} from '@e-pharmacy/ui/statistics';
 
 import {
   decideAdminPharmacyModeration,
@@ -509,6 +513,10 @@ export function PharmacyModerationActions({
           headerDetails={
             <div className={css.statusTransition}>
               <StatusBadge {...PHARMACY_STATUS_PRESENTATION[detail.status]} />
+              <PharmacyBlockSourceBadge
+                status={detail.status}
+                blockSource={detail.blockSource}
+              />
               {detail.reviewState === 'changes_requested' &&
               (detail.status === 'on_verification' ||
                 detail.status === 'on_moderation' ||
@@ -519,6 +527,12 @@ export function PharmacyModerationActions({
               <StatusBadge
                 {...PHARMACY_STATUS_PRESENTATION[action.option.targetStatus]}
               />
+              {action.option.targetStatus === 'blocked' ? (
+                <PharmacyBlockSourceBadge
+                  status="blocked"
+                  blockSource="admin_blocked"
+                />
+              ) : null}
               {action.option.action === 'request_corrections' ? (
                 <StatusBadge label="Needs changes" tone="neutral" />
               ) : null}

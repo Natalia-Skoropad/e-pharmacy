@@ -45,4 +45,12 @@ test('collapsed order notifications remain visible and expanded badges expose se
   assert.match(source, /getOrderCountAriaLabel/);
   assert.match(source, /formatVisibleOrderCount/);
   assert.match(css, /\.collapsedCounter\s*\{/);
+  assert.match(source, /css\.collapsedPharmacyCounters/);
+  assert.match(source, /pharmacyCounts\.onVerification > 0/);
+  assert.match(css, /\.collapsedPharmacyCounters > span/);
+
+  for (const dot of ['New', 'Verification', 'Moderation', 'Reactivation']) {
+    assert.match(css, new RegExp(`\\.collapsed${dot}Dot`));
+    assert.match(source, new RegExp(`css\\.collapsed${dot}Dot`));
+  }
 });

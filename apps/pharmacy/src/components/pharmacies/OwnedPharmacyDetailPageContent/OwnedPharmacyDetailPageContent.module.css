@@ -46,14 +46,16 @@
 .titleWithHelp {
   display: inline;
   min-width: 0;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
   white-space: normal;
 }
 
 /* The name can wrap freely, but its help icon stays with the last word. */
 .titleEnding {
-  display: inline-block;
-  white-space: nowrap;
+  display: inline;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .titleEnding > * {
@@ -1041,4 +1043,10 @@
   .clientsLoadingStatistics {
     display: none;
   }
+}
+
+.reviewDocumentAdded {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-semi-bold);
+  color: var(--color-accent);
 }

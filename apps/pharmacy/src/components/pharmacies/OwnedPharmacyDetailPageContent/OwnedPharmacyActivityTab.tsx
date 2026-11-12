@@ -6,7 +6,12 @@ import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import type { PharmacyStatus } from '@e-pharmacy/types/pharmacies';
 
 import { Button } from '@e-pharmacy/ui/primitives';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  StatusBadge,
+  PharmacyBlockSourceBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -134,12 +139,20 @@ export function OwnedPharmacyActivityTab({
                     status={entry.previousStatus ?? entry.nextStatus}
                   />
                 )}
+                <PharmacyBlockSourceBadge
+                  status={entry.previousStatus ?? entry.nextStatus ?? ''}
+                  blockSource={entry.previousBlockSource}
+                />
                 {entry.previousReviewState === 'changes_requested' ? (
                   <StatusBadge label="Needs changes" tone="neutral" />
                 ) : null}
                 <span aria-hidden="true">→</span>
                 <LifecycleBadge
                   status={entry.nextStatus ?? entry.previousStatus}
+                />
+                <PharmacyBlockSourceBadge
+                  status={entry.nextStatus ?? entry.previousStatus ?? ''}
+                  blockSource={entry.nextBlockSource}
                 />
                 {entry.nextReviewState === 'changes_requested' ||
                 entry.action === 'pharmacy.corrections.requested' ? (

@@ -89,6 +89,7 @@ export type AdminPharmacyOwnerPharmacySummary = Readonly<{
   createdAt: ISODateTimeString;
   status: PharmacyStatus;
   reviewState?: 'pending' | 'changes_requested';
+  blockSource?: 'owner_deactivated' | 'admin_blocked';
   activeClientsCount: number;
   addedProductsCount: number;
   successfulOrdersCount: number;

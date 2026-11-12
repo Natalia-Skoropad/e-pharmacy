@@ -11,6 +11,7 @@ import {
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { missingRequiredModerationFields } from './pharmacy-moderation-readiness';
+import { resolveMissingPharmacyBlockSources } from './pharmacy-block-source-read.service';
 
 import type {
   CurrentPharmacySummaryResponseDto,
@@ -93,11 +94,28 @@ export async function getMyPharmacyProfileService(
     pharmacyId
   );
 
+  const recovered = await resolveMissingPharmacyBlockSources([
+    {
+      id: String(pharmacy._id),
+      ownerId: String(pharmacy.ownerId),
+      status: pharmacy.status,
+      blockSource: pharmacy.blockSource,
+    },
+  ]);
+
+  const profile = serializePharmacyProfile(
+    pharmacy as PharmacyDocument,
+    membershipRole
+  );
+
   return {
-    pharmacy: serializePharmacyProfile(
-      pharmacy as PharmacyDocument,
-      membershipRole
-    ),
+    pharmacy: {
+      ...profile,
+
+      ...(recovered.get(String(pharmacy._id))
+        ? { blockSource: recovered.get(String(pharmacy._id))! }
+        : {}),
+    },
   };
 }
 

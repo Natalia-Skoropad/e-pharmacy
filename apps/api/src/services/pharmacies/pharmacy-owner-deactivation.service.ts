@@ -204,11 +204,13 @@ export async function deactivateOwnedPharmacyService(
 
         before: {
           status: pharmacy.status,
+          blockSource: pharmacy.blockSource ?? null,
           revision: pharmacy.updatedAt.toISOString(),
         },
 
         after: {
           status: blocked.status,
+          blockSource: 'owner_deactivated',
           revision: blocked.updatedAt.toISOString(),
         },
 

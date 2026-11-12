@@ -14,6 +14,7 @@ import { getEndOfDay, getStartOfDay } from '../../../utils/dates/date-range';
 import { createSafeRegExp } from '../../../utils/validation/regexp';
 
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
+import { resolveMissingPharmacyBlockSources } from '../../pharmacies/pharmacy-block-source-read.service';
 
 import {
   RATING_BOUNDS,
@@ -31,6 +32,7 @@ type RegistryAggregateRow = {
   location: Record<string, unknown> | null;
   status: string;
   reviewState: string | null;
+  blockSource: string | null;
   createdAt: Date;
   owner: Array<{ id: string; name: string; pictureUrl: string | null }>;
   activeClientsCount: number;
@@ -257,6 +259,15 @@ export async function listAdminPharmaciesService(
     .select('createdAt')
     .lean<{ createdAt: Date } | null>();
 
+  const legacyBlockSources = await resolveMissingPharmacyBlockSources(
+    result.items.map((item) => ({
+      id: item.id,
+      ownerId: item.owner[0]?.id,
+      status: item.status,
+      blockSource: item.blockSource,
+    }))
+  );
+
   return {
     items: result.items.map((item) => {
       const owner = item.owner[0];
@@ -273,6 +284,13 @@ export async function listAdminPharmaciesService(
         status: item.status,
 
         ...(item.reviewState ? { reviewState: item.reviewState } : {}),
+
+        ...(item.blockSource === 'owner_deactivated' ||
+        item.blockSource === 'admin_blocked'
+          ? { blockSource: item.blockSource }
+          : legacyBlockSources.get(item.id)
+            ? { blockSource: legacyBlockSources.get(item.id) }
+            : {}),
 
         createdAt: item.createdAt.toISOString(),
 

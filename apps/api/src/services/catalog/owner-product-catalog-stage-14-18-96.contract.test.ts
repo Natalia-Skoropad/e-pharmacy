@@ -58,12 +58,12 @@ test('activation sync uses idempotent offers and never initializes existing stoc
 
   assert.match(
     moderation,
-    /nextStatus === PHARMACY_STATUSES\.ACTIVE && previousStatus !== PHARMACY_STATUSES\.ACTIVE/
+    /nextStatus === PHARMACY_STATUSES\.ACTIVE\s*&&\s*previousStatus !== PHARMACY_STATUSES\.ACTIVE/
   );
 
   assert.match(
     moderation,
-    /ensureOwnerProductOffers\(String\(saved\.ownerId\), saved\._id, session\)/
+    /ensureOwnerProductOffers\(\s*String\(saved\.ownerId\),\s*saved\._id,\s*session\s*\)/
   );
 });
 

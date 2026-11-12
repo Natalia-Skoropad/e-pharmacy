@@ -384,7 +384,12 @@ export function OwnedPharmacyEditor({
       hint: FIELD_HINTS[name],
 
       onChange: (event: ChangeEvent<HTMLInputElement>) =>
-        change(name, event.target.value),
+        change(
+          name,
+          name === 'email' || name === 'receiptEmail'
+            ? event.target.value.toLowerCase()
+            : event.target.value
+        ),
     };
 
     if (name === 'phone') return <PhoneInput {...common} />;

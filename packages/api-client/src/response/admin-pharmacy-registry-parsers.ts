@@ -247,6 +247,10 @@ export function parseAdminPharmacyListItem(
     status: status(item.status),
 
     ...(pharmacyReviewState ? { reviewState: pharmacyReviewState } : {}),
+    ...(item.blockSource === 'owner_deactivated' ||
+    item.blockSource === 'admin_blocked'
+      ? { blockSource: item.blockSource }
+      : {}),
 
     createdAt: dateTime(item.createdAt),
 
@@ -254,6 +258,7 @@ export function parseAdminPharmacyListItem(
       ? {
           id: id(owner.id, 'pharmacy owner id'),
           name: str(owner.name, 'pharmacy owner name'),
+
           ...(optional(owner.pictureUrl, 'pharmacy owner pictureUrl')
             ? { pictureUrl: owner.pictureUrl as string }
             : {}),

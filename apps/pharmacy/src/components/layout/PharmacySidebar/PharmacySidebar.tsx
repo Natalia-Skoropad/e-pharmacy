@@ -340,11 +340,54 @@ export function PharmacySidebar({
                 ) : null}
               </span>
             ) : null}
-            {isCollapsed && showPharmacyCounters && pharmacyCounts ? (
+            {isCollapsed &&
+            showPharmacyCounters &&
+            pharmacyCounts &&
+            (pharmacyCounts.new > 0 ||
+              pharmacyCounts.onVerification > 0 ||
+              pharmacyCounts.onModeration > 0 ||
+              pharmacyCounts.onReactivation > 0) ? (
               <span
-                className={css.collapsedCounter}
-                aria-label={`${pharmacyCounts.new} new, ${pharmacyCounts.onVerification} on verification, ${pharmacyCounts.onModeration} on moderation, ${pharmacyCounts.onReactivation} awaiting reactivation`}
-              />
+                className={css.collapsedPharmacyCounters}
+                aria-label={[
+                  pharmacyCounts.new > 0
+                    ? `${pharmacyCounts.new} new pharmacies`
+                    : '',
+                  pharmacyCounts.onVerification > 0
+                    ? `${pharmacyCounts.onVerification} on verification`
+                    : '',
+                  pharmacyCounts.onModeration > 0
+                    ? `${pharmacyCounts.onModeration} on moderation`
+                    : '',
+                  pharmacyCounts.onReactivation > 0
+                    ? `${pharmacyCounts.onReactivation} awaiting reactivation`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+              >
+                {pharmacyCounts.new > 0 ? (
+                  <span className={css.collapsedNewDot} aria-hidden="true" />
+                ) : null}
+                {pharmacyCounts.onVerification > 0 ? (
+                  <span
+                    className={css.collapsedVerificationDot}
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {pharmacyCounts.onModeration > 0 ? (
+                  <span
+                    className={css.collapsedModerationDot}
+                    aria-hidden="true"
+                  />
+                ) : null}
+                {pharmacyCounts.onReactivation > 0 ? (
+                  <span
+                    className={css.collapsedReactivationDot}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </span>
             ) : null}
 
             {isCollapsed && hasNotifications && orderCounts ? (

@@ -163,7 +163,7 @@ export function OwnedPharmacyEditorTabContent({
                   }))
                 }
                 labels={{
-                  hint: 'Upload a lightweight JPG, PNG, or WEBP photo up to 450 KB. Clients will see it in the pharmacy profile and search results. It will be saved with your draft.',
+                  hint: 'Upload a JPG, PNG, or WEBP photo (up to 10 MB). Photos are automatically optimized before saving; the saved image must be no larger than 450 KB. Clients will see it in your pharmacy profile.',
                 }}
               />
             </div>

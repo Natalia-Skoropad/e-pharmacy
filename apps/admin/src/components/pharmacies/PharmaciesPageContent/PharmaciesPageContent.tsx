@@ -51,6 +51,7 @@ import {
   StatsGrid,
   StatsLoadingSkeleton,
   StatusBadge,
+  PharmacyBlockSourceBadge,
 } from '@e-pharmacy/ui/statistics';
 
 import { formatAmount } from '@e-pharmacy/utils/money';
@@ -409,7 +410,10 @@ export function PharmaciesPageContent({
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
 
         render: (pharmacy) => (
-          <TextActionButton href={buildAdminPharmacyDetailUrl(pharmacy.id)}>
+          <TextActionButton
+            className={css.breakableName}
+            href={buildAdminPharmacyDetailUrl(pharmacy.id)}
+          >
             {pharmacy.name || 'Unnamed pharmacy'}
           </TextActionButton>
         ),
@@ -478,6 +482,10 @@ export function PharmaciesPageContent({
         render: (pharmacy) => (
           <div style={{ display: 'grid', justifyItems: 'start', gap: 5 }}>
             <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+            <PharmacyBlockSourceBadge
+              status={pharmacy.status}
+              blockSource={pharmacy.blockSource}
+            />
             {pharmacy.reviewState === 'changes_requested' &&
             ['on_verification', 'on_moderation', 'on_reactivation'].includes(
               pharmacy.status

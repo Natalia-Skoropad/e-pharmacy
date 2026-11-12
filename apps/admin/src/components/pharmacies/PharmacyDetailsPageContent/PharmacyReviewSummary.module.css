@@ -159,3 +159,9 @@
   font-weight: var(--fw-semi-bold);
   color: var(--color-error);
 }
+
+.reviewDocumentAdded {
+  font-size: var(--fz-12);
+  font-weight: var(--fw-semi-bold);
+  color: var(--color-accent);
+}

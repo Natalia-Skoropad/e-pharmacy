@@ -186,6 +186,10 @@ function OwnProductsPageContent({
     null
   );
 
+  const [availableAddedDates, setAvailableAddedDates] = useState<
+    readonly string[]
+  >([]);
+
   const [productStatistics, setProductStatistics] =
     useState<OwnProductStatisticsCounts>(DEFAULT_OWN_PRODUCT_STATISTICS);
 
@@ -299,7 +303,8 @@ function OwnProductsPageContent({
         setProducts([...response.items]);
         setTotalProducts(response.total);
         setTotalPages(Math.max(1, response.totalPages));
-        setEarliestCreatedAt(response.earliestCreatedAt);
+        setEarliestCreatedAt(response.availableAddedDates?.[0] ?? null);
+        setAvailableAddedDates(response.availableAddedDates ?? []);
         setProductStatistics(response.statistics);
         setIsProductStatisticsUnavailable(false);
       } catch {
@@ -540,6 +545,7 @@ function OwnProductsPageContent({
         ) : null}
 
         <OwnProductsTable
+          minWidth={960}
           products={products}
           isLoading={!isProfileLoaded || isLoading}
           emptyMessage={
@@ -581,6 +587,7 @@ function OwnProductsPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           minDate={earliestCreatedAt ?? undefined}
+          availableDates={availableAddedDates}
           categoryOptions={categoryOptions}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}

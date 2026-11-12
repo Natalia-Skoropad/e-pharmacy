@@ -28,7 +28,7 @@ import {
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
-import { readFileAsDataUrl } from '@e-pharmacy/ui/media';
+import { optimizePictureFile, readFileAsDataUrl } from '@e-pharmacy/ui/media';
 
 import {
   PHARMACY_STATUS_PRESENTATION,
@@ -628,9 +628,30 @@ function NewProductRequestPageContent({
     setIsImageProcessing(true);
 
     try {
-      const dataUrl = await readFileAsDataUrl(image.file, controller.signal);
+      const optimizedFile = await optimizePictureFile(
+        image.file,
+        controller.signal
+      );
 
-      setProductImage([{ ...image, dataUrl }]);
+      const dataUrl = await readFileAsDataUrl(optimizedFile, controller.signal);
+
+      const optimizedImage = {
+        ...image,
+        file: optimizedFile,
+        name: optimizedFile.name,
+        size: optimizedFile.size,
+        type: optimizedFile.type,
+        dataUrl,
+      };
+
+      const optimizedError = validateProductRequestImageFile(optimizedImage);
+
+      if (optimizedError) {
+        setProductImageError(optimizedError);
+        return;
+      }
+
+      setProductImage([optimizedImage]);
       setProductImagePreview(dataUrl);
       setProductImageError('');
       setIsProductImageRemoved(false);

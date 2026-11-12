@@ -16,6 +16,7 @@ export type OwnedPharmacyListItem = Readonly<{
   location?: PharmacyLocationDraft;
   status: PharmacyStatus;
   reviewState?: 'pending' | 'changes_requested';
+  blockSource?: 'owner_deactivated' | 'admin_blocked';
   membershipRole: 'owner' | 'manager';
   createdAt: ISODateTimeString;
   addedProductsCount?: number;
@@ -29,6 +30,7 @@ export type OwnedPharmacyListItem = Readonly<{
 export type OwnedPharmacyListResponse = Readonly<
   ApiPaginationResponse<OwnedPharmacyListItem> & {
     earliestCreatedAt: string | null;
+    availableCreatedDates?: readonly string[];
   }
 >;
 
@@ -51,6 +53,7 @@ export type OwnedPharmacyOption = Readonly<{
   location?: PharmacyLocationDraft;
   status: PharmacyStatus;
   reviewState?: 'pending' | 'changes_requested';
+  blockSource?: 'owner_deactivated' | 'admin_blocked';
   membershipRole: 'owner' | 'manager';
 }>;
 

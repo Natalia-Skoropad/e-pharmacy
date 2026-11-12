@@ -52,6 +52,7 @@ import {
   StatsGrid,
   StatsLoadingSkeleton,
   StatusBadge,
+  PharmacyBlockSourceBadge,
 } from '@e-pharmacy/ui/statistics';
 
 import { formatAmount } from '@e-pharmacy/utils/money';
@@ -391,7 +392,10 @@ export function OwnedPharmaciesPageContent({
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
 
         render: (pharmacy) => (
-          <TextActionButton href={buildOwnedPharmacyDetailUrl(pharmacy.id)}>
+          <TextActionButton
+            className={css.breakableName}
+            href={buildOwnedPharmacyDetailUrl(pharmacy.id)}
+          >
             {pharmacy.name || 'Unnamed pharmacy'}
           </TextActionButton>
         ),
@@ -448,6 +452,10 @@ export function OwnedPharmaciesPageContent({
         render: (pharmacy) => (
           <div style={{ display: 'grid', justifyItems: 'start', gap: 5 }}>
             <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+            <PharmacyBlockSourceBadge
+              status={pharmacy.status}
+              blockSource={pharmacy.blockSource}
+            />
             {pharmacy.reviewState === 'changes_requested' &&
             ['on_verification', 'on_moderation', 'on_reactivation'].includes(
               pharmacy.status
@@ -672,11 +680,8 @@ export function OwnedPharmaciesPageContent({
             state.region
           )}
           hasActiveFilters={hasActiveFilters}
-          minDate={
-            data?.earliestCreatedAt ??
-            listResult.data?.earliestCreatedAt ??
-            undefined
-          }
+          minDate={data?.earliestCreatedAt ?? undefined}
+          availableDates={data?.availableCreatedDates ?? []}
           onChange={navigate}
           onReset={resetFilters}
           onClose={() => setIsFiltersOpen(false)}

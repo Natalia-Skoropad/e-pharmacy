@@ -1,7 +1,6 @@
 import { Star, MapPin, Map, MapPinned, Search } from 'lucide-react';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { getBusinessCalendarDate } from '@e-pharmacy/utils/date';
 
 import {
   DateFilter,
@@ -27,6 +26,7 @@ import css from './OwnedPharmaciesFiltersDrawer.module.css';
 type OwnedPharmaciesFiltersDrawerProps = Readonly<{
   state: OwnedPharmacyListUrlState;
   minDate?: string;
+  availableDates?: readonly string[];
 
   locationsLoading?: boolean;
   locationOptions: Readonly<{
@@ -77,6 +77,7 @@ const RATING_OPTIONS: Array<SelectOption<OwnedPharmacyRating | 'all'>> = [
 export function OwnedPharmaciesFiltersDrawer({
   state,
   minDate,
+  availableDates,
   locationOptions,
   locationsLoading = false,
   hasActiveFilters,
@@ -101,7 +102,8 @@ export function OwnedPharmaciesFiltersDrawer({
         value={{ from: state.createdFrom, to: state.createdTo }}
         isActive={Boolean(state.createdFrom || state.createdTo)}
         minDate={minDate}
-        maxDate={getBusinessCalendarDate() ?? undefined}
+        maxDate={availableDates?.at(-1)}
+        availableDates={availableDates}
         disabled={!minDate}
         applyOnSubmit
         applyLabel="Apply"

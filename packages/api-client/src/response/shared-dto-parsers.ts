@@ -885,9 +885,29 @@ export function parseProductsWithOffersResponse(
     context
   );
 
+  const calendarDays = record.availableAddedDates;
+
+  if (
+    calendarDays !== undefined &&
+    (!Array.isArray(calendarDays) ||
+      !calendarDays.every(
+        (day: unknown) =>
+          typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
+      ))
+  ) {
+    throw new TypeError('Invalid products available added dates.');
+  }
+
   return checked<ProductsWithOffersResponse>({
     ...pagination,
     earliestCreatedAt,
+
+    ...(calendarDays
+      ? {
+          availableAddedDates:
+            calendarDays as ProductsWithOffersResponse['availableAddedDates'],
+        }
+      : {}),
   });
 }
 

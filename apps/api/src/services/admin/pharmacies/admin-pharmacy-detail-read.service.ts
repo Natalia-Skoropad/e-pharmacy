@@ -26,6 +26,7 @@ import type { OrderSalesStatisticsQuery } from '../../../schemas/orders/order.sc
 
 import { hasCompleteBankDetails } from '../../pharmacies/bank-details';
 import { buildPagedPharmacyItemsPipeline } from '../../pharmacies/registry/pharmacy-registry-query';
+import { resolveMissingPharmacyBlockSources } from '../../pharmacies/pharmacy-block-source-read.service';
 
 //===============================================================
 
@@ -227,7 +228,7 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
   const pharmacy = await Pharmacy.findById(_id)
     .select(
-      'name location phone email workingHours bankDetails imageUrl description shortDescription license status statusReason reviewState reviewFeedback reviewedAt reviewedBy pendingModeration documents ownerId createdAt updatedAt approvedAt activatedAt'
+      'name location phone email workingHours bankDetails imageUrl description shortDescription license status blockSource statusReason reviewState reviewFeedback reviewedAt reviewedBy pendingModeration documents ownerId createdAt updatedAt approvedAt activatedAt'
     )
     .lean<DetailDocument | null>();
 
@@ -314,6 +315,15 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
     ]),
   ]);
 
+  const legacyBlockSources = await resolveMissingPharmacyBlockSources([
+    {
+      id: pharmacyId,
+      ownerId: String(pharmacy.ownerId),
+      status: pharmacy.status,
+      blockSource: pharmacy.blockSource,
+    },
+  ]);
+
   const fields = ['phone', 'email', 'taxId', 'iban', 'receiptEmail'] as const;
 
   const currentIdentifiers: Record<(typeof fields)[number], string> = {
@@ -385,7 +395,12 @@ export async function getAdminPharmacyDetailService(pharmacyId: string) {
 
     ...(pharmacy.statusReason ? { statusReason: pharmacy.statusReason } : {}),
     ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
-    ...(pharmacy.blockSource ? { blockSource: pharmacy.blockSource } : {}),
+    ...(pharmacy.blockSource || legacyBlockSources.get(pharmacyId)
+      ? {
+          blockSource:
+            pharmacy.blockSource ?? legacyBlockSources.get(pharmacyId),
+        }
+      : {}),
 
     ...(pharmacy.reviewFeedback
       ? { reviewFeedback: pharmacy.reviewFeedback }

@@ -143,9 +143,18 @@ export async function requestOwnedPharmacyReactivationService(
         before: {
           status: pharmacy.status,
           reviewState: pharmacy.reviewState ?? null,
+
+          // Preserve the source of the original block in the immutable
+          // transition snapshot, not just on the Pharmacy document.
+          blockSource: pharmacy.blockSource ?? null,
         },
 
-        after: { status: updated.status, reviewState: 'pending' },
+        after: {
+          status: updated.status,
+          reviewState: 'pending',
+          blockSource: updated.blockSource ?? null,
+        },
+
         changedFields: ['status', 'reviewState'],
         reason: input.reason.trim(),
         requestId,

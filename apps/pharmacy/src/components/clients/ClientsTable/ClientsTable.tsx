@@ -186,7 +186,7 @@ function ClientsTable({
       items={clients}
       getItemKey={(client) => client.id}
       isLoading={isLoading}
-      minWidth={0}
+      minWidth={960}
       labels={{
         loading: 'Loading clients...',
         empty: emptyMessage,

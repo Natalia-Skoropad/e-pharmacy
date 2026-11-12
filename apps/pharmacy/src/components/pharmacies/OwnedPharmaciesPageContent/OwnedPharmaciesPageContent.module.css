@@ -103,6 +103,7 @@
 
 .breakableLink {
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .createArea {
@@ -176,4 +177,14 @@
   .createArea > button {
     width: auto;
   }
+}
+
+/* A long unbroken pharmacy name must not determine the entire table width. */
+.breakableName {
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }

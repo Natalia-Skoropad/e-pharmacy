@@ -17,6 +17,14 @@ test('PictureCard owns the styled, accessible photo-upload error for every consu
   assert.match(component, /const \[localError, setLocalError\] = useState/);
   assert.match(component, /const visibleError = error \|\| localError/);
   assert.match(component, /reportError\(fileError\)/);
+
+  assert.match(
+    component,
+    /await optimizePictureFile\(file, controller\.signal\)/
+  );
+
+  assert.match(component, /validateFile\?\.\(optimized\)/);
+  assert.match(component, /readFileAsDataUrl\(optimized, controller\.signal\)/);
   assert.match(component, /reportError\(pictureUrlError\)/);
   assert.match(component, /reportError\(mergedLabels\.uploadError\)/);
   assert.match(component, /<p className=\{css\.error\} role="alert">/);

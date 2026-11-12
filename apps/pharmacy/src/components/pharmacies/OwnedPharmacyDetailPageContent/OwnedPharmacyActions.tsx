@@ -25,7 +25,12 @@ import type {
 } from '@e-pharmacy/types/pharmacies';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  StatusBadge,
+  PharmacyBlockSourceBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import {
@@ -687,6 +692,10 @@ export function OwnedPharmacyActions({
           headerDetails={
             <div className={css.reviewJourneyTransition}>
               <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+              <PharmacyBlockSourceBadge
+                status={pharmacy.status}
+                blockSource={pharmacy.blockSource}
+              />
               {(action === 'verification' ||
                 action === 'moderation' ||
                 action === 'reactivate') &&
@@ -705,6 +714,12 @@ export function OwnedPharmacyActions({
                         : 'blocked') as PharmacyStatus
                 ]}
               />
+              {action === 'deactivate' ? (
+                <PharmacyBlockSourceBadge
+                  status="blocked"
+                  blockSource="owner_deactivated"
+                />
+              ) : null}
             </div>
           }
           details={
@@ -768,6 +783,10 @@ export function OwnedPharmacyActions({
                         <div className={css.reviewJourneyBadges}>
                           <StatusBadge
                             {...PHARMACY_STATUS_PRESENTATION.blocked}
+                          />
+                          <PharmacyBlockSourceBadge
+                            status="blocked"
+                            blockSource="admin_blocked"
                           />
                         </div>
                         <span>If a serious violation is identified</span>

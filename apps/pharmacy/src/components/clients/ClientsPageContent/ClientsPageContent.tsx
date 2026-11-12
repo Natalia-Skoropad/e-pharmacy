@@ -7,14 +7,13 @@ import { Repeat2, Store, Users, UsersRound } from 'lucide-react';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-import { StatsLoadingSkeleton, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import {
   type ClientStatisticsCounts,
@@ -23,7 +22,6 @@ import {
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyClients } from '@/lib/api/browser';
-import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import {
@@ -37,8 +35,6 @@ import type {
   PharmacyClientRow,
   PharmacyClientsQueryParams,
 } from '@/lib/clients/clients';
-
-import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { ClientStatistics } from '@/components/statistics';
 import { ClientsFiltersDrawer } from '@/components/clients/ClientsFiltersDrawer/ClientsFiltersDrawer';
@@ -298,12 +294,6 @@ function ClientsPageContent({
     return link('all');
   };
 
-  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
-
-  const bannerStatus = ownerScope
-    ? null
-    : getLockedFeatureBannerStatus(currentPharmacyStatus);
-
   const RootElement = embedded ? 'section' : 'main';
 
   return (
@@ -348,24 +338,6 @@ function ClientsPageContent({
             }
             titleId="clients-page-title"
             icon={<Users size={23} aria-hidden="true" />}
-          />
-        ) : null}
-
-        {bannerStatus ? (
-          <StatusBanner
-            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title={
-              bannerStatus === 'blocked'
-                ? 'Pharmacy access is temporarily restricted'
-                : 'Verification is required'
-            }
-            message={
-              bannerStatus === 'blocked'
-                ? 'Existing client data remains available for review, while operational pharmacy actions stay disabled until Admin restores access.'
-                : bannerStatus === 'on_verification'
-                  ? 'Client data stays locked while Admin reviews the submitted pharmacy profile.'
-                  : 'Client data is connected only to real pharmacy orders, so a new pharmacy starts with an empty client table.'
-            }
           />
         ) : null}
 

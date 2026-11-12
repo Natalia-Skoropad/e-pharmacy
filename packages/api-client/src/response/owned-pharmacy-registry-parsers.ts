@@ -141,6 +141,11 @@ function parseOwnedPharmacyListItem(value: unknown): OwnedPharmacyListItem {
 
     ...(rowReviewState ? { reviewState: rowReviewState } : {}),
 
+    ...(row.blockSource === 'owner_deactivated' ||
+    row.blockSource === 'admin_blocked'
+      ? { blockSource: row.blockSource }
+      : {}),
+
     membershipRole: role,
     createdAt: createdAt as ISODateTimeString,
 
@@ -193,6 +198,13 @@ export function parseOwnedPharmacyListResponse(
     total,
     totalPages,
     earliestCreatedAt: earliest as string | null,
+
+    ...(Array.isArray(response.availableCreatedDates) &&
+    response.availableCreatedDates.every(
+      (day) => typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
+    )
+      ? { availableCreatedDates: response.availableCreatedDates as string[] }
+      : {}),
   };
 }
 

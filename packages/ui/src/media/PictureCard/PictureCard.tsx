@@ -5,7 +5,12 @@ import type { ChangeEvent, ReactNode } from 'react';
 import clsx from 'clsx';
 import { CircleAlert, ImageOff, Upload, Trash2, X } from 'lucide-react';
 
-import { ImagePreview, readFileAsDataUrl } from '../../media';
+import {
+  ImagePreview,
+  optimizePictureFile,
+  readFileAsDataUrl,
+} from '../../media';
+
 import Button from '../../primitives/Button/Button';
 import ConfirmationModal from '../../overlays/ConfirmationModal/ConfirmationModal';
 import { formatInitials } from '../../data-display/format-initials';
@@ -99,16 +104,17 @@ function PictureCard({
     if (disabled || isSaving) return;
 
     const file = event.target.files?.[0];
+
     event.target.value = '';
 
     if (!file) return;
 
     setLocalError(null);
 
-    const fileError = validateFile?.(file);
-
-    if (fileError) {
-      reportError(fileError);
+    // A large source can be valid after compression; enforce the upload limit
+    // against the actual image that will be persisted, not the raw camera file.
+    if (file.size > 10 * 1024 * 1024) {
+      reportError('Photo must be no larger than 10 MB before optimization.');
       return;
     }
 
@@ -119,7 +125,15 @@ function PictureCard({
     readControllerRef.current = controller;
 
     try {
-      const dataUrl = await readFileAsDataUrl(file, controller.signal);
+      const optimized = await optimizePictureFile(file, controller.signal);
+      const fileError = validateFile?.(optimized);
+
+      if (fileError) {
+        reportError(fileError);
+        return;
+      }
+
+      const dataUrl = await readFileAsDataUrl(optimized, controller.signal);
       const pictureUrlError = validatePictureUrl?.(dataUrl);
 
       if (pictureUrlError) {

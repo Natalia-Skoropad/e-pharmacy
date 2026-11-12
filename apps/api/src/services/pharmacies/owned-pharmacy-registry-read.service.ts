@@ -15,7 +15,11 @@ import type {
 
 import type { PharmacyMembershipRole } from '../../types/pharmacies/pharmacy';
 
-import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+import {
+  getEndOfBusinessDay,
+  getStartOfBusinessDay,
+} from '../../utils/dates/date-range';
+
 import { httpError } from '../../utils/http/httpError';
 import { createSafeRegExp } from '../../utils/validation/regexp';
 
@@ -32,6 +36,7 @@ import {
 } from './pharmacy-membership.service';
 
 import { serializePharmacyProfile } from './pharmacy-profile.shared';
+import { resolveMissingPharmacyBlockSources } from './pharmacy-block-source-read.service';
 
 //===============================================================
 
@@ -44,6 +49,7 @@ type RegistryRow = {
   location: Record<string, unknown> | null;
   status: string;
   reviewState: string | null;
+  blockSource: string | null;
   createdAt: Date;
   membershipRole: PharmacyMembershipRole;
   activeClientsCount: number;
@@ -54,7 +60,11 @@ type RegistryRow = {
   reviewsCount: number;
 };
 
+//===================================================================
+
 type RegistryFacet = { items: RegistryRow[]; total: Array<{ count: number }> };
+
+//===================================================================
 
 type RegistryMetrics = Pick<
   RegistryRow,
@@ -65,6 +75,8 @@ type RegistryMetrics = Pick<
   | 'rating'
   | 'reviewsCount'
 >;
+
+//===================================================================
 
 type RegistryOption = {
   id: string;
@@ -188,8 +200,13 @@ function registryFilters(query: OwnedPharmacyRegistryListQuery) {
 
   if (query.createdFrom || query.createdTo) {
     match.createdAt = {
-      ...(query.createdFrom ? { $gte: getStartOfDay(query.createdFrom) } : {}),
-      ...(query.createdTo ? { $lte: getEndOfDay(query.createdTo) } : {}),
+      ...(query.createdFrom
+        ? { $gte: getStartOfBusinessDay(query.createdFrom) }
+        : {}),
+
+      ...(query.createdTo
+        ? { $lte: getEndOfBusinessDay(query.createdTo) }
+        : {}),
     };
   }
 
@@ -282,13 +299,42 @@ export async function listOwnedPharmaciesService(
     result = await aggregatePage(userId, query, page);
   }
 
-  const [earliest] = await Pharmacy.aggregate<{ createdAt: Date }>([
-    ...membershipStages(userId),
+  // The picker must expose actual creation days across *all* matching rows,
+  // not an uninterrupted range since the oldest pharmacy or just one page.
+  // Ignore only the selected date range so users can adjust it after filtering.
+  const calendarMatch = registryFilters({
+    ...query,
+    createdFrom: undefined,
+    createdTo: undefined,
+  });
 
-    { $sort: { createdAt: 1, _id: 1 } },
-    { $limit: 1 },
-    { $project: { _id: 0, createdAt: 1 } },
+  const calendarDays = await Pharmacy.aggregate<{ _id: string }>([
+    ...membershipStages(userId),
+    { $match: calendarMatch },
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: '%Y-%m-%d',
+            date: '$createdAt',
+            timezone: 'Europe/Kyiv',
+          },
+        },
+      },
+    },
+    { $sort: { _id: 1 } },
   ]);
+
+  const availableCreatedDates = calendarDays.map((row) => row._id);
+
+  const legacyBlockSources = await resolveMissingPharmacyBlockSources(
+    result.items.map((item) => ({
+      id: item.id,
+      ownerId: item.membershipRole === 'owner' ? String(userId) : undefined,
+      status: item.status,
+      blockSource: item.blockSource,
+    }))
+  );
 
   return {
     items: result.items.map((item) => ({
@@ -303,6 +349,13 @@ export async function listOwnedPharmaciesService(
       status: item.status,
 
       ...(item.reviewState ? { reviewState: item.reviewState } : {}),
+
+      ...(item.blockSource === 'owner_deactivated' ||
+      item.blockSource === 'admin_blocked'
+        ? { blockSource: item.blockSource }
+        : legacyBlockSources.get(item.id)
+          ? { blockSource: legacyBlockSources.get(item.id) }
+          : {}),
 
       membershipRole: item.membershipRole,
       createdAt: item.createdAt.toISOString(),
@@ -326,7 +379,8 @@ export async function listOwnedPharmaciesService(
     perPage: query.perPage,
     total: result.total,
     totalPages,
-    earliestCreatedAt: earliest?.createdAt?.toISOString().slice(0, 10) ?? null,
+    earliestCreatedAt: availableCreatedDates[0] ?? null,
+    availableCreatedDates,
   };
 }
 
@@ -509,8 +563,25 @@ export async function getOwnedPharmacyDetailService(
     .select('createdAt')
     .lean<{ createdAt: Date } | null>();
 
+  const legacyBlockSources = await resolveMissingPharmacyBlockSources([
+    {
+      id: pharmacyId,
+      ownerId: String(pharmacy.ownerId),
+      status: pharmacy.status,
+      blockSource: pharmacy.blockSource,
+    },
+  ]);
+
+  const profile = serializePharmacyProfile(pharmacy, membershipRole);
+
   return {
-    pharmacy: serializePharmacyProfile(pharmacy, membershipRole),
+    pharmacy: {
+      ...profile,
+
+      ...(legacyBlockSources.get(pharmacyId)
+        ? { blockSource: legacyBlockSources.get(pharmacyId)! }
+        : {}),
+    },
 
     dates: {
       createdAt: pharmacy.createdAt.toISOString(),

@@ -88,12 +88,14 @@ export type ProductFilterOptionsResponse = Readonly<{
 export type ProductsResponse = Readonly<
   ApiPaginationResponse<ProductCardSummary> & {
     earliestCreatedAt: CalendarDateString | null;
+    availableAddedDates?: readonly CalendarDateString[];
   }
 >;
 
 export type ProductsWithOffersResponse = Readonly<
   ApiPaginationResponse<ProductDetails> & {
     earliestCreatedAt: CalendarDateString | null;
+    availableAddedDates?: readonly CalendarDateString[];
   }
 >;
 

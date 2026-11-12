@@ -35,6 +35,7 @@ type OwnProductsTableProps = Readonly<{
   removingProductId?: EntityId | null;
   onRemoveProduct?: (product: PharmacyProductRow) => void;
   isAllPharmacies?: boolean;
+  minWidth?: number;
   categoryReference?: ReadonlyMap<string, ProductCategoryReference>;
 }>;
 
@@ -47,6 +48,7 @@ function OwnProductsTable({
   removingProductId = null,
   onRemoveProduct,
   isAllPharmacies = false,
+  minWidth = 960,
   categoryReference,
 }: OwnProductsTableProps) {
   const columns = useMemo<Array<DataTableColumn<PharmacyProductRow>>>(
@@ -204,7 +206,7 @@ function OwnProductsTable({
       items={products}
       getItemKey={(product) => String(product.id)}
       isLoading={isLoading}
-      minWidth={0}
+      minWidth={minWidth}
       labels={{
         loading: 'Loading products...',
         empty: emptyMessage,

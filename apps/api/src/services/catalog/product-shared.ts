@@ -15,7 +15,11 @@ import {
 } from './product-category.service';
 
 import { httpError } from '../../utils/http/httpError';
-import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
+
+import {
+  getEndOfBusinessDay,
+  getStartOfBusinessDay,
+} from '../../utils/dates/date-range';
 
 import {
   createFlexibleSearchRegExp,
@@ -239,14 +243,25 @@ export async function getProductsByScope(
     filter.categoryId = category?._id ?? null;
   }
 
+  // Keep the product predicates before adding offer/date constraints, so
+  // calendar days can be computed from every eligible offer without pagination.
+  const calendarProductFilter = { ...filter };
+
+  if (query.productId && Types.ObjectId.isValid(query.productId)) {
+    calendarProductFilter._id = new Types.ObjectId(query.productId);
+  }
+
   if (
     !query.pharmacyId &&
     !options.ownedPharmacyIds &&
     (query.addedFrom || query.addedTo)
   ) {
     filter.createdAt = {
-      ...(query.addedFrom ? { $gte: getStartOfDay(query.addedFrom) } : {}),
-      ...(query.addedTo ? { $lte: getEndOfDay(query.addedTo) } : {}),
+      ...(query.addedFrom
+        ? { $gte: getStartOfBusinessDay(query.addedFrom) }
+        : {}),
+
+      ...(query.addedTo ? { $lte: getEndOfBusinessDay(query.addedTo) } : {}),
     };
   }
 
@@ -274,8 +289,11 @@ export async function getProductsByScope(
     (query.addedFrom || query.addedTo)
   ) {
     offerFilter.createdAt = {
-      ...(query.addedFrom ? { $gte: getStartOfDay(query.addedFrom) } : {}),
-      ...(query.addedTo ? { $lte: getEndOfDay(query.addedTo) } : {}),
+      ...(query.addedFrom
+        ? { $gte: getStartOfBusinessDay(query.addedFrom) }
+        : {}),
+
+      ...(query.addedTo ? { $lte: getEndOfBusinessDay(query.addedTo) } : {}),
     };
   }
 
@@ -373,6 +391,46 @@ export async function getProductsByScope(
 
   const skip = (query.page - 1) * query.perPage;
 
+  const calendarOfferFilter: Record<string, unknown> = { ...offerFilter };
+
+  delete calendarOfferFilter.createdAt;
+
+  const availableAddedDatesQuery =
+    options.ownedPharmacyIds || query.pharmacyId
+      ? ProductOffer.aggregate<{ _id: string }>([
+          { $match: calendarOfferFilter },
+          {
+            $lookup: {
+              from: Product.collection.name,
+              let: { productId: '$productId' },
+              pipeline: [
+                {
+                  $match: {
+                    ...calendarProductFilter,
+                    $expr: { $eq: ['$_id', '$$productId'] },
+                  },
+                },
+                { $limit: 1 },
+              ],
+              as: '_product',
+            },
+          },
+          { $match: { '_product.0': { $exists: true } } },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: '%Y-%m-%d',
+                  date: '$createdAt',
+                  timezone: 'Europe/Kyiv',
+                },
+              },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ])
+      : Promise.resolve(null);
+
   const earliestCreatedAtQuery = options.ownedPharmacyIds
     ? ProductOffer.findOne({ pharmacyId: { $in: options.ownedPharmacyIds } })
         .sort({ createdAt: 1 })
@@ -394,6 +452,7 @@ export async function getProductsByScope(
     favorites,
     ownProductStatistics,
     earliestCreatedRecord,
+    availableAddedDatesRows,
   ] = await Promise.all([
     Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
     Product.countDocuments(filter),
@@ -408,6 +467,7 @@ export async function getProductsByScope(
         : Promise.resolve(undefined),
 
     earliestCreatedAtQuery,
+    availableAddedDatesQuery,
   ]);
 
   const productIds = products.map((product) => product._id);
@@ -462,6 +522,10 @@ export async function getProductsByScope(
     earliestCreatedAt: earliestCreatedRecord
       ? earliestCreatedRecord.createdAt.toISOString().slice(0, 10)
       : null,
+
+    ...(availableAddedDatesRows
+      ? { availableAddedDates: availableAddedDatesRows.map((row) => row._id) }
+      : {}),
 
     ...(ownProductStatistics ? { ownProductStatistics } : {}),
   };

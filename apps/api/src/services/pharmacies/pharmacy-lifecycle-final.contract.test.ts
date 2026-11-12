@@ -98,10 +98,27 @@ test('status log is drawn from canonical audit with member-only read and field p
   assert.match(ownerHistory, /AdminAuditLog\.find/);
   assert.match(ownerHistory, /PHARMACY_REACTIVATION_REJECTED/);
   assert.match(ownerHistory, /PHARMACY_VERIFICATION_WITHDRAWN/);
+  assert.match(ownerHistory, /recoverBlockSourceFromStatusChange/);
+  assert.match(ownerHistory, /resolvePreviousPharmacyBlockSources/);
+  assert.match(ownerHistory, /historicalSources\.get\(String\(entry\._id\)\)/);
+  assert.match(reactivation, /blockSource: pharmacy\.blockSource \?\? null/);
+  assert.match(reactivation, /blockSource: updated\.blockSource \?\? null/);
+
+  const provenanceBadge = read(
+    'packages/ui/src/statistics/PharmacyBlockSourceBadge/PharmacyBlockSourceBadge.tsx'
+  );
+
+  assert.doesNotMatch(provenanceBadge, /Blocking source not recorded/i);
+
+  const auditRead = read(
+    'apps/api/src/services/admin/audit/admin-audit-read.service.ts'
+  );
+
+  assert.match(auditRead, /resolvePreviousPharmacyBlockSources/);
 
   assert.match(
     ownerHistory,
-    /\.select\(\s*'action actorNameSnapshot createdAt reason before\.status after\.status before\.reviewState after\.reviewState'\s*\)/
+    /\.select\(\s*'action actorUserId actorNameSnapshot createdAt reason before\.status after\.status before\.reviewState after\.reviewState before\.blockSource after\.blockSource'\s*\)/
   );
 
   assert.match(ownerUI, /getOwnedPharmacyLifecycleHistory\(pharmacy\.id, 1\)/);

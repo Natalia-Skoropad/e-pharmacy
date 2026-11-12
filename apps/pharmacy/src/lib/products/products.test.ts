@@ -19,6 +19,7 @@ function isInvalidResponse(error: unknown): boolean {
     error instanceof ApiError && error.transportCode === 'INVALID_RESPONSE'
   );
 }
+
 //===================================================================
 
 function validProduct() {
@@ -44,6 +45,7 @@ function validProduct() {
     isFavorite: false,
     createdAt: '2026-08-10T10:00:00.000Z',
     updatedAt: '2026-08-12T10:00:00.000Z',
+
     offers: [
       {
         id: '507f1f77bcf86cd799439012',
@@ -75,6 +77,7 @@ function validResponse() {
     total: 1,
     totalPages: 1,
     earliestCreatedAt: '2026-08-10',
+
     ownProductStatistics: {
       inStock: { quantity: 10, amount: 1000 },
       reserved: { quantity: 2, amount: 200 },

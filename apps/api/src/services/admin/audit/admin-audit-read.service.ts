@@ -11,6 +11,12 @@ import {
 
 import { HTTP_STATUS } from '../../../constants/http/httpStatus';
 import { AdminAuditLog } from '../../../models/audit/adminAuditLog.model';
+import { Pharmacy } from '../../../models/pharmacies/pharmacy.model';
+
+import {
+  recoverBlockSourceFromStatusChange,
+  resolvePreviousPharmacyBlockSources,
+} from '../../pharmacies/pharmacy-block-source-read.service';
 
 import type { AdminAuditListQuery } from '../../../schemas/admin/audit/admin-audit.schema';
 
@@ -200,7 +206,89 @@ export async function getAdminAuditLogService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Audit record was not found.');
   }
 
-  const details = serializeAuditDetails(auditLog);
+  let details = serializeAuditDetails(auditLog);
+
+  // Legacy blocking audit records may predate blockSource snapshots. Recover
+  // provenance from the immutable blocking actor + the owner ID, only if
+  // those identities are available. This also works for deleted actors.
+  if (
+    auditLog.entityType === 'pharmacy' &&
+    details.action === 'pharmacy.status.changed' &&
+    auditLog.after?.status === 'blocked' &&
+    auditLog.after?.blockSource !== 'owner_deactivated' &&
+    auditLog.after?.blockSource !== 'admin_blocked'
+  ) {
+    const ownerIdFromAudit =
+      auditLog.scopeEntityType === 'pharmacyOwner'
+        ? auditLog.scopeEntityId
+        : undefined;
+
+    const currentPharmacy =
+      ownerIdFromAudit || !Types.ObjectId.isValid(auditLog.entityId)
+        ? null
+        : await Pharmacy.findById(auditLog.entityId)
+            .select('ownerId')
+            .lean<{ ownerId: Types.ObjectId } | null>();
+
+    const recovered = recoverBlockSourceFromStatusChange(
+      {
+        entityId: auditLog.entityId,
+        actorUserId: auditLog.actorUserId,
+        after: {
+          status: 'blocked',
+        },
+      },
+
+      ownerIdFromAudit ??
+        (currentPharmacy ? String(currentPharmacy.ownerId) : undefined)
+    );
+
+    if (recovered) {
+      details = {
+        ...details,
+        after: { ...details.after, blockSource: recovered },
+      };
+    }
+  }
+
+  // Reactivation requests made before blockSource was included in audit
+  // snapshots must show the source of the preceding block, not the owner who
+  // submitted the reactivation request. Keep the stored audit immutable.
+  if (
+    auditLog.entityType === 'pharmacy' &&
+    auditLog.before?.status === 'blocked' &&
+    auditLog.before?.blockSource !== 'owner_deactivated' &&
+    auditLog.before?.blockSource !== 'admin_blocked'
+  ) {
+    const ownerIdFromAudit =
+      auditLog.scopeEntityType === 'pharmacyOwner'
+        ? auditLog.scopeEntityId
+        : undefined;
+
+    const currentPharmacy =
+      ownerIdFromAudit || !Types.ObjectId.isValid(auditLog.entityId)
+        ? null
+        : await Pharmacy.findById(auditLog.entityId)
+            .select('ownerId')
+            .lean<{ ownerId: Types.ObjectId } | null>();
+
+    const sources = await resolvePreviousPharmacyBlockSources(
+      auditLog.entityId,
+
+      ownerIdFromAudit ??
+        (currentPharmacy ? String(currentPharmacy.ownerId) : undefined),
+      [{ id: String(auditLog._id), createdAt: auditLog.createdAt }]
+    );
+
+    const source = sources.get(String(auditLog._id));
+
+    if (source) {
+      details = {
+        ...details,
+        before: { ...details.before, blockSource: source },
+      };
+    }
+  }
 
   if (
     auditLog.entityType !== 'pharmacy' ||
