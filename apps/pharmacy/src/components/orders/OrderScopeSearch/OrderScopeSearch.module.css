@@ -1,0 +1,12 @@
+/* Shared visual treatment with StockMovementOrderSearch: a circular icon. */
+.orderSearchIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+}

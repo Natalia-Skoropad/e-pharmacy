@@ -4,6 +4,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { isClientsFilterSegment } from '@/lib/clients/client-paths';
 import { isOwnProductsFilterSegment } from '@/lib/products/own-product-paths';
+import { isOrdersFilterSegment } from '@/lib/orders/order-paths';
 import { parseSalesChartSegments } from '@/lib/statistics/sales-chart-paths';
 
 //===================================================================
@@ -83,6 +84,7 @@ export type OwnedPharmacyRouteResolution =
       pharmacyId: string;
       tab: OwnedPharmacyDetailTab;
       clientSegments: readonly string[];
+      orderSegments: readonly string[];
       productSegments: readonly string[];
       salesSegments: readonly string[];
     }>
@@ -332,6 +334,12 @@ export function resolveOwnedPharmaciesRoute(
               /^page-[1-9]\d*$/.test(segment) ||
               /^per-page-(20|50|100)$/.test(segment)
           )) ||
+        (tab === 'orders' &&
+          tail.every(
+            (segment) =>
+              !segment.startsWith('pharmacy-id-') &&
+              isOrdersFilterSegment(segment)
+          )) ||
         (tab === 'products' &&
           tail.every(
             (segment) =>
@@ -348,6 +356,7 @@ export function resolveOwnedPharmaciesRoute(
       pharmacyId: segments[0].toLowerCase(),
       tab: tab as OwnedPharmacyDetailTab,
       clientSegments: tab === 'clients' ? tail : [],
+      orderSegments: tab === 'orders' ? tail : [],
       productSegments: tab === 'products' ? tail : [],
       salesSegments: tab === 'information' ? tail : [],
     };

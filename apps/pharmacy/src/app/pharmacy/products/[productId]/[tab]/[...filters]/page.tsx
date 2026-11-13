@@ -5,6 +5,13 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { getOwnProductDetailTabPath } from '@/lib/products/own-product-detail-tabs';
 
 import {
+  buildRelatedProductOrdersPath,
+  isOrdersFilterRoute,
+  parseOrdersSegments,
+  parseOrdersPaginationSegments,
+} from '@/lib/orders/order-paths';
+
+import {
   buildStockMovementPath,
   parseStockMovementSegments,
 } from '@/lib/products/stock-movement-paths';
@@ -68,14 +75,28 @@ export default async function OwnProductStatisticsFiltersRoute({
 
   if (
     !isValidObjectId(productId) ||
-    !['statistics', 'stock-movement', 'clients', 'pharmacies'].includes(tab)
+    ![
+      'statistics',
+      'stock-movement',
+      'clients',
+      'pharmacies',
+      'related-orders',
+    ].includes(tab)
   )
     notFound();
 
   let canonical: string;
 
   try {
-    if (tab === 'stock-movement') {
+    if (tab === 'related-orders') {
+      if (!isOrdersFilterRoute(filters)) notFound();
+
+      canonical = buildRelatedProductOrdersPath(
+        productId,
+        parseOrdersSegments({ filters }),
+        parseOrdersPaginationSegments({ filters })
+      );
+    } else if (tab === 'stock-movement') {
       canonical = buildStockMovementPath(
         productId,
         parseStockMovementSegments(filters)

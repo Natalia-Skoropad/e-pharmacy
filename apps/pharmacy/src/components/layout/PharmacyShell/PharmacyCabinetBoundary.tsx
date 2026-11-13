@@ -15,6 +15,7 @@ import {
   isOwnerClientDetailPath,
   isOwnerClientsListPath,
   isOwnerProductsListPath,
+  isOwnerOrdersListPath,
   isOwnerProductDetailPath,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
@@ -57,7 +58,8 @@ export function PharmacyCabinetBoundaryRuntime({
   // resources authorize independently. Only operational pages require it.
   if (
     (pathname &&
-      (isOwnerClientsListPath(pathname) ||
+      (isOwnerOrdersListPath(pathname) ||
+        isOwnerClientsListPath(pathname) ||
         isOwnerClientDetailPath(pathname) ||
         isOwnerProductsListPath(pathname) ||
         isOwnerProductDetailPath(pathname))) ||

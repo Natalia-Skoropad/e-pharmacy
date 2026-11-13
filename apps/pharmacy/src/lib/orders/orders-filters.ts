@@ -21,6 +21,9 @@ export type OrdersFilterState = Readonly<{
     to: string;
   };
 
+  pharmacyId: string;
+  clientId: string;
+  orderId: string;
   client: string;
   orderNumber: string;
   deliveryMethod: DeliveryMethodFilter;
@@ -37,6 +40,9 @@ export const DEFAULT_ORDERS_FILTERS: OrdersFilterState = {
     to: '',
   },
 
+  pharmacyId: '',
+  clientId: '',
+  orderId: '',
   client: '',
   orderNumber: '',
   deliveryMethod: 'all',

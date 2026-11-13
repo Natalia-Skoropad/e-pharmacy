@@ -52,17 +52,6 @@
   opacity: 0.8;
 }
 
-.collapsedCounter {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 9px;
-  height: 9px;
-  background-color: var(--color-info);
-  border: 2px solid var(--color-surface);
-  border-radius: 50%;
-}
-
 @media only screen and (min-width: 1440px) {
   .sidebar {
     position: sticky;
@@ -76,7 +65,8 @@
 .collapsedPharmacyCounters {
   position: absolute;
   top: 6px;
-  right: 5px;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   gap: 2px;
   padding: 2px;
@@ -105,4 +95,24 @@
 
 .collapsedReactivationDot {
   background-color: var(--color-status-mustard, #986209);
+}
+
+/* Both order statuses remain visible in collapsed navigation. */
+.collapsedOrderCounters {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+}
+
+.collapsedOrderCounters > span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
 }

@@ -9,6 +9,7 @@ import {
   getOrderManagerComments,
   getOrderSalesStatistics,
   getOrders,
+  getOwnerOrderOptions,
   updateOrderDetails,
   updateOrderStatus,
 } from '../../controllers/orders/order.controller';
@@ -28,6 +29,7 @@ import {
   orderParamsSchema,
   orderSalesStatisticsQuerySchema,
   ordersQuerySchema,
+  ownerOrderOptionsQuerySchema,
   updateOrderDetailsSchema,
   updateOrderStatusSchema,
 } from '../../schemas/orders/order.schema';
@@ -65,6 +67,15 @@ orderRoutes.get(
   '/',
   validate({ query: ordersQuerySchema }),
   ctrlWrapper(getOrders)
+);
+
+//===============================================================
+
+orderRoutes.get(
+  '/options',
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ query: ownerOrderOptionsQuerySchema }),
+  ctrlWrapper(getOwnerOrderOptions)
 );
 
 //===============================================================

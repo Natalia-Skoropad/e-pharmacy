@@ -382,6 +382,7 @@ function ClientDetailsPageContentState({
             page: ordersPage,
             perPage: ordersRowsPerPage,
             clientId,
+            scope: 'owner',
             orderNumber: debouncedOrderNumberSearch.trim() || undefined,
             clientComment: debouncedOrderCommentSearch.trim() || undefined,
             dateFrom: orderFilters.date.from || undefined,

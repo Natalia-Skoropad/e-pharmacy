@@ -19,6 +19,7 @@ export type OrdersPageResourceState = Readonly<{
   totalOrders: number;
   totalPages: number;
   earliestCreatedAt: string | null;
+  availableOrderDates: readonly string[];
   statistics: OrderStatisticsCounts;
   errorMessage: string;
 }>;
@@ -31,6 +32,7 @@ export const INITIAL_ORDERS_PAGE_RESOURCE_STATE: OrdersPageResourceState = {
   totalOrders: 0,
   totalPages: 0,
   earliestCreatedAt: null,
+  availableOrderDates: [],
   statistics: DEFAULT_ORDER_STATISTICS,
   errorMessage: '',
 };
@@ -58,6 +60,7 @@ export function completeOrdersLoad(
     totalOrders: response.total,
     totalPages: response.totalPages,
     earliestCreatedAt: response.earliestCreatedAt,
+    availableOrderDates: response.availableOrderDates,
     statistics: response.statistics,
     errorMessage: '',
   };

@@ -52,6 +52,7 @@ export const ordersQuerySchema = z.preprocess(
       client: orderClientSearchSchema,
       pharmacy: sharedSearchSchema,
       pharmacyId: mongoIdSchema.optional(),
+      orderId: mongoIdSchema.optional(),
       scope: z.enum(['owner']).optional(),
       clientId: mongoIdSchema.optional(),
       orderNumber: sharedSearchSchema,
@@ -75,6 +76,27 @@ export const ordersQuerySchema = z.preprocess(
       path: ['dateTo'],
     })
 );
+
+//===============================================================
+
+export const ownerOrderOptionsQuerySchema = z
+  .object({
+    kind: z.enum(['order', 'client']),
+    productId: mongoIdSchema.optional(),
+    pharmacyId: mongoIdSchema.optional(),
+    clientId: mongoIdSchema.optional(),
+    orderId: mongoIdSchema.optional(),
+    search: z.string().trim().max(80).optional(),
+    page: z.coerce.number().int().min(1).max(10000).default(1),
+    perPage: z.coerce.number().int().min(1).max(50).default(50),
+  })
+  .strict();
+
+//===============================================================
+
+export type OwnerOrderOptionsQuery = z.infer<
+  typeof ownerOrderOptionsQuerySchema
+>;
 
 //===============================================================
 

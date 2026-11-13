@@ -5,6 +5,7 @@ import {
   getPharmacyIdFromDetailPath,
   isLegacyOperationalPharmacyPath,
   isOwnerClientsListPath,
+  isOwnerOrdersListPath,
   isOwnerClientDetailPath,
   isOwnerProductDetailPath,
   isOperationalPharmacyPath,
@@ -55,15 +56,21 @@ test('detail tabs use the exact pharmacy from their canonical URL', () => {
 //===================================================================
 
 test('legacy operational routes retain explicit pharmacy selection in the query', () => {
-  for (const page of [
-    'dashboard',
-    'orders',
-    'all-products',
-    'product-requests',
-  ]) {
+  for (const page of ['dashboard', 'all-products', 'product-requests']) {
     assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/${page}`), true);
   }
 
+  assert.equal(isOwnerOrdersListPath('/pharmacy/orders'), true);
+  assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/orders'), false);
+
+  assert.equal(
+    isOwnerOrdersListPath(
+      `/pharmacy/orders/pharmacy-id-${A}/status-new/page-2`
+    ),
+    true
+  );
+
+  assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/orders/new'), true);
   assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/products'), false);
 
   assert.equal(

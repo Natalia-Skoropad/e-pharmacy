@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ClipboardList, Search, ShoppingBag } from 'lucide-react';
+import { Search, ShoppingBag } from 'lucide-react';
 
 import {
   SearchableSelect,
@@ -79,7 +79,7 @@ export function StockMovementOrderSearch({
         <InfoTooltip
           label="Order search help"
           title="Order search"
-          icon={<ClipboardList size={20} aria-hidden="true" />}
+          icon={<ShoppingBag size={20} aria-hidden="true" />}
           escapeOverflow
           preferTopLayer
           items={[

@@ -10,6 +10,7 @@ import type {
   OrderCommentsQuery,
   OrderParams,
   OrdersQuery,
+  OwnerOrderOptionsQuery,
   OrderSalesStatisticsQuery,
   UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
@@ -27,6 +28,7 @@ import {
 import {
   getOrderByIdService,
   getOrdersService,
+  getOwnerOrderOptionsService,
 } from '../../services/orders/order-query.service';
 
 import { getOrderSalesStatisticsService } from '../../services/orders/order-sales-statistics.service';
@@ -82,6 +84,21 @@ export async function getOrders(
     req.user?.id ?? '',
     query,
     req.user?.role
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+/** Owner-wide order/client suggestions respect pharmacy membership. */
+export async function getOwnerOrderOptions(
+  req: Request,
+  res: ValidatedResponse<unknown, unknown, OwnerOrderOptionsQuery>
+): Promise<void> {
+  const data = await getOwnerOrderOptionsService(
+    req.user?.id ?? '',
+    res.locals.validated.query
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

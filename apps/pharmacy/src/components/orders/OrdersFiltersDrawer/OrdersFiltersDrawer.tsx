@@ -1,4 +1,17 @@
 import {
+  Banknote,
+  Landmark,
+  MapPin,
+  Truck,
+  UserCog,
+  UserRound,
+} from 'lucide-react';
+
+import type { ReactNode } from 'react';
+
+import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
   DELIVERY_METHODS,
   ORDER_CREATED_BY_TYPES,
   ORDER_STATUSES,
@@ -20,15 +33,16 @@ import {
 
 import { FilterDrawer } from '@e-pharmacy/ui/overlays';
 
-import { PHARMACY_ROUTES } from '@/lib/routes';
 import type { OrdersFilterState } from '@/lib/orders/orders-filters';
+
+import css from './OrdersFiltersDrawer.module.css';
 
 //===================================================================
 
 type OrdersFiltersDrawerProps = Readonly<{
   filters: OrdersFilterState;
   hasActiveFilters: boolean;
-  minDate?: string;
+  availableDates: readonly string[];
   onChange: (filters: OrdersFilterState) => void;
   onClose: () => void;
   onReset: () => void;
@@ -36,41 +50,85 @@ type OrdersFiltersDrawerProps = Readonly<{
 
 //===================================================================
 
+function filterOption(label: string, icon: ReactNode) {
+  return (
+    <span className={css.orderFilterOption}>
+      <span className={css.orderFilterIcon} aria-hidden="true">
+        {icon}
+      </span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
+//===================================================================
+
 const DELIVERY_METHOD_OPTIONS: Array<
   SelectOption<OrdersFilterState['deliveryMethod']>
 > = [
   { value: 'all', label: 'All' },
+
   ...DELIVERY_METHODS.map((deliveryMethod) => ({
     value: deliveryMethod,
     label: DELIVERY_METHOD_LABELS[deliveryMethod],
+
+    content: filterOption(
+      DELIVERY_METHOD_LABELS[deliveryMethod],
+      deliveryMethod === 'pickup' ? <MapPin size={16} /> : <Truck size={16} />
+    ),
   })),
 ];
+
+//===================================================================
 
 const PAYMENT_METHOD_OPTIONS: Array<
   SelectOption<OrdersFilterState['paymentMethod']>
 > = [
   { value: 'all', label: 'All' },
+
   ...PAYMENT_METHODS.map((paymentMethod) => ({
     value: paymentMethod,
     label: PAYMENT_METHOD_LABELS[paymentMethod],
+
+    content: filterOption(
+      PAYMENT_METHOD_LABELS[paymentMethod],
+      paymentMethod === 'cash' ? <Banknote size={16} /> : <Landmark size={16} />
+    ),
   })),
 ];
 
+//===================================================================
+
 const ORDER_STATUS_OPTIONS: Array<SelectOption<OrdersFilterState['status']>> = [
   { value: 'all', label: 'All' },
+
   ...ORDER_STATUSES.map((status) => ({
     value: status,
     label: ORDER_STATUS_PRESENTATION[status].label,
+    content: <StatusBadge {...ORDER_STATUS_PRESENTATION[status]} />,
   })),
 ];
+
+//===================================================================
 
 const ORDER_CREATED_BY_OPTIONS: Array<
   SelectOption<OrdersFilterState['createdByType']>
 > = [
   { value: 'all', label: 'All' },
+
   ...ORDER_CREATED_BY_TYPES.map((createdByType) => ({
     value: createdByType,
     label: ORDER_CREATED_BY_LABELS[createdByType],
+
+    content: filterOption(
+      ORDER_CREATED_BY_LABELS[createdByType],
+
+      createdByType === 'client' ? (
+        <UserRound size={16} />
+      ) : (
+        <UserCog size={16} />
+      )
+    ),
   })),
 ];
 
@@ -79,7 +137,7 @@ const ORDER_CREATED_BY_OPTIONS: Array<
 function OrdersFiltersDrawer({
   filters,
   hasActiveFilters,
-  minDate,
+  availableDates,
   onChange,
   onClose,
   onReset,
@@ -89,7 +147,6 @@ function OrdersFiltersDrawer({
       id="orders-filters-panel"
       eyebrow="Orders"
       hasActiveFilters={hasActiveFilters}
-      resetHref={PHARMACY_ROUTES.ORDERS}
       onClose={onClose}
       onReset={() => {
         onReset();
@@ -98,8 +155,10 @@ function OrdersFiltersDrawer({
     >
       <DateFilter
         id="orders-date-filter"
-        minDate={minDate}
-        disabled={!minDate}
+        minDate={availableDates[0]}
+        maxDate={availableDates.at(-1)}
+        availableDates={availableDates}
+        disabled={availableDates.length === 0}
         label="Order date"
         value={filters.date}
         isActive={Boolean(filters.date.from || filters.date.to)}

@@ -443,6 +443,14 @@
   },
   {
     "app": "pharmacy",
+    "route": "/orders/options",
+    "backend": "/orders/options",
+    "methods": {
+      "GET": "private"
+    }
+  },
+  {
+    "app": "pharmacy",
     "route": "/orders/[orderId]",
     "backend": "/orders/:orderId",
     "methods": {

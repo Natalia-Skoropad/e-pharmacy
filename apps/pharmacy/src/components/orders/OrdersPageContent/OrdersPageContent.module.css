@@ -3,7 +3,6 @@
   gap: 20px;
   width: 100%;
   min-width: 0;
-  margin-inline: 0;
 }
 
 .card {
@@ -16,23 +15,19 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card);
 }
+.pharmacySelector {
+  min-width: 0;
+}
 
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  white-space: nowrap;
-  border: 0;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
+.orderStatistics {
+  display: none;
+  min-width: 0;
 }
 
 .searchGrid {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 
 .searchAction {
@@ -47,9 +42,14 @@
 }
 
 .toolbar {
-  min-width: 0;
   display: grid;
   gap: 16px;
+  min-width: 0;
+}
+
+.rowsControl {
+  min-width: 0;
+  width: 100%;
 }
 
 .countLabel {
@@ -57,28 +57,33 @@
   width: 100%;
 }
 
-.rowsControl {
-  width: 100%;
-  min-width: 0;
-}
-
-.orderStatistics {
-  display: none;
-}
-
 .createButton {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-@media only screen and (min-width: 768px) {
+@media (min-width: 768px) {
+  .orderStatistics {
+    display: block;
+  }
+
   .searchGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, 80px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 140px;
     align-items: end;
   }
 
   .toolbar {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: end;
+  }
+
+  .rowsControl {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
   }
 
   .countLabel {
@@ -88,42 +93,9 @@
     width: unset;
   }
 
-  .rowsControl {
-    grid-column: 1;
-    grid-row: 1;
-    width: auto;
-  }
-
-  .orderStatistics {
-    display: grid;
-    gap: 14px;
-  }
-
-  .toolbar {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
-
   .createButton {
     grid-column: 3;
     grid-row: 1;
     width: auto;
   }
-}
-
-.errorState {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-  padding: 16px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.errorText {
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
 }

@@ -21,6 +21,8 @@ import {
 
 import { formatMoney } from '@e-pharmacy/utils/money';
 
+import css from './OrderStatistics.module.css';
+
 //===================================================================
 
 type OrderStatisticConfig = Readonly<{
@@ -35,6 +37,7 @@ type OrderStatisticsProps = Readonly<{
   className?: string;
   getStatusHref?: (status: OrderStatus) => string | undefined;
   onStatusClick?: (status: OrderStatus) => void;
+  activeStatus?: OrderStatus | null;
 }>;
 
 //===================================================================
@@ -73,6 +76,7 @@ function OrderStatistics({
   className,
   getStatusHref,
   onStatusClick,
+  activeStatus = null,
 }: OrderStatisticsProps) {
   return (
     <StatsGrid
@@ -101,7 +105,12 @@ function OrderStatistics({
                   ? () => onStatusClick(key)
                   : undefined
             }
-            ariaLabel={`${title} statistics`}
+            ariaLabel={
+              activeStatus === key
+                ? `Clear ${title.toLowerCase()} filter`
+                : `${title} statistics`
+            }
+            className={activeStatus === key ? css.activeCard : undefined}
           />
         );
       })}

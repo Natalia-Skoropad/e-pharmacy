@@ -24,13 +24,18 @@ const DETAILS_STYLES = path.join(
 
 const ORDERS_SOURCE = path.join(
   CURRENT_DIR,
-  'OrdersPageContent',
-  'OrdersPageContent.tsx'
+  'OrderScopeSearch',
+  'OrderScopeSearch.tsx'
 );
 
 const PRODUCT_SOURCE = path.resolve(
   CURRENT_DIR,
   '../products/OwnProductDetailsPageContent/OwnProductRelatedOrdersTab.tsx'
+);
+
+const STOCK_ORDER_SEARCH_SOURCE = path.resolve(
+  CURRENT_DIR,
+  '../products/OwnProductDetailsPageContent/StockMovementOrderSearch.tsx'
 );
 
 const PICKER_SOURCE = path.join(
@@ -51,11 +56,23 @@ test('client search help documents all supported identifiers', async () => {
   const normalizeWhitespace = (source: string) => source.replace(/\s+/g, ' ');
   const help = 'Search by client name, ID, email, phone number, or address.';
 
-  assert.match(ordersSource, /label="Client search"/);
-  assert.ok(normalizeWhitespace(ordersSource).includes(help));
+  assert.match(ordersSource, /isClient \? 'Client search'/);
+
+  assert.ok(
+    normalizeWhitespace(ordersSource).includes(
+      'Search by client name, ID, email, phone number, or address.'
+    )
+  );
+
   assert.ok(normalizeWhitespace(productSource).includes(help));
   assert.ok(normalizeWhitespace(detailsSource).includes(help));
   assert.match(detailsSource, /searchText:/);
+
+  const stockSearch = await readFile(STOCK_ORDER_SEARCH_SOURCE, 'utf8');
+
+  assert.match(ordersSource, /css\.orderSearchIcon/);
+  assert.match(ordersSource, /<ShoppingBag size=\{20\}/);
+  assert.match(stockSearch, /icon=\{<ShoppingBag size=\{20\}/);
 });
 
 //===================================================================

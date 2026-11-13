@@ -12,71 +12,151 @@ const componentPath = path.resolve(
 
 //===================================================================
 
-test('Orders page uses settled text filters for requests and URL updates', async () => {
+test('Orders registry derives selected pharmacy, filters and pagination from route state', async () => {
   const source = await readFile(componentPath, 'utf8');
 
-  assert.match(source, /useDebouncedValue\(textFilters, 450\)/);
+  assert.match(source, /parseOrdersSegments\(\{ filters: segments \}\)/);
 
   assert.match(
     source,
-    /const requestTextFilters = routeTextOverride \?\? debouncedTextFilters/
+    /parseOrdersPaginationSegments\(\{ filters: segments \}\)/
   );
+
+  assert.match(source, /buildOrdersPath\(nextFilters/);
 
   assert.match(
     source,
-    /applyDebouncedOrdersTextFilters\(immediateFilters, requestTextFilters\)/
+    /buildEmbeddedOrdersPath\(embeddedPharmacyId, nextFilters, pagination\)/
   );
+
+  assert.match(source, /pathname\.startsWith/);
+  assert.match(source, /scope: embedded \? undefined : 'owner'/);
+  assert.match(source, /embeddedReady/);
+  assert.match(source, /embeddedPharmacyId/);
+  assert.match(source, /pharmacyId: filters\.pharmacyId \|\| undefined/);
+  assert.match(source, /clientId: filters.clientId \|\| undefined/);
+  assert.match(source, /orderId: filters.orderId \|\| undefined/);
+  assert.doesNotMatch(source, /useDebouncedValue/);
+});
+
+//===================================================================
+
+test('Orders page accepts the canonical backend page through a URL replacement', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  assert.match(source, /result.page !== params.page/);
+  assert.match(source, /router\.replace\(canonical, \{ scroll: false \}\)/);
 
   assert.match(
     source,
-    /getOrdersQueryParams\(requestFilters, rowsPerPage, currentPage\)/
+    /buildEmbeddedOrdersPath\(embeddedPharmacyId, filters, \{ page: result.page, perPage \}\)/
   );
 
-  assert.match(source, /buildOrdersPath\(requestFilters\)/);
+  assert.doesNotMatch(source, /setCurrentPage\(response.page\)/);
+});
 
-  assert.doesNotMatch(
-    source,
-    /getOrdersQueryParams\(filters, rowsPerPage, currentPage\)/
+//===================================================================
+
+test('Orders page has independent scoped selectors, statistics and loading states', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  assert.match(source, /<OwnedPharmacySearch/);
+  assert.match(source, /statisticsContext="orders"/);
+  assert.match(source, /<OrderScopeSearch[\s\S]*?kind="client"/);
+  assert.match(source, /<OrderScopeSearch[\s\S]*?kind="order"/);
+  assert.match(source, /<StatsLoadingSkeleton/);
+  assert.match(source, /<ProfileResourceState/);
+  assert.match(source, /fullWidthOnMobile/);
+});
+
+//===================================================================
+
+// Embedded Orders keeps its local URL and does not display a selection-level loader.
+test('embedded Orders preserves the detail URL and uses only content loaders', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  const detail = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/pharmacies/OwnedPharmacyDetailPageContent/OwnedPharmacyDetailPageContent.tsx'
+    ),
+    'utf8'
+  );
+
+  assert.match(source, /buildEmbeddedOrdersPath\(embeddedPharmacyId, next/);
+  assert.match(source, /buildEmbeddedOrdersPath\(embeddedPharmacyId, filters/);
+  assert.match(source, /embedded && !embeddedReady/);
+  assert.doesNotMatch(detail, /Selecting pharmacy/);
+
+  assert.match(
+    detail,
+    /!\['comments', 'clients', 'products', 'orders'\]\.includes\(visibleTab\)/
+  );
+
+  assert.match(detail, /: visibleTab === 'orders' \? \(/);
+  assert.doesNotMatch(detail, /pharmacy && visibleTab === 'orders'/);
+
+  assert.match(
+    detail,
+    /embeddedReady=\{!selectionLoading && selectedId === pharmacyId\}/
   );
 });
 
 //===================================================================
 
-test('Orders page accepts the backend canonical page without a duplicate GET', async () => {
+// Shared Orders registry is also used on a specific product, without making
+// filters global or changing the owner-scoped access boundary.
+test('related product Orders scopes table, statistics and search options by product and keeps its route', async () => {
   const source = await readFile(componentPath, 'utf8');
 
-  assert.match(source, /response\.page !== queryParams\.page/);
+  const table = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrdersTable/OrdersTable.tsx'
+    ),
+    'utf8'
+  );
+
+  const search = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrderScopeSearch/OrderScopeSearch.tsx'
+    ),
+    'utf8'
+  );
+
+  const detail = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/products/OwnProductDetailsPageContent/OwnProductDetailsPageContent.tsx'
+    ),
+    'utf8'
+  );
+
+  const client = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/clients/ClientDetailsPageContent/ClientDetailsPageContent.tsx'
+    ),
+    'utf8'
+  );
+
+  assert.match(source, /productId: relatedProductId \|\| undefined/);
 
   assert.match(
     source,
-    /skipCanonicalPageRequestRef\.current = response\.page;[\s\S]{0,120}setCurrentPage\(response\.page\)/
+    /buildRelatedProductOrdersPath\(relatedProductId, nextFilters, pagination\)/
   );
+
+  assert.match(source, /productId=\{relatedProductId\}/);
+  assert.match(table, /key: 'pharmacy'/);
 
   assert.match(
-    source,
-    /skipCanonicalPageRequestRef\.current === queryParams\.page[\s\S]{0,120}return;/
-  );
-});
-
-//===================================================================
-
-test('Orders page ignores its own URL replacements when syncing route filters but restores external navigation', async () => {
-  const source = await readFile(componentPath, 'utf8');
-
-  assert.match(source, /internalRoutePathsRef\.current\.add\(nextPath\)/);
-
-  assert.match(
-    source,
-    /internalRoutePathsRef\.current\.delete\(initialFiltersPath\)[\s\S]{0,100}return;/
+    table,
+    /order\.items\.find\(\(item\) => item\.productId === productId\)/
   );
 
-  assert.match(
-    source,
-    /setRouteTextOverride\(getOrdersTextFilterState\(initialFilters\)\)/
-  );
-
-  assert.match(
-    source,
-    /syncOrdersFiltersFromRoute\(currentFilters, initialFilters\)/
-  );
+  assert.match(search, /productId: productId \|\| undefined/);
+  assert.match(detail, /activeTab === 'related-orders' && !error/);
+  assert.match(client, /clientId,\s*scope: 'owner'/);
 });

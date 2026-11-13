@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import {
-  BarChart3,
+  ShoppingBag,
   Boxes,
   Building2,
   ChartNoAxesCombined,
@@ -65,7 +65,7 @@ const PRODUCT_DETAILS_TABS: Array<TabItem<OwnProductDetailTab>> = [
   {
     value: 'related-orders',
     label: 'Related orders',
-    icon: <BarChart3 size={17} />,
+    icon: <ShoppingBag size={17} />,
   },
   {
     value: 'stock-movement',
@@ -343,6 +343,8 @@ function OwnProductDetailsPageContent({
               productError={error?.message ?? null}
               onRetryProduct={() => setRetry((value) => value + 1)}
             />
+          ) : activeTab === 'related-orders' && !error ? (
+            <OwnProductRelatedOrdersTab key={productId} productId={productId} />
           ) : activeTab === 'comments' && !error ? (
             <OwnProductCommentsTab
               productId={productId}
@@ -369,11 +371,6 @@ function OwnProductDetailsPageContent({
               canRemove={canRemove}
               removing={isRemovingProduct}
               onRemove={() => setIsRemoveModalOpen(true)}
-            />
-          ) : activeTab === 'related-orders' ? (
-            <OwnProductRelatedOrdersTab
-              key={product.id}
-              productId={product.id}
             />
           ) : null}
         </div>

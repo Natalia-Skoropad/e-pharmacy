@@ -80,8 +80,14 @@ test('URL filters use shared timing hooks and header delegates dropdown lifecycl
     './components/layout/PharmacyHeader/PharmacyHeader.tsx'
   );
 
-  assert.match(orders, /@e-pharmacy\/hooks\/timing/);
-  assert.match(orders, /useDebouncedValue/);
+  // Text search now lives in a paginated, debounced OrderScopeSearch select.
+  const orderSearch = await readSource(
+    './components/orders/OrderScopeSearch/OrderScopeSearch.tsx'
+  );
+
+  assert.match(orderSearch, /@e-pharmacy\/hooks\/timing/);
+  assert.match(orderSearch, /useDebouncedValue/);
+  assert.match(orders, /<OrderScopeSearch/);
 
   assert.match(header, /@e-pharmacy\/ui\/cabinet/);
   assert.match(header, /UserDropdown/);

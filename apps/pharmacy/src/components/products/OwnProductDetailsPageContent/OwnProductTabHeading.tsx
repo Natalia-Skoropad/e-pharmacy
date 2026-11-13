@@ -1,5 +1,5 @@
 import {
-  BarChart3,
+  ShoppingBag,
   Boxes,
   Building2,
   ChartNoAxesCombined,
@@ -45,7 +45,7 @@ export function OwnProductTabHeading({
     'related-orders': {
       title: 'Related orders',
       description: 'See orders containing this product across your pharmacies.',
-      icon: <BarChart3 size={21} />,
+      icon: <ShoppingBag size={21} />,
     },
 
     'stock-movement': {

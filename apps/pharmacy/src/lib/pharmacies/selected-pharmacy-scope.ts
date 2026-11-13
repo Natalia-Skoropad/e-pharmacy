@@ -1,6 +1,13 @@
 import { isOwnProductsFilterSegment } from '../products/own-product-paths';
 
 import {
+  isOrdersFilterRoute,
+  buildOrdersPath,
+  parseOrdersSegments,
+  parseOrdersPaginationSegments,
+} from '../orders/order-paths';
+
+import {
   buildStockMovementPath,
   parseStockMovementSegments,
 } from '../products/stock-movement-paths';
@@ -63,6 +70,29 @@ export function isOwnerClientsListPath(pathname: string): boolean {
         segment
       )
     );
+}
+
+//===================================================================
+
+/** Owner-wide Orders list works without an operational current-pharmacy selection. */
+export function isOwnerOrdersListPath(pathname: string): boolean {
+  const base = '/pharmacy/orders';
+
+  if (pathname === base) return true;
+  if (!pathname.startsWith(`${base}/`)) return false;
+
+  const segments = pathname.slice(base.length + 1).split('/');
+
+  if (!isOrdersFilterRoute(segments)) return false;
+
+  const params = { filters: segments };
+
+  return (
+    buildOrdersPath(
+      parseOrdersSegments(params),
+      parseOrdersPaginationSegments(params)
+    ) === pathname
+  );
 }
 
 //===================================================================
@@ -270,6 +300,7 @@ let authorizedPharmacyId: string | null = null;
 export function isOperationalPharmacyPath(pathname: string): boolean {
   return (
     (LEGACY_OPERATION.test(pathname) &&
+      !isOwnerOrdersListPath(pathname) &&
       !isOwnerClientsListPath(pathname) &&
       !isOwnerClientDetailPath(pathname) &&
       !isOwnerProductsListPath(pathname) &&
@@ -283,6 +314,7 @@ export function isOperationalPharmacyPath(pathname: string): boolean {
 export function isLegacyOperationalPharmacyPath(pathname: string): boolean {
   return (
     LEGACY_OPERATION.test(pathname) &&
+    !isOwnerOrdersListPath(pathname) &&
     !isOwnerClientsListPath(pathname) &&
     !isOwnerClientDetailPath(pathname) &&
     !isOwnerProductsListPath(pathname) &&

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
-import { isApiError } from '@e-pharmacy/api-client/transport';
+import { useAuth } from '@e-pharmacy/auth/react';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
 import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
@@ -15,10 +15,12 @@ import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 
 import {
   isLegacyOperationalPharmacyPath,
+  isOwnerOrdersListPath,
   withSelectedPharmacyQuery,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
 import { subscribeToOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
+import { parseOrdersSegments } from '@/lib/orders/order-paths';
 
 import {
   INITIAL_ORDER_COUNTER_STATE,
@@ -53,22 +55,32 @@ export function PharmacySidebar({
   onToggleCollapsed,
 }: PharmacySidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const { selectedId } = usePharmacySelection();
+
+  // Orders count follows the explicit Orders URL filter; a previously selected
+  // operational pharmacy must never narrow the owner-wide default view.
+  const orderScopePharmacyId = isOwnerOrdersListPath(pathname)
+    ? parseOrdersSegments({ filters: pathname.split('/').slice(3) }).pharmacyId
+    : '';
+
+  const currentUserId = user?.id ?? null;
+  const orderCounterScopeKey = `${currentUserId ?? ''}:${orderScopePharmacyId}`;
 
   const scopedHref = (href: string) =>
     selectedId && isLegacyOperationalPharmacyPath(href)
       ? withSelectedPharmacyQuery(href, '', selectedId)
       : href;
 
-  // Keep counts tied to the pharmacy that produced them. Changing the selected
-  // pharmacy (or clearing the selection) must never show another pharmacy's badges.
+  // Keep counts tied to the Orders filter that produced them. Switching between
+  // owner-wide and pharmacy-specific routes never shows stale counts.
   const [orderCounterState, setOrderCounterState] = useState<{
-    pharmacyId: string;
+    scopeKey: string;
     value: OrderCounterState;
   } | null>(null);
 
   const orderCounts = getVisibleOrderCounts(
-    selectedId && orderCounterState?.pharmacyId === selectedId
+    orderCounterState?.scopeKey === orderCounterScopeKey
       ? orderCounterState.value
       : INITIAL_ORDER_COUNTER_STATE
   );
@@ -83,14 +95,11 @@ export function PharmacySidebar({
   useEffect(() => {
     let requestVersion = 0;
     let activeController: AbortController | null = null;
-    let needsPharmacySelection = false;
 
     const loadOrderCounts = async () => {
-      if (!selectedId) return;
+      if (!currentUserId) return;
 
-      requestVersion += 1;
-
-      const currentVersion = requestVersion;
+      const currentVersion = ++requestVersion;
 
       activeController?.abort();
 
@@ -101,46 +110,36 @@ export function PharmacySidebar({
       try {
         const requestOptions = { signal: controller.signal };
 
-        const [newOrders, inProgressOrders] = await Promise.all([
-          getPharmacyOrders(
-            { page: 1, perPage: 1, status: 'new' },
-            requestOptions
-          ),
+        const scopedParams = {
+          scope: 'owner' as const,
+          ...(orderScopePharmacyId ? { pharmacyId: orderScopePharmacyId } : {}),
+          page: 1,
+          perPage: 1,
+        };
 
-          getPharmacyOrders(
-            { page: 1, perPage: 1, status: 'in_progress' },
-            requestOptions
-          ),
-        ]);
+        // The owner-wide list response includes totals for every status,
+        // regardless of the visible table page. One request is sufficient.
+        const response = await getPharmacyOrders(scopedParams, requestOptions);
 
         if (controller.signal.aborted || currentVersion !== requestVersion) {
           return;
         }
 
         setOrderCounterState({
-          pharmacyId: selectedId,
+          scopeKey: orderCounterScopeKey,
 
           value: createReadyOrderCounterState({
-            new: newOrders.total,
-            inProgress: inProgressOrders.total,
+            new: response.statistics.new.count,
+            inProgress: response.statistics.in_progress.count,
           }),
         });
-      } catch (error) {
+      } catch {
         if (controller.signal.aborted || currentVersion !== requestVersion) {
           return;
         }
 
-        // A multi-pharmacy owner must explicitly select a pharmacy for the
-        // legacy /orders endpoint. Repeating its 409 on every focus only adds
-        // auth and database traffic without ever producing badge counts.
-        needsPharmacySelection = Boolean(
-          isApiError(error) &&
-          error.httpStatus === 409 &&
-          error.code === 'PHARMACY_SELECTION_REQUIRED'
-        );
-
         setOrderCounterState({
-          pharmacyId: selectedId,
+          scopeKey: orderCounterScopeKey,
           value: createUnavailableOrderCounterState(),
         });
       } finally {
@@ -149,18 +148,14 @@ export function PharmacySidebar({
     };
 
     const handleFocus = () => {
-      if (!selectedId || needsPharmacySelection || activeController) return;
+      if (activeController) return;
 
       void loadOrderCounts();
     };
 
-    if (selectedId) void loadOrderCounts();
+    void loadOrderCounts();
 
     const unsubscribeRefresh = subscribeToOrderCounterRefresh(() => {
-      if (!selectedId) return;
-
-      needsPharmacySelection = false;
-
       void loadOrderCounts();
     });
 
@@ -172,7 +167,7 @@ export function PharmacySidebar({
       unsubscribeRefresh();
       window.removeEventListener('focus', handleFocus);
     };
-  }, [selectedId]);
+  }, [currentUserId, orderCounterScopeKey, orderScopePharmacyId]);
 
   useEffect(() => {
     let generation = 0;
@@ -353,12 +348,15 @@ export function PharmacySidebar({
                   pharmacyCounts.new > 0
                     ? `${pharmacyCounts.new} new pharmacies`
                     : '',
+
                   pharmacyCounts.onVerification > 0
                     ? `${pharmacyCounts.onVerification} on verification`
                     : '',
+
                   pharmacyCounts.onModeration > 0
                     ? `${pharmacyCounts.onModeration} on moderation`
                     : '',
+
                   pharmacyCounts.onReactivation > 0
                     ? `${pharmacyCounts.onReactivation} awaiting reactivation`
                     : '',
@@ -392,9 +390,19 @@ export function PharmacySidebar({
 
             {isCollapsed && hasNotifications && orderCounts ? (
               <span
-                className={css.collapsedCounter}
+                className={css.collapsedOrderCounters}
                 aria-label={getCollapsedOrderNotificationLabel(orderCounts)}
-              />
+              >
+                {orderCounts.new > 0 ? (
+                  <span className={css.collapsedNewDot} aria-hidden="true" />
+                ) : null}
+                {orderCounts.inProgress > 0 ? (
+                  <span
+                    className={css.collapsedModerationDot}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </span>
             ) : null}
           </Link>
         );

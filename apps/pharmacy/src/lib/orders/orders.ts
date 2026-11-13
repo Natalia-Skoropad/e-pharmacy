@@ -64,6 +64,7 @@ export type PharmacyOrderItem = Readonly<{
 
 export type PharmacyOrderRow = Readonly<{
   id: EntityId;
+  pharmacyId?: EntityId;
   orderNumber: string;
   orderDate: string;
   pharmacyName: string;
@@ -154,6 +155,8 @@ export type PharmacyOrderManagerCommentsResponse = Readonly<
 export type PharmacyOrdersQueryParams = Readonly<{
   page?: number;
   perPage?: number;
+  pharmacyId?: EntityId;
+  orderId?: EntityId;
   dateFrom?: string;
   dateTo?: string;
   client?: string;
@@ -176,6 +179,7 @@ export type PharmacyOrdersResponse = Readonly<
   ApiPaginationResponse<PharmacyOrderRow> & {
     statistics: OrderStatisticsCounts;
     earliestCreatedAt: string | null;
+    availableOrderDates: readonly string[];
   }
 >;
 
@@ -658,6 +662,11 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
     orderNumber,
     orderDate,
 
+    ...(typeof rawOrder.pharmacyId === 'string' &&
+    isValidObjectId(rawOrder.pharmacyId)
+      ? { pharmacyId: rawOrder.pharmacyId }
+      : {}),
+
     pharmacyName: requireText(
       rawOrder.pharmacyName,
       'order.pharmacyName',
@@ -1066,5 +1075,11 @@ export function normalizePharmacyOrdersResponse(
         ),
 
     earliestCreatedAt: parseEarliestCreatedAt(payload),
+    availableOrderDates:
+      isRecord(payload) && Array.isArray(payload.availableOrderDates)
+        ? payload.availableOrderDates.filter((date): date is string =>
+            isCalendarDateString(date)
+          )
+        : [],
   };
 }

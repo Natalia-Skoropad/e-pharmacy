@@ -21,6 +21,7 @@ const EMPTY_RESPONSE: PharmacyOrdersResponse = {
   totalPages: 0,
   statistics: DEFAULT_ORDER_STATISTICS,
   earliestCreatedAt: null,
+  availableOrderDates: [],
 };
 
 //===================================================================
@@ -53,6 +54,7 @@ test('failed initial orders request is represented as error instead of successfu
 test('refresh failure preserves the last successful snapshot while marking it unavailable', () => {
   const successful = completeOrdersLoad({
     ...EMPTY_RESPONSE,
+
     items: [
       {
         id: '507f1f77bcf86cd799439011',
@@ -72,6 +74,7 @@ test('refresh failure preserves the last successful snapshot while marking it un
         items: [],
       },
     ],
+
     total: 1,
     totalPages: 1,
   });

@@ -60,6 +60,9 @@ test('Pharmacy registry disambiguates ObjectId detail routes from filters', () =
     pharmacyId: ID,
     tab: 'information',
     clientSegments: [],
+    orderSegments: [],
+    productSegments: [],
+    salesSegments: [],
   });
 
   assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'orders']), {
@@ -67,6 +70,9 @@ test('Pharmacy registry disambiguates ObjectId detail routes from filters', () =
     pharmacyId: ID,
     tab: 'orders',
     clientSegments: [],
+    orderSegments: [],
+    productSegments: [],
+    salesSegments: [],
   });
 
   assert.equal(
@@ -92,7 +98,7 @@ test('Pharmacy registry disambiguates ObjectId detail routes from filters', () =
 
 //===================================================================
 
-// Stage 14.18.85: only Clients has nested URL-driven filters.
+// Detail tabs use scoped URL-driven filters.
 test('pharmacy Clients accepts nested filters and paging; product requests tab is removed', () => {
   assert.deepEqual(
     resolveOwnedPharmaciesRoute([
@@ -108,6 +114,7 @@ test('pharmacy Clients accepts nested filters and paging; product requests tab i
       kind: 'detail',
       pharmacyId: ID,
       tab: 'clients',
+
       clientSegments: [
         'client-id-507f1f77bcf86cd799439012',
         'status-active',
@@ -115,6 +122,10 @@ test('pharmacy Clients accepts nested filters and paging; product requests tab i
         'per-page-50',
         'page-2',
       ],
+
+      orderSegments: [],
+      productSegments: [],
+      salesSegments: [],
     }
   );
 
@@ -122,9 +133,31 @@ test('pharmacy Clients accepts nested filters and paging; product requests tab i
     kind: 'invalid',
   });
 
-  assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'orders', 'page-2']), {
-    kind: 'invalid',
-  });
+  assert.deepEqual(
+    resolveOwnedPharmaciesRoute([
+      ID,
+      'orders',
+      'status-in-progress',
+      'per-page-50',
+      'page-2',
+    ]),
+    {
+      kind: 'detail',
+      pharmacyId: ID,
+      tab: 'orders',
+      clientSegments: [],
+      orderSegments: ['status-in-progress', 'per-page-50', 'page-2'],
+      productSegments: [],
+      salesSegments: [],
+    }
+  );
+
+  assert.deepEqual(
+    resolveOwnedPharmaciesRoute([ID, 'orders', `pharmacy-id-${ID}`]),
+    {
+      kind: 'invalid',
+    }
+  );
 
   assert.deepEqual(resolveOwnedPharmaciesRoute([ID, 'clients', 'unknown-2']), {
     kind: 'invalid',

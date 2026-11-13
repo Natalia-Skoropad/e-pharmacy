@@ -56,3 +56,51 @@ test('14.18.15: stock history enriches order metadata only from the offer pharma
     /Order\.find\(\{\s*_id:\s*\{\s*\$in:\s*orderIds\s*\},\s*pharmacyId:\s*currentOffer\.pharmacyId/
   );
 });
+
+//===================================================================
+
+test('Order suggestions are tenant-scoped and use server-side paging', async () => {
+  const source = await readFile(
+    apiSource('services', 'orders', 'order-query.service.ts'),
+    'utf8'
+  );
+
+  assert.match(source, /getOwnerOrderOptionsService/);
+  assert.match(source, /getOwnerOrderPharmacyIds\(userId\)/);
+  assert.match(source, /query\.pharmacyId[\s\S]*?HTTP_STATUS\.FORBIDDEN/);
+  assert.match(source, /\$in: pharmacyIds/);
+  assert.match(source, /\.skip\(\(query\.page - 1\) \* query\.perPage\)/);
+  assert.match(source, /\.limit\(query\.perPage\)/);
+  assert.match(source, /createOrderClientSearchCondition\(search\)/);
+  assert.match(source, /timezone: 'Europe\/Kyiv'/);
+  assert.match(source, /isDefaultPharmacyClient defaultClientPharmacyId/);
+  assert.match(source, /\.select\('_id name imageUrl'\)/);
+  assert.match(source, /allowedIds\.has\(id\)/);
+  assert.match(source, /Walk-in client \(\$\{walkInPharmacy\.name\}\)/);
+});
+
+//===================================================================
+
+// Options for a product's Related orders must never include an unrelated order
+// even if that order belongs to an authorized pharmacy.
+test('owner order options also respect the requested product', async () => {
+  const query = await readFile(
+    apiSource('services', 'orders', 'order-query.service.ts'),
+    'utf8'
+  );
+
+  const schema = await readFile(
+    apiSource('schemas', 'orders', 'order.schema.ts'),
+    'utf8'
+  );
+
+  assert.match(
+    schema,
+    /ownerOrderOptionsQuerySchema = z\.object\(\{[\s\S]*?productId: mongoIdSchema\.optional\(\)/
+  );
+
+  assert.match(
+    query,
+    /if \(query\.productId\) filter\['items\.productId'\] = new Types\.ObjectId\(query\.productId\)/
+  );
+});

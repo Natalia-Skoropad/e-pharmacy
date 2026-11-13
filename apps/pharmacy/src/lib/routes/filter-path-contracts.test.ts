@@ -8,8 +8,10 @@ import {
 
 import {
   buildOrdersPath,
+  buildEmbeddedOrdersPath,
   isOrdersFilterSegment,
   parseOrdersSegments,
+  parseOrdersPaginationSegments,
 } from '@/lib/orders/order-paths';
 
 import { DEFAULT_CLIENTS_FILTERS } from '@/lib/clients/client-paths';
@@ -71,6 +73,75 @@ test('order client search stays ephemeral and is never persisted in the route', 
   assert.deepEqual(
     parseOrdersSegments({ filters: ['client-nataliia-skoropad'] }),
     DEFAULT_ORDERS_FILTERS
+  );
+});
+
+//===================================================================
+
+test('Orders owner selection, dependent entity IDs and pagination roundtrip', () => {
+  const state = {
+    ...DEFAULT_ORDERS_FILTERS,
+    pharmacyId: '507f1f77bcf86cd799439011',
+    clientId: '507f1f77bcf86cd799439012',
+    orderId: '507f1f77bcf86cd799439013',
+    status: 'successful' as const,
+  };
+
+  const paging = { page: 2, perPage: 50 as const };
+  const path = buildOrdersPath(state, paging);
+
+  assert.equal(
+    path,
+    '/pharmacy/orders/pharmacy-id-507f1f77bcf86cd799439011/client-id-507f1f77bcf86cd799439012/order-id-507f1f77bcf86cd799439013/status-successful/per-page-50/page-2'
+  );
+
+  assert.deepEqual(parseOrdersSegments({ filters: segments(path) }), state);
+
+  assert.deepEqual(
+    parseOrdersPaginationSegments({ filters: segments(path) }),
+    paging
+  );
+});
+
+//===================================================================
+
+test('pharmacy Orders detail routes keep filters scoped to that pharmacy and preserve paging', () => {
+  const pharmacyId = '507f1f77bcf86cd799439011';
+
+  const filters = {
+    ...DEFAULT_ORDERS_FILTERS,
+    pharmacyId,
+    clientId: '507f1f77bcf86cd799439012',
+    status: 'in_progress' as const,
+    date: { from: '2026-07-09', to: '2026-07-12' },
+  };
+
+  const pagination = { page: 2, perPage: 50 as const };
+  const path = buildEmbeddedOrdersPath(pharmacyId, filters, pagination);
+
+  assert.equal(
+    path,
+    `/pharmacy/pharmacies/${pharmacyId}/orders/client-id-507f1f77bcf86cd799439012/status-in-progress/date-from-2026-07-09/date-to-2026-07-12/per-page-50/page-2`
+  );
+
+  const tail = path.split('/orders/')[1]?.split('/') ?? [];
+  const parsed = parseOrdersSegments({ filters: tail });
+
+  assert.deepEqual({ ...parsed, pharmacyId }, filters);
+
+  assert.deepEqual(
+    parseOrdersPaginationSegments({ filters: tail }),
+    pagination
+  );
+
+  assert.throws(
+    () =>
+      buildEmbeddedOrdersPath(
+        pharmacyId,
+        { ...filters, pharmacyId: '507f1f77bcf86cd799439099' },
+        pagination
+      ),
+    TypeError
   );
 });
 

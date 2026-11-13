@@ -56,6 +56,7 @@ export function parseOwnProductDetailTabPath(
     segment !== 'details' &&
     (extra.length === 0 ||
       segment === 'statistics' ||
+      segment === 'related-orders' ||
       segment === 'stock-movement' ||
       segment === 'clients' ||
       segment === 'pharmacies')

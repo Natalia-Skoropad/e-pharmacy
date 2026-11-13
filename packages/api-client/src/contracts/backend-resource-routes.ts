@@ -305,6 +305,7 @@ export const backendRoutes = {
   orders: {
     checkout: '/orders/checkout',
     list: '/orders',
+    options: '/orders/options',
     salesStatistics: '/orders/sales-statistics',
     details: (orderId: EntityId) => `/orders/${segment(orderId)}`,
     status: (orderId: EntityId) => `/orders/${segment(orderId)}/status`,

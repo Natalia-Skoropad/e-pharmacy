@@ -6,6 +6,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import {
   isOrdersFilterSegment,
   parseOrdersSegments,
+  parseOrdersPaginationSegments,
 } from '@/lib/orders/order-paths';
 
 import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
@@ -33,6 +34,9 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
     return (
       <OrdersPageContent
         initialFilters={parseOrdersSegments({ filters: [orderId] })}
+        initialPagination={parseOrdersPaginationSegments({
+          filters: [orderId],
+        })}
       />
     );
   }

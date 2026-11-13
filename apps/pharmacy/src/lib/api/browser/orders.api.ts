@@ -291,3 +291,86 @@ export async function getPharmacyOrderSalesStatistics(
     { url: path, method: 'GET' }
   );
 }
+
+//===================================================================
+
+export type OrderOption = Readonly<{
+  id: string;
+  label: string;
+  photoUrl?: string;
+}>;
+
+export type OrderOptionsResponse = Readonly<{
+  items: readonly OrderOption[];
+  page: number;
+  totalPages: number;
+}>;
+
+//===================================================================
+
+export async function getOwnerOrderOptions(
+  params: Readonly<{
+    kind: 'order' | 'client';
+    productId?: string;
+    pharmacyId?: string;
+    clientId?: string;
+    orderId?: string;
+    search?: string;
+    page?: number;
+    perPage?: number;
+  }>,
+
+  options?: BrowserReadRequestOptions
+): Promise<OrderOptionsResponse> {
+  const path = appendQueryParams(PHARMACY_API_ROUTES.orders.options, params);
+
+  return parseApiResponseData(
+    await ownerLocalApiRequest(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
+    (payload: unknown) => {
+      if (
+        !isRecord(payload) ||
+        !Array.isArray(payload.items) ||
+        typeof payload.page !== 'number' ||
+        typeof payload.totalPages !== 'number'
+      ) {
+        throw new ApiError('Invalid order suggestions response.', {
+          transportCode: 'INVALID_RESPONSE',
+          payload,
+        });
+      }
+
+      const items: OrderOption[] = payload.items.map((raw: unknown) => {
+        if (
+          !isRecord(raw) ||
+          typeof raw.id !== 'string' ||
+          typeof raw.label !== 'string'
+        ) {
+          throw new ApiError('Invalid order suggestion.', {
+            transportCode: 'INVALID_RESPONSE',
+            payload,
+          });
+        }
+
+        return {
+          id: raw.id,
+          label: raw.label,
+
+          ...(typeof raw.photoUrl === 'string'
+            ? { photoUrl: raw.photoUrl }
+            : {}),
+        };
+      });
+
+      return {
+        items,
+        page: payload.page as number,
+        totalPages: payload.totalPages as number,
+      };
+    },
+
+    { url: path, method: 'GET' }
+  );
+}

@@ -291,6 +291,7 @@ export type OrdersResponseDto = {
   totalPages: number;
   statistics: OrderStatisticsDto;
   earliestCreatedAt: CalendarDateString | null;
+  availableOrderDates: CalendarDateString[];
   orderNumberOptions?: string[];
 
   pharmacyOptions?: Array<{

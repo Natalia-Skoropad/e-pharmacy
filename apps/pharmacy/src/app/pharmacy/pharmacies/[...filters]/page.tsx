@@ -14,6 +14,12 @@ import {
 } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import {
+  parseOrdersSegments,
+  parseOrdersPaginationSegments,
+  buildEmbeddedOrdersPath,
+} from '@/lib/orders/order-paths';
+
+import {
   parseOwnProductsSegments,
   parseOwnProductsPaginationSegments,
   buildEmbeddedOwnProductsPath,
@@ -50,6 +56,16 @@ export default async function OwnedPharmaciesRoute({
         ? parseClientsPaginationSegments(route.clientSegments)
         : undefined;
 
+    const orderFilters =
+      route.tab === 'orders'
+        ? parseOrdersSegments({ filters: [...route.orderSegments] })
+        : undefined;
+
+    const orderPagination =
+      route.tab === 'orders'
+        ? parseOrdersPaginationSegments({ filters: [...route.orderSegments] })
+        : undefined;
+
     const productFilters =
       route.tab === 'products'
         ? parseOwnProductsSegments({ filters: [...route.productSegments] })
@@ -70,13 +86,19 @@ export default async function OwnedPharmaciesRoute({
           )
         : clientFilters && pagination
           ? buildClientsPath(clientFilters, base, pagination)
-          : productFilters && productPagination
-            ? buildEmbeddedOwnProductsPath(
+          : orderFilters && orderPagination
+            ? buildEmbeddedOrdersPath(
                 route.pharmacyId,
-                productFilters,
-                productPagination
+                orderFilters,
+                orderPagination
               )
-            : base;
+            : productFilters && productPagination
+              ? buildEmbeddedOwnProductsPath(
+                  route.pharmacyId,
+                  productFilters,
+                  productPagination
+                )
+              : base;
 
     if (`/pharmacy/pharmacies/${filters.join('/')}` !== canonical)
       redirect(canonical);
@@ -89,6 +111,8 @@ export default async function OwnedPharmaciesRoute({
         initialClientPagination={pagination}
         initialProductFilters={productFilters}
         initialProductPagination={productPagination}
+        initialOrderFilters={orderFilters}
+        initialOrderPagination={orderPagination}
       />
     );
   }

@@ -24,6 +24,7 @@ import {
 import {
   getPharmacyIdFromDetailPath,
   isOwnerClientsListPath,
+  isOwnerOrdersListPath,
   isOwnerClientDetailPath,
   isLegacyOperationalPharmacyPath,
   isOperationalPharmacyPath,
@@ -58,7 +59,7 @@ type SelectionContext = Readonly<{
   isLoading: boolean;
   isInvalid: boolean;
   isOperational: boolean;
-  select: (pharmacyId: string) => void;
+  select: (pharmacyId: string, targetPath?: string) => void;
 }>;
 
 //===================================================================
@@ -195,6 +196,7 @@ export function PharmacySelectionProvider({
   useEffect(() => {
     if (
       !pathname.startsWith('/pharmacy/all-products') &&
+      !isOwnerOrdersListPath(pathname) &&
       !isOwnerClientsListPath(pathname) &&
       !isOwnerClientDetailPath(pathname)
     )
@@ -240,7 +242,7 @@ export function PharmacySelectionProvider({
   ]);
 
   const select = useCallback(
-    (id: string) => {
+    (id: string, targetPath?: string) => {
       if (
         !identity ||
         !memberships.some((m) => m.id.toLowerCase() === id.toLowerCase())
@@ -251,6 +253,11 @@ export function PharmacySelectionProvider({
       const nextId = id.toLowerCase();
 
       setPreferred({ identity, id: nextId });
+
+      if (targetPath) {
+        router.push(targetPath, { scroll: false });
+        return;
+      }
 
       const detailId = getPharmacyIdFromDetailPath(pathname);
 

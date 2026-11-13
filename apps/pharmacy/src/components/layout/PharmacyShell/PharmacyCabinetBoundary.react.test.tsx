@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 
 import { ErrorPage, PageLoader } from '@e-pharmacy/ui/status-pages';
@@ -92,7 +91,7 @@ test('blocked and last-known-good summaries keep cabinet children renderable', (
 
 //===================================================================
 
-test('owner with no pharmacies can open personal profile but not unloaded operations', () => {
+test('owner with no pharmacies can open personal profile and order registry but not creation', () => {
   const profile = PharmacyCabinetBoundaryRuntime({
     profile: null,
     isLoading: false,
@@ -113,7 +112,7 @@ test('owner with no pharmacies can open personal profile but not unloaded operat
     children: 'orders-without-pharmacy',
   });
 
-  assert.notEqual(operations, 'orders-without-pharmacy');
+  assert.equal(operations, 'orders-without-pharmacy');
 });
 
 //===================================================================
@@ -127,6 +126,9 @@ test('owner account pages and pharmacy creation bypass ambiguous summary bootstr
     '/pharmacy/all-products/status-active/category-vitamins',
     '/pharmacy/pharmacies',
     '/pharmacy/pharmacies/new',
+    '/pharmacy/orders',
+    '/pharmacy/orders/status-new',
+    `/pharmacy/orders/pharmacy-id-${blockedSummary.id}`,
     '/pharmacy/pharmacies/507f1f77bcf86cd799439011',
   ]) {
     const content = PharmacyCabinetBoundaryRuntime({
@@ -175,7 +177,7 @@ test('All products bypasses selected-pharmacy summary during loading, failure an
     profile: null,
     isLoading: false,
     error: new Error('PHARMACY_SELECTION_REQUIRED'),
-    pathname: '/pharmacy/orders',
+    pathname: '/pharmacy/orders/new',
     onRetry: () => undefined,
     children: 'orders',
   });

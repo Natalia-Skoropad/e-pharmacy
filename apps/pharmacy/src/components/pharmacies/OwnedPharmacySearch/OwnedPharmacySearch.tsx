@@ -34,6 +34,7 @@ type OwnedPharmacySearchProps = Readonly<{
   id?: string;
   label?: string;
   explainStatistics?: boolean;
+  statisticsContext?: 'products' | 'orders';
   isOptionsLoading?: boolean;
 }>;
 
@@ -84,6 +85,7 @@ export function OwnedPharmacySearch({
   id = 'owned-pharmacy-registry-search',
   label = 'Pharmacy search',
   explainStatistics = false,
+  statisticsContext = 'products',
   isOptionsLoading = false,
 }: OwnedPharmacySearchProps) {
   const [query, setQuery] = useState('');
@@ -212,7 +214,9 @@ export function OwnedPharmacySearch({
                   {
                     title: 'Statistics and products',
                     description:
-                      'All pharmacies combines the stock, reservations and products of every pharmacy you own. Select a specific pharmacy to see statistics and inventory for that pharmacy only.',
+                      statisticsContext === 'orders'
+                        ? 'All pharmacies combines the orders and order statistics from every pharmacy you own. Select a pharmacy to see only its orders and statistics.'
+                        : 'All pharmacies combines the stock, reservations and products of every pharmacy you own. Select a specific pharmacy to see statistics and inventory for that pharmacy only.',
                     icon: <Building2 size={17} aria-hidden="true" />,
                   },
                 ]

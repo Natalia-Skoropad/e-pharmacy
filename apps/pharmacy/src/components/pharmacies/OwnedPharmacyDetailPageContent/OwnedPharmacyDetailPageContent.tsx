@@ -68,6 +68,9 @@ import {
 
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 
+import { type OrdersFilterState } from '@/lib/orders/orders-filters';
+import { type OrdersPagination } from '@/lib/orders/order-paths';
+
 import {
   DEFAULT_CLIENTS_FILTERS,
   buildClientsPath,
@@ -181,6 +184,8 @@ export function OwnedPharmacyDetailPageContent({
   initialClientPagination,
   initialProductFilters,
   initialProductPagination,
+  initialOrderFilters,
+  initialOrderPagination,
 }: Readonly<{
   pharmacyId: string;
   activeTab: OwnedPharmacyDetailTab;
@@ -188,6 +193,8 @@ export function OwnedPharmacyDetailPageContent({
   initialClientPagination?: ClientsPaginationState;
   initialProductFilters?: OwnProductsFilterState;
   initialProductPagination?: OwnProductsPagination;
+  initialOrderFilters?: OrdersFilterState;
+  initialOrderPagination?: OrdersPagination;
 }>) {
   const router = useRouter();
 
@@ -539,7 +546,9 @@ export function OwnedPharmacyDetailPageContent({
               />
             ) : null}
             {loading &&
-            !['comments', 'clients', 'products'].includes(visibleTab) ? (
+            !['comments', 'clients', 'products', 'orders'].includes(
+              visibleTab
+            ) ? (
               <ProfileResourceState
                 variant="loading"
                 title="Loading pharmacy details"
@@ -656,21 +665,22 @@ export function OwnedPharmacyDetailPageContent({
                   initialPagination={initialProductPagination}
                 />
               ) : null
-            ) : pharmacy && visibleTab === 'orders' ? (
-              selectionLoading ||
-              selectedId !== pharmacyId ||
+            ) : visibleTab === 'orders' ? (
               selectionInvalid ? (
                 <ProfileResourceState
-                  variant={selectionInvalid ? 'error' : 'loading'}
-                  title={
-                    selectionInvalid
-                      ? 'Pharmacy access unavailable'
-                      : 'Selecting pharmacy'
-                  }
-                  description="The operational tab requires verified access to this pharmacy."
+                  variant="error"
+                  title="Pharmacy access unavailable"
+                  description="You do not have access to this pharmacy."
                 />
               ) : (
-                <OrdersPageContent key={`${pharmacyId}:orders`} embedded />
+                <OrdersPageContent
+                  key={`${pharmacyId}:orders`}
+                  embedded
+                  embeddedPharmacyId={pharmacyId}
+                  embeddedReady={!selectionLoading && selectedId === pharmacyId}
+                  initialFilters={initialOrderFilters}
+                  initialPagination={initialOrderPagination}
+                />
               )
             ) : deferred ? (
               <ProfileResourceState
