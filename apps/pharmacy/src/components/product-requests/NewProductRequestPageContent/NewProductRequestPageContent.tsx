@@ -28,7 +28,10 @@ import {
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import type { BrowserUploadFile } from '@e-pharmacy/ui/forms';
-import { optimizePictureFile, readFileAsDataUrl } from '@e-pharmacy/ui/media';
+import {
+  readFileAsDataUrl,
+  uploadManagedPhotoDetails,
+} from '@e-pharmacy/ui/media';
 
 import {
   PHARMACY_STATUS_PRESENTATION,
@@ -58,7 +61,6 @@ import {
   PRODUCT_REQUEST_ATTACHMENTS_ACCEPT,
   PRODUCT_REQUEST_ATTACHMENT_RULES,
   PRODUCT_REQUEST_IMAGE_ACCEPT,
-  PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB,
   PRODUCT_REQUEST_IMAGE_RULES,
   PRODUCT_REQUEST_INITIAL_VALUES,
   PRODUCT_REQUEST_LIMITS,
@@ -75,6 +77,7 @@ import {
 } from '@e-pharmacy/validation/product-requests';
 
 import { PHARMACY_ROUTES, getPharmacyRequestPath } from '@/lib/routes';
+import { storePharmacyPhoto } from '@/lib/api/browser/media-upload.api';
 
 import {
   checkPharmacyProductRequestArticle,
@@ -93,9 +96,11 @@ import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
+
 import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { EntityComments } from '@/components/comments/EntityComments';
+
 import { resolveProductRequestPageMode } from './product-request-page-mode';
 
 import css from './NewProductRequestPageContent.module.css';
@@ -606,7 +611,15 @@ function NewProductRequestPageContent({
       return;
     }
 
-    const imageError = validateProductRequestImageFile(image);
+    const imageError = image.file
+      ? image.size > 10 * 1024 * 1024
+        ? 'Photo must be no larger than 10 MB.'
+        : !PRODUCT_REQUEST_IMAGE_RULES.mimeTypes.some(
+              (mimeType) => mimeType === image.type
+            )
+          ? 'Upload JPG, PNG or WebP.'
+          : ''
+      : validateProductRequestImageFile(image);
     if (imageError) {
       setProductImageError(imageError);
       return;
@@ -628,31 +641,30 @@ function NewProductRequestPageContent({
     setIsImageProcessing(true);
 
     try {
-      const optimizedFile = await optimizePictureFile(
+      const saved = await uploadManagedPhotoDetails(
         image.file,
-        controller.signal
+        controller.signal,
+        storePharmacyPhoto
       );
 
-      const dataUrl = await readFileAsDataUrl(optimizedFile, controller.signal);
-
-      const optimizedImage = {
+      const storedImage: BrowserUploadFile = {
         ...image,
-        file: optimizedFile,
-        name: optimizedFile.name,
-        size: optimizedFile.size,
-        type: optimizedFile.type,
-        dataUrl,
+        file: undefined,
+        name: image.name.replace(/\.[^.]+$/, '') + '.webp',
+        size: saved.size,
+        type: saved.type,
+        dataUrl: saved.url,
       };
 
-      const optimizedError = validateProductRequestImageFile(optimizedImage);
+      const optimizedError = validateProductRequestImageFile(storedImage);
 
       if (optimizedError) {
         setProductImageError(optimizedError);
         return;
       }
 
-      setProductImage([optimizedImage]);
-      setProductImagePreview(dataUrl);
+      setProductImage([storedImage]);
+      setProductImagePreview(saved.url);
       setProductImageError('');
       setIsProductImageRemoved(false);
     } catch (error) {
@@ -1181,10 +1193,20 @@ function NewProductRequestPageContent({
                   multiple={false}
                   maxFiles={PRODUCT_REQUEST_IMAGE_RULES.maxFiles}
                   accept={PRODUCT_REQUEST_IMAGE_ACCEPT}
-                  hint={`JPG, PNG, or WEBP up to ${PRODUCT_REQUEST_IMAGE_MAX_SIZE_MB} MB.`}
-                  validateSelection={(files) =>
-                    files[0] ? validateProductRequestImageFile(files[0]) : ''
-                  }
+                  hint="JPG, PNG or WebP up to 10 MB. Optimized versions are generated automatically."
+                  validateSelection={(files) => {
+                    const file = files[0];
+                    if (!file) return '';
+                    if (!file.file)
+                      return validateProductRequestImageFile(file);
+                    if (file.size > 10 * 1024 * 1024)
+                      return 'Photo must be no larger than 10 MB.';
+                    return PRODUCT_REQUEST_IMAGE_RULES.mimeTypes.some(
+                      (mimeType) => mimeType === file.type
+                    )
+                      ? ''
+                      : 'Upload JPG, PNG or WebP.';
+                  }}
                   labels={{
                     dropzoneTitle: isFileProcessing
                       ? 'Preparing image preview...'

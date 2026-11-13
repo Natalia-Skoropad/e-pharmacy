@@ -77,6 +77,7 @@ export function ProductDetailsHero({
             src={product.imageUrl}
             alt={product.name}
             priority
+            mediaSize="large"
             fetchPriority="high"
             sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
           />

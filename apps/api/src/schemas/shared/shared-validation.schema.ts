@@ -46,6 +46,7 @@ import {
   PAYMENT_PURPOSE_MAX_LENGTH,
   VALIDATION_MESSAGES,
   isHttpUrl,
+  isManagedPictureUrl,
   isPictureDataUrl,
 } from '../../constants/shared/validation';
 
@@ -229,7 +230,7 @@ export const sharedPictureUrlSchema = z
       return;
     }
 
-    if (isHttpUrl(value)) {
+    if (isHttpUrl(value) || isManagedPictureUrl(value)) {
       if (value.length > PICTURE_HTTP_URL_MAX_LENGTH) {
         context.addIssue({
           code: 'custom',

@@ -978,12 +978,14 @@ function parseProductCategoryFilterOption(
   }
 
   const record = requireRecord(value, 'category filter option', context);
+
   requireOptionalFields(
     record,
     'category filter option',
     { icon: 'string' },
     context
   );
+
   return {
     ...option,
     ...(typeof record.icon === 'string' ? { icon: record.icon } : {}),
@@ -1701,6 +1703,9 @@ function parsePharmacyProfileVerificationDocuments(
 //===================================================================
 
 function isHttpPictureUrl(value: string): boolean {
+  if (/^\/api\/media\/[a-f0-9]{24}\/(?:thumb|medium|large)$/.test(value))
+    return true;
+
   try {
     const url = new URL(value);
 
@@ -2089,6 +2094,7 @@ function parsePharmacyPendingModeration(
     'shortDescription',
   ] as const) {
     const fieldValue = record[key];
+
     if (fieldValue === undefined) continue;
 
     if (fieldValue !== null && typeof fieldValue !== 'string') {
@@ -2098,6 +2104,7 @@ function parsePharmacyPendingModeration(
         context
       );
     }
+
     result[key] = fieldValue;
   }
 
@@ -2838,6 +2845,7 @@ export function parseMessageResponse(
   context?: ApiResponseContext
 ): MessageResponse {
   const record = requireRecord(value, 'message response', context);
+
   requireFields(record, 'message response', { message: 'string' }, context);
 
   return checked<MessageResponse>({ message: record.message });
@@ -3176,6 +3184,7 @@ function parseCart(value: unknown, context?: ApiResponseContext): Cart {
   );
 
   const items = parseArray(record.items, 'items', parseCartItem, context);
+
   assertCartPharmacyMetadataConsistency(items, record, context);
 
   const totalItems = requireSafeNonNegativeInteger(
@@ -3230,6 +3239,7 @@ export function parseCartResponse(
   context?: ApiResponseContext
 ): CartResponse {
   const record = requireRecord(value, 'cart response', context);
+
   return { cart: parseCart(record.cart, context) };
 }
 
@@ -3412,6 +3422,7 @@ export function parseOrderManagerCommentsResponse(
       normalizePaginatedResponse(value, {
         normalizeItem: (item) => {
           const record = isRecord(item) ? item : null;
+
           if (!record) return null;
 
           if (
@@ -3600,6 +3611,7 @@ export function parseHealthResponse(
   context?: ApiResponseContext
 ): HealthResponse {
   const record = requireRecord(value, 'health response', context);
+
   requireFields(record, 'health response', { status: 'string' }, context);
 
   return checked<HealthResponse>({ status: record.status });

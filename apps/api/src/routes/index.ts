@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { managedPhotoRoutes } from './media/managed-photo.routes';
 
 import { adminRoutes } from './admin/admin.routes';
 import { authRoutes } from './auth/auth.routes';
@@ -28,6 +29,8 @@ routes.use('/clients', clientRoutes);
 routes.use('/pharmacy-notes', pharmacyNoteRoutes);
 routes.use('/health', healthRoutes);
 routes.use('/orders', orderRoutes);
+
+routes.use('/media', managedPhotoRoutes);
 
 routes.use('/products', productRoutes);
 routes.use('/product-categories', productCategoryRoutes);

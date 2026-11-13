@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import clsx from 'clsx';
 
 import { ShimmerImage } from '../ShimmerImage';
+
 import css from './TableImagePreview.module.css';
 
 //===================================================================
@@ -40,6 +41,7 @@ function TableImagePreview({
           src={src}
           alt={alt}
           sizes={`${size}px`}
+          mediaSize="thumb"
           as="span"
           unoptimized
         />

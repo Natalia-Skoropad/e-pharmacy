@@ -16,6 +16,7 @@ import {
   USER_PHONE_MIN_LENGTH,
   VALIDATION_MESSAGES,
   isHttpUrl,
+  isManagedPictureUrl,
   isPictureDataUrl,
 } from '../../constants/shared/validation';
 
@@ -136,7 +137,7 @@ const userSchema = new Schema<UserEntity>(
             return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
           }
 
-          if (isHttpUrl(value)) {
+          if (isHttpUrl(value) || isManagedPictureUrl(value)) {
             return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
           }
 

@@ -332,3 +332,12 @@ export const reviewRateLimit = createRateLimit({
   message: 'Too many review submissions. Please try again later.',
   code: null,
 });
+
+// Dedicated authenticated media budget. Uploads are expensive (image decode,
+// multiple GridFS files); never share this counter with login or reviews.
+export const managedPhotoUploadRateLimit = createRateLimit({
+  policy: 'managed-photo-upload-user',
+  limit: 50,
+  message: 'Too many photo uploads. Please try again later.',
+  resolveKey: getAuthenticatedUserKey,
+});

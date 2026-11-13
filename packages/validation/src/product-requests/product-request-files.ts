@@ -66,6 +66,7 @@ function isAllowedFile(
 
 function getDataUrlMimeType(dataUrl: string): string | null {
   const match = dataUrl.match(/^data:([^;,]+);base64,/i);
+
   return match?.[1]?.toLowerCase() ?? null;
 }
 
@@ -73,6 +74,7 @@ function getDataUrlMimeType(dataUrl: string): string | null {
 
 function getDataUrlByteSize(dataUrl: string): number | null {
   const commaIndex = dataUrl.indexOf(',');
+
   if (commaIndex < 0) return null;
 
   const base64 = dataUrl.slice(commaIndex + 1);
@@ -88,12 +90,15 @@ function validateFileMetadata(file: ProductRequestFileLike): string {
   const fileType = file.type.trim();
 
   if (!fileName) return 'File name is required';
+
   if (fileName.length > PRODUCT_REQUEST_LIMITS.fileNameMax) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileName;
   }
+
   if (fileType.length > PRODUCT_REQUEST_LIMITS.fileTypeMax) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileType;
   }
+
   if (!Number.isInteger(file.size) || file.size <= 0) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileSize;
   }
@@ -113,11 +118,13 @@ function validateDataUrl(
   if (file.dataUrl.length > maxLength) return tooLargeMessage;
 
   const dataUrlMimeType = getDataUrlMimeType(file.dataUrl);
+
   if (dataUrlMimeType !== getNormalizedFileMimeType(file)) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.format.attachmentData;
   }
 
   const dataUrlSize = getDataUrlByteSize(file.dataUrl);
+
   if (dataUrlSize === null || dataUrlSize !== file.size) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.format.fileSizeMismatch;
   }
@@ -131,6 +138,7 @@ export function validateProductRequestImageFile(
   file: ProductRequestFileLike
 ): string {
   const metadataError = validateFileMetadata(file);
+
   if (metadataError) return metadataError;
 
   if (
@@ -146,6 +154,9 @@ export function validateProductRequestImageFile(
   if (file.size > PRODUCT_REQUEST_IMAGE_RULES.maxSizeBytes) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.productImageSize;
   }
+
+  if (file.dataUrl && /^\/api\/media\/[a-f0-9]{24}\/large$/.test(file.dataUrl))
+    return '';
 
   return validateDataUrl(
     file,
@@ -166,12 +177,14 @@ export function validateProductRequestAdditionalFiles(
   }
 
   const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+
   if (totalSize > PRODUCT_REQUEST_ATTACHMENT_RULES.maxTotalSizeBytes) {
     return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentsTotalSize;
   }
 
   for (const file of files) {
     const metadataError = validateFileMetadata(file);
+
     if (metadataError) return metadataError;
 
     if (options.requireDataUrl && !file.dataUrl) {
@@ -221,6 +234,7 @@ export function toProductRequestFileMetadata(
     name: file.name.trim(),
     type: getNormalizedFileMimeType(file),
     size: file.size,
+
     ...(resolvedDataUrl ? { dataUrl: resolvedDataUrl } : {}),
   };
 }

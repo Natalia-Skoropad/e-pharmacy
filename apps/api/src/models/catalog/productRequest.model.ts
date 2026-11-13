@@ -115,6 +115,12 @@ function createProductRequestFileSchema({
             ) {
               if (!value) return !requireDataUrl;
 
+              if (
+                dataUrlPattern === PRODUCT_REQUEST_IMAGE_RULES.dataUrlPattern &&
+                /^\/api\/media\/[a-f0-9]{24}\/large$/.test(value)
+              )
+                return true;
+
               const dataUrlMimeType = value.match(
                 /^data:([^;,]+);base64,/i
               )?.[1];
@@ -131,6 +137,12 @@ function createProductRequestFileSchema({
               value?: string
             ) {
               if (!value) return !requireDataUrl;
+
+              if (
+                dataUrlPattern === PRODUCT_REQUEST_IMAGE_RULES.dataUrlPattern &&
+                /^\/api\/media\/[a-f0-9]{24}\/large$/.test(value)
+              )
+                return true;
 
               return getDataUrlByteSize(value) === this.size;
             },

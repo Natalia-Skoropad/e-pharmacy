@@ -33,7 +33,9 @@ export const PRODUCT_REQUEST_IMAGE_RULES = {
   maxDataUrlLength: 3 * 1024 * 1024,
   mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
   fileNamePattern: /\.(?:jpe?g|png|webp)$/i,
-  dataUrlPattern: /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/,
+
+  dataUrlPattern:
+    /^(?:data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+|\/api\/media\/[a-f0-9]{24}\/large)$/,
 } as const;
 
 //===============================================================

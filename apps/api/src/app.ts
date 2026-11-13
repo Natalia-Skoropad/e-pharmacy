@@ -81,6 +81,7 @@ for (const routePath of [
   '/pharmacy-owners/me/documents',
   '/admin/employees/me/documents',
   '/product-requests',
+  '/media/photos',
 ]) {
   app.use(
     routePath,

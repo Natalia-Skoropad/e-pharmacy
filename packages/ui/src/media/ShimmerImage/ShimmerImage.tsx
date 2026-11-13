@@ -6,6 +6,11 @@ import clsx from 'clsx';
 
 import { normalizeImageSource } from '../image-source';
 
+import {
+  chooseManagedPhotoSize,
+  type ManagedPhotoSize,
+} from '../managed-photo-url';
+
 import css from './ShimmerImage.module.css';
 
 //===============================================================
@@ -15,6 +20,7 @@ type Props = Omit<ImageProps, 'fill' | 'alt'> & {
   className?: string;
   wrapClassName?: string;
   as?: 'div' | 'span';
+  mediaSize?: ManagedPhotoSize;
 };
 
 //===============================================================
@@ -26,6 +32,7 @@ function ShimmerImage({
   onError,
   alt,
   as = 'div',
+  mediaSize = 'medium',
   ...props
 }: Props) {
   const [loaded, setLoaded] = useState(false);
@@ -36,7 +43,11 @@ function ShimmerImage({
     <Wrap className={clsx(css.wrap, wrapClassName)}>
       <Image
         {...props}
-        src={normalizeImageSource(props.src)}
+        src={normalizeImageSource(
+          typeof props.src === 'string'
+            ? chooseManagedPhotoSize(props.src, mediaSize)
+            : props.src
+        )}
         alt={alt}
         fill
         className={clsx(css.img, className)}

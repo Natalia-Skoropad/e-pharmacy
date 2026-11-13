@@ -190,6 +190,12 @@ export const VALIDATION_MESSAGES = {
 
 //===============================================================
 
+export function isManagedPictureUrl(value: string): boolean {
+  return /^\/api\/media\/[a-f0-9]{24}\/(?:thumb|medium|large)$/.test(value);
+}
+
+//===================================================================
+
 export function isPictureDataUrl(value: string): boolean {
   return PICTURE_DATA_URL_PATTERN.test(value);
 }

@@ -19,6 +19,7 @@ export function readFileAsDataUrl(
 
     const handleAbort = () => {
       if (reader.readyState === FileReader.LOADING) reader.abort();
+      
       cleanup();
       reject(new DOMException('File reading was aborted.', 'AbortError'));
     };
@@ -32,6 +33,7 @@ export function readFileAsDataUrl(
 
     reader.onload = () => {
       const result = reader.result;
+
       cleanup();
 
       if (typeof result === 'string') {
@@ -41,6 +43,7 @@ export function readFileAsDataUrl(
 
       reject(new Error('Could not read selected file.'));
     };
+
     reader.onerror = rejectRead;
     reader.onabort = rejectRead;
     reader.readAsDataURL(file);

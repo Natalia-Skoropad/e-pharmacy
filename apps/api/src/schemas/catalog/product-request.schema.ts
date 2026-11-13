@@ -113,6 +113,12 @@ function createProductRequestFileSchema(
         return;
       }
 
+      if (
+        /^\/api\/media\/[a-f0-9]{24}\/large$/.test(file.dataUrl) &&
+        rules.dataUrlPattern === PRODUCT_REQUEST_IMAGE_RULES.dataUrlPattern
+      )
+        return;
+
       const dataUrlMimeType = file.dataUrl.match(
         /^data:([^;,]+);base64,/i
       )?.[1];

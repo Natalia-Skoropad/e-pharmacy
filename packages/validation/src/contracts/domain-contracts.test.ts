@@ -48,6 +48,7 @@ test('payment purpose has its own semantic pattern', () => {
 test('working hours require exactly one entry for every day', () => {
   assert.equal(buildWorkingHoursError(validWorkingHours), '');
   assert.notEqual(buildWorkingHoursError('Open every day'), '');
+
   assert.notEqual(
     buildWorkingHoursError(validWorkingHours.replace('; Sun: Closed', '')),
     ''
@@ -100,6 +101,13 @@ test('calendar dates reject impossible dates and inverted ranges', () => {
 test('picture transport distinguishes data URLs, HTTP URLs and blob previews', () => {
   assert.equal(buildPictureUrlError('https://example.com/image.webp'), '');
   assert.equal(buildPictureUrlError('data:image/webp;base64,AA=='), '');
+
+  assert.equal(
+    buildPictureUrlError('/api/media/0123456789abcdef01234567/large'),
+    ''
+  );
+
+  assert.notEqual(buildPictureUrlError('/api/media/guess/large'), '');
   assert.notEqual(buildPictureUrlError('data:image/jpg;base64,AA=='), '');
   assert.notEqual(buildPictureUrlError('blob:https://example.com/preview'), '');
 

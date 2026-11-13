@@ -9,8 +9,10 @@ import {
   ImagePreview,
   optimizePictureFile,
   readFileAsDataUrl,
+  uploadManagedPhoto,
 } from '../../media';
 
+import type { StoreManagedPhotoTransport } from '../../media';
 import Button from '../../primitives/Button/Button';
 import ConfirmationModal from '../../overlays/ConfirmationModal/ConfirmationModal';
 import { formatInitials } from '../../data-display/format-initials';
@@ -46,6 +48,8 @@ export type PictureCardProps = {
   disabled?: boolean;
   compactLayout?: boolean;
   accept?: string;
+  storage?: 'data-url' | 'managed';
+  managedPhotoTransport?: StoreManagedPhotoTransport;
   labels?: PictureCardLabels;
   validateFile?: (file: File) => string | null;
   validatePictureUrl?: (pictureUrl: string) => string | null;
@@ -57,7 +61,7 @@ export type PictureCardProps = {
 
 const DEFAULT_LABELS: Required<PictureCardLabels> = {
   uploadAriaLabel: 'Upload photo',
-  hint: 'Upload a lightweight JPG, PNG, or WEBP image up to 450 KB. The photo is saved right away.',
+  hint: 'Upload a JPG, PNG or WebP image. The photo is saved right away.',
   uploadButton: 'Upload photo',
   savingButton: 'Saving...',
   removeButton: 'Remove photo',
@@ -80,6 +84,8 @@ function PictureCard({
   disabled = false,
   compactLayout = false,
   accept = DEFAULT_PICTURE_ACCEPT,
+  storage = 'data-url',
+  managedPhotoTransport,
   labels,
   validateFile,
   validatePictureUrl,
@@ -111,10 +117,9 @@ function PictureCard({
 
     setLocalError(null);
 
-    // A large source can be valid after compression; enforce the upload limit
-    // against the actual image that will be persisted, not the raw camera file.
+    // The master can be up to 10 MB; the server generates compact derivatives.
     if (file.size > 10 * 1024 * 1024) {
-      reportError('Photo must be no larger than 10 MB before optimization.');
+      reportError('Photo must be no larger than 10 MB.');
       return;
     }
 
@@ -125,7 +130,11 @@ function PictureCard({
     readControllerRef.current = controller;
 
     try {
-      const optimized = await optimizePictureFile(file, controller.signal);
+      const optimized =
+        storage === 'managed'
+          ? file
+          : await optimizePictureFile(file, controller.signal);
+
       const fileError = validateFile?.(optimized);
 
       if (fileError) {
@@ -133,15 +142,27 @@ function PictureCard({
         return;
       }
 
-      const dataUrl = await readFileAsDataUrl(optimized, controller.signal);
-      const pictureUrlError = validatePictureUrl?.(dataUrl);
+      if (storage === 'managed' && !managedPhotoTransport) {
+        throw new Error('Managed photo upload transport is not configured.');
+      }
+
+      const pictureUrl =
+        storage === 'managed' && managedPhotoTransport
+          ? await uploadManagedPhoto(
+              file,
+              controller.signal,
+              managedPhotoTransport
+            )
+          : await readFileAsDataUrl(optimized, controller.signal);
+
+      const pictureUrlError = validatePictureUrl?.(pictureUrl);
 
       if (pictureUrlError) {
         reportError(pictureUrlError);
         return;
       }
 
-      await onChange(dataUrl);
+      await onChange(pictureUrl);
 
       setLocalError(null);
     } catch (error) {

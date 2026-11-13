@@ -37,6 +37,12 @@ export function isPictureMimeType(value: string): value is PictureMimeType {
 
 //===================================================================
 
+export function isManagedPictureUrl(value: string): boolean {
+  return /^\/api\/media\/[a-f0-9]{24}\/(?:thumb|medium|large)$/.test(value);
+}
+
+//===================================================================
+
 export function isPictureDataUrl(value: string): boolean {
   return PICTURE_DATA_URL_PATTERN.test(value);
 }
@@ -46,6 +52,7 @@ export function isPictureDataUrl(value: string): boolean {
 export function isHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
+
     return url.protocol === 'http:' || url.protocol === 'https:';
   } catch {
     return false;
@@ -58,6 +65,7 @@ export function buildPictureFileError(file: File): string {
   if (!isPictureMimeType(file.type)) {
     return VALIDATION_MESSAGES.format.pictureFileType;
   }
+
   if (file.size > PICTURE_FILE_MAX_BYTES) {
     return VALIDATION_MESSAGES.limits.pictureFileSize;
   }
@@ -76,11 +84,15 @@ export function buildPictureUrlError(
   if (!pictureUrl) {
     return options.required ? VALIDATION_MESSAGES.required.picture : '';
   }
+
   if (isPictureDataUrl(pictureUrl)) {
     return pictureUrl.length > PICTURE_DATA_URL_MAX_LENGTH
       ? VALIDATION_MESSAGES.limits.pictureDataUrlMax
       : '';
   }
+
+  if (isManagedPictureUrl(pictureUrl)) return '';
+
   if (isHttpUrl(pictureUrl)) {
     return pictureUrl.length > PICTURE_HTTP_URL_MAX_LENGTH
       ? VALIDATION_MESSAGES.limits.pictureHttpUrlMax

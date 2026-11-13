@@ -26,7 +26,8 @@
     "test": "node ../../scripts/test-runners/run-api-tests.mjs src --match=.test.ts --exclude=.integration.test.ts",
     "test:integration": "node ../../scripts/test-runners/run-api-tests.mjs src --match=.integration.test.ts",
     "cart:cleanup-expired": "tsx src/scripts/maintenance/cleanup-expired-cart-items.ts",
-    "migrate:session-history-retention": "tsx src/scripts/migrations/accounts/migrate-session-history-retention.ts"
+    "migrate:session-history-retention": "tsx src/scripts/migrations/accounts/migrate-session-history-retention.ts",
+    "migrate:media": "tsx src/scripts/migrations/media/migrate-legacy-media.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -39,7 +40,8 @@
     "zod": "^4.4.3",
     "handlebars": "^4.7.8",
     "nodemailer": "^7.0.6",
-    "express-rate-limit": "^8.1.0"
+    "express-rate-limit": "^8.1.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/cors": "latest",

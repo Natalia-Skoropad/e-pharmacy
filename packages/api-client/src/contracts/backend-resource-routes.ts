@@ -12,6 +12,13 @@ const segment = (value: string): string => encodeRouteSegment(value);
 export const backendRoutes = {
   health: '/health',
 
+  media: {
+    uploadPhoto: '/media/photos',
+
+    photo: (photoId: string, size: 'thumb' | 'medium' | 'large') =>
+      `/media/${segment(photoId)}/${size}`,
+  },
+
   admin: {
     accessMe: '/admin/access/me',
 

@@ -33,6 +33,7 @@ import {
   WORKING_HOURS_MAX_LENGTH,
   WORKING_HOURS_PATTERN,
   isHttpUrl,
+  isManagedPictureUrl,
   isPictureDataUrl,
 } from '../../constants/shared/validation';
 
@@ -440,7 +441,7 @@ const pharmacySchema = new Schema<PharmacyEntity>(
             return value.length <= PICTURE_DATA_URL_MAX_LENGTH;
           }
 
-          if (isHttpUrl(value))
+          if (isHttpUrl(value) || isManagedPictureUrl(value))
             return value.length <= PICTURE_HTTP_URL_MAX_LENGTH;
 
           return false;

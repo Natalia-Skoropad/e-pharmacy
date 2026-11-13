@@ -62,6 +62,7 @@ export function PharmacyDetailsHero({
             src={pharmacy.imageUrl}
             alt={`${pharmacy.name} image`}
             priority
+            mediaSize="large"
             fetchPriority="high"
             unoptimized={useDirectImage}
             onError={() => {

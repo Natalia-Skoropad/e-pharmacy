@@ -27,7 +27,7 @@ import {
   PHARMACY_DOCUMENT_RULES,
   validatePharmacyDocuments,
   PICTURE_ACCEPT,
-  buildPictureFileError,
+  isPictureMimeType,
   buildPictureUrlError,
 } from '@e-pharmacy/validation/files';
 
@@ -41,6 +41,7 @@ import {
 } from '@e-pharmacy/validation/pharmacy';
 
 import { downloadOwnedPharmacyDocument } from '@/lib/api/browser/owned-pharmacy-editor.api';
+import { storePharmacyPhoto } from '@/lib/api/browser/media-upload.api';
 import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 
 import { WorkingHoursInput } from '@e-pharmacy/ui/profile';
@@ -142,12 +143,18 @@ export function OwnedPharmacyEditorTabContent({
             <div className={css.pictureColumn}>
               <PictureCard
                 compactLayout
+                storage="managed"
+                managedPhotoTransport={storePharmacyPhoto}
                 name={values.name || 'Pharmacy'}
                 pictureUrl={values.imageUrl || null}
                 error={errors.imageUrl}
                 accept={PICTURE_ACCEPT}
                 disabled={busy !== null}
-                validateFile={(file) => buildPictureFileError(file) || null}
+                validateFile={(file) =>
+                  isPictureMimeType(file.type)
+                    ? null
+                    : 'Upload JPG, PNG or WebP.'
+                }
                 validatePictureUrl={(url) => buildPictureUrlError(url) || null}
                 onChange={(url) => {
                   change('imageUrl', url ?? '');
@@ -163,7 +170,7 @@ export function OwnedPharmacyEditorTabContent({
                   }))
                 }
                 labels={{
-                  hint: 'Upload a JPG, PNG, or WEBP photo (up to 10 MB). Photos are automatically optimized before saving; the saved image must be no larger than 450 KB. Clients will see it in your pharmacy profile.',
+                  hint: 'Upload a JPG, PNG, or WEBP photo (up to 10 MB). The original is preserved and three optimized versions are served according to their display size. Clients will see it in your pharmacy profile.',
                 }}
               />
             </div>

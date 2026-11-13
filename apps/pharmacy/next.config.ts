@@ -9,6 +9,8 @@ import {
 
 const nodeEnv = resolveNodeEnvironment(process.env.NODE_ENV);
 
+//===============================================================
+
 const apiBaseUrl = resolveApiBaseUrl(process.env.API_BASE_URL, nodeEnv, {
   // Next runs `next build` with NODE_ENV=production even for a local build.
   // Allow only loopback HTTP here so local production-build verification can
@@ -19,6 +21,10 @@ const apiBaseUrl = resolveApiBaseUrl(process.env.API_BASE_URL, nodeEnv, {
 //===============================================================
 
 const nextConfig: NextConfig = {
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+
   transpilePackages: [
     '@e-pharmacy/api-client',
     '@e-pharmacy/auth',
