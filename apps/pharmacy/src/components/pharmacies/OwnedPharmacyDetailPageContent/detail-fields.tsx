@@ -4,7 +4,12 @@ import type { ReactNode } from 'react';
 import { Mail, Phone } from 'lucide-react';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
+
+import {
+  PharmacyPhotoPlaceholder,
+  ResponsivePhoto,
+} from '@e-pharmacy/ui/media';
+
 import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 
@@ -47,11 +52,11 @@ export function Photo({ url, name }: { url?: string | null; name: string }) {
   return (
     <div className={css.photo}>
       {url ? (
-        <ShimmerImage
+        <ResponsivePhoto
+          preset="panel"
           src={url}
           alt={name}
           className={css.coverImage}
-          sizes="(max-width: 767px) 90vw, 400px"
           unoptimized
         />
       ) : (

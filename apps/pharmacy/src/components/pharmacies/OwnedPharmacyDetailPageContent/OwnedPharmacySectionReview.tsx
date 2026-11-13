@@ -6,7 +6,7 @@ import { ShieldCheck, Trash2, X } from 'lucide-react';
 import type { MyPharmacyProfile } from '@e-pharmacy/types/pharmacies';
 
 import { MarkdownContent, WorkingHours } from '@e-pharmacy/ui/data-display';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -145,7 +145,8 @@ function ComparisonValue({
   if (change.field === 'imageUrl') {
     return (
       <div className={css.reviewPhoto}>
-        <ShimmerImage
+        <ResponsivePhoto
+          preset="table"
           src={value}
           alt={`${change.label} preview`}
           className={css.reviewPhotoImage}

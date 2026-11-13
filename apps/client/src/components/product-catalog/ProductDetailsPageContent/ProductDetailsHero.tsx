@@ -5,7 +5,7 @@ import { Building2, Hash, PackageX, Wallet } from 'lucide-react';
 
 import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto } from '@e-pharmacy/ui/media';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { formatPharmaciesCount } from '@e-pharmacy/utils/numbers';
 
@@ -72,14 +72,13 @@ export function ProductDetailsHero({
     <div className={css.grid}>
       <div className={css.imageCard}>
         {product.imageUrl ? (
-          <ShimmerImage
+          <ResponsivePhoto
+            preset="hero"
             className={css.image}
             src={product.imageUrl}
             alt={product.name}
             priority
-            mediaSize="large"
             fetchPriority="high"
-            sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
           />
         ) : (
           <div className={css.imageFallback} aria-hidden="true">

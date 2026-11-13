@@ -8,7 +8,7 @@ import {
 
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { MarkdownContent, WorkingHours } from '@e-pharmacy/ui/data-display';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto } from '@e-pharmacy/ui/media';
 import { ProfileSectionHeader } from '@e-pharmacy/ui/profile';
 
 import { buildPharmacyComparisonRows } from './pharmacy-information-comparison';
@@ -178,7 +178,8 @@ function ReviewValue({
   if (change.presentation === 'photo') {
     return (
       <div className={css.photo}>
-        <ShimmerImage
+        <ResponsivePhoto
+          preset="table"
           src={value}
           alt={`${change.label} preview`}
           className={css.photoImage}

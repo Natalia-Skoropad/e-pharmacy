@@ -81,7 +81,8 @@ test('pending comparison appears before edit and each field can be discarded ind
   assert.match(review, /discardOwnedPharmacyPendingSection/);
   assert.match(review, /<MarkdownContent/);
   assert.match(review, /<WorkingHours/);
-  assert.match(review, /<ShimmerImage/);
+  assert.match(review, /<ResponsivePhoto/);
+  assert.match(review, /preset="table"/);
   assert.match(review, /cancelIconLeft/);
   assert.match(editor, /valuesFromPharmacy/);
 
@@ -109,7 +110,8 @@ test('long pharmacy help can scroll and stays attached to a wrapping title', () 
   );
 
   assert.match(styles, /\.titleWithHelp\s*\{[^}]*display:\s*inline;/);
-  assert.match(styles, /\.titleEnding\s*\{[^}]*white-space:\s*nowrap;/);
+  assert.match(styles, /\.titleEnding\s*\{[^}]*white-space:\s*normal;/);
+  assert.match(styles, /\.titleEnding\s*\{[^}]*overflow-wrap:\s*anywhere;/);
 });
 
 //===================================================================

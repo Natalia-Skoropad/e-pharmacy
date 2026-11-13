@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image, { type ImageProps } from 'next/image';
 import clsx from 'clsx';
 
-import { normalizeImageSource } from '../image-source';
+import { chooseSeedImageSize, normalizeImageSource } from '../image-source';
 
 import {
   chooseManagedPhotoSize,
@@ -36,6 +36,21 @@ function ShimmerImage({
   ...props
 }: Props) {
   const [loaded, setLoaded] = useState(false);
+  const [failedSeedUrl, setFailedSeedUrl] = useState<string | null>(null);
+
+  const originalSource = normalizeImageSource(
+    typeof props.src === 'string'
+      ? chooseManagedPhotoSize(props.src, mediaSize)
+      : props.src
+  );
+
+  const seedSource =
+    typeof originalSource === 'string'
+      ? chooseSeedImageSize(originalSource, mediaSize)
+      : originalSource;
+
+  const imageSource =
+    seedSource === failedSeedUrl ? originalSource : seedSource;
 
   const Wrap = as;
 
@@ -43,11 +58,7 @@ function ShimmerImage({
     <Wrap className={clsx(css.wrap, wrapClassName)}>
       <Image
         {...props}
-        src={normalizeImageSource(
-          typeof props.src === 'string'
-            ? chooseManagedPhotoSize(props.src, mediaSize)
-            : props.src
-        )}
+        src={imageSource}
         alt={alt}
         fill
         className={clsx(css.img, className)}
@@ -56,13 +67,27 @@ function ShimmerImage({
           onLoad?.(event);
         }}
         onError={(event) => {
+          // WebP derivatives are deployed with the API; keep the original PNG
+          // usable during staggered deployments or a temporary asset failure.
+          if (
+            typeof seedSource === 'string' &&
+            seedSource !== originalSource &&
+            failedSeedUrl !== seedSource
+          ) {
+            setFailedSeedUrl(seedSource);
+            setLoaded(false);
+            return;
+          }
           setLoaded(true);
           onError?.(event);
         }}
       />
 
       <span
-        className={clsx(css.skeleton, loaded && css.skeletonOff)}
+        className={clsx(
+          css.skeleton,
+          (loaded || props.priority) && css.skeletonOff
+        )}
         aria-hidden="true"
       />
     </Wrap>

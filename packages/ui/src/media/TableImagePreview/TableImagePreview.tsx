@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import clsx from 'clsx';
 
-import { ShimmerImage } from '../ShimmerImage';
+import { ResponsivePhoto } from '../ResponsivePhoto';
 
 import css from './TableImagePreview.module.css';
 
@@ -37,11 +37,11 @@ function TableImagePreview({
   return (
     <span className={clsx(css.preview, className)} style={style}>
       {src ? (
-        <ShimmerImage
+        <ResponsivePhoto
+          preset="table"
           src={src}
           alt={alt}
           sizes={`${size}px`}
-          mediaSize="thumb"
           as="span"
           unoptimized
         />

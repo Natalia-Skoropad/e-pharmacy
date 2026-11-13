@@ -26,7 +26,7 @@ test('activity list and filters use the same section and change names', async ()
 
   assert.match(
     history,
-    /className=\{css\.breakableEntity\}>\{item\.entityLabelSnapshot\}<\/span>/
+    /className=\{css\.breakableEntity\}>\s*\{item\.entityLabelSnapshot\}\s*<\/span>/
   );
 
   assert.match(history, /buildAdminActivityUrl/);
@@ -72,7 +72,8 @@ test('audit modal separates section and page and has accessible change values', 
 test('audit photo previews use an explicit historical before URL and shimmer while loading', async () => {
   const modal = await source('./AuditDetailsModal.tsx');
 
-  assert.match(modal, /<ShimmerImage/);
+  assert.match(modal, /<ResponsivePhoto/);
+  assert.match(modal, /preset="table"/);
   assert.match(modal, /photoUrl=\{item\.beforePhotoUrl\}/);
   assert.match(modal, /photoUrl=\{item\.afterPhotoUrl\}/);
   assert.match(modal, /Historical photo preview unavailable/);

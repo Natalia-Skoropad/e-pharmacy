@@ -54,6 +54,7 @@ function PharmacyCard({
       id: pharmacy.id,
       notifier: toast,
       ...favoriteCopy,
+
       onFavoriteChange: (pharmacyId, nextIsFavorite) => {
         onFavoriteChange?.(pharmacyId, nextIsFavorite);
       },
@@ -86,7 +87,6 @@ function PharmacyCard({
         fallbackIcon: 'icon-map-pin',
         fit: 'cover',
         priority: priorityImage,
-        sizes: '(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw',
       }}
       favoriteAction={
         shouldRenderFavoriteControl(authCapabilities) ? (

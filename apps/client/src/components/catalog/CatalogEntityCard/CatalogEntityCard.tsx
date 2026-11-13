@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto, type PhotoPreset } from '@e-pharmacy/ui/media';
 import { SvgIcon } from '@e-pharmacy/ui/primitives';
 
 import {
@@ -25,7 +25,7 @@ type CatalogCardImage = Readonly<{
   alt: string;
   fallbackIcon: string;
   fit: 'contain' | 'cover';
-  sizes: string;
+  preset?: PhotoPreset;
   priority?: boolean;
 }>;
 
@@ -58,14 +58,14 @@ function CatalogEntityImage({ image }: Readonly<{ image: CatalogCardImage }>) {
   }
 
   return (
-    <ShimmerImage
+    <ResponsivePhoto
+      preset={image.preset ?? 'card'}
       className={clsx(
         css.image,
         image.fit === 'contain' ? css.imageContain : css.imageCover
       )}
       src={image.src}
       alt={image.alt}
-      sizes={image.sizes}
       priority={image.priority}
       fetchPriority={image.priority ? 'high' : undefined}
       unoptimized={useDirectImage}

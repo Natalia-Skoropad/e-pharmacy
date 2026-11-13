@@ -31,7 +31,7 @@ import {
   StatusBadge,
 } from '@e-pharmacy/ui/statistics';
 
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto } from '@e-pharmacy/ui/media';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import type {
@@ -159,7 +159,8 @@ function RenderAuditValue({
       {field === 'photoFingerprint' ? (
         photoUrl ? (
           <span className={css.auditPhotoPreview}>
-            <ShimmerImage
+            <ResponsivePhoto
+              preset="table"
               src={photoUrl}
               alt="Pharmacy photo at this change"
               sizes="110px"

@@ -11,7 +11,13 @@ import {
 
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
 import { WorkingHours } from '@e-pharmacy/ui/data-display';
-import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
+
+import {
+  PharmacyPhotoPlaceholder,
+  ResponsivePhoto,
+  ShimmerImage,
+} from '@e-pharmacy/ui/media';
+
 import { CopyButton, TextActionButton } from '@e-pharmacy/ui/primitives';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
@@ -109,11 +115,12 @@ function Photo({
   return (
     <div className={compact ? css.smallPhoto : css.photo}>
       {url?.trim() ? (
-        <ShimmerImage
+        <ResponsivePhoto
+          preset={compact ? 'compact' : 'panel'}
           src={url}
           alt={name}
           className={css.coverImage}
-          sizes={compact ? '160px' : '(max-width: 767px) 90vw, 400px'}
+          sizes={compact ? '160px' : undefined}
           unoptimized
         />
       ) : (

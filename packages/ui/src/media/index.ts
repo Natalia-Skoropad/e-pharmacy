@@ -2,6 +2,8 @@ export * from './ImagePreview';
 export * from './Logo';
 export * from './PictureCard';
 export * from './ShimmerImage';
+export * from './ResponsivePhoto';
+export * from './photo-presets';
 export * from './TableImagePreview';
 export * from './read-file-as-data-url';
 export * from './optimize-picture-file';

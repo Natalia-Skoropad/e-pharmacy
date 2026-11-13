@@ -165,7 +165,6 @@ function ProductCard({
           fallbackIcon: 'icon-shopping-cart',
           fit: 'cover',
           priority: priorityImage,
-          sizes: '(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 33vw',
         }}
         favoriteAction={
           shouldRenderFavoriteControl(authCapabilities) ? (

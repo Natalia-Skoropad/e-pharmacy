@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto } from '@e-pharmacy/ui/media';
 import { SvgIcon } from '@e-pharmacy/ui/primitives';
 import type { PublicPharmacy } from '@e-pharmacy/types/pharmacies';
 
@@ -57,19 +57,18 @@ export function PharmacyDetailsHero({
     <div className={css.grid}>
       <div className={css.imageCard}>
         {pharmacy.imageUrl && !hasImageError ? (
-          <ShimmerImage
+          <ResponsivePhoto
+            preset="hero"
             className={css.image}
             src={pharmacy.imageUrl}
             alt={`${pharmacy.name} image`}
             priority
-            mediaSize="large"
             fetchPriority="high"
             unoptimized={useDirectImage}
             onError={() => {
               if (!useDirectImage) setUseDirectImage(true);
               else setHasImageError(true);
             }}
-            sizes="(max-width: 767px) 100vw, (max-width: 1439px) 50vw, 520px"
           />
         ) : (
           <div className={css.imageFallback} aria-hidden="true">

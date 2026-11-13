@@ -6,7 +6,7 @@ import { CART_ITEM_TTL_DAYS } from '@e-pharmacy/config/cart';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { ResponsivePhoto } from '@e-pharmacy/ui/media';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { SvgIcon } from '@e-pharmacy/ui/primitives';
 
@@ -87,12 +87,11 @@ export function ProductOfferCard({
           ) : null}
 
           {offer.pharmacyImageUrl ? (
-            <ShimmerImage
+            <ResponsivePhoto
+              preset="offer"
               className={css.image}
               src={offer.pharmacyImageUrl}
               alt={`${offer.pharmacyName} image`}
-              sizes="500px"
-              quality={90}
             />
           ) : (
             <SvgIcon name="icon-shopping-cart" size={32} />

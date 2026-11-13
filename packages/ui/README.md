@@ -65,3 +65,38 @@ The canonical page container is:
 `types/config -> utils/validation/hooks -> ui -> apps`
 
 Data and API layers must never import UI types. Pharmacy-only composites, such as `WorkingHoursInput`, stay in the pharmacy application until a second real consumer justifies a dedicated shared domain entrypoint.
+
+## Photo rendering standard (Stage 14.18.163)
+
+**Required for new photo views** in client, pharmacy and admin apps: use
+`ResponsivePhoto` from `@e-pharmacy/ui/media` instead of raw `next/image`,
+`<img>` or repeating `mediaSize` and `sizes` per page. Set the semantic
+`preset` according to the actual *display location*: `table`, `search`,
+`compact`, `panel`, `card`, `offer`, `detail`, `hero`. The shared `PHOTO_PRESETS`
+configuration defines GridFS/seed derivatives **thumb / medium / large**
+and DPR-aware Next.js `sizes` using the established mobile/tablet/desktop
+breakpoints. ResponsivePhoto uses existing ShimmerImage URL normalization,
+seed WebP fallback, legacy Data URL handling and shimmer logic.
+
+```tsx
+import { ResponsivePhoto, TableImagePreview } from '@e-pharmacy/ui/media';
+
+// In an image container with position: relative and a defined height/ratio:
+<ResponsivePhoto preset="card" src={product.imageUrl} alt={product.name} />
+<ResponsivePhoto preset="hero" src={product.imageUrl} alt={product.name} priority />
+// Tables and search selects: use the shared preview with a bounded width:
+<TableImagePreview src={product.imageUrl} alt={product.name} size={42} />
+```
+
+`priority` is **only** for the actual above-the-fold LCP image, not every
+card; all other images remain lazy. Set custom `sizes` **only** for a measured
+nonstandard slot (e.g. a fixed-width side panel); prefer adding a shared
+preset if more than one screen needs it. Never rewrite a stored URL to a
+particular variant in a page: the shared component selects the right version.
+Do not force `unoptimized` unless deliberately bypassing a failing optimizer
+or displaying a known legacy image; it disables Next.js srcset optimization.
+
+`ImagePreview` is retained for user avatars, document previews, and existing
+non-catalog images; its plain `<img>` is not a substitute for responsive
+product/pharmacy catalog photos. Source bytes are still created by the
+Stage 14.18.159 upload pipeline and Stage 14.18.162 seed derivatives.
