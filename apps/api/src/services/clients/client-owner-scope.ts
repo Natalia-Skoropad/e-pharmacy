@@ -1,11 +1,6 @@
 import { Types } from 'mongoose';
 
-import {
-  PHARMACY_STATUSES,
-  USER_ROLES,
-  USER_STATUSES,
-} from '../../constants/auth/auth';
-
+import { USER_ROLES, USER_STATUSES } from '../../constants/auth/auth';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
@@ -39,12 +34,10 @@ export async function getOwnedClientPharmacyIds(
     );
   }
 
+  // Historical client reports include blocked pharmacies; editing permissions
+  // are enforced independently for each mutation.
   const pharmacies = await Pharmacy.find({
     ownerId: new Types.ObjectId(userId),
-
-    // Match the existing read_clients membership rule: blocked pharmacies
-    // do not expose their operational customer records.
-    status: { $ne: PHARMACY_STATUSES.BLOCKED },
   })
     .select('_id')
     .lean<Array<{ _id: Types.ObjectId }>>();

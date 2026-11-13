@@ -20,6 +20,7 @@ export type ProductOffer = Readonly<{
   reservedQuantity?: number;
   inStock: boolean;
   hasRelatedOrders?: boolean;
+  hasOperationalHistory?: boolean;
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
 }>;

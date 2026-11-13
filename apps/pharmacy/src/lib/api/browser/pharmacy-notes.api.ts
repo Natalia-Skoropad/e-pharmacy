@@ -94,7 +94,11 @@ export async function getPharmacyNotes(
 ): Promise<PharmacyNotesResponse> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId),
-    { page, perPage: 10, ...(type === 'client' ? { scope: 'client' } : {}) }
+    {
+      page,
+      perPage: 10,
+      ...(['client', 'product'].includes(type) ? { scope: type } : {}),
+    }
   );
 
   return parseApiResponseData(
@@ -123,7 +127,7 @@ export async function createPharmacyNote(
 ): Promise<void> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.pharmacyNotes.list(type, entityId),
-    type === 'client' ? { scope: 'client' } : {}
+    ['client', 'product'].includes(type) ? { scope: type } : {}
   );
 
   parseApiResponseData(
@@ -149,7 +153,7 @@ export async function deletePharmacyNote(
 ): Promise<void> {
   const path = appendQueryParams(
     PHARMACY_API_ROUTES.pharmacyNotes.details(type, entityId, noteId),
-    type === 'client' ? { scope: 'client' } : {}
+    ['client', 'product'].includes(type) ? { scope: type } : {}
   );
 
   parseApiResponseData(

@@ -6,6 +6,7 @@ import { Client } from '../../models/clients/client.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { Order } from '../../models/orders/order.model';
+import { StockMovement } from '../../models/inventory/stockMovement.model';
 
 import type {
   ProductCardSummaryResponseDto,
@@ -83,6 +84,23 @@ export async function getOffersByProductIds(
           'items.productOfferId': {
             $in: operationalOffers.map((offer) => offer._id),
           },
+        })
+      : []
+    ).map(String)
+  );
+
+  const laterMovementOfferIds = new Set<string>(
+    (operationalOffers.length
+      ? await StockMovement.distinct('productOfferId', {
+          productOfferId: { $in: operationalOffers.map((offer) => offer._id) },
+
+          $nor: [
+            {
+              eventType: 'arrival',
+              source: 'pharmacy_stock',
+              comment: /^Initial stock/i,
+            },
+          ],
         })
       : []
     ).map(String)
@@ -169,6 +187,7 @@ export async function getOffersByProductIds(
             totalQuantity: offer.totalQuantity,
             reservedQuantity: offer.reservedQuantity,
             hasRelatedOrders: relatedOfferIds.has(String(offer._id)),
+            hasOperationalHistory: laterMovementOfferIds.has(String(offer._id)),
           }
         : {}),
 

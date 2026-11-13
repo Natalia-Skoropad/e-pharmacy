@@ -21,7 +21,7 @@ test('client pharmacy registry is restricted to owner and client relationship', 
 
   assert.match(
     service,
-    /candidateIds\.filter\(\(id\) => String\(id\) === query\.pharmacyId\)/
+    /filteredIds\.filter\(\(id\) => String\(id\) === query\.pharmacyId\)/
   );
 
   assert.match(service, /userId: new Types\.ObjectId\(clientId\)/);

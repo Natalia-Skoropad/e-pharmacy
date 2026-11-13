@@ -229,7 +229,7 @@ function AllProductsTable({
       items={products}
       getItemKey={(product) => String(product.id)}
       isLoading={isLoading}
-      minWidth={0}
+      minWidth={960}
       labels={{
         loading: 'Loading products...',
         empty: emptyMessage,

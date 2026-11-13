@@ -15,6 +15,9 @@ import {
 } from './owner-product-catalog.service';
 
 import { ProductOffer } from '../../models/inventory/productOffer.model';
+import { OwnerProductSelection } from '../../models/catalog/ownerProductSelection.model';
+import { StockMovement } from '../../models/inventory/stockMovement.model';
+import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { Order } from '../../models/orders/order.model';
 
 import type { ManagedProductsQuery } from '../../schemas/catalog/product.schema';
@@ -378,10 +381,136 @@ export async function addProductToMyPharmacyService(
 
 //===============================================================
 
+/** Remove the product from the owner's catalog and every owned pharmacy.
+ * Never remove a single pharmacy offer; keep historical orders and stock
+ * movements intact by rejecting products that have operational history.
+ */
+async function removeOwnerProductSelectionService(
+  productId: string,
+  ownerId: string
+) {
+  await assertOwnerCatalogAccess(ownerId);
+
+  const [product, pharmacyIds] = await Promise.all([
+    Product.findById(productId).lean(),
+    Pharmacy.distinct('_id', { ownerId: new Types.ObjectId(ownerId) }),
+  ]);
+
+  if (!product)
+    throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
+
+  const session = await mongoose.startSession();
+
+  try {
+    await session.withTransaction(async () => {
+      const offers = await ProductOffer.find({
+        productId: product._id,
+        pharmacyId: { $in: pharmacyIds },
+      })
+        .select('_id')
+        .session(session)
+        .lean<Array<{ _id: Types.ObjectId }>>();
+
+      const offerIds = offers.map(({ _id }) => _id);
+
+      // Orders remain authoritative even if an earlier stock snapshot is absent.
+      const relatedOrders = await Order.exists({
+        pharmacyId: { $in: pharmacyIds },
+        'items.productId': product._id,
+      }).session(session);
+
+      if (relatedOrders) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Product cannot be removed because it has related orders.',
+          undefined,
+          PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS
+        );
+      }
+
+      // The automatic initial arrival is not a sale or an operator adjustment.
+      // Any later movement is real history and must never be deleted.
+      const activity = await StockMovement.exists({
+        productOfferId: { $in: offerIds },
+        $nor: [
+          {
+            eventType: 'arrival',
+            source: 'pharmacy_stock',
+            comment: /^Initial stock/i,
+          },
+        ],
+      }).session(session);
+
+      if (activity) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Product cannot be removed because stock movement history exists.',
+          undefined,
+          PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS
+        );
+      }
+
+      const comments = await PharmacyNote.exists({
+        entityType: 'product',
+        entityId: product._id,
+
+        $or: [
+          { ownerId: new Types.ObjectId(ownerId) },
+          { pharmacyId: { $in: pharmacyIds } },
+        ],
+      }).session(session);
+
+      if (comments) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Product cannot be removed while internal comments need to be preserved.',
+          undefined,
+          PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS
+        );
+      }
+
+      // Remove only synthetic initial arrivals for offers that can safely go.
+      await StockMovement.deleteMany(
+        { productOfferId: { $in: offerIds } },
+        { session }
+      );
+
+      await ProductOffer.deleteMany({ _id: { $in: offerIds } }, { session });
+
+      await OwnerProductSelection.deleteOne(
+        {
+          ownerId: new Types.ObjectId(ownerId),
+          productId: product._id,
+        },
+        { session }
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  const details = await getManagedProductDetailsService(
+    productId,
+    { userId: ownerId, role: USER_ROLES.PHARMACY },
+    true
+  );
+
+  return {
+    ...details,
+    message: 'Product removed from your owner catalog and pharmacies.',
+  };
+}
+
+//===============================================================
+
 export async function removeProductFromMyPharmacyService(
   productId: string,
-  userId: string
+  userId: string,
+  ownerProducts = false
 ) {
+  if (ownerProducts)
+    return removeOwnerProductSelectionService(productId, userId);
+
   const [pharmacy, product] = await Promise.all([
     getCurrentUserPharmacyForProductManagement(userId),
     Product.findById(productId).lean(),

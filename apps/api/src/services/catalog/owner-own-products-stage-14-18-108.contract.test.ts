@@ -41,7 +41,7 @@ test('server restricts product and stock queries to the owner offer allow-list',
 
   assert.match(
     shared,
-    /getOwnProductStatistics\(query\.pharmacyId \? \[query\.pharmacyId\]/
+    /getOwnProductStatistics\(\s*query\.pharmacyId \? \[query\.pharmacyId\]/
   );
 });
 

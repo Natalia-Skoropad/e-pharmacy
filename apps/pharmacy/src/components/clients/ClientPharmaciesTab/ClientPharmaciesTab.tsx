@@ -28,7 +28,12 @@ import {
 } from '@e-pharmacy/ui/profile';
 
 import { FiltersButton, TextActionButton } from '@e-pharmacy/ui/primitives';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  StatusBadge,
+  PharmacyBlockSourceBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { formatAmount } from '@e-pharmacy/utils/money';
 
 import {
@@ -251,7 +256,10 @@ export function ClientPharmaciesTab({
         title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
 
         render: (item) => (
-          <TextActionButton href={getOwnedPharmacyPath(item.pharmacyId)}>
+          <TextActionButton
+            className={css.breakableName}
+            href={getOwnedPharmacyPath(item.pharmacyId)}
+          >
             {item.pharmacyName}
           </TextActionButton>
         ),
@@ -315,6 +323,10 @@ export function ClientPharmaciesTab({
         render: (item) => (
           <div className={css.statusCell}>
             <StatusBadge {...PHARMACY_STATUS_PRESENTATION[item.status]} />
+            <PharmacyBlockSourceBadge
+              status={item.status}
+              blockSource={item.blockSource}
+            />
             {item.reviewState === 'changes_requested' &&
             ['on_verification', 'on_moderation', 'on_reactivation'].includes(
               item.status
@@ -449,7 +461,8 @@ export function ClientPharmaciesTab({
         <OwnedPharmaciesFiltersDrawer
           state={state}
           hasActiveFilters={hasActiveFilters}
-          minDate={data?.earliestCreatedAt ?? undefined}
+          minDate={data?.availableCreatedDates?.[0]}
+          availableDates={data?.availableCreatedDates ?? []}
           locationsLoading={locations === null}
           locationOptions={getOwnedPharmacyLocationFilterOptions(
             locations?.length ? locations : (data?.items ?? []),

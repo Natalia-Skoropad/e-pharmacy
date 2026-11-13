@@ -130,3 +130,27 @@ test('product-specific canonical routes use the correct card without mode props'
   assert.match(own, /<OwnProductDetailsPageContent productId=\{productId\}/);
   assert.match(own, /isOwnProductDetailTab\(tab\)/);
 });
+
+//===================================================================
+
+test('product comments have one heading and loader, no tab counter, and resolve stored author names', async () => {
+  const [page, tab, notes] = await Promise.all([
+    read(ownFolder + 'OwnProductDetailsPageContent.tsx'),
+    read(ownFolder + 'OwnProductCommentsTab.tsx'),
+    read('../api/src/services/products/owner-product-note.service.ts'),
+  ]);
+
+  assert.match(page, /items=\{PRODUCT_DETAILS_TABS\}/);
+  assert.doesNotMatch(page, /`Comments \(\$\{commentsTotal\}\)`/);
+  assert.match(page, /activeTab !== 'comments' \? \(\s*<OwnProductTabHeading/);
+  assert.match(page, /activeTab === 'comments' && !error \? \(/);
+
+  assert.match(
+    page,
+    /enabled=\{isLoading \|\| Boolean\(product\?\.isAddedToOwner\)\}/
+  );
+
+  assert.match(tab, /presentation="profile"/);
+  assert.match(notes, /select\('_id name pictureUrl'\)/);
+  assert.match(notes, /author\?\.name\?\.trim\(\)/);
+});

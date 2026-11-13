@@ -80,13 +80,13 @@ import test from 'node:test';
     assert.match(drawer, /PHARMACY_STATUS_PRESENTATION/);
   });
 
-  test('pharmacy search includes complete owner registry and region/settlement are available', async () => {
+  test('pharmacy search includes only product pharmacies while region/settlement remain available', async () => {
     const [tab, drawer] = await Promise.all([
       read(prefix + 'OwnProductPharmaciesTab.tsx'),
       read(prefix + 'OwnProductPharmaciesFiltersDrawer.tsx'),
     ]);
 
-    assert.match(tab, /registryReady \? registry\?\.items \?\? \[\] : \[\]/);
+    assert.match(tab, /rows\.map\(\(\{ pharmacy \}\) =>/);
     assert.match(tab, /getOwnedPharmacyLocationFilterOptions/);
     assert.match(drawer, /label="Product availability"/);
     assert.match(drawer, /label="Region"/);

@@ -64,17 +64,18 @@ export async function getOwnerOwnProductSuggestions(
 
 //===================================================================
 
-/** Mutates only the explicitly selected, server-authorized owner pharmacy. */
-export async function removeOwnerOwnProduct(
-  productId: string,
-  pharmacyId: string
-) {
-  const path = PHARMACY_API_ROUTES.products.myPharmacy(productId);
+/** Removes the owner-wide selection, never an individual pharmacy offer. */
+export async function removeOwnerOwnProduct(productId: string) {
+  const path = appendQueryParams(
+    PHARMACY_API_ROUTES.products.myPharmacy(productId),
+    {
+      ownerProducts: true,
+    }
+  );
 
   return parseApiResponseData(
     await localApiRequest(path, {
       method: 'DELETE',
-      headers: { 'X-Pharmacy-ID': pharmacyId },
     }),
 
     parsePharmacyProductMutationResponse,

@@ -42,7 +42,7 @@ export async function getClientRowsForPharmacies(
       total: 0,
       statistics: { total: 0, repeat: 0, active: 0, blocked: 0 },
       earliestCreatedAt: null,
-      ...(query.productId ? { availableClientAddedDates: [] } : {}),
+      availableClientAddedDates: [],
     };
   }
 
@@ -66,7 +66,7 @@ export async function getClientRowsForPharmacies(
             $dateToString: {
               format: '%Y-%m-%d',
               date: '$firstOrderAt',
-              timezone: 'UTC',
+              timezone: 'Europe/Kyiv',
             },
           },
         },
@@ -434,7 +434,7 @@ export async function getClientRowsForPharmacies(
         items: itemsFacet,
         total: totalFacet,
         statistics: statisticsFacet,
-        ...(query.productId ? { clientAddedDates: clientAddedDatesFacet } : {}),
+        clientAddedDates: clientAddedDatesFacet,
       },
     },
   ];
@@ -488,12 +488,8 @@ export async function getClientRowsForPharmacies(
       ? statistics.earliestOrderAt.toISOString().slice(0, 10)
       : null,
 
-    ...(query.productId
-      ? {
-          availableClientAddedDates: [
-            ...(result?.clientAddedDates?.[0]?.days ?? []),
-          ].sort(),
-        }
-      : {}),
+    availableClientAddedDates: [
+      ...(result?.clientAddedDates?.[0]?.days ?? []),
+    ].sort(),
   };
 }

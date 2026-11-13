@@ -186,3 +186,18 @@
   left: 55px;
   top: -3px;
 }
+
+.pharmacyNameLink {
+  display: inline-block;
+  min-width: 0;
+  max-width: 230px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.pharmacyStatusBadges {
+  display: grid;
+  justify-items: start;
+  gap: 5px;
+}

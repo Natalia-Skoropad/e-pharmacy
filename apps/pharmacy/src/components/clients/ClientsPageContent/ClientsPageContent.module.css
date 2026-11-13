@@ -72,6 +72,10 @@
   display: grid;
 }
 
+.statisticsBody {
+  min-width: 0;
+}
+
 .errorText,
 .statisticsState {
   color: var(--color-text-secondary);
@@ -134,10 +138,15 @@
   width: 100%;
 }
 
-/* The account-wide page keeps its statistics on phones. Only the embedded
-   Clients tab hides its stats; table, search and pagination stay available. */
+/* On mobile, hide only the owner statistics body (keep the page heading);
+   embedded Clients tabs have no heading here, so hide the whole statistics card. */
 @media only screen and (max-width: 767px) {
-  .embeddedStatisticsCard {
+  .embeddedStatisticsCard,
+  .ownerStatisticsCard .statisticsBody {
     display: none;
+  }
+
+  .ownerStatisticsCard {
+    gap: 0;
   }
 }

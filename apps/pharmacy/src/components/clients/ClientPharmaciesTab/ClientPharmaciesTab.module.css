@@ -78,3 +78,12 @@
     width: auto;
   }
 }
+
+.breakableName {
+  display: inline-block;
+  min-width: 0;
+  max-width: 230px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}

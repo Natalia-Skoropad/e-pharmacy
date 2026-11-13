@@ -231,7 +231,8 @@ export async function removeProductFromMyPharmacy(
 
   const data = await removeProductFromMyPharmacyService(
     productId,
-    req.user?.id ?? ''
+    req.user?.id ?? '',
+    req.query.ownerProducts === 'true'
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

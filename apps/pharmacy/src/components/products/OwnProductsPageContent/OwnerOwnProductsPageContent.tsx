@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Archive, Boxes, ShoppingBag, Trash2 } from 'lucide-react';
+import { Archive, Boxes, ShoppingBag } from 'lucide-react';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
@@ -11,7 +11,7 @@ import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { ConfirmationModal, InfoTooltip } from '@e-pharmacy/ui/overlays';
+import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
@@ -57,6 +57,7 @@ import { OwnedPharmacySearch } from '@/components/pharmacies/OwnedPharmacySearch
 import { OwnProductStatistics } from '@/components/statistics/OwnProductStatistics/OwnProductStatistics';
 import { OwnProductsFiltersDrawer } from '@/components/products/OwnProductsFiltersDrawer';
 import { OwnProductsTable } from '@/components/products/OwnProductsTable';
+import { RemoveOwnProductConfirmation } from '@/components/products/RemoveOwnProductConfirmation/RemoveOwnProductConfirmation';
 
 import css from './OwnProductsPageContent.module.css';
 
@@ -356,15 +357,19 @@ function OwnerOwnProductsPageContent({
   };
 
   const removeProduct = async () => {
-    if (!productToRemove || !filters.pharmacyId) return;
+    if (!productToRemove || filters.pharmacyId || embeddedPharmacyId) return;
 
     setRemovingProductId(productToRemove.id);
 
     try {
-      await removeOwnerOwnProduct(productToRemove.id, filters.pharmacyId);
+      await removeOwnerOwnProduct(productToRemove.id);
 
       setProductToRemove(null);
-      toast.success('Product removed from the selected pharmacy.');
+
+      toast.success(
+        'Product removed from your own catalog and all your pharmacies.'
+      );
+
       refresh();
     } catch (error) {
       toast.error(
@@ -551,7 +556,11 @@ function OwnerOwnProductsPageContent({
           isAllPharmacies={!filters.pharmacyId}
           categoryReference={categoryMap}
           removingProductId={removingProductId}
-          onRemoveProduct={filters.pharmacyId ? setProductToRemove : undefined}
+          onRemoveProduct={
+            !filters.pharmacyId && !embeddedPharmacyId
+              ? setProductToRemove
+              : undefined
+          }
         />
         <PaginationView
           currentPage={page}
@@ -561,16 +570,8 @@ function OwnerOwnProductsPageContent({
         />
       </section>
 
-      <ConfirmationModal
-        isOpen={Boolean(productToRemove && filters.pharmacyId)}
-        title="Remove product from pharmacy?"
-        description={
-          productToRemove
-            ? `Remove ${productToRemove.name} from the selected pharmacy? Existing orders prevent removal.`
-            : undefined
-        }
-        confirmLabel="Remove product"
-        confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+      <RemoveOwnProductConfirmation
+        productName={productToRemove?.name ?? null}
         isLoading={Boolean(removingProductId)}
         onConfirm={() => void removeProduct()}
         onCancel={() => {

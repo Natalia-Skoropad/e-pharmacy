@@ -170,32 +170,35 @@ function OwnProductsTable({
           <StatusBadge {...PRODUCT_STATUS_PRESENTATION[product.status]} />
         ),
       },
-      {
-        key: 'action',
-        width: '130px',
-        title: 'Action',
+      ...(onRemoveProduct
+        ? [
+            {
+              key: 'action',
+              width: '130px',
+              title: 'Action',
 
-        render: (product) => (
-          <Button
-            className={css.removeButton}
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={
-              isAllPharmacies ||
-              !onRemoveProduct ||
-              product.hasRelatedOrders ||
-              removingProductId === product.id
-            }
-            isLoading={removingProductId === product.id}
-            loadingLabel="Removing..."
-            iconLeft={<Trash2 size={16} aria-hidden="true" />}
-            onClick={() => onRemoveProduct?.(product)}
-          >
-            Remove
-          </Button>
-        ),
-      },
+              render: (product) => (
+                <Button
+                  className={css.removeButton}
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={
+                    product.hasRelatedOrders ||
+                    product.hasOperationalHistory ||
+                    removingProductId === product.id
+                  }
+                  isLoading={removingProductId === product.id}
+                  loadingLabel="Removing..."
+                  iconLeft={<Trash2 size={16} aria-hidden="true" />}
+                  onClick={() => onRemoveProduct?.(product)}
+                >
+                  Remove
+                </Button>
+              ),
+            } satisfies DataTableColumn<PharmacyProductRow>,
+          ]
+        : []),
     ],
     [onRemoveProduct, removingProductId, isAllPharmacies, categoryReference]
   );

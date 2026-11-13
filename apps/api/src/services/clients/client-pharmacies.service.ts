@@ -5,8 +5,8 @@ import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
 import type { OwnedPharmacyRegistryListQuery } from '../../schemas/owners/owned-pharmacy-registry.schema';
 
-import { getEndOfDay, getStartOfDay } from '../../utils/dates/date-range';
 import { createSafeRegExp } from '../../utils/validation/regexp';
+import { getBusinessCalendarDate } from '../../utils/dates/date-range';
 
 import { RATING_BOUNDS } from '../pharmacies/registry/pharmacy-registry.constants';
 
@@ -79,14 +79,56 @@ export async function getClientPharmaciesService(
     ? ownedIds.filter((id) => String(id) === client.pharmacyId)
     : orderMetrics.map((metric) => metric._id);
 
-  const filter: Record<string, unknown> = {
+  // The date filter applies to when THIS client became associated with each
+  // pharmacy, not to the unrelated pharmacy's global creation date.
+  const calendarPharmacies = await Pharmacy.find({
     _id: { $in: candidateIds },
+    ownerId: new Types.ObjectId(userId),
+  })
+    .select('_id createdAt activatedAt approvedAt')
+    .lean();
+
+  const associationDates = new Map(
+    calendarPharmacies.map((pharmacy) => {
+      const metric = byId.get(String(pharmacy._id));
+
+      const date =
+        metric?.firstOrderAt ??
+        (pharmacy.activatedAt || pharmacy.approvedAt || pharmacy.createdAt);
+
+      return [String(pharmacy._id), date] as const;
+    })
+  );
+
+  const availableCreatedDates = [
+    ...new Set(
+      [...associationDates.values()]
+        .map((date) => getBusinessCalendarDate(date))
+        .filter((day): day is string => Boolean(day))
+    ),
+  ].sort();
+
+  const filteredIds = candidateIds.filter((id) => {
+    const date = getBusinessCalendarDate(
+      associationDates.get(String(id)) ?? new Date(Number.NaN)
+    );
+
+    if (!date) return false;
+
+    return (
+      (!query.createdFrom || date >= query.createdFrom) &&
+      (!query.createdTo || date <= query.createdTo)
+    );
+  });
+
+  const filter: Record<string, unknown> = {
+    _id: { $in: filteredIds },
     ownerId: new Types.ObjectId(userId),
   };
 
   if (query.pharmacyId) {
     filter._id = {
-      $in: candidateIds.filter((id) => String(id) === query.pharmacyId),
+      $in: filteredIds.filter((id) => String(id) === query.pharmacyId),
     };
   }
 
@@ -104,13 +146,6 @@ export async function getClientPharmaciesService(
       `^${createSafeRegExp(query.region).source}$`,
       'i'
     );
-  }
-
-  if (query.createdFrom || query.createdTo) {
-    filter.createdAt = {
-      ...(query.createdFrom ? { $gte: getStartOfDay(query.createdFrom) } : {}),
-      ...(query.createdTo ? { $lte: getEndOfDay(query.createdTo) } : {}),
-    };
   }
 
   if (query.pharmacySearch) {
@@ -150,24 +185,14 @@ export async function getClientPharmaciesService(
   const page = Math.min(query.page, Math.max(1, totalPages));
   const direction = query.sort === 'created_asc' ? 1 : -1;
 
-  const [pharmacies, earliest] = await Promise.all([
-    Pharmacy.find(filter)
-      .select(
-        '_id name email phone imageUrl location status reviewState createdAt rating reviewsCount'
-      )
-      .sort({ createdAt: direction, _id: direction })
-      .skip((page - 1) * query.perPage)
-      .limit(query.perPage)
-      .lean(),
-
-    Pharmacy.findOne({
-      _id: { $in: candidateIds },
-      ownerId: new Types.ObjectId(userId),
-    })
-      .select('createdAt')
-      .sort({ createdAt: 1, _id: 1 })
-      .lean(),
-  ]);
+  const pharmacies = await Pharmacy.find(filter)
+    .select(
+      '_id name email phone imageUrl location status reviewState blockSource createdAt rating reviewsCount'
+    )
+    .sort({ createdAt: direction, _id: direction })
+    .skip((page - 1) * query.perPage)
+    .limit(query.perPage)
+    .lean();
 
   return {
     items: pharmacies.map((pharmacy) => {
@@ -177,7 +202,10 @@ export async function getClientPharmaciesService(
       return {
         pharmacyId,
         pharmacyName: pharmacy.name,
-        createdAt: pharmacy.createdAt.toISOString(),
+
+        createdAt: (
+          associationDates.get(pharmacyId) ?? pharmacy.createdAt
+        ).toISOString(),
 
         ...(pharmacy.imageUrl ? { imageUrl: pharmacy.imageUrl } : {}),
         ...(pharmacy.email ? { email: pharmacy.email } : {}),
@@ -187,6 +215,7 @@ export async function getClientPharmaciesService(
         status: pharmacy.status,
 
         ...(pharmacy.reviewState ? { reviewState: pharmacy.reviewState } : {}),
+        ...(pharmacy.blockSource ? { blockSource: pharmacy.blockSource } : {}),
 
         rating: pharmacy.rating ?? 0,
         reviewsCount: pharmacy.reviewsCount ?? 0,
@@ -202,6 +231,7 @@ export async function getClientPharmaciesService(
     perPage: query.perPage,
     total,
     totalPages,
-    earliestCreatedAt: earliest?.createdAt?.toISOString().slice(0, 10) ?? null,
+    earliestCreatedAt: availableCreatedDates[0] ?? null,
+    availableCreatedDates,
   };
 }

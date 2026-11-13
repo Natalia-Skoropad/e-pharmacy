@@ -147,7 +147,7 @@ export function OwnProductPharmaciesTab({
 
   const pharmacyOptions = useMemo<OwnedPharmacyOption[]>(
     () =>
-      (registryReady ? (registry?.items ?? []) : []).map((pharmacy) => ({
+      rows.map(({ pharmacy }) => ({
         id: pharmacy.id,
         name: pharmacy.name,
         imageUrl: pharmacy.imageUrl,
@@ -158,7 +158,7 @@ export function OwnProductPharmaciesTab({
         reviewState: pharmacy.reviewState,
         membershipRole: pharmacy.membershipRole,
       })),
-    [registry, registryReady]
+    [rows]
   );
 
   const loadSearchOptions = useCallback(
@@ -232,13 +232,9 @@ export function OwnProductPharmaciesTab({
     }
   }, [registryReady, productLoading, route, pages, productId, router]);
 
-  const calendarRows = filterProductPharmacyRows(rows, {
-    ...route,
-    date: { from: '', to: '' },
-    page: 1,
-  });
-
-  const availableDates = productPharmacyAddedDates(calendarRows);
+  // All product-specific offers define the calendar; filters must not shrink
+  // its bounds or hide dates that exist elsewhere in this product's history.
+  const availableDates = productPharmacyAddedDates(rows);
 
   const activeFilters =
     Number(Boolean(route.pharmacyId)) +

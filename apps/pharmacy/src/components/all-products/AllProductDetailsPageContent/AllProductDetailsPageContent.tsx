@@ -5,6 +5,10 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import {
   ArrowRight,
+  Building2,
+  FlaskConical,
+  Package2,
+  Tags,
   ClipboardList,
   MessageSquareText,
   PackageSearch,
@@ -137,16 +141,25 @@ function CatalogTabHeading({ tab }: { tab: AllProductDetailTab }) {
 function CatalogCharacteristics({ product }: { product: ProductDetails }) {
   const characteristics = [
     product.manufacturer
-      ? { label: 'Manufacturer', value: product.manufacturer }
+      ? {
+          label: 'Manufacturer',
+          value: product.manufacturer,
+          icon: 'manufacturer',
+        }
       : null,
 
-    product.dosage ? { label: 'Dosage', value: product.dosage } : null,
+    product.dosage
+      ? { label: 'Dosage', value: product.dosage, icon: 'dosage' }
+      : null,
 
     product.packageQuantity
-      ? { label: 'Package', value: product.packageQuantity }
+      ? { label: 'Package', value: product.packageQuantity, icon: 'package' }
       : null,
-    { label: 'Category', value: product.category.name },
-  ].filter((item): item is { label: string; value: string } => Boolean(item));
+
+    { label: 'Category', value: product.category.name, icon: 'category' },
+  ].filter((item): item is { label: string; value: string; icon: string } =>
+    Boolean(item)
+  );
 
   return (
     <>
@@ -154,8 +167,30 @@ function CatalogCharacteristics({ product }: { product: ProductDetails }) {
         <dl className={css.characteristicsList}>
           {characteristics.map((item) => (
             <div className={css.characteristicItem} key={item.label}>
-              <dt>{item.label}</dt>
-              <dd>{item.value}</dd>
+              <dt>
+                <span className={css.characteristicIcon} aria-hidden="true">
+                  {item.icon === 'manufacturer' ? (
+                    <Building2 size={16} />
+                  ) : item.icon === 'dosage' ? (
+                    <FlaskConical size={16} />
+                  ) : item.icon === 'package' ? (
+                    <Package2 size={16} />
+                  ) : (
+                    <Tags size={16} />
+                  )}
+                </span>
+                {item.label}
+              </dt>
+              <dd>
+                {item.icon === 'category' ? (
+                  <span className={css.categoryCharacteristic}>
+                    <CategoryIcon name={product.category.icon} size={16} />
+                    {item.value}
+                  </span>
+                ) : (
+                  item.value
+                )}
+              </dd>
             </div>
           ))}
         </dl>

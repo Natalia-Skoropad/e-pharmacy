@@ -100,9 +100,9 @@ function ClientsPageContent({
   const [totalClients, setTotalClients] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
-    null
-  );
+  const [availableClientDates, setAvailableClientDates] = useState<
+    readonly string[]
+  >([]);
 
   const {
     data: clientStatistics,
@@ -199,7 +199,7 @@ function ClientsPageContent({
           );
         }
 
-        setEarliestCreatedAt(response.earliestCreatedAt);
+        setAvailableClientDates(response.availableClientAddedDates ?? []);
         setClientStatisticsSuccess(response.statistics);
         setClientsStatus('success');
       } catch (loadError) {
@@ -304,7 +304,9 @@ function ClientsPageContent({
     >
       <section
         className={
-          embedded ? `${css.card} ${css.embeddedStatisticsCard}` : css.card
+          embedded
+            ? `${css.card} ${css.embeddedStatisticsCard}`
+            : `${css.card} ${css.ownerStatisticsCard}`
         }
         aria-label={embedded ? 'Client statistics' : undefined}
         aria-labelledby={embedded ? undefined : 'clients-page-title'}
@@ -341,35 +343,37 @@ function ClientsPageContent({
           />
         ) : null}
 
-        {clientStatisticsStatus === 'error' ? (
-          <ProfileResourceState
-            variant="error"
-            title="Client statistics could not be loaded"
-            description="Client statistics are temporarily unavailable. Please try again."
-            retryLabel="Try again"
-            sideActionOnDesktop
-            onRetry={() => setRetryVersion((version) => version + 1)}
-          />
-        ) : clientStatistics ? (
-          <ClientStatistics
-            counts={clientStatistics}
-            getStatisticHref={getClientStatisticHref}
-            activeKey={
-              filters.status === 'active' || filters.status === 'blocked'
-                ? filters.status
-                : null
-            }
-            className={css.clientStatistics}
-          />
-        ) : (
-          <StatsLoadingSkeleton
-            className={css.statisticsSkeleton}
-            count={3}
-            columns={3}
-            tabletColumns={2}
-            label="Loading client statistics"
-          />
-        )}
+        <div className={css.statisticsBody}>
+          {clientStatisticsStatus === 'error' ? (
+            <ProfileResourceState
+              variant="error"
+              title="Client statistics could not be loaded"
+              description="Client statistics are temporarily unavailable. Please try again."
+              retryLabel="Try again"
+              sideActionOnDesktop
+              onRetry={() => setRetryVersion((version) => version + 1)}
+            />
+          ) : clientStatistics ? (
+            <ClientStatistics
+              counts={clientStatistics}
+              getStatisticHref={getClientStatisticHref}
+              activeKey={
+                filters.status === 'active' || filters.status === 'blocked'
+                  ? filters.status
+                  : null
+              }
+              className={css.clientStatistics}
+            />
+          ) : (
+            <StatsLoadingSkeleton
+              className={css.statisticsSkeleton}
+              count={3}
+              columns={3}
+              tabletColumns={2}
+              label="Loading client statistics"
+            />
+          )}
+        </div>
       </section>
 
       <section className={css.card} aria-labelledby="clients-search-title">
@@ -467,7 +471,9 @@ function ClientsPageContent({
         <ClientsFiltersDrawer
           filters={filters}
           hasActiveFilters={hasActiveFilters}
-          minDate={earliestCreatedAt ?? undefined}
+          minDate={availableClientDates[0]}
+          maxDate={availableClientDates.at(-1)}
+          availableDates={availableClientDates}
           onChange={handleFiltersChange}
           onClose={() => setIsFiltersOpen(false)}
           onReset={resetFilters}

@@ -22,17 +22,15 @@ import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { getProductCategories } from '@/lib/api/browser';
-import { removeProductFromMyPharmacy } from '@/lib/api/browser';
+import { removeOwnerOwnProduct } from '@/lib/api/browser/owner-own-products.api';
 import { getOwnerCatalogProductDetails } from '@/lib/api/browser/owner-all-products.api';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
-import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
@@ -41,6 +39,8 @@ import {
   parseOwnProductDetailTabPath,
   type OwnProductDetailTab,
 } from '@/lib/products/own-product-detail-tabs';
+
+import { RemoveOwnProductConfirmation } from '@/components/products/RemoveOwnProductConfirmation/RemoveOwnProductConfirmation';
 
 import { OwnProductTabHeading } from './OwnProductTabHeading';
 import { OwnProductDetailsTab } from './OwnProductDetailsTab';
@@ -155,7 +155,6 @@ function OwnProductDetailsPageContent({
     readonly ProductCategoryReference[]
   >([]);
 
-  const [commentsTotal, setCommentsTotal] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [error, setError] = useState<ReturnType<typeof getProductError> | null>(
@@ -172,10 +171,10 @@ function OwnProductDetailsPageContent({
 
   const canRemove = Boolean(
     product &&
-    selectedOffer &&
-    currentPharmacyId &&
-    !getLockedFeatureBannerStatus(pharmacyProfile?.status ?? null) &&
-    !selectedOffer.hasRelatedOrders
+    product.isAddedToOwner &&
+    !product.offers.some(
+      (offer) => offer.hasRelatedOrders || offer.hasOperationalHistory
+    )
   );
 
   useEffect(() => {
@@ -233,41 +232,26 @@ function OwnProductDetailsPageContent({
 
     setIsRemovingProduct(true);
 
-    const offersAfterRemoval = product.offers.filter(
-      (offer) => String(offer.pharmacyId) !== String(currentPharmacyId)
-    );
-
     try {
-      const response = await removeProductFromMyPharmacy(product.id);
+      const response = await removeOwnerOwnProduct(product.id);
 
-      const refreshed = await getOwnerCatalogProductDetails(product.id).catch(
-        () => null
-      );
-
-      setProduct(
-        refreshed?.product ?? {
-          ...product,
-          offers: offersAfterRemoval,
-          isAddedToOwner: offersAfterRemoval.length > 0,
-        }
-      );
-
-      setCommentsTotal(0);
       setIsRemoveModalOpen(false);
 
       toast.success(
-        response.message || 'Product was removed from your pharmacy.'
+        response.message || 'Product was removed from your pharmacies.'
       );
+
+      router.push('/pharmacy/products');
     } catch (removeError) {
-      if (currentPharmacyId && shouldReconcileRemove(removeError)) {
+      if (shouldReconcileRemove(removeError)) {
         try {
           const latest = await getOwnerCatalogProductDetails(product.id);
 
-          if (!getProductOffer(latest.product, currentPharmacyId)) {
+          if (!latest.product.isAddedToOwner) {
             setProduct(latest.product);
-            setCommentsTotal(0);
             setIsRemoveModalOpen(false);
-            toast.success('Product is already removed from your pharmacy.');
+            toast.success('Product is already removed from your pharmacies.');
+            router.push('/pharmacy/products');
 
             return;
           }
@@ -288,7 +272,7 @@ function OwnProductDetailsPageContent({
               'Product management is unavailable until Admin verifies the pharmacy.',
 
             [PRODUCT_MANAGEMENT_ERROR_CODES.NOT_ADDED]:
-              'This product is no longer added to your pharmacy.',
+              'This product is no longer in your catalog.',
 
             [PRODUCT_MANAGEMENT_ERROR_CODES.HAS_RELATED_ORDERS]:
               'This product cannot be removed because it has related orders.',
@@ -300,12 +284,6 @@ function OwnProductDetailsPageContent({
       setIsRemovingProduct(false);
     }
   }
-
-  const tabs = PRODUCT_DETAILS_TABS.map((tab) =>
-    tab.value === 'comments' && commentsTotal !== null
-      ? { ...tab, label: `Comments (${commentsTotal})` }
-      : tab
-  );
 
   return (
     <main className={css.page} aria-labelledby="own-product-page-title">
@@ -331,7 +309,7 @@ function OwnProductDetailsPageContent({
       <section className={css.contentCard} aria-label="Product details">
         <div className={css.tabsSection}>
           <Tabs
-            items={tabs}
+            items={PRODUCT_DETAILS_TABS}
             activeValue={activeTab}
             ariaLabel="Product details sections"
             mobileVisibleCount={1}
@@ -342,7 +320,9 @@ function OwnProductDetailsPageContent({
               })
             }
           />
-          <OwnProductTabHeading tab={activeTab} />
+          {activeTab !== 'comments' ? (
+            <OwnProductTabHeading tab={activeTab} />
+          ) : null}
           {activeTab === 'statistics' ? (
             <OwnProductStatisticsTab productId={productId} />
           ) : activeTab === 'clients' ? (
@@ -362,6 +342,11 @@ function OwnProductDetailsPageContent({
               productLoading={isLoading}
               productError={error?.message ?? null}
               onRetryProduct={() => setRetry((value) => value + 1)}
+            />
+          ) : activeTab === 'comments' && !error ? (
+            <OwnProductCommentsTab
+              productId={productId}
+              enabled={isLoading || Boolean(product?.isAddedToOwner)}
             />
           ) : isLoading || error || !product ? (
             <ProfileResourceState
@@ -390,22 +375,12 @@ function OwnProductDetailsPageContent({
               key={product.id}
               productId={product.id}
             />
-          ) : (
-            <OwnProductCommentsTab
-              key={product.id}
-              productId={product.id}
-              enabled={Boolean(selectedOffer)}
-              onTotalChange={setCommentsTotal}
-            />
-          )}
+          ) : null}
         </div>
       </section>
 
-      <ConfirmationModal
-        isOpen={isRemoveModalOpen}
-        title="Remove product from pharmacy?"
-        description="This product will be removed from your own products only if no orders were created for it."
-        confirmLabel="Remove product"
+      <RemoveOwnProductConfirmation
+        productName={isRemoveModalOpen ? (product?.name ?? null) : null}
         isLoading={isRemovingProduct}
         onConfirm={() => void confirmRemove()}
         onCancel={() => {

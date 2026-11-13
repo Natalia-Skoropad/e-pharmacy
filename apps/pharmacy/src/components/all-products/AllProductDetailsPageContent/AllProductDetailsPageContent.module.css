@@ -118,7 +118,7 @@
 .characteristicsList {
   display: grid;
   gap: 10px;
-  max-width: 680px;
+  width: 100%;
   margin-top: 20px;
 }
 
@@ -134,7 +134,27 @@
 }
 
 .characteristicItem dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--color-text-muted);
+}
+
+.characteristicIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.categoryCharacteristic {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.categoryCharacteristic svg {
+  flex: 0 0 auto;
+  color: var(--color-accent);
 }
 
 .characteristicItem dd {

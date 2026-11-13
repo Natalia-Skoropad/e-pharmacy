@@ -202,7 +202,7 @@ export function ClientProductsTab({
               isLoading={
                 productsStatus === 'idle' || productsStatus === 'loading'
               }
-              minWidth={0}
+              minWidth={960}
               labels={{
                 loading: 'Loading purchased products...',
                 empty: 'No successful-order products match the filters.',

@@ -67,6 +67,7 @@ export type ProductOfferResponseDto = {
   reservedQuantity?: number;
   inStock: boolean;
   hasRelatedOrders?: boolean;
+  hasOperationalHistory?: boolean;
   createdAt: ISODateTimeString;
   updatedAt: ISODateTimeString;
 };

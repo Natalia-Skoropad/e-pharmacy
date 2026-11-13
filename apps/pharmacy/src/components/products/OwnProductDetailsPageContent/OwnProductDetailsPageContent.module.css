@@ -513,3 +513,10 @@
     display: none;
   }
 }
+
+/* Stock movement statistics are useful on tablet/desktop, not in the mobile tab. */
+@media only screen and (max-width: 767px) {
+  .stockStatisticsCard {
+    display: none;
+  }
+}

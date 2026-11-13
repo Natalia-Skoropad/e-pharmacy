@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 import {
   getPharmacyNotes,
   createPharmacyNote,
@@ -17,24 +15,26 @@ import css from './OwnProductDetailsPageContent.module.css';
 export function OwnProductCommentsTab({
   productId,
   enabled,
-  onTotalChange,
 }: Readonly<{
   productId: string;
   enabled: boolean;
-  onTotalChange: (value: number) => void;
 }>) {
-  const [total, setTotal] = useState<number | undefined>(undefined);
   if (!enabled)
     return (
       <p className={css.emptyPanel}>
-        Choose a pharmacy carrying this product to manage its comments.
+        This product has not been added to your own catalog yet.
       </p>
     );
 
   return (
     <EntityComments
       entityKey={`product:${productId}`}
-      initialTotal={total}
+      presentation="profile"
+      title="Comments"
+      description="Private comments about this product, visible to authorized pharmacy members."
+      commentTitle="Product comment"
+      emptyTitle="No product comments yet."
+      emptyText="Authorized pharmacy members can leave internal notes about this product."
       load={(page, options) =>
         getPharmacyNotes('product', productId, page, options)
       }
@@ -50,10 +50,6 @@ export function OwnProductCommentsTab({
       remove={(id, options) =>
         deletePharmacyNote('product', productId, id, options)
       }
-      onTotalChange={(value) => {
-        setTotal(value);
-        onTotalChange(value);
-      }}
     />
   );
 }

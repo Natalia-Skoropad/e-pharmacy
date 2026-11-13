@@ -112,3 +112,20 @@ export function getEndOfBusinessDay(value: string): Date {
     getStartOfBusinessDay(date.toISOString().slice(0, 10)).getTime() - 1
   );
 }
+
+//===============================================================
+
+/** Calendar day in the business timezone, matching all server date filters. */
+export function getBusinessCalendarDate(value: Date): string | null {
+  if (Number.isNaN(value.getTime())) return null;
+
+  const parts = Object.fromEntries(
+    BUSINESS_DATE_PARTS.formatToParts(value)
+      .filter((part) => ['year', 'month', 'day'].includes(part.type))
+      .map((part) => [part.type, part.value])
+  );
+
+  return parts.year && parts.month && parts.day
+    ? `${parts.year}-${parts.month}-${parts.day}`
+    : null;
+}

@@ -181,6 +181,10 @@ export function OwnProductPharmaciesFiltersDrawer({
         isActive={state.stock !== 'all'}
         onChange={(stock) => onChange({ stock })}
       />
+      <p className={css.filterNote}>
+        <Archive size={16} aria-hidden="true" /> Physical stock and sale
+        availability are not the same. Blocked pharmacies may still have stock.
+      </p>
 
       <div className={css.regionFilter}>
         <span className={css.regionHelp}>
@@ -256,11 +260,6 @@ export function OwnProductPharmaciesFiltersDrawer({
         isActive={Boolean(state.settlement)}
         onChange={(settlement) => onChange({ settlement })}
       />
-
-      <p className={css.filterNote}>
-        <Archive size={16} aria-hidden="true" /> Physical stock and sale
-        availability are not the same. Blocked pharmacies may still have stock.
-      </p>
     </FilterDrawer>
   );
 }

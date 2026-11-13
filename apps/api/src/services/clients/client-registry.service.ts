@@ -47,7 +47,7 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
       total: 0,
       totalPages: 0,
       earliestCreatedAt: null,
-      ...(query.productId ? { availableClientAddedDates: [] } : {}),
+      availableClientAddedDates: [],
       statistics: { total: 0, repeat: 0, active: 0, blocked: 0 },
     };
   }
@@ -81,11 +81,7 @@ export async function getClientsService(userId: string, query: ClientsQuery) {
     total: result.total,
     totalPages,
     earliestCreatedAt: result.earliestCreatedAt,
-
-    ...(query.productId
-      ? { availableClientAddedDates: result.availableClientAddedDates ?? [] }
-      : {}),
-
+    availableClientAddedDates: result.availableClientAddedDates ?? [],
     statistics: result.statistics,
   };
 }

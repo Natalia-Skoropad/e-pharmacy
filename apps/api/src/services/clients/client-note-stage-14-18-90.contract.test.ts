@@ -15,7 +15,11 @@ test('owner-wide client comments use the existing opt-in BFF route, not pharmacy
   const routes = read('routes/pharmacies/pharmacy-note.routes.ts');
   const schema = read('schemas/pharmacies/pharmacy-note.schema.ts');
 
-  assert.match(schema, /scope: z\.literal\('client'\)\.optional\(\)/);
+  assert.match(
+    schema,
+    /scope: z\.enum\(\['client', 'product'\]\)\.optional\(\)/
+  );
+
   assert.match(routes, /query: clientNoteScopeQuerySchema/);
   assert.match(controller, /query\.scope === 'client'/);
   assert.match(controller, /getClientCardNotesService/);
@@ -70,7 +74,11 @@ test('new client-card comments are owner-scoped; legacy pharmacy notes remain re
   assert.match(model, /ownerId\?: Schema\.Types\.ObjectId/);
   assert.match(model, /return !this\.ownerId/);
   assert.match(model, /owner_client_comment_idempotency/);
-  assert.match(model, /this\.entityType === 'client' && !this\.pharmacyId/);
+
+  assert.match(
+    model,
+    /\['client', 'product'\]\.includes\(this\.entityType\) && !this\.pharmacyId/
+  );
 });
 
 //===============================================================

@@ -11,7 +11,8 @@ import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatAmount } from '@e-pharmacy/utils/money';
+import { PharmacyBlockSourceBadge } from '@e-pharmacy/ui/statistics';
 
 import { buildOwnedPharmacyDetailUrl } from '@/lib/pharmacies/owned-pharmacy-url';
 import type { ProductPharmacyRow } from '@/lib/products/own-product-pharmacies-data';
@@ -67,7 +68,10 @@ export function OwnProductPharmaciesTable({
       title: <TableHeaderTitle parts={['Pharmacy', 'name']} />,
 
       render: ({ pharmacy }) => (
-        <TextActionButton href={buildOwnedPharmacyDetailUrl(pharmacy.id)}>
+        <TextActionButton
+          className={css.pharmacyNameLink}
+          href={buildOwnedPharmacyDetailUrl(pharmacy.id)}
+        >
           {pharmacy.name}
         </TextActionButton>
       ),
@@ -75,7 +79,7 @@ export function OwnProductPharmaciesTable({
     {
       key: 'price',
       title: <TableHeaderTitle parts={['Current', 'price, ₴']} />,
-      render: ({ offer }) => formatMoney(offer.price) ?? '—',
+      render: ({ offer }) => formatAmount(offer.price) ?? '—',
     },
     {
       key: 'updated',
@@ -102,7 +106,19 @@ export function OwnProductPharmaciesTable({
       title: <TableHeaderTitle parts={['Pharmacy', 'status']} />,
 
       render: ({ pharmacy }) => (
-        <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+        <span className={css.pharmacyStatusBadges}>
+          <StatusBadge {...PHARMACY_STATUS_PRESENTATION[pharmacy.status]} />
+          <PharmacyBlockSourceBadge
+            status={pharmacy.status}
+            blockSource={pharmacy.blockSource}
+          />
+          {pharmacy.reviewState === 'changes_requested' &&
+          ['on_verification', 'on_moderation', 'on_reactivation'].includes(
+            pharmacy.status
+          ) ? (
+            <StatusBadge label="Needs changes" tone="neutral" />
+          ) : null}
+        </span>
       ),
     },
   ];
@@ -113,7 +129,7 @@ export function OwnProductPharmaciesTable({
       items={rows}
       isLoading={loading}
       getItemKey={({ pharmacy }) => pharmacy.id}
-      minWidth={1030}
+      minWidth={960}
       ariaLabel="Pharmacies with this product"
       labels={{
         loading: 'Loading product pharmacies...',

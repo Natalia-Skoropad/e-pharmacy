@@ -18,7 +18,7 @@ test('owner Clients registry authorizes explicit owned pharmacy IDs and never tr
   assert.match(auth, /owner\.role !== USER_ROLES\.PHARMACY/);
   assert.match(auth, /owner\.status === USER_STATUSES\.BLOCKED/);
   assert.match(auth, /ownerId: new Types\.ObjectId\(userId\)/);
-  assert.match(auth, /status: \{ \$ne: PHARMACY_STATUSES\.BLOCKED \}/);
+  assert.doesNotMatch(auth, /status: \{ \$ne: PHARMACY_STATUSES\.BLOCKED \}/);
   assert.match(registry, /query\.scope === 'owner'/);
   assert.match(registry, /HTTP_STATUS\.FORBIDDEN/);
   assert.match(registry, /getCurrentPharmacyId\(userId\)/);

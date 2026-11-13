@@ -85,3 +85,28 @@ test('Clients tab waits for selected pharmacy instead of showing premature acces
 
   assert.match(clientsBranch, /<ClientsTable clients=\{\[\]\} isLoading/);
 });
+
+//===================================================================
+
+test('mobile Clients header stays visible while statistics are hidden', () => {
+  const page = read(pagePath);
+
+  const css = read(
+    'components/clients/ClientsPageContent/ClientsPageContent.module.css'
+  );
+
+  assert.match(page, /<PageHeader[\s\S]*?titleId="clients-page-title"/);
+  assert.match(page, /<div className=\{css.statisticsBody\}>/);
+
+  assert.match(
+    css,
+    /\.ownerStatisticsCard \.statisticsBody\s*\{\s*display: none;/
+  );
+
+  assert.doesNotMatch(css, /\.ownerStatisticsCard\s*\{\s*display: none;/);
+
+  assert.match(
+    css,
+    /\.embeddedStatisticsCard,\s*\.ownerStatisticsCard \.statisticsBody/
+  );
+});

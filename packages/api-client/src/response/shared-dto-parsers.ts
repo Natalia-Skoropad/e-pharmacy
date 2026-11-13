@@ -559,6 +559,7 @@ function parseProductOffer(
       totalQuantity: 'number',
       reservedQuantity: 'number',
       hasRelatedOrders: 'boolean',
+      hasOperationalHistory: 'boolean',
     },
     context
   );

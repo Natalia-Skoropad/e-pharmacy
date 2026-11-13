@@ -68,6 +68,7 @@ export type PharmacyProductRow = Readonly<{
   imageUrl?: string;
   status: OwnProductStatus;
   hasRelatedOrders: boolean;
+  hasOperationalHistory: boolean;
 }>;
 
 export type PharmacyProductsQueryParams = Readonly<{
@@ -270,6 +271,7 @@ function projectPharmacyProduct(
 
     status: product.status,
     hasRelatedOrders: offer.hasRelatedOrders === true,
+    hasOperationalHistory: offer.hasOperationalHistory === true,
   };
 }
 
@@ -323,6 +325,7 @@ export function projectOwnerProduct(
       rows.reduce((total, row) => total + row.currentPrice, 0) / rows.length,
 
     hasRelatedOrders: rows.some((row) => row.hasRelatedOrders),
+    hasOperationalHistory: rows.some((row) => row.hasOperationalHistory),
   };
 }
 

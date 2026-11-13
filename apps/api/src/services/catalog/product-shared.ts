@@ -17,6 +17,7 @@ import {
 import { httpError } from '../../utils/http/httpError';
 
 import {
+  getBusinessCalendarDate,
   getEndOfBusinessDay,
   getStartOfBusinessDay,
 } from '../../utils/dates/date-range';
@@ -286,7 +287,8 @@ export async function getProductsByScope(
 
   if (
     (query.pharmacyId || options.ownedPharmacyIds) &&
-    (query.addedFrom || query.addedTo)
+    (query.addedFrom || query.addedTo) &&
+    !(query.ownerProducts && options.ownedPharmacyIds && !query.pharmacyId)
   ) {
     offerFilter.createdAt = {
       ...(query.addedFrom
@@ -369,6 +371,45 @@ export async function getProductsByScope(
     }
   }
 
+  // For the owner-wide table the Added date is the first time the product
+  // entered ANY owned pharmacy, not its Admin catalog creation time, nor its
+  // latest synchronization to another pharmacy.
+  const ownerFirstAdded =
+    options.ownedPharmacyIds && query.ownerProducts
+      ? await ProductOffer.aggregate<{ _id: Types.ObjectId; addedAt: Date }>([
+          {
+            $match: {
+              pharmacyId: {
+                $in: options.ownedPharmacyIds.map(
+                  (id) => new Types.ObjectId(id)
+                ),
+              },
+            },
+          },
+          { $group: { _id: '$productId', addedAt: { $min: '$createdAt' } } },
+          { $sort: { addedAt: -1, _id: 1 } },
+        ])
+      : null;
+
+  if (
+    ownerFirstAdded &&
+    !query.pharmacyId &&
+    (query.addedFrom || query.addedTo)
+  ) {
+    applyProductIdIncludeFilter(
+      filter,
+
+      ownerFirstAdded
+        .filter(
+          ({ addedAt }) =>
+            (!query.addedFrom ||
+              addedAt >= getStartOfBusinessDay(query.addedFrom)) &&
+            (!query.addedTo || addedAt <= getEndOfBusinessDay(query.addedTo))
+        )
+        .map(({ _id }) => _id)
+    );
+  }
+
   if (query.productId) {
     const existing = filter._id as Record<string, unknown> | undefined;
 
@@ -395,8 +436,30 @@ export async function getProductsByScope(
 
   delete calendarOfferFilter.createdAt;
 
+  const ownerCalendarQuery =
+    ownerFirstAdded && !query.pharmacyId
+      ? Product.find(calendarProductFilter)
+          .select('_id')
+          .lean()
+          .then((products) => {
+            const matching = new Set(products.map(({ _id }) => String(_id)));
+
+            return [
+              ...new Set(
+                ownerFirstAdded
+                  .filter(({ _id }) => matching.has(String(_id)))
+                  .map(({ addedAt }) => getBusinessCalendarDate(addedAt))
+                  .filter((date): date is string => Boolean(date))
+              ),
+            ]
+              .sort()
+              .map((_id) => ({ _id }));
+          })
+      : null;
+
   const availableAddedDatesQuery =
-    options.ownedPharmacyIds || query.pharmacyId
+    ownerCalendarQuery ??
+    (options.ownedPharmacyIds || query.pharmacyId
       ? ProductOffer.aggregate<{ _id: string }>([
           { $match: calendarOfferFilter },
           {
@@ -429,7 +492,7 @@ export async function getProductsByScope(
           },
           { $sort: { _id: 1 } },
         ])
-      : Promise.resolve(null);
+      : Promise.resolve(null));
 
   const earliestCreatedAtQuery = options.ownedPharmacyIds
     ? ProductOffer.findOne({ pharmacyId: { $in: options.ownedPharmacyIds } })
@@ -446,6 +509,34 @@ export async function getProductsByScope(
           .select('createdAt')
           .lean<{ createdAt: Date } | null>();
 
+  const dateOrder =
+    ownerFirstAdded && (!query.sort || query.sort === 'newest')
+      ? ownerFirstAdded
+      : query.pharmacyId && (!query.sort || query.sort === 'newest')
+        ? await ProductOffer.aggregate<{ _id: Types.ObjectId; addedAt: Date }>([
+            { $match: { pharmacyId: new Types.ObjectId(query.pharmacyId) } },
+            { $group: { _id: '$productId', addedAt: { $min: '$createdAt' } } },
+            { $sort: { addedAt: -1, _id: 1 } },
+          ])
+        : null;
+
+  const productsQuery = dateOrder
+    ? Product.find(filter)
+        .lean()
+        .then((matching) => {
+          const byId = new Map(
+            matching.map((product) => [String(product._id), product])
+          );
+
+          return dateOrder
+            .map(({ _id }) => byId.get(String(_id)))
+            .filter((product): product is (typeof matching)[number] =>
+              Boolean(product)
+            )
+            .slice(skip, skip + query.perPage);
+        })
+    : Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean();
+
   const [
     products,
     total,
@@ -454,7 +545,7 @@ export async function getProductsByScope(
     earliestCreatedRecord,
     availableAddedDatesRows,
   ] = await Promise.all([
-    Product.find(filter).sort(sort).skip(skip).limit(query.perPage).lean(),
+    productsQuery,
     Product.countDocuments(filter),
     getClientFavorites(userId),
 
@@ -519,9 +610,16 @@ export async function getProductsByScope(
     total,
     totalPages: Math.ceil(total / query.perPage),
 
-    earliestCreatedAt: earliestCreatedRecord
-      ? earliestCreatedRecord.createdAt.toISOString().slice(0, 10)
-      : null,
+    earliestCreatedAt:
+      ownerFirstAdded && !query.pharmacyId
+        ? ownerFirstAdded.length
+          ? getBusinessCalendarDate(
+              ownerFirstAdded[ownerFirstAdded.length - 1]!.addedAt
+            )
+          : null
+        : earliestCreatedRecord
+          ? getBusinessCalendarDate(earliestCreatedRecord.createdAt)
+          : null,
 
     ...(availableAddedDatesRows
       ? { availableAddedDates: availableAddedDatesRows.map((row) => row._id) }

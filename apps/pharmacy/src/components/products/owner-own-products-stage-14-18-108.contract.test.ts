@@ -79,7 +79,7 @@ test('table uses individual category icons and owner average price for all pharm
   assert.match(page, /getProductCategories/);
   assert.match(table, /CategoryIcon name=\{category.icon\}/);
   assert.match(table, /TableHeaderTitle parts=\{\['Average', 'price, ₴'\]\}/);
-  assert.match(table, /isAllPharmacies \|\|/);
+  assert.match(table, /\.\.\.\(onRemoveProduct \?/);
   assert.match(parser, /projectOwnerProduct/);
 
   assert.match(

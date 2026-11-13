@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { History } from 'lucide-react';
@@ -471,7 +472,7 @@ export function OwnProductStockMovementTab({
                       items={stockReadLoading ? [] : paginatedStockMovementRows}
                       isLoading={stockReadLoading}
                       getItemKey={(row) => row.id}
-                      minWidth={0}
+                      minWidth={960}
                       labels={{
                         loading: 'Loading stock movement history...',
                         empty: 'Stock movement history is empty.',

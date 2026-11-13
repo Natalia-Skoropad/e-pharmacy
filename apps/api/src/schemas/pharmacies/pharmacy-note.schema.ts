@@ -25,7 +25,7 @@ export const pharmacyNotesQuerySchema = z
   .object({
     page: positivePageSchema,
     perPage: createPerPageSchema({ defaultValue: 10, max: 100 }),
-    scope: z.literal('client').optional(),
+    scope: z.enum(['client', 'product']).optional(),
   })
 
   .strict();
@@ -34,7 +34,7 @@ export const pharmacyNotesQuerySchema = z
 
 export const clientNoteScopeQuerySchema = z
   .object({
-    scope: z.literal('client').optional(),
+    scope: z.enum(['client', 'product']).optional(),
   })
 
   .strict();
