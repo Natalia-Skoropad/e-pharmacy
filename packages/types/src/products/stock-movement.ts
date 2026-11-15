@@ -26,6 +26,9 @@ export type ProductStockBalance = {
   stockQuantity: number;
   reservedQuantity: number;
   availableQuantity: number;
+
+  /** Sum of quantity × frozen unitPrice for New and In progress order lines. */
+  reservedOrderAmount?: number;
 };
 
 export type ProductStockMovement = {

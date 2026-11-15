@@ -25,6 +25,7 @@ import css from './OwnedPharmaciesFiltersDrawer.module.css';
 
 type OwnedPharmaciesFiltersDrawerProps = Readonly<{
   state: OwnedPharmacyListUrlState;
+  showRating?: boolean;
   minDate?: string;
   availableDates?: readonly string[];
 
@@ -76,6 +77,7 @@ const RATING_OPTIONS: Array<SelectOption<OwnedPharmacyRating | 'all'>> = [
 
 export function OwnedPharmaciesFiltersDrawer({
   state,
+  showRating = true,
   minDate,
   availableDates,
   locationOptions,
@@ -201,14 +203,16 @@ export function OwnedPharmaciesFiltersDrawer({
         onChange={(settlement) => onChange({ ...state, settlement, page: 1 })}
       />
 
-      <SelectField
-        id="pharmacies-filter-rating"
-        label="Rating"
-        value={state.rating}
-        options={RATING_OPTIONS}
-        isActive={state.rating !== 'all'}
-        onChange={(rating) => onChange({ ...state, rating, page: 1 })}
-      />
+      {showRating ? (
+        <SelectField
+          id="pharmacies-filter-rating"
+          label="Rating"
+          value={state.rating}
+          options={RATING_OPTIONS}
+          isActive={state.rating !== 'all'}
+          onChange={(rating) => onChange({ ...state, rating, page: 1 })}
+        />
+      ) : null}
     </FilterDrawer>
   );
 }

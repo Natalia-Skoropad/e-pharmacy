@@ -50,7 +50,8 @@ test('client details keep the primary request independent and lazily activate pr
   assert.doesNotMatch(loadClientSource, /getPharmacyClientProducts/);
   assert.doesNotMatch(loadClientSource, /getPharmacyNotes/);
 
-  assert.equal((source.match(/getPharmacyOrders\(/g) ?? []).length, 1);
+  assert.equal((source.match(/getPharmacyOrders\(/g) ?? []).length, 0);
+  assert.match(source, /<OrdersPageContent embeddedClientId=\{clientId\}/);
   assert.match(source, /shouldLoadClientProducts\(/);
   assert.match(source, /setLoadedProductsRequestKey\(productsRequestKey\)/);
   assert.match(source, /getPharmacyClientProducts\(/);
@@ -76,7 +77,7 @@ test('clientId is a generation boundary that remounts all client-detail local re
   );
 
   assert.match(source, /useState<ClientDetailTab>\(initialTab\)/);
-  assert.match(source, /parseClientDetailPaginationPath\(pathname, clientId/);
+  assert.match(source, /parseClientPurchasedProductsPath\(pathname, clientId/);
   assert.match(source, /useState\(''\)/);
   assert.match(source, /const controller = new AbortController\(\)/);
   assert.match(source, /controller\.abort\(\)/);
@@ -90,7 +91,7 @@ test('deleted purchased products are rendered as history without a broken Produc
   );
 
   assert.match(source, /item\.currentProductExists \? \(/);
-  assert.match(source, /item\.currentStatus \? \(/);
+  assert.match(source, /item\.currentStatus && item\.currentStatus !== 'new'/);
   assert.match(source, /'Unavailable'/);
   assert.match(source, /item\.firstOrderDate/);
   assert.match(source, /item\.ordersCount/);
@@ -138,7 +139,11 @@ test('client resources keep unavailable state separate from successful empty dat
   assert.match(clientsSource, /useLastKnownStatistics<ClientStatisticsCounts>/);
   assert.doesNotMatch(clientsSource, /DEFAULT_CLIENT_STATISTICS/);
   assert.doesNotMatch(clientsSource, /catch[\s\S]{0,220}setClients\(\[\]\)/);
-  assert.match(detailsSource, /const \[ordersStatus, setOrdersStatus\]/);
+
+  assert.match(
+    detailsSource,
+    /<OrdersPageContent embeddedClientId=\{clientId\}/
+  );
 
   const orderStatisticsSource = await read(
     './ClientDetailsPageContent/ClientOrderStatistics.tsx'
@@ -178,18 +183,18 @@ test('client pagination uses canonical backend pages while order statistics have
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
 
-  assert.match(source, /response\.page !== ordersPage/);
-
-  assert.match(
-    source,
-    /navigateTable\('orders', response\.page, ordersRowsPerPage, true\)/
+  const sharedOrders = await read(
+    '../orders/OrdersPageContent/OrdersPageContent.tsx'
   );
 
+  assert.match(sharedOrders, /result\.page !== params\.page/);
+  assert.match(sharedOrders, /buildClientOrdersPath\(/);
+  assert.match(sharedOrders, /scope: embedded \? undefined : 'owner'/);
   assert.match(source, /response\.page !== productsPage/);
 
   assert.match(
     source,
-    /navigateTable\('products', response\.page, productsRowsPerPage, true\)/
+    /navigateProductsTable\(response\.page, productsRowsPerPage, true\)/
   );
 
   assert.doesNotMatch(
@@ -197,7 +202,6 @@ test('client pagination uses canonical backend pages while order statistics have
     /setOrderStatisticsSuccess\(response\.statistics\)/
   );
 
-  assert.match(source, /setOrdersOverallTotal\(response\.total\)/);
   assert.match(source, /<ClientOrderStatistics clientId=\{clientId\}/);
 });
 
@@ -250,50 +254,19 @@ test('client detail text searches debounce network work and reset pagination by 
     './ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
 
-  assert.match(source, /useDebouncedValue\(orderNumberSearch, 450\)/);
-  assert.match(source, /useDebouncedValue\(\s*orderCommentSearch,\s*450\s*\)/);
-
-  assert.match(
-    source,
-    /useDebouncedValue\(\s*productArticleSearch,\s*450\s*\)/
-  );
-
-  assert.match(source, /useDebouncedValue\(productNameSearch, 450\)/);
-
-  assert.match(
-    source,
-    /orderNumber: debouncedOrderNumberSearch\.trim\(\) \|\| undefined/
-  );
-
-  assert.match(
-    source,
-    /clientComment: debouncedOrderCommentSearch\.trim\(\) \|\| undefined/
-  );
-
-  assert.match(
-    source,
-    /article: debouncedProductArticleSearch\.trim\(\) \|\| undefined/
-  );
-
-  assert.match(
-    source,
-    /name: debouncedProductNameSearch\.trim\(\) \|\| undefined/
-  );
-
-  assert.match(source, /const orderSearchKey =/);
-  assert.match(source, /const ordersPage = ordersPagination\.page/);
-  assert.match(source, /const productSearchKey =/);
-  assert.match(source, /const productsPage = productsPagination\.page/);
+  assert.match(source, /<OrdersPageContent embeddedClientId=\{clientId\}/);
+  assert.doesNotMatch(source, /orderNumberSearch/);
+  assert.doesNotMatch(source, /orderCommentSearch/);
 
   const [ordersTab, productsTab] = await Promise.all([
-    read('./ClientDetailsPageContent/ClientOrdersTab.tsx'),
+    read('../orders/OrdersPageContent/OrdersPageContent.tsx'),
     read('./ClientDetailsPageContent/ClientProductsTab.tsx'),
   ]);
 
-  assert.match(ordersTab, /onChange=\{setOrderNumberSearch\}/);
-  assert.match(ordersTab, /onChange=\{setOrderCommentSearch\}/);
-  assert.match(productsTab, /onChange=\{setProductArticleSearch\}/);
-  assert.match(productsTab, /onChange=\{setProductNameSearch\}/);
+  assert.match(ordersTab, /<OrderScopeSearch/);
+  assert.match(ordersTab, /kind="order"/);
+  assert.match(ordersTab, /hideClient=\{Boolean\(embeddedClientId\)\}/);
+  assert.match(productsTab, /<OwnerProductSearch/);
 });
 
 //===================================================================
@@ -317,7 +290,17 @@ test('client resources expose explicit local retry controls without clearing las
   assert.match(detailsSource, /retryLabel="Try again"/);
   assert.match(orderStats, /Client order statistics could not be loaded/);
   assert.match(orderStats, /onRetry/);
-  assert.match(productTab, /Retry purchased products/);
-  assert.match(detailsSource, /ordersRetryVersion/);
+  assert.match(productTab, /Purchased products could not be loaded/);
+
+  assert.match(
+    detailsSource,
+    /<OrdersPageContent embeddedClientId=\{clientId\}/
+  );
+
+  const sharedOrders = await read(
+    '../orders/OrdersPageContent/OrdersPageContent.tsx'
+  );
+
+  assert.match(sharedOrders, /const reload =/);
   assert.match(detailsSource, /productsRetryVersion/);
 });

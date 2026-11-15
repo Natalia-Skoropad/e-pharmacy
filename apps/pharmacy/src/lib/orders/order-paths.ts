@@ -250,3 +250,21 @@ export function buildRelatedProductOrdersPath(
 
   return `${PHARMACY_ROUTES.PRODUCTS}/${productId.toLowerCase()}/related-orders${registryPath.slice(PHARMACY_ROUTES.ORDERS.length)}`;
 }
+
+//===================================================================
+
+/** A client's Orders tab is owner-wide, but always fixed to that client. */
+export function buildClientOrdersPath(
+  clientId: string,
+  filters: OrdersFilterState,
+  pagination: OrdersPagination = DEFAULT_ORDERS_PAGINATION
+): string {
+  if (!ID.test(clientId)) throw new TypeError('Invalid client ID.');
+
+  return buildOrdersPath(
+    { ...filters, clientId: '' },
+
+    pagination,
+    `/pharmacy/clients/${clientId.toLowerCase()}/orders`
+  );
+}

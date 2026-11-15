@@ -2,6 +2,9 @@
 
 import { useMemo, useState, type ChangeEvent } from 'react';
 import { Clock, Info, Mail, MapPin, Phone, Truck } from 'lucide-react';
+
+import { formatMoney } from '@e-pharmacy/utils/money';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useSearchParams } from 'next/navigation';
 
 import { DELIVERY_METHOD_LABELS } from '@e-pharmacy/config/presentation';
@@ -44,6 +47,7 @@ import {
 
 import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/metadata-copy';
 import { ROUTES } from '@/lib/routes';
+
 import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
@@ -163,27 +167,30 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     isDeliveryFormValid &&
     canUseSelectedPayment;
 
-  const { isSubmitting, handleSubmit } = useCheckoutSubmit({
-    isAuthenticated: canUseClientFeatures,
-    selectedOrderGroup,
-    paymentMethod,
-    deliveryMethod,
-    recipientNameValue: recipientName,
-    recipientPhoneValue: recipientPhone,
-    deliveryAddressValue: deliveryAddress,
-    comment,
-    canSubmit,
-    replaceCartFromServer,
-    setError,
-  });
+  const { isSubmitting, handleSubmit, priceChanges, dismissPriceChanges } =
+    useCheckoutSubmit({
+      isAuthenticated: canUseClientFeatures,
+      selectedOrderGroup,
+      paymentMethod,
+      deliveryMethod,
+      recipientNameValue: recipientName,
+      recipientPhoneValue: recipientPhone,
+      deliveryAddressValue: deliveryAddress,
+      comment,
+      canSubmit,
+      replaceCartFromServer,
+      setError,
+    });
 
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (isSubmitting) return;
+
     setDeliveryFieldValue('recipientName', event.target.value);
   };
 
   const handleRecipientPhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (isSubmitting) return;
+
     setDeliveryFieldValue('recipientPhone', event.target.value);
   };
 
@@ -191,11 +198,13 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     event: ChangeEvent<HTMLTextAreaElement>
   ) => {
     if (isSubmitting) return;
+
     setDeliveryFieldValue('deliveryAddress', event.target.value);
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     if (isSubmitting) return;
+
     setDeliveryFieldValue('comment', event.target.value);
   };
 
@@ -217,6 +226,32 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   return (
     <main className={css.page}>
+      <ConfirmationModal
+        isOpen={priceChanges.length > 0}
+        eyebrow="Price update"
+        title="Product price changed during checkout"
+        description={
+          <div>
+            <p>
+              Prices were updated while you were preparing this order. Your cart
+              now shows the current prices. Review the changes before confirming
+              the order again.
+            </p>
+            <ul>
+              {priceChanges.map((change, index) => (
+                <li key={`${change.productName}-${index}`}>
+                  {change.productName}: {formatMoney(change.previousPrice)} →{' '}
+                  {formatMoney(change.currentPrice)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        }
+        confirmLabel="Review updated prices"
+        cancelLabel="Close"
+        onConfirm={dismissPriceChanges}
+        onCancel={dismissPriceChanges}
+      />
       <p className="visually-hidden" role="status" aria-live="polite">
         {clipboard.statusMessage}
       </p>

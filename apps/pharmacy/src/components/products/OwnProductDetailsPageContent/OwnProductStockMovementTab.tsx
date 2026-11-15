@@ -70,16 +70,24 @@ import css from './OwnProductDetailsPageContent.module.css';
 //===================================================================
 
 function getPharmacyStockCounts(
-  offer: ProductOffer
+  offer: ProductOffer,
+  reservedOrderAmount: number
 ): OwnProductStatisticsCounts {
   const inStock = offer.totalQuantity ?? 0;
   const reserved = offer.reservedQuantity ?? 0;
   const available = offer.availableQuantity;
+  const availableAmount = available * offer.price;
 
+  // Reserved units are worth their frozen order prices; only unsold units
+  // are valued at the current offer price. The three cards must reconcile.
   return {
-    inStock: { quantity: inStock, amount: inStock * offer.price },
-    reserved: { quantity: reserved, amount: reserved * offer.price },
-    available: { quantity: available, amount: available * offer.price },
+    inStock: {
+      quantity: inStock,
+      amount: availableAmount + reservedOrderAmount,
+    },
+
+    reserved: { quantity: reserved, amount: reservedOrderAmount },
+    available: { quantity: available, amount: availableAmount },
     outOfStock: { quantity: offer.inStock ? 0 : 1 },
   };
 }
@@ -135,6 +143,10 @@ export function OwnProductStockMovementTab({
     []
   );
 
+  const [reservedOrderAmount, setReservedOrderAmount] = useState<number | null>(
+    null
+  );
+
   const [stockStatus, setStockStatus] = useState<ResourceStatus>('idle');
   const [lastLoadedKey, setLastLoadedKey] = useState<string | null>(null);
   const [stockRetry, setStockRetry] = useState(0);
@@ -166,6 +178,7 @@ export function OwnProductStockMovementTab({
         if (controller.signal.aborted) return;
 
         setStockMovements([...response.items]);
+        setReservedOrderAmount(response.stock.reservedOrderAmount ?? null);
         setStockEarliestCreatedAt(response.earliestCreatedAt);
 
         setStockLatestCreatedAt(
@@ -185,6 +198,7 @@ export function OwnProductStockMovementTab({
         if (controller.signal.aborted) return;
 
         setStockMovements([]);
+        setReservedOrderAmount(null);
         setStockEarliestCreatedAt(null);
         setStockLatestCreatedAt(null);
         setStockStatus('error');
@@ -369,18 +383,24 @@ export function OwnProductStockMovementTab({
             className={css.stockStatisticsCard}
             aria-label="Product stock statistics"
           >
-            {productLoading ? (
+            {productLoading || stockReadLoading ? (
               <StatsLoadingSkeleton
                 count={3}
                 columns={3}
                 tabletColumns={2}
                 label="Loading product stock statistics"
               />
-            ) : productError || !product ? (
+            ) : productError ||
+              !product ||
+              currentStockStatus === 'error' ||
+              reservedOrderAmount === null ? (
               <ProfileResourceState
                 variant="error"
                 title="Product stock statistics could not be loaded"
-                description={productError ?? 'Try loading the product again.'}
+                description={
+                  productError ??
+                  'Could not load the reserved order values. Try again.'
+                }
                 retryLabel="Try again"
                 onRetry={onRetryProduct}
               />
@@ -393,7 +413,10 @@ export function OwnProductStockMovementTab({
               />
             ) : (
               <OwnProductStatistics
-                counts={getPharmacyStockCounts(currentOffer)}
+                counts={getPharmacyStockCounts(
+                  currentOffer,
+                  reservedOrderAmount
+                )}
                 visibleKeys={['inStock', 'reserved', 'available']}
               />
             )}

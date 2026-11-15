@@ -1091,6 +1091,13 @@ export function parseProductStockMovementsResponse(
     context
   );
 
+  requireOptionalFields(
+    stock,
+    'stock balance',
+    { reservedOrderAmount: 'number' },
+    context
+  );
+
   const earliestCreatedAt = requireNullableString(
     record,
     'earliestCreatedAt',

@@ -134,22 +134,16 @@ test('client detail Orders and Products use URL-backed page/perPage and preserve
 
   const scope = read('lib/pharmacies/selected-pharmacy-scope.ts');
 
-  assert.match(route, /parseClientDetailPaginationSegments/);
+  const orders = read(
+    'components/orders/OrdersPageContent/OrdersPageContent.tsx'
+  );
+
+  assert.match(route, /parseOrdersSegments/);
+  assert.match(route, /buildClientOrdersPath/);
   assert.match(route, /resolveClientsRoute\(segments\)/);
   assert.match(route, /route\.kind === 'filters'/);
-  assert.match(route, /buildClientDetailPaginationPath/);
-
-  assert.match(
-    page,
-    /parseClientDetailPaginationPath\(pathname, clientId, 'orders'\)/
-  );
-
-  assert.match(
-    page,
-    /parseClientDetailPaginationPath\(pathname, clientId, 'products'\)/
-  );
-
-  assert.match(page, /onRowsPerPageChange=\{\(perPage\) => navigateTable/);
-  assert.match(page, /onPageChange=\{\(page\) => navigateTable/);
-  assert.match(scope, /detailPaging/);
+  assert.match(orders, /buildClientOrdersPath\(/);
+  assert.match(page, /<OrdersPageContent embeddedClientId=\{clientId\}/);
+  assert.match(page, /navigateProductsTable/);
+  assert.match(scope, /clientOrders/);
 });

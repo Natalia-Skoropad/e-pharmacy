@@ -76,7 +76,7 @@ test('audit photo previews do not expose fingerprint hashes and work with new re
 
   const view = file('apps/admin/src/components/activity/AuditDetailsModal.tsx');
 
-  assert.match(view, /<ShimmerImage/);
+  assert.match(view, /<ResponsivePhoto/);
   assert.match(view, /Historical photo preview unavailable/);
 });
 

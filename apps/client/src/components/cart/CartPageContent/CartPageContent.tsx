@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CircleAlert } from 'lucide-react';
 
 import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
@@ -73,6 +73,7 @@ function CartPageContent() {
     isRefreshing,
     error: cartLoadError,
     retryCart,
+    refreshCart,
     pendingItemIds,
     isClearing,
     updateItemQuantity,
@@ -80,6 +81,7 @@ function CartPageContent() {
     clearAllCart,
     removePharmacyOrder,
   } = useCart();
+
   const [error, setError] = useState('');
 
   const [continueShoppingPharmacy, setContinueShoppingPharmacy] =
@@ -92,6 +94,23 @@ function CartPageContent() {
     | null
   >(null);
 
+  // Cart prices are read from current pharmacy offers, not snapshots.
+  // Refresh on entry and when returning to the tab after a possible reprice.
+  useEffect(() => {
+    if (!canUseCart) return;
+
+    void refreshCart().catch(() => undefined);
+
+    const refreshOnFocus = () => {
+      if (document.visibilityState === 'visible')
+        void refreshCart().catch(() => undefined);
+    };
+
+    window.addEventListener('focus', refreshOnFocus);
+
+    return () => window.removeEventListener('focus', refreshOnFocus);
+  }, [canUseCart, refreshCart]);
+
   const isUpdating = pendingItemIds.size > 0 || isClearing;
   const visibleError = error || cartLoadError;
 
@@ -100,6 +119,7 @@ function CartPageContent() {
 
     try {
       setError('');
+
       await updateItemQuantity(cartItemId, { quantity });
     } catch (error) {
       setError(
@@ -116,6 +136,7 @@ function CartPageContent() {
 
     try {
       setError('');
+
       await removeItemFromCart(cartItemId);
     } catch (error) {
       setError(
@@ -132,6 +153,7 @@ function CartPageContent() {
 
     try {
       setError('');
+
       await clearAllCart();
     } catch (error) {
       setError(
@@ -144,6 +166,7 @@ function CartPageContent() {
   };
 
   const visibleCart = canUseCart ? cart : EMPTY_CART;
+
   const shouldShowLoading =
     isBootstrapping || (canUseCart && (!isLoaded || isLoading));
 
@@ -157,6 +180,7 @@ function CartPageContent() {
 
     try {
       setError('');
+
       await removePharmacyOrder(pharmacyId);
     } catch (error) {
       setError(

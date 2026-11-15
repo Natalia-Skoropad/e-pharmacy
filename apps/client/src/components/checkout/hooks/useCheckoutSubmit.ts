@@ -57,6 +57,15 @@ export function useCheckoutSubmit({
 }: UseCheckoutSubmitParams) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [priceChanges, setPriceChanges] = useState<
+    readonly Readonly<{
+      productName: string;
+      previousPrice: number;
+      currentPrice: number;
+    }>[]
+  >([]);
+
   const submitLockRef = useRef(false);
   const activeControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
@@ -77,7 +86,9 @@ export function useCheckoutSubmit({
     if (!selectedOrderGroup) return;
 
     submitLockRef.current = true;
+
     const controller = new AbortController();
+
     activeControllerRef.current?.abort();
     activeControllerRef.current = controller;
 
@@ -88,9 +99,11 @@ export function useCheckoutSubmit({
       setError('');
 
       const latestCartResponse = await getCart({ signal: controller.signal });
+
       if (controller.signal.aborted) return;
 
       const latestGroups = groupCartByPharmacy(latestCartResponse.cart);
+
       const latestOrderGroup = latestGroups.find(
         (group) => group.pharmacyId === selectedOrderGroup.pharmacyId
       );
@@ -98,17 +111,44 @@ export function useCheckoutSubmit({
       if (!latestOrderGroup) {
         replaceCartFromServer(latestCartResponse.cart);
         setError(APP_ERROR_MESSAGES.checkout.staleOrder);
+
         return;
       }
 
       const shownGroupFingerprint =
         createCheckoutGroupFingerprint(selectedOrderGroup);
+
       const latestGroupFingerprint =
         createCheckoutGroupFingerprint(latestOrderGroup);
 
       if (shownGroupFingerprint !== latestGroupFingerprint) {
+        const oldByOffer = new Map(
+          selectedOrderGroup.items.map((item) => [item.productOfferId, item])
+        );
+
+        const changes = latestOrderGroup.items.flatMap((item) => {
+          const previous = oldByOffer.get(item.productOfferId);
+
+          return previous && previous.unitPrice !== item.unitPrice
+            ? [
+                {
+                  productName: item.product.name,
+                  previousPrice: previous.unitPrice,
+                  currentPrice: item.unitPrice,
+                },
+              ]
+            : [];
+        });
+
         replaceCartFromServer(latestCartResponse.cart);
+
+        if (changes.length > 0) {
+          setPriceChanges(changes);
+          return;
+        }
+
         setError(APP_ERROR_MESSAGES.checkout.cartChanged);
+
         return;
       }
 
@@ -117,10 +157,12 @@ export function useCheckoutSubmit({
       if (stockError) {
         replaceCartFromServer(latestCartResponse.cart);
         setError(stockError);
+
         return;
       }
 
       const trimmedComment = comment.trim();
+
       const orderPayload: CheckoutOrderPayload =
         deliveryMethod === 'postal_delivery'
           ? {
@@ -129,11 +171,13 @@ export function useCheckoutSubmit({
               groupFingerprint: latestGroupFingerprint,
               paymentMethod,
               deliveryMethod,
+
               deliveryDetails: {
                 recipientName: recipientNameValue.trim(),
                 recipientPhone: normalizePhoneInput(recipientPhoneValue),
                 address: deliveryAddressValue.trim(),
               },
+
               ...(trimmedComment ? { comment: trimmedComment } : {}),
             }
           : {
@@ -142,6 +186,7 @@ export function useCheckoutSubmit({
               groupFingerprint: latestGroupFingerprint,
               paymentMethod,
               deliveryMethod,
+
               ...(trimmedComment ? { comment: trimmedComment } : {}),
             };
 
@@ -163,16 +208,44 @@ export function useCheckoutSubmit({
       ) {
         try {
           const refreshedCart = await getCart({ signal: controller.signal });
+
           if (!controller.signal.aborted && mountedRef.current) {
+            const refreshedGroup = groupCartByPharmacy(refreshedCart.cart).find(
+              (group) => group.pharmacyId === selectedOrderGroup.pharmacyId
+            );
+
+            const oldByOffer = new Map(
+              selectedOrderGroup.items.map((item) => [
+                item.productOfferId,
+                item,
+              ])
+            );
+
+            const changes =
+              refreshedGroup?.items.flatMap((item) => {
+                const previous = oldByOffer.get(item.productOfferId);
+
+                return previous && previous.unitPrice !== item.unitPrice
+                  ? [
+                      {
+                        productName: item.product.name,
+                        previousPrice: previous.unitPrice,
+                        currentPrice: item.unitPrice,
+                      },
+                    ]
+                  : [];
+              }) ?? [];
+
             replaceCartFromServer(refreshedCart.cart);
+
+            if (changes.length > 0) setPriceChanges(changes);
+            else setError(APP_ERROR_MESSAGES.checkout.cartChanged);
           }
         } catch {
-          // Preserve the checkout conflict as the primary user-facing error.
+          if (!controller.signal.aborted && mountedRef.current)
+            setError(APP_ERROR_MESSAGES.checkout.cartChanged);
         }
 
-        if (!controller.signal.aborted && mountedRef.current) {
-          setError(APP_ERROR_MESSAGES.checkout.cartChanged);
-        }
         return;
       }
 
@@ -182,10 +255,13 @@ export function useCheckoutSubmit({
           backendCodeMessages: {
             [CHECKOUT_GROUP_MISSING_ERROR_CODE]:
               APP_ERROR_MESSAGES.checkout.groupMissing,
+
             [STOCK_CHANGED_ERROR_CODE]:
               APP_ERROR_MESSAGES.checkout.stockChanged,
+
             [PHARMACY_UNAVAILABLE_ERROR_CODE]:
               APP_ERROR_MESSAGES.checkout.pharmacyUnavailable,
+
             [PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE]:
               APP_ERROR_MESSAGES.checkout.paymentUnavailable,
           },
@@ -206,5 +282,7 @@ export function useCheckoutSubmit({
   return {
     isSubmitting,
     handleSubmit,
+    priceChanges,
+    dismissPriceChanges: () => setPriceChanges([]),
   };
 }

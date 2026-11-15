@@ -145,6 +145,14 @@ function appendRouteParam(basePath: string, value: EntityId): string {
 
 //===================================================================
 
+export function getPharmacyNewOrderPath(pharmacyId: EntityId): string {
+  if (!isValidObjectId(pharmacyId)) throw new TypeError('Invalid pharmacy ID.');
+
+  return `${PHARMACY_ROUTES.ORDER_NEW}/pharmacy-id-${pharmacyId.toLowerCase()}`;
+}
+
+//===================================================================
+
 export function getPharmacyOrderPath(orderId: EntityId): string {
   return appendRouteParam(PHARMACY_ROUTES.ORDERS, orderId);
 }

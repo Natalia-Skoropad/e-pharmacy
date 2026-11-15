@@ -304,3 +304,66 @@ test('canonical stock-movement URL filters remain owner-scoped without global ph
     assert.equal(isLegacyOperationalPharmacyPath(path), true, path);
   }
 });
+
+//===================================================================
+
+test('related product orders remain owner-scoped with canonical nested filters', () => {
+  for (const segments of [
+    'status-new',
+    `client-id-${B}`,
+    `order-id-${B}`,
+    'date-from-2026-07-13/date-to-2026-07-16',
+    'per-page-50',
+    'page-2',
+    `pharmacy-id-${B}/status-in-progress`,
+  ]) {
+    const pathname = `/pharmacy/products/${A}/related-orders/${segments}`;
+
+    assert.equal(isOwnerProductDetailPath(pathname), true, pathname);
+    assert.equal(isOperationalPharmacyPath(pathname), false, pathname);
+  }
+
+  assert.equal(
+    isOwnerProductDetailPath(
+      `/pharmacy/products/${A}/related-orders/not-a-filter`
+    ),
+    false
+  );
+});
+
+//===================================================================
+
+test('new-order route binds the explicit pharmacy instead of the saved current selection', () => {
+  const path = `/pharmacy/orders/new/pharmacy-id-${B}`;
+
+  assert.equal(getPharmacyIdFromDetailPath(path), B);
+
+  assert.deepEqual(readExplicitPharmacySelection(path, `pharmacyId=${A}`), {
+    id: B,
+    invalid: false,
+  });
+
+  assert.equal(isOperationalPharmacyPath(path), true);
+  assert.equal(isOwnerOrdersListPath(path), false);
+});
+
+//===================================================================
+
+test('client Orders filters remain inside the client card and reject foreign client overrides', () => {
+  const base = `/pharmacy/clients/${A}/orders`;
+
+  for (const path of [
+    `${base}/status-new`,
+    `${base}/order-id-${B}`,
+    `${base}/delivery-pickup`,
+    `${base}/payment-bank-transfer`,
+    `${base}/created-by-client`,
+    `${base}/date-from-2026-07-01/date-to-2026-07-16`,
+    `${base}/per-page-50/page-2`,
+  ]) {
+    assert.equal(isOwnerClientDetailPath(path), true, path);
+    assert.equal(isOperationalPharmacyPath(path), false, path);
+  }
+
+  assert.equal(isOwnerClientDetailPath(`${base}/client-id-${B}`), false);
+});

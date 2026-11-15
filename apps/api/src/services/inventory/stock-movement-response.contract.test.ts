@@ -24,4 +24,24 @@ test('stock movement response keeps the canonical pagination envelope expected b
   assert.match(serviceSource, /perPage: Math\.max\(rows\.length, 1\)/);
   assert.match(serviceSource, /total: rows\.length/);
   assert.match(serviceSource, /totalPages: rows\.length > 0 \? 1 : 0/);
+  assert.match(serviceSource, /status: \{ \$in: \['new', 'in_progress'\] \}/);
+  assert.match(serviceSource, /item\.quantity \* item\.unitPrice/);
+  assert.match(serviceSource, /reservedOrderAmount,/);
+});
+
+//===================================================================
+
+test('reserved valuation uses fixed order prices rather than the current offer price', async () => {
+  const source = await readFile(
+    resolve(
+      process.cwd(),
+      'src/services/inventory/stock-movement-read.service.ts'
+    ),
+    'utf8'
+  );
+
+  assert.match(source, /'items\.productOfferId': currentOffer\._id/);
+  assert.match(source, /status: \{ \$in: \['new', 'in_progress'\] \}/);
+  assert.match(source, /item\.quantity \* item\.unitPrice/);
+  assert.match(source, /reservedOrderAmount,/);
 });

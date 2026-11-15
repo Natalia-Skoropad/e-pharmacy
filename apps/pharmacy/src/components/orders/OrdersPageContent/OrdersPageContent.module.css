@@ -30,6 +30,12 @@
   min-width: 0;
 }
 
+.searchGridClient {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
 .searchAction {
   display: flex;
   align-items: flex-end;
@@ -72,6 +78,13 @@
 
   .searchGrid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 140px;
+    align-items: end;
+  }
+
+  .searchGridClient {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 12px;
     align-items: end;
   }
 

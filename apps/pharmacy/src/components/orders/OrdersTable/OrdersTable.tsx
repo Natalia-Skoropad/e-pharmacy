@@ -38,6 +38,7 @@ type OrdersTableProps = Readonly<{
   onOpenOrder?: (order: PharmacyOrderRow) => void;
   showPharmacy?: boolean;
   productId?: string;
+  hideClient?: boolean;
 }>;
 
 //===================================================================
@@ -60,9 +61,10 @@ function OrdersTable({
   onOpenOrder,
   showPharmacy = false,
   productId,
+  hideClient = false,
 }: OrdersTableProps) {
-  const columns = useMemo<Array<DataTableColumn<PharmacyOrderRow>>>(
-    () => [
+  const columns = useMemo<Array<DataTableColumn<PharmacyOrderRow>>>(() => {
+    const allColumns: Array<DataTableColumn<PharmacyOrderRow>> = [
       {
         key: 'orderDate',
         title: <TableHeaderTitle parts={['Order', 'date']} />,
@@ -220,9 +222,28 @@ function OrdersTable({
           <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
         ),
       },
-    ],
-    [productId, showPharmacy, onOpenOrder]
-  );
+    ];
+
+    return allColumns.filter((column) => {
+      const key = String(column.key);
+
+      if (hideClient && (key === 'clientPhoto' || key === 'client'))
+        return false;
+
+      if (
+        productId &&
+        [
+          'deliveryMethod',
+          'paymentMethod',
+          'clientComment',
+          'createdByType',
+        ].includes(key)
+      )
+        return false;
+
+      return true;
+    });
+  }, [hideClient, productId, showPharmacy, onOpenOrder]);
 
   return (
     <DataTable

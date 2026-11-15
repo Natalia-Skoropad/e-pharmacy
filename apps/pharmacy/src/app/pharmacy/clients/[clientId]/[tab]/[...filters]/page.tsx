@@ -10,13 +10,6 @@ import {
 } from '@/lib/clients/client-paths';
 
 import {
-  buildClientDetailPaginationPath,
-  parseClientDetailPaginationSegments,
-  type ClientDetailListTab,
-  type ClientDetailPagination,
-} from '@/lib/clients/client-detail-pagination';
-
-import {
   parseClientPurchasedProductsSegments,
   buildClientPurchasedProductsPath,
 } from '@/lib/clients/client-purchased-products-paths';
@@ -27,6 +20,13 @@ import {
 } from '@/lib/statistics/sales-chart-paths';
 
 import { getPharmacyClientPath } from '@/lib/routes';
+
+import {
+  buildClientOrdersPath,
+  isOrdersFilterRoute,
+  parseOrdersSegments,
+  parseOrdersPaginationSegments,
+} from '@/lib/orders/order-paths';
 
 import { ClientDetailsPageContent } from '@/components/clients/ClientDetailsPageContent';
 import type { ClientDetailTab } from '@/components/clients/client-detail-resource-policy';
@@ -91,13 +91,16 @@ export default async function ClientDetailPaginatedTab({
         state.pagination
       );
     } else {
-      const pagination: ClientDetailPagination =
-        parseClientDetailPaginationSegments(filters);
+      if (
+        !isOrdersFilterRoute(filters) ||
+        filters.some((part) => part.startsWith('client-id-'))
+      )
+        notFound();
 
-      canonical = buildClientDetailPaginationPath(
+      canonical = buildClientOrdersPath(
         clientId,
-        tab as ClientDetailListTab,
-        pagination
+        parseOrdersSegments({ filters }),
+        parseOrdersPaginationSegments({ filters })
       );
     }
   } catch {

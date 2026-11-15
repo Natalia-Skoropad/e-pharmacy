@@ -10,6 +10,7 @@ const {
   getPharmacyAllProductPath,
   getPharmacyClientPath,
   getPharmacyOrderPath,
+  getPharmacyNewOrderPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
   getOwnedPharmacyPath,
@@ -114,6 +115,7 @@ test('builds dynamic routes only from validated entity IDs', () => {
 test('rejects empty and malformed dynamic route IDs', () => {
   for (const builder of [
     getPharmacyOrderPath,
+    getPharmacyNewOrderPath,
     getPharmacyClientPath,
     getPharmacyProductPath,
     getPharmacyAllProductPath,
@@ -137,4 +139,13 @@ test('rejects empty and malformed dynamic route IDs', () => {
 
 test('does not expose a route builder for a missing request edit page', () => {
   assert.equal('getPharmacyRequestEditPath' in pharmacyRoutes, false);
+});
+
+//===================================================================
+
+test('new order URL is explicitly bound to the chosen pharmacy', () => {
+  assert.equal(
+    getPharmacyNewOrderPath(ENTITY_IDS.request),
+    `/pharmacy/orders/new/pharmacy-id-${ENTITY_IDS.request}`
+  );
 });

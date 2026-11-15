@@ -18,7 +18,12 @@ import {
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 
-import { PHARMACY_ROUTES, getPharmacyOrderPath } from '@/lib/routes';
+import {
+  PHARMACY_ROUTES,
+  getPharmacyOrderPath,
+  getPharmacyNewOrderPath,
+} from '@/lib/routes';
+
 import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
@@ -33,6 +38,7 @@ import {
   buildOrdersPath,
   buildEmbeddedOrdersPath,
   buildRelatedProductOrdersPath,
+  buildClientOrdersPath,
   parseOrdersSegments,
   parseOrdersPaginationSegments,
   DEFAULT_ORDERS_PAGINATION,
@@ -65,6 +71,7 @@ type OrdersPageContentProps = Readonly<{
   embeddedPharmacyId?: string;
   embeddedReady?: boolean;
   relatedProductId?: string;
+  embeddedClientId?: string;
   initialFilters?: OrdersFilterState;
   initialPagination?: OrdersPagination;
 }>;
@@ -77,6 +84,7 @@ function OrdersPageContent({
   embeddedPharmacyId,
   embeddedReady = true,
   relatedProductId,
+  embeddedClientId,
   initialFilters = DEFAULT_ORDERS_FILTERS,
   initialPagination = DEFAULT_ORDERS_PAGINATION,
 }: OrdersPageContentProps) {
@@ -89,11 +97,13 @@ function OrdersPageContent({
   // Both registries use the pathname as the single source of truth. Embedded
   // routes have their own base path and an implicit (non-editable) pharmacy ID.
   const routeState = useMemo(() => {
-    const base = relatedProductId
-      ? `${PHARMACY_ROUTES.PRODUCTS}/${relatedProductId}/related-orders`
-      : embedded && embeddedPharmacyId
-        ? `${PHARMACY_ROUTES.PHARMACIES}/${embeddedPharmacyId}/orders`
-        : PHARMACY_ROUTES.ORDERS;
+    const base = embeddedClientId
+      ? `${PHARMACY_ROUTES.CLIENTS}/${embeddedClientId}/orders`
+      : relatedProductId
+        ? `${PHARMACY_ROUTES.PRODUCTS}/${relatedProductId}/related-orders`
+        : embedded && embeddedPharmacyId
+          ? `${PHARMACY_ROUTES.PHARMACIES}/${embeddedPharmacyId}/orders`
+          : PHARMACY_ROUTES.ORDERS;
 
     const segments =
       pathname === base
@@ -107,9 +117,12 @@ function OrdersPageContent({
       : initialFilters;
 
     return {
-      filters: embedded
-        ? { ...parsed, pharmacyId: embeddedPharmacyId ?? '' }
-        : parsed,
+      filters: embeddedClientId
+        ? { ...parsed, clientId: embeddedClientId }
+        : embedded
+          ? { ...parsed, pharmacyId: embeddedPharmacyId ?? '' }
+          : parsed,
+
       pagination: segments
         ? parseOrdersPaginationSegments({ filters: segments })
         : initialPagination,
@@ -117,6 +130,7 @@ function OrdersPageContent({
   }, [
     embedded,
     embeddedPharmacyId,
+    embeddedClientId,
     relatedProductId,
     initialFilters,
     initialPagination,
@@ -145,11 +159,17 @@ function OrdersPageContent({
       perPage: nextPerPage as OrdersPagination['perPage'],
     };
 
-    const nextPath = relatedProductId
-      ? buildRelatedProductOrdersPath(relatedProductId, nextFilters, pagination)
-      : embedded && embeddedPharmacyId
-        ? buildEmbeddedOrdersPath(embeddedPharmacyId, nextFilters, pagination)
-        : buildOrdersPath(nextFilters, pagination);
+    const nextPath = embeddedClientId
+      ? buildClientOrdersPath(embeddedClientId, nextFilters, pagination)
+      : relatedProductId
+        ? buildRelatedProductOrdersPath(
+            relatedProductId,
+            nextFilters,
+            pagination
+          )
+        : embedded && embeddedPharmacyId
+          ? buildEmbeddedOrdersPath(embeddedPharmacyId, nextFilters, pagination)
+          : buildOrdersPath(nextFilters, pagination);
 
     if (nextPath !== pathname) router.push(nextPath, { scroll: false });
   };
@@ -159,7 +179,7 @@ function OrdersPageContent({
       scope: embedded ? undefined : 'owner',
       productId: relatedProductId || undefined,
       pharmacyId: filters.pharmacyId || undefined,
-      clientId: filters.clientId || undefined,
+      clientId: embeddedClientId || filters.clientId || undefined,
       orderId: filters.orderId || undefined,
       orderNumber: filters.orderNumber.trim() || undefined,
       page,
@@ -178,7 +198,7 @@ function OrdersPageContent({
       createdByType:
         filters.createdByType === 'all' ? undefined : filters.createdByType,
     }),
-    [embedded, filters, page, perPage, relatedProductId]
+    [embedded, embeddedClientId, filters, page, perPage, relatedProductId]
   );
 
   const requestKey = JSON.stringify({ params, retryVersion });
@@ -195,17 +215,22 @@ function OrdersPageContent({
         if (controller.signal.aborted) return;
 
         if (result.page !== params.page) {
-          const canonical = relatedProductId
-            ? buildRelatedProductOrdersPath(relatedProductId, filters, {
+          const canonical = embeddedClientId
+            ? buildClientOrdersPath(embeddedClientId, filters, {
                 page: result.page,
                 perPage,
               })
-            : embedded && embeddedPharmacyId
-              ? buildEmbeddedOrdersPath(embeddedPharmacyId, filters, {
+            : relatedProductId
+              ? buildRelatedProductOrdersPath(relatedProductId, filters, {
                   page: result.page,
                   perPage,
                 })
-              : buildOrdersPath(filters, { page: result.page, perPage });
+              : embedded && embeddedPharmacyId
+                ? buildEmbeddedOrdersPath(embeddedPharmacyId, filters, {
+                    page: result.page,
+                    perPage,
+                  })
+                : buildOrdersPath(filters, { page: result.page, perPage });
 
           router.replace(canonical, { scroll: false });
 
@@ -235,6 +260,7 @@ function OrdersPageContent({
   }, [
     embedded,
     embeddedPharmacyId,
+    embeddedClientId,
     embeddedReady,
     filters,
     params,
@@ -286,23 +312,59 @@ function OrdersPageContent({
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.date.from || filters.date.to),
-    Boolean(filters.clientId),
+    !embeddedClientId && Boolean(filters.clientId),
     Boolean(filters.orderId || filters.orderNumber),
-    filters.deliveryMethod !== 'all',
-    filters.paymentMethod !== 'all',
+    !relatedProductId && filters.deliveryMethod !== 'all',
+    !relatedProductId && filters.paymentMethod !== 'all',
     filters.status !== 'all',
-    filters.createdByType !== 'all'
+    !relatedProductId && filters.createdByType !== 'all'
   );
 
   const hasActiveFilters = activeFiltersCount > 0;
-  const RootElement = embedded || relatedProductId ? 'section' : 'main';
+
+  const RootElement =
+    embedded || relatedProductId || embeddedClientId ? 'section' : 'main';
+
   const reload = () => setRetryVersion((value) => value + 1);
 
   return (
     <RootElement
       className={css.page}
-      aria-label={relatedProductId ? 'Related orders' : 'Orders'}
+      aria-label={
+        relatedProductId
+          ? 'Related orders'
+          : embeddedClientId
+            ? 'Client orders'
+            : 'Orders'
+      }
     >
+      {relatedProductId ? (
+        <div className={css.pharmacySelector}>
+          <OwnedPharmacySearch
+            id="related-orders-pharmacy-search"
+            label="Select pharmacy"
+            value={filters.pharmacyId}
+            explainStatistics
+            statisticsContext="orders"
+            onChange={(pharmacyId) =>
+              navigate({
+                ...filters,
+                pharmacyId,
+                clientId: '',
+                orderId: '',
+                orderNumber: '',
+              })
+            }
+          />
+        </div>
+      ) : null}
+      {embeddedClientId ? (
+        <ProfileSectionHeader
+          title="Orders"
+          description="View orders placed by this client at your pharmacies."
+          icon={<ShoppingBag size={21} aria-hidden="true" />}
+        />
+      ) : null}
       {embedded ? (
         <ProfileSectionHeader
           title="Orders"
@@ -310,97 +372,109 @@ function OrdersPageContent({
           icon={<ShoppingBag size={21} aria-hidden="true" />}
         />
       ) : null}
-      <section
-        className={css.card}
-        aria-label="Order statistics and pharmacy selection"
-      >
-        {!embedded && !relatedProductId ? (
-          <PageHeader
-            title="Orders"
-            titleId="orders-page-title"
-            icon={<ShoppingBag size={23} aria-hidden="true" />}
-          />
-        ) : null}
-        {!embedded ? (
-          <div className={css.pharmacySelector}>
-            <OwnedPharmacySearch
-              id="orders-pharmacy-search"
-              label="Select pharmacy"
-              value={filters.pharmacyId}
-              explainStatistics
-              statisticsContext="orders"
-              onChange={(pharmacyId) =>
-                navigate({
-                  ...filters,
-                  pharmacyId,
-                  clientId: '',
-                  orderId: '',
-                  orderNumber: '',
-                })
-              }
+      {!embeddedClientId ? (
+        <section
+          className={css.card}
+          aria-label="Order statistics and pharmacy selection"
+        >
+          {!embedded && !relatedProductId ? (
+            <PageHeader
+              title="Orders"
+              titleId="orders-page-title"
+              icon={<ShoppingBag size={23} aria-hidden="true" />}
             />
-          </div>
-        ) : null}
-        <div className={css.orderStatistics}>
-          {isLoading ? (
-            <StatsLoadingSkeleton
-              count={4}
-              columns={4}
-              tabletColumns={2}
-              label="Loading order statistics"
-            />
-          ) : isError ? (
-            <ProfileResourceState
-              variant="error"
-              title="Order statistics could not be loaded"
-              description="Order statistics are temporarily unavailable."
-              retryLabel="Try again"
-              sideActionOnDesktop
-              onRetry={reload}
-            />
-          ) : (
-            <OrderStatistics
-              counts={resource.statistics}
-              activeStatus={filters.status === 'all' ? null : filters.status}
-              getStatusHref={(status) => {
-                const next = {
-                  ...filters,
-                  status: filters.status === status ? ('all' as const) : status,
-                };
+          ) : null}
+          {!embedded && !relatedProductId ? (
+            <div className={css.pharmacySelector}>
+              <OwnedPharmacySearch
+                id="orders-pharmacy-search"
+                label="Select pharmacy"
+                value={filters.pharmacyId}
+                explainStatistics
+                statisticsContext="orders"
+                onChange={(pharmacyId) =>
+                  navigate({
+                    ...filters,
+                    pharmacyId,
+                    clientId: '',
+                    orderId: '',
+                    orderNumber: '',
+                  })
+                }
+              />
+            </div>
+          ) : null}
+          <div className={css.orderStatistics}>
+            {isLoading ? (
+              <StatsLoadingSkeleton
+                count={4}
+                columns={4}
+                tabletColumns={2}
+                label="Loading order statistics"
+              />
+            ) : isError ? (
+              <ProfileResourceState
+                variant="error"
+                title="Order statistics could not be loaded"
+                description="Order statistics are temporarily unavailable."
+                retryLabel="Try again"
+                sideActionOnDesktop
+                onRetry={reload}
+              />
+            ) : (
+              <OrderStatistics
+                counts={resource.statistics}
+                activeStatus={filters.status === 'all' ? null : filters.status}
+                getStatusHref={(status) => {
+                  const next = {
+                    ...filters,
+                    status:
+                      filters.status === status ? ('all' as const) : status,
+                  };
 
-                return relatedProductId
-                  ? buildRelatedProductOrdersPath(relatedProductId, next, {
-                      page: 1,
-                      perPage,
-                    })
-                  : embedded && embeddedPharmacyId
-                    ? buildEmbeddedOrdersPath(embeddedPharmacyId, next, {
+                  return embeddedClientId
+                    ? buildClientOrdersPath(embeddedClientId, next, {
                         page: 1,
                         perPage,
                       })
-                    : buildOrdersPath(next, { page: 1, perPage });
-              }}
-              className={css.statisticsGrid}
-            />
-          )}
-        </div>
-      </section>
+                    : relatedProductId
+                      ? buildRelatedProductOrdersPath(relatedProductId, next, {
+                          page: 1,
+                          perPage,
+                        })
+                      : embedded && embeddedPharmacyId
+                        ? buildEmbeddedOrdersPath(embeddedPharmacyId, next, {
+                            page: 1,
+                            perPage,
+                          })
+                        : buildOrdersPath(next, { page: 1, perPage });
+                }}
+                className={css.statisticsGrid}
+              />
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section className={css.card} aria-label="Orders search">
-        <div className={css.searchGrid}>
-          <OrderScopeSearch
-            kind="client"
-            pharmacyId={filters.pharmacyId}
-            productId={relatedProductId}
-            relatedId={filters.orderId}
-            value={filters.clientId}
-            onChange={(clientId) => navigate({ ...filters, clientId })}
-          />
+        <div
+          className={embeddedClientId ? css.searchGridClient : css.searchGrid}
+        >
+          {!embeddedClientId ? (
+            <OrderScopeSearch
+              kind="client"
+              pharmacyId={filters.pharmacyId}
+              productId={relatedProductId}
+              relatedId={filters.orderId}
+              value={filters.clientId}
+              onChange={(clientId) => navigate({ ...filters, clientId })}
+            />
+          ) : null}
           <OrderScopeSearch
             kind="order"
             pharmacyId={filters.pharmacyId}
             productId={relatedProductId}
-            relatedId={filters.clientId}
+            relatedId={embeddedClientId ?? filters.clientId}
             value={filters.orderId}
             onChange={(orderId) =>
               navigate({ ...filters, orderId, orderNumber: '' })
@@ -436,7 +510,7 @@ function OrdersPageContent({
               className={css.countLabel}
             />
           ) : null}
-          {filters.pharmacyId && !relatedProductId ? (
+          {filters.pharmacyId ? (
             <Button
               className={css.createButton}
               type="button"
@@ -445,7 +519,7 @@ function OrdersPageContent({
               onClick={() =>
                 selectCurrentPharmacy(
                   filters.pharmacyId,
-                  PHARMACY_ROUTES.ORDER_NEW
+                  getPharmacyNewOrderPath(filters.pharmacyId)
                 )
               }
             >
@@ -473,7 +547,8 @@ function OrdersPageContent({
                 ? 'No orders found for the selected filters.'
                 : 'No orders yet for these pharmacies.'
             }
-            showPharmacy={!filters.pharmacyId}
+            showPharmacy={Boolean(embeddedClientId) || !filters.pharmacyId}
+            hideClient={Boolean(embeddedClientId)}
             productId={relatedProductId}
             onOpenOrder={(order) => {
               const target = getPharmacyOrderPath(order.id);
@@ -499,6 +574,7 @@ function OrdersPageContent({
           filters={filters}
           hasActiveFilters={hasActiveFilters}
           availableDates={resource.availableOrderDates}
+          relatedProduct={Boolean(relatedProductId)}
           onChange={(next) => navigate(next)}
           onClose={() => setFiltersOpen(false)}
           onReset={() =>

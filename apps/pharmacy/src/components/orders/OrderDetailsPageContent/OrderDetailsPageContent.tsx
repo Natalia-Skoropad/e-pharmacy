@@ -120,6 +120,7 @@ import {
 } from '@/lib/orders/orders';
 
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser/pharmacy.api';
+import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 import { getProductImageSrc } from '@/lib/products/product-images';
@@ -152,6 +153,7 @@ function getCreateOrderPayloadKey(
 ): string {
   return JSON.stringify({
     ...payload,
+
     items: [...payload.items].sort((left, right) =>
       left.productOfferId.localeCompare(right.productOfferId)
     ),
@@ -169,6 +171,7 @@ function createClientRequestId(): string {
 type OrderDetailsPageContentProps = Readonly<{
   orderId?: string;
   mode?: 'details' | 'create';
+  pharmacyId?: string;
 }>;
 
 type PendingStatusChange = Readonly<{
@@ -1207,6 +1210,7 @@ function getOrderDetailsLoadError(
 
 function OrderDetailsPageContent({
   orderId,
+  pharmacyId,
   mode = 'details',
 }: OrderDetailsPageContentProps) {
   const router = useRouter();
@@ -1220,7 +1224,8 @@ function OrderDetailsPageContent({
     pharmacyProfile?.status
   );
 
-  const createLockedStatus = isCreateMode ? pharmacyLockedStatus : null;
+  const createLockedStatus =
+    isCreateMode && !pharmacyId ? pharmacyLockedStatus : null;
 
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
@@ -1267,9 +1272,11 @@ function OrderDetailsPageContent({
   const resourceGenerationRef = useRef(0);
 
   useEffect(() => {
-    if (isCreateMode && (isProfileLoading || createLockedStatus)) return;
+    if (isCreateMode && !pharmacyId && (isProfileLoading || createLockedStatus))
+      return;
 
     const generation = resourceGenerationRef.current + 1;
+
     resourceGenerationRef.current = generation;
 
     const controller = new AbortController();
@@ -1278,18 +1285,38 @@ function OrderDetailsPageContent({
     async function loadPage() {
       try {
         if (isCreateMode) {
-          if (!pharmacyProfile) {
-            throw new Error('Pharmacy profile could not be loaded.');
+          const targetPharmacyId = pharmacyId ?? pharmacyProfile?.id;
+
+          if (!targetPharmacyId) {
+            throw new Error('Select a pharmacy before creating an order.');
           }
 
-          const [clientsResponse, checkoutDetailsResponse] = await Promise.all([
-            getPharmacyClients(
-              { page: 1, perPage: 200, status: 'active' },
-              requestOptions
-            ),
+          const [clientsResponse, checkoutDetailsResponse, selectedPharmacy] =
+            await Promise.all([
+              getPharmacyClients(
+                {
+                  page: 1,
+                  perPage: 200,
+                  status: 'active',
+                  scope: 'owner',
+                  pharmacyId: targetPharmacyId,
+                },
 
-            getPharmacyCheckoutDetails(pharmacyProfile.id, requestOptions),
-          ]);
+                requestOptions
+              ),
+
+              getPharmacyCheckoutDetails(targetPharmacyId, requestOptions),
+              getOwnedPharmacyDetail(targetPharmacyId, requestOptions),
+            ]);
+
+          if (
+            selectedPharmacy.pharmacy.status !== 'active' &&
+            selectedPharmacy.pharmacy.status !== 'on_moderation'
+          ) {
+            throw new Error(
+              'Order creation is only available for Active or On moderation pharmacies.'
+            );
+          }
 
           if (
             controller.signal.aborted ||
@@ -1428,6 +1455,7 @@ function OrderDetailsPageContent({
     isCreateMode,
     isProfileLoading,
     orderId,
+    pharmacyId,
     pharmacyProfile,
   ]);
 
@@ -1542,6 +1570,7 @@ function OrderDetailsPageContent({
     if (!order || isCreateMode || pharmacyLockedStatus) return order;
 
     const generation = resourceGenerationRef.current;
+
     setIsUpdatingOrder(true);
 
     try {
@@ -1617,6 +1646,11 @@ function OrderDetailsPageContent({
       return;
     }
 
+    if (quantity < 1) {
+      handleRequestRemoveProduct(item);
+      return;
+    }
+
     if (
       quantity > item.quantity &&
       item.currentPrice !== undefined &&
@@ -1648,7 +1682,7 @@ function OrderDetailsPageContent({
     if (!item) return;
 
     setProductToRemove(null);
-    handleQuantityChange(item, 0);
+    applyQuantityChange(item, 0);
   };
 
   const handleAddProduct = async (product: ProductDetails): Promise<void> => {
@@ -1866,6 +1900,7 @@ function OrderDetailsPageContent({
 
     try {
       await navigator.clipboard.writeText(value);
+
       toast.success(`${label} copied.`);
     } catch {
       toast.error(`Could not copy ${label.toLowerCase()}.`);
@@ -1968,6 +2003,7 @@ function OrderDetailsPageContent({
     if (!order || !selectedClientId || !isCreateMode) return;
 
     const generation = resourceGenerationRef.current;
+
     setIsCreatingOrder(true);
 
     try {
@@ -1991,6 +2027,7 @@ function OrderDetailsPageContent({
       };
 
       const payloadKey = getCreateOrderPayloadKey(payload);
+
       let requestState = createOrderRequestRef.current;
 
       if (!requestState || requestState.payloadKey !== payloadKey) {
@@ -2012,7 +2049,6 @@ function OrderDetailsPageContent({
       createOrderRequestRef.current = null;
       setIsCreateConfirmationOpen(false);
       dispatchOrderCounterRefresh();
-
       toast.success('Order created and moved to In progress.');
       router.replace(getPharmacyOrderPath(createdOrder.id));
     } catch (createError) {
@@ -2447,7 +2483,12 @@ function OrderDetailsPageContent({
           productToRemove
             ? isCreateMode
               ? `${productToRemove.name} will be removed from this unsaved order draft.`
-              : `${productToRemove.name} will be removed and its reserved quantity will return to available stock.`
+              : `${productToRemove.name} will be removed and its reserved quantity will return to available stock.${
+                  productToRemove.currentPrice !== undefined &&
+                  productToRemove.currentPrice !== productToRemove.unitPrice
+                    ? ` The original unit price is ${formatMoney(productToRemove.unitPrice) ?? '—'}, but the current price is ${formatMoney(productToRemove.currentPrice) ?? '—'}. If you add this product again, the updated price will apply.`
+                    : ''
+                }`
             : ''
         }
         confirmLabel="Remove product"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import {
@@ -12,7 +12,6 @@ import {
   Users,
 } from 'lucide-react';
 
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { isApiError } from '@e-pharmacy/api-client/transport';
 import { type RowsPerPageValue, type SelectOption } from '@e-pharmacy/ui/forms';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
@@ -33,19 +32,12 @@ import {
   parseClientPurchasedProductsPath,
 } from '@/lib/clients/client-purchased-products-paths';
 
-import {
-  buildClientDetailPaginationPath,
-  parseClientDetailPaginationPath,
-  type ClientDetailListTab,
-} from '@/lib/clients/client-detail-pagination';
-
 import { type OwnedPharmacyListUrlState } from '@/lib/pharmacies/owned-pharmacy-url';
 
 import {
   createPharmacyNote,
   deletePharmacyNote,
   getPharmacyNotes,
-  getPharmacyOrders,
   getProductCategories,
 } from '@/lib/api/browser';
 
@@ -59,13 +51,13 @@ import type {
   PharmacyClientRow,
 } from '@/lib/clients/clients';
 
-import type { PharmacyOrderRow } from '@/lib/orders/orders';
 import { getClientDisplayName } from '@/lib/clients/client-display-name';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { ClientPharmaciesTab } from '@/components/clients/ClientPharmaciesTab/ClientPharmaciesTab';
+import { OrdersPageContent } from '@/components/orders/OrdersPageContent/OrdersPageContent';
 
 import {
   shouldLoadClientProducts,
@@ -73,17 +65,13 @@ import {
 } from '@/components/clients/client-detail-resource-policy';
 
 import {
-  ClientOrdersFiltersDrawer,
   ClientProductsFiltersDrawer,
-  DEFAULT_ORDER_FILTERS,
   DEFAULT_PRODUCT_FILTERS,
-  type ClientOrderFilters,
   type ClientProductFilters,
 } from './ClientDetailFilters';
 
 import { ClientInformationTab } from './ClientInformationTab';
 import { ClientOrderStatistics } from './ClientOrderStatistics';
-import { ClientOrdersTab } from './ClientOrdersTab';
 import { ClientProductsTab } from './ClientProductsTab';
 
 import css from './ClientDetailsPageContent.module.css';
@@ -111,7 +99,7 @@ type ClientDetailsError = Readonly<{
 
 const CLIENT_TABS: Array<TabItem<ClientDetailTab>> = [
   { value: 'details', label: 'Details', icon: <UserRound size={17} /> },
-  { value: 'orders', label: 'Client orders', icon: <ShoppingBag size={17} /> },
+  { value: 'orders', label: 'Orders', icon: <ShoppingBag size={17} /> },
   { value: 'pharmacies', label: 'Pharmacies', icon: <Building2 size={17} /> },
   {
     value: 'products',
@@ -144,6 +132,7 @@ function getClientDetailsError(error: unknown): ClientDetailsError {
 
   return {
     title: 'Client could not be loaded',
+
     message: getSafeApiErrorMessage(
       error,
       'Could not load client details. Please try again.'
@@ -161,33 +150,18 @@ function ClientDetailsPageContentState({
   const router = useRouter();
   const pathname = usePathname();
 
-  const ordersPagination = parseClientDetailPaginationPath(
-    pathname,
-    clientId,
-    'orders'
-  );
-
   const productsRoute = parseClientPurchasedProductsPath(pathname, clientId);
   const productsPagination = productsRoute.pagination;
 
-  const navigateTable = useCallback(
-    (
-      tab: ClientDetailListTab,
-      page: number,
-      perPage: RowsPerPageValue,
-      replace = false
-    ) => {
-      const nextPath =
-        tab === 'products'
-          ? buildClientPurchasedProductsPath(
-              clientId,
-              parseClientPurchasedProductsPath(pathname, clientId).filters,
-              { page, perPage }
-            )
-          : buildClientDetailPaginationPath(clientId, tab, { page, perPage });
+  const navigateProductsTable = useCallback(
+    (page: number, perPage: RowsPerPageValue, replace = false) => {
+      const nextPath = buildClientPurchasedProductsPath(
+        clientId,
+        parseClientPurchasedProductsPath(pathname, clientId).filters,
+        { page, perPage }
+      );
 
       if (nextPath === pathname) return;
-
       if (replace) router.replace(nextPath, { scroll: false });
       else router.push(nextPath, { scroll: false });
     },
@@ -195,41 +169,6 @@ function ClientDetailsPageContentState({
   );
 
   const [client, setClient] = useState<PharmacyClientRow | null>(null);
-  const [orders, setOrders] = useState<PharmacyOrderRow[]>([]);
-  const [ordersTotal, setOrdersTotal] = useState(0);
-
-  const [ordersOverallTotal, setOrdersOverallTotal] = useState<number | null>(
-    null
-  );
-
-  const [ordersTotalPages, setOrdersTotalPages] = useState(0);
-  const ordersRowsPerPage = ordersPagination.perPage;
-
-  const [ordersEarliestCreatedAt, setOrdersEarliestCreatedAt] = useState<
-    string | null
-  >(null);
-
-  const [orderNumberSearch, setOrderNumberSearch] = useState('');
-  const [orderCommentSearch, setOrderCommentSearch] = useState('');
-  const debouncedOrderNumberSearch = useDebouncedValue(orderNumberSearch, 450);
-
-  const debouncedOrderCommentSearch = useDebouncedValue(
-    orderCommentSearch,
-    450
-  );
-
-  const orderSearchKey = `${debouncedOrderNumberSearch}\u0000${debouncedOrderCommentSearch}`;
-  const ordersPage = ordersPagination.page;
-
-  const [orderFilters, setOrderFilters] = useState<ClientOrderFilters>(
-    DEFAULT_ORDER_FILTERS
-  );
-
-  const [ordersStatus, setOrdersStatus] = useState<ResourceStatus>('idle');
-  const [ordersError, setOrdersError] = useState('');
-  const [ordersRetryVersion, setOrdersRetryVersion] = useState(0);
-  const [isOrdersFiltersOpen, setIsOrdersFiltersOpen] = useState(false);
-
   const [activeTab, setActiveTab] = useState<ClientDetailTab>(initialTab);
   const [clientStatus, setClientStatus] = useState<ResourceStatus>('loading');
   const [clientRetryVersion, setClientRetryVersion] = useState(0);
@@ -366,117 +305,6 @@ function ClientDetailsPageContentState({
   }, [clientDisplayName]);
 
   useEffect(() => {
-    // Orders use the selected operational pharmacy. Owner-wide counters are
-    // fetched independently, so the overview must not trigger this request.
-    if (clientStatus !== 'success' || activeTab !== 'orders') return;
-
-    const controller = new AbortController();
-
-    async function loadOrders() {
-      setOrdersStatus('loading');
-      setOrdersError('');
-
-      try {
-        const response = await getPharmacyOrders(
-          {
-            page: ordersPage,
-            perPage: ordersRowsPerPage,
-            clientId,
-            scope: 'owner',
-            orderNumber: debouncedOrderNumberSearch.trim() || undefined,
-            clientComment: debouncedOrderCommentSearch.trim() || undefined,
-            dateFrom: orderFilters.date.from || undefined,
-            dateTo: orderFilters.date.to || undefined,
-
-            status:
-              orderFilters.status === 'all' ? undefined : orderFilters.status,
-
-            deliveryMethod:
-              orderFilters.deliveryMethod === 'all'
-                ? undefined
-                : orderFilters.deliveryMethod,
-
-            paymentMethod:
-              orderFilters.paymentMethod === 'all'
-                ? undefined
-                : orderFilters.paymentMethod,
-
-            clientCommentPresence:
-              orderFilters.clientCommentPresence === 'all'
-                ? undefined
-                : orderFilters.clientCommentPresence,
-
-            createdByType:
-              orderFilters.createdByType === 'all'
-                ? undefined
-                : orderFilters.createdByType,
-          },
-          { signal: controller.signal }
-        );
-
-        if (controller.signal.aborted) return;
-
-        setOrders([...response.items]);
-        setOrdersTotal(response.total);
-        setOrdersTotalPages(response.totalPages);
-
-        if (response.page !== ordersPage) {
-          navigateTable('orders', response.page, ordersRowsPerPage, true);
-        }
-
-        setOrdersEarliestCreatedAt(response.earliestCreatedAt);
-
-        const hasSearchOrFilters = Boolean(
-          debouncedOrderNumberSearch.trim() ||
-          debouncedOrderCommentSearch.trim() ||
-          orderFilters.date.from ||
-          orderFilters.date.to ||
-          orderFilters.status !== 'all' ||
-          orderFilters.deliveryMethod !== 'all' ||
-          orderFilters.paymentMethod !== 'all' ||
-          orderFilters.clientCommentPresence !== 'all' ||
-          orderFilters.createdByType !== 'all'
-        );
-
-        if (!hasSearchOrFilters) {
-          setOrdersOverallTotal(response.total);
-        }
-
-        setOrdersStatus('success');
-      } catch (loadOrdersError) {
-        if (controller.signal.aborted) return;
-
-        setOrdersError(
-          getSafeApiErrorMessage(
-            loadOrdersError,
-            'Could not load client orders. Please try again.'
-          )
-        );
-
-        setOrdersStatus('error');
-      }
-    }
-
-    void loadOrders();
-
-    return () => {
-      controller.abort();
-    };
-  }, [
-    activeTab,
-    clientId,
-    clientStatus,
-    debouncedOrderCommentSearch,
-    debouncedOrderNumberSearch,
-    orderFilters,
-    orderSearchKey,
-    ordersPage,
-    ordersRetryVersion,
-    ordersRowsPerPage,
-    navigateTable,
-  ]);
-
-  useEffect(() => {
     if (clientStatus !== 'success') return;
 
     if (
@@ -527,7 +355,7 @@ function ClientDetailsPageContentState({
         setProductsTotalPages(response.totalPages);
 
         if (response.page !== productsPage) {
-          navigateTable('products', response.page, productsRowsPerPage, true);
+          navigateProductsTable(response.page, productsRowsPerPage, true);
         }
 
         setLoadedProductsRequestKey(productsRequestKey);
@@ -562,37 +390,8 @@ function ClientDetailsPageContentState({
     productsPage,
     productsRequestKey,
     productsRowsPerPage,
-    navigateTable,
+    navigateProductsTable,
   ]);
-
-  const tabs = useMemo(
-    () =>
-      CLIENT_TABS.map((tab) => {
-        if (tab.value === 'orders') {
-          return {
-            ...tab,
-            label:
-              ordersOverallTotal === null
-                ? 'Orders'
-                : `Orders (${ordersOverallTotal})`,
-          };
-        }
-
-        return tab;
-      }),
-    [ordersOverallTotal]
-  );
-
-  const orderFiltersCount = countTrueConditions(
-    Boolean(orderFilters.date.from || orderFilters.date.to),
-    orderFilters.status !== 'all',
-    orderFilters.deliveryMethod !== 'all',
-    orderFilters.paymentMethod !== 'all',
-    orderFilters.clientCommentPresence !== 'all',
-    orderFilters.createdByType !== 'all'
-  );
-
-  const hasOrderFilters = orderFiltersCount > 0;
 
   const productFiltersCount = countTrueConditions(
     Boolean(productFilters.productId),
@@ -633,7 +432,7 @@ function ClientDetailsPageContentState({
       <section className={css.contentCard}>
         <div className={css.tabsSection}>
           <Tabs
-            items={tabs}
+            items={CLIENT_TABS}
             activeValue={activeTab}
             ariaLabel="Client details tabs"
             mobileVisibleCount={1}
@@ -677,32 +476,6 @@ function ClientDetailsPageContentState({
             </div>
           ) : null}
 
-          {activeTab !== 'details' &&
-          activeTab !== 'pharmacies' &&
-          activeTab !== 'products' &&
-          activeTab !== 'comments' &&
-          clientStatus !== 'success' ? (
-            <ProfileResourceState
-              variant={clientStatus === 'error' ? 'error' : 'loading'}
-              title={
-                clientStatus === 'error'
-                  ? (error?.title ?? 'Client unavailable')
-                  : 'Loading client details'
-              }
-              description={
-                clientStatus === 'error'
-                  ? (error?.message ?? 'Please try again.')
-                  : 'The client information is being loaded.'
-              }
-              {...(clientStatus === 'error'
-                ? {
-                    retryLabel: 'Try again',
-                    onRetry: () => setClientRetryVersion((n) => n + 1),
-                  }
-                : {})}
-            />
-          ) : null}
-
           {activeTab === 'pharmacies' ? (
             <ClientPharmaciesTab
               clientId={clientId}
@@ -710,39 +483,16 @@ function ClientDetailsPageContentState({
             />
           ) : null}
 
-          {clientStatus === 'success' && activeTab === 'orders' ? (
-            <ClientOrdersTab
-              orderNumberSearch={orderNumberSearch}
-              setOrderNumberSearch={(value) => {
-                setOrderNumberSearch(value);
-
-                if (ordersPage !== 1)
-                  navigateTable('orders', 1, ordersRowsPerPage, true);
-              }}
-              orderCommentSearch={orderCommentSearch}
-              setOrderCommentSearch={(value) => {
-                setOrderCommentSearch(value);
-
-                if (ordersPage !== 1)
-                  navigateTable('orders', 1, ordersRowsPerPage, true);
-              }}
-              orderFiltersCount={orderFiltersCount}
-              isOrdersFiltersOpen={isOrdersFiltersOpen}
-              setIsOrdersFiltersOpen={setIsOrdersFiltersOpen}
-              ordersRowsPerPage={ordersRowsPerPage}
-              onRowsPerPageChange={(perPage) =>
-                navigateTable('orders', 1, perPage)
-              }
-              onPageChange={(page) =>
-                navigateTable('orders', page, ordersRowsPerPage)
-              }
-              ordersStatus={ordersStatus}
-              orders={orders}
-              ordersTotal={ordersTotal}
-              ordersError={ordersError}
-              setOrdersRetryVersion={setOrdersRetryVersion}
-              ordersPage={ordersPage}
-              ordersTotalPages={ordersTotalPages}
+          {activeTab === 'orders' && clientStatus !== 'error' ? (
+            <OrdersPageContent embeddedClientId={clientId} />
+          ) : null}
+          {activeTab === 'orders' && clientStatus === 'error' ? (
+            <ProfileResourceState
+              variant="error"
+              title={error?.title ?? 'Client unavailable'}
+              description={error?.message ?? 'Could not load client orders.'}
+              retryLabel="Try again"
+              onRetry={() => setClientRetryVersion((n) => n + 1)}
             />
           ) : null}
 
@@ -777,10 +527,10 @@ function ClientDetailsPageContentState({
               setIsProductsFiltersOpen={setIsProductsFiltersOpen}
               productsRowsPerPage={productsRowsPerPage}
               onRowsPerPageChange={(perPage) =>
-                navigateTable('products', 1, perPage)
+                navigateProductsTable(1, perPage)
               }
               onPageChange={(page) =>
-                navigateTable('products', page, productsRowsPerPage)
+                navigateProductsTable(page, productsRowsPerPage)
               }
               productsStatus={
                 loadedProductsRequestKey === productsRequestKey
@@ -823,28 +573,6 @@ function ClientDetailsPageContentState({
           ) : null}
         </div>
       </section>
-
-      {isOrdersFiltersOpen ? (
-        <ClientOrdersFiltersDrawer
-          filters={orderFilters}
-          hasActiveFilters={hasOrderFilters}
-          minDate={ordersEarliestCreatedAt ?? undefined}
-          resetHref={getPharmacyClientPath(clientId)}
-          onChange={(filters) => {
-            setOrderFilters(filters);
-
-            if (ordersPage !== 1)
-              navigateTable('orders', 1, ordersRowsPerPage, true);
-          }}
-          onClose={() => setIsOrdersFiltersOpen(false)}
-          onReset={() => {
-            setOrderFilters(DEFAULT_ORDER_FILTERS);
-
-            if (ordersPage !== 1)
-              navigateTable('orders', 1, ordersRowsPerPage, true);
-          }}
-        />
-      ) : null}
 
       {isProductsFiltersOpen ? (
         <ClientProductsFiltersDrawer

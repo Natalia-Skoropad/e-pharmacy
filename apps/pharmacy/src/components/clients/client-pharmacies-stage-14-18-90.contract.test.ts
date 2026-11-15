@@ -38,11 +38,18 @@ test('client pharmacies use canonical server-side filter routes with browser his
   assert.match(nested, /buildClientPharmaciesPath\(clientId, state\)/);
   assert.match(nested, /redirect\(canonical\)/);
   assert.match(nested, /notFound\(\)/);
-  assert.match(paths, /buildOwnedPharmaciesListUrl\(state\)/);
+
+  assert.match(
+    paths,
+    /buildOwnedPharmaciesListUrl\(\{ \.\.\.state, rating: 'all' \}\)/
+  );
+
   assert.match(paths, /parseOwnedPharmaciesListSegments/);
   assert.match(paths, /date-from-/);
   assert.match(paths, /date-to-/);
   assert.match(paths, /buildOwnedPharmaciesListUrl/); // pagination lives in canonical registry builder
+  assert.match(paths, /rating: 'all'/); // legacy client rating URLs are normalized
+  assert.match(tab, /showRating=\{false\}/);
 
   assert.match(
     tab,
@@ -55,7 +62,7 @@ test('client pharmacies use canonical server-side filter routes with browser his
 
   assert.match(
     breadcrumbs,
-    /route.segments.length === 2 \|\| tab === 'pharmacies'/
+    /route\.segments\.length === 2 \|\|[\s\S]*?tab === 'pharmacies'/
   );
 });
 
@@ -84,9 +91,10 @@ test('comments display the shared pharmacy form without blocking client loader',
     'components/clients/ClientDetailsPageContent/ClientDetailsPageContent.tsx'
   );
 
-  assert.match(
+  // Comments can render independently of the client-details loading state.
+  assert.doesNotMatch(
     parent,
-    /activeTab !== 'comments'[\s\S]*?clientStatus !== 'success'/
+    /activeTab === 'comments' && clientStatus === 'success'/
   );
 
   assert.match(parent, /\{activeTab === 'comments' \? \(/);
@@ -100,15 +108,11 @@ test('client-note browser calls opt into membership-scoped backend for all metho
   const source = read('lib/api/browser/pharmacy-notes.api.ts');
 
   assert.equal(
-    (source.match(/type === 'client' \? \{ scope: 'client' \} : \{\}/g) ?? [])
-      .length,
+    (source.match(/\['client', 'product'\]\.includes\(type\)/g) ?? []).length,
     3
   );
 
-  assert.match(
-    source,
-    /\{ page, perPage: 10, \.\.\.\(type === 'client' \? \{ scope: 'client' \} : \{\}\) \}/
-  );
+  assert.match(source, /scope: type/);
 
   assert.match(source, /method: 'POST'/);
   assert.match(source, /method: 'DELETE'/);

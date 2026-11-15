@@ -87,6 +87,41 @@ export async function getProductStockMovementsService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product offer was not found.');
   }
 
+  // Monetary values of reservations are frozen in open order lines.
+  // An offer repricing must not retroactively revalue already placed orders.
+  const openOrders = await Order.find({
+    pharmacyId: currentOffer.pharmacyId,
+    status: { $in: ['new', 'in_progress'] },
+    'items.productOfferId': currentOffer._id,
+  })
+    .select('items.productOfferId items.quantity items.unitPrice')
+    .lean<
+      Array<{
+        items: Array<{
+          productOfferId: mongoose.Types.ObjectId;
+          quantity: number;
+          unitPrice: number;
+        }>;
+      }>
+    >();
+
+  const reservedOrderAmount =
+    Math.round(
+      openOrders.reduce(
+        (sum, order) =>
+          sum +
+          order.items.reduce(
+            (total, item) =>
+              total +
+              (String(item.productOfferId) === String(currentOffer._id)
+                ? item.quantity * item.unitPrice
+                : 0),
+            0
+          ),
+        0
+      ) * 100
+    ) / 100;
+
   const movements = await StockMovement.find({
     productOfferId: currentOffer._id,
   })
@@ -232,6 +267,7 @@ export async function getProductStockMovementsService(
       stockQuantity: currentOffer.totalQuantity,
       reservedQuantity: currentOffer.reservedQuantity,
       availableQuantity: currentOffer.availableQuantity,
+      reservedOrderAmount,
     },
 
     earliestCreatedAt:

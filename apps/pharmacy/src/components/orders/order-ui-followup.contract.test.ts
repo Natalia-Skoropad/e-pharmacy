@@ -64,7 +64,13 @@ test('client search help documents all supported identifiers', async () => {
     )
   );
 
-  assert.ok(normalizeWhitespace(productSource).includes(help));
+  // Related orders now reuses the shared OrderScopeSearch for help text.
+  assert.match(
+    productSource,
+    /<OrdersPageContent relatedProductId=\{productId\}/
+  );
+
+  assert.ok(normalizeWhitespace(ordersSource).includes(help));
   assert.ok(normalizeWhitespace(detailsSource).includes(help));
   assert.match(detailsSource, /searchText:/);
 

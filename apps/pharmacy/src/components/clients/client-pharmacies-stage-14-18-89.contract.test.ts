@@ -37,11 +37,13 @@ test('client pharmacies use the owner registry presentation, filters and table l
     'name',
     'successfulOrdersCount',
     'successfulOrdersAmount',
-    'rating',
     'status',
   ]) {
     assert.match(tab, new RegExp(`key: '${column}'`));
   }
+
+  assert.doesNotMatch(tab, /key: 'rating'/);
+  assert.match(tab, /showRating=\{false\}/);
 });
 
 //===============================================================

@@ -3,6 +3,8 @@ import { isOwnProductsFilterSegment } from '../products/own-product-paths';
 import {
   isOrdersFilterRoute,
   buildOrdersPath,
+  buildClientOrdersPath,
+  buildRelatedProductOrdersPath,
   parseOrdersSegments,
   parseOrdersPaginationSegments,
 } from '../orders/order-paths';
@@ -37,15 +39,13 @@ import {
   parseClientPharmaciesSegments,
 } from '../clients/client-pharmacies-path';
 
-import {
-  buildClientDetailPaginationPath,
-  parseClientDetailPaginationSegments,
-} from '../clients/client-detail-pagination';
-
 //===================================================================
 
 /** Canonical browser selection contract. Server membership is always authoritative. */
 const ID = /^[0-9a-f]{24}$/i;
+
+const CREATE_ORDER_PATH =
+  /^\/pharmacy\/orders\/new\/pharmacy-id-([0-9a-f]{24})$/i;
 
 const DETAIL_OPERATION =
   /^\/pharmacy\/pharmacies\/([0-9a-f]{24})\/(orders|clients|products)(?:\/|$)/i;
@@ -149,21 +149,26 @@ export function isOwnerClientDetailPath(pathname: string): boolean {
     }
   }
 
-  // Nested Orders pagination belongs to the owner client card too.
-  const detailPaging =
+  // Client-specific Orders are owner-scoped and keep their filters in the
+  // client card. An additional client-id segment must never override the card.
+  const clientOrders =
     /^\/pharmacy\/clients\/([0-9a-f]{24})\/orders\/(.+)$/i.exec(pathname);
 
-  if (detailPaging) {
-    try {
-      const pagination = parseClientDetailPaginationSegments(
-        detailPaging[2]!.split('/')
-      );
+  if (clientOrders) {
+    const parts = clientOrders[2]!.split('/');
 
+    if (
+      !isOrdersFilterRoute(parts) ||
+      parts.some((part) => part.startsWith('client-id-'))
+    )
+      return false;
+
+    try {
       return (
-        buildClientDetailPaginationPath(
-          detailPaging[1]!,
-          'orders',
-          pagination
+        buildClientOrdersPath(
+          clientOrders[1]!,
+          parseOrdersSegments({ filters: parts }),
+          parseOrdersPaginationSegments({ filters: parts })
         ) === pathname
       );
     } catch {
@@ -253,6 +258,31 @@ export function isOwnerProductDetailPath(pathname: string): boolean {
     }
   }
 
+  // Related orders is a product-detail tab even when URL filters are present.
+  // Only canonical, valid segments qualify; the API still enforces owner scope.
+  const relatedOrders =
+    /^\/pharmacy\/products\/([0-9a-f]{24})\/related-orders\/(.+)$/i.exec(
+      pathname
+    );
+
+  if (relatedOrders) {
+    const segments = relatedOrders[2]!.split('/');
+
+    if (!isOrdersFilterRoute(segments)) return false;
+
+    try {
+      return (
+        buildRelatedProductOrdersPath(
+          relatedOrders[1]!,
+          parseOrdersSegments({ filters: segments }),
+          parseOrdersPaginationSegments({ filters: segments })
+        ) === pathname
+      );
+    } catch {
+      return false;
+    }
+  }
+
   // Owner-wide stock movement belongs to the product card even without a
   // globally selected pharmacy. The route is only syntactic authorization:
   // backend endpoints must still verify access to the pharmacy in the URL.
@@ -325,7 +355,11 @@ export function isLegacyOperationalPharmacyPath(pathname: string): boolean {
 //===================================================================
 
 export function getPharmacyIdFromDetailPath(pathname: string): string | null {
-  return DETAIL_OPERATION.exec(pathname)?.[1]?.toLowerCase() ?? null;
+  return (
+    CREATE_ORDER_PATH.exec(pathname)?.[1]?.toLowerCase() ??
+    DETAIL_OPERATION.exec(pathname)?.[1]?.toLowerCase() ??
+    null
+  );
 }
 
 //===================================================================

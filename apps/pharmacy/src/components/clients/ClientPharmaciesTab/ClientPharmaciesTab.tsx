@@ -11,7 +11,6 @@ import {
   CountLabel,
   DataTable,
   formatInitials,
-  RatingSummary,
   TableDateTime,
   TableHeaderTitle,
   type DataTableColumn,
@@ -302,21 +301,6 @@ export function ClientPharmaciesTab({
         render: (item) => formatAmount(item.successfulOrdersAmount) ?? '0.00',
       },
       {
-        key: 'rating',
-        title: <TableHeaderTitle parts={['Rating /', 'reviews']} />,
-
-        render: (item) =>
-          item.reviewsCount ? (
-            <RatingSummary
-              rating={item.rating}
-              reviewsCount={item.reviewsCount}
-              size="sm"
-            />
-          ) : (
-            'No reviews'
-          ),
-      },
-      {
         key: 'status',
         title: <TableHeaderTitle parts={['Pharmacy', 'status']} />,
 
@@ -346,8 +330,7 @@ export function ClientPharmaciesTab({
     state.region ||
     state.status !== 'all' ||
     state.createdFrom ||
-    state.createdTo ||
-    state.rating !== 'all'
+    state.createdTo
   );
 
   const activeFiltersCount = [
@@ -356,7 +339,6 @@ export function ClientPharmaciesTab({
     Boolean(state.region),
     Boolean(state.createdFrom || state.createdTo),
     state.status !== 'all',
-    state.rating !== 'all',
   ].filter(Boolean).length;
 
   const resetFilters = () =>
@@ -459,6 +441,7 @@ export function ClientPharmaciesTab({
 
       {isFiltersOpen ? (
         <OwnedPharmaciesFiltersDrawer
+          showRating={false}
           state={state}
           hasActiveFilters={hasActiveFilters}
           minDate={data?.availableCreatedDates?.[0]}

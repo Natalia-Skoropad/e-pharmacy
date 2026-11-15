@@ -1,10 +1,4 @@
-import {
-  PRODUCT_STATUS_PRESENTATION,
-  ORDER_CREATED_BY_LABELS,
-  ORDER_STATUS_PRESENTATION,
-  PAYMENT_METHOD_LABELS,
-  DELIVERY_METHOD_LABELS,
-} from '@e-pharmacy/config/presentation';
+import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { CategoryIcon } from '@e-pharmacy/ui/forms';
@@ -20,9 +14,8 @@ import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatAmount } from '@e-pharmacy/utils/money';
 
-import { getPharmacyOrderPath, getPharmacyProductPath } from '@/lib/routes';
+import { getPharmacyProductPath } from '@/lib/routes';
 import { getProductImageSrc } from '@/lib/products/product-images';
-import type { PharmacyOrderRow } from '@/lib/orders/orders';
 import type { PharmacyClientPurchasedProduct } from '@/lib/clients/clients';
 
 import css from './ClientDetailsPageContent.module.css';
@@ -30,64 +23,6 @@ import css from './ClientDetailsPageContent.module.css';
 //===================================================================
 
 const formatAmountValue = (value: number) => formatAmount(value) ?? '—';
-
-//===================================================================
-
-export const ORDER_COLUMNS: Array<DataTableColumn<PharmacyOrderRow>> = [
-  {
-    key: 'date',
-    title: <TableHeaderTitle parts={['Order', 'date']} />,
-    render: (order) => <TableDateTime value={order.orderDate} />,
-  },
-  {
-    key: 'number',
-    title: <TableHeaderTitle parts={['Order', 'number']} />,
-
-    render: (order) => (
-      <TextActionButton href={getPharmacyOrderPath(order.id)}>
-        {order.orderNumber}
-      </TextActionButton>
-    ),
-  },
-  {
-    key: 'delivery',
-    title: <TableHeaderTitle parts={['Delivery', 'method']} />,
-    render: (order) => DELIVERY_METHOD_LABELS[order.deliveryMethod],
-  },
-  {
-    key: 'payment',
-    title: <TableHeaderTitle parts={['Payment', 'method']} />,
-    render: (order) => PAYMENT_METHOD_LABELS[order.paymentMethod],
-  },
-  {
-    key: 'comment',
-    title: <TableHeaderTitle parts={['Client', 'comment']} />,
-    render: (order) => order.clientComment || '—',
-  },
-  {
-    key: 'quantity',
-    title: <TableHeaderTitle parts={['Order', 'quantity']} />,
-    render: (order) => order.totalQuantity,
-  },
-  {
-    key: 'amount',
-    title: <TableHeaderTitle parts={['Order', ' amount, ₴']} />,
-    render: (order) => formatAmountValue(order.totalAmount),
-  },
-  {
-    key: 'createdByType',
-    title: <TableHeaderTitle parts={['Created', 'by']} />,
-    render: (order) => ORDER_CREATED_BY_LABELS[order.createdByType],
-  },
-  {
-    key: 'status',
-    title: <TableHeaderTitle parts={['Order', 'status']} />,
-
-    render: (order) => (
-      <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
-    ),
-  },
-];
 
 //===================================================================
 

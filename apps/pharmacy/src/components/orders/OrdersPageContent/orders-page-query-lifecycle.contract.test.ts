@@ -34,7 +34,12 @@ test('Orders registry derives selected pharmacy, filters and pagination from rou
   assert.match(source, /embeddedReady/);
   assert.match(source, /embeddedPharmacyId/);
   assert.match(source, /pharmacyId: filters\.pharmacyId \|\| undefined/);
-  assert.match(source, /clientId: filters.clientId \|\| undefined/);
+
+  assert.match(
+    source,
+    /clientId: embeddedClientId \|\| filters.clientId \|\| undefined/
+  );
+
   assert.match(source, /orderId: filters.orderId \|\| undefined/);
   assert.doesNotMatch(source, /useDebouncedValue/);
 });
@@ -49,7 +54,7 @@ test('Orders page accepts the canonical backend page through a URL replacement',
 
   assert.match(
     source,
-    /buildEmbeddedOrdersPath\(embeddedPharmacyId, filters, \{ page: result.page, perPage \}\)/
+    /buildEmbeddedOrdersPath\(embeddedPharmacyId, filters, \{\s*page: result.page,\s*perPage,\s*\}\)/
   );
 
   assert.doesNotMatch(source, /setCurrentPage\(response.page\)/);
@@ -87,12 +92,7 @@ test('embedded Orders preserves the detail URL and uses only content loaders', a
   assert.match(source, /buildEmbeddedOrdersPath\(embeddedPharmacyId, filters/);
   assert.match(source, /embedded && !embeddedReady/);
   assert.doesNotMatch(detail, /Selecting pharmacy/);
-
-  assert.match(
-    detail,
-    /!\['comments', 'clients', 'products', 'orders'\]\.includes\(visibleTab\)/
-  );
-
+  assert.match(detail, /visibleTab !== 'comments' && visibleTab !== 'orders'/);
   assert.match(detail, /: visibleTab === 'orders' \? \(/);
   assert.doesNotMatch(detail, /pharmacy && visibleTab === 'orders'/);
 
@@ -158,5 +158,76 @@ test('related product Orders scopes table, statistics and search options by prod
 
   assert.match(search, /productId: productId \|\| undefined/);
   assert.match(detail, /activeTab === 'related-orders' && !error/);
-  assert.match(client, /clientId,\s*scope: 'owner'/);
+  assert.match(client, /<OrdersPageContent embeddedClientId=\{clientId\}/);
+
+  const drawer = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrdersFiltersDrawer/OrdersFiltersDrawer.tsx'
+    ),
+    'utf8'
+  );
+
+  assert.match(source, /id="related-orders-pharmacy-search"/);
+  assert.match(source, /relatedProduct=\{Boolean\(relatedProductId\)\}/);
+  assert.match(source, /filters\.pharmacyId \? \(/);
+  assert.match(table, /allColumns\.filter/);
+  assert.match(drawer, /!relatedProduct/);
+});
+
+//===================================================================
+
+test('product related orders renders a scoped selector, trimmed filters, columns and creation control', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  const drawer = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrdersFiltersDrawer/OrdersFiltersDrawer.tsx'
+    ),
+    'utf8'
+  );
+
+  const table = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrdersTable/OrdersTable.tsx'
+    ),
+    'utf8'
+  );
+
+  const detail = await readFile(
+    path.resolve(
+      process.cwd(),
+      'src/components/orders/OrderDetailsPageContent/OrderDetailsPageContent.tsx'
+    ),
+    'utf8'
+  );
+
+  assert.match(source, /id="related-orders-pharmacy-search"/);
+  assert.match(source, /relatedProduct=\{Boolean\(relatedProductId\)\}/);
+  assert.match(source, /\{filters\.pharmacyId \? \(/);
+  assert.match(drawer, /!relatedProduct/);
+  assert.match(table, /allColumns\.filter/);
+  assert.match(table, /'clientComment'/);
+
+  assert.match(
+    detail,
+    /If you add this product again, the updated price will apply/
+  );
+});
+
+//===================================================================
+
+test('client Orders and new-order navigation stay explicitly scoped without a global pharmacy query', async () => {
+  const source = await readFile(componentPath, 'utf8');
+
+  assert.match(
+    source,
+    /buildClientOrdersPath\(embeddedClientId, nextFilters, pagination\)/
+  );
+
+  assert.match(source, /hideClient=\{Boolean\(embeddedClientId\)\}/);
+  assert.match(source, /getPharmacyNewOrderPath\(filters\.pharmacyId\)/);
+  assert.doesNotMatch(source, /orders\/new\?pharmacyId/);
 });

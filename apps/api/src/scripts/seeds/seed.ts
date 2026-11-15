@@ -1737,7 +1737,15 @@ async function seedActivePharmacyOrder(): Promise<number> {
   const seededOrders = orderConfigs.map((config) => {
     const orderId = new Types.ObjectId();
     const orderNumber = createSeedOrderNumber(orderId, config.createdAt);
-    const totalPrice = config.quantity * STOCK_MOVEMENT_DEMO_ORDER_PRICE;
+
+    // Repricing on 14 July applies to orders created after that moment;
+    // historical orders retain the price fixed at their own creation time.
+    const fixedUnitPrice =
+      config.createdAt >= new Date('2026-07-14T09:00:00.000Z')
+        ? STOCK_MOVEMENT_DEMO_CURRENT_PRICE
+        : STOCK_MOVEMENT_DEMO_ORDER_PRICE;
+
+    const totalPrice = config.quantity * fixedUnitPrice;
 
     return {
       _id: orderId,
@@ -1759,7 +1767,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
             productOfferId: offer._id,
             productSnapshot,
             quantity: config.quantity,
-            unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+            unitPrice: fixedUnitPrice,
             totalPrice,
           },
         ],
@@ -1800,8 +1808,8 @@ async function seedActivePharmacyOrder(): Promise<number> {
             previousQuantity: 0,
             quantity: config.quantity,
             quantityDelta: config.quantity,
-            previousUnitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
-            unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+            previousUnitPrice: fixedUnitPrice,
+            unitPrice: fixedUnitPrice,
           },
         ],
 
@@ -1861,7 +1869,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
       stockAfter: 170,
       reservedAfter: 10,
       availableAfter: 160,
-      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      unitPrice: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
       orderId: newOrder._id,
       orderNumber: newOrder.orderNumber,
       orderStatus: 'new',
@@ -1881,7 +1889,7 @@ async function seedActivePharmacyOrder(): Promise<number> {
       stockAfter: 170,
       reservedAfter: 20,
       availableAfter: 150,
-      unitPrice: STOCK_MOVEMENT_DEMO_ORDER_PRICE,
+      unitPrice: STOCK_MOVEMENT_DEMO_CURRENT_PRICE,
       orderId: inProgressOrder._id,
       orderNumber: inProgressOrder.orderNumber,
       orderStatus: 'in_progress',

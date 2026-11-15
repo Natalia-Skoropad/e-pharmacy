@@ -66,7 +66,7 @@ test('client tabs have section icons and are split into independent components',
 
   for (const component of [
     'ClientInformationTab',
-    'ClientOrdersTab',
+    'OrdersPageContent',
     'ClientProductsTab',
   ]) {
     assert.match(page, new RegExp(`<${component}`));

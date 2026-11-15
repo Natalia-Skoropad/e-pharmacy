@@ -46,6 +46,7 @@ type OrdersFiltersDrawerProps = Readonly<{
   onChange: (filters: OrdersFilterState) => void;
   onClose: () => void;
   onReset: () => void;
+  relatedProduct?: boolean;
 }>;
 
 //===================================================================
@@ -141,6 +142,7 @@ function OrdersFiltersDrawer({
   onChange,
   onClose,
   onReset,
+  relatedProduct = false,
 }: OrdersFiltersDrawerProps) {
   return (
     <FilterDrawer
@@ -167,23 +169,31 @@ function OrdersFiltersDrawer({
         onChange={(date) => onChange({ ...filters, date })}
       />
 
-      <SelectField
-        id="orders-delivery-method"
-        label="Delivery method"
-        value={filters.deliveryMethod}
-        options={DELIVERY_METHOD_OPTIONS}
-        isActive={filters.deliveryMethod !== 'all'}
-        onChange={(deliveryMethod) => onChange({ ...filters, deliveryMethod })}
-      />
+      {!relatedProduct ? (
+        <>
+          <SelectField
+            id="orders-delivery-method"
+            label="Delivery method"
+            value={filters.deliveryMethod}
+            options={DELIVERY_METHOD_OPTIONS}
+            isActive={filters.deliveryMethod !== 'all'}
+            onChange={(deliveryMethod) =>
+              onChange({ ...filters, deliveryMethod })
+            }
+          />
 
-      <SelectField
-        id="orders-payment-method"
-        label="Payment method"
-        value={filters.paymentMethod}
-        options={PAYMENT_METHOD_OPTIONS}
-        isActive={filters.paymentMethod !== 'all'}
-        onChange={(paymentMethod) => onChange({ ...filters, paymentMethod })}
-      />
+          <SelectField
+            id="orders-payment-method"
+            label="Payment method"
+            value={filters.paymentMethod}
+            options={PAYMENT_METHOD_OPTIONS}
+            isActive={filters.paymentMethod !== 'all'}
+            onChange={(paymentMethod) =>
+              onChange({ ...filters, paymentMethod })
+            }
+          />
+        </>
+      ) : null}
 
       <SelectField
         id="orders-status"
@@ -194,14 +204,16 @@ function OrdersFiltersDrawer({
         onChange={(status) => onChange({ ...filters, status })}
       />
 
-      <SelectField
-        id="orders-created-by"
-        label="Created by"
-        value={filters.createdByType}
-        options={ORDER_CREATED_BY_OPTIONS}
-        isActive={filters.createdByType !== 'all'}
-        onChange={(createdByType) => onChange({ ...filters, createdByType })}
-      />
+      {!relatedProduct ? (
+        <SelectField
+          id="orders-created-by"
+          label="Created by"
+          value={filters.createdByType}
+          options={ORDER_CREATED_BY_OPTIONS}
+          isActive={filters.createdByType !== 'all'}
+          onChange={(createdByType) => onChange({ ...filters, createdByType })}
+        />
+      ) : null}
     </FilterDrawer>
   );
 }
