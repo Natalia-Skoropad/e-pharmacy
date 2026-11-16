@@ -154,7 +154,11 @@ export function getPharmacyNewOrderPath(pharmacyId: EntityId): string {
 //===================================================================
 
 export function getPharmacyOrderPath(orderId: EntityId): string {
-  return appendRouteParam(PHARMACY_ROUTES.ORDERS, orderId);
+  if (!isValidObjectId(orderId.trim())) {
+    throw new TypeError('Route parameter must be a valid entity ID.');
+  }
+
+  return `${PHARMACY_ROUTES.ORDERS}/details/order-id-${orderId.trim().toLowerCase()}`;
 }
 
 //===================================================================

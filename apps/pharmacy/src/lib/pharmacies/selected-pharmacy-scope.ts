@@ -55,6 +55,15 @@ const LEGACY_OPERATION =
 
 //===================================================================
 
+/** Order details are owner-scoped: authorization is checked by order ID on the server. */
+export function isOwnerOrderDetailPath(pathname: string): boolean {
+  return /^\/pharmacy\/orders\/(?:[a-f0-9]{24}|details\/order-id-[a-f0-9]{24})\/?$/i.test(
+    pathname
+  );
+}
+
+//===================================================================
+
 /** Clients registry and owner client cards do not require a selected pharmacy. */
 export function isOwnerClientsListPath(pathname: string): boolean {
   const base = '/pharmacy/clients';
@@ -331,6 +340,7 @@ export function isOperationalPharmacyPath(pathname: string): boolean {
   return (
     (LEGACY_OPERATION.test(pathname) &&
       !isOwnerOrdersListPath(pathname) &&
+      !isOwnerOrderDetailPath(pathname) &&
       !isOwnerClientsListPath(pathname) &&
       !isOwnerClientDetailPath(pathname) &&
       !isOwnerProductsListPath(pathname) &&
@@ -345,6 +355,7 @@ export function isLegacyOperationalPharmacyPath(pathname: string): boolean {
   return (
     LEGACY_OPERATION.test(pathname) &&
     !isOwnerOrdersListPath(pathname) &&
+    !isOwnerOrderDetailPath(pathname) &&
     !isOwnerClientsListPath(pathname) &&
     !isOwnerClientDetailPath(pathname) &&
     !isOwnerProductsListPath(pathname) &&

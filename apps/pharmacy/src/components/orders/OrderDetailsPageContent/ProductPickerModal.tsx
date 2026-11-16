@@ -1,7 +1,14 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
-import { Search, ShoppingCart } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+
+import {
+  CircleAlert,
+  LoaderCircle,
+  RotateCcw,
+  Search,
+  ShoppingCart,
+} from 'lucide-react';
 
 import { Button, CloseIconButton, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { CategoryIcon, SearchInput } from '@e-pharmacy/ui/forms';
@@ -15,7 +22,8 @@ import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 import type { LabeledOption } from '@e-pharmacy/utils/collections';
 import { formatMoney } from '@e-pharmacy/utils/money';
 
-import { getProductFilters, getProducts } from '@/lib/api/browser';
+import { getProductFilters } from '@/lib/api/browser';
+import { getOrderPickerProducts } from '@/lib/api/browser/products.api';
 import { getProductCategories } from '@/lib/api/browser/product-categories.api';
 import type { PharmacyOrderDetails } from '@/lib/orders/orders';
 import { getProductImageSrc } from '@/lib/products/product-images';
@@ -59,14 +67,47 @@ function ProductPickerModal({
     {}
   );
 
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [hasLoadedProducts, setHasLoadedProducts] = useState(false);
+  const [productsError, setProductsError] = useState('');
+  const [retryVersion, setRetryVersion] = useState(0);
 
   const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
     () => new Set()
   );
+
+  const isAddPendingRef = useRef(false);
+
+  // Keep one continuous loading state until both the category filters and
+  // the initial product list are ready, rather than flashing two loading phases.
+  const isPickerLoading =
+    isLoading || isLoadingCategories || !hasLoadedProducts;
+
+  const visibleItemsCount =
+    isPickerLoading || productsError ? 0 : availableProductsCount;
+
+  const categoriesReady = !isLoadingCategories && hasLoadedProducts;
+
+  const selectCategory = (category: ProductCategorySlug | 'all') => {
+    if (category === selectedCategory) return;
+
+    setIsLoading(true);
+    setSelectedCategory(category);
+  };
+
+  const updateSearch = (value: string) => {
+    setIsLoading(true);
+    setSearchValue(value);
+  };
+
+  const retryProducts = () => {
+    setIsLoading(true);
+    setRetryVersion((current) => current + 1);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -86,6 +127,8 @@ function ProductPickerModal({
           directory.map((category) => [category.slug, category.icon ?? ''])
         );
 
+        if (controller.signal.aborted) return;
+
         setCategoryIcons(iconBySlug);
 
         setCategoryOptions(
@@ -102,9 +145,11 @@ function ProductPickerModal({
           )
         );
       } catch {
-        if (!controller.signal.aborted) {
-          setError('Could not load product categories for this pharmacy.');
-        }
+        // Category filters are optional. Product search remains available
+        // even if their separate request fails.
+        if (!controller.signal.aborted) setCategoryOptions([]);
+      } finally {
+        if (!controller.signal.aborted) setIsLoadingCategories(false);
       }
     }
 
@@ -119,9 +164,9 @@ function ProductPickerModal({
     const timeoutId = window.setTimeout(async () => {
       try {
         setIsLoading(true);
-        setError('');
+        setProductsError('');
 
-        const response = await getProducts(
+        const response = await getOrderPickerProducts(
           {
             pharmacyId: order.pharmacyId,
             inStock: true,
@@ -133,14 +178,21 @@ function ProductPickerModal({
           { signal: controller.signal }
         );
 
-        setProducts([...response.items]);
-        setAvailableProductsCount(response.total);
+        if (!controller.signal.aborted) {
+          setProducts([...response.items]);
+          setAvailableProductsCount(response.total);
+        }
       } catch {
         if (!controller.signal.aborted) {
-          setError('Could not load products from this pharmacy.');
+          setProducts([]);
+          setAvailableProductsCount(0);
+          setProductsError('Could not load products from this pharmacy.');
         }
       } finally {
-        if (!controller.signal.aborted) setIsLoading(false);
+        if (!controller.signal.aborted) {
+          setHasLoadedProducts(true);
+          setIsLoading(false);
+        }
       }
     }, 250);
 
@@ -148,10 +200,12 @@ function ProductPickerModal({
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [order.pharmacyId, searchValue, selectedCategory]);
+  }, [order.pharmacyId, searchValue, selectedCategory, retryVersion]);
 
   const handleAddProduct = async (product: ProductDetails) => {
-    if (addingProductIds.has(product.id)) return;
+    if (isAddPendingRef.current) return;
+
+    isAddPendingRef.current = true;
 
     setAddingProductIds((current) => {
       const next = new Set(current);
@@ -164,6 +218,8 @@ function ProductPickerModal({
     try {
       await onAddProduct(product);
     } finally {
+      isAddPendingRef.current = false;
+
       setAddingProductIds((current) => {
         const next = new Set(current);
 
@@ -197,82 +253,106 @@ function ProductPickerModal({
         </div>
 
         <div className={css.productModalSearchBlock}>
-          <div className={css.productModalSearchLabel}>
-            <span>Product search</span>
-            <InfoTooltip
-              label="Product search help"
-              title="Product search"
-              icon={<ShoppingCart size={20} aria-hidden="true" />}
-              items={[
-                {
-                  title: 'Search fields',
-                  description:
-                    'Find a product by its name, article or ID. Suggestions are limited to available products in this pharmacy.',
-                  icon: <Search size={17} aria-hidden="true" />,
-                },
-              ]}
-            />
-          </div>
           <SearchInput
             id={searchId}
             label="Product search"
+            labelAccessory={
+              <InfoTooltip
+                label="Product search help"
+                title="Product search"
+                icon={<ShoppingCart size={20} aria-hidden="true" />}
+                items={[
+                  {
+                    title: 'Search fields',
+                    description:
+                      'Find a product by its name, article or ID. Suggestions are limited to available products in this pharmacy.',
+                    icon: <Search size={17} aria-hidden="true" />,
+                  },
+                ]}
+              />
+            }
             value={searchValue}
             placeholder="Name, article, or product ID"
             isActive={Boolean(searchValue)}
-            onChange={setSearchValue}
+            onChange={updateSearch}
           />
-
-          <p className={css.productModalAvailableCount}>
-            {`${availableProductsCount.toLocaleString('en-US')} items available`}
-          </p>
         </div>
 
-        {categoryOptions.length > 0 ? (
-          <div
-            className={css.productModalCategories}
-            aria-label="Product categories in this pharmacy"
-          >
-            <button
-              className={
-                selectedCategory === 'all'
-                  ? css.productModalCategoryActive
-                  : css.productModalCategory
-              }
-              type="button"
-              aria-pressed={selectedCategory === 'all'}
-              onClick={() => setSelectedCategory('all')}
-            >
-              <ShoppingCart size={16} aria-hidden="true" />
-              All
-            </button>
-
-            {categoryOptions.map((category) => (
+        <div
+          className={css.productModalCategories}
+          aria-label="Product categories in this pharmacy"
+          aria-busy={!categoriesReady}
+        >
+          {categoriesReady ? (
+            <>
               <button
                 className={
-                  selectedCategory === category.value
+                  selectedCategory === 'all'
                     ? css.productModalCategoryActive
                     : css.productModalCategory
                 }
                 type="button"
-                key={category.value}
-                aria-pressed={selectedCategory === category.value}
-                onClick={() => setSelectedCategory(category.value)}
+                aria-pressed={selectedCategory === 'all'}
+                onClick={() => selectCategory('all')}
               >
-                <CategoryIcon name={category.icon} size={16} />
-                {category.label}
+                <ShoppingCart size={16} aria-hidden="true" />
+                All
               </button>
-            ))}
+
+              {categoryOptions.map((category) => (
+                <button
+                  className={
+                    selectedCategory === category.value
+                      ? css.productModalCategoryActive
+                      : css.productModalCategory
+                  }
+                  type="button"
+                  key={category.value}
+                  aria-pressed={selectedCategory === category.value}
+                  onClick={() => selectCategory(category.value)}
+                >
+                  <CategoryIcon name={category.icon} size={16} />
+                  {category.label}
+                </button>
+              ))}
+            </>
+          ) : (
+            <div
+              className={css.productModalCategorySkeletons}
+              aria-hidden="true"
+            >
+              {Array.from({ length: 4 }, (_, index) => (
+                <span
+                  className={css.productModalCategorySkeleton}
+                  key={index}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <p className={css.productModalAvailableCount} aria-live="polite">
+          {`${visibleItemsCount.toLocaleString('en-US')} items available`}
+        </p>
+
+        {productsError && !isPickerLoading ? (
+          <div className={css.productModalNotice} role="alert">
+            <CircleAlert size={18} aria-hidden="true" />
+            <span>{productsError}</span>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={retryProducts}
+            >
+              <RotateCcw size={15} aria-hidden="true" />
+              Retry
+            </Button>
           </div>
         ) : null}
 
-        {error ? (
-          <p className={css.productModalNotice} role="alert">
-            {error}
-          </p>
-        ) : null}
-
         <div className={css.productModalResults}>
-          {isLoading ? (
+          {isPickerLoading ? (
             <ProfileResourceState
               variant="loading"
               title="Loading pharmacy products"
@@ -280,13 +360,19 @@ function ProductPickerModal({
             />
           ) : null}
 
-          {!isLoading && products.length === 0 ? (
-            <p className={css.productModalStatus}>
-              No matching products in this pharmacy.
-            </p>
+          {!isPickerLoading && !productsError && products.length === 0 ? (
+            <div className={css.productModalEmpty}>
+              <span className={css.emptyProductsIcon} aria-hidden="true">
+                <ShoppingCart size={24} />
+              </span>
+              <div>
+                <h3>No matching products in this pharmacy.</h3>
+                <p>Try another product search or category.</p>
+              </div>
+            </div>
           ) : null}
 
-          {!isLoading && products.length > 0 ? (
+          {!isPickerLoading && !productsError && products.length > 0 ? (
             <ul className={css.productModalList}>
               {products.map((product) => {
                 const offer = getProductOffer(product, order.pharmacyId);
@@ -297,9 +383,7 @@ function ProductPickerModal({
                 );
 
                 const isAdding = addingProductIds.has(product.id);
-
                 const categoryLabel = product.category.name;
-
                 const imageSrc = getProductImageSrc(product.imageUrl);
 
                 return (
@@ -336,7 +420,20 @@ function ProductPickerModal({
                         {categoryLabel}
                       </p>
                       <p className={css.productModalAvailability}>
-                        {offer?.availableQuantity ?? 0} items available
+                        {Math.max(
+                          0,
+                          (offer?.availableQuantity ?? 0) -
+                            // Existing orders already reserve stock on the server;
+                            // only unsaved drafts need a local deduction.
+                            (order.id === 'draft'
+                              ? order.items
+                                  .filter(
+                                    (item) => item.productOfferId === offer?.id
+                                  )
+                                  .reduce((sum, item) => sum + item.quantity, 0)
+                              : 0)
+                        )}{' '}
+                        items available
                       </p>
                     </div>
 
@@ -358,14 +455,21 @@ function ProductPickerModal({
                           !offer ||
                           offer.availableQuantity < 1 ||
                           isInOrder ||
-                          isAdding
+                          addingProductIds.size > 0
                         }
                         onClick={() => void handleAddProduct(product)}
                       >
                         {isInOrder ? (
                           'In order'
                         ) : isAdding ? (
-                          'Adding...'
+                          <>
+                            <LoaderCircle
+                              className={css.productModalAddSpinner}
+                              size={17}
+                              aria-hidden="true"
+                            />
+                            Adding...
+                          </>
                         ) : (
                           <>
                             <ShoppingCart size={18} aria-hidden="true" />

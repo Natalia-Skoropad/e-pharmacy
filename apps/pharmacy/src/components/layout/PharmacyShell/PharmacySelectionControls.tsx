@@ -13,6 +13,7 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import {
   getPharmacyIdFromDetailPath,
   isLegacyOperationalPharmacyPath,
+  isOwnerOrderDetailPath,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
 import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
@@ -30,6 +31,7 @@ export function PharmacySelectionControls() {
   if (
     !isOperational ||
     getPharmacyIdFromDetailPath(pathname) ||
+    isOwnerOrderDetailPath(pathname) ||
     isLoading ||
     memberships.length === 0
   ) {

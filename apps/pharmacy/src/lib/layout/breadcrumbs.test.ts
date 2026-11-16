@@ -116,6 +116,20 @@ test('Pharmacy data has a third breadcrumb like other detail tabs', () => {
 
 //===================================================================
 
+test('canonical order details render the order breadcrumb without query parameters', () => {
+  assert.deepEqual(
+    getPharmacyBreadcrumbsByPathname(
+      `/pharmacy/orders/details/order-id-${ENTITY_ID}`
+    ),
+    [
+      { label: 'Orders', href: '/pharmacy/orders' },
+      { label: `Order #${ENTITY_ID}` },
+    ]
+  );
+});
+
+//===================================================================
+
 test('real entity ids still produce detail breadcrumbs for each domain', () => {
   assert.deepEqual(
     getPharmacyBreadcrumbsByPathname(`/pharmacy/orders/${ENTITY_ID}`),

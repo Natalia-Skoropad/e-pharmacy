@@ -711,6 +711,7 @@
 }
 
 .productModalAvailableCount {
+  margin-bottom: 14px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-text-secondary);
@@ -720,7 +721,69 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 16px;
+  min-height: 38px;
+  margin-bottom: 6px;
+}
+
+/* Keep category pills occupied while the initial catalogue is loading. */
+.productModalCategorySkeletons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+}
+
+.productModalCategorySkeleton {
+  position: relative;
+  display: block;
+  flex: 0 0 108px;
+  height: 38px;
+  overflow: hidden;
+  background-color: var(--color-background-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.productModalCategorySkeleton:nth-child(1) {
+  flex-basis: 72px;
+}
+
+.productModalCategorySkeleton:nth-child(2) {
+  flex-basis: 116px;
+}
+
+.productModalCategorySkeleton:nth-child(3) {
+  flex-basis: 97px;
+}
+
+.productModalCategorySkeleton:nth-child(4) {
+  flex-basis: 112px;
+}
+
+.productModalCategorySkeleton::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-shimmer-highlight) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: order-category-shimmer 1.35s ease-in-out infinite;
+}
+
+@keyframes order-category-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .productModalCategorySkeleton::after {
+    animation: none;
+  }
 }
 
 .productModalCategory,
@@ -756,10 +819,63 @@
 }
 
 .productModalNotice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  padding: 10px 14px;
   margin-bottom: 12px;
   font-size: var(--fz-14);
   line-height: var(--lh-base);
   color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border-radius: var(--radius-md);
+}
+
+.productModalNotice > svg {
+  flex-shrink: 0;
+}
+
+.productModalNotice > span {
+  flex: 1 1 auto;
+}
+
+.productModalNotice > button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.productModalEmpty {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 18px;
+  color: var(--color-text-secondary);
+  background: linear-gradient(
+    110deg,
+    var(--color-accent-light),
+    var(--color-surface)
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.productModalEmpty h3 {
+  margin-bottom: 4px;
+  font-size: var(--fz-18);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  color: var(--color-text-primary);
+}
+
+.productModalEmpty p {
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+  color: var(--color-text-secondary);
 }
 
 .productModalResults {
@@ -1887,4 +2003,81 @@
 
 .methodHeader {
   justify-content: flex-end;
+}
+
+/* The add action uses the shared filled green primary button, including its hover/focus styles. */
+.addMoreProductsButton {
+  min-height: 44px;
+  font-weight: var(--fw-bold);
+}
+
+/* Fixed-size dialog: the whole modal scrolls, including search and actions. */
+.productModalBackdrop {
+  --modal-max-height: min(760px, calc(100dvh - 32px));
+  --modal-overflow: auto;
+  --modal-padding: 16px;
+  align-items: center;
+}
+
+.productModal {
+  display: block;
+  height: min(760px, calc(100dvh - 32px));
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.productModalResults {
+  min-height: 0;
+  padding-right: 0;
+  overflow: visible;
+}
+
+.productModalAddSpinner {
+  animation: order-product-spin 850ms linear infinite;
+}
+
+@keyframes order-product-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (min-width: 768px) {
+  .itemActions {
+    margin-top: 10px;
+  }
+}
+
+/* Mobile bank rows follow the public pharmacy details list exactly. */
+@media (max-width: 767px) {
+  .bankList .bankRow {
+    column-gap: 14px;
+    row-gap: 8px;
+  }
+  .bankList .bankRow dt {
+    font-weight: var(--fw-medium);
+    color: var(--color-text-secondary);
+  }
+  .bankList .bankRow dd {
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+    margin: 0;
+    justify-content: flex-start;
+  }
+  .bankCopyAction {
+    width: 44px;
+    justify-self: end;
+  }
+}
+
+.orderConflictDescription {
+  display: grid;
+  gap: 12px;
+}
+.orderConflictDescription ul {
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
 }

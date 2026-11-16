@@ -188,7 +188,15 @@ const orderEditableItemSchema = z.object({
 const managerOrderBaseSchema = z.object({
   clientRequestId: z.string().trim().uuid(),
   clientId: mongoIdSchema,
-  items: z.array(orderEditableItemSchema).min(1, 'Order must contain products'),
+
+  items: z
+    .array(
+      orderEditableItemSchema.extend({
+        expectedUnitPrice: z.number().finite().nonnegative().optional(),
+      })
+    )
+    .min(1, 'Order must contain products'),
+
   paymentMethod: z.enum(['cash', 'bank_transfer']),
   comment: sharedOrderCommentSchema,
 });

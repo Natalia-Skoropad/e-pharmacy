@@ -34,18 +34,14 @@ test('order A to B navigation remounts the details resource and resets transient
       readFile(FILTER_ROUTE_SOURCE, 'utf8'),
     ]);
 
-  assert.match(
-    orderRouteSource,
-    /<OrderDetailsPageContent key=\{orderId\} orderId=\{orderId\} \/>/
-  );
-
+  assert.match(orderRouteSource, /redirect\(getPharmacyOrderPath\(orderId\)\)/);
   assert.match(filterRouteSource, /const orderId = segments\?\.length === 1/);
   assert.match(filterRouteSource, /!isValidObjectId\(orderId\)/);
   assert.match(filterRouteSource, /notFound\(\)/);
 
   assert.match(
     filterRouteSource,
-    /<OrderDetailsPageContent key=\{orderId\} orderId=\{orderId\} \/>/
+    /redirect\(getPharmacyOrderPath\(orderId\)\)/
   );
 
   for (const initialState of [

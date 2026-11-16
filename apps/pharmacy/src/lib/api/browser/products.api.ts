@@ -78,6 +78,31 @@ export async function getProducts(
 
 //===================================================================
 
+/**
+ * Order creation uses the pharmacy ID from the loaded order draft. The BFF
+ * forwards it to the authenticated backend, which validates membership.
+ * This avoids relying on a possibly stale global selected-pharmacy header.
+ */
+export async function getOrderPickerProducts(
+  params: PharmacyProductsApiQueryParams & Readonly<{ pharmacyId: string }>,
+  options: BrowserReadRequestOptions = {}
+): Promise<ProductsWithOffersResponse> {
+  const path = appendQueryParams(PHARMACY_API_ROUTES.products.list, params);
+
+  return parseApiResponseData(
+    await ownerLocalApiRequest(path, {
+      ...sanitizeBrowserReadRequestOptions(options),
+      headers: { 'X-Pharmacy-ID': params.pharmacyId },
+    }),
+
+    parseProductsWithOffersResponse,
+
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
 export async function getProductFilters(
   params: Readonly<{ pharmacyId?: string; inStock?: boolean }> = {},
   options: BrowserReadRequestOptions = {}
@@ -85,7 +110,10 @@ export async function getProductFilters(
   const path = appendQueryParams(PHARMACY_API_ROUTES.products.filters, params);
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await ownerLocalApiRequest(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
 
     parseProductFilterOptionsResponse,
 

@@ -5,67 +5,41 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  CircleCheckBig,
-  CircleMinus,
-  CirclePlay,
-  CirclePlus,
-  CircleX,
-  CreditCard,
   Boxes,
-  Package,
-  X,
+  CircleCheckBig,
+  CirclePlay,
+  CircleX,
   Clock,
+  CreditCard,
   History,
-  Info,
-  MapPin,
-  Mail,
-  Phone,
-  Save,
+  LogOut,
   MessageSquareText,
+  Save,
   ShoppingBag,
-  ShoppingCart,
   Trash2,
   Truck,
-  Wallet,
+  X,
 } from 'lucide-react';
 
 import {
-  DELIVERY_METHOD_LABELS,
   ORDER_STATUS_PRESENTATION,
-  PAYMENT_METHOD_LABELS,
   PHARMACY_STATUS_PRESENTATION,
 } from '@e-pharmacy/config/presentation';
 
 import {
-  Button,
-  CopyButton,
-  LazyLoadButton,
-  LoadingSpinner,
-  SvgIcon,
-} from '@e-pharmacy/ui/primitives';
+  getOrderStatusTransitions,
+  ORDER_PRICE_CHANGED_ERROR_CODE,
+} from '@e-pharmacy/config/orders';
 
-import { LinkButton } from '@e-pharmacy/ui/navigation';
-
-import {
-  CountLabel,
-  RatingSummary,
-  formatInitials,
-} from '@e-pharmacy/ui/data-display';
-
-import {
-  CategoryIcon,
-  QuantityCounter,
-  RadioOption,
-} from '@e-pharmacy/ui/forms';
-
-import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
+import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
+import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { formatInitials } from '@e-pharmacy/ui/data-display';
+import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import { AddressInput, NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { ProfileSectionHeader } from '@e-pharmacy/ui/profile';
-import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import type {
@@ -76,38 +50,24 @@ import type {
 } from '@e-pharmacy/types/orders';
 
 import type { ProductDetails } from '@e-pharmacy/types/products';
-import { getOrderStatusTransitions } from '@e-pharmacy/config/orders';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { formatDateTime } from '@e-pharmacy/utils/date';
-import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
-import { getWorkingHoursDisplayItems } from '@e-pharmacy/validation/pharmacy';
 
 import {
-  USER_ADDRESS_MAX_LENGTH,
-  USER_NAME_MAX_LENGTH,
-  USER_PHONE_MAX_LENGTH,
   buildOrderRejectionReasonError,
   hasValidationErrors,
   normalizePhoneInput,
   validateOrderDeliveryForm,
-  type OrderDeliveryFormErrors,
   type OrderDeliveryTouchedFields,
   type OrderDeliveryFormValues,
 } from '@e-pharmacy/validation/order';
 
-import {
-  getPharmacyClientPath,
-  getPharmacyOrderPath,
-  getPharmacyProductPath,
-} from '@/lib/routes';
+import { getPharmacyClientPath, getPharmacyOrderPath } from '@/lib/routes';
 
 import {
   createPharmacyOrder,
-  createPharmacyOrderComment,
-  deletePharmacyOrderComment,
   getPharmacyClients,
   getPharmacyOrderDetails,
-  getPharmacyOrderComments,
   updatePharmacyOrder,
   updatePharmacyOrderStatus,
   type CreatePharmacyOrderPayload,
@@ -115,13 +75,13 @@ import {
 
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 
-import {
-  type PharmacyOrderActivityHistoryItem,
-  type PharmacyOrderDetails,
-  type PharmacyOrderItem,
+import type {
+  PharmacyOrderDetails,
+  PharmacyOrderItem,
 } from '@/lib/orders/orders';
 
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser/pharmacy.api';
+import { getProductDetails } from '@/lib/api/browser/products.api';
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
@@ -129,13 +89,22 @@ import { getProductImageSrc } from '@/lib/products/product-images';
 import { getProductCategories } from '@/lib/api/browser/product-categories.api';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
-import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
+import { useUnsavedPharmacyNavigation } from '@/components/pharmacies/OwnedPharmacyEditor/useUnsavedPharmacyNavigation';
 
-import { ProductPickerModal } from './ProductPickerModal';
+import {
+  ManagerCommentTab,
+  HistoryTab,
+  type OrderHistoryEntry,
+} from './OrderActivityTabs';
+
 import { NewOrderClientSearch } from './NewOrderClientSearch';
+import { ProductPickerModal } from './ProductPickerModal';
+import { OrderProductsTab } from './OrderProductsTab';
+import { DeliveryTab, PaymentTab } from './OrderMethodTabs';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -189,31 +158,15 @@ type PendingPriceQuantityChange = Readonly<{
   quantity: number;
 }>;
 
+type OrderCreateConflict = Readonly<{
+  kind: 'stock' | 'price';
+  details: readonly string[];
+  refreshedItems: PharmacyOrderItem[] | null;
+}>;
+
 //===================================================================
 
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
-
-//===================================================================
-
-type OrderHistoryEntry =
-  | Readonly<{
-      id: string;
-      occurredAt: string;
-      kind: 'status';
-      entry: PharmacyOrderDetails['statusHistory'][number];
-    }>
-  | Readonly<{
-      id: string;
-      occurredAt: string;
-      kind: 'activity';
-      entry: PharmacyOrderActivityHistoryItem;
-    }>;
-
-//===================================================================
-
-const COMMENTS_PER_PAGE = 10;
-const HISTORY_INITIAL_VISIBLE_COUNT = 10;
-const HISTORY_LOAD_STEP = 5;
 
 //===================================================================
 
@@ -363,12 +316,6 @@ function getOrderItemsPayload(items: PharmacyOrderItem[]) {
 
 //===================================================================
 
-function formatAvailableItems(quantity: number): string {
-  return quantity === 1 ? '1 item available' : `${quantity} items available`;
-}
-
-//===================================================================
-
 function OrderClientBadge({
   clientId,
   name,
@@ -410,818 +357,6 @@ function getOrderFormState(order: PharmacyOrderDetails) {
     deliveryAddress: order.deliveryAddress ?? order.clientAddress ?? '',
     paymentMethod: order.paymentMethod,
   };
-}
-
-//===================================================================
-
-function OrderProductCard({
-  item,
-  categoryIcons,
-  isEditable,
-  isUpdating,
-  onQuantityChange,
-  onRemove,
-}: Readonly<{
-  item: PharmacyOrderItem;
-  categoryIcons: Readonly<Record<string, string>>;
-  isEditable: boolean;
-  isUpdating: boolean;
-  onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
-  onRemove: (item: PharmacyOrderItem) => void;
-}>) {
-  const imageSrc = getProductImageSrc(item.imageUrl);
-  const stockQuantity = item.quantity + (item.availableQuantity ?? 0);
-  const availableQuantity = item.availableQuantity ?? 0;
-
-  return (
-    <article
-      className={css.itemCard}
-      aria-labelledby={`order-product-${item.id}`}
-    >
-      <div className={css.itemImageWrap}>
-        {imageSrc ? (
-          <ShimmerImage
-            className={css.itemImage}
-            src={imageSrc}
-            alt={item.name}
-            sizes="(max-width: 767px) calc(100vw - 88px), 140px"
-            unoptimized
-          />
-        ) : (
-          <div className={css.itemFallback} aria-hidden="true">
-            <SvgIcon name="icon-shopping-cart" size={28} />
-          </div>
-        )}
-      </div>
-
-      <div className={css.itemContent}>
-        <div className={css.itemHead}>
-          <div>
-            {item.category ? (
-              <p className={css.itemCategory}>
-                <span className={css.categoryIcon} aria-hidden="true">
-                  <CategoryIcon
-                    name={categoryIcons[item.category.slug]}
-                    size={16}
-                  />
-                </span>
-                {item.category.name}
-              </p>
-            ) : null}
-
-            <h3 className={css.itemTitle} id={`order-product-${item.id}`}>
-              {item.name}
-            </h3>
-
-            <RatingSummary
-              className={css.itemRating}
-              rating={item.rating ?? 0}
-              reviewsCount={item.reviewsCount ?? 0}
-              size="sm"
-            />
-          </div>
-
-          <dl className={css.itemPrices}>
-            <div className={css.totalPriceRow}>
-              <dt>Total amount</dt>
-              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
-            </div>
-            <div className={css.unitPriceRow}>
-              <dt>Unit price</dt>
-              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className={css.itemFooter}>
-          <div className={css.quantityBlock}>
-            <QuantityCounter
-              value={item.quantity}
-              min={0}
-              max={stockQuantity}
-              disabled={!isEditable}
-              isLoading={isUpdating}
-              ariaLabel={`Quantity controls for ${item.name}`}
-              onDecrement={() => onQuantityChange(item, item.quantity - 1)}
-              onIncrement={() => onQuantityChange(item, item.quantity + 1)}
-            />
-
-            <p className={css.stockText}>
-              {formatAvailableItems(availableQuantity)}
-            </p>
-          </div>
-
-          <div className={css.itemActions}>
-            <LinkButton
-              href={getPharmacyProductPath(item.productId)}
-              variant="secondary"
-              size="sm"
-              renderLink={({ href, className, children, ...props }) => (
-                <Link href={href} className={className} {...props}>
-                  {children}
-                </Link>
-              )}
-            >
-              <Info size={16} aria-hidden="true" />
-              Details
-            </LinkButton>
-
-            <Button
-              className={css.removeButton}
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={!isEditable || isUpdating}
-              onClick={() => onRemove(item)}
-            >
-              <Trash2 size={16} aria-hidden="true" />
-              Remove
-            </Button>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-//===================================================================
-
-function OrderProductsTab({
-  order,
-  categoryIcons,
-  isEditable,
-  isUpdating,
-  onQuantityChange,
-  onRemoveProduct,
-  onOpenProductModal,
-}: Readonly<{
-  order: PharmacyOrderDetails;
-  categoryIcons: Readonly<Record<string, string>>;
-  isEditable: boolean;
-  isUpdating: boolean;
-  onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
-  onRemoveProduct: (item: PharmacyOrderItem) => void;
-  onOpenProductModal: () => void;
-}>) {
-  return (
-    <div className={css.productsGrid}>
-      <section className={css.itemsSection} aria-labelledby="order-items-title">
-        <div className={css.itemsList}>
-          {order.items.length > 0 ? (
-            order.items.map((item) => (
-              <OrderProductCard
-                key={item.productOfferId}
-                item={item}
-                categoryIcons={categoryIcons}
-                isEditable={isEditable}
-                isUpdating={isUpdating}
-                onQuantityChange={onQuantityChange}
-                onRemove={onRemoveProduct}
-              />
-            ))
-          ) : (
-            <div className={css.emptyProducts}>
-              <span className={css.emptyProductsIcon} aria-hidden="true">
-                <ShoppingCart size={23} />
-              </span>
-              <div>
-                <h2>No products in this order yet</h2>
-                <p>
-                  Click “Add more products” to select an available product
-                  before saving the order.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <aside className={css.orderSummary} aria-labelledby="order-summary-title">
-        <h2 className={css.summaryTitle} id="order-summary-title">
-          Order summary
-        </h2>
-
-        <dl className={css.summaryListCompact}>
-          <div>
-            <dt>
-              <Package size={17} aria-hidden="true" /> Items
-            </dt>
-            <dd>{order.totalQuantity}</dd>
-          </div>
-
-          <div>
-            <dt>
-              <Wallet size={17} aria-hidden="true" /> Total
-            </dt>
-            <dd>{formatMoney(order.totalAmount) ?? '—'}</dd>
-          </div>
-        </dl>
-
-        <div className={css.clientComment}>
-          <div className={css.clientCommentTitle}>
-            <MessageSquareText size={18} aria-hidden="true" />
-            <strong>Client comment</strong>
-          </div>
-          <p>{order.clientComment || 'Client did not leave a comment.'}</p>
-        </div>
-
-        <Button
-          type="button"
-          variant="ghost"
-          fullWidth
-          disabled={!isEditable || isUpdating}
-          onClick={onOpenProductModal}
-        >
-          <CirclePlus size={17} aria-hidden="true" />
-          Add more products
-        </Button>
-      </aside>
-    </div>
-  );
-}
-
-//===================================================================
-
-function DeliveryTab({
-  order,
-  isCreateMode,
-  isEditable,
-  deliveryMethod,
-  recipientName,
-  recipientPhone,
-  deliveryAddress,
-  deliveryErrors,
-  deliveryTouchedFields,
-  isUpdating,
-  onDeliveryMethodChange,
-  onRecipientNameChange,
-  onRecipientPhoneChange,
-  onDeliveryAddressChange,
-  onCopyValue,
-  onSave,
-}: Readonly<{
-  order: PharmacyOrderDetails;
-  isCreateMode: boolean;
-  isEditable: boolean;
-  deliveryMethod: DeliveryMethod;
-  recipientName: string;
-  recipientPhone: string;
-  deliveryAddress: string;
-  deliveryErrors: OrderDeliveryFormErrors;
-  deliveryTouchedFields: OrderDeliveryTouchedFields;
-  isUpdating: boolean;
-  onDeliveryMethodChange: (value: DeliveryMethod) => void;
-  onRecipientNameChange: (value: string) => void;
-  onRecipientPhoneChange: (value: string) => void;
-  onDeliveryAddressChange: (value: string) => void;
-  onCopyValue: (value: string, label: string) => void;
-  onSave: () => void;
-}>) {
-  const workingHours =
-    getWorkingHoursDisplayItems(order.pharmacyWorkingHours ?? '') ?? [];
-
-  const pharmacyLocation = formatPharmacyLocation(order.pharmacyLocation);
-
-  return (
-    <>
-      <div className={css.orderTabHeader}>
-        <ProfileSectionHeader
-          title="Delivery method"
-          titleId="delivery-title"
-          description="Choose how the client will receive the order."
-          icon={<Truck size={22} aria-hidden="true" />}
-        />
-      </div>
-
-      <section className={css.methodCard} aria-labelledby="delivery-title">
-        {!isCreateMode ? (
-          <div className={css.methodHeader}>
-            <Button
-              className={css.tabSaveButton}
-              type="button"
-              disabled={!isEditable || isUpdating}
-              onClick={onSave}
-            >
-              <Save size={17} aria-hidden="true" /> Save delivery method
-            </Button>
-          </div>
-        ) : null}
-
-        <div className={css.methodGrid}>
-          <fieldset
-            className={css.methodOptions}
-            disabled={!isEditable || isUpdating}
-          >
-            <legend className="visually-hidden">Delivery method</legend>
-
-            <RadioOption
-              name="delivery-method"
-              value="pickup"
-              checked={deliveryMethod === 'pickup'}
-              label={DELIVERY_METHOD_LABELS.pickup}
-              disabled={!isEditable || isUpdating}
-              onChange={onDeliveryMethodChange}
-            />
-
-            <RadioOption
-              name="delivery-method"
-              value="postal_delivery"
-              checked={deliveryMethod === 'postal_delivery'}
-              label={DELIVERY_METHOD_LABELS.postal_delivery}
-              disabled={!isEditable || isUpdating}
-              onChange={onDeliveryMethodChange}
-            />
-          </fieldset>
-
-          <div className={css.methodDetailsPanel}>
-            {deliveryMethod === 'pickup' ? (
-              <div className={css.deliveryInfoCard}>
-                <h3>Pharmacy details</h3>
-
-                <ul className={css.deliveryIconList}>
-                  {order.pharmacyPhone ? (
-                    <li>
-                      <Phone size={18} aria-hidden="true" />
-                      <a href={`tel:${order.pharmacyPhone}`}>
-                        {order.pharmacyPhone}
-                      </a>
-                    </li>
-                  ) : null}
-
-                  {order.pharmacyEmail ? (
-                    <li className={css.emailRow}>
-                      <Mail size={18} aria-hidden="true" />
-                      <span className={css.emailActions}>
-                        <a href={`mailto:${order.pharmacyEmail}`}>
-                          {order.pharmacyEmail}
-                        </a>
-                        <CopyButton
-                          label={`Copy pharmacy email ${order.pharmacyEmail}`}
-                          disabled={isUpdating}
-                          onClick={() =>
-                            onCopyValue(
-                              order.pharmacyEmail ?? '',
-                              'Pharmacy email'
-                            )
-                          }
-                        />
-                      </span>
-                    </li>
-                  ) : null}
-
-                  <li>
-                    <Clock size={18} aria-hidden="true" />
-                    {workingHours.length > 0 ? (
-                      <span className={css.workingHoursList}>
-                        {workingHours.map((item) => (
-                          <span key={item.day}>
-                            <strong>{item.day}:</strong> {item.hours}
-                          </span>
-                        ))}
-                      </span>
-                    ) : (
-                      <span>Working hours are not specified.</span>
-                    )}
-                  </li>
-
-                  {pharmacyLocation ? (
-                    <li>
-                      <MapPin size={18} aria-hidden="true" />
-                      <span>{pharmacyLocation}</span>
-                    </li>
-                  ) : null}
-                </ul>
-              </div>
-            ) : (
-              <div className={css.deliveryFields}>
-                <div className={css.deliveryFieldsGrid}>
-                  <NameInput
-                    id="recipient-name"
-                    name="recipientName"
-                    value={recipientName}
-                    error={deliveryErrors.recipientName ?? ''}
-                    isTouched={Boolean(deliveryTouchedFields.recipientName)}
-                    maxLength={USER_NAME_MAX_LENGTH}
-                    disabled={!isEditable || isUpdating}
-                    onChange={(event) =>
-                      onRecipientNameChange(event.target.value)
-                    }
-                  />
-
-                  <PhoneInput
-                    id="recipient-phone"
-                    name="recipientPhone"
-                    value={recipientPhone}
-                    error={deliveryErrors.recipientPhone ?? ''}
-                    isTouched={Boolean(deliveryTouchedFields.recipientPhone)}
-                    maxLength={USER_PHONE_MAX_LENGTH}
-                    disabled={!isEditable || isUpdating}
-                    onChange={(event) =>
-                      onRecipientPhoneChange(event.target.value)
-                    }
-                  />
-
-                  <div className={css.deliveryFieldWide}>
-                    <AddressInput
-                      id="delivery-address"
-                      name="deliveryAddress"
-                      value={deliveryAddress}
-                      error={deliveryErrors.deliveryAddress ?? ''}
-                      isTouched={Boolean(deliveryTouchedFields.deliveryAddress)}
-                      maxLength={USER_ADDRESS_MAX_LENGTH}
-                      disabled={!isEditable || isUpdating}
-                      onChange={(event) =>
-                        onDeliveryAddressChange(event.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className={css.deliveryNotes}>
-                  <div className={css.deliveryNoteCard}>
-                    <Truck size={18} aria-hidden="true" />
-                    <p>
-                      After confirmation, the pharmacy will contact the client
-                      to confirm or clarify the delivery address.
-                    </p>
-                  </div>
-
-                  <div className={css.deliveryNoteCardAccent}>
-                    <Info size={18} aria-hidden="true" />
-                    <p>
-                      Delivery is not included in the product price. The carrier
-                      will announce the delivery cost separately.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-//===================================================================
-
-function PaymentTab({
-  order,
-  isCreateMode,
-  paymentMethod,
-  isEditable,
-  isUpdating,
-  onPaymentMethodChange,
-  onCopyValue,
-  onSave,
-}: Readonly<{
-  order: PharmacyOrderDetails;
-  isCreateMode: boolean;
-  paymentMethod: PaymentMethod;
-  isEditable: boolean;
-  isUpdating: boolean;
-  onPaymentMethodChange: (value: PaymentMethod) => void;
-  onCopyValue: (value: string, label: string) => void;
-  onSave: () => void;
-}>) {
-  const bankDetails = order.bankDetails;
-
-  const bankRows = bankDetails
-    ? ([
-        ['Recipient name', bankDetails.recipientName],
-        ['Tax ID / EDRPOU', bankDetails.taxId],
-        ['IBAN', bankDetails.iban],
-        ['Bank name', bankDetails.bankName],
-        ['Payment purpose', bankDetails.paymentPurpose],
-      ] as const)
-    : [];
-
-  return (
-    <>
-      <div className={css.orderTabHeader}>
-        <ProfileSectionHeader
-          title="Payment method"
-          titleId="payment-title"
-          description="Choose how the client will pay for the order."
-          icon={<CreditCard size={22} aria-hidden="true" />}
-        />
-      </div>
-
-      <section className={css.methodCard} aria-labelledby="payment-title">
-        {!isCreateMode ? (
-          <div className={css.methodHeader}>
-            <Button
-              className={css.tabSaveButton}
-              type="button"
-              disabled={
-                !isEditable ||
-                isUpdating ||
-                (paymentMethod === 'bank_transfer' && !bankDetails)
-              }
-              onClick={onSave}
-            >
-              <Save size={17} aria-hidden="true" /> Save payment method
-            </Button>
-          </div>
-        ) : null}
-
-        <div className={css.methodGrid}>
-          <fieldset
-            className={css.methodOptions}
-            disabled={!isEditable || isUpdating}
-          >
-            <legend className="visually-hidden">Payment method</legend>
-
-            <RadioOption
-              name="payment-method"
-              value="cash"
-              checked={paymentMethod === 'cash'}
-              label={PAYMENT_METHOD_LABELS.cash}
-              disabled={!isEditable || isUpdating}
-              onChange={onPaymentMethodChange}
-            />
-
-            <RadioOption
-              name="payment-method"
-              value="bank_transfer"
-              checked={paymentMethod === 'bank_transfer'}
-              label={PAYMENT_METHOD_LABELS.bank_transfer}
-              disabled={!isEditable || isUpdating || !bankDetails}
-              onChange={onPaymentMethodChange}
-            />
-          </fieldset>
-
-          <div className={css.methodDetailsPanel}>
-            {paymentMethod === 'cash' ? (
-              <div className={css.paymentInfoCard}>
-                <Wallet size={20} aria-hidden="true" />
-                <h3>Pay when everything is ready</h3>
-                <p>
-                  Cash is paid during pickup or delivery. Please keep the order
-                  amount ready when the client receives the order.
-                </p>
-              </div>
-            ) : (
-              <div className={css.bankDetailsStack}>
-                <div className={css.bankCard}>
-                  <h3>Bank details</h3>
-
-                  {bankDetails ? (
-                    <dl className={css.bankList}>
-                      {bankRows.map(([label, value]) => (
-                        <div className={css.bankRow} key={label}>
-                          <dt>{label}</dt>
-                          <dd>
-                            <span>{value}</span>
-                          </dd>
-                          <span className={css.bankCopyAction}>
-                            <CopyButton
-                              label={`Copy ${label} ${value}`}
-                              disabled={isUpdating}
-                              onClick={() => onCopyValue(value, label)}
-                            />
-                          </span>
-                        </div>
-                      ))}
-                      {bankDetails.receiptEmail ? (
-                        <div className={css.bankRow}>
-                          <dt>Receipt email</dt>
-                          <dd>
-                            <a href={`mailto:${bankDetails.receiptEmail}`}>
-                              {bankDetails.receiptEmail}
-                            </a>
-                          </dd>
-                          <span className={css.bankCopyAction}>
-                            <CopyButton
-                              label={`Copy receipt email ${bankDetails.receiptEmail}`}
-                              disabled={isUpdating}
-                              onClick={() =>
-                                onCopyValue(
-                                  bankDetails.receiptEmail ?? '',
-                                  'Receipt email'
-                                )
-                              }
-                            />
-                          </span>
-                        </div>
-                      ) : null}
-                    </dl>
-                  ) : (
-                    <p className={css.metaText}>
-                      Bank transfer is unavailable because the pharmacy has not
-                      provided bank details yet.
-                    </p>
-                  )}
-                </div>
-
-                {bankDetails ? (
-                  <div className={css.emailNote}>
-                    <Mail size={20} aria-hidden="true" />
-                    <p>
-                      After payment, the client should send the receipt to the
-                      pharmacy email for faster processing.
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
-
-//===================================================================
-
-function ManagerCommentTab({
-  orderId,
-  totalComments,
-  isEditable,
-  onTotalChange,
-}: Readonly<{
-  orderId: string;
-  totalComments: number;
-  isEditable: boolean;
-  onTotalChange: (total: number) => void;
-}>) {
-  return (
-    <EntityComments
-      entityKey={`order:${orderId}`}
-      initialTotal={totalComments}
-      isEditable={isEditable}
-      placeholder="Write an internal comment for this order..."
-      load={(page, options) =>
-        getPharmacyOrderComments(
-          orderId,
-          { page, perPage: COMMENTS_PER_PAGE },
-          options
-        )
-      }
-      create={async (text, options) => {
-        await createPharmacyOrderComment(
-          orderId,
-          text,
-          options.clientRequestId,
-          options
-        );
-      }}
-      remove={(id, options) => deletePharmacyOrderComment(orderId, id, options)}
-      onTotalChange={onTotalChange}
-    />
-  );
-}
-
-//===================================================================
-
-function getOrderActivityLabel(
-  activity: PharmacyOrderActivityHistoryItem
-): string {
-  if (activity.type === 'product_added') return 'ProductDetails added';
-  if (activity.type === 'product_removed') return 'ProductDetails removed';
-  if (activity.type === 'quantity_increased') return 'Quantity increased';
-
-  return 'Quantity decreased';
-}
-
-//===================================================================
-
-function HistoryTab({
-  historyEntries,
-  rejectionReason,
-}: Readonly<{
-  historyEntries: OrderHistoryEntry[];
-  rejectionReason?: string;
-}>) {
-  const [visibleCount, setVisibleCount] = useState(
-    HISTORY_INITIAL_VISIBLE_COUNT
-  );
-
-  const visibleEntries = historyEntries.slice(0, visibleCount);
-
-  return (
-    <section className={css.methodCard} aria-labelledby="history-title">
-      <div className={css.historyHeader}>
-        <h2 id="history-title">Order history</h2>
-
-        <CountLabel
-          className={css.tabCountLabel}
-          shown={visibleEntries.length}
-          total={historyEntries.length}
-          label="history events"
-        />
-      </div>
-
-      <ol className={css.historyList}>
-        {visibleEntries.map((historyEntry) => {
-          if (historyEntry.kind === 'status') {
-            const entry = historyEntry.entry;
-
-            const toneClassName =
-              entry.status === 'rejected'
-                ? css.historyDanger
-                : entry.status === 'in_progress'
-                  ? css.historyWarning
-                  : entry.status === 'new'
-                    ? css.historyInfo
-                    : undefined;
-
-            return (
-              <li key={historyEntry.id} className={toneClassName}>
-                <History size={18} aria-hidden="true" />
-                <div className={css.historyContent}>
-                  <div className={css.historyTopRow}>
-                    <div className={css.historyMeta}>
-                      <strong>
-                        {ORDER_STATUS_PRESENTATION[entry.status].label}
-                      </strong>
-                      <time dateTime={entry.changedAt}>
-                        {formatDateTime(entry.changedAt) ?? '—'}
-                      </time>
-                    </div>
-
-                    <StatusBadge {...ORDER_STATUS_PRESENTATION[entry.status]} />
-                  </div>
-
-                  {entry.comment ? <p>{entry.comment}</p> : null}
-                  {entry.status === 'rejected' && rejectionReason ? (
-                    <p className={css.historyRejectionReason}>
-                      <b>Rejection reason:</b> {rejectionReason}
-                    </p>
-                  ) : null}
-                </div>
-              </li>
-            );
-          }
-
-          const activity = historyEntry.entry;
-          const isIncrease = activity.quantityDelta > 0;
-
-          const priceChanged =
-            activity.previousUnitPrice !== activity.unitPrice;
-
-          const ActivityIcon =
-            activity.type === 'product_added'
-              ? ShoppingCart
-              : activity.type === 'product_removed'
-                ? Trash2
-                : isIncrease
-                  ? CirclePlus
-                  : CircleMinus;
-
-          const activityToneClassName =
-            activity.type === 'product_removed' ||
-            activity.type === 'quantity_decreased'
-              ? css.historyDanger
-              : undefined;
-
-          return (
-            <li key={historyEntry.id} className={activityToneClassName}>
-              <ActivityIcon size={18} aria-hidden="true" />
-              <div className={css.historyContent}>
-                <div className={css.historyTopRow}>
-                  <div className={css.historyMeta}>
-                    <strong>{getOrderActivityLabel(activity)}</strong>
-                    <time dateTime={activity.occurredAt}>
-                      {formatDateTime(activity.occurredAt) ?? '—'}
-                    </time>
-                  </div>
-                </div>
-                <p>
-                  <b>{activity.productName}</b>: {activity.previousQuantity} →{' '}
-                  {activity.quantity}{' '}
-                  <span
-                    className={
-                      isIncrease ? css.historyIncrease : css.historyDecrease
-                    }
-                  >
-                    ({activity.quantityDelta > 0 ? '+' : ''}
-                    {activity.quantityDelta})
-                  </span>
-                </p>
-                {priceChanged ? (
-                  <p className={css.historyPriceChange}>
-                    Unit price changed from{' '}
-                    {formatMoney(activity.previousUnitPrice) ?? '—'} to{' '}
-                    {formatMoney(activity.unitPrice) ?? '—'}.
-                  </p>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-
-      <LazyLoadButton
-        visibleCount={visibleEntries.length}
-        totalCount={historyEntries.length}
-        label="Show more history"
-        onLoadMore={() =>
-          setVisibleCount((current) => current + HISTORY_LOAD_STEP)
-        }
-      />
-    </section>
-  );
 }
 
 //===================================================================
@@ -1354,6 +489,11 @@ function OrderDetailsPageContent({
 
   const [isCreateConfirmationOpen, setIsCreateConfirmationOpen] =
     useState(false);
+
+  const [createConflict, setCreateConflict] =
+    useState<OrderCreateConflict | null>(null);
+
+  const [initialClientId, setInitialClientId] = useState('');
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
@@ -1493,6 +633,7 @@ function OrderDetailsPageContent({
               : {}),
           };
 
+          setInitialClientId(defaultClient.id);
           setClients(activeClients);
           setSelectedClientId(defaultClient.id);
           setOrder(draftOrder);
@@ -1581,6 +722,7 @@ function OrderDetailsPageContent({
       .catch(() => {
         /* Categories retain their fallback icons. */
       });
+
     return () => controller.abort();
   }, []);
 
@@ -1615,6 +757,28 @@ function OrderDetailsPageContent({
     : order?.status === 'in_progress' && !pharmacyLockedStatus;
 
   const isOrderBusy = isUpdatingOrder || isCreatingOrder;
+
+  // An untouched empty draft can be left without a warning.
+  const isDirtyDraft = Boolean(
+    isCreateMode &&
+    order &&
+    (order.items.length > 0 ||
+      (initialClientId && selectedClientId !== initialClientId) ||
+      deliveryMethod !== 'pickup' ||
+      paymentMethod !== 'cash' ||
+      recipientName !== (selectedClient?.name ?? '') ||
+      recipientPhone !==
+        (getOptionalClientValue(selectedClient?.phone ?? '') ?? '') ||
+      deliveryAddress !==
+        (getOptionalClientValue(selectedClient?.address ?? '') ?? ''))
+  );
+
+  const {
+    allowNavigateRef,
+    pendingNavigationRef,
+    leaveDialogOpen,
+    setLeaveDialogOpen,
+  } = useUnsavedPharmacyNavigation(isDirtyDraft);
 
   const statusModalText = pendingStatus
     ? getStatusModalText(pendingStatus.status)
@@ -1776,6 +940,7 @@ function OrderDetailsPageContent({
       item.currentPrice !== item.unitPrice
     ) {
       setPendingPriceQuantityChange({ item, quantity });
+
       return;
     }
 
@@ -1789,6 +954,7 @@ function OrderDetailsPageContent({
       toast.error(
         'You cannot remove the whole order. Continue editing it or reject the order.'
       );
+
       return;
     }
 
@@ -2010,6 +1176,7 @@ function OrderDetailsPageContent({
       setOrder((currentOrder) =>
         currentOrder ? { ...currentOrder, paymentMethod } : currentOrder
       );
+
       toast.success('Payment method saved in the order draft.');
       return;
     }
@@ -2131,7 +1298,13 @@ function OrderDetailsPageContent({
     try {
       const payload: CreateOrderPayloadWithoutRequestId = {
         clientId: selectedClientId,
-        items: getOrderItemsPayload(order.items),
+
+        items: order.items.map(({ productOfferId, quantity, unitPrice }) => ({
+          productOfferId,
+          quantity,
+          expectedUnitPrice: unitPrice,
+        })),
+
         deliveryMethod,
 
         ...(deliveryMethod === 'postal_delivery'
@@ -2172,16 +1345,73 @@ function OrderDetailsPageContent({
       setIsCreateConfirmationOpen(false);
       dispatchOrderCounterRefresh();
       toast.success('Order created and moved to In progress.');
+      allowNavigateRef.current = true;
       router.replace(getPharmacyOrderPath(createdOrder.id));
     } catch (createError) {
       if (resourceGenerationRef.current !== generation) return;
 
-      toast.error(
-        getSafeApiErrorMessage(
-          createError,
-          'Could not create the order. Please try again.'
-        )
-      );
+      const code = isApiError(createError) ? createError.backendCode : null;
+
+      if (
+        code === STOCK_CHANGED_ERROR_CODE ||
+        code === ORDER_PRICE_CHANGED_ERROR_CODE
+      ) {
+        const kind = code === STOCK_CHANGED_ERROR_CODE ? 'stock' : 'price';
+        const details: string[] = [];
+
+        let refreshedItems: PharmacyOrderItem[] | null = null;
+
+        // The server has already rejected the transaction; fetch live snapshots
+        // so the manager can explicitly accept revised prices/quantities.
+        try {
+          const snapshots = await Promise.all(
+            order.items.map(async (item) => {
+              const { product } = await getProductDetails(item.productId);
+              const offer = getProductOffer(product, order.pharmacyId);
+              const available = offer?.availableQuantity ?? 0;
+              const quantity = Math.min(item.quantity, available);
+              const price = offer?.price ?? item.unitPrice;
+
+              if (available < item.quantity) {
+                details.push(
+                  `${item.name}: requested ${item.quantity}, available ${available}.`
+                );
+              }
+
+              if (price !== item.unitPrice) {
+                details.push(
+                  `${item.name}: ${formatMoney(item.unitPrice) ?? '—'} → ${formatMoney(price) ?? '—'}.`
+                );
+              }
+
+              return {
+                ...item,
+                quantity,
+                unitPrice: price,
+                currentPrice: price,
+                availableQuantity: Math.max(0, available - quantity),
+              };
+            })
+          );
+
+          refreshedItems = snapshots.filter((item) => item.quantity > 0);
+        } catch {
+          // Do not guess live stock or prices when refreshing failed.
+          refreshedItems = null;
+        }
+
+        if (resourceGenerationRef.current !== generation) return;
+
+        setIsCreateConfirmationOpen(false);
+        setCreateConflict({ kind, details, refreshedItems });
+      } else {
+        toast.error(
+          getSafeApiErrorMessage(
+            createError,
+            'Could not create the order. Please try again.'
+          )
+        );
+      }
     } finally {
       if (resourceGenerationRef.current === generation) {
         setIsCreatingOrder(false);
@@ -2532,7 +1762,10 @@ function OrderDetailsPageContent({
 
       <ConfirmationModal
         isOpen={isCreateConfirmationOpen}
+        eyebrow="CREATE ORDER"
         title="Create this order?"
+        confirmIconLeft={<CircleCheckBig size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         description={
           selectedClient
             ? `The order will be assigned to ${selectedClient.name}, the selected products will be reserved, and the order will receive In progress status. It cannot be deleted after creation.`
@@ -2548,8 +1781,79 @@ function OrderDetailsPageContent({
       />
 
       <ConfirmationModal
+        isOpen={Boolean(createConflict)}
+        eyebrow={
+          createConflict?.kind === 'price' ? 'PRICE UPDATE' : 'STOCK UPDATE'
+        }
+        title={
+          createConflict?.kind === 'price'
+            ? 'Product prices have changed'
+            : 'Not enough products are available'
+        }
+        description={
+          <div className={css.orderConflictDescription}>
+            <p>
+              {createConflict?.kind === 'price'
+                ? 'Prices changed while the order was being prepared. The server did not reserve any products. Review the current prices before trying again.'
+                : 'Another order reserved some of the requested products. No products were reserved for this order. Review the remaining quantities before trying again.'}
+            </p>
+            {createConflict?.details.length ? (
+              <ul>
+                {createConflict.details.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                Current product details could not be retrieved. Please review
+                the products before trying again.
+              </p>
+            )}
+          </div>
+        }
+        confirmLabel={
+          createConflict?.refreshedItems ? 'Update order draft' : 'Review order'
+        }
+        cancelLabel="Keep editing"
+        confirmIconLeft={<CircleCheckBig size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        onConfirm={() => {
+          if (createConflict?.refreshedItems)
+            setDraftItems(createConflict.refreshedItems);
+
+          setActiveTab('products');
+          setCreateConflict(null);
+        }}
+        onCancel={() => setCreateConflict(null)}
+      />
+
+      <ConfirmationModal
+        isOpen={leaveDialogOpen}
+        eyebrow="UNSAVED CHANGES"
+        title="Leave order editor?"
+        description="Your unsaved order, including the selected products and delivery details, will be lost."
+        confirmLabel="Leave page"
+        cancelLabel="Keep editing"
+        confirmIconLeft={<LogOut size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        destructive
+        onCancel={() => {
+          pendingNavigationRef.current = null;
+          setLeaveDialogOpen(false);
+        }}
+        onConfirm={() => {
+          setLeaveDialogOpen(false);
+
+          const navigate = pendingNavigationRef.current;
+
+          pendingNavigationRef.current = null;
+          navigate?.();
+        }}
+      />
+
+      <ConfirmationModal
         isOpen={Boolean(pendingPriceQuantityChange)}
-        title="ProductDetails price changed"
+        title="Product price changed"
         description={
           pendingPriceQuantityChange ? (
             <>

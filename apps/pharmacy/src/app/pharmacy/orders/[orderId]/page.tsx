@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 
@@ -9,7 +9,8 @@ import {
   parseOrdersPaginationSegments,
 } from '@/lib/orders/order-paths';
 
-import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
+import { getPharmacyOrderPath } from '@/lib/routes';
+
 import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
 
 //===================================================================
@@ -45,7 +46,7 @@ async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
     notFound();
   }
 
-  return <OrderDetailsPageContent key={orderId} orderId={orderId} />;
+  redirect(getPharmacyOrderPath(orderId));
 }
 
 export default OrderDetailsPage;

@@ -81,7 +81,7 @@ test('matches canonical route families without re-parsing section names in layou
 test('builds dynamic routes only from validated entity IDs', () => {
   assert.equal(
     getPharmacyOrderPath(ENTITY_IDS.order),
-    `/pharmacy/orders/${ENTITY_IDS.order}`
+    `/pharmacy/orders/details/order-id-${ENTITY_IDS.order}`
   );
 
   assert.equal(

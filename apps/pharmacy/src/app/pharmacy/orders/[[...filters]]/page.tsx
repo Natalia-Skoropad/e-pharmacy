@@ -11,7 +11,8 @@ import {
   type OrdersRouteParams,
 } from '@/lib/orders/order-paths';
 
-import { OrderDetailsPageContent } from '@/components/orders/OrderDetailsPageContent';
+import { getPharmacyOrderPath } from '@/lib/routes';
+
 import { OrdersPageContent } from '@/components/orders/OrdersPageContent';
 
 //===================================================================
@@ -41,7 +42,7 @@ async function OrdersPage({ params, searchParams }: OrdersPageProps) {
       notFound();
     }
 
-    return <OrderDetailsPageContent key={orderId} orderId={orderId} />;
+    redirect(getPharmacyOrderPath(orderId));
   }
 
   const filters = parseOrdersSegments(resolvedParams);

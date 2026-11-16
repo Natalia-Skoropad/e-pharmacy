@@ -1,12 +1,14 @@
 import mongoose, { Types } from 'mongoose';
 
 import { USER_ROLES } from '../../constants/auth/auth';
+import { STOCK_CHANGED_ERROR_CODE } from '../../constants/inventory/stock';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
 import { requirePharmacyCapability } from '../pharmacies/pharmacy-membership.service';
 
 import {
   MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE,
+  ORDER_PRICE_CHANGED_ERROR_CODE,
   PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE,
 } from '../../constants/orders/order';
 
@@ -246,7 +248,30 @@ export async function createManagerOrderService(
         if (offer.availableQuantity < quantity) {
           throw httpError(
             HTTP_STATUS.CONFLICT,
-            `${product.name} does not have enough available stock.`
+            `${product.name} does not have enough available stock.`,
+            undefined,
+            STOCK_CHANGED_ERROR_CODE
+          );
+        }
+
+        // Never silently invoice the current price when the manager saw another.
+        // Older API clients may omit the snapshot; the create UI always sends it.
+        const submittedItems = input.items.filter(
+          (item) => item.productOfferId === String(offer._id)
+        );
+
+        if (
+          submittedItems.some(
+            (item) =>
+              item.expectedUnitPrice !== undefined &&
+              item.expectedUnitPrice !== offer.price
+          )
+        ) {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            `${product.name} has a new price. Please review the order.`,
+            undefined,
+            ORDER_PRICE_CHANGED_ERROR_CODE
           );
         }
 

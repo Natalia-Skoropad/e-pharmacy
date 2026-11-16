@@ -73,3 +73,9 @@
   font-size: var(--fz-14);
   color: var(--color-text-secondary);
 }
+
+/* Only the empty-resource heading; review authors and section titles stay unchanged. */
+.emptyReviewsState > :last-child h2 {
+  font-size: var(--fz-18);
+  line-height: var(--lh-heading);
+}

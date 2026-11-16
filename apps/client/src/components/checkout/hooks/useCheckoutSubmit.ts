@@ -66,6 +66,16 @@ export function useCheckoutSubmit({
     }>[]
   >([]);
 
+  const [stockChanges, setStockChanges] = useState<
+    readonly Readonly<{
+      productName: string;
+      requested: number;
+      available: number;
+    }>[]
+  >([]);
+
+  const [stockConflictOpen, setStockConflictOpen] = useState(false);
+
   const submitLockRef = useRef(false);
   const activeControllerRef = useRef<AbortController | null>(null);
   const mountedRef = useRef(true);
@@ -115,6 +125,25 @@ export function useCheckoutSubmit({
         return;
       }
 
+      const stockError = getStockValidationError(latestOrderGroup);
+
+      if (stockError) {
+        replaceCartFromServer(latestCartResponse.cart);
+
+        setStockChanges(
+          latestOrderGroup.items
+            .filter((item) => item.stockQuantity < item.quantity)
+            .map((item) => ({
+              productName: item.product.name,
+              requested: item.quantity,
+              available: item.stockQuantity,
+            }))
+        );
+
+        setStockConflictOpen(true);
+        return;
+      }
+
       const shownGroupFingerprint =
         createCheckoutGroupFingerprint(selectedOrderGroup);
 
@@ -148,15 +177,6 @@ export function useCheckoutSubmit({
         }
 
         setError(APP_ERROR_MESSAGES.checkout.cartChanged);
-
-        return;
-      }
-
-      const stockError = getStockValidationError(latestOrderGroup);
-
-      if (stockError) {
-        replaceCartFromServer(latestCartResponse.cart);
-        setError(stockError);
 
         return;
       }
@@ -201,6 +221,38 @@ export function useCheckoutSubmit({
       router.push(buildOrderPath(response.order));
     } catch (error) {
       if (controller.signal.aborted || !mountedRef.current) return;
+
+      if (isApiError(error) && error.backendCode === STOCK_CHANGED_ERROR_CODE) {
+        try {
+          const refreshedCart = await getCart({ signal: controller.signal });
+
+          if (!controller.signal.aborted && mountedRef.current) {
+            replaceCartFromServer(refreshedCart.cart);
+
+            const refreshedGroup = groupCartByPharmacy(refreshedCart.cart).find(
+              (group) => group.pharmacyId === selectedOrderGroup.pharmacyId
+            );
+
+            setStockChanges(
+              (refreshedGroup?.items ?? [])
+                .filter((item) => item.stockQuantity < item.quantity)
+                .map((item) => ({
+                  productName: item.product.name,
+                  requested: item.quantity,
+                  available: item.stockQuantity,
+                }))
+            );
+          }
+        } catch {
+          setStockChanges([]);
+        }
+
+        if (!controller.signal.aborted && mountedRef.current) {
+          setStockConflictOpen(true);
+        }
+
+        return;
+      }
 
       if (
         isApiError(error) &&
@@ -284,5 +336,8 @@ export function useCheckoutSubmit({
     handleSubmit,
     priceChanges,
     dismissPriceChanges: () => setPriceChanges([]),
+    stockChanges,
+    stockConflictOpen,
+    dismissStockConflict: () => setStockConflictOpen(false),
   };
 }

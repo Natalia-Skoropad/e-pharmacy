@@ -284,6 +284,17 @@ export function getPharmacyBreadcrumbsByPathname(
       );
     }
 
+    if (
+      route.segments.length === 2 &&
+      route.segments[0] === 'details' &&
+      /^order-id-[a-f0-9]{24}$/i.test(route.segments[1] ?? '')
+    ) {
+      return getOrderDetailsBreadcrumbs(
+        route.segments[1]!.slice('order-id-'.length),
+        currentDetailLabel
+      );
+    }
+
     if (isOrdersFilterRoute([...route.segments])) {
       return getOrdersBreadcrumbs();
     }

@@ -48,7 +48,13 @@ import { operationalLocalApiRequest as localApiRequest } from './operational-req
 export type CreatePharmacyOrderPayload = Readonly<{
   clientRequestId: string;
   clientId: string;
-  items: Array<{ productOfferId: string; quantity: number }>;
+
+  items: Array<{
+    productOfferId: string;
+    quantity: number;
+    expectedUnitPrice?: number;
+  }>;
+
   deliveryMethod: DeliveryMethod;
 
   deliveryDetails?: {

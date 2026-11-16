@@ -102,31 +102,39 @@ export function PharmacyReviewsPanel({
         />
       </div>
 
-      <ReviewsSection
-        reviews={reviews}
-        visibleCount={visibleReviewsCount}
-        onVisibleCountChange={setVisibleReviewsCount}
-        reviewText={reviewText}
-        reviewRating={reviewRating}
-        isReviewValid={isReviewValid}
-        commentError={reviewErrors.comment}
-        ratingError={reviewErrors.rating}
-        reviewTouchedFields={reviewTouchedFields}
-        isReviewSubmitting={isReviewSubmitting}
-        canCreateReview={canCreateReview}
-        reviewAccessMessage={reviewAccessMessage}
-        isAuthUnavailable={isAuthUnavailable}
-        isUnavailable={areReviewsUnavailable}
-        emptyVariant="resource"
-        emptyHeadingLevel={2}
-        emptyTitle="This pharmacy has no reviews yet."
-        emptyText="Reviews appear here after real client orders are completed and approved."
-        textareaId="pharmacy-review"
-        maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
-        onReviewTextChange={handleReviewTextChange}
-        onReviewRatingChange={handleReviewRatingChange}
-        onReviewSubmit={() => void handleReviewSubmit()}
-      />
+      <div
+        className={
+          reviews.length === 0 && !areReviewsUnavailable
+            ? css.emptyReviewsState
+            : undefined
+        }
+      >
+        <ReviewsSection
+          reviews={reviews}
+          visibleCount={visibleReviewsCount}
+          onVisibleCountChange={setVisibleReviewsCount}
+          reviewText={reviewText}
+          reviewRating={reviewRating}
+          isReviewValid={isReviewValid}
+          commentError={reviewErrors.comment}
+          ratingError={reviewErrors.rating}
+          reviewTouchedFields={reviewTouchedFields}
+          isReviewSubmitting={isReviewSubmitting}
+          canCreateReview={canCreateReview}
+          reviewAccessMessage={reviewAccessMessage}
+          isAuthUnavailable={isAuthUnavailable}
+          isUnavailable={areReviewsUnavailable}
+          emptyVariant="resource"
+          emptyHeadingLevel={2}
+          emptyTitle="This pharmacy has no reviews yet."
+          emptyText="Reviews appear here after real client orders are completed and approved."
+          textareaId="pharmacy-review"
+          maxLength={USER_REVIEW_COMMENT_MAX_LENGTH}
+          onReviewTextChange={handleReviewTextChange}
+          onReviewRatingChange={handleReviewRatingChange}
+          onReviewSubmit={() => void handleReviewSubmit()}
+        />
+      </div>
     </>
   );
 }

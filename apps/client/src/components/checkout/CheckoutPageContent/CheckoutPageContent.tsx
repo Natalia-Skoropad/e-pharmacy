@@ -1,17 +1,27 @@
 'use client';
 
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { Clock, Info, Mail, MapPin, Phone, Truck } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import {
+  Clock,
+  Info,
+  Mail,
+  MapPin,
+  Phone,
+  Truck,
+  ShoppingCart,
+  X,
+} from 'lucide-react';
 
 import { formatMoney } from '@e-pharmacy/utils/money';
-import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
-import { useSearchParams } from 'next/navigation';
-
 import { DELIVERY_METHOD_LABELS } from '@e-pharmacy/config/presentation';
+
 import { CopyButton, LoadingSpinner } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import { WorkingHours } from '@e-pharmacy/ui/data-display';
+import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 
 import {
   AddressInput,
@@ -79,6 +89,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const { isBootstrapping, user, canUseClientFeatures } =
     useClientAuthCapabilities();
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const queryPharmacyId = searchParams.get('pharmacyId');
   const selectedPharmacyIdFromRoute = checkoutPharmacyId ?? queryPharmacyId;
@@ -167,20 +178,27 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
     isDeliveryFormValid &&
     canUseSelectedPayment;
 
-  const { isSubmitting, handleSubmit, priceChanges, dismissPriceChanges } =
-    useCheckoutSubmit({
-      isAuthenticated: canUseClientFeatures,
-      selectedOrderGroup,
-      paymentMethod,
-      deliveryMethod,
-      recipientNameValue: recipientName,
-      recipientPhoneValue: recipientPhone,
-      deliveryAddressValue: deliveryAddress,
-      comment,
-      canSubmit,
-      replaceCartFromServer,
-      setError,
-    });
+  const {
+    isSubmitting,
+    handleSubmit,
+    priceChanges,
+    dismissPriceChanges,
+    stockChanges,
+    stockConflictOpen,
+    dismissStockConflict,
+  } = useCheckoutSubmit({
+    isAuthenticated: canUseClientFeatures,
+    selectedOrderGroup,
+    paymentMethod,
+    deliveryMethod,
+    recipientNameValue: recipientName,
+    recipientPhoneValue: recipientPhone,
+    deliveryAddressValue: deliveryAddress,
+    comment,
+    canSubmit,
+    replaceCartFromServer,
+    setError,
+  });
 
   const handleRecipientNameChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (isSubmitting) return;
@@ -226,6 +244,39 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   return (
     <main className={css.page}>
+      <ConfirmationModal
+        isOpen={stockConflictOpen}
+        eyebrow="STOCK UPDATE"
+        title="The requested quantity is no longer available"
+        description={
+          <div>
+            <p>
+              While you were filling out the form, another order reserved some
+              of these products. No products were reserved for your order.
+              Please adjust the quantities in your cart before trying again.
+            </p>
+            {stockChanges.length ? (
+              <ul className={css.stockConflictList}>
+                {stockChanges.map((change) => (
+                  <li key={change.productName}>
+                    <strong>{change.productName}</strong>: requested{' '}
+                    {change.requested}, available {change.available}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        }
+        confirmLabel="Review cart"
+        cancelLabel="Stay on checkout"
+        confirmIconLeft={<ShoppingCart size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
+        onConfirm={() => {
+          dismissStockConflict();
+          router.push(ROUTES.CART);
+        }}
+        onCancel={dismissStockConflict}
+      />
       <ConfirmationModal
         isOpen={priceChanges.length > 0}
         eyebrow="Price update"

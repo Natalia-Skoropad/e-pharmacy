@@ -138,7 +138,7 @@ export function NewOrderClientSearch({
       list.unshift(getOption(selectedClient));
     }
     return list;
-  }, [ready, selectedClient, suggestions]);
+  }, [query, ready, selectedClient, suggestions]);
 
   const loadMore = () => {
     if (

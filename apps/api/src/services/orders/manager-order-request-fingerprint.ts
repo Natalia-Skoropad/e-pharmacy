@@ -7,13 +7,22 @@ import type { CreateManagerOrderInput } from '../../schemas/orders/order.schema'
 export function createManagerOrderRequestFingerprint(
   input: CreateManagerOrderInput
 ): string {
-  const quantitiesByOffer = new Map<string, number>();
+  const quantitiesByOffer = new Map<
+    string,
+    { quantity: number; expectedUnitPrice?: number }
+  >();
 
   for (const item of input.items) {
-    quantitiesByOffer.set(
-      item.productOfferId,
-      (quantitiesByOffer.get(item.productOfferId) ?? 0) + item.quantity
-    );
+    const previous = quantitiesByOffer.get(item.productOfferId);
+
+    quantitiesByOffer.set(item.productOfferId, {
+      quantity: (previous?.quantity ?? 0) + item.quantity,
+      ...(item.expectedUnitPrice !== undefined
+        ? { expectedUnitPrice: item.expectedUnitPrice }
+        : previous?.expectedUnitPrice !== undefined
+          ? { expectedUnitPrice: previous.expectedUnitPrice }
+          : {}),
+    });
   }
 
   const normalized = {
@@ -21,7 +30,7 @@ export function createManagerOrderRequestFingerprint(
 
     items: [...quantitiesByOffer.entries()]
       .sort(([left], [right]) => left.localeCompare(right))
-      .map(([productOfferId, quantity]) => ({ productOfferId, quantity })),
+      .map(([productOfferId, item]) => ({ productOfferId, ...item })),
 
     paymentMethod: input.paymentMethod,
 
