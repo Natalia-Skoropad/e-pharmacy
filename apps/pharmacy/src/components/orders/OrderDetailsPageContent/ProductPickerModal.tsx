@@ -1,27 +1,22 @@
 'use client';
 
 import { useEffect, useId, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
 
-import {
-  Button,
-  CloseIconButton,
-  LoadingSpinner,
-  SvgIcon,
-} from '@e-pharmacy/ui/primitives';
-
-import { SearchInput } from '@e-pharmacy/ui/forms';
+import { Button, CloseIconButton, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { CategoryIcon, SearchInput } from '@e-pharmacy/ui/forms';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
-import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
+import { InfoTooltip, ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
 
 import type { ProductDetails } from '@e-pharmacy/types/products';
 import type { ProductCategorySlug } from '@e-pharmacy/types/reference-data';
 
 import type { LabeledOption } from '@e-pharmacy/utils/collections';
 import { formatMoney } from '@e-pharmacy/utils/money';
-import { formatStockLabel } from '@e-pharmacy/utils/numbers';
 
 import { getProductFilters, getProducts } from '@/lib/api/browser';
+import { getProductCategories } from '@/lib/api/browser/product-categories.api';
 import type { PharmacyOrderDetails } from '@/lib/orders/orders';
 import { getProductImageSrc } from '@/lib/products/product-images';
 
@@ -57,13 +52,18 @@ function ProductPickerModal({
   >('all');
 
   const [categoryOptions, setCategoryOptions] = useState<
-    readonly LabeledOption<ProductCategorySlug>[]
+    readonly (LabeledOption<ProductCategorySlug> & { icon?: string })[]
   >([]);
+
+  const [categoryIcons, setCategoryIcons] = useState<Record<string, string>>(
+    {}
+  );
 
   const [availableProductsCount, setAvailableProductsCount] = useState(0);
   const [products, setProducts] = useState<ProductDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+
   const [addingProductIds, setAddingProductIds] = useState<Set<string>>(
     () => new Set()
   );
@@ -73,19 +73,32 @@ function ProductPickerModal({
 
     async function loadCategories() {
       try {
-        const response = await getProductFilters(
-          {
-            pharmacyId: order.pharmacyId,
-            inStock: true,
-          },
-          { signal: controller.signal }
+        const [response, directory] = await Promise.all([
+          getProductFilters(
+            { pharmacyId: order.pharmacyId, inStock: true },
+            { signal: controller.signal }
+          ),
+
+          getProductCategories({ signal: controller.signal }).catch(() => []),
+        ]);
+
+        const iconBySlug = Object.fromEntries(
+          directory.map((category) => [category.slug, category.icon ?? ''])
         );
+
+        setCategoryIcons(iconBySlug);
 
         setCategoryOptions(
           response.categories.flatMap((option) =>
             option.value === 'all'
               ? []
-              : [{ value: option.value, label: option.label }]
+              : [
+                  {
+                    value: option.value,
+                    label: option.label,
+                    icon: iconBySlug[option.value] ?? option.icon,
+                  },
+                ]
           )
         );
       } catch {
@@ -102,6 +115,7 @@ function ProductPickerModal({
 
   useEffect(() => {
     const controller = new AbortController();
+
     const timeoutId = window.setTimeout(async () => {
       try {
         setIsLoading(true);
@@ -141,7 +155,9 @@ function ProductPickerModal({
 
     setAddingProductIds((current) => {
       const next = new Set(current);
+
       next.add(product.id);
+
       return next;
     });
 
@@ -150,7 +166,9 @@ function ProductPickerModal({
     } finally {
       setAddingProductIds((current) => {
         const next = new Set(current);
+
         next.delete(product.id);
+
         return next;
       });
     }
@@ -179,17 +197,33 @@ function ProductPickerModal({
         </div>
 
         <div className={css.productModalSearchBlock}>
+          <div className={css.productModalSearchLabel}>
+            <span>Product search</span>
+            <InfoTooltip
+              label="Product search help"
+              title="Product search"
+              icon={<ShoppingCart size={20} aria-hidden="true" />}
+              items={[
+                {
+                  title: 'Search fields',
+                  description:
+                    'Find a product by its name, article or ID. Suggestions are limited to available products in this pharmacy.',
+                  icon: <Search size={17} aria-hidden="true" />,
+                },
+              ]}
+            />
+          </div>
           <SearchInput
             id={searchId}
-            label="Search products"
+            label="Product search"
             value={searchValue}
-            placeholder="Add one more product"
+            placeholder="Name, article, or product ID"
             isActive={Boolean(searchValue)}
             onChange={setSearchValue}
           />
 
           <p className={css.productModalAvailableCount}>
-            {formatStockLabel(availableProductsCount) ?? '—'}
+            {`${availableProductsCount.toLocaleString('en-US')} items available`}
           </p>
         </div>
 
@@ -208,6 +242,7 @@ function ProductPickerModal({
               aria-pressed={selectedCategory === 'all'}
               onClick={() => setSelectedCategory('all')}
             >
+              <ShoppingCart size={16} aria-hidden="true" />
               All
             </button>
 
@@ -223,6 +258,7 @@ function ProductPickerModal({
                 aria-pressed={selectedCategory === category.value}
                 onClick={() => setSelectedCategory(category.value)}
               >
+                <CategoryIcon name={category.icon} size={16} />
                 {category.label}
               </button>
             ))}
@@ -237,7 +273,11 @@ function ProductPickerModal({
 
         <div className={css.productModalResults}>
           {isLoading ? (
-            <LoadingSpinner label="Loading pharmacy products..." />
+            <ProfileResourceState
+              variant="loading"
+              title="Loading pharmacy products"
+              description="Available products are being loaded for this pharmacy."
+            />
           ) : null}
 
           {!isLoading && products.length === 0 ? (
@@ -285,13 +325,19 @@ function ProductPickerModal({
 
                     <div className={css.productModalInfo}>
                       <h3 className={css.productModalName}>{product.name}</h3>
-                      <p className={css.productModalMeta}>{categoryLabel}</p>
-
-                      {product.manufacturer ? (
-                        <p className={css.productModalManufacturer}>
-                          {product.manufacturer}
-                        </p>
-                      ) : null}
+                      <p className={css.productModalMeta}>
+                        <CategoryIcon
+                          name={
+                            categoryIcons[product.category.slug] ??
+                            product.category.icon
+                          }
+                          size={16}
+                        />
+                        {categoryLabel}
+                      </p>
+                      <p className={css.productModalAvailability}>
+                        {offer?.availableQuantity ?? 0} items available
+                      </p>
                     </div>
 
                     <div className={css.productModalActions}>

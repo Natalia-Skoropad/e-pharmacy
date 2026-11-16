@@ -257,6 +257,24 @@ export function getPharmacyBreadcrumbsByPathname(
   }
 
   if (route.family === 'orders') {
+    const newOrderPharmacySegment =
+      route.segments.length === 2 && route.segments[0] === 'new'
+        ? /^pharmacy-id-([a-f0-9]{24})$/i.exec(route.segments[1] ?? '')
+        : null;
+
+    if (newOrderPharmacySegment) {
+      const targetId = newOrderPharmacySegment[1]!;
+
+      return [
+        { label: 'Orders', href: PHARMACY_ROUTES.ORDERS },
+        {
+          label: currentDetailLabel ?? `Pharmacy #${targetId.slice(-6)}`,
+          href: `${PHARMACY_ROUTES.PHARMACIES}/${targetId}`,
+        },
+        { label: 'Create order' },
+      ];
+    }
+
     if (
       pathname.split('?')[0]?.replace(/\/$/, '') === PHARMACY_ROUTES.ORDER_NEW
     ) {

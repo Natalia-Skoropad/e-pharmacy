@@ -10,6 +10,10 @@ import {
   CirclePlay,
   CirclePlus,
   CircleX,
+  CreditCard,
+  Boxes,
+  Package,
+  X,
   Clock,
   History,
   Info,
@@ -22,7 +26,6 @@ import {
   ShoppingCart,
   Trash2,
   Truck,
-  UsersRound,
   Wallet,
 } from 'lucide-react';
 
@@ -49,12 +52,10 @@ import {
   formatInitials,
 } from '@e-pharmacy/ui/data-display';
 
-import { InfoTooltip } from '@e-pharmacy/ui/overlays';
-
 import {
+  CategoryIcon,
   QuantityCounter,
   RadioOption,
-  SearchableSelect,
 } from '@e-pharmacy/ui/forms';
 
 import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
@@ -63,6 +64,7 @@ import { AddressInput, NameInput, PhoneInput } from '@e-pharmacy/ui/forms';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { ProfileSectionHeader } from '@e-pharmacy/ui/profile';
 import { StatusBadge, StatusBanner } from '@e-pharmacy/ui/statistics';
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
@@ -124,13 +126,16 @@ import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registr
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { getProductCategories } from '@/lib/api/browser/product-categories.api';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
 import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 import { OrderCancellationModal } from '@/components/orders/OrderCancellationModal';
+
 import { ProductPickerModal } from './ProductPickerModal';
+import { NewOrderClientSearch } from './NewOrderClientSearch';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -212,17 +217,41 @@ const HISTORY_LOAD_STEP = 5;
 
 //===================================================================
 
-function getOrderTabs(
-  commentsCount: number,
-  historyCount: number
-): Array<TabItem<OrderTab>> {
-  return [
-    { value: 'products', label: 'Order products' },
-    { value: 'delivery', label: 'Delivery method' },
-    { value: 'payment', label: 'Payment method' },
-    { value: 'comment', label: `Order comments (${commentsCount})` },
-    { value: 'history', label: `Order history (${historyCount})` },
+function getOrderTabs(isCreateMode: boolean): Array<TabItem<OrderTab>> {
+  const tabs: Array<TabItem<OrderTab>> = [
+    {
+      value: 'products',
+      label: 'Order products',
+      icon: <Boxes size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'delivery',
+      label: 'Delivery method',
+      icon: <Truck size={17} aria-hidden="true" />,
+    },
+    {
+      value: 'payment',
+      label: 'Payment method',
+      icon: <CreditCard size={17} aria-hidden="true" />,
+    },
   ];
+
+  if (!isCreateMode) {
+    tabs.push(
+      {
+        value: 'comment',
+        label: 'Order comments',
+        icon: <MessageSquareText size={17} aria-hidden="true" />,
+      },
+      {
+        value: 'history',
+        label: 'Order history',
+        icon: <History size={17} aria-hidden="true" />,
+      }
+    );
+  }
+
+  return tabs;
 }
 
 //===================================================================
@@ -387,12 +416,14 @@ function getOrderFormState(order: PharmacyOrderDetails) {
 
 function OrderProductCard({
   item,
+  categoryIcons,
   isEditable,
   isUpdating,
   onQuantityChange,
   onRemove,
 }: Readonly<{
   item: PharmacyOrderItem;
+  categoryIcons: Readonly<Record<string, string>>;
   isEditable: boolean;
   isUpdating: boolean;
   onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
@@ -427,7 +458,15 @@ function OrderProductCard({
         <div className={css.itemHead}>
           <div>
             {item.category ? (
-              <p className={css.itemCategory}>{item.category.name}</p>
+              <p className={css.itemCategory}>
+                <span className={css.categoryIcon} aria-hidden="true">
+                  <CategoryIcon
+                    name={categoryIcons[item.category.slug]}
+                    size={16}
+                  />
+                </span>
+                {item.category.name}
+              </p>
             ) : null}
 
             <h3 className={css.itemTitle} id={`order-product-${item.id}`}>
@@ -483,6 +522,7 @@ function OrderProductCard({
                 </Link>
               )}
             >
+              <Info size={16} aria-hidden="true" />
               Details
             </LinkButton>
 
@@ -494,6 +534,7 @@ function OrderProductCard({
               disabled={!isEditable || isUpdating}
               onClick={() => onRemove(item)}
             >
+              <Trash2 size={16} aria-hidden="true" />
               Remove
             </Button>
           </div>
@@ -507,6 +548,7 @@ function OrderProductCard({
 
 function OrderProductsTab({
   order,
+  categoryIcons,
   isEditable,
   isUpdating,
   onQuantityChange,
@@ -514,6 +556,7 @@ function OrderProductsTab({
   onOpenProductModal,
 }: Readonly<{
   order: PharmacyOrderDetails;
+  categoryIcons: Readonly<Record<string, string>>;
   isEditable: boolean;
   isUpdating: boolean;
   onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
@@ -529,6 +572,7 @@ function OrderProductsTab({
               <OrderProductCard
                 key={item.productOfferId}
                 item={item}
+                categoryIcons={categoryIcons}
                 isEditable={isEditable}
                 isUpdating={isUpdating}
                 onQuantityChange={onQuantityChange}
@@ -537,7 +581,9 @@ function OrderProductsTab({
             ))
           ) : (
             <div className={css.emptyProducts}>
-              <ShoppingCart size={28} aria-hidden="true" />
+              <span className={css.emptyProductsIcon} aria-hidden="true">
+                <ShoppingCart size={23} />
+              </span>
               <div>
                 <h2>No products in this order yet</h2>
                 <p>
@@ -557,12 +603,16 @@ function OrderProductsTab({
 
         <dl className={css.summaryListCompact}>
           <div>
-            <dt>Items</dt>
+            <dt>
+              <Package size={17} aria-hidden="true" /> Items
+            </dt>
             <dd>{order.totalQuantity}</dd>
           </div>
 
           <div>
-            <dt>Total</dt>
+            <dt>
+              <Wallet size={17} aria-hidden="true" /> Total
+            </dt>
             <dd>{formatMoney(order.totalAmount) ?? '—'}</dd>
           </div>
         </dl>
@@ -582,6 +632,7 @@ function OrderProductsTab({
           disabled={!isEditable || isUpdating}
           onClick={onOpenProductModal}
         >
+          <CirclePlus size={17} aria-hidden="true" />
           Add more products
         </Button>
       </aside>
@@ -593,6 +644,7 @@ function OrderProductsTab({
 
 function DeliveryTab({
   order,
+  isCreateMode,
   isEditable,
   deliveryMethod,
   recipientName,
@@ -609,6 +661,7 @@ function DeliveryTab({
   onSave,
 }: Readonly<{
   order: PharmacyOrderDetails;
+  isCreateMode: boolean;
   isEditable: boolean;
   deliveryMethod: DeliveryMethod;
   recipientName: string;
@@ -630,172 +683,183 @@ function DeliveryTab({
   const pharmacyLocation = formatPharmacyLocation(order.pharmacyLocation);
 
   return (
-    <section className={css.methodCard} aria-labelledby="delivery-title">
-      <div className={css.methodHeader}>
-        <h2 id="delivery-title">Delivery method</h2>
-
-        <Button
-          className={css.tabSaveButton}
-          type="button"
-          disabled={!isEditable || isUpdating}
-          onClick={onSave}
-        >
-          Save delivery method
-        </Button>
+    <>
+      <div className={css.orderTabHeader}>
+        <ProfileSectionHeader
+          title="Delivery method"
+          titleId="delivery-title"
+          description="Choose how the client will receive the order."
+          icon={<Truck size={22} aria-hidden="true" />}
+        />
       </div>
 
-      <div className={css.methodGrid}>
-        <fieldset
-          className={css.methodOptions}
-          disabled={!isEditable || isUpdating}
-        >
-          <legend className="visually-hidden">Delivery method</legend>
+      <section className={css.methodCard} aria-labelledby="delivery-title">
+        {!isCreateMode ? (
+          <div className={css.methodHeader}>
+            <Button
+              className={css.tabSaveButton}
+              type="button"
+              disabled={!isEditable || isUpdating}
+              onClick={onSave}
+            >
+              <Save size={17} aria-hidden="true" /> Save delivery method
+            </Button>
+          </div>
+        ) : null}
 
-          <RadioOption
-            name="delivery-method"
-            value="pickup"
-            checked={deliveryMethod === 'pickup'}
-            label={DELIVERY_METHOD_LABELS.pickup}
+        <div className={css.methodGrid}>
+          <fieldset
+            className={css.methodOptions}
             disabled={!isEditable || isUpdating}
-            onChange={onDeliveryMethodChange}
-          />
+          >
+            <legend className="visually-hidden">Delivery method</legend>
 
-          <RadioOption
-            name="delivery-method"
-            value="postal_delivery"
-            checked={deliveryMethod === 'postal_delivery'}
-            label={DELIVERY_METHOD_LABELS.postal_delivery}
-            disabled={!isEditable || isUpdating}
-            onChange={onDeliveryMethodChange}
-          />
-        </fieldset>
+            <RadioOption
+              name="delivery-method"
+              value="pickup"
+              checked={deliveryMethod === 'pickup'}
+              label={DELIVERY_METHOD_LABELS.pickup}
+              disabled={!isEditable || isUpdating}
+              onChange={onDeliveryMethodChange}
+            />
 
-        <div className={css.methodDetailsPanel}>
-          {deliveryMethod === 'pickup' ? (
-            <div className={css.deliveryInfoCard}>
-              <h3>Pharmacy details</h3>
+            <RadioOption
+              name="delivery-method"
+              value="postal_delivery"
+              checked={deliveryMethod === 'postal_delivery'}
+              label={DELIVERY_METHOD_LABELS.postal_delivery}
+              disabled={!isEditable || isUpdating}
+              onChange={onDeliveryMethodChange}
+            />
+          </fieldset>
 
-              <ul className={css.deliveryIconList}>
-                {order.pharmacyPhone ? (
-                  <li>
-                    <Phone size={18} aria-hidden="true" />
-                    <a href={`tel:${order.pharmacyPhone}`}>
-                      {order.pharmacyPhone}
-                    </a>
-                  </li>
-                ) : null}
+          <div className={css.methodDetailsPanel}>
+            {deliveryMethod === 'pickup' ? (
+              <div className={css.deliveryInfoCard}>
+                <h3>Pharmacy details</h3>
 
-                {order.pharmacyEmail ? (
-                  <li className={css.emailRow}>
-                    <Mail size={18} aria-hidden="true" />
-                    <span className={css.emailActions}>
-                      <a href={`mailto:${order.pharmacyEmail}`}>
-                        {order.pharmacyEmail}
+                <ul className={css.deliveryIconList}>
+                  {order.pharmacyPhone ? (
+                    <li>
+                      <Phone size={18} aria-hidden="true" />
+                      <a href={`tel:${order.pharmacyPhone}`}>
+                        {order.pharmacyPhone}
                       </a>
-                      <CopyButton
-                        label={`Copy pharmacy email ${order.pharmacyEmail}`}
-                        disabled={isUpdating}
-                        onClick={() =>
-                          onCopyValue(
-                            order.pharmacyEmail ?? '',
-                            'Pharmacy email'
-                          )
-                        }
-                      />
-                    </span>
-                  </li>
-                ) : null}
+                    </li>
+                  ) : null}
 
-                <li>
-                  <Clock size={18} aria-hidden="true" />
-                  {workingHours.length > 0 ? (
-                    <span className={css.workingHoursList}>
-                      {workingHours.map((item) => (
-                        <span key={item.day}>
-                          <strong>{item.day}:</strong> {item.hours}
-                        </span>
-                      ))}
-                    </span>
-                  ) : (
-                    <span>Working hours are not specified.</span>
-                  )}
-                </li>
+                  {order.pharmacyEmail ? (
+                    <li className={css.emailRow}>
+                      <Mail size={18} aria-hidden="true" />
+                      <span className={css.emailActions}>
+                        <a href={`mailto:${order.pharmacyEmail}`}>
+                          {order.pharmacyEmail}
+                        </a>
+                        <CopyButton
+                          label={`Copy pharmacy email ${order.pharmacyEmail}`}
+                          disabled={isUpdating}
+                          onClick={() =>
+                            onCopyValue(
+                              order.pharmacyEmail ?? '',
+                              'Pharmacy email'
+                            )
+                          }
+                        />
+                      </span>
+                    </li>
+                  ) : null}
 
-                {pharmacyLocation ? (
                   <li>
-                    <MapPin size={18} aria-hidden="true" />
-                    <span>{pharmacyLocation}</span>
+                    <Clock size={18} aria-hidden="true" />
+                    {workingHours.length > 0 ? (
+                      <span className={css.workingHoursList}>
+                        {workingHours.map((item) => (
+                          <span key={item.day}>
+                            <strong>{item.day}:</strong> {item.hours}
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <span>Working hours are not specified.</span>
+                    )}
                   </li>
-                ) : null}
-              </ul>
-            </div>
-          ) : (
-            <div className={css.deliveryFields}>
-              <div className={css.deliveryFieldsGrid}>
-                <NameInput
-                  id="recipient-name"
-                  name="recipientName"
-                  value={recipientName}
-                  error={deliveryErrors.recipientName ?? ''}
-                  isTouched={Boolean(deliveryTouchedFields.recipientName)}
-                  maxLength={USER_NAME_MAX_LENGTH}
-                  disabled={!isEditable || isUpdating}
-                  onChange={(event) =>
-                    onRecipientNameChange(event.target.value)
-                  }
-                />
 
-                <PhoneInput
-                  id="recipient-phone"
-                  name="recipientPhone"
-                  value={recipientPhone}
-                  error={deliveryErrors.recipientPhone ?? ''}
-                  isTouched={Boolean(deliveryTouchedFields.recipientPhone)}
-                  maxLength={USER_PHONE_MAX_LENGTH}
-                  disabled={!isEditable || isUpdating}
-                  onChange={(event) =>
-                    onRecipientPhoneChange(event.target.value)
-                  }
-                />
-
-                <div className={css.deliveryFieldWide}>
-                  <AddressInput
-                    id="delivery-address"
-                    name="deliveryAddress"
-                    value={deliveryAddress}
-                    error={deliveryErrors.deliveryAddress ?? ''}
-                    isTouched={Boolean(deliveryTouchedFields.deliveryAddress)}
-                    maxLength={USER_ADDRESS_MAX_LENGTH}
+                  {pharmacyLocation ? (
+                    <li>
+                      <MapPin size={18} aria-hidden="true" />
+                      <span>{pharmacyLocation}</span>
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
+            ) : (
+              <div className={css.deliveryFields}>
+                <div className={css.deliveryFieldsGrid}>
+                  <NameInput
+                    id="recipient-name"
+                    name="recipientName"
+                    value={recipientName}
+                    error={deliveryErrors.recipientName ?? ''}
+                    isTouched={Boolean(deliveryTouchedFields.recipientName)}
+                    maxLength={USER_NAME_MAX_LENGTH}
                     disabled={!isEditable || isUpdating}
                     onChange={(event) =>
-                      onDeliveryAddressChange(event.target.value)
+                      onRecipientNameChange(event.target.value)
                     }
                   />
+
+                  <PhoneInput
+                    id="recipient-phone"
+                    name="recipientPhone"
+                    value={recipientPhone}
+                    error={deliveryErrors.recipientPhone ?? ''}
+                    isTouched={Boolean(deliveryTouchedFields.recipientPhone)}
+                    maxLength={USER_PHONE_MAX_LENGTH}
+                    disabled={!isEditable || isUpdating}
+                    onChange={(event) =>
+                      onRecipientPhoneChange(event.target.value)
+                    }
+                  />
+
+                  <div className={css.deliveryFieldWide}>
+                    <AddressInput
+                      id="delivery-address"
+                      name="deliveryAddress"
+                      value={deliveryAddress}
+                      error={deliveryErrors.deliveryAddress ?? ''}
+                      isTouched={Boolean(deliveryTouchedFields.deliveryAddress)}
+                      maxLength={USER_ADDRESS_MAX_LENGTH}
+                      disabled={!isEditable || isUpdating}
+                      onChange={(event) =>
+                        onDeliveryAddressChange(event.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className={css.deliveryNotes}>
+                  <div className={css.deliveryNoteCard}>
+                    <Truck size={18} aria-hidden="true" />
+                    <p>
+                      After confirmation, the pharmacy will contact the client
+                      to confirm or clarify the delivery address.
+                    </p>
+                  </div>
+
+                  <div className={css.deliveryNoteCardAccent}>
+                    <Info size={18} aria-hidden="true" />
+                    <p>
+                      Delivery is not included in the product price. The carrier
+                      will announce the delivery cost separately.
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              <div className={css.deliveryNotes}>
-                <div className={css.deliveryNoteCard}>
-                  <Truck size={18} aria-hidden="true" />
-                  <p>
-                    After confirmation, the pharmacy will contact the client to
-                    confirm or clarify the delivery address.
-                  </p>
-                </div>
-
-                <div className={css.deliveryNoteCardAccent}>
-                  <Info size={18} aria-hidden="true" />
-                  <p>
-                    Delivery is not included in the product price. The carrier
-                    will announce the delivery cost separately.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
@@ -803,6 +867,7 @@ function DeliveryTab({
 
 function PaymentTab({
   order,
+  isCreateMode,
   paymentMethod,
   isEditable,
   isUpdating,
@@ -811,6 +876,7 @@ function PaymentTab({
   onSave,
 }: Readonly<{
   order: PharmacyOrderDetails;
+  isCreateMode: boolean;
   paymentMethod: PaymentMethod;
   isEditable: boolean;
   isUpdating: boolean;
@@ -831,103 +897,138 @@ function PaymentTab({
     : [];
 
   return (
-    <section className={css.methodCard} aria-labelledby="payment-title">
-      <div className={css.methodHeader}>
-        <h2 id="payment-title">Payment method</h2>
-
-        <Button
-          className={css.tabSaveButton}
-          type="button"
-          disabled={
-            !isEditable ||
-            isUpdating ||
-            (paymentMethod === 'bank_transfer' && !bankDetails)
-          }
-          onClick={onSave}
-        >
-          Save payment method
-        </Button>
+    <>
+      <div className={css.orderTabHeader}>
+        <ProfileSectionHeader
+          title="Payment method"
+          titleId="payment-title"
+          description="Choose how the client will pay for the order."
+          icon={<CreditCard size={22} aria-hidden="true" />}
+        />
       </div>
 
-      <div className={css.methodGrid}>
-        <fieldset
-          className={css.methodOptions}
-          disabled={!isEditable || isUpdating}
-        >
-          <legend className="visually-hidden">Payment method</legend>
+      <section className={css.methodCard} aria-labelledby="payment-title">
+        {!isCreateMode ? (
+          <div className={css.methodHeader}>
+            <Button
+              className={css.tabSaveButton}
+              type="button"
+              disabled={
+                !isEditable ||
+                isUpdating ||
+                (paymentMethod === 'bank_transfer' && !bankDetails)
+              }
+              onClick={onSave}
+            >
+              <Save size={17} aria-hidden="true" /> Save payment method
+            </Button>
+          </div>
+        ) : null}
 
-          <RadioOption
-            name="payment-method"
-            value="cash"
-            checked={paymentMethod === 'cash'}
-            label={PAYMENT_METHOD_LABELS.cash}
+        <div className={css.methodGrid}>
+          <fieldset
+            className={css.methodOptions}
             disabled={!isEditable || isUpdating}
-            onChange={onPaymentMethodChange}
-          />
+          >
+            <legend className="visually-hidden">Payment method</legend>
 
-          <RadioOption
-            name="payment-method"
-            value="bank_transfer"
-            checked={paymentMethod === 'bank_transfer'}
-            label={PAYMENT_METHOD_LABELS.bank_transfer}
-            disabled={!isEditable || isUpdating || !bankDetails}
-            onChange={onPaymentMethodChange}
-          />
-        </fieldset>
+            <RadioOption
+              name="payment-method"
+              value="cash"
+              checked={paymentMethod === 'cash'}
+              label={PAYMENT_METHOD_LABELS.cash}
+              disabled={!isEditable || isUpdating}
+              onChange={onPaymentMethodChange}
+            />
 
-        <div className={css.methodDetailsPanel}>
-          {paymentMethod === 'cash' ? (
-            <div className={css.paymentInfoCard}>
-              <Wallet size={20} aria-hidden="true" />
-              <h3>Pay when everything is ready</h3>
-              <p>
-                Cash is paid during pickup or delivery. Please keep the order
-                amount ready when the client receives the order.
-              </p>
-            </div>
-          ) : (
-            <div className={css.bankDetailsStack}>
-              <div className={css.bankCard}>
-                <h3>Bank details</h3>
+            <RadioOption
+              name="payment-method"
+              value="bank_transfer"
+              checked={paymentMethod === 'bank_transfer'}
+              label={PAYMENT_METHOD_LABELS.bank_transfer}
+              disabled={!isEditable || isUpdating || !bankDetails}
+              onChange={onPaymentMethodChange}
+            />
+          </fieldset>
+
+          <div className={css.methodDetailsPanel}>
+            {paymentMethod === 'cash' ? (
+              <div className={css.paymentInfoCard}>
+                <Wallet size={20} aria-hidden="true" />
+                <h3>Pay when everything is ready</h3>
+                <p>
+                  Cash is paid during pickup or delivery. Please keep the order
+                  amount ready when the client receives the order.
+                </p>
+              </div>
+            ) : (
+              <div className={css.bankDetailsStack}>
+                <div className={css.bankCard}>
+                  <h3>Bank details</h3>
+
+                  {bankDetails ? (
+                    <dl className={css.bankList}>
+                      {bankRows.map(([label, value]) => (
+                        <div className={css.bankRow} key={label}>
+                          <dt>{label}</dt>
+                          <dd>
+                            <span>{value}</span>
+                          </dd>
+                          <span className={css.bankCopyAction}>
+                            <CopyButton
+                              label={`Copy ${label} ${value}`}
+                              disabled={isUpdating}
+                              onClick={() => onCopyValue(value, label)}
+                            />
+                          </span>
+                        </div>
+                      ))}
+                      {bankDetails.receiptEmail ? (
+                        <div className={css.bankRow}>
+                          <dt>Receipt email</dt>
+                          <dd>
+                            <a href={`mailto:${bankDetails.receiptEmail}`}>
+                              {bankDetails.receiptEmail}
+                            </a>
+                          </dd>
+                          <span className={css.bankCopyAction}>
+                            <CopyButton
+                              label={`Copy receipt email ${bankDetails.receiptEmail}`}
+                              disabled={isUpdating}
+                              onClick={() =>
+                                onCopyValue(
+                                  bankDetails.receiptEmail ?? '',
+                                  'Receipt email'
+                                )
+                              }
+                            />
+                          </span>
+                        </div>
+                      ) : null}
+                    </dl>
+                  ) : (
+                    <p className={css.metaText}>
+                      Bank transfer is unavailable because the pharmacy has not
+                      provided bank details yet.
+                    </p>
+                  )}
+                </div>
 
                 {bankDetails ? (
-                  <dl className={css.bankList}>
-                    {bankRows.map(([label, value]) => (
-                      <div key={label}>
-                        <dt>{label}</dt>
-                        <dd>
-                          <span>{value}</span>
-                          <CopyButton
-                            label={`Copy ${label} ${value}`}
-                            disabled={isUpdating}
-                            onClick={() => onCopyValue(value, label)}
-                          />
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                ) : (
-                  <p className={css.metaText}>
-                    Bank transfer is unavailable because the pharmacy has not
-                    provided bank details yet.
-                  </p>
-                )}
+                  <div className={css.emailNote}>
+                    <Mail size={20} aria-hidden="true" />
+                    <p>
+                      After payment, the client should send the receipt to the
+                      pharmacy email for faster processing.
+                    </p>
+                  </div>
+                ) : null}
               </div>
-
-              {bankDetails ? (
-                <div className={css.emailNote}>
-                  <Mail size={20} aria-hidden="true" />
-                  <p>
-                    After payment, the client should send the receipt to the
-                    pharmacy email for faster processing.
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
@@ -1229,6 +1330,11 @@ function OrderDetailsPageContent({
 
   const [order, setOrder] = useState<PharmacyOrderDetails | null>(null);
   const [clients, setClients] = useState<PharmacyClientRow[]>([]);
+
+  const [categoryIcons, setCategoryIcons] = useState<
+    Readonly<Record<string, string>>
+  >({});
+
   const [selectedClientId, setSelectedClientId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -1460,6 +1566,31 @@ function OrderDetailsPageContent({
   ]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    void getProductCategories({ signal: controller.signal })
+      .then((categories) => {
+        if (!controller.signal.aborted) {
+          setCategoryIcons(
+            Object.fromEntries(
+              categories.map((item) => [item.slug, item.icon ?? ''])
+            )
+          );
+        }
+      })
+      .catch(() => {
+        /* Categories retain their fallback icons. */
+      });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!isCreateMode || !order?.pharmacyName) return;
+
+    dispatchPharmacyBreadcrumbLabel(order.pharmacyName);
+  }, [isCreateMode, order?.pharmacyName]);
+
+  useEffect(() => {
     if (isCreateMode || !order?.orderNumber) return;
 
     dispatchPharmacyBreadcrumbLabel(`Order ${order.orderNumber}`);
@@ -1470,43 +1601,18 @@ function OrderDetailsPageContent({
     [order]
   );
 
-  const orderTabs = useMemo(
-    () => getOrderTabs(order?.managerCommentsCount ?? 0, historyEntries.length),
-    [historyEntries.length, order?.managerCommentsCount]
-  );
+  const orderTabs = useMemo(() => getOrderTabs(isCreateMode), [isCreateMode]);
 
   const selectedClient = useMemo(
     () => clients.find((client) => client.id === selectedClientId) ?? null,
     [clients, selectedClientId]
   );
 
-  const clientOptions = useMemo(
-    () =>
-      clients.map((client) => ({
-        value: client.id,
-
-        label: client.isDefault
-          ? `${client.name} – default client`
-          : client.name,
-
-        searchText: [client.id, client.email, client.phone, client.address]
-          .filter(Boolean)
-          .join(' '),
-
-        leading: (
-          <TableImagePreview
-            src={getProductImageSrc(client.photoUrl ?? undefined)}
-            alt={`${client.name} photo`}
-            fallback={formatInitials(client.name, 'C')}
-            size={30}
-          />
-        ),
-      })),
-    [clients]
-  );
-
-  const isEditable =
-    (isCreateMode || order?.status === 'in_progress') && !pharmacyLockedStatus;
+  // The pharmacy explicitly selected in the create URL is validated above.
+  // A different globally selected pharmacy must not lock this order draft.
+  const isEditable = isCreateMode
+    ? Boolean(order && !createLockedStatus)
+    : order?.status === 'in_progress' && !pharmacyLockedStatus;
 
   const isOrderBusy = isUpdatingOrder || isCreatingOrder;
 
@@ -1528,6 +1634,19 @@ function OrderDetailsPageContent({
   const deliveryErrors = useMemo(
     () => validateOrderDeliveryForm(deliveryValues, deliveryMethod),
     [deliveryMethod, deliveryValues]
+  );
+
+  const canSaveCreateOrder = Boolean(
+    isCreateMode &&
+    isEditable &&
+    order &&
+    selectedClientId &&
+    order.items.length > 0 &&
+    order.items.every((item) => item.quantity > 0) &&
+    !hasValidationErrors(deliveryErrors) &&
+    (paymentMethod !== 'bank_transfer' || order.bankDetails) &&
+    !isCreatingOrder &&
+    !isUpdatingOrder
   );
 
   const statusActions = useMemo(() => {
@@ -1732,8 +1851,11 @@ function OrderDetailsPageContent({
     await updateOrderDraft({ items: getOrderItemsPayload(nextItems) });
   };
 
-  const handleClientChange = (clientId: string) => {
-    const client = clients.find((item) => item.id === clientId);
+  const handleClientChange = (
+    clientId: string,
+    selected?: PharmacyClientRow
+  ) => {
+    const client = selected ?? clients.find((item) => item.id === clientId);
 
     if (!client || client.status !== 'active') return;
 
@@ -2153,35 +2275,21 @@ function OrderDetailsPageContent({
             </div>
 
             <div className={css.clientSelector}>
-              <SearchableSelect
-                id="manager-order-client"
-                label="Client"
-                labelAccessory={
-                  <InfoTooltip
-                    label="About client selection"
-                    title="Client selection"
-                    icon={<UsersRound size={20} aria-hidden="true" />}
-                    items={[
-                      {
-                        title: 'Search active clients',
-                        description:
-                          'Search by client name, ID, email, phone number, or address.',
-                      },
-                      {
-                        title: 'Walk-in client',
-                        description:
-                          'The default walk-in client is selected automatically when you start a new order.',
-                      },
-                    ]}
-                  />
-                }
+              <NewOrderClientSearch
+                pharmacyId={order.pharmacyId}
                 value={selectedClientId}
-                options={clientOptions}
-                placeholder="Search active client"
-                emptyMessage="No active clients found"
-                isActive={Boolean(selectedClientId)}
+                selectedClient={selectedClient}
+                onSelect={(client) => {
+                  if (client) {
+                    setClients((current) =>
+                      current.some((item) => item.id === client.id)
+                        ? current
+                        : [...current, client]
+                    );
+                    handleClientChange(client.id, client);
+                  }
+                }}
                 disabled={isCreatingOrder}
-                onChange={handleClientChange}
               />
             </div>
 
@@ -2198,7 +2306,7 @@ function OrderDetailsPageContent({
               type="button"
               variant="secondary"
               iconLeft={<Save size={17} aria-hidden="true" />}
-              disabled={!selectedClientId || isCreatingOrder}
+              disabled={!canSaveCreateOrder}
               isLoading={isCreatingOrder}
               onClick={handleRequestCreateOrder}
             >
@@ -2325,6 +2433,7 @@ function OrderDetailsPageContent({
           {activeTab === 'products' ? (
             <OrderProductsTab
               order={order}
+              categoryIcons={categoryIcons}
               isEditable={isEditable}
               isUpdating={isOrderBusy}
               onQuantityChange={handleQuantityChange}
@@ -2336,6 +2445,7 @@ function OrderDetailsPageContent({
           {activeTab === 'delivery' ? (
             <DeliveryTab
               order={order}
+              isCreateMode={isCreateMode}
               isEditable={isEditable}
               deliveryMethod={deliveryMethod}
               recipientName={recipientName}
@@ -2356,6 +2466,7 @@ function OrderDetailsPageContent({
           {activeTab === 'payment' ? (
             <PaymentTab
               order={order}
+              isCreateMode={isCreateMode}
               paymentMethod={paymentMethod}
               isEditable={isEditable}
               isUpdating={isOrderBusy}
@@ -2479,6 +2590,10 @@ function OrderDetailsPageContent({
       <ConfirmationModal
         isOpen={Boolean(productToRemove)}
         title="Remove product from order?"
+        eyebrow="Order products"
+        destructive
+        confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         description={
           productToRemove
             ? isCreateMode

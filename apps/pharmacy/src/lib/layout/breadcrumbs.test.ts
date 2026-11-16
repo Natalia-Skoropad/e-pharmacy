@@ -36,6 +36,21 @@ test('base and new routes derive breadcrumbs from canonical route families', () 
   ]);
 
   assert.deepEqual(
+    getPharmacyBreadcrumbsByPathname(
+      `/pharmacy/orders/new/pharmacy-id-${ENTITY_ID}`,
+      'Care Pharmacy Lviv'
+    ),
+    [
+      { label: 'Orders', href: '/pharmacy/orders' },
+      {
+        label: 'Care Pharmacy Lviv',
+        href: `/pharmacy/pharmacies/${ENTITY_ID}`,
+      },
+      { label: 'Create order' },
+    ]
+  );
+
+  assert.deepEqual(
     getPharmacyBreadcrumbsByPathname('/pharmacy/product-requests/new'),
     [
       { label: 'Product requests', href: '/pharmacy/product-requests' },

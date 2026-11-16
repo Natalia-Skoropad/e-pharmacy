@@ -38,6 +38,12 @@ const STOCK_ORDER_SEARCH_SOURCE = path.resolve(
   '../products/OwnProductDetailsPageContent/StockMovementOrderSearch.tsx'
 );
 
+const CREATE_CLIENT_SEARCH_SOURCE = path.join(
+  CURRENT_DIR,
+  'OrderDetailsPageContent',
+  'NewOrderClientSearch.tsx'
+);
+
 const PICKER_SOURCE = path.join(
   CURRENT_DIR,
   'OrderDetailsPageContent',
@@ -47,11 +53,13 @@ const PICKER_SOURCE = path.join(
 //===================================================================
 
 test('client search help documents all supported identifiers', async () => {
-  const [ordersSource, productSource, detailsSource] = await Promise.all([
-    readFile(ORDERS_SOURCE, 'utf8'),
-    readFile(PRODUCT_SOURCE, 'utf8'),
-    readFile(DETAILS_SOURCE, 'utf8'),
-  ]);
+  const [ordersSource, productSource, detailsSource, clientSelectSource] =
+    await Promise.all([
+      readFile(ORDERS_SOURCE, 'utf8'),
+      readFile(PRODUCT_SOURCE, 'utf8'),
+      readFile(DETAILS_SOURCE, 'utf8'),
+      readFile(CREATE_CLIENT_SEARCH_SOURCE, 'utf8'),
+    ]);
 
   const normalizeWhitespace = (source: string) => source.replace(/\s+/g, ' ');
   const help = 'Search by client name, ID, email, phone number, or address.';
@@ -71,8 +79,12 @@ test('client search help documents all supported identifiers', async () => {
   );
 
   assert.ok(normalizeWhitespace(ordersSource).includes(help));
-  assert.ok(normalizeWhitespace(detailsSource).includes(help));
-  assert.match(detailsSource, /searchText:/);
+  assert.match(detailsSource, /<NewOrderClientSearch/);
+  assert.match(clientSelectSource, /Search fields/);
+  assert.match(clientSelectSource, /name, ID, email, phone, or address/);
+  assert.match(clientSelectSource, /searchText:/);
+  assert.match(clientSelectSource, /perPage: PAGE_SIZE/);
+  assert.match(clientSelectSource, /onLoadMore=\{loadMore\}/);
 
   const stockSearch = await readFile(STOCK_ORDER_SEARCH_SOURCE, 'utf8');
 
@@ -99,10 +111,11 @@ test('new order uses active client badge, matching states and compact controls',
   );
 
   assert.match(detailsSource, /const pharmacyLockedStatus =/);
+  assert.match(detailsSource, /const isEditable = isCreateMode/);
 
   assert.match(
     detailsSource,
-    /const isEditable =[\s\S]{0,120}!pharmacyLockedStatus/
+    /order\?\.status === 'in_progress' && !pharmacyLockedStatus/
   );
 
   assert.match(detailsSource, /Boolean\(pharmacyLockedStatus\)/);
@@ -145,4 +158,60 @@ test('order draft product and checkout presentation matches requested contracts'
   );
 
   assert.doesNotMatch(styles, /\.deliveryAddressError\s*\{/);
+});
+
+//===================================================================
+
+test('create order only exposes editable tabs and guards saving until the draft is complete', async () => {
+  const source = await readFile(DETAILS_SOURCE, 'utf8');
+
+  assert.match(source, /getOrderTabs\(isCreateMode: boolean\)/);
+  assert.match(source, /if \(!isCreateMode\)/);
+  assert.match(source, /const canSaveCreateOrder = Boolean\(/);
+
+  assert.match(
+    source,
+    /isCreateMode && isEditable && order && selectedClientId/
+  );
+
+  assert.match(source, /hasValidationErrors\(deliveryErrors\)/);
+  assert.match(source, /disabled=\{!canSaveCreateOrder\}/);
+
+  assert.match(
+    source,
+    /!isCreateMode \? <div className=\{css\.methodHeader\}>/
+  );
+
+  assert.match(
+    source,
+    /ProfileSectionHeader[\s\S]*?Choose how the client will receive the order\./
+  );
+
+  assert.match(
+    source,
+    /ProfileSectionHeader[\s\S]*?Choose how the client will pay for the order\./
+  );
+});
+
+//===================================================================
+
+test('create order renders product category icons, contextual actions and public-style bank details', async () => {
+  const [source, picker, styles] = await Promise.all([
+    readFile(DETAILS_SOURCE, 'utf8'),
+    readFile(PICKER_SOURCE, 'utf8'),
+    readFile(DETAILS_STYLES, 'utf8'),
+  ]);
+
+  assert.match(
+    source,
+    /<CategoryIcon name=\{categoryIcons\[item\.category\.slug\]\}/
+  );
+
+  assert.match(source, /destructive[\s\S]*?confirmIconLeft=\{<Trash2/);
+  assert.match(source, /className=\{css\.bankCopyAction\}/);
+  assert.match(picker, /getProductCategories/);
+  assert.match(picker, /<ProfileResourceState/);
+  assert.match(picker, /[Nn]ame, article, or product ID/);
+  assert.match(picker, /categoryIcons\[product\.category\.slug\]/);
+  assert.match(styles, /\.bankList \.bankRow\s*\{/);
 });
