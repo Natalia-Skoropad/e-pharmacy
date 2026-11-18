@@ -698,9 +698,19 @@ export function parseProductCardSummary(
     {
       imageUrl: 'string',
       manufacturer: 'string',
+      availableQuantity: 'number',
     },
     context
   );
+
+  if (record.availableQuantity !== undefined) {
+    requireSafeNonNegativeInteger(
+      record,
+      'availableQuantity',
+      'product card summary',
+      context
+    );
+  }
 
   const minPrice = requireNullableNonNegativeNumber(
     record,
@@ -2946,6 +2956,7 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
       pharmacyImageUrl: 'string',
       pharmacyRating: 'number',
       pharmacyReviewsCount: 'number',
+      pharmacyLocation: 'record',
     },
     context
   );
@@ -3004,6 +3015,24 @@ function parseCartItem(value: unknown, context?: ApiResponseContext): CartItem {
   );
 
   const product = parseCartProduct(record.product, context);
+
+  if (record.pharmacyLocation !== undefined) {
+    const location = requireRecord(
+      record.pharmacyLocation,
+      'cart item pharmacy location',
+      context
+    );
+
+    requireOptionalFields(
+      location,
+      'cart item pharmacy location',
+      {
+        settlement: 'string',
+        region: 'string',
+      },
+      context
+    );
+  }
 
   if (product.id !== productId) {
     throw invalidDto(

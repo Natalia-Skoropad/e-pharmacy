@@ -595,7 +595,8 @@ export async function getProductsByScope(
             product,
             getProductCategoryReferenceOrThrow(categoryMap, product.categoryId),
             summaryMap.get(String(product._id)),
-            favorites.products
+            favorites.products,
+            Boolean(query.pharmacyId)
           )
         );
       })();

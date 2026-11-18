@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { Building2, Info } from 'lucide-react';
+import { Building2, Info, Trash2, X } from 'lucide-react';
 
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
@@ -189,8 +189,14 @@ export function ProductOffersPanel({
       ) : null}
       {cart.pendingRemoveOffer ? (
         <ConfirmationModal
+          eyebrow="CART PRODUCT"
           title="Remove product from order?"
           text={`This is the last unit of ${product.name} from ${cart.pendingRemoveOffer.pharmacyName}. It will be removed from the cart.`}
+          confirmLabel="Remove product"
+          cancelLabel="Keep product"
+          destructive
+          confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+          cancelIconLeft={<X size={17} aria-hidden="true" />}
           isLoading={cart.pendingOfferIds.has(cart.pendingRemoveOffer.id)}
           onConfirm={() => void cart.confirmRemoveUnit()}
           onCancel={cart.closeRemoveConfirmation}

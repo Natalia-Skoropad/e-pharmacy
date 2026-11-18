@@ -43,6 +43,7 @@ export type CartItemResponseDto = {
   product: CartProductResponseDto;
   pharmacyName: string;
   pharmacyImageUrl?: string;
+  pharmacyLocation?: Readonly<{ settlement?: string; region?: string }>;
   pharmacyRating?: number;
   pharmacyReviewsCount?: number;
   stockQuantity: number;
@@ -52,16 +53,22 @@ export type CartItemResponseDto = {
   expiresAt: string;
 };
 
+//===============================================================
+
 export type CartIssueReason =
   | 'expired'
   | 'offer_unavailable'
   | 'product_unavailable'
   | 'pharmacy_unavailable';
 
+//===============================================================
+
 export type CartIssueResponseDto = {
   cartItemId: string;
   reason: CartIssueReason;
 };
+
+//===============================================================
 
 export type CartResponseDto = {
   revision: number;

@@ -1,9 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { CircleAlert } from 'lucide-react';
 
-import { Button, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import {
+  Building2,
+  PackageSearch,
+  ShoppingCart,
+  Trash2,
+  X,
+} from 'lucide-react';
+
+import { Button } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 
 import {
@@ -15,7 +22,11 @@ import {
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { Container } from '@e-pharmacy/ui/layout';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
+
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import type { Cart } from '@e-pharmacy/types/cart';
 
 import {
@@ -34,11 +45,14 @@ import { hasCartGroupStockConflict } from '@/lib/cart/cart-stock';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
 import { ROUTES } from '@/lib/routes';
 import { buildPharmacyPath, createBreadcrumbs } from '@/lib/routes';
+
 import { useClientAuthCapabilities } from '@/hooks/useClientAuthCapabilities';
+
 import { useCart } from '@/providers/CartProvider';
 
 import CartItemCard from '@/components/cart/CartItemCard/CartItemCard';
 import CartSummary from '@/components/cart/CartSummary/CartSummary';
+import { OrderPageSkeleton } from '@/components/common/OrderPageSkeleton/OrderPageSkeleton';
 import ContinueShoppingModal from '@/components/cart/ContinueShoppingModal/ContinueShoppingModal';
 
 import css from './CartPageContent.module.css';
@@ -65,12 +79,13 @@ const EMPTY_CART: Cart = {
 function CartPageContent() {
   const { isBootstrapping, canUseClientFeatures } = useClientAuthCapabilities();
   const canUseCart = canUseClientFeatures;
+  const toast = useToast();
+  const [isEntryRefreshing, setIsEntryRefreshing] = useState(true);
 
   const {
     cart,
     isLoaded,
     isLoading,
-    isRefreshing,
     error: cartLoadError,
     retryCart,
     refreshCart,
@@ -99,7 +114,13 @@ function CartPageContent() {
   useEffect(() => {
     if (!canUseCart) return;
 
-    void refreshCart().catch(() => undefined);
+    let isActive = true;
+
+    void refreshCart()
+      .catch(() => undefined)
+      .finally(() => {
+        if (isActive) setIsEntryRefreshing(false);
+      });
 
     const refreshOnFocus = () => {
       if (document.visibilityState === 'visible')
@@ -108,114 +129,165 @@ function CartPageContent() {
 
     window.addEventListener('focus', refreshOnFocus);
 
-    return () => window.removeEventListener('focus', refreshOnFocus);
+    return () => {
+      isActive = false;
+      window.removeEventListener('focus', refreshOnFocus);
+    };
   }, [canUseCart, refreshCart]);
 
   const isUpdating = pendingItemIds.size > 0 || isClearing;
   const visibleError = error || cartLoadError;
 
   const handleQuantityChange = async (cartItemId: string, quantity: number) => {
-    if (!canUseCart || quantity < 1) return;
+    const previousQuantity = cart.items.find(
+      (item) => item.id === cartItemId
+    )?.quantity;
+
+    if (
+      !canUseCart ||
+      quantity < 1 ||
+      previousQuantity === undefined ||
+      previousQuantity === quantity
+    )
+      return;
 
     try {
       setError('');
+      const response = await updateItemQuantity(cartItemId, { quantity });
 
-      await updateItemQuantity(cartItemId, { quantity });
+      if (response) {
+        toast.success(
+          quantity > previousQuantity
+            ? 'One product unit was added to the order.'
+            : 'One product unit was removed from the order.'
+        );
+      }
     } catch (error) {
-      setError(
-        getUserFacingErrorMessage(error, {
-          fallback: APP_ERROR_MESSAGES.cart.update,
-          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
-        })
-      );
+      const message = getUserFacingErrorMessage(error, {
+        fallback: APP_ERROR_MESSAGES.cart.update,
+        backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
+      });
+
+      setError(message);
+      toast.error(message);
     }
   };
 
-  const handleRemove = async (cartItemId: string) => {
-    if (!canUseCart) return;
+  const handleRemove = async (cartItemId: string): Promise<boolean> => {
+    if (!canUseCart) return false;
 
     try {
       setError('');
 
-      await removeItemFromCart(cartItemId);
+      const response = await removeItemFromCart(cartItemId);
+
+      if (!response) return false;
+
+      toast.success('Product was removed from the order.');
+
+      return true;
     } catch (error) {
-      setError(
-        getUserFacingErrorMessage(error, {
-          fallback: APP_ERROR_MESSAGES.cart.remove,
-          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
-        })
-      );
+      const message = getUserFacingErrorMessage(error, {
+        fallback: APP_ERROR_MESSAGES.cart.remove,
+        backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
+      });
+
+      setError(message);
+      toast.error(message);
+
+      return false;
     }
   };
 
-  const handleClear = async () => {
-    if (!canUseCart) return;
+  const handleClear = async (): Promise<boolean> => {
+    if (!canUseCart) return false;
 
     try {
       setError('');
 
-      await clearAllCart();
+      const response = await clearAllCart();
+
+      if (!response) return false;
+
+      toast.success('Cart was cleared.');
+
+      return true;
     } catch (error) {
-      setError(
-        getUserFacingErrorMessage(error, {
-          fallback: APP_ERROR_MESSAGES.cart.clear,
-          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
-        })
-      );
+      const message = getUserFacingErrorMessage(error, {
+        fallback: APP_ERROR_MESSAGES.cart.clear,
+        backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
+      });
+
+      setError(message);
+      toast.error(message);
+
+      return false;
     }
   };
 
   const visibleCart = canUseCart ? cart : EMPTY_CART;
 
   const shouldShowLoading =
-    isBootstrapping || (canUseCart && (!isLoaded || isLoading));
+    isBootstrapping ||
+    (canUseCart && (isEntryRefreshing || !isLoaded || isLoading));
 
   const groupedCartItems = useMemo(
     () => groupCartItemsByPharmacy(visibleCart.items),
     [visibleCart.items]
   );
 
-  const handleRemovePharmacy = async (pharmacyId: string) => {
-    if (!canUseCart) return;
+  const handleRemovePharmacy = async (pharmacyId: string): Promise<boolean> => {
+    if (!canUseCart) return false;
 
     try {
       setError('');
 
-      await removePharmacyOrder(pharmacyId);
+      const response = await removePharmacyOrder(pharmacyId);
+
+      if (!response) return false;
+
+      toast.success('Pharmacy order was removed from the cart.');
+
+      return true;
     } catch (error) {
-      setError(
-        getUserFacingErrorMessage(error, {
-          fallback: APP_ERROR_MESSAGES.cart.removeOrder,
-          backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
-        })
-      );
+      const message = getUserFacingErrorMessage(error, {
+        fallback: APP_ERROR_MESSAGES.cart.removeOrder,
+        backendCodeMessages: CART_BACKEND_CODE_MESSAGES,
+      });
+
+      setError(message);
+      toast.error(message);
+
+      return false;
     }
   };
 
   const handleConfirmPendingAction = async () => {
     if (!pendingAction) return;
 
-    if (pendingAction.type === 'item') {
-      await handleRemove(pendingAction.itemId);
-    }
+    const succeeded =
+      pendingAction.type === 'item'
+        ? await handleRemove(pendingAction.itemId)
+        : pendingAction.type === 'pharmacy'
+          ? await handleRemovePharmacy(pendingAction.pharmacyId)
+          : await handleClear();
 
-    if (pendingAction.type === 'pharmacy') {
-      await handleRemovePharmacy(pendingAction.pharmacyId);
-    }
-
-    if (pendingAction.type === 'clear') {
-      await handleClear();
-    }
-
-    setPendingAction(null);
+    if (succeeded) setPendingAction(null);
   };
 
   const pendingActionText =
     pendingAction?.type === 'item'
-      ? 'Remove this product from the order?'
+      ? 'This product will be removed from your pharmacy order. Are you sure?'
       : pendingAction?.type === 'pharmacy'
-        ? `Remove the whole order from ${pendingAction.pharmacyName}?`
-        : 'Clear the whole cart?';
+        ? `All products from ${pendingAction.pharmacyName} will be removed from your cart. Are you sure?`
+        : 'All products will be removed from your cart. Are you sure?';
+
+  const pendingActionTitle =
+    pendingAction?.type === 'item'
+      ? 'Remove product from order?'
+      : pendingAction?.type === 'pharmacy'
+        ? 'Remove pharmacy order?'
+        : 'Clear your cart?';
 
   return (
     <main className={css.page}>
@@ -237,50 +309,32 @@ function CartPageContent() {
                 shown={groupedCartItems.length}
                 total={groupedCartItems.length}
                 label={groupedCartItems.length === 1 ? 'order' : 'orders'}
+                fullWidthOnMobile
               />
             ) : null}
           </div>
 
-          {shouldShowLoading ? (
-            <div className={css.status}>
-              <LoadingSpinner label="Loading pharmacy orders..." />
-            </div>
+          {shouldShowLoading ? <OrderPageSkeleton variant="cart" /> : null}
+
+          {!shouldShowLoading && cartLoadError ? (
+            <ProfileResourceState
+              variant="error"
+              title="We couldn’t load your cart"
+              description={cartLoadError}
+              onRetry={() => retryCart()}
+              retryLabel="Try again"
+            />
+          ) : !shouldShowLoading && error ? (
+            <ProfileResourceState
+              variant="error"
+              title="Your cart could not be updated"
+              description={error}
+              onRetry={() => refreshCart()}
+              retryLabel="Refresh cart"
+            />
           ) : null}
 
-          {cartLoadError ? (
-            <div className={css.errorState} role="alert">
-              <span className={css.errorIcon} aria-hidden="true">
-                <CircleAlert size={30} />
-              </span>
-
-              <div className={css.errorCopy}>
-                <h2>We couldn’t load your cart</h2>
-                <p>{cartLoadError}</p>
-
-                <div className={css.errorActions}>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    disabled={isLoading || isRefreshing}
-                    onClick={() => void retryCart().catch(() => undefined)}
-                  >
-                    Try again
-                  </Button>
-
-                  <LinkButton href={ROUTES.PRODUCTS_CATALOG} size="sm">
-                    Browse products
-                  </LinkButton>
-                </div>
-              </div>
-            </div>
-          ) : error ? (
-            <div className={css.notice} role="alert">
-              <p>{error}</p>
-            </div>
-          ) : null}
-
-          {visibleCart.issues.length > 0 ? (
+          {!shouldShowLoading && visibleCart.issues.length > 0 ? (
             <div className={css.notice} role="status">
               <p>{APP_ERROR_MESSAGES.cart.itemsChanged}</p>
             </div>
@@ -289,23 +343,27 @@ function CartPageContent() {
           {!shouldShowLoading &&
           !visibleError &&
           visibleCart.items.length === 0 ? (
-            <div className={css.empty}>
-              <h2 className={css.emptyTitle}>Your cart is empty</h2>
-
-              <p className={css.emptyText}>
-                Add products from the catalog and they will appear here.
-              </p>
-
-              <LinkButton
-                className={css.emptyButton}
-                href={ROUTES.PRODUCTS_CATALOG}
-              >
-                Browse products
-              </LinkButton>
-            </div>
+            <ProfileResourceState
+              variant="empty"
+              icon={<ShoppingCart size={24} aria-hidden="true" />}
+              title="Your cart is empty"
+              description="Add products from the catalog and they will appear here."
+              sideActionOnDesktop
+              headingLevel={2}
+              action={
+                <LinkButton
+                  href={ROUTES.PRODUCTS_CATALOG}
+                  iconLeft={<PackageSearch size={18} aria-hidden="true" />}
+                >
+                  Browse products
+                </LinkButton>
+              }
+            />
           ) : null}
 
-          {!cartLoadError && visibleCart.items.length > 0 ? (
+          {!shouldShowLoading &&
+          !cartLoadError &&
+          visibleCart.items.length > 0 ? (
             <ul className={css.groupList}>
               {groupedCartItems.map((group) => (
                 <li className={css.order} key={group.pharmacyId}>
@@ -321,8 +379,11 @@ function CartPageContent() {
                           />
 
                           <div className={css.pharmacyInfo}>
-                            <p className={css.groupKicker}>Pharmacy order</p>
-
+                            {group.pharmacyLocation ? (
+                              <p className={css.pharmacyLocation}>
+                                {formatPharmacyLocation(group.pharmacyLocation)}
+                              </p>
+                            ) : null}
                             <h2 className={css.pharmacyGroupTitle}>
                               {group.pharmacyName}
                             </h2>
@@ -344,6 +405,9 @@ function CartPageContent() {
                             )}
                             variant="secondary"
                             size="sm"
+                            iconLeft={
+                              <Building2 size={16} aria-hidden="true" />
+                            }
                           >
                             Pharmacy details
                           </LinkButton>
@@ -354,6 +418,7 @@ function CartPageContent() {
                             variant="ghost"
                             size="sm"
                             disabled={isUpdating}
+                            iconLeft={<Trash2 size={16} aria-hidden="true" />}
                             onClick={() =>
                               setPendingAction({
                                 type: 'pharmacy',
@@ -413,8 +478,22 @@ function CartPageContent() {
 
           {pendingAction ? (
             <ConfirmationModal
-              title="Confirm removing"
+              eyebrow={
+                pendingAction.type === 'item' ? 'CART PRODUCT' : 'CART ORDER'
+              }
+              title={pendingActionTitle}
               text={pendingActionText}
+              confirmLabel={
+                pendingAction.type === 'item'
+                  ? 'Remove product'
+                  : pendingAction.type === 'pharmacy'
+                    ? 'Remove order'
+                    : 'Clear cart'
+              }
+              cancelLabel="Keep editing"
+              destructive
+              confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
+              cancelIconLeft={<X size={17} aria-hidden="true" />}
               isLoading={isUpdating}
               onConfirm={() => void handleConfirmPendingAction()}
               onCancel={() => setPendingAction(null)}

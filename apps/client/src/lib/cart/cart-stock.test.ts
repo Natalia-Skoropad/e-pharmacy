@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import type { CartItem } from '@e-pharmacy/types/cart';
 
-import { hasCartItemStockConflict } from './cart-stock';
+import { getRemainingCartStock, hasCartItemStockConflict } from './cart-stock';
 
 //===================================================================
 
@@ -45,4 +45,13 @@ test('reports stock conflicts without masking the server quantity', () => {
   assert.equal(hasCartItemStockConflict(item(5, 2)), true);
   assert.equal(hasCartItemStockConflict(item(5, 5)), false);
   assert.equal(hasCartItemStockConflict(item(5, 6)), false);
+});
+
+//===================================================================
+
+test('subtracts unreserved cart quantities without producing negative availability', () => {
+  assert.equal(getRemainingCartStock(34, 0), 34);
+  assert.equal(getRemainingCartStock(34, 1), 33);
+  assert.equal(getRemainingCartStock(34, 4), 30);
+  assert.equal(getRemainingCartStock(2, 4), 0);
 });

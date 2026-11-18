@@ -64,32 +64,54 @@
   gap: 10px;
 }
 
-.bankList div {
-  display: flex;
-  gap: 16px;
-  justify-content: space-between;
+.bankRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-rows: auto auto;
+  gap: 6px 12px;
+  align-items: center;
 }
 
 .bankList dt {
+  grid-column: 1;
+  grid-row: 1;
   color: var(--color-text-secondary);
 }
 
 .bankList dd {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-  max-width: 68%;
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  margin: 0;
   font-weight: var(--fw-medium);
   color: var(--color-text-primary);
-  text-align: right;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.bankList dd span,
+.bankList dd a {
   overflow-wrap: anywhere;
 }
 
-.bankList dd span {
-  min-width: 0;
-  overflow-wrap: anywhere;
+.bankList dd a {
+  color: inherit;
+  transition: color var(--transition-base);
+}
+
+.bankList dd a:hover,
+.bankList dd a:focus-visible {
+  color: var(--color-accent);
+}
+
+.copyAction {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: flex;
+  width: 44px;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
 }
 
 .emailNote {
@@ -130,5 +152,33 @@
 
   .optionsGrid {
     max-width: 340px;
+  }
+}
+
+/* Keep the public bank-details alignment at tablet and desktop widths. */
+@media only screen and (min-width: 768px) {
+  .bankRow {
+    grid-template-columns: minmax(140px, 0.42fr) minmax(0, 1fr) 44px;
+    grid-template-rows: auto;
+    gap: 16px;
+  }
+
+  .bankList dt,
+  .bankList dd,
+  .copyAction {
+    grid-row: 1;
+  }
+
+  .bankList dt {
+    grid-column: 1;
+  }
+
+  .bankList dd {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .copyAction {
+    grid-column: 3;
   }
 }

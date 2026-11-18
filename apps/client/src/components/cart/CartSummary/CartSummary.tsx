@@ -1,7 +1,14 @@
-import { ShieldAlert } from 'lucide-react';
+import {
+  ShieldAlert,
+  Package,
+  Wallet,
+  CircleCheck,
+  ShoppingCart,
+} from 'lucide-react';
 
 import { Button } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
+
 import { formatMoney } from '@e-pharmacy/utils/money';
 
 import css from './CartSummary.module.css';
@@ -37,12 +44,18 @@ function CartSummary({
 
       <dl className={css.list}>
         <div className={css.row}>
-          <dt>Items</dt>
+          <dt>
+            <Package size={17} aria-hidden="true" />
+            Items
+          </dt>
           <dd>{totalItems}</dd>
         </div>
 
         <div className={css.row}>
-          <dt>Total</dt>
+          <dt>
+            <Wallet size={17} aria-hidden="true" />
+            Total
+          </dt>
           <dd>{formatMoney(totalPrice) ?? '—'}</dd>
         </div>
       </dl>
@@ -57,11 +70,20 @@ function CartSummary({
 
       <div className={css.actions}>
         {hasStockConflict ? (
-          <Button type="button" fullWidth disabled>
+          <Button
+            type="button"
+            fullWidth
+            disabled
+            iconLeft={<CircleCheck size={18} aria-hidden="true" />}
+          >
             Confirm order
           </Button>
         ) : (
-          <LinkButton href={checkoutPath} fullWidth>
+          <LinkButton
+            href={checkoutPath}
+            fullWidth
+            iconLeft={<CircleCheck size={18} aria-hidden="true" />}
+          >
             Confirm order
           </LinkButton>
         )}
@@ -70,6 +92,7 @@ function CartSummary({
           type="button"
           variant="ghost"
           fullWidth
+          iconLeft={<ShoppingCart size={18} aria-hidden="true" />}
           disabled={isUpdating}
           onClick={onContinueShopping}
         >

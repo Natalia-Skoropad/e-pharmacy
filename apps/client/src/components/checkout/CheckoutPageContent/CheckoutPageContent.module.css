@@ -263,3 +263,13 @@
   display: grid;
   gap: 6px;
 }
+
+@media only screen and (min-width: 768px) {
+  .emptyActions {
+    width: auto;
+  }
+
+  .emptyActions > * {
+    width: auto;
+  }
+}

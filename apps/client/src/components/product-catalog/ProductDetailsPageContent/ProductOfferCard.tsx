@@ -18,6 +18,7 @@ import type { ProductOffer } from '@e-pharmacy/types/products';
 
 import { getTelephoneHref } from '@/lib/contact/telephone';
 import { buildPharmacyPath } from '@/lib/routes';
+import { getRemainingCartStock } from '@/lib/cart/cart-stock';
 
 import { StockAvailability } from '@/components/common';
 
@@ -177,7 +178,10 @@ export function ProductOfferCard({
             {canShowStock ? (
               <StockAvailability
                 className={css.stockLine}
-                stockQuantity={offer.availableQuantity}
+                stockQuantity={getRemainingCartStock(
+                  offer.availableQuantity,
+                  quantity
+                )}
               />
             ) : null}
           </div>

@@ -136,3 +136,33 @@ test('public product endpoints are active-only while blocked lifecycle access is
 
   assert.match(availableProductsCount, /\$unwind: '\$pharmacyIds'/);
 });
+
+//===================================================================
+
+test('pharmacy-scoped public product summaries expose only current pharmacy stock', async () => {
+  const [projection, service] = await Promise.all([
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product-projections.ts'),
+      'utf8'
+    ),
+
+    readFile(
+      resolve(process.cwd(), 'src/services/catalog/product-shared.ts'),
+      'utf8'
+    ),
+  ]);
+
+  assert.match(projection, /pharmacyScoped && offerSummary/);
+
+  assert.match(
+    projection,
+    /availableQuantity: offerSummary\.availableQuantity/
+  );
+
+  assert.match(projection, /if \(pharmacyId\) match\.pharmacyId/);
+
+  assert.match(
+    service,
+    /summaryMap\.get\(String\(product\._id\)\),\s*favorites\.products,\s*Boolean\(query\.pharmacyId\)/
+  );
+});

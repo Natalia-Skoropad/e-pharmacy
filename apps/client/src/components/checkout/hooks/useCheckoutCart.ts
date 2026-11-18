@@ -11,6 +11,7 @@ export function useCheckoutCart(
   const {
     cart,
     isLoading: isCartLoading,
+    isLoaded: isCartLoaded,
     error: cartLoadError,
     replaceCartFromServer,
   } = useCart();
@@ -21,7 +22,13 @@ export function useCheckoutCart(
   return {
     cart,
     error: canUseCart ? error || cartLoadError : '',
-    isLoading: !isAuthSettled || (isAuthenticated && isCartLoading),
+
+    // On a direct checkout URL the cart can still be `idle` before its
+    // initial fetch starts. Do not reveal the form (or an empty state) until
+    // that first request has settled.
+    isLoading:
+      !isAuthSettled || (isAuthenticated && (!isCartLoaded || isCartLoading)),
+
     replaceCartFromServer,
     setError,
   };

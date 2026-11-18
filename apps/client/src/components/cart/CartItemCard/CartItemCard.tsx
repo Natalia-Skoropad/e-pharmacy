@@ -1,14 +1,21 @@
+import { PackageSearch, Trash2 } from 'lucide-react';
+
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { QuantityCounter } from '@e-pharmacy/ui/forms';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
+
 import { CART_ITEM_MAX_QUANTITY } from '@e-pharmacy/config/cart';
 import { formatMoney } from '@e-pharmacy/utils/money';
 import type { CartItem } from '@e-pharmacy/types/cart';
 
 import { buildProductPath } from '@/lib/routes';
-import { hasCartItemStockConflict } from '@/lib/cart/cart-stock';
+import {
+  getRemainingCartStock,
+  hasCartItemStockConflict,
+} from '@/lib/cart/cart-stock';
 
 import { StockAvailability } from '@/components/common';
 
@@ -55,7 +62,10 @@ function CartItemCard({
       <div className={css.content}>
         <div className={css.head}>
           <div>
-            <p className={css.category}>{item.product.category.name}</p>
+            <p className={css.category}>
+              <CategoryIcon name={item.product.category.icon} size={16} />
+              {item.product.category.name}
+            </p>
 
             <h2 className={css.title} id={`cart-item-${item.id}`}>
               {item.product.name}
@@ -95,7 +105,10 @@ function CartItemCard({
 
             <StockAvailability
               className={css.stock}
-              stockQuantity={item.stockQuantity}
+              stockQuantity={getRemainingCartStock(
+                item.stockQuantity,
+                item.quantity
+              )}
             />
 
             {hasStockConflict ? (
@@ -107,7 +120,12 @@ function CartItemCard({
           </div>
 
           <div className={css.actions}>
-            <LinkButton href={productHref} variant="secondary" size="sm">
+            <LinkButton
+              href={productHref}
+              variant="secondary"
+              size="sm"
+              iconLeft={<PackageSearch size={16} aria-hidden="true" />}
+            >
               Product details
             </LinkButton>
 
@@ -116,6 +134,7 @@ function CartItemCard({
               type="button"
               variant="ghost"
               size="sm"
+              iconLeft={<Trash2 size={16} aria-hidden="true" />}
               disabled={isUpdating}
               onClick={() => onRemove(item.id)}
             >

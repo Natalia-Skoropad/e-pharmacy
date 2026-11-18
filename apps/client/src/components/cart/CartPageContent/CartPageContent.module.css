@@ -350,3 +350,27 @@
     align-items: start;
   }
 }
+
+.pharmacyLocation {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+  font-size: var(--fz-12);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wide);
+}
+
+/* The profile resource card owns empty, error and loading layout. */
+@media (max-width: 767px) {
+  .hero {
+    gap: 14px;
+  }
+
+  .hero > :last-child {
+    width: 100%;
+  }
+}

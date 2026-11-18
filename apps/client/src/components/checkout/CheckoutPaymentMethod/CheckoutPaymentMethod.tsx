@@ -3,6 +3,7 @@ import { Mail, Wallet } from 'lucide-react';
 import { PAYMENT_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import { CopyButton } from '@e-pharmacy/ui/primitives';
+
 import type { PublicPaymentBankDetails } from '@e-pharmacy/types/pharmacies';
 import type { PaymentMethod } from '@e-pharmacy/types/orders';
 
@@ -34,6 +35,7 @@ function CheckoutPaymentMethod({
         ['IBAN', bankDetails.iban],
         ['Bank name', bankDetails.bankName],
         ['Payment purpose', bankDetails.paymentPurpose],
+        ['Receipt email', bankDetails.receiptEmail],
       ] as const)
     : [];
 
@@ -84,16 +86,22 @@ function CheckoutPaymentMethod({
                 {bankDetails ? (
                   <dl className={css.bankList}>
                     {bankRows.map(([label, value]) => (
-                      <div key={label}>
+                      <div className={css.bankRow} key={label}>
                         <dt>{label}</dt>
                         <dd>
-                          <span>{value}</span>
+                          {label === 'Receipt email' ? (
+                            <a href={`mailto:${value}`}>{value}</a>
+                          ) : (
+                            <span>{value}</span>
+                          )}
+                        </dd>
+                        <span className={css.copyAction}>
                           <CopyButton
                             label={`Copy ${label} ${value}`}
                             disabled={disabled}
                             onClick={() => void onCopy(value, label)}
                           />
-                        </dd>
+                        </span>
                       </div>
                     ))}
                   </dl>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useRef } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 import { ModalBase, ModalRoot } from '@e-pharmacy/ui/overlays';
@@ -29,23 +29,22 @@ function CartOrderLimitModal({ onClose }: CartOrderLimitModalProps) {
   return (
     <ModalRoot>
       <ModalBase
+        className={css.backdrop}
+        dialogClassName={css.dialog}
         labelledBy={titleId}
         describedBy={descriptionId}
         initialFocusRef={dismissButtonRef}
         onClose={onClose}
       >
         <div className={css.header}>
-          <span className={css.icon} aria-hidden="true">
-            <ShoppingCart size={24} />
-          </span>
-
-          <h2 className={css.title} id={titleId}>
-            {CART_ORDER_LIMIT_MODAL_TITLE}
-          </h2>
-
+          <div className={css.heading}>
+            <span className={css.eyebrow}>CART ORDER LIMIT</span>
+            <h2 className={css.title} id={titleId}>
+              {CART_ORDER_LIMIT_MODAL_TITLE}
+            </h2>
+          </div>
           <CloseIconButton
             className={css.closeButton}
-            variant="dark"
             label="Close order limit message"
             onClick={onClose}
           />
@@ -56,7 +55,14 @@ function CartOrderLimitModal({ onClose }: CartOrderLimitModalProps) {
         </p>
 
         <div className={css.footer}>
-          <Button ref={dismissButtonRef} type="button" onClick={onClose}>
+          <Button
+            ref={dismissButtonRef}
+            className={css.dismissButton}
+            type="button"
+            variant="primary"
+            iconLeft={<Check size={17} aria-hidden="true" />}
+            onClick={onClose}
+          >
             Got it
           </Button>
         </div>

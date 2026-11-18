@@ -306,6 +306,20 @@ async function serializeCartWithCleanup(
       product: productDto,
       pharmacyName: pharmacy.name,
 
+      ...(pharmacy.location?.settlement || pharmacy.location?.region
+        ? {
+            pharmacyLocation: {
+              ...(pharmacy.location.settlement
+                ? { settlement: pharmacy.location.settlement }
+                : {}),
+
+              ...(pharmacy.location.region
+                ? { region: pharmacy.location.region }
+                : {}),
+            },
+          }
+        : {}),
+
       ...(pharmacy.imageUrl ? { pharmacyImageUrl: pharmacy.imageUrl } : {}),
 
       ...(typeof pharmacy.rating === 'number'

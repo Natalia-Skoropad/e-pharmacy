@@ -88,6 +88,9 @@ export type ProductCardSummaryResponseDto = {
   manufacturer?: string;
   foundInPharmaciesCount: number;
   availableInPharmaciesCount: number;
+
+  /** Current stock for a selected pharmacy, when product search is pharmacy-scoped. */
+  availableQuantity?: number;
   inStock: boolean;
   rating: number;
   reviewsCount: number;

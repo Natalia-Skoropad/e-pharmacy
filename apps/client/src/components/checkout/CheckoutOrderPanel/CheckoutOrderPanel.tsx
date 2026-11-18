@@ -1,9 +1,11 @@
-import { ShieldAlert } from 'lucide-react';
+import { Check, Package, ShieldAlert, WalletCards } from 'lucide-react';
 
 import { formatInitials, RatingSummary } from '@e-pharmacy/ui/data-display';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { Button } from '@e-pharmacy/ui/primitives';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
 import { formatMoney } from '@e-pharmacy/utils/money';
+
 import type { CartPharmacyGroup } from '@/lib/cart/cart-groups';
 
 import css from './CheckoutOrderPanel.module.css';
@@ -36,7 +38,12 @@ function CheckoutOrderPanel({
         />
 
         <div className={css.orderIdentity}>
-          <p className={css.orderKicker}>Pharmacy order</p>
+          {orderGroup.pharmacyLocation ? (
+            <p className={css.orderLocation}>
+              {formatPharmacyLocation(orderGroup.pharmacyLocation)}
+            </p>
+          ) : null}
+
           <h2 className={css.orderName} id="order-title">
             {orderGroup.pharmacyName}
           </h2>
@@ -58,11 +65,21 @@ function CheckoutOrderPanel({
 
       <dl className={css.totalList}>
         <div>
-          <dt>Total items</dt>
+          <dt>
+            <span className={css.totalLabel}>
+              <Package size={18} aria-hidden="true" />
+              Items
+            </span>
+          </dt>
           <dd>{orderGroup.totalItems}</dd>
         </div>
         <div>
-          <dt>Total</dt>
+          <dt>
+            <span className={css.totalLabel}>
+              <WalletCards size={18} aria-hidden="true" />
+              Total
+            </span>
+          </dt>
           <dd>{formatMoney(orderGroup.totalPrice) ?? '—'}</dd>
         </div>
       </dl>
@@ -73,6 +90,7 @@ function CheckoutOrderPanel({
         disabled={!canSubmit}
         isLoading={isSubmitting}
         loadingLabel="Confirming..."
+        iconLeft={<Check size={18} aria-hidden="true" />}
         onClick={onSubmit}
       >
         Confirm order

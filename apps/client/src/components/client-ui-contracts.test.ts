@@ -10,16 +10,33 @@ async function readComponent(relativePath: string): Promise<string> {
 
 //===================================================================
 
-test('keeps the cart limit message single-action and fully described', async () => {
-  const modal = await readComponent(
-    './common/CartOrderLimitModal/CartOrderLimitModal.tsx'
-  );
+test('keeps cart confirmations accessible and uses shared action icons', async () => {
+  const [modal, offers, cart, item] = await Promise.all([
+    readComponent('./common/CartOrderLimitModal/CartOrderLimitModal.tsx'),
+
+    readComponent(
+      './product-catalog/ProductDetailsPageContent/ProductOffersPanel.tsx'
+    ),
+
+    readComponent('./cart/CartPageContent/CartPageContent.tsx'),
+    readComponent('./cart/CartItemCard/CartItemCard.tsx'),
+  ]);
 
   assert.equal((modal.match(/<Button\b/g) ?? []).length, 1);
 
   assert.match(modal, /describedBy=\{descriptionId\}/);
   assert.match(modal, /initialFocusRef=\{dismissButtonRef\}/);
+  assert.match(modal, /CART ORDER LIMIT/);
+  assert.match(modal, /iconLeft=\{<Check/);
+  assert.match(modal, /Got it/);
   assert.doesNotMatch(modal, /ConfirmationModal|cancelLabel|onCancel/);
+  assert.match(offers, /eyebrow="CART PRODUCT"/);
+  assert.match(offers, /destructive/);
+  assert.match(offers, /confirmIconLeft=\{<Trash2/);
+  assert.match(offers, /cancelIconLeft=\{<X/);
+  assert.match(cart, /iconLeft=\{<PackageSearch/);
+  assert.match(cart, /iconLeft=\{<Building2/);
+  assert.match(item, /iconLeft=\{<PackageSearch/);
 });
 
 //===================================================================
@@ -396,4 +413,43 @@ test('uses the branded status layout for pharmacy application configuration erro
   assert.match(configurationState, /\/images\/status\/status-pills\.png/);
   assert.doesNotMatch(configurationState, /description=\{message\}/);
   assert.match(configurationState, /cannot be opened right now/);
+});
+
+//===================================================================
+
+test('cart and checkout reuse the favorite resource states and content-shaped skeletons', async () => {
+  const [cart, checkout, summary, card, skeleton, heroCss] = await Promise.all([
+    readComponent('./cart/CartPageContent/CartPageContent.tsx'),
+    readComponent('./checkout/CheckoutPageContent/CheckoutPageContent.tsx'),
+    readComponent('./cart/CartSummary/CartSummary.tsx'),
+    readComponent('./cart/CartItemCard/CartItemCard.tsx'),
+    readComponent('./common/OrderPageSkeleton/OrderPageSkeleton.tsx'),
+
+    readComponent(
+      './product-catalog/ProductDetailsPageContent/ProductDetailsHero.module.css'
+    ),
+  ]);
+
+  assert.match(cart, /ProfileResourceState/);
+  assert.match(cart, /fullWidthOnMobile/);
+  assert.match(cart, /formatPharmacyLocation\(group\.pharmacyLocation\)/);
+  assert.match(cart, /OrderPageSkeleton variant="cart"/);
+  assert.match(cart, /isEntryRefreshing/);
+  assert.match(cart, /useToast/);
+  assert.match(cart, /toast\.success/);
+  assert.match(cart, /confirmIconLeft=\{<Trash2/);
+  assert.match(cart, /destructive/);
+  assert.match(checkout, /OrderPageSkeleton variant="checkout"/);
+  assert.match(checkout, /title="Choose a pharmacy order"/);
+  assert.match(summary, /Package size=\{17\}/);
+  assert.match(summary, /Wallet size=\{17\}/);
+  assert.match(card, /CategoryIcon name=\{item\.product\.category\.icon\}/);
+
+  assert.match(
+    card,
+    /getRemainingCartStock\(item\.stockQuantity, item\.quantity\)/
+  );
+
+  assert.match(skeleton, /variant === 'cart'/);
+  assert.match(heroCss, /justify-self: end/);
 });

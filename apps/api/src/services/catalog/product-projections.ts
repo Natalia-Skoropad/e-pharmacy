@@ -209,6 +209,7 @@ type ProductOfferSummary = Readonly<{
   minPrice: number;
   maxPrice: number;
   pharmaciesCount: number;
+  availableQuantity: number;
 }>;
 
 //===============================================================
@@ -231,6 +232,7 @@ export async function getOfferSummaryByProductIds(
     minPrice: number;
     maxPrice: number;
     pharmaciesCount: number;
+    availableQuantity: number;
   }>([
     { $match: match },
 
@@ -256,6 +258,7 @@ export async function getOfferSummaryByProductIds(
         _id: { productId: '$productId', pharmacyId: '$pharmacyId' },
         minPrice: { $min: '$price' },
         maxPrice: { $max: '$price' },
+        availableQuantity: { $sum: '$availableQuantity' },
       },
     },
 
@@ -265,6 +268,7 @@ export async function getOfferSummaryByProductIds(
         minPrice: { $min: '$minPrice' },
         maxPrice: { $max: '$maxPrice' },
         pharmaciesCount: { $sum: 1 },
+        availableQuantity: { $sum: '$availableQuantity' },
       },
     },
   ]);
@@ -277,6 +281,7 @@ export async function getOfferSummaryByProductIds(
         minPrice: row.minPrice,
         maxPrice: row.maxPrice,
         pharmaciesCount: row.pharmaciesCount,
+        availableQuantity: row.availableQuantity,
       },
     ])
   );
@@ -288,7 +293,8 @@ export function serializeProductCardSummary(
   product: ProductDocument,
   category: ProductCategoryReferenceDto,
   offerSummary: ProductOfferSummary | undefined,
-  favoriteIds: Set<string>
+  favoriteIds: Set<string>,
+  pharmacyScoped = false
 ): ProductCardSummaryResponseDto {
   const productId = String(product._id);
   const minPrice = offerSummary?.minPrice ?? null;
@@ -317,6 +323,10 @@ export function serializeProductCardSummary(
 
     foundInPharmaciesCount: pharmaciesCount,
     availableInPharmaciesCount: pharmaciesCount,
+
+    ...(pharmacyScoped && offerSummary
+      ? { availableQuantity: offerSummary.availableQuantity }
+      : {}),
 
     inStock: pharmaciesCount > 0,
     rating: product.rating ?? 0,

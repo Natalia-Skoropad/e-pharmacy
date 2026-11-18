@@ -11,17 +11,23 @@ import {
   Phone,
   Truck,
   ShoppingCart,
+  ShoppingBag,
+  CircleAlert,
   X,
 } from 'lucide-react';
 
 import { formatMoney } from '@e-pharmacy/utils/money';
 import { DELIVERY_METHOD_LABELS } from '@e-pharmacy/config/presentation';
 
-import { CopyButton, LoadingSpinner } from '@e-pharmacy/ui/primitives';
+import { CopyButton } from '@e-pharmacy/ui/primitives';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { RadioOption } from '@e-pharmacy/ui/forms';
 import { WorkingHours } from '@e-pharmacy/ui/data-display';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
+import { Container } from '@e-pharmacy/ui/layout';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 
 import {
   AddressInput,
@@ -30,9 +36,6 @@ import {
   PhoneInput,
 } from '@e-pharmacy/ui/forms';
 
-import { Container } from '@e-pharmacy/ui/layout';
-import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import type { PaymentMethod, DeliveryMethod } from '@e-pharmacy/types/orders';
 
 import {
@@ -59,6 +62,8 @@ import { CHECKOUT_DESCRIPTION, CHECKOUT_TITLE } from '@/lib/seo/metadata-copy';
 import { ROUTES } from '@/lib/routes';
 
 import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
+
+import { OrderPageSkeleton } from '@/components/common/OrderPageSkeleton/OrderPageSkeleton';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
@@ -126,8 +131,15 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
   const hasPharmacyLoadError =
     pharmacyStatus === 'error' && pharmacyError !== null;
 
+  // The pharmacy details load after the cart. Keep the checkout skeleton visible
+  // until both requests have settled, including on direct pharmacy checkout URLs.
+  const shouldShowPageSkeleton =
+    isBootstrapping ||
+    isLoading ||
+    (Boolean(selectedOrderGroup) && isPharmacyLoading);
+
   const shouldSelectOrder =
-    !isLoading && cart.items.length > 0 && !selectedOrderGroup;
+    !shouldShowPageSkeleton && cart.items.length > 0 && !selectedOrderGroup;
 
   const selectOrderMessage = selectedPharmacyIdFromRoute
     ? 'This checkout link is no longer valid. Return to cart and choose an active pharmacy order.'
@@ -318,27 +330,36 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
             <p className={css.text}>{CHECKOUT_DESCRIPTION}</p>
           </div>
 
-          {isLoading ? (
-            <div className={css.status}>
-              <LoadingSpinner label="Loading checkout order..." />
-            </div>
+          {shouldShowPageSkeleton ? (
+            <OrderPageSkeleton variant="checkout" />
           ) : null}
 
-          {error ? (
-            <div className={css.notice} role="alert">
-              {error}
-            </div>
+          {!shouldShowPageSkeleton && error ? (
+            <ProfileResourceState
+              variant="error"
+              title="Checkout could not be loaded"
+              description={error}
+              icon={<CircleAlert size={24} aria-hidden="true" />}
+              action={
+                <LinkButton
+                  href={ROUTES.CART}
+                  iconLeft={<ShoppingCart size={18} aria-hidden="true" />}
+                >
+                  Back to cart
+                </LinkButton>
+              }
+            />
           ) : null}
 
-          {!isLoading && cart.items.length === 0 ? (
+          {!shouldShowPageSkeleton && !error && cart.items.length === 0 ? (
             <CheckoutEmptyState />
           ) : null}
 
-          {shouldSelectOrder ? (
+          {!error && shouldSelectOrder ? (
             <CheckoutSelectOrderState message={selectOrderMessage} />
           ) : null}
 
-          {selectedOrderGroup ? (
+          {!shouldShowPageSkeleton && selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
                 <section className={css.card} aria-labelledby="delivery-title">
@@ -380,12 +401,6 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
                           <h3 className={css.deliveryInfoTitle}>
                             Pharmacy details
                           </h3>
-
-                          {isPharmacyLoading ? (
-                            <p className={css.deliveryMutedText}>
-                              Loading pharmacy details...
-                            </p>
-                          ) : null}
 
                           {hasPharmacyLoadError ? (
                             <p className={css.deliveryMutedText} role="alert">
@@ -568,15 +583,22 @@ export default CheckoutPageContent;
 
 function CheckoutSelectOrderState({ message }: { message: string }) {
   return (
-    <div className={css.empty}>
-      <h2 className={css.emptyTitle}>Choose a pharmacy order</h2>
-      <p className={css.emptyText}>{message}</p>
-      <div className={css.emptyActions}>
-        <LinkButton className={css.selectOrderButton} href={ROUTES.CART}>
+    <ProfileResourceState
+      variant="empty"
+      icon={<ShoppingCart size={24} aria-hidden="true" />}
+      title="Choose a pharmacy order"
+      description={message}
+      headingLevel={2}
+      sideActionOnDesktop
+      action={
+        <LinkButton
+          href={ROUTES.CART}
+          iconLeft={<ShoppingCart size={18} aria-hidden="true" />}
+        >
           Back to cart
         </LinkButton>
-      </div>
-    </div>
+      }
+    />
   );
 }
 
@@ -584,18 +606,30 @@ function CheckoutSelectOrderState({ message }: { message: string }) {
 
 function CheckoutEmptyState() {
   return (
-    <div className={css.empty}>
-      <h2 className={css.emptyTitle}>Your cart is empty</h2>
-      <p className={css.emptyText}>
-        Add products first, then checkout will form pharmacy orders.
-      </p>
-      <div className={css.emptyActions}>
-        <LinkButton href={ROUTES.CART} variant="secondary">
-          Back to cart
-        </LinkButton>
-
-        <LinkButton href={ROUTES.PRODUCTS_CATALOG}>Browse products</LinkButton>
-      </div>
-    </div>
+    <ProfileResourceState
+      variant="empty"
+      icon={<ShoppingCart size={24} aria-hidden="true" />}
+      title="Your cart is empty"
+      description="Add products first, then checkout will form pharmacy orders."
+      headingLevel={2}
+      sideActionOnDesktop
+      action={
+        <div className={css.emptyActions}>
+          <LinkButton
+            href={ROUTES.CART}
+            variant="secondary"
+            iconLeft={<ShoppingCart size={18} aria-hidden="true" />}
+          >
+            Back to cart
+          </LinkButton>
+          <LinkButton
+            href={ROUTES.PRODUCTS_CATALOG}
+            iconLeft={<ShoppingBag size={18} aria-hidden="true" />}
+          >
+            Browse products
+          </LinkButton>
+        </div>
+      }
+    />
   );
 }

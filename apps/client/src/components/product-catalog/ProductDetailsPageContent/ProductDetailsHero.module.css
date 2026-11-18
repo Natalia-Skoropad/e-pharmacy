@@ -92,8 +92,12 @@
   .action {
     display: flex;
     width: calc((100% - 14px) / 2);
+    max-width: calc((100% - 14px) / 2);
     min-width: 0;
+    margin-right: 0;
     margin-left: auto;
+    justify-self: end;
+    align-self: end;
   }
 }
 
