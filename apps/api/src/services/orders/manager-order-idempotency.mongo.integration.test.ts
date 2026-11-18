@@ -6,11 +6,13 @@ import mongoose, { Types } from 'mongoose';
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
 
 import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../../constants/orders/order';
+
 import { Order } from '../../models/orders/order.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { User } from '../../models/accounts/user.model';
+
 import type { HttpError } from '../../types/http/errors';
 
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
@@ -61,6 +63,7 @@ test(
     const productId = new Types.ObjectId();
     const offerId = new Types.ObjectId();
     const clientId = new Types.ObjectId();
+    const secondClientId = new Types.ObjectId();
     const phoneSuffix = getPhoneSuffix(suffix);
 
     await seedIntegrationPharmacyActors([ownerId]);
@@ -83,6 +86,17 @@ test(
         status: 'active',
         price: 100,
         inStock: true,
+      }),
+
+      User.create({
+        _id: secondClientId,
+        name: 'Parallel Test Client',
+        email: `parallel-${suffix.toLowerCase()}@example.com`,
+        password: 'test-password-hash',
+        role: 'client',
+        status: 'active',
+        isDefaultPharmacyClient: true,
+        defaultClientPharmacyId: pharmacyId,
       }),
 
       User.create({
@@ -177,13 +191,50 @@ test(
       assert.ok(offerAfterConflict);
       assert.equal(offerAfterConflict.availableQuantity, 4);
       assert.equal(offerAfterConflict.reservedQuantity, 1);
+
+      // Two browser tabs/employees may submit independent requests for the
+      // same pharmacy at once. Neither request may reuse another's idempotency
+      // key; Mongo must reserve each order exactly once without overwriting it.
+      const [sameClientOrder, otherClientOrder] = await Promise.all([
+        createManagerOrderService(
+          { id: ownerId.toString(), role: 'pharmacy' },
+          {
+            ...input,
+            clientRequestId: '3a350cb8-b4ac-4e5c-b970-1a0dc9f28e06',
+          }
+        ),
+
+        createManagerOrderService(
+          { id: ownerId.toString(), role: 'pharmacy' },
+          {
+            ...input,
+            clientRequestId: '90d3b6df-fd0e-4c80-bfc9-2f11a23b35d6',
+            clientId: secondClientId.toString(),
+          }
+        ),
+      ]);
+
+      assert.notEqual(sameClientOrder.order.id, otherClientOrder.order.id);
+      assert.notEqual(first.order.id, sameClientOrder.order.id);
+      assert.equal(await Order.countDocuments({ pharmacyId }), 3);
+
+      const offerAfterConcurrentOrders = await ProductOffer.findById(
+        offerId
+      ).lean<{
+        availableQuantity: number;
+        reservedQuantity: number;
+      } | null>();
+
+      assert.ok(offerAfterConcurrentOrders);
+      assert.equal(offerAfterConcurrentOrders.availableQuantity, 2);
+      assert.equal(offerAfterConcurrentOrders.reservedQuantity, 3);
     } finally {
       await Promise.all([
         Order.deleteMany({ pharmacyId }),
         ProductOffer.deleteOne({ _id: offerId }),
         Product.deleteOne({ _id: productId }),
         Pharmacy.deleteOne({ _id: pharmacyId }),
-        User.deleteMany({ _id: { $in: [ownerId, clientId] } }),
+        User.deleteMany({ _id: { $in: [ownerId, clientId, secondClientId] } }),
       ]);
 
       await mongoose.disconnect();

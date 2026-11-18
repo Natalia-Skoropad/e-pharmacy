@@ -42,7 +42,11 @@ import {
   getOrderOfferFallbacks,
 } from './order-shared';
 
-import { getCurrentPharmacyId, getOwnerOrderPharmacyIds } from './order-access';
+import {
+  assertCanAccessPharmacyOrder,
+  getCurrentPharmacyId,
+  getOwnerOrderPharmacyIds,
+} from './order-access';
 
 //===============================================================
 
@@ -500,23 +504,33 @@ export async function getOrderByIdService(
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
   }
 
-  let filter: Record<string, unknown>;
-
-  if (role === USER_ROLES.PHARMACY) {
-    const pharmacyId = await getCurrentPharmacyId(userId);
-
-    if (!pharmacyId) {
-      throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
-    }
-
-    filter = { _id: orderId, pharmacyId };
-  } else {
-    filter = { _id: orderId, userId };
-  }
+  // The order ID identifies its pharmacy. Do not resolve a tab-local
+  // "current pharmacy" for an owner order card: a deep link or a new browser
+  // tab must load the same resource without an implicit X-Pharmacy-ID header.
+  const filter =
+    role === USER_ROLES.PHARMACY ? { _id: orderId } : { _id: orderId, userId };
 
   const order = await Order.findOne(filter).lean<OrderDocument | null>();
 
   if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+
+  if (role === USER_ROLES.PHARMACY) {
+    // Keep foreign orders indistinguishable from nonexistent ones (404).
+    // The subsequent capability check still rejects managers who lack
+    // read_orders and blocked accounts with their original 403 status.
+    const isMember = await Pharmacy.exists({
+      _id: order.pharmacyId,
+      $or: [{ ownerId: userId }, { managerUserIds: userId }],
+    });
+
+    if (!isMember) {
+      throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+    }
+
+    // Check capability against the order's ACTUAL pharmacy, not a browser
+    // selection that may be absent or different in another tab.
+    await assertCanAccessPharmacyOrder({ id: userId, role }, order);
+  }
 
   const [productFallbacks, offerFallbacks, clientUser] = await Promise.all([
     getOrderProductFallbacks(order),

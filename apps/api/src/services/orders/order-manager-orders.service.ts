@@ -159,7 +159,9 @@ export async function createManagerOrderService(
       if (!client) {
         throw httpError(
           HTTP_STATUS.BAD_REQUEST,
-          'The selected client is inactive or unavailable.'
+          'The selected client is inactive or unavailable.',
+          undefined,
+          'ORDER_CLIENT_UNAVAILABLE'
         );
       }
 
@@ -177,7 +179,9 @@ export async function createManagerOrderService(
         if (!belongsToPharmacy) {
           throw httpError(
             HTTP_STATUS.BAD_REQUEST,
-            'The selected client is not connected to this pharmacy.'
+            'The selected client is not connected to this pharmacy.',
+            undefined,
+            'ORDER_CLIENT_NOT_CONNECTED'
           );
         }
       }

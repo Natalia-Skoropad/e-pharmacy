@@ -333,6 +333,12 @@ const orderSchema = new Schema<OrderEntity>(
       default: undefined,
     },
 
+    rejectedByType: {
+      type: String,
+      enum: ['manager', 'client'],
+      default: undefined,
+    },
+
     orderNumber: { type: String, required: true, unique: true, index: true },
 
     createdByType: {

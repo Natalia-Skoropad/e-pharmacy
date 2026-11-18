@@ -104,3 +104,46 @@ test('owner order options also respect the requested product', async () => {
     /if \(query\.productId\) filter\['items\.productId'\] = new Types\.ObjectId\(query\.productId\)/
   );
 });
+
+//===================================================================
+
+test('order details in a new browser tab resolve their own tenant without widening access', async () => {
+  const [query, access] = await Promise.all([
+    readFile(apiSource('services', 'orders', 'order-query.service.ts'), 'utf8'),
+    readFile(apiSource('services', 'orders', 'order-access.ts'), 'utf8'),
+  ]);
+
+  const details = query.split('export async function getOrderByIdService(')[1]!;
+
+  assert.ok(details);
+
+  const detailsBody = details.split('export async function ')[0]!;
+
+  assert.match(
+    detailsBody,
+    /role === USER_ROLES\.PHARMACY[\s\S]*?\{ _id: orderId \}/
+  );
+
+  assert.match(detailsBody, /\{ _id: orderId, userId \}/);
+
+  assert.match(
+    detailsBody,
+    /Pharmacy\.exists\(\{[\s\S]*?ownerId: userId[\s\S]*?managerUserIds: userId/
+  );
+
+  assert.match(detailsBody, /if \(!isMember\)[\s\S]*?HTTP_STATUS\.NOT_FOUND/);
+
+  assert.match(
+    detailsBody,
+    /assertCanAccessPharmacyOrder\(\{ id: userId, role \}, order\)/
+  );
+
+  assert.doesNotMatch(detailsBody, /getCurrentPharmacyId\(/);
+
+  assert.match(
+    access,
+    /await requirePharmacyCapability\(actor\.id, capability/
+  );
+
+  assert.match(access, /pharmacyId: String\(order\.pharmacyId\)/);
+});

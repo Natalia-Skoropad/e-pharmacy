@@ -3,10 +3,12 @@ import mongoose, { Types } from 'mongoose';
 import { API_MESSAGES } from '../../constants/shared/messages';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE } from '../../constants/orders/order';
+
 import { Order } from '../../models/orders/order.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { User } from '../../models/accounts/user.model';
+
 import { httpError } from '../../utils/http/httpError';
 
 import {
@@ -460,6 +462,9 @@ export async function updateOrderStatusService(
         set.rejectionReason = input.rejectionReason;
         set.rejectedAt = changedAt;
         set.rejectedBy = new Types.ObjectId(actor.id);
+
+        // Preserve only verified provenance. Admin actions are not labelled as a manager.
+        if (actor.role === 'pharmacy') set.rejectedByType = 'manager';
       }
 
       return Order.findByIdAndUpdate(

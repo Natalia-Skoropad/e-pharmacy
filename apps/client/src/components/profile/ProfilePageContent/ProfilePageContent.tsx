@@ -123,7 +123,12 @@ import type {
 
 import type { PharmacyCardSummary } from '@e-pharmacy/types/pharmacies';
 import type { ProductCardSummary } from '@e-pharmacy/types/products';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  OrderRejectionSourceBadge,
+  StatusBadge,
+} from '@e-pharmacy/ui/statistics';
+
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 
 import { getClientPasswordChangeErrorMessage } from '@/lib/auth';
@@ -156,6 +161,7 @@ import { ProductCard } from '@/components/product-catalog';
 import { PharmacyCard } from '@/components/pharmacies';
 
 import { isCurrentFavoriteRequest } from './favorite-request-lifecycle';
+
 import css from './ProfilePageContent.module.css';
 
 //===================================================================
@@ -618,7 +624,20 @@ function AuthenticatedProfilePageContent({
         title: <TableHeaderTitle parts={['Order', 'status']} />,
 
         render: (order) => (
-          <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              flexWrap: 'wrap',
+            }}
+          >
+            <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+            <OrderRejectionSourceBadge
+              status={order.status}
+              rejectedByType={order.rejectedByType}
+            />
+          </span>
         ),
       },
     ],
@@ -1000,10 +1019,12 @@ function AuthenticatedProfilePageContent({
 
   const handleRevokeSession = async (sessionId: string) => {
     if (sessionMutationInFlightRef.current) return;
+
     sessionMutationInFlightRef.current = true;
 
     try {
       setSessionsError('');
+
       await revokeActiveSession(sessionId);
 
       setSessions((current) =>
@@ -1062,6 +1083,7 @@ function AuthenticatedProfilePageContent({
 
   const handlePictureChange = async (pictureUrl: string | null) => {
     if (!canUseAuthFeatures || profileMutationInFlightRef.current) return;
+
     profileMutationInFlightRef.current = true;
 
     const previousPictureDraft = pictureDraft;
@@ -1097,6 +1119,7 @@ function AuthenticatedProfilePageContent({
 
   const handleProfileSubmit = async () => {
     const nextErrors = validateDataProfileForm(profileValues);
+
     setProfileTouchedFields(markAllFieldsTouched(DATA_PROFILE_FORM_FIELDS));
 
     if (
@@ -1123,7 +1146,6 @@ function AuthenticatedProfilePageContent({
       applyCurrentUser(response.user);
       setProfileDraft(null);
       setProfileTouchedFields({});
-
       toast.success('Profile data was updated.');
     } catch (error) {
       toast.error(

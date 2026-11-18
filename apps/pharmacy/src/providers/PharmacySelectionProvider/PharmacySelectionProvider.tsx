@@ -25,6 +25,7 @@ import {
   getPharmacyIdFromDetailPath,
   isOwnerClientsListPath,
   isOwnerOrdersListPath,
+  isOwnerOrderDetailPath,
   isOwnerClientDetailPath,
   isLegacyOperationalPharmacyPath,
   isOperationalPharmacyPath,
@@ -191,12 +192,13 @@ export function PharmacySelectionProvider({
     return () => setAuthorizedPharmacySelection(null);
   }, [selectedId]);
 
-  // Stage 14.18.16: old selected-pharmacy bookmarks for the owner Clients
-  // registry canonicalize to the account-wide URL without discarding filters.
+  // Account-wide routes (including all order details tabs) do not carry
+  // the legacy pharmacyId query. Preserve unrelated query parameters.
   useEffect(() => {
     if (
       !pathname.startsWith('/pharmacy/all-products') &&
       !isOwnerOrdersListPath(pathname) &&
+      !isOwnerOrderDetailPath(pathname) &&
       !isOwnerClientsListPath(pathname) &&
       !isOwnerClientDetailPath(pathname)
     )

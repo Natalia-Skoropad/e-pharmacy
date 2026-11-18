@@ -58,6 +58,8 @@ test('orders share one status summary layout across draft and persisted states',
   assert.match(source, /ORDER_STATUS_PRESENTATION\[order\.status\]/);
   assert.match(source, /getOrderStatusSummary\(order\.status\)/);
   assert.match(source, /inlineMeta/);
+  assert.match(source, /labelSupplement=\{/);
+  assert.match(source, /<OrderRejectionSourceBadge/);
   assert.match(source, /This order is in progress/);
   assert.match(source, /This order was completed successfully/);
   assert.match(source, /This order was rejected/);
@@ -140,4 +142,26 @@ test('active clients receive a success-toned information summary', async () => {
     source,
     /The client account is active and can place orders without[\s\S]{0,80}additional account restrictions\./
   );
+});
+
+//===================================================================
+
+test('tablet order banners keep final status metadata next to titles and pharmacy labels left aligned', async () => {
+  const [details, styles, banner, bannerStyles] = await Promise.all([
+    readFile(ORDER_SOURCE, 'utf8'),
+    readFile(ORDER_STYLES, 'utf8'),
+    readFile(STATUS_BANNER_SOURCE, 'utf8'),
+    readFile(STATUS_BANNER_STYLES, 'utf8'),
+  ]);
+
+  assert.match(details, /css\.selectedPharmacyBadge/);
+  assert.match(styles, /\.selectedPharmacyBadge > span:last-child\s*\{[\s\S]*?text-align: left/);
+  assert.match(banner, /headerMeta && css\.withHeaderMeta/);
+  assert.match(bannerStyles, /min-width: 768px\) and \(max-width: 1439px/);
+  assert.match(bannerStyles, /\.inlineMeta\.withHeaderMeta \.header\s*\{[^}]*display: flex/);
+  assert.match(details, /formatTableDateTimeParts\(value\)/);
+  assert.match(details, /Created \{formatOrderCreatedAt\(order\.orderDate\)\}/);
+  assert.match(styles, /\.orderHeaderMeta\s*\{[\s\S]*?white-space: nowrap/);
+  assert.match(bannerStyles, /\.inlineMeta\.withHeaderMeta \.headerTrailing\s*\{[^}]*width: max-content/);
+  assert.match(bannerStyles, /\.inlineMeta\.withHeaderMeta \.badgeGroup\s*\{[^}]*flex-wrap: nowrap/);
 });

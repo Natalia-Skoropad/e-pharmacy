@@ -57,6 +57,7 @@ export function DeliveryTab({
   deliveryErrors,
   deliveryTouchedFields,
   isUpdating,
+  hasChanges,
   onDeliveryMethodChange,
   onRecipientNameChange,
   onRecipientPhoneChange,
@@ -74,6 +75,7 @@ export function DeliveryTab({
   deliveryErrors: OrderDeliveryFormErrors;
   deliveryTouchedFields: OrderDeliveryTouchedFields;
   isUpdating: boolean;
+  hasChanges: boolean;
   onDeliveryMethodChange: (value: DeliveryMethod) => void;
   onRecipientNameChange: (value: string) => void;
   onRecipientPhoneChange: (value: string) => void;
@@ -94,23 +96,26 @@ export function DeliveryTab({
           titleId="delivery-title"
           description="Choose how the client will receive the order."
           icon={<Truck size={22} aria-hidden="true" />}
+          actionClassName={css.methodTitleAction}
+          action={
+            !isCreateMode ? (
+              <Button
+                className={css.tabSaveButton}
+                type="button"
+                variant="primary"
+                iconLeft={<Save size={17} aria-hidden="true" />}
+                disabled={!isEditable || !hasChanges || isUpdating}
+                isLoading={isUpdating}
+                onClick={onSave}
+              >
+                Save delivery method
+              </Button>
+            ) : undefined
+          }
         />
       </div>
 
       <section className={css.methodCard} aria-labelledby="delivery-title">
-        {!isCreateMode ? (
-          <div className={css.methodHeader}>
-            <Button
-              className={css.tabSaveButton}
-              type="button"
-              disabled={!isEditable || isUpdating}
-              onClick={onSave}
-            >
-              <Save size={17} aria-hidden="true" /> Save delivery method
-            </Button>
-          </div>
-        ) : null}
-
         <div className={css.methodGrid}>
           <fieldset
             className={css.methodOptions}
@@ -275,6 +280,7 @@ export function PaymentTab({
   paymentMethod,
   isEditable,
   isUpdating,
+  hasChanges,
   onPaymentMethodChange,
   onCopyValue,
   onSave,
@@ -284,6 +290,7 @@ export function PaymentTab({
   paymentMethod: PaymentMethod;
   isEditable: boolean;
   isUpdating: boolean;
+  hasChanges: boolean;
   onPaymentMethodChange: (value: PaymentMethod) => void;
   onCopyValue: (value: string, label: string) => void;
   onSave: () => void;
@@ -308,27 +315,31 @@ export function PaymentTab({
           titleId="payment-title"
           description="Choose how the client will pay for the order."
           icon={<CreditCard size={22} aria-hidden="true" />}
+          actionClassName={css.methodTitleAction}
+          action={
+            !isCreateMode ? (
+              <Button
+                className={css.tabSaveButton}
+                type="button"
+                variant="primary"
+                iconLeft={<Save size={17} aria-hidden="true" />}
+                disabled={
+                  !isEditable ||
+                  !hasChanges ||
+                  isUpdating ||
+                  (paymentMethod === 'bank_transfer' && !bankDetails)
+                }
+                isLoading={isUpdating}
+                onClick={onSave}
+              >
+                Save payment method
+              </Button>
+            ) : undefined
+          }
         />
       </div>
 
       <section className={css.methodCard} aria-labelledby="payment-title">
-        {!isCreateMode ? (
-          <div className={css.methodHeader}>
-            <Button
-              className={css.tabSaveButton}
-              type="button"
-              disabled={
-                !isEditable ||
-                isUpdating ||
-                (paymentMethod === 'bank_transfer' && !bankDetails)
-              }
-              onClick={onSave}
-            >
-              <Save size={17} aria-hidden="true" /> Save payment method
-            </Button>
-          </div>
-        ) : null}
-
         <div className={css.methodGrid}>
           <fieldset
             className={css.methodOptions}

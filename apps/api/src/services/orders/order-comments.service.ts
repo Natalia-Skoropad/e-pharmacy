@@ -61,7 +61,8 @@ function assertManagerCommentReplayMatches(
 
 function serializeCreatedManagerComment(
   comment: OrderManagerCommentEntity,
-  actorId: string
+  actorId: string,
+  pictureUrl?: string
 ) {
   return {
     comment: {
@@ -73,6 +74,8 @@ function serializeCreatedManagerComment(
       author: {
         userId: actorId,
         displayName: comment.authorDisplayName?.trim() || 'Pharmacy member',
+
+        ...(pictureUrl?.trim() ? { pictureUrl: pictureUrl.trim() } : {}),
       },
     },
   };
@@ -102,8 +105,36 @@ export async function getOrderManagerCommentsService(
     const page = totalPages === 0 ? 1 : Math.min(query.page, totalPages);
     const start = (page - 1) * query.perPage;
 
+    const items = comments.slice(start, start + query.perPage);
+
+    const authorIds = [
+      ...new Set(items.map((comment) => comment.author.userId)),
+    ].filter((id) => Types.ObjectId.isValid(id));
+
+    const authors = authorIds.length
+      ? await User.find({ _id: { $in: authorIds } })
+          .select('_id pictureUrl')
+          .session(session)
+          .lean<Array<{ _id: Types.ObjectId; pictureUrl?: string }>>()
+      : [];
+
+    const authorPictures = new Map(
+      authors.map((author) => [String(author._id), author.pictureUrl?.trim()])
+    );
+
     return {
-      items: comments.slice(start, start + query.perPage),
+      items: items.map((comment) => {
+        const pictureUrl = authorPictures.get(comment.author.userId);
+
+        return {
+          ...comment,
+          author: {
+            ...comment.author,
+            ...(pictureUrl ? { pictureUrl } : {}),
+          },
+        };
+      }),
+
       page,
       perPage: query.perPage,
       total,
@@ -125,6 +156,7 @@ export async function createOrderManagerCommentService(
   const normalizedText = input.text.trim();
 
   let resultComment: OrderManagerCommentEntity | null = null;
+  let authorPictureUrl: string | undefined;
 
   try {
     await session.withTransaction(async () => {
@@ -158,11 +190,13 @@ export async function createOrderManagerCommentService(
       }
 
       const author = await User.findById(actor.id)
-        .select('name email')
+        .select('name email pictureUrl')
         .session(session)
         .lean<UserDocument | null>();
 
       const authorDisplayName = getManagerCommentAuthorDisplayName(author);
+
+      authorPictureUrl = author?.pictureUrl;
 
       const comment: OrderManagerCommentEntity = {
         _id: new Types.ObjectId(),
@@ -191,7 +225,11 @@ export async function createOrderManagerCommentService(
       );
     }
 
-    return serializeCreatedManagerComment(finalComment, actor.id);
+    return serializeCreatedManagerComment(
+      finalComment,
+      actor.id,
+      authorPictureUrl
+    );
   } finally {
     await session.endSession();
   }

@@ -6,6 +6,7 @@ import {
   isLegacyOperationalPharmacyPath,
   isOwnerClientsListPath,
   isOwnerOrdersListPath,
+  isOwnerOrderDetailPath,
   isOwnerClientDetailPath,
   isOwnerProductDetailPath,
   isOperationalPharmacyPath,
@@ -366,4 +367,36 @@ test('client Orders filters remain inside the client card and reject foreign cli
   }
 
   assert.equal(isOwnerClientDetailPath(`${base}/client-id-${B}`), false);
+});
+
+//===================================================================
+
+test('canonical owner order tabs never require pharmacy selection', () => {
+  const base = `/pharmacy/orders/details/order-id-${A}`;
+
+  for (const path of [
+    base,
+    `${base}/delivery-method`,
+    `${base}/payment-method`,
+    `${base}/comments`,
+    `${base}/history`,
+  ]) {
+    assert.equal(isOwnerOrderDetailPath(path), true, path);
+    assert.equal(isLegacyOperationalPharmacyPath(path), false, path);
+    assert.equal(isOperationalPharmacyPath(path), false, path);
+
+    assert.deepEqual(
+      readExplicitPharmacySelection(path, `pharmacyId=${B}`),
+      { id: null, invalid: false },
+      path
+    );
+  }
+
+  for (const path of [
+    `${base}/unexpected`,
+    `${base}/comments/extra`,
+    `/pharmacy/orders/details/order-id-not-valid/comments`,
+  ]) {
+    assert.equal(isOwnerOrderDetailPath(path), false, path);
+  }
 });

@@ -157,3 +157,26 @@ test('S10 Order keeps tenant capability checks separate from shared serializatio
   assert.match(query, /getCurrentPharmacyId\(userId\)/);
   assert.match(stats, /getOrderSalesStatisticsForPharmaciesService/);
 });
+
+//===================================================================
+
+test('order comment responses include author photos without exposing unrelated users', () => {
+  const comments = modules.get('order-comments.service')!;
+  const pharmacy = read('services/pharmacies/pharmacy-note.service.ts');
+
+  // Load only the authors of the already-authorized, paginated order comments.
+  assert.match(
+    comments,
+    /assertCanAccessPharmacyOrder\(actor, order, session\)/
+  );
+
+  assert.match(
+    comments,
+    /const items = comments\.slice\(start, start \+ query\.perPage\)/
+  );
+
+  assert.match(comments, /\.select\('_id pictureUrl'\)/);
+  assert.match(comments, /authorPictures\.get\(comment\.author\.userId\)/);
+  assert.match(comments, /\.\.\.\(pictureUrl \? \{ pictureUrl \} : \{\}\)/);
+  assert.match(pharmacy, /\.select\('_id pictureUrl'\)/);
+});

@@ -18,7 +18,11 @@ import {
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { formatAmount } from '@e-pharmacy/utils/money';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  OrderRejectionSourceBadge,
+  StatusBadge,
+} from '@e-pharmacy/ui/statistics';
 
 import {
   getPharmacyClientPath,
@@ -47,9 +51,9 @@ function truncateComment(value: string): string {
   const normalized = value.trim();
 
   if (!normalized) return '—';
-  if (normalized.length <= 50) return normalized;
+  if (normalized.length <= 20) return normalized;
 
-  return `${normalized.slice(0, 50)}...`;
+  return `${normalized.slice(0, 20)}…`;
 }
 
 //===================================================================
@@ -219,7 +223,20 @@ function OrdersTable({
         title: <TableHeaderTitle parts={['Order', 'status']} />,
 
         render: (order) => (
-          <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              flexWrap: 'wrap',
+            }}
+          >
+            <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+            <OrderRejectionSourceBadge
+              status={order.status}
+              rejectedByType={order.rejectedByType}
+            />
+          </span>
         ),
       },
     ];
@@ -232,12 +249,7 @@ function OrdersTable({
 
       if (
         productId &&
-        [
-          'deliveryMethod',
-          'paymentMethod',
-          'clientComment',
-          'createdByType',
-        ].includes(key)
+        ['deliveryMethod', 'paymentMethod', 'createdByType'].includes(key)
       )
         return false;
 

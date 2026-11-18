@@ -152,6 +152,7 @@ export type OrderEntity = {
   successfulAt?: Date;
   rejectedAt?: Date;
   rejectedBy?: Types.ObjectId;
+  rejectedByType?: 'manager' | 'client';
   orderNumber: string;
   createdAt: Date;
   updatedAt: Date;
@@ -234,6 +235,7 @@ export type OrderResponseDto = {
   rejectionReason?: string;
   rejectedAt?: ISODateTimeString;
   rejectedBy?: string;
+  rejectedByType?: 'manager' | 'client';
   paymentMethod: PaymentMethod;
   delivery: Delivery;
   comment?: string;

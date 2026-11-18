@@ -31,7 +31,11 @@ import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
 import { formatDateTime } from '@e-pharmacy/utils/date';
 import { formatMoney } from '@e-pharmacy/utils/money';
-import { StatusBadge } from '@e-pharmacy/ui/statistics';
+
+import {
+  OrderRejectionSourceBadge,
+  StatusBadge,
+} from '@e-pharmacy/ui/statistics';
 
 import { ROUTES, buildProductPath, buildPharmacyPath } from '@/lib/routes';
 import { getOrderDetails } from '@/lib/api/browser';
@@ -68,6 +72,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
       try {
         setIsLoaded(false);
         setError('');
+
         const response = await getOrderDetails(cleanOrderId, {
           signal: controller.signal,
         });
@@ -128,6 +133,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   }
 
   const pharmacyHref = buildPharmacyPath(order.pharmacyName, order.pharmacyId);
+
   const hasDeliveryDetails =
     order.delivery.method === 'postal_delivery' &&
     Boolean(order.delivery.details);
@@ -148,7 +154,13 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
               </p>
             </div>
 
-            <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+            <div className={css.statusBadges}>
+              <StatusBadge {...ORDER_STATUS_PRESENTATION[order.status]} />
+              <OrderRejectionSourceBadge
+                status={order.status}
+                rejectedByType={order.rejectedByType}
+              />
+            </div>
           </div>
 
           {order.status === 'rejected' && order.rejectionReason ? (

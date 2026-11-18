@@ -12,6 +12,8 @@ import {
 
 import { ORDER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
+import { ProfileSectionHeader } from '@e-pharmacy/ui/profile';
+import { OrderRejectionSourceBadge } from '@e-pharmacy/ui/statistics';
 import { LazyLoadButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -71,6 +73,11 @@ export function ManagerCommentTab({
     <EntityComments
       entityKey={`order:${orderId}`}
       initialTotal={totalComments}
+      presentation="profile"
+      title="Order comments"
+      description="Private comments about this order, visible to authorized pharmacy staff."
+      emptyTitle="No internal comments yet"
+      emptyText="Internal order comments will appear here."
       isEditable={isEditable}
       placeholder="Write an internal comment for this order..."
       load={(page, options) =>
@@ -111,9 +118,11 @@ function getOrderActivityLabel(
 export function HistoryTab({
   historyEntries,
   rejectionReason,
+  rejectedByType,
 }: Readonly<{
   historyEntries: OrderHistoryEntry[];
   rejectionReason?: string;
+  rejectedByType?: 'manager' | 'client';
 }>) {
   const [visibleCount, setVisibleCount] = useState(
     HISTORY_INITIAL_VISIBLE_COUNT
@@ -123,16 +132,20 @@ export function HistoryTab({
 
   return (
     <section className={css.methodCard} aria-labelledby="history-title">
-      <div className={css.historyHeader}>
-        <h2 id="history-title">Order history</h2>
-
-        <CountLabel
-          className={css.tabCountLabel}
-          shown={visibleEntries.length}
-          total={historyEntries.length}
-          label="history events"
-        />
-      </div>
+      <ProfileSectionHeader
+        title="Order history"
+        titleId="history-title"
+        icon={<History size={22} aria-hidden="true" />}
+        description="Review status updates and product changes for this order."
+        action={
+          <CountLabel
+            className={css.tabCountLabel}
+            shown={visibleEntries.length}
+            total={historyEntries.length}
+            label="history events"
+          />
+        }
+      />
 
       <ol className={css.historyList}>
         {visibleEntries.map((historyEntry) => {
@@ -162,7 +175,15 @@ export function HistoryTab({
                       </time>
                     </div>
 
-                    <StatusBadge {...ORDER_STATUS_PRESENTATION[entry.status]} />
+                    <span className={css.historyStatusBadges}>
+                      <StatusBadge
+                        {...ORDER_STATUS_PRESENTATION[entry.status]}
+                      />
+                      <OrderRejectionSourceBadge
+                        status={entry.status}
+                        rejectedByType={rejectedByType}
+                      />
+                    </span>
                   </div>
 
                   {entry.comment ? <p>{entry.comment}</p> : null}

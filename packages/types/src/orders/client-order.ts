@@ -110,6 +110,7 @@ export type ClientOrder = Readonly<{
   rejectionReason?: string;
   rejectedAt?: ISODateTimeString;
   rejectedBy?: EntityId;
+  rejectedByType?: OrderCreatedByType;
   paymentMethod: PaymentMethod;
   delivery: Delivery;
   comment?: string;

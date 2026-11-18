@@ -163,6 +163,55 @@ export function getPharmacyOrderPath(orderId: EntityId): string {
 
 //===================================================================
 
+export type PharmacyOrderTab =
+  | 'products'
+  | 'delivery'
+  | 'payment'
+  | 'comment'
+  | 'history';
+
+//===================================================================
+
+export const PHARMACY_ORDER_TAB_SEGMENTS: Readonly<
+  Record<PharmacyOrderTab, string>
+> = {
+  products: '',
+  delivery: 'delivery-method',
+  payment: 'payment-method',
+  comment: 'comments',
+  history: 'history',
+};
+
+//===================================================================
+
+export function getPharmacyOrderTabPath(
+  orderId: EntityId,
+  tab: PharmacyOrderTab
+): string {
+  const base = getPharmacyOrderPath(orderId);
+  const segment = PHARMACY_ORDER_TAB_SEGMENTS[tab];
+
+  return segment ? `${base}/${segment}` : base;
+}
+
+//===================================================================
+
+export function getPharmacyOrderTabFromPath(
+  pathname: string
+): PharmacyOrderTab {
+  const segment = pathname.split('/').filter(Boolean).at(-1);
+
+  const tab = (
+    Object.entries(PHARMACY_ORDER_TAB_SEGMENTS) as Array<
+      [PharmacyOrderTab, string]
+    >
+  ).find(([, value]) => value && segment === value);
+
+  return tab?.[0] ?? 'products';
+}
+
+//===================================================================
+
 export function getPharmacyClientPath(clientId: EntityId): string {
   return appendRouteParam(PHARMACY_ROUTES.CLIENTS, clientId);
 }

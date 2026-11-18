@@ -110,14 +110,24 @@ function parseCreatedComment(
 //===================================================================
 
 export async function createPharmacyOrder(
-  payload: CreatePharmacyOrderPayload
+  payload: CreatePharmacyOrderPayload,
+  pharmacyId: string
 ): Promise<PharmacyOrderDetails> {
   const path = PHARMACY_API_ROUTES.orders.list;
 
+  // The create page is scoped by its URL, not by a mutable browser-wide
+  // pharmacy selection. The backend validates membership and manage_orders.
+  if (!/^[a-f0-9]{24}$/i.test(pharmacyId)) {
+    throw new Error(
+      'The order pharmacy is missing. Open the create-order page again.'
+    );
+  }
+
   return parseApiResponseData(
-    await localApiRequest(path, {
+    await ownerLocalApiRequest(path, {
       method: 'POST',
       body: payload,
+      headers: { 'X-Pharmacy-ID': pharmacyId },
     }),
 
     parseOrderData,
@@ -155,7 +165,10 @@ export async function getPharmacyOrderDetails(
   const path = PHARMACY_API_ROUTES.orders.details(orderId);
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await ownerLocalApiRequest(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
 
     parseOrderData,
 
@@ -184,7 +197,7 @@ export async function updatePharmacyOrder(
   const path = PHARMACY_API_ROUTES.orders.details(orderId);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    await ownerLocalApiRequest(path, { method: 'PATCH', body: payload }),
 
     parseOrderData,
 
@@ -201,7 +214,7 @@ export async function updatePharmacyOrderStatus(
   const path = PHARMACY_API_ROUTES.orders.status(orderId);
 
   return parseApiResponseData(
-    await localApiRequest(path, { method: 'PATCH', body: payload }),
+    await ownerLocalApiRequest(path, { method: 'PATCH', body: payload }),
 
     parseOrderData,
 
@@ -222,7 +235,10 @@ export async function getPharmacyOrderComments(
   );
 
   return parseApiResponseData(
-    await localApiRequest(path, sanitizeBrowserReadRequestOptions(options)),
+    await ownerLocalApiRequest(
+      path,
+      sanitizeBrowserReadRequestOptions(options)
+    ),
 
     normalizePharmacyOrderManagerCommentsResponse,
 
@@ -242,7 +258,7 @@ export async function createPharmacyOrderComment(
   const payload: CreateOrderManagerCommentPayload = { text, clientRequestId };
 
   return parseApiResponseData(
-    await localApiRequest(path, {
+    await ownerLocalApiRequest(path, {
       method: 'POST',
       body: payload,
       ...sanitizeBrowserMutationRequestOptions(options),
@@ -264,7 +280,7 @@ export async function deletePharmacyOrderComment(
   const path = PHARMACY_API_ROUTES.orders.comment(orderId, commentId);
 
   parseApiResponseData(
-    await localApiRequest(path, {
+    await ownerLocalApiRequest(path, {
       method: 'DELETE',
       ...sanitizeBrowserMutationRequestOptions(options),
     }),

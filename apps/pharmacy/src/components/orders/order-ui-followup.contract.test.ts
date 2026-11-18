@@ -195,11 +195,7 @@ test('create order only exposes editable tabs and guards saving until the draft 
 
   assert.match(source, /hasValidationErrors\(deliveryErrors\)/);
   assert.match(source, /disabled=\{!canSaveCreateOrder\}/);
-
-  assert.match(
-    source,
-    /!isCreateMode \? \(\s*<div className=\{css\.methodHeader\}>/
-  );
+  assert.match(source, /action=\{!isCreateMode \? \(\s*<Button/);
 
   assert.match(
     source,
@@ -254,6 +250,132 @@ test('manager checkout uses server-protected prices and offers stock revision fe
   assert.match(picker, /order\.id === 'draft'/);
   assert.match(picker, /productModalAddSpinner/);
   assert.match(css, /height: min\(760px, calc\(100dvh - 32px\)\)/);
+});
+
+//===================================================================
+
+test('stock conflicts use the shared pharmacy-warning modal design and preserve draft actions', async () => {
+  const modalSource = path.join(TABS_DIR, 'OrderCreateConflictModal.tsx');
+
+  const modalStyles = path.join(
+    TABS_DIR,
+    'OrderCreateConflictModal.module.css'
+  );
+
+  const [details, modal, styles] = await Promise.all([
+    readFile(DETAILS_SOURCE, 'utf8'),
+    readFile(modalSource, 'utf8'),
+    readFile(modalStyles, 'utf8'),
+  ]);
+
+  assert.match(details, /<OrderCreateConflictModal/);
+  assert.match(details, /setDraftItems\(createConflict\.refreshedItems\)/);
+  assert.match(details, /setActiveTab\('products'\)/);
+  assert.match(modal, /<ModalBase/);
+  assert.match(modal, /<CloseIconButton/);
+  assert.match(modal, /Not enough products are available/);
+  assert.match(modal, /Product prices have changed/);
+  assert.match(modal, /<AlertTriangle/);
+  assert.match(modal, /conflict\.details\.map/);
+  assert.match(details, /productId: item\.productId/);
+
+  assert.match(
+    details,
+    /getOrderProductDetails\(\s*item\.productId,\s*order\.pharmacyId/
+  );
+
+  assert.match(details, /const checks = await Promise\.all/);
+  assert.match(details, /const details = checks\.map/);
+  assert.match(details, /refreshedItem: null/);
+  assert.match(modal, /Products to review \(\{conflict\.details\.length\}\)/);
+  assert.match(modal, /<TableImagePreview/);
+  assert.match(modal, /getPharmacyProductPath\(detail\.productId\)/);
+  assert.match(modal, /target="_blank"/);
+  assert.match(modal, /rel="noopener noreferrer"/);
+
+  assert.match(
+    modal,
+    /conflict\.refreshedItems \? 'Update order draft' : 'Review order'/
+  );
+
+  assert.match(modal, /Keep editing/);
+  assert.match(modal, /onClick=\{onCancel\}/);
+  assert.match(styles, /\.scrollableDialog\s*\{/);
+  assert.match(styles, /max-height: calc\(100dvh - 40px\)/);
+  assert.match(styles, /\.notice\s*\{/);
+  assert.match(styles, /\.detailsList\s*\{/);
+  assert.match(styles, /\.actions\s*\{/);
+});
+
+//===================================================================
+
+test('changed order prices require explicit confirmation before increasing, decreasing or removing products', async () => {
+  const [details, priceModal, modalStyles] = await Promise.all([
+    readFile(DETAILS_SOURCE, 'utf8'),
+    readFile(path.join(TABS_DIR, 'OrderPriceChangeModal.tsx'), 'utf8'),
+    readFile(
+      path.join(TABS_DIR, 'OrderCreateConflictModal.module.css'),
+      'utf8'
+    ),
+  ]);
+
+  const quantityHandler = details.match(
+    /const handleQuantityChange = \([\s\S]*?const handleRequestRemoveProduct =/
+  )?.[0];
+
+  assert.ok(quantityHandler);
+
+  assert.match(
+    quantityHandler,
+    /if \(quantity < 1\) \{\s*handleRequestRemoveProduct\(item\)/
+  );
+
+  assert.match(
+    quantityHandler,
+    /if \(quantity !== item\.quantity && hasChangedProductPrice\(item\)\) \{\s*setPendingPriceQuantityChange/
+  );
+
+  assert.match(quantityHandler, /applyQuantityChange\(item, quantity\)/);
+  assert.equal((details.match(/<OrderPriceChangeModal/g) ?? []).length, 2);
+  assert.match(details, /action:[\s\S]*?'decrease'[\s\S]*?: 'increase'/);
+  assert.match(details, /hasChangedProductPrice\(productToRemove\)/);
+  assert.match(details, /action: 'remove'/);
+  assert.match(details, /onConfirm=\{handleConfirmRemoveProduct\}/);
+
+  assert.match(
+    details,
+    /isOpen=\{Boolean\(\s*productToRemove && !hasChangedProductPrice\(productToRemove\)\s*\)\}/
+  );
+
+  assert.match(priceModal, /Product price changed/);
+  assert.match(priceModal, /Price update/);
+  assert.match(priceModal, /Are you sure you want to remove one unit\?/);
+  assert.match(priceModal, /entire order line will use the new price/);
+
+  assert.match(
+    priceModal,
+    /Are you sure you want to remove this product from the order\?/
+  );
+
+  assert.match(priceModal, /If you add it again, the updated price will apply/);
+  assert.match(priceModal, /'Remove one unit'/);
+  assert.match(priceModal, /'Use current price'/);
+  assert.match(priceModal, /'Remove anyway'/);
+  assert.match(priceModal, /<TableImagePreview/);
+  assert.match(priceModal, /Previous price:/);
+  assert.match(priceModal, /Current price:/);
+  assert.match(priceModal, /getPharmacyProductPath\(item\.productId\)/);
+  assert.match(priceModal, /className=\{css\.productLink\}/);
+  assert.match(priceModal, /<AlertTriangle/);
+  assert.match(priceModal, /<CloseIconButton/);
+  assert.match(priceModal, /<Trash2/);
+  assert.match(priceModal, /<Minus/);
+  assert.match(priceModal, /<CircleCheckBig/);
+  assert.match(priceModal, /isLoading=\{isLoading\}/);
+
+  assert.match(modalStyles, /\.productLink::after/);
+  assert.match(modalStyles, /transition: transform var\(--transition-base\)/);
+  assert.match(modalStyles, /\.destructiveAction/);
 });
 
 //===================================================================
@@ -357,12 +479,12 @@ test('order picker presents one loading state with a persistent count below cate
 
   assert.match(
     picker,
-    /const isPickerLoading = isLoading \|\| isLoadingCategories \|\| !hasLoadedProducts/
+    /const isPickerLoading =\s*isLoading \|\| isLoadingCategories \|\| !hasLoadedProducts/
   );
 
   assert.match(
     picker,
-    /const visibleItemsCount = isPickerLoading \|\| productsError\s*\? 0\s*: availableProductsCount/
+    /const visibleItemsCount =\s*isPickerLoading \|\| productsError\s*\? 0\s*: availableProductsCount/
   );
 
   assert.equal((picker.match(/<ProfileResourceState/g) ?? []).length, 1);
@@ -387,4 +509,61 @@ test('order picker presents one loading state with a persistent count below cate
   assert.match(styles, /\.productModalCategorySkeleton \{[\s\S]*?height: 38px/);
   assert.match(styles, /animation: order-category-shimmer/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
+});
+
+//===================================================================
+
+test('continue shopping keeps modal help in the top layer and stocks aligned with saved order snapshots', async () => {
+  const pickerSource = await readFile(PICKER_SOURCE, 'utf8');
+
+  assert.match(pickerSource, /escapeOverflow\s+preferTopLayer/);
+  assert.match(pickerSource, /orderItem\?\.availableQuantity !== undefined/);
+  assert.match(pickerSource, /order\.id === 'draft'/);
+  assert.match(pickerSource, /\{availableQuantity\}\{' '\}/);
+});
+
+//===================================================================
+
+test('order banners distinguish created time and pharmacy, and creation targets the requested pharmacy', async () => {
+  const details = await readFile(DETAILS_SOURCE, 'utf8');
+
+  const api = await readFile(
+    path.resolve(CURRENT_DIR, '../../lib/api/browser/orders.api.ts'),
+    'utf8'
+  );
+
+  const table = await readFile(
+    path.join(CURRENT_DIR, 'OrdersTable', 'OrdersTable.tsx'),
+    'utf8'
+  );
+
+  assert.match(details, /headerMeta=\{/);
+  assert.match(details, /meta=\{\s*<OrderPharmacyBadge/);
+  assert.match(details, /createPharmacyOrder\([\s\S]*?order\.pharmacyId/);
+  assert.match(api, /headers: \{ 'X-Pharmacy-ID': pharmacyId \}/);
+  assert.match(table, /normalized\.slice\(0, 20\)/);
+});
+
+//===================================================================
+
+test('related product orders retain the compact client comment column', async () => {
+  const source = await readFile(
+    path.join(CURRENT_DIR, 'OrdersTable', 'OrdersTable.tsx'),
+    'utf8'
+  );
+
+  assert.match(source, /key: 'clientComment'/);
+  assert.match(source, /truncateComment\(order\.clientComment\)/);
+  assert.match(source, /normalized\.slice\(0, 20\)/);
+
+  const productExclusions = source
+    .split('if (\n        productId &&')[1]
+    ?.split('].includes(key)')[0];
+
+  assert.ok(
+    productExclusions,
+    'Expected product-specific column visibility rule'
+  );
+
+  assert.doesNotMatch(productExclusions, /'clientComment'/);
 });

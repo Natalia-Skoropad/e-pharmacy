@@ -1221,6 +1221,7 @@
   min-width: 0;
   font-size: var(--fz-13);
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .orderHeaderMeta svg {
@@ -2072,12 +2073,126 @@
   }
 }
 
-.orderConflictDescription {
-  display: grid;
-  gap: 12px;
+/* Stage 14.18: order details header badges and stable loading presentation. */
+.detailsClientBadge {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
 }
-.orderConflictDescription ul {
-  padding-left: 22px;
-  display: grid;
+
+.detailsClientBadge .selectedClientPreview {
+  justify-content: flex-start;
+}
+
+.historyStatusBadges {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.methodTitleAction .tabSaveButton {
+  min-height: 44px;
+}
+
+.orderHeaderSkeleton {
+  display: grid;
+  gap: 16px;
+  padding-top: 14px;
+}
+
+.skeletonPulse {
+  display: block;
+  background: linear-gradient(
+    105deg,
+    var(--color-accent-light),
+    var(--color-background-soft),
+    var(--color-accent-light)
+  );
+  background-size: 220% 100%;
+  animation: order-skeleton-loading 1.4s ease-in-out infinite;
+  border-radius: var(--radius-lg);
+}
+
+.skeletonHeading {
+  width: min(380px, 75%);
+  height: 26px;
+}
+
+.skeletonBadgeRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.skeletonBadge {
+  width: 170px;
+  height: 46px;
+}
+
+.skeletonBanner {
+  width: 100%;
+  height: 106px;
+}
+
+.skeletonTabs {
+  display: flex;
+  gap: 10px;
+  overflow: hidden;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.skeletonTab {
+  flex: 0 0 135px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+}
+
+@keyframes order-skeleton-loading {
+  to {
+    background-position-x: -220%;
+  }
+}
+
+@media (max-width: 767px) {
+  .methodTitleAction,
+  .methodTitleAction .tabSaveButton {
+    width: 100%;
+  }
+  .detailsClientBadge > a {
+    max-width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonPulse {
+    animation: none;
+  }
+}
+
+.skeletonTitleRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.skeletonTitleIcon {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+}
+
+/* Keep pharmacy labels aligned like the client badge even inside right-aligned status meta. */
+.selectedPharmacyBadge {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.selectedPharmacyBadge > span:last-child {
+  justify-items: start;
+  text-align: left;
 }

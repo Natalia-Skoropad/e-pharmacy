@@ -1,0 +1,213 @@
+/* Match the owner's shared-pharmacy-details warning modal. */
+.content {
+  display: grid;
+  gap: 16px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.heading {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--color-accent);
+  font-size: var(--fz-13);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: clamp(1.75rem, 1.4rem + 0.8vw, 2.25rem);
+  line-height: 1.05;
+}
+
+.notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 14px;
+  background: #fff8e8;
+  border: 1px solid #f5d483;
+  border-radius: var(--radius-lg);
+}
+
+.noticeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: #a76712;
+  background: rgba(245, 212, 131, 0.3);
+  border-radius: 50%;
+}
+
+.noticeCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.noticeCopy strong {
+  color: var(--color-text-primary);
+  font-size: var(--fz-14);
+}
+
+.noticeCopy p {
+  margin: 0;
+  color: #7a5b10;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+}
+
+.details {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.detailsTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--fz-14);
+  font-weight: var(--fw-semi-bold);
+}
+
+.detailsList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0 6px 0 0;
+  list-style: none;
+  max-height: 148px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.detailItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.productInfo {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+}
+
+.productLink {
+  position: relative;
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.productLink::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 1px;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-base);
+}
+
+.productLink:hover::after,
+.productLink:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.productInfo p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-secondary);
+}
+
+.linkIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.detailsFallback {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--fz-14);
+  line-height: var(--lh-base);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+}
+
+.actions > * {
+  width: 100%;
+}
+
+.scrollableDialog {
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: clamp(1.25rem, 4.5vw, 1.5rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The removal variant keeps the same modal layout with destructive emphasis. */
+.destructiveAction {
+  color: var(--color-white);
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.destructiveAction:hover:not(:disabled),
+.destructiveAction:focus-visible:not(:disabled) {
+  color: var(--color-white);
+  background-color: color-mix(in srgb, var(--color-error) 86%, black);
+  border-color: color-mix(in srgb, var(--color-error) 86%, black);
+}

@@ -146,6 +146,40 @@ test('owner account pages and pharmacy creation bypass ambiguous summary bootstr
 
 //===================================================================
 
+test('order cards and every detail tab bypass selected-pharmacy bootstrap in another browser tab', () => {
+  const orderId = '507f1f77bcf86cd799439011';
+  const base = `/pharmacy/orders/details/order-id-${orderId}`;
+
+  for (const pathname of [
+    base,
+    `${base}/delivery-method`,
+    `${base}/payment-method`,
+    `${base}/comments`,
+    `${base}/history`,
+  ]) {
+    for (const state of [
+      { isLoading: true, error: null },
+      { isLoading: false, error: new Error('PHARMACY_SELECTION_REQUIRED') },
+      { isLoading: false, error: null },
+    ]) {
+      assert.equal(
+        PharmacyCabinetBoundaryRuntime({
+          profile: null,
+          ...state,
+          pathname,
+          onRetry: () => undefined,
+          children: 'order-loading-skeleton',
+        }),
+
+        'order-loading-skeleton',
+        `${pathname} must render its own order skeleton independent of selection`
+      );
+    }
+  }
+});
+
+//===================================================================
+
 test('All products bypasses selected-pharmacy summary during loading, failure and empty ownership', () => {
   for (const pathname of [
     '/pharmacy/all-products',

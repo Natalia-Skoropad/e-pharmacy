@@ -78,6 +78,8 @@ export type PharmacyOrderRow = Readonly<{
   totalAmount: number;
   status: OrderStatus;
   createdByType: OrderCreatedByType;
+  rejectedByType?: OrderCreatedByType;
+  pharmacyImageUrl?: string;
   items: PharmacyOrderItem[];
 }>;
 
@@ -117,6 +119,7 @@ export type PharmacyOrderManagerComment = Readonly<{
   author: Readonly<{
     userId: EntityId;
     displayName: string;
+    pictureUrl?: string;
   }>;
 }>;
 
@@ -283,6 +286,7 @@ function requireObjectId(
   payload: unknown
 ): EntityId {
   const id = getTrimmedString(value);
+
   if (!id || !isValidObjectId(id)) {
     invalidOrderContract(`${label} must be a Mongo ObjectId string.`, payload);
   }
@@ -688,6 +692,15 @@ export function normalizePharmacyOrder(rawOrder: unknown): PharmacyOrderRow {
     totalAmount,
     status: rawOrder.status,
     createdByType: rawOrder.createdByType,
+
+    ...(isOrderCreatedByType(rawOrder.rejectedByType)
+      ? { rejectedByType: rawOrder.rejectedByType }
+      : {}),
+
+    ...(getTrimmedString(rawOrder.pharmacyImageUrl)
+      ? { pharmacyImageUrl: getTrimmedString(rawOrder.pharmacyImageUrl) }
+      : {}),
+
     items,
   };
 }
@@ -844,6 +857,7 @@ export function normalizePharmacyOrderManagerComment(
   const author = isRecord(payload.author) ? payload.author : null;
   const authorUserId = getTrimmedString(author?.userId);
   const authorDisplayName = getTrimmedString(author?.displayName);
+  const authorPictureUrl = getTrimmedString(author?.pictureUrl);
 
   if (
     !id ||
@@ -864,6 +878,8 @@ export function normalizePharmacyOrderManagerComment(
     author: {
       userId: authorUserId,
       displayName: authorDisplayName,
+
+      ...(authorPictureUrl ? { pictureUrl: authorPictureUrl } : {}),
     },
   };
 }
@@ -1075,6 +1091,7 @@ export function normalizePharmacyOrdersResponse(
         ),
 
     earliestCreatedAt: parseEarliestCreatedAt(payload),
+
     availableOrderDates:
       isRecord(payload) && Array.isArray(payload.availableOrderDates)
         ? payload.availableOrderDates.filter((date): date is string =>

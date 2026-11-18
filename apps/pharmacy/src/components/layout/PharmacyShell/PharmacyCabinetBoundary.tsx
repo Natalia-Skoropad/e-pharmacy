@@ -16,6 +16,7 @@ import {
   isOwnerClientsListPath,
   isOwnerProductsListPath,
   isOwnerOrdersListPath,
+  isOwnerOrderDetailPath,
   isOwnerProductDetailPath,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
@@ -59,6 +60,7 @@ export function PharmacyCabinetBoundaryRuntime({
   if (
     (pathname &&
       (isOwnerOrdersListPath(pathname) ||
+        isOwnerOrderDetailPath(pathname) ||
         isOwnerClientsListPath(pathname) ||
         isOwnerClientDetailPath(pathname) ||
         isOwnerProductsListPath(pathname) ||

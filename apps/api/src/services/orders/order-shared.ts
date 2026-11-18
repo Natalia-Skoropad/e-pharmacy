@@ -15,7 +15,10 @@ import type {
   OrderResponseDto,
 } from '../../types/orders/order';
 
-import type { ProductEntity, ProductOfferEntity } from '../../types/catalog/product';
+import type {
+  ProductEntity,
+  ProductOfferEntity,
+} from '../../types/catalog/product';
 
 import type {
   ProductCategoryReferenceDto,
@@ -407,6 +410,7 @@ export function serializeOrder(
 
     ...(order.rejectedAt ? { rejectedAt: order.rejectedAt.toISOString() } : {}),
     ...(order.rejectedBy ? { rejectedBy: order.rejectedBy.toString() } : {}),
+    ...(order.rejectedByType ? { rejectedByType: order.rejectedByType } : {}),
 
     paymentMethod: order.paymentMethod,
     delivery: order.delivery,

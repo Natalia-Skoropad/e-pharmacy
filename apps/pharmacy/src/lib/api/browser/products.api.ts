@@ -160,6 +160,31 @@ export async function getProductDetails(
 
 //===================================================================
 
+/**
+ * Reads a product for an order draft without depending on the globally
+ * selected pharmacy. The authenticated BFF and backend retain authorization.
+ */
+export async function getOrderProductDetails(
+  productId: ProductDetails['id'],
+  pharmacyId: string,
+  options?: BrowserReadRequestOptions
+): Promise<ProductDetailsResponse> {
+  const path = PHARMACY_API_ROUTES.products.details(productId);
+
+  return parseApiResponseData(
+    await ownerLocalApiRequest(path, {
+      ...sanitizeBrowserReadRequestOptions(options),
+      headers: { 'X-Pharmacy-ID': pharmacyId },
+    }),
+
+    parseProductDetailsResponse,
+
+    { url: path, method: 'GET' }
+  );
+}
+
+//===================================================================
+
 export async function addProductToMyPharmacy(
   productId: ProductDetails['id']
 ): Promise<PharmacyProductMutationResponse> {

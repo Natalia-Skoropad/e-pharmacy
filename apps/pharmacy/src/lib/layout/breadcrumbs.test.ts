@@ -130,6 +130,32 @@ test('canonical order details render the order breadcrumb without query paramete
 
 //===================================================================
 
+test('order tabs have an addressable route and third breadcrumb', () => {
+  for (const [segment, label] of [
+    ['delivery-method', 'Delivery method'],
+    ['payment-method', 'Payment method'],
+    ['comments', 'Order comments'],
+    ['history', 'Order history'],
+  ] as const) {
+    assert.deepEqual(
+      getPharmacyBreadcrumbsByPathname(
+        `/pharmacy/orders/details/order-id-${ENTITY_ID}/${segment}`,
+        'Order EP-20261116-123456-ABCDEF'
+      ),
+      [
+        { label: 'Orders', href: '/pharmacy/orders' },
+        {
+          label: 'Order EP-20261116-123456-ABCDEF',
+          href: `/pharmacy/orders/details/order-id-${ENTITY_ID}`,
+        },
+        { label },
+      ]
+    );
+  }
+});
+
+//===================================================================
+
 test('real entity ids still produce detail breadcrumbs for each domain', () => {
   assert.deepEqual(
     getPharmacyBreadcrumbsByPathname(`/pharmacy/orders/${ENTITY_ID}`),

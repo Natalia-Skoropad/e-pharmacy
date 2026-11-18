@@ -96,3 +96,61 @@
   background-color: #fff5d4;
   border-color: #b9820f;
 }
+
+.badgeGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* Optional created-at metadata beside the status, with mobile-first order. */
+.headerTrailing {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .headerTrailing {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}
+
+/* Keep the date and the whole status badge group together on tablets.
+   Move the metadata group beneath the title when space is tight;
+   never split the primary and supplementary status badges apart. */
+@media only screen and (min-width: 768px) and (max-width: 1439px) {
+  .inlineMeta.withHeaderMeta .header {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .inlineMeta.withHeaderMeta .headerTrailing {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: max-content;
+    max-width: 100%;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .inlineMeta.withHeaderMeta .badgeGroup {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    justify-content: flex-end;
+  }
+}

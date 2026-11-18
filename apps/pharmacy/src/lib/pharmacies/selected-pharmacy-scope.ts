@@ -57,7 +57,7 @@ const LEGACY_OPERATION =
 
 /** Order details are owner-scoped: authorization is checked by order ID on the server. */
 export function isOwnerOrderDetailPath(pathname: string): boolean {
-  return /^\/pharmacy\/orders\/(?:[a-f0-9]{24}|details\/order-id-[a-f0-9]{24})\/?$/i.test(
+  return /^\/pharmacy\/orders\/(?:[a-f0-9]{24}|details\/order-id-[a-f0-9]{24}(?:\/(?:delivery-method|payment-method|comments|history))?)\/?$/i.test(
     pathname
   );
 }
@@ -383,6 +383,10 @@ export function readExplicitPharmacySelection(
   const pathId = getPharmacyIdFromDetailPath(pathname);
 
   if (pathId) return { id: pathId, invalid: false };
+
+  // Order cards are authorized by order ID, not the cabinet's selected pharmacy.
+  // Ignore legacy pharmacyId queries until the provider canonicalizes the URL.
+  if (isOwnerOrderDetailPath(pathname)) return { id: null, invalid: false };
 
   const query = new URLSearchParams(search);
   const all = query.getAll('pharmacyId');

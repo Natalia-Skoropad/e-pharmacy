@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -16,8 +16,8 @@ import {
   MessageSquareText,
   Save,
   ShoppingBag,
-  Trash2,
   Truck,
+  Trash2,
   X,
 } from 'lucide-react';
 
@@ -39,7 +39,12 @@ import { Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
+
+import {
+  OrderRejectionSourceBadge,
+  StatusBanner,
+} from '@e-pharmacy/ui/statistics';
+
 import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import type {
@@ -51,7 +56,7 @@ import type {
 
 import type { ProductDetails } from '@e-pharmacy/types/products';
 import { formatMoney } from '@e-pharmacy/utils/money';
-import { formatDateTime } from '@e-pharmacy/utils/date';
+import { formatTableDateTimeParts } from '@e-pharmacy/utils/date';
 
 import {
   buildOrderRejectionReasonError,
@@ -62,7 +67,13 @@ import {
   type OrderDeliveryFormValues,
 } from '@e-pharmacy/validation/order';
 
-import { getPharmacyClientPath, getPharmacyOrderPath } from '@/lib/routes';
+import {
+  getPharmacyClientPath,
+  getPharmacyOrderPath,
+  getOwnedPharmacyPath,
+  getPharmacyOrderTabPath,
+  getPharmacyOrderTabFromPath,
+} from '@/lib/routes';
 
 import {
   createPharmacyOrder,
@@ -81,7 +92,7 @@ import type {
 } from '@/lib/orders/orders';
 
 import { getPharmacyCheckoutDetails } from '@/lib/api/browser/pharmacy.api';
-import { getProductDetails } from '@/lib/api/browser/products.api';
+import { getOrderProductDetails } from '@/lib/api/browser/products.api';
 import { getOwnedPharmacyDetail } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
 import { dispatchOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
@@ -102,8 +113,17 @@ import {
 } from './OrderActivityTabs';
 
 import { NewOrderClientSearch } from './NewOrderClientSearch';
+
+import {
+  OrderCreateConflictModal,
+  type OrderCreateConflict,
+  type OrderCreateConflictDetail,
+} from './OrderCreateConflictModal';
+
 import { ProductPickerModal } from './ProductPickerModal';
 import { OrderProductsTab } from './OrderProductsTab';
+import { OrderDetailsLoadingSkeleton } from './OrderDetailsLoadingSkeleton';
+import { OrderPriceChangeModal } from './OrderPriceChangeModal';
 import { DeliveryTab, PaymentTab } from './OrderMethodTabs';
 
 import css from './OrderDetailsPageContent.module.css';
@@ -158,15 +178,25 @@ type PendingPriceQuantityChange = Readonly<{
   quantity: number;
 }>;
 
-type OrderCreateConflict = Readonly<{
-  kind: 'stock' | 'price';
-  details: readonly string[];
-  refreshedItems: PharmacyOrderItem[] | null;
-}>;
+function hasChangedProductPrice(item: PharmacyOrderItem): boolean {
+  return (
+    item.currentPrice !== undefined && item.currentPrice !== item.unitPrice
+  );
+}
 
 //===================================================================
 
 type OrderTab = 'products' | 'delivery' | 'payment' | 'comment' | 'history';
+
+//===================================================================
+
+function formatOrderCreatedAt(value: string): string {
+  const parts = formatTableDateTimeParts(value);
+
+  if (!parts) return '—';
+
+  return `${parts.dayMonth} ${parts.year} at ${parts.time}`;
+}
 
 //===================================================================
 
@@ -349,6 +379,35 @@ function OrderClientBadge({
 
 //===================================================================
 
+function OrderPharmacyBadge({
+  pharmacyId,
+  name,
+  imageUrl,
+}: Readonly<{ pharmacyId: string; name: string; imageUrl?: string }>) {
+  return (
+    <Link
+      className={`${css.selectedClientPreview} ${css.selectedPharmacyBadge}`}
+      href={getOwnedPharmacyPath(pharmacyId)}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Open ${name} pharmacy details in a new tab`}
+    >
+      <TableImagePreview
+        src={getProductImageSrc(imageUrl)}
+        alt={`${name} photo`}
+        fallback={formatInitials(name, 'P')}
+        size={36}
+      />
+      <span>
+        <small>Selected pharmacy</small>
+        <strong>{name}</strong>
+      </span>
+    </Link>
+  );
+}
+
+//===================================================================
+
 function getOrderFormState(order: PharmacyOrderDetails) {
   return {
     deliveryMethod: order.deliveryMethod,
@@ -450,6 +509,7 @@ function OrderDetailsPageContent({
   mode = 'details',
 }: OrderDetailsPageContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   const isCreateMode = mode === 'create';
 
@@ -477,7 +537,11 @@ function OrderDetailsPageContent({
     null
   );
 
-  const [activeTab, setActiveTab] = useState<OrderTab>('products');
+  const [createTab, setActiveTab] = useState<OrderTab>('products');
+
+  const activeTab: OrderTab = isCreateMode
+    ? createTab
+    : getPharmacyOrderTabFromPath(pathname);
 
   const [pendingStatus, setPendingStatus] =
     useState<PendingStatusChange | null>(null);
@@ -486,6 +550,7 @@ function OrderDetailsPageContent({
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const createPendingRef = useRef(false);
 
   const [isCreateConfirmationOpen, setIsCreateConfirmationOpen] =
     useState(false);
@@ -758,6 +823,24 @@ function OrderDetailsPageContent({
 
   const isOrderBusy = isUpdatingOrder || isCreatingOrder;
 
+  const deliveryHasChanges = Boolean(
+    order &&
+    !isCreateMode &&
+    (deliveryMethod !== order.deliveryMethod ||
+      (deliveryMethod === 'postal_delivery' &&
+        (recipientName.trim() !== (order.recipientName ?? order.client) ||
+          normalizePhoneInput(recipientPhone) !==
+            normalizePhoneInput(
+              order.recipientPhone ?? order.clientPhone ?? ''
+            ) ||
+          deliveryAddress.trim() !==
+            (order.deliveryAddress ?? order.clientAddress ?? ''))))
+  );
+
+  const paymentHasChanges = Boolean(
+    order && !isCreateMode && paymentMethod !== order.paymentMethod
+  );
+
   // An untouched empty draft can be left without a warning.
   const isDirtyDraft = Boolean(
     isCreateMode &&
@@ -934,11 +1017,9 @@ function OrderDetailsPageContent({
       return;
     }
 
-    if (
-      quantity > item.quantity &&
-      item.currentPrice !== undefined &&
-      item.currentPrice !== item.unitPrice
-    ) {
+    // A reduction also deserves a warning: any quantity added back later
+    // will use the updated price, even though decreasing preserves the old one.
+    if (quantity !== item.quantity && hasChangedProductPrice(item)) {
       setPendingPriceQuantityChange({ item, quantity });
 
       return;
@@ -1289,10 +1370,17 @@ function OrderDetailsPageContent({
   };
 
   const handleConfirmCreateOrder = async () => {
-    if (!order || !selectedClientId || !isCreateMode) return;
+    if (
+      !order ||
+      !selectedClientId ||
+      !isCreateMode ||
+      createPendingRef.current
+    )
+      return;
 
     const generation = resourceGenerationRef.current;
 
+    createPendingRef.current = true;
     setIsCreatingOrder(true);
 
     try {
@@ -1334,10 +1422,13 @@ function OrderDetailsPageContent({
         createOrderRequestRef.current = requestState;
       }
 
-      const createdOrder = await createPharmacyOrder({
-        ...payload,
-        clientRequestId: requestState.clientRequestId,
-      });
+      const createdOrder = await createPharmacyOrder(
+        {
+          ...payload,
+          clientRequestId: requestState.clientRequestId,
+        },
+        order.pharmacyId
+      );
 
       if (resourceGenerationRef.current !== generation) return;
 
@@ -1357,48 +1448,99 @@ function OrderDetailsPageContent({
         code === ORDER_PRICE_CHANGED_ERROR_CODE
       ) {
         const kind = code === STOCK_CHANGED_ERROR_CODE ? 'stock' : 'price';
-        const details: string[] = [];
 
-        let refreshedItems: PharmacyOrderItem[] | null = null;
-
-        // The server has already rejected the transaction; fetch live snapshots
-        // so the manager can explicitly accept revised prices/quantities.
-        try {
-          const snapshots = await Promise.all(
-            order.items.map(async (item) => {
-              const { product } = await getProductDetails(item.productId);
-              const offer = getProductOffer(product, order.pharmacyId);
-              const available = offer?.availableQuantity ?? 0;
-              const quantity = Math.min(item.quantity, available);
-              const price = offer?.price ?? item.unitPrice;
-
-              if (available < item.quantity) {
-                details.push(
-                  `${item.name}: requested ${item.quantity}, available ${available}.`
-                );
-              }
-
-              if (price !== item.unitPrice) {
-                details.push(
-                  `${item.name}: ${formatMoney(item.unitPrice) ?? '—'} → ${formatMoney(price) ?? '—'}.`
-                );
-              }
-
-              return {
-                ...item,
-                quantity,
-                unitPrice: price,
-                currentPrice: price,
-                availableQuantity: Math.max(0, available - quantity),
+        // Preserve every draft line even when a product request fails. An
+        // unavailable details endpoint must not hide all five ordered items.
+        // Each line is refreshed independently; unknown data is never treated
+        // as zero stock or as a verified price.
+        const checks = await Promise.all(
+          order.items.map(
+            async (
+              item
+            ): Promise<{
+              detail: OrderCreateConflictDetail;
+              refreshedItem: PharmacyOrderItem | null;
+            }> => {
+              const baseDetail = {
+                productId: item.productId,
+                productOfferId: item.productOfferId,
+                name: item.name,
+                imageUrl: item.imageUrl,
               };
-            })
-          );
 
-          refreshedItems = snapshots.filter((item) => item.quantity > 0);
-        } catch {
-          // Do not guess live stock or prices when refreshing failed.
-          refreshedItems = null;
-        }
+              try {
+                const { product } = await getOrderProductDetails(
+                  item.productId,
+                  order.pharmacyId
+                );
+
+                const offer = getProductOffer(product, order.pharmacyId);
+
+                if (!offer || offer.id !== item.productOfferId) {
+                  return {
+                    detail: {
+                      ...baseDetail,
+
+                      messages: [
+                        `Requested ${item.quantity}. This pharmacy offer is no longer available for verification.`,
+                      ],
+                    },
+
+                    refreshedItem: null,
+                  };
+                }
+
+                const available = offer.availableQuantity;
+                const quantity = Math.min(item.quantity, available);
+                const price = offer.price;
+
+                const messages = [
+                  `Requested ${item.quantity}, available ${available}.`,
+                ];
+
+                if (price !== item.unitPrice) {
+                  messages.push(
+                    `Price: ${formatMoney(item.unitPrice) ?? '—'} → ${formatMoney(price) ?? '—'}.`
+                  );
+                }
+
+                return {
+                  detail: { ...baseDetail, messages },
+
+                  refreshedItem: {
+                    ...item,
+                    quantity,
+                    unitPrice: price,
+                    currentPrice: price,
+                    availableQuantity: Math.max(0, available - quantity),
+                  },
+                };
+              } catch {
+                return {
+                  detail: {
+                    ...baseDetail,
+
+                    messages: [
+                      `Requested ${item.quantity}. Current stock and price could not be verified.`,
+                    ],
+                  },
+
+                  refreshedItem: null,
+                };
+              }
+            }
+          )
+        );
+
+        const details = checks.map(({ detail }) => detail);
+
+        const refreshedItems: PharmacyOrderItem[] | null = checks.every(
+          ({ refreshedItem }) => refreshedItem !== null
+        )
+          ? checks.flatMap(({ refreshedItem }) =>
+              refreshedItem && refreshedItem.quantity > 0 ? [refreshedItem] : []
+            )
+          : null;
 
         if (resourceGenerationRef.current !== generation) return;
 
@@ -1408,11 +1550,36 @@ function OrderDetailsPageContent({
         toast.error(
           getSafeApiErrorMessage(
             createError,
-            'Could not create the order. Please try again.'
+            'Could not create the order. Check your pharmacy selection and try again.',
+            {
+              backendMessages: {
+                PHARMACY_SELECTION_REQUIRED:
+                  'The pharmacy for this order was not selected. Reopen the order from the correct pharmacy.',
+
+                ORDER_CLIENT_NOT_CONNECTED:
+                  'This client is not connected to the selected pharmacy. Choose a client from this pharmacy.',
+
+                ORDER_CLIENT_UNAVAILABLE:
+                  'This client is no longer active or available. Select another active client.',
+
+                MANAGER_ORDER_REQUEST_REUSED:
+                  'This order submission was already processed with different details. Reload the form before creating another order.',
+
+                PAYMENT_METHOD_UNAVAILABLE:
+                  'Bank transfer is unavailable for this pharmacy. Choose another payment method.',
+              },
+
+              statusMessages: {
+                400: 'The order details or selected client are not valid. Review the form and try again.',
+                409: 'The order could not be saved because some data changed. Check the client, quantities and prices, then try again.',
+                500: 'The server could not finish creating this order. Your draft is preserved. Please try again.',
+              },
+            }
           )
         );
       }
     } finally {
+      createPendingRef.current = false;
       if (resourceGenerationRef.current === generation) {
         setIsCreatingOrder(false);
       }
@@ -1448,16 +1615,16 @@ function OrderDetailsPageContent({
   }
 
   if (isLoading) {
-    return (
-      <main className={css.page} aria-label="Loading order">
+    return isCreateMode ? (
+      <main className={css.page} aria-label="Preparing order">
         <section className={css.contentCard}>
           <div className={css.loaderBox}>
-            <LoadingSpinner
-              label={isCreateMode ? 'Preparing order...' : 'Loading order...'}
-            />
+            <LoadingSpinner label="Preparing order..." />
           </div>
         </section>
       </main>
+    ) : (
+      <OrderDetailsLoadingSkeleton tab={activeTab} />
     );
   }
 
@@ -1589,15 +1756,15 @@ function OrderDetailsPageContent({
                 </div>
               ) : null}
 
-              {order.clientId ? (
-                <div className={css.detailsClientBadge}>
+              <div className={css.detailsClientBadge}>
+                {order.clientId ? (
                   <OrderClientBadge
                     clientId={order.clientId}
                     name={order.client || 'Client'}
                     photoUrl={order.clientPhotoUrl}
                   />
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
           </div>
         )}
@@ -1635,11 +1802,24 @@ function OrderDetailsPageContent({
               {...ORDER_STATUS_PRESENTATION[order.status]}
               {...getOrderStatusSummary(order.status)}
               inlineMeta
-              meta={
+              labelSupplement={
+                <OrderRejectionSourceBadge
+                  status={order.status}
+                  rejectedByType={order.rejectedByType}
+                />
+              }
+              headerMeta={
                 <span className={css.orderHeaderMeta}>
                   <Clock size={16} aria-hidden="true" />
-                  Created {formatDateTime(order.orderDate) ?? '—'}
+                  Created {formatOrderCreatedAt(order.orderDate)}
                 </span>
+              }
+              meta={
+                <OrderPharmacyBadge
+                  pharmacyId={order.pharmacyId}
+                  name={order.pharmacyName}
+                  imageUrl={order.pharmacyImageUrl}
+                />
               }
               className={css.statusBanner}
             />
@@ -1655,7 +1835,17 @@ function OrderDetailsPageContent({
             ariaLabel="Order details tabs"
             mobileVisibleCount={1}
             tabletVisibleCount={3}
-            onChange={setActiveTab}
+            onChange={(tab) => {
+              if (isCreateMode) {
+                setActiveTab(tab);
+              } else {
+                window.history.pushState(
+                  null,
+                  '',
+                  getPharmacyOrderTabPath(order.id, tab)
+                );
+              }
+            }}
           />
         </div>
 
@@ -1684,6 +1874,7 @@ function OrderDetailsPageContent({
               deliveryErrors={deliveryErrors}
               deliveryTouchedFields={deliveryTouchedFields}
               isUpdating={isOrderBusy}
+              hasChanges={deliveryHasChanges}
               onDeliveryMethodChange={handleDeliveryMethodChange}
               onRecipientNameChange={handleRecipientNameChange}
               onRecipientPhoneChange={handleRecipientPhoneChange}
@@ -1700,6 +1891,7 @@ function OrderDetailsPageContent({
               paymentMethod={paymentMethod}
               isEditable={isEditable}
               isUpdating={isOrderBusy}
+              hasChanges={paymentHasChanges}
               onPaymentMethodChange={setPaymentMethod}
               onCopyValue={(value, label) => void handleCopyValue(value, label)}
               onSave={handleSavePayment}
@@ -1754,6 +1946,7 @@ function OrderDetailsPageContent({
               <HistoryTab
                 historyEntries={historyEntries}
                 rejectionReason={order.rejectionReason}
+                rejectedByType={order.rejectedByType}
               />
             )
           ) : null}
@@ -1780,43 +1973,8 @@ function OrderDetailsPageContent({
         }}
       />
 
-      <ConfirmationModal
-        isOpen={Boolean(createConflict)}
-        eyebrow={
-          createConflict?.kind === 'price' ? 'PRICE UPDATE' : 'STOCK UPDATE'
-        }
-        title={
-          createConflict?.kind === 'price'
-            ? 'Product prices have changed'
-            : 'Not enough products are available'
-        }
-        description={
-          <div className={css.orderConflictDescription}>
-            <p>
-              {createConflict?.kind === 'price'
-                ? 'Prices changed while the order was being prepared. The server did not reserve any products. Review the current prices before trying again.'
-                : 'Another order reserved some of the requested products. No products were reserved for this order. Review the remaining quantities before trying again.'}
-            </p>
-            {createConflict?.details.length ? (
-              <ul>
-                {createConflict.details.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
-              </ul>
-            ) : (
-              <p>
-                Current product details could not be retrieved. Please review
-                the products before trying again.
-              </p>
-            )}
-          </div>
-        }
-        confirmLabel={
-          createConflict?.refreshedItems ? 'Update order draft' : 'Review order'
-        }
-        cancelLabel="Keep editing"
-        confirmIconLeft={<CircleCheckBig size={17} aria-hidden="true" />}
-        cancelIconLeft={<X size={17} aria-hidden="true" />}
+      <OrderCreateConflictModal
+        conflict={createConflict}
         onConfirm={() => {
           if (createConflict?.refreshedItems)
             setDraftItems(createConflict.refreshedItems);
@@ -1851,36 +2009,23 @@ function OrderDetailsPageContent({
         }}
       />
 
-      <ConfirmationModal
-        isOpen={Boolean(pendingPriceQuantityChange)}
-        title="Product price changed"
-        description={
-          pendingPriceQuantityChange ? (
-            <>
-              {pendingPriceQuantityChange.item.name} now costs{' '}
-              <strong>
-                {formatMoney(
-                  pendingPriceQuantityChange.item.currentPrice ??
-                    pendingPriceQuantityChange.item.unitPrice
-                ) ?? '—'}
-              </strong>{' '}
-              instead of{' '}
-              <strong>
-                {formatMoney(pendingPriceQuantityChange.item.unitPrice) ?? '—'}
-              </strong>
-              . Increasing the quantity from{' '}
-              {pendingPriceQuantityChange.item.quantity} to{' '}
-              {pendingPriceQuantityChange.quantity} will use the current price
-              for the updated order line.
-            </>
-          ) : null
+      <OrderPriceChangeModal
+        change={
+          pendingPriceQuantityChange
+            ? {
+                item: pendingPriceQuantityChange.item,
+                action:
+                  pendingPriceQuantityChange.quantity <
+                  pendingPriceQuantityChange.item.quantity
+                    ? 'decrease'
+                    : 'increase',
+                nextQuantity: pendingPriceQuantityChange.quantity,
+              }
+            : null
         }
-        confirmLabel="Use current price"
-        cancelLabel="Keep current quantity"
         isLoading={isOrderBusy}
         onConfirm={() => {
           const pendingChange = pendingPriceQuantityChange;
-
           if (!pendingChange) return;
 
           setPendingPriceQuantityChange(null);
@@ -1891,10 +2036,25 @@ function OrderDetailsPageContent({
         }}
       />
 
+      <OrderPriceChangeModal
+        change={
+          productToRemove && hasChangedProductPrice(productToRemove)
+            ? { item: productToRemove, action: 'remove' }
+            : null
+        }
+        isLoading={isOrderBusy}
+        onConfirm={handleConfirmRemoveProduct}
+        onCancel={() => {
+          if (!isOrderBusy) setProductToRemove(null);
+        }}
+      />
+
       <ConfirmationModal
-        isOpen={Boolean(productToRemove)}
+        isOpen={Boolean(
+          productToRemove && !hasChangedProductPrice(productToRemove)
+        )}
         title="Remove product from order?"
-        eyebrow="Order products"
+        eyebrow="ORDER PRODUCTS"
         destructive
         confirmIconLeft={<Trash2 size={17} aria-hidden="true" />}
         cancelIconLeft={<X size={17} aria-hidden="true" />}
@@ -1902,12 +2062,7 @@ function OrderDetailsPageContent({
           productToRemove
             ? isCreateMode
               ? `${productToRemove.name} will be removed from this unsaved order draft.`
-              : `${productToRemove.name} will be removed and its reserved quantity will return to available stock.${
-                  productToRemove.currentPrice !== undefined &&
-                  productToRemove.currentPrice !== productToRemove.unitPrice
-                    ? ` The original unit price is ${formatMoney(productToRemove.unitPrice) ?? '—'}, but the current price is ${formatMoney(productToRemove.currentPrice) ?? '—'}. If you add this product again, the updated price will apply.`
-                    : ''
-                }`
+              : `${productToRemove.name} will be removed and its reserved quantity will return to available stock.`
             : ''
         }
         confirmLabel="Remove product"
@@ -1922,8 +2077,11 @@ function OrderDetailsPageContent({
 
       <ConfirmationModal
         isOpen={Boolean(pendingStatus && pendingStatus.status !== 'rejected')}
+        eyebrow="ORDER STATUS"
         title={statusModalText?.title ?? 'Update order status?'}
         description={statusModalText?.description ?? ''}
+        confirmIconLeft={<CircleCheckBig size={17} aria-hidden="true" />}
+        cancelIconLeft={<X size={17} aria-hidden="true" />}
         confirmLabel={
           pendingStatus ? getStatusActionLabel(pendingStatus.status) : 'Confirm'
         }

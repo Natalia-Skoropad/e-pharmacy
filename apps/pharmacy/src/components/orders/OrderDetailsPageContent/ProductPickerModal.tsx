@@ -259,6 +259,8 @@ function ProductPickerModal({
             labelAccessory={
               <InfoTooltip
                 label="Product search help"
+                escapeOverflow
+                preferTopLayer
                 title="Product search"
                 icon={<ShoppingCart size={20} aria-hidden="true" />}
                 items={[
@@ -377,9 +379,22 @@ function ProductPickerModal({
               {products.map((product) => {
                 const offer = getProductOffer(product, order.pharmacyId);
 
-                const isInOrder = Boolean(
-                  offer &&
-                  order.items.some((item) => item.productOfferId === offer.id)
+                const orderItem = offer
+                  ? order.items.find((item) => item.productOfferId === offer.id)
+                  : undefined;
+
+                const isInOrder = Boolean(orderItem);
+
+                // A saved order has already reserved stock. Its latest server
+                // snapshot is more recent than the catalogue search response
+                // after a quantity update; never subtract reserved units twice.
+                const availableQuantity = Math.max(
+                  0,
+                  order.id !== 'draft' &&
+                    orderItem?.availableQuantity !== undefined
+                    ? orderItem.availableQuantity
+                    : (offer?.availableQuantity ?? 0) -
+                        (order.id === 'draft' ? (orderItem?.quantity ?? 0) : 0)
                 );
 
                 const isAdding = addingProductIds.has(product.id);
@@ -420,20 +435,7 @@ function ProductPickerModal({
                         {categoryLabel}
                       </p>
                       <p className={css.productModalAvailability}>
-                        {Math.max(
-                          0,
-                          (offer?.availableQuantity ?? 0) -
-                            // Existing orders already reserve stock on the server;
-                            // only unsaved drafts need a local deduction.
-                            (order.id === 'draft'
-                              ? order.items
-                                  .filter(
-                                    (item) => item.productOfferId === offer?.id
-                                  )
-                                  .reduce((sum, item) => sum + item.quantity, 0)
-                              : 0)
-                        )}{' '}
-                        items available
+                        {availableQuantity} items available
                       </p>
                     </div>
 

@@ -14,6 +14,8 @@ import {
   getPharmacyAllProductPath,
   getPharmacyProductPath,
   getPharmacyRequestPath,
+  getPharmacyOrderPath,
+  PHARMACY_ORDER_TAB_SEGMENTS,
   matchPharmacyRoute,
 } from '@/lib/routes';
 
@@ -80,12 +82,29 @@ export function getOrdersBreadcrumbs(
 
 export function getOrderDetailsBreadcrumbs(
   orderId: string,
-  orderLabel?: string
+  orderLabel?: string,
+  tab?: string
 ): BreadcrumbItem[] {
-  return getPharmacyBreadcrumbs(
-    { label: orderLabel ?? `Order #${orderId}` },
-    { label: 'Orders', href: PHARMACY_ROUTES.ORDERS }
-  );
+  const labels: Record<string, string> = {
+    'delivery-method': 'Delivery method',
+    'payment-method': 'Payment method',
+    comments: 'Order comments',
+    history: 'Order history',
+  };
+
+  const parent: BreadcrumbItem = {
+    label: 'Orders',
+    href: PHARMACY_ROUTES.ORDERS,
+  };
+
+  const order: BreadcrumbItem = {
+    label: orderLabel ?? `Order #${orderId}`,
+    ...(tab && labels[tab] ? { href: getPharmacyOrderPath(orderId) } : {}),
+  };
+
+  return tab && labels[tab]
+    ? [parent, order, { label: labels[tab] }]
+    : [parent, order];
 }
 
 //===================================================================
@@ -292,6 +311,21 @@ export function getPharmacyBreadcrumbsByPathname(
       return getOrderDetailsBreadcrumbs(
         route.segments[1]!.slice('order-id-'.length),
         currentDetailLabel
+      );
+    }
+
+    if (
+      route.segments.length === 3 &&
+      route.segments[0] === 'details' &&
+      /^order-id-[a-f0-9]{24}$/i.test(route.segments[1] ?? '') &&
+      Object.values(PHARMACY_ORDER_TAB_SEGMENTS).some(
+        (segment) => segment && segment === route.segments[2]
+      )
+    ) {
+      return getOrderDetailsBreadcrumbs(
+        route.segments[1]!.slice('order-id-'.length),
+        currentDetailLabel,
+        route.segments[2]
       );
     }
 

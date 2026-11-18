@@ -23,7 +23,7 @@ import type { OrderDocument } from './order-shared';
 async function getAuthorizedPharmacyOrderStatus(
   actor: { id: string; role: UserRole },
   order: OrderDocument,
-  session: mongoose.ClientSession,
+  session?: mongoose.ClientSession,
   capability: 'read_orders' | 'manage_orders' = 'read_orders'
 ): Promise<PharmacyEntity['status'] | null> {
   if (actor.role === USER_ROLES.ADMIN) return null;
@@ -37,7 +37,7 @@ async function getAuthorizedPharmacyOrderStatus(
 
   const { pharmacy } = await requirePharmacyCapability(actor.id, capability, {
     pharmacyId: String(order.pharmacyId),
-    session,
+    ...(session ? { session } : {}),
   });
 
   return pharmacy.status;
@@ -48,7 +48,7 @@ async function getAuthorizedPharmacyOrderStatus(
 export async function assertCanAccessPharmacyOrder(
   actor: { id: string; role: UserRole },
   order: OrderDocument,
-  session: mongoose.ClientSession
+  session?: mongoose.ClientSession
 ): Promise<void> {
   await getAuthorizedPharmacyOrderStatus(actor, order, session);
 }

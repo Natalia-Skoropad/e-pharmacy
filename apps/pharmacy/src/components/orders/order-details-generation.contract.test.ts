@@ -104,3 +104,69 @@ test('stale detail and mutation responses are generation-isolated', async () => 
     /createPharmacyOrder\([\s\S]{0,220}resourceGenerationRef\.current !== generation/
   );
 });
+
+//===================================================================
+
+test('detail tabs preserve header and tab skeletons; only comments omit duplicate content loader', async () => {
+  const [detailsSource, skeleton] = await Promise.all([
+    readFile(DETAILS_SOURCE, 'utf8'),
+    readFile(
+      path.join(
+        path.dirname(DETAILS_SOURCE),
+        'OrderDetailsLoadingSkeleton.tsx'
+      ),
+      'utf8'
+    ),
+  ]);
+
+  assert.match(
+    detailsSource,
+    /if \(isLoading\)[\s\S]{0,400}<OrderDetailsLoadingSkeleton tab=\{activeTab\}/
+  );
+
+  assert.match(skeleton, /css\.orderHeaderSkeleton/);
+  assert.match(skeleton, /css\.skeletonTabs/);
+  assert.match(skeleton, /Array\.from\(\{ length: 5 \}/);
+
+  assert.match(
+    skeleton,
+    /tab !== 'comment' \? \([\s\S]*?<ProfileResourceState/
+  );
+});
+
+//===================================================================
+
+test('order-specific BFF actions do not rely on a tab-local selected pharmacy', async () => {
+  const source = await readFile(
+    path.resolve(CURRENT_DIR, '../../lib/api/browser/orders.api.ts'),
+    'utf8'
+  );
+
+  // New orders carry the pharmacy encoded in the create-page URL, while
+  // persisted orders use resource-ID authorization on the backend.
+  const creation = source
+    .split('export async function createPharmacyOrder(')[1]!
+    .split('export async function getPharmacyOrders(')[0]!;
+
+  assert.match(creation, /await ownerLocalApiRequest\(/);
+  assert.match(creation, /headers: \{ 'X-Pharmacy-ID': pharmacyId \}/);
+  assert.doesNotMatch(creation, /await localApiRequest\(/);
+
+  for (const name of [
+    'getPharmacyOrderDetails',
+    'updatePharmacyOrder',
+    'updatePharmacyOrderStatus',
+    'getPharmacyOrderComments',
+    'createPharmacyOrderComment',
+    'deletePharmacyOrderComment',
+  ]) {
+    const body = source.split(`export async function ${name}(`)[1]!;
+
+    assert.ok(body, `${name} must exist`);
+
+    const untilNextExport = body.split('\nexport ')[0]!;
+
+    assert.match(untilNextExport, /await ownerLocalApiRequest\(/, name);
+    assert.doesNotMatch(untilNextExport, /await localApiRequest\(/, name);
+  }
+});
