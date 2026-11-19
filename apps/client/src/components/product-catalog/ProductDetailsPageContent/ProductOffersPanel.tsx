@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Building2, Info, Trash2, X } from 'lucide-react';
 
 import { LinkPagination } from '@e-pharmacy/ui/navigation';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
+
 import type { ProductDetails, ProductOffer } from '@e-pharmacy/types/products';
 
 import { useClientAuthCapabilities } from '@/hooks';
 import { useFavorites } from '@/providers/FavoritesProvider';
 
+import { getProductDetails } from '@/lib/api/browser/products.api';
 import { buildProductPath } from '@/lib/routes';
 
 import {
@@ -18,11 +21,13 @@ import {
 } from '@/lib/catalog/product-offers-paths';
 
 import { CartOrderLimitModal } from '@/components/common';
+import { ClientStockConflictModal } from '@/components/common/ClientStockConflictModal/ClientStockConflictModal';
 
 import { ProductOfferList } from './ProductOfferList';
 import { ProductOffersToolbar } from './ProductOffersToolbar';
 import { useProductOfferCart } from './useProductOfferCart';
 import { useProductOffersView } from './useProductOffersView';
+import { ProductOfferResultsSkeleton } from './ProductOfferResultsSkeleton';
 
 import css from './ProductOffersPanel.module.css';
 
@@ -57,11 +62,59 @@ export function ProductOffersPanel({
     void loadCollection('pharmacy').catch(() => undefined);
   }, [canUseClientFeatures, loadCollection]);
 
+  const [refreshedOffers, setRefreshedOffers] = useState<{
+    productId: string;
+    offers: readonly ProductOffer[];
+  } | null>(null);
+
+  const [offersLoadState, setOffersLoadState] = useState<{
+    productId: string;
+    status: 'ready' | 'error';
+  } | null>(null);
+
+  // Availability is volatile while public product metadata is cached. Before
+  // rendering an interactive counter, read the current stock via the BFF.
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getProductDetails(product.id, {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then((latest) => {
+        if (controller.signal.aborted) return;
+
+        setRefreshedOffers({
+          productId: product.id,
+          offers: latest.product.offers,
+        });
+
+        setOffersLoadState({ productId: product.id, status: 'ready' });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setOffersLoadState({ productId: product.id, status: 'error' });
+        }
+      });
+
+    return () => controller.abort();
+  }, [product.id]);
+
+  const isOffersLoading = offersLoadState?.productId !== product.id;
+
+  const isOffersUnavailable =
+    !isOffersLoading && offersLoadState?.status === 'error';
+
+  const offers =
+    refreshedOffers?.productId === product.id
+      ? refreshedOffers.offers
+      : product.offers;
+
   const favoritePharmacyIds = useMemo(() => {
     const useFavoriteCollection = favoriteCollectionStatus === 'ready';
 
     return new Set(
-      product.offers
+      offers
         .filter((offer) =>
           useFavoriteCollection
             ? isFavorite('pharmacy', offer.pharmacyId)
@@ -69,10 +122,50 @@ export function ProductOffersPanel({
         )
         .map((offer) => offer.pharmacyId)
     );
-  }, [favoriteCollectionStatus, isFavorite, product.offers]);
+  }, [favoriteCollectionStatus, isFavorite, offers]);
+
+  const [stockConflict, setStockConflict] = useState<{
+    pharmacyId: string;
+    pharmacyName: string;
+    requested: number;
+    available: number | null;
+  } | null>(null);
+
+  const handleStockConflict = async (
+    offer: ProductOffer,
+    requested: number
+  ) => {
+    setStockConflict({
+      pharmacyId: offer.pharmacyId,
+      pharmacyName: offer.pharmacyName,
+      requested,
+      available: null,
+    });
+
+    try {
+      const latest = await getProductDetails(product.id, { cache: 'no-store' });
+
+      setRefreshedOffers({
+        productId: product.id,
+        offers: latest.product.offers,
+      });
+
+      const current = latest.product.offers.find(
+        (item) => item.pharmacyId === offer.pharmacyId
+      );
+
+      setStockConflict((previous) =>
+        previous?.pharmacyId === offer.pharmacyId
+          ? { ...previous, available: current?.availableQuantity ?? 0 }
+          : previous
+      );
+    } catch {
+      // Do not present the old value as an authoritative current balance.
+    }
+  };
 
   const view = useProductOffersView(
-    product.offers,
+    offers,
     contextPharmacyId,
     favoritePharmacyIds
   );
@@ -80,11 +173,15 @@ export function ProductOffersPanel({
   const heading = getProductOffersHeading(
     product.name,
     view.filters,
-    product.offers.find((offer) => offer.pharmacyId === view.filters.pharmacyId)
+    offers.find((offer) => offer.pharmacyId === view.filters.pharmacyId)
       ?.pharmacyName
   );
 
-  const cart = useProductOfferCart(product.id, canUseClientFeatures);
+  const cart = useProductOfferCart(
+    product.id,
+    canUseClientFeatures,
+    handleStockConflict
+  );
 
   const productHref = buildProductPath(
     product.name,
@@ -137,7 +234,7 @@ export function ProductOffersPanel({
       </header>
 
       <ProductOffersToolbar
-        offers={view.availableOffers}
+        offers={offers}
         productId={product.id}
         baseProductPath={productHref}
         contextPharmacyId={contextPharmacyId}
@@ -146,28 +243,40 @@ export function ProductOffersPanel({
         total={view.filteredOffers.length}
       />
 
-      {view.visibleOffers.length > 0 ? (
+      {isOffersLoading ? (
+        <ProductOfferResultsSkeleton />
+      ) : isOffersUnavailable ? (
+        <ProfileResourceState
+          variant="error"
+          title="Pharmacy stock could not be updated"
+          description="Current availability could not be verified. Refresh the page before adding this product."
+          onRetry={() => window.location.reload()}
+          retryLabel="Refresh page"
+        />
+      ) : view.visibleOffers.length > 0 ? (
         <ProductOfferList
           offers={view.visibleOffers}
           getOfferState={getOfferState}
         />
       ) : (
-        <div className={css.emptyPanel}>
-          <Building2 size={28} aria-hidden="true" />
-          <h3 className={css.emptyTitle}>
-            {view.hasActiveFilters
+        <ProfileResourceState
+          variant="empty"
+          icon={<Building2 size={24} aria-hidden="true" />}
+          title={
+            view.hasActiveFilters
               ? 'No matching pharmacies'
-              : 'No pharmacies available'}
-          </h3>
-          <p className={css.emptyText}>
-            {view.hasActiveFilters
-              ? 'No pharmacy offers match the selected search or location. Change or reset the filters.'
-              : 'This product is currently unavailable in pharmacies.'}
-          </p>
-        </div>
+              : 'No pharmacies available'
+          }
+          description={
+            view.hasActiveFilters
+              ? 'No pharmacies match this search or location. Try changing or resetting the filters.'
+              : 'No pharmacy currently offers this product.'
+          }
+          headingLevel={3}
+        />
       )}
 
-      {view.totalPages > 1 ? (
+      {!isOffersLoading && !isOffersUnavailable && view.totalPages > 1 ? (
         <div className={css.pagination}>
           <LinkPagination
             currentPage={view.filters.page}
@@ -184,6 +293,24 @@ export function ProductOffersPanel({
         </div>
       ) : null}
 
+      {stockConflict ? (
+        <ClientStockConflictModal
+          products={[
+            {
+              productId: product.id,
+              name: product.name,
+              imageUrl: product.imageUrl,
+              requested: stockConflict.requested,
+              available: stockConflict.available,
+            },
+          ]}
+          description={`Another order has reserved some or all of this product at ${stockConflict.pharmacyName}. The pharmacy availability has been refreshed where possible.`}
+          confirmLabel="Review availability"
+          cancelLabel="Keep browsing"
+          onConfirm={() => setStockConflict(null)}
+          onCancel={() => setStockConflict(null)}
+        />
+      ) : null}
       {cart.isOrderLimitOpen ? (
         <CartOrderLimitModal onClose={cart.closeOrderLimit} />
       ) : null}

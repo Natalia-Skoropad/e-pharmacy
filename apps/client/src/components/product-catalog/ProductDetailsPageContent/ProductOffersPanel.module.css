@@ -87,28 +87,6 @@
   }
 }
 
-.emptyPanel {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  padding: 28px;
-  text-align: center;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-xl);
-  color: var(--color-text-secondary);
-}
-
-.emptyTitle {
-  font-size: var(--fz-20);
-  font-weight: var(--fw-bold);
-  color: var(--color-text-primary);
-}
-
-.emptyText {
-  font-size: var(--fz-14);
-  line-height: var(--lh-base);
-}
-
 .pagination {
   display: flex;
   justify-content: center;

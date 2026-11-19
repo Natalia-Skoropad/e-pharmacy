@@ -119,10 +119,19 @@ async function findOfferOrThrow(
     throw httpError(HTTP_STATUS.NOT_FOUND, API_MESSAGES.PRODUCT_NOT_FOUND);
   }
 
-  if (!offer || offer.availableQuantity <= 0) {
+  if (!offer) {
     throw httpError(
       HTTP_STATUS.BAD_REQUEST,
       'Product is unavailable in this pharmacy'
+    );
+  }
+
+  if (offer.availableQuantity <= 0) {
+    throw httpError(
+      HTTP_STATUS.CONFLICT,
+      'This product has just sold out in this pharmacy. Please review availability.',
+      undefined,
+      STOCK_CHANGED_ERROR_CODE
     );
   }
 

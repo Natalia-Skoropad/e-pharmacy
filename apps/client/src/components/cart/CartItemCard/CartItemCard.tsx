@@ -1,4 +1,4 @@
-import { PackageSearch, Trash2 } from 'lucide-react';
+import { CircleAlert, PackageSearch, Trash2 } from 'lucide-react';
 
 import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
@@ -113,8 +113,12 @@ function CartItemCard({
 
             {hasStockConflict ? (
               <p className={css.stockWarning} role="alert">
-                Only {item.stockQuantity} available. Decrease the quantity to
-                continue to checkout.
+                <CircleAlert size={16} aria-hidden="true" />
+                <span>
+                  {item.stockQuantity === 0
+                    ? 'This product has been reserved by another order and is currently unavailable. Remove it to continue to checkout.'
+                    : `Only ${item.stockQuantity} available. Decrease the quantity to continue to checkout.`}
+                </span>
               </p>
             ) : null}
           </div>

@@ -271,6 +271,19 @@ test('product offers filter uses actual pharmacy and location before pagination'
     [ID]
   );
 
+  // A pharmacy that has sold its final unit remains discoverable, but its
+  // offer will be marked unavailable and cannot be added to the cart.
+  const exhausted = offers.map((offer) =>
+    offer.pharmacyId === ID
+      ? { ...offer, inStock: false, availableQuantity: 0 }
+      : offer
+  );
+
+  assert.deepEqual(
+    filterProductOffers(exhausted, query).map((item) => item.pharmacyId),
+    [ID]
+  );
+
   assert.deepEqual(
     filterProductOffers(offers, { ...query, settlement: '', region: '' }).map(
       (item) => item.price

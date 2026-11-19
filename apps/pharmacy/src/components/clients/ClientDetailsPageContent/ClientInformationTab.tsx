@@ -1,13 +1,16 @@
 import { Mail, MapPin, Phone, UserRound } from 'lucide-react';
 
 import { USER_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { formatShortDate } from '@e-pharmacy/utils/date';
+
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 import { ShimmerImage } from '@e-pharmacy/ui/media';
-import { formatShortDate } from '@e-pharmacy/utils/date';
+import { PharmacyPhotoPlaceholder } from '@e-pharmacy/ui/media';
 
 import { getClientDisplayName } from '@/lib/clients/client-display-name';
 import type { PharmacyClientRow } from '@/lib/clients/clients';
 import { getProductImageSrc } from '@/lib/products/product-images';
+
 import { ClientSalesChart } from './ClientSalesChart';
 
 import css from './ClientDetailsPageContent.module.css';
@@ -37,9 +40,11 @@ export function ClientInformationTab({
               />
             </span>
           ) : (
-            <div className={css.imagePlaceholder} aria-hidden="true">
-              <UserRound size={72} />
-            </div>
+            <PharmacyPhotoPlaceholder
+              icon={UserRound}
+              title="No client photo yet"
+              description="The client has not uploaded a photo."
+            />
           )}
         </section>
 

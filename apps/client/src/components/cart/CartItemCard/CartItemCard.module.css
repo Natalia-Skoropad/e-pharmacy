@@ -120,11 +120,23 @@
 }
 
 .stockWarning {
-  max-width: 320px;
+  display: inline-flex;
+  gap: 9px;
+  align-items: flex-start;
+  max-width: 400px;
+  padding: 10px 12px;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
   line-height: var(--lh-base);
   color: var(--color-error);
+  background: var(--color-error-soft);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-lg);
+}
+
+.stockWarning svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
 }
 
 .actions {

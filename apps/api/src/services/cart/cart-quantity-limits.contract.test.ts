@@ -25,5 +25,6 @@ test('cart add never silently clamps requested quantity and enforces the shared 
   assert.match(service, /nextQuantity > CART_ITEM_MAX_QUANTITY/);
   assert.match(service, /nextQuantity > offer\.availableQuantity/);
   assert.match(service, /STOCK_CHANGED_ERROR_CODE/);
+  assert.match(service, /offer\.availableQuantity <= 0[\s\S]*?HTTP_STATUS\.CONFLICT[\s\S]*?STOCK_CHANGED_ERROR_CODE/);
   assert.match(model, /max: CART_ITEM_MAX_QUANTITY/);
 });

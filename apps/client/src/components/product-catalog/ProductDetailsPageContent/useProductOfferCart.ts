@@ -4,10 +4,14 @@ import { useState } from 'react';
 
 import type { Cart } from '@e-pharmacy/types/cart';
 import type { ProductOffer } from '@e-pharmacy/types/products';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
+import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
+import { isApiError } from '@e-pharmacy/api-client/transport';
 
 import { isCartOrderLimitError } from '@/lib/cart/order-limit';
 import { APP_ERROR_MESSAGES, getUserFacingErrorMessage } from '@/lib/errors';
+
 import { useCart } from '@/providers/CartProvider';
 
 //===================================================================
@@ -20,7 +24,11 @@ function getOfferCartItem(cart: Cart | null, productOfferId: string) {
 
 //===================================================================
 
-export function useProductOfferCart(productId: string, canUseCart: boolean) {
+export function useProductOfferCart(
+  productId: string,
+  canUseCart: boolean,
+  onStockConflict?: (offer: ProductOffer, requested: number) => Promise<void>
+) {
   const {
     cart,
     pendingItemIds,
@@ -74,6 +82,11 @@ export function useProductOfferCart(productId: string, canUseCart: boolean) {
     } catch (error) {
       if (isCartOrderLimitError(error)) {
         setIsOrderLimitOpen(true);
+      } else if (
+        isApiError(error) &&
+        error.backendCode === STOCK_CHANGED_ERROR_CODE
+      ) {
+        await onStockConflict?.(offer, nextQuantity);
       } else {
         toast.error(
           getUserFacingErrorMessage(error, {
@@ -94,9 +107,11 @@ export function useProductOfferCart(productId: string, canUseCart: boolean) {
 
   const confirmRemoveUnit = async () => {
     const offer = pendingRemoveOffer;
+
     if (!offer || !canUseCart || pendingOfferIds.has(offer.id)) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
+
     if (!cartItem) return;
 
     try {
@@ -121,6 +136,7 @@ export function useProductOfferCart(productId: string, canUseCart: boolean) {
     if (!canUseCart || !offer.inStock || pendingOfferIds.has(offer.id)) return;
 
     const cartItem = getOfferCartItem(cart, offer.id);
+
     if (!cartItem) return;
 
     if (cartItem.quantity === 1) {

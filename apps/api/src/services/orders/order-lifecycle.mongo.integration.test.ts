@@ -22,6 +22,7 @@ import { createCheckoutGroupFingerprint } from './checkout-group-fingerprint';
 import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
 import { checkoutOrderService } from './order-checkout.service';
+import { createManagerOrderService } from './order-manager-orders.service';
 import { getOrderByIdService } from './order-query.service';
 import { getOrderSalesStatisticsService } from './order-sales-statistics.service';
 
@@ -950,6 +951,83 @@ test(
       assert.equal(totalAmount, CHECKOUT_OFFER_PRICE);
     } finally {
       await Promise.all([removeFixture(fixtureA), removeFixture(fixtureB)]);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
+  'manager and client competing for the last unit cannot reserve it twice',
+  { skip: shouldSkip },
+
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture({ stock: 1 });
+
+    try {
+      // The manager acts on an eligible pharmacy client while the same user
+      // attempts checkout in another browser session. Both paths use the same
+      // physical ProductOffer and must respect its one remaining unit.
+      await User.updateOne(
+        { _id: fixture.clientUserId },
+        {
+          $set: {
+            isDefaultPharmacyClient: true,
+            defaultClientPharmacyId: fixture.pharmacyId,
+          },
+        }
+      );
+
+      const results = await Promise.allSettled([
+        checkoutFixture(fixture),
+
+        createManagerOrderService(
+          { id: fixture.pharmacyOwnerId.toString(), role: 'pharmacy' },
+          {
+            clientRequestId: 'e7e4ff55-6892-4ecb-bc1c-4a59c802d11b',
+            clientId: fixture.clientUserId.toString(),
+
+            items: [
+              { productOfferId: fixture.offerId.toString(), quantity: 1 },
+            ],
+
+            paymentMethod: 'cash',
+            deliveryMethod: 'pickup',
+            comment: '',
+          }
+        ),
+      ]);
+
+      assert.equal(
+        results.filter((item) => item.status === 'fulfilled').length,
+        1
+      );
+
+      assert.equal(
+        results.filter((item) => item.status === 'rejected').length,
+        1
+      );
+
+      const offer = await ProductOffer.findById(fixture.offerId).lean<{
+        totalQuantity: number;
+        availableQuantity: number;
+        reservedQuantity: number;
+      } | null>();
+
+      assert.ok(offer);
+      assert.equal(offer.totalQuantity, 1);
+      assert.equal(offer.availableQuantity, 0);
+      assert.equal(offer.reservedQuantity, 1);
+
+      assert.equal(
+        await Order.countDocuments({ pharmacyId: fixture.pharmacyId }),
+        1
+      );
+    } finally {
+      await removeFixture(fixture);
       await mongoose.disconnect();
     }
   }

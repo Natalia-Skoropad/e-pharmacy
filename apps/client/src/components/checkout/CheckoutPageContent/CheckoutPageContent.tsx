@@ -13,7 +13,6 @@ import {
   ShoppingCart,
   ShoppingBag,
   CircleAlert,
-  X,
 } from 'lucide-react';
 
 import { formatMoney } from '@e-pharmacy/utils/money';
@@ -64,6 +63,7 @@ import { ROUTES } from '@/lib/routes';
 import { useClientAuthCapabilities, useClipboardAction } from '@/hooks';
 
 import { OrderPageSkeleton } from '@/components/common/OrderPageSkeleton/OrderPageSkeleton';
+import { ClientStockConflictModal } from '@/components/common/ClientStockConflictModal/ClientStockConflictModal';
 
 import CheckoutOrderPanel from '../CheckoutOrderPanel';
 import CheckoutPaymentMethod from '../CheckoutPaymentMethod/CheckoutPaymentMethod';
@@ -256,39 +256,22 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   return (
     <main className={css.page}>
-      <ConfirmationModal
-        isOpen={stockConflictOpen}
-        eyebrow="STOCK UPDATE"
-        title="The requested quantity is no longer available"
-        description={
-          <div>
-            <p>
-              While you were filling out the form, another order reserved some
-              of these products. No products were reserved for your order.
-              Please adjust the quantities in your cart before trying again.
-            </p>
-            {stockChanges.length ? (
-              <ul className={css.stockConflictList}>
-                {stockChanges.map((change) => (
-                  <li key={change.productName}>
-                    <strong>{change.productName}</strong>: requested{' '}
-                    {change.requested}, available {change.available}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        }
-        confirmLabel="Review cart"
-        cancelLabel="Stay on checkout"
-        confirmIconLeft={<ShoppingCart size={17} aria-hidden="true" />}
-        cancelIconLeft={<X size={17} aria-hidden="true" />}
-        onConfirm={() => {
-          dismissStockConflict();
-          router.push(ROUTES.CART);
-        }}
-        onCancel={dismissStockConflict}
-      />
+      {stockConflictOpen ? (
+        <ClientStockConflictModal
+          products={stockChanges.map((change) => ({
+            productId: change.productId,
+            name: change.productName,
+            imageUrl: change.imageUrl,
+            requested: change.requested,
+            available: change.available,
+          }))}
+          onConfirm={() => {
+            dismissStockConflict();
+            router.push(ROUTES.CART);
+          }}
+          onCancel={dismissStockConflict}
+        />
+      ) : null}
       <ConfirmationModal
         isOpen={priceChanges.length > 0}
         eyebrow="Price update"

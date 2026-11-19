@@ -35,7 +35,7 @@ test('keeps cart confirmations accessible and uses shared action icons', async (
   assert.match(offers, /confirmIconLeft=\{<Trash2/);
   assert.match(offers, /cancelIconLeft=\{<X/);
   assert.match(cart, /iconLeft=\{<PackageSearch/);
-  assert.match(cart, /iconLeft=\{<Building2/);
+  assert.match(cart, /iconLeft=\{\s*<Building2/);
   assert.match(item, /iconLeft=\{<PackageSearch/);
 });
 
@@ -193,7 +193,7 @@ test('catalog routes use six-card skeleton loading states with reduced-motion su
   assert.match(skeletonStyles, /min-height:\s*210px/);
   assert.match(skeletonStyles, /prefers-reduced-motion:\s*reduce/);
   assert.match(catalogLoading, /<CatalogCardSkeleton count=\{6\}/);
-  assert.match(catalogLoading, /filterCount = variant === 'product' \? 5 : 2/);
+  assert.match(catalogLoading, /filterCount = variant === 'product' \? 3 : 2/);
   assert.match(productLoading, /label="Loading products" variant="product"/);
 
   assert.match(
@@ -447,9 +447,70 @@ test('cart and checkout reuse the favorite resource states and content-shaped sk
 
   assert.match(
     card,
-    /getRemainingCartStock\(item\.stockQuantity, item\.quantity\)/
+    /getRemainingCartStock\(\s*item\.stockQuantity,\s*item\.quantity\s*\)/
   );
 
   assert.match(skeleton, /variant === 'cart'/);
   assert.match(heroCss, /justify-self: end/);
+});
+
+//===================================================================
+
+test('stock conflicts use an actionable modal, refresh offers and preserve sold-out pharmacies', async () => {
+  const [
+    productCard,
+    offersPanel,
+    offerCart,
+    stockModal,
+    checkout,
+    cartItem,
+    placeholder,
+    clientInfo,
+  ] = await Promise.all([
+    readComponent('./product-catalog/ProductCard/ProductCard.tsx'),
+
+    readComponent(
+      './product-catalog/ProductDetailsPageContent/ProductOffersPanel.tsx'
+    ),
+
+    readComponent(
+      './product-catalog/ProductDetailsPageContent/useProductOfferCart.ts'
+    ),
+
+    readComponent(
+      './common/ClientStockConflictModal/ClientStockConflictModal.tsx'
+    ),
+
+    readComponent('./checkout/CheckoutPageContent/CheckoutPageContent.tsx'),
+    readComponent('./cart/CartItemCard/CartItemCard.tsx'),
+
+    readFile(
+      new URL(
+        '../../../../packages/ui/src/media/PharmacyPhotoPlaceholder/PharmacyPhotoPlaceholder.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+
+    readComponent(
+      '../../../pharmacy/src/components/clients/ClientDetailsPageContent/ClientInformationTab.tsx'
+    ),
+  ]);
+
+  assert.match(productCard, /STOCK_CHANGED_ERROR_CODE/);
+  assert.match(productCard, /ClientStockConflictModal/);
+  assert.match(offerCart, /onStockConflict/);
+
+  assert.match(
+    offersPanel,
+    /getProductDetails\(product\.id, \{ cache: 'no-store' \}\)/
+  );
+
+  assert.match(offersPanel, /ProfileResourceState/);
+  assert.match(stockModal, /Products to review/);
+  assert.match(stockModal, /TableImagePreview/);
+  assert.match(checkout, /ClientStockConflictModal/);
+  assert.match(cartItem, /className=\{css\.stockWarning\}/);
+  assert.match(placeholder, /icon: Icon = Building2/);
+  assert.match(clientInfo, /<PharmacyPhotoPlaceholder/);
 });

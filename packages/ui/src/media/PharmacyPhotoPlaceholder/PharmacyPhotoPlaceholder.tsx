@@ -1,4 +1,5 @@
 import { Building2, ImageOff } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import clsx from 'clsx';
 
 import css from './PharmacyPhotoPlaceholder.module.css';
@@ -9,12 +10,20 @@ import css from './PharmacyPhotoPlaceholder.module.css';
 // owner details placeholder. Use the same presentation in both cabinets.
 export function PharmacyPhotoPlaceholder({
   compact = false,
-}: Readonly<{ compact?: boolean }>) {
+  icon: Icon = Building2,
+  title = 'No pharmacy photo yet',
+  description = 'The pharmacy has not uploaded a photo.',
+}: Readonly<{
+  compact?: boolean;
+  icon?: LucideIcon;
+  title?: string;
+  description?: string;
+}>) {
   return (
     <div className={clsx(css.placeholder, compact && css.compact)}>
       <div className={css.visual} aria-hidden="true">
         <span className={css.icon}>
-          <Building2 size={compact ? 27 : 58} />
+          <Icon size={compact ? 27 : 58} />
         </span>
 
         <span className={css.badge}>
@@ -24,8 +33,8 @@ export function PharmacyPhotoPlaceholder({
 
       {!compact ? (
         <div className={css.copy}>
-          <strong>No pharmacy photo yet</strong>
-          <span>The pharmacy has not uploaded a photo.</span>
+          <strong>{title}</strong>
+          <span>{description}</span>
         </div>
       ) : null}
     </div>

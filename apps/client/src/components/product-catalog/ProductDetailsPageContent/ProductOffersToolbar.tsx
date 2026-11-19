@@ -134,7 +134,6 @@ export function ProductOffersToolbar({
   const localPharmacies: PharmacyOption[] = useMemo(
     () =>
       offers
-        .filter((offer) => offer.inStock)
         .filter(
           (offer) =>
             (!filters.settlement ||
@@ -225,10 +224,7 @@ export function ProductOffersToolbar({
     const locations = new Map<string, PharmacyLocationFilterOption>();
 
     for (const offer of offers) {
-      if (
-        !offer.inStock ||
-        (filters.pharmacyId && offer.pharmacyId !== filters.pharmacyId)
-      )
+      if (filters.pharmacyId && offer.pharmacyId !== filters.pharmacyId)
         continue;
 
       const settlement = offer.pharmacyLocation?.settlement;

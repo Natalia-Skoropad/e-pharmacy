@@ -168,8 +168,6 @@ export function filterProductOffers(
   contextPharmacyId?: string
 ): ProductOffer[] {
   const result = offers.filter((offer) => {
-    if (!offer.inStock) return false;
-
     if (filters.pharmacyId && offer.pharmacyId !== filters.pharmacyId)
       return false;
 

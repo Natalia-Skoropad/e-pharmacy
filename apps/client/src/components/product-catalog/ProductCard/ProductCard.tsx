@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Hash, Building2, Eye, ShoppingCart } from 'lucide-react';
+
+import { STOCK_CHANGED_ERROR_CODE } from '@e-pharmacy/config/cart';
+import { isApiError } from '@e-pharmacy/api-client/transport';
+import { getProductDetails } from '@/lib/api/browser/products.api';
 
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
 import { useToast } from '@e-pharmacy/ui/feedback';
@@ -30,6 +35,7 @@ import CatalogEntityCard, {
 } from '@/components/catalog/CatalogEntityCard/CatalogEntityCard';
 
 import { CartOrderLimitModal, FavoriteToggleButton } from '@/components/common';
+import { ClientStockConflictModal } from '@/components/common/ClientStockConflictModal/ClientStockConflictModal';
 
 import css from './ProductCard.module.css';
 
@@ -56,6 +62,13 @@ function ProductCard({
 }: ProductCardProps) {
   const authCapabilities = useClientAuthCapabilities();
   const toast = useToast();
+  const router = useRouter();
+
+  const [stockConflict, setStockConflict] = useState<{
+    available: number | null;
+  } | null>(null);
+
+  const [isSoldOutHere, setIsSoldOutHere] = useState(false);
   const favoriteCopy = getFavoriteActionCopy('product');
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isOrderLimitOpen, setIsOrderLimitOpen] = useState(false);
@@ -81,7 +94,9 @@ function ProductCard({
     product.publicSlugId
   );
 
-  const isAvailable = product.inStock && product.foundInPharmaciesCount > 0;
+  const isAvailable =
+    product.inStock && product.foundInPharmaciesCount > 0 && !isSoldOutHere;
+
   const isPharmacyScoped = Boolean(pharmacyId);
 
   const cartItem = pharmacyId
@@ -142,6 +157,29 @@ function ProductCard({
     } catch (error) {
       if (isCartOrderLimitError(error)) {
         setIsOrderLimitOpen(true);
+      } else if (
+        isApiError(error) &&
+        error.backendCode === STOCK_CHANGED_ERROR_CODE
+      ) {
+        setIsSoldOutHere(true);
+        setStockConflict({ available: null });
+
+        try {
+          const latest = await getProductDetails(product.id, {
+            cache: 'no-store',
+          });
+
+          const currentOffer = latest.product.offers.find(
+            (offer) => offer.pharmacyId === pharmacyId
+          );
+
+          const available = currentOffer?.availableQuantity ?? 0;
+
+          setIsSoldOutHere(available === 0);
+          setStockConflict({ available });
+        } catch {
+          // The request was rejected by the server. Do not show stale stock as current.
+        }
       } else {
         toast.error(
           getUserFacingErrorMessage(error, {
@@ -281,6 +319,30 @@ function ProductCard({
         }
       />
 
+      {stockConflict ? (
+        <ClientStockConflictModal
+          products={[
+            {
+              productId: product.id,
+              name: product.name,
+              imageUrl: product.imageUrl,
+              requested: 1,
+              available: stockConflict.available,
+            },
+          ]}
+          description="Another order reserved the remaining units in this pharmacy. The catalog availability has been updated where possible."
+          confirmLabel="Review availability"
+          cancelLabel="Keep browsing"
+          onConfirm={() => {
+            setStockConflict(null);
+            router.refresh();
+          }}
+          onCancel={() => {
+            setStockConflict(null);
+            router.refresh();
+          }}
+        />
+      ) : null}
       {isOrderLimitOpen ? (
         <CartOrderLimitModal onClose={() => setIsOrderLimitOpen(false)} />
       ) : null}

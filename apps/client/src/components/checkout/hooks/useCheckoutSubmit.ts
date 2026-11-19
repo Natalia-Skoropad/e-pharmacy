@@ -68,7 +68,9 @@ export function useCheckoutSubmit({
 
   const [stockChanges, setStockChanges] = useState<
     readonly Readonly<{
+      productId: string;
       productName: string;
+      imageUrl?: string;
       requested: number;
       available: number;
     }>[]
@@ -134,7 +136,9 @@ export function useCheckoutSubmit({
           latestOrderGroup.items
             .filter((item) => item.stockQuantity < item.quantity)
             .map((item) => ({
+              productId: item.productId,
               productName: item.product.name,
+              imageUrl: item.product.imageUrl,
               requested: item.quantity,
               available: item.stockQuantity,
             }))
@@ -237,7 +241,9 @@ export function useCheckoutSubmit({
               (refreshedGroup?.items ?? [])
                 .filter((item) => item.stockQuantity < item.quantity)
                 .map((item) => ({
+                  productId: item.productId,
                   productName: item.product.name,
+                  imageUrl: item.product.imageUrl,
                   requested: item.quantity,
                   available: item.stockQuantity,
                 }))
