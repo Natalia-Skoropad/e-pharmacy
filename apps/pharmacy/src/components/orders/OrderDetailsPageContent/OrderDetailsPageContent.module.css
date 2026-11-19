@@ -112,17 +112,30 @@
   object-fit: cover;
 }
 
-.itemContent,
-.itemHead,
-.itemFooter,
-.quantityBlock {
-  display: grid;
+/* Mobile keeps the existing order of product, prices, warning, quantity, actions. */
+.itemContent {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
-.itemHead {
-  gap: 10px;
-  margin-bottom: 18px;
+.itemLeftColumn,
+.itemRightColumn {
+  display: contents;
+}
+
+.itemProductInfo {
+  order: 1;
+  min-width: 0;
+}
+
+.quantityBlock {
+  display: grid;
+  order: 4;
+  gap: 8px;
+  justify-items: start;
+  min-width: 0;
+  margin-top: 18px;
 }
 
 .itemCategory {
@@ -146,11 +159,38 @@
   margin-top: 6px;
 }
 
+.itemStockWarning {
+  display: flex;
+  order: 3;
+  gap: 9px;
+  align-items: flex-start;
+  margin-top: 12px;
+  padding: 10px 12px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-base);
+  color: var(--color-error);
+  background-color: var(--color-error-soft);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-lg);
+}
+
+.itemStockWarning svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.itemStockWarning span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .itemPrices {
   display: grid;
+  order: 2;
   gap: 8px;
-  min-width: 170px;
-  margin: 0;
+  min-width: 0;
+  margin: 10px 0 0;
 }
 
 .itemPrices div {
@@ -182,15 +222,6 @@
   color: var(--color-text-secondary);
 }
 
-.itemFooter {
-  gap: 14px;
-}
-
-.quantityBlock {
-  gap: 8px;
-  justify-items: start;
-}
-
 .stockText {
   max-width: 260px;
   font-size: var(--fz-14);
@@ -201,7 +232,9 @@
 .itemActions {
   display: flex;
   flex-wrap: wrap;
+  order: 5;
   gap: 10px;
+  margin-top: 14px;
 }
 
 .removeButton {
@@ -1402,18 +1435,58 @@
     height: 140px;
   }
 
-  .itemHead {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
+  /* Match the client cart: two independent columns with no reserved error row. */
+  .itemContent {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 63%);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .itemLeftColumn,
+  .itemRightColumn {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .itemLeftColumn {
+    gap: 24px;
+  }
+
+  .itemRightColumn {
+    gap: 12px;
+  }
+
+  .itemProductInfo,
+  .itemPrices,
+  .quantityBlock,
+  .itemStockWarning,
+  .itemActions {
+    order: initial;
   }
 
   .itemPrices {
-    justify-self: end;
+    margin: 0 0 0 auto;
+    align-self: flex-end;
   }
 
-  .itemFooter {
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
+  .quantityBlock {
+    margin-top: 0;
+  }
+
+  .itemStockWarning {
+    width: 100%;
+    margin: 0;
+  }
+
+  .itemActions {
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .itemActions > * {
+    width: auto;
   }
 
   .itemActions {
@@ -1732,11 +1805,6 @@
     width: auto;
   }
 
-  .itemFooter {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-  }
-
   .itemActions {
     align-items: center;
     justify-content: flex-end;
@@ -2042,12 +2110,6 @@
 @keyframes order-product-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@media (min-width: 768px) {
-  .itemActions {
-    margin-top: 10px;
   }
 }
 

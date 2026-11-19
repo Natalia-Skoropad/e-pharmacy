@@ -456,12 +456,46 @@ test('cart and checkout reuse the favorite resource states and content-shaped sk
 
 //===================================================================
 
+test('successful checkout navigates directly to the created order before revealing an empty cart', async () => {
+  const [submit, checkout] = await Promise.all([
+    readComponent('./checkout/hooks/useCheckoutSubmit.ts'),
+    readComponent('./checkout/CheckoutPageContent/CheckoutPageContent.tsx'),
+  ]);
+
+  const routeIndex = submit.indexOf(
+    'const orderPath = buildOrderPath(response.order)'
+  );
+
+  const emptyCartIndex = submit.indexOf(
+    'replaceCartFromServer(response.cart)',
+    routeIndex
+  );
+
+  const navigationIndex = submit.indexOf(
+    'window.location.replace(orderPath)',
+    routeIndex
+  );
+
+  assert.ok(
+    routeIndex >= 0 &&
+      emptyCartIndex > routeIndex &&
+      navigationIndex > emptyCartIndex
+  );
+
+  assert.match(submit, /setIsRedirecting\(true\)/);
+  assert.match(checkout, /shouldShowPageSkeleton \|\| isRedirecting/);
+  assert.match(checkout, /!isRedirecting && !error && cart.items.length === 0/);
+});
+
+//===================================================================
+
 test('stock conflicts use an actionable modal, refresh offers and preserve sold-out pharmacies', async () => {
   const [
     productCard,
     offersPanel,
     offerCart,
     stockModal,
+    stockModalCss,
     checkout,
     cartItem,
     placeholder,
@@ -481,7 +515,12 @@ test('stock conflicts use an actionable modal, refresh offers and preserve sold-
       './common/ClientStockConflictModal/ClientStockConflictModal.tsx'
     ),
 
+    readComponent(
+      './common/ClientStockConflictModal/ClientStockConflictModal.module.css'
+    ),
+
     readComponent('./checkout/CheckoutPageContent/CheckoutPageContent.tsx'),
+
     readComponent('./cart/CartItemCard/CartItemCard.tsx'),
 
     readFile(
@@ -509,8 +548,49 @@ test('stock conflicts use an actionable modal, refresh offers and preserve sold-
   assert.match(offersPanel, /ProfileResourceState/);
   assert.match(stockModal, /Products to review/);
   assert.match(stockModal, /TableImagePreview/);
+  assert.match(stockModal, /type="button"\s+fullWidth\s+iconLeft=\{<RefreshCw/);
+
+  assert.match(
+    stockModal,
+    /variant="secondary"\s+fullWidth\s+iconLeft=\{<PencilLine/
+  );
+
+  assert.match(stockModalCss, /@media \(max-width: 767px\)/);
+  assert.match(stockModalCss, /\.actions > button \{/);
   assert.match(checkout, /ClientStockConflictModal/);
   assert.match(cartItem, /className=\{css\.stockWarning\}/);
   assert.match(placeholder, /icon: Icon = Building2/);
   assert.match(clientInfo, /<PharmacyPhotoPlaceholder/);
+});
+
+//===================================================================
+
+test('positions cart stock alerts between prices and action buttons on tablet and desktop', async () => {
+  const [card, styles] = await Promise.all([
+    readComponent('./cart/CartItemCard/CartItemCard.tsx'),
+    readComponent('./cart/CartItemCard/CartItemCard.module.css'),
+  ]);
+
+  assert.match(card, /<div className=\{css\.leftColumn\}>/);
+  assert.match(card, /<div className=\{css\.rightColumn\}>/);
+
+  const rightColumn = card.split('<div className={css.rightColumn}>')[1] ?? '';
+  const priceIndex = rightColumn.indexOf('className={css.prices}');
+  const warningIndex = rightColumn.indexOf('className={css.stockWarning}');
+  const actionIndex = rightColumn.indexOf('className={css.actions}');
+
+  assert.ok(
+    priceIndex >= 0 && warningIndex > priceIndex && actionIndex > warningIndex
+  );
+
+  assert.match(styles, /@media only screen and \(min-width: 768px\)/);
+
+  assert.match(
+    styles,
+    /\.content \{[\s\S]*?display: grid;[\s\S]*?grid-template-columns:/
+  );
+
+  assert.match(styles, /\.rightColumn \{\s*gap: 12px;/);
+  assert.match(styles, /\.stockWarning \{\s*width: 100%;\s*max-width: none;/);
+  assert.match(styles, /\.imageWrap \{\s*width: 140px;\s*height: 140px;/);
 });

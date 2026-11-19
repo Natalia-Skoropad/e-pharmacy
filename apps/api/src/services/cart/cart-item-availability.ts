@@ -27,3 +27,19 @@ export function getCartItemUnavailableReason({
 
   return null;
 }
+
+//===============================================================
+
+/**
+ * A cart is not a stock reservation. If another order consumes its stock,
+ * the client must still be able to decrease a stale quantity one unit at a
+ * time. Only increases are constrained by the current available quantity.
+ * Checkout independently validates the entire final quantity.
+ */
+export function exceedsAvailableStockOnIncrease(
+  currentQuantity: number,
+  nextQuantity: number,
+  availableQuantity: number
+): boolean {
+  return nextQuantity > currentQuantity && nextQuantity > availableQuantity;
+}

@@ -60,8 +60,8 @@ function CartItemCard({
       </div>
 
       <div className={css.content}>
-        <div className={css.head}>
-          <div>
+        <div className={css.leftColumn}>
+          <div className={css.productInfo}>
             <p className={css.category}>
               <CategoryIcon name={item.product.category.icon} size={16} />
               {item.product.category.name}
@@ -79,19 +79,6 @@ function CartItemCard({
             />
           </div>
 
-          <dl className={css.prices}>
-            <div className={css.totalPriceRow}>
-              <dt>Total amount</dt>
-              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
-            </div>
-            <div className={css.unitPriceRow}>
-              <dt>Unit price</dt>
-              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className={css.footer}>
           <div className={css.quantityBlock}>
             <QuantityCounter
               value={item.quantity}
@@ -110,18 +97,31 @@ function CartItemCard({
                 item.quantity
               )}
             />
-
-            {hasStockConflict ? (
-              <p className={css.stockWarning} role="alert">
-                <CircleAlert size={16} aria-hidden="true" />
-                <span>
-                  {item.stockQuantity === 0
-                    ? 'This product has been reserved by another order and is currently unavailable. Remove it to continue to checkout.'
-                    : `Only ${item.stockQuantity} available. Decrease the quantity to continue to checkout.`}
-                </span>
-              </p>
-            ) : null}
           </div>
+        </div>
+
+        <div className={css.rightColumn}>
+          <dl className={css.prices}>
+            <div className={css.totalPriceRow}>
+              <dt>Total amount</dt>
+              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
+            </div>
+            <div className={css.unitPriceRow}>
+              <dt>Unit price</dt>
+              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
+            </div>
+          </dl>
+
+          {hasStockConflict ? (
+            <p className={css.stockWarning} role="alert">
+              <CircleAlert size={16} aria-hidden="true" />
+              <span>
+                {item.stockQuantity === 0
+                  ? 'This product has been reserved by another order and is currently unavailable. Remove it to continue to checkout.'
+                  : `Only ${item.stockQuantity} available. Decrease the quantity to continue to checkout.`}
+              </span>
+            </p>
+          ) : null}
 
           <div className={css.actions}>
             <LinkButton

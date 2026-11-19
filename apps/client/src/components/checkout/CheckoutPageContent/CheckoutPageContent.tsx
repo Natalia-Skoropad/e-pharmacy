@@ -192,6 +192,7 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
 
   const {
     isSubmitting,
+    isRedirecting,
     handleSubmit,
     priceChanges,
     dismissPriceChanges,
@@ -313,11 +314,11 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
             <p className={css.text}>{CHECKOUT_DESCRIPTION}</p>
           </div>
 
-          {shouldShowPageSkeleton ? (
+          {shouldShowPageSkeleton || isRedirecting ? (
             <OrderPageSkeleton variant="checkout" />
           ) : null}
 
-          {!shouldShowPageSkeleton && error ? (
+          {!shouldShowPageSkeleton && !isRedirecting && error ? (
             <ProfileResourceState
               variant="error"
               title="Checkout could not be loaded"
@@ -334,15 +335,18 @@ function CheckoutPageContent({ checkoutPharmacyId }: CheckoutPageContentProps) {
             />
           ) : null}
 
-          {!shouldShowPageSkeleton && !error && cart.items.length === 0 ? (
+          {!shouldShowPageSkeleton &&
+          !isRedirecting &&
+          !error &&
+          cart.items.length === 0 ? (
             <CheckoutEmptyState />
           ) : null}
 
-          {!error && shouldSelectOrder ? (
+          {!error && !isRedirecting && shouldSelectOrder ? (
             <CheckoutSelectOrderState message={selectOrderMessage} />
           ) : null}
 
-          {!shouldShowPageSkeleton && selectedOrderGroup ? (
+          {!shouldShowPageSkeleton && !isRedirecting && selectedOrderGroup ? (
             <div className={css.grid}>
               <div className={css.leftColumn}>
                 <section className={css.card} aria-labelledby="delivery-title">

@@ -18,7 +18,11 @@ import { ProductOffer } from '../../models/inventory/productOffer.model';
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 
 import { httpError } from '../../utils/http/httpError';
-import { getCartItemUnavailableReason } from './cart-item-availability';
+
+import {
+  exceedsAvailableStockOnIncrease,
+  getCartItemUnavailableReason,
+} from './cart-item-availability';
 
 import {
   getProductCategoryReferenceMap,
@@ -563,7 +567,13 @@ export async function updateCartItemService(
         );
       }
 
-      if (nextQuantity > offer.availableQuantity) {
+      if (
+        exceedsAvailableStockOnIncrease(
+          currentItem.quantity,
+          nextQuantity,
+          offer.availableQuantity
+        )
+      ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           'Available quantity has changed. Refresh the cart and try again.',

@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import {
   CirclePlus,
+  CircleAlert,
   Info,
   MessageSquareText,
   Package,
@@ -42,6 +43,7 @@ function formatAvailableItems(quantity: number): string {
 function OrderProductCard({
   item,
   categoryIcons,
+  verifiedAvailableStock,
   isEditable,
   isUpdating,
   onQuantityChange,
@@ -49,14 +51,28 @@ function OrderProductCard({
 }: Readonly<{
   item: PharmacyOrderItem;
   categoryIcons: Readonly<Record<string, string>>;
+  verifiedAvailableStock?: number | null;
   isEditable: boolean;
   isUpdating: boolean;
   onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
   onRemove: (item: PharmacyOrderItem) => void;
 }>) {
   const imageSrc = getProductImageSrc(item.imageUrl);
-  const stockQuantity = item.quantity + (item.availableQuantity ?? 0);
-  const availableQuantity = item.availableQuantity ?? 0;
+
+  const stockQuantity =
+    typeof verifiedAvailableStock === 'number'
+      ? verifiedAvailableStock
+      : item.quantity + (item.availableQuantity ?? 0);
+
+  const availableQuantity =
+    typeof verifiedAvailableStock === 'number'
+      ? Math.max(0, verifiedAvailableStock - item.quantity)
+      : (item.availableQuantity ?? 0);
+
+  const hasStockWarning =
+    verifiedAvailableStock === null ||
+    (typeof verifiedAvailableStock === 'number' &&
+      item.quantity > verifiedAvailableStock);
 
   return (
     <article
@@ -80,8 +96,8 @@ function OrderProductCard({
       </div>
 
       <div className={css.itemContent}>
-        <div className={css.itemHead}>
-          <div>
+        <div className={css.itemLeftColumn}>
+          <div className={css.itemProductInfo}>
             {item.category ? (
               <p className={css.itemCategory}>
                 <span className={css.categoryIcon} aria-hidden="true">
@@ -106,19 +122,6 @@ function OrderProductCard({
             />
           </div>
 
-          <dl className={css.itemPrices}>
-            <div className={css.totalPriceRow}>
-              <dt>Total amount</dt>
-              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
-            </div>
-            <div className={css.unitPriceRow}>
-              <dt>Unit price</dt>
-              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
-            </div>
-          </dl>
-        </div>
-
-        <div className={css.itemFooter}>
           <div className={css.quantityBlock}>
             <QuantityCounter
               value={item.quantity}
@@ -132,9 +135,37 @@ function OrderProductCard({
             />
 
             <p className={css.stockText}>
-              {formatAvailableItems(availableQuantity)}
+              {verifiedAvailableStock === null
+                ? 'Availability not verified'
+                : formatAvailableItems(availableQuantity)}
             </p>
           </div>
+        </div>
+
+        <div className={css.itemRightColumn}>
+          <dl className={css.itemPrices}>
+            <div className={css.totalPriceRow}>
+              <dt>Total amount</dt>
+              <dd>{formatMoney(item.totalPrice) ?? '—'}</dd>
+            </div>
+            <div className={css.unitPriceRow}>
+              <dt>Unit price</dt>
+              <dd>{formatMoney(item.unitPrice) ?? '—'}</dd>
+            </div>
+          </dl>
+
+          {hasStockWarning ? (
+            <p className={css.itemStockWarning} role="alert">
+              <CircleAlert size={16} aria-hidden="true" />
+              <span>
+                {verifiedAvailableStock === null
+                  ? 'Current stock could not be verified. Review availability before creating the order.'
+                  : verifiedAvailableStock === 0
+                    ? 'This product has been reserved by another order and is currently unavailable. Remove it to continue.'
+                    : `Only ${verifiedAvailableStock} available. Decrease the quantity to continue.`}
+              </span>
+            </p>
+          ) : null}
 
           <div className={css.itemActions}>
             <LinkButton
@@ -174,6 +205,7 @@ function OrderProductCard({
 export function OrderProductsTab({
   order,
   categoryIcons,
+  verifiedDraftStock,
   isEditable,
   isUpdating,
   onQuantityChange,
@@ -182,6 +214,7 @@ export function OrderProductsTab({
 }: Readonly<{
   order: PharmacyOrderDetails;
   categoryIcons: Readonly<Record<string, string>>;
+  verifiedDraftStock: Readonly<Record<string, number | null>>;
   isEditable: boolean;
   isUpdating: boolean;
   onQuantityChange: (item: PharmacyOrderItem, quantity: number) => void;
@@ -201,6 +234,7 @@ export function OrderProductsTab({
                 key={item.productOfferId}
                 item={item}
                 categoryIcons={categoryIcons}
+                verifiedAvailableStock={verifiedDraftStock[item.productOfferId]}
                 isEditable={isEditable}
                 isUpdating={isUpdating}
                 onQuantityChange={onQuantityChange}

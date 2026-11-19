@@ -558,6 +558,13 @@ function OrderDetailsPageContent({
   const [createConflict, setCreateConflict] =
     useState<OrderCreateConflict | null>(null);
 
+  // Latest verified warehouse quantities after a failed create attempt.
+  // Keeping this separate from the draft quantity prevents silently deleting
+  // an item that another order has just reserved.
+  const [verifiedDraftStock, setVerifiedDraftStock] = useState<
+    Readonly<Record<string, number | null>>
+  >({});
+
   const [initialClientId, setInitialClientId] = useState('');
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -883,6 +890,15 @@ function OrderDetailsPageContent({
     [deliveryMethod, deliveryValues]
   );
 
+  const hasDraftStockConflict = Boolean(
+    isCreateMode &&
+    order?.items.some((item) => {
+      const available = verifiedDraftStock[item.productOfferId];
+
+      return typeof available === 'number' && item.quantity > available;
+    })
+  );
+
   const canSaveCreateOrder = Boolean(
     isCreateMode &&
     isEditable &&
@@ -890,6 +906,7 @@ function OrderDetailsPageContent({
     selectedClientId &&
     order.items.length > 0 &&
     order.items.every((item) => item.quantity > 0) &&
+    !hasDraftStockConflict &&
     !hasValidationErrors(deliveryErrors) &&
     (paymentMethod !== 'bank_transfer' || order.bankDetails) &&
     !isCreatingOrder &&
@@ -971,6 +988,7 @@ function OrderDetailsPageContent({
 
     if (isCreateMode) {
       const physicalQuantity =
+        verifiedDraftStock[item.productOfferId] ??
         item.quantity + Math.max(0, item.availableQuantity ?? 0);
 
       const nextItems = order.items
@@ -985,6 +1003,14 @@ function OrderDetailsPageContent({
             : orderItem
         )
         .filter((orderItem) => orderItem.quantity > 0);
+
+      if (quantity < 1) {
+        setVerifiedDraftStock((current) => {
+          const next = { ...current };
+          delete next[item.productOfferId];
+          return next;
+        });
+      }
 
       setDraftItems(nextItems);
       return;
@@ -1091,6 +1117,14 @@ function OrderDetailsPageContent({
     ];
 
     if (isCreateMode) {
+      // The product picker has just fetched a fresh offer; forget any old
+      // conflict snapshot for the same offer if it was previously removed.
+      setVerifiedDraftStock((current) => {
+        const next = { ...current };
+        delete next[offer.id];
+        return next;
+      });
+
       setDraftItems(nextItems);
       return;
     }
@@ -1460,6 +1494,7 @@ function OrderDetailsPageContent({
             ): Promise<{
               detail: OrderCreateConflictDetail;
               refreshedItem: PharmacyOrderItem | null;
+              availableStock: number | null;
             }> => {
               const baseDetail = {
                 productId: item.productId,
@@ -1487,11 +1522,16 @@ function OrderDetailsPageContent({
                     },
 
                     refreshedItem: null,
+                    availableStock: 0,
                   };
                 }
 
                 const available = offer.availableQuantity;
-                const quantity = Math.min(item.quantity, available);
+
+                // Keep the manager's requested quantity even if available is
+                // zero. The line remains in the draft with an inline warning
+                // until the manager decreases or explicitly removes it.
+                const quantity = item.quantity;
                 const price = offer.price;
 
                 const messages = [
@@ -1514,6 +1554,8 @@ function OrderDetailsPageContent({
                     currentPrice: price,
                     availableQuantity: Math.max(0, available - quantity),
                   },
+
+                  availableStock: available,
                 };
               } catch {
                 return {
@@ -1526,19 +1568,35 @@ function OrderDetailsPageContent({
                   },
 
                   refreshedItem: null,
+                  availableStock: null,
                 };
               }
             }
           )
         );
 
+        if (resourceGenerationRef.current !== generation) return;
+
         const details = checks.map(({ detail }) => detail);
+
+        // Refresh only confirmed stock values, including verified zeroes.
+        // Individual fetch failures are represented as unknown, never zero.
+        setVerifiedDraftStock((current) => ({
+          ...current,
+
+          ...Object.fromEntries(
+            checks.map(({ detail, availableStock }) => [
+              detail.productOfferId,
+              availableStock,
+            ])
+          ),
+        }));
 
         const refreshedItems: PharmacyOrderItem[] | null = checks.every(
           ({ refreshedItem }) => refreshedItem !== null
         )
           ? checks.flatMap(({ refreshedItem }) =>
-              refreshedItem && refreshedItem.quantity > 0 ? [refreshedItem] : []
+              refreshedItem ? [refreshedItem] : []
             )
           : null;
 
@@ -1854,6 +1912,7 @@ function OrderDetailsPageContent({
             <OrderProductsTab
               order={order}
               categoryIcons={categoryIcons}
+              verifiedDraftStock={isCreateMode ? verifiedDraftStock : {}}
               isEditable={isEditable}
               isUpdating={isOrderBusy}
               onQuantityChange={handleQuantityChange}

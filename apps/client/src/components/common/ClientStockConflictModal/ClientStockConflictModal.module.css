@@ -172,11 +172,14 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
+  width: 100%;
   gap: 12px;
 }
 
-.actions > * {
+.actions > button {
   width: 100%;
+  min-width: 0;
+  justify-content: center;
 }
 
 .scrollableDialog {
@@ -186,7 +189,7 @@
   overscroll-behavior-y: contain;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .title {
     font-size: clamp(1.25rem, 4.5vw, 1.5rem);
     line-height: 1.15;

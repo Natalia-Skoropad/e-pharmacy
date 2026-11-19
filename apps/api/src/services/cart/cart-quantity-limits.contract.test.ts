@@ -12,7 +12,10 @@ test('cart add never silently clamps requested quantity and enforces the shared 
       'utf8'
     ),
 
-    readFile(path.resolve(process.cwd(), 'src/models/cart/cart.model.ts'), 'utf8'),
+    readFile(
+      path.resolve(process.cwd(), 'src/models/cart/cart.model.ts'),
+      'utf8'
+    ),
   ]);
 
   assert.doesNotMatch(
@@ -23,8 +26,18 @@ test('cart add never silently clamps requested quantity and enforces the shared 
   assert.doesNotMatch(service, /Math\.max\(1, quantity\)/);
   assert.match(service, /nextQuantity < 1/);
   assert.match(service, /nextQuantity > CART_ITEM_MAX_QUANTITY/);
-  assert.match(service, /nextQuantity > offer\.availableQuantity/);
+
+  assert.match(
+    service,
+    /exceedsAvailableStockOnIncrease\(\s*currentItem\.quantity,\s*nextQuantity,\s*offer\.availableQuantity/
+  );
+
   assert.match(service, /STOCK_CHANGED_ERROR_CODE/);
-  assert.match(service, /offer\.availableQuantity <= 0[\s\S]*?HTTP_STATUS\.CONFLICT[\s\S]*?STOCK_CHANGED_ERROR_CODE/);
+
+  assert.match(
+    service,
+    /offer\.availableQuantity <= 0[\s\S]*?HTTP_STATUS\.CONFLICT[\s\S]*?STOCK_CHANGED_ERROR_CODE/
+  );
+
   assert.match(model, /max: CART_ITEM_MAX_QUANTITY/);
 });

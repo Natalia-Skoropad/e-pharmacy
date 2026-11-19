@@ -141,6 +141,7 @@ export function ClientStockConflictModal({
           <div className={css.actions}>
             <Button
               type="button"
+              fullWidth
               iconLeft={<RefreshCw size={17} aria-hidden="true" />}
               onClick={onConfirm}
             >
@@ -149,6 +150,7 @@ export function ClientStockConflictModal({
             <Button
               type="button"
               variant="secondary"
+              fullWidth
               iconLeft={<PencilLine size={17} aria-hidden="true" />}
               onClick={onCancel}
             >

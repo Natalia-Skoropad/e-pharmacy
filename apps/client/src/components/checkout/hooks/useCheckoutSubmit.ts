@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 import type { Cart } from '@e-pharmacy/types/cart';
 import type { CheckoutOrderPayload } from '@e-pharmacy/types/orders';
@@ -55,8 +54,8 @@ export function useCheckoutSubmit({
   replaceCartFromServer,
   setError,
 }: UseCheckoutSubmitParams) {
-  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const [priceChanges, setPriceChanges] = useState<
     readonly Readonly<{
@@ -220,9 +219,15 @@ export function useCheckoutSubmit({
 
       if (controller.signal.aborted || !mountedRef.current) return;
 
-      replaceCartFromServer(response.cart);
+      // Build the confirmed order URL before clearing the cart. Updating the
+      // shared cart first can reveal the checkout empty state while the route
+      // transition is pending. A full replacement also avoids returning to an
+      // already-completed checkout through browser Back.
+      const orderPath = buildOrderPath(response.order);
+      setIsRedirecting(true);
       shouldResetSubmitting = false;
-      router.push(buildOrderPath(response.order));
+      replaceCartFromServer(response.cart);
+      window.location.replace(orderPath);
     } catch (error) {
       if (controller.signal.aborted || !mountedRef.current) return;
 
@@ -339,6 +344,7 @@ export function useCheckoutSubmit({
 
   return {
     isSubmitting,
+    isRedirecting,
     handleSubmit,
     priceChanges,
     dismissPriceChanges: () => setPriceChanges([]),

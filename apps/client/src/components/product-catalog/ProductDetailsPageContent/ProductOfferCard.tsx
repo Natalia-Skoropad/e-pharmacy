@@ -1,6 +1,13 @@
 'use client';
 
-import { Building2, Heart, Mail, MapPin, Phone } from 'lucide-react';
+import {
+  Building2,
+  CircleAlert,
+  Heart,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react';
 
 import { CART_ITEM_TTL_DAYS } from '@e-pharmacy/config/cart';
 import { RatingSummary } from '@e-pharmacy/ui/data-display';
@@ -186,8 +193,9 @@ export function ProductOfferCard({
             ) : null}
           </div>
         ) : (
-          <p className={css.unavailable}>
-            Currently unavailable in this pharmacy.
+          <p className={css.unavailable} role="status">
+            <CircleAlert size={17} aria-hidden="true" />
+            <span>Currently unavailable in this pharmacy.</span>
           </p>
         )}
 

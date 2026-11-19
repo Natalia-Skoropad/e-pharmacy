@@ -31,14 +31,21 @@
   color: var(--color-accent);
 }
 
+/* Flatten the columns on mobile to preserve the original element order. */
 .content {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
-.head {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 18px;
+.leftColumn,
+.rightColumn {
+  display: contents;
+}
+
+.productInfo {
+  order: 1;
+  min-width: 0;
 }
 
 .category {
@@ -67,9 +74,10 @@
 
 .prices {
   display: grid;
+  order: 2;
   gap: 8px;
   min-width: 0;
-  margin: 0;
+  margin: 10px 0 18px;
 }
 
 .prices div {
@@ -101,13 +109,9 @@
   color: var(--color-text-secondary);
 }
 
-.footer {
-  display: grid;
-  gap: 14px;
-}
-
 .quantityBlock {
   display: grid;
+  order: 3;
   gap: 8px;
   justify-items: start;
 }
@@ -121,9 +125,11 @@
 
 .stockWarning {
   display: inline-flex;
+  order: 4;
   gap: 9px;
   align-items: flex-start;
   max-width: 400px;
+  margin-top: 8px;
   padding: 10px 12px;
   font-size: var(--fz-14);
   font-weight: var(--fw-medium);
@@ -142,7 +148,9 @@
 .actions {
   display: flex;
   flex-wrap: wrap;
+  order: 5;
   gap: 10px;
+  margin-top: 14px;
 }
 
 .actions,
@@ -171,38 +179,67 @@
 
   .imageWrap {
     width: 140px;
-    height: auto;
-    min-height: 140px;
-    align-self: stretch;
+    height: 140px;
+    min-height: 0;
+    align-self: start;
   }
 
   .imageFallback {
     width: 100%;
     height: 100%;
-    min-height: 140px;
+    min-height: 0;
   }
 
-  .head {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
+  /* Independent columns keep the warning directly below the prices,
+     regardless of the height of the title, rating, or quantity controls. */
+  .content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 60%);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .leftColumn,
+  .rightColumn {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .leftColumn {
+    gap: 24px;
+  }
+
+  .rightColumn {
+    gap: 12px;
+  }
+
+  .productInfo,
+  .prices,
+  .quantityBlock,
+  .stockWarning,
+  .actions {
+    order: initial;
   }
 
   .prices {
     min-width: 170px;
-    justify-self: end;
+    margin: 0 0 0 auto;
+    align-self: flex-end;
   }
 
-  .footer {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
+  .stockWarning {
+    width: 100%;
+    max-width: none;
+    margin: 0;
   }
 
   .actions {
     flex-wrap: nowrap;
     gap: 8px;
-    justify-self: end;
     justify-content: flex-end;
-    width: auto;
+    width: 100%;
+    margin-top: auto;
   }
 
   .actions > * {

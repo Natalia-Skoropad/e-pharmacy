@@ -195,7 +195,7 @@ test('create order only exposes editable tabs and guards saving until the draft 
 
   assert.match(source, /hasValidationErrors\(deliveryErrors\)/);
   assert.match(source, /disabled=\{!canSaveCreateOrder\}/);
-  assert.match(source, /action=\{!isCreateMode \? \(\s*<Button/);
+  assert.match(source, /action=\{\s*!isCreateMode \? \(\s*<Button/);
 
   assert.match(
     source,
@@ -262,10 +262,12 @@ test('stock conflicts use the shared pharmacy-warning modal design and preserve 
     'OrderCreateConflictModal.module.css'
   );
 
-  const [details, modal, styles] = await Promise.all([
+  const [details, modal, styles, productCards, cardStyles] = await Promise.all([
     readFile(DETAILS_SOURCE, 'utf8'),
     readFile(modalSource, 'utf8'),
     readFile(modalStyles, 'utf8'),
+    readFile(path.join(TABS_DIR, 'OrderProductsTab.tsx'), 'utf8'),
+    readFile(DETAILS_STYLES, 'utf8'),
   ]);
 
   assert.match(details, /<OrderCreateConflictModal/);
@@ -287,6 +289,67 @@ test('stock conflicts use the shared pharmacy-warning modal design and preserve 
   assert.match(details, /const checks = await Promise\.all/);
   assert.match(details, /const details = checks\.map/);
   assert.match(details, /refreshedItem: null/);
+  assert.match(details, /setVerifiedDraftStock/);
+  assert.match(details, /const quantity = item\.quantity;/);
+  assert.doesNotMatch(details, /Math\.min\(item\.quantity, available\)/);
+  assert.doesNotMatch(details, /refreshedItem && refreshedItem\.quantity > 0/);
+  assert.match(details, /!hasDraftStockConflict/);
+  assert.match(details, /verifiedDraftStock=\{isCreateMode/);
+
+  assert.match(
+    productCards,
+    /verifiedAvailableStock=\{verifiedDraftStock\[item\.productOfferId\]\}/
+  );
+
+  assert.match(productCards, /hasStockWarning/);
+
+  assert.match(
+    productCards,
+    /className=\{css\.itemStockWarning\} role="alert"/
+  );
+
+  // The manager's warning belongs under the price summary and above the
+  // actions in the independent right column. No empty row is reserved when
+  // there is no warning; mobile keeps the original stacked order.
+  assert.match(productCards, /className=\{css\.itemLeftColumn\}/);
+  assert.match(productCards, /className=\{css\.itemRightColumn\}/);
+
+  assert.ok(
+    productCards.indexOf('className={css.itemPrices}') <
+      productCards.indexOf('className={css.itemStockWarning}')
+  );
+
+  assert.ok(
+    productCards.indexOf('className={css.itemStockWarning}') <
+      productCards.indexOf('className={css.itemActions}')
+  );
+
+  assert.match(
+    cardStyles,
+    /\.itemLeftColumn,\s*\.itemRightColumn\s*\{\s*display:\s*contents;/
+  );
+
+  assert.match(
+    cardStyles,
+    /\.itemContent\s*\{\s*display:\s*grid;\s*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 63%\)/
+  );
+
+  assert.match(cardStyles, /\.itemRightColumn\s*\{\s*gap:\s*12px;/);
+
+  assert.match(
+    cardStyles,
+    /\.itemActions\s*\{\s*width:\s*100%;\s*margin-top:\s*auto;/
+  );
+
+  assert.match(
+    cardStyles,
+    /\.itemStockWarning\s*\{\s*width:\s*100%;\s*margin:\s*0;/
+  );
+
+  assert.match(productCards, /\{hasStockWarning \? \(/);
+  assert.doesNotMatch(cardStyles, /grid-template-areas:\s*'product price'/);
+  assert.doesNotMatch(cardStyles, /\.itemPriceColumn\s*\{/);
+  assert.match(styles.replace(/\s+/g, ' '), /\.notice/);
   assert.match(modal, /Products to review \(\{conflict\.details\.length\}\)/);
   assert.match(modal, /<TableImagePreview/);
   assert.match(modal, /getPharmacyProductPath\(detail\.productId\)/);
@@ -313,6 +376,7 @@ test('changed order prices require explicit confirmation before increasing, decr
   const [details, priceModal, modalStyles] = await Promise.all([
     readFile(DETAILS_SOURCE, 'utf8'),
     readFile(path.join(TABS_DIR, 'OrderPriceChangeModal.tsx'), 'utf8'),
+
     readFile(
       path.join(TABS_DIR, 'OrderCreateConflictModal.module.css'),
       'utf8'
@@ -519,7 +583,7 @@ test('continue shopping keeps modal help in the top layer and stocks aligned wit
   assert.match(pickerSource, /escapeOverflow\s+preferTopLayer/);
   assert.match(pickerSource, /orderItem\?\.availableQuantity !== undefined/);
   assert.match(pickerSource, /order\.id === 'draft'/);
-  assert.match(pickerSource, /\{availableQuantity\}\{' '\}/);
+  assert.match(pickerSource, /\{availableQuantity\} items available/);
 });
 
 //===================================================================
