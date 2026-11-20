@@ -4,10 +4,12 @@ import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
+import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 
 import { Pharmacy } from '../../models/pharmacies/pharmacy.model';
 import { User } from '../../models/accounts/user.model';
 import { Product } from '../../models/catalog/product.model';
+import { ProductCategory } from '../../models/catalog/productCategory.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
 
 import type { HttpError } from '../../types/http/errors';
@@ -19,8 +21,6 @@ import {
 
 import { getProductRequestArticleAvailabilityService } from './product-request-read.service';
 import { moderateProductRequestByAdminService } from './product-request-moderation.service';
-
-import { getTestProductCategoryId } from './__tests__/product-category-test.helper';
 
 //===================================================================
 
@@ -409,10 +409,23 @@ test(
           assert.equal(result.request.categoryMode, 'custom');
           assert.equal(result.request.customCategory, 'Herbal wellness blends');
 
+          const category = await ProductCategory.findById(medicineCategoryId)
+            .select('name slug color icon')
+            .lean<{
+              name: string;
+              slug: string;
+              color: string;
+              icon: string;
+            } | null>();
+
+          assert.ok(category);
+
           assert.deepEqual(result.request.category, {
             id: medicineCategoryId.toString(),
-            name: 'Medicine',
-            slug: 'medicine',
+            name: category.name,
+            slug: category.slug,
+            color: category.color,
+            icon: category.icon,
           });
 
           assert.ok(result.request.productId);

@@ -79,10 +79,10 @@ test('client Purchased products filters remain owner scoped across nested URL ro
 
   assert.match(
     scope,
-    /parseClientPurchasedProductsSegments\(purchased\[2\]!\.split/
+    /parseClientPurchasedProductsSegments\(\s*purchased\[2\]!\.split/
   );
 
-  assert.match(scope, /buildClientPurchasedProductsPath\(purchased\[1\]!/);
+  assert.match(scope, /buildClientPurchasedProductsPath\(\s*purchased\[1\]!/);
   assert.match(detail, /changeProductFilters\(DEFAULT_PRODUCT_FILTERS\)/);
 
   assert.doesNotMatch(
@@ -156,6 +156,6 @@ test('all product details Category icon is sourced from live Admin category dire
 
   assert.match(
     detail,
-    /resolveOwnerCatalogCategory\(product\.category, categoryDirectory\)\.icon/
+    /resolveOwnerCatalogCategory\(\s*product\.category,\s*categoryDirectory\s*\)\.icon/
   );
 });

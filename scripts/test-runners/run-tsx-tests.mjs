@@ -31,6 +31,17 @@ for (const argument of argumentsList) {
   }
 }
 
+// Mongo integration suites share a test database and may rebuild indexes.
+// Serialize these suites and surface leaked connections as timeouts instead
+// of letting the entire CI check remain stuck without a result.
+const isMongoIntegrationRun = matchSuffixes.includes('.integration.test.ts');
+
+const testRunnerOptions = isMongoIntegrationRun
+  ? ['--test-concurrency=1', '--test-timeout=180000']
+  : [];
+
+//===================================================================
+
 if (matchSuffixes.length === 0) {
   console.error('Provide at least one non-empty --match suffix.');
   process.exit(1);
@@ -84,7 +95,7 @@ if (testFiles.length === 0) {
 
   const result = spawnSync(
     process.execPath,
-    [tsxCliPath, '--test', ...testFiles],
+    [tsxCliPath, '--test', ...testRunnerOptions, ...testFiles],
     {
       cwd: process.cwd(),
       stdio: 'inherit',

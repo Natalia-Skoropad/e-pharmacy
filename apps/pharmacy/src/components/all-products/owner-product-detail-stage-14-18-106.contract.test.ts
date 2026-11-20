@@ -50,7 +50,7 @@ test('global tabs use pathname navigation and distinct icons without operational
   );
 
   assert.match(source, /label: 'Details', icon: <PackageSearch/);
-  assert.match(source, /label: 'Characteristics', icon: <ClipboardList/);
+  assert.match(source, /label:\s*'Characteristics',\s*icon: <ClipboardList/);
   assert.match(source, /label: 'Reviews', icon: <MessageSquareText/);
 
   assert.doesNotMatch(
@@ -71,11 +71,11 @@ test('global and own product loaders stay below tab heading, never block the ent
   ]);
 
   for (const source of [global, own]) {
-    assert.match(source, /<Tabs items=/);
+    assert.match(source, /<Tabs\s+items=/);
 
     assert.match(
       source,
-      /<ProfileResourceState variant=\{error \? 'error' : 'loading'\}/
+      /<ProfileResourceState\s+variant=\{error \? 'error' : 'loading'\}/
     );
 
     assert.doesNotMatch(source, /<LoadingSpinner[^>]*fullPage/);
@@ -110,7 +110,7 @@ test('catalog metadata preserves Admin field order and live category icon', asyn
 
   assert.match(
     source,
-    /resolveOwnerCatalogCategory\(product\.category, categoryDirectory\)\.icon/
+    /resolveOwnerCatalogCategory\(\s*product\.category,\s*categoryDirectory\s*\)\.icon/
   );
 });
 
@@ -122,7 +122,11 @@ test('catalog add action remains full-width, eligibility checked, with no second
     read(detailCss),
   ]);
 
-  assert.match(source, /!isAdded \? <div className=\{css\.ownerActions\}>/);
+  assert.match(
+    source,
+    /!isAdded \? \(\s*<div className=\{css\.ownerActions\}>/
+  );
+
   assert.match(source, /ownerHasEligiblePharmacies/);
   assert.match(source, /<Plus size=\{17\}/);
   assert.match(css, /\.ownerActions \.actionButton\s*\{\s*width: 100%/);

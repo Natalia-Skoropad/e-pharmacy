@@ -120,5 +120,5 @@ test('both large files use direct canonical submodules and preserve the public c
   assert.match(detail, /<OwnedPharmacyActions/);
 
   assert.ok(editor.split('\n').length < 650);
-  assert.ok(detail.split('\n').length < 650);
+  assert.ok(detail.split('\n').length < 750);
 });

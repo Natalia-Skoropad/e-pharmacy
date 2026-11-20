@@ -62,6 +62,10 @@ test('own operational fetches belong to their respective tabs and run with abort
     read(ownFolder + 'OwnProductStatisticsTab.tsx'),
   ]);
 
+  const sharedOrders = await read(
+    'src/components/orders/OrdersPageContent/OrdersPageContent.tsx'
+  );
+
   assert.doesNotMatch(
     own,
     /getPharmacyOrders\(|getProductStockMovements\(|getPharmacyClients\(|getPharmacyOrderSalesStatistics\(/
@@ -69,7 +73,7 @@ test('own operational fetches belong to their respective tabs and run with abort
 
   for (const [source, method] of [
     [stock, 'getProductStockMovements'],
-    [orders, 'getPharmacyOrders'],
+    [sharedOrders, 'getPharmacyOrders'],
     [clients, 'getPharmacyClients'],
     [sales, 'getPharmacyOrderSalesStatistics'],
   ] as const) {
@@ -81,7 +85,8 @@ test('own operational fetches belong to their respective tabs and run with abort
     assert.match(source, /controller\.abort\(\)/);
   }
 
-  assert.match(orders, /scope: 'owner' as const/);
+  assert.match(orders, /<OrdersPageContent relatedProductId=\{productId\}/);
+  assert.match(sharedOrders, /scope: embedded \? undefined : 'owner'/);
   assert.match(sales, /scope: 'owner'/);
 });
 

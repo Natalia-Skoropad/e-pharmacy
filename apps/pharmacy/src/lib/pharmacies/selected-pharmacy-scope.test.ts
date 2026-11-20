@@ -57,9 +57,15 @@ test('detail tabs use the exact pharmacy from their canonical URL', () => {
 //===================================================================
 
 test('legacy operational routes retain explicit pharmacy selection in the query', () => {
-  for (const page of ['dashboard', 'all-products', 'product-requests']) {
+  for (const page of ['dashboard', 'product-requests']) {
     assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/${page}`), true);
   }
+
+  // All products is an owner-wide Admin catalog, not a selected-pharmacy view.
+  assert.equal(
+    isLegacyOperationalPharmacyPath('/pharmacy/all-products'),
+    false
+  );
 
   assert.equal(isOwnerOrdersListPath('/pharmacy/orders'), true);
   assert.equal(isLegacyOperationalPharmacyPath('/pharmacy/orders'), false);
@@ -219,7 +225,14 @@ test('owner Clients list is not a selected-pharmacy operational route', () => {
   );
 
   assert.equal(isOwnerClientsListPath(`/pharmacy/clients/${A}`), false);
-  assert.equal(isLegacyOperationalPharmacyPath(`/pharmacy/clients/${A}`), true);
+
+  // A client card is owner-wide and must not inherit current-pharmacy selection.
+  assert.equal(isOwnerClientDetailPath(`/pharmacy/clients/${A}`), true);
+
+  assert.equal(
+    isLegacyOperationalPharmacyPath(`/pharmacy/clients/${A}`),
+    false
+  );
 });
 
 //===================================================================

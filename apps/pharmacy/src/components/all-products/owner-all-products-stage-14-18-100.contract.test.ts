@@ -54,7 +54,7 @@ test('both All products category views consume the canonical API directory', asy
 
   assert.match(
     table,
-    /resolveOwnerCatalogCategory\(product\.category, categoryDirectory\)/
+    /resolveOwnerCatalogCategory\(\s*product\.category,\s*categoryDirectory\s*\)/
   );
 
   assert.match(drawer, /CategoryIcon name=\{option\.icon\}/);

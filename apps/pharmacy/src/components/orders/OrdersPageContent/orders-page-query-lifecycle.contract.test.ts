@@ -145,7 +145,7 @@ test('related product Orders scopes table, statistics and search options by prod
 
   assert.match(
     source,
-    /buildRelatedProductOrdersPath\(relatedProductId, nextFilters, pagination\)/
+    /buildRelatedProductOrdersPath\(\s*relatedProductId,\s*nextFilters,\s*pagination\s*\)/
   );
 
   assert.match(source, /productId=\{relatedProductId\}/);
@@ -196,10 +196,10 @@ test('product related orders renders a scoped selector, trimmed filters, columns
     'utf8'
   );
 
-  const detail = await readFile(
+  const priceChangeModal = await readFile(
     path.resolve(
       process.cwd(),
-      'src/components/orders/OrderDetailsPageContent/OrderDetailsPageContent.tsx'
+      'src/components/orders/OrderDetailsPageContent/OrderPriceChangeModal.tsx'
     ),
     'utf8'
   );
@@ -212,8 +212,8 @@ test('product related orders renders a scoped selector, trimmed filters, columns
   assert.match(table, /'clientComment'/);
 
   assert.match(
-    detail,
-    /If you add this product again, the updated price will apply/
+    priceChangeModal,
+    /If you add it again, the updated price will apply/
   );
 });
 

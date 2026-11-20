@@ -26,7 +26,7 @@ test('pharmacy detail does not show global selection and Clients has its own sec
   assert.match(selector, /getPharmacyIdFromDetailPath\(pathname\)/);
   assert.match(detail, /<ProfileSectionHeader/);
   assert.match(detail, /visibleTab === 'clients'/);
-  assert.match(clients, /!embedded \? <PageHeader/);
+  assert.match(clients, /!embedded \? \(\s*<PageHeader/);
   assert.match(clients, /<StatsLoadingSkeleton/);
 
   assert.match(
@@ -54,12 +54,17 @@ test('nested Clients route keeps filters, search and paging within the selected 
 
   assert.match(
     page,
-    /router\.replace\(buildClientsPath\(routeFilters, basePath/
+    /router\.replace\(\s*buildClientsPath\(routeFilters, basePath/
   );
 
   assert.match(page, /resetHref=\{basePath\}/);
   assert.match(page, /embedded=\{embedded\}/);
-  assert.match(search, /scope: embedded \? undefined : 'owner'/);
+
+  assert.match(
+    search,
+    /scope: productId \|\| !embedded \? 'owner' : undefined/
+  );
+
   assert.match(page, /fullWidthOnMobile/);
 });
 

@@ -88,6 +88,16 @@ export async function resolve(specifier, context, nextResolve) {
   );
 
   if (applicationAlias) {
+    if (CSS_MODULE_PATTERN.test(applicationAlias)) {
+      try {
+        await access(new URL(applicationAlias));
+
+        return { url: applicationAlias, shortCircuit: true };
+      } catch {
+        // Leave missing CSS modules to the default resolver.
+      }
+    }
+
     const resolvedURL = await resolveExistingCandidate(
       applicationAlias,
       import.meta.url

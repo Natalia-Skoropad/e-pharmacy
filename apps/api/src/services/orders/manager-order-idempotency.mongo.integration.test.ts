@@ -4,6 +4,7 @@ import test from 'node:test';
 import mongoose, { Types } from 'mongoose';
 
 import { seedIntegrationPharmacyActors } from '../__tests__/fixtures/pharmacy-integration-actors.helper';
+import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 
 import { MANAGER_ORDER_REQUEST_REUSED_ERROR_CODE } from '../../constants/orders/order';
 
@@ -15,7 +16,6 @@ import { User } from '../../models/accounts/user.model';
 
 import type { HttpError } from '../../types/http/errors';
 
-import { getTestProductCategoryId } from '../catalog/__tests__/product-category-test.helper';
 import { createManagerOrderService } from './order-manager-orders.service';
 
 //===================================================================
@@ -53,10 +53,6 @@ test(
   async () => {
     await mongoose.connect(getTestMongoUri());
 
-    const medicineCategoryId = await getTestProductCategoryId();
-
-    await Order.syncIndexes();
-
     const suffix = new Types.ObjectId().toHexString().toUpperCase();
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
@@ -66,72 +62,108 @@ test(
     const secondClientId = new Types.ObjectId();
     const phoneSuffix = getPhoneSuffix(suffix);
 
-    await seedIntegrationPharmacyActors([ownerId]);
-
-    await Promise.all([
-      Pharmacy.create({
-        _id: pharmacyId,
-        ownerId,
-        managerUserIds: [],
-        documents: [],
-        name: `Replay Pharmacy ${suffix.slice(-8)}`,
-        status: 'active',
-      }),
-
-      Product.create({
-        _id: productId,
-        name: `Replay Product ${suffix.slice(-8)}`,
-        article: `RP-${suffix.slice(-12)}`,
-        categoryId: medicineCategoryId,
-        status: 'active',
-        price: 100,
-        inStock: true,
-      }),
-
-      User.create({
-        _id: secondClientId,
-        name: 'Parallel Test Client',
-        email: `parallel-${suffix.toLowerCase()}@example.com`,
-        password: 'test-password-hash',
-        role: 'client',
-        status: 'active',
-        isDefaultPharmacyClient: true,
-        defaultClientPharmacyId: pharmacyId,
-      }),
-
-      User.create({
-        _id: clientId,
-        name: 'Replay Test Client',
-        email: `replay-${suffix.toLowerCase()}@example.com`,
-        password: 'test-password-hash',
-        role: 'client',
-        status: 'active',
-        phone: `+38050${phoneSuffix}`,
-        isDefaultPharmacyClient: true,
-        defaultClientPharmacyId: pharmacyId,
-      }),
-    ]);
-
-    await ProductOffer.create({
-      _id: offerId,
-      productId,
-      pharmacyId,
-      price: 100,
-      totalQuantity: 5,
-      availableQuantity: 5,
-      reservedQuantity: 0,
-    });
-
-    const input = {
-      clientRequestId: '1a3ae534-45a8-466c-a99f-153242673d0c',
-      clientId: clientId.toString(),
-      items: [{ productOfferId: offerId.toString(), quantity: 1 }],
-      paymentMethod: 'cash' as const,
-      deliveryMethod: 'pickup' as const,
-      comment: '',
-    };
-
     try {
+      const medicineCategoryId = await getTestProductCategoryId();
+
+      await Order.syncIndexes();
+      await seedIntegrationPharmacyActors([ownerId]);
+
+      await Promise.all([
+        Pharmacy.create({
+          _id: pharmacyId,
+          ownerId,
+          managerUserIds: [],
+          documents: [],
+          name: `Replay Pharmacy ${suffix.slice(-8)}`,
+          status: 'active',
+        }),
+
+        Product.create({
+          _id: productId,
+          name: `Replay Product ${suffix.slice(-8)}`,
+          article: `RP-${suffix.slice(-12)}`,
+          categoryId: medicineCategoryId,
+          status: 'active',
+          price: 100,
+          inStock: true,
+        }),
+
+        User.create({
+          _id: secondClientId,
+          name: 'Parallel Test Client',
+          email: `parallel-${suffix.toLowerCase()}@example.com`,
+          password: 'test-password-hash',
+          role: 'client',
+          status: 'active',
+          phone: `+38067${phoneSuffix}`,
+          // A regular client is eligible for manager orders after a previous
+          // order in this pharmacy; only one walk-in client may be default.
+        }),
+
+        User.create({
+          _id: clientId,
+          name: 'Replay Test Client',
+          email: `replay-${suffix.toLowerCase()}@example.com`,
+          password: 'test-password-hash',
+          role: 'client',
+          status: 'active',
+          phone: `+38050${phoneSuffix}`,
+          isDefaultPharmacyClient: true,
+          defaultClientPharmacyId: pharmacyId,
+        }),
+      ]);
+
+      await ProductOffer.create({
+        _id: offerId,
+        productId,
+        pharmacyId,
+        price: 100,
+        totalQuantity: 5,
+        availableQuantity: 5,
+        reservedQuantity: 0,
+      });
+
+      // The second client is already associated with this pharmacy through a
+      // historical completed order. This fixture does not reserve current stock
+      // and is intentionally excluded from manager-created order assertions.
+      await Order.create({
+        userId: secondClientId,
+        pharmacyId,
+        pharmacySnapshot: { name: `Replay Pharmacy ${suffix.slice(-8)}` },
+
+        items: [
+          {
+            productId,
+            productOfferId: offerId,
+            productSnapshot: {
+              name: `Replay Product ${suffix.slice(-8)}`,
+              article: `RP-${suffix.slice(-12)}`,
+            },
+            quantity: 1,
+            unitPrice: 100,
+            totalPrice: 100,
+          },
+        ],
+
+        totalItems: 1,
+        totalPrice: 100,
+        currency: '₴',
+        paymentMethod: 'cash',
+        delivery: { method: 'pickup' },
+        status: 'successful',
+        createdByType: 'client',
+        orderNumber: `RP-HISTORY-${suffix.slice(-12)}`,
+      });
+
+      const input = {
+        clientRequestId: '1a3ae534-45a8-466c-a99f-153242673d0c',
+        clientId: clientId.toString(),
+        items: [{ productOfferId: offerId.toString(), quantity: 1 }],
+        paymentMethod: 'cash' as const,
+        deliveryMethod: 'pickup' as const,
+        comment: '',
+      };
+
       const first = await createManagerOrderService(
         { id: ownerId.toString(), role: 'pharmacy' },
         input
@@ -181,7 +213,10 @@ test(
         }
       );
 
-      assert.equal(await Order.countDocuments({ pharmacyId }), 1);
+      assert.equal(
+        await Order.countDocuments({ pharmacyId, createdByType: 'manager' }),
+        1
+      );
 
       const offerAfterConflict = await ProductOffer.findById(offerId).lean<{
         availableQuantity: number;
@@ -216,7 +251,11 @@ test(
 
       assert.notEqual(sameClientOrder.order.id, otherClientOrder.order.id);
       assert.notEqual(first.order.id, sameClientOrder.order.id);
-      assert.equal(await Order.countDocuments({ pharmacyId }), 3);
+
+      assert.equal(
+        await Order.countDocuments({ pharmacyId, createdByType: 'manager' }),
+        3
+      );
 
       const offerAfterConcurrentOrders = await ProductOffer.findById(
         offerId
@@ -229,15 +268,20 @@ test(
       assert.equal(offerAfterConcurrentOrders.availableQuantity, 2);
       assert.equal(offerAfterConcurrentOrders.reservedQuantity, 3);
     } finally {
-      await Promise.all([
-        Order.deleteMany({ pharmacyId }),
-        ProductOffer.deleteOne({ _id: offerId }),
-        Product.deleteOne({ _id: productId }),
-        Pharmacy.deleteOne({ _id: pharmacyId }),
-        User.deleteMany({ _id: { $in: [ownerId, clientId, secondClientId] } }),
-      ]);
+      try {
+        await Promise.all([
+          Order.deleteMany({ pharmacyId }),
+          ProductOffer.deleteOne({ _id: offerId }),
+          Product.deleteOne({ _id: productId }),
+          Pharmacy.deleteOne({ _id: pharmacyId }),
 
-      await mongoose.disconnect();
+          User.deleteMany({
+            _id: { $in: [ownerId, clientId, secondClientId] },
+          }),
+        ]);
+      } finally {
+        await mongoose.disconnect();
+      }
     }
   }
 );

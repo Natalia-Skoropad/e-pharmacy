@@ -37,7 +37,7 @@ test('product clients are loaded independently with owner/product/pharmacy scope
   assert.match(tab, /<PaginationView/);
   assert.match(tab, /includeSuccessfulOrders=\{false\}/);
   assert.match(search, /perPage: productId \? 50 : SEARCH_LIMIT/);
-  assert.match(search, /hasMoreOptions=\{Boolean\(productId/);
+  assert.match(search, /hasMoreOptions=\{Boolean\(\s*productId/);
   assert.match(table, /showProductQuantity \? /);
   assert.match(table, /client\.productQuantity \?\? 0/);
 });

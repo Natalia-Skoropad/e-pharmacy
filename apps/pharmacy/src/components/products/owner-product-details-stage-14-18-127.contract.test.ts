@@ -43,7 +43,7 @@ test('Stock movement shows owner-scoped pharmacy chooser, local stock cards, and
 
   assert.match(
     stock,
-    /<OwnProductStatistics counts=\{getPharmacyStockCounts\(currentOffer\)\}/
+    /<OwnProductStatistics\s+counts=\{getPharmacyStockCounts\(\s*currentOffer,\s*reservedOrderAmount\s*\)\}/
   );
 
   assert.match(

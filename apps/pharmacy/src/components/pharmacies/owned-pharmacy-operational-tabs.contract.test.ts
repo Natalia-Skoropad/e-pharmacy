@@ -31,7 +31,12 @@ test('all operational browser APIs use the selected pharmacy through the private
 
   assert.match(
     clientsApi,
-    /await operationalLocalApiRequest\(\s*path,\s*sanitizeBrowserReadRequestOptions\(options\)\s*\)/
+    /params\.scope === 'owner' \? localApiRequest : operationalLocalApiRequest/
+  );
+
+  assert.match(
+    clientsApi,
+    /\)\(path, sanitizeBrowserReadRequestOptions\(options\)\)/
   );
 
   const scoped = pharmacy('lib/api/browser/operational-request.ts');
@@ -57,7 +62,7 @@ test('the owner detail mounts the existing operational components, not new copie
   for (const name of [
     'OrdersPageContent',
     'ClientsPageContent',
-    'OwnProductsPageContent',
+    'OwnerOwnProductsPageContent',
   ]) {
     assert.match(detail, new RegExp(`<${name}\\s+key=`));
     assert.match(detail, new RegExp(`<${name}[^>]+embedded`));

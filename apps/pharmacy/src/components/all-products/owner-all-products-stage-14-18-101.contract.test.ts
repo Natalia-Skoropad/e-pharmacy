@@ -28,7 +28,7 @@ test('All products URL encodes page and rows-per-page while preserving filters',
 
   assert.match(
     page,
-    /useState<RowsPerPageValue>\(initialPagination\.perPage\)/
+    /useState<RowsPerPageValue>\(\s*initialPagination\.perPage\s*\)/
   );
 
   assert.match(page, /useState\(initialPagination\.page\)/);
@@ -97,7 +97,7 @@ test('category icons remain backed by the current Admin catalog directory', asyn
   // these checks cover the local owner catalog rendering.
   assert.match(
     table,
-    /resolveOwnerCatalogCategory\(product\.category, categoryDirectory\)/
+    /resolveOwnerCatalogCategory\(\s*product\.category,\s*categoryDirectory\s*\)/
   );
 
   assert.match(drawer, /CategoryIcon name=\{option\.icon\}/);

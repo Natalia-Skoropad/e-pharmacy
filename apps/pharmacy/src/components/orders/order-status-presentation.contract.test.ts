@@ -31,7 +31,7 @@ const PRODUCT_REQUEST_SOURCE = path.resolve(
 
 const CLIENT_SOURCE = path.resolve(
   CURRENT_DIR,
-  '../clients/ClientDetailsPageContent/ClientDetailsPageContent.tsx'
+  '../clients/ClientDetailsPageContent/ClientInformationTab.tsx'
 );
 
 const STATUS_BANNER_SOURCE = path.resolve(
@@ -155,13 +155,31 @@ test('tablet order banners keep final status metadata next to titles and pharmac
   ]);
 
   assert.match(details, /css\.selectedPharmacyBadge/);
-  assert.match(styles, /\.selectedPharmacyBadge > span:last-child\s*\{[\s\S]*?text-align: left/);
+
+  assert.match(
+    styles,
+    /\.selectedPharmacyBadge > span:last-child\s*\{[\s\S]*?text-align: left/
+  );
+
   assert.match(banner, /headerMeta && css\.withHeaderMeta/);
   assert.match(bannerStyles, /min-width: 768px\) and \(max-width: 1439px/);
-  assert.match(bannerStyles, /\.inlineMeta\.withHeaderMeta \.header\s*\{[^}]*display: flex/);
+
+  assert.match(
+    bannerStyles,
+    /\.inlineMeta\.withHeaderMeta \.header\s*\{[^}]*display: flex/
+  );
+
   assert.match(details, /formatTableDateTimeParts\(value\)/);
   assert.match(details, /Created \{formatOrderCreatedAt\(order\.orderDate\)\}/);
   assert.match(styles, /\.orderHeaderMeta\s*\{[\s\S]*?white-space: nowrap/);
-  assert.match(bannerStyles, /\.inlineMeta\.withHeaderMeta \.headerTrailing\s*\{[^}]*width: max-content/);
-  assert.match(bannerStyles, /\.inlineMeta\.withHeaderMeta \.badgeGroup\s*\{[^}]*flex-wrap: nowrap/);
+
+  assert.match(
+    bannerStyles,
+    /\.inlineMeta\.withHeaderMeta \.headerTrailing\s*\{[^}]*width: max-content/
+  );
+
+  assert.match(
+    bannerStyles,
+    /\.inlineMeta\.withHeaderMeta \.badgeGroup\s*\{[^}]*flex-wrap: nowrap/
+  );
 });

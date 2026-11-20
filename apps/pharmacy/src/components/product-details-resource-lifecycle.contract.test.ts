@@ -36,7 +36,17 @@ test('initial product loading fetches only owner catalog details; ancillary requ
     );
   }
 
-  assert.match(related, /getPharmacyOrders\(/);
+  assert.match(related, /<OrdersPageContent relatedProductId=\{productId\}/);
+
+  const ordersRegistry = await read(
+    'src/components/orders/OrdersPageContent/OrdersPageContent.tsx'
+  );
+
+  assert.match(
+    ordersRegistry,
+    /getPharmacyOrders\(params, \{ signal: controller\.signal \}\)/
+  );
+
   assert.match(stock, /getProductStockMovements\(/);
   assert.match(clients, /getPharmacyClients\(/);
   assert.match(statistics, /getPharmacyOrderSalesStatistics\(/);
@@ -46,14 +56,23 @@ test('initial product loading fetches only owner catalog details; ancillary requ
 //===================================================================
 
 test('related orders retain server pagination and owner scope', async () => {
-  const source = await read(owner + 'OwnProductRelatedOrdersTab.tsx');
+  const [tab, ordersRegistry] = await Promise.all([
+    read(owner + 'OwnProductRelatedOrdersTab.tsx'),
+    read('src/components/orders/OrdersPageContent/OrdersPageContent.tsx'),
+  ]);
 
-  assert.match(source, /page: relatedCurrentPage/);
-  assert.match(source, /perPage: relatedRowsPerPage/);
-  assert.match(source, /scope: 'owner'/);
-  assert.match(source, /setRelatedOrdersTotal\(response\.total\)/);
-  assert.match(source, /items=\{relatedOrderRows\}/);
-  assert.doesNotMatch(source, /perPage:\s*200|paginatedRelatedOrderRows/);
+  assert.match(tab, /<OrdersPageContent relatedProductId=\{productId\}/);
+  assert.match(ordersRegistry, /scope: embedded \? undefined : 'owner'/);
+  assert.match(ordersRegistry, /productId: relatedProductId \|\| undefined/);
+  assert.match(ordersRegistry, /page: nextPage/);
+  assert.match(ordersRegistry, /perPage: nextPerPage/);
+
+  assert.match(
+    ordersRegistry,
+    /getPharmacyOrders\(params, \{ signal: controller\.signal \}\)/
+  );
+
+  assert.match(ordersRegistry, /<OrdersTable/);
 });
 
 //===================================================================
@@ -62,7 +81,7 @@ test('stock movement uses explicitly selected owned pharmacy and local retry/loa
   const source = await read(owner + 'OwnProductStockMovementTab.tsx');
 
   assert.match(source, /if \(!pharmacyId \|\| !currentOffer\) return/);
-  assert.match(source, /Select a specific pharmacy to view its product stock/);
+  assert.match(source, /Select a pharmacy to view stock movement/);
   assert.match(source, /Stock movement could not be loaded/);
   assert.match(source, /currentStockStatus !== 'success'/);
   assert.doesNotMatch(source, /getActiveOrdersReservedQuantity/);
@@ -79,8 +98,19 @@ test('supporting resources show independent unavailable/loading states and abort
   ]) {
     const source = await read(owner + filename);
 
-    assert.match(source, /AbortController/);
-    assert.match(source, /controller\.abort\(\)/);
+    const operationalSource =
+      filename === 'OwnProductRelatedOrdersTab.tsx'
+        ? await read(
+            'src/components/orders/OrdersPageContent/OrdersPageContent.tsx'
+          )
+        : source;
+
+    if (filename === 'OwnProductRelatedOrdersTab.tsx') {
+      assert.match(source, /<OrdersPageContent relatedProductId=\{productId\}/);
+    }
+
+    assert.match(operationalSource, /AbortController/);
+    assert.match(operationalSource, /controller\.abort\(\)/);
   }
 
   const global = await read(globalCard);
@@ -104,7 +134,7 @@ test('global addition and owner removal preserve safe server error handling and 
     /setProduct\(\{ \.\.\.response\.product, isAddedToOwner: true \}\)/
   );
 
-  assert.match(own, /removeProductFromMyPharmacy\(product\.id\)/);
+  assert.match(own, /removeOwnerOwnProduct\(product\.id\)/);
   assert.match(own, /shouldReconcileRemove\(removeError\)/);
   assert.match(own, /getOwnerCatalogProductDetails\(product\.id\)/);
 

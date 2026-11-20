@@ -389,9 +389,11 @@ test(
             404
           );
 
+          // The other order belongs to the same owner, but its pharmacy
+          // differs from the request's selected pharmacy: reject with 403.
           await expectStatus(
             () => getOrderByIdService(owner, foreignOrder.order.id, 'pharmacy'),
-            404
+            403
           );
 
           await expectStatus(

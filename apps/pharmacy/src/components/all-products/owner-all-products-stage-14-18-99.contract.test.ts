@@ -22,7 +22,7 @@ test('owner product table has no Color column and resolves categories from the A
 
   assert.match(
     table,
-    /resolveOwnerCatalogCategory\(product\.category, categoryDirectory\)/
+    /resolveOwnerCatalogCategory\(\s*product\.category,\s*categoryDirectory\s*\)/
   );
 
   assert.match(page, /getProductCategories/);
@@ -52,13 +52,21 @@ test('category select options and product table share the same Admin directory',
 //===================================================================
 
 test('Add confirmation uses shared profile modal with icon-labelled actions', async () => {
-  const page = await source(
-    'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
-  );
+  const [page, confirmation] = await Promise.all([
+    source(
+      'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
+    ),
 
-  assert.match(page, /<ConfirmationModal/);
-  assert.match(page, /eyebrow="ALL PRODUCTS"/);
-  assert.match(page, /confirmIconLeft=\{<PackagePlus/);
-  assert.match(page, /cancelIconLeft=\{<X/);
-  assert.match(page, /closeOnBackdrop=\{!addingProductId\}/);
+    source(
+      'src/components/all-products/OwnerAddProductConfirmation/OwnerAddProductConfirmation.tsx'
+    ),
+  ]);
+
+  assert.match(page, /<OwnerAddProductConfirmation/);
+  assert.match(page, /isLoading=\{Boolean\(addingProductId\)\}/);
+  assert.match(confirmation, /<ConfirmationModal/);
+  assert.match(confirmation, /eyebrow="ALL PRODUCTS"/);
+  assert.match(confirmation, /confirmIconLeft=\{<PackagePlus/);
+  assert.match(confirmation, /cancelIconLeft=\{<X/);
+  assert.match(confirmation, /closeOnBackdrop=\{!isLoading\}/);
 });
