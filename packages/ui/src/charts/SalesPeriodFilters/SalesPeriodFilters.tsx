@@ -2,26 +2,15 @@
 
 import clsx from 'clsx';
 
+import type { SalesPeriodMonth } from '@e-pharmacy/types/primitives';
+
 import { SelectField } from '../../forms';
 
 import css from './SalesPeriodFilters.module.css';
 
 //===================================================================
 
-export type SalesPeriodMonth =
-  | 'all'
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | '10'
-  | '11'
-  | '12';
+export type { SalesPeriodMonth } from '@e-pharmacy/types/primitives';
 
 //===================================================================
 

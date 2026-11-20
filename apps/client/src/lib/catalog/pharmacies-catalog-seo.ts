@@ -15,9 +15,18 @@ export type PharmaciesCatalogSeoContent = Readonly<{
 //===================================================================
 
 function getSelectedLocationLabel(filters: PharmacyFilters): string {
-  return filters.settlement
-    ? formatPharmacyLocationLabel(filters.settlement, filters.region)
-    : '';
+  if (!filters.settlement) return '';
+
+  // Route segments contain normalized lowercase slugs. Capitalize location
+  // names in human-facing SEO copy without changing canonical filter values.
+  return formatPharmacyLocationLabel(
+    filters.settlement,
+    filters.region
+  ).replace(
+    /(^|[-(])(\p{L})/gu,
+    (_match, separator: string, letter: string) =>
+      `${separator}${letter.toLocaleUpperCase('uk-UA')}`
+  );
 }
 
 //===================================================================

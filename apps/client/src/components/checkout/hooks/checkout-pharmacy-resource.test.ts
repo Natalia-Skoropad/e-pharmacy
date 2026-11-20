@@ -35,11 +35,15 @@ test('checkout shows the shared page skeleton until pharmacy details load', asyn
 
   assert.match(
     page,
-    /shouldShowPageSkeleton \? <OrderPageSkeleton variant="checkout"/
+    /shouldShowPageSkeleton \|\| isRedirecting \?\s*\(\s*<OrderPageSkeleton variant="checkout"/
   );
 
   assert.doesNotMatch(page, /Loading pharmacy details\.\.\./);
-  assert.match(page, /!shouldShowPageSkeleton && selectedOrderGroup/);
+
+  assert.match(
+    page,
+    /!shouldShowPageSkeleton && !isRedirecting && selectedOrderGroup/
+  );
 });
 
 //===================================================================

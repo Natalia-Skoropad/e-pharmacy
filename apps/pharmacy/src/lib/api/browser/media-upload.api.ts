@@ -2,10 +2,11 @@ import 'client-only';
 
 import { parseApiResponseData } from '@e-pharmacy/api-client/response';
 import { localApiRequest } from '@e-pharmacy/next-api/browser';
+import { pharmacyApiRoutes } from '@/lib/api/routes/pharmacy-api-routes';
 
 //===============================================================
 
-const PATH = '/api/media/photos';
+const PATH = pharmacyApiRoutes.media.photos;
 
 //===============================================================
 

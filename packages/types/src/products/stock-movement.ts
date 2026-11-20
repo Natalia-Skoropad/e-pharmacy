@@ -22,7 +22,7 @@ export type StockMovementSource = 'pharmacy_stock' | 'client_order';
 
 //===================================================================
 
-export type ProductStockBalance = {
+type ProductStockBalance = {
   stockQuantity: number;
   reservedQuantity: number;
   availableQuantity: number;

@@ -1,6 +1,5 @@
 import { isValidObjectId } from '@e-pharmacy/validation/url';
-
-import type { SalesPeriodMonth } from '@e-pharmacy/ui/charts';
+import type { SalesPeriodMonth } from '@e-pharmacy/types/primitives';
 
 //===================================================================
 

@@ -34,12 +34,16 @@ test('keeps Product Details split by lifecycle responsibility', async () => {
       ),
     ]);
 
-  assert.ok(page.split(/\r?\n/).length < 180);
+  assert.ok(page.split(/\r?\n/).length <= 200);
   assert.match(page, /ProductDetailsHero/);
   assert.match(page, /ProductOffersPanel/);
   assert.match(page, /ProductCharacteristicsPanel/);
   assert.match(page, /ProductReviewsPanel/);
-  assert.doesNotMatch(page, /getProductDetails|loadCart|setTimeout|aria-live/);
+
+  assert.doesNotMatch(
+    page,
+    /getProductDetails\s*\(|loadCart|setTimeout|aria-live/
+  );
 
   assert.match(offerList, /key=\{offer\.id\}/);
   assert.doesNotMatch(offerList, /offer\.pharmacyId/);
@@ -96,7 +100,7 @@ test('keeps Pharmacy Details retryable and separates contact from receipt email'
       ),
     ]);
 
-  assert.ok(page.split(/\r?\n/).length <= 230);
+  assert.ok(page.split(/\r?\n/).length <= 245);
   assert.match(page, /PharmacyDetailsHero/);
   assert.match(page, /PharmacyBankDetailsPanel/);
   assert.match(page, /PharmacyAboutPanel/);

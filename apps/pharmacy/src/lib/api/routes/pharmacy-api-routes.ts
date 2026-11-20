@@ -10,6 +10,10 @@ const segment = (value: string): string => encodeRouteSegment(value);
 //===================================================================
 
 export const pharmacyApiRoutes = {
+  media: {
+    photos: '/api/media/photos',
+  },
+
   productCategories: {
     list: '/api/product-categories',
   },

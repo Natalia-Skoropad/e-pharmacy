@@ -39,7 +39,7 @@ test('comments use Clients access at the owner boundary, not selected or assigne
 
   assert.match(
     service,
-    /canPharmacyMembershipUseCapability\(member\.membershipRole, 'read_clients'\)/
+    /canPharmacyMembershipUseCapability\(\s*member\.membershipRole,\s*'read_clients'\s*\)/
   );
 
   assert.doesNotMatch(
@@ -65,7 +65,12 @@ test('new client-card comments are owner-scoped; legacy pharmacy notes remain re
   const service = read('services/clients/client-note.service.ts');
   const model = read('models/pharmacies/pharmacyNote.model.ts');
 
-  assert.match(service, /ownerId: scope\.ownerObjectId, entityType: 'client'/);
+  // New notes are owner-scoped, while the read filter separately supports
+  // legacy pharmacy-scoped entries for that same authorized owner.
+  assert.match(service, /function noteFilter\(scope: ClientCardNoteScope\)/);
+  assert.match(service, /entityType: 'client' as const/);
+  assert.match(service, /entityId: scope\.clientObjectId/);
+  assert.match(service, /\$or:\s*\[\s*\{ ownerId: scope\.ownerObjectId \}/);
   assert.match(service, /ownerId: scope\.ownerObjectId/);
   assert.match(service, /ownerId: \{ \$exists: false \}/);
   assert.match(service, /pharmacyId: \{ \$in: scope\.legacyPharmacyIds \}/);

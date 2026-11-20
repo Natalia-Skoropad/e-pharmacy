@@ -484,7 +484,10 @@ test('successful checkout navigates directly to the created order before reveali
 
   assert.match(submit, /setIsRedirecting\(true\)/);
   assert.match(checkout, /shouldShowPageSkeleton \|\| isRedirecting/);
-  assert.match(checkout, /!isRedirecting && !error && cart.items.length === 0/);
+  assert.match(
+    checkout,
+    /!shouldShowPageSkeleton\s*&&\s*!isRedirecting\s*&&\s*!error\s*&&\s*cart\.items\.length === 0/
+  );
 });
 
 //===================================================================

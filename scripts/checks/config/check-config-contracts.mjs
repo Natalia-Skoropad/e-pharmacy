@@ -341,6 +341,7 @@ assert.deepEqual(
 const semanticTones = new Set([
   'info',
   'pending',
+  'mustard',
   'success',
   'warning',
   'danger',

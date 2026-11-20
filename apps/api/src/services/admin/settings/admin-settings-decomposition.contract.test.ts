@@ -209,6 +209,19 @@ test('S10.10 preserves dictionary pagination, UTC date windows and safe projecti
   }
 
   assert.match(categoryProjection, /PRODUCT_CATEGORY_DEFAULT_COLOR/);
-  assert.match(categoryProjection, /PRODUCT_CATEGORY_SEED_DEFINITIONS/);
+
+  assert.match(
+    categoryProjection,
+    /icon: resolveProductCategoryIcon\(category\)/
+  );
+
+  // The canonical icon resolver owns seed fallbacks, not the projection.
+  const categoryConstants = readFileSync(
+    resolve(SRC, 'constants/catalog/product-category.ts'),
+    'utf8'
+  );
+
+  assert.match(categoryConstants, /PRODUCT_CATEGORY_SEED_DEFINITIONS/);
+  assert.match(categoryConstants, /export function resolveProductCategoryIcon/);
   assert.match(positionProjection, /employeesCount: 0, total: 0/);
 });

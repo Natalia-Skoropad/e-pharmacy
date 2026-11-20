@@ -39,16 +39,13 @@ import { sanitizeCatalogTextSearch } from '@/lib/catalog/search-sanitizers';
 import {
   buildProductOffersPath,
   type ProductOffersFilters,
+  type ProductOfferSort,
 } from '@/lib/catalog/product-offers-paths';
 
 import CatalogFiltersShell from '@/components/catalog/CatalogFiltersShell/CatalogFiltersShell';
 import { useCatalogNavigation } from '@/components/catalog/hooks/useCatalogNavigation';
 import { useRemotePharmacyOptions } from '@/components/catalog/hooks/useRemotePharmacyOptions';
-
-import {
-  PRODUCT_OFFER_SORT_OPTIONS,
-  type ProductOfferSort,
-} from '@/components/product-catalog/config/product-offers';
+import { PRODUCT_OFFER_SORT_OPTIONS } from '@/components/product-catalog/config/product-offers';
 
 import { ProductOfferResultsSkeleton } from './ProductOfferResultsSkeleton';
 

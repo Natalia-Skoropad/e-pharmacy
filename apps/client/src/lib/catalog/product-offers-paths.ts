@@ -5,12 +5,21 @@ import {
 
 import type { ProductOffer } from '@e-pharmacy/types/products';
 
-import type { ProductOfferSort } from '@/components/product-catalog/config/product-offers';
-
 import {
   normalizeLocationKey,
   formatPharmacyLocationLabel,
 } from './pharmacies-catalog-filters';
+
+//===================================================================
+
+export type ProductOfferSort =
+  | 'newest'
+  | 'price-asc'
+  | 'price-desc'
+  | 'rating-desc'
+  | 'rating-asc'
+  | 'name-asc'
+  | 'name-desc';
 
 //===================================================================
 

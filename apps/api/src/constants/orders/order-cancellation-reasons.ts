@@ -1,6 +1,6 @@
 /**
- * Backend-owned cancellation reasons. The API intentionally does not import
- * @e-pharmacy/config: backend/frontend boundaries are enforced separately.
+ * Backend-owned cancellation reasons. The API keeps its own reason catalog
+ * to preserve backend/frontend package boundaries.
  * Keep these codes and labels synchronized with the public client contract;
  * scripts/checks/config/check-config-contracts.mjs verifies parity.
  */

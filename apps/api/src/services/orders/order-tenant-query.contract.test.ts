@@ -96,12 +96,18 @@ test('owner order options also respect the requested product', async () => {
 
   assert.match(
     schema,
-    /ownerOrderOptionsQuerySchema = z\.object\(\{[\s\S]*?productId: mongoIdSchema\.optional\(\)/
+    /ownerOrderOptionsQuerySchema = z\s*\.object\(\{[\s\S]*?productId: mongoIdSchema\.optional\(\)/
   );
 
+  const optionsBody = query.split(
+    'export async function getOwnerOrderOptionsService('
+  )[1];
+
+  assert.ok(optionsBody, 'Owner order options service must exist');
+
   assert.match(
-    query,
-    /if \(query\.productId\) filter\['items\.productId'\] = new Types\.ObjectId\(query\.productId\)/
+    optionsBody,
+    /if \(query\.productId\)\s*filter\['items\.productId'\] = new Types\.ObjectId\(query\.productId\)/
   );
 });
 

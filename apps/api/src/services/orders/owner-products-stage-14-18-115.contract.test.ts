@@ -20,7 +20,7 @@ test('owner order queries check owned pharmacy IDs and preserve selected-pharmac
     read('services/orders/order-sales-statistics.service.ts'),
   ]);
 
-  assert.match(access, /Pharmacy\.distinct\('_id', \{ ownerId:/);
+  assert.match(access, /Pharmacy\.distinct\('_id',\s*\{\s*ownerId:/);
   assert.match(orders, /query\.scope === 'owner'/);
   assert.match(orders, /ownerIds\.some/);
   assert.match(orders, /getCurrentPharmacyId/);

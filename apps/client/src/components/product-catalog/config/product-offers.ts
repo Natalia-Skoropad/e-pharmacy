@@ -1,11 +1,4 @@
-export type ProductOfferSort =
-  | 'newest'
-  | 'price-asc'
-  | 'price-desc'
-  | 'rating-desc'
-  | 'rating-asc'
-  | 'name-asc'
-  | 'name-desc';
+import type { ProductOfferSort } from '@/lib/catalog/product-offers-paths';
 
 //===================================================================
 

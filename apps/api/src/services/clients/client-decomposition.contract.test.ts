@@ -137,7 +137,7 @@ test('S10.8 registry retains per-pharmacy Mongo facet and true Walk-in identity'
 
   assert.match(
     aggregation,
-    /\{ \$match: \{ pharmacyId: \{ \$in: pharmacyIds \} \} \}/
+    /\$match:\s*\{\s*pharmacyId:\s*\{\s*\$in:\s*pharmacyIds\s*\}/
   );
 
   assert.match(
