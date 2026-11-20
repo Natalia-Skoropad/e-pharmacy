@@ -89,3 +89,19 @@ export async function getOrderDetails(
     { url: path, method: 'GET' }
   );
 }
+
+//===================================================================
+
+export async function cancelClientOrder(
+  orderId: string,
+  input: { reasonCode: string; otherReason?: string },
+  options: MutationRequestOptions = {}
+): Promise<ClientOrderDetailsResponse> {
+  const path = ROUTES.orders.cancel(orderId);
+
+  return parseApiResponseData(
+    await localApiRequest(path, { ...options, method: 'POST', body: input }),
+    parseClientOrderDetailsResponse,
+    { url: path, method: 'POST' }
+  );
+}

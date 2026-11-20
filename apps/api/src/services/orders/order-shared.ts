@@ -119,6 +119,10 @@ function getCategorySnapshot(
 
     name: snapshot.categoryNameSnapshot,
     slug: snapshot.categorySlugSnapshot,
+
+    ...(snapshot.categoryIconSnapshot
+      ? { icon: snapshot.categoryIconSnapshot }
+      : {}),
   };
 }
 
@@ -408,6 +412,10 @@ export function serializeOrder(
       ? { rejectionReason: order.rejectionReason }
       : {}),
 
+    ...(order.rejectionReasonCode
+      ? { rejectionReasonCode: order.rejectionReasonCode }
+      : {}),
+
     ...(order.rejectedAt ? { rejectedAt: order.rejectedAt.toISOString() } : {}),
     ...(order.rejectedBy ? { rejectedBy: order.rejectedBy.toString() } : {}),
     ...(order.rejectedByType ? { rejectedByType: order.rejectedByType } : {}),
@@ -433,6 +441,16 @@ export function serializeOrder(
       const category =
         getCategorySnapshot(item.productSnapshot) ?? productFallback?.category;
 
+      const categoryWithIcon = category && {
+        ...category,
+
+        ...(category.icon
+          ? { icon: category.icon }
+          : productFallback?.category?.icon
+            ? { icon: productFallback.category.icon }
+            : {}),
+      };
+
       const rating =
         typeof item.productSnapshot.rating === 'number'
           ? item.productSnapshot.rating
@@ -455,7 +473,7 @@ export function serializeOrder(
 
         article: item.productSnapshot.article,
 
-        ...(category ? { category } : {}),
+        ...(categoryWithIcon ? { category: categoryWithIcon } : {}),
 
         ...(item.productSnapshot.imageUrl
           ? { imageUrl: item.productSnapshot.imageUrl }
@@ -502,6 +520,7 @@ export async function getOrderProductFallbacks(
       (item) =>
         !item.productSnapshot.categoryNameSnapshot ||
         !item.productSnapshot.categorySlugSnapshot ||
+        !item.productSnapshot.categoryIconSnapshot ||
         typeof item.productSnapshot.rating !== 'number' ||
         typeof item.productSnapshot.reviewsCount !== 'number'
     )
@@ -583,6 +602,7 @@ export function createOrderItemFromProductOffer({
       categoryNameSnapshot: category.name,
       categorySlugSnapshot: category.slug,
 
+      ...(category.icon ? { categoryIconSnapshot: category.icon } : {}),
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
       ...(product.dosage ? { dosage: product.dosage } : {}),

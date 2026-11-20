@@ -520,3 +520,11 @@
     display: none;
   }
 }
+
+/* Keep Rejected and its cancellation source together without inventing a status. */
+.stockOrderStatusBadges {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}

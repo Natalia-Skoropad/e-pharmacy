@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   checkoutOrder,
+  cancelClientOrder,
   createManagerOrder,
   createOrderManagerComment,
   deleteOrderManagerComment,
@@ -22,6 +23,7 @@ import { validate } from '../../middlewares/http/validate.middleware';
 
 import {
   checkoutOrderSchema,
+  cancelClientOrderSchema,
   createManagerOrderSchema,
   createOrderManagerCommentSchema,
   orderCommentParamsSchema,
@@ -118,6 +120,15 @@ orderRoutes.delete(
 
 //===============================================================
 
+orderRoutes.post(
+  '/:orderId/cancel',
+  authorizeRoles(USER_ROLES.CLIENT),
+  validate({ params: orderParamsSchema, body: cancelClientOrderSchema }),
+  ctrlWrapper(cancelClientOrder)
+);
+
+//===============================================================
+
 orderRoutes.get(
   '/:orderId',
   validate({ params: orderParamsSchema }),
@@ -136,6 +147,7 @@ orderRoutes.patch(
 
 orderRoutes.patch(
   '/:orderId/status',
+  authorizeRoles(USER_ROLES.PHARMACY, USER_ROLES.ADMIN),
   validate({ params: orderParamsSchema, body: updateOrderStatusSchema }),
   ctrlWrapper(updateOrderStatus)
 );

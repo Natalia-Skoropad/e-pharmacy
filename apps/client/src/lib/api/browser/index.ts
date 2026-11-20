@@ -25,7 +25,12 @@ export {
   updateCartItem,
 } from './cart.api';
 
-export { checkoutOrder, getOrderDetails, getOrders } from './orders.api';
+export {
+  checkoutOrder,
+  getOrderDetails,
+  getOrders,
+  cancelClientOrder,
+} from './orders.api';
 
 export {
   addFavoriteProduct,

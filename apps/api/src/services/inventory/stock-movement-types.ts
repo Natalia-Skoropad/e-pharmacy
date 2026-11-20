@@ -50,6 +50,7 @@ export type CurrentOrderSnapshot = {
   _id: Types.ObjectId;
   status: OrderStatus;
   orderNumber: string;
+  rejectedByType?: 'manager' | 'client';
 
   items: Array<{
     productOfferId: Types.ObjectId;

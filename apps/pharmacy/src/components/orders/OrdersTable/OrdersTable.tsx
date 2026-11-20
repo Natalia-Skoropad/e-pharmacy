@@ -77,7 +77,7 @@ function OrdersTable({
       {
         key: 'orderNumber',
         title: <TableHeaderTitle parts={['Order', 'number']} />,
-        width: '150px',
+        width: '100px',
 
         render: (order) => (
           <TextActionButton

@@ -39,6 +39,43 @@ function assertSameValues(label, frontend, backend) {
 
 //===================================================================
 
+// The backend does not depend on frontend workspace packages at runtime.
+// Check that its standalone cancellation reason contracts remain identical.
+const frontendCancellationReasons = await parse(
+  'packages',
+  'config',
+  'src',
+  'reasons',
+  'index.ts'
+);
+
+const backendCancellationReasons = await parse(
+  'apps',
+  'api',
+  'src',
+  'constants',
+  'orders',
+  'order-cancellation-reasons.ts'
+);
+
+for (const variableName of [
+  'CLIENT_ORDER_CANCEL_REASONS',
+  'MANAGER_ORDER_CANCEL_REASONS',
+]) {
+  assertSameValues(
+    `${variableName} codes and labels`,
+    getVariableLiteral(ts, frontendCancellationReasons, variableName).map(
+      ({ code, label }) => JSON.stringify([code, label])
+    ),
+
+    getVariableLiteral(ts, backendCancellationReasons, variableName).map(
+      ({ code, label }) => JSON.stringify([code, label])
+    )
+  );
+}
+
+//===================================================================
+
 const [
   frontendAuth,
   frontendUsers,

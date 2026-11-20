@@ -58,6 +58,7 @@ export type ProductCategorySnapshot = Readonly<{
   id?: EntityId;
   name: string;
   slug: ProductCategorySlug;
+  icon?: string;
 }>;
 
 //===================================================================

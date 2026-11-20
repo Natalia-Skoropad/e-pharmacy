@@ -4,6 +4,12 @@ import { API_MESSAGES } from '../../constants/shared/messages';
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { PAYMENT_METHOD_UNAVAILABLE_ERROR_CODE } from '../../constants/orders/order';
 
+import {
+  findReasonCode,
+  CLIENT_ORDER_CANCEL_REASONS,
+  MANAGER_ORDER_CANCEL_REASONS,
+} from '../../constants/orders/order-cancellation-reasons';
+
 import { Order } from '../../models/orders/order.model';
 import { Product } from '../../models/catalog/product.model';
 import { ProductOffer } from '../../models/inventory/productOffer.model';
@@ -402,7 +408,20 @@ export async function updateOrderStatusService(
 
       if (!order) throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
 
-      await assertCanEditPharmacyOrder(actor, order, session);
+      if (actor.role === 'client') {
+        if (String(order.userId) !== actor.id) {
+          throw httpError(HTTP_STATUS.NOT_FOUND, 'Order was not found');
+        }
+
+        if (order.status !== 'new' || input.status !== 'rejected') {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Only New orders can be cancelled by the client.'
+          );
+        }
+      } else {
+        await assertCanEditPharmacyOrder(actor, order, session);
+      }
 
       if (!canTransitionOrderStatus(order.status, input.status)) {
         throw httpError(
@@ -460,11 +479,23 @@ export async function updateOrderStatusService(
 
       if (input.status === 'rejected') {
         set.rejectionReason = input.rejectionReason;
+
+        set.rejectionReasonCode =
+          actor.role === 'client' && input.rejectionReasonCode
+            ? input.rejectionReasonCode
+            : findReasonCode(
+                input.rejectionReason ?? '',
+                actor.role === 'client'
+                  ? CLIENT_ORDER_CANCEL_REASONS
+                  : MANAGER_ORDER_CANCEL_REASONS
+              );
+
         set.rejectedAt = changedAt;
         set.rejectedBy = new Types.ObjectId(actor.id);
 
         // Preserve only verified provenance. Admin actions are not labelled as a manager.
         if (actor.role === 'pharmacy') set.rejectedByType = 'manager';
+        if (actor.role === 'client') set.rejectedByType = 'client';
       }
 
       return Order.findByIdAndUpdate(
@@ -479,7 +510,11 @@ export async function updateOrderStatusService(
               changedAt,
               changedBy: new Types.ObjectId(actor.id),
 
-              ...(input.comment ? { comment: input.comment } : {}),
+              ...(input.status === 'rejected'
+                ? { comment: input.rejectionReason }
+                : input.comment
+                  ? { comment: input.comment }
+                  : {}),
             },
           },
         },

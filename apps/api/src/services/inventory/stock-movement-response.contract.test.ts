@@ -45,3 +45,41 @@ test('reserved valuation uses fixed order prices rather than the current offer p
   assert.match(source, /item\.quantity \* item\.unitPrice/);
   assert.match(source, /reservedOrderAmount,/);
 });
+
+//===================================================================
+
+test('stock movement sends cancellation author for rejected orders only', async () => {
+  const [readService, projection, responseTypes] = await Promise.all([
+    readFile(
+      resolve(
+        process.cwd(),
+        'src/services/inventory/stock-movement-read.service.ts'
+      ),
+      'utf8'
+    ),
+
+    readFile(
+      resolve(
+        process.cwd(),
+        'src/services/inventory/stock-movement-projection.ts'
+      ),
+      'utf8'
+    ),
+
+    readFile(
+      resolve(process.cwd(), 'src/services/inventory/stock-movement-types.ts'),
+      'utf8'
+    ),
+  ]);
+
+  assert.match(readService, /orderNumber rejectedByType items\.productOfferId/);
+  assert.match(readService, /rejectedByType\?: 'manager' \| 'client'/);
+  assert.match(responseTypes, /rejectedByType\?: 'manager' \| 'client'/);
+
+  assert.match(
+    projection,
+    /orderStatus === 'rejected' && order\?\.rejectedByType/
+  );
+
+  assert.match(projection, /rejectedByType: order\.rejectedByType/);
+});

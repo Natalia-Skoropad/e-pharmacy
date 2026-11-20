@@ -64,7 +64,7 @@ function CartItemCard({
           <div className={css.productInfo}>
             <p className={css.category}>
               <CategoryIcon name={item.product.category.icon} size={16} />
-              {item.product.category.name}
+              <span>{item.product.category.name}</span>
             </p>
 
             <h2 className={css.title} id={`cart-item-${item.id}`}>

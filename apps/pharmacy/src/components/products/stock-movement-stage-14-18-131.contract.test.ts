@@ -21,7 +21,7 @@ test('stock movement selectors use scoped orders rather than an unfiltered order
 
   assert.match(
     tab,
-    /rows=\{lastLoadedKey === stockKey && currentStockStatus === 'success' \? allStockRows : \[\]\}/
+    /rows=\{\s*lastLoadedKey === stockKey\s*&&\s*currentStockStatus === 'success'\s*\?\s*allStockRows\s*:\s*\[\]\s*\}/
   );
 
   assert.match(select, /Map<string/);
@@ -65,4 +65,23 @@ test('chart filters provide conditional reset control and stock info is in its t
   assert.match(heading, /How stock movement works/);
   assert.match(heading, /Stock arrivals/);
   assert.doesNotMatch(stock, /How stock movement works/);
+});
+
+//===================================================================
+
+test('rejected stock movement rows reuse the shared cancellation source badge', async () => {
+  const [tab, helpers] = await Promise.all([
+    read(`${base}OwnProductStockMovementTab.tsx`),
+    read(`${base}own-product-detail-helpers.ts`),
+  ]);
+
+  assert.match(tab, /<OrderRejectionSourceBadge/);
+  assert.match(tab, /rejectedByType=\{row\.rejectedByType\}/);
+
+  assert.match(
+    helpers,
+    /movement\.orderStatus === 'rejected' && movement\.rejectedByType/
+  );
+
+  assert.match(helpers, /rejectedByType: movement\.rejectedByType/);
 });

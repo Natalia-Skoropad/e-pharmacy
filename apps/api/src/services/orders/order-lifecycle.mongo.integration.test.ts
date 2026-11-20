@@ -335,6 +335,88 @@ test(
 //===============================================================
 
 test(
+  'client can cancel only their own New order and release stock exactly once',
+  { skip: shouldSkip },
+
+  async () => {
+    await mongoose.connect(getTestMongoUri());
+
+    const fixture = await createCheckoutFixture({ stock: 1 });
+
+    try {
+      const checkout = await checkoutFixture(fixture);
+
+      const anotherClient = {
+        id: new Types.ObjectId().toString(),
+        role: 'client' as const,
+      };
+
+      const actor = {
+        id: fixture.clientUserId.toString(),
+        role: 'client' as const,
+      };
+
+      await assert.rejects(
+        updateOrderStatusService(anotherClient, checkout.order.id, {
+          status: 'rejected',
+          rejectionReason: 'Ordered from another pharmacy',
+        }),
+
+        (error: unknown) =>
+          error instanceof Error && 'status' in error && error.status === 404
+      );
+
+      await assert.rejects(
+        updateOrderStatusService(actor, checkout.order.id, {
+          status: 'in_progress',
+        }),
+
+        (error: unknown) =>
+          error instanceof Error && 'status' in error && error.status === 409
+      );
+
+      const result = await updateOrderStatusService(actor, checkout.order.id, {
+        status: 'rejected',
+        rejectionReason: 'Ordered from another pharmacy',
+        rejectionReasonCode: 'ordered_elsewhere',
+      });
+
+      assert.equal(result.order.status, 'rejected');
+      assert.equal(result.order.rejectedByType, 'client');
+      assert.equal(result.order.rejectionReasonCode, 'ordered_elsewhere');
+
+      assert.equal(
+        result.order.statusHistory.at(-1)?.comment,
+        'Ordered from another pharmacy'
+      );
+
+      await assert.rejects(
+        updateOrderStatusService(actor, checkout.order.id, {
+          status: 'rejected',
+          rejectionReason: 'Ordered from another pharmacy',
+        }),
+
+        (error: unknown) =>
+          error instanceof Error && 'status' in error && error.status === 409
+      );
+
+      const offer = await ProductOffer.findById(fixture.offerId).lean<{
+        availableQuantity: number;
+        reservedQuantity: number;
+      } | null>();
+
+      assert.equal(offer?.availableQuantity, 1);
+      assert.equal(offer?.reservedQuantity, 0);
+    } finally {
+      await removeFixture(fixture);
+      await mongoose.disconnect();
+    }
+  }
+);
+
+//===============================================================
+
+test(
   'Mongo transaction rolls back a reservation when later work fails',
   { skip: shouldSkip },
 

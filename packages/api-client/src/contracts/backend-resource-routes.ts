@@ -309,6 +309,7 @@ export const backendRoutes = {
     salesStatistics: '/orders/sales-statistics',
     details: (orderId: EntityId) => `/orders/${segment(orderId)}`,
     status: (orderId: EntityId) => `/orders/${segment(orderId)}/status`,
+    cancel: (orderId: EntityId) => `/orders/${segment(orderId)}/cancel`,
     comments: (orderId: EntityId) => `/orders/${segment(orderId)}/comments`,
 
     comment: (orderId: EntityId, commentId: EntityId) =>

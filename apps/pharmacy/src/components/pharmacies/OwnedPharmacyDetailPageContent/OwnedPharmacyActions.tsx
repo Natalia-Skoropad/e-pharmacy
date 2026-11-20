@@ -25,6 +25,7 @@ import type {
 } from '@e-pharmacy/types/pharmacies';
 
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { OWNER_PHARMACY_BLOCK_REASONS } from '@e-pharmacy/config/reasons';
 
 import {
   StatusBadge,
@@ -673,6 +674,9 @@ export function OwnedPharmacyActions({
       {action ? (
         <ReasonModal
           eyebrow="PHARMACY STATUS"
+          reasonOptions={
+            action === 'deactivate' ? OWNER_PHARMACY_BLOCK_REASONS : undefined
+          }
           title={
             action === 'deactivate'
               ? 'Deactivate pharmacy?'

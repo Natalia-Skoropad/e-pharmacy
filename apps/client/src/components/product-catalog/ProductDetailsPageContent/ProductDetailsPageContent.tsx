@@ -120,7 +120,7 @@ function ProductDetailsPageContent({
                   )}
                   <span className={css.category}>
                     <CategoryIcon name={product.category.icon} size={16} />
-                    {product.category.name}
+                    <span>{product.category.name}</span>
                   </span>
                 </div>
                 {shortDescription ? (

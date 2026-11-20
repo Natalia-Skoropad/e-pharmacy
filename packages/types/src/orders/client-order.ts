@@ -108,6 +108,7 @@ export type ClientOrder = Readonly<{
   statusHistory: readonly ClientOrderStatusHistoryItem[];
   activityHistory: readonly ClientOrderActivityHistoryItem[];
   rejectionReason?: string;
+  rejectionReasonCode?: string;
   rejectedAt?: ISODateTimeString;
   rejectedBy?: EntityId;
   rejectedByType?: OrderCreatedByType;

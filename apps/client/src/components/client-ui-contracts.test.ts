@@ -594,3 +594,116 @@ test('positions cart stock alerts between prices and action buttons on tablet an
   assert.match(styles, /\.stockWarning \{\s*width: 100%;\s*max-width: none;/);
   assert.match(styles, /\.imageWrap \{\s*width: 140px;\s*height: 140px;/);
 });
+
+//===================================================================
+
+test('client order details show the shared cancellation reasons, order navigation and category icons', async () => {
+  const [detail, skeleton, api, route, sharedModal] = await Promise.all([
+    readComponent(
+      './profile/OrderDetailsPageContent/OrderDetailsPageContent.tsx'
+    ),
+
+    readComponent(
+      './profile/OrderDetailsPageContent/OrderDetailsPageSkeleton.tsx'
+    ),
+
+    readComponent('../lib/api/browser/orders.api.ts'),
+    readComponent('../app/api/orders/[orderId]/cancel/route.ts'),
+
+    readFile(
+      new URL(
+        '../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.tsx',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+  ]);
+
+  assert.match(detail, /label: 'Orders', href:.*PROFILE.*orders/);
+  assert.match(detail, /OrderDetailsPageSkeleton/);
+  assert.match(detail, /formatPharmacyLocation/);
+  assert.match(detail, /<CategoryIcon/);
+  assert.match(detail, /<PackageSearch/);
+  assert.match(detail, /<Building2/);
+  assert.match(detail, /canCancelOrder = order\.status === 'new'/);
+  assert.match(detail, /<ReasonModal/);
+  assert.match(detail, /reasonOptions=\{CLIENT_ORDER_CANCEL_REASONS\}/);
+  assert.match(skeleton, /aria-busy="true"/);
+  assert.match(api, /export async function cancelClientOrder/);
+  assert.match(route, /method: 'POST'/);
+  assert.match(sharedModal, /<RadioOption/);
+});
+
+//===================================================================
+
+test('aligns order pharmacy actions with cart and centers category labels across product views', async () => {
+  const [order, orderCss, cart, cartCss, product, productCss, referenceCss] =
+    await Promise.all([
+      readComponent(
+        './profile/OrderDetailsPageContent/OrderDetailsPageContent.tsx'
+      ),
+
+      readComponent(
+        './profile/OrderDetailsPageContent/OrderDetailsPageContent.module.css'
+      ),
+
+      readComponent('./cart/CartItemCard/CartItemCard.tsx'),
+      readComponent('./cart/CartItemCard/CartItemCard.module.css'),
+
+      readComponent(
+        './product-catalog/ProductDetailsPageContent/ProductDetailsPageContent.tsx'
+      ),
+
+      readComponent(
+        './product-catalog/ProductDetailsPageContent/ProductDetailsPageContent.module.css'
+      ),
+
+      readComponent('./product-catalog/ProductCard/ProductCard.module.css'),
+    ]);
+
+  assert.match(order, /<div className=\{css\.pharmacyActions\}>/);
+
+  assert.match(
+    order,
+    /<div className=\{css\.pharmacyActions\}>[\s\S]*?Pharmacy details[\s\S]*?canCancelOrder[\s\S]*?Cancel order/
+  );
+
+  assert.match(
+    orderCss,
+    /\.pharmacyHead \{[\s\S]*?grid-template-columns: minmax\(0, 1fr\) auto;/
+  );
+
+  assert.match(orderCss, /\.pharmacyActions > \* \{\s*width: auto;/);
+
+  assert.match(
+    orderCss,
+    /\.cancelOrderButton:hover:not\(:disabled\),[\s\S]*?background-color: var\(--color-error\)/
+  );
+
+  for (const [source, styles, marker] of [
+    [order, orderCss, 'itemCategory'],
+    [cart, cartCss, 'category'],
+    [product, productCss, 'category'],
+  ]) {
+    assert.match(
+      source,
+      new RegExp(
+        `<span>\\{(?:item(?:\\.product)?|product)\\.category\\.name\\}</span>`
+      )
+    );
+
+    assert.match(
+      styles,
+      new RegExp(
+        `\\.${marker} > span \\{[\\s\\S]*?transform: translateY\\(1px\\);`
+      )
+    );
+
+    assert.match(styles, new RegExp(`\\.${marker} svg \\{\\s*flex-shrink: 0;`));
+  }
+
+  assert.match(
+    referenceCss,
+    /\.category > span \{[\s\S]*?transform: translateY\(1px\);/
+  );
+});

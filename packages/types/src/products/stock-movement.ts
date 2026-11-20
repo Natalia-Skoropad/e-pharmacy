@@ -47,6 +47,9 @@ export type ProductStockMovement = {
   orderId?: EntityId;
   orderNumber?: string;
   orderStatus?: OrderStatus;
+
+  /** Who cancelled the order, when its current status is Rejected. */
+  rejectedByType?: 'manager' | 'client';
   orderStatusAtEvent?: OrderStatus;
   comment: string;
 };

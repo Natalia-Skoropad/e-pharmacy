@@ -1,10 +1,10 @@
 'use client';
 
 import { Ban, CircleCheckBig, MessageSquareText, X } from 'lucide-react';
-import { useId, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 
-import { CommentInput } from '../../forms';
+import { CommentInput, RadioOption } from '../../forms';
 import { Button, CloseIconButton } from '../../primitives';
 import { ModalBase } from '../ModalBase';
 import { ModalRoot } from '../ModalRoot';
@@ -29,6 +29,8 @@ export type ReasonModalProps = Readonly<{
   /** Optional status transition directly below the modal heading. */
   headerDetails?: ReactNode;
 
+  /** Optional five preset reasons plus Other; otherwise keep the free-text flow. */
+  reasonOptions?: readonly Readonly<{ code: string; label: string }>[];
   value: string;
   fieldName: string;
   fieldLabel: string;
@@ -55,6 +57,7 @@ function ReasonModal({
   details,
   headerDetails,
   value,
+  reasonOptions,
   fieldName,
   fieldLabel,
   placeholder,
@@ -72,11 +75,23 @@ function ReasonModal({
   const titleId = useId();
   const descriptionId = useId();
   const fieldId = useId();
+  const [otherSelected, setOtherSelected] = useState(false);
+
+  const selectedPreset = reasonOptions?.find(
+    (option) => option.code !== 'other' && option.label === value
+  );
+
+  const isOtherReason = Boolean(
+    reasonOptions && (otherSelected || (value && !selectedPreset))
+  );
 
   if (!isOpen) return null;
 
   const handleCancel = () => {
-    if (!isLoading) onCancel();
+    if (!isLoading) {
+      setOtherSelected(false);
+      onCancel();
+    }
   };
 
   return (
@@ -112,21 +127,47 @@ function ReasonModal({
 
         {details ? <div>{details}</div> : null}
 
-        <CommentInput
-          id={fieldId}
-          name={fieldName}
-          label={fieldLabel}
-          placeholder={placeholder}
-          required
-          value={value}
-          error={error}
-          isTouched
-          maxLength={maxLength}
-          disabled={isLoading}
-          onChange={(event) =>
-            onValueChange(event.target.value.slice(0, maxLength))
-          }
-        />
+        {reasonOptions ? (
+          <fieldset className={css.reasonChoices} disabled={isLoading}>
+            <legend className={css.reasonLegend}>Choose a reason</legend>
+            {reasonOptions.map((option) => (
+              <RadioOption
+                key={option.code}
+                name={`${fieldName}Choice`}
+                value={option.code}
+                checked={
+                  option.code === 'other'
+                    ? isOtherReason
+                    : !isOtherReason && selectedPreset?.code === option.code
+                }
+                label={option.label}
+                disabled={isLoading}
+                onChange={() => {
+                  setOtherSelected(option.code === 'other');
+                  onValueChange(option.code === 'other' ? '' : option.label);
+                }}
+              />
+            ))}
+          </fieldset>
+        ) : null}
+
+        {!reasonOptions || isOtherReason ? (
+          <CommentInput
+            id={fieldId}
+            name={fieldName}
+            label={fieldLabel}
+            placeholder={placeholder}
+            required
+            value={value}
+            error={error}
+            isTouched
+            maxLength={maxLength}
+            disabled={isLoading}
+            onChange={(event) =>
+              onValueChange(event.target.value.slice(0, maxLength))
+            }
+          />
+        ) : null}
 
         {requestError ? (
           <div className={css.requestError} role="alert">

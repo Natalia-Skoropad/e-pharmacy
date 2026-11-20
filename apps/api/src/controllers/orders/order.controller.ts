@@ -1,6 +1,7 @@
 import type { Request } from 'express';
 
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
+import { CLIENT_ORDER_CANCEL_REASONS } from '../../constants/orders/order-cancellation-reasons';
 
 import type {
   CheckoutOrderInput,
@@ -14,6 +15,7 @@ import type {
   OrderSalesStatisticsQuery,
   UpdateOrderDetailsInput,
   UpdateOrderStatusInput,
+  CancelClientOrderInput,
 } from '../../schemas/orders/order.schema';
 
 import { checkoutOrderService } from '../../services/orders/order-checkout.service';
@@ -238,6 +240,41 @@ export async function updateOrderStatus(
 
     params.orderId,
     body
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function cancelClientOrder(
+  req: Request,
+  res: ValidatedResponse<CancelClientOrderInput, OrderParams>
+): Promise<void> {
+  const user = req.user;
+
+  if (!user) return;
+
+  const { body, params } = res.locals.validated;
+
+  const reason = CLIENT_ORDER_CANCEL_REASONS.find(
+    (option) => option.code === body.reasonCode
+  );
+
+  if (!reason) return;
+
+  const data = await updateOrderStatusService(
+    { id: user.id, role: user.role },
+    params.orderId,
+
+    {
+      status: 'rejected',
+
+      rejectionReason:
+        body.reasonCode === 'other' ? (body.otherReason ?? '') : reason.label,
+
+      rejectionReasonCode: body.reasonCode,
+    }
   );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });

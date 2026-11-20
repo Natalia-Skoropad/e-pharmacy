@@ -2,7 +2,7 @@ import type { OrderStatus } from '@e-pharmacy/types/orders';
 
 //===================================================================
 
-export const ORDER_REJECTION_REASON_MIN_LENGTH = 100;
+export const ORDER_REJECTION_REASON_MIN_LENGTH = 10;
 export const ORDER_REJECTION_REASON_MAX_LENGTH = 500;
 export const ORDER_STATUS_COMMENT_MAX_LENGTH = 500;
 

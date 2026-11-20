@@ -1,5 +1,7 @@
 'use client';
 
+import { ADMIN_OWNER_BLOCK_REASONS } from '@e-pharmacy/config/reasons';
+
 import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -818,6 +820,9 @@ function PharmacyOwnerDetailsPageContent({
       {actionState && detail ? (
         <ReasonModal
           isOpen
+          reasonOptions={
+            actionTarget === 'blocked' ? ADMIN_OWNER_BLOCK_REASONS : undefined
+          }
           eyebrow={
             actionTarget === 'blocked' ? 'Deactivate owner' : 'Activate owner'
           }

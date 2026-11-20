@@ -1,5 +1,6 @@
 'use client';
 
+import { MANAGER_ORDER_CANCEL_REASONS } from '@e-pharmacy/config/reasons';
 import { ReasonModal } from '@e-pharmacy/ui/overlays';
 
 import {
@@ -34,6 +35,7 @@ function OrderCancellationModal({
       eyebrow="Reject order"
       title="Explain the cancellation reason"
       description="This explanation will be saved in the order history and helps the client and support team understand what happened."
+      reasonOptions={MANAGER_ORDER_CANCEL_REASONS}
       value={value}
       fieldName="orderCancellationReason"
       fieldLabel="Cancellation comment"

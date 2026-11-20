@@ -104,6 +104,7 @@ const orderProductSnapshotSchema = new Schema(
     },
 
     categoryNameSnapshot: { type: String, trim: true, default: undefined },
+    categoryIconSnapshot: { type: String, trim: true, default: undefined },
 
     categorySlugSnapshot: {
       type: String,
@@ -321,6 +322,13 @@ const orderSchema = new Schema<OrderEntity>(
       type: String,
       trim: true,
       maxlength: 500,
+      default: undefined,
+    },
+
+    rejectionReasonCode: {
+      type: String,
+      trim: true,
+      maxlength: 64,
       default: undefined,
     },
 

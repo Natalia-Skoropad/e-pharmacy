@@ -40,6 +40,8 @@ export type OrderClientSnapshot = {
   defaultClientPharmacyId?: Types.ObjectId;
 };
 
+//===============================================================
+
 export type OrderPharmacySnapshot = {
   name: string;
   location?: PharmacyLocationDraft;
@@ -58,6 +60,8 @@ export type OrderPharmacySnapshot = {
   bankDetails?: CompletePharmacyBankDetails;
 };
 
+//===============================================================
+
 export type OrderProductSnapshot = {
   name: string;
   slug?: string;
@@ -65,6 +69,7 @@ export type OrderProductSnapshot = {
   categoryId?: Types.ObjectId;
   categoryNameSnapshot?: string;
   categorySlugSnapshot?: string;
+  categoryIconSnapshot?: string;
   imageUrl?: string;
   manufacturer?: string;
   dosage?: string;
@@ -95,6 +100,8 @@ export type OrderStatusHistoryItem = {
   comment?: string;
 };
 
+//===============================================================
+
 export type OrderActivityHistoryItem = {
   type: OrderActivityType;
   occurredAt: Date;
@@ -109,6 +116,8 @@ export type OrderActivityHistoryItem = {
   unitPrice: number;
 };
 
+//===============================================================
+
 export type OrderManagerCommentEntity = {
   _id?: Types.ObjectId;
   text: string;
@@ -117,6 +126,8 @@ export type OrderManagerCommentEntity = {
   authorDisplayName?: string;
   clientRequestId?: string;
 };
+
+//===============================================================
 
 export type OrderItemEntity = {
   _id?: Types.ObjectId;
@@ -127,6 +138,8 @@ export type OrderItemEntity = {
   unitPrice: number;
   totalPrice: number;
 };
+
+//===============================================================
 
 export type OrderEntity = {
   userId: Types.ObjectId;
@@ -149,6 +162,7 @@ export type OrderEntity = {
   statusHistory: OrderStatusHistoryItem[];
   activityHistory?: OrderActivityHistoryItem[];
   rejectionReason?: string;
+  rejectionReasonCode?: string;
   successfulAt?: Date;
   rejectedAt?: Date;
   rejectedBy?: Types.ObjectId;
@@ -157,6 +171,8 @@ export type OrderEntity = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+//===============================================================
 
 export type OrderItemResponseDto = {
   id: string;
@@ -178,6 +194,8 @@ export type OrderItemResponseDto = {
   availableQuantity?: number;
   currentPrice?: number;
 };
+
+//===============================================================
 
 export type OrderResponseDto = {
   id: string;
@@ -233,6 +251,7 @@ export type OrderResponseDto = {
   }>;
 
   rejectionReason?: string;
+  rejectionReasonCode?: string;
   rejectedAt?: ISODateTimeString;
   rejectedBy?: string;
   rejectedByType?: 'manager' | 'client';
@@ -266,11 +285,15 @@ export type OrderSalesStatisticsGroupBy = 'day' | 'month';
 
 export type OrderSalesStatisticsValueDto = { quantity: number; amount: number };
 
+//===============================================================
+
 export type OrderSalesStatisticsPointDto = {
   key: string;
   label: string;
   values: Partial<Record<string, OrderSalesStatisticsValueDto>>;
 };
+
+//===============================================================
 
 export type OrderSalesStatisticsDto = {
   currency: Currency;
@@ -279,7 +302,11 @@ export type OrderSalesStatisticsDto = {
   points: OrderSalesStatisticsPointDto[];
 };
 
+//===============================================================
+
 export type OrderStatisticsValueDto = { count: number; amount: number };
+
+//===============================================================
 
 export type OrderStatisticsDto = Record<OrderStatus, OrderStatisticsValueDto>;
 

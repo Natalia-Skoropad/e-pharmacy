@@ -182,6 +182,10 @@ export function aggregateOrderMovements(
     orderNumber,
     orderStatus,
 
+    ...(orderStatus === 'rejected' && order?.rejectedByType
+      ? { rejectedByType: order.rejectedByType }
+      : {}),
+
     ...(eventMovement.orderStatus
       ? { orderStatusAtEvent: eventMovement.orderStatus }
       : {}),

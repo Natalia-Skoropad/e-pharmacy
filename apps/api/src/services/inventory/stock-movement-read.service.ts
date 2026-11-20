@@ -147,7 +147,7 @@ export async function getProductStockMovementsService(
       pharmacyId: currentOffer.pharmacyId,
     })
       .select(
-        '_id status orderNumber items.productOfferId items.quantity items.unitPrice statusHistory createdAt updatedAt'
+        '_id status orderNumber rejectedByType items.productOfferId items.quantity items.unitPrice statusHistory createdAt updatedAt'
       )
 
       .lean<CurrentOrderSnapshot[]>();
@@ -180,6 +180,7 @@ export async function getProductStockMovementsService(
     orderId?: string;
     orderNumber?: string;
     orderStatus?: OrderStatus;
+    rejectedByType?: 'manager' | 'client';
     orderStatusAtEvent?: OrderStatus;
     comment: string;
   }> = [];

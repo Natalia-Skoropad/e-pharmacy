@@ -7,6 +7,10 @@ import {
   CreditCard,
   CircleDollarSign,
   MapPin,
+  Building2,
+  PackageSearch,
+  Package,
+  CircleX,
   MessageSquareText,
   PackageCheck,
   Phone,
@@ -20,25 +24,38 @@ import {
   PAYMENT_METHOD_LABELS,
 } from '@e-pharmacy/config/presentation';
 
-import { LoadingSpinner, SvgIcon } from '@e-pharmacy/ui/primitives';
+import {
+  CLIENT_ORDER_CANCEL_REASONS,
+  findReasonCode,
+} from '@e-pharmacy/config/reasons';
+
+import { Button, SvgIcon } from '@e-pharmacy/ui/primitives';
+import { ReasonModal } from '@e-pharmacy/ui/overlays';
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
+import { useToast } from '@e-pharmacy/ui/feedback';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { formatInitials, RatingSummary } from '@e-pharmacy/ui/data-display';
 import { ShimmerImage, TableImagePreview } from '@e-pharmacy/ui/media';
 import { Container } from '@e-pharmacy/ui/layout';
 import { Breadcrumbs } from '@e-pharmacy/ui/navigation';
-import { useAuth } from '@e-pharmacy/auth/react';
-import type { ClientOrder } from '@e-pharmacy/types/orders';
 import type { BreadcrumbItem } from '@e-pharmacy/ui/navigation';
-import { formatDateTime } from '@e-pharmacy/utils/date';
-import { formatMoney } from '@e-pharmacy/utils/money';
 
 import {
   OrderRejectionSourceBadge,
   StatusBadge,
 } from '@e-pharmacy/ui/statistics';
 
+import { useAuth } from '@e-pharmacy/auth/react';
+import type { ClientOrder } from '@e-pharmacy/types/orders';
+
+import { formatDateTime } from '@e-pharmacy/utils/date';
+import { formatMoney } from '@e-pharmacy/utils/money';
+import { formatPharmacyLocation } from '@e-pharmacy/utils/strings';
+
 import { ROUTES, buildProductPath, buildPharmacyPath } from '@/lib/routes';
-import { getOrderDetails } from '@/lib/api/browser';
+import { cancelClientOrder, getOrderDetails } from '@/lib/api/browser';
+
+import OrderDetailsPageSkeleton from './OrderDetailsPageSkeleton';
 
 import css from './OrderDetailsPageContent.module.css';
 
@@ -55,6 +72,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   const [order, setOrder] = useState<ClientOrder | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState('');
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+  const toast = useToast();
   const cleanOrderId = orderId;
 
   useEffect(() => {
@@ -99,13 +121,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
     () => [
       { label: 'Home', href: ROUTES.HOME },
       { label: 'Profile', href: ROUTES.PROFILE },
+      { label: 'Orders', href: `${ROUTES.PROFILE}/orders` },
       { label: order?.orderNumber ?? 'Order details' },
     ],
     [order]
   );
 
   if (!isLoaded) {
-    return <LoadingSpinner label="Loading order details..." />;
+    return <OrderDetailsPageSkeleton />;
   }
 
   if (!order) {
@@ -133,6 +156,47 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
   }
 
   const pharmacyHref = buildPharmacyPath(order.pharmacyName, order.pharmacyId);
+  const canCancelOrder = order.status === 'new';
+
+  const confirmCancellation = async () => {
+    if (isCancelling || !canCancelOrder || cancelReason.trim().length < 10) {
+      return;
+    }
+
+    const reasonCode = findReasonCode(
+      cancelReason,
+      CLIENT_ORDER_CANCEL_REASONS
+    );
+
+    setIsCancelling(true);
+    setCancelError('');
+
+    try {
+      const response = await cancelClientOrder(order.id, {
+        reasonCode,
+        ...(reasonCode === 'other' ? { otherReason: cancelReason.trim() } : {}),
+      });
+
+      setOrder(response.order);
+      setIsCancelOpen(false);
+      setCancelReason('');
+      toast.success('Order cancelled. Reserved products have been released.');
+    } catch {
+      setCancelError(
+        'Could not cancel the order. Refresh its status and try again.'
+      );
+
+      try {
+        const latest = await getOrderDetails(order.id);
+
+        setOrder(latest.order);
+      } catch {
+        // Keep the original cancellation error visible.
+      }
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const hasDeliveryDetails =
     order.delivery.method === 'postal_delivery' &&
@@ -163,20 +227,20 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
             </div>
           </div>
 
-          {order.status === 'rejected' && order.rejectionReason ? (
-            <section
-              className={css.rejectionCard}
-              aria-labelledby="order-rejection-title"
-            >
-              <MessageSquareText size={20} aria-hidden="true" />
-              <div>
-                <h2 id="order-rejection-title">Rejection reason</h2>
-                <p>{order.rejectionReason}</p>
-              </div>
-            </section>
-          ) : null}
-
           <div className={css.orderShell}>
+            {order.status === 'rejected' && order.rejectionReason ? (
+              <section
+                className={css.rejectionCard}
+                aria-labelledby="order-rejection-title"
+              >
+                <MessageSquareText size={20} aria-hidden="true" />
+                <div>
+                  <h2 id="order-rejection-title">Rejection reason</h2>
+                  <p>{order.rejectionReason}</p>
+                </div>
+              </section>
+            ) : null}
+
             <div className={css.orderMain}>
               <article className={css.order} aria-labelledby="order-title">
                 <div className={css.pharmacyHead}>
@@ -189,7 +253,14 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                     />
 
                     <div>
-                      <p className={css.kicker}>Pharmacy order</p>
+                      {order.pharmacyLocation ? (
+                        <p className={css.kicker}>
+                          {formatPharmacyLocation({
+                            settlement: order.pharmacyLocation.settlement,
+                            region: order.pharmacyLocation.region,
+                          })}
+                        </p>
+                      ) : null}
                       <h2 className={css.pharmacyTitle}>
                         {order.pharmacyName}
                       </h2>
@@ -202,14 +273,33 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                     </div>
                   </div>
 
-                  <LinkButton
-                    className={css.pharmacyDetailsLink}
-                    href={pharmacyHref}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    Pharmacy details
-                  </LinkButton>
+                  <div className={css.pharmacyActions}>
+                    <LinkButton
+                      className={css.pharmacyDetailsLink}
+                      href={pharmacyHref}
+                      variant="secondary"
+                      size="sm"
+                      iconLeft={<Building2 size={16} aria-hidden="true" />}
+                    >
+                      Pharmacy details
+                    </LinkButton>
+                    {canCancelOrder ? (
+                      <Button
+                        className={css.cancelOrderButton}
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        iconLeft={<CircleX size={16} aria-hidden="true" />}
+                        onClick={() => {
+                          setCancelReason('');
+                          setCancelError('');
+                          setIsCancelOpen(true);
+                        }}
+                      >
+                        Cancel order
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
 
                 <ul className={css.itemList}>
@@ -235,7 +325,11 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                           <div>
                             {item.category ? (
                               <p className={css.itemCategory}>
-                                {item.category.name}
+                                <CategoryIcon
+                                  name={item.category.icon}
+                                  size={16}
+                                />
+                                <span>{item.category.name}</span>
                               </p>
                             ) : null}
 
@@ -261,6 +355,7 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
 
                         <div className={css.itemFooter}>
                           <p className={css.quantityText}>
+                            <Package size={17} aria-hidden="true" />
                             Purchased quantity: <strong>{item.quantity}</strong>
                           </p>
 
@@ -269,6 +364,9 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
                             href={buildProductPath(item.name, item.productId)}
                             variant="secondary"
                             size="sm"
+                            iconLeft={
+                              <PackageSearch size={16} aria-hidden="true" />
+                            }
                           >
                             Product details
                           </LinkButton>
@@ -360,6 +458,35 @@ function OrderDetailsPageContent({ orderId }: OrderDetailsPageContentProps) {
           </div>
         </Container>
       </section>
+
+      <ReasonModal
+        isOpen={isCancelOpen}
+        eyebrow="ORDER CANCELLATION"
+        title="Cancel this order?"
+        description="A cancelled New order cannot be restored. Reserved products will become available again, and your selected reason will be recorded in the order history."
+        value={cancelReason}
+        reasonOptions={CLIENT_ORDER_CANCEL_REASONS}
+        fieldName="clientCancellationReason"
+        fieldLabel="Other cancellation reason"
+        placeholder="Explain why you would like to cancel this order..."
+        maxLength={500}
+        confirmLabel="Cancel order"
+        cancelLabel="Keep order"
+        tone="danger"
+        error={
+          cancelReason.trim().length < 10
+            ? 'Choose a reason or enter at least 10 characters.'
+            : ''
+        }
+        requestError={cancelError}
+        isLoading={isCancelling}
+        onValueChange={setCancelReason}
+        onCancel={() => {
+          setCancelError('');
+          setIsCancelOpen(false);
+        }}
+        onConfirm={() => void confirmCancellation()}
+      />
     </main>
   );
 }

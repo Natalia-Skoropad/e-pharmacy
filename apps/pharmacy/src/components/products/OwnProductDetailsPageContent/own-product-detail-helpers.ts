@@ -58,6 +58,7 @@ export type StockMovementRow = Readonly<{
   totalAmount: string;
   orderNumber: string;
   orderStatus?: OrderStatus;
+  rejectedByType?: OrderCreatedByType;
   source: string;
   sourceValue: StockMovementSource;
   comment: string;
@@ -172,6 +173,10 @@ export function getStockMovementRows(
         orderNumber: movement.orderNumber ?? '—',
 
         ...(movement.orderStatus ? { orderStatus: movement.orderStatus } : {}),
+
+        ...(movement.orderStatus === 'rejected' && movement.rejectedByType
+          ? { rejectedByType: movement.rejectedByType }
+          : {}),
 
         source: STOCK_SOURCE_LABELS[movement.source],
         sourceValue: movement.source,

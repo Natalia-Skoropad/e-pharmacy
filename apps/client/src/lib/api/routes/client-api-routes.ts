@@ -58,5 +58,6 @@ export const clientApiRoutes = {
     checkout: '/api/orders/checkout',
     list: '/api/orders',
     details: (id: EntityId) => `/api/orders/${encodeRouteSegment(id)}`,
+    cancel: (id: EntityId) => `/api/orders/${encodeRouteSegment(id)}/cancel`,
   },
 } as const;

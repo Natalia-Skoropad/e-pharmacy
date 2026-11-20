@@ -13,8 +13,12 @@ import {
 } from 'lucide-react';
 
 import { isApiError } from '@e-pharmacy/api-client/transport';
+
 import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import { ADMIN_PHARMACY_BLOCK_REASONS } from '@e-pharmacy/config/reasons';
+
 import type { AdminPharmacyDetail } from '@e-pharmacy/types/admin';
+
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { ReasonModal, InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { Button } from '@e-pharmacy/ui/primitives';
@@ -509,6 +513,11 @@ export function PharmacyModerationActions({
         <ReasonModal
           isOpen
           eyebrow="Pharmacy moderation"
+          reasonOptions={
+            action.option.targetStatus === 'blocked'
+              ? ADMIN_PHARMACY_BLOCK_REASONS
+              : undefined
+          }
           title={action.option.label}
           headerDetails={
             <div className={css.statusTransition}>

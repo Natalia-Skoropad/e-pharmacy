@@ -8,6 +8,7 @@
     "./auth": "./src/auth/index.ts",
     "./cart": "./src/cart/index.ts",
     "./orders": "./src/orders/index.ts",
+    "./reasons": "./src/reasons/index.ts",
     "./pharmacies": "./src/pharmacies/index.ts",
     "./products": "./src/products/index.ts",
     "./product-requests": "./src/product-requests/index.ts",

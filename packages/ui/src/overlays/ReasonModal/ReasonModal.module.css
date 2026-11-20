@@ -141,3 +141,18 @@
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
+
+.reasonChoices {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.reasonLegend {
+  margin-bottom: 10px;
+  font-size: var(--fz-14);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}

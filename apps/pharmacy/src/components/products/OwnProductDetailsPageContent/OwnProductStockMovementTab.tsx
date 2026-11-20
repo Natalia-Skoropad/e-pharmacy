@@ -20,7 +20,13 @@ import {
 } from '@e-pharmacy/ui/forms';
 
 import { FiltersButton, TextActionButton } from '@e-pharmacy/ui/primitives';
-import { StatusBadge, StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
+
+import {
+  OrderRejectionSourceBadge,
+  StatusBadge,
+  StatsLoadingSkeleton,
+} from '@e-pharmacy/ui/statistics';
+
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 
 import {
@@ -325,7 +331,13 @@ export function OwnProductStockMovementTab({
 
         render: (row: StockMovementRow) =>
           row.orderStatus ? (
-            <StatusBadge {...ORDER_STATUS_PRESENTATION[row.orderStatus]} />
+            <span className={css.stockOrderStatusBadges}>
+              <StatusBadge {...ORDER_STATUS_PRESENTATION[row.orderStatus]} />
+              <OrderRejectionSourceBadge
+                status={row.orderStatus}
+                rejectedByType={row.rejectedByType}
+              />
+            </span>
           ) : (
             '—'
           ),

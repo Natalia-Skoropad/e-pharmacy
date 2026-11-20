@@ -28,6 +28,8 @@ import {
   ORDER_STATUS_VALIDATION_MESSAGES,
 } from '../../constants/orders/order-validation';
 
+import { CLIENT_ORDER_CANCEL_REASONS } from '../../constants/orders/order-cancellation-reasons';
+
 //===============================================================
 
 const orderRouteIdSchema = z.string().trim().min(1, 'ID is required');
@@ -271,9 +273,41 @@ export const updateOrderDetailsSchema = z
 
 //===============================================================
 
+/** Client-owned New orders only; other statuses remain immutable to clients. */
+export const cancelClientOrderSchema = z
+  .object({
+    reasonCode: z.string().trim(),
+    otherReason: z.string().trim().max(500).optional(),
+  })
+
+  .superRefine((value, ctx) => {
+    const validReason = CLIENT_ORDER_CANCEL_REASONS.some(
+      (option) => option.code === value.reasonCode
+    );
+
+    if (!validReason)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['reasonCode'],
+        message: 'Choose a cancellation reason.',
+      });
+
+    if (
+      value.reasonCode === 'other' &&
+      (!value.otherReason || value.otherReason.length < 10)
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['otherReason'],
+        message: 'Provide at least 10 characters for the other reason.',
+      });
+    }
+  });
+
 export const updateOrderStatusSchema = z
   .object({
     status: z.enum(['in_progress', 'successful', 'rejected']),
+    rejectionReasonCode: z.string().trim().max(64).optional(),
 
     rejectionReason: z
       .string()
@@ -333,3 +367,4 @@ export type OrderSalesStatisticsQuery = z.infer<
 export type CheckoutOrderInput = z.infer<typeof checkoutOrderSchema>;
 export type CreateManagerOrderInput = z.infer<typeof createManagerOrderSchema>;
 export type OrderCommentsQuery = z.infer<typeof orderCommentsQuerySchema>;
+export type CancelClientOrderInput = z.infer<typeof cancelClientOrderSchema>;
