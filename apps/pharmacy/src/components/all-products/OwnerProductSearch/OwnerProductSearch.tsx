@@ -91,6 +91,7 @@ export function OwnerProductSearch({
   description = 'Find an Admin product by article, name or product ID.',
   tooltipTitle = 'Product search',
   tooltipIcon = <PackageSearch size={20} />,
+  selectedFallbackLabel,
 }: {
   value: string;
   onChange: (id: string) => void;
@@ -100,6 +101,7 @@ export function OwnerProductSearch({
   description?: string;
   tooltipTitle?: string;
   tooltipIcon?: ReactNode;
+  selectedFallbackLabel?: string;
 }) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebouncedValue(query.trim(), 250);
@@ -185,11 +187,17 @@ export function OwnerProductSearch({
   );
 
   const options = useMemo<Array<SearchableSelectOption<string>>>(() => {
-    const nextOptions = items.map(toOption);
+    const uniqueProducts = new Map(
+      items.map((product) => [product.id, product])
+    );
+
+    const nextOptions = [...uniqueProducts.values()].map(toOption);
 
     if (value && !nextOptions.some((option) => option.value === value)) {
       nextOptions.unshift(
-        selected?.id === value ? toOption(selected) : { value, label: value }
+        selected?.id === value
+          ? toOption(selected)
+          : { value, label: selectedFallbackLabel ?? value }
       );
     }
 
@@ -197,7 +205,7 @@ export function OwnerProductSearch({
       nextOptions.unshift({ value: '', label: 'All products' });
 
     return nextOptions;
-  }, [items, query, selected, value]);
+  }, [items, query, selected, selectedFallbackLabel, value]);
 
   const loadMoreOptions = () => {
     if (!currentSuggestions || !suggestions?.hasMore || isLoadingMore) return;
@@ -262,7 +270,7 @@ export function OwnerProductSearch({
       value={value}
       options={options}
       placeholder="Article, name, or product ID"
-      selectedFallbackLabel={value}
+      selectedFallbackLabel={selectedFallbackLabel ?? value}
       emptyMessage={
         currentSuggestions && suggestions?.unavailable
           ? 'Suggestions are temporarily unavailable.'

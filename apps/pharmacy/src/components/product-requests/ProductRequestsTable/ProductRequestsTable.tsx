@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Settings } from 'lucide-react';
 
 import {
   DataTable,
@@ -7,15 +8,23 @@ import {
   type DataTableColumn,
 } from '@e-pharmacy/ui/data-display';
 
+import { CategoryIcon } from '@e-pharmacy/ui/forms';
 import { TableImagePreview } from '@e-pharmacy/ui/media';
 import { TextActionButton } from '@e-pharmacy/ui/primitives';
 import { StatusBadge } from '@e-pharmacy/ui/statistics';
 
 import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
 
 import type { ProductRequestRowViewModel } from '@/lib/product-requests/product-requests';
-import { getPharmacyProductPath, getPharmacyRequestPath } from '@/lib/routes';
+
+import {
+  getPharmacyAllProductPath,
+  getPharmacyRequestPath,
+} from '@/lib/routes';
+
 import { getProductImageSrc } from '@/lib/products/product-images';
+import { resolveOwnerCatalogCategory } from '@/lib/products/owner-catalog-category';
 
 import css from './ProductRequestsTable.module.css';
 
@@ -23,6 +32,7 @@ import css from './ProductRequestsTable.module.css';
 
 type ProductRequestsTableProps = Readonly<{
   requests: ProductRequestRowViewModel[];
+  categoryDirectory: readonly ProductCategoryReference[];
   emptyMessage: string;
   isLoading?: boolean;
 }>;
@@ -30,15 +40,50 @@ type ProductRequestsTableProps = Readonly<{
 //===================================================================
 
 function getProductHref(request: ProductRequestRowViewModel) {
-  return request.status === 'approved' && request.productId
-    ? getPharmacyProductPath(request.productId)
+  return request.productId
+    ? getPharmacyAllProductPath(request.productId)
     : null;
+}
+
+//===================================================================
+
+function renderCategory(
+  request: ProductRequestRowViewModel,
+  categoryDirectory: readonly ProductCategoryReference[]
+) {
+  const original = request.category;
+
+  const resolved = original
+    ? resolveOwnerCatalogCategory(original, categoryDirectory)
+    : undefined;
+  // The submitted category mode, not the existence of an approved product,
+  // decides which icon is shown. Unlinked catalog requests still have a
+  // genuine Admin-managed category and should display its real icon.
+  const isCustomCategory = request.categoryMode === 'custom';
+
+  const name = isCustomCategory
+    ? (request.customCategory ?? 'Other / custom category')
+    : (resolved?.name ?? '—');
+
+  return (
+    <span className={css.categoryCell}>
+      <span className={css.categoryIconWrap}>
+        {isCustomCategory ? (
+          <Settings size={16} aria-hidden="true" />
+        ) : (
+          <CategoryIcon name={resolved?.icon} size={16} />
+        )}
+      </span>
+      <span className={css.categoryText}>{name}</span>
+    </span>
+  );
 }
 
 //===================================================================
 
 function ProductRequestsTable({
   requests,
+  categoryDirectory,
   emptyMessage,
   isLoading = false,
 }: ProductRequestsTableProps) {
@@ -76,10 +121,10 @@ function ProductRequestsTable({
         title: <TableHeaderTitle parts={['Product', 'article']} />,
 
         render: (request) => {
-          const productHref = getProductHref(request);
+          const href = getProductHref(request);
 
-          return productHref ? (
-            <TextActionButton href={productHref}>
+          return href ? (
+            <TextActionButton href={href}>
               {request.productArticle}
             </TextActionButton>
           ) : (
@@ -94,10 +139,10 @@ function ProductRequestsTable({
         title: <TableHeaderTitle parts={['Product', 'name']} />,
 
         render: (request) => {
-          const productHref = getProductHref(request);
+          const href = getProductHref(request);
 
-          return productHref ? (
-            <TextActionButton href={productHref}>
+          return href ? (
+            <TextActionButton href={href}>
               {request.productName}
             </TextActionButton>
           ) : (
@@ -110,24 +155,32 @@ function ProductRequestsTable({
       {
         key: 'category',
         title: <TableHeaderTitle parts={['Product', 'category']} />,
-
-        render: (request) =>
-          request.categoryMode === 'custom'
-            ? (request.customCategory ?? '—')
-            : (request.category?.name ?? '—'),
+        render: (request) => renderCategory(request, categoryDirectory),
       },
       {
         key: 'status',
         title: <TableHeaderTitle parts={['Request', 'status']} />,
 
         render: (request) => (
-          <StatusBadge
-            {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
-          />
+          <span className={css.statusCell}>
+            <StatusBadge
+              {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
+            />
+            {request.status === 'rejected' ? (
+              <StatusBadge
+                label={
+                  request.cancelledBy === 'owner'
+                    ? 'Cancelled by owner'
+                    : 'Cancelled by admin'
+                }
+                tone="neutral"
+              />
+            ) : null}
+          </span>
         ),
       },
     ],
-    []
+    [categoryDirectory]
   );
 
   return (

@@ -2,25 +2,21 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { FilePlus2 } from 'lucide-react';
+import { FilePlus2, Plus } from 'lucide-react';
 
-import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
-import { LinkButton } from '@e-pharmacy/ui/navigation';
+import { LinkButton, PaginationView } from '@e-pharmacy/ui/navigation';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { PHARMACY_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
-
-import {
-  RowsPerPageSelect,
-  SearchInput,
-  type RowsPerPageValue,
-} from '@e-pharmacy/ui/forms';
-
-import { PaginationView } from '@e-pharmacy/ui/navigation';
-import { countTrueConditions } from '@e-pharmacy/utils/collections';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
+import { StatsLoadingSkeleton, StatusBanner } from '@e-pharmacy/ui/statistics';
+import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
+
+import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
+
+import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data';
+import type { ProductRequestStatus } from '@e-pharmacy/types/product-requests';
 
 import {
   CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
@@ -37,16 +33,21 @@ import {
   getProductCategories,
 } from '@/lib/api/browser';
 
-import { buildProductRequestsPath } from '@/lib/product-requests/product-request-paths';
+import {
+  buildProductRequestsPath,
+  DEFAULT_PRODUCT_REQUESTS_PAGINATION,
+  type ProductRequestsPagination,
+} from '@/lib/product-requests/product-request-paths';
+
 import { getPharmacyProductRequestStatistics } from '@/lib/product-requests/product-request-statistics';
 import { PHARMACY_ROUTES } from '@/lib/routes';
-import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
+import { clampProductListPage } from '@/lib/products/product-pagination';
 
-import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
-
-import { ProductRequestStatistics } from '@/components/statistics';
+import { ProductRequestStatistics } from '@/components/statistics/ProductRequestStatistics/ProductRequestStatistics';
 import { ProductRequestsFiltersDrawer } from '@/components/product-requests/ProductRequestsFiltersDrawer';
 import { ProductRequestsTable } from '@/components/product-requests/ProductRequestsTable';
+import { OwnerProductRequestSearch } from '@/components/product-requests/OwnerProductRequestSearch';
+import { OwnerRequestedProductSearch } from '@/components/product-requests/OwnerRequestedProductSearch';
 
 import css from './ProductRequestsPageContent.module.css';
 
@@ -57,6 +58,12 @@ function getProductRequestsQueryParams(
   rowsPerPage: RowsPerPageValue,
   page: number
 ): ProductRequestsQueryParams {
+  // Unsaved/catalog-unlinked products have no global product ID. Their
+  // search selection uses the request ID as an explicit, separate filter.
+  const unlinkedRequestId = filters.productId.startsWith('request-')
+    ? filters.productId.slice('request-'.length)
+    : '';
+
   return {
     page,
     perPage: rowsPerPage,
@@ -66,9 +73,8 @@ function getProductRequestsQueryParams(
       : undefined,
 
     dateTo: isCalendarDateString(filters.date.to) ? filters.date.to : undefined,
-    requestNumber: filters.requestNumber.trim() || undefined,
-    productName: filters.productName.trim() || undefined,
-    productArticle: filters.productArticle.trim() || undefined,
+    requestId: filters.requestId || unlinkedRequestId || undefined,
+    productId: unlinkedRequestId ? undefined : filters.productId || undefined,
 
     category:
       filters.category === 'all' ||
@@ -92,6 +98,7 @@ function getProductRequestsQueryParams(
 type ProductRequestsPageContentProps = Readonly<{
   embedded?: boolean;
   initialFilters?: ProductRequestsFilterState;
+  initialPagination?: ProductRequestsPagination;
 }>;
 
 //===================================================================
@@ -99,6 +106,7 @@ type ProductRequestsPageContentProps = Readonly<{
 function ProductRequestsPageContent({
   embedded = false,
   initialFilters = DEFAULT_PRODUCT_REQUESTS_FILTERS,
+  initialPagination = DEFAULT_PRODUCT_REQUESTS_PAGINATION,
 }: ProductRequestsPageContentProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -106,15 +114,36 @@ function ProductRequestsPageContent({
   const [filters, setFilters] =
     useState<ProductRequestsFilterState>(initialFilters);
 
-  const [categoryOptions, setCategoryOptions] = useState<
-    readonly { value: ProductRequestsFilterState['category']; label: string }[]
-  >([{ value: 'all', label: 'All categories' }]);
+  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(
+    initialPagination.perPage
+  );
 
-  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPageValue>(20);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(initialPagination.page);
+
+  const [categoryDirectory, setCategoryDirectory] = useState<
+    readonly ProductCategoryReference[]
+  >([]);
+
+  const categoryOptions = useMemo(
+    () => [
+      { value: 'all' as const, label: 'All categories' },
+      ...categoryDirectory.map((category) => ({
+        value: category.slug,
+        label: category.name,
+        icon: category.icon,
+      })),
+      {
+        value: CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
+        label: 'Other / custom category',
+        icon: 'settings',
+      },
+    ],
+    [categoryDirectory]
+  );
+
   const [requests, setRequests] = useState<ProductRequestRowViewModel[]>([]);
   const [totalRequests, setTotalRequests] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [earliestCreatedAt, setEarliestCreatedAt] = useState<string | null>(
     null
@@ -128,104 +157,74 @@ function ProductRequestsPageContent({
   const [isRequestStatisticsUnavailable, setIsRequestStatisticsUnavailable] =
     useState(false);
 
+  const [isRequestStatisticsLoading, setIsRequestStatisticsLoading] =
+    useState(true);
+
   const [isLoading, setIsLoading] = useState(false);
   const [retryVersion, setRetryVersion] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
+  const reloadStatistics = () => {
+    setIsRequestStatisticsLoading(true);
+    setRetryVersion((version) => version + 1);
+  };
+
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadCategoryOptions() {
-      try {
-        const categories = await getProductCategories({
-          signal: controller.signal,
-        });
-
-        if (!controller.signal.aborted) {
-          setCategoryOptions([
-            { value: 'all', label: 'All categories' },
-
-            ...categories.map((category) => ({
-              value: category.slug,
-              label: category.name,
-            })),
-            {
-              value: CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
-              label: 'Other / custom category',
-            },
-          ]);
-        }
-      } catch {
-        // Keep the neutral fallback; request data has its own resource state.
-      }
-    }
-
-    void loadCategoryOptions();
+    void getProductCategories({ signal: controller.signal })
+      .then((categories) => {
+        if (!controller.signal.aborted) setCategoryDirectory(categories);
+      })
+      .catch(() => {
+        // Keep the neutral fallback; list and statistics have independent errors.
+      });
 
     return () => controller.abort();
   }, []);
 
-  const debouncedRequestNumber = useDebouncedValue(filters.requestNumber, 450);
-
-  const debouncedProductArticle = useDebouncedValue(
-    filters.productArticle,
-    450
-  );
-
-  const debouncedProductName = useDebouncedValue(filters.productName, 450);
-
-  const requestFilters = useMemo<ProductRequestsFilterState>(
-    () => ({
-      date: filters.date,
-      requestNumber: debouncedRequestNumber,
-      productArticle: debouncedProductArticle,
-      productName: debouncedProductName,
-      category: filters.category,
-      status: filters.status,
-    }),
-    [
-      debouncedProductArticle,
-      debouncedProductName,
-      debouncedRequestNumber,
-      filters.category,
-      filters.date,
-      filters.status,
-    ]
-  );
-
-  const queryParams = useMemo(
-    () =>
-      getProductRequestsQueryParams(requestFilters, rowsPerPage, currentPage),
-    [currentPage, requestFilters, rowsPerPage]
-  );
-
   useEffect(() => {
     const controller = new AbortController();
 
-    async function loadProductRequestStatistics() {
-      try {
-        const statistics = await getPharmacyProductRequestStatistics({
-          signal: controller.signal,
-        });
+    void getPharmacyProductRequestStatistics({ signal: controller.signal })
+      .then((statistics) => {
+        if (controller.signal.aborted) return;
 
-        if (!controller.signal.aborted) {
-          setRequestStatistics(statistics);
-          setIsRequestStatisticsUnavailable(false);
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setIsRequestStatisticsUnavailable(true);
-        }
-      }
-    }
+        setRequestStatistics(statistics);
+        setIsRequestStatisticsUnavailable(false);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setIsRequestStatisticsUnavailable(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsRequestStatisticsLoading(false);
+      });
 
-    void loadProductRequestStatistics();
-
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [retryVersion]);
+
+  const queryParams = useMemo(
+    () => getProductRequestsQueryParams(filters, rowsPerPage, currentPage),
+    [currentPage, filters, rowsPerPage]
+  );
+
+  // Suggestions are intersected with the currently selected filters, except
+  // for the selected request itself. This prevents unrelated request options.
+  const relatedRequestFilters = useMemo(
+    () => getProductRequestsQueryParams({ ...filters, requestId: '' }, 20, 1),
+    [filters]
+  );
+
+  const relatedProductFilters = useMemo(
+    () =>
+      getProductRequestsQueryParams(
+        { ...filters, requestId: '', productId: '' },
+        20,
+        1
+      ),
+    [filters]
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -241,9 +240,20 @@ function ProductRequestsPageContent({
 
         if (controller.signal.aborted) return;
 
+        const normalizedPage = clampProductListPage(
+          currentPage,
+          response.total,
+          rowsPerPage
+        );
+
+        if (normalizedPage !== currentPage) {
+          setCurrentPage(normalizedPage);
+          return;
+        }
+
         setRequests([...response.items]);
         setTotalRequests(response.total);
-        setTotalPages(response.totalPages);
+        setTotalPages(Math.max(1, response.totalPages));
         setEarliestCreatedAt(response.earliestCreatedAt);
       } catch {
         if (controller.signal.aborted) return;
@@ -261,25 +271,23 @@ function ProductRequestsPageContent({
     return () => {
       controller.abort();
     };
-  }, [queryParams, retryVersion]);
-
-  const debouncedFilters = useDebouncedValue(filters, 450);
+  }, [currentPage, queryParams, retryVersion, rowsPerPage]);
 
   useEffect(() => {
-    if (debouncedFilters !== filters) return;
-
-    const nextPath = buildProductRequestsPath(debouncedFilters);
+    const nextPath = buildProductRequestsPath(filters, {
+      page: currentPage,
+      perPage: rowsPerPage,
+    });
 
     if (pathname === nextPath) return;
 
     router.replace(nextPath, { scroll: false });
-  }, [debouncedFilters, filters, pathname, router]);
+  }, [currentPage, filters, pathname, router, rowsPerPage]);
 
   const activeFiltersCount = countTrueConditions(
     Boolean(filters.date.from || filters.date.to),
-    Boolean(filters.requestNumber.trim()),
-    Boolean(filters.productArticle.trim()),
-    Boolean(filters.productName.trim()),
+    Boolean(filters.requestId),
+    Boolean(filters.productId),
     filters.category !== 'all',
     filters.status !== 'all'
   );
@@ -287,23 +295,29 @@ function ProductRequestsPageContent({
   const hasActiveFilters = activeFiltersCount > 0;
 
   const handleFiltersChange = (nextFilters: ProductRequestsFilterState) => {
-    setFilters(nextFilters);
     setCurrentPage(1);
+    setFilters(nextFilters);
   };
 
   const handleRowsPerPageChange = (nextRowsPerPage: RowsPerPageValue) => {
-    setRowsPerPage(nextRowsPerPage);
     setCurrentPage(1);
+    setRowsPerPage(nextRowsPerPage);
   };
 
   const resetFilters = () => {
-    setFilters(DEFAULT_PRODUCT_REQUESTS_FILTERS);
     setCurrentPage(1);
+    setFilters(DEFAULT_PRODUCT_REQUESTS_FILTERS);
   };
 
-  const { status: currentPharmacyStatus } = useCurrentPharmacyStatus();
-  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const isCreateRequestLocked = Boolean(bannerStatus);
+  const getStatusHref = (status: ProductRequestStatus) =>
+    buildProductRequestsPath(
+      {
+        ...filters,
+        status: filters.status === status ? 'all' : status,
+      },
+      { page: 1, perPage: rowsPerPage }
+    );
+
   const RootElement = embedded ? 'section' : 'main';
 
   return (
@@ -312,7 +326,7 @@ function ProductRequestsPageContent({
       aria-labelledby="product-requests-page-title"
     >
       <section
-        className={css.tableCard}
+        className={css.heroCard}
         aria-labelledby="product-requests-page-title"
       >
         <PageHeader
@@ -321,50 +335,31 @@ function ProductRequestsPageContent({
           icon={<FilePlus2 size={23} aria-hidden="true" />}
         />
 
-        {bannerStatus ? (
-          <StatusBanner
-            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title={
-              bannerStatus === 'blocked'
-                ? 'Product request management is unavailable'
-                : 'Verification is required'
-            }
-            message={
-              bannerStatus === 'blocked'
-                ? 'Your pharmacy is temporarily blocked. Existing requests remain visible, but creating or changing requests is disabled until Admin restores access.'
-                : bannerStatus === 'on_verification'
-                  ? 'Creating product requests is paused while Admin reviews the submitted pharmacy profile.'
-                  : 'Creating product requests is locked for a new pharmacy until verification is complete.'
-            }
-          />
-        ) : null}
-
-        {isRequestStatisticsUnavailable ? (
-          <div>
-            <p role="status">
-              Product request statistics are temporarily unavailable.
-            </p>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setRetryVersion((version) => version + 1)}
-            >
-              Retry request statistics
-            </Button>
-          </div>
-        ) : (
-          <ProductRequestStatistics
-            className={css.requestStatistics}
-            counts={requestStatistics}
-            getStatusHref={(status) =>
-              buildProductRequestsPath({
-                ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
-                status,
-              })
-            }
-          />
-        )}
+        <div className={css.requestStatistics}>
+          {isRequestStatisticsLoading ? (
+            <StatsLoadingSkeleton
+              count={5}
+              columns={5}
+              tabletColumns={3}
+              label="Loading product request statistics"
+            />
+          ) : isRequestStatisticsUnavailable ? (
+            <ProfileResourceState
+              variant="error"
+              title="Product request statistics could not be loaded"
+              description="The product request statistics are temporarily unavailable."
+              retryLabel="Try again"
+              sideActionOnDesktop
+              onRetry={reloadStatistics}
+            />
+          ) : (
+            <ProductRequestStatistics
+              counts={requestStatistics}
+              activeStatuses={filters.status === 'all' ? [] : [filters.status]}
+              getStatusHref={getStatusHref}
+            />
+          )}
+        </div>
       </section>
 
       <section
@@ -372,44 +367,34 @@ function ProductRequestsPageContent({
         aria-label="Search and filter product requests"
       >
         <div className={css.searchGrid}>
-          <SearchInput
-            id="product-requests-request-number-search"
-            label="Request number search"
-            value={filters.requestNumber}
-            placeholder="Request number"
-            isActive={Boolean(filters.requestNumber)}
-            onChange={(requestNumber) =>
+          <OwnerProductRequestSearch
+            value={filters.requestId}
+            relatedFilters={relatedRequestFilters}
+            onChange={(requestId, linkedProductId) =>
               handleFiltersChange({
                 ...filters,
-                requestNumber,
+                requestId,
+
+                // Like Orders -> Client: selecting a specific request also
+                // selects its matching global product when it has one.
+                productId: requestId
+                  ? (linkedProductId ?? `request-${requestId}`)
+                  : filters.productId,
               })
             }
           />
-
-          <SearchInput
-            id="product-requests-product-article-search"
-            label="Product article search"
-            value={filters.productArticle}
-            placeholder="Product article"
-            isActive={Boolean(filters.productArticle)}
-            onChange={(productArticle) =>
+          <OwnerRequestedProductSearch
+            value={filters.productId}
+            relatedFilters={relatedProductFilters}
+            onChange={(productId) =>
               handleFiltersChange({
                 ...filters,
-                productArticle,
-              })
-            }
-          />
+                productId,
 
-          <SearchInput
-            id="product-requests-product-name-search"
-            label="Product name search"
-            value={filters.productName}
-            placeholder="Product name"
-            isActive={Boolean(filters.productName)}
-            onChange={(productName) =>
-              handleFiltersChange({
-                ...filters,
-                productName,
+                // Switching the product invalidates the previously selected
+                // request; its options will now be scoped to the new product.
+                requestId:
+                  productId !== filters.productId ? '' : filters.requestId,
               })
             }
           />
@@ -440,26 +425,17 @@ function ProductRequestsPageContent({
             shown={requests.length}
             total={totalRequests}
             label="requests"
+            fullWidthOnMobile
           />
 
-          {isCreateRequestLocked ? (
-            <Button
-              className={css.createButton}
-              type="button"
-              size="md"
-              disabled
-            >
-              Create request
-            </Button>
-          ) : (
-            <LinkButton
-              className={css.createButton}
-              href={PHARMACY_ROUTES.PRODUCT_REQUEST_NEW}
-              size="md"
-            >
-              Create request
-            </LinkButton>
-          )}
+          <LinkButton
+            className={css.createButton}
+            href={PHARMACY_ROUTES.PRODUCT_REQUEST_NEW}
+            size="md"
+            iconLeft={<Plus size={17} aria-hidden="true" />}
+          >
+            Create request
+          </LinkButton>
         </div>
 
         {loadError ? (
@@ -482,19 +458,21 @@ function ProductRequestsPageContent({
 
         <ProductRequestsTable
           requests={requests}
+          categoryDirectory={categoryDirectory}
           isLoading={isLoading}
           emptyMessage={
             loadError
               ? 'Product requests are temporarily unavailable.'
               : hasActiveFilters
                 ? 'No requests found for the selected filters.'
-                : 'Your pharmacy has no product creation requests yet.'
+                : 'You have no product creation requests yet.'
           }
         />
 
         <PaginationView
           currentPage={currentPage}
           totalPages={totalPages}
+          ariaLabel="Product requests pagination"
           onPageChange={setCurrentPage}
         />
       </section>

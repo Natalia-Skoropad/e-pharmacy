@@ -109,15 +109,31 @@
   font-weight: var(--fw-semi-bold);
 }
 
+.draftCounter {
+  background-color: var(--color-text-muted);
+}
+
 .newCounter {
   background-color: var(--color-info);
 }
+.orderNewCounter {
+  background-color: var(--color-info);
+  opacity: 0.8;
+}
+
+.orderProgressCounter {
+  background-color: var(--color-warning);
+  opacity: 0.8;
+}
+
 .verificationCounter {
   background-color: var(--color-status-beauty);
 }
+
 .moderationCounter {
   background-color: var(--color-warning);
 }
+
 .reactivationCounter {
   background-color: #986209;
 }

@@ -28,6 +28,12 @@ import {
   deleteOwnerProductNoteService,
 } from '../../services/products/owner-product-note.service';
 
+import {
+  getOwnerProductRequestNotesService,
+  createOwnerProductRequestNoteService,
+  deleteOwnerProductRequestNoteService,
+} from '../../services/catalog/product-request-note.service';
+
 import { httpError } from '../../utils/http/httpError';
 import { sendSuccessResponse } from '../../utils/http/apiResponse';
 
@@ -67,14 +73,21 @@ export async function getPharmacyNotes(
             query.page,
             query.perPage
           )
-        : await getPharmacyNotesService(
-            { id: user.id, role: user.role },
+        : params.entityType === 'product_request'
+          ? await getOwnerProductRequestNotesService(
+              { id: user.id, role: user.role },
+              params.entityId,
+              query.page,
+              query.perPage
+            )
+          : await getPharmacyNotesService(
+              { id: user.id, role: user.role },
 
-            params.entityType,
-            params.entityId,
-            query.page,
-            query.perPage
-          );
+              params.entityType,
+              params.entityId,
+              query.page,
+              query.perPage
+            );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }
@@ -115,13 +128,19 @@ export async function createPharmacyNote(
             params.entityId,
             body
           )
-        : await createPharmacyNoteService(
-            { id: user.id, role: user.role },
+        : params.entityType === 'product_request'
+          ? await createOwnerProductRequestNoteService(
+              { id: user.id, role: user.role },
+              params.entityId,
+              body
+            )
+          : await createPharmacyNoteService(
+              { id: user.id, role: user.role },
 
-            params.entityType,
-            params.entityId,
-            body
-          );
+              params.entityType,
+              params.entityId,
+              body
+            );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.CREATED, data });
 }
@@ -162,13 +181,19 @@ export async function deletePharmacyNote(
             params.entityId,
             params.noteId
           )
-        : await deletePharmacyNoteService(
-            { id: user.id, role: user.role },
+        : params.entityType === 'product_request'
+          ? await deleteOwnerProductRequestNoteService(
+              { id: user.id, role: user.role },
+              params.entityId,
+              params.noteId
+            )
+          : await deletePharmacyNoteService(
+              { id: user.id, role: user.role },
 
-            params.entityType,
-            params.entityId,
-            params.noteId
-          );
+              params.entityType,
+              params.entityId,
+              params.noteId
+            );
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

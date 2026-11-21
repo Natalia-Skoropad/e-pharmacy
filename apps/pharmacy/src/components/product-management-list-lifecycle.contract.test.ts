@@ -80,24 +80,14 @@ test('text search is debounced before request query construction', async () => {
   assert.match(ownProducts, /useDebouncedValue\(filters\.article, 450\)/);
   assert.match(ownProducts, /getProductsQueryParams\(\s*requestFilters,/);
 
-  assert.match(
-    productRequests,
-    /useDebouncedValue\(filters\.requestNumber, 450\)/
-  );
+  assert.match(productRequests, /<OwnerProductRequestSearch/);
+  assert.match(productRequests, /<OwnerRequestedProductSearch/);
+  assert.match(productRequests, /getProductRequestsQueryParams\(filters,/);
+  assert.doesNotMatch(productRequests, /requestNumber: debouncedRequestNumber/);
 
-  assert.match(
+  assert.doesNotMatch(
     productRequests,
-    /useDebouncedValue\(\s*filters\.productArticle,\s*450\s*\)/
-  );
-
-  assert.match(
-    productRequests,
-    /useDebouncedValue\(filters\.productName, 450\)/
-  );
-
-  assert.match(
-    productRequests,
-    /getProductRequestsQueryParams\(\s*requestFilters,/
+    /productArticle: debouncedProductArticle/
   );
 });
 
@@ -198,7 +188,8 @@ test('product management list failures expose explicit retry generations', async
   assert.match(ownProducts, /setRefreshVersion/);
 
   assert.match(productRequests, /const \[retryVersion, setRetryVersion\]/);
-  assert.match(productRequests, /Retry request statistics/);
+  assert.match(productRequests, /onRetry=\{reloadStatistics\}/);
+  assert.match(productRequests, /StatsLoadingSkeleton/);
   assert.match(productRequests, /Retry product requests/);
 });
 

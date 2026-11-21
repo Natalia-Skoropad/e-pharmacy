@@ -5,32 +5,23 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { CabinetSidebar } from '@e-pharmacy/ui/cabinet';
-import { useAuth } from '@e-pharmacy/auth/react';
 
 import { PHARMACY_ROUTES } from '@/lib/routes';
-import { getPharmacyOrders } from '@/lib/api/browser/orders.api';
 import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { subscribeToPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 import { PHARMACY_NAVIGATION } from '@/lib/layout/navigation';
 
 import {
   isLegacyOperationalPharmacyPath,
-  isOwnerOrdersListPath,
   withSelectedPharmacyQuery,
 } from '@/lib/pharmacies/selected-pharmacy-scope';
 
-import { subscribeToOrderCounterRefresh } from '@/lib/orders/order-counter-refresh';
-import { parseOrdersSegments } from '@/lib/orders/order-paths';
+import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import {
-  INITIAL_ORDER_COUNTER_STATE,
-  createReadyOrderCounterState,
-  createUnavailableOrderCounterState,
-  getVisibleOrderCounts,
-  type OrderCounterState,
-} from '@/lib/orders/order-counter-state';
-
-import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
+  useOrderNavigationCounts,
+  useProductRequestNavigationCounts,
+} from '@/hooks/usePharmacyNavigationCounters';
 
 import {
   formatVisibleOrderCount,
@@ -55,35 +46,14 @@ export function PharmacySidebar({
   onToggleCollapsed,
 }: PharmacySidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
   const { selectedId } = usePharmacySelection();
-
-  // Orders count follows the explicit Orders URL filter; a previously selected
-  // operational pharmacy must never narrow the owner-wide default view.
-  const orderScopePharmacyId = isOwnerOrdersListPath(pathname)
-    ? parseOrdersSegments({ filters: pathname.split('/').slice(3) }).pharmacyId
-    : '';
-
-  const currentUserId = user?.id ?? null;
-  const orderCounterScopeKey = `${currentUserId ?? ''}:${orderScopePharmacyId}`;
+  const orderCounts = useOrderNavigationCounts();
+  const productRequestCounts = useProductRequestNavigationCounts();
 
   const scopedHref = (href: string) =>
     selectedId && isLegacyOperationalPharmacyPath(href)
       ? withSelectedPharmacyQuery(href, '', selectedId)
       : href;
-
-  // Keep counts tied to the Orders filter that produced them. Switching between
-  // owner-wide and pharmacy-specific routes never shows stale counts.
-  const [orderCounterState, setOrderCounterState] = useState<{
-    scopeKey: string;
-    value: OrderCounterState;
-  } | null>(null);
-
-  const orderCounts = getVisibleOrderCounts(
-    orderCounterState?.scopeKey === orderCounterScopeKey
-      ? orderCounterState.value
-      : INITIAL_ORDER_COUNTER_STATE
-  );
 
   const [pharmacyCounts, setPharmacyCounts] = useState<null | {
     new: number;
@@ -91,83 +61,6 @@ export function PharmacySidebar({
     onModeration: number;
     onReactivation: number;
   }>(null);
-
-  useEffect(() => {
-    let requestVersion = 0;
-    let activeController: AbortController | null = null;
-
-    const loadOrderCounts = async () => {
-      if (!currentUserId) return;
-
-      const currentVersion = ++requestVersion;
-
-      activeController?.abort();
-
-      const controller = new AbortController();
-
-      activeController = controller;
-
-      try {
-        const requestOptions = { signal: controller.signal };
-
-        const scopedParams = {
-          scope: 'owner' as const,
-          ...(orderScopePharmacyId ? { pharmacyId: orderScopePharmacyId } : {}),
-          page: 1,
-          perPage: 1,
-        };
-
-        // The owner-wide list response includes totals for every status,
-        // regardless of the visible table page. One request is sufficient.
-        const response = await getPharmacyOrders(scopedParams, requestOptions);
-
-        if (controller.signal.aborted || currentVersion !== requestVersion) {
-          return;
-        }
-
-        setOrderCounterState({
-          scopeKey: orderCounterScopeKey,
-
-          value: createReadyOrderCounterState({
-            new: response.statistics.new.count,
-            inProgress: response.statistics.in_progress.count,
-          }),
-        });
-      } catch {
-        if (controller.signal.aborted || currentVersion !== requestVersion) {
-          return;
-        }
-
-        setOrderCounterState({
-          scopeKey: orderCounterScopeKey,
-          value: createUnavailableOrderCounterState(),
-        });
-      } finally {
-        if (activeController === controller) activeController = null;
-      }
-    };
-
-    const handleFocus = () => {
-      if (activeController) return;
-
-      void loadOrderCounts();
-    };
-
-    void loadOrderCounts();
-
-    const unsubscribeRefresh = subscribeToOrderCounterRefresh(() => {
-      void loadOrderCounts();
-    });
-
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      requestVersion += 1;
-      activeController?.abort();
-      unsubscribeRefresh();
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [currentUserId, orderCounterScopeKey, orderScopePharmacyId]);
 
   useEffect(() => {
     let generation = 0;
@@ -246,6 +139,9 @@ export function PharmacySidebar({
         const isOrdersLink = item.href === PHARMACY_ROUTES.ORDERS;
         const isPharmaciesLink = item.href === PHARMACY_ROUTES.PHARMACIES;
 
+        const isProductRequestsLink =
+          item.href === PHARMACY_ROUTES.PRODUCT_REQUESTS;
+
         const showPharmacyCounters = Boolean(
           isPharmaciesLink &&
           pharmacyCounts &&
@@ -259,11 +155,19 @@ export function PharmacySidebar({
           isOrdersLink && orderCounts && hasOrderNotifications(orderCounts)
         );
 
+        const showProductRequestCounters = Boolean(
+          isProductRequestsLink &&
+          productRequestCounts &&
+          (productRequestCounts.draft ||
+            productRequestCounts.new ||
+            productRequestCounts.inProgress)
+        );
+
         return (
           <Link
             href={scopedHref(href)}
             className={
-              isOrdersLink || isPharmaciesLink
+              isOrdersLink || isPharmaciesLink || isProductRequestsLink
                 ? `${className} ${css.ordersLink}`
                 : className
             }
@@ -309,6 +213,7 @@ export function PharmacySidebar({
                     {formatVisibleOrderCount(pharmacyCounts.new)}
                   </span>
                 ) : null}
+
                 {pharmacyCounts.onVerification > 0 ? (
                   <span
                     className={css.verificationCounter}
@@ -317,6 +222,7 @@ export function PharmacySidebar({
                     {formatVisibleOrderCount(pharmacyCounts.onVerification)}
                   </span>
                 ) : null}
+
                 {pharmacyCounts.onModeration > 0 ? (
                   <span
                     className={css.moderationCounter}
@@ -325,6 +231,7 @@ export function PharmacySidebar({
                     {formatVisibleOrderCount(pharmacyCounts.onModeration)}
                   </span>
                 ) : null}
+
                 {pharmacyCounts.onReactivation > 0 ? (
                   <span
                     className={css.reactivationCounter}
@@ -335,6 +242,80 @@ export function PharmacySidebar({
                 ) : null}
               </span>
             ) : null}
+            {!isCollapsed &&
+            showProductRequestCounters &&
+            productRequestCounts ? (
+              <span
+                className={css.orderCounters}
+                aria-label="Product request status totals"
+              >
+                {productRequestCounts.draft > 0 ? (
+                  <span
+                    className={css.draftCounter}
+                    aria-label={`${productRequestCounts.draft} draft product requests`}
+                  >
+                    {formatVisibleOrderCount(productRequestCounts.draft)}
+                  </span>
+                ) : null}
+
+                {productRequestCounts.new > 0 ? (
+                  <span
+                    className={css.newCounter}
+                    aria-label={`${productRequestCounts.new} new product requests`}
+                  >
+                    {formatVisibleOrderCount(productRequestCounts.new)}
+                  </span>
+                ) : null}
+
+                {productRequestCounts.inProgress > 0 ? (
+                  <span
+                    className={css.moderationCounter}
+                    aria-label={`${productRequestCounts.inProgress} product requests in work`}
+                  >
+                    {formatVisibleOrderCount(productRequestCounts.inProgress)}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+
+            {isCollapsed &&
+            showProductRequestCounters &&
+            productRequestCounts ? (
+              <span
+                className={css.collapsedProductRequestCounters}
+                aria-label={[
+                  productRequestCounts.draft > 0
+                    ? `${productRequestCounts.draft} draft product requests`
+                    : '',
+
+                  productRequestCounts.new > 0
+                    ? `${productRequestCounts.new} new product requests`
+                    : '',
+
+                  productRequestCounts.inProgress > 0
+                    ? `${productRequestCounts.inProgress} product requests in work`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join(', ')}
+              >
+                {productRequestCounts.draft > 0 ? (
+                  <span className={css.collapsedDraftDot} aria-hidden="true" />
+                ) : null}
+
+                {productRequestCounts.new > 0 ? (
+                  <span className={css.collapsedNewDot} aria-hidden="true" />
+                ) : null}
+
+                {productRequestCounts.inProgress > 0 ? (
+                  <span
+                    className={css.collapsedModerationDot}
+                    aria-hidden="true"
+                  />
+                ) : null}
+              </span>
+            ) : null}
+
             {isCollapsed &&
             showPharmacyCounters &&
             pharmacyCounts &&
@@ -367,18 +348,21 @@ export function PharmacySidebar({
                 {pharmacyCounts.new > 0 ? (
                   <span className={css.collapsedNewDot} aria-hidden="true" />
                 ) : null}
+
                 {pharmacyCounts.onVerification > 0 ? (
                   <span
                     className={css.collapsedVerificationDot}
                     aria-hidden="true"
                   />
                 ) : null}
+
                 {pharmacyCounts.onModeration > 0 ? (
                   <span
                     className={css.collapsedModerationDot}
                     aria-hidden="true"
                   />
                 ) : null}
+
                 {pharmacyCounts.onReactivation > 0 ? (
                   <span
                     className={css.collapsedReactivationDot}
@@ -396,6 +380,7 @@ export function PharmacySidebar({
                 {orderCounts.new > 0 ? (
                   <span className={css.collapsedNewDot} aria-hidden="true" />
                 ) : null}
+
                 {orderCounts.inProgress > 0 ? (
                   <span
                     className={css.collapsedModerationDot}

@@ -33,10 +33,7 @@ import {
   uploadManagedPhotoDetails,
 } from '@e-pharmacy/ui/media';
 
-import {
-  PHARMACY_STATUS_PRESENTATION,
-  PRODUCT_REQUEST_STATUS_PRESENTATION,
-} from '@e-pharmacy/config/presentation';
+import { PRODUCT_REQUEST_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { CommentInput, NameInput } from '@e-pharmacy/ui/forms';
@@ -93,11 +90,8 @@ import {
 
 import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
 import { dispatchPharmacyBreadcrumbLabel } from '@/lib/layout/breadcrumbs';
-import { getLockedFeatureBannerStatus } from '@/lib/pharmacies/current-pharmacy-status';
 import { getProductImageSrc } from '@/lib/products/product-images';
 import { getSafeApiErrorMessage } from '@/lib/errors/get-safe-api-error-message';
-
-import { useCurrentPharmacyStatus } from '@/hooks/useCurrentPharmacyStatus';
 
 import { EntityComments } from '@/components/comments/EntityComments';
 
@@ -281,15 +275,7 @@ function NewProductRequestPageContent({
   const router = useRouter();
   const toast = useToast();
 
-  const {
-    status: currentPharmacyStatus,
-    isLoading: isPharmacyStatusLoading,
-    error: pharmacyStatusError,
-  } = useCurrentPharmacyStatus();
-
-  const bannerStatus = getLockedFeatureBannerStatus(currentPharmacyStatus);
-  const isBlocked = currentPharmacyStatus === 'blocked';
-  const isCreationLocked = Boolean(bannerStatus);
+  // Product requests are owner resources, independent of pharmacy selection.
   const cloneSourceRequestId = requestId ? undefined : sourceRequestId;
 
   const [request, setRequest] = useState<ProductRequestDetailsViewModel | null>(
@@ -365,7 +351,7 @@ function NewProductRequestPageContent({
   });
 
   const isDraft = requestMode === 'edit';
-  const canEdit = requestMode !== 'readonly' && !isCreationLocked;
+  const canEdit = requestMode !== 'readonly';
   const isSaving = savingStatus !== null;
   const isMutating = isSaving || isDeleting;
   const isFileProcessing = isImageProcessing || isAdditionalFilesProcessing;
@@ -427,18 +413,20 @@ function NewProductRequestPageContent({
   const tabs = useMemo<TabItem<RequestTab>[]>(() => {
     const items: TabItem<RequestTab>[] = [
       { value: 'details', label: 'Request details' },
-      { value: 'comments', label: `Comments (${commentsTotal})` },
     ];
 
-    if (request) {
-      items.push({
-        value: 'history',
-        label: `Change history (${request.history.length})`,
-      });
+    // Comments belong to an existing request, never to an unsaved draft or
+    // a new request prefilled from a rejected submission.
+    if (requestId) {
+      items.push({ value: 'comments', label: 'Comments' });
+    }
+
+    if (requestId && request) {
+      items.push({ value: 'history', label: 'Change history' });
     }
 
     return items;
-  }, [commentsTotal, request]);
+  }, [requestId, request]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -961,7 +949,7 @@ function NewProductRequestPageContent({
     </div>
   );
 
-  if (isLoading || isPharmacyStatusLoading) {
+  if (isLoading) {
     return (
       <main className={css.page} aria-label="Loading product request">
         <section className={css.contentCard}>
@@ -988,56 +976,6 @@ function NewProductRequestPageContent({
             title={loadError.title}
             message={loadError.message}
           />
-        </section>
-      </main>
-    );
-  }
-
-  if (pharmacyStatusError) {
-    return (
-      <main className={css.page} aria-labelledby="product-request-error-title">
-        <section className={css.contentCard}>
-          <PageHeader
-            title="Product request is unavailable"
-            titleId="product-request-error-title"
-            icon={<FilePlus2 size={23} aria-hidden="true" />}
-          />
-          <StatusBanner
-            tone="danger"
-            label="Error"
-            title="Pharmacy status could not be verified"
-            message="Reload the page before creating or editing a product request."
-          />
-        </section>
-      </main>
-    );
-  }
-
-  if (!requestId && isCreationLocked) {
-    const lockedStatus = bannerStatus;
-
-    return (
-      <main className={css.page} aria-labelledby="product-request-page-title">
-        <section className={css.contentCard}>
-          <PageHeader
-            title="New product request"
-            titleId="product-request-page-title"
-            icon={<FilePlus2 size={23} aria-hidden="true" />}
-          />
-
-          {lockedStatus ? (
-            <StatusBanner
-              {...PHARMACY_STATUS_PRESENTATION[lockedStatus]}
-              title="Product request creation is unavailable"
-              message={
-                lockedStatus === 'on_verification'
-                  ? 'Creating product requests is paused while Admin verifies the pharmacy profile.'
-                  : lockedStatus === 'new'
-                    ? 'Creating product requests becomes available after Admin verifies the pharmacy profile.'
-                    : 'Your account is temporarily blocked. Contact Admin to restore access.'
-              }
-            />
-          ) : null}
         </section>
       </main>
     );
@@ -1077,22 +1015,6 @@ function NewProductRequestPageContent({
           icon={<FilePlus2 size={23} aria-hidden="true" />}
           actions={hasHeaderActions ? headerActions : undefined}
         />
-
-        {bannerStatus && bannerStatus !== 'blocked' ? (
-          <StatusBanner
-            {...PHARMACY_STATUS_PRESENTATION[bannerStatus]}
-            title="Product request management is locked for now"
-            message="Creating and editing requests becomes available after Admin verifies the pharmacy profile."
-          />
-        ) : null}
-
-        {isBlocked ? (
-          <StatusBanner
-            {...PHARMACY_STATUS_PRESENTATION.blocked}
-            title="Product request management is unavailable"
-            message="Your account is temporarily blocked. Contact Admin to restore access."
-          />
-        ) : null}
 
         {request && statusMessage ? (
           <StatusBanner
@@ -1196,11 +1118,15 @@ function NewProductRequestPageContent({
                   hint="JPG, PNG or WebP up to 10 MB. Optimized versions are generated automatically."
                   validateSelection={(files) => {
                     const file = files[0];
+
                     if (!file) return '';
+
                     if (!file.file)
                       return validateProductRequestImageFile(file);
+
                     if (file.size > 10 * 1024 * 1024)
                       return 'Photo must be no larger than 10 MB.';
+
                     return PRODUCT_REQUEST_IMAGE_RULES.mimeTypes.some(
                       (mimeType) => mimeType === file.type
                     )
@@ -1310,6 +1236,7 @@ function NewProductRequestPageContent({
                   if (categoryValue === CUSTOM_CATEGORY_OPTION_VALUE) {
                     updateValue('categoryMode', 'custom');
                     updateValue('categoryId', '');
+
                     return;
                   }
 

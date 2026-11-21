@@ -18,6 +18,8 @@ import {
 
 import type { ProductRequestStatisticsCounts } from '@/lib/product-requests/product-requests';
 
+import css from '../AllProductStatistics/AllProductStatistics.module.css';
+
 //===================================================================
 
 type ProductRequestStatisticConfig = Readonly<{
@@ -30,6 +32,7 @@ type ProductRequestStatisticsProps = Readonly<{
   counts: ProductRequestStatisticsCounts;
   className?: string;
   showDraft?: boolean;
+  activeStatuses?: readonly ProductRequestStatus[];
   getStatusHref?: (status: ProductRequestStatus) => string | undefined;
 }>;
 
@@ -50,6 +53,7 @@ function ProductRequestStatistics({
   counts,
   className,
   showDraft = true,
+  activeStatuses = [],
   getStatusHref,
 }: ProductRequestStatisticsProps) {
   const cards = PRODUCT_REQUEST_STATISTICS_CONFIG.filter(
@@ -65,6 +69,7 @@ function ProductRequestStatistics({
     >
       {cards.map(({ status, tone, icon: Icon }) => {
         const title = PRODUCT_REQUEST_STATUS_PRESENTATION[status].label;
+        const active = activeStatuses.includes(status);
 
         return (
           <StatsCard
@@ -74,7 +79,12 @@ function ProductRequestStatistics({
             tone={tone}
             icon={<Icon size={26} aria-hidden="true" />}
             href={getStatusHref?.(status)}
-            ariaLabel={`${title} statistics`}
+            className={active ? css.activeCard : undefined}
+            ariaLabel={
+              active
+                ? `Clear ${title.toLowerCase()} request filter`
+                : `Filter requests by ${title.toLowerCase()}`
+            }
           />
         );
       })}

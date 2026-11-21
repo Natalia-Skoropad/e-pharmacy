@@ -25,10 +25,16 @@ import {
 import { getOwnedPharmacyStatistics } from '@/lib/api/browser/owned-pharmacy-registry.api';
 import { subscribeToPharmacyCounterRefresh } from '@/lib/pharmacies/pharmacy-counter-refresh';
 
+import {
+  useOrderNavigationCounts,
+  useProductRequestNavigationCounts,
+} from '@/hooks/usePharmacyNavigationCounters';
+
 import { usePharmacyProfile } from '@/providers/PharmacyProfileProvider';
 import { usePharmacySelection } from '@/providers/PharmacySelectionProvider';
 
 import { shouldCloseMobileMenuForPathnameChange } from './mobile-menu-route-lifecycle';
+import { formatVisibleOrderCount } from '../PharmacySidebar/order-counter-presentation';
 
 import css from './PharmacyMobileMenu.module.css';
 
@@ -53,6 +59,8 @@ export function PharmacyMobileMenu({
 }: PharmacyMobileMenuProps) {
   const pathname = usePathname();
   const { selectedId } = usePharmacySelection();
+  const orderCounts = useOrderNavigationCounts(isOpen);
+  const productRequestCounts = useProductRequestNavigationCounts(isOpen);
 
   const scopedHref = (href: string) =>
     selectedId && isLegacyOperationalPharmacyPath(href)
@@ -175,6 +183,70 @@ export function PharmacyMobileMenu({
         renderLink={({ item, href, className, children, ...props }) => (
           <Link href={scopedHref(href)} className={className} {...props}>
             {children}
+            {item.href === PHARMACY_ROUTES.ORDERS &&
+            orderCounts &&
+            (orderCounts.new > 0 || orderCounts.inProgress > 0) ? (
+              <span
+                className={css.pharmacyCounters}
+                aria-label="Order status totals"
+              >
+                {orderCounts.new > 0 ? (
+                  <span
+                    className={`${css.pharmacyCounter} ${css.orderNewCounter}`}
+                    aria-label={`${orderCounts.new} new orders`}
+                  >
+                    {formatVisibleOrderCount(orderCounts.new)}
+                  </span>
+                ) : null}
+
+                {orderCounts.inProgress > 0 ? (
+                  <span
+                    className={`${css.pharmacyCounter} ${css.orderProgressCounter}`}
+                    aria-label={`${orderCounts.inProgress} orders in progress`}
+                  >
+                    {formatVisibleOrderCount(orderCounts.inProgress)}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+
+            {item.href === PHARMACY_ROUTES.PRODUCT_REQUESTS &&
+            productRequestCounts &&
+            (productRequestCounts.draft > 0 ||
+              productRequestCounts.new > 0 ||
+              productRequestCounts.inProgress > 0) ? (
+              <span
+                className={css.pharmacyCounters}
+                aria-label="Product request status totals"
+              >
+                {productRequestCounts.draft > 0 ? (
+                  <span
+                    className={`${css.pharmacyCounter} ${css.draftCounter}`}
+                    aria-label={`${productRequestCounts.draft} draft product requests`}
+                  >
+                    {formatVisibleOrderCount(productRequestCounts.draft)}
+                  </span>
+                ) : null}
+
+                {productRequestCounts.new > 0 ? (
+                  <span
+                    className={`${css.pharmacyCounter} ${css.newCounter}`}
+                    aria-label={`${productRequestCounts.new} new product requests`}
+                  >
+                    {formatVisibleOrderCount(productRequestCounts.new)}
+                  </span>
+                ) : null}
+
+                {productRequestCounts.inProgress > 0 ? (
+                  <span
+                    className={`${css.pharmacyCounter} ${css.moderationCounter}`}
+                    aria-label={`${productRequestCounts.inProgress} product requests in work`}
+                  >
+                    {formatVisibleOrderCount(productRequestCounts.inProgress)}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
             {item.href === PHARMACY_ROUTES.PHARMACIES && pharmacyCounts ? (
               <span
                 className={css.pharmacyCounters}

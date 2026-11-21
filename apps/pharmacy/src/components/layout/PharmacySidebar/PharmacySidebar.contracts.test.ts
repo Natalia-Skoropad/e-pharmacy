@@ -6,7 +6,7 @@ import test from 'node:test';
 
 test('order counters refresh from owner-wide or URL-scoped Orders selection and explicit signals', async () => {
   const source = await readFile(
-    new URL('./PharmacySidebar.tsx', import.meta.url),
+    new URL('../../../hooks/usePharmacyNavigationCounters.ts', import.meta.url),
     'utf8'
   );
 
@@ -20,7 +20,7 @@ test('order counters refresh from owner-wide or URL-scoped Orders selection and 
 
   assert.match(
     source,
-    /\}, \[currentUserId, orderCounterScopeKey, orderScopePharmacyId\]\);/
+    /\}, \[enabled, currentUserId, orderCounterScopeKey, orderScopePharmacyId\]\);/
   );
 
   assert.equal(source.includes('}, [pathname]);'), false);
@@ -31,7 +31,7 @@ test('order counters refresh from owner-wide or URL-scoped Orders selection and 
 
 test('counter refresh aborts the previous generation before starting another', async () => {
   const source = await readFile(
-    new URL('./PharmacySidebar.tsx', import.meta.url),
+    new URL('../../../hooks/usePharmacyNavigationCounters.ts', import.meta.url),
     'utf8'
   );
 
@@ -69,8 +69,11 @@ test('collapsed order notifications remain visible and expanded badges expose se
   for (const selector of [
     'collapsedPharmacyCounters',
     'collapsedOrderCounters',
+    'collapsedProductRequestCounters',
   ]) {
-    const rule = css.match(new RegExp(`\\.${selector}\\s*\\{([^}]+)\\}`))?.[1];
+    const rule = css.match(
+      new RegExp(`\\.${selector}(?:,\\s*\\.[a-zA-Z]+)?\\s*\\{([^}]+)\\}`)
+    )?.[1];
 
     assert.ok(rule, `${selector} must have a style rule`);
     assert.match(rule, /left:\s*50%/);
@@ -78,8 +81,51 @@ test('collapsed order notifications remain visible and expanded badges expose se
     assert.doesNotMatch(rule, /right:\s*\d/);
   }
 
-  for (const dot of ['New', 'Verification', 'Moderation', 'Reactivation']) {
+  for (const dot of [
+    'New',
+    'Verification',
+    'Moderation',
+    'Reactivation',
+    'Draft',
+  ]) {
     assert.match(css, new RegExp(`\\.collapsed${dot}Dot`));
     assert.match(source, new RegExp(`css\\.collapsed${dot}Dot`));
   }
+});
+
+//===================================================================
+
+test('product request navigation counters use owner-wide statistics and refresh after mutations', async () => {
+  const [hook, api, sidebar] = await Promise.all([
+    readFile(
+      new URL(
+        '../../../hooks/usePharmacyNavigationCounters.ts',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+
+    readFile(
+      new URL(
+        '../../../lib/api/browser/product-requests.api.ts',
+        import.meta.url
+      ),
+      'utf8'
+    ),
+
+    readFile(new URL('./PharmacySidebar.tsx', import.meta.url), 'utf8'),
+  ]);
+
+  assert.match(hook, /getPharmacyProductRequestStatistics/);
+  assert.match(hook, /draft: stats\.draft/);
+  assert.match(hook, /new: stats\.new/);
+  assert.match(hook, /inProgress: stats\.in_progress/);
+  assert.match(hook, /subscribeToProductRequestCounterRefresh/);
+  assert.match(hook, /active\.signal\.aborted/);
+  assert.match(api, /dispatchProductRequestCounterRefresh/);
+  assert.match(sidebar, /useProductRequestNavigationCounts/);
+  assert.match(sidebar, /css\.collapsedProductRequestCounters/);
+  assert.match(sidebar, /productRequestCounts\.draft > 0/);
+  assert.match(sidebar, /productRequestCounts\.new > 0/);
+  assert.match(sidebar, /productRequestCounts\.inProgress > 0/);
 });

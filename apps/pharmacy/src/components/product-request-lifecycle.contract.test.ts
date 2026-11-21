@@ -94,3 +94,123 @@ test('request entity generations remount local state and abort async work', asyn
     /additionalFilesReadControllerRef\.current\?\.abort\(\)/
   );
 });
+
+//===================================================================
+
+test('owner-wide request list uses canonical ID/category/status/pagination segments', async () => {
+  const paths = await read('src/lib/product-requests/product-request-paths.ts');
+
+  const list = await read(
+    'src/components/product-requests/ProductRequestsPageContent/ProductRequestsPageContent.tsx'
+  );
+
+  const requestSearch = await read(
+    'src/components/product-requests/OwnerProductRequestSearch.tsx'
+  );
+
+  for (const segment of [
+    'request-id-',
+    'product-id-',
+    'request-product-id-',
+    'category-',
+    'status-',
+    'page-',
+    'per-page-',
+  ]) {
+    assert.ok(paths.includes(segment), `missing URL filter: ${segment}`);
+  }
+
+  assert.match(paths, /parseProductRequestsPaginationSegments/);
+  assert.match(list, /OwnerProductRequestSearch/);
+  assert.match(list, /OwnerRequestedProductSearch/);
+  assert.match(list, /StatsLoadingSkeleton/);
+  assert.match(requestSearch, /getPharmacyProductRequests/);
+
+  assert.doesNotMatch(
+    list,
+    /CurrentPharmacySelector|useSelectedPharmacy|Current pharmacy/
+  );
+
+  assert.doesNotMatch(paths, /pharmacyId/);
+});
+
+//===================================================================
+
+test('request and product searches share owner-scoped choices without global catalog leakage', async () => {
+  const [list, requestSearch, scopedProductSearch] = await Promise.all([
+    read(
+      'src/components/product-requests/ProductRequestsPageContent/ProductRequestsPageContent.tsx'
+    ),
+
+    read('src/components/product-requests/OwnerProductRequestSearch.tsx'),
+    read('src/components/product-requests/OwnerRequestedProductSearch.tsx'),
+  ]);
+
+  assert.match(requestSearch, /label: request\.productName/);
+  assert.doesNotMatch(requestSearch, /label: `\$\{request\.requestNumber\}/);
+  assert.match(list, /relatedRequestFilters/);
+  assert.match(list, /relatedProductFilters/);
+
+  assert.match(
+    list,
+    /productId: requestId \? \(linkedProductId \?\? `request-\$\{requestId\}`\)/
+  );
+
+  assert.match(list, /requestId: productId !== filters\.productId \? ''/);
+
+  assert.match(
+    scopedProductSearch,
+    /request\.productId \?\? `request-\$\{request\.id\}`/
+  );
+
+  assert.match(scopedProductSearch, /unlinkedRequestId/);
+  assert.match(scopedProductSearch, /getPharmacyProductRequests/);
+  assert.doesNotMatch(scopedProductSearch, /getOwnerCatalogProducts/);
+  assert.match(scopedProductSearch, /key=\{scopeKey\}/);
+
+  const paths = await read('src/lib/product-requests/product-request-paths.ts');
+
+  assert.match(paths, /request-product-id-/);
+
+  assert.match(
+    paths,
+    /filters\.productId = `request-\$\{id\.toLowerCase\(\)\}`/
+  );
+
+  assert.match(
+    paths,
+    /segments\.push\(`request-product-id-\$\{filters\.productId\.slice/
+  );
+});
+
+//===================================================================
+
+test('request category icons follow chosen category mode and new request has no Comments tab', async () => {
+  const [table, details] = await Promise.all([
+    read(
+      'src/components/product-requests/ProductRequestsTable/ProductRequestsTable.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+  ]);
+
+  assert.match(
+    table,
+    /const isCustomCategory = request\.categoryMode === 'custom'/
+  );
+
+  assert.match(table, /isCustomCategory[\s\S]*?<Settings/);
+  assert.match(table, /<CategoryIcon name=\{resolved\?\.icon\}/);
+  assert.doesNotMatch(table, /Boolean\(request\.productId && resolved\)/);
+
+  assert.match(
+    details,
+    /if \(requestId\) \{[\s\S]{0,110}items\.push\(\{ value: 'comments', label: 'Comments' \}\)/
+  );
+
+  assert.match(details, /label: 'Change history'/);
+  assert.doesNotMatch(details, /label: `Comments \(/);
+  assert.doesNotMatch(details, /label: `Change history \(/);
+});

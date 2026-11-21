@@ -32,7 +32,8 @@ export type ProductRequestHistoryEntry = {
 //===============================================================
 
 export type ProductRequestEntity = {
-  pharmacyId: Types.ObjectId;
+  ownerId?: Types.ObjectId;
+  pharmacyId?: Types.ObjectId;
   name: string;
   article: string;
   categoryMode: ProductRequestCategoryMode;
@@ -52,6 +53,7 @@ export type ProductRequestEntity = {
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
   rejectionReason?: string;
+  cancelledBy?: 'owner' | 'admin';
   history?: ProductRequestHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
@@ -86,6 +88,7 @@ export type ProductRequestResponseDto = {
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];
   rejectionReason?: string;
+  cancelledBy?: 'owner' | 'admin';
 
   history?: Array<{
     id: string;

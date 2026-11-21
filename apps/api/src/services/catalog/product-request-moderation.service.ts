@@ -302,8 +302,10 @@ export async function moderateProductRequestByAdminService(
         }
 
         request.rejectionReason = undefined;
+        request.cancelledBy = undefined;
       } else if (input.status === 'rejected') {
         request.rejectionReason = input.reason?.trim();
+        request.cancelledBy = 'admin';
       }
 
       const historyCopy = getStatusHistoryCopy(

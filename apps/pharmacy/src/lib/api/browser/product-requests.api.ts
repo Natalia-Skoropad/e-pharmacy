@@ -10,8 +10,10 @@ import {
 
 import { isRecord } from '@e-pharmacy/utils/guards';
 import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
+import { localApiRequest } from '@e-pharmacy/next-api/browser';
 
 import { pharmacyApiRoutes as PHARMACY_API_ROUTES } from '@/lib/api/routes/pharmacy-api-routes';
+import { dispatchProductRequestCounterRefresh } from '@/lib/product-requests/product-request-counter-refresh';
 
 import {
   normalizeProductRequest,
@@ -28,8 +30,6 @@ import {
   sanitizeBrowserReadRequestOptions,
   type BrowserReadRequestOptions,
 } from './request-options';
-
-import { operationalLocalApiRequest as localApiRequest } from './operational-request';
 
 //===================================================================
 
@@ -119,13 +119,17 @@ export async function createPharmacyProductRequest(
 ): Promise<ProductRequestRowViewModel> {
   const path = PHARMACY_API_ROUTES.productRequests.list;
 
-  return parseApiResponseData(
+  const result = parseApiResponseData(
     await localApiRequest(path, { method: 'POST', body: payload }),
 
     parseProductRequestRow,
 
     { url: path, method: 'POST' }
   );
+
+  dispatchProductRequestCounterRefresh();
+
+  return result;
 }
 
 //===================================================================
@@ -210,13 +214,17 @@ export async function updatePharmacyProductRequest(
 ): Promise<ProductRequestDetailsViewModel> {
   const path = PHARMACY_API_ROUTES.productRequests.details(requestId);
 
-  return parseApiResponseData(
+  const result = parseApiResponseData(
     await localApiRequest(path, { method: 'PATCH', body: payload }),
 
     parseProductRequestDetails,
 
     { url: path, method: 'PATCH' }
   );
+
+  dispatchProductRequestCounterRefresh();
+
+  return result;
 }
 
 //===================================================================
@@ -233,4 +241,6 @@ export async function deletePharmacyProductRequest(
 
     { url: path, method: 'DELETE' }
   );
+
+  dispatchProductRequestCounterRefresh();
 }

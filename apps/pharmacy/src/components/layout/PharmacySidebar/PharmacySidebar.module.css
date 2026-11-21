@@ -14,6 +14,7 @@
 }
 
 .newCounter,
+.draftCounter,
 .progressCounter,
 .verificationCounter,
 .moderationCounter,
@@ -28,6 +29,10 @@
   line-height: 1;
   color: var(--color-white);
   border-radius: var(--radius-pill);
+}
+
+.draftCounter {
+  background-color: var(--color-text-muted);
 }
 
 .newCounter {
@@ -62,6 +67,7 @@
 }
 
 /* Match the Admin navigation badges: only statuses with items appear. */
+.collapsedProductRequestCounters,
 .collapsedPharmacyCounters {
   position: absolute;
   top: 6px;
@@ -74,11 +80,16 @@
   background-color: var(--color-surface);
 }
 
+.collapsedProductRequestCounters > span,
 .collapsedPharmacyCounters > span {
   width: 7px;
   height: 7px;
   flex: 0 0 auto;
   border-radius: 50%;
+}
+
+.collapsedDraftDot {
+  background-color: var(--color-text-muted);
 }
 
 .collapsedNewDot {

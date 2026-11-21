@@ -197,6 +197,7 @@ export function PharmacySelectionProvider({
   useEffect(() => {
     if (
       !pathname.startsWith('/pharmacy/all-products') &&
+      !pathname.startsWith('/pharmacy/product-requests') &&
       !isOwnerOrdersListPath(pathname) &&
       !isOwnerOrderDetailPath(pathname) &&
       !isOwnerClientsListPath(pathname) &&

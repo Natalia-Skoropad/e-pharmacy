@@ -34,7 +34,7 @@ function getTestMongoUri(): string {
 //===================================================================
 
 test(
-  'product-request statistics return one tenant-scoped status distribution',
+  'product-request statistics aggregate an entire owner and exclude other owners',
   { skip: shouldSkip },
 
   async () => {
@@ -46,6 +46,7 @@ test(
     const ownerA = new Types.ObjectId();
     const ownerB = new Types.ObjectId();
     const pharmacyA = new Types.ObjectId();
+    const pharmacyA2 = new Types.ObjectId();
     const pharmacyB = new Types.ObjectId();
 
     await seedIntegrationPharmacyActors([ownerA, ownerB]);
@@ -61,6 +62,15 @@ test(
       }),
 
       Pharmacy.create({
+        _id: pharmacyA2,
+        ownerId: ownerA,
+        managerUserIds: [],
+        documents: [],
+        name: `Analytics Requests Pharmacy A2 ${suffix.slice(-6)}`,
+        status: 'active',
+      }),
+
+      Pharmacy.create({
         _id: pharmacyB,
         ownerId: ownerB,
         managerUserIds: [],
@@ -70,7 +80,7 @@ test(
       }),
     ]);
 
-    const requestIds = Array.from({ length: 6 }, () => new Types.ObjectId());
+    const requestIds = Array.from({ length: 8 }, () => new Types.ObjectId());
 
     try {
       await ProductRequest.create([
@@ -110,6 +120,26 @@ test(
           categoryId: medicineCategoryId,
           status: 'rejected',
         },
+        // Legacy request in another pharmacy owned by A must be counted.
+        {
+          _id: requestIds[6],
+          pharmacyId: pharmacyA2,
+          name: 'Analytics draft A second pharmacy',
+          article: `AN-D3-${suffix.slice(-8)}`,
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
+          status: 'draft',
+        },
+        // New requests have ownerId and no pharmacyId at all.
+        {
+          _id: requestIds[7],
+          ownerId: ownerA,
+          name: 'Analytics owner-wide draft',
+          article: `AN-D4-${suffix.slice(-8)}`,
+          categoryMode: 'catalog',
+          categoryId: medicineCategoryId,
+          status: 'draft',
+        },
         {
           _id: requestIds[4],
           pharmacyId: pharmacyB,
@@ -139,7 +169,7 @@ test(
       );
 
       assert.deepEqual(statisticsA, {
-        draft: 2,
+        draft: 4,
         new: 0,
         in_progress: 0,
         approved: 1,
@@ -156,7 +186,11 @@ test(
     } finally {
       await Promise.all([
         ProductRequest.deleteMany({ _id: { $in: requestIds } }),
-        Pharmacy.deleteMany({ _id: { $in: [pharmacyA, pharmacyB] } }),
+
+        Pharmacy.deleteMany({
+          _id: { $in: [pharmacyA, pharmacyA2, pharmacyB] },
+        }),
+
         User.deleteMany({ _id: { $in: [ownerA, ownerB] } }),
       ]);
 

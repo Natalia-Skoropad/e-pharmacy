@@ -84,9 +84,8 @@ export type ProductRequestStatusFilter = 'all' | ProductRequestStatus;
 
 export type ProductRequestsFilterState = Readonly<{
   date: { from: string; to: string };
-  requestNumber: string;
-  productArticle: string;
-  productName: string;
+  requestId: string;
+  productId: string;
   category: ProductRequestCategoryFilter;
   status: ProductRequestStatusFilter;
 }>;
@@ -96,6 +95,9 @@ export type ProductRequestsQueryParams = Readonly<{
   perPage?: number;
   dateFrom?: CalendarDateString;
   dateTo?: CalendarDateString;
+  requestId?: string;
+  productId?: string;
+  keyword?: string;
   requestNumber?: string;
   productName?: string;
   productArticle?: string;
@@ -125,6 +127,7 @@ export type ProductRequestRowViewModel = Readonly<{
   category?: ProductCategoryReference;
   customCategory?: string;
   status: ProductRequestStatus;
+  cancelledBy?: 'owner' | 'admin';
 }>;
 
 export type ProductRequestDetailsViewModel = ProductRequestRowViewModel &
@@ -168,6 +171,8 @@ export const DEFAULT_PRODUCT_REQUEST_STATISTICS: ProductRequestStatisticsCounts 
     PRODUCT_REQUEST_STATUSES.map((status) => [status, 0])
   ) as ProductRequestStatisticsCounts;
 
+//===================================================================
+
 export function normalizeProductRequestStatisticsResponse(
   value: unknown
 ): ProductRequestStatisticsCounts {
@@ -182,12 +187,14 @@ export function normalizeProductRequestStatisticsResponse(
 
   for (const status of PRODUCT_REQUEST_STATUSES) {
     const count = getFiniteNumber(value[status]);
+
     if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
       invalidProductRequestContract(
         `product request statistics response.${status} must be a non-negative integer.`,
         value
       );
     }
+
     statistics[status] = count;
   }
 
@@ -198,9 +205,8 @@ export function normalizeProductRequestStatisticsResponse(
 
 export const DEFAULT_PRODUCT_REQUESTS_FILTERS: ProductRequestsFilterState = {
   date: { from: '', to: '' },
-  requestNumber: '',
-  productArticle: '',
-  productName: '',
+  requestId: '',
+  productId: '',
   category: 'all',
   status: 'all',
 };
@@ -235,14 +241,17 @@ export function normalizeProductRequestStatus(
 
 function normalizeDateTime(value: unknown): ISODateTimeString | null {
   const raw = getTrimmedString(value);
+
   if (!raw) return null;
 
   if (isISODateTimeString(raw)) return raw;
 
   const timestamp = Date.parse(raw);
+
   if (!Number.isFinite(timestamp)) return null;
 
   const normalized = new Date(timestamp).toISOString();
+
   return isISODateTimeString(normalized) ? normalized : null;
 }
 
@@ -255,6 +264,7 @@ function normalizeProductRequestFile(
 
   const name = getTrimmedString(rawFile.name);
   const size = getFiniteNumber(rawFile.size);
+
   const type =
     getTrimmedString(rawFile.type) ?? getTrimmedString(rawFile.mimeType);
 
@@ -266,6 +276,7 @@ function normalizeProductRequestFile(
     name,
     type,
     size,
+
     ...(dataUrl ? { dataUrl } : {}),
   };
 }
@@ -314,10 +325,12 @@ export function normalizeProductRequest(
 
   const id =
     getTrimmedString(rawRequest.id) ?? getTrimmedString(rawRequest._id);
+
   const createdAt =
     normalizeDateTime(rawRequest.createdAt) ??
     normalizeDateTime(rawRequest.createdDate) ??
     normalizeDateTime(rawRequest.updatedAt);
+
   const status = normalizeProductRequestStatus(rawRequest.status);
 
   const categoryMode = rawRequest.categoryMode;
@@ -364,16 +377,23 @@ export function normalizeProductRequest(
     id,
     requestNumber: getTrimmedString(rawRequest.requestNumber) ?? id,
     createdAt,
+
     ...(productId ? { productId } : {}),
     ...(productImageUrl ? { productImageUrl } : {}),
+
     productArticle,
     productName,
     categoryMode,
-    ...(categoryMode === 'catalog' && isProductCategory(category)
-      ? { category }
-      : {}),
+
+    ...(isProductCategory(category) ? { category } : {}),
     ...(categoryMode === 'custom' && customCategory ? { customCategory } : {}),
+
     status: status.value,
+
+    ...(status.value === 'rejected' &&
+    (rawRequest.cancelledBy === 'owner' || rawRequest.cancelledBy === 'admin')
+      ? { cancelledBy: rawRequest.cancelledBy }
+      : {}),
   };
 }
 
@@ -383,6 +403,7 @@ export function normalizeProductRequestDetails(
   rawRequest: unknown
 ): ProductRequestDetailsViewModel | null {
   const request = normalizeProductRequest(rawRequest);
+
   if (!request || !isRecord(rawRequest)) return null;
 
   const updatedAt = normalizeDateTime(rawRequest.updatedAt);
@@ -402,6 +423,7 @@ export function normalizeProductRequestDetails(
   const rawHistory = Array.isArray(rawRequest.history)
     ? rawRequest.history
     : [];
+
   const history = rawHistory
     .map(normalizeProductRequestHistoryEntry)
     .filter((entry): entry is ProductRequestHistoryViewModel => Boolean(entry));
@@ -413,37 +435,51 @@ export function normalizeProductRequestDetails(
 
   return {
     ...request,
+
     updatedAt,
     name,
     article,
+
     ...(productImage ? { productImage } : {}),
+
     ...(optionalString('manufacturer')
       ? { manufacturer: optionalString('manufacturer') }
       : {}),
+
     ...(optionalString('countryOfOrigin')
       ? { countryOfOrigin: optionalString('countryOfOrigin') }
       : {}),
+
     ...(optionalString('dosage') ? { dosage: optionalString('dosage') } : {}),
+
     ...(optionalString('packageSize')
       ? { packageSize: optionalString('packageSize') }
       : {}),
+
     ...(optionalString('form') ? { form: optionalString('form') } : {}),
+
     ...(optionalString('activeSubstance')
       ? { activeSubstance: optionalString('activeSubstance') }
       : {}),
+
     ...(optionalString('prescriptionType')
       ? { prescriptionType: optionalString('prescriptionType') }
       : {}),
+
     ...(optionalString('fullDescription')
       ? { fullDescription: optionalString('fullDescription') }
       : {}),
+
     ...(optionalString('pharmacyComment')
       ? { pharmacyComment: optionalString('pharmacyComment') }
       : {}),
+
     ...(additionalFiles.length ? { additionalFiles } : {}),
+
     ...(optionalString('rejectionReason')
       ? { rejectionReason: optionalString('rejectionReason') }
       : {}),
+
     history,
     commentsTotal: getFiniteNumber(rawRequest.commentsTotal) ?? 0,
   };
@@ -461,6 +497,7 @@ export function normalizeProductRequestsResponse(
     }),
     { label: 'product requests response' }
   );
+
   return {
     ...response,
     earliestCreatedAt: parseEarliestCreatedAt(payload),

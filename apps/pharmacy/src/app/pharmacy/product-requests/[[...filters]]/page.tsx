@@ -6,6 +6,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import {
   isProductRequestsFilterRoute,
   parseProductRequestsSegments,
+  parseProductRequestsPaginationSegments,
   type ProductRequestsRouteParams,
 } from '@/lib/product-requests/product-request-paths';
 
@@ -43,10 +44,14 @@ async function ProductRequestsPage({ params }: ProductRequestsPageProps) {
 
   const initialFilters = parseProductRequestsSegments(resolvedParams);
 
+  const initialPagination =
+    parseProductRequestsPaginationSegments(resolvedParams);
+
   return (
     <ProductRequestsPageContent
-      key={JSON.stringify(initialFilters)}
+      key={JSON.stringify([initialFilters, initialPagination])}
       initialFilters={initialFilters}
+      initialPagination={initialPagination}
     />
   );
 }

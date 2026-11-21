@@ -187,6 +187,11 @@ export function serializeProductRequest(
       : {}),
 
     status: request.status,
+
+    ...(request.status === 'rejected'
+      ? { cancelledBy: request.cancelledBy ?? 'admin' }
+      : {}),
+
     productImage: request.productImage,
     manufacturer: request.manufacturer,
     countryOfOrigin: request.countryOfOrigin,

@@ -51,7 +51,7 @@ const DETAIL_OPERATION =
   /^\/pharmacy\/pharmacies\/([0-9a-f]{24})\/(orders|clients|products)(?:\/|$)/i;
 
 const LEGACY_OPERATION =
-  /^\/pharmacy\/(dashboard|orders|clients|products|product-requests)(?:\/|$)/;
+  /^\/pharmacy\/(dashboard|orders|clients|products)(?:\/|$)/;
 
 //===================================================================
 

@@ -6,6 +6,7 @@ import { isValidObjectId } from '@e-pharmacy/validation/url';
 import {
   isProductRequestsFilterSegment,
   parseProductRequestsSegments,
+  parseProductRequestsPaginationSegments,
 } from '@/lib/product-requests/product-request-paths';
 
 import { ProductRequestDetailsPageContent } from '@/components/product-requests/ProductRequestDetailsPageContent';
@@ -32,14 +33,15 @@ async function ProductRequestDetailsPage({
   const { requestId } = await params;
 
   if (isProductRequestsFilterSegment(requestId)) {
-    const initialFilters = parseProductRequestsSegments({
-      filters: [requestId],
-    });
+    const params = { filters: [requestId] };
+    const initialFilters = parseProductRequestsSegments(params);
+    const initialPagination = parseProductRequestsPaginationSegments(params);
 
     return (
       <ProductRequestsPageContent
-        key={JSON.stringify(initialFilters)}
+        key={JSON.stringify([initialFilters, initialPagination])}
         initialFilters={initialFilters}
+        initialPagination={initialPagination}
       />
     );
   }

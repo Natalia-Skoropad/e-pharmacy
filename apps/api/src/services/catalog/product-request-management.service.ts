@@ -2,7 +2,6 @@ import mongoose, { Types } from 'mongoose';
 
 import { HTTP_STATUS } from '../../constants/http/httpStatus';
 import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-request';
-import { isPharmacyOperationalStatus } from '../../constants/pharmacies/pharmacy-status';
 
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
@@ -19,7 +18,7 @@ import {
   requireProductCategoryById,
 } from './product-category.service';
 
-import { getCurrentPharmacy } from './product-request-access';
+import { getProductRequestOwnerScope } from './product-request-access';
 import { assertArticleAvailable } from './product-request-articles';
 
 import {
@@ -75,18 +74,7 @@ export async function createProductRequestService(
   userId: string,
   input: ProductRequestFormInput
 ) {
-  const pharmacy = await getCurrentPharmacy(userId, 'manage_product_requests');
-
-  if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
-  }
-
-  if (!isPharmacyOperationalStatus(pharmacy.status)) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Product requests are available only for an activated pharmacy.'
-    );
-  }
+  const scope = await getProductRequestOwnerScope(userId);
 
   await assertArticleAvailable(input.article);
 
@@ -96,7 +84,7 @@ export async function createProductRequestService(
 
   try {
     const request = await ProductRequest.create({
-      pharmacyId: pharmacy._id,
+      ownerId: scope.ownerId,
       status: input.status,
 
       ...formUpdate,
@@ -146,9 +134,9 @@ export async function updateProductRequestService(
   requestId: string,
   input: ProductRequestFormInput
 ) {
-  const pharmacy = await getCurrentPharmacy(userId, 'manage_product_requests');
+  const scope = await getProductRequestOwnerScope(userId);
 
-  if (!pharmacy || !Types.ObjectId.isValid(requestId)) {
+  if (!Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
@@ -158,18 +146,9 @@ export async function updateProductRequestService(
     );
   }
 
-  if (!isPharmacyOperationalStatus(pharmacy.status)) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Product request changes are unavailable while the pharmacy is not active.'
-    );
-  }
-
-  const pharmacyId = pharmacy._id;
-
   const request = await ProductRequest.findOne({
     _id: new Types.ObjectId(requestId),
-    pharmacyId,
+    ...scope.filter,
   });
 
   if (!request) {
@@ -236,9 +215,9 @@ export async function updateProductRequestService(
   }
 
   const commentsTotal = await PharmacyNote.countDocuments({
-    pharmacyId,
     entityType: 'product_request',
     entityId: request._id,
+    $or: scope.filter.$or,
   });
 
   const categoryMap = request.categoryId
@@ -263,9 +242,9 @@ export async function deleteProductRequestService(
   userId: string,
   requestId: string
 ) {
-  const pharmacy = await getCurrentPharmacy(userId, 'manage_product_requests');
+  const scope = await getProductRequestOwnerScope(userId);
 
-  if (!pharmacy || !Types.ObjectId.isValid(requestId)) {
+  if (!Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
@@ -275,14 +254,6 @@ export async function deleteProductRequestService(
     );
   }
 
-  if (!isPharmacyOperationalStatus(pharmacy.status)) {
-    throw httpError(
-      HTTP_STATUS.FORBIDDEN,
-      'Product request changes are unavailable while the pharmacy is not active.'
-    );
-  }
-
-  const pharmacyId = pharmacy._id;
   const requestObjectId = new Types.ObjectId(requestId);
   const session = await mongoose.startSession();
 
@@ -290,7 +261,7 @@ export async function deleteProductRequestService(
     await session.withTransaction(async () => {
       const request = await ProductRequest.findOne({
         _id: requestObjectId,
-        pharmacyId,
+        ...scope.filter,
       })
         .select('_id status')
         .session(session);
@@ -317,7 +288,7 @@ export async function deleteProductRequestService(
 
       const deleteResult = await ProductRequest.deleteOne({
         _id: request._id,
-        pharmacyId,
+        ...scope.filter,
         status: 'draft',
       }).session(session);
 
@@ -332,7 +303,7 @@ export async function deleteProductRequestService(
       }
 
       await PharmacyNote.deleteMany({
-        pharmacyId,
+        $or: scope.filter.$or,
         entityType: 'product_request',
         entityId: request._id,
       }).session(session);

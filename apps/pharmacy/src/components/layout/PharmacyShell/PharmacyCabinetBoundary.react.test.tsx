@@ -180,12 +180,16 @@ test('order cards and every detail tab bypass selected-pharmacy bootstrap in ano
 
 //===================================================================
 
-test('All products bypasses selected-pharmacy summary during loading, failure and empty ownership', () => {
+test('All products and owner product requests bypass selected-pharmacy summary during loading, failure and empty ownership', () => {
   for (const pathname of [
     '/pharmacy/all-products',
     `/pharmacy/all-products/${blockedSummary.id}`,
     `/pharmacy/all-products/product-id-${blockedSummary.id}`,
     '/pharmacy/all-products/date-from-2026-11-01/status-active',
+    '/pharmacy/product-requests',
+    `/pharmacy/product-requests/${blockedSummary.id}`,
+    '/pharmacy/product-requests/new',
+    `/pharmacy/product-requests/request-id-${blockedSummary.id}/status-new`,
   ]) {
     for (const state of [
       { isLoading: true, error: null },

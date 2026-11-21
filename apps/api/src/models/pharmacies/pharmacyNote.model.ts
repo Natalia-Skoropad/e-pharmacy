@@ -41,11 +41,14 @@ const pharmacyNoteSchema = new Schema<PharmacyNoteEntity>(
       validate: {
         validator: function (this: PharmacyNoteEntity) {
           return (
-            ['client', 'product'].includes(this.entityType) && !this.pharmacyId
+            ['client', 'product', 'product_request'].includes(
+              this.entityType
+            ) && !this.pharmacyId
           );
         },
 
-        message: 'Owner-scoped notes must target a client without a pharmacy.',
+        message:
+          'Owner-scoped notes must target an allowed entity without a pharmacy.',
       },
     },
 

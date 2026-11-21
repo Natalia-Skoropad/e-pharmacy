@@ -28,11 +28,7 @@ import {
   findProductCategoryBySlug,
 } from './product-category.service';
 
-import {
-  getCurrentPharmacy,
-  getCurrentPharmacyId,
-} from './product-request-access';
-
+import { getProductRequestOwnerScope } from './product-request-access';
 import { getArticleConflict } from './product-request-articles';
 import { serializeProductRequest } from './product-request-projection';
 import type { ProductRequestDocument } from './product-request-projection';
@@ -43,16 +39,12 @@ export async function getProductRequestArticleAvailabilityService(
   userId: string,
   query: ProductRequestArticleAvailabilityQuery
 ) {
-  const pharmacy = await getCurrentPharmacy(userId);
-
-  if (!pharmacy) {
-    throw httpError(HTTP_STATUS.NOT_FOUND, 'Pharmacy profile was not found.');
-  }
+  const scope = await getProductRequestOwnerScope(userId);
 
   if (query.excludeRequestId) {
     const ownedRequestExists = await ProductRequest.exists({
       _id: new Types.ObjectId(query.excludeRequestId),
-      pharmacyId: pharmacy._id,
+      ...scope.filter,
     });
 
     if (!ownedRequestExists) {
@@ -80,7 +72,7 @@ export async function getProductRequestArticleAvailabilityService(
 //===============================================================
 
 export async function getProductRequestStatisticsService(userId: string) {
-  const pharmacyId = await getCurrentPharmacyId(userId);
+  const scope = await getProductRequestOwnerScope(userId);
 
   const statistics: Record<ProductRequestStatus, number> = {
     draft: 0,
@@ -90,13 +82,11 @@ export async function getProductRequestStatisticsService(userId: string) {
     rejected: 0,
   };
 
-  if (!pharmacyId) return statistics;
-
   const rows = await ProductRequest.aggregate<{
     _id: ProductRequestStatus;
     count: number;
   }>([
-    { $match: { pharmacyId } },
+    { $match: scope.filter },
     { $group: { _id: '$status', count: { $sum: 1 } } },
   ]);
 
@@ -113,20 +103,8 @@ export async function getProductRequestsService(
   userId: string,
   query: ProductRequestsQuery
 ) {
-  const pharmacyId = await getCurrentPharmacyId(userId);
-
-  if (!pharmacyId) {
-    return {
-      items: [],
-      page: 1,
-      perPage: query.perPage,
-      total: 0,
-      totalPages: 0,
-      earliestCreatedAt: null,
-    };
-  }
-
-  const filter: Record<string, unknown> = { pharmacyId };
+  const scope = await getProductRequestOwnerScope(userId);
+  const filter: Record<string, unknown> = { ...scope.filter };
 
   if (query.dateFrom || query.dateTo) {
     filter.createdAt = {
@@ -136,6 +114,27 @@ export async function getProductRequestsService(
   }
 
   const requestNumber = query.requestNumber?.trim();
+  const keyword = query.keyword?.trim();
+
+  if (query.requestId) filter._id = new Types.ObjectId(query.requestId);
+  if (query.productId) filter.productId = new Types.ObjectId(query.productId);
+
+  if (keyword) {
+    const expression = createFlexibleSearchRegExp(keyword);
+
+    filter.$and = [
+      {
+        $or: [
+          { name: expression },
+          { article: expression },
+          ...(Types.ObjectId.isValid(keyword)
+            ? [{ _id: new Types.ObjectId(keyword) }]
+            : []),
+        ],
+      },
+    ];
+  }
+
   const productName = query.productName?.trim() || query.name?.trim();
   const productArticle = query.productArticle?.trim() || query.article?.trim();
 
@@ -156,8 +155,13 @@ export async function getProductRequestsService(
   if (query.category) {
     const category = await findProductCategoryBySlug(query.category);
 
-    filter.categoryMode = 'catalog';
+    // Approved custom requests also have a resolved catalog categoryId.
     filter.categoryId = category?._id ?? null;
+  } else if (query.categoryMode === 'custom') {
+    // Once Admin approves a custom-category request it is associated with a
+    // canonical product/category; it no longer belongs in the custom-only view.
+    filter.categoryMode = 'custom';
+    filter.productId = { $exists: false };
   } else if (query.categoryMode) {
     filter.categoryMode = query.categoryMode;
   }
@@ -176,7 +180,7 @@ export async function getProductRequestsService(
 
     ProductRequest.countDocuments(filter),
 
-    ProductRequest.findOne({ pharmacyId })
+    ProductRequest.findOne(scope.filter)
       .sort({ createdAt: 1 })
       .select('createdAt')
       .lean<{ createdAt: Date } | null>(),
@@ -217,9 +221,9 @@ export async function getProductRequestByIdService(
   userId: string,
   requestId: string
 ) {
-  const pharmacyId = await getCurrentPharmacyId(userId);
+  const scope = await getProductRequestOwnerScope(userId);
 
-  if (!pharmacyId || !Types.ObjectId.isValid(requestId)) {
+  if (!Types.ObjectId.isValid(requestId)) {
     throw httpError(
       HTTP_STATUS.NOT_FOUND,
       'Product request was not found.',
@@ -231,7 +235,7 @@ export async function getProductRequestByIdService(
 
   const request = await ProductRequest.findOne({
     _id: new Types.ObjectId(requestId),
-    pharmacyId,
+    ...scope.filter,
   })
     .populate('productId', 'imageUrl article name')
     .lean<ProductRequestDocument | null>();
@@ -247,9 +251,16 @@ export async function getProductRequestByIdService(
   }
 
   const commentsTotal = await PharmacyNote.countDocuments({
-    pharmacyId,
     entityType: 'product_request',
     entityId: request._id,
+
+    $or: [
+      { ownerId: scope.ownerId },
+      {
+        ownerId: { $exists: false },
+        pharmacyId: { $in: scope.legacyPharmacyIds },
+      },
+    ],
   });
 
   const categoryMap = request.categoryId

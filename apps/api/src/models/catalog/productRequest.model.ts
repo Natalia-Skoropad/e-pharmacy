@@ -205,10 +205,18 @@ const productRequestHistorySchema = new Schema(
 
 const productRequestSchema = new Schema<ProductRequestEntity>(
   {
+    ownerId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: undefined,
+      index: true,
+    },
+
+    // Legacy ownership only. New requests have ownerId and no pharmacyId.
     pharmacyId: {
       type: Schema.Types.ObjectId,
       ref: 'Pharmacy',
-      required: true,
+      default: undefined,
       index: true,
     },
 
@@ -278,6 +286,12 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       default: 'draft',
       required: true,
       index: true,
+    },
+
+    cancelledBy: {
+      type: String,
+      enum: ['owner', 'admin'],
+      default: undefined,
     },
 
     productId: {
@@ -475,6 +489,9 @@ productRequestSchema.pre('validate', function validateCategoryRelation() {
 
 //===============================================================
 
+productRequestSchema.index({ ownerId: 1, createdAt: -1 });
+productRequestSchema.index({ ownerId: 1, status: 1, createdAt: -1 });
+productRequestSchema.index({ ownerId: 1, productId: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, status: 1, createdAt: -1 });
 productRequestSchema.index({ pharmacyId: 1, categoryId: 1, createdAt: -1 });

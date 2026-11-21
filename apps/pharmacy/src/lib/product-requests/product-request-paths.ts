@@ -1,10 +1,7 @@
 import {
-  deslugifyArticleSegment,
-  deslugifyNameSegment,
   isDateParam,
   isDateRangeValid,
   normalizeSlugEnumValue,
-  slugifySegment,
   slugifyStatus,
 } from '@e-pharmacy/validation/url';
 
@@ -16,49 +13,43 @@ import { PHARMACY_ROUTES } from '@/lib/routes';
 import {
   CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER,
   DEFAULT_PRODUCT_REQUESTS_FILTERS,
+  type ProductRequestsFilterState,
 } from './product-requests';
 
-import type { ProductRequestsFilterState } from './product-requests';
-
 //===================================================================
 
-type ProductRequestCategoryFilter = ProductRequestsFilterState['category'];
-type ProductRequestStatusFilter = ProductRequestsFilterState['status'];
+export type ProductRequestsRouteParams = Readonly<{ filters?: string[] }>;
 
-//===================================================================
-
-type ProductRequestsFilterDraft = {
-  date: {
-    from: string;
-    to: string;
-  };
-  requestNumber: string;
-  productArticle: string;
-  productName: string;
-  category: ProductRequestCategoryFilter;
-  status: ProductRequestStatusFilter;
-};
-
-//===================================================================
-
-export type ProductRequestsRouteParams = Readonly<{
-  filters?: string[];
+export type ProductRequestsPagination = Readonly<{
+  page: number;
+  perPage: 20 | 50 | 100;
 }>;
+
+export const DEFAULT_PRODUCT_REQUESTS_PAGINATION: ProductRequestsPagination = {
+  page: 1,
+  perPage: 20,
+};
 
 //===================================================================
 
 export function isProductRequestsFilterSegment(segment: string): boolean {
   return (
+    segment.startsWith('request-id-') ||
+    segment.startsWith('product-id-') ||
+    segment.startsWith('request-product-id-') ||
+    segment.startsWith('category-') ||
+    segment.startsWith('status-') ||
+    segment.startsWith('date-from-') ||
+    segment.startsWith('date-to-') ||
+    segment.startsWith('page-') ||
+    segment.startsWith('per-page-') ||
+    // Previous URL formats are accepted for normalization, not emitted.
     segment.startsWith('request-number-') ||
     segment.startsWith('product-article-') ||
     segment.startsWith('product-name-') ||
     segment.startsWith('search-name-') ||
     segment.startsWith('article-') ||
-    segment === 'category-mode-custom' ||
-    segment.startsWith('category-') ||
-    segment.startsWith('status-') ||
-    segment.startsWith('date-from-') ||
-    segment.startsWith('date-to-')
+    segment === 'category-mode-custom'
   );
 }
 
@@ -72,47 +63,78 @@ export function isProductRequestsFilterRoute(
 
 //===================================================================
 
+export function parseProductRequestsPaginationSegments(
+  params: ProductRequestsRouteParams = {}
+): ProductRequestsPagination {
+  let page = 1;
+  let perPage: ProductRequestsPagination['perPage'] = 20;
+
+  for (const segment of params.filters ?? []) {
+    if (segment.startsWith('page-')) {
+      const raw = segment.slice(5);
+      const number = Number(raw);
+
+      if (/^[1-9]\d*$/.test(raw) && Number.isSafeInteger(number)) page = number;
+    }
+
+    if (segment.startsWith('per-page-')) {
+      const raw = segment.slice('per-page-'.length);
+
+      if (raw === '20' || raw === '50' || raw === '100') {
+        perPage = Number(raw) as ProductRequestsPagination['perPage'];
+      }
+    }
+  }
+
+  return { page, perPage };
+}
+
+//===================================================================
+
 export function parseProductRequestsSegments(
   params: ProductRequestsRouteParams = {}
 ): ProductRequestsFilterState {
-  const filters: ProductRequestsFilterDraft = {
+  const filters: {
+    date: { from: string; to: string };
+    requestId: string;
+    productId: string;
+    category: ProductRequestsFilterState['category'];
+    status: ProductRequestsFilterState['status'];
+  } = {
     ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
     date: { ...DEFAULT_PRODUCT_REQUESTS_FILTERS.date },
   };
 
   for (const segment of params.filters ?? []) {
-    if (segment.startsWith('request-number-')) {
-      filters.requestNumber = deslugifyArticleSegment(
-        segment.replace('request-number-', '')
+    if (
+      segment.startsWith('request-id-') ||
+      segment.startsWith('request-number-')
+    ) {
+      const id = segment.slice(
+        segment.startsWith('request-id-')
+          ? 'request-id-'.length
+          : 'request-number-'.length
       );
+
+      if (/^[a-f0-9]{24}$/i.test(id)) filters.requestId = id.toLowerCase();
+
       continue;
     }
 
-    if (segment.startsWith('product-article-')) {
-      filters.productArticle = deslugifyArticleSegment(
-        segment.replace('product-article-', '')
-      );
+    if (segment.startsWith('product-id-')) {
+      const id = segment.slice('product-id-'.length);
+
+      if (/^[a-f0-9]{24}$/i.test(id)) filters.productId = id.toLowerCase();
+
       continue;
     }
 
-    if (segment.startsWith('product-name-')) {
-      filters.productName = deslugifyNameSegment(
-        segment.replace('product-name-', '')
-      );
-      continue;
-    }
+    if (segment.startsWith('request-product-id-')) {
+      const id = segment.slice('request-product-id-'.length);
 
-    if (segment.startsWith('search-name-')) {
-      filters.productName = deslugifyNameSegment(
-        segment.replace('search-name-', '')
-      );
-      continue;
-    }
+      if (/^[a-f0-9]{24}$/i.test(id))
+        filters.productId = `request-${id.toLowerCase()}`;
 
-    if (segment.startsWith('article-')) {
-      filters.productArticle = deslugifyArticleSegment(
-        segment.replace('article-', '')
-      );
       continue;
     }
 
@@ -122,53 +144,36 @@ export function parseProductRequestsSegments(
     }
 
     if (segment.startsWith('category-')) {
-      const rawCategory = segment.slice('category-'.length);
-      const category = rawCategory.includes('-')
-        ? rawCategory.replace(/-/g, '_')
-        : rawCategory;
+      const slug = segment.slice('category-'.length).replace(/-/g, '_');
 
-      if (isProductCategorySlug(category)) {
-        filters.category = category;
-      }
+      if (isProductCategorySlug(slug)) filters.category = slug;
 
       continue;
     }
 
     if (segment.startsWith('status-')) {
       const status = normalizeSlugEnumValue(
-        segment.replace('status-', ''),
+        segment.slice(7),
         PRODUCT_REQUEST_STATUSES
       );
 
-      if (status) {
-        filters.status = status;
-      }
+      if (status) filters.status = status;
 
       continue;
     }
 
     if (segment.startsWith('date-from-')) {
-      const dateFrom = segment.replace('date-from-', '');
+      const date = segment.slice('date-from-'.length);
 
-      if (isDateParam(dateFrom)) {
-        filters.date = {
-          ...filters.date,
-          from: dateFrom,
-        };
-      }
+      if (isDateParam(date)) filters.date.from = date;
 
       continue;
     }
 
     if (segment.startsWith('date-to-')) {
-      const dateTo = segment.replace('date-to-', '');
+      const date = segment.slice('date-to-'.length);
 
-      if (isDateParam(dateTo)) {
-        filters.date = {
-          ...filters.date,
-          to: dateTo,
-        };
-      }
+      if (isDateParam(date)) filters.date.to = date;
     }
   }
 
@@ -182,24 +187,19 @@ export function parseProductRequestsSegments(
 //===================================================================
 
 export function buildProductRequestsPath(
-  filters: ProductRequestsFilterState
+  filters: ProductRequestsFilterState,
+  pagination: ProductRequestsPagination = DEFAULT_PRODUCT_REQUESTS_PAGINATION
 ): string {
   const segments: string[] = [];
-  const dateRangeIsValid = isDateRangeValid(filters.date);
-  const requestNumber = filters.requestNumber.trim();
-  const productArticle = filters.productArticle.trim();
-  const productName = filters.productName.trim();
 
-  if (requestNumber) {
-    segments.push(`request-number-${slugifySegment(requestNumber)}`);
-  }
+  if (filters.requestId) segments.push(`request-id-${filters.requestId}`);
 
-  if (productArticle) {
-    segments.push(`product-article-${slugifySegment(productArticle)}`);
-  }
-
-  if (productName) {
-    segments.push(`product-name-${slugifySegment(productName)}`);
+  if (filters.productId.startsWith('request-')) {
+    segments.push(
+      `request-product-id-${filters.productId.slice('request-'.length)}`
+    );
+  } else if (filters.productId) {
+    segments.push(`product-id-${filters.productId}`);
   }
 
   if (filters.category === CUSTOM_PRODUCT_REQUEST_CATEGORY_FILTER) {
@@ -208,16 +208,20 @@ export function buildProductRequestsPath(
     segments.push(`category-${filters.category}`);
   }
 
-  if (filters.status !== 'all') {
+  if (filters.status !== 'all')
     segments.push(`status-${slugifyStatus(filters.status)}`);
+
+  if (isDateRangeValid(filters.date)) {
+    if (filters.date.from) segments.push(`date-from-${filters.date.from}`);
+    if (filters.date.to) segments.push(`date-to-${filters.date.to}`);
   }
 
-  if (dateRangeIsValid && filters.date.from) {
-    segments.push(`date-from-${filters.date.from}`);
+  if (Number.isSafeInteger(pagination.page) && pagination.page > 1) {
+    segments.push(`page-${pagination.page}`);
   }
 
-  if (dateRangeIsValid && filters.date.to) {
-    segments.push(`date-to-${filters.date.to}`);
+  if (pagination.perPage === 50 || pagination.perPage === 100) {
+    segments.push(`per-page-${pagination.perPage}`);
   }
 
   return segments.length

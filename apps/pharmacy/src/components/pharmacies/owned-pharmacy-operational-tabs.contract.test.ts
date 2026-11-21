@@ -14,13 +14,18 @@ const pharmacy = (path: string) =>
 
 //===================================================================
 
-test('all operational browser APIs use the selected pharmacy through the private adapter', () => {
-  for (const name of ['orders', 'products', 'product-requests']) {
+test('pharmacy operational APIs stay scoped while owner requests use the owner adapter', () => {
+  for (const name of ['orders', 'products']) {
     assert.match(
       pharmacy(`lib/api/browser/${name}.api.ts`),
       /operationalLocalApiRequest as localApiRequest/
     );
   }
+
+  const requestsApi = pharmacy('lib/api/browser/product-requests.api.ts');
+
+  assert.match(requestsApi, /localApiRequest.*@e-pharmacy\/next-api\/browser/);
+  assert.doesNotMatch(requestsApi, /operationalLocalApiRequest/);
 
   const clientsApi = pharmacy('lib/api/browser/clients.api.ts');
 

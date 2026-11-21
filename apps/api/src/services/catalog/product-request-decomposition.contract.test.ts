@@ -8,8 +8,12 @@ import test from 'node:test';
 // S10.5: enforce canonical Product Request ownership without compatibility proxies.
 const catalog = resolve(process.cwd(), 'src/services/catalog');
 
+//===================================================================
+
 const read = (name: string): string =>
   readFileSync(resolve(catalog, name), 'utf8');
+
+//===================================================================
 
 const files = [
   'product-request-read.service.ts',
@@ -30,12 +34,16 @@ test('S10.5 Product Request has no legacy proxy and controllers use direct domai
 
   for (const name of files) {
     const content = read(name);
+
     assert.ok(content.trim().length > 150, `${name} must own real code`);
     assert.doesNotMatch(content, /from ['"]\.\/product-request\.service['"]/);
   }
 
   const ownerController = readFileSync(
-    resolve(process.cwd(), 'src/controllers/catalog/product-request.controller.ts'),
+    resolve(
+      process.cwd(),
+      'src/controllers/catalog/product-request.controller.ts'
+    ),
     'utf8'
   );
 
@@ -111,7 +119,7 @@ test('S10.5 Product Request modules form an acyclic graph with resolved local im
 
 //===================================================================
 
-test('S10.5 pharmacy reads and writes preserve capability and scoped record ownership', () => {
+test('product request owner scope preserves legacy access without a selected pharmacy', () => {
   const access = read('product-request-access.ts');
   const readers = read('product-request-read.service.ts');
   const writers = read('product-request-management.service.ts');
@@ -121,14 +129,14 @@ test('S10.5 pharmacy reads and writes preserve capability and scoped record owne
   assert.match(access, /'read_product_requests'/);
   assert.match(access, /'manage_product_requests'/);
 
-  assert.match(
-    writers,
-    /getCurrentPharmacy\(userId, 'manage_product_requests'\)/
-  );
-
-  assert.match(writers, /pharmacyId[\s\S]*?request\.status !== 'draft'/);
-  assert.match(readers, /pharmacyId: pharmacy\._id/);
-  assert.match(readers, /getCurrentPharmacyId\(userId\)/);
+  assert.match(access, /getProductRequestOwnerScope/);
+  assert.match(access, /Pharmacy\.find\(\{ ownerId \}\)/);
+  assert.match(access, /ownerId: \{ \$exists: false \}/);
+  assert.match(writers, /getProductRequestOwnerScope\(userId\)/);
+  assert.match(writers, /ownerId: scope\.ownerId/);
+  assert.match(readers, /getProductRequestOwnerScope\(userId\)/);
+  assert.match(readers, /\$match: scope\.filter/);
+  assert.doesNotMatch(readers, /getCurrentPharmacyId\(userId\)/);
   assert.match(articles, /Product\.exists/);
   assert.match(articles, /ProductRequest\.exists/);
   assert.match(writers, /isDuplicateProductRequestArticleError/);
