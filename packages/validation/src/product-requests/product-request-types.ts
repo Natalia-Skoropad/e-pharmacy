@@ -15,7 +15,12 @@ export type ProductRequestFormValues = {
   categoryMode: ProductRequestCategoryMode;
   categoryId: string;
   customCategory: string;
+  brand: string;
+  series: string;
   manufacturer: string;
+  releaseForm: string;
+  activeIngredients: string;
+  activeIngredientCount: string;
   countryOfOrigin: string;
   dosage: string;
   packageSize: string;
@@ -57,7 +62,12 @@ export const PRODUCT_REQUEST_INITIAL_VALUES: ProductRequestFormValues = {
   categoryMode: 'catalog',
   categoryId: '',
   customCategory: '',
+  brand: '',
+  series: '',
   manufacturer: '',
+  releaseForm: '',
+  activeIngredients: '',
+  activeIngredientCount: '',
   countryOfOrigin: '',
   dosage: '',
   packageSize: '',

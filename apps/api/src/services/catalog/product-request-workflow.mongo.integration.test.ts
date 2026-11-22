@@ -93,6 +93,32 @@ test(
 
     try {
       await context.test(
+        'multiple name-only drafts remain valid for one owner',
+        async () => {
+          const first = await createProductRequestService(ownerA.toString(), {
+            status: 'draft',
+            name: 'Name only draft alpha',
+            article: '',
+            categoryMode: 'catalog',
+          });
+
+          requestIds.push(new Types.ObjectId(first.request.id));
+
+          const second = await createProductRequestService(ownerA.toString(), {
+            status: 'draft',
+            name: 'Name only draft beta',
+            article: '',
+            categoryMode: 'catalog',
+          });
+
+          requestIds.push(new Types.ObjectId(second.request.id));
+          assert.equal(first.request.article, '');
+          assert.equal(second.request.article, '');
+          assert.notEqual(first.request.id, second.request.id);
+        }
+      );
+
+      await context.test(
         'parallel creates keep one active request per article',
         async () => {
           const article = `REQ-RACE-${suffix.slice(-10)}`;
@@ -338,7 +364,12 @@ test(
             categoryId: medicineCategoryId,
             status: 'in_progress',
             fullDescription: 'Approved product description.',
+            brand: 'Workflow Brand',
+            series: 'Workflow Series',
             manufacturer: 'Workflow Manufacturer',
+            releaseForm: 'Tablets',
+            activeIngredients: 'Ingredient A',
+            activeIngredientCount: 1,
             dosage: '10 mg',
             packageSize: '20 tablets',
           });
@@ -355,11 +386,28 @@ test(
           assert.ok(result.request.productId);
 
           const product = await Product.findById(result.request.productId)
-            .select('_id article')
-            .lean<{ _id: Types.ObjectId; article: string } | null>();
+            .select(
+              '_id article brand series manufacturer releaseForm activeIngredients activeIngredientCount'
+            )
+            .lean<{
+              _id: Types.ObjectId;
+              article: string;
+              brand?: string;
+              series?: string;
+              manufacturer?: string;
+              releaseForm?: string;
+              activeIngredients?: string;
+              activeIngredientCount?: number;
+            } | null>();
 
           assert.ok(product);
           assert.equal(product.article, article);
+          assert.equal(product.brand, 'Workflow Brand');
+          assert.equal(product.series, 'Workflow Series');
+          assert.equal(product.manufacturer, 'Workflow Manufacturer');
+          assert.equal(product.releaseForm, 'Tablets');
+          assert.equal(product.activeIngredients, 'Ingredient A');
+          assert.equal(product.activeIngredientCount, 1);
           productIds.push(product._id);
 
           const persistedRequest = await ProductRequest.findById(request._id)

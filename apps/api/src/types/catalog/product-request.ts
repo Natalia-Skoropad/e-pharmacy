@@ -42,7 +42,12 @@ export type ProductRequestEntity = {
   status: ProductRequestStatus;
   productId?: Types.ObjectId;
   productImage?: ProductRequestFile;
+  brand?: string;
+  series?: string;
   manufacturer?: string;
+  releaseForm?: string;
+  activeIngredients?: string;
+  activeIngredientCount?: number;
   countryOfOrigin?: string;
   dosage?: string;
   packageSize?: string;
@@ -77,7 +82,12 @@ export type ProductRequestResponseDto = {
   customCategory?: string;
   status: ProductRequestStatus;
   productImage?: ProductRequestFile;
+  brand?: string;
+  series?: string;
   manufacturer?: string;
+  releaseForm?: string;
+  activeIngredients?: string;
+  activeIngredientCount?: number;
   countryOfOrigin?: string;
   dosage?: string;
   packageSize?: string;

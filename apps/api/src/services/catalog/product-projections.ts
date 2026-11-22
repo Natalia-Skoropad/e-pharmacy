@@ -378,6 +378,18 @@ export function serializeProductDetails(
 
     ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
     ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
+    ...(product.brand ? { brand: product.brand } : {}),
+    ...(product.series ? { series: product.series } : {}),
+    ...(product.releaseForm ? { releaseForm: product.releaseForm } : {}),
+
+    ...(product.activeIngredients
+      ? { activeIngredients: product.activeIngredients }
+      : {}),
+
+    ...(product.activeIngredientCount != null
+      ? { activeIngredientCount: product.activeIngredientCount }
+      : {}),
+
     ...(product.dosage ? { dosage: product.dosage } : {}),
 
     ...(product.packageQuantity

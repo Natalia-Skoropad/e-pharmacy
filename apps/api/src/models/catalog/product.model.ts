@@ -66,6 +66,30 @@ const productSchema = new Schema<ProductEntity>(
       default: undefined,
     },
 
+    brand: { type: String, trim: true, maxlength: 160, default: undefined },
+    series: { type: String, trim: true, maxlength: 160, default: undefined },
+
+    releaseForm: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+      default: undefined,
+    },
+
+    activeIngredients: {
+      type: String,
+      trim: true,
+      maxlength: 180,
+      default: undefined,
+    },
+
+    activeIngredientCount: {
+      type: Number,
+      min: 1,
+      max: 99,
+      default: undefined,
+    },
+
     manufacturer: {
       type: String,
       trim: true,

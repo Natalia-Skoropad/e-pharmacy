@@ -32,7 +32,7 @@ import type { ProductRequestDocument } from './product-request-projection';
 
 async function getRequestFormUpdate(input: ProductRequestFormInput) {
   const categoryId =
-    input.categoryMode === 'catalog'
+    input.categoryMode === 'catalog' && input.categoryId
       ? (
           await requireProductCategoryById(input.categoryId!, {
             activeOnly: true,
@@ -50,7 +50,12 @@ async function getRequestFormUpdate(input: ProductRequestFormInput) {
       input.categoryMode === 'custom' ? input.customCategory : undefined,
 
     productImage: input.productImage,
+    brand: input.brand,
+    series: input.series,
     manufacturer: input.manufacturer,
+    releaseForm: input.releaseForm,
+    activeIngredients: input.activeIngredients,
+    activeIngredientCount: input.activeIngredientCount,
     countryOfOrigin: input.countryOfOrigin,
 
     dosage: input.dosage,

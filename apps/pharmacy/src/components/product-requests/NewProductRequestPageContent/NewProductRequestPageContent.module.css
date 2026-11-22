@@ -78,9 +78,9 @@
 }
 
 .headerActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
   justify-content: flex-start;
   width: 100%;
   max-width: 100%;
@@ -156,53 +156,81 @@
   min-width: 0;
 }
 
-.formCard {
+.formCard,
+.editorCard,
+.editorPanel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 20px;
+  min-width: 0;
 }
 
-.sectionHeader {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: flex-start;
-  justify-content: space-between;
+/* One surface for tabs and the active editor panel, as in All products. */
+.editorCard {
+  width: 100%;
+  max-width: 100%;
+  padding: 16px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
 }
 
 .contentCard > *,
 .noticeCard > *,
 .formCard > *,
-.sectionHeader > * {
+.editorCard > *,
+.editorPanel > *,
+.historyHeader > * {
   max-width: 100%;
   min-width: 0;
 }
 
-.primaryGrid,
-.categoryGrid,
-.productGrid,
-.substanceGrid {
+.fieldGroups {
   display: grid;
-  gap: 4px 16px;
+  gap: 14px;
+  min-width: 0;
+}
+
+.fieldGroup {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.fieldsGrid,
+.tripleGrid {
+  display: grid;
+  gap: 14px;
   min-width: 0;
 }
 
 .imageGrid {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   min-width: 0;
 }
 
 .imagePreview {
-  display: flex;
-  align-items: stretch;
-  justify-content: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
   height: 320px;
   min-height: 320px;
   overflow: hidden;
   background-color: var(--color-background-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
+}
+
+.imagePreview > * {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
 }
 
 .imagePreview img {
@@ -213,27 +241,30 @@
   object-fit: cover;
 }
 
-.imagePlaceholder {
-  display: grid;
-  width: 100%;
-  gap: 10px;
-  justify-items: center;
-  align-content: center;
-  padding: 24px;
-  font-size: var(--fz-14);
-  color: var(--color-text-secondary);
-  text-align: center;
-}
-
-.imagePlaceholder svg {
-  color: var(--color-accent);
-}
-
 .imageUploadSlot {
   min-width: 0;
-  height: 320px;
-  min-height: 320px;
-  overflow-y: auto;
+}
+
+.productImageUpload ul {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.optionWithIcon {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.optionIcon {
+  display: inline-grid;
+  flex: 0 0 26px;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border: 1px solid var(--color-accent-border-soft);
+  border-radius: 50%;
 }
 
 .historyHeader {
@@ -368,7 +399,9 @@
   }
 
   .headerActions {
-    justify-content: flex-end;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     width: auto;
   }
 
@@ -379,12 +412,6 @@
   .statusUpdatedAt {
     width: auto;
     text-align: right;
-  }
-
-  .contentCard,
-  .noticeCard,
-  .formCard {
-    padding: 24px;
   }
 
   .noticeCard {
@@ -400,35 +427,39 @@
     align-items: start;
   }
 
-  .imagePreview,
-  .imageUploadSlot {
+  .imagePreview {
     height: 390px;
     min-height: 390px;
   }
 
-  .imageUploadSlot {
-    overflow-y: auto;
+  /* Both fields share the same label/hint/control rows, even if hints wrap. */
+  .categoryFieldsGrid {
+    grid-template-rows: auto auto auto auto;
+    row-gap: 8px;
+    align-items: stretch;
   }
 
-  .productImageUpload ul {
-    grid-template-columns: minmax(0, 1fr);
+  .categoryFieldsGrid > .categoryField {
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 8px;
   }
 
-  .primaryGrid,
-  .productGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .categoryGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .substanceGrid {
+  .fieldsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tripleGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media only screen and (min-width: 1440px) {
+  .imagePreview {
+    height: 420px;
+    min-height: 420px;
+  }
+
   .requestPageHeader {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

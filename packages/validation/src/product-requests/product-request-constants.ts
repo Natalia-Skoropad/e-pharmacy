@@ -2,6 +2,11 @@ export const PRODUCT_REQUEST_LIMITS = {
   nameMax: 160,
   articleMax: 40,
   customCategoryMax: 100,
+  brandMax: 160,
+  seriesMax: 160,
+  releaseFormMax: 100,
+  activeIngredientsMax: 180,
+  activeIngredientCountMax: 99,
   manufacturerMax: 160,
   countryOfOriginMax: 100,
   dosageMax: 100,
@@ -91,6 +96,11 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     article: 'Product article is required',
     customCategory: 'Enter the category name',
     productImage: 'Product image is required',
+    brand: 'Brand is required',
+    series: 'Series / Line is required',
+    releaseForm: 'Release form is required',
+    activeIngredients: 'Active ingredients are required',
+    activeIngredientCount: 'Enter a whole number of active ingredients (1–99)',
     manufacturer: 'Manufacturer is required',
     countryOfOrigin: 'Country is required',
     dosage: 'Dosage is required',
@@ -105,6 +115,14 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     name: `Product name must be at most ${PRODUCT_REQUEST_LIMITS.nameMax} characters`,
     article: `Product article must be at most ${PRODUCT_REQUEST_LIMITS.articleMax} characters`,
     customCategory: `Category name must be at most ${PRODUCT_REQUEST_LIMITS.customCategoryMax} characters`,
+    brand: `Brand must be at most ${PRODUCT_REQUEST_LIMITS.brandMax} characters`,
+    series: `Series / Line must be at most ${PRODUCT_REQUEST_LIMITS.seriesMax} characters`,
+    releaseForm: `Release form must be at most ${PRODUCT_REQUEST_LIMITS.releaseFormMax} characters`,
+    activeIngredients: `Active ingredients must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientsMax} characters`,
+
+    activeIngredientCount:
+      'Active ingredients count must be a whole number from 1 to 99',
+
     manufacturer: `Manufacturer must be at most ${PRODUCT_REQUEST_LIMITS.manufacturerMax} characters`,
     countryOfOrigin: `Country must be at most ${PRODUCT_REQUEST_LIMITS.countryOfOriginMax} characters`,
     dosage: `Dosage must be at most ${PRODUCT_REQUEST_LIMITS.dosageMax} characters`,
@@ -136,9 +154,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
   format: {
     article: 'Use English letters, numbers, dot, slash, underscore or hyphen',
     shortText: 'Use English letters, numbers, spaces and basic punctuation',
-
     longText: 'Use English letters, numbers, line breaks and basic punctuation',
-
     productImage: 'Choose a JPG, PNG, or WEBP image',
     attachment: 'Choose a PDF, DOC, DOCX, JPG, PNG, or WEBP file',
     attachmentData: 'The attached file data does not match its MIME type',

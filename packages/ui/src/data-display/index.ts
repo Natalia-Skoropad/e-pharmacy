@@ -1,4 +1,5 @@
 export * from './CountLabel';
+export * from './ProductCharacteristicsList';
 export * from './DataTable';
 export * from './RatingSummary';
 export * from './ReviewsList';
@@ -9,5 +10,4 @@ export * from './format-initials';
 
 export { WorkingHours } from './WorkingHours/WorkingHours';
 export type { WorkingHoursProps } from './WorkingHours/WorkingHours';
-
 export { MarkdownContent } from './MarkdownContent/MarkdownContent';

@@ -238,7 +238,9 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
 
     article: {
       type: String,
-      required: [true, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article],
+      required: function (this: ProductRequestEntity) {
+        return this.status !== 'draft';
+      },
       trim: true,
       uppercase: true,
 
@@ -247,10 +249,11 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article,
       ],
 
-      match: [
-        PRODUCT_REQUEST_ARTICLE_PATTERN,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article,
-      ],
+      validate: {
+        validator: (value?: string) =>
+          !value || PRODUCT_REQUEST_ARTICLE_PATTERN.test(value),
+        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article,
+      },
     },
 
     categoryMode: {
@@ -304,6 +307,57 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     productImage: {
       type: productRequestImageSchema,
       required: false,
+    },
+
+    brand: {
+      type: String,
+      trim: true,
+      maxlength: PRODUCT_REQUEST_LIMITS.brandMax,
+
+      match: [
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+      ],
+    },
+
+    series: {
+      type: String,
+      trim: true,
+      maxlength: PRODUCT_REQUEST_LIMITS.seriesMax,
+
+      match: [
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+      ],
+    },
+
+    releaseForm: {
+      type: String,
+      trim: true,
+      maxlength: PRODUCT_REQUEST_LIMITS.releaseFormMax,
+
+      match: [
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+      ],
+    },
+
+    activeIngredients: {
+      type: String,
+      trim: true,
+      maxlength: PRODUCT_REQUEST_LIMITS.activeIngredientsMax,
+
+      match: [
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+      ],
+    },
+
+    activeIngredientCount: {
+      type: Number,
+      min: 1,
+      max: PRODUCT_REQUEST_LIMITS.activeIngredientCountMax,
+      default: undefined,
     },
 
     manufacturer: {
@@ -471,11 +525,19 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
 //===============================================================
 
 productRequestSchema.pre('validate', function validateCategoryRelation() {
-  if (this.categoryMode === 'catalog' && !this.categoryId) {
+  if (
+    this.status !== 'draft' &&
+    this.categoryMode === 'catalog' &&
+    !this.categoryId
+  ) {
     this.invalidate('categoryId', 'Product category is required');
   }
 
-  if (this.categoryMode === 'custom' && !this.customCategory?.trim()) {
+  if (
+    this.status !== 'draft' &&
+    this.categoryMode === 'custom' &&
+    !this.customCategory?.trim()
+  ) {
     this.invalidate(
       'customCategory',
       PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory
@@ -507,6 +569,7 @@ productRequestSchema.index(
 
     partialFilterExpression: {
       status: { $in: ['draft', 'new', 'in_progress', 'approved'] },
+      article: { $gt: '' },
     },
   }
 );

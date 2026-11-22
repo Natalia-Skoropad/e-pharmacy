@@ -118,6 +118,7 @@ export async function getProductRequestsService(
 
   if (query.requestId) filter._id = new Types.ObjectId(query.requestId);
   if (query.productId) filter.productId = new Types.ObjectId(query.productId);
+  else if (query.linkedOnly) filter.productId = { $exists: true, $ne: null };
 
   if (keyword) {
     const expression = createFlexibleSearchRegExp(keyword);

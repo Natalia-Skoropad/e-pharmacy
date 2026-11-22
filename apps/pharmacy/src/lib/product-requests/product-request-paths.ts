@@ -132,8 +132,10 @@ export function parseProductRequestsSegments(
     if (segment.startsWith('request-product-id-')) {
       const id = segment.slice('request-product-id-'.length);
 
-      if (/^[a-f0-9]{24}$/i.test(id))
-        filters.productId = `request-${id.toLowerCase()}`;
+      // Legacy links selected an unlinked request as if it were a global
+      // product. Preserve the request selection and canonicalize the URL.
+      if (/^[a-f0-9]{24}$/i.test(id) && !filters.requestId)
+        filters.requestId = id.toLowerCase();
 
       continue;
     }
@@ -194,11 +196,7 @@ export function buildProductRequestsPath(
 
   if (filters.requestId) segments.push(`request-id-${filters.requestId}`);
 
-  if (filters.productId.startsWith('request-')) {
-    segments.push(
-      `request-product-id-${filters.productId.slice('request-'.length)}`
-    );
-  } else if (filters.productId) {
+  if (filters.productId && !filters.productId.startsWith('request-')) {
     segments.push(`product-id-${filters.productId}`);
   }
 

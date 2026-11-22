@@ -151,19 +151,11 @@ test('request and product searches share owner-scoped choices without global cat
   assert.match(list, /relatedRequestFilters/);
   assert.match(list, /relatedProductFilters/);
 
-  assert.match(
-    list,
-    /productId: requestId \? \(linkedProductId \?\? `request-\$\{requestId\}`\)/
-  );
+  assert.match(list, /productId: requestId[\s\S]*?linkedProductId \?\? ''/);
+  assert.match(list, /requestId:[\s\S]*?productId !== filters\.productId/);
 
-  assert.match(list, /requestId: productId !== filters\.productId \? ''/);
-
-  assert.match(
-    scopedProductSearch,
-    /request\.productId \?\? `request-\$\{request\.id\}`/
-  );
-
-  assert.match(scopedProductSearch, /unlinkedRequestId/);
+  assert.match(scopedProductSearch, /linkedOnly: true/);
+  assert.match(scopedProductSearch, /if \(!request\.productId\) continue/);
   assert.match(scopedProductSearch, /getPharmacyProductRequests/);
   assert.doesNotMatch(scopedProductSearch, /getOwnerCatalogProducts/);
   assert.match(scopedProductSearch, /key=\{scopeKey\}/);
@@ -171,16 +163,9 @@ test('request and product searches share owner-scoped choices without global cat
   const paths = await read('src/lib/product-requests/product-request-paths.ts');
 
   assert.match(paths, /request-product-id-/);
-
-  assert.match(
-    paths,
-    /filters\.productId = `request-\$\{id\.toLowerCase\(\)\}`/
-  );
-
-  assert.match(
-    paths,
-    /segments\.push\(`request-product-id-\$\{filters\.productId\.slice/
-  );
+  assert.match(paths, /filters\.requestId = id\.toLowerCase\(\)/);
+  assert.match(paths, /!filters\.productId\.startsWith\('request-'\)/);
+  assert.doesNotMatch(paths, /segments\.push\(`request-product-id-/);
 });
 
 //===================================================================
@@ -213,4 +198,142 @@ test('request category icons follow chosen category mode and new request has no 
   assert.match(details, /label: 'Change history'/);
   assert.doesNotMatch(details, /label: `Comments \(/);
   assert.doesNotMatch(details, /label: `Change history \(/);
+});
+
+//===================================================================
+
+test('request characteristics editor matches the six-field shared catalog contract', async () => {
+  const [editor, publicPanel, pharmacyPanel, sharedRows] = await Promise.all([
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+
+    read(
+      '../client/src/components/product-catalog/ProductDetailsPageContent/ProductCharacteristicsPanel.tsx'
+    ),
+
+    read(
+      'src/components/all-products/AllProductDetailsPageContent/AllProductDetailsPageContent.tsx'
+    ),
+
+    read(
+      '../../packages/ui/src/data-display/ProductCharacteristicsList/ProductCharacteristicsList.tsx'
+    ),
+  ]);
+  for (const label of [
+    'Brand',
+    'Series / Line',
+    'Manufacturer',
+    'Release form',
+    'Active ingredients',
+    'Active ingredient count',
+  ]) {
+    assert.ok(editor.includes(`label="${label}"`), label);
+    assert.ok(sharedRows.includes(`label: '${label}'`), label);
+  }
+
+  assert.match(publicPanel, /<ProductCharacteristicsList product=\{product\}/);
+
+  assert.match(
+    pharmacyPanel,
+    /<ProductCharacteristicsList product=\{product\}/
+  );
+
+  assert.doesNotMatch(sharedRows, /label:\s*'Category'/);
+});
+
+//===================================================================
+
+test('product request editor keeps tabs inside one card and photo/category layouts stable', async () => {
+  const [editor, styles] = await Promise.all([
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.module.css'
+    ),
+  ]);
+
+  assert.match(editor, /<section className=\{css\.editorCard\}[\s\S]*?<Tabs/);
+
+  assert.match(
+    editor,
+    /className=\{css\.editorPanel\} aria-labelledby="details-title"/
+  );
+
+  assert.match(
+    editor,
+    /<PharmacyPhotoPlaceholder[\s\S]*?icon=\{PackageSearch\}/
+  );
+
+  assert.match(
+    editor,
+    /<img src=\{displayedImageSrc\} alt="Selected product preview"/
+  );
+
+  assert.match(editor, /label="Product image"[\s\S]*?required/);
+  assert.doesNotMatch(editor, /label="Product image \*"/);
+  assert.match(editor, /css\.categoryFieldsGrid/);
+
+  assert.equal(
+    (editor.match(/className=\{css\.categoryField\}/g) ?? []).length,
+    2
+  );
+
+  assert.match(styles, /\.imagePreview\s*\{[\s\S]*?height: 320px;/);
+  assert.match(styles, /\.imagePreview img\s*\{[\s\S]*?object-fit: cover;/);
+
+  assert.match(
+    styles,
+    /\.categoryFieldsGrid > \.categoryField\s*\{[\s\S]*?subgrid/
+  );
+});
+
+//===================================================================
+
+test('request help explains the draft-first workflow and tablet overflow keeps Documents in More', async () => {
+  const [editor, tabs] = await Promise.all([
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+
+    read('../../packages/ui/src/navigation/Tabs/Tabs.tsx'),
+  ]);
+
+  assert.match(editor, /'Creating your product request'/);
+  assert.match(editor, /'Editing your product request'/);
+  assert.match(editor, /title: 'Save draft',[\s\S]*?icon: <Save/);
+
+  assert.match(
+    editor,
+    /title: 'Complete product details',[\s\S]*?icon: <CheckCircle2/
+  );
+
+  assert.match(editor, /title: 'Send for moderation',[\s\S]*?icon: <Send/);
+  assert.match(editor, /Save the draft first, then send the completed request/);
+  assert.match(editor, /escapeOverflow[\s\S]*?preferTopLayer/);
+  assert.doesNotMatch(editor, /title="Save or send the request"/);
+
+  const editorTabStart = editor.indexOf('const editorTabs = ');
+  const editorTabEnd = editor.indexOf('useEffect(', editorTabStart);
+  const editorTabSection = editor.slice(editorTabStart, editorTabEnd);
+
+  for (const label of [
+    'Details',
+    'Characteristics',
+    'Full description',
+    'Note for Admin',
+    'Documents',
+  ]) {
+    assert.match(editorTabSection, new RegExp(`label: '${label}'`));
+  }
+
+  assert.match(
+    editor,
+    /ariaLabel="Product request editor sections"[\s\S]*?tabletVisibleCount=\{4\}/
+  );
+
+  assert.match(tabs, /items\.slice\(normalizedTabletVisibleCount\)/);
+  assert.match(tabs, /css\.tabletMoreWrap/);
 });

@@ -57,11 +57,11 @@ export function validateProductRequestForm(
   const errors: ProductRequestFormErrors = {};
 
   if (values.categoryMode === 'catalog') {
-    if (!values.categoryId.trim()) {
+    if (mode === 'moderation' && !values.categoryId.trim()) {
       errors.categoryId = PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category;
     }
   } else if (values.categoryMode === 'custom') {
-    if (!values.customCategory.trim()) {
+    if (mode === 'moderation' && !values.customCategory.trim()) {
       errors.customCategory =
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory;
     }
@@ -80,7 +80,9 @@ export function validateProductRequestForm(
   );
 
   if (requiredNameError) errors.name = requiredNameError;
-  if (requiredArticleError) errors.article = requiredArticleError;
+  if (mode === 'moderation' && requiredArticleError) {
+    errors.article = requiredArticleError;
+  }
 
   const fieldLimits: Array<
     readonly [keyof ProductRequestFormValues, number, string]
@@ -99,6 +101,26 @@ export function validateProductRequestForm(
       'customCategory',
       PRODUCT_REQUEST_LIMITS.customCategoryMax,
       PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory,
+    ],
+    [
+      'brand',
+      PRODUCT_REQUEST_LIMITS.brandMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.brand,
+    ],
+    [
+      'series',
+      PRODUCT_REQUEST_LIMITS.seriesMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.series,
+    ],
+    [
+      'releaseForm',
+      PRODUCT_REQUEST_LIMITS.releaseFormMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.releaseForm,
+    ],
+    [
+      'activeIngredients',
+      PRODUCT_REQUEST_LIMITS.activeIngredientsMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredients,
     ],
     [
       'manufacturer',
@@ -151,6 +173,7 @@ export function validateProductRequestForm(
     if (errors[field]) continue;
 
     const error = buildMaxLengthError(values[field], maxLength, message);
+
     if (error) errors[field] = error;
   }
 
@@ -166,6 +189,10 @@ export function validateProductRequestForm(
   const shortTextFields: Array<keyof ProductRequestFormValues> = [
     'name',
     'customCategory',
+    'brand',
+    'series',
+    'releaseForm',
+    'activeIngredients',
     'manufacturer',
     'countryOfOrigin',
     'dosage',
@@ -203,11 +230,22 @@ export function validateProductRequestForm(
     if (error) errors[field] = error;
   }
 
+  if (
+    values.activeIngredientCount.trim() &&
+    (!/^[1-9]\d*$/.test(values.activeIngredientCount.trim()) ||
+      Number(values.activeIngredientCount.trim()) >
+        PRODUCT_REQUEST_LIMITS.activeIngredientCountMax)
+  ) {
+    errors.activeIngredientCount =
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredientCount;
+  }
+
   const productImage = context.productImage;
   const hasProductImage = context.hasProductImage ?? Boolean(productImage);
 
   if (productImage) {
     const imageError = validateProductRequestImageFile(productImage);
+
     if (imageError) errors.productImage = imageError;
   }
 
@@ -216,6 +254,7 @@ export function validateProductRequestForm(
       context.additionalFiles,
       { requireDataUrl: true }
     );
+
     if (filesError) errors.additionalFiles = filesError;
   }
 
@@ -228,17 +267,24 @@ export function validateProductRequestForm(
     const moderationRequiredFields: Array<
       readonly [keyof ProductRequestFormValues, string]
     > = [
+      ['brand', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.brand],
+      ['series', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.series],
+      ['releaseForm', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.releaseForm],
       [
-        'manufacturer',
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.manufacturer,
+        'activeIngredients',
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredients,
       ],
       [
-        'countryOfOrigin',
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.countryOfOrigin,
+        'activeIngredientCount',
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredientCount,
       ],
       [
         'fullDescription',
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,
+      ],
+      [
+        'manufacturer',
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.manufacturer,
       ],
     ];
 

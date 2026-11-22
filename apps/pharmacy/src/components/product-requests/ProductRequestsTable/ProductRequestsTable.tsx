@@ -56,6 +56,7 @@ function renderCategory(
   const resolved = original
     ? resolveOwnerCatalogCategory(original, categoryDirectory)
     : undefined;
+
   // The submitted category mode, not the existence of an approved product,
   // decides which icon is shown. Unlinked catalog requests still have a
   // genuine Admin-managed category and should display its real icon.
@@ -125,11 +126,11 @@ function ProductRequestsTable({
 
           return href ? (
             <TextActionButton href={href}>
-              {request.productArticle}
+              {request.productArticle || '—'}
             </TextActionButton>
           ) : (
             <TextActionButton className={css.disabledAction} disabled>
-              {request.productArticle}
+              {request.productArticle || '—'}
             </TextActionButton>
           );
         },
@@ -189,7 +190,7 @@ function ProductRequestsTable({
       items={requests}
       getItemKey={(request) => String(request.id)}
       isLoading={isLoading}
-      minWidth={0}
+      minWidth={960}
       labels={{
         loading: 'Loading requests...',
         empty: emptyMessage,

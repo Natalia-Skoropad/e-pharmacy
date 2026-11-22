@@ -97,6 +97,7 @@ export type ProductRequestsQueryParams = Readonly<{
   dateTo?: CalendarDateString;
   requestId?: string;
   productId?: string;
+  linkedOnly?: boolean;
   keyword?: string;
   requestNumber?: string;
   productName?: string;
@@ -136,7 +137,12 @@ export type ProductRequestDetailsViewModel = ProductRequestRowViewModel &
     name: string;
     article: string;
     productImage?: ProductRequestFile;
+    brand?: string;
+    series?: string;
     manufacturer?: string;
+    releaseForm?: string;
+    activeIngredients?: string;
+    activeIngredientCount?: number;
     countryOfOrigin?: string;
     dosage?: string;
     packageSize?: string;
@@ -342,8 +348,10 @@ export function normalizeProductRequest(
     !createdAt ||
     !status.success ||
     (categoryMode !== 'catalog' && categoryMode !== 'custom') ||
-    (categoryMode === 'catalog' && !isProductCategory(category)) ||
-    (categoryMode === 'custom' && !customCategory)
+    (status.value !== 'draft' &&
+      categoryMode === 'catalog' &&
+      !isProductCategory(category)) ||
+    (status.value !== 'draft' && categoryMode === 'custom' && !customCategory)
   ) {
     return null;
   }
@@ -371,7 +379,8 @@ export function normalizeProductRequest(
     getTrimmedString(rawRequest.productName) ??
     getTrimmedString(rawRequest.name);
 
-  if (!productArticle || !productName) return null;
+  if (!productName || (status.value !== 'draft' && !productArticle))
+    return null;
 
   return {
     id,
@@ -381,7 +390,7 @@ export function normalizeProductRequest(
     ...(productId ? { productId } : {}),
     ...(productImageUrl ? { productImageUrl } : {}),
 
-    productArticle,
+    productArticle: productArticle ?? '',
     productName,
     categoryMode,
 
@@ -410,7 +419,9 @@ export function normalizeProductRequestDetails(
   const name = getTrimmedString(rawRequest.name);
   const article = getTrimmedString(rawRequest.article);
 
-  if (!updatedAt || !name || !article) return null;
+  if (!updatedAt || !name || (request.status !== 'draft' && !article)) {
+    return null;
+  }
 
   const productImage = normalizeProductRequestFile(rawRequest.productImage);
 
@@ -433,14 +444,31 @@ export function normalizeProductRequestDetails(
   const optionalString = (key: string): string | undefined =>
     getTrimmedString(rawRequest[key]);
 
+  const activeIngredientCount = getFiniteNumber(
+    rawRequest.activeIngredientCount
+  );
+
   return {
     ...request,
 
     updatedAt,
     name,
-    article,
+    article: article ?? '',
 
     ...(productImage ? { productImage } : {}),
+
+    ...(optionalString('brand') ? { brand: optionalString('brand') } : {}),
+    ...(optionalString('series') ? { series: optionalString('series') } : {}),
+
+    ...(optionalString('releaseForm')
+      ? { releaseForm: optionalString('releaseForm') }
+      : {}),
+
+    ...(optionalString('activeIngredients')
+      ? { activeIngredients: optionalString('activeIngredients') }
+      : {}),
+
+    ...(activeIngredientCount !== null ? { activeIngredientCount } : {}),
 
     ...(optionalString('manufacturer')
       ? { manufacturer: optionalString('manufacturer') }

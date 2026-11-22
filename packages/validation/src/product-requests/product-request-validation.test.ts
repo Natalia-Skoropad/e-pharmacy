@@ -31,6 +31,10 @@ const FIELD_LIMIT_CASES: ReadonlyArray<
   ['name', PRODUCT_REQUEST_LIMITS.nameMax],
   ['article', PRODUCT_REQUEST_LIMITS.articleMax],
   ['customCategory', PRODUCT_REQUEST_LIMITS.customCategoryMax],
+  ['brand', PRODUCT_REQUEST_LIMITS.brandMax],
+  ['series', PRODUCT_REQUEST_LIMITS.seriesMax],
+  ['releaseForm', PRODUCT_REQUEST_LIMITS.releaseFormMax],
+  ['activeIngredients', PRODUCT_REQUEST_LIMITS.activeIngredientsMax],
   ['manufacturer', PRODUCT_REQUEST_LIMITS.manufacturerMax],
   ['countryOfOrigin', PRODUCT_REQUEST_LIMITS.countryOfOriginMax],
   ['dosage', PRODUCT_REQUEST_LIMITS.dosageMax],
@@ -72,7 +76,12 @@ function createSubmissionValues(
   overrides: Partial<ProductRequestFormValues> = {}
 ): ProductRequestFormValues {
   return createDraftValues({
+    brand: 'HealthCare',
+    series: 'Everyday',
     manufacturer: 'Pharmaco',
+    releaseForm: 'Tablets',
+    activeIngredients: 'Paracetamol',
+    activeIngredientCount: '1',
     countryOfOrigin: 'United Kingdom',
     dosage: '500 mg',
     packageSize: '20 tablets',
@@ -96,13 +105,29 @@ function withTextField(
 
 //=============================================================================
 
-test('draft validation requires name and article', () => {
+test('draft validation requires only a valid name, while moderation requires article and category', () => {
   assert.equal(
     isProductRequestDraftValid(PRODUCT_REQUEST_INITIAL_VALUES),
     false
   );
 
   assert.equal(isProductRequestDraftValid(createDraftValues()), true);
+
+  assert.equal(
+    isProductRequestDraftValid({
+      ...PRODUCT_REQUEST_INITIAL_VALUES,
+      name: 'Valid draft name',
+    }),
+    true
+  );
+
+  assert.equal(
+    isProductRequestSubmissionValid({
+      ...PRODUCT_REQUEST_INITIAL_VALUES,
+      name: 'Valid draft name',
+    }),
+    false
+  );
 });
 
 //=============================================================================
@@ -156,7 +181,15 @@ test('catalog category mode requires a category id without hardcoded membership 
     'draft'
   );
 
-  assert.ok(missingCategory.categoryId);
+  assert.equal(missingCategory.categoryId, undefined);
+
+  assert.ok(
+    validateProductRequestForm(
+      createDraftValues({ categoryId: '   ' }),
+      'moderation'
+    ).categoryId
+  );
+
   assert.equal(dynamicCategory.categoryId, undefined);
 });
 
@@ -164,6 +197,7 @@ test('catalog category mode requires a category id without hardcoded membership 
 
 test('validation rejects an unsupported category mode', () => {
   const values = createDraftValues();
+
   Reflect.set(values, 'categoryMode', 'unsupported');
 
   assert.ok(validateProductRequestForm(values, 'draft').categoryMode);
@@ -186,7 +220,19 @@ test('custom category is required only in custom category mode', () => {
     'draft'
   );
 
-  assert.ok(missingCustomCategory.customCategory);
+  assert.equal(missingCustomCategory.customCategory, undefined);
+
+  assert.ok(
+    validateProductRequestForm(
+      createDraftValues({
+        categoryMode: 'custom',
+        categoryId: '',
+        customCategory: '',
+      }),
+      'moderation'
+    ).customCategory
+  );
+
   assert.equal(catalogCategory.customCategory, undefined);
 });
 
@@ -205,7 +251,7 @@ test('moderation validation requires the moderation essentials and product image
 
 //=============================================================================
 
-test('Product data fields stay optional when a request is sent for moderation', () => {
+test('legacy Product data fields remain optional for moderation', () => {
   const values = createSubmissionValues({
     dosage: '',
     packageSize: '',
@@ -227,6 +273,52 @@ test('Product data fields stay optional when a request is sent for moderation', 
   assert.equal(
     isProductRequestSubmissionValid(values, { productImage: validImage }),
     true
+  );
+});
+
+//=============================================================================
+
+test('all six shared characteristics are required for moderation, not drafts', () => {
+  const complete = createSubmissionValues();
+
+  const requiredFields = [
+    'brand',
+    'series',
+    'manufacturer',
+    'releaseForm',
+    'activeIngredients',
+    'activeIngredientCount',
+  ] as const;
+
+  for (const field of requiredFields) {
+    const values = { ...complete, [field]: '' };
+
+    assert.equal(isProductRequestDraftValid(values), true, `${field} draft`);
+
+    assert.ok(
+      validateProductRequestForm(values, 'moderation', {
+        productImage: validImage,
+      })[field],
+      `${field} moderation`
+    );
+  }
+
+  for (const value of ['0', '-1', '2.5', '100', 'abc']) {
+    assert.ok(
+      validateProductRequestForm(
+        { ...complete, activeIngredientCount: value },
+        'moderation',
+        {
+          productImage: validImage,
+        }
+      ).activeIngredientCount,
+      `invalid count: ${value}`
+    );
+  }
+
+  assert.equal(
+    normalizeProductRequestForm(complete, 'new').activeIngredientCount,
+    1
   );
 });
 

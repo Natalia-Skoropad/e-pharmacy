@@ -27,7 +27,12 @@ const validSubmission = {
   ...validDraft,
   status: 'new' as const,
   productImage: validProductImage,
+  brand: 'HealthCare',
+  series: 'Everyday',
   manufacturer: 'Pharmaco',
+  releaseForm: 'Tablets',
+  activeIngredients: 'Paracetamol',
+  activeIngredientCount: 1,
   countryOfOrigin: 'United Kingdom',
   dosage: '500 mg',
   packageSize: '20 tablets',
@@ -36,6 +41,29 @@ const validSubmission = {
   prescriptionType: 'non_prescription',
   fullDescription: 'Complete product description in English.',
 };
+
+//===============================================================
+
+test('product request schema accepts a name-only draft without an article or category', () => {
+  const parsed = productRequestFormSchema.safeParse({
+    status: 'draft',
+    name: 'Name only draft',
+    article: '',
+    categoryMode: 'catalog',
+  });
+
+  assert.equal(parsed.success, true);
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      status: 'new',
+      name: 'Incomplete submission',
+      article: '',
+      categoryMode: 'catalog',
+    }).success,
+    false
+  );
+});
 
 //===============================================================
 
@@ -103,26 +131,28 @@ test('product request schema normalizes blank optional text to undefined', () =>
 
 //===============================================================
 
-test('product request schema requires custom category metadata in custom mode', () => {
-  assert.equal(
-    productRequestFormSchema.safeParse({
-      ...validDraft,
-      categoryMode: 'custom',
-      categoryId: undefined,
-      customCategory: '',
-    }).success,
+test('product request schema permits a partial category in drafts but requires it for moderation', () => {
+  const partial = {
+    ...validDraft,
+    categoryMode: 'custom' as const,
+    categoryId: undefined,
+    customCategory: '',
+  };
 
+  assert.equal(productRequestFormSchema.safeParse(partial).success, true);
+
+  assert.equal(
+    productRequestFormSchema.safeParse({ ...partial, status: 'new' }).success,
     false
   );
 
   assert.equal(
     productRequestFormSchema.safeParse({
-      ...validDraft,
+      ...validSubmission,
       categoryMode: 'custom',
       categoryId: undefined,
       customCategory: 'Other medicine',
     }).success,
-
     true
   );
 });
@@ -140,6 +170,48 @@ test('product request schema enforces moderation-required fields', () => {
     productRequestFormSchema.safeParse(validSubmission).success,
     true
   );
+});
+
+//===============================================================
+
+test('backend requires the same six characteristics and a positive count on moderation', () => {
+  const required = [
+    'brand',
+    'series',
+    'manufacturer',
+    'releaseForm',
+    'activeIngredients',
+    'activeIngredientCount',
+  ] as const;
+
+  for (const field of required) {
+    const submission = { ...validSubmission, [field]: undefined };
+
+    assert.equal(
+      productRequestFormSchema.safeParse(submission).success,
+      false,
+      field
+    );
+
+    assert.equal(
+      productRequestFormSchema.safeParse({ ...submission, status: 'draft' })
+        .success,
+      true,
+      `${field} draft`
+    );
+  }
+
+  for (const count of [0, -1, 2.5, 100]) {
+    assert.equal(
+      productRequestFormSchema.safeParse({
+        ...validSubmission,
+        activeIngredientCount: count,
+      }).success,
+
+      false,
+      `count ${count}`
+    );
+  }
 });
 
 //===============================================================

@@ -58,12 +58,6 @@ function getProductRequestsQueryParams(
   rowsPerPage: RowsPerPageValue,
   page: number
 ): ProductRequestsQueryParams {
-  // Unsaved/catalog-unlinked products have no global product ID. Their
-  // search selection uses the request ID as an explicit, separate filter.
-  const unlinkedRequestId = filters.productId.startsWith('request-')
-    ? filters.productId.slice('request-'.length)
-    : '';
-
   return {
     page,
     perPage: rowsPerPage,
@@ -73,8 +67,8 @@ function getProductRequestsQueryParams(
       : undefined,
 
     dateTo: isCalendarDateString(filters.date.to) ? filters.date.to : undefined,
-    requestId: filters.requestId || unlinkedRequestId || undefined,
-    productId: unlinkedRequestId ? undefined : filters.productId || undefined,
+    requestId: filters.requestId || undefined,
+    productId: filters.productId || undefined,
 
     category:
       filters.category === 'all' ||
@@ -217,12 +211,7 @@ function ProductRequestsPageContent({
   );
 
   const relatedProductFilters = useMemo(
-    () =>
-      getProductRequestsQueryParams(
-        { ...filters, requestId: '', productId: '' },
-        20,
-        1
-      ),
+    () => getProductRequestsQueryParams({ ...filters, productId: '' }, 20, 1),
     [filters]
   );
 
@@ -378,7 +367,7 @@ function ProductRequestsPageContent({
                 // Like Orders -> Client: selecting a specific request also
                 // selects its matching global product when it has one.
                 productId: requestId
-                  ? (linkedProductId ?? `request-${requestId}`)
+                  ? (linkedProductId ?? '')
                   : filters.productId,
               })
             }

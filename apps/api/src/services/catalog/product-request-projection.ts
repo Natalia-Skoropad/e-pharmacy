@@ -193,7 +193,12 @@ export function serializeProductRequest(
       : {}),
 
     productImage: request.productImage,
+    brand: request.brand,
+    series: request.series,
     manufacturer: request.manufacturer,
+    releaseForm: request.releaseForm,
+    activeIngredients: request.activeIngredients,
+    activeIngredientCount: request.activeIngredientCount,
     countryOfOrigin: request.countryOfOrigin,
     dosage: request.dosage,
     packageSize: request.packageSize,

@@ -5,10 +5,6 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import {
   ArrowRight,
-  Building2,
-  FlaskConical,
-  Package2,
-  Tags,
   ClipboardList,
   MessageSquareText,
   PackageSearch,
@@ -23,7 +19,13 @@ import { PRODUCT_STATUS_PRESENTATION } from '@e-pharmacy/config/presentation';
 import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 
 import { LinkButton, Tabs, type TabItem } from '@e-pharmacy/ui/navigation';
-import { RatingSummary, ReviewsList } from '@e-pharmacy/ui/data-display';
+
+import {
+  RatingSummary,
+  ReviewsList,
+  ProductCharacteristicsList,
+} from '@e-pharmacy/ui/data-display';
+
 import { Button } from '@e-pharmacy/ui/primitives';
 
 import {
@@ -139,66 +141,9 @@ function CatalogTabHeading({ tab }: { tab: AllProductDetailTab }) {
 //===================================================================
 
 function CatalogCharacteristics({ product }: { product: ProductDetails }) {
-  const characteristics = [
-    product.manufacturer
-      ? {
-          label: 'Manufacturer',
-          value: product.manufacturer,
-          icon: 'manufacturer',
-        }
-      : null,
-
-    product.dosage
-      ? { label: 'Dosage', value: product.dosage, icon: 'dosage' }
-      : null,
-
-    product.packageQuantity
-      ? { label: 'Package', value: product.packageQuantity, icon: 'package' }
-      : null,
-
-    { label: 'Category', value: product.category.name, icon: 'category' },
-  ].filter((item): item is { label: string; value: string; icon: string } =>
-    Boolean(item)
-  );
-
   return (
     <>
-      {characteristics.length ? (
-        <dl className={css.characteristicsList}>
-          {characteristics.map((item) => (
-            <div className={css.characteristicItem} key={item.label}>
-              <dt>
-                <span className={css.characteristicIcon} aria-hidden="true">
-                  {item.icon === 'manufacturer' ? (
-                    <Building2 size={16} />
-                  ) : item.icon === 'dosage' ? (
-                    <FlaskConical size={16} />
-                  ) : item.icon === 'package' ? (
-                    <Package2 size={16} />
-                  ) : (
-                    <Tags size={16} />
-                  )}
-                </span>
-                {item.label}
-              </dt>
-              <dd>
-                {item.icon === 'category' ? (
-                  <span className={css.categoryCharacteristic}>
-                    <CategoryIcon name={product.category.icon} size={16} />
-                    {item.value}
-                  </span>
-                ) : (
-                  item.value
-                )}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      ) : (
-        <p className={css.emptyPanel}>
-          Characteristics for this product have not been added yet.
-        </p>
-      )}
+      <ProductCharacteristicsList product={product} />
       <div className={css.descriptionBlock}>
         {product.description ? <p>{product.description}</p> : null}
         <p>

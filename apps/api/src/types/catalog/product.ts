@@ -21,6 +21,11 @@ export type ProductEntity = {
   price?: number;
   imageUrl?: string;
   manufacturer?: string;
+  brand?: string;
+  series?: string;
+  releaseForm?: string;
+  activeIngredients?: string;
+  activeIngredientCount?: number;
   dosage?: string;
   packageQuantity?: string;
   pharmacyId?: Types.ObjectId;
@@ -113,6 +118,11 @@ export type ProductResponseDto = {
   price: number;
   imageUrl?: string;
   manufacturer?: string;
+  brand?: string;
+  series?: string;
+  releaseForm?: string;
+  activeIngredients?: string;
+  activeIngredientCount?: number;
   dosage?: string;
   packageQuantity?: string;
   pharmacyId?: string;

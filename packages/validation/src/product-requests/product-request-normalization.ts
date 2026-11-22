@@ -28,7 +28,16 @@ export function normalizeProductRequestForm(
         : undefined,
 
     productImage: files.productImage,
+    brand: normalizeOptionalText(values.brand),
+    series: normalizeOptionalText(values.series),
     manufacturer: normalizeOptionalText(values.manufacturer),
+    releaseForm: normalizeOptionalText(values.releaseForm),
+    activeIngredients: normalizeOptionalText(values.activeIngredients),
+
+    activeIngredientCount: values.activeIngredientCount.trim()
+      ? Number(values.activeIngredientCount.trim())
+      : undefined,
+
     countryOfOrigin: normalizeOptionalText(values.countryOfOrigin),
     dosage: normalizeOptionalText(values.dosage),
     packageSize: normalizeOptionalText(values.packageSize),

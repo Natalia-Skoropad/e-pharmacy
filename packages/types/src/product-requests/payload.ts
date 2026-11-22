@@ -22,7 +22,12 @@ export type ProductRequestFormPayload = Readonly<{
   categoryId?: EntityId;
   customCategory?: string;
   productImage?: ProductRequestFile;
+  brand?: string;
+  series?: string;
   manufacturer?: string;
+  releaseForm?: string;
+  activeIngredients?: string;
+  activeIngredientCount?: number;
   countryOfOrigin?: string;
   dosage?: string;
   packageSize?: string;

@@ -180,6 +180,7 @@ export const productRequestsQuerySchema = z.preprocess(
       dateTo: dateQuerySchema,
       requestId: mongoIdSchema.optional(),
       productId: mongoIdSchema.optional(),
+      linkedOnly: z.literal('true').optional(),
       keyword: sharedSearchSchema,
       requestNumber: sharedSearchSchema,
       productName: sharedSearchSchema,
@@ -228,15 +229,13 @@ export const productRequestFormSchema = z
     article: z
       .string()
       .trim()
-      .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
-
       .max(
         PRODUCT_REQUEST_LIMITS.articleMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
       )
 
-      .regex(
-        PRODUCT_REQUEST_ARTICLE_PATTERN,
+      .refine(
+        (value) => !value || PRODUCT_REQUEST_ARTICLE_PATTERN.test(value),
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
       )
 
@@ -254,6 +253,41 @@ export const productRequestFormSchema = z
     }),
 
     productImage: productImageSchema.optional(),
+
+    brand: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.brandMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.brand,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    series: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.seriesMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.series,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    releaseForm: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.releaseFormMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.releaseForm,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    activeIngredients: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.activeIngredientsMax,
+      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredients,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }),
+
+    activeIngredientCount: z
+      .number()
+      .int()
+      .min(1)
+      .max(PRODUCT_REQUEST_LIMITS.activeIngredientCountMax)
+      .optional(),
 
     manufacturer: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.manufacturerMax,
@@ -335,7 +369,11 @@ export const productRequestFormSchema = z
   })
 
   .superRefine((value, context) => {
-    if (value.categoryMode === 'catalog' && !value.categoryId) {
+    if (
+      value.status === 'new' &&
+      value.categoryMode === 'catalog' &&
+      !value.categoryId
+    ) {
       context.addIssue({
         code: 'custom',
         path: ['categoryId'],
@@ -351,7 +389,11 @@ export const productRequestFormSchema = z
       });
     }
 
-    if (value.categoryMode === 'custom' && !value.customCategory?.trim()) {
+    if (
+      value.status === 'new' &&
+      value.categoryMode === 'custom' &&
+      !value.customCategory?.trim()
+    ) {
       context.addIssue({
         code: 'custom',
         path: ['customCategory'],
@@ -360,6 +402,14 @@ export const productRequestFormSchema = z
     }
 
     if (value.status !== 'new') return;
+
+    if (!value.article.trim()) {
+      context.addIssue({
+        code: 'custom',
+        path: ['article'],
+        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article,
+      });
+    }
 
     const requiredForModeration = [
       [
@@ -373,9 +423,29 @@ export const productRequestFormSchema = z
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.manufacturer,
       ],
       [
-        'countryOfOrigin',
-        value.countryOfOrigin,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.countryOfOrigin,
+        'brand',
+        value.brand,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.brand,
+      ],
+      [
+        'series',
+        value.series,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.series,
+      ],
+      [
+        'releaseForm',
+        value.releaseForm,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.releaseForm,
+      ],
+      [
+        'activeIngredients',
+        value.activeIngredients,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredients,
+      ],
+      [
+        'activeIngredientCount',
+        value.activeIngredientCount,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredientCount,
       ],
       [
         'fullDescription',

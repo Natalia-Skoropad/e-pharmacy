@@ -8,14 +8,15 @@ import { getPharmacyProductRequests } from '@/lib/api/browser';
 import {
   OwnerProductSearch,
   type ProductSuggestionsLoader,
+  type ProductSearchItem,
 } from '@/components/all-products/OwnerProductSearch/OwnerProductSearch';
 
 //===================================================================
 
 /**
  * Reuse the global-catalog select UI, but never fetch the whole catalog.
- * Only products included in requests owned by this account may be
- * suggested, including requests not yet linked to the global catalog.
+ * Only global products referenced by this owner's requests may be
+ * suggested. Draft requests without a global product are not product options.
  * Other active request filters apply to the choices in this selector.
  */
 export function OwnerRequestedProductSearch({
@@ -31,35 +32,38 @@ export function OwnerRequestedProductSearch({
 
   const loadProducts = useCallback<ProductSuggestionsLoader>(
     async (params, options) => {
-      // The explicit prefix distinguishes an unlinked request-product from
-      // an Admin global product. Never substitute a request ID as productId.
-      const unlinkedRequestId = params.productId?.startsWith('request-')
-        ? params.productId.slice('request-'.length)
-        : undefined;
-
       const response = await getPharmacyProductRequests(
         {
           ...relatedFilters,
-          requestId: unlinkedRequestId,
-          productId: unlinkedRequestId ? undefined : params.productId,
+
+          // Product search lists only linked global products from the owner's
+          // requests. Unlinked requests belong in Product request search.
+          linkedOnly: true,
+          productId: params.productId,
           keyword: params.keyword || undefined,
           page: params.page ?? 1,
           perPage: params.perPage ?? 20,
         },
-
         options
       );
+
+      const products = new Map<string, ProductSearchItem>();
+
+      for (const request of response.items) {
+        if (!request.productId) continue;
+
+        products.set(request.productId, {
+          id: request.productId,
+          name: request.productName,
+          article: request.productArticle,
+          imageUrl: request.productImageUrl,
+        });
+      }
 
       return {
         page: response.page,
         totalPages: response.totalPages,
-
-        items: response.items.map((request) => ({
-          id: request.productId ?? `request-${request.id}`,
-          name: request.productName,
-          article: request.productArticle,
-          imageUrl: request.productImageUrl,
-        })),
+        items: [...products.values()],
       };
     },
     [relatedFilters]
@@ -75,7 +79,7 @@ export function OwnerRequestedProductSearch({
       onChange={onChange}
       loadProducts={loadProducts}
       selectedFallbackLabel="Selected product"
-      description="Find products appearing in your product requests by article or name. Selecting a request automatically selects its product."
+      description="Find only global catalog products linked to your product requests. Draft requests without a linked product are available through Product request search."
     />
   );
 }
