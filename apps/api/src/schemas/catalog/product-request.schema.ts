@@ -97,6 +97,8 @@ function createProductRequestFileSchema(
         .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fileSize)
         .max(rules.maxSizeBytes, sizeMessage),
 
+      documentId: mongoIdSchema.optional(),
+
       dataUrl: z
         .string()
         .max(rules.maxDataUrlLength, dataMessage)
@@ -105,8 +107,28 @@ function createProductRequestFileSchema(
     })
 
     .superRefine((file, context) => {
+      if (file.documentId && file.dataUrl) {
+        context.addIssue({
+          code: 'custom',
+          path: ['dataUrl'],
+          message: 'Choose either a stored document or a new upload.',
+        });
+
+        return;
+      }
+
+      if (file.documentId && !rules.requireDataUrl) {
+        context.addIssue({
+          code: 'custom',
+          path: ['documentId'],
+          message: 'Images cannot reference an attachment ID.',
+        });
+
+        return;
+      }
+
       if (!file.dataUrl) {
-        if (rules.requireDataUrl) {
+        if (rules.requireDataUrl && !file.documentId) {
           context.addIssue({
             code: 'custom',
             path: ['dataUrl'],
@@ -215,7 +237,7 @@ export const productRequestsQuerySchema = z.preprocess(
 
 export const productRequestFormSchema = z
   .object({
-    status: z.enum(['draft', 'new']).default('draft'),
+    status: z.literal('new').default('new'),
 
     name: z
       .string()
@@ -308,7 +330,11 @@ export const productRequestFormSchema = z
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescription,
       pattern: PRODUCT_REQUEST_LONG_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.longText,
-    }),
+    }).refine(
+      (value) =>
+        !value || value.length >= PRODUCT_REQUEST_LIMITS.fullDescriptionMin,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescriptionMin
+    ),
 
     pharmacyComment: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.pharmacyCommentMax,
@@ -336,88 +362,11 @@ export const productRequestFormSchema = z
   })
 
   .superRefine((value, context) => {
-    if (
-      value.status === 'new' &&
-      value.categoryMode === 'catalog' &&
-      !value.categoryId
-    ) {
-      context.addIssue({
-        code: 'custom',
-        path: ['categoryId'],
-        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.category,
-      });
-    }
-
     if (value.categoryMode === 'custom' && value.categoryId) {
       context.addIssue({
         code: 'custom',
         path: ['categoryId'],
         message: 'Custom category requests must not select a catalog category.',
-      });
-    }
-
-    if (
-      value.status === 'new' &&
-      value.categoryMode === 'custom' &&
-      !value.customCategory?.trim()
-    ) {
-      context.addIssue({
-        code: 'custom',
-        path: ['customCategory'],
-        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.customCategory,
-      });
-    }
-
-    if (value.status !== 'new') return;
-
-    if (!value.article.trim()) {
-      context.addIssue({
-        code: 'custom',
-        path: ['article'],
-        message: PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article,
-      });
-    }
-
-    const requiredForModeration = [
-      [
-        'productImage',
-        value.productImage,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.productImage,
-      ],
-      [
-        'manufacturer',
-        value.manufacturer,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.manufacturer,
-      ],
-      [
-        'brand',
-        value.brand,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.brand,
-      ],
-      [
-        'series',
-        value.series,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.series,
-      ],
-      [
-        'fullDescription',
-        value.fullDescription,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,
-      ],
-    ] as const;
-
-    for (const [field, fieldValue, message] of requiredForModeration) {
-      const isFilled =
-        typeof fieldValue === 'string'
-          ? Boolean(fieldValue.trim())
-          : Boolean(fieldValue);
-
-      if (isFilled) continue;
-
-      context.addIssue({
-        code: 'custom',
-        path: [field],
-        message,
       });
     }
   });
@@ -455,18 +404,42 @@ export const productRequestParamsSchema = z.object({
 
 export const productRequestModerationSchema = z
   .object({
-    status: z.enum(['in_progress', 'approved', 'rejected']),
+    status: z.enum(['on_moderation', 'approved', 'rejected']),
     reason: z.string().trim().max(1000).optional(),
+    reviewState: z.literal('changes_requested').optional(),
     productId: mongoIdSchema.optional(),
     categoryId: mongoIdSchema.optional(),
   })
 
   .superRefine((value, context) => {
-    if (value.status === 'rejected' && !value.reason?.trim()) {
+    if (
+      (value.status === 'rejected' ||
+        value.reviewState === 'changes_requested') &&
+      !value.reason?.trim()
+    ) {
       context.addIssue({
         code: 'custom',
         path: ['reason'],
         message: 'Rejection reason is required.',
+      });
+    }
+
+    if (
+      value.status === 'on_moderation' &&
+      value.reviewState !== 'changes_requested'
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['reviewState'],
+        message: 'Admin must explicitly request corrections during moderation.',
+      });
+    }
+
+    if (value.reviewState && value.status !== 'on_moderation') {
+      context.addIssue({
+        code: 'custom',
+        path: ['reviewState'],
+        message: 'Corrections are only available during moderation.',
       });
     }
 

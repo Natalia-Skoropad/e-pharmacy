@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
+import { PHARMACY_DOCUMENT_RULES } from '../../constants/pharmacies/pharmacy-document-validation';
+import { PRODUCT_REQUEST_ATTACHMENT_RULES } from '../../constants/catalog/product-request-validation';
+
 import {
   productRequestFormSchema,
   productRequestModerationSchema,
@@ -9,7 +12,7 @@ import {
 //===============================================================
 
 const validDraft = {
-  status: 'draft' as const,
+  status: 'new' as const,
   name: 'Paracetamol',
   article: 'MED-001',
   categoryMode: 'catalog' as const,
@@ -33,15 +36,15 @@ const validSubmission = {
   releaseForm: 'Tablets',
   activeIngredients: 'Paracetamol',
   activeIngredientCount: 'Paracetamol: 500 mg per tablet',
-  fullDescription: 'Complete product description in English.',
+  fullDescription: 'Complete product description in English. '.repeat(3),
 };
 
 //===============================================================
 
-test('product request schema accepts a name-only draft without an article or category', () => {
+test('New status saves name-only requests without forcing moderation fields', () => {
   const parsed = productRequestFormSchema.safeParse({
-    status: 'draft',
-    name: 'Name only draft',
+    status: 'new',
+    name: 'Name only request',
     article: '',
     categoryMode: 'catalog',
   });
@@ -50,8 +53,8 @@ test('product request schema accepts a name-only draft without an article or cat
 
   assert.equal(
     productRequestFormSchema.safeParse({
-      status: 'new',
-      name: 'Incomplete submission',
+      status: 'draft',
+      name: 'Legacy',
       article: '',
       categoryMode: 'catalog',
     }).success,
@@ -156,7 +159,7 @@ test('product request schema normalizes blank optional text to undefined', () =>
 
 //===============================================================
 
-test('product request schema permits a partial category in drafts but requires it for moderation', () => {
+test('New requests may have a partial category, but category combinations remain consistent', () => {
   const partial = {
     ...validDraft,
     categoryMode: 'custom' as const,
@@ -167,15 +170,16 @@ test('product request schema permits a partial category in drafts but requires i
   assert.equal(productRequestFormSchema.safeParse(partial).success, true);
 
   assert.equal(
-    productRequestFormSchema.safeParse({ ...partial, status: 'new' }).success,
+    productRequestFormSchema.safeParse({
+      ...partial,
+      categoryId: validDraft.categoryId,
+    }).success,
     false
   );
 
   assert.equal(
     productRequestFormSchema.safeParse({
-      ...validSubmission,
-      categoryMode: 'custom',
-      categoryId: undefined,
+      ...partial,
       customCategory: 'Other medicine',
     }).success,
     true
@@ -184,10 +188,14 @@ test('product request schema permits a partial category in drafts but requires i
 
 //===============================================================
 
-test('product request schema enforces moderation-required fields', () => {
+test('owner submission is a separate action, not a status in the Save form', () => {
+  assert.equal(productRequestFormSchema.safeParse(validDraft).success, true);
+
   assert.equal(
-    productRequestFormSchema.safeParse({ ...validDraft, status: 'new' })
-      .success,
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      status: 'on_moderation',
+    }).success,
     false
   );
 
@@ -199,27 +207,11 @@ test('product request schema enforces moderation-required fields', () => {
 
 //===============================================================
 
-test('backend requires brand, series and manufacturer on moderation', () => {
-  const required = ['brand', 'series', 'manufacturer'] as const;
-
-  for (const field of required) {
-    const submission = { ...validSubmission, [field]: undefined };
-
-    assert.equal(
-      productRequestFormSchema.safeParse(submission).success,
-      false,
-      field
-    );
-
-    assert.equal(
-      productRequestFormSchema.safeParse({ ...submission, status: 'draft' })
-        .success,
-      true,
-      `${field} draft`
-    );
-  }
-
+test('New Save form allows optional characteristics; submit service validates required fields', () => {
   for (const field of [
+    'brand',
+    'series',
+    'manufacturer',
     'releaseForm',
     'activeIngredients',
     'activeIngredientCount',
@@ -229,7 +221,9 @@ test('backend requires brand, series and manufacturer on moderation', () => {
         ...validSubmission,
         [field]: undefined,
       }).success,
-      true
+
+      true,
+      field
     );
   }
 
@@ -239,6 +233,40 @@ test('backend requires brand, series and manufacturer on moderation', () => {
       activeIngredientCount: 'Vitamin C: 500 mg, calcium: 55 mg',
     }).success,
     true
+  );
+});
+
+//===============================================================
+
+test('About product follows the 100-character boundary', () => {
+  assert.equal(
+    productRequestFormSchema.safeParse({ ...validDraft, fullDescription: '' })
+      .success,
+    true
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      fullDescription: 'A'.repeat(99),
+    }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      fullDescription: 'A'.repeat(100),
+    }).success,
+    true
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validSubmission,
+      fullDescription: 'A'.repeat(99),
+    }).success,
+    false
   );
 });
 
@@ -289,6 +317,35 @@ test('product request schema enforces image MIME, extension and size', () => {
     }).success,
 
     false
+  );
+});
+
+//===============================================================
+
+test('request document limits match pharmacy verification document rules', () => {
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles,
+    PHARMACY_DOCUMENT_RULES.maxFiles
+  );
+
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.maxSizeBytes,
+    PHARMACY_DOCUMENT_RULES.maxSizeBytes
+  );
+
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.maxTotalSizeBytes,
+    PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes
+  );
+
+  assert.deepEqual(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.mimeTypes,
+    PHARMACY_DOCUMENT_RULES.mimeTypes
+  );
+
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.fileNamePattern.source,
+    PHARMACY_DOCUMENT_RULES.fileNamePattern.source
   );
 });
 
@@ -353,7 +410,17 @@ test('product request schema stores attachment data and checks MIME consistency'
 
 test('product request moderation schema enforces the admin transition payload', () => {
   assert.equal(
-    productRequestModerationSchema.safeParse({ status: 'in_progress' }).success,
+    productRequestModerationSchema.safeParse({ status: 'on_moderation' })
+      .success,
+    false
+  );
+
+  assert.equal(
+    productRequestModerationSchema.safeParse({
+      status: 'on_moderation',
+      reviewState: 'changes_requested',
+      reason: 'Please supply a better image.',
+    }).success,
     true
   );
 
@@ -382,7 +449,7 @@ test('product request moderation schema enforces the admin transition payload', 
 
   assert.equal(
     productRequestModerationSchema.safeParse({
-      status: 'in_progress',
+      status: 'on_moderation',
       productId: '507f1f77bcf86cd799439011',
     }).success,
 
@@ -391,6 +458,43 @@ test('product request moderation schema enforces the admin transition payload', 
 
   assert.equal(
     productRequestModerationSchema.safeParse({ status: 'new' }).success,
+    false
+  );
+});
+
+//===============================================================
+
+test('product request accepts stored attachment references without Base64 but rejects ambiguous mixed payloads', () => {
+  const file = {
+    documentId: '507f1f77bcf86cd799439011',
+    name: 'instruction.pdf',
+    type: 'application/pdf',
+    size: 100,
+  };
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      additionalFiles: [file],
+    }).success,
+    true
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      additionalFiles: [
+        { ...file, dataUrl: 'data:application/pdf;base64,AA==' },
+      ],
+    }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      additionalFiles: [{ name: file.name, type: file.type, size: file.size }],
+    }).success,
     false
   );
 });

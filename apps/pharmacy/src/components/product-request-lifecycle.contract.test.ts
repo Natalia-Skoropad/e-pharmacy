@@ -26,7 +26,8 @@ test('product request flow uses one explicit feature mode contract', async () =>
   );
 
   assert.match(source, /const requestMode = resolveProductRequestPageMode/);
-  assert.match(source, /const isDraft = requestMode === 'edit'/);
+  assert.match(modeSource, /requestStatus === 'new'/);
+  assert.match(modeSource, /reviewState === 'changes_requested'/);
   assert.match(source, /const canEdit = requestMode !== 'readonly'/);
   assert.match(source, /requestMode !== 'readonly'/);
 });
@@ -189,15 +190,10 @@ test('request category icons follow chosen category mode and new request has no 
   assert.match(table, /isCustomCategory[\s\S]*?<Settings/);
   assert.match(table, /<CategoryIcon name=\{resolved\?\.icon\}/);
   assert.doesNotMatch(table, /Boolean\(request\.productId && resolved\)/);
-
-  assert.match(
-    details,
-    /if \(requestId\) \{[\s\S]{0,110}items\.push\(\{ value: 'comments', label: 'Comments' \}\)/
-  );
-
-  assert.match(details, /label: 'Change history'/);
+  assert.match(details, /\.\.\.\(requestId \? \[[\s\S]*label: 'Comments'/);
+  assert.match(details, /label: 'Activity history'/);
   assert.doesNotMatch(details, /label: `Comments \(/);
-  assert.doesNotMatch(details, /label: `Change history \(/);
+  assert.doesNotMatch(details, /label: `Activity history \(/);
 });
 
 //===================================================================
@@ -322,7 +318,7 @@ test('request help explains the draft-first workflow and tablet overflow keeps D
   for (const label of [
     'Details',
     'Characteristics',
-    'Full description',
+    'About product',
     'Note for Admin',
     'Documents',
   ]) {
@@ -336,6 +332,31 @@ test('request help explains the draft-first workflow and tablet overflow keeps D
 
   assert.match(tabs, /items\.slice\(normalizedTabletVisibleCount\)/);
   assert.match(tabs, /css\.tabletMoreWrap/);
+});
+
+//===================================================================
+
+test('request editor shares About pharmacy editor sizing and uses distinct note/documents icons', async () => {
+  const [source, styles] = await Promise.all([
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.module.css'
+    ),
+  ]);
+
+  assert.match(source, /label: 'About product',[\s\S]*?icon: <FileText/);
+  assert.match(source, /label: 'Note for Admin',[\s\S]*?icon: <StickyNote/);
+  assert.match(source, /label: 'Documents',[\s\S]*?icon: <Files/);
+  assert.match(source, /name="fullDescription"\s+expanded/);
+  assert.match(source, /At least 100 characters when filled/);
+  assert.match(source, /title="Note for Admin"[\s\S]*?icon={<StickyNote/);
+  assert.match(source, /className={css.noteField}/);
+  assert.match(styles, /\.noteField textarea/);
+  assert.match(source, /title="Documents"[\s\S]*?icon={<Files/);
+  assert.match(source, /PDF, DOC, DOCX, JPG, PNG or WEBP/);
 });
 
 //===================================================================
@@ -383,4 +404,23 @@ test('characteristics hide missing values and follow stacked public bank detail 
   assert.doesNotMatch(formProjection, /request\.form\b/);
   assert.match(editor, /Boolean\(articleFormatError\)/);
   assert.match(editor, /normalizeProductRequestLatinInput/);
+});
+
+//===================================================================
+
+test('supporting documents upload individually before the draft JSON mutation', async () => {
+  const source = await read(
+    'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+  );
+
+  const browserApi = await read('src/lib/api/browser/product-requests.api.ts');
+
+  assert.match(source, /uploadPharmacyProductRequestDocument\(/);
+  assert.match(source, /documentId: uploaded\.document\.documentId/);
+  assert.match(source, /onDownloadFile=\{async \(file\)/);
+
+  assert.match(
+    browserApi,
+    /localApiRequest\(path, \{ method: 'POST', body: payload \}\)/
+  );
 });

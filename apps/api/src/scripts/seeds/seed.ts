@@ -3902,9 +3902,8 @@ async function seedClientManagerNotes(): Promise<number> {
 const PRODUCT_REQUEST_SEED_STATUSES = [
   ...Array.from({ length: 14 }, () => 'approved' as const),
   ...Array.from({ length: 5 }, () => 'rejected' as const),
-  ...Array.from({ length: 2 }, () => 'draft' as const),
-  ...Array.from({ length: 3 }, () => 'new' as const),
-  'in_progress' as const,
+  ...Array.from({ length: 2 }, () => 'new' as const),
+  ...Array.from({ length: 4 }, () => 'on_moderation' as const),
 ] as const;
 
 const PRODUCT_REQUEST_SEED_CATEGORY_SLUGS = [
@@ -3941,55 +3940,31 @@ function createProductRequestSeedHistory(
     createdAt: Date;
   }> = [
     {
-      status: 'draft' as const,
-      title: 'Draft created',
-      description: 'The pharmacy saved the product request as a draft.',
+      status: 'new',
+      title: 'Request created',
+      description: 'The pharmacy saved a new product request.',
       createdAt,
     },
   ];
 
-  if (status !== 'draft') {
+  if (status !== 'new') {
     entries.push({
-      status: 'new',
+      status: 'on_moderation',
       title: 'Sent for moderation',
       description: 'The pharmacy sent the product request to Admin.',
       createdAt: new Date(createdAt.getTime() + 60 * 60 * 1000),
     });
   }
 
-  if (
-    status === 'in_progress' ||
-    status === 'approved' ||
-    status === 'rejected'
-  ) {
+  if (status === 'approved' || status === 'rejected') {
     entries.push({
-      status: 'in_progress',
-      title: 'Review started',
-      description: 'Admin started reviewing the submitted product data.',
-      createdAt: new Date(createdAt.getTime() + 2 * 60 * 60 * 1000),
-    });
-  }
-
-  if (status === 'approved') {
-    entries.push({
-      status: 'approved',
-      title: 'Request approved',
+      status,
+      title: status === 'approved' ? 'Request approved' : 'Request rejected',
 
       description:
-        'Admin approved the request and created or linked the product.',
-
-      createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
-    });
-  }
-
-  if (status === 'rejected') {
-    entries.push({
-      status: 'rejected',
-      title: 'Request rejected',
-
-      description:
-        rejectionReason ??
-        'Admin rejected the request because the submitted information needs correction.',
+        status === 'approved'
+          ? 'Admin approved the request and created or linked the product.'
+          : (rejectionReason ?? 'Admin rejected the request.'),
 
       createdAt: new Date(createdAt.getTime() + 3 * 60 * 60 * 1000),
     });

@@ -164,12 +164,12 @@ test('own product stock route roundtrips through its domain builder', () => {
 test('product request status route roundtrips through its domain builder', () => {
   const state = {
     ...DEFAULT_PRODUCT_REQUESTS_FILTERS,
-    status: 'in_progress' as const,
+    status: 'on_moderation' as const,
   };
 
   const path = buildProductRequestsPath(state);
 
-  assert.equal(path, '/pharmacy/product-requests/status-in-progress');
+  assert.equal(path, '/pharmacy/product-requests/status-on-moderation');
 
   assert.deepEqual(
     parseProductRequestsSegments({ filters: segments(path) }),

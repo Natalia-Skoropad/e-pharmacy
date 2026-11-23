@@ -158,9 +158,7 @@ export function PharmacySidebar({
         const showProductRequestCounters = Boolean(
           isProductRequestsLink &&
           productRequestCounts &&
-          (productRequestCounts.draft ||
-            productRequestCounts.new ||
-            productRequestCounts.inProgress)
+          (productRequestCounts.new || productRequestCounts.onModeration)
         );
 
         return (
@@ -249,15 +247,6 @@ export function PharmacySidebar({
                 className={css.orderCounters}
                 aria-label="Product request status totals"
               >
-                {productRequestCounts.draft > 0 ? (
-                  <span
-                    className={css.draftCounter}
-                    aria-label={`${productRequestCounts.draft} draft product requests`}
-                  >
-                    {formatVisibleOrderCount(productRequestCounts.draft)}
-                  </span>
-                ) : null}
-
                 {productRequestCounts.new > 0 ? (
                   <span
                     className={css.newCounter}
@@ -267,12 +256,12 @@ export function PharmacySidebar({
                   </span>
                 ) : null}
 
-                {productRequestCounts.inProgress > 0 ? (
+                {productRequestCounts.onModeration > 0 ? (
                   <span
                     className={css.moderationCounter}
-                    aria-label={`${productRequestCounts.inProgress} product requests in work`}
+                    aria-label={`${productRequestCounts.onModeration} product requests on moderation`}
                   >
-                    {formatVisibleOrderCount(productRequestCounts.inProgress)}
+                    {formatVisibleOrderCount(productRequestCounts.onModeration)}
                   </span>
                 ) : null}
               </span>
@@ -284,30 +273,22 @@ export function PharmacySidebar({
               <span
                 className={css.collapsedProductRequestCounters}
                 aria-label={[
-                  productRequestCounts.draft > 0
-                    ? `${productRequestCounts.draft} draft product requests`
-                    : '',
-
                   productRequestCounts.new > 0
                     ? `${productRequestCounts.new} new product requests`
                     : '',
 
-                  productRequestCounts.inProgress > 0
-                    ? `${productRequestCounts.inProgress} product requests in work`
+                  productRequestCounts.onModeration > 0
+                    ? `${productRequestCounts.onModeration} product requests on moderation`
                     : '',
                 ]
                   .filter(Boolean)
                   .join(', ')}
               >
-                {productRequestCounts.draft > 0 ? (
-                  <span className={css.collapsedDraftDot} aria-hidden="true" />
-                ) : null}
-
                 {productRequestCounts.new > 0 ? (
                   <span className={css.collapsedNewDot} aria-hidden="true" />
                 ) : null}
 
-                {productRequestCounts.inProgress > 0 ? (
+                {productRequestCounts.onModeration > 0 ? (
                   <span
                     className={css.collapsedModerationDot}
                     aria-hidden="true"

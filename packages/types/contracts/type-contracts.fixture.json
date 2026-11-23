@@ -17,13 +17,7 @@
     "reviewStatuses": ["on_moderation", "approved", "rejected"],
     "orderStatuses": ["new", "in_progress", "successful", "rejected"],
 
-    "productRequestStatuses": [
-      "draft",
-      "new",
-      "in_progress",
-      "approved",
-      "rejected"
-    ],
+    "productRequestStatuses": ["new", "on_moderation", "approved", "rejected"],
 
     "deliveryMethods": ["pickup", "postal_delivery"],
     "paymentMethods": ["cash", "bank_transfer"],
@@ -101,7 +95,7 @@
 
     "productRequestFile": {
       "required": ["name", "size", "type"],
-      "optional": ["dataUrl"]
+      "optional": ["dataUrl", "documentId"]
     },
 
     "createReviewPayload": {
@@ -238,6 +232,7 @@
         "pharmacyComment",
         "additionalFiles",
         "rejectionReason",
+        "reviewState",
         "history",
         "commentsTotal"
       ]

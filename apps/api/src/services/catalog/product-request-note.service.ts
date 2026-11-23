@@ -36,16 +36,23 @@ async function resolveScope(
     _id: requestObjectId,
     ...owner.filter,
   })
-    .select('status')
-    .lean<{ status: string } | null>();
+    .select('status reviewState')
+    .lean<{ status: string; reviewState?: string } | null>();
 
   if (!request)
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
 
-  if (mutate && request.status !== 'draft') {
+  if (
+    mutate &&
+    !(
+      request.status === 'new' ||
+      (request.status === 'on_moderation' &&
+        request.reviewState === 'changes_requested')
+    )
+  ) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Product request comments can be edited only while the request is a draft.'
+      'Comments may be edited only in New or Needs changes.'
     );
   }
 

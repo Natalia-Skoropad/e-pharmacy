@@ -1,3 +1,7 @@
+import { PHARMACY_DOCUMENT_RULES } from '../files/pharmacy-document-validation';
+
+//===================================================================
+
 export const PRODUCT_REQUEST_LIMITS = {
   nameMax: 160,
   articleMax: 40,
@@ -8,6 +12,7 @@ export const PRODUCT_REQUEST_LIMITS = {
   activeIngredientsMax: 200,
   activeIngredientCountMax: 200,
   manufacturerMax: 160,
+  fullDescriptionMin: 100,
   fullDescriptionMax: 5000,
   pharmacyCommentMax: 1500,
   fileNameMax: 180,
@@ -27,24 +32,14 @@ export const PRODUCT_REQUEST_IMAGE_RULES = {
 //===================================================================
 
 export const PRODUCT_REQUEST_ATTACHMENT_RULES = {
-  maxFiles: 5,
-  maxSizeBytes: 5 * 1024 * 1024,
-  maxTotalSizeBytes: 20 * 1024 * 1024,
-  maxDataUrlLength: 7 * 1024 * 1024,
+  // Keep document format/count/size rules in sync with pharmacy documents.
+  maxFiles: PHARMACY_DOCUMENT_RULES.maxFiles,
+  maxSizeBytes: PHARMACY_DOCUMENT_RULES.maxSizeBytes,
+  maxTotalSizeBytes: PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes,
+  maxDataUrlLength: 14 * 1024 * 1024,
 
-  mimeTypes: [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ...PRODUCT_REQUEST_IMAGE_RULES.mimeTypes,
-  ],
-
-  extensions: [
-    '.pdf',
-    '.doc',
-    '.docx',
-    ...PRODUCT_REQUEST_IMAGE_RULES.extensions,
-  ],
+  mimeTypes: PHARMACY_DOCUMENT_RULES.mimeTypes,
+  extensions: PHARMACY_DOCUMENT_RULES.extensions,
 } as const;
 
 //===================================================================
@@ -93,7 +88,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     brand: 'Brand is required',
     series: 'Series / Line is required',
     manufacturer: 'Manufacturer is required',
-    fullDescription: 'Full description is required',
+    fullDescription: 'About product is required',
   },
 
   limits: {
@@ -106,7 +101,8 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     activeIngredients: `Active ingredients must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientsMax} characters`,
     activeIngredientCount: `Active ingredient count must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientCountMax} characters`,
     manufacturer: `Manufacturer must be at most ${PRODUCT_REQUEST_LIMITS.manufacturerMax} characters`,
-    fullDescription: `Full description must be at most ${PRODUCT_REQUEST_LIMITS.fullDescriptionMax} characters`,
+    fullDescription: `About product must be at most ${PRODUCT_REQUEST_LIMITS.fullDescriptionMax} characters`,
+    fullDescriptionMin: `About product must be at least ${PRODUCT_REQUEST_LIMITS.fullDescriptionMin} characters when filled`,
     pharmacyComment: `Pharmacy note must be at most ${PRODUCT_REQUEST_LIMITS.pharmacyCommentMax} characters`,
     fileName: `File name must be at most ${PRODUCT_REQUEST_LIMITS.fileNameMax} characters`,
     fileType: `File type must be at most ${PRODUCT_REQUEST_LIMITS.fileTypeMax} characters`,
@@ -123,7 +119,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     attachmentDataRequired: (fileName: string) =>
       `Upload “${fileName}” again because its file content is missing`,
 
-    attachmentsTotalSize: 'The combined attachment size must not exceed 20 MB',
+    attachmentsTotalSize: 'The combined attachment size must not exceed 30 MB',
     attachmentsCount: `You can attach up to ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} files`,
   },
 

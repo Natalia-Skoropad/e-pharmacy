@@ -46,7 +46,7 @@ async function createDraftAggregate(
     article: input.article,
     categoryMode: 'catalog',
     categoryId: input.categoryId,
-    status: 'draft',
+    status: 'new',
   });
 
   const note = await PharmacyNote.create({
@@ -72,7 +72,6 @@ test(
     await mongoose.connect(getTestMongoUri());
 
     const medicineCategoryId = await getTestProductCategoryId();
-
     const ownerId = new Types.ObjectId();
     const pharmacyId = new Types.ObjectId();
     const suffix = new Types.ObjectId().toHexString().toUpperCase();

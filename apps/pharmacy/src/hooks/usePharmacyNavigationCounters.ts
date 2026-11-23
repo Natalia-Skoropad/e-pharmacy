@@ -127,9 +127,8 @@ export function useOrderNavigationCounts(enabled = true) {
 //===================================================================
 
 export type ProductRequestNavigationCounts = Readonly<{
-  draft: number;
   new: number;
-  inProgress: number;
+  onModeration: number;
 }>;
 
 //===================================================================
@@ -171,9 +170,8 @@ export function useProductRequestNavigationCounts(
           ownerId,
 
           counts: {
-            draft: stats.draft,
             new: stats.new,
-            inProgress: stats.in_progress,
+            onModeration: stats.on_moderation,
           },
         });
       } catch {

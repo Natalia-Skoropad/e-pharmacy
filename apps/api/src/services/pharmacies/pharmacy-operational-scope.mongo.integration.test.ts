@@ -285,7 +285,7 @@ test(
       await expectStatus(
         () =>
           createProductRequestService(owner, {
-            status: 'draft',
+            status: 'new',
             name: 'Missing selected pharmacy',
             article: `REQ-NOSEL-${suffix.slice(-10)}`,
             categoryMode: 'catalog',
@@ -494,7 +494,7 @@ test(
       assert.equal(await salesTotal(pharmacyB), 400);
 
       const requestForm = (article: string) => ({
-        status: 'draft' as const,
+        status: 'new' as const,
         name: 'Scoped pharmacy product request',
         article,
         categoryMode: 'catalog' as const,
@@ -525,9 +525,10 @@ test(
 
         assert.equal(requests.total, 1);
         assert.equal(requests.items[0]?.id, requestA.request.id);
+
         const counts = await getProductRequestStatisticsService(owner);
 
-        assert.equal(counts.draft, 1);
+        assert.equal(counts.new, 1);
 
         await expectStatus(
           () => getProductRequestByIdService(owner, requestB.request.id),
@@ -587,7 +588,7 @@ test(
 
         const counts = await getProductRequestStatisticsService(owner);
 
-        assert.equal(counts.draft, 1);
+        assert.equal(counts.new, 1);
 
         await expectStatus(
           () =>

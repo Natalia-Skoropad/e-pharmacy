@@ -35,6 +35,7 @@ export type ProductRequestFileLike = Readonly<{
   type: string;
   size: number;
   dataUrl?: string;
+  documentId?: string;
 }>;
 
 export type ProductRequestFormValidationContext = Readonly<{

@@ -73,6 +73,17 @@ export const pharmacyApiRoutes = {
 
     details: (requestId: string) =>
       `/api/product-requests/${segment(requestId)}`,
+
+    submit: (requestId: string) =>
+      `/api/product-requests/${segment(requestId)}/submit`,
+
+    cancel: (requestId: string) =>
+      `/api/product-requests/${segment(requestId)}/cancel`,
+
+    documentUpload: '/api/product-requests/documents',
+
+    documentDownload: (requestId: string, documentId: string) =>
+      `/api/product-requests/${segment(requestId)}/documents/${segment(documentId)}`,
   },
 
   pharmacyNotes: {

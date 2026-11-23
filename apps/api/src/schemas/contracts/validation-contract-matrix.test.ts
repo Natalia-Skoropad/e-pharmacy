@@ -153,7 +153,7 @@ function evaluateProductRequestCase(
   contractCase: ContractCase
 ): ContractResult {
   const payload = {
-    status: 'draft' as const,
+    status: 'new' as const,
     name: 'Product',
     categoryMode: 'catalog' as const,
     categoryId: '507f1f77bcf86cd799439011',

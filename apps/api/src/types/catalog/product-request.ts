@@ -20,6 +20,7 @@ export type ProductRequestFile = {
   type: string;
   size: number;
   dataUrl?: string;
+  documentId?: string;
 };
 
 export type ProductRequestHistoryEntry = {
@@ -53,6 +54,7 @@ export type ProductRequestEntity = {
   additionalFiles?: ProductRequestFile[];
   rejectionReason?: string;
   cancelledBy?: 'owner' | 'admin';
+  reviewState?: 'changes_requested';
   history?: ProductRequestHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +89,7 @@ export type ProductRequestResponseDto = {
   additionalFiles?: ProductRequestFile[];
   rejectionReason?: string;
   cancelledBy?: 'owner' | 'admin';
+  reviewState?: 'changes_requested';
 
   history?: Array<{
     id: string;

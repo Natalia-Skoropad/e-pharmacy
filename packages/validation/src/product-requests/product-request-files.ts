@@ -187,7 +187,7 @@ export function validateProductRequestAdditionalFiles(
 
     if (metadataError) return metadataError;
 
-    if (options.requireDataUrl && !file.dataUrl) {
+    if (options.requireDataUrl && !file.dataUrl && !file.documentId) {
       return PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentDataRequired(
         file.name
       );
@@ -236,5 +236,6 @@ export function toProductRequestFileMetadata(
     size: file.size,
 
     ...(resolvedDataUrl ? { dataUrl: resolvedDataUrl } : {}),
+    ...(file.documentId ? { documentId: file.documentId } : {}),
   };
 }

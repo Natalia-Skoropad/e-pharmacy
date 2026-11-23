@@ -20,6 +20,7 @@ import type {
 import type {
   ProductRequestModerationInput,
   ProductRequestParams,
+  ProductRequestsQuery,
 } from '../../schemas/catalog/product-request.schema';
 
 import {
@@ -29,6 +30,12 @@ import {
 } from '../../services/admin/pharmacies/admin.service';
 
 import { updatePharmacyOwnerStatusByAdminService } from '../../services/owners/pharmacy-owner-lifecycle.service';
+
+import {
+  getAdminProductRequestsService,
+  getAdminProductRequestByIdService,
+} from '../../services/catalog/product-request-read.service';
+
 import { moderateProductRequestByAdminService } from '../../services/catalog/product-request-moderation.service';
 
 import type { ValidatedResponse } from '../../types/http/validated-request';
@@ -200,4 +207,29 @@ export async function updateProductRequestStatusByAdmin(
     message: 'Product request status was updated successfully.',
     data,
   });
+}
+
+//=================================================================================
+
+// Read-only until a request is submitted for moderation.
+export async function getAdminProductRequests(
+  _req: Request,
+  res: ValidatedResponse<unknown, unknown, ProductRequestsQuery>
+): Promise<void> {
+  const data = await getAdminProductRequestsService(res.locals.validated.query);
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//=================================================================================
+
+export async function getAdminProductRequestById(
+  _req: Request,
+  res: ValidatedResponse<unknown, ProductRequestParams>
+): Promise<void> {
+  const data = await getAdminProductRequestByIdService(
+    res.locals.validated.params.requestId
+  );
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

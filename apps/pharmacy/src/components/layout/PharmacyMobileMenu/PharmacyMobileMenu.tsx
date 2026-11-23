@@ -212,22 +212,12 @@ export function PharmacyMobileMenu({
 
             {item.href === PHARMACY_ROUTES.PRODUCT_REQUESTS &&
             productRequestCounts &&
-            (productRequestCounts.draft > 0 ||
-              productRequestCounts.new > 0 ||
-              productRequestCounts.inProgress > 0) ? (
+            (productRequestCounts.new > 0 ||
+              productRequestCounts.onModeration > 0) ? (
               <span
                 className={css.pharmacyCounters}
                 aria-label="Product request status totals"
               >
-                {productRequestCounts.draft > 0 ? (
-                  <span
-                    className={`${css.pharmacyCounter} ${css.draftCounter}`}
-                    aria-label={`${productRequestCounts.draft} draft product requests`}
-                  >
-                    {formatVisibleOrderCount(productRequestCounts.draft)}
-                  </span>
-                ) : null}
-
                 {productRequestCounts.new > 0 ? (
                   <span
                     className={`${css.pharmacyCounter} ${css.newCounter}`}
@@ -237,12 +227,12 @@ export function PharmacyMobileMenu({
                   </span>
                 ) : null}
 
-                {productRequestCounts.inProgress > 0 ? (
+                {productRequestCounts.onModeration > 0 ? (
                   <span
                     className={`${css.pharmacyCounter} ${css.moderationCounter}`}
-                    aria-label={`${productRequestCounts.inProgress} product requests in work`}
+                    aria-label={`${productRequestCounts.onModeration} product requests on moderation`}
                   >
-                    {formatVisibleOrderCount(productRequestCounts.inProgress)}
+                    {formatVisibleOrderCount(productRequestCounts.onModeration)}
                   </span>
                 ) : null}
               </span>

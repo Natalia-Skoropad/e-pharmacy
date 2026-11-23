@@ -3,6 +3,16 @@ import { localAuthApiRoutes } from '@e-pharmacy/next-api/contracts';
 //===================================================================
 
 export const adminApiRoutes = {
+  productRequests: {
+    list: '/api/admin/product-requests',
+
+    details: (id: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}`,
+
+    status: (id: string) =>
+      `/api/admin/product-requests/${encodeURIComponent(id)}/status`,
+  },
+
   adminAccess: {
     current: '/api/admin/access/me',
   },

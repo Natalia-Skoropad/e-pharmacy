@@ -44,6 +44,7 @@ function buildPatternError(
   message: string
 ): string {
   const normalizedValue = value.trim();
+
   return normalizedValue && !pattern.test(normalizedValue) ? message : '';
 }
 
@@ -200,6 +201,18 @@ export function validateProductRequestForm(
     );
 
     if (error) errors[field] = error;
+  }
+
+  // Match the About pharmacy editor: a draft may omit the description,
+  // but a description that has been started must contain at least 100 characters.
+  if (
+    !errors.fullDescription &&
+    values.fullDescription.trim().length > 0 &&
+    values.fullDescription.trim().length <
+      PRODUCT_REQUEST_LIMITS.fullDescriptionMin
+  ) {
+    errors.fullDescription =
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescriptionMin;
   }
 
   const productImage = context.productImage;

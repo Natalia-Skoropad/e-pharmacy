@@ -11,10 +11,15 @@ export function resolveProductRequestPageMode(
     requestId?: string;
     sourceRequestId?: string;
     requestStatus?: ProductRequestStatus;
+    reviewState?: 'changes_requested';
   }>
 ): ProductRequestPageMode {
   if (input.requestId) {
-    return input.requestStatus === 'draft' ? 'edit' : 'readonly';
+    return input.requestStatus === 'new' ||
+      (input.requestStatus === 'on_moderation' &&
+        input.reviewState === 'changes_requested')
+      ? 'edit'
+      : 'readonly';
   }
 
   if (input.sourceRequestId) return 'clone';
@@ -32,5 +37,6 @@ export function getProductRequestGenerationKey(
 ): string {
   if (input.requestId) return `request:${input.requestId}`;
   if (input.sourceRequestId) return `clone:${input.sourceRequestId}`;
+
   return 'new-product-request';
 }

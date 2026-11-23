@@ -1,7 +1,10 @@
+import { PHARMACY_DOCUMENT_RULES } from '../pharmacies/pharmacy-document-validation';
+
+//=================================================================================
+
 export const PRODUCT_REQUEST_STATUSES = [
-  'draft',
   'new',
-  'in_progress',
+  'on_moderation',
   'approved',
   'rejected',
 ] as const;
@@ -18,6 +21,7 @@ export const PRODUCT_REQUEST_LIMITS = {
   activeIngredientsMax: 200,
   activeIngredientCountMax: 200,
   manufacturerMax: 160,
+  fullDescriptionMin: 100,
   fullDescriptionMax: 5000,
   pharmacyCommentMax: 1500,
   fileNameMax: 180,
@@ -40,19 +44,12 @@ export const PRODUCT_REQUEST_IMAGE_RULES = {
 //===============================================================
 
 export const PRODUCT_REQUEST_ATTACHMENT_RULES = {
-  maxFiles: 5,
-  maxSizeBytes: 5 * 1024 * 1024,
-  maxTotalSizeBytes: 20 * 1024 * 1024,
-  maxDataUrlLength: 7 * 1024 * 1024,
-
-  mimeTypes: [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ...PRODUCT_REQUEST_IMAGE_RULES.mimeTypes,
-  ],
-
-  fileNamePattern: /\.(?:pdf|docx?|jpe?g|png|webp)$/i,
+  maxFiles: PHARMACY_DOCUMENT_RULES.maxFiles,
+  maxSizeBytes: PHARMACY_DOCUMENT_RULES.maxSizeBytes,
+  maxTotalSizeBytes: PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes,
+  maxDataUrlLength: 14 * 1024 * 1024,
+  mimeTypes: PHARMACY_DOCUMENT_RULES.mimeTypes,
+  fileNamePattern: PHARMACY_DOCUMENT_RULES.fileNamePattern,
 
   dataUrlPattern:
     /^data:(?:application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|image\/(?:jpeg|png|webp));base64,[A-Za-z0-9+/=]+$/,
@@ -80,7 +77,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     brand: 'Brand is required',
     series: 'Series / Line is required',
     manufacturer: 'Manufacturer is required',
-    fullDescription: 'Full description is required',
+    fullDescription: 'About product is required',
   },
 
   format: {
@@ -105,17 +102,18 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     activeIngredients: `Active ingredients must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientsMax} characters`,
     activeIngredientCount: `Active ingredient count must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientCountMax} characters`,
     manufacturer: `Manufacturer must be at most ${PRODUCT_REQUEST_LIMITS.manufacturerMax} characters`,
-    fullDescription: `Full description must be at most ${PRODUCT_REQUEST_LIMITS.fullDescriptionMax} characters`,
+    fullDescription: `About product must be at most ${PRODUCT_REQUEST_LIMITS.fullDescriptionMax} characters`,
+    fullDescriptionMin: `About product must be at least ${PRODUCT_REQUEST_LIMITS.fullDescriptionMin} characters when filled`,
     pharmacyComment: `Pharmacy note must be at most ${PRODUCT_REQUEST_LIMITS.pharmacyCommentMax} characters`,
     fileName: `File name must be at most ${PRODUCT_REQUEST_LIMITS.fileNameMax} characters`,
     fileType: `File type must be at most ${PRODUCT_REQUEST_LIMITS.fileTypeMax} characters`,
     fileSize: 'File size is invalid',
     productImageSize: 'The product image must be no larger than 2 MB',
     productImageData: 'The product image data is too large',
-    attachmentSize: 'Additional files must be no larger than 5 MB',
+    attachmentSize: 'Additional files must be no larger than 10 MB',
     attachmentData: 'Additional file data is too large',
     attachmentDataRequired: 'Additional file content is required',
-    attachmentsTotalSize: 'The combined attachment size must not exceed 20 MB',
+    attachmentsTotalSize: 'The combined attachment size must not exceed 30 MB',
     attachmentsCount: `A product request can contain at most ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} additional files`,
   },
 } as const;

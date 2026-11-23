@@ -33,14 +33,14 @@ const ALLOWED_TONES = new Set([
 
 //===================================================================
 
-test('keeps colliding in_progress statuses domain-specific', () => {
+test('keeps order In progress separate from product-request On moderation', () => {
   assert.deepEqual(ORDER_STATUS_PRESENTATION.in_progress, {
     label: 'In progress',
     tone: 'pending',
   });
 
-  assert.deepEqual(PRODUCT_REQUEST_STATUS_PRESENTATION.in_progress, {
-    label: 'In work',
+  assert.deepEqual(PRODUCT_REQUEST_STATUS_PRESENTATION.on_moderation, {
+    label: 'On moderation',
     tone: 'pending',
   });
 });

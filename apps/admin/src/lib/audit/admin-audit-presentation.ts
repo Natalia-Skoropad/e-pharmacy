@@ -73,8 +73,8 @@ const STATUS_PRESENTATION_BY_VALUE = {
   on_verification: PHARMACY_STATUS_PRESENTATION.on_verification,
   on_moderation: PHARMACY_STATUS_PRESENTATION.on_moderation,
   on_reactivation: PHARMACY_STATUS_PRESENTATION.on_reactivation,
-  draft: PRODUCT_REQUEST_STATUS_PRESENTATION.draft,
-  in_progress: PRODUCT_REQUEST_STATUS_PRESENTATION.in_progress,
+  draft: PRODUCT_REQUEST_STATUS_PRESENTATION.new,
+  in_progress: PRODUCT_REQUEST_STATUS_PRESENTATION.on_moderation,
   approved: PRODUCT_REQUEST_STATUS_PRESENTATION.approved,
   rejected: PRODUCT_REQUEST_STATUS_PRESENTATION.rejected,
 } as const;

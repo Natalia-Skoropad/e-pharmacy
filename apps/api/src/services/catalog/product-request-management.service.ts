@@ -5,6 +5,12 @@ import { PRODUCT_REQUEST_ERROR_CODES } from '../../constants/catalog/product-req
 
 import { PharmacyNote } from '../../models/pharmacies/pharmacyNote.model';
 import { ProductRequest } from '../../models/catalog/productRequest.model';
+import { ProductRequestDocumentFile } from '../../models/catalog/productRequestDocumentFile.model';
+
+import {
+  resolveProductRequestDocuments,
+  reconcileProductRequestDocuments,
+} from './product-request-document.service';
 
 import type { ProductRequestFormInput } from '../../schemas/catalog/product-request.schema';
 import type { ProductCategoryReferenceDto } from '../../types/catalog/product-category';
@@ -92,24 +98,46 @@ export async function createProductRequestService(
   await assertArticleAvailable(input.article);
 
   const now = new Date();
-  const historyCopy = getStatusHistoryCopy(input.status);
+  const historyCopy = getStatusHistoryCopy('new');
   const formUpdate = await getRequestFormUpdate(input);
 
   try {
-    const request = await ProductRequest.create({
-      ownerId: scope.ownerId,
-      status: input.status,
+    // Allocate the ID before storing files so each binary is bound to this
+    // request in the same MongoDB transaction as the metadata.
+    const requestId = new Types.ObjectId();
+    const session = await mongoose.startSession();
 
-      ...formUpdate,
+    try {
+      await session.withTransaction(async () => {
+        const files = await resolveProductRequestDocuments(
+          scope.ownerId,
+          requestId,
+          input.additionalFiles ?? [],
+          session
+        );
 
-      history: [
-        {
-          status: input.status,
-          ...historyCopy,
-          createdAt: now,
-        },
-      ],
-    });
+        await ProductRequest.create(
+          [
+            {
+              _id: requestId,
+              ownerId: scope.ownerId,
+              status: 'new',
+              ...formUpdate,
+              additionalFiles: files.length ? files : undefined,
+
+              history: [{ status: 'new', ...historyCopy, createdAt: now }],
+            },
+          ],
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    const request = await ProductRequest.findById(requestId);
+
+    if (!request) throw new Error('Product request creation did not commit.');
 
     const categoryMap = request.categoryId
       ? await getProductCategoryReferenceMap([request.categoryId])
@@ -174,10 +202,16 @@ export async function updateProductRequestService(
     );
   }
 
-  if (request.status !== 'draft') {
+  if (
+    !(
+      request.status === 'new' ||
+      (request.status === 'on_moderation' &&
+        request.reviewState === 'changes_requested')
+    )
+  ) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Only draft product requests can be edited.',
+      'Only New or Needs changes requests can be edited.',
       undefined,
 
       PRODUCT_REQUEST_ERROR_CODES.NOT_EDITABLE
@@ -188,31 +222,66 @@ export async function updateProductRequestService(
 
   const formUpdate = await getRequestFormUpdate(input);
 
-  request.set({
-    ...formUpdate,
-    status: input.status,
-  });
-
-  const historyCopy =
-    input.status === 'new'
-      ? getStatusHistoryCopy('new')
-      : {
-          title: 'Draft updated',
-          description: 'The pharmacy updated the product request draft.',
-        };
-
-  request.history = [
-    ...(request.history ?? []),
-
-    {
-      status: input.status,
-      ...historyCopy,
-      createdAt: new Date(),
-    },
-  ];
-
   try {
-    await request.save();
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        const editableRequest = await ProductRequest.findOne({
+          _id: request._id,
+          ...scope.filter,
+          status: request.status,
+
+          reviewState:
+            request.reviewState === 'changes_requested'
+              ? 'changes_requested'
+              : { $exists: false },
+        }).session(session);
+
+        if (!editableRequest) {
+          throw httpError(
+            HTTP_STATUS.CONFLICT,
+            'Only New or Needs changes requests can be edited.',
+            undefined,
+            PRODUCT_REQUEST_ERROR_CODES.NOT_EDITABLE
+          );
+        }
+
+        const files = await resolveProductRequestDocuments(
+          scope.ownerId,
+          request._id,
+          input.additionalFiles ?? [],
+          session
+        );
+
+        editableRequest.set({
+          ...formUpdate,
+          additionalFiles: files.length ? files : undefined,
+          status: request.status,
+        });
+
+        editableRequest.history = [
+          ...(editableRequest.history ?? []),
+
+          {
+            status: request.status,
+            title: 'Request details updated',
+            description: 'The pharmacy owner saved changes.',
+            createdAt: new Date(),
+          },
+        ];
+
+        await editableRequest.save({ session });
+
+        await reconcileProductRequestDocuments(
+          scope.ownerId,
+          request._id,
+          files,
+          session
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
   } catch (error) {
     if (isDuplicateProductRequestArticleError(error)) {
       throw httpError(
@@ -227,23 +296,31 @@ export async function updateProductRequestService(
     throw error;
   }
 
+  const updatedRequest = await ProductRequest.findById(request._id);
+
+  if (!updatedRequest)
+    throw new Error('Product request update did not commit.');
+
   const commentsTotal = await PharmacyNote.countDocuments({
     entityType: 'product_request',
     entityId: request._id,
     $or: scope.filter.$or,
   });
 
-  const categoryMap = request.categoryId
-    ? await getProductCategoryReferenceMap([request.categoryId])
+  const categoryMap = updatedRequest.categoryId
+    ? await getProductCategoryReferenceMap([updatedRequest.categoryId])
     : new Map<string, ProductCategoryReferenceDto>();
 
   return {
     request: serializeProductRequest(
-      request.toObject() as unknown as ProductRequestDocument,
+      updatedRequest.toObject() as unknown as ProductRequestDocument,
       commentsTotal,
 
-      request.categoryId
-        ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
+      updatedRequest.categoryId
+        ? getProductCategoryReferenceOrThrow(
+            categoryMap,
+            updatedRequest.categoryId
+          )
         : undefined
     ),
   };
@@ -289,10 +366,16 @@ export async function deleteProductRequestService(
         );
       }
 
-      if (request.status !== 'draft') {
+      if (
+        !(
+          request.status === 'new' ||
+          (request.status === 'on_moderation' &&
+            request.reviewState === 'changes_requested')
+        )
+      ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
-          'Only draft product requests can be deleted.',
+          'Only New product requests can be deleted.',
           undefined,
 
           PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE
@@ -302,7 +385,7 @@ export async function deleteProductRequestService(
       const deleteResult = await ProductRequest.deleteOne({
         _id: request._id,
         ...scope.filter,
-        status: 'draft',
+        status: 'new',
       }).session(session);
 
       if (deleteResult.deletedCount !== 1) {
@@ -320,10 +403,203 @@ export async function deleteProductRequestService(
         entityType: 'product_request',
         entityId: request._id,
       }).session(session);
+
+      await ProductRequestDocumentFile.deleteMany({
+        requestId: request._id,
+        ownerId: scope.ownerId,
+      }).session(session);
     });
   } finally {
     await session.endSession();
   }
 
-  return { message: 'Product request draft deleted successfully.' };
+  return { message: 'Product request deleted successfully.' };
+}
+
+//===============================================================
+
+/** Owner-only transition; unlike Save, submitting never updates request fields. */
+export async function submitProductRequestService(
+  userId: string,
+  requestId: string
+) {
+  const scope = await getProductRequestOwnerScope(userId);
+
+  if (!Types.ObjectId.isValid(requestId))
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+
+  const session = await mongoose.startSession();
+
+  let updatedId: Types.ObjectId | null = null;
+
+  try {
+    await session.withTransaction(async () => {
+      const request = await ProductRequest.findOne({
+        _id: new Types.ObjectId(requestId),
+        ...scope.filter,
+      }).session(session);
+
+      if (!request)
+        throw httpError(
+          HTTP_STATUS.NOT_FOUND,
+          'Product request was not found.'
+        );
+      if (
+        !(
+          request.status === 'new' ||
+          (request.status === 'on_moderation' &&
+            request.reviewState === 'changes_requested')
+        )
+      ) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'The request cannot be submitted in its current status.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.INVALID_TRANSITION
+        );
+      }
+
+      // All required fields are checked against the saved document; never trust a disabled button.
+      const missing = [
+        !request.name?.trim() && 'name',
+        !request.article?.trim() && 'article',
+        !request.productImage?.dataUrl && 'productImage',
+        !request.brand?.trim() && 'brand',
+        !request.series?.trim() && 'series',
+        !request.manufacturer?.trim() && 'manufacturer',
+        (!request.fullDescription?.trim() ||
+          request.fullDescription.trim().length < 100) &&
+          'fullDescription',
+        request.categoryMode === 'catalog' &&
+          !request.categoryId &&
+          'categoryId',
+        request.categoryMode === 'custom' &&
+          !request.customCategory?.trim() &&
+          'customCategory',
+      ].filter(Boolean);
+
+      if (missing.length)
+        throw httpError(
+          HTTP_STATUS.BAD_REQUEST,
+          `Complete the required fields before moderation: ${missing.join(', ')}.`
+        );
+
+      await assertArticleAvailable(request.article, requestId);
+
+      request.status = 'on_moderation';
+      request.reviewState = undefined;
+
+      request.history = [
+        ...(request.history ?? []),
+
+        {
+          status: 'on_moderation',
+          ...getStatusHistoryCopy('on_moderation'),
+          createdAt: new Date(),
+        },
+      ];
+
+      await request.save({ session });
+
+      updatedId = request._id;
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  if (!updatedId)
+    throw new Error('Product request submit transaction did not commit.');
+
+  const updatedRequest = await ProductRequest.findById(updatedId);
+
+  if (!updatedRequest)
+    throw new Error('Product request submit result not found.');
+
+  return {
+    request: serializeProductRequest(
+      updatedRequest.toObject() as unknown as ProductRequestDocument
+    ),
+  };
+}
+
+//===============================================================
+
+export async function cancelProductRequestService(
+  userId: string,
+  requestId: string
+) {
+  const scope = await getProductRequestOwnerScope(userId);
+
+  if (!Types.ObjectId.isValid(requestId))
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
+
+  const session = await mongoose.startSession();
+
+  let updatedId: Types.ObjectId | null = null;
+
+  try {
+    await session.withTransaction(async () => {
+      const request = await ProductRequest.findOne({
+        _id: new Types.ObjectId(requestId),
+        ...scope.filter,
+      }).session(session);
+
+      if (!request)
+        throw httpError(
+          HTTP_STATUS.NOT_FOUND,
+          'Product request was not found.'
+        );
+
+      if (
+        request.status !== 'on_moderation' ||
+        request.reviewState !== 'changes_requested'
+      ) {
+        throw httpError(
+          HTTP_STATUS.CONFLICT,
+          'Only a request needing corrections can be cancelled by its owner.',
+          undefined,
+          PRODUCT_REQUEST_ERROR_CODES.INVALID_TRANSITION
+        );
+      }
+
+      request.status = 'rejected';
+      request.reviewState = undefined;
+      request.cancelledBy = 'owner';
+      request.rejectionReason = 'Cancelled by owner';
+
+      request.history = [
+        ...(request.history ?? []),
+
+        {
+          status: 'rejected',
+          title: 'Cancelled by owner',
+
+          description:
+            'The owner cancelled the request after Admin requested corrections.',
+
+          createdAt: new Date(),
+        },
+      ];
+
+      await request.save({ session });
+
+      updatedId = request._id;
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  if (!updatedId)
+    throw new Error('Product request cancel transaction did not commit.');
+
+  const updatedRequest = await ProductRequest.findById(updatedId);
+
+  if (!updatedRequest)
+    throw new Error('Product request cancel result not found.');
+
+  return {
+    request: serializeProductRequest(
+      updatedRequest.toObject() as unknown as ProductRequestDocument
+    ),
+  };
 }

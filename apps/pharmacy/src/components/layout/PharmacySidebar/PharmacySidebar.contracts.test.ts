@@ -81,13 +81,7 @@ test('collapsed order notifications remain visible and expanded badges expose se
     assert.doesNotMatch(rule, /right:\s*\d/);
   }
 
-  for (const dot of [
-    'New',
-    'Verification',
-    'Moderation',
-    'Reactivation',
-    'Draft',
-  ]) {
+  for (const dot of ['New', 'Verification', 'Moderation', 'Reactivation']) {
     assert.match(css, new RegExp(`\\.collapsed${dot}Dot`));
     assert.match(source, new RegExp(`css\\.collapsed${dot}Dot`));
   }
@@ -117,15 +111,16 @@ test('product request navigation counters use owner-wide statistics and refresh 
   ]);
 
   assert.match(hook, /getPharmacyProductRequestStatistics/);
-  assert.match(hook, /draft: stats\.draft/);
   assert.match(hook, /new: stats\.new/);
-  assert.match(hook, /inProgress: stats\.in_progress/);
+  assert.match(hook, /onModeration: stats\.on_moderation/);
+  assert.doesNotMatch(hook, /draft: stats\.draft/);
   assert.match(hook, /subscribeToProductRequestCounterRefresh/);
   assert.match(hook, /active\.signal\.aborted/);
   assert.match(api, /dispatchProductRequestCounterRefresh/);
   assert.match(sidebar, /useProductRequestNavigationCounts/);
   assert.match(sidebar, /css\.collapsedProductRequestCounters/);
-  assert.match(sidebar, /productRequestCounts\.draft > 0/);
   assert.match(sidebar, /productRequestCounts\.new > 0/);
-  assert.match(sidebar, /productRequestCounts\.inProgress > 0/);
+  assert.match(sidebar, /productRequestCounts\.onModeration > 0/);
+  assert.doesNotMatch(sidebar, /productRequestCounts\.draft/);
+  assert.doesNotMatch(sidebar, /productRequestCounts\.inProgress/);
 });

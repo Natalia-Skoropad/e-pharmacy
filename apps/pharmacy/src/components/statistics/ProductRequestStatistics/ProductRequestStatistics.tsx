@@ -1,7 +1,6 @@
 import {
   CheckCircle2,
   Clock3,
-  FileClock,
   FilePlus2,
   XCircle,
   type LucideIcon,
@@ -31,7 +30,6 @@ type ProductRequestStatisticConfig = Readonly<{
 type ProductRequestStatisticsProps = Readonly<{
   counts: ProductRequestStatisticsCounts;
   className?: string;
-  showDraft?: boolean;
   activeStatuses?: readonly ProductRequestStatus[];
   getStatusHref?: (status: ProductRequestStatus) => string | undefined;
 }>;
@@ -40,9 +38,8 @@ type ProductRequestStatisticsProps = Readonly<{
 
 const PRODUCT_REQUEST_STATISTICS_CONFIG: readonly ProductRequestStatisticConfig[] =
   [
-    { status: 'draft', tone: 'gray', icon: FileClock },
     { status: 'new', tone: 'blue', icon: FilePlus2 },
-    { status: 'in_progress', tone: 'yellow', icon: Clock3 },
+    { status: 'on_moderation', tone: 'yellow', icon: Clock3 },
     { status: 'approved', tone: 'green', icon: CheckCircle2 },
     { status: 'rejected', tone: 'red', icon: XCircle },
   ];
@@ -52,19 +49,16 @@ const PRODUCT_REQUEST_STATISTICS_CONFIG: readonly ProductRequestStatisticConfig[
 function ProductRequestStatistics({
   counts,
   className,
-  showDraft = true,
   activeStatuses = [],
   getStatusHref,
 }: ProductRequestStatisticsProps) {
-  const cards = PRODUCT_REQUEST_STATISTICS_CONFIG.filter(
-    ({ status }) => showDraft || status !== 'draft'
-  );
+  const cards = PRODUCT_REQUEST_STATISTICS_CONFIG;
 
   return (
     <StatsGrid
       className={className}
       columns={cards.length}
-      tabletColumns={showDraft ? 3 : 2}
+      tabletColumns={2}
       ariaLabel="Product request statistics"
     >
       {cards.map(({ status, tone, icon: Icon }) => {

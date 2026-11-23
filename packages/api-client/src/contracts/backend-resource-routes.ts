@@ -20,7 +20,22 @@ export const backendRoutes = {
   },
 
   admin: {
+    productRequests: {
+      list: '/admin/product-requests',
+
+      details: (requestId: EntityId) =>
+        `/admin/product-requests/${segment(requestId)}`,
+
+      status: (requestId: EntityId) =>
+        `/admin/product-requests/${segment(requestId)}/status`,
+    },
+
     accessMe: '/admin/access/me',
+
+    productRequestDocuments: {
+      download: (requestId: EntityId, documentId: EntityId) =>
+        `/admin/product-requests/${segment(requestId)}/documents/${segment(documentId)}`,
+    },
 
     employees: {
       myProfile: '/admin/employees/me/profile',
@@ -337,6 +352,17 @@ export const backendRoutes = {
     statistics: '/product-requests/statistics',
     articleAvailability: '/product-requests/article-availability',
     details: (requestId: EntityId) => `/product-requests/${segment(requestId)}`,
+
+    submit: (requestId: string) =>
+      `/product-requests/${segment(requestId)}/submit`,
+
+    cancel: (requestId: string) =>
+      `/product-requests/${segment(requestId)}/cancel`,
+
+    documentUpload: '/product-requests/documents',
+
+    documentDownload: (requestId: EntityId, documentId: EntityId) =>
+      `/product-requests/${segment(requestId)}/documents/${segment(documentId)}`,
   },
 
   pharmacyNotes: {

@@ -17,6 +17,8 @@
     "diagnose:pharmacy-owner-registration-documents": "tsx src/scripts/diagnostics/diagnose-pharmacy-owner-registration-documents.ts",
     "diagnose:pharmacy-reactivation": "node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/diagnostics/diagnose-pharmacy-reactivation.ts",
     "diagnose:public-pharmacy-options": "node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/diagnostics/diagnose-public-pharmacy-options.ts",
+    "migrate:product-request-statuses": "tsx src/scripts/migrations/catalog/migrate-product-request-statuses.ts",
+    "migrate:product-request-documents": "tsx src/scripts/migrations/catalog/migrate-product-request-documents.ts",
     "migrate:product-request-draft-index": "tsx src/scripts/migrations/catalog/ensure-product-request-draft-index.ts",
     "migrate:demo-product-characteristics": "tsx src/scripts/migrations/catalog/backfill-demo-product-characteristics.ts",
     "migrate:public-pharmacy-name-index": "node ../../scripts/dev/run-with-bff-secret.mjs tsx src/scripts/migrations/pharmacies/ensure-public-pharmacy-name-index.ts",

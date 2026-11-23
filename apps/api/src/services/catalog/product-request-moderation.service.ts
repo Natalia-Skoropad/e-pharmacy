@@ -40,15 +40,16 @@ import type {
 
 function canTransitionProductRequest(
   currentStatus: ProductRequestStatus,
+  reviewState: 'changes_requested' | undefined,
   nextStatus: ProductRequestModerationInput['status']
 ): boolean {
-  if (currentStatus === 'new') return nextStatus === 'in_progress';
-
-  if (currentStatus === 'in_progress') {
-    return nextStatus === 'approved' || nextStatus === 'rejected';
-  }
-
-  return false;
+  return (
+    currentStatus === 'on_moderation' &&
+    !reviewState &&
+    (nextStatus === 'approved' ||
+      nextStatus === 'rejected' ||
+      nextStatus === 'on_moderation')
+  );
 }
 
 //===============================================================
@@ -264,7 +265,13 @@ export async function moderateProductRequestByAdminService(
         ? String(request.categoryId)
         : null;
 
-      if (!canTransitionProductRequest(request.status, input.status)) {
+      if (
+        !canTransitionProductRequest(
+          request.status,
+          request.reviewState,
+          input.status
+        )
+      ) {
         throw httpError(
           HTTP_STATUS.CONFLICT,
           `Product request cannot transition from ${request.status} to ${input.status}.`,
@@ -297,6 +304,9 @@ export async function moderateProductRequestByAdminService(
 
       request.status = input.status;
 
+      request.reviewState =
+        input.status === 'on_moderation' ? 'changes_requested' : undefined;
+
       if (approvedProduct) {
         request.productId = approvedProduct.productId;
 
@@ -306,15 +316,20 @@ export async function moderateProductRequestByAdminService(
 
         request.rejectionReason = undefined;
         request.cancelledBy = undefined;
+      } else if (input.status === 'on_moderation') {
+        request.rejectionReason = input.reason?.trim();
       } else if (input.status === 'rejected') {
         request.rejectionReason = input.reason?.trim();
         request.cancelledBy = 'admin';
       }
 
-      const historyCopy = getStatusHistoryCopy(
-        input.status,
-        request.rejectionReason
-      );
+      const historyCopy =
+        input.status === 'on_moderation'
+          ? {
+              title: 'Changes requested',
+              description: input.reason?.trim() || 'Admin requested changes.',
+            }
+          : getStatusHistoryCopy(input.status, request.rejectionReason);
 
       request.history = [
         ...(request.history ?? []),
@@ -357,6 +372,7 @@ export async function moderateProductRequestByAdminService(
 
           after: {
             status: request.status,
+            reviewState: request.reviewState ?? null,
 
             ...(productChanged ? { productId: nextProductId } : {}),
             ...(categoryChanged ? { categoryId: nextCategoryId } : {}),
@@ -364,7 +380,7 @@ export async function moderateProductRequestByAdminService(
 
           changedFields: [
             'status',
-
+            ...(request.reviewState ? ['reviewState'] : []),
             ...(productChanged ? ['productId'] : []),
             ...(categoryChanged ? ['categoryId'] : []),
           ],

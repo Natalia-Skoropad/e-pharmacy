@@ -1,5 +1,8 @@
 import { Router } from 'express';
 
+import { downloadProductRequestDocumentByAdmin } from '../../controllers/catalog/product-request-document.controller';
+import { productRequestDocumentParamsSchema } from '../../schemas/catalog/product-request-document.schema';
+
 import { USER_ROLES } from '../../constants/auth/auth';
 import { ADMIN_PERMISSIONS } from '../../constants/admin/access/admin-permissions';
 
@@ -57,6 +60,8 @@ import {
   decidePharmacyModerationByAdmin,
   requestPharmacyCorrectionsByAdmin,
   updateProductRequestStatusByAdmin,
+  getAdminProductRequests,
+  getAdminProductRequestById,
 } from '../../controllers/admin/admin.controller';
 
 import {
@@ -167,6 +172,7 @@ import {
 import {
   productRequestModerationSchema,
   productRequestParamsSchema,
+  productRequestsQuerySchema,
 } from '../../schemas/catalog/product-request.schema';
 
 import { orderSalesStatisticsQuerySchema } from '../../schemas/orders/order.schema';
@@ -745,6 +751,33 @@ adminRoutes.post(
   }),
 
   ctrlWrapper(requestPharmacyCorrectionsByAdmin)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ query: productRequestsQuerySchema }),
+  ctrlWrapper(getAdminProductRequests)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/:requestId',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(getAdminProductRequestById)
+);
+
+//=================================================================================
+
+adminRoutes.get(
+  '/product-requests/:requestId/documents/:documentId',
+  requireAdminPermission(ADMIN_PERMISSIONS.productRequests.view),
+  validate({ params: productRequestDocumentParamsSchema }),
+  ctrlWrapper(downloadProductRequestDocumentByAdmin)
 );
 
 //=================================================================================

@@ -244,3 +244,86 @@ export async function deletePharmacyProductRequest(
 
   dispatchProductRequestCounterRefresh();
 }
+
+//===================================================================
+
+// Separate binary attachment storage; product request JSON stores only document IDs.
+export async function uploadPharmacyProductRequestDocument(payload: {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+}): Promise<{
+  document: { documentId: string; name: string; type: string; size: number };
+}> {
+  const path = PHARMACY_API_ROUTES.productRequests.documentUpload;
+
+  return parseApiResponseData(
+    await localApiRequest(path, { method: 'POST', body: payload }),
+    (value) => {
+      if (
+        !isRecord(value) ||
+        !isRecord(value.document) ||
+        typeof value.document.documentId !== 'string' ||
+        typeof value.document.name !== 'string' ||
+        typeof value.document.type !== 'string' ||
+        typeof value.document.size !== 'number'
+      ) {
+        throw new ApiError(
+          'Product request document upload response is invalid.',
+          {
+            transportCode: 'INVALID_RESPONSE',
+            payload: value,
+          }
+        );
+      }
+
+      return {
+        document: {
+          documentId: value.document.documentId,
+          name: value.document.name,
+          type: value.document.type,
+          size: value.document.size,
+        },
+      };
+    },
+    { url: path, method: 'POST' }
+  );
+}
+
+//===================================================================
+
+// Owner lifecycle transitions are separate from ordinary Save changes.
+export async function submitPharmacyProductRequest(
+  requestId: string
+): Promise<ProductRequestDetailsViewModel> {
+  const path = PHARMACY_API_ROUTES.productRequests.submit(requestId);
+
+  const result = parseApiResponseData(
+    await localApiRequest(path, { method: 'POST' }),
+    parseProductRequestDetails,
+    { url: path, method: 'POST' }
+  );
+
+  dispatchProductRequestCounterRefresh();
+
+  return result;
+}
+
+//===================================================================
+
+export async function cancelPharmacyProductRequest(
+  requestId: string
+): Promise<ProductRequestDetailsViewModel> {
+  const path = PHARMACY_API_ROUTES.productRequests.cancel(requestId);
+
+  const result = parseApiResponseData(
+    await localApiRequest(path, { method: 'POST' }),
+    parseProductRequestDetails,
+    { url: path, method: 'POST' }
+  );
+
+  dispatchProductRequestCounterRefresh();
+
+  return result;
+}

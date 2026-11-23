@@ -75,9 +75,8 @@ export async function getProductRequestStatisticsService(userId: string) {
   const scope = await getProductRequestOwnerScope(userId);
 
   const statistics: Record<ProductRequestStatus, number> = {
-    draft: 0,
     new: 0,
-    in_progress: 0,
+    on_moderation: 0,
     approved: 0,
     rejected: 0,
   };
@@ -173,6 +172,7 @@ export async function getProductRequestsService(
 
   const [requests, total, earliestRequest] = await Promise.all([
     ProductRequest.find(filter)
+      .select('-additionalFiles') // large legacy binaries belong only in request details
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(query.perPage)
@@ -275,6 +275,90 @@ export async function getProductRequestByIdService(
 
       request.categoryId
         ? getProductCategoryReferenceOrThrow(categoryMap, request.categoryId)
+        : undefined
+    ),
+  };
+}
+
+//===============================================================
+
+/** Admin read scope is separate from owner scope. Authorization is enforced
+ * by the admin route permission guard, never by client-supplied owner IDs. */
+export async function getAdminProductRequestsService(
+  query: ProductRequestsQuery
+) {
+  const filter: Record<string, unknown> = {};
+
+  if (query.status) filter.status = query.status;
+
+  if (query.keyword?.trim()) {
+    const expression = createFlexibleSearchRegExp(query.keyword.trim());
+
+    filter.$or = [{ name: expression }, { article: expression }];
+  }
+
+  if (query.requestId) filter._id = new Types.ObjectId(query.requestId);
+
+  const [requests, total] = await Promise.all([
+    ProductRequest.find(filter)
+      .select('-additionalFiles')
+      .sort({ createdAt: -1 })
+      .skip((query.page - 1) * query.perPage)
+      .limit(query.perPage)
+      .populate('productId', 'imageUrl article name')
+      .lean<ProductRequestDocument[]>(),
+
+    ProductRequest.countDocuments(filter),
+  ]);
+
+  const categories = await getProductCategoryReferenceMap(
+    requests.flatMap((request) =>
+      request.categoryId ? [request.categoryId] : []
+    )
+  );
+
+  return {
+    items: requests.map((request) =>
+      serializeProductRequest(
+        request,
+        0,
+        request.categoryId
+          ? getProductCategoryReferenceOrThrow(categories, request.categoryId)
+          : undefined
+      )
+    ),
+
+    total,
+    page: query.page,
+    perPage: query.perPage,
+    totalPages: Math.ceil(total / query.perPage),
+    earliestCreatedAt: null,
+  };
+}
+
+//===================================================================
+
+export async function getAdminProductRequestByIdService(requestId: string) {
+  if (!Types.ObjectId.isValid(requestId))
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request not found.');
+
+  const request = await ProductRequest.findById(requestId)
+    .populate('productId', 'imageUrl article name')
+    .lean<ProductRequestDocument | null>();
+
+  if (!request)
+    throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request not found.');
+
+  const categories = request.categoryId
+    ? await getProductCategoryReferenceMap([request.categoryId])
+    : new Map<string, ProductCategoryReferenceDto>();
+
+  return {
+    request: serializeProductRequest(
+      request,
+      0,
+      request.categoryId
+        ? getProductCategoryReferenceOrThrow(categories, request.categoryId)
         : undefined
     ),
   };

@@ -12,6 +12,8 @@ import type {
 import {
   createProductRequestService,
   deleteProductRequestService,
+  submitProductRequestService,
+  cancelProductRequestService,
   updateProductRequestService,
 } from '../../services/catalog/product-request-management.service';
 
@@ -121,6 +123,30 @@ export async function deleteProductRequest(
 ): Promise<void> {
   const { requestId } = res.locals.validated.params;
   const data = await deleteProductRequestService(req.user?.id ?? '', requestId);
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//===============================================================
+
+export async function submitProductRequest(
+  req: Request,
+  res: ValidatedResponse<unknown, ProductRequestParams>
+): Promise<void> {
+  const { requestId } = res.locals.validated.params;
+  const data = await submitProductRequestService(req.user?.id ?? '', requestId);
+
+  sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
+}
+
+//=================================================================================
+
+export async function cancelProductRequest(
+  req: Request,
+  res: ValidatedResponse<unknown, ProductRequestParams>
+): Promise<void> {
+  const { requestId } = res.locals.validated.params;
+  const data = await cancelProductRequestService(req.user?.id ?? '', requestId);
 
   sendSuccessResponse({ res, statusCode: HTTP_STATUS.OK, data });
 }

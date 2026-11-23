@@ -177,14 +177,10 @@ test('S10.5 moderation preserves transitions and atomic approved-product audit',
 
   assert.match(
     moderation,
-    /currentStatus === 'new'[\s\S]*?nextStatus === 'in_progress'/
+    /currentStatus === 'on_moderation'[\s\S]*?!reviewState/
   );
 
-  assert.match(
-    moderation,
-    /currentStatus === 'in_progress'[\s\S]*?nextStatus === 'approved'/
-  );
-
+  assert.match(moderation, /nextStatus === 'approved'/);
   assert.match(moderation, /session\.withTransaction/);
   assert.match(moderation, /resolveApprovedProduct\(/);
   assert.match(moderation, /Product\.create\([\s\S]*?\{ session \}/);

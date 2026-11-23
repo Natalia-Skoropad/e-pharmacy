@@ -109,10 +109,6 @@
   font-weight: var(--fw-semi-bold);
 }
 
-.draftCounter {
-  background-color: var(--color-text-muted);
-}
-
 .newCounter {
   background-color: var(--color-info);
 }

@@ -19,23 +19,24 @@ test('product request page mode is explicit for new and clone flows', () => {
 
 //===================================================================
 
-test('existing draft and non-draft requests resolve to edit and readonly modes', () => {
+test('New and Needs changes requests are editable; pending and terminal are read-only', () => {
+  assert.equal(
+    resolveProductRequestPageMode({ requestId: 'id', requestStatus: 'new' }),
+    'edit'
+  );
+
   assert.equal(
     resolveProductRequestPageMode({
-      requestId: 'request-id',
-      requestStatus: 'draft',
+      requestId: 'id',
+      requestStatus: 'on_moderation',
+      reviewState: 'changes_requested',
     }),
     'edit'
   );
 
-  for (const requestStatus of [
-    'new',
-    'in_progress',
-    'approved',
-    'rejected',
-  ] as const) {
+  for (const status of ['on_moderation', 'approved', 'rejected'] as const) {
     assert.equal(
-      resolveProductRequestPageMode({ requestId: 'request-id', requestStatus }),
+      resolveProductRequestPageMode({ requestId: 'id', requestStatus: status }),
       'readonly'
     );
   }

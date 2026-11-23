@@ -21,7 +21,10 @@ import type {
   ISODateTimeString,
 } from '../src/primitives';
 
-import type { ProductRequestResponseDto } from '../src/product-requests';
+import type {
+  ProductRequestResponseDto,
+  ProductRequestStatus,
+} from '../src/product-requests';
 
 //===================================================================
 // Dates are intentionally different contracts.
@@ -39,6 +42,7 @@ void timestamp;
 // Delivery is discriminated by deliveryMethod.
 
 declare const pharmacyId: EntityId;
+
 declare const postalDetails: {
   recipientName: string;
   recipientPhone: string;
@@ -75,7 +79,7 @@ type ProductRequestRowViewModel = Readonly<{
   id: EntityId;
   requestNumber: string;
   createdAt: ISODateTimeString;
-  status: 'draft' | 'new' | 'in_progress' | 'approved' | 'rejected';
+  status: ProductRequestStatus;
 }>;
 
 declare const dto: ProductRequestResponseDto;

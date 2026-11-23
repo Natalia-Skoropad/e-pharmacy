@@ -37,18 +37,19 @@ function validRequest() {
       slug: 'medicine',
     },
 
-    status: 'in_progress',
+    status: 'on_moderation',
 
     history: [
       {
         id: `${REQUEST_ID}-0`,
-        status: 'in_progress',
+        status: 'on_moderation',
         title: 'Request is in progress',
         description: 'The request is being reviewed.',
         createdAt: '2026-08-12T10:00:00.000Z',
         isInferred: false,
       },
     ],
+
     commentsTotal: 1,
   };
 }
@@ -65,11 +66,13 @@ function isInvalidResponse(error: unknown): boolean {
 
 test('product request parser preserves the canonical application projection', () => {
   const row = normalizeProductRequest(validRequest());
+
   assert.equal(row?.id, REQUEST_ID);
   assert.equal(row?.productId, PRODUCT_ID);
-  assert.equal(row?.status, 'in_progress');
+  assert.equal(row?.status, 'on_moderation');
 
   const details = normalizeProductRequestDetails(validRequest());
+
   assert.equal(details?.updatedAt, '2026-08-13T10:00:00.000Z');
   assert.equal(details?.history.length, 1);
   assert.equal(details?.history[0]?.isInferred, false);
@@ -81,13 +84,13 @@ test('product request parser preserves the canonical application projection', ()
 test('legacy request statuses are normalized explicitly and unknown statuses are rejected', () => {
   assert.deepEqual(normalizeProductRequestStatus('in_work'), {
     success: true,
-    value: 'in_progress',
+    value: 'on_moderation',
     legacy: true,
   });
 
-  assert.deepEqual(normalizeProductRequestStatus('on_moderation'), {
+  assert.deepEqual(normalizeProductRequestStatus('in_progress'), {
     success: true,
-    value: 'in_progress',
+    value: 'on_moderation',
     legacy: true,
   });
 
@@ -118,6 +121,7 @@ test('product request pagination rejects malformed rows instead of silently drop
         ...response,
         items: [{ ...validRequest(), status: 'unexpected' }],
       }),
+
     isInvalidResponse
   );
 });
@@ -141,6 +145,7 @@ test('product request list metadata fails closed for malformed earliest dates', 
           ...response,
           earliestCreatedAt,
         }),
+
       isInvalidResponse
     );
   }
@@ -162,6 +167,7 @@ test('product request list metadata fails closed for malformed earliest dates', 
 test('product request history requires an explicit inferred marker', () => {
   const request = validRequest();
   const { isInferred, ...withoutMarker } = request.history[0];
+
   assert.equal(isInferred, false);
 
   assert.equal(
@@ -174,9 +180,8 @@ test('product request history requires an explicit inferred marker', () => {
 
 test('product request statistics require all canonical non-negative integer counts', () => {
   const valid = {
-    draft: 1,
     new: 2,
-    in_progress: 3,
+    on_moderation: 3,
     approved: 4,
     rejected: 5,
   };
@@ -184,7 +189,7 @@ test('product request statistics require all canonical non-negative integer coun
   assert.deepEqual(normalizeProductRequestStatisticsResponse(valid), valid);
 
   for (const invalid of [
-    { ...valid, draft: -1 },
+    { ...valid, on_moderation: -1 },
     { ...valid, new: 1.5 },
     { ...valid, approved: undefined },
   ]) {

@@ -1,12 +1,17 @@
 'use client';
 
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 import {
+  ClipboardCheck,
+  ChevronDown,
+  CircleHelp,
   ClipboardList,
   Clock3,
   FileText,
+  Files,
+  StickyNote,
   CheckCircle2,
   FilePlus2,
   History,
@@ -57,7 +62,6 @@ import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data'
 import type {
   ProductRequestFormPayload,
   ProductRequestFile,
-  ProductRequestStatus,
 } from '@e-pharmacy/types/product-requests';
 
 import { formatDateTime } from '@e-pharmacy/utils/date';
@@ -97,8 +101,11 @@ import {
   deletePharmacyProductRequest,
   getPharmacyNotes,
   getPharmacyProductRequest,
+  submitPharmacyProductRequest,
+  cancelPharmacyProductRequest,
   getProductCategories,
   updatePharmacyProductRequest,
+  uploadPharmacyProductRequestDocument,
 } from '@/lib/api/browser';
 
 import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/product-requests';
@@ -119,20 +126,22 @@ const CUSTOM_CATEGORY_OPTION_VALUE = '__custom__';
 //===================================================================
 
 type ValidationMode = ProductRequestValidationMode | null;
-type RequestTab = 'editor' | 'comments' | 'history';
 
 type EditorTab =
   | 'details'
   | 'characteristics'
   | 'full-description'
   | 'note-for-admin'
-  | 'documents';
+  | 'documents'
+  | 'comments'
+  | 'activity';
 
 //===================================================================
 
 export type NewProductRequestPageContentProps = Readonly<{
   requestId?: string;
   sourceRequestId?: string;
+  initialTab?: EditorTab;
 }>;
 
 type ProductRequestLoadError = Readonly<{
@@ -174,7 +183,8 @@ function toUploadFile(
   prefix: string
 ): BrowserUploadFile {
   return {
-    id: `${prefix}-${file.name}-${file.size}`,
+    id: file.documentId ?? `${prefix}-${file.name}-${file.size}`,
+    documentId: file.documentId,
     name: file.name,
     type: file.type,
     size: file.size,
@@ -217,47 +227,6 @@ function renderSelectOption(label: string, icon: ReactNode) {
 
 //===================================================================
 
-function getStatusMessage(status: ProductRequestStatus) {
-  switch (status) {
-    case 'draft':
-      return {
-        title: 'This request is a draft',
-        message:
-          'You can edit the request, manage private pharmacy comments, or send it for moderation.',
-      };
-
-    case 'new':
-      return {
-        title: 'The request was sent for moderation',
-        message:
-          'The submitted information is locked while Admin reviews the request.',
-      };
-
-    case 'in_progress':
-      return {
-        title: 'Admin is reviewing this request',
-        message:
-          'The request is in work and all submitted fields are read-only.',
-      };
-
-    case 'approved':
-      return {
-        title: 'The product request was approved',
-        message:
-          'Admin approved the request and created or linked the catalog product.',
-      };
-
-    case 'rejected':
-      return {
-        title: 'The product request was rejected',
-        message:
-          'Review the reason in Change history and create a corrected request from this data.',
-      };
-  }
-}
-
-//===================================================================
-
 const PRODUCT_REQUEST_ACTION_ERROR_MESSAGES: Readonly<Record<string, string>> =
   {
     [PRODUCT_REQUEST_ERROR_CODES.ARTICLE_CONFLICT]:
@@ -267,10 +236,10 @@ const PRODUCT_REQUEST_ACTION_ERROR_MESSAGES: Readonly<Record<string, string>> =
       'This product request is no longer available.',
 
     [PRODUCT_REQUEST_ERROR_CODES.NOT_EDITABLE]:
-      'Only draft product requests can be edited.',
+      'Only New requests and requests needing corrections can be edited.',
 
     [PRODUCT_REQUEST_ERROR_CODES.NOT_DELETABLE]:
-      'Only draft product requests can be deleted.',
+      'Only New product requests can be deleted.',
 
     [PRODUCT_REQUEST_ERROR_CODES.INVALID_TRANSITION]:
       'This product request status has already changed. Reload the latest data and try again.',
@@ -292,8 +261,10 @@ function getProductRequestActionErrorMessage(
 function NewProductRequestPageContent({
   requestId,
   sourceRequestId,
+  initialTab = 'details',
 }: NewProductRequestPageContentProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
 
   // Product requests are owner resources, independent of pharmacy selection.
@@ -336,7 +307,7 @@ function NewProductRequestPageContent({
   const [additionalFilesError, setAdditionalFilesError] = useState('');
   const [validationMode, setValidationMode] = useState<ValidationMode>(null);
 
-  const [savingStatus, setSavingStatus] = useState<'draft' | 'new' | null>(
+  const [savingStatus, setSavingStatus] = useState<'new' | 'moderation' | null>(
     null
   );
 
@@ -348,8 +319,12 @@ function NewProductRequestPageContent({
     null
   );
 
-  const [activeTab, setActiveTab] = useState<RequestTab>('editor');
-  const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>('details');
+  const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>(initialTab);
+  const [savedSignature, setSavedSignature] = useState('');
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
+  const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
   const [commentsTotal, setCommentsTotal] = useState(0);
   const [isModerationConfirmOpen, setIsModerationConfirmOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -370,13 +345,38 @@ function NewProductRequestPageContent({
     requestId,
     sourceRequestId: cloneSourceRequestId,
     requestStatus: request?.status,
+    reviewState: request?.reviewState,
   });
 
-  const isDraft = requestMode === 'edit';
   const canEdit = requestMode !== 'readonly';
   const isSaving = savingStatus !== null;
   const isMutating = isSaving || isDeleting;
   const isFileProcessing = isImageProcessing || isAdditionalFilesProcessing;
+
+  const currentSignature = JSON.stringify({
+    values,
+
+    image: productImage.map((file) => [
+      file.documentId,
+      file.dataUrl,
+      file.name,
+    ]),
+
+    files: additionalFiles.map((file) => [
+      file.documentId,
+      file.name,
+      file.size,
+    ]),
+  });
+
+  const isDirty = Boolean(
+    requestId && request && savedSignature !== currentSignature
+  );
+
+  const canSubmitSaved = Boolean(
+    requestId && request && !isDirty && !isMutating && !isFileProcessing
+  );
+
   const hasProductImage = productImage.length > 0 && !isProductImageRemoved;
 
   const articleFormatError =
@@ -411,7 +411,8 @@ function NewProductRequestPageContent({
     isProductRequestDraftValid(values, validationContext) &&
     (!values.article.trim() || articleCheckStatus === 'available') &&
     !isFileProcessing &&
-    !isMutating;
+    !isMutating &&
+    (!requestId || isDirty);
 
   const formErrors: ProductRequestFormErrors = validationMode
     ? validateProductRequestForm(values, validationMode, validationContext)
@@ -458,24 +459,6 @@ function NewProductRequestPageContent({
       ? CUSTOM_CATEGORY_OPTION_VALUE
       : values.categoryId;
 
-  const tabs = useMemo<TabItem<RequestTab>[]>(() => {
-    const items: TabItem<RequestTab>[] = [
-      { value: 'editor', label: 'Request details' },
-    ];
-
-    // Comments belong to an existing request, never to an unsaved draft or
-    // a new request prefilled from a rejected submission.
-    if (requestId) {
-      items.push({ value: 'comments', label: 'Comments' });
-    }
-
-    if (requestId && request) {
-      items.push({ value: 'history', label: 'Change history' });
-    }
-
-    return items;
-  }, [requestId, request]);
-
   const editorTabs = useMemo<TabItem<EditorTab>[]>(
     () => [
       {
@@ -490,21 +473,36 @@ function NewProductRequestPageContent({
       },
       {
         value: 'full-description',
-        label: 'Full description',
+        label: 'About product',
         icon: <FileText size={17} aria-hidden="true" />,
       },
       {
         value: 'note-for-admin',
         label: 'Note for Admin',
-        icon: <FileText size={17} aria-hidden="true" />,
+        icon: <StickyNote size={17} aria-hidden="true" />,
       },
       {
         value: 'documents',
         label: 'Documents',
-        icon: <FilePlus2 size={17} aria-hidden="true" />,
+        icon: <Files size={17} aria-hidden="true" />,
       },
+
+      ...(requestId
+        ? [
+            {
+              value: 'comments' as const,
+              label: 'Comments',
+              icon: <StickyNote size={17} aria-hidden="true" />,
+            },
+            {
+              value: 'activity' as const,
+              label: 'Activity history',
+              icon: <History size={17} aria-hidden="true" />,
+            },
+          ]
+        : []),
     ],
-    []
+    [requestId]
   );
 
   useEffect(() => {
@@ -581,6 +579,22 @@ function NewProductRequestPageContent({
           (loadedRequest.additionalFiles ?? []).map((file, index) =>
             toUploadFile(file, `additional-${index}`)
           )
+        );
+        setSavedSignature(
+          JSON.stringify({
+            values: toFormState(loadedRequest),
+
+            image: (loadedRequest.productImage
+              ? [toUploadFile(loadedRequest.productImage, 'product-image')]
+              : []
+            ).map((file) => [file.documentId, file.dataUrl, file.name]),
+
+            files: (loadedRequest.additionalFiles ?? []).map((file) => [
+              file.documentId,
+              file.name,
+              file.size,
+            ]),
+          })
         );
 
         if (requestId) {
@@ -772,14 +786,38 @@ function NewProductRequestPageContent({
       for (const file of files) {
         if (controller.signal.aborted) return;
 
-        if (file.dataUrl || !file.file) {
+        // Pre-existing attached documents are represented by a stable ID.
+        // A legacy embedded document is uploaded when the selection changes.
+        if (file.documentId || (!file.file && !file.dataUrl)) {
           filesWithData.push(file);
           continue;
         }
 
-        const dataUrl = await readFileAsDataUrl(file.file, controller.signal);
+        const dataUrl =
+          file.dataUrl ??
+          (await readFileAsDataUrl(file.file!, controller.signal));
 
-        filesWithData.push({ ...file, dataUrl });
+        if (controller.signal.aborted) return;
+
+        const fileMetadata = toProductRequestFileMetadata(file);
+
+        const uploaded = await uploadPharmacyProductRequestDocument({
+          name: fileMetadata.name,
+          type: fileMetadata.type,
+          size: fileMetadata.size,
+          dataUrl,
+        });
+
+        if (controller.signal.aborted) return;
+
+        filesWithData.push({
+          ...file,
+          id: uploaded.document.documentId,
+          name: uploaded.document.name,
+          type: uploaded.document.type,
+          documentId: uploaded.document.documentId,
+          dataUrl: undefined,
+        });
       }
 
       if (controller.signal.aborted) return;
@@ -797,7 +835,9 @@ function NewProductRequestPageContent({
       setAdditionalFilesError('');
     } catch (error) {
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
-        setAdditionalFilesError('The selected files could not be read.');
+        setAdditionalFilesError(
+          'The selected files could not be uploaded. Please try again.'
+        );
       }
     } finally {
       if (additionalFilesReadControllerRef.current === controller) {
@@ -821,7 +861,7 @@ function NewProductRequestPageContent({
         : undefined,
     });
 
-  const saveRequest = async (status: 'draft' | 'new') => {
+  const saveRequest = async () => {
     if (
       mutationLockRef.current ||
       imageReadControllerRef.current ||
@@ -832,47 +872,42 @@ function NewProductRequestPageContent({
     }
 
     mutationLockRef.current = true;
-    setSavingStatus(status);
+    setSavingStatus('new');
 
     try {
       if (requestId) {
         const updatedRequest = await updatePharmacyProductRequest(
           requestId,
-          buildPayload(status)
+          buildPayload('new')
         );
 
         setRequest(updatedRequest);
         setCommentsTotal(updatedRequest.commentsTotal);
 
-        toast.success(
-          status === 'draft'
-            ? 'Request draft saved.'
-            : 'Request sent for Admin moderation.'
+        setAdditionalFiles(
+          (updatedRequest.additionalFiles ?? []).map((file, index) =>
+            toUploadFile(file, `additional-${index}`)
+          )
         );
 
+        setSavedSignature(currentSignature);
+        toast.success('Changes saved.');
         router.refresh();
 
         return;
       }
 
       const createdRequest = await createPharmacyProductRequest(
-        buildPayload(status)
+        buildPayload('new')
       );
 
-      toast.success(
-        status === 'draft'
-          ? 'Request draft saved.'
-          : 'Request sent for Admin moderation.'
-      );
-
+      toast.success('New request saved. You can continue editing it.');
       router.push(getPharmacyRequestPath(createdRequest.id));
       router.refresh();
     } catch (error) {
       const message = getProductRequestActionErrorMessage(
         error,
-        status === 'draft'
-          ? 'Could not save draft. Please try again.'
-          : 'Could not send request. Please try again.'
+        'Could not save changes. Please try again.'
       );
 
       if (message) toast.error(message);
@@ -904,7 +939,7 @@ function NewProductRequestPageContent({
       return;
     }
 
-    void saveRequest('draft');
+    void saveRequest();
   };
 
   const handleSendForModeration = () => {
@@ -916,11 +951,63 @@ function NewProductRequestPageContent({
   };
 
   const handleConfirmModeration = async () => {
-    if (isMutating || isFileProcessing || mutationLockRef.current) return;
+    if (
+      !requestId ||
+      !canSubmitSaved ||
+      !isModerationReady ||
+      mutationLockRef.current
+    )
+      return;
 
-    setIsModerationConfirmOpen(false);
+    mutationLockRef.current = true;
+    setSavingStatus('moderation');
 
-    await saveRequest('new');
+    try {
+      const result = await submitPharmacyProductRequest(requestId);
+
+      setRequest(result);
+      setIsModerationConfirmOpen(false);
+      setStatusMenuOpen(false);
+      toast.success('Request sent for moderation.');
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        getProductRequestActionErrorMessage(
+          error,
+          'Could not submit the request.'
+        )
+      );
+    } finally {
+      mutationLockRef.current = false;
+      setSavingStatus(null);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!requestId || mutationLockRef.current) return;
+
+    mutationLockRef.current = true;
+    setIsDeleting(true);
+
+    try {
+      const result = await cancelPharmacyProductRequest(requestId);
+
+      setRequest(result);
+      setIsCancelConfirmOpen(false);
+      setStatusMenuOpen(false);
+      toast.success('Product request cancelled.');
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        getProductRequestActionErrorMessage(
+          error,
+          'Could not cancel the request.'
+        )
+      );
+    } finally {
+      mutationLockRef.current = false;
+      setIsDeleting(false);
+    }
   };
 
   const handleDeleteDraft = async () => {
@@ -949,13 +1036,71 @@ function NewProductRequestPageContent({
     }
   };
 
+  useEffect(() => {
+    if (!statusMenuOpen) return;
+
+    const onClick = (event: MouseEvent) => {
+      if (!statusMenuRef.current?.contains(event.target as Node))
+        setStatusMenuOpen(false);
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setStatusMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', onClick);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', onClick);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [statusMenuOpen]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    // Links in the sidebar and breadcrumbs should use the same confirmation modal.
+    const onLinkClick = (event: MouseEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest('a[href]');
+
+      if (!(anchor instanceof HTMLAnchorElement) || anchor.target === '_blank')
+        return;
+
+      if (
+        anchor.origin !== window.location.origin ||
+        anchor.pathname === pathname
+      )
+        return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setPendingPath(anchor.pathname + anchor.search + anchor.hash);
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('click', onLinkClick, true);
+
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('click', onLinkClick, true);
+    };
+  }, [isDirty, pathname]);
+
   const pageTitle =
     request?.name ??
     (requestMode === 'clone'
       ? 'New product request from rejected request'
       : 'New product request');
-
-  const statusMessage = request ? getStatusMessage(request.status) : null;
 
   const savedImageSrc = request?.productImageUrl
     ? getProductImageSrc(request.productImageUrl)
@@ -966,55 +1111,133 @@ function NewProductRequestPageContent({
     : (productImagePreview ?? savedImageSrc);
 
   const hasHeaderActions =
-    requestMode !== 'readonly' || request?.status === 'rejected';
+    canEdit ||
+    request?.status === 'rejected' ||
+    request?.status === 'on_moderation';
 
-  const showDeleteDraftAction = Boolean(isDraft);
-  const showSendForModerationAction = Boolean(requestId && canEdit);
+  const canModerate =
+    request?.status === 'new' ||
+    (request?.status === 'on_moderation' &&
+      request.reviewState === 'changes_requested');
+
+  const showStatusMenu = Boolean(
+    requestId &&
+    (request?.status === 'new' || request?.status === 'on_moderation')
+  );
+
+  const isSendDisabled = !canModerate || !isModerationReady || !canSubmitSaved;
+
+  const onEditorTabChange = (tab: EditorTab) => {
+    if (tab === activeEditorTab) return;
+
+    const url = requestId
+      ? `${getPharmacyRequestPath(requestId)}/${tab === 'full-description' ? 'about-product' : tab}`
+      : '';
+
+    if (isDirty) {
+      setPendingPath(url || `tab:${tab}`);
+      return;
+    }
+
+    setActiveEditorTab(tab);
+
+    if (url) router.push(url);
+  };
 
   const headerActions = (
     <div className={css.headerActions}>
-      {requestMode !== 'readonly' ? (
-        <>
-          {showDeleteDraftAction ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className={css.dangerButton}
-              disabled={isMutating || isFileProcessing || !canEdit}
-              isLoading={isDeleting}
-              iconLeft={<Trash2 size={17} aria-hidden="true" />}
-              onClick={() => setIsDeleteConfirmOpen(true)}
-            >
-              Delete draft
-            </Button>
-          ) : null}
-
+      {canEdit ? (
+        <Button
+          type="button"
+          isLoading={savingStatus === 'new'}
+          disabled={!canSaveDraft}
+          iconLeft={<Save size={17} aria-hidden="true" />}
+          onClick={handleSaveDraft}
+        >
+          {requestId ? 'Save changes' : 'Save draft'}
+        </Button>
+      ) : null}
+      {showStatusMenu ? (
+        <div className={css.statusMenu} ref={statusMenuRef}>
           <Button
             type="button"
-            isLoading={savingStatus === 'draft'}
-            disabled={!canEdit || !canSaveDraft}
-            iconLeft={<Save size={17} aria-hidden="true" />}
-            onClick={handleSaveDraft}
+            size="sm"
+            variant="secondary"
+            aria-haspopup="menu"
+            aria-expanded={statusMenuOpen}
+            aria-controls="request-status-actions-menu"
+            iconLeft={<ClipboardCheck size={17} aria-hidden="true" />}
+            onClick={() => setStatusMenuOpen((open) => !open)}
           >
-            Save draft
+            Manage request status <ChevronDown size={16} aria-hidden="true" />
           </Button>
-
-          {showSendForModerationAction ? (
-            <Button
-              type="button"
-              isLoading={savingStatus === 'new'}
-              disabled={
-                isMutating || !canEdit || !isModerationReady || isFileProcessing
-              }
-              iconLeft={<Send size={17} aria-hidden="true" />}
-              onClick={handleSendForModeration}
+          {statusMenuOpen ? (
+            <div
+              className={css.statusMenuOptions}
+              id="request-status-actions-menu"
+              role="menu"
+              aria-label="Available request actions"
             >
-              Send for moderation
-            </Button>
+              <div className={css.statusActionRow}>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={css.sendStatusAction}
+                  disabled={isSendDisabled}
+                  onClick={() => {
+                    setStatusMenuOpen(false);
+                    handleSendForModeration();
+                  }}
+                >
+                  <Send size={17} aria-hidden="true" />{' '}
+                  {request?.reviewState === 'changes_requested'
+                    ? 'Resend for moderation'
+                    : 'Send for moderation'}
+                </button>
+                <InfoTooltip
+                  label="Moderation requirements"
+                  title="Send for moderation"
+                  items={[
+                    {
+                      title: 'Required details',
+                      description:
+                        'Save all changes, then provide a photo, unique article, category, brand, series, manufacturer, and an About product text of at least 100 characters.',
+                      icon: <CircleHelp size={16} />,
+                    },
+                  ]}
+                />
+              </div>
+              {request?.status === 'new' ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={css.dangerStatusAction}
+                  disabled={isMutating}
+                  onClick={() => {
+                    setStatusMenuOpen(false);
+                    setIsDeleteConfirmOpen(true);
+                  }}
+                >
+                  <Trash2 size={17} aria-hidden="true" /> Delete request draft
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={css.dangerStatusAction}
+                  disabled={!request?.reviewState || isMutating}
+                  onClick={() => {
+                    setStatusMenuOpen(false);
+                    setIsCancelConfirmOpen(true);
+                  }}
+                >
+                  <X size={17} aria-hidden="true" /> Cancel request
+                </button>
+              )}
+            </div>
           ) : null}
-        </>
+        </div>
       ) : null}
-
       {request?.status === 'rejected' ? (
         <LinkButton
           href={`${PHARMACY_ROUTES.PRODUCT_REQUEST_NEW}?source=${request.id}`}
@@ -1088,7 +1311,7 @@ function NewProductRequestPageContent({
                     {
                       title: 'Complete product details',
                       description:
-                        'Before moderation, add a product photo, unique article, category, brand, series, manufacturer, and a full description. Add other characteristics when relevant.',
+                        'Before moderation, add a product photo, unique article, category, brand, series, manufacturer, and an About product description of at least 100 characters. Add other characteristics when relevant.',
                       icon: <CheckCircle2 size={17} aria-hidden="true" />,
                     },
                     {
@@ -1107,34 +1330,38 @@ function NewProductRequestPageContent({
           actions={hasHeaderActions ? headerActions : undefined}
         />
 
-        {request && statusMessage ? (
-          <StatusBanner
-            {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
-            title={statusMessage.title}
-            message={statusMessage.message}
-            inlineMeta
-            meta={
-              <span className={css.statusUpdatedAt}>
-                <Clock3 size={16} aria-hidden="true" />
-                Last updated {formatDateTime(request.updatedAt) ?? '—'}
+        {request ? (
+          <div className={css.requestStatusLine}>
+            <StatusBadge
+              {...PRODUCT_REQUEST_STATUS_PRESENTATION[request.status]}
+            />
+            {request.reviewState === 'changes_requested' ? (
+              <span className={css.changesRequested}>Needs changes</span>
+            ) : null}
+
+            {request.status === 'rejected' && request.cancelledBy ? (
+              <span className={css.changesRequested}>
+                Cancelled by{' '}
+                {request.cancelledBy === 'admin' ? 'Admin' : 'owner'}
               </span>
-            }
-          />
+            ) : null}
+
+            {request.reviewState === 'changes_requested' &&
+            request.rejectionReason ? (
+              <span role="status">
+                Admin feedback: {request.rejectionReason}
+              </span>
+            ) : null}
+
+            <span className={css.statusUpdatedAt}>
+              <Clock3 size={16} aria-hidden="true" /> Last updated{' '}
+              {formatDateTime(request.updatedAt) ?? '—'}
+            </span>
+          </div>
         ) : null}
       </section>
 
-      {requestId ? (
-        <Tabs
-          items={tabs}
-          activeValue={activeTab}
-          ariaLabel="Product request sections"
-          mobileVisibleCount={1}
-          tabletVisibleCount={3}
-          onChange={setActiveTab}
-        />
-      ) : null}
-
-      {activeTab === 'editor' ? (
+      {activeEditorTab !== 'comments' && activeEditorTab !== 'activity' ? (
         <form
           className={css.form}
           noValidate
@@ -1151,7 +1378,7 @@ function NewProductRequestPageContent({
               ariaLabel="Product request editor sections"
               mobileVisibleCount={1}
               tabletVisibleCount={4}
-              onChange={setActiveEditorTab}
+              onChange={onEditorTabChange}
             />
 
             {activeEditorTab === 'details' ? (
@@ -1387,6 +1614,7 @@ function NewProductRequestPageContent({
                           )
                         }
                       />
+
                       <NameInput
                         id="product-request-series"
                         name="series"
@@ -1410,6 +1638,7 @@ function NewProductRequestPageContent({
                       />
                     </div>
                   </div>
+
                   <div className={css.fieldGroup}>
                     <div className={css.fieldsGrid}>
                       <NameInput
@@ -1433,6 +1662,7 @@ function NewProductRequestPageContent({
                           )
                         }
                       />
+
                       <NameInput
                         id="product-request-releaseForm"
                         name="releaseForm"
@@ -1456,6 +1686,7 @@ function NewProductRequestPageContent({
                       />
                     </div>
                   </div>
+
                   <div className={css.fieldGroup}>
                     <div className={css.stackedFields}>
                       <NameInput
@@ -1479,6 +1710,7 @@ function NewProductRequestPageContent({
                           )
                         }
                       />
+
                       <NameInput
                         id="product-request-activeIngredientCount"
                         name="activeIngredientCount"
@@ -1514,18 +1746,19 @@ function NewProductRequestPageContent({
                 aria-labelledby="description-title"
               >
                 <ProfileSectionHeader
-                  title="Full description"
+                  title="About product"
                   titleId="description-title"
-                  description="Add complete product information using the same editor as the pharmacy public description."
+                  description="Describe this product in detail using the same editor as About pharmacy."
                   icon={<FileText size={21} aria-hidden="true" />}
                 />
 
                 <MarkdownTextarea
                   id="product-request-full-description"
                   name="fullDescription"
-                  label="Full description"
+                  expanded
+                  label="About product"
                   placeholder="Describe the product, composition, use, package, and other important details."
-                  hint="You can use simple formatting buttons or type plain text."
+                  hint="At least 100 characters when filled. You can use simple formatting or type plain text."
                   value={values.fullDescription}
                   error={errors.fullDescription}
                   isTouched={validationMode === 'moderation'}
@@ -1547,12 +1780,13 @@ function NewProductRequestPageContent({
                   title="Note for Admin"
                   titleId="admin-comment-title"
                   description="Use this optional field to explain something directly to Admin."
-                  icon={<FileText size={21} aria-hidden="true" />}
+                  icon={<StickyNote size={21} aria-hidden="true" />}
                 />
 
                 <CommentInput
                   id="product-request-pharmacy-comment"
                   name="pharmacyComment"
+                  className={css.noteField}
                   label="Pharmacy note for Admin"
                   placeholder="Add an optional note for Admin."
                   value={values.pharmacyComment}
@@ -1575,7 +1809,7 @@ function NewProductRequestPageContent({
                   title="Documents"
                   titleId="documents-title"
                   description="Attach instructions, package photos, certificates, or other supporting documents if needed."
-                  icon={<FilePlus2 size={21} aria-hidden="true" />}
+                  icon={<Files size={21} aria-hidden="true" />}
                 />
 
                 <DocumentUpload
@@ -1590,7 +1824,7 @@ function NewProductRequestPageContent({
                   disabled={!canEdit || isMutating || isFileProcessing}
                   maxFiles={PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles}
                   accept={PRODUCT_REQUEST_ATTACHMENTS_ACCEPT}
-                  hint={`Up to ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} files, no larger than ${PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB} MB each.`}
+                  hint={`PDF, DOC, DOCX, JPG, PNG or WEBP. Up to ${PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles} files, ${PRODUCT_REQUEST_ATTACHMENT_MAX_SIZE_MB} MB each.`}
                   validateSelection={(files) =>
                     validateProductRequestAdditionalFiles(files)
                   }
@@ -1599,7 +1833,7 @@ function NewProductRequestPageContent({
                     dropzoneTitle: 'Upload supporting files',
 
                     dropzoneText:
-                      'PDF, DOC, JPG, PNG, or WEBP files are supported.',
+                      'PDF, DOC, DOCX, JPG, PNG or WEBP. Up to 6 files, 10 MB each.',
 
                     removeTitle: 'Remove additional file?',
 
@@ -1610,6 +1844,15 @@ function NewProductRequestPageContent({
                     removeCancel: 'Keep file',
                   }}
                   onSelectionError={setAdditionalFilesError}
+                  onDownloadFile={async (file) => {
+                    if (!file.documentId) return '';
+
+                    const sourceId = requestId ?? cloneSourceRequestId;
+
+                    return sourceId
+                      ? `/api/product-requests/${encodeURIComponent(sourceId)}/documents/${encodeURIComponent(file.documentId)}`
+                      : '';
+                  }}
                   onChange={(files) => void handleAdditionalFilesChange(files)}
                 />
               </section>
@@ -1618,7 +1861,7 @@ function NewProductRequestPageContent({
         </form>
       ) : null}
 
-      {activeTab === 'comments' ? (
+      {activeEditorTab === 'comments' ? (
         request ? (
           <EntityComments
             entityKey={`product-request:${request.id}`}
@@ -1627,7 +1870,11 @@ function NewProductRequestPageContent({
             placeholder="Write a private comment about this product request..."
             emptyText="No private pharmacy comments have been added yet."
             initialTotal={commentsTotal}
-            isEditable={request.status === 'draft'}
+            isEditable={
+              request.status === 'new' ||
+              (request.status === 'on_moderation' &&
+                request.reviewState === 'changes_requested')
+            }
             load={(page, options) =>
               getPharmacyNotes('product_request', request.id, page, options)
             }
@@ -1648,7 +1895,7 @@ function NewProductRequestPageContent({
         ) : (
           <section className={css.formCard}>
             <StatusBanner
-              {...PRODUCT_REQUEST_STATUS_PRESENTATION.draft}
+              {...PRODUCT_REQUEST_STATUS_PRESENTATION.new}
               title="Comments are not available yet"
               message="Save the request as a draft first. Private pharmacy comments will become available after the draft is created."
             />
@@ -1656,7 +1903,7 @@ function NewProductRequestPageContent({
         )
       ) : null}
 
-      {activeTab === 'history' && request ? (
+      {activeEditorTab === 'activity' && request ? (
         <section
           className={css.formCard}
           aria-labelledby="request-history-title"
@@ -1678,7 +1925,7 @@ function NewProductRequestPageContent({
               const toneClassName =
                 entry.status === 'rejected'
                   ? css.historyDanger
-                  : entry.status === 'in_progress'
+                  : entry.status === 'on_moderation'
                     ? css.historyWarning
                     : entry.status === 'new'
                       ? css.historyInfo
@@ -1732,12 +1979,84 @@ function NewProductRequestPageContent({
       {isModerationConfirmOpen ? (
         <ConfirmationModal
           title="Send request for moderation?"
-          text="After sending, all fields and private comments become read-only while Admin reviews the request."
+          text="Once submitted, the request becomes read-only. Admin can approve it, ask for corrections (Needs changes), or reject/cancel it. You can edit and resubmit only after corrections are requested."
           confirmLabel="Send for moderation"
           cancelLabel="Keep editing"
-          isLoading={savingStatus === 'new'}
+          isLoading={savingStatus === 'moderation'}
           onConfirm={() => void handleConfirmModeration()}
           onCancel={() => setIsModerationConfirmOpen(false)}
+        />
+      ) : null}
+
+      {isCancelConfirmOpen ? (
+        <ConfirmationModal
+          title="Cancel product request?"
+          eyebrow="CANCEL REQUEST"
+          text="The request will become Rejected / Cancelled by owner. This cannot be undone."
+          destructive
+          confirmLabel="Cancel request"
+          cancelLabel="Keep request"
+          isLoading={isDeleting}
+          onConfirm={() => void handleCancelRequest()}
+          onCancel={() => setIsCancelConfirmOpen(false)}
+        />
+      ) : null}
+
+      {pendingPath ? (
+        <ConfirmationModal
+          title="Leave without saving changes?"
+          eyebrow="UNSAVED CHANGES"
+          text="The changes you have made to this request have not been saved and will be lost."
+          destructive
+          confirmLabel="Discard changes"
+          cancelLabel="Keep editing"
+          onConfirm={() => {
+            const destination = pendingPath;
+
+            setPendingPath(null);
+
+            if (request) {
+              const restoredValues = toFormState(request);
+
+              const restoredImage = request.productImage
+                ? [toUploadFile(request.productImage, 'product-image')]
+                : [];
+
+              const restoredFiles = (request.additionalFiles ?? []).map(
+                (file, index) => toUploadFile(file, `additional-${index}`)
+              );
+
+              setValues(restoredValues);
+              setProductImage(restoredImage);
+              setProductImagePreview(request.productImage?.dataUrl ?? null);
+              setIsProductImageRemoved(false);
+              setAdditionalFiles(restoredFiles);
+
+              setSavedSignature(
+                JSON.stringify({
+                  values: restoredValues,
+                  image: restoredImage.map((file) => [
+                    file.documentId,
+                    file.dataUrl,
+                    file.name,
+                  ]),
+
+                  files: restoredFiles.map((file) => [
+                    file.documentId,
+                    file.name,
+                    file.size,
+                  ]),
+                })
+              );
+
+              setValidationMode(null);
+            }
+
+            if (destination.startsWith('tab:'))
+              setActiveEditorTab(destination.slice(4) as EditorTab);
+            else router.push(destination);
+          }}
+          onCancel={() => setPendingPath(null)}
         />
       ) : null}
 

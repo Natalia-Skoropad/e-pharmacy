@@ -34,6 +34,7 @@ export type ProductRequestResponseDto = Readonly<{
   category?: ProductCategoryReference;
   customCategory?: string;
   status: ProductRequestStatus;
+  reviewState?: 'changes_requested';
   cancelledBy?: 'owner' | 'admin';
   productImage?: ProductRequestFile;
   manufacturer?: string;

@@ -1,6 +1,16 @@
 import { Router } from 'express';
 
 import {
+  uploadProductRequestDocument,
+  downloadProductRequestDocument,
+} from '../../controllers/catalog/product-request-document.controller';
+
+import {
+  productRequestDocumentUploadSchema,
+  productRequestDocumentParamsSchema,
+} from '../../schemas/catalog/product-request-document.schema';
+
+import {
   createProductRequest,
   deleteProductRequest,
   getProductRequestArticleAvailability,
@@ -8,6 +18,8 @@ import {
   getProductRequestStatistics,
   getProductRequests,
   updateProductRequest,
+  submitProductRequest,
+  cancelProductRequest,
 } from '../../controllers/catalog/product-request.controller';
 
 import { USER_ROLES } from '../../constants/auth/auth';
@@ -60,6 +72,24 @@ productRequestRoutes.get(
 
 //=================================================================================
 
+productRequestRoutes.post(
+  '/documents',
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ body: productRequestDocumentUploadSchema }),
+  ctrlWrapper(uploadProductRequestDocument)
+);
+
+//=================================================================================
+
+productRequestRoutes.get(
+  '/:requestId/documents/:documentId',
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ params: productRequestDocumentParamsSchema }),
+  ctrlWrapper(downloadProductRequestDocument)
+);
+
+//=================================================================================
+
 productRequestRoutes.get(
   '/:requestId',
   validate({ params: productRequestParamsSchema }),
@@ -91,4 +121,22 @@ productRequestRoutes.delete(
   '/:requestId',
   validate({ params: productRequestParamsSchema }),
   ctrlWrapper(deleteProductRequest)
+);
+
+//=================================================================================
+
+productRequestRoutes.post(
+  '/:requestId/submit',
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(submitProductRequest)
+);
+
+//=================================================================================
+
+productRequestRoutes.post(
+  '/:requestId/cancel',
+  authorizeRoles(USER_ROLES.PHARMACY),
+  validate({ params: productRequestParamsSchema }),
+  ctrlWrapper(cancelProductRequest)
 );

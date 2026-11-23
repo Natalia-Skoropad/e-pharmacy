@@ -125,6 +125,7 @@ function parseContractCase(value: unknown): ContractCase {
     contract: value.contract,
     input: value.input,
     valid: value.valid,
+
     ...(value.normalized === undefined ? {} : { normalized: value.normalized }),
   };
 }
@@ -164,15 +165,18 @@ function evaluateProductRequestCase(
 ): ContractResult {
   const values = {
     ...PRODUCT_REQUEST_INITIAL_VALUES,
+
     name: 'Product',
     categoryMode: 'catalog' as const,
     categoryId: '507f1f77bcf86cd799439011',
+
     ...(contractCase.contract === 'productRequestArticle'
       ? { article: contractCase.input }
       : { article: 'MED-001', fullDescription: contractCase.input }),
   };
 
   const errors = validateProductRequestForm(values, 'draft');
+
   const error =
     contractCase.contract === 'productRequestArticle'
       ? (errors.article ?? '')
@@ -180,7 +184,8 @@ function evaluateProductRequestCase(
 
   if (error) return { valid: false };
 
-  const payload = normalizeProductRequestForm(values, 'draft');
+  const payload = normalizeProductRequestForm(values, 'new');
+
   const normalized =
     contractCase.contract === 'productRequestArticle'
       ? payload.article

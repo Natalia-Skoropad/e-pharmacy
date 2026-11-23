@@ -211,7 +211,7 @@ test(
         ownerA.toString(),
 
         {
-          status: 'draft',
+          status: 'new',
           name: 'Operational request update',
           article: requestUpdateArticle,
           categoryMode: 'catalog',
@@ -222,7 +222,7 @@ test(
       await expectHttpStatus(
         () =>
           createProductRequestService(managerA.toString(), {
-            status: 'draft',
+            status: 'new',
             name: 'Manager unauthorized request',
             article: `OPS-UNAUTH-${suffix.slice(-8)}`,
             categoryMode: 'catalog',
@@ -235,7 +235,7 @@ test(
         ownerA.toString(),
 
         {
-          status: 'draft',
+          status: 'new',
           name: 'Operational request delete',
           article: requestDeleteArticle,
           categoryMode: 'catalog',
@@ -259,7 +259,7 @@ test(
             updateRequest.request.id,
 
             {
-              status: 'draft',
+              status: 'new',
               name: 'Foreign update attempt',
               article: requestUpdateArticle,
               categoryMode: 'catalog',
@@ -360,7 +360,7 @@ test(
             updateRequest.request.id,
 
             {
-              status: 'draft',
+              status: 'new',
               name: 'Blocked update attempt',
               article: requestUpdateArticle,
               categoryMode: 'catalog',

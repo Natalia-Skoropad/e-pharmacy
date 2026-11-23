@@ -14,7 +14,6 @@
 }
 
 .newCounter,
-.draftCounter,
 .progressCounter,
 .verificationCounter,
 .moderationCounter,
@@ -29,10 +28,6 @@
   line-height: 1;
   color: var(--color-white);
   border-radius: var(--radius-pill);
-}
-
-.draftCounter {
-  background-color: var(--color-text-muted);
 }
 
 .newCounter {
@@ -86,10 +81,6 @@
   height: 7px;
   flex: 0 0 auto;
   border-radius: 50%;
-}
-
-.collapsedDraftDot {
-  background-color: var(--color-text-muted);
 }
 
 .collapsedNewDot {

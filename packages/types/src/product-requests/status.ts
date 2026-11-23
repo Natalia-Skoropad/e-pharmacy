@@ -1,6 +1,5 @@
 export type ProductRequestStatus =
-  | 'draft'
   | 'new'
-  | 'in_progress'
+  | 'on_moderation'
   | 'approved'
   | 'rejected';

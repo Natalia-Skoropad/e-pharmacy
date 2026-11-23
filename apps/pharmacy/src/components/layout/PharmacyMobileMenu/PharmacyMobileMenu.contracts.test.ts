@@ -34,16 +34,18 @@ test('mobile menu reuses owner order and request counters with matching status b
   assert.match(source, /item\.href === PHARMACY_ROUTES\.ORDERS/);
   assert.match(source, /item\.href === PHARMACY_ROUTES\.PRODUCT_REQUESTS/);
 
-  for (const status of ['draft', 'new', 'inProgress']) {
+  for (const status of ['new', 'onModeration']) {
     assert.match(source, new RegExp(`productRequestCounts\\.${status} > 0`));
   }
 
   for (const selector of [
-    'draftCounter',
     'orderNewCounter',
     'orderProgressCounter',
     'moderationCounter',
   ]) {
     assert.match(css, new RegExp(`\\.${selector}\\s*\\{`));
   }
+
+  assert.doesNotMatch(source, /productRequestCounts\.draft/);
+  assert.doesNotMatch(source, /productRequestCounts\.inProgress/);
 });

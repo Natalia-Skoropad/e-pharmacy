@@ -96,7 +96,7 @@ test(
         'multiple name-only drafts remain valid for one owner',
         async () => {
           const first = await createProductRequestService(ownerA.toString(), {
-            status: 'draft',
+            status: 'new',
             name: 'Name only draft alpha',
             article: '',
             categoryMode: 'catalog',
@@ -105,7 +105,7 @@ test(
           requestIds.push(new Types.ObjectId(first.request.id));
 
           const second = await createProductRequestService(ownerA.toString(), {
-            status: 'draft',
+            status: 'new',
             name: 'Name only draft beta',
             article: '',
             categoryMode: 'catalog',
@@ -124,7 +124,7 @@ test(
           const article = `REQ-RACE-${suffix.slice(-10)}`;
 
           const input = {
-            status: 'draft' as const,
+            status: 'new' as const,
             name: 'Concurrent request product',
             article,
             categoryMode: 'catalog' as const,
@@ -176,7 +176,7 @@ test(
             article: ownArticle,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'draft',
+            status: 'new',
           });
 
           const foreignRequest = await ProductRequest.create({
@@ -185,7 +185,7 @@ test(
             article: `REQ-FOREIGN-${suffix.slice(-10)}`,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'draft',
+            status: 'new',
           });
 
           requestIds.push(
@@ -250,7 +250,7 @@ test(
             article: occupiedArticle,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'draft',
+            status: 'new',
           });
 
           const editableRequest = await ProductRequest.create({
@@ -259,7 +259,7 @@ test(
             article: editableArticle,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'draft',
+            status: 'new',
           });
 
           requestIds.push(
@@ -269,7 +269,7 @@ test(
 
           await assert.rejects(
             createProductRequestService(ownerA.toString(), {
-              status: 'draft',
+              status: 'new',
               name: 'Conflicting create',
               article: occupiedArticle,
               categoryMode: 'catalog',
@@ -292,7 +292,7 @@ test(
               String(editableRequest._id),
 
               {
-                status: 'draft',
+                status: 'new',
                 name: 'Conflicting update',
                 article: occupiedArticle,
                 categoryMode: 'catalog',
@@ -327,7 +327,7 @@ test(
             article: `REQ-INVALID-${suffix.slice(-10)}`,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'draft',
+            status: 'new',
           });
 
           requestIds.push(request._id as Types.ObjectId);
@@ -335,7 +335,7 @@ test(
           await assert.rejects(
             moderateProductRequestByAdminService(
               String(request._id),
-              { status: 'in_progress' },
+              { status: 'on_moderation' },
               adminUserId.toString()
             ),
 
@@ -362,7 +362,7 @@ test(
             article,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'in_progress',
+            status: 'on_moderation',
             fullDescription: 'Approved product description.',
             brand: 'Workflow Brand',
             series: 'Workflow Series',
@@ -435,7 +435,7 @@ test(
             article,
             categoryMode: 'custom',
             customCategory: 'Herbal wellness blends',
-            status: 'in_progress',
+            status: 'on_moderation',
 
             fullDescription:
               'Custom metadata must remain historical request data.',
@@ -530,7 +530,7 @@ test(
             article: `REQ-MISMATCH-${suffix.slice(-10)}`,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'in_progress',
+            status: 'on_moderation',
           });
 
           requestIds.push(request._id as Types.ObjectId);
@@ -566,7 +566,7 @@ test(
             .select('status productId')
             .lean<{ status: string; productId?: Types.ObjectId } | null>();
 
-          assert.equal(persistedRequest?.status, 'in_progress');
+          assert.equal(persistedRequest?.status, 'on_moderation');
           assert.equal(persistedRequest?.productId, undefined);
         }
       );
@@ -582,7 +582,7 @@ test(
             article,
             categoryMode: 'catalog',
             categoryId: medicineCategoryId,
-            status: 'in_progress',
+            status: 'on_moderation',
           });
 
           requestIds.push(request._id as Types.ObjectId);

@@ -5,9 +5,8 @@ import type { Assert, IsExactValueSet } from '../internal/type-assertions';
 //===================================================================
 
 export const PRODUCT_REQUEST_STATUSES = [
-  'draft',
   'new',
-  'in_progress',
+  'on_moderation',
   'approved',
   'rejected',
 ] as const satisfies readonly ProductRequestStatus[];

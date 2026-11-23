@@ -1,5 +1,4 @@
 import type { EntityId, FileMetadata } from '../primitives';
-import type { ProductRequestStatus } from './status';
 
 //=============================================================================
 
@@ -10,12 +9,13 @@ export type ProductRequestCategoryMode = 'catalog' | 'custom';
 export type ProductRequestFile = FileMetadata &
   Readonly<{
     dataUrl?: string;
+    documentId?: EntityId;
   }>;
 
 //=============================================================================
 
 export type ProductRequestFormPayload = Readonly<{
-  status: Extract<ProductRequestStatus, 'draft' | 'new'>;
+  status: 'new';
   name: string;
   article: string;
   categoryMode: ProductRequestCategoryMode;

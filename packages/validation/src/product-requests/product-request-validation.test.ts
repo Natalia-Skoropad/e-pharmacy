@@ -6,6 +6,7 @@ import {
   PRODUCT_REQUEST_IMAGE_RULES,
   PRODUCT_REQUEST_INITIAL_VALUES,
   PRODUCT_REQUEST_LIMITS,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES,
   isProductRequestDraftValid,
   isProductRequestSubmissionValid,
   normalizeProductRequestForm,
@@ -17,6 +18,8 @@ import {
   validateProductRequestImageFile,
   type ProductRequestFormValues,
 } from './index';
+
+import { PHARMACY_DOCUMENT_RULES } from '../files/pharmacy-document-validation';
 
 //=============================================================================
 
@@ -79,7 +82,7 @@ function createSubmissionValues(
     releaseForm: 'Tablets',
     activeIngredients: 'Paracetamol',
     activeIngredientCount: 'Paracetamol: 500 mg per tablet',
-    fullDescription: 'Complete product description in English.',
+    fullDescription: 'Complete product description in English. '.repeat(3),
     ...overrides,
   });
 }
@@ -151,7 +154,7 @@ test('validation rejects non-English product text without changing it', () => {
   });
 
   const errors = validateProductRequestForm(values, 'draft');
-  const payload = normalizeProductRequestForm(values, 'draft');
+  const payload = normalizeProductRequestForm(values, 'new');
 
   assert.ok(errors.name);
   assert.ok(errors.fullDescription);
@@ -310,7 +313,7 @@ test('product draft normalization uses Latin initial capitals and uppercase arti
       brand: 'healthcare',
       series: 'daily',
     }),
-    'draft'
+    'new'
   );
 
   assert.equal(normalized.name, 'Medicine');
@@ -407,6 +410,72 @@ test('optional ingredient count enforces Latin-only text and 200 character limit
       undefined
     );
   }
+});
+
+//=============================================================================
+
+test('About product requires 100 characters when populated, but draft can be blank', () => {
+  const valid = createSubmissionValues();
+  const short = 'A'.repeat(PRODUCT_REQUEST_LIMITS.fullDescriptionMin - 1);
+  const exact = 'A'.repeat(PRODUCT_REQUEST_LIMITS.fullDescriptionMin);
+
+  assert.equal(
+    validateProductRequestForm(createDraftValues(), 'draft').fullDescription,
+    undefined
+  );
+
+  assert.equal(
+    validateProductRequestForm({ ...valid, fullDescription: short }, 'draft')
+      .fullDescription,
+    PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescriptionMin
+  );
+
+  assert.equal(
+    validateProductRequestForm(
+      { ...valid, fullDescription: short },
+      'moderation',
+      { productImage: validImage }
+    ).fullDescription,
+    PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.fullDescriptionMin
+  );
+
+  assert.equal(
+    validateProductRequestForm(
+      { ...valid, fullDescription: exact },
+      'moderation',
+      { productImage: validImage }
+    ).fullDescription,
+    undefined
+  );
+});
+
+//=============================================================================
+
+test('request attachments share pharmacy document limits and formats', () => {
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.maxFiles,
+    PHARMACY_DOCUMENT_RULES.maxFiles
+  );
+
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.maxSizeBytes,
+    PHARMACY_DOCUMENT_RULES.maxSizeBytes
+  );
+
+  assert.equal(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.maxTotalSizeBytes,
+    PHARMACY_DOCUMENT_RULES.maxTotalSizeBytes
+  );
+
+  assert.deepEqual(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.mimeTypes,
+    PHARMACY_DOCUMENT_RULES.mimeTypes
+  );
+
+  assert.deepEqual(
+    PRODUCT_REQUEST_ATTACHMENT_RULES.extensions,
+    PHARMACY_DOCUMENT_RULES.extensions
+  );
 });
 
 //=============================================================================
@@ -556,7 +625,7 @@ test('normalization keeps custom category separate from catalog category ids', (
       categoryId: '',
       customCategory: '  Veterinary care  ',
     }),
-    'draft'
+    'new'
   );
 
   assert.equal(payload.categoryMode, 'custom');
@@ -576,4 +645,38 @@ test('file metadata infers MIME and preserves actual file data', () => {
 
   assert.equal(file.type, 'application/pdf');
   assert.equal(file.dataUrl, 'data:application/pdf;base64,AA==');
+});
+
+//=============================================================================
+
+test('persisted product request attachment references need no inline Base64', () => {
+  const documentId = '507f1f77bcf86cd799439011';
+
+  const file = {
+    documentId,
+    name: 'support.pdf',
+    type: 'application/pdf',
+    size: 2048,
+  };
+
+  assert.equal(
+    validateProductRequestAdditionalFiles([file], { requireDataUrl: true }),
+    ''
+  );
+
+  assert.deepEqual(toProductRequestFileMetadata(file), file);
+
+  assert.notEqual(
+    validateProductRequestAdditionalFiles(
+      [
+        {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        },
+      ],
+      { requireDataUrl: true }
+    ),
+    ''
+  );
 });

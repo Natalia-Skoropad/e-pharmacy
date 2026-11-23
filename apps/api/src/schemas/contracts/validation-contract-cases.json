@@ -415,9 +415,15 @@
     {
       "id": "product-article-normalization",
       "contract": "productRequestArticle",
-      "input": " med-001 ",
+      "input": "med-001",
       "valid": true,
       "normalized": "MED-001"
+    },
+    {
+      "id": "product-article-with-spaces",
+      "contract": "productRequestArticle",
+      "input": " med-001 ",
+      "valid": false
     },
     {
       "id": "product-article-max",
@@ -441,9 +447,15 @@
     {
       "id": "product-long-text-english",
       "contract": "productRequestLongText",
-      "input": "Complete product description in English.",
+      "input": "Complete product description in English. It explains the composition, intended use, precautions and essential product information.",
       "valid": true,
-      "normalized": "Complete product description in English."
+      "normalized": "Complete product description in English. It explains the composition, intended use, precautions and essential product information."
+    },
+    {
+      "id": "product-long-text-too-short",
+      "contract": "productRequestLongText",
+      "input": "Complete product description in English.",
+      "valid": false
     },
     {
       "id": "product-long-text-cyrillic",

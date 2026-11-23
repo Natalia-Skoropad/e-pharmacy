@@ -87,20 +87,20 @@ test(
         {
           _id: requestIds[0],
           pharmacyId: pharmacyA,
-          name: 'Analytics draft A1',
+          name: 'Analytics new A1',
           article: `AN-D1-${suffix.slice(-8)}`,
           categoryMode: 'catalog',
           categoryId: medicineCategoryId,
-          status: 'draft',
+          status: 'new',
         },
         {
           _id: requestIds[1],
           pharmacyId: pharmacyA,
-          name: 'Analytics draft A2',
+          name: 'Analytics new A2',
           article: `AN-D2-${suffix.slice(-8)}`,
           categoryMode: 'catalog',
           categoryId: medicineCategoryId,
-          status: 'draft',
+          status: 'new',
         },
         {
           _id: requestIds[2],
@@ -124,21 +124,21 @@ test(
         {
           _id: requestIds[6],
           pharmacyId: pharmacyA2,
-          name: 'Analytics draft A second pharmacy',
+          name: 'Analytics new A second pharmacy',
           article: `AN-D3-${suffix.slice(-8)}`,
           categoryMode: 'catalog',
           categoryId: medicineCategoryId,
-          status: 'draft',
+          status: 'new',
         },
         // New requests have ownerId and no pharmacyId at all.
         {
           _id: requestIds[7],
           ownerId: ownerA,
-          name: 'Analytics owner-wide draft',
+          name: 'Analytics owner-wide new',
           article: `AN-D4-${suffix.slice(-8)}`,
           categoryMode: 'catalog',
           categoryId: medicineCategoryId,
-          status: 'draft',
+          status: 'new',
         },
         {
           _id: requestIds[4],
@@ -169,17 +169,15 @@ test(
       );
 
       assert.deepEqual(statisticsA, {
-        draft: 4,
-        new: 0,
-        in_progress: 0,
+        new: 4,
+        on_moderation: 0,
         approved: 1,
         rejected: 1,
       });
 
       assert.deepEqual(statisticsB, {
-        draft: 0,
         new: 2,
-        in_progress: 0,
+        on_moderation: 0,
         approved: 0,
         rejected: 0,
       });

@@ -98,17 +98,24 @@ async function assertEntityAccess(
     _id: objectId,
     pharmacyId,
   })
-    .select('status')
-    .lean<{ status: string } | null>();
+    .select('status reviewState')
+    .lean<{ status: string; reviewState?: 'changes_requested' } | null>();
 
   if (!request) {
     throw httpError(HTTP_STATUS.NOT_FOUND, 'Product request was not found.');
   }
 
-  if (requireDraft && request.status !== 'draft') {
+  if (
+    requireDraft &&
+    !(
+      request.status === 'new' ||
+      (request.status === 'on_moderation' &&
+        request.reviewState === 'changes_requested')
+    )
+  ) {
     throw httpError(
       HTTP_STATUS.CONFLICT,
-      'Product request comments can be edited only while the request is a draft.'
+      'Product request comments can be edited only for New requests or requests needing corrections.'
     );
   }
 }

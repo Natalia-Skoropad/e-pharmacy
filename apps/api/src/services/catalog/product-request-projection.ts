@@ -68,28 +68,21 @@ export function getStatusHistoryCopy(
   rejectionReason?: string
 ): Pick<ProductRequestHistoryEntry, 'title' | 'description'> {
   switch (status) {
-    case 'draft':
-      return {
-        title: 'Draft created',
-        description: 'The pharmacy saved the product request as a draft.',
-      };
-
     case 'new':
       return {
-        title: 'Sent for moderation',
-        description: 'The pharmacy sent the product request to Admin.',
+        title: 'Request created',
+        description: 'The pharmacy owner saved a new request.',
       };
 
-    case 'in_progress':
+    case 'on_moderation':
       return {
-        title: 'Review started',
-        description: 'Admin started reviewing the submitted product data.',
+        title: 'Sent for moderation',
+        description: 'The owner submitted the request for Admin review.',
       };
 
     case 'approved':
       return {
         title: 'Request approved',
-
         description:
           'Admin approved the request and created or linked the product.',
       };
@@ -97,10 +90,7 @@ export function getStatusHistoryCopy(
     case 'rejected':
       return {
         title: 'Request rejected',
-
-        description:
-          rejectionReason ||
-          'Admin rejected the request because the submitted information needs correction.',
+        description: rejectionReason || 'The request was cancelled.',
       };
   }
 }
@@ -110,18 +100,9 @@ export function getStatusHistoryCopy(
 function getFallbackHistory(
   request: ProductRequestDocument
 ): ProductRequestHistoryDocument[] {
-  const statusSequence: ProductRequestStatus[] = ['draft'];
+  const statusSequence: ProductRequestStatus[] = ['new'];
 
-  if (request.status !== 'draft') statusSequence.push('new');
-
-  if (
-    request.status === 'in_progress' ||
-    request.status === 'approved' ||
-    request.status === 'rejected'
-  ) {
-    statusSequence.push('in_progress');
-  }
-
+  if (request.status !== 'new') statusSequence.push('on_moderation');
   if (request.status === 'approved') statusSequence.push('approved');
   if (request.status === 'rejected') statusSequence.push('rejected');
 
@@ -203,6 +184,7 @@ export function serializeProductRequest(
     pharmacyComment: request.pharmacyComment,
     additionalFiles: request.additionalFiles,
     rejectionReason: request.rejectionReason,
+    reviewState: request.reviewState,
 
     history: history.map((entry, index) => ({
       id: entry._id ? String(entry._id) : `${request._id}-${index}`,

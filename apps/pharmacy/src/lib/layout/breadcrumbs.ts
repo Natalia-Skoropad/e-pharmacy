@@ -476,11 +476,34 @@ export function getPharmacyBreadcrumbsByPathname(
       return getProductRequestsBreadcrumbs();
     }
 
-    const requestId = getSingleEntityId(route.segments);
+    const [requestId, tab] = route.segments;
 
-    return requestId
-      ? getProductRequestDetailsBreadcrumbs(requestId, currentDetailLabel)
-      : getProductRequestsBreadcrumbs();
+    if (requestId && isValidObjectId(requestId)) {
+      const tabTitles: Record<string, string> = {
+        details: 'Details',
+        characteristics: 'Characteristics',
+        'about-product': 'About product',
+        'note-for-admin': 'Note for Admin',
+        documents: 'Documents',
+        comments: 'Comments',
+        activity: 'Activity history',
+      };
+
+      if (tab && tabTitles[tab]) {
+        return [
+          { label: 'Product requests', href: PHARMACY_ROUTES.PRODUCT_REQUESTS },
+          {
+            label: currentDetailLabel ?? `Product request ${requestId}`,
+            href: getPharmacyRequestPath(requestId),
+          },
+          { label: tabTitles[tab] },
+        ];
+      }
+
+      return getProductRequestDetailsBreadcrumbs(requestId, currentDetailLabel);
+    }
+
+    return getProductRequestsBreadcrumbs();
   }
 
   return getDashboardBreadcrumbs();

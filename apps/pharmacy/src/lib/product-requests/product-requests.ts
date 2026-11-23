@@ -129,6 +129,7 @@ export type ProductRequestRowViewModel = Readonly<{
   customCategory?: string;
   status: ProductRequestStatus;
   cancelledBy?: 'owner' | 'admin';
+  reviewState?: 'changes_requested';
 }>;
 
 export type ProductRequestDetailsViewModel = ProductRequestRowViewModel &
@@ -226,12 +227,13 @@ export type ProductRequestStatusNormalizationResult =
 export function normalizeProductRequestStatus(
   value: unknown
 ): ProductRequestStatusNormalizationResult {
+  if (value === 'draft') return { success: true, value: 'new', legacy: true };
   if (isProductRequestStatus(value)) {
     return { success: true, value, legacy: false };
   }
 
-  if (value === 'in_work' || value === 'on_moderation') {
-    return { success: true, value: 'in_progress', legacy: true };
+  if (value === 'in_work' || value === 'in_progress') {
+    return { success: true, value: 'on_moderation', legacy: true };
   }
 
   return { success: false, issue: 'unknown-status', value };
@@ -271,6 +273,7 @@ function normalizeProductRequestFile(
   if (!name || size === undefined || !type) return null;
 
   const dataUrl = getTrimmedString(rawFile.dataUrl);
+  const documentId = getTrimmedString(rawFile.documentId);
 
   return {
     name,
@@ -278,6 +281,7 @@ function normalizeProductRequestFile(
     size,
 
     ...(dataUrl ? { dataUrl } : {}),
+    ...(documentId && /^[a-f\d]{24}$/i.test(documentId) ? { documentId } : {}),
   };
 }
 
@@ -342,10 +346,10 @@ export function normalizeProductRequest(
     !createdAt ||
     !status.success ||
     (categoryMode !== 'catalog' && categoryMode !== 'custom') ||
-    (status.value !== 'draft' &&
+    (status.value !== 'new' &&
       categoryMode === 'catalog' &&
       !isProductCategory(category)) ||
-    (status.value !== 'draft' && categoryMode === 'custom' && !customCategory)
+    (status.value !== 'new' && categoryMode === 'custom' && !customCategory)
   ) {
     return null;
   }
@@ -373,8 +377,7 @@ export function normalizeProductRequest(
     getTrimmedString(rawRequest.productName) ??
     getTrimmedString(rawRequest.name);
 
-  if (!productName || (status.value !== 'draft' && !productArticle))
-    return null;
+  if (!productName || (status.value !== 'new' && !productArticle)) return null;
 
   return {
     id,
@@ -392,6 +395,10 @@ export function normalizeProductRequest(
     ...(categoryMode === 'custom' && customCategory ? { customCategory } : {}),
 
     status: status.value,
+
+    ...(rawRequest.reviewState === 'changes_requested'
+      ? { reviewState: 'changes_requested' as const }
+      : {}),
 
     ...(status.value === 'rejected' &&
     (rawRequest.cancelledBy === 'owner' || rawRequest.cancelledBy === 'admin')
@@ -413,7 +420,7 @@ export function normalizeProductRequestDetails(
   const name = getTrimmedString(rawRequest.name);
   const article = getTrimmedString(rawRequest.article);
 
-  if (!updatedAt || !name || (request.status !== 'draft' && !article)) {
+  if (!updatedAt || !name || (request.status !== 'new' && !article)) {
     return null;
   }
 
@@ -446,7 +453,6 @@ export function normalizeProductRequestDetails(
     article: article ?? '',
 
     ...(productImage ? { productImage } : {}),
-
     ...(optionalString('brand') ? { brand: optionalString('brand') } : {}),
     ...(optionalString('series') ? { series: optionalString('series') } : {}),
 

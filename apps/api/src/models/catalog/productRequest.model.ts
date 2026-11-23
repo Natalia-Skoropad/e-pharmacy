@@ -33,6 +33,7 @@ type ProductRequestStoredFile = {
   type: string;
   size: number;
   dataUrl?: string;
+  documentId?: string;
 };
 
 //===============================================================
@@ -96,11 +97,17 @@ function createProductRequestFileSchema({
         max: [maxSizeBytes, maxSizeMessage],
       },
 
+      documentId: {
+        type: String,
+        match: /^[a-f\d]{24}$/i,
+        default: undefined,
+      },
+
       dataUrl: {
         type: String,
 
         required: [
-          requireDataUrl,
+          false, // legacy inline attachments only; new files are stored separately
           PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.attachmentDataRequired,
         ],
 
@@ -113,7 +120,7 @@ function createProductRequestFileSchema({
               this: ProductRequestStoredFile,
               value?: string
             ) {
-              if (!value) return !requireDataUrl;
+              if (!value) return Boolean(this.documentId) || !requireDataUrl;
 
               if (
                 dataUrlPattern === PRODUCT_REQUEST_IMAGE_RULES.dataUrlPattern &&
@@ -136,7 +143,7 @@ function createProductRequestFileSchema({
 
               value?: string
             ) {
-              if (!value) return !requireDataUrl;
+              if (!value) return Boolean(this.documentId) || !requireDataUrl;
 
               if (
                 dataUrlPattern === PRODUCT_REQUEST_IMAGE_RULES.dataUrlPattern &&
@@ -238,9 +245,11 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
 
     article: {
       type: String,
+
       required: function (this: ProductRequestEntity) {
-        return this.status !== 'draft';
+        return this.status !== 'new';
       },
+
       trim: true,
       uppercase: true,
 
@@ -286,9 +295,15 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     status: {
       type: String,
       enum: PRODUCT_REQUEST_STATUSES,
-      default: 'draft',
+      default: 'new',
       required: true,
       index: true,
+    },
+
+    reviewState: {
+      type: String,
+      enum: ['changes_requested'],
+      default: undefined,
     },
 
     cancelledBy: {
@@ -445,7 +460,7 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
 
 productRequestSchema.pre('validate', function validateCategoryRelation() {
   if (
-    this.status !== 'draft' &&
+    this.status !== 'new' &&
     this.categoryMode === 'catalog' &&
     !this.categoryId
   ) {
@@ -453,7 +468,7 @@ productRequestSchema.pre('validate', function validateCategoryRelation() {
   }
 
   if (
-    this.status !== 'draft' &&
+    this.status !== 'new' &&
     this.categoryMode === 'custom' &&
     !this.customCategory?.trim()
   ) {
@@ -487,7 +502,7 @@ productRequestSchema.index(
     unique: true,
 
     partialFilterExpression: {
-      status: { $in: ['draft', 'new', 'in_progress', 'approved'] },
+      status: { $in: ['new', 'on_moderation', 'approved'] },
       article: { $gt: '' },
     },
   }
