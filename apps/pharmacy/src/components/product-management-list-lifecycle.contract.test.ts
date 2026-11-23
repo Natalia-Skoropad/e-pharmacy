@@ -46,7 +46,7 @@ test('list failures preserve loaded rows and expose an explicit error state', as
 
   for (const source of sources) {
     assert.match(source, /const \[loadError, setLoadError\]/);
-    assert.match(source, /role="alert"/);
+    assert.match(source, /role="alert"|<ProfileResourceState/);
 
     assert.doesNotMatch(
       source,
@@ -191,6 +191,40 @@ test('product management list failures expose explicit retry generations', async
   assert.match(productRequests, /onRetry=\{reloadStatistics\}/);
   assert.match(productRequests, /StatsLoadingSkeleton/);
   assert.match(productRequests, /Retry product requests/);
+});
+
+//===================================================================
+
+test('product listing errors use the shared resource-state component with retry in all three views', async () => {
+  const [allProducts, ownerProducts, pharmacyProducts] = await Promise.all([
+    read(
+      'src/components/all-products/AllProductsPageContent/AllProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/products/OwnProductsPageContent/OwnerOwnProductsPageContent.tsx'
+    ),
+
+    read(
+      'src/components/products/OwnProductsPageContent/OwnProductsPageContent.tsx'
+    ),
+  ]);
+
+  for (const source of [allProducts, ownerProducts, pharmacyProducts]) {
+    assert.match(
+      source,
+      /<ProfileResourceState\s+variant="error"\s+title="(?:Own products|Products) are temporarily unavailable"/
+    );
+
+    assert.match(source, /description=\{loadError\}/);
+    assert.match(source, /sideActionOnDesktop/);
+    assert.match(source, /onRetry=/);
+
+    assert.doesNotMatch(
+      source,
+      /<StatusBanner[\s\S]{0,140}?title="(?:Own products|Products) are temporarily unavailable"/
+    );
+  }
 });
 
 //===================================================================

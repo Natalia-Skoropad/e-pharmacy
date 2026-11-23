@@ -605,12 +605,6 @@ export function createOrderItemFromProductOffer({
       ...(category.icon ? { categoryIconSnapshot: category.icon } : {}),
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
-      ...(product.dosage ? { dosage: product.dosage } : {}),
-
-      ...(product.packageQuantity
-        ? { packageQuantity: product.packageQuantity }
-        : {}),
-
       ...(typeof product.rating === 'number' ? { rating: product.rating } : {}),
 
       ...(typeof product.reviewsCount === 'number'

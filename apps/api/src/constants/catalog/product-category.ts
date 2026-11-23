@@ -1,5 +1,4 @@
 import {
-  SETTINGS_DICTIONARY_NAME_MAX_LENGTH,
   SETTINGS_DICTIONARY_NAME_PATTERN,
   normalizeSettingsDictionaryName,
   normalizeSettingsDictionaryNameKey,
@@ -7,8 +6,7 @@ import {
 
 //===============================================================
 
-export const PRODUCT_CATEGORY_NAME_MAX_LENGTH =
-  SETTINGS_DICTIONARY_NAME_MAX_LENGTH;
+export const PRODUCT_CATEGORY_NAME_MAX_LENGTH = 100;
 
 export const PRODUCT_CATEGORY_NAME_PATTERN = SETTINGS_DICTIONARY_NAME_PATTERN;
 export const PRODUCT_CATEGORY_SLUG_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;

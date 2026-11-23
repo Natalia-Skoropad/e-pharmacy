@@ -34,7 +34,10 @@ test('active product request articles have a storage-level uniqueness backstop',
 
 test('admin moderation endpoint owns the request transition graph and approved product relation', async () => {
   const [routes, service] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/routes/admin/admin.routes.ts'), 'utf8'),
+    readFile(
+      resolve(process.cwd(), 'src/routes/admin/admin.routes.ts'),
+      'utf8'
+    ),
 
     readFile(
       resolve(
@@ -77,4 +80,38 @@ test('admin moderation endpoint owns the request transition graph and approved p
 
   assert.match(service, /requireProductCategoryById/);
   assert.match(service, /request\.history = \[/);
+});
+
+//===================================================================
+
+test('demo characteristics backfill applies only missing fields to both collections', async () => {
+  const source = await readFile(
+    resolve(
+      process.cwd(),
+      'src/scripts/migrations/catalog/backfill-demo-product-characteristics.ts'
+    ),
+    'utf8'
+  );
+
+  // Both collections must pass through the field projection. Sending the
+  // whole fixture includes an existing manufacturer and makes the atomic
+  // optimistic filter match zero documents even when attributes are missing.
+  assert.equal(
+    (source.match(/missingAttributes\(doc, fixture\)/g) ?? []).length,
+    2
+  );
+
+  assert.match(
+    source,
+    /updateIfMissing\(Product\.collection, doc, missingAttributes\(doc, fixture\), products\)/
+  );
+
+  assert.match(
+    source,
+    /updateIfMissing\(ProductRequest\.collection[\s\S]*?missingAttributes\(doc, fixture\), requests\)/
+  );
+
+  assert.match(source, /\{ _id: entry\._id, \$and: conditions \}/);
+  assert.match(source, /\{ \$set: fields \}/);
+  assert.doesNotMatch(source, /deleteMany|dropCollection|replaceOne/);
 });

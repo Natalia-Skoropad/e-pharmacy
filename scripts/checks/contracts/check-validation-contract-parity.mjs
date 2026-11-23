@@ -338,10 +338,12 @@ assert.equal(
   'Shared and backend settings dictionary name patterns differ'
 );
 
+// Product categories, employee positions and the product-request custom
+// category all use a 100-character limit. Keep API and UI parity.
 assert.match(
   backendProductCategoryConstantsSource,
-  /PRODUCT_CATEGORY_NAME_MAX_LENGTH\s*=\s*SETTINGS_DICTIONARY_NAME_MAX_LENGTH/,
-  'Product categories must reuse the backend settings dictionary name max length'
+  /PRODUCT_CATEGORY_NAME_MAX_LENGTH\s*=\s*100/,
+  'Product-category name maximum must match product requests (100)'
 );
 
 assert.match(

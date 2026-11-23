@@ -32,6 +32,12 @@ import {
 
 //===============================================================
 
+function uppercaseInitial(value?: string): string | undefined {
+  return value ? value[0].toUpperCase() + value.slice(1) : undefined;
+}
+
+//===============================================================
+
 const productRequestsPerPageSchema = createPerPageSchema({
   defaultValue: 20,
   max: 200,
@@ -224,25 +230,25 @@ export const productRequestFormSchema = z
       .regex(
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText
-      ),
+      )
+      .transform((value) => uppercaseInitial(value) ?? ''),
 
     article: z
       .string()
-      .trim()
       .max(
         PRODUCT_REQUEST_LIMITS.articleMax,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.article
       )
 
       .refine(
-        (value) => !value || PRODUCT_REQUEST_ARTICLE_PATTERN.test(value),
+        (value) =>
+          !value || PRODUCT_REQUEST_ARTICLE_PATTERN.test(value.toUpperCase()),
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
       )
 
       .transform((value) => value.toUpperCase()),
 
     categoryMode: z.enum(PRODUCT_REQUEST_CATEGORY_MODES),
-
     categoryId: mongoIdSchema.optional(),
 
     customCategory: optionalTrimmedTextSchema({
@@ -250,7 +256,7 @@ export const productRequestFormSchema = z
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.customCategory,
       pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
+    }).transform(uppercaseInitial),
 
     productImage: productImageSchema.optional(),
 
@@ -259,82 +265,43 @@ export const productRequestFormSchema = z
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.brand,
       pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
+    }).transform(uppercaseInitial),
 
     series: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.seriesMax,
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.series,
       pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
+    }).transform(uppercaseInitial),
 
     releaseForm: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.releaseFormMax,
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.releaseForm,
       pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
+    }).transform(uppercaseInitial),
 
     activeIngredients: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.activeIngredientsMax,
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredients,
       pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
+    }).transform(uppercaseInitial),
 
-    activeIngredientCount: z
-      .number()
-      .int()
-      .min(1)
-      .max(PRODUCT_REQUEST_LIMITS.activeIngredientCountMax)
-      .optional(),
+    activeIngredientCount: optionalTrimmedTextSchema({
+      maxLength: PRODUCT_REQUEST_LIMITS.activeIngredientCountMax,
+      maxMessage:
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredientCount,
+      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+    }).transform(uppercaseInitial),
 
     manufacturer: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.manufacturerMax,
       maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer,
       pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
       patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
-
-    countryOfOrigin: optionalTrimmedTextSchema({
-      maxLength: PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
-      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin,
-      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
-
-    dosage: optionalTrimmedTextSchema({
-      maxLength: PRODUCT_REQUEST_LIMITS.dosageMax,
-      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage,
-      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
-
-    packageSize: optionalTrimmedTextSchema({
-      maxLength: PRODUCT_REQUEST_LIMITS.packageSizeMax,
-      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize,
-      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
-
-    form: optionalTrimmedTextSchema({
-      maxLength: PRODUCT_REQUEST_LIMITS.formMax,
-      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form,
-      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
-
-    activeSubstance: optionalTrimmedTextSchema({
-      maxLength: PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
-      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance,
-      pattern: PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-      patternMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-    }),
-
-    prescriptionType: optionalTrimmedTextSchema({
-      maxLength: PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
-      maxMessage: PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType,
-    }),
+    }).transform(uppercaseInitial),
 
     fullDescription: optionalTrimmedTextSchema({
       maxLength: PRODUCT_REQUEST_LIMITS.fullDescriptionMax,
@@ -433,21 +400,6 @@ export const productRequestFormSchema = z
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.series,
       ],
       [
-        'releaseForm',
-        value.releaseForm,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.releaseForm,
-      ],
-      [
-        'activeIngredients',
-        value.activeIngredients,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredients,
-      ],
-      [
-        'activeIngredientCount',
-        value.activeIngredientCount,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredientCount,
-      ],
-      [
         'fullDescription',
         value.fullDescription,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,
@@ -476,7 +428,6 @@ export const productRequestArticleAvailabilityQuerySchema = z
   .object({
     article: z
       .string()
-      .trim()
       .min(1, PRODUCT_REQUEST_VALIDATION_MESSAGES.required.article)
 
       .max(

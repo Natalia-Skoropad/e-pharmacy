@@ -21,6 +21,7 @@ import {
   parseProductDetails,
   parseProductFilterOptionsResponse,
   parseProductsResponse,
+  parseProductsWithOffersResponse,
 } from './shared-dto-parsers';
 
 //===================================================================
@@ -293,6 +294,44 @@ test('requires backend-provided typed public slug IDs', () => {
   };
 
   assert.equal(parseProductDetails(product).publicSlugId, product.publicSlugId);
+
+  // Demo characteristics were backfilled as descriptive text in Stage 14.18.240.
+  // Both detail and owner/management listing parsers must accept this DTO.
+  const productWithCharacteristics = {
+    ...product,
+    brand: 'Acme',
+    series: 'Daily Care',
+    manufacturer: 'Acme Health',
+    releaseForm: 'Tablets',
+    activeIngredients: 'Amlodipine',
+    activeIngredientCount: 'Amlodipine: 5 mg per tablet',
+  };
+
+  assert.deepEqual(
+    parseProductDetails(productWithCharacteristics),
+    productWithCharacteristics
+  );
+
+  assert.equal(
+    parseProductsWithOffersResponse({
+      items: [productWithCharacteristics],
+      page: 1,
+      perPage: 10,
+      total: 1,
+      totalPages: 1,
+      earliestCreatedAt: null,
+    }).items[0]?.activeIngredientCount,
+    'Amlodipine: 5 mg per tablet'
+  );
+
+  assert.throws(
+    () =>
+      parseProductDetails({
+        ...productWithCharacteristics,
+        activeIngredientCount: 1,
+      }),
+    ApiError
+  );
 
   assert.throws(
     () => parseProductDetails({ ...product, publicSlugId: undefined }),

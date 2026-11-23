@@ -65,7 +65,7 @@ test('orders share one status summary layout across draft and persisted states',
   assert.match(source, /This order was rejected/);
   assert.doesNotMatch(source, /className=\{css\.lockNotice\}/);
 
-  assert.match(source, /iconLeft={[\s\S]{0,160}<CirclePlay/);
+  assert.match(source, /statusActions\.map\([\s\S]{0,1000}<CirclePlay/);
   assert.match(source, /<CircleCheckBig/);
   assert.match(source, /<CircleX/);
 
@@ -74,7 +74,12 @@ test('orders share one status summary layout across draft and persisted states',
     /clientStatusRowWithActions[\s\S]{0,160}clientStatusRowClientOnly/
   );
 
-  assert.match(source, /statusActions\.map[\s\S]{0,1200}detailsClientBadge/);
+  assert.match(source, /Manage order status/);
+  assert.match(source, /aria-haspopup="menu"/);
+  assert.match(source, /aria-expanded=\{isStatusMenuOpen\}/);
+  assert.match(source, /statusActions\.map[\s\S]{0,1900}detailsClientBadge/);
+  assert.match(source, /getStatusActionLabel\(status\)/);
+  assert.match(source, /onClick=\{\(\) => handleStatusClick\(status\)\}/);
 
   assert.match(
     styles,
@@ -107,6 +112,33 @@ test('orders share one status summary layout across draft and persisted states',
     bannerStyles,
     /@media only screen and \(min-width: 768px\)[\s\S]{0,500}\.inlineMeta \.message/
   );
+});
+
+//===================================================================
+
+test('order status menu mirrors pharmacy actions without bypassing confirmation', async () => {
+  const [source, styles] = await Promise.all([
+    readFile(ORDER_SOURCE, 'utf8'),
+    readFile(ORDER_STYLES, 'utf8'),
+  ]);
+
+  assert.match(source, /getOrderStatusTransitions\(order\.status\)/);
+  assert.match(source, /statusActions\.length > 0/);
+  assert.match(source, /disabled=\{areStatusActionsDisabled\}/);
+  assert.match(source, /className=\{css\.statusMenuOptions\}/);
+  assert.match(source, /role="menu"/);
+  assert.match(source, /role="menuitem"/);
+  assert.match(source, /css\.rejectStatusAction/);
+  assert.match(source, /css\.approveStatusAction/);
+  assert.match(source, /event\.key === 'Escape'/);
+  assert.match(source, /document\.addEventListener\('pointerdown'/);
+  assert.match(source, /setPendingStatus\(\{ status \}\)/);
+  assert.match(source, /<OrderCancellationModal/);
+  assert.match(source, /onConfirm=\{\(\) => void handleConfirmStatus\(\)\}/);
+  assert.match(styles, /\.statusMenuOptions\s*\{/);
+  assert.match(styles, /\.approveStatusAction\s*\{/);
+  assert.match(styles, /\.rejectStatusAction\s*\{/);
+  assert.doesNotMatch(source, /css\.rejectButton/);
 });
 
 //===================================================================

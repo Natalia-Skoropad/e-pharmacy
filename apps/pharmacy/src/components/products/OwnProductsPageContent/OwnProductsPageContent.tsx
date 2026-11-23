@@ -7,12 +7,13 @@ import { Boxes, PackageCheck } from 'lucide-react';
 import { useDebouncedValue } from '@e-pharmacy/hooks/timing';
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { InfoTooltip } from '@e-pharmacy/ui/overlays';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
 import { ConfirmationModal } from '@e-pharmacy/ui/overlays';
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
+import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { StatusBanner } from '@e-pharmacy/ui/statistics';
 import type { EntityId } from '@e-pharmacy/types/primitives';
 
@@ -527,21 +528,14 @@ function OwnProductsPageContent({
         </div>
 
         {loadError ? (
-          <div role="alert">
-            <StatusBanner
-              tone="danger"
-              title="Own products are temporarily unavailable"
-              message={loadError}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setRefreshVersion((version) => version + 1)}
-            >
-              Retry own products
-            </Button>
-          </div>
+          <ProfileResourceState
+            variant="error"
+            title="Own products are temporarily unavailable"
+            description={loadError}
+            retryLabel="Retry own products"
+            sideActionOnDesktop
+            onRetry={() => setRefreshVersion((version) => version + 1)}
+          />
         ) : null}
 
         <OwnProductsTable

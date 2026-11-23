@@ -201,8 +201,6 @@ async function resolveApprovedProduct(
         releaseForm: request.releaseForm,
         activeIngredients: request.activeIngredients,
         activeIngredientCount: request.activeIngredientCount,
-        dosage: request.dosage,
-        packageQuantity: request.packageSize,
         inStock: false,
         createdBy: new Types.ObjectId(adminUserId),
         updatedBy: new Types.ObjectId(adminUserId),

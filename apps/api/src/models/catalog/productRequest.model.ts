@@ -354,10 +354,14 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
     },
 
     activeIngredientCount: {
-      type: Number,
-      min: 1,
-      max: PRODUCT_REQUEST_LIMITS.activeIngredientCountMax,
-      default: undefined,
+      type: String,
+      trim: true,
+      maxlength: PRODUCT_REQUEST_LIMITS.activeIngredientCountMax,
+
+      match: [
+        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
+        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
+      ],
     },
 
     manufacturer: {
@@ -372,91 +376,6 @@ const productRequestSchema = new Schema<ProductRequestEntity>(
       match: [
         PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
         PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-      ],
-    },
-
-    countryOfOrigin: {
-      type: String,
-      trim: true,
-
-      maxlength: [
-        PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin,
-      ],
-
-      match: [
-        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-      ],
-    },
-
-    dosage: {
-      type: String,
-      trim: true,
-
-      maxlength: [
-        PRODUCT_REQUEST_LIMITS.dosageMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage,
-      ],
-
-      match: [
-        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-      ],
-    },
-
-    packageSize: {
-      type: String,
-      trim: true,
-
-      maxlength: [
-        PRODUCT_REQUEST_LIMITS.packageSizeMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize,
-      ],
-
-      match: [
-        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-      ],
-    },
-
-    form: {
-      type: String,
-      trim: true,
-
-      maxlength: [
-        PRODUCT_REQUEST_LIMITS.formMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form,
-      ],
-
-      match: [
-        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-      ],
-    },
-
-    activeSubstance: {
-      type: String,
-      trim: true,
-
-      maxlength: [
-        PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance,
-      ],
-
-      match: [
-        PRODUCT_REQUEST_SHORT_TEXT_PATTERN,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.format.shortText,
-      ],
-    },
-
-    prescriptionType: {
-      type: String,
-      trim: true,
-
-      maxlength: [
-        PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType,
       ],
     },
 

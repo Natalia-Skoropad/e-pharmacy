@@ -123,39 +123,14 @@ export function validateProductRequestForm(
       PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredients,
     ],
     [
+      'activeIngredientCount',
+      PRODUCT_REQUEST_LIMITS.activeIngredientCountMax,
+      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredientCount,
+    ],
+    [
       'manufacturer',
       PRODUCT_REQUEST_LIMITS.manufacturerMax,
       PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.manufacturer,
-    ],
-    [
-      'countryOfOrigin',
-      PRODUCT_REQUEST_LIMITS.countryOfOriginMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.countryOfOrigin,
-    ],
-    [
-      'dosage',
-      PRODUCT_REQUEST_LIMITS.dosageMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.dosage,
-    ],
-    [
-      'packageSize',
-      PRODUCT_REQUEST_LIMITS.packageSizeMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.packageSize,
-    ],
-    [
-      'form',
-      PRODUCT_REQUEST_LIMITS.formMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.form,
-    ],
-    [
-      'activeSubstance',
-      PRODUCT_REQUEST_LIMITS.activeSubstanceMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeSubstance,
-    ],
-    [
-      'prescriptionType',
-      PRODUCT_REQUEST_LIMITS.prescriptionTypeMax,
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.prescriptionType,
     ],
     [
       'fullDescription',
@@ -177,11 +152,12 @@ export function validateProductRequestForm(
     if (error) errors[field] = error;
   }
 
-  const articleFormatError = buildPatternError(
-    values.article,
-    PRODUCT_REQUEST_ARTICLE_PATTERN,
-    PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
-  );
+  // Do not trim: leading, trailing, and internal spaces are invalid.
+  const articleFormatError =
+    values.article &&
+    !PRODUCT_REQUEST_ARTICLE_PATTERN.test(values.article.toUpperCase())
+      ? PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+      : '';
 
   if (!errors.article && articleFormatError)
     errors.article = articleFormatError;
@@ -193,12 +169,8 @@ export function validateProductRequestForm(
     'series',
     'releaseForm',
     'activeIngredients',
+    'activeIngredientCount',
     'manufacturer',
-    'countryOfOrigin',
-    'dosage',
-    'packageSize',
-    'form',
-    'activeSubstance',
   ];
 
   for (const field of shortTextFields) {
@@ -230,16 +202,6 @@ export function validateProductRequestForm(
     if (error) errors[field] = error;
   }
 
-  if (
-    values.activeIngredientCount.trim() &&
-    (!/^[1-9]\d*$/.test(values.activeIngredientCount.trim()) ||
-      Number(values.activeIngredientCount.trim()) >
-        PRODUCT_REQUEST_LIMITS.activeIngredientCountMax)
-  ) {
-    errors.activeIngredientCount =
-      PRODUCT_REQUEST_VALIDATION_MESSAGES.limits.activeIngredientCount;
-  }
-
   const productImage = context.productImage;
   const hasProductImage = context.hasProductImage ?? Boolean(productImage);
 
@@ -269,15 +231,6 @@ export function validateProductRequestForm(
     > = [
       ['brand', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.brand],
       ['series', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.series],
-      ['releaseForm', PRODUCT_REQUEST_VALIDATION_MESSAGES.required.releaseForm],
-      [
-        'activeIngredients',
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredients,
-      ],
-      [
-        'activeIngredientCount',
-        PRODUCT_REQUEST_VALIDATION_MESSAGES.required.activeIngredientCount,
-      ],
       [
         'fullDescription',
         PRODUCT_REQUEST_VALIDATION_MESSAGES.required.fullDescription,

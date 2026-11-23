@@ -79,14 +79,14 @@ const productSchema = new Schema<ProductEntity>(
     activeIngredients: {
       type: String,
       trim: true,
-      maxlength: 180,
+      maxlength: 200,
       default: undefined,
     },
 
     activeIngredientCount: {
-      type: Number,
-      min: 1,
-      max: 99,
+      type: String,
+      trim: true,
+      maxlength: 200,
       default: undefined,
     },
 
@@ -94,20 +94,6 @@ const productSchema = new Schema<ProductEntity>(
       type: String,
       trim: true,
       maxlength: [160, 'Manufacturer must be at most 160 characters'],
-      default: undefined,
-    },
-
-    dosage: {
-      type: String,
-      trim: true,
-      maxlength: [80, 'Dosage must be at most 80 characters'],
-      default: undefined,
-    },
-
-    packageQuantity: {
-      type: String,
-      trim: true,
-      maxlength: [80, 'Package quantity must be at most 80 characters'],
       default: undefined,
     },
 

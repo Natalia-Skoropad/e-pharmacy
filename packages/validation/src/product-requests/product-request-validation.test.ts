@@ -9,6 +9,8 @@ import {
   isProductRequestDraftValid,
   isProductRequestSubmissionValid,
   normalizeProductRequestForm,
+  normalizeProductRequestLatinInput,
+  normalizeProductRequestArticleInput,
   toProductRequestFileMetadata,
   validateProductRequestAdditionalFiles,
   validateProductRequestForm,
@@ -35,13 +37,8 @@ const FIELD_LIMIT_CASES: ReadonlyArray<
   ['series', PRODUCT_REQUEST_LIMITS.seriesMax],
   ['releaseForm', PRODUCT_REQUEST_LIMITS.releaseFormMax],
   ['activeIngredients', PRODUCT_REQUEST_LIMITS.activeIngredientsMax],
+  ['activeIngredientCount', PRODUCT_REQUEST_LIMITS.activeIngredientCountMax],
   ['manufacturer', PRODUCT_REQUEST_LIMITS.manufacturerMax],
-  ['countryOfOrigin', PRODUCT_REQUEST_LIMITS.countryOfOriginMax],
-  ['dosage', PRODUCT_REQUEST_LIMITS.dosageMax],
-  ['packageSize', PRODUCT_REQUEST_LIMITS.packageSizeMax],
-  ['form', PRODUCT_REQUEST_LIMITS.formMax],
-  ['activeSubstance', PRODUCT_REQUEST_LIMITS.activeSubstanceMax],
-  ['prescriptionType', PRODUCT_REQUEST_LIMITS.prescriptionTypeMax],
   ['fullDescription', PRODUCT_REQUEST_LIMITS.fullDescriptionMax],
   ['pharmacyComment', PRODUCT_REQUEST_LIMITS.pharmacyCommentMax],
 ];
@@ -81,13 +78,7 @@ function createSubmissionValues(
     manufacturer: 'Pharmaco',
     releaseForm: 'Tablets',
     activeIngredients: 'Paracetamol',
-    activeIngredientCount: '1',
-    countryOfOrigin: 'United Kingdom',
-    dosage: '500 mg',
-    packageSize: '20 tablets',
-    form: 'Tablets',
-    activeSubstance: 'Paracetamol',
-    prescriptionType: 'non_prescription',
+    activeIngredientCount: 'Paracetamol: 500 mg per tablet',
     fullDescription: 'Complete product description in English.',
     ...overrides,
   });
@@ -251,24 +242,18 @@ test('moderation validation requires the moderation essentials and product image
 
 //=============================================================================
 
-test('legacy Product data fields remain optional for moderation', () => {
+test('optional characteristics may be omitted for moderation', () => {
   const values = createSubmissionValues({
-    dosage: '',
-    packageSize: '',
-    form: '',
-    activeSubstance: '',
-    prescriptionType: '',
+    releaseForm: '',
+    activeIngredients: '',
+    activeIngredientCount: '',
   });
 
   const errors = validateProductRequestForm(values, 'moderation', {
     productImage: validImage,
   });
 
-  assert.equal(errors.dosage, undefined);
-  assert.equal(errors.packageSize, undefined);
-  assert.equal(errors.form, undefined);
-  assert.equal(errors.activeSubstance, undefined);
-  assert.equal(errors.prescriptionType, undefined);
+  assert.deepEqual(errors, {});
 
   assert.equal(
     isProductRequestSubmissionValid(values, { productImage: validImage }),
@@ -278,17 +263,9 @@ test('legacy Product data fields remain optional for moderation', () => {
 
 //=============================================================================
 
-test('all six shared characteristics are required for moderation, not drafts', () => {
+test('brand, series and manufacturer are required for moderation, not drafts', () => {
   const complete = createSubmissionValues();
-
-  const requiredFields = [
-    'brand',
-    'series',
-    'manufacturer',
-    'releaseForm',
-    'activeIngredients',
-    'activeIngredientCount',
-  ] as const;
+  const requiredFields = ['brand', 'series', 'manufacturer'] as const;
 
   for (const field of requiredFields) {
     const values = { ...complete, [field]: '' };
@@ -303,23 +280,133 @@ test('all six shared characteristics are required for moderation, not drafts', (
     );
   }
 
-  for (const value of ['0', '-1', '2.5', '100', 'abc']) {
-    assert.ok(
+  const descriptions = ['Vitamin C: 500 mg', 'Calcium: 55 mg'];
+
+  for (const value of descriptions) {
+    assert.equal(
       validateProductRequestForm(
         { ...complete, activeIngredientCount: value },
         'moderation',
-        {
-          productImage: validImage,
-        }
+        { productImage: validImage }
       ).activeIngredientCount,
-      `invalid count: ${value}`
+      undefined
     );
   }
 
   assert.equal(
     normalizeProductRequestForm(complete, 'new').activeIngredientCount,
-    1
+    'Paracetamol: 500 mg per tablet'
   );
+});
+
+//=============================================================================
+
+test('product draft normalization uses Latin initial capitals and uppercase article', () => {
+  const normalized = normalizeProductRequestForm(
+    createDraftValues({
+      name: 'medicine',
+      article: 'aa-11-pp',
+      customCategory: 'test category',
+      brand: 'healthcare',
+      series: 'daily',
+    }),
+    'draft'
+  );
+
+  assert.equal(normalized.name, 'Medicine');
+  assert.equal(normalized.article, 'AA-11-PP');
+  assert.equal(normalized.brand, 'Healthcare');
+  assert.equal(normalized.series, 'Daily');
+
+  assert.ok(
+    validateProductRequestForm(createDraftValues({ name: 'Товар' }), 'draft')
+      .name
+  );
+
+  assert.equal(PRODUCT_REQUEST_LIMITS.customCategoryMax, 100);
+});
+
+//=============================================================================
+
+test('Latin product text input rejects Cyrillic and preserves spaces between words', () => {
+  assert.equal(
+    normalizeProductRequestLatinInput('medicine gloves'),
+    'Medicine gloves'
+  );
+
+  assert.equal(normalizeProductRequestLatinInput('medicine '), 'Medicine ');
+
+  assert.equal(
+    normalizeProductRequestLatinInput('витаміни Vitamin C 500 mg'),
+    'Vitamin C 500 mg'
+  );
+
+  assert.equal(normalizeProductRequestLatinInput('крем'), '');
+  assert.equal(normalizeProductRequestArticleInput('aa-11-пп'), 'AA-11-');
+  assert.equal(normalizeProductRequestArticleInput('aa 11'), 'AA 11');
+
+  assert.equal(
+    normalizeProductRequestLatinInput('calcium: 55 mg; vitamin C: 500 mg'),
+    'Calcium: 55 mg; vitamin C: 500 mg'
+  );
+});
+
+//=============================================================================
+
+test('articles reject every kind of whitespace with a specific format error', () => {
+  const draft = createDraftValues();
+
+  for (const article of ['AA 11', ' AA-11', 'AA-11 ', 'AA\t11', 'AA\n11']) {
+    assert.match(
+      validateProductRequestForm({ ...draft, article }, 'draft').article ?? '',
+      /without spaces/
+    );
+
+    assert.equal(isProductRequestDraftValid({ ...draft, article }), false);
+  }
+
+  assert.equal(
+    validateProductRequestForm({ ...draft, article: 'AA-11_PP' }, 'draft')
+      .article,
+    undefined
+  );
+});
+
+//=============================================================================
+
+test('optional ingredient count enforces Latin-only text and 200 character limit', () => {
+  const base = createSubmissionValues();
+
+  assert.equal(
+    validateProductRequestForm(
+      { ...base, activeIngredientCount: 'Кальцій 55 мг' },
+      'draft'
+    ).activeIngredientCount !== undefined,
+    true
+  );
+
+  assert.equal(
+    validateProductRequestForm(
+      { ...base, activeIngredientCount: 'A'.repeat(201) },
+      'draft'
+    ).activeIngredientCount !== undefined,
+    true
+  );
+
+  for (const field of [
+    'releaseForm',
+    'activeIngredients',
+    'activeIngredientCount',
+  ] as const) {
+    const values = { ...base, [field]: '' };
+
+    assert.equal(
+      validateProductRequestForm(values, 'moderation', {
+        productImage: validImage,
+      })[field],
+      undefined
+    );
+  }
 });
 
 //=============================================================================
@@ -431,6 +518,7 @@ test('additional file validation checks count, MIME, size and data URL', () => {
     ]),
     ''
   );
+
   assert.notEqual(
     validateProductRequestAdditionalFiles([{ ...validFile, size: 2 }]),
     ''

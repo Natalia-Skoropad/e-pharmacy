@@ -5,15 +5,9 @@ export const PRODUCT_REQUEST_LIMITS = {
   brandMax: 160,
   seriesMax: 160,
   releaseFormMax: 100,
-  activeIngredientsMax: 180,
-  activeIngredientCountMax: 99,
+  activeIngredientsMax: 200,
+  activeIngredientCountMax: 200,
   manufacturerMax: 160,
-  countryOfOriginMax: 100,
-  dosageMax: 100,
-  packageSizeMax: 100,
-  formMax: 100,
-  activeSubstanceMax: 180,
-  prescriptionTypeMax: 80,
   fullDescriptionMax: 5000,
   pharmacyCommentMax: 1500,
   fileNameMax: 180,
@@ -79,10 +73,10 @@ export const PRODUCT_REQUEST_ATTACHMENTS_ACCEPT = [
 
 //===================================================================
 
-export const PRODUCT_REQUEST_ARTICLE_PATTERN = /^[A-Za-z0-9._/\-]+$/;
+export const PRODUCT_REQUEST_ARTICLE_PATTERN = /^[A-Z0-9._/\-]+$/;
 
 export const PRODUCT_REQUEST_SHORT_TEXT_PATTERN =
-  /^[A-Za-z0-9][A-Za-z0-9\s.,'’"()/%+&\-]*$/;
+  /^[A-Za-z0-9][A-Za-z0-9\s.,:;'’"()/%+&\-]*$/;
 
 export const PRODUCT_REQUEST_LONG_TEXT_PATTERN =
   /^[A-Za-z0-9\s.,!?;:'"“”()[\]_\-–—/#%+*&=~@\n\r]+$/;
@@ -98,16 +92,7 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     productImage: 'Product image is required',
     brand: 'Brand is required',
     series: 'Series / Line is required',
-    releaseForm: 'Release form is required',
-    activeIngredients: 'Active ingredients are required',
-    activeIngredientCount: 'Enter a whole number of active ingredients (1–99)',
     manufacturer: 'Manufacturer is required',
-    countryOfOrigin: 'Country is required',
-    dosage: 'Dosage is required',
-    packageSize: 'Package size is required',
-    form: 'Product form is required',
-    activeSubstance: 'Active substance is required',
-    prescriptionType: 'Prescription type is required',
     fullDescription: 'Full description is required',
   },
 
@@ -119,17 +104,8 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
     series: `Series / Line must be at most ${PRODUCT_REQUEST_LIMITS.seriesMax} characters`,
     releaseForm: `Release form must be at most ${PRODUCT_REQUEST_LIMITS.releaseFormMax} characters`,
     activeIngredients: `Active ingredients must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientsMax} characters`,
-
-    activeIngredientCount:
-      'Active ingredients count must be a whole number from 1 to 99',
-
+    activeIngredientCount: `Active ingredient count must be at most ${PRODUCT_REQUEST_LIMITS.activeIngredientCountMax} characters`,
     manufacturer: `Manufacturer must be at most ${PRODUCT_REQUEST_LIMITS.manufacturerMax} characters`,
-    countryOfOrigin: `Country must be at most ${PRODUCT_REQUEST_LIMITS.countryOfOriginMax} characters`,
-    dosage: `Dosage must be at most ${PRODUCT_REQUEST_LIMITS.dosageMax} characters`,
-    packageSize: `Package size must be at most ${PRODUCT_REQUEST_LIMITS.packageSizeMax} characters`,
-    form: `Product form must be at most ${PRODUCT_REQUEST_LIMITS.formMax} characters`,
-    activeSubstance: `Active substance must be at most ${PRODUCT_REQUEST_LIMITS.activeSubstanceMax} characters`,
-    prescriptionType: `Prescription type must be at most ${PRODUCT_REQUEST_LIMITS.prescriptionTypeMax} characters`,
     fullDescription: `Full description must be at most ${PRODUCT_REQUEST_LIMITS.fullDescriptionMax} characters`,
     pharmacyComment: `Pharmacy note must be at most ${PRODUCT_REQUEST_LIMITS.pharmacyCommentMax} characters`,
     fileName: `File name must be at most ${PRODUCT_REQUEST_LIMITS.fileNameMax} characters`,
@@ -152,7 +128,9 @@ export const PRODUCT_REQUEST_VALIDATION_MESSAGES = {
   },
 
   format: {
-    article: 'Use English letters, numbers, dot, slash, underscore or hyphen',
+    article:
+      'Use uppercase English letters, numbers, dot, slash, underscore or hyphen without spaces',
+
     shortText: 'Use English letters, numbers, spaces and basic punctuation',
     longText: 'Use English letters, numbers, line breaks and basic punctuation',
     productImage: 'Choose a JPG, PNG, or WEBP image',

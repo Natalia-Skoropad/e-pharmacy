@@ -25,9 +25,7 @@ export type ProductEntity = {
   series?: string;
   releaseForm?: string;
   activeIngredients?: string;
-  activeIngredientCount?: number;
-  dosage?: string;
-  packageQuantity?: string;
+  activeIngredientCount?: string;
   pharmacyId?: Types.ObjectId;
   pharmacyName?: string;
   inStock: boolean;
@@ -122,9 +120,7 @@ export type ProductResponseDto = {
   series?: string;
   releaseForm?: string;
   activeIngredients?: string;
-  activeIngredientCount?: number;
-  dosage?: string;
-  packageQuantity?: string;
+  activeIngredientCount?: string;
   pharmacyId?: string;
   pharmacyName?: string;
   foundInPharmaciesCount: number;

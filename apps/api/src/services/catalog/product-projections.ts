@@ -390,12 +390,6 @@ export function serializeProductDetails(
       ? { activeIngredientCount: product.activeIngredientCount }
       : {}),
 
-    ...(product.dosage ? { dosage: product.dosage } : {}),
-
-    ...(product.packageQuantity
-      ? { packageQuantity: product.packageQuantity }
-      : {}),
-
     ...(first
       ? { pharmacyId: first.pharmacyId, pharmacyName: first.pharmacyName }
       : {}),

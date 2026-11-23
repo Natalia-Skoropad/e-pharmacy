@@ -372,3 +372,32 @@
 
 /* Two equally sized actions within the own-product card, matching the
    metadata columns when the actual card is wide enough. */
+
+/* Same framed Characteristics layout as the public product catalog. */
+.characteristicsPanel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-size: var(--fz-16);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.characteristicsDescription {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.characteristicsDescription p {
+  margin: 0;
+}
+
+@media only screen and (min-width: 768px) {
+  .characteristicsPanel {
+    padding: 24px;
+  }
+}

@@ -142,19 +142,14 @@ function CatalogTabHeading({ tab }: { tab: AllProductDetailTab }) {
 
 function CatalogCharacteristics({ product }: { product: ProductDetails }) {
   return (
-    <>
+    <div className={css.characteristicsPanel}>
       <ProductCharacteristicsList product={product} />
-      <div className={css.descriptionBlock}>
-        {product.description ? <p>{product.description}</p> : null}
-        <p>
-          Before purchasing, compare pharmacy prices, check the available
-          quantity, read client reviews, and make sure the selected offer
-          matches your needs. Information on this page helps clients quickly
-          understand the product, its main properties, and where it can be
-          bought online.
-        </p>
-      </div>
-    </>
+      {product.description ? (
+        <div className={css.characteristicsDescription}>
+          <p>{product.description}</p>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

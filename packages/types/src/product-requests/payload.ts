@@ -27,13 +27,7 @@ export type ProductRequestFormPayload = Readonly<{
   manufacturer?: string;
   releaseForm?: string;
   activeIngredients?: string;
-  activeIngredientCount?: number;
-  countryOfOrigin?: string;
-  dosage?: string;
-  packageSize?: string;
-  form?: string;
-  activeSubstance?: string;
-  prescriptionType?: string;
+  activeIngredientCount?: string;
   fullDescription?: string;
   pharmacyComment?: string;
   additionalFiles?: ProductRequestFile[];

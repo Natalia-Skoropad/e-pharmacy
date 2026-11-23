@@ -32,13 +32,7 @@ const validSubmission = {
   manufacturer: 'Pharmaco',
   releaseForm: 'Tablets',
   activeIngredients: 'Paracetamol',
-  activeIngredientCount: 1,
-  countryOfOrigin: 'United Kingdom',
-  dosage: '500 mg',
-  packageSize: '20 tablets',
-  form: 'Tablets',
-  activeSubstance: 'Paracetamol',
-  prescriptionType: 'non_prescription',
+  activeIngredientCount: 'Paracetamol: 500 mg per tablet',
   fullDescription: 'Complete product description in English.',
 };
 
@@ -62,6 +56,37 @@ test('product request schema accepts a name-only draft without an article or cat
       categoryMode: 'catalog',
     }).success,
     false
+  );
+});
+
+//===============================================================
+
+test('product request schema rejects article whitespace and category names over 100 characters', () => {
+  for (const article of ['AA 11', ' AA-11', 'AA-11 ']) {
+    assert.equal(
+      productRequestFormSchema.safeParse({ ...validDraft, article }).success,
+      false
+    );
+  }
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      categoryMode: 'custom',
+      categoryId: undefined,
+      customCategory: 'A'.repeat(101),
+    }).success,
+    false
+  );
+
+  assert.equal(
+    productRequestFormSchema.safeParse({
+      ...validDraft,
+      categoryMode: 'custom',
+      categoryId: undefined,
+      customCategory: 'A'.repeat(100),
+    }).success,
+    true
   );
 });
 
@@ -174,15 +199,8 @@ test('product request schema enforces moderation-required fields', () => {
 
 //===============================================================
 
-test('backend requires the same six characteristics and a positive count on moderation', () => {
-  const required = [
-    'brand',
-    'series',
-    'manufacturer',
-    'releaseForm',
-    'activeIngredients',
-    'activeIngredientCount',
-  ] as const;
+test('backend requires brand, series and manufacturer on moderation', () => {
+  const required = ['brand', 'series', 'manufacturer'] as const;
 
   for (const field of required) {
     const submission = { ...validSubmission, [field]: undefined };
@@ -201,38 +219,25 @@ test('backend requires the same six characteristics and a positive count on mode
     );
   }
 
-  for (const count of [0, -1, 2.5, 100]) {
+  for (const field of [
+    'releaseForm',
+    'activeIngredients',
+    'activeIngredientCount',
+  ] as const) {
     assert.equal(
       productRequestFormSchema.safeParse({
         ...validSubmission,
-        activeIngredientCount: count,
+        [field]: undefined,
       }).success,
-
-      false,
-      `count ${count}`
+      true
     );
   }
-});
-
-//===============================================================
-
-test('product request schema keeps Product data fields optional for moderation', () => {
-  const productDataFields = new Set([
-    'dosage',
-    'packageSize',
-    'form',
-    'activeSubstance',
-    'prescriptionType',
-  ]);
-
-  const submissionWithoutProductData = Object.fromEntries(
-    Object.entries(validSubmission).filter(
-      ([key]) => !productDataFields.has(key)
-    )
-  );
 
   assert.equal(
-    productRequestFormSchema.safeParse(submissionWithoutProductData).success,
+    productRequestFormSchema.safeParse({
+      ...validSubmission,
+      activeIngredientCount: 'Vitamin C: 500 mg, calcium: 55 mg',
+    }).success,
     true
   );
 });

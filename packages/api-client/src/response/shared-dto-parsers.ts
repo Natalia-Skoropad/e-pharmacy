@@ -523,6 +523,7 @@ function assertMoneyEqual(
 }
 
 //===================================================================
+
 function parseProductOffer(
   value: unknown,
   context?: ApiResponseContext
@@ -776,6 +777,7 @@ export function parseProductCardSummary(
 }
 
 //===================================================================
+
 export function parseProductDetails(
   value: unknown,
   context?: ApiResponseContext
@@ -835,7 +837,7 @@ export function parseProductDetails(
       series: 'string',
       releaseForm: 'string',
       activeIngredients: 'string',
-      activeIngredientCount: 'number',
+      activeIngredientCount: 'string',
       description: 'string',
       pharmacyId: 'string',
       pharmacyName: 'string',

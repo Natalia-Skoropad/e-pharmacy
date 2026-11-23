@@ -30,7 +30,23 @@ import type { ProductRequestDocument } from './product-request-projection';
 
 //===============================================================
 
-async function getRequestFormUpdate(input: ProductRequestFormInput) {
+// The validated response type includes transform-generated `undefined` fields,
+// but direct service callers can omit them (notably name-only drafts).
+// Keep the essential inputs required while accepting absent optional values.
+type ProductRequestServiceInput = Pick<
+  ProductRequestFormInput,
+  'status' | 'name' | 'article' | 'categoryMode'
+> &
+  Partial<
+    Omit<
+      ProductRequestFormInput,
+      'status' | 'name' | 'article' | 'categoryMode'
+    >
+  >;
+
+//===============================================================
+
+async function getRequestFormUpdate(input: ProductRequestServiceInput) {
   const categoryId =
     input.categoryMode === 'catalog' && input.categoryId
       ? (
@@ -56,14 +72,6 @@ async function getRequestFormUpdate(input: ProductRequestFormInput) {
     releaseForm: input.releaseForm,
     activeIngredients: input.activeIngredients,
     activeIngredientCount: input.activeIngredientCount,
-    countryOfOrigin: input.countryOfOrigin,
-
-    dosage: input.dosage,
-    packageSize: input.packageSize,
-    form: input.form,
-
-    activeSubstance: input.activeSubstance,
-    prescriptionType: input.prescriptionType,
     fullDescription: input.fullDescription,
     pharmacyComment: input.pharmacyComment,
 
@@ -77,7 +85,7 @@ async function getRequestFormUpdate(input: ProductRequestFormInput) {
 
 export async function createProductRequestService(
   userId: string,
-  input: ProductRequestFormInput
+  input: ProductRequestServiceInput
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 
@@ -137,7 +145,7 @@ export async function createProductRequestService(
 export async function updateProductRequestService(
   userId: string,
   requestId: string,
-  input: ProductRequestFormInput
+  input: ProductRequestServiceInput
 ) {
   const scope = await getProductRequestOwnerScope(userId);
 

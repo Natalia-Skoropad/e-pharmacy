@@ -142,13 +142,7 @@ export type ProductRequestDetailsViewModel = ProductRequestRowViewModel &
     manufacturer?: string;
     releaseForm?: string;
     activeIngredients?: string;
-    activeIngredientCount?: number;
-    countryOfOrigin?: string;
-    dosage?: string;
-    packageSize?: string;
-    form?: string;
-    activeSubstance?: string;
-    prescriptionType?: string;
+    activeIngredientCount?: string;
     fullDescription?: string;
     pharmacyComment?: string;
     additionalFiles?: ProductRequestFile[];
@@ -444,10 +438,6 @@ export function normalizeProductRequestDetails(
   const optionalString = (key: string): string | undefined =>
     getTrimmedString(rawRequest[key]);
 
-  const activeIngredientCount = getFiniteNumber(
-    rawRequest.activeIngredientCount
-  );
-
   return {
     ...request,
 
@@ -468,30 +458,12 @@ export function normalizeProductRequestDetails(
       ? { activeIngredients: optionalString('activeIngredients') }
       : {}),
 
-    ...(activeIngredientCount !== null ? { activeIngredientCount } : {}),
+    ...(optionalString('activeIngredientCount')
+      ? { activeIngredientCount: optionalString('activeIngredientCount') }
+      : {}),
 
     ...(optionalString('manufacturer')
       ? { manufacturer: optionalString('manufacturer') }
-      : {}),
-
-    ...(optionalString('countryOfOrigin')
-      ? { countryOfOrigin: optionalString('countryOfOrigin') }
-      : {}),
-
-    ...(optionalString('dosage') ? { dosage: optionalString('dosage') } : {}),
-
-    ...(optionalString('packageSize')
-      ? { packageSize: optionalString('packageSize') }
-      : {}),
-
-    ...(optionalString('form') ? { form: optionalString('form') } : {}),
-
-    ...(optionalString('activeSubstance')
-      ? { activeSubstance: optionalString('activeSubstance') }
-      : {}),
-
-    ...(optionalString('prescriptionType')
-      ? { prescriptionType: optionalString('prescriptionType') }
       : {}),
 
     ...(optionalString('fullDescription')

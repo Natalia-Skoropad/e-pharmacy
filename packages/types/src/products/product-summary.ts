@@ -18,8 +18,6 @@ export type ProductSummary = Readonly<{
   price: number;
   imageUrl?: string;
   manufacturer?: string;
-  dosage?: string;
-  packageQuantity?: string;
   foundInPharmaciesCount: number;
   availableInPharmaciesCount: number;
   inStock: boolean;

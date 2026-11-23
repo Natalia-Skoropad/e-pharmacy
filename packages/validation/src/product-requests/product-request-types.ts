@@ -21,12 +21,6 @@ export type ProductRequestFormValues = {
   releaseForm: string;
   activeIngredients: string;
   activeIngredientCount: string;
-  countryOfOrigin: string;
-  dosage: string;
-  packageSize: string;
-  form: string;
-  activeSubstance: string;
-  prescriptionType: string;
   fullDescription: string;
   pharmacyComment: string;
 };
@@ -68,12 +62,6 @@ export const PRODUCT_REQUEST_INITIAL_VALUES: ProductRequestFormValues = {
   releaseForm: '',
   activeIngredients: '',
   activeIngredientCount: '',
-  countryOfOrigin: '',
-  dosage: '',
-  packageSize: '',
-  form: '',
-  activeSubstance: '',
-  prescriptionType: '',
   fullDescription: '',
   pharmacyComment: '',
 };

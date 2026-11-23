@@ -70,6 +70,10 @@ import {
   PRODUCT_REQUEST_IMAGE_RULES,
   PRODUCT_REQUEST_INITIAL_VALUES,
   PRODUCT_REQUEST_LIMITS,
+  PRODUCT_REQUEST_ARTICLE_PATTERN,
+  PRODUCT_REQUEST_VALIDATION_MESSAGES,
+  normalizeProductRequestLatinInput,
+  normalizeProductRequestArticleInput,
   isProductRequestDraftValid,
   isProductRequestSubmissionValid,
   normalizeProductRequestForm,
@@ -192,18 +196,9 @@ function toFormState(
     brand: request.brand ?? '',
     series: request.series ?? '',
     manufacturer: request.manufacturer ?? '',
-    releaseForm: request.releaseForm ?? request.form ?? '',
-
-    activeIngredients:
-      request.activeIngredients ?? request.activeSubstance ?? '',
-
-    activeIngredientCount: request.activeIngredientCount?.toString() ?? '',
-    countryOfOrigin: request.countryOfOrigin ?? '',
-    dosage: request.dosage ?? '',
-    packageSize: request.packageSize ?? '',
-    form: request.form ?? '',
-    activeSubstance: request.activeSubstance ?? '',
-    prescriptionType: request.prescriptionType ?? '',
+    releaseForm: request.releaseForm ?? '',
+    activeIngredients: request.activeIngredients ?? '',
+    activeIngredientCount: request.activeIngredientCount ?? '',
     fullDescription: request.fullDescription ?? '',
     pharmacyComment: request.pharmacyComment ?? '',
   };
@@ -384,10 +379,17 @@ function NewProductRequestPageContent({
   const isFileProcessing = isImageProcessing || isAdditionalFilesProcessing;
   const hasProductImage = productImage.length > 0 && !isProductImageRemoved;
 
+  const articleFormatError =
+    values.article &&
+    !PRODUCT_REQUEST_ARTICLE_PATTERN.test(values.article.toUpperCase())
+      ? PRODUCT_REQUEST_VALIDATION_MESSAGES.format.article
+      : '';
+
   const articleError =
-    articleCheckStatus === 'conflict' || articleCheckStatus === 'error'
+    articleFormatError ||
+    (articleCheckStatus === 'conflict' || articleCheckStatus === 'error'
       ? articleCheckMessage
-      : undefined;
+      : '');
 
   const validationContext = useMemo(
     () => ({
@@ -605,7 +607,12 @@ function NewProductRequestPageContent({
   useEffect(() => {
     const article = values.article.trim().toUpperCase();
 
-    if (!canEdit || !article) return;
+    if (
+      !canEdit ||
+      !article ||
+      !PRODUCT_REQUEST_ARTICLE_PATTERN.test(values.article)
+    )
+      return;
 
     const controller = new AbortController();
 
@@ -1081,7 +1088,7 @@ function NewProductRequestPageContent({
                     {
                       title: 'Complete product details',
                       description:
-                        'Before moderation, add a product photo, unique article, category, all six characteristics and a full description.',
+                        'Before moderation, add a product photo, unique article, category, brand, series, manufacturer, and a full description. Add other characteristics when relevant.',
                       icon: <CheckCircle2 size={17} aria-hidden="true" />,
                     },
                     {
@@ -1240,7 +1247,12 @@ function NewProductRequestPageContent({
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('name', event.target.value)
+                          updateValue(
+                            'name',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
 
@@ -1252,13 +1264,14 @@ function NewProductRequestPageContent({
                         hint={
                           articleCheckStatus === 'checking'
                             ? 'Checking article availability…'
-                            : 'Enter the unique manufacturer or supplier article'
+                            : 'Uppercase English letters, numbers, . / _ -; no spaces'
                         }
                         placeholder="Enter product article"
                         value={values.article}
                         error={errors.article}
                         isTouched={
                           Boolean(validationMode) ||
+                          Boolean(articleFormatError) ||
                           articleCheckStatus === 'conflict' ||
                           articleCheckStatus === 'error'
                         }
@@ -1268,7 +1281,9 @@ function NewProductRequestPageContent({
                         onChange={(event) =>
                           updateValue(
                             'article',
-                            event.target.value.toUpperCase()
+                            normalizeProductRequestArticleInput(
+                              event.target.value
+                            )
                           )
                         }
                       />
@@ -1317,12 +1332,17 @@ function NewProductRequestPageContent({
                           values.categoryMode === 'custom' &&
                           Boolean(validationMode)
                         }
-                        required
+                        required={values.categoryMode === 'custom'}
                         maxLength={PRODUCT_REQUEST_LIMITS.customCategoryMax}
                         disabled={!canEdit || values.categoryMode !== 'custom'}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('customCategory', event.target.value)
+                          updateValue(
+                            'customCategory',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
                     </div>
@@ -1359,7 +1379,12 @@ function NewProductRequestPageContent({
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('brand', event.target.value)
+                          updateValue(
+                            'brand',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
                       <NameInput
@@ -1375,7 +1400,12 @@ function NewProductRequestPageContent({
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('series', event.target.value)
+                          updateValue(
+                            'series',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
                     </div>
@@ -1395,14 +1425,19 @@ function NewProductRequestPageContent({
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('manufacturer', event.target.value)
+                          updateValue(
+                            'manufacturer',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
                       <NameInput
                         id="product-request-releaseForm"
                         name="releaseForm"
+                        required={false}
                         label="Release form"
-                        required
                         placeholder="Example: tablets, capsules, cream"
                         value={values.releaseForm}
                         error={errors.releaseForm}
@@ -1411,18 +1446,23 @@ function NewProductRequestPageContent({
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('releaseForm', event.target.value)
+                          updateValue(
+                            'releaseForm',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
                     </div>
                   </div>
                   <div className={css.fieldGroup}>
-                    <div className={css.fieldsGrid}>
+                    <div className={css.stackedFields}>
                       <NameInput
                         id="product-request-activeIngredients"
                         name="activeIngredients"
+                        required={false}
                         label="Active ingredients"
-                        required
                         placeholder="Enter active ingredients"
                         value={values.activeIngredients}
                         error={errors.activeIngredients}
@@ -1431,26 +1471,34 @@ function NewProductRequestPageContent({
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
-                          updateValue('activeIngredients', event.target.value)
+                          updateValue(
+                            'activeIngredients',
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
+                          )
                         }
                       />
                       <NameInput
                         id="product-request-activeIngredientCount"
                         name="activeIngredientCount"
+                        required={false}
                         label="Active ingredient count"
-                        required
-                        placeholder="Enter a number from 1 to 99"
+                        placeholder="Example: Vitamin C: 500 mg, calcium: 55 mg"
                         value={values.activeIngredientCount}
                         error={errors.activeIngredientCount}
                         isTouched={validationMode === 'moderation'}
-                        maxLength={3}
-                        pattern="[1-9][0-9]*"
+                        maxLength={
+                          PRODUCT_REQUEST_LIMITS.activeIngredientCountMax
+                        }
                         disabled={!canEdit}
                         autoComplete="off"
                         onChange={(event) =>
                           updateValue(
                             'activeIngredientCount',
-                            event.target.value
+                            normalizeProductRequestLatinInput(
+                              event.target.value
+                            )
                           )
                         }
                       />

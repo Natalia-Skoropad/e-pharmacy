@@ -15,6 +15,7 @@ import { Button, CloseIconButton } from '@e-pharmacy/ui/primitives';
 
 import {
   PRODUCT_CATEGORY_COLOR_MESSAGE,
+  REFERENCE_DATA_NAME_MAX_LENGTH,
   buildReferenceDataNameError,
   isProductCategoryColor,
   normalizeProductCategoryColor,
@@ -92,7 +93,10 @@ export function SettingsDictionaryFormModal<
     null
   );
 
-  const clientNameError = buildReferenceDataNameError(name);
+  const clientNameError = buildReferenceDataNameError(
+    name,
+    REFERENCE_DATA_NAME_MAX_LENGTH
+  );
 
   const duplicateNameError =
     isDuplicateNameError(submitError) && lastSubmittedName === name.trim()
@@ -192,7 +196,7 @@ export function SettingsDictionaryFormModal<
               name="name"
               label="Name"
               value={name}
-              maxLength={100}
+              maxLength={REFERENCE_DATA_NAME_MAX_LENGTH}
               autoComplete="off"
               disabled={nameDisabled || isSubmitting}
               hint={

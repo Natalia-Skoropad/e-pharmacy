@@ -255,11 +255,11 @@ test('product request editor keeps tabs inside one card and photo/category layou
     ),
   ]);
 
-  assert.match(editor, /<section className=\{css\.editorCard\}[\s\S]*?<Tabs/);
+  assert.match(editor, /<section\s+className=\{css\.editorCard\}[\s\S]*?<Tabs/);
 
   assert.match(
     editor,
-    /className=\{css\.editorPanel\} aria-labelledby="details-title"/
+    /className=\{css\.editorPanel\}\s+aria-labelledby="details-title"/
   );
 
   assert.match(
@@ -269,7 +269,7 @@ test('product request editor keeps tabs inside one card and photo/category layou
 
   assert.match(
     editor,
-    /<img src=\{displayedImageSrc\} alt="Selected product preview"/
+    /<img\s+src=\{displayedImageSrc\}\s+alt="Selected product preview"/
   );
 
   assert.match(editor, /label="Product image"[\s\S]*?required/);
@@ -336,4 +336,51 @@ test('request help explains the draft-first workflow and tablet overflow keeps D
 
   assert.match(tabs, /items\.slice\(normalizedTabletVisibleCount\)/);
   assert.match(tabs, /css\.tabletMoreWrap/);
+});
+
+//===================================================================
+
+test('characteristics hide missing values and follow stacked public bank detail rows on mobile', async () => {
+  const [sharedRows, sharedStyles, editor] = await Promise.all([
+    read(
+      '../../packages/ui/src/data-display/ProductCharacteristicsList/ProductCharacteristicsList.tsx'
+    ),
+
+    read(
+      '../../packages/ui/src/data-display/ProductCharacteristicsList/ProductCharacteristicsList.module.css'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+  ]);
+
+  assert.match(sharedRows, /rows\.filter\(/);
+  assert.match(sharedRows, /value\.trim\(\)\.length > 0/);
+  assert.doesNotMatch(sharedRows, /'—'/);
+  assert.match(sharedStyles, /min-width: 768px/);
+  assert.match(sharedStyles, /grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(sharedStyles, /text-align: left/);
+
+  for (const field of [
+    'releaseForm',
+    'activeIngredients',
+    'activeIngredientCount',
+  ]) {
+    assert.match(editor, new RegExp(`name="${field}"\\s+required=\\{false\\}`));
+  }
+
+  const formProjectionStart = editor.indexOf('function toFormState(');
+
+  const formProjectionEnd = editor.indexOf(
+    '//===================================================================',
+    formProjectionStart + 10
+  );
+
+  const formProjection = editor.slice(formProjectionStart, formProjectionEnd);
+
+  assert.match(formProjection, /releaseForm: request\.releaseForm \?\? ''/);
+  assert.doesNotMatch(formProjection, /request\.form\b/);
+  assert.match(editor, /Boolean\(articleFormatError\)/);
+  assert.match(editor, /normalizeProductRequestLatinInput/);
 });

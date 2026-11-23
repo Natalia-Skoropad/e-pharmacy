@@ -110,7 +110,7 @@ export function createProductDetailMetadata(
           selectedPharmacy?.pharmacyName
         )
       : tab === 'characteristics'
-        ? `Explore ${product.name} characteristics, including its manufacturer, dosage, packaging and product information.`
+        ? `Explore ${product.name} characteristics, including its brand, manufacturer, release form, and active ingredients.`
         : tab === 'reviews'
           ? `Read client reviews of ${product.name} on E-PHARMACY and learn about other customers' experiences with this product.`
           : `Explore ${product.name} on E-PHARMACY. Compare pharmacy prices, availability, characteristics and client reviews before choosing a pharmacy.`;

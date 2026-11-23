@@ -6,10 +6,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   Boxes,
+  ChevronDown,
   CircleCheckBig,
   CirclePlay,
   CircleX,
   Clock,
+  ClipboardCheck,
   CreditCard,
   History,
   LogOut,
@@ -546,6 +548,9 @@ function OrderDetailsPageContent({
   const [pendingStatus, setPendingStatus] =
     useState<PendingStatusChange | null>(null);
 
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+
   const [rejectionReason, setRejectionReason] = useState('');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
@@ -924,9 +929,32 @@ function OrderDetailsPageContent({
   const areStatusActionsDisabled =
     Boolean(pharmacyLockedStatus) || isUpdatingStatus || isUpdatingOrder;
 
+  useEffect(() => {
+    if (!isStatusMenuOpen) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!statusMenuRef.current?.contains(event.target as Node)) {
+        setIsStatusMenuOpen(false);
+      }
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsStatusMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isStatusMenuOpen]);
+
   const syncOrderState = (updatedOrder: PharmacyOrderDetails) => {
     const formState = getOrderFormState(updatedOrder);
 
+    setIsStatusMenuOpen(false);
     setOrder(updatedOrder);
     setSelectedClientId(updatedOrder.clientId ?? '');
     setDeliveryMethod(formState.deliveryMethod);
@@ -1312,7 +1340,14 @@ function OrderDetailsPageContent({
   };
 
   const handleStatusClick = (status: PendingStatusChange['status']) => {
-    if (pharmacyLockedStatus) return;
+    if (
+      areStatusActionsDisabled ||
+      !statusActions.some((availableStatus) => availableStatus === status)
+    ) {
+      return;
+    }
+
+    setIsStatusMenuOpen(false);
 
     if (status === 'rejected') {
       setRejectionReason('');
@@ -1787,30 +1822,55 @@ function OrderDetailsPageContent({
             >
               {statusActions.length > 0 ? (
                 <div className={css.statusActions}>
-                  {statusActions.map((status) => (
+                  <div className={css.statusMenu} ref={statusMenuRef}>
                     <Button
-                      key={status}
                       type="button"
                       size="sm"
-                      variant={status === 'rejected' ? 'secondary' : 'primary'}
-                      className={
-                        status === 'rejected' ? css.rejectButton : undefined
-                      }
-                      iconLeft={
-                        status === 'in_progress' ? (
-                          <CirclePlay size={16} aria-hidden="true" />
-                        ) : status === 'successful' ? (
-                          <CircleCheckBig size={16} aria-hidden="true" />
-                        ) : (
-                          <CircleX size={16} aria-hidden="true" />
-                        )
-                      }
+                      variant="secondary"
+                      aria-haspopup="menu"
+                      aria-expanded={isStatusMenuOpen}
+                      aria-controls="order-status-actions-menu"
+                      iconLeft={<ClipboardCheck size={17} aria-hidden="true" />}
                       disabled={areStatusActionsDisabled}
-                      onClick={() => handleStatusClick(status)}
+                      onClick={() => setIsStatusMenuOpen((open) => !open)}
                     >
-                      {getStatusActionLabel(status)}
+                      Manage order status
+                      <ChevronDown size={16} aria-hidden="true" />
                     </Button>
-                  ))}
+
+                    {isStatusMenuOpen ? (
+                      <div
+                        id="order-status-actions-menu"
+                        className={css.statusMenuOptions}
+                        role="menu"
+                        aria-label="Available order status actions"
+                      >
+                        {statusActions.map((status) => (
+                          <button
+                            key={status}
+                            type="button"
+                            role="menuitem"
+                            className={
+                              status === 'rejected'
+                                ? css.rejectStatusAction
+                                : css.approveStatusAction
+                            }
+                            disabled={areStatusActionsDisabled}
+                            onClick={() => handleStatusClick(status)}
+                          >
+                            {status === 'in_progress' ? (
+                              <CirclePlay size={17} aria-hidden="true" />
+                            ) : status === 'successful' ? (
+                              <CircleCheckBig size={17} aria-hidden="true" />
+                            ) : (
+                              <CircleX size={17} aria-hidden="true" />
+                            )}
+                            {getStatusActionLabel(status)}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
 

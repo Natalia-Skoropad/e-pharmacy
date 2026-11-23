@@ -1,19 +1,9 @@
 {
   "values": {
-    "authApplications": [
-      "client",
-      "pharmacy",
-      "admin"
-    ],
-    "userRoles": [
-      "client",
-      "pharmacy",
-      "admin"
-    ],
-    "userStatuses": [
-      "active",
-      "blocked"
-    ],
+    "authApplications": ["client", "pharmacy", "admin"],
+    "userRoles": ["client", "pharmacy", "admin"],
+    "userStatuses": ["active", "blocked"],
+
     "pharmacyStatuses": [
       "new",
       "on_verification",
@@ -22,22 +12,11 @@
       "active",
       "blocked"
     ],
-    "productStatuses": [
-      "new",
-      "active",
-      "blocked"
-    ],
-    "reviewStatuses": [
-      "on_moderation",
-      "approved",
-      "rejected"
-    ],
-    "orderStatuses": [
-      "new",
-      "in_progress",
-      "successful",
-      "rejected"
-    ],
+
+    "productStatuses": ["new", "active", "blocked"],
+    "reviewStatuses": ["on_moderation", "approved", "rejected"],
+    "orderStatuses": ["new", "in_progress", "successful", "rejected"],
+
     "productRequestStatuses": [
       "draft",
       "new",
@@ -45,33 +24,20 @@
       "approved",
       "rejected"
     ],
-    "deliveryMethods": [
-      "pickup",
-      "postal_delivery"
-    ],
-    "paymentMethods": [
-      "cash",
-      "bank_transfer"
-    ],
-    "noteEntityTypes": [
-      "client",
-      "product",
-      "pharmacy",
-      "product_request"
-    ]
+
+    "deliveryMethods": ["pickup", "postal_delivery"],
+    "paymentMethods": ["cash", "bank_transfer"],
+    "noteEntityTypes": ["client", "product", "pharmacy", "product_request"]
   },
+
   "cartPharmacyLimit": 15,
+
   "shapes": {
     "pagination": {
-      "required": [
-        "items",
-        "page",
-        "perPage",
-        "total",
-        "totalPages"
-      ],
+      "required": ["items", "page", "perPage", "total", "totalPages"],
       "optional": []
     },
+
     "editableBankDetails": {
       "required": [],
       "optional": [
@@ -83,6 +49,7 @@
         "paymentPurpose"
       ]
     },
+
     "completeBankDetails": {
       "required": [
         "recipientName",
@@ -94,6 +61,7 @@
       ],
       "optional": []
     },
+
     "publicBankDetails": {
       "required": [
         "recipientName",
@@ -105,76 +73,52 @@
       ],
       "optional": []
     },
+
     "verificationDocument": {
-      "required": [
-        "id",
-        "name",
-        "sha256",
-        "size",
-        "type",
-        "uploadedAt"
-      ],
+      "required": ["id", "name", "sha256", "size", "type", "uploadedAt"],
       "optional": []
     },
+
     "fileMetadata": {
-      "required": [
-        "name",
-        "size",
-        "type"
-      ],
+      "required": ["name", "size", "type"],
       "optional": []
     },
+
     "productRequestFile": {
-      "required": [
-        "name",
-        "size",
-        "type"
-      ],
-      "optional": [
-        "dataUrl"
-      ]
+      "required": ["name", "size", "type"],
+      "optional": ["dataUrl"]
     },
+
     "createReviewPayload": {
-      "required": [
-        "rating",
-        "comment"
-      ],
+      "required": ["rating", "comment"],
       "optional": []
     },
+
     "moderateReviewPayload": {
-      "required": [
-        "status"
-      ],
-      "optional": [
-        "reason"
-      ]
+      "required": ["status"],
+      "optional": ["reason"]
     },
+
     "favoriteIdsResponse": {
-      "required": [
-        "ids"
-      ],
+      "required": ["ids"],
       "optional": []
     },
+
     "favoriteMutationResponse": {
-      "required": [
-        "isFavorite",
-        "message"
-      ],
+      "required": ["isFavorite", "message"],
       "optional": []
     },
+
     "pickupDelivery": {
-      "required": [
-        "method"
-      ],
+      "required": ["method"],
       "optional": []
     },
+
     "postalDelivery": {
-      "required": [
-        "method",
-        "details"
-      ],
+      "required": ["method", "details"],
       "optional": []
     },
+
     "clientOrder": {
       "required": [
         "id",
@@ -194,6 +138,7 @@
         "managerCommentsCount",
         "items"
       ],
+
       "optional": [
         "userId",
         "clientId",
@@ -218,6 +163,7 @@
         "bankDetails"
       ]
     },
+
     "clientOrderItem": {
       "required": [
         "id",
@@ -229,6 +175,7 @@
         "unitPrice",
         "totalPrice"
       ],
+
       "optional": [
         "slug",
         "category",
@@ -242,6 +189,7 @@
         "currentPrice"
       ]
     },
+
     "productRequestResponse": {
       "required": [
         "id",
@@ -251,6 +199,7 @@
         "categoryMode",
         "status"
       ],
+
       "optional": [
         "updatedAt",
         "requestNumber",
@@ -260,14 +209,14 @@
         "productName",
         "category",
         "customCategory",
+        "cancelledBy",
         "productImage",
         "manufacturer",
-        "countryOfOrigin",
-        "dosage",
-        "packageSize",
-        "form",
-        "activeSubstance",
-        "prescriptionType",
+        "brand",
+        "series",
+        "releaseForm",
+        "activeIngredients",
+        "activeIngredientCount",
         "fullDescription",
         "pharmacyComment",
         "additionalFiles",
@@ -277,6 +226,7 @@
       ]
     }
   },
+
   "dateExamples": {
     "calendarDate": "2026-07-24",
     "dateTime": "2026-07-24T08:30:00.000Z"

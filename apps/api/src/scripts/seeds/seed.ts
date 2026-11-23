@@ -4,6 +4,15 @@ import path from 'node:path';
 import mongoose, { Types } from 'mongoose';
 
 import { connectDB } from '../../db/connectDB';
+
+import {
+  PRODUCT_BLUEPRINTS,
+  PRODUCT_REQUEST_SEED_NAMES,
+  createProductName,
+  getDemoProductCharacteristics,
+  getDemoRequestCharacteristics,
+} from './catalog-demo-characteristics';
+
 import { env } from '../../config/env';
 
 import {
@@ -236,251 +245,6 @@ const STREETS = [
 
 //===============================================================
 
-const PRODUCT_BLUEPRINTS = [
-  [
-    'Aspirin',
-    'medicine',
-    'Square',
-    '500 mg',
-    '№30 (10x3)',
-    '/images/seed/products/product-001.png',
-  ],
-  [
-    'Paracetamol',
-    'medicine',
-    'Acme',
-    '500 mg',
-    '№20 (10x2)',
-    '/images/seed/products/product-002.png',
-  ],
-  [
-    'Ibuprofen',
-    'medicine',
-    'Beximco',
-    '200 mg',
-    '№28 (14x2)',
-    '/images/seed/products/product-003.png',
-  ],
-  [
-    'Acetaminophen',
-    'hygiene',
-    'ACI',
-    '500 mg',
-    '№10',
-    '/images/seed/products/product-004.png',
-  ],
-  [
-    'Naproxen',
-    'beauty',
-    'Uniliver',
-    '250 mg',
-    '№60',
-    '/images/seed/products/product-005.png',
-  ],
-  [
-    'Loratadine',
-    'medicine',
-    'Square',
-    '10 mg',
-    '№100',
-    '/images/seed/products/product-006.png',
-  ],
-  [
-    'Atorvastatin',
-    'medicine',
-    'Acme',
-    '20 mg',
-    '№30 (10x3)',
-    '/images/seed/products/product-007.png',
-  ],
-  [
-    'Omeprazole',
-    'medicine',
-    'Beximco',
-    '20 mg',
-    '№20 (10x2)',
-    '/images/seed/products/product-008.png',
-  ],
-  [
-    'Simvastatin',
-    'hygiene',
-    'ACI',
-    '20 mg',
-    '№28 (14x2)',
-    '/images/seed/products/product-009.png',
-  ],
-  [
-    'Metformin',
-    'beauty',
-    'Uniliver',
-    '500 mg',
-    '№10',
-    '/images/seed/products/product-010.png',
-  ],
-  [
-    'Warfarin',
-    'medicine',
-    'Square',
-    '5 mg',
-    '№60',
-    '/images/seed/products/product-011.png',
-  ],
-  [
-    'Fluoxetine',
-    'medicine',
-    'Acme',
-    '20 mg',
-    '№100',
-    '/images/seed/products/product-012.png',
-  ],
-  [
-    'Lisinopril',
-    'medicine',
-    'Beximco',
-    '10 mg',
-    '№30 (10x3)',
-    '/images/seed/products/product-013.png',
-  ],
-  [
-    'Metoprolol',
-    'hygiene',
-    'ACI',
-    '50 mg',
-    '№20 (10x2)',
-    '/images/seed/products/product-014.png',
-  ],
-  [
-    'Amlodipine',
-    'beauty',
-    'Uniliver',
-    '5 mg',
-    '№28 (14x2)',
-    '/images/seed/products/product-015.png',
-  ],
-  [
-    'Citalopram',
-    'medicine',
-    'Square',
-    '20 mg',
-    '№10',
-    '/images/seed/products/product-016.png',
-  ],
-  [
-    'Metronidazole',
-    'medicine',
-    'Acme',
-    '500 mg',
-    '№60',
-    '/images/seed/products/product-017.png',
-  ],
-  [
-    'Carvedilol',
-    'medicine',
-    'Beximco',
-    '12.5 mg',
-    '№100',
-    '/images/seed/products/product-018.png',
-  ],
-  [
-    'Clopidogrel',
-    'hygiene',
-    'ACI',
-    '75 mg',
-    '№30 (10x3)',
-    '/images/seed/products/product-019.png',
-  ],
-  [
-    'Levothyroxine',
-    'beauty',
-    'Uniliver',
-    '50 mcg',
-    '№20 (10x2)',
-    '/images/seed/products/product-020.png',
-  ],
-  [
-    'Ramipril',
-    'medicine',
-    'Square',
-    '5 mg',
-    '№28 (14x2)',
-    '/images/seed/products/product-021.png',
-  ],
-  [
-    'Amitriptyline',
-    'medicine',
-    'Acme',
-    '25 mg',
-    '№10',
-    '/images/seed/products/product-022.png',
-  ],
-  [
-    'Losartan',
-    'medicine',
-    'Beximco',
-    '50 mg',
-    '№60',
-    '/images/seed/products/product-023.png',
-  ],
-  [
-    'Montelukast',
-    'hygiene',
-    'ACI',
-    '10 mg',
-    '№100',
-    '/images/seed/products/product-024.png',
-  ],
-  [
-    'Hydrochlorothiazide',
-    'beauty',
-    'Uniliver',
-    '25 mg',
-    '№30 (10x3)',
-    '/images/seed/products/product-025.png',
-  ],
-  [
-    'Meloxicam',
-    'medicine',
-    'Square',
-    '15 mg',
-    '№20 (10x2)',
-    '/images/seed/products/product-026.png',
-  ],
-  [
-    'Amlodipine',
-    'medicine',
-    'Acme',
-    '5 mg',
-    '№28 (14x2)',
-    '/images/seed/products/product-027.png',
-  ],
-  [
-    'Citalopram',
-    'medicine',
-    'Beximco',
-    '20 mg',
-    '№10',
-    '/images/seed/products/product-028.png',
-  ],
-  [
-    'Atorvastatin',
-    'hygiene',
-    'ACI',
-    '20 mg',
-    '№60',
-    '/images/seed/products/product-029.png',
-  ],
-  [
-    'Warfarin',
-    'beauty',
-    'Uniliver',
-    '5 mg',
-    '№100',
-    '/images/seed/products/product-030.png',
-  ],
-] as const;
-
-//===============================================================
-
 type SeedPharmacyDocument = {
   _id: Types.ObjectId;
   name: string;
@@ -558,30 +322,6 @@ function createPharmacyImageUrl(index: number): string {
   return createSeedAssetUrl(
     PHARMACY_IMAGE_URLS[index % PHARMACY_IMAGE_URLS.length]
   );
-}
-
-//===============================================================
-
-function createProductName(
-  baseName: string,
-  manufacturer: string,
-  dosage?: string,
-  packageQuantity?: string,
-  variantIndex = 0
-): string {
-  const safeDosage = dosage ?? '20 mg';
-  const safePackageQuantity = packageQuantity ?? '№30';
-  const normalizedManufacturer = manufacturer.replace(/\s+/g, '-');
-
-  const variants = [
-    baseName,
-    `${baseName} ${safeDosage} ${safePackageQuantity}`,
-    `${baseName}-${normalizedManufacturer}`,
-    `${baseName} ${safeDosage} ${normalizedManufacturer}`,
-    `${baseName} Max ${safeDosage} №60`,
-  ];
-
-  return variants[variantIndex % variants.length];
 }
 
 //===============================================================
@@ -1397,8 +1137,7 @@ function createSeedProducts(
       price: offers.length > 0 ? basePrice : 0,
       imageUrl,
       manufacturer,
-      dosage,
-      packageQuantity,
+      ...getDemoProductCharacteristics(index),
       pharmacyId: offers[0]?.pharmacyId,
       pharmacyName: offers[0]?.pharmacyName,
       offers,
@@ -3046,7 +2785,7 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
     status: 'active',
   })
     .select(
-      '_id name slug article categoryId imageUrl manufacturer dosage packageQuantity rating reviewsCount'
+      '_id name slug article categoryId imageUrl manufacturer rating reviewsCount'
     )
     .lean<
       Array<
@@ -3058,8 +2797,6 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
           | 'categoryId'
           | 'imageUrl'
           | 'manufacturer'
-          | 'dosage'
-          | 'packageQuantity'
           | 'rating'
           | 'reviewsCount'
         > & { _id: Types.ObjectId }
@@ -3320,11 +3057,6 @@ async function seedDefaultClientSuccessfulOrders(): Promise<number> {
       ...createSeedCategorySnapshot(product.categoryId, categoryById),
       ...(product.imageUrl ? { imageUrl: product.imageUrl } : {}),
       ...(product.manufacturer ? { manufacturer: product.manufacturer } : {}),
-      ...(product.dosage ? { dosage: product.dosage } : {}),
-
-      ...(product.packageQuantity
-        ? { packageQuantity: String(product.packageQuantity) }
-        : {}),
 
       rating: product.rating ?? 0,
       reviewsCount: product.reviewsCount ?? 0,
@@ -4167,34 +3899,6 @@ async function seedClientManagerNotes(): Promise<number> {
 
 //===============================================================
 
-const PRODUCT_REQUEST_SEED_NAMES = [
-  'Magnesium Citrate Plus',
-  'Vitamin D3 Kids Drops',
-  'Herbal Throat Spray',
-  'Digital Thermometer Flex',
-  'Sensitive Skin Cleansing Gel',
-  'Omega-3 Forte Capsules',
-  'Cooling Eye Mask',
-  'Probiotic Balance Complex',
-  'Antiseptic Wound Foam',
-  'Daily Zinc Lozenges',
-  'Joint Support Collagen',
-  'Baby Nasal Aspirator',
-  'Hydrating Hand Cream',
-  'Iron Bisglycinate Tablets',
-  'Reusable Hot Cold Pack',
-  'Electrolyte Powder Lemon',
-  'Calming Herbal Tea',
-  'Medical Compression Socks',
-  'Face Sunscreen SPF 50',
-  'Vitamin B12 Oral Spray',
-  'Sleep Support Melatonin',
-  'Portable Nebulizer Mini',
-  'Dental Floss Mint',
-  'Lactase Enzyme Capsules',
-  'Sterile Saline Spray',
-] as const;
-
 const PRODUCT_REQUEST_SEED_STATUSES = [
   ...Array.from({ length: 14 }, () => 'approved' as const),
   ...Array.from({ length: 5 }, () => 'rejected' as const),
@@ -4386,18 +4090,17 @@ function createProductRequestSeeds(
           ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4]
       ),
 
-      countryOfOrigin: ['Ukraine', 'Poland', 'Germany', 'Italy'][index % 4],
-      dosage: index % 3 === 0 ? '500 mg' : index % 3 === 1 ? '10 ml' : '1 unit',
-      packageSize: index % 2 === 0 ? '30 tablets' : '100 ml',
-      form: ['tablets', 'spray', 'capsules', 'medical device'][index % 4],
-
-      activeSubstance:
-        category.slug === 'medical_devices'
-          ? 'Not applicable / device material'
-          : `Active component ${index + 1}`,
-
-      prescriptionType:
-        category.slug === 'medicine' ? 'non_prescription' : 'not_applicable',
+      ...(approvedProduct?.article.match(/^EPH-\d{4}$/)
+        ? getDemoProductCharacteristics(
+            Number(approvedProduct.article.slice(4)) - 1
+          )
+        : getDemoRequestCharacteristics(
+            index,
+            normalizeProductRequestSeedShortText(
+              approvedProduct?.manufacturer ??
+                ['Medica Nova', 'HealthLab', 'CareLine', 'VitaWorks'][index % 4]
+            )
+          )),
 
       fullDescription:
         'The request contains complete sample product information for checking draft editing, moderation states, internal comments, and the change history.',

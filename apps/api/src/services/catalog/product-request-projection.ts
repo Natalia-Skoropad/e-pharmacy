@@ -199,13 +199,6 @@ export function serializeProductRequest(
     releaseForm: request.releaseForm,
     activeIngredients: request.activeIngredients,
     activeIngredientCount: request.activeIngredientCount,
-    countryOfOrigin: request.countryOfOrigin,
-    dosage: request.dosage,
-    packageSize: request.packageSize,
-    form: request.form,
-
-    activeSubstance: request.activeSubstance,
-    prescriptionType: request.prescriptionType,
     fullDescription: request.fullDescription,
     pharmacyComment: request.pharmacyComment,
     additionalFiles: request.additionalFiles,

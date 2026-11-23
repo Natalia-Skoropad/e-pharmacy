@@ -18,7 +18,7 @@ export type ProductCharacteristicValues = Readonly<{
   manufacturer?: string;
   releaseForm?: string;
   activeIngredients?: string;
-  activeIngredientCount?: number;
+  activeIngredientCount?: string;
 }>;
 
 //===================================================================
@@ -43,9 +43,15 @@ export function ProductCharacteristicsList({
     },
   ] as const;
 
+  const populatedRows = rows.filter(
+    ({ value }) => typeof value === 'string' && value.trim().length > 0
+  );
+
+  if (populatedRows.length === 0) return null;
+
   return (
     <dl className={css.list}>
-      {rows.map(({ label, value, Icon }) => (
+      {populatedRows.map(({ label, value, Icon }) => (
         <div className={css.item} key={label}>
           <dt>
             <span className={css.icon} aria-hidden="true">
@@ -53,7 +59,7 @@ export function ProductCharacteristicsList({
             </span>
             {label}
           </dt>
-          <dd>{value === undefined || value === '' ? '—' : value}</dd>
+          <dd>{value}</dd>
         </div>
       ))}
     </dl>

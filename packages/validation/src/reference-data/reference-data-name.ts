@@ -30,13 +30,16 @@ export function normalizeReferenceDataNameKey(value: string): string {
 
 //===================================================================
 
-export function buildReferenceDataNameError(value: string): string {
+export function buildReferenceDataNameError(
+  value: string,
+  maxLength = REFERENCE_DATA_NAME_MAX_LENGTH
+): string {
   const name = normalizeReferenceDataName(value);
 
   if (!name) return REFERENCE_DATA_NAME_MESSAGES.required;
 
-  if (name.length > REFERENCE_DATA_NAME_MAX_LENGTH) {
-    return REFERENCE_DATA_NAME_MESSAGES.maxLength;
+  if (name.length > maxLength) {
+    return `Name must be at most ${maxLength} characters`;
   }
 
   if (!REFERENCE_DATA_NAME_PATTERN.test(name)) {

@@ -12,7 +12,7 @@ export type ProductDetails = ProductSummary &
     series?: string;
     releaseForm?: string;
     activeIngredients?: string;
-    activeIngredientCount?: number;
+    activeIngredientCount?: string;
     pharmacyId?: EntityId;
     pharmacyName?: string;
     offers: readonly ProductOffer[];

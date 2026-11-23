@@ -1,11 +1,44 @@
 import type { ProductRequestFormPayload } from '@e-pharmacy/types/product-requests';
 
-import { normalizeOptionalText } from '../shared';
-
 import type {
   ProductRequestFormValues,
   ProductRequestPayloadFiles,
 } from './product-request-types';
+
+import { normalizeOptionalText } from '../shared';
+
+//===================================================================
+
+/**
+ * For controlled product request short-text inputs: accept Latin text only,
+ * preserve spaces while typing (including between words), and uppercase the
+ * first Latin letter. Pasted Cyrillic and unsupported symbols are ignored.
+ * Server-side validation remains authoritative for submitted payloads.
+ */
+export function normalizeProductRequestLatinInput(value: string): string {
+  const latinText = value
+    .replace(/[^A-Za-z0-9 ., :;'’"()/%+&\-]/g, '')
+    .trimStart();
+
+  return latinText.replace(/[A-Za-z]/, (letter) => letter.toUpperCase());
+}
+
+//===================================================================
+
+/** Keep invalid spaces visible for the field-level article error, but
+ * reject Cyrillic characters immediately and uppercase Latin letters. */
+export function normalizeProductRequestArticleInput(value: string): string {
+  return value.replace(/[^\x00-\x7F]/g, '').toUpperCase();
+}
+
+//===================================================================
+
+// Capitalize initial Latin character without silently deleting other characters.
+export function normalizeProductRequestTitle(value: string): string {
+  const trimmed = value.trim();
+
+  return trimmed ? trimmed[0].toUpperCase() + trimmed.slice(1) : '';
+}
 
 //===================================================================
 
@@ -16,34 +49,31 @@ export function normalizeProductRequestForm(
 ): ProductRequestFormPayload {
   return {
     status,
-    name: values.name.trim(),
+    name: normalizeProductRequestTitle(values.name),
     article: values.article.trim().toUpperCase(),
     categoryMode: values.categoryMode,
+
     categoryId:
       values.categoryMode === 'catalog' ? values.categoryId.trim() : undefined,
 
     customCategory:
       values.categoryMode === 'custom'
-        ? normalizeOptionalText(values.customCategory)
+        ? normalizeProductRequestTitle(values.customCategory) || undefined
         : undefined,
 
     productImage: files.productImage,
-    brand: normalizeOptionalText(values.brand),
-    series: normalizeOptionalText(values.series),
-    manufacturer: normalizeOptionalText(values.manufacturer),
-    releaseForm: normalizeOptionalText(values.releaseForm),
-    activeIngredients: normalizeOptionalText(values.activeIngredients),
+    brand: normalizeProductRequestTitle(values.brand) || undefined,
+    series: normalizeProductRequestTitle(values.series) || undefined,
 
-    activeIngredientCount: values.activeIngredientCount.trim()
-      ? Number(values.activeIngredientCount.trim())
-      : undefined,
+    manufacturer:
+      normalizeProductRequestTitle(values.manufacturer) || undefined,
 
-    countryOfOrigin: normalizeOptionalText(values.countryOfOrigin),
-    dosage: normalizeOptionalText(values.dosage),
-    packageSize: normalizeOptionalText(values.packageSize),
-    form: normalizeOptionalText(values.form),
-    activeSubstance: normalizeOptionalText(values.activeSubstance),
-    prescriptionType: normalizeOptionalText(values.prescriptionType),
+    releaseForm: normalizeProductRequestTitle(values.releaseForm) || undefined,
+
+    activeIngredients:
+      normalizeProductRequestTitle(values.activeIngredients) || undefined,
+
+    activeIngredientCount: normalizeOptionalText(values.activeIngredientCount),
     fullDescription: normalizeOptionalText(values.fullDescription),
     pharmacyComment: normalizeOptionalText(values.pharmacyComment),
 

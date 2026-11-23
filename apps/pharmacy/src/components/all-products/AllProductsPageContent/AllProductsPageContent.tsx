@@ -10,13 +10,11 @@ import { PRODUCT_MANAGEMENT_ERROR_CODES } from '@e-pharmacy/config/products';
 import { CountLabel } from '@e-pharmacy/ui/data-display';
 import { ProfileResourceState } from '@e-pharmacy/ui/profile';
 import { StatsLoadingSkeleton } from '@e-pharmacy/ui/statistics';
-import { Button, FiltersButton } from '@e-pharmacy/ui/primitives';
+import { FiltersButton } from '@e-pharmacy/ui/primitives';
 import { RowsPerPageSelect, type RowsPerPageValue } from '@e-pharmacy/ui/forms';
 import { PaginationView } from '@e-pharmacy/ui/navigation';
-
 import { useToast } from '@e-pharmacy/ui/feedback';
 import { PageHeader } from '@e-pharmacy/ui/layout';
-import { StatusBanner } from '@e-pharmacy/ui/statistics';
 
 import { countTrueConditions } from '@e-pharmacy/utils/collections';
 import { isCalendarDateString } from '@e-pharmacy/validation/dates';
@@ -568,21 +566,14 @@ function AllProductsPageContent({
         </div>
 
         {loadError ? (
-          <div role="alert">
-            <StatusBanner
-              tone="danger"
-              title="Products are temporarily unavailable"
-              message={loadError}
-            />
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => setRefreshVersion((version) => version + 1)}
-            >
-              Retry products
-            </Button>
-          </div>
+          <ProfileResourceState
+            variant="error"
+            title="Products are temporarily unavailable"
+            description={loadError}
+            retryLabel="Retry products"
+            sideActionOnDesktop
+            onRetry={() => setRefreshVersion((version) => version + 1)}
+          />
         ) : null}
 
         {!isCheckingEligibility && !hasEligiblePharmacy ? (

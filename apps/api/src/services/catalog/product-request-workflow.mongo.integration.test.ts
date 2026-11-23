@@ -369,9 +369,7 @@ test(
             manufacturer: 'Workflow Manufacturer',
             releaseForm: 'Tablets',
             activeIngredients: 'Ingredient A',
-            activeIngredientCount: 1,
-            dosage: '10 mg',
-            packageSize: '20 tablets',
+            activeIngredientCount: 'Ingredient A: 10 mg',
           });
 
           requestIds.push(request._id as Types.ObjectId);
@@ -397,7 +395,7 @@ test(
               manufacturer?: string;
               releaseForm?: string;
               activeIngredients?: string;
-              activeIngredientCount?: number;
+              activeIngredientCount?: string;
             } | null>();
 
           assert.ok(product);
@@ -407,7 +405,7 @@ test(
           assert.equal(product.manufacturer, 'Workflow Manufacturer');
           assert.equal(product.releaseForm, 'Tablets');
           assert.equal(product.activeIngredients, 'Ingredient A');
-          assert.equal(product.activeIngredientCount, 1);
+          assert.equal(product.activeIngredientCount, 'Ingredient A: 10 mg');
           productIds.push(product._id);
 
           const persistedRequest = await ProductRequest.findById(request._id)
