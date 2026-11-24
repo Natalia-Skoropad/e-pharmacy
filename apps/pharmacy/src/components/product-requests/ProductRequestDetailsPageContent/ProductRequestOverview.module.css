@@ -46,20 +46,6 @@
   object-fit: cover;
 }
 
-.imagePlaceholder {
-  display: grid;
-  place-items: center;
-  width: 180px;
-  max-width: 100%;
-  height: 180px;
-  font-size: var(--fz-64);
-  font-weight: var(--fw-bold);
-  color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  border: 1px solid var(--color-accent-border);
-  border-radius: var(--radius-xl);
-}
-
 .productNotice {
   font-size: var(--fz-20);
   font-weight: var(--fw-bold);
@@ -169,4 +155,84 @@
     line-height: var(--lh-base);
     text-align: left;
   }
+}
+
+/* Match the compact Pharmacy status activity card. */
+.activityCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  min-width: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* Activity timeline uses the same compact card language as pharmacy fields. */
+.activityHeading {
+  margin: 0;
+  font-size: var(--fz-18);
+  color: var(--color-text-primary);
+}
+
+.activityList {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.activityItem {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+}
+
+.activityTitle {
+  color: var(--color-text-primary);
+  font-weight: var(--fw-semi-bold);
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+}
+
+.activityTransition {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--color-accent);
+  font-weight: var(--fw-semi-bold);
+  text-transform: capitalize;
+}
+
+.activityCancellationBadge {
+  text-transform: none;
+}
+
+.activityMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: var(--fz-14);
+  color: var(--color-text-secondary);
+}
+
+.activityReason {
+  margin: 0;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.activityEmpty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  background: var(--color-background);
 }

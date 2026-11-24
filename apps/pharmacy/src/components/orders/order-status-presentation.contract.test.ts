@@ -24,9 +24,14 @@ const ORDER_STYLES = path.join(
 
 //===================================================================
 
-const PRODUCT_REQUEST_SOURCE = path.resolve(
+const PRODUCT_REQUEST_OVERVIEW = path.resolve(
   CURRENT_DIR,
-  '../product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+  '../product-requests/ProductRequestDetailsPageContent/ProductRequestOverview.tsx'
+);
+
+const PRODUCT_REQUEST_HISTORY = path.resolve(
+  CURRENT_DIR,
+  '../product-requests/NewProductRequestPageContent/ProductRequestDetailSections.tsx'
 );
 
 const CLIENT_SOURCE = path.resolve(
@@ -144,21 +149,25 @@ test('order status menu mirrors pharmacy actions without bypassing confirmation'
 //===================================================================
 
 test('product requests align status copy with metadata and expose rejection reason', async () => {
-  const source = await readFile(PRODUCT_REQUEST_SOURCE, 'utf8');
+  const [overview, history] = await Promise.all([
+    readFile(PRODUCT_REQUEST_OVERVIEW, 'utf8'),
+    readFile(PRODUCT_REQUEST_HISTORY, 'utf8'),
+  ]);
 
   assert.match(
-    source,
-    /PRODUCT_REQUEST_STATUS_PRESENTATION\[request\.status\][\s\S]{0,180}inlineMeta/
+    overview,
+    /PRODUCT_REQUEST_STATUS_PRESENTATION\[request\.status\]/
   );
 
-  assert.match(source, /Last updated \{formatDateTime\(request\.updatedAt\)/);
+  assert.match(overview, /Last update date/);
+  assert.match(overview, /formatShortDate\(request\.updatedAt\)/);
 
   assert.match(
-    source,
+    history,
     /entry\.status === 'rejected' && request\.rejectionReason/
   );
 
-  assert.match(source, /Rejection reason:/);
+  assert.match(history, /Rejection reason:/);
 });
 
 //===================================================================

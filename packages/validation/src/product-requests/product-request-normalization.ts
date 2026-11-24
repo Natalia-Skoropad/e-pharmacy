@@ -5,7 +5,7 @@ import type {
   ProductRequestPayloadFiles,
 } from './product-request-types';
 
-import { normalizeOptionalText } from '../shared';
+import { normalizeLatinTextInput, normalizeOptionalText } from '../shared';
 
 //===================================================================
 
@@ -16,11 +16,7 @@ import { normalizeOptionalText } from '../shared';
  * Server-side validation remains authoritative for submitted payloads.
  */
 export function normalizeProductRequestLatinInput(value: string): string {
-  const latinText = value
-    .replace(/[^A-Za-z0-9 ., :;'’"()/%+&\-]/g, '')
-    .trimStart();
-
-  return latinText.replace(/[A-Za-z]/, (letter) => letter.toUpperCase());
+  return normalizeLatinTextInput(value);
 }
 
 //===================================================================

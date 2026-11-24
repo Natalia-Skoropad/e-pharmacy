@@ -8,7 +8,7 @@ import type { ProductCategoryReference } from '@e-pharmacy/types/reference-data'
 import { isValidObjectId } from '@e-pharmacy/validation/url';
 import { formatShortDate } from '@e-pharmacy/utils/date';
 
-import { ShimmerImage } from '@e-pharmacy/ui/media';
+import { PharmacyPhotoPlaceholder, ShimmerImage } from '@e-pharmacy/ui/media';
 import { LinkButton } from '@e-pharmacy/ui/navigation';
 import { Button } from '@e-pharmacy/ui/primitives';
 import { ProfileSectionHeader } from '@e-pharmacy/ui/profile';
@@ -19,6 +19,9 @@ import type { ProductRequestDetailsViewModel } from '@/lib/product-requests/prod
 import { getPharmacyAllProductPath } from '@/lib/routes';
 
 import { ProductRequestCategory } from '../ProductRequestCategory';
+
+import { ProductRequestStatusActivity } from './ProductRequestStatusActivity';
+import { getProductRequestCancellationLabel } from './product-request-status-activity';
 
 import css from './ProductRequestOverview.module.css';
 
@@ -52,6 +55,8 @@ export function ProductRequestOverview({
     request.status === 'approved' && isValidObjectId(request.productId)
       ? getPharmacyAllProductPath(request.productId)
       : null;
+
+  const cancellationLabel = getProductRequestCancellationLabel(request);
 
   const notice =
     request.reviewState === 'changes_requested'
@@ -87,9 +92,11 @@ export function ProductRequestOverview({
               />
             </div>
           ) : (
-            <div className={css.imagePlaceholder} aria-hidden="true">
-              {request.name.charAt(0)}
-            </div>
+            <PharmacyPhotoPlaceholder
+              icon={PackageSearch}
+              title="No product photo yet"
+              description="No photo has been added to this product request."
+            />
           )}
         </div>
 
@@ -109,11 +116,8 @@ export function ProductRequestOverview({
                 {request.reviewState === 'changes_requested' ? (
                   <StatusBadge label="Needs changes" tone="neutral" />
                 ) : null}
-                {request.status === 'rejected' && request.cancelledBy ? (
-                  <StatusBadge
-                    label={`Cancelled by ${request.cancelledBy === 'admin' ? 'Admin' : 'owner'}`}
-                    tone="neutral"
-                  />
+                {cancellationLabel ? (
+                  <StatusBadge label={cancellationLabel} tone="neutral" />
                 ) : null}
               </dd>
             </div>
@@ -168,6 +172,7 @@ export function ProductRequestOverview({
           </div>
         </div>
       </div>
+      <ProductRequestStatusActivity request={request} />
     </section>
   );
 }

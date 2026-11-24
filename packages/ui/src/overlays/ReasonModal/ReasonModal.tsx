@@ -13,7 +13,12 @@ import css from './ReasonModal.module.css';
 
 //===================================================================
 
-export type ReasonModalTone = 'accent' | 'danger' | 'verification';
+export type ReasonModalTone =
+  | 'accent'
+  | 'danger'
+  | 'verification'
+  | 'moderation'
+  | 'reactivation';
 
 //===================================================================
 
@@ -28,24 +33,38 @@ export type ReasonModalProps = Readonly<{
 
   /** Optional status transition directly below the modal heading. */
   headerDetails?: ReactNode;
-
-  /** Optional five preset reasons plus Other; otherwise keep the free-text flow. */
-  reasonOptions?: readonly Readonly<{ code: string; label: string }>[];
-  value: string;
-  fieldName: string;
-  fieldLabel: string;
-  placeholder: string;
   confirmLabel: string;
   cancelLabel: string;
-  maxLength: number;
-  error?: string;
   requestError?: ReactNode;
   isLoading?: boolean;
   tone?: ReasonModalTone;
-  onValueChange: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
-}>;
+}> &
+  (
+    | Readonly<{
+        withoutReason: true;
+        reasonOptions?: never;
+        value?: never;
+        fieldName?: never;
+        fieldLabel?: never;
+        placeholder?: never;
+        maxLength?: never;
+        error?: never;
+        onValueChange?: never;
+      }>
+    | Readonly<{
+        withoutReason?: false;
+        reasonOptions?: readonly Readonly<{ code: string; label: string }>[];
+        value: string;
+        fieldName: string;
+        fieldLabel: string;
+        placeholder: string;
+        maxLength: number;
+        error?: string;
+        onValueChange: (value: string) => void;
+      }>
+  );
 
 //===================================================================
 
@@ -56,14 +75,15 @@ function ReasonModal({
   description,
   details,
   headerDetails,
-  value,
+  withoutReason = false,
+  value = '',
   reasonOptions,
-  fieldName,
-  fieldLabel,
-  placeholder,
+  fieldName = '',
+  fieldLabel = '',
+  placeholder = '',
   confirmLabel,
   cancelLabel,
-  maxLength,
+  maxLength = 500,
   error = '',
   requestError,
   isLoading = false,
@@ -127,7 +147,7 @@ function ReasonModal({
 
         {details ? <div>{details}</div> : null}
 
-        {reasonOptions ? (
+        {!withoutReason && reasonOptions ? (
           <fieldset className={css.reasonChoices} disabled={isLoading}>
             <legend className={css.reasonLegend}>Choose a reason</legend>
             {reasonOptions.map((option) => (
@@ -144,14 +164,14 @@ function ReasonModal({
                 disabled={isLoading}
                 onChange={() => {
                   setOtherSelected(option.code === 'other');
-                  onValueChange(option.code === 'other' ? '' : option.label);
+                  onValueChange?.(option.code === 'other' ? '' : option.label);
                 }}
               />
             ))}
           </fieldset>
         ) : null}
 
-        {!reasonOptions || isOtherReason ? (
+        {!withoutReason && (!reasonOptions || isOtherReason) ? (
           <CommentInput
             id={fieldId}
             name={fieldName}
@@ -164,7 +184,7 @@ function ReasonModal({
             maxLength={maxLength}
             disabled={isLoading}
             onChange={(event) =>
-              onValueChange(event.target.value.slice(0, maxLength))
+              onValueChange?.(event.target.value.slice(0, maxLength))
             }
           />
         ) : null}
@@ -192,7 +212,11 @@ function ReasonModal({
                 ? css.dangerButton
                 : tone === 'verification'
                   ? css.verificationButton
-                  : undefined
+                  : tone === 'moderation'
+                    ? css.moderationButton
+                    : tone === 'reactivation'
+                      ? css.reactivationButton
+                      : undefined
             }
             type="button"
             iconLeft={

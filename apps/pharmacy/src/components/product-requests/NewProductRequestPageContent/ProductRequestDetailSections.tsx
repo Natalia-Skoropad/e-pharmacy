@@ -24,6 +24,7 @@ import css from './ProductRequestDetailSections.module.css';
 type ProductRequestDetailSectionsProps = Readonly<{
   activeEditorTab: ProductRequestEditorTab;
   request: ProductRequestDetailsViewModel | null;
+  requestId?: string;
   commentsTotal: number;
   onCommentsTotalChange: (total: number) => void;
 }>;
@@ -33,39 +34,41 @@ type ProductRequestDetailSectionsProps = Readonly<{
 export function ProductRequestDetailSections({
   activeEditorTab,
   request,
+  requestId,
   commentsTotal,
   onCommentsTotalChange,
 }: ProductRequestDetailSectionsProps) {
   return (
     <>
       {activeEditorTab === 'comments' ? (
-        request ? (
+        requestId ? (
           <EntityComments
-            entityKey={`product-request:${request.id}`}
-            title="Private pharmacy comments"
-            commentTitle="Pharmacy comment"
-            placeholder="Write a private comment about this product request..."
-            emptyText="No private pharmacy comments have been added yet."
+            entityKey={`product-request:${requestId}`}
+            presentation="profile"
+            title="Comments"
+            description="Private working notes about this product request, visible to authorized pharmacy staff."
+            emptyTitle="No internal comments yet"
+            emptyText="Internal product request comments will appear here."
             initialTotal={commentsTotal}
             isEditable={
-              request.status === 'new' ||
-              (request.status === 'on_moderation' &&
+              request?.status === 'new' ||
+              (request?.status === 'on_moderation' &&
                 request.reviewState === 'changes_requested')
             }
             load={(page, options) =>
-              getPharmacyNotes('product_request', request.id, page, options)
+              getPharmacyNotes('product_request', requestId, page, options)
             }
             create={(text, options) =>
               createPharmacyNote(
                 'product_request',
-                request.id,
+                requestId,
                 text,
                 options.clientRequestId,
                 options
               )
             }
             remove={(id, options) =>
-              deletePharmacyNote('product_request', request.id, id, options)
+              deletePharmacyNote('product_request', requestId, id, options)
             }
             onTotalChange={onCommentsTotalChange}
           />

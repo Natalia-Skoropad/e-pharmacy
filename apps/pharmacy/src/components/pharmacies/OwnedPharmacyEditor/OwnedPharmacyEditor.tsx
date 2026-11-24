@@ -46,6 +46,7 @@ import {
   EDITOR_TABS,
   REQUIRED_FIELDS,
   buildPharmacyEditorPayload,
+  normalizePharmacyEditorInput,
   tabHasErrors,
   validatePharmacyEditor,
   valuesFromPharmacy,
@@ -194,7 +195,12 @@ export function OwnedPharmacyEditor({
 
   const change = (name: PharmacyEditorField, value: string) => {
     setConfirmSharedOpen(false);
-    setValues((old) => ({ ...old, [name]: value }));
+
+    setValues((old) => ({
+      ...old,
+      [name]: normalizePharmacyEditorInput(name, value),
+    }));
+
     setErrors((old) => ({ ...old, [name]: undefined }));
   };
 

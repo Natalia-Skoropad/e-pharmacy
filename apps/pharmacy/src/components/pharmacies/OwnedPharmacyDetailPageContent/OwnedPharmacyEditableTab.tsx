@@ -32,6 +32,7 @@ import { getProfileErrorMessage } from '@/lib/errors/get-profile-error-message';
 
 import {
   buildPharmacyEditorPayload,
+  normalizePharmacyEditorInput,
   validatePharmacyEditor,
   tabHasErrors,
   valuesFromPharmacy,
@@ -161,7 +162,12 @@ export function OwnedPharmacyEditableTab({
 
   const change = (name: PharmacyEditorField, value: string) => {
     setConfirmSharedOpen(false);
-    setValues((current) => ({ ...current, [name]: value }));
+
+    setValues((current) => ({
+      ...current,
+      [name]: normalizePharmacyEditorInput(name, value),
+    }));
+
     setErrors((current) => ({ ...current, [name]: undefined }));
   };
 

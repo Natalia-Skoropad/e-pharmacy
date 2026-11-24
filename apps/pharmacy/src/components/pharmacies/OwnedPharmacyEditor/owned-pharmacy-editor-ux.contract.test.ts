@@ -160,3 +160,109 @@ test('documents tab is hidden before saving a pharmacy and editable once the dra
     /Save the pharmacy draft first|Owner documents:\s*<a|Pharmacy documents <span/
   );
 });
+
+//===================================================================
+
+test('both pharmacy editors normalize only the seven requested text fields while typing', () => {
+  const editableTab = readFileSync(
+    new URL(
+      '../OwnedPharmacyDetailPageContent/OwnedPharmacyEditableTab.tsx',
+      import.meta.url
+    ),
+    'utf8'
+  );
+
+  const normalizer = fields.match(
+    /export function normalizePharmacyEditorInput\([\s\S]*?\n\}/
+  )?.[0];
+
+  assert.ok(normalizer);
+
+  assert.deepEqual(
+    Array.from(normalizer.matchAll(/case '([^']+)':/g), (match) => match[1]),
+    [
+      'name',
+      'region',
+      'settlement',
+      'recipientName',
+      'bankName',
+      'address',
+      'shortDescription',
+    ]
+  );
+
+  assert.match(normalizer, /return normalizeLatinTextInput\(value\)/);
+  assert.match(normalizer, /default:\s*return value;/);
+
+  for (const source of [editor, editableTab]) {
+    assert.match(
+      source,
+      /\[name\]: normalizePharmacyEditorInput\(name, value\)/
+    );
+  }
+});
+
+//===================================================================
+
+test('pharmacy text input filters non-Latin characters and preserves valid punctuation', async () => {
+  const { normalizePharmacyEditorInput } =
+    await import('./pharmacy-editor-fields');
+
+  const textFields = [
+    'name',
+    'shortDescription',
+    'region',
+    'settlement',
+    'address',
+    'recipientName',
+    'bankName',
+  ] as const;
+
+  for (const field of textFields) {
+    assert.equal(
+      normalizePharmacyEditorInput(field, '  pharmacy name '),
+      'Pharmacy name '
+    );
+
+    assert.equal(normalizePharmacyEditorInput(field, 'аптека'), '');
+
+    assert.equal(
+      normalizePharmacyEditorInput(field, 'аптека health LLC'),
+      'Health LLC'
+    );
+
+    assert.equal(
+      normalizePharmacyEditorInput(field, 'Already UPPER'),
+      'Already UPPER'
+    );
+
+    assert.equal(normalizePharmacyEditorInput(field, ''), '');
+  }
+
+  assert.equal(
+    normalizePharmacyEditorInput('address', 'main street #5'),
+    'Main street #5'
+  );
+
+  assert.equal(
+    normalizePharmacyEditorInput('shortDescription', 'open daily!'),
+    'Open daily!'
+  );
+
+  for (const field of [
+    'phone',
+    'email',
+    'workingHours',
+    'imageUrl',
+    'description',
+    'taxId',
+    'iban',
+    'receiptEmail',
+    'paymentPurpose',
+  ] as const) {
+    assert.equal(
+      normalizePharmacyEditorInput(field, 'lower case'),
+      'lower case'
+    );
+  }
+});

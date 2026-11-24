@@ -156,3 +156,51 @@
   font-weight: var(--fw-bold);
   color: var(--color-text-primary);
 }
+
+/* On moderation uses the same amber palette as the request status. */
+.moderation {
+  color: #956500;
+  background-color: #fff4d6;
+  border: 1px solid var(--color-warning);
+}
+
+.moderation svg {
+  color: #956500;
+}
+
+.actions .moderationButton {
+  color: #fff;
+  background-color: #b77906;
+  border-color: #b77906;
+}
+
+.actions .moderationButton:hover:not(:disabled),
+.actions .moderationButton:focus-visible:not(:disabled) {
+  color: #fff;
+  background-color: #956500;
+  border-color: #956500;
+}
+
+/* Match the Reactivation requested mustard badge and status action. */
+.reactivation {
+  color: #68420a;
+  background-color: #f4dea0;
+  border: 1px solid #b9820f;
+}
+
+.reactivation svg {
+  color: #68420a;
+}
+
+.actions .reactivationButton {
+  color: #fff;
+  background-color: #986209;
+  border-color: #986209;
+}
+
+.actions .reactivationButton:hover:not(:disabled),
+.actions .reactivationButton:focus-visible:not(:disabled) {
+  color: #fff;
+  background-color: #68420a;
+  border-color: #68420a;
+}

@@ -47,3 +47,16 @@ export function sanitizeTaxId(value: string): string {
 export function normalizeIban(value: string): string {
   return value.replace(/\s/g, '').toUpperCase();
 }
+
+//=============================================================================
+
+/** Normalize a controlled Latin short-text input without removing trailing spaces. */
+export function normalizeLatinTextInput(
+  value: string,
+  unsupportedCharacters: RegExp = /[^A-Za-z0-9 ., :;'’"()/%+&\-]/g
+): string {
+  return value
+    .replace(unsupportedCharacters, '')
+    .trimStart()
+    .replace(/[A-Za-z]/, (letter) => letter.toUpperCase());
+}

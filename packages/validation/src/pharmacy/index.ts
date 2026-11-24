@@ -12,6 +12,7 @@ export {
 export {
   normalizeEmail,
   normalizeIban,
+  normalizeLatinTextInput,
   normalizePhoneInput,
   sanitizeTaxId,
 } from '../shared/sanitizers';

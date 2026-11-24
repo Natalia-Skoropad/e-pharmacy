@@ -19,6 +19,7 @@ import {
   normalizePhoneInput,
   normalizeEmail,
   normalizeIban,
+  normalizeLatinTextInput,
   validateNormalizedPhone,
 } from '../shared/sanitizers';
 
@@ -38,7 +39,6 @@ test('email normalization trims surrounding whitespace and lowercases', () => {
   assert.equal(normalizeEmail('john @example.com'), 'john @example.com');
   assert.notEqual(buildEmailError(normalizeEmail('john @example.com')), '');
 });
-
 
 //=============================================================================
 
@@ -90,4 +90,25 @@ test('domain name validators accept English and reject Cyrillic', () => {
   assert.notEqual(buildPharmacyNameError('Аптека'), '');
   assert.notEqual(buildBankRecipientNameError('ТОВ Аптека'), '');
   assert.notEqual(buildBankNameError('Банк'), '');
+});
+
+//=============================================================================
+
+test('Latin short text input capitalizes the first letter and ignores non-Latin text', () => {
+  assert.equal(
+    normalizeLatinTextInput('  health pharmacy '),
+    'Health pharmacy '
+  );
+
+  assert.equal(normalizeLatinTextInput('аптека'), '');
+  assert.equal(normalizeLatinTextInput('  аптека health LLC'), 'Health LLC');
+  assert.equal(normalizeLatinTextInput('7th street'), '7Th street');
+  assert.equal(normalizeLatinTextInput('bank 東京'), 'Bank ');
+  assert.equal(normalizeLatinTextInput('Already UPPER'), 'Already UPPER');
+  assert.equal(normalizeLatinTextInput(''), '');
+
+  assert.equal(
+    normalizeLatinTextInput('  main street #5', /[^A-Za-z0-9 .,'’/#&()\-]/g),
+    'Main street #5'
+  );
 });

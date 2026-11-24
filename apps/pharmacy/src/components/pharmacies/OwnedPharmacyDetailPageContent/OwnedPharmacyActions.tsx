@@ -823,7 +823,9 @@ export function OwnedPharmacyActions({
               ? 'danger'
               : action === 'verification'
                 ? 'verification'
-                : 'accent'
+                : action === 'reactivate'
+                  ? 'reactivation'
+                  : 'moderation'
           }
           isLoading={busy}
           onValueChange={setComment}

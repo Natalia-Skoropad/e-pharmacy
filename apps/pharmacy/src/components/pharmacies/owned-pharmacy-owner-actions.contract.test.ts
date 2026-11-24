@@ -160,3 +160,54 @@ test('moderation with one saved change uses required-field completeness, not re-
 
   assert.doesNotMatch(actions, /disabled=\{invalid \|\| !hasChanges\}/);
 });
+
+//===================================================================
+
+test('pharmacy review dialogs use destination status tones and preserve required reasons', () => {
+  const modal = read(
+    '../../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.tsx'
+  );
+
+  const modalStyles = read(
+    '../../../../../packages/ui/src/overlays/ReasonModal/ReasonModal.module.css'
+  );
+
+  const badgeStyles = read(
+    '../../../../../packages/ui/src/statistics/StatusBadge/StatusBadge.module.css'
+  );
+
+  assert.match(
+    actions,
+    /tone=\{\s*action === 'deactivate'\s*\? 'danger'\s*:\s*action === 'verification'\s*\? 'verification'\s*:\s*action === 'reactivate'\s*\? 'reactivation'\s*:\s*'moderation'\s*\}/
+  );
+
+  assert.match(actions, /fieldLabel="Short description for the administrator"/);
+
+  assert.match(
+    actions,
+    /error=\{comment\.trim\(\) \? '' : 'Short description is required\.'\}/
+  );
+
+  assert.match(modal, /tone === 'reactivation'\s*\? css\.reactivationButton/);
+  assert.match(modal, /clsx\(css\.notice, css\[tone\]\)/);
+
+  assert.match(
+    badgeStyles,
+    /\.mustard\s*\{[^}]*color: #68420a;[^}]*background-color: #f4dea0;[^}]*border-color: #b9820f;/
+  );
+
+  assert.match(
+    modalStyles,
+    /\.reactivation\s*\{[^}]*color: #68420a;[^}]*background-color: #f4dea0;[^}]*border: 1px solid #b9820f;/
+  );
+
+  assert.match(
+    modalStyles,
+    /\.actions \.reactivationButton\s*\{[^}]*background-color: #986209;/
+  );
+
+  assert.match(
+    modalStyles,
+    /\.actions \.moderationButton\s*\{[^}]*background-color: #b77906;/
+  );
+});

@@ -3,6 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
+import { isISODateTimeString } from '@e-pharmacy/validation/dates';
+
+import type { ProductRequestHistoryViewModel } from '../lib/product-requests/product-requests';
+
+import {
+  getLatestProductRequestStatusActivity,
+  getProductRequestCancellationLabel,
+} from './product-requests/ProductRequestDetailsPageContent/product-request-status-activity';
+
 //===================================================================
 
 async function read(relativePath: string): Promise<string> {
@@ -337,7 +346,7 @@ test('product request editor keeps all tabs in one card and field panels respons
 
 //===================================================================
 
-test('request help explains the draft-first workflow and tablet overflow keeps Documents in More', async () => {
+test('request help explains the draft-first workflow and tablet overflow keeps Note for Admin and Documents in More for new requests', async () => {
   const [editor, tabs] = await Promise.all([
     read(
       'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
@@ -377,7 +386,7 @@ test('request help explains the draft-first workflow and tablet overflow keeps D
 
   assert.match(
     editor,
-    /ariaLabel="Product request editor sections"[\s\S]*?tabletVisibleCount=\{4\}/
+    /ariaLabel="Product request editor sections"[\s\S]*?tabletVisibleCount=\{requestId \? 4 : 3\}/
   );
 
   assert.match(tabs, /items\.slice\(normalizedTabletVisibleCount\)/);
@@ -591,7 +600,7 @@ test('request overview is route-owned, read-only and links only approved request
 
   assert.match(
     editor,
-    /activeEditorTab === 'details' && request \? \(\s*<ProductRequestOverview request=\{request\}/
+    /activeEditorTab === 'details' && request \? \(\s*<ProductRequestOverview\s+request=\{request\}/
   );
 
   assert.match(editor, /dispatchPharmacyBreadcrumbLabel\(request.name\)/);
@@ -616,7 +625,7 @@ test('request overview is route-owned, read-only and links only approved request
   );
 
   assert.match(overview, /getPharmacyAllProductPath\(request.productId\)/);
-  assert.match(overview, /<LinkButton href=\{productHref\}/);
+  assert.match(overview, /<LinkButton\s+href=\{productHref\}/);
   assert.match(overview, /<Button[^>]*disabled/);
   assert.match(overview, /<ShimmerImage/);
 
@@ -625,7 +634,7 @@ test('request overview is route-owned, read-only and links only approved request
     /request.productImage\?\.dataUrl \?\? request.productImageUrl/
   );
 
-  assert.match(overview, /<ProductRequestCategory request=\{request\}/);
+  assert.match(overview, /<ProductRequestCategory\s+request=\{request\}/);
   assert.match(category, /if \(!name\) return <span>—<\/span>/);
 
   for (const label of [
@@ -646,4 +655,300 @@ test('request overview is route-owned, read-only and links only approved request
 
   assert.match(css, /min-width: 1440px/);
   assert.match(css, /overflow-wrap: anywhere/);
+});
+
+//===================================================================
+
+test('existing request tabs keep their shell while loading, and Comments uses its own profile resource', async () => {
+  const [editor, resource, comments, overview, commentComponent] =
+    await Promise.all([
+      read(
+        'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+      ),
+
+      read(
+        'src/components/product-requests/NewProductRequestPageContent/ProductRequestSectionState.tsx'
+      ),
+
+      read(
+        'src/components/product-requests/NewProductRequestPageContent/ProductRequestDetailSections.tsx'
+      ),
+
+      read(
+        'src/components/product-requests/ProductRequestDetailsPageContent/ProductRequestOverview.tsx'
+      ),
+
+      read('src/components/comments/EntityComments/EntityComments.tsx'),
+    ]);
+
+  assert.match(editor, /if \(!requestId && isLoading\)/);
+  assert.match(editor, /isLoading && activeEditorTab !== 'comments'/);
+  assert.match(editor, /<Tabs[\s\S]*?<ProductRequestSectionState/);
+  assert.match(editor, /onRetry=\{\(\) => setLoadAttempt/);
+  assert.match(editor, /label: 'Comments',\s*icon: <MessageSquareText/);
+  assert.match(resource, /<ProfileSectionHeader[\s\S]*?<ProfileResourceState/);
+  assert.match(resource, /variant="loading"/);
+  assert.match(resource, /variant="error"/);
+  assert.match(resource, /retryLabel="Try again"/);
+
+  assert.match(
+    overview,
+    /<PharmacyPhotoPlaceholder[\s\S]*?icon=\{PackageSearch\}/
+  );
+
+  assert.match(comments, /requestId \? \(\s*<EntityComments/);
+  assert.match(comments, /presentation="profile"/);
+  assert.match(comments, /title="Comments"/);
+  assert.match(comments, /emptyTitle="No internal comments yet"/);
+  assert.match(comments, /request\?\.status === 'new' \|\|/);
+  assert.match(comments, /request.reviewState === 'changes_requested'/);
+  assert.match(commentComponent, /title="Loading comments"/);
+  assert.match(commentComponent, /title="Delete this comment\?"/);
+});
+
+//===================================================================
+
+test('product request status actions match the moderation palette and use the shared review modal without a reason field', async () => {
+  const [editor, css, modal, shared] = await Promise.all([
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.module.css'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/ProductRequestModerationModal.tsx'
+    ),
+
+    read('../../packages/ui/src/overlays/ReasonModal/ReasonModal.tsx'),
+  ]);
+
+  assert.match(editor, /className=\{css\.moderationStatusAction\}/);
+
+  assert.match(
+    editor,
+    /isSendDisabled \? \([\s\S]*?<InfoTooltip[\s\S]*?escapeOverflow[\s\S]*?scrollable/
+  );
+
+  assert.match(css, /\.moderationStatusAction\s*\{[^}]*background: #fff4d6/);
+  assert.doesNotMatch(css, /\.statusMenuOptions\s*\{[^}]*overflow-y: auto/);
+
+  assert.match(
+    editor,
+    /eyebrow="PRODUCT REQUEST STATUS"\s*title="Delete product request draft\?"\s*destructive/
+  );
+
+  assert.match(modal, /<ReasonModal[\s\S]*?headerDetails=/);
+  assert.match(modal, /What happens next\?/);
+  assert.match(modal, /withoutReason\s*tone="moderation"/);
+
+  assert.match(
+    shared,
+    /!withoutReason && \(!reasonOptions \|\| isOtherReason\)/
+  );
+});
+
+//===================================================================
+
+function statusHistoryEntry(
+  status: ProductRequestHistoryViewModel['status'],
+  title: string,
+  isInferred = false
+): ProductRequestHistoryViewModel {
+  const createdAt = '2026-11-24T12:00:00.000Z';
+
+  assert.ok(isISODateTimeString(createdAt));
+
+  return {
+    id: title,
+    status,
+    title,
+    description: `${title} description`,
+    createdAt,
+    isInferred,
+  };
+}
+
+//===================================================================
+
+test('overview status activity selects the latest lifecycle event, not review start', () => {
+  const created = statusHistoryEntry('new', 'Draft created');
+  const submitted = statusHistoryEntry('on_moderation', 'Sent for moderation');
+  const started = statusHistoryEntry('on_moderation', 'Review started');
+
+  assert.equal(getLatestProductRequestStatusActivity([]), null);
+
+  const first = getLatestProductRequestStatusActivity([created]);
+
+  assert.equal(first?.created, true);
+  assert.equal(first?.actorRole, 'Pharmacy owner');
+
+  const current = getLatestProductRequestStatusActivity([
+    created,
+    submitted,
+    started,
+  ]);
+
+  assert.equal(current?.entry, submitted);
+  assert.equal(current?.previous, created);
+  assert.equal(current?.needsChanges, false);
+});
+
+//===================================================================
+
+test('overview activity represents same-status corrections, resubmission and cancellation', () => {
+  const submitted = statusHistoryEntry('on_moderation', 'Sent for moderation');
+  const corrections = statusHistoryEntry('on_moderation', 'Changes requested');
+  const resent = statusHistoryEntry('on_moderation', 'Sent for moderation');
+  const cancelled = statusHistoryEntry('rejected', 'Cancelled by owner');
+
+  const correction = getLatestProductRequestStatusActivity([
+    submitted,
+    corrections,
+  ]);
+
+  assert.equal(correction?.entry, corrections);
+  assert.equal(correction?.previous?.status, 'on_moderation');
+  assert.equal(correction?.previousNeedsChanges, false);
+  assert.equal(correction?.needsChanges, true);
+  assert.equal(correction?.actorRole, 'Admin');
+
+  const resubmission = getLatestProductRequestStatusActivity([
+    submitted,
+    corrections,
+    resent,
+  ]);
+
+  assert.equal(resubmission?.previousNeedsChanges, true);
+  assert.equal(resubmission?.needsChanges, false);
+  assert.equal(resubmission?.actorRole, 'Pharmacy owner');
+
+  const cancellation = getLatestProductRequestStatusActivity([
+    submitted,
+    corrections,
+    cancelled,
+  ]);
+
+  assert.equal(cancellation?.entry, cancelled);
+  assert.equal(cancellation?.previousNeedsChanges, true);
+  assert.equal(cancellation?.needsChanges, false);
+  assert.equal(cancellation?.actorRole, 'Pharmacy owner');
+});
+
+//===================================================================
+
+test('overview activity does not attribute inferred events to an actor', () => {
+  const created = statusHistoryEntry('new', 'Request created', true);
+  const approved = statusHistoryEntry('approved', 'Request approved', true);
+  const current = getLatestProductRequestStatusActivity([created, approved]);
+
+  assert.equal(current?.entry.isInferred, true);
+  assert.equal(current?.actorRole, null);
+
+  const recorded = statusHistoryEntry('approved', 'Request approved');
+
+  assert.equal(
+    getLatestProductRequestStatusActivity([recorded])?.actorRole,
+    'Admin'
+  );
+
+  assert.equal(
+    getLatestProductRequestStatusActivity([recorded])?.previous,
+    undefined
+  );
+});
+
+//===================================================================
+
+test('overview renders the saved status activity and pending requests label resubmission without unlocking it', async () => {
+  const [overview, activity, editor, modal] = await Promise.all([
+    read(
+      'src/components/product-requests/ProductRequestDetailsPageContent/ProductRequestOverview.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/ProductRequestDetailsPageContent/ProductRequestStatusActivity.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/NewProductRequestPageContent.tsx'
+    ),
+
+    read(
+      'src/components/product-requests/NewProductRequestPageContent/ProductRequestModerationModal.tsx'
+    ),
+  ]);
+
+  assert.match(overview, /<ProductRequestStatusActivity request=\{request\}/);
+  assert.match(activity, /Product request status activity/);
+  assert.match(activity, /exact transition and event time unavailable/);
+  assert.match(activity, /name not recorded/);
+  assert.match(activity, /activity.entry.description/);
+  assert.match(overview, /getProductRequestCancellationLabel\(request\)/);
+
+  assert.match(
+    activity,
+    /activity\?\.entry.status === 'rejected'\s*\? getProductRequestCancellationLabel\(request\)/
+  );
+
+  assert.match(
+    activity,
+    /<StatusBadge\s+label=\{cancellationLabel\}\s+tone="neutral"\s+className=\{css.activityCancellationBadge\}/
+  );
+
+  assert.match(
+    editor,
+    /request\?\.status === 'on_moderation'\s*\? 'Resend for moderation'\s*:\s*'Send for moderation'/
+  );
+
+  assert.match(
+    editor,
+    /const canModerate =\s*request\?\.status === 'new' \|\|\s*\(request\?\.status === 'on_moderation' &&\s*request.reviewState === 'changes_requested'\)/
+  );
+
+  assert.match(editor, /disabled=\{isSendDisabled\}/);
+
+  assert.match(
+    modal,
+    /currentStatus === 'on_moderation'\s*\? 'Resend for moderation'/
+  );
+});
+
+//===================================================================
+
+test('overview and status activity use the saved cancellation source only for rejected requests', () => {
+  assert.equal(
+    getProductRequestCancellationLabel({
+      status: 'rejected',
+      cancelledBy: 'admin',
+    }),
+    'Cancelled by Admin'
+  );
+
+  assert.equal(
+    getProductRequestCancellationLabel({
+      status: 'rejected',
+      cancelledBy: 'owner',
+    }),
+    'Cancelled by owner'
+  );
+
+  assert.equal(
+    getProductRequestCancellationLabel({ status: 'rejected' }),
+    null
+  );
+
+  for (const status of ['new', 'on_moderation', 'approved'] as const) {
+    assert.equal(
+      getProductRequestCancellationLabel({ status, cancelledBy: 'admin' }),
+      null
+    );
+
+    assert.equal(
+      getProductRequestCancellationLabel({ status, cancelledBy: 'owner' }),
+      null
+    );
+  }
 });

@@ -9,6 +9,7 @@ import {
   validatePharmacyPaymentForm,
   normalizeEmail,
   normalizeIban,
+  normalizeLatinTextInput,
   type PharmacyValidationMode,
 } from '@e-pharmacy/validation/pharmacy';
 
@@ -60,6 +61,33 @@ export const EMPTY_FIELDS: Record<PharmacyEditorField, string> = {
 //===================================================================
 
 export type PharmacyEditorValues = Record<PharmacyEditorField, string>;
+
+//===================================================================
+
+// Match Product name input behavior; retain existing address and description
+// punctuation without admitting non-Latin letters.
+export function normalizePharmacyEditorInput(
+  name: PharmacyEditorField,
+  value: string
+): string {
+  switch (name) {
+    case 'name':
+    case 'region':
+    case 'settlement':
+    case 'recipientName':
+    case 'bankName':
+      return normalizeLatinTextInput(value);
+    case 'address':
+      return normalizeLatinTextInput(value, /[^A-Za-z0-9 .,'’/#&()\-]/g);
+    case 'shortDescription':
+      return normalizeLatinTextInput(
+        value,
+        /[^A-Za-z0-9 .,!?:;'’"“”()/%+&\-–—#*\[\]_=@~]/g
+      );
+    default:
+      return value;
+  }
+}
 
 //===================================================================
 
